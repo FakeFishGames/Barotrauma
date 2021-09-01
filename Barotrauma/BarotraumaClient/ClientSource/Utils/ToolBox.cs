@@ -99,6 +99,62 @@ namespace Barotrauma
             if (hue < 240) return q1 + (q2 - q1) * (240 - hue) / 60;
             return q1;
         }
+        
+        /// <summary>
+        /// Convert a RGB value into a HSV value.
+        /// </summary>
+        /// <param name="color"></param>
+        /// <see href="https://www.cs.rit.edu/~ncs/color/t_convert.html">Reference</see>
+        /// <returns>
+        /// Vector3 where X is the hue (0-360 or NaN)
+        /// Y is the saturation (0-1)
+        /// Z is the value (0-1) 
+        /// </returns>
+        public static Vector3 RGBToHSV(Color color)
+        {
+            float r = color.R / 255f,
+                  g = color.G / 255f,
+                  b = color.B / 255f;
+
+            float h, s;
+
+            float min = Math.Min(r, Math.Min(g, b));
+            float max = Math.Max(r, Math.Max(g, b));
+
+            float v = max;
+
+            float delta = max - min;
+
+            if (max != 0)
+            {
+                s = delta / max;
+            }
+            else
+            {
+                s = 0;
+                h = -1;
+                return new Vector3(h, s, v);
+            }
+
+            if (MathUtils.NearlyEqual(r, max))
+            {
+                h = (g - b) / delta;
+            }
+            else if (MathUtils.NearlyEqual(g, max))
+            {
+                h = 2 + (b - r) / delta;
+            }
+            else
+            {
+                h = 4 + (r - g) / delta;
+            }
+
+            h *= 60;
+            if (h < 0) { h += 360; }
+
+            return new Vector3(h, s, v);
+        }
+
 
         public static Color Add(this Color sourceColor, Color color)
         {
@@ -150,7 +206,7 @@ namespace Barotrauma
                 return Color.Black;
             }
 
-            if (t <= 0.0f) { return gradient[0]; }
+            if (t <= 0.0f || !MathUtils.IsValid(t)) { return gradient[0]; }
             if (t >= 1.0f) { return gradient[gradient.Length - 1]; }
 
             float scaledT = t * (gradient.Length - 1);
@@ -235,6 +291,7 @@ namespace Barotrauma
                         {
                             linePos = splitSize = 0.0f;
                             splitWord[k] = splitWord[k].Remove(splitWord[k].Length - 1) + "\n";
+                            if (splitWord[k].Length <= 1) { break; }
                             j--;
                             splitWord.Add(string.Empty);
                             k++;

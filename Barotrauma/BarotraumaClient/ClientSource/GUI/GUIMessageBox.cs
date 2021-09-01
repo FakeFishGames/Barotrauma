@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Networking;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -20,11 +22,12 @@ namespace Barotrauma
         public enum Type
         {
             Default,
-            InGame
+            InGame,
+            Vote,
+            Hint
         }
 
         public List<GUIButton> Buttons { get; private set; } = new List<GUIButton>();
-        //public GUIFrame BackgroundFrame { get; private set; }
         public GUILayoutGroup Content { get; private set; }
         public GUIFrame InnerFrame { get; private set; }
         public GUITextBlock Header { get; private set; }
@@ -47,20 +50,23 @@ namespace Barotrauma
                 Icon.Color = value;
             }
         }
+        
+        public bool Draggable { get; set; }
+        public Vector2 DraggingPosition = Vector2.Zero;
 
         public GUIImage BackgroundIcon { get; private set; }
         private GUIImage newBackgroundIcon;
 
         public bool AutoClose;
 
-        private readonly bool alwaysVisible;
-
         private float openState;
         private float iconState;
         private bool iconSwitching;
         private bool closing;
 
-        private Type type;
+        private readonly Type type;
+
+        public Type MessageBoxType => type;
 
         public static GUIComponent VisibleBox => MessageBoxes.LastOrDefault();
 
@@ -70,10 +76,17 @@ namespace Barotrauma
             this.Buttons[0].OnClicked = Close;
         }
 
-        public GUIMessageBox(string headerText, string text, string[] buttons, Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, Type type = Type.Default, string tag = "", Sprite icon = null, string iconStyle = "", Sprite backgroundIcon = null)
+        public GUIMessageBox(string headerText, string text, string[] buttons, Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, Type type = Type.Default, string tag = "", Sprite icon = null, string iconStyle = "", Sprite backgroundIcon = null, bool parseRichText = false)
             : base(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas, Anchor.Center), style: GUI.Style.GetComponentStyle("GUIMessageBox." + type) != null ? "GUIMessageBox." + type : "GUIMessageBox")
         {
-            int width = (int)(DefaultWidth * (type == Type.Default ? 1.0f : 1.5f)), height = 0;
+            int width = (int)(DefaultWidth * type switch
+            {
+                Type.Default => 1.0f,
+                Type.Hint => 1.25f,
+                _ => 1.5f
+            });
+            int height = 0;
+
             if (relativeSize.HasValue)
             {
                 width = (int)(GameMain.GraphicsWidth * relativeSize.Value.X);
@@ -97,23 +110,37 @@ namespace Barotrauma
                 };
             }
 
-            InnerFrame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, type == Type.InGame ? Anchor.TopCenter : Anchor.Center) { IsFixedSize = false }, style: null);
+            Anchor anchor = type switch
+            {
+                Type.InGame => Anchor.TopCenter,
+                Type.Hint => Anchor.TopRight,
+                Type.Vote => Anchor.TopRight,
+                _ => Anchor.Center
+            };
+
+            InnerFrame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, anchor) { IsFixedSize = false }, style: null);
+            if (type == Type.Vote)
+            {
+                int offset = GUI.IntScale(64);
+                InnerFrame.RectTransform.ScreenSpaceOffset = new Point(-offset, offset);
+                CanBeFocused = false;
+            }
             GUI.Style.Apply(InnerFrame, "", this);
             this.type = type;
             Tag = tag;
 
-            if (type == Type.Default)
+            if (type == Type.Default || type == Type.Vote)
             {
                 Content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), InnerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
                             
                 Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
-                    headerText, font: GUI.SubHeadingFont, textAlignment: Alignment.Center, wrap: true);
+                    headerText, font: GUI.SubHeadingFont, textAlignment: Alignment.Center, wrap: true, parseRichText: parseRichText);
                 GUI.Style.Apply(Header, "", this);
                 Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
 
                 if (!string.IsNullOrWhiteSpace(text))
                 {
-                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true);
+                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true, parseRichText: parseRichText);
                     GUI.Style.Apply(Text, "", this);
                     Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize = 
                         new Point(Text.Rect.Width, Text.Rect.Height);
@@ -160,7 +187,6 @@ namespace Barotrauma
             else if (type == Type.InGame)
             {
                 InnerFrame.RectTransform.AbsoluteOffset = new Point(0, GameMain.GraphicsHeight);
-                alwaysVisible = true;
                 CanBeFocused = false;
                 AutoClose = true;
                 GUI.Style.Apply(InnerFrame, "", this);
@@ -192,13 +218,36 @@ namespace Barotrauma
                     }
                 };
 
-                Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), headerText, wrap: true);
+                InputType? closeInput = null;
+                if (GameMain.Config.KeyBind(InputType.Use).MouseButton == MouseButton.None)
+                {
+                    closeInput = InputType.Use;
+                }
+                else if (GameMain.Config.KeyBind(InputType.Select).MouseButton == MouseButton.None)
+                {
+                    closeInput = InputType.Select;
+                }
+                if (closeInput.HasValue)
+                {
+                    Buttons[0].ToolTip = TextManager.ParseInputTypes($"{TextManager.Get("Close")} ([InputType.{closeInput.Value}])");
+                    Buttons[0].OnAddedToGUIUpdateList += (GUIComponent component) =>
+                    {
+                        if (!closing && openState >= 1.0f && PlayerInput.KeyHit(closeInput.Value))
+                        {
+                            GUIButton btn = component as GUIButton;
+                            btn?.OnClicked(btn, btn.UserData);
+                            btn?.Flash(GUI.Style.Green);
+                        }
+                    };
+                }
+
+                Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), headerText, wrap: true, parseRichText: parseRichText);
                 GUI.Style.Apply(Header, "", this);
                 Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
 
                 if (!string.IsNullOrWhiteSpace(text))
                 {
-                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true);
+                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true, parseRichText: parseRichText);
                     GUI.Style.Apply(Text, "", this);
                     Content.Recalculate();
                     Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize =
@@ -223,30 +272,184 @@ namespace Barotrauma
                 }
                 Buttons[0].RectTransform.MaxSize = new Point((int)(0.4f * Buttons[0].Rect.Y), Buttons[0].Rect.Y);
             }
-            
+            else if (type == Type.Hint)
+            {
+                CanBeFocused = false;
+                GUI.Style.Apply(InnerFrame, "", this);
+
+                Point absoluteSpacing = GUIStyle.ItemFrameMargin.Multiply(1.0f / 5.0f);
+                var verticalLayoutGroup = new GUILayoutGroup(new RectTransform(GetVerticalLayoutGroupSize(), parent: InnerFrame.RectTransform, anchor: Anchor.Center), childAnchor: Anchor.TopCenter)
+                {
+                    AbsoluteSpacing = absoluteSpacing.Y,
+                    Stretch = true
+                };
+
+                var topHorizontalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.7f), verticalLayoutGroup.RectTransform),
+                    isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.02f
+                };
+
+                int iconMaxHeight = 0;
+                if (icon != null)
+                {
+                    Icon = new GUIImage(new RectTransform(new Vector2(0.15f, 0.95f), topHorizontalLayoutGroup.RectTransform), icon, scaleToFit: true);
+                    iconMaxHeight = (int)Icon.Sprite.size.Y;
+                }
+                else
+                {
+                    bool iconStyleDefined = !string.IsNullOrEmpty(iconStyle);
+                    Icon = new GUIImage(new RectTransform(new Vector2(0.15f, 0.95f), topHorizontalLayoutGroup.RectTransform),
+                        iconStyleDefined ? iconStyle : "GUIButtonInfo", scaleToFit: true);
+                    if (!iconStyleDefined)
+                    {
+                        Icon.Color = Color.Orange;
+                    }
+                    iconMaxHeight = (int)(Icon.Style.GetDefaultSprite()?.size.Y ?? GUI.yScale * 40);
+                }
+
+                iconMaxHeight = Math.Min((int)(GUI.yScale * 40), iconMaxHeight);
+                int iconMinHeight = Math.Min((int)(GUI.yScale * 40), iconMaxHeight);
+                Icon.RectTransform.MinSize = new Point(Icon.Rect.Width, iconMinHeight);
+                Icon.RectTransform.MaxSize = new Point(Icon.Rect.Width, iconMaxHeight);
+
+                Content = new GUILayoutGroup(new RectTransform(new Vector2(Icon != null ? 0.85f : 1.0f, 1.0f), topHorizontalLayoutGroup.RectTransform))
+                {
+                    AbsoluteSpacing = absoluteSpacing.Y,
+                };
+
+                var bottomContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.3f), verticalLayoutGroup.RectTransform), style: null);
+
+                var tickBoxLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.67f, 1.0f), bottomContainer.RectTransform, anchor: Anchor.CenterLeft),
+                    isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.02f
+                };
+
+                var dontShowAgainTickBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickBoxLayoutGroup.RectTransform),
+                    TextManager.Get("hintmessagebox.dontshowagain"))
+                {
+                    ToolTip = TextManager.Get("hintmessagebox.dontshowagaintooltip"),
+                    UserData = "dontshowagain"
+                };
+
+                //var disableHintsTickBox = new GUITickBox(new RectTransform(new Vector2(0.33f, 1.0f), tickBoxLayoutGroup.RectTransform),
+                //    TextManager.Get("hintmessagebox.disablehints"))
+                //{
+                //    ToolTip = TextManager.Get("hintmessagebox.disablehintstooltip"),
+                //    UserData = "disablehints"
+                //};
+
+                Buttons = new List<GUIButton>(1)
+                {
+                    new GUIButton(new RectTransform(new Vector2(0.33f, 1.0f), bottomContainer.RectTransform, Anchor.CenterRight),
+                        text: TextManager.Get("hintmessagebox.dismiss"), style: "GUIButtonSmall")
+                    {
+                        OnClicked = Close
+                    }
+                };
+
+                Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), headerText, wrap: true);
+                GUI.Style.Apply(Header, "", this);
+                Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
+
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true);
+                    GUI.Style.Apply(Text, "", this);
+                    Content.Recalculate();
+                    Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize =
+                        new Point(Text.Rect.Width, Text.Rect.Height);
+                    Text.RectTransform.IsFixedSize = true;
+                    if (string.IsNullOrWhiteSpace(headerText))
+                    {
+                        Header.RectTransform.Parent = null;
+                        Content.ChildAnchor = Anchor.Center;
+                    }
+                }
+
+                if (height == 0)
+                {
+                    height = absoluteSpacing.Y;
+                    int upperContainerHeight = absoluteSpacing.Y;
+                    if (Header.Rect.Height > 0) { upperContainerHeight += Header.Rect.Height + Content.AbsoluteSpacing; }
+                    if (Text != null) { upperContainerHeight += Text.Rect.Height + Content.AbsoluteSpacing; }
+                    upperContainerHeight = Math.Max(upperContainerHeight, Icon.Rect.Height);
+                    height += upperContainerHeight;
+                    height += absoluteSpacing.Y;
+                    height += (int)((bottomContainer.RectTransform.RelativeSize.Y / topHorizontalLayoutGroup.RectTransform.RelativeSize.Y) * upperContainerHeight);
+                    height += absoluteSpacing.Y;
+                    if (minSize.HasValue) { height = Math.Max(height, minSize.Value.Y); }
+
+                    InnerFrame.RectTransform.NonScaledSize = new Point(InnerFrame.Rect.Width, height);
+                    verticalLayoutGroup.RectTransform.NonScaledSize = GetVerticalLayoutGroupSize();
+                    verticalLayoutGroup.Recalculate();
+                    topHorizontalLayoutGroup.Recalculate();
+                    Content.Recalculate();
+                    tickBoxLayoutGroup.Recalculate();
+                }
+
+                InnerFrame.RectTransform.AbsoluteOffset = new Point(GUI.IntScale(64), -InnerFrame.Rect.Height);
+
+                Point GetVerticalLayoutGroupSize()
+                {
+                    return InnerFrame.Rect.Size - absoluteSpacing.Multiply(2);
+                }
+            }
+
             MessageBoxes.Add(this);
         }
 
+        /// <summary>
+        /// Use to create a message box of Hint type
+        /// </summary>
+        public GUIMessageBox(string hintIdentifier, string text, Sprite icon) : this("", text, new string[0], textAlignment: Alignment.CenterLeft, type: Type.Hint, icon: icon)
+        {
+            if (InnerFrame.FindChild("dontshowagain", recursive: true) is GUITickBox dontShowAgainTickBox)
+            {
+                dontShowAgainTickBox.OnSelected = HintManager.OnDontShowAgain;
+                dontShowAgainTickBox.UserData = hintIdentifier;
+            }
+            if (InnerFrame.FindChild("disablehints", recursive: true) is GUITickBox disableHintsTickBox)
+            {
+                disableHintsTickBox.OnSelected = HintManager.OnDisableHints;
+                disableHintsTickBox.UserData = hintIdentifier;
+            }
+        }
+
+        private static Type[] messageBoxTypes;
+
         public static void AddActiveToGUIUpdateList()
         {
-            for (int i = 0; i < MessageBoxes.Count; i++)
+            messageBoxTypes ??= (Type[])Enum.GetValues(typeof(Type));
+
+            foreach (var type in messageBoxTypes)
             {
-                if (MessageBoxes[i] is GUIMessageBox alwaysVisibleMsgBox && alwaysVisibleMsgBox.alwaysVisible)
+                // Don't display hints when HUD is disabled
+                if (type == Type.Hint && GUI.DisableHUD) { continue; } 
+
+                for (int i = 0; i < MessageBoxes.Count; i++)
                 {
-                    alwaysVisibleMsgBox.AddToGUIUpdateList();
-                    break;
-                }
-            }
-            for (int i = MessageBoxes.Count - 1; i >= 0; i--)
-            {
-                if (MessageBoxes[i].UserData as string == "verificationprompt" ||
-                    MessageBoxes[i].UserData as string == "bugreporter")
-                {
-                    continue;
-                }
-                if (!(MessageBoxes[i] is GUIMessageBox msgBox) || !msgBox.alwaysVisible)
-                {
-                    MessageBoxes[i].AddToGUIUpdateList();
+                    if (MessageBoxes[i] == null) { continue; }
+                    if (!(MessageBoxes[i] is GUIMessageBox messageBox))
+                    {
+                        if (type == Type.Default)
+                        {
+                            // Message box not of type GUIMessageBox is likely the round summary
+                            MessageBoxes[i].AddToGUIUpdateList();
+                            break;
+                        }
+                        continue;
+                    }
+                    if (messageBox.type != type) { continue; }
+
+                    // These are handled separately in GUI.HandlePersistingElements()
+                    if (MessageBoxes[i].UserData as string == "verificationprompt") { continue; }
+                    if (MessageBoxes[i].UserData as string == "bugreporter") { continue; }
+
+                    messageBox.AddToGUIUpdateList();
                     break;
                 }
             }
@@ -271,104 +474,137 @@ namespace Barotrauma
 
         protected override void Update(float deltaTime)
         {
-            if (type != Type.InGame) { return; }
-            
-            Vector2 initialPos = new Vector2(0.0f, GameMain.GraphicsHeight);
-            Vector2 defaultPos = new Vector2(0.0f, HUDLayoutSettings.InventoryAreaLower.Y - InnerFrame.Rect.Height - 20 * GUI.Scale);
-            Vector2 endPos = new Vector2(GameMain.GraphicsWidth, defaultPos.Y);
-
-            if (!closing)
+            if (Draggable)
             {
-                Point step = Vector2.SmoothStep(initialPos, defaultPos, openState).ToPoint();
-                InnerFrame.RectTransform.AbsoluteOffset = step;
-                if (BackgroundIcon != null)
+                GUIComponent parent = GUI.MouseOn?.Parent?.Parent;
+                if ((GUI.MouseOn == InnerFrame || InnerFrame.IsParentOf(GUI.MouseOn)) && !(GUI.MouseOn is GUIButton || GUI.MouseOn is GUIColorPicker || GUI.MouseOn is GUITextBox || parent is GUITextBox))
                 {
-                    BackgroundIcon.RectTransform.AbsoluteOffset = new Point(InnerFrame.Rect.Location.X - (int) (BackgroundIcon.Rect.Size.X / 1.25f), (int)defaultPos.Y - BackgroundIcon.Rect.Size.Y / 2);
-                    if (!MathUtils.NearlyEqual(openState, 1.0f))
+                    GUI.MouseCursor = CursorState.Move;
+                    if (PlayerInput.PrimaryMouseButtonDown())
                     {
-                        BackgroundIcon.Color = ToolBox.GradientLerp(openState, Color.Transparent, Color.White);
+                        DraggingPosition = RectTransform.ScreenSpaceOffset.ToVector2() - PlayerInput.MousePosition;
                     }
                 }
-                if (!(Screen.Selected is RoundSummaryScreen) && !MessageBoxes.Any(mb => mb.UserData is RoundSummary))
-                {
-                    openState = Math.Min(openState + deltaTime * 2.0f, 1.0f);
-                }
 
-                if (GUI.MouseOn != InnerFrame && !InnerFrame.IsParentOf(GUI.MouseOn) && AutoClose)
+                if (PlayerInput.PrimaryMouseButtonHeld() && DraggingPosition != Vector2.Zero)
                 {
-                    inGameCloseTimer += deltaTime;
-                }
-
-                if (inGameCloseTimer >= inGameCloseTime)
-                {
-                    Close();
-                }
-            }
-            else
-            {
-                openState += deltaTime * 2.0f;
-                Point step = Vector2.SmoothStep(defaultPos, endPos, openState - 1.0f).ToPoint();
-                InnerFrame.RectTransform.AbsoluteOffset = step;
-                if (BackgroundIcon != null)
-                {
-                    BackgroundIcon.Color *= 0.9f;
-                }
-                if (openState >= 2.0f)
-                {
-                    if (Parent != null) { Parent.RemoveChild(this); }
-                    if (MessageBoxes.Contains(this)) { MessageBoxes.Remove(this); }
-                }
-            }
-
-            if (newBackgroundIcon != null)
-            {
-                if (!iconSwitching)
-                {
-                    if (BackgroundIcon != null)
-                    {
-                        BackgroundIcon.Color *= 0.9f;
-                        if (BackgroundIcon.Color.A == 0)
-                        {
-                            BackgroundIcon = null;
-                            iconSwitching = true;
-                            RemoveChild(BackgroundIcon);
-                        }
-                    }
-                    else
-                    {
-                        iconSwitching = true;
-                    }
-                    iconState = 0;
+                    GUI.MouseCursor = CursorState.Dragging;
+                    RectTransform.ScreenSpaceOffset = (PlayerInput.MousePosition + DraggingPosition).ToPoint();
                 }
                 else
                 {
-                    newBackgroundIcon.SetAsFirstChild();
-                    newBackgroundIcon.RectTransform.AbsoluteOffset = new Point(InnerFrame.Rect.Location.X - (int) (newBackgroundIcon.Rect.Size.X / 1.25f), (int)defaultPos.Y - newBackgroundIcon.Rect.Size.Y / 2);
-                    newBackgroundIcon.Color = ToolBox.GradientLerp(iconState, Color.Transparent, Color.White);
-                    if (newBackgroundIcon.Color.A == 255)
-                    {
-                        BackgroundIcon = newBackgroundIcon;
-                        BackgroundIcon.SetAsFirstChild();
-                        newBackgroundIcon = null;
-                        iconSwitching = false;
-                    }
-
-                    iconState = Math.Min(iconState + deltaTime * 2.0f, 1.0f);
+                    DraggingPosition = Vector2.Zero;
                 }
             }
-            
+
+            if (type == Type.InGame || type == Type.Hint)
+            {
+                Vector2 initialPos, defaultPos, endPos;
+                if (type == Type.InGame)
+                {
+                    initialPos = new Vector2(0.0f, GameMain.GraphicsHeight);
+                    defaultPos = new Vector2(0.0f, HUDLayoutSettings.InventoryAreaLower.Y - InnerFrame.Rect.Height - 20 * GUI.Scale);
+                    endPos = new Vector2(GameMain.GraphicsWidth, defaultPos.Y);
+                }
+                else
+                {
+                    initialPos = new Vector2(GUI.IntScale(64), -InnerFrame.Rect.Height);
+                    defaultPos = new Vector2(initialPos.X, HUDLayoutSettings.ButtonAreaTop.Height + GUI.IntScale(64));
+                    endPos = new Vector2(-InnerFrame.Rect.Width, defaultPos.Y);
+                }
+
+                if (!closing)
+                {
+                    Point step = Vector2.SmoothStep(initialPos, defaultPos, openState).ToPoint();
+                    InnerFrame.RectTransform.AbsoluteOffset = step;
+                    if (BackgroundIcon != null)
+                    {
+                        BackgroundIcon.RectTransform.AbsoluteOffset = new Point(InnerFrame.Rect.Location.X - (int)(BackgroundIcon.Rect.Size.X / 1.25f), (int)defaultPos.Y - BackgroundIcon.Rect.Size.Y / 2);
+                        if (!MathUtils.NearlyEqual(openState, 1.0f))
+                        {
+                            BackgroundIcon.Color = ToolBox.GradientLerp(openState, Color.Transparent, Color.White);
+                        }
+                    }
+                    if (!(Screen.Selected is RoundSummaryScreen) && !MessageBoxes.Any(mb => mb.UserData is RoundSummary))
+                    {
+                        openState = Math.Min(openState + deltaTime * 2.0f, 1.0f);
+                    }
+
+                    if (GUI.MouseOn != InnerFrame && !InnerFrame.IsParentOf(GUI.MouseOn) && AutoClose)
+                    {
+                        inGameCloseTimer += deltaTime;
+                    }
+
+                    if (inGameCloseTimer >= inGameCloseTime)
+                    {
+                        Close();
+                    }
+                }
+                else
+                {
+                    openState += deltaTime * 2.0f;
+                    Point step = Vector2.SmoothStep(defaultPos, endPos, openState - 1.0f).ToPoint();
+                    InnerFrame.RectTransform.AbsoluteOffset = step;
+                    if (BackgroundIcon != null)
+                    {
+                        BackgroundIcon.Color *= 0.9f;
+                    }
+                    if (openState >= 2.0f)
+                    {
+                        Parent?.RemoveChild(this);
+                        if (MessageBoxes.Contains(this)) { MessageBoxes.Remove(this); }
+                    }
+                }
+
+                if (newBackgroundIcon != null)
+                {
+                    if (!iconSwitching)
+                    {
+                        if (BackgroundIcon != null)
+                        {
+                            BackgroundIcon.Color *= 0.9f;
+                            if (BackgroundIcon.Color.A == 0)
+                            {
+                                BackgroundIcon = null;
+                                iconSwitching = true;
+                                RemoveChild(BackgroundIcon);
+                            }
+                        }
+                        else
+                        {
+                            iconSwitching = true;
+                        }
+                        iconState = 0;
+                    }
+                    else
+                    {
+                        newBackgroundIcon.SetAsFirstChild();
+                        newBackgroundIcon.RectTransform.AbsoluteOffset = new Point(InnerFrame.Rect.Location.X - (int)(newBackgroundIcon.Rect.Size.X / 1.25f), (int)defaultPos.Y - newBackgroundIcon.Rect.Size.Y / 2);
+                        newBackgroundIcon.Color = ToolBox.GradientLerp(iconState, Color.Transparent, Color.White);
+                        if (newBackgroundIcon.Color.A == 255)
+                        {
+                            BackgroundIcon = newBackgroundIcon;
+                            BackgroundIcon.SetAsFirstChild();
+                            newBackgroundIcon = null;
+                            iconSwitching = false;
+                        }
+
+                        iconState = Math.Min(iconState + deltaTime * 2.0f, 1.0f);
+                    }
+                }
+            }
         }
 
 
         public void Close()
         {
-            if (type == Type.InGame)
+            if (type == Type.InGame || type == Type.Hint)
             {
                 closing = true;
             }
             else
             {
-                if (Parent != null) { Parent.RemoveChild(this); }
+                Parent?.RemoveChild(this);
                 if (MessageBoxes.Contains(this)) { MessageBoxes.Remove(this); }
             }
 

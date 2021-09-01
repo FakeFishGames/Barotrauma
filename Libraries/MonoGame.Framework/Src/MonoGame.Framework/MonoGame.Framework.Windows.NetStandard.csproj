@@ -36,6 +36,7 @@
     <EmbeddedResource Remove=".\**" />
     <None Remove=".\**" />
     <Compile Include="Clipboard.cs" />
+    <Compile Include="FileDropEventArgs.cs" />
     <Compile Include="GraphicsDeviceManager.SDL.cs" />
     <Compile Include="Graphics\SpriteEffects.cs" />
     <Compile Include="Input\GamePad.SDL.cs" />

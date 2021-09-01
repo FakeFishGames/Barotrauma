@@ -86,7 +86,7 @@ namespace Barotrauma.Items.Components
         {
             RefreshConnections();
 
-            item.SendSignal(0, IsOn ? "1" : "0", "state_out", null);
+            item.SendSignal(IsOn ? "1" : "0", "state_out");
 			
             if (!CanTransfer) { Voltage = 0.0f; return; }
 
@@ -169,22 +169,23 @@ namespace Barotrauma.Items.Components
             
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (item.Condition <= 0.0f || connection.IsPower) { return; }
 
             if (connectionPairs.TryGetValue(connection.Name, out string outConnection))
             {
                 if (!IsOn) { return; }
-                item.SendSignal(stepsTaken, signal, outConnection, sender, power, source, signalStrength);
+                item.SendSignal(signal, outConnection);
             }
             else if (connection.Name == "toggle")
             {
+                if (signal.value == "0") { return; }
                 SetState(!IsOn, false);
             }
             else if (connection.Name == "set_state")
             {
-                SetState(signal != "0", false);
+                SetState(signal.value != "0", false);
             }
         }
 

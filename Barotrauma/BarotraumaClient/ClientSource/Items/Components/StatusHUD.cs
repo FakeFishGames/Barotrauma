@@ -17,15 +17,6 @@ namespace Barotrauma.Items.Components
             TextManager.Get("CatastrophicBleeding")
         };
 
-        private static readonly string[] HealthTexts = 
-        {
-            TextManager.Get("NoInjuries"),
-            TextManager.Get("MinorInjuries"),
-            TextManager.Get("Injuries"),
-            TextManager.Get("MajorInjuries"),
-            TextManager.Get("CriticalInjuries")
-        };
-
         private static readonly string[] OxygenTexts = 
         {
             TextManager.Get("OxygenNormal"),
@@ -55,6 +46,8 @@ namespace Barotrauma.Items.Components
 
         private Character equipper;
 
+        private bool isEquippable;
+
         public IEnumerable<Character> VisibleCharacters
         {
             get 
@@ -64,14 +57,28 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void OnItemLoaded()
+        {
+            isEquippable = item.GetComponent<Pickable>() != null;
+            if (!isEquippable) { IsActive = true; }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
 
-            if (equipper == null || equipper.Removed)
+            Entity refEntity = equipper;
+            if (isEquippable)
             {
-                IsActive = false;
-                return;
+                if (equipper == null || equipper.Removed)
+                {
+                    IsActive = false;
+                    return;
+                }
+            }
+            else
+            {
+                refEntity = item;
             }
             
             if (updateTimer > 0.0f)
@@ -85,11 +92,11 @@ namespace Barotrauma.Items.Components
             {
                 if (c == equipper || !c.Enabled || c.Removed) { continue; }
 
-                float dist = Vector2.DistanceSquared(equipper.WorldPosition, c.WorldPosition);
+                float dist = Vector2.DistanceSquared(refEntity.WorldPosition, c.WorldPosition);
                 if (dist < Range * Range)
                 {
-                    Vector2 diff = c.WorldPosition - equipper.WorldPosition;
-                    if (Submarine.CheckVisibility(equipper.SimPosition, equipper.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
+                    Vector2 diff = c.WorldPosition - refEntity.WorldPosition;
+                    if (Submarine.CheckVisibility(refEntity.SimPosition, refEntity.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
                     {
                         visibleCharacters.Add(c);
                     }
@@ -147,27 +154,46 @@ namespace Barotrauma.Items.Components
 
             List<string> texts = new List<string>();
             List<Color> textColors = new List<Color>();
-
-            if (target.Info != null)
+            texts.Add(target.Info == null ? target.DisplayName : target.Info.DisplayName);
+            Color nameColor = GUI.Style.TextColor;
+            if (Character.Controlled != null && target.TeamID != Character.Controlled.TeamID)
             {
-                texts.Add(target.Name);
-                textColors.Add(GUI.Style.TextColor);
+                nameColor = target.TeamID == CharacterTeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
             }
+            textColors.Add(nameColor);
             
             if (target.IsDead)
             {
                 texts.Add(TextManager.Get("Deceased"));
                 textColors.Add(GUI.Style.Red);
-                texts.Add(
-                    target.CauseOfDeath.Affliction?.CauseOfDeathDescription ??
-                    TextManager.AddPunctuation(':', TextManager.Get("CauseOfDeath"), TextManager.Get("CauseOfDeath." + target.CauseOfDeath.Type.ToString())));
-                textColors.Add(GUI.Style.Red);
+                if (target.CauseOfDeath != null)
+                {
+                    texts.Add(
+                        target.CauseOfDeath.Affliction?.CauseOfDeathDescription ??
+                        TextManager.AddPunctuation(':', TextManager.Get("CauseOfDeath"), TextManager.Get("CauseOfDeath." + target.CauseOfDeath.Type.ToString())));
+                    textColors.Add(GUI.Style.Red);
+                }
             }
             else
             {
                 if (!string.IsNullOrEmpty(target.customInteractHUDText) && target.AllowCustomInteract)
                 {
                     texts.Add(target.customInteractHUDText);
+                    textColors.Add(GUI.Style.Green);
+                }
+                if (!target.IsIncapacitated && target.IsPet)
+                {
+                    texts.Add(CharacterHUD.GetCachedHudText("PlayHint", GameMain.Config.KeyBindText(InputType.Use)));
+                    textColors.Add(GUI.Style.Green);
+                }
+                if (target.CharacterHealth.UseHealthWindow && !target.DisableHealthWindow && equipper?.FocusedCharacter == target && equipper.CanInteractWith(target, 160f, false))
+                {
+                    texts.Add(CharacterHUD.GetCachedHudText("HealHint", GameMain.Config.KeyBindText(InputType.Health)));
+                    textColors.Add(GUI.Style.Green);
+                }
+                if (target.CanBeDragged)
+                {
+                    texts.Add(CharacterHUD.GetCachedHudText("GrabHint", GameMain.Config.KeyBindText(InputType.Grab)));
                     textColors.Add(GUI.Style.Green);
                 }
 
@@ -181,7 +207,7 @@ namespace Barotrauma.Items.Components
                     texts.Add(TextManager.Get("Stunned"));
                     textColors.Add(GUI.Style.Orange);
                 }
-                
+
                 int oxygenTextIndex = MathHelper.Clamp((int)Math.Floor((1.0f - (target.Oxygen / 100.0f)) * OxygenTexts.Length), 0, OxygenTexts.Length - 1);
                 texts.Add(OxygenTexts[oxygenTextIndex]);
                 textColors.Add(Color.Lerp(GUI.Style.Red, GUI.Style.Green, target.Oxygen / 100.0f));
@@ -210,7 +236,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (AfflictionPrefab affliction in combinedAfflictionStrengths.Keys)
                 {
-                    texts.Add(TextManager.AddPunctuation(':', affliction.Name, ((int)combinedAfflictionStrengths[affliction]).ToString() + " %"));
+                    texts.Add(TextManager.AddPunctuation(':', affliction.Name, Math.Max(((int)combinedAfflictionStrengths[affliction]), 1).ToString() + " %"));
                     textColors.Add(Color.Lerp(GUI.Style.Orange, GUI.Style.Red, combinedAfflictionStrengths[affliction] / affliction.MaxStrength));
                 }
             }

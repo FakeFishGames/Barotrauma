@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System.Threading;
 using FarseerPhysics.Dynamics;
 #if DEBUG && CLIENT
+using System;
 using Microsoft.Xna.Framework.Input;
 #endif
 
@@ -97,33 +98,66 @@ namespace Barotrauma
 
 
 #if DEBUG && CLIENT
-            if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null &&
-                !DebugConsole.IsOpen && GUI.KeyboardDispatcher.Subscriber == null)
+            if (GameMain.GameSession != null && !DebugConsole.IsOpen && GUI.KeyboardDispatcher.Subscriber == null)
             {
-                if (PlayerInput.KeyHit(Keys.Insert))
+                if (GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null)
                 {
-                    DebugConsole.ExecuteCommand("teleportcharacter");
+                    Submarine closestSub = Submarine.FindClosest(cam.WorldViewCenter) ?? GameMain.GameSession.Submarine;
+
+                    Vector2 targetMovement = Vector2.Zero;
+                    if (PlayerInput.KeyDown(Keys.I)) { targetMovement.Y += 1.0f; }
+                    if (PlayerInput.KeyDown(Keys.K)) { targetMovement.Y -= 1.0f; }
+                    if (PlayerInput.KeyDown(Keys.J)) { targetMovement.X -= 1.0f; }
+                    if (PlayerInput.KeyDown(Keys.L)) { targetMovement.X += 1.0f; }
+
+                    if (targetMovement != Vector2.Zero)
+                    {
+                        closestSub.ApplyForce(targetMovement * closestSub.SubBody.Body.Mass * 100.0f);
+                    }
                 }
-
-                var closestSub = Submarine.FindClosest(cam.WorldViewCenter);
-                if (closestSub == null) closestSub = GameMain.GameSession.Submarine;
-
-                Vector2 targetMovement = Vector2.Zero;
-                if (PlayerInput.KeyDown(Keys.I)) targetMovement.Y += 1.0f;
-                if (PlayerInput.KeyDown(Keys.K)) targetMovement.Y -= 1.0f;
-                if (PlayerInput.KeyDown(Keys.J)) targetMovement.X -= 1.0f;
-                if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
-
-                if (targetMovement != Vector2.Zero)
-                    closestSub.ApplyForce(targetMovement * closestSub.SubBody.Body.Mass * 100.0f);
             }
+            
+#if LINUX
+            // disgusting
+            if (PlayerInput.KeyDown(Keys.RightShift) && Character.Controlled is { CharacterHealth: { } health } && PlayerInput.MouseSpeed != Vector2.Zero)
+            {
+                AfflictionPrefab radiationPrefab = AfflictionPrefab.RadiationSickness;
+                float afflictionAmount = (PlayerInput.MousePosition.X / GameMain.GraphicsWidth) * radiationPrefab.MaxStrength;
+                Affliction affliction = health.GetAffliction(radiationPrefab.Identifier, true);
+
+                if (affliction == null)
+                {
+                    health.ApplyAffliction(null, new Affliction(radiationPrefab, Math.Abs(afflictionAmount)));
+                }
+                else
+                {
+                    float diff = affliction.Strength - afflictionAmount;
+
+                    if (!MathUtils.NearlyEqual(diff, 0))
+                    {
+                        if (diff > 0)
+                        {
+                            health.ReduceAffliction(null, radiationPrefab.Identifier, Math.Abs(diff));
+                        }
+                        else if (diff < 0)
+                        {
+                            health.ApplyAffliction(null, new Affliction(radiationPrefab, Math.Abs(diff)));
+                        }
+                    }
+                }
+            }
+#endif
+#endif
+
+#if CLIENT
+            GameMain.LightManager?.Update((float)deltaTime);
 #endif
 
             GameTime += deltaTime;
 
             foreach (PhysicsBody body in PhysicsBody.List)
             {
-                if (body.Enabled) { body.Update(); }               
+                if (body.Enabled && body.BodyType != FarseerPhysics.BodyType.Static) { body.Update(); }               
             }
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
@@ -154,9 +188,8 @@ namespace Barotrauma
                 }
                 if (Character.Controlled.Inventory != null)
                 {
-                    foreach (Item item in Character.Controlled.Inventory.Items)
+                    foreach (Item item in Character.Controlled.Inventory.AllItems)
                     {
-                        if (item == null) { continue; }
                         if (Character.Controlled.HasEquippedItem(item))
                         {
                             item.UpdateHUD(cam, Character.Controlled, (float)deltaTime);
@@ -191,7 +224,7 @@ namespace Barotrauma
             if (Character.Controlled != null && 
                 Lights.LightManager.ViewTarget != null)
             {
-                Vector2 targetPos = Lights.LightManager.ViewTarget.DrawPosition;
+                Vector2 targetPos = Lights.LightManager.ViewTarget.WorldPosition;
                 if (Lights.LightManager.ViewTarget == Character.Controlled &&
                     (CharacterHealth.OpenHealthWindow != null || CrewManager.IsCommandInterfaceOpen || ConversationAction.IsDialogOpen))
                 {
@@ -211,7 +244,7 @@ namespace Barotrauma
                 cam.TargetPos = targetPos;
             }
 
-            cam.MoveCamera((float)deltaTime);
+            cam.MoveCamera((float)deltaTime, allowZoom: GUI.MouseOn == null);
 #endif
 
             foreach (Submarine sub in Submarine.Loaded)
@@ -221,7 +254,10 @@ namespace Barotrauma
 
             foreach (PhysicsBody body in PhysicsBody.List)
             {
-                if (body.Enabled) { body.SetPrevTransform(body.SimPosition, body.Rotation); }
+                if (body.Enabled && body.BodyType != FarseerPhysics.BodyType.Static) 
+                { 
+                    body.SetPrevTransform(body.SimPosition, body.Rotation); 
+                }
             }
 
 #if CLIENT

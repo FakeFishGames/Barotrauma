@@ -156,10 +156,10 @@ namespace Barotrauma
                 sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
                 sb.AppendLine("VSync " + (GameMain.Config.VSyncEnabled ? "ON" : "OFF"));
                 sb.AppendLine("Language: " + (GameMain.Config.Language ?? "none"));
-            }
-            if (GameMain.Config.AllEnabledPackages != null)
-            {
-                sb.AppendLine("Selected content packages: " + (!GameMain.Config.AllEnabledPackages.Any() ? "None" : string.Join(", ", GameMain.Config.AllEnabledPackages.Select(c => c.Name))));
+                if (GameMain.Config.AllEnabledPackages != null)
+                {
+                    sb.AppendLine("Selected content packages: " + (!GameMain.Config.AllEnabledPackages.Any() ? "None" : string.Join(", ", GameMain.Config.AllEnabledPackages.Select(c => c.Name))));
+                }
             }
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash + ")"));
@@ -218,9 +218,12 @@ namespace Barotrauma
                 sb.AppendLine("Target site: " + exception.TargetSite.ToString());
             }
 
-            sb.AppendLine("Stack trace: ");
-            sb.AppendLine(exception.StackTrace.CleanupStackTrace());
-            sb.AppendLine("\n");
+            if (exception.StackTrace != null)
+            {
+                sb.AppendLine("Stack trace: ");
+                sb.AppendLine(exception.StackTrace.CleanupStackTrace());
+                sb.AppendLine("\n");
+            }
 
             if (exception.InnerException != null)
             {
@@ -229,8 +232,11 @@ namespace Barotrauma
                 {
                     sb.AppendLine("Target site: " + exception.InnerException.TargetSite.ToString());
                 }
-                sb.AppendLine("Stack trace: ");
-                sb.AppendLine(exception.InnerException.StackTrace.CleanupStackTrace());
+                if (exception.InnerException.StackTrace != null)
+                {
+                    sb.AppendLine("Stack trace: ");
+                    sb.AppendLine(exception.InnerException.StackTrace.CleanupStackTrace());
+                }
             }
 
             sb.AppendLine("Last debug messages:");

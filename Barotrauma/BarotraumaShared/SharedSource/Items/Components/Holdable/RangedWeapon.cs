@@ -5,13 +5,15 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class RangedWeapon : ItemComponent
     {
-        private float reload, reloadTimer;
+        private float reload;
+        public float ReloadTimer { get; private set; }
 
         private Vector2 barrelPos;
 
@@ -67,6 +69,7 @@ namespace Barotrauma.Items.Components
             item.IsShootable = true;
             // TODO: should define this in xml if we have ranged weapons that don't require aim to use
             item.RequireAimToUse = true;
+            characterUsable = true;
             InitProjSpecific(element);
         }
 
@@ -74,17 +77,17 @@ namespace Barotrauma.Items.Components
 
         public override void Equip(Character character)
         {
-            reloadTimer = Math.Min(reload, 1.0f);
+            ReloadTimer = Math.Min(reload, 1.0f);
             IsActive = true;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
-            reloadTimer -= deltaTime;
+            ReloadTimer -= deltaTime;
 
-            if (reloadTimer < 0.0f)
+            if (ReloadTimer < 0.0f)
             {
-                reloadTimer = 0.0f;
+                ReloadTimer = 0.0f;
                 IsActive = false;
             }
         }
@@ -100,10 +103,10 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || character.Removed) { return false; }
-            if ((item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) || reloadTimer > 0.0f) { return false; }
+            if ((item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) || ReloadTimer > 0.0f) { return false; }
 
             IsActive = true;
-            reloadTimer = reload;
+            ReloadTimer = reload;
 
             if (item.AiTarget != null)
             {
@@ -128,54 +131,19 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < ProjectileCount; i++)
             {
                 Projectile projectile = FindProjectile(triggerOnUseOnContainers: true);
-                if (projectile == null) { return true; }
-
-                float spread = GetSpread(character);
-                float rotation = (item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
-                rotation += spread * Rand.Range(-0.5f, 0.5f);
-
-                projectile.User = character;
-                //add the limbs of the shooter to the list of bodies to be ignored
-                //so that the player can't shoot himself
-                projectile.IgnoredBodies = new List<Body>(limbBodies);
-
-                Vector2 projectilePos = item.SimPosition;
-                Vector2 sourcePos = character?.AnimController == null ? item.SimPosition : character.AnimController.AimSourceSimPos;
-                Vector2 barrelPos = TransformedBarrelPos + item.body.SimPosition;
-                //make sure there's no obstacles between the base of the weapon (or the shoulder of the character) and the end of the barrel
-                if (Submarine.PickBody(sourcePos, barrelPos, projectile.IgnoredBodies, Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking) == null)
+                if (projectile != null)
                 {
-                    //no obstacles -> we can spawn the projectile at the barrel
-                    projectilePos = barrelPos;
-                }
-                else if ((sourcePos - barrelPos).LengthSquared() > 0.0001f)
-                {
-                    //spawn the projectile body.GetMaxExtent() away from the position where the raycast hit the obstacle
-                    projectilePos = sourcePos - Vector2.Normalize(barrelPos - projectilePos) * Math.Max(projectile.Item.body.GetMaxExtent(), 0.1f);
-                }
-
-                projectile.Item.body.ResetDynamics();
-                projectile.Item.SetTransform(projectilePos, rotation);
-
-                projectile.Use(deltaTime);
-                projectile.Item.GetComponent<Rope>()?.Attach(item, projectile.Item);
-                if (projectile.Item.Removed) { continue; }
-                projectile.User = character;
-
-                projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
-
-                //set the rotation of the projectile again because dropping the projectile resets the rotation
-                projectile.Item.SetTransform(projectilePos,
-                    rotation + (projectile.Item.body.Dir * projectile.LaunchRotationRadians));
-
-                item.RemoveContained(projectile.Item);
-
-                if (i == 0)
-                {
-                    //recoil
-                    item.body.ApplyLinearImpulse(
-                        new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * item.body.Mass * -50.0f,
-                        maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    Vector2 barrelPos = TransformedBarrelPos + item.body.SimPosition;
+                    float rotation = (Item.body.Dir == 1.0f) ? Item.body.Rotation : Item.body.Rotation - MathHelper.Pi;
+                    float spread = GetSpread(character) * Rand.Range(-0.5f, 0.5f);
+                    projectile.Shoot(character, character.AnimController.AimSourceSimPos, barrelPos, rotation + spread, ignoredBodies: limbBodies.ToList(), createNetworkEvent: false);
+                    projectile.Item.GetComponent<Rope>()?.Attach(Item, projectile.Item);
+                    if (i == 0)
+                    {
+                        Item.body.ApplyLinearImpulse(new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * Item.body.Mass * -50.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    }
+                    projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
+                    Item.RemoveContained(projectile.Item);
                 }
             }
 
@@ -184,9 +152,14 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        public override bool SecondaryUse(float deltaTime, Character character = null)
+        {
+            return characterUsable || character == null;
+        }
+
         public Projectile FindProjectile(bool triggerOnUseOnContainers = false)
         {
-            var containedItems = item.OwnInventory?.Items;
+            var containedItems = item.OwnInventory?.AllItemsMod;
             if (containedItems == null) { return null; }
 
             foreach (Item item in containedItems)
@@ -200,7 +173,7 @@ namespace Barotrauma.Items.Components
             foreach (Item it in containedItems)
             {
                 if (it == null) { continue; }
-                var containedSubItems = it.OwnInventory?.Items;
+                var containedSubItems = it.OwnInventory?.AllItemsMod;
                 if (containedSubItems == null) { continue; }
                 foreach (Item subItem in containedSubItems)
                 {

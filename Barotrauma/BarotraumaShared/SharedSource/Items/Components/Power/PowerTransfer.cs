@@ -55,6 +55,22 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        private float extraLoad;
+        private float extraLoadSetTime;
+        /// <summary>
+        /// Additional load coming from somewhere else than the devices connected to the junction box (e.g. ballast flora or piezo crystals).
+        /// Goes back to zero automatically if you stop setting the value.
+        /// </summary>
+        public float ExtraLoad
+        {
+            get { return extraLoad; }
+            set 
+            {
+                extraLoad = Math.Max(value, 0.0f);
+                extraLoadSetTime = (float)Timing.TotalTime;
+            }
+        }
+
         //can the component transfer power
         private bool canTransfer;
         public bool CanTransfer
@@ -134,6 +150,11 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             RefreshConnections();
+
+            if (Timing.TotalTime > extraLoadSetTime + 1.0)
+            {
+                extraLoad = Math.Max(extraLoad - 1000.0f * deltaTime, 0);
+            }
 
             if (!CanTransfer) { return; }
 
@@ -321,7 +342,7 @@ namespace Barotrauma.Items.Components
             powerOut?.SendPowerProbeSignal(source, power);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (item.Condition <= 0.0f || connection.IsPower) { return; }
             if (!connectedRecipients.ContainsKey(connection)) { return; }
@@ -330,16 +351,16 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Connection recipient in connectedRecipients[connection])
                 {
-                    if (recipient.Item == item || recipient.Item == source) { continue; }
+                    if (recipient.Item == item || recipient.Item == signal.source) { continue; }
 
-                    source?.LastSentSignalRecipients.Add(recipient.Item);
+                    signal.source?.LastSentSignalRecipients.Add(recipient);
 
                     foreach (ItemComponent ic in recipient.Item.Components)
                     {
                         //other junction boxes don't need to receive the signal in the pass-through signal connections
                         //because we relay it straight to the connected items without going through the whole chain of junction boxes
-                        if (ic is PowerTransfer && !(ic is RelayComponent) && connection.Name.Contains("signal")) { continue; }
-                        ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f, signalStrength);
+                        if (ic is PowerTransfer && !(ic is RelayComponent)) { continue; }
+                        ic.ReceiveSignal(signal, recipient);
                     }
 
                     foreach (StatusEffect effect in recipient.Effects)

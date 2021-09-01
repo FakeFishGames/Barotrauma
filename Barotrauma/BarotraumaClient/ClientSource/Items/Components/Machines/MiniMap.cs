@@ -21,16 +21,12 @@ namespace Barotrauma.Items.Components
 
         private readonly List<Submarine> displayedSubs = new List<Submarine>();
 
+        private Point prevResolution;
+
         partial void InitProjSpecific(XElement element)
         {
             noPowerTip = TextManager.Get("SteeringNoPowerTip");
             CreateGUI();
-        }
-
-        protected override void OnResolutionChanged()
-        {
-            base.OnResolutionChanged();
-            CreateHUD();
         }
 
         protected override void CreateGUI()
@@ -76,15 +72,10 @@ namespace Barotrauma.Items.Components
             hullInfoFrame.AddToGUIUpdateList(order: 1);
         }
 
-        public override void OnMapLoaded()
-        {
-            base.OnMapLoaded();
-            CreateHUD();
-        }
-
         private void CreateHUD()
         {
-            submarineContainer.ClearChildren();
+            prevResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            submarineContainer?.ClearChildren();
 
             if (item.Submarine == null) { return; }
 
@@ -94,19 +85,15 @@ namespace Barotrauma.Items.Components
             displayedSubs.AddRange(item.Submarine.DockedTo);
         }
 
-        public override void FlipX(bool relativeToSub)
-        {
-            CreateHUD();
-        }
-
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             //recreate HUD if the subs we should display have changed
-            if ((item.Submarine == null && displayedSubs.Count > 0) ||              //item not inside a sub anymore, but display is still showing subs
-                !displayedSubs.Contains(item.Submarine) ||                          //current sub not displayer
-                item.Submarine.DockedTo.Any(s => !displayedSubs.Contains(s)) ||     //some of the docked subs not diplayed
-                !submarineContainer.Children.Any() ||                                        // We lack a GUI
-                displayedSubs.Any(s => s != item.Submarine && !item.Submarine.DockedTo.Contains(s))) //displaying a sub that shouldn't be displayed
+            if ((item.Submarine == null && displayedSubs.Count > 0) ||                                       //item not inside a sub anymore, but display is still showing subs
+                !displayedSubs.Contains(item.Submarine) ||                                                   //current sub not displayer
+                prevResolution.X != GameMain.GraphicsWidth || prevResolution.Y != GameMain.GraphicsHeight || //resolution changed
+                item.Submarine.DockedTo.Any(s => !displayedSubs.Contains(s)) ||                              //some of the docked subs not diplayed
+                !submarineContainer.Children.Any() ||                                                        // We lack a GUI
+                displayedSubs.Any(s => s != item.Submarine && !item.Submarine.DockedTo.Contains(s)))         //displaying a sub that shouldn't be displayed
             {
                 CreateHUD();
             }
@@ -212,13 +199,9 @@ namespace Barotrauma.Items.Components
                 }
                 
                 Color neutralColor = Color.DarkCyan;
-                if (hull.RoomName != null)
+                if (hull.IsWetRoom)
                 {
-                    if (hull.RoomName.Contains("ballast") || hull.RoomName.Contains("Ballast") ||
-                        hull.RoomName.Contains("airlock") || hull.RoomName.Contains("Airlock"))
-                    {
-                        neutralColor = new Color(9, 80, 159);
-                    }
+                    neutralColor = new Color(9, 80, 159);
                 }
 
                 if (hullData.Distort)

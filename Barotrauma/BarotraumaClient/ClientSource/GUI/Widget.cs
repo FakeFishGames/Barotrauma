@@ -32,6 +32,7 @@ namespace Barotrauma
 
         public Vector2 DrawPos { get; set; }
         public int size = 10;
+        public float thickness = 1f;
         /// <summary>
         /// Used only for circles.
         /// </summary>
@@ -114,6 +115,7 @@ namespace Barotrauma
             if (IsMouseOver || (!RequireMouseOn && selectedWidgets.Contains(this) && PlayerInput.PrimaryMouseButtonHeld()))
             {
                 Hovered?.Invoke();
+                System.Diagnostics.Debug.WriteLine("hovered");
                 if (RequireMouseOn || PlayerInput.PrimaryMouseButtonDown())
                 {
                     if ((multiselect && !selectedWidgets.Contains(this)) || selectedWidgets.None())
@@ -125,6 +127,7 @@ namespace Barotrauma
             }
             else if (selectedWidgets.Contains(this))
             {
+                System.Diagnostics.Debug.WriteLine("selectedWidgets.Contains(this) -> remove");
                 selectedWidgets.Remove(this);
                 Deselected?.Invoke();
             }
@@ -157,7 +160,7 @@ namespace Barotrauma
                     {
                         GUI.DrawRectangle(spriteBatch, drawRect, secondaryColor.Value, isFilled, thickness: 2);
                     }
-                    GUI.DrawRectangle(spriteBatch, drawRect, color, isFilled, thickness: IsSelected ? 3 : 1);
+                    GUI.DrawRectangle(spriteBatch, drawRect, color, isFilled, thickness: IsSelected ? (int)(thickness * 3) : (int)thickness);
                     break;
                 case Shape.Circle:
                     if (secondaryColor.HasValue)
@@ -182,7 +185,7 @@ namespace Barotrauma
             {
                 if (showTooltip && !string.IsNullOrEmpty(tooltip))
                 {
-                    var offset = tooltipOffset ?? new Vector2(size, -size / 2);
+                    var offset = tooltipOffset ?? new Vector2(size, -size / 2f);
                     GUI.DrawString(spriteBatch, DrawPos + offset, tooltip, textColor, textBackgroundColor);
                 }
             }

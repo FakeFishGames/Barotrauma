@@ -46,7 +46,10 @@ namespace Barotrauma
             if (IsHighlighted || IsHighlighted) { clr = Color.Lerp(clr, Color.White, 0.8f); }
 
             int iconSize = spawnType == SpawnType.Path ? WaypointSize : SpawnPointSize;
-            if (ConnectedDoor != null || Ladders != null || Stairs != null || SpawnType != SpawnType.Path) { iconSize = (int)(iconSize * 1.5f); }
+            if (ConnectedDoor != null || Ladders != null || Stairs != null || SpawnType != SpawnType.Path)
+            {
+                iconSize = (int)(iconSize * 1.5f);
+            }
 
             if (IsSelected || IsHighlighted)
             {
@@ -98,10 +101,32 @@ namespace Barotrauma
                     GUI.Style.Green * 0.5f, width: 1);
             }
 
+            var color = Color.WhiteSmoke;
+            if (spawnType == SpawnType.Path)
+            {
+                if (linkedTo.Count < 2)
+                {
+                    if (linkedTo.Count == 0)
+                    {
+                        color = Color.Red;
+                    }
+                    else
+                    {
+                        if (CurrentHull == null)
+                        {
+                            color = Ladders == null ? Color.Red : Color.Yellow;
+                        }
+                        else
+                        {
+                            color = Color.Yellow;
+                        }
+                    }
+                }
+            }
             GUI.SmallFont.DrawString(spriteBatch,
                 ID.ToString(),
                 new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 30),
-                Color.WhiteSmoke);
+                color);
         }
 
         public override bool IsMouseOn(Vector2 position)
@@ -124,7 +149,7 @@ namespace Barotrauma
             }
         }
 
-        public override void UpdateEditing(Camera cam)
+        public override void UpdateEditing(Camera cam, float deltaTime)
         {
             if (editingHUD == null || editingHUD.UserData != this)
             {
@@ -222,18 +247,20 @@ namespace Barotrauma
         private bool ChangeSpawnType(GUIButton button, object obj)
         {
             GUITextBlock spawnTypeText = button.Parent.GetChildByUserData("spawntypetext") as GUITextBlock;
-            spawnType += (int)button.UserData;
-            var values = Enum.GetValues(typeof(SpawnType));
+            var values = (SpawnType[])Enum.GetValues(typeof(SpawnType));
+            int currIndex = values.IndexOf(spawnType);
+            currIndex += (int)button.UserData;
             int firstIndex = 1;
             int lastIndex = values.Length - 1;
-            if ((int)spawnType > lastIndex)
+            if (currIndex > lastIndex)
             {
-                spawnType = (SpawnType)firstIndex;
+                currIndex = firstIndex;
             }
-            if ((int)spawnType < firstIndex)
+            if (currIndex < firstIndex)
             {
-                spawnType = (SpawnType)values.GetValue(lastIndex);
+                currIndex = lastIndex;
             }
+            spawnType = values[currIndex];
             spawnTypeText.Text = spawnType.ToString();
             return true;
         }

@@ -27,13 +27,13 @@ namespace Barotrauma.Items.Components
                 string signalOut = val1 > val2 ? output : falseOutput;
                 if (string.IsNullOrEmpty(signalOut)) return;
 
-                item.SendSignal(0, signalOut, "signal_out", null);
+                item.SendSignal(signalOut, "signal_out");
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
+            base.ReceiveSignal(signal, connection);
             float.TryParse(receivedSignal[0], NumberStyles.Float, CultureInfo.InvariantCulture, out val1);
             float.TryParse(receivedSignal[1], NumberStyles.Float, CultureInfo.InvariantCulture, out val2);
         }

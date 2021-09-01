@@ -10,6 +10,7 @@
     description="Allowed to manage round settings, kick players and access server logs." 
     permissions="ManageRound,Kick,SelectSub,SelectMode,ManageCampaign,ConsoleCommands,ServerLog">
     <Command name="clientlist"/>
+    <Command name="readycheck"/>
     <Command name="autorestart"/>
     <Command name="autorestartinterval"/>
     <Command name="autorestarttimer"/>
@@ -39,6 +40,7 @@
     description="Allowed to ban and kick players, manage round settings, access server logs and use nearly all console commands." 
     permissions="All">
     <Command name="clientlist"/>
+    <Command name="readycheck"/>
     <Command name="autorestart"/>
     <Command name="autorestartinterval"/>
     <Command name="autorestarttimer"/>

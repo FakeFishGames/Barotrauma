@@ -24,6 +24,7 @@ namespace Barotrauma
 
         public Effect PostProcessEffect { get; private set; }
         public Effect GradientEffect { get; private set; }
+        public Effect GrainEffect { get; private set; }
 
         public GameScreen(GraphicsDevice graphics, ContentManager content)
         {
@@ -41,11 +42,13 @@ namespace Barotrauma
             damageEffect = content.Load<Effect>("Effects/damageshader_opengl");
             PostProcessEffect = content.Load<Effect>("Effects/postprocess_opengl");
             GradientEffect = content.Load<Effect>("Effects/gradientshader_opengl");
+            GrainEffect = content.Load<Effect>("Effects/grainshader_opengl");
 #else
             //var blurEffect = content.Load<Effect>("Effects/blurshader");
             damageEffect = content.Load<Effect>("Effects/damageshader");
             PostProcessEffect = content.Load<Effect>("Effects/postprocess");
             GradientEffect = content.Load<Effect>("Effects/gradientshader");
+            GrainEffect = content.Load<Effect>("Effects/grainshader");
 #endif
 
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
@@ -77,9 +80,8 @@ namespace Barotrauma
             }
             if (Character.Controlled?.Inventory != null)
             {
-                foreach (Item item in Character.Controlled.Inventory.Items)
+                foreach (Item item in Character.Controlled.Inventory.AllItems)
                 {
-                    if (item == null) { continue; }
                     if (Character.Controlled.HasEquippedItem(item))
                     {
                         item.AddToGUIUpdateList();
@@ -169,10 +171,7 @@ namespace Barotrauma
                 Character.Controlled.ObstructVision && 
                 (Character.Controlled.ViewTarget == Character.Controlled || Character.Controlled.ViewTarget == null);
 
-            if (Character.Controlled != null)
-            {
-                GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
-            }
+            GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled?.CursorWorldPosition ?? Vector2.Zero);
 
             //------------------------------------------------------------------------
             graphics.SetRenderTarget(renderTarget);
@@ -186,7 +185,7 @@ namespace Barotrauma
             spriteBatch.End();
 
             graphics.SetRenderTarget(null);
-            GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam, renderTarget);
+            GameMain.LightManager.RenderLightMap(graphics, spriteBatch, cam, renderTarget);
 
             //------------------------------------------------------------------------
             graphics.SetRenderTarget(renderTargetBackground);
@@ -248,6 +247,8 @@ namespace Barotrauma
                 c.Draw(spriteBatch, Cam);
             }
             spriteBatch.End();
+
+            Level.Loaded?.DrawFront(spriteBatch, cam);
 
             //draw the rendertarget and particles that are only supposed to be drawn in water into renderTargetWater
             graphics.SetRenderTarget(renderTargetWater);
@@ -317,10 +318,8 @@ namespace Barotrauma
             {
                 c.DrawFront(spriteBatch, cam);
             }
-            if (Level.Loaded != null)
-            {
-                Level.Loaded.DrawFront(spriteBatch, cam);
-            }
+
+            Level.Loaded?.DrawDebugOverlay(spriteBatch, cam);            
             if (GameMain.DebugDraw)
             {
                 MapEntity.mapEntityList.ForEach(me => me.AiTarget?.Draw(spriteBatch));
@@ -332,12 +331,13 @@ namespace Barotrauma
             }
             spriteBatch.End();
 
-            if (GameMain.LightManager.LosEnabled && GameMain.LightManager.LosMode != LosMode.None && Character.Controlled != null)
+            if (GameMain.LightManager.LosEnabled && GameMain.LightManager.LosMode != LosMode.None && Lights.LightManager.ViewTarget != null)
             {
                 GameMain.LightManager.LosEffect.CurrentTechnique = GameMain.LightManager.LosEffect.Techniques["LosShader"];
 
                 GameMain.LightManager.LosEffect.Parameters["xTexture"].SetValue(renderTargetBackground);
                 GameMain.LightManager.LosEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.LosTexture);
+                GameMain.LightManager.LosEffect.Parameters["xLosAlpha"].SetValue(GameMain.LightManager.LosAlpha);
 
                 Color losColor;
                 if (GameMain.LightManager.LosMode == LosMode.Transparent)
@@ -363,6 +363,19 @@ namespace Barotrauma
                 GameMain.LightManager.LosEffect.CurrentTechnique.Passes[0].Apply();
                 Quad.Render();
             }
+
+            if (Character.Controlled is { } character)
+            {
+                float grainStrength = character.GrainStrength;
+                Rectangle screenRect = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, effect: GrainEffect);
+                GUI.DrawRectangle(spriteBatch, screenRect, Color.White, isFilled: true);
+                GrainEffect.Parameters["seed"].SetValue(Rand.Range(0f, 1f, Rand.RandSync.Unsynced));
+                GrainEffect.Parameters["intensity"].SetValue(grainStrength);
+                GrainEffect.Parameters["grainColor"].SetValue(character.GrainColor.ToVector4());
+                spriteBatch.End();
+            }
+
             graphics.SetRenderTarget(null);
 
             float BlurStrength = 0.0f;
@@ -374,7 +387,10 @@ namespace Barotrauma
             {
                 BlurStrength = Character.Controlled.BlurStrength * 0.005f;
                 DistortStrength = Character.Controlled.DistortStrength;
-                chromaticAberrationStrength -= Vector3.One * Character.Controlled.RadialDistortStrength;
+                if (GameMain.Config.EnableRadialDistortion)
+                {
+                    chromaticAberrationStrength -= Vector3.One * Character.Controlled.RadialDistortStrength;
+                }
                 chromaticAberrationStrength += new Vector3(-0.03f, -0.015f, 0.0f) * Character.Controlled.ChromaticAberrationStrength;
             }
             else
@@ -438,8 +454,8 @@ namespace Barotrauma
 
             if (!PlayerInput.PrimaryMouseButtonHeld())
             {
-                Inventory.draggingSlot = null;
-                Inventory.draggingItem = null;
+                Inventory.DraggingSlot = null;
+                Inventory.DraggingItems.Clear();
             }
         }
     }

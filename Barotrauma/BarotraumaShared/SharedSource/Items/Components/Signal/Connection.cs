@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -8,13 +7,19 @@ namespace Barotrauma.Items.Components
 {
     partial class Connection
     {
-        //how many wires can be linked to a single connector
-        public const int MaxLinked = 5;
+        //how many wires can be linked to connectors by default
+        private const int DefaultMaxWires = 5;
+
+        //how many wires a player can link to this connection
+        public readonly int MaxPlayerConnectableWires = 5;
+
+        //how many wires can be linked to this connection in total
+        public readonly int MaxWires = 5;
 
         public readonly string Name;
         public readonly string DisplayName;
 
-        private Wire[] wires;
+        private readonly Wire[] wires;
         public IEnumerable<Wire> Wires
         {
             get { return wires; }
@@ -40,7 +45,7 @@ namespace Barotrauma.Items.Components
         {
             get
             {
-                if (recipientsDirty) RefreshRecipients();
+                if (recipientsDirty) { RefreshRecipients(); }
                 return recipients;
             }
         }
@@ -61,7 +66,7 @@ namespace Barotrauma.Items.Components
             return "Connection (" + item.Name + ", " + Name + ")";
         }
 
-        public Connection(XElement element, ConnectionPanel connectionPanel)
+        public Connection(XElement element, ConnectionPanel connectionPanel, IdRemap idRemap)
         {
 
 #if CLIENT
@@ -77,7 +82,11 @@ namespace Barotrauma.Items.Components
             ConnectionPanel = connectionPanel;
             item = connectionPanel.Item;
 
-            wires = new Wire[MaxLinked];
+            MaxWires = element.GetAttributeInt("maxwires", DefaultMaxWires);
+            MaxWires = Math.Max(element.Elements().Count(e => e.Name.ToString().Equals("link", StringComparison.OrdinalIgnoreCase)), MaxWires);
+
+            MaxPlayerConnectableWires = element.GetAttributeInt("maxplayerconnectablewires", MaxWires);
+            wires = new Wire[MaxWires];
 
             IsOutput = element.Name.ToString() == "output";
             Name = element.GetAttributeString("name", IsOutput ? "output" : "input");
@@ -135,7 +144,7 @@ namespace Barotrauma.Items.Components
 
             Effects = new List<StatusEffect>();
 
-            wireId = new ushort[MaxLinked];
+            wireId = new ushort[MaxWires];
 
             foreach (XElement subElement in element.Elements())
             {
@@ -143,18 +152,17 @@ namespace Barotrauma.Items.Components
                 {
                     case "link":
                         int index = -1;
-                        for (int i = 0; i < MaxLinked; i++)
+                        for (int i = 0; i < MaxWires; i++)
                         {
-                            if (wireId[i] < 1) index = i;
+                            if (wireId[i] < 1) { index = i; }
                         }
-                        if (index == -1) break;
+                        if (index == -1) { break; }
 
                         int id = subElement.GetAttributeInt("w", 0);
-                        if (id < 0) id = 0;
-                        wireId[index] = (ushort)id;
+                        if (id < 0) { id = 0; }
+                        wireId[index] = idRemap.GetOffsetId(id);
 
                         break;
-
                     case "statuseffect":
                         Effects.Add(StatusEffect.Load(subElement, item.Name + ", connection " + Name));
                         break;
@@ -162,10 +170,15 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public void SetRecipientsDirty()
+        {
+            recipientsDirty = true;
+        }
+
         private void RefreshRecipients()
         {
             recipients.Clear();
-            for (int i = 0; i < MaxLinked; i++)
+            for (int i = 0; i < MaxWires; i++)
             {
                 if (wires[i] == null) continue;
                 Connection recipient = wires[i].OtherConnection(this);
@@ -176,7 +189,7 @@ namespace Barotrauma.Items.Components
 
         public int FindEmptyIndex()
         {
-            for (int i = 0; i < MaxLinked; i++)
+            for (int i = 0; i < MaxWires; i++)
             {
                 if (wires[i] == null) return i;
             }
@@ -185,7 +198,7 @@ namespace Barotrauma.Items.Components
 
         public int FindWireIndex(Wire wire)
         {
-            for (int i = 0; i < MaxLinked; i++)
+            for (int i = 0; i < MaxWires; i++)
             {
                 if (wires[i] == wire) return i;
             }
@@ -194,7 +207,7 @@ namespace Barotrauma.Items.Components
 
         public int FindWireIndex(Item wireItem)
         {
-            for (int i = 0; i < MaxLinked; i++)
+            for (int i = 0; i < MaxWires; i++)
             {
                 if (wires[i] == null && wireItem == null) return i;
                 if (wires[i] != null && wires[i].Item == wireItem) return i;
@@ -204,7 +217,7 @@ namespace Barotrauma.Items.Components
 
         public bool TryAddLink(Wire wire)
         {
-            for (int i = 0; i < MaxLinked; i++)
+            for (int i = 0; i < MaxWires; i++)
             {
                 if (wires[i] == null)
                 {
@@ -239,34 +252,39 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-        
-        public void SendSignal(int stepsTaken, string signal, Item source, Character sender, float power, float signalStrength = 1.0f)
+
+        public void SendSignal(Signal signal)
         {
-            for (int i = 0; i < MaxLinked; i++)
+            for (int i = 0; i < MaxWires; i++)
             {
                 if (wires[i] == null) { continue; }
 
                 Connection recipient = wires[i].OtherConnection(this);
                 if (recipient == null) { continue; }
-                if (recipient.item == this.item || recipient.item == source) { continue; }
+                if (recipient.item == this.item || signal.source?.LastSentSignalRecipients.LastOrDefault() == recipient) { continue; }
 
-                source?.LastSentSignalRecipients.Add(recipient.item);
+                signal.source?.LastSentSignalRecipients.Add(recipient);
+
+                Connection connection = recipient;
 
                 foreach (ItemComponent ic in recipient.item.Components)
                 {
-                    ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, power, signalStrength);
+                    ic.ReceiveSignal(signal, connection);
                 }
 
-                foreach (StatusEffect effect in recipient.Effects)
+                if (signal.value != "0")
                 {
-                    recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step);
+                    foreach (StatusEffect effect in recipient.Effects)
+                    {
+                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step);
+                    }
                 }
             }
         }
-
+        
         public void SendPowerProbeSignal(Item source, float power)
         {
-            for (int i = 0; i < MaxLinked; i++)
+            for (int i = 0; i < MaxWires; i++)
             {
                 if (wires[i] == null) { continue; }
 
@@ -278,7 +296,7 @@ namespace Barotrauma.Items.Components
         }
         public void ClearConnections()
         {
-            for (int i = 0; i < MaxLinked; i++)
+            for (int i = 0; i < MaxWires; i++)
             {
                 if (wires[i] == null) continue;
 
@@ -292,7 +310,7 @@ namespace Barotrauma.Items.Components
         {
             if (wireId == null) return;
             
-            for (int i = 0; i < MaxLinked; i++)
+            for (int i = 0; i < MaxWires; i++)
             {
                 if (wireId[i] == 0) { continue; }
 
@@ -304,6 +322,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (wires[i].Item.body != null) wires[i].Item.body.Enabled = false;
                     wires[i].Connect(this, false, false);
+                    wires[i].FixNodeEnds();
                 }
             }
         }
@@ -320,7 +339,7 @@ namespace Barotrauma.Items.Components
                 return wire1.Item.ID.CompareTo(wire2.Item.ID);
             });
 
-            for (int i = 0; i < MaxLinked; i++)
+            for (int i = 0; i < MaxWires; i++)
             {
                 if (wires[i] == null) continue;
                 

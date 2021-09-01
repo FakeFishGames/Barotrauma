@@ -1,27 +1,18 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 
 namespace Barotrauma
 {
     partial class AICharacter : Character
-    {
-        //characters that are further than this from the camera (and all clients)
-        //have all their limb physics bodies disabled
-        const float EnableSimplePhysicsDist = 6000.0f;        
-        const float DisableSimplePhysicsDist = EnableSimplePhysicsDist * 0.9f;
-
-        const float EnableSimplePhysicsDistSqr = EnableSimplePhysicsDist * EnableSimplePhysicsDist;
-        const float DisableSimplePhysicsDistSqr = DisableSimplePhysicsDist * DisableSimplePhysicsDist;
-        
+    {        
         private AIController aiController;
         
         public override AIController AIController
         {
             get { return aiController; }
         }
-        
-        public AICharacter(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, RagdollParams ragdoll = null)
-            : base(speciesName, position, seed, characterInfo, isNetworkPlayer, ragdoll)
+
+        public AICharacter(CharacterPrefab prefab, string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isNetworkPlayer = false, RagdollParams ragdoll = null)
+            : base(prefab, speciesName, position, seed, characterInfo, id: id, isRemotePlayer: isNetworkPlayer, ragdollParams: ragdoll)
         {
             InitProjSpecific();
         }
@@ -62,21 +53,12 @@ namespace Barotrauma
 
             if (!IsRemotePlayer && !(AIController is HumanAIController))
             {
-                float characterDist = float.MaxValue;
-#if CLIENT
-                characterDist = Vector2.DistanceSquared(cam.GetPosition(), WorldPosition);
-#elif SERVER
-                if (GameMain.Server != null)
-                {
-                    characterDist = GetClosestDistance();
-                }
-#endif
-
-                if (characterDist > EnableSimplePhysicsDistSqr)
+                float characterDistSqr = GetDistanceSqrToClosestPlayer();
+                if (characterDistSqr > MathUtils.Pow2(Params.DisableDistance * 0.5f))
                 {
                     AnimController.SimplePhysicsEnabled = true;
                 }
-                else if (characterDist < DisableSimplePhysicsDistSqr)
+                else if (characterDistSqr < MathUtils.Pow2(Params.DisableDistance * 0.5f * 0.9f))
                 {
                     AnimController.SimplePhysicsEnabled = false;
                 }
@@ -90,50 +72,5 @@ namespace Barotrauma
                 aiController.Update(deltaTime);
             }
         }
-
-#if SERVER
-        // Gets the closest distance, either an active player character or spectator
-        private float GetClosestDistance()
-        {
-            float minDist = float.MaxValue;
-
-            for (int i = 0; i < GameMain.Server.ConnectedClients.Count; i++)
-            {
-                var spectatePos = GameMain.Server.ConnectedClients[i].SpectatePos;
-                if (spectatePos != null)
-                {
-                    float dist = Vector2.DistanceSquared(spectatePos.Value, WorldPosition);
-
-                    if (dist < minDist)
-                    {
-                        minDist = dist;
-                    }
-                    if (dist < DisableSimplePhysicsDistSqr)
-                    {
-                        return dist;
-                    }
-                }
-            }
-
-            foreach (Character c in CharacterList)
-            {
-                if (c != this && c.IsRemotePlayer)
-                {
-                    float dist = Vector2.DistanceSquared(c.WorldPosition, WorldPosition);
-
-                    if (dist < minDist)
-                    {
-                        minDist = dist;
-                    }
-                    if (dist < DisableSimplePhysicsDistSqr)
-                    {
-                        return dist;
-                    }
-                }
-            }
-
-            return minDist;
-        }
-#endif
     }
 }

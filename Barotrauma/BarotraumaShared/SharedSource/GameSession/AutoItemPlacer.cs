@@ -25,11 +25,12 @@ namespace Barotrauma
                 subs.ForEach(s => s.Info.InitialSuppliesSpawned = true);
             }
             
-            foreach (var wreck in Submarine.Loaded)
+            foreach (var sub in Submarine.Loaded)
             {
-                if (wreck.Info.IsWreck)
+                if (sub.Info.Type == SubmarineType.Wreck || 
+                    sub.Info.Type == SubmarineType.BeaconStation)
                 {
-                    Place(wreck.ToEnumerable());
+                    Place(sub.ToEnumerable());
                 }
             }
 
@@ -195,16 +196,19 @@ namespace Barotrauma
             int amount = Rand.Range(validContainer.Value.MinAmount, validContainer.Value.MaxAmount + 1, Rand.RandSync.Server);
             for (int i = 0; i < amount; i++)
             {
-                if (validContainer.Key.Inventory.IsFull())
+                if (validContainer.Key.Inventory.IsFull(takeStacksIntoAccount: true))
                 {
                     containers.Remove(validContainer.Key);
                     break;
                 }
+                if (!validContainer.Key.Inventory.CanBePut(itemPrefab)) { break; }
                 var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine)
                 {
                     SpawnedInOutpost = validContainer.Key.Item.SpawnedInOutpost,
+                    AllowStealing = validContainer.Key.Item.AllowStealing,
                     OriginalModuleIndex = validContainer.Key.Item.OriginalModuleIndex,
-                    OriginalContainerID = validContainer.Key.Item.OriginalID
+                    OriginalContainerIndex = 
+                        Item.ItemList.Where(it => it.Submarine == validContainer.Key.Item.Submarine && it.OriginalModuleIndex == validContainer.Key.Item.OriginalModuleIndex).ToList().IndexOf(validContainer.Key.Item)
                 };
                 foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
                 {

@@ -48,10 +48,10 @@ namespace Barotrauma
             List<EventPrefab> eventPrefabs = new List<EventPrefab>(PrefabList);
             foreach (var eventSet in List)
             {
-                eventPrefabs.AddRange(eventSet.EventPrefabs.Select(ep => ep.First));
+                eventPrefabs.AddRange(eventSet.EventPrefabs.Select(ep => ep.prefab));
                 foreach (var childSet in eventSet.ChildSets)
                 {
-                    eventPrefabs.AddRange(childSet.EventPrefabs.Select(ep => ep.First));
+                    eventPrefabs.AddRange(childSet.EventPrefabs.Select(ep => ep.prefab));
                 }
             }
             return eventPrefabs;
@@ -64,6 +64,8 @@ namespace Barotrauma
 
         //0-100
         public readonly float MinLevelDifficulty, MaxLevelDifficulty;
+
+        public readonly string BiomeIdentifier;
 
         public readonly LevelData.LevelType LevelType;
 
@@ -83,15 +85,20 @@ namespace Barotrauma
 
         public readonly bool IgnoreCoolDown;
 
-        public readonly bool PerRuin;
-        public readonly bool PerWreck;
+        public readonly bool PerRuin, PerCave, PerWreck;
+        public readonly bool DisableInHuntingGrounds;
 
         public readonly bool OncePerOutpost;
 
+        public readonly bool DelayWhenCrewAway;
+
+        public readonly bool TriggerEventCooldown;
+
+        public readonly bool Additive;
+
         public readonly Dictionary<string, float> Commonness;
 
-        //Pair.First: event prefab, Pair.Second: commonness
-        public readonly List<Pair<EventPrefab, float>> EventPrefabs;
+        public readonly List<(EventPrefab prefab, float commonness, float probability)> EventPrefabs;
 
         public readonly List<EventSet> ChildSets;
 
@@ -105,11 +112,14 @@ namespace Barotrauma
         {
             DebugIdentifier = element.GetAttributeString("identifier", null) ?? debugIdentifier;
             Commonness = new Dictionary<string, float>();
-            EventPrefabs = new List<Pair<EventPrefab, float>>();
+            EventPrefabs =  new List<(EventPrefab prefab, float commonness, float probability)>();
             ChildSets = new List<EventSet>();
 
+            BiomeIdentifier = element.GetAttributeString("biome", string.Empty);
             MinLevelDifficulty = element.GetAttributeFloat("minleveldifficulty", 0);
             MaxLevelDifficulty = Math.Max(element.GetAttributeFloat("maxleveldifficulty", 100), MinLevelDifficulty);
+
+            Additive = element.GetAttributeBool("additive", false);
 
             string levelTypeStr = element.GetAttributeString("leveltype", "LocationConnection");
             if (!Enum.TryParse(levelTypeStr, true, out LevelType))
@@ -133,12 +143,16 @@ namespace Barotrauma
             MinMissionTime = element.GetAttributeFloat("minmissiontime", 0.0f);
 
             AllowAtStart = element.GetAttributeBool("allowatstart", false);
-            IgnoreCoolDown = element.GetAttributeBool("ignorecooldown", parentSet?.IgnoreCoolDown ?? false);
             PerRuin = element.GetAttributeBool("perruin", false);
+            PerCave = element.GetAttributeBool("percave", false);
             PerWreck = element.GetAttributeBool("perwreck", false);
-            OncePerOutpost = element.GetAttributeBool("perwreck", false);
+            DisableInHuntingGrounds = element.GetAttributeBool("disableinhuntinggrounds", false);
+            IgnoreCoolDown = element.GetAttributeBool("ignorecooldown", parentSet?.IgnoreCoolDown ?? (PerRuin || PerCave || PerWreck));
+            DelayWhenCrewAway = element.GetAttributeBool("delaywhencrewaway", !PerRuin && !PerCave && !PerWreck);
+            OncePerOutpost = element.GetAttributeBool("onceperoutpost", false);
+            TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
 
-            Commonness[""] = 1.0f;
+            Commonness[""] = element.GetAttributeFloat("commonness", 1.0f);
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -173,13 +187,14 @@ namespace Barotrauma
                             else
                             {
                                 float commonness = subElement.GetAttributeFloat("commonness", prefab.Commonness);
-                                EventPrefabs.Add(new Pair<EventPrefab, float>( prefab, commonness));
+                                float probability = subElement.GetAttributeFloat("probability", prefab.Probability);
+                                EventPrefabs.Add((prefab, commonness, probability));
                             }
                         }
                         else
                         {
                             var prefab = new EventPrefab(subElement);
-                            EventPrefabs.Add(new Pair<EventPrefab, float>(prefab, prefab.Commonness));
+                            EventPrefabs.Add((prefab, prefab.Commonness, prefab.Probability));
                         }
                         break;
                 }
@@ -331,13 +346,13 @@ namespace Barotrauma
             {
                 if (thisSet.ChooseRandom)
                 {
-                    List<Pair<EventPrefab, float>> unusedEvents = new List<Pair<EventPrefab, float>>(thisSet.EventPrefabs);
+                    var unusedEvents = new List<(EventPrefab prefab, float commonness, float probability)>(thisSet.EventPrefabs);
                     for (int i = 0; i < thisSet.EventCount; i++)
                     {
-                        var eventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => e.Second).ToList(), Rand.RandSync.Unsynced);
-                        if (eventPrefab != null)
+                        var eventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => e.commonness).ToList(), Rand.RandSync.Unsynced);
+                        if (eventPrefab.prefab != null)
                         {
-                            AddEvent(stats, eventPrefab.First);
+                            AddEvent(stats, eventPrefab.prefab);
                             unusedEvents.Remove(eventPrefab);
                         }
                     }
@@ -346,7 +361,7 @@ namespace Barotrauma
                 {
                     foreach (var eventPrefab in thisSet.EventPrefabs)
                     {
-                        AddEvent(stats, eventPrefab.First);
+                        AddEvent(stats, eventPrefab.prefab);
                     }
                 }
                 foreach (var childSet in thisSet.ChildSets)

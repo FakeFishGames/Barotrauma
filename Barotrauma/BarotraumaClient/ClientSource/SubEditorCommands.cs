@@ -120,10 +120,12 @@ namespace Barotrauma
         /// </summary>
         /// <param name="receivers">Entities that were deleted or added</param>
         /// <param name="wasDeleted">Whether or not all entities are or are going to be deleted</param>
-        public AddOrDeleteCommand(List<MapEntity> receivers, bool wasDeleted)
+        /// <param name="handleInventoryBehavior">Ignore item inventories when set to false, workaround for pasting</param>
+        public AddOrDeleteCommand(List<MapEntity> receivers, bool wasDeleted, bool handleInventoryBehavior = true)
         {
+            Debug.Assert(receivers.Count > 0, "Command has 0 receivers");
             WasDeleted = wasDeleted;
-            Receivers = receivers;
+            Receivers = new List<MapEntity>(receivers);
 
             try
             {
@@ -131,7 +133,7 @@ namespace Barotrauma
                 {
                     if (receiver is Item it && it.ParentInventory != null)
                     {
-                        PreviousInventories.Add(new InventorySlotItem(Array.IndexOf(it.ParentInventory.Items, it), it), it.ParentInventory);
+                        PreviousInventories.Add(new InventorySlotItem(it.ParentInventory.FindIndex(it), it), it.ParentInventory);
                     }
                 }
 
@@ -145,20 +147,22 @@ namespace Barotrauma
                         foreach (ItemContainer component in it.GetComponents<ItemContainer>())
                         {
                             if (component.Inventory == null) { continue; }
-
-                            itemsToDelete.AddRange(component.Inventory.Items.Where(item => item != null && !item.Removed));
+                            itemsToDelete.AddRange(component.Inventory.AllItems.Where(item => !item.Removed));
                         }
                     }
                 }
 
-                if (itemsToDelete.Any())
+                if (itemsToDelete.Any() && handleInventoryBehavior)
                 {
-                    ContainedItemsCommand.Add(new AddOrDeleteCommand(itemsToDelete, true));
-                    foreach (MapEntity item in itemsToDelete)
+                    ContainedItemsCommand.Add(new AddOrDeleteCommand(itemsToDelete, wasDeleted));
+                    if (wasDeleted)
                     {
-                        if (item != null && !item.Removed)
+                        foreach (MapEntity item in itemsToDelete)
                         {
-                            item.Remove();
+                            if (item != null && !item.Removed)
+                            {
+                                item.Remove();
+                            }
                         }
                     }
                 }
@@ -226,10 +230,10 @@ namespace Barotrauma
                 Debug.Assert(Receivers.All(entity => entity.GetReplacementOrThis().Removed), "Tried to redo a deletion but some items were not deleted");
 
                 List<MapEntity> clones = MapEntity.Clone(CloneList);
-                for (int i = 0; i < Math.Min(Receivers.Count, clones.Count); i++)
+                int length = Math.Min(Receivers.Count, clones.Count);
+                for (int i = 0; i < length; i++)
                 {
-                    MapEntity clone = clones[i];
-                    MapEntity receiver = Receivers[i];
+                    MapEntity clone = clones[i], receiver = Receivers[i];
 
                     if (receiver.GetReplacementOrThis() is Item item && clone is Item cloneItem)
                     {
@@ -252,6 +256,11 @@ namespace Barotrauma
                     }
 
                     receiver.GetReplacementOrThis().ReplacedBy = clone;
+                }
+
+                for (int i = 0; i < length; i++)
+                {
+                    MapEntity clone = clones[i], receiver = Receivers[i];
 
                     if (clone is Item it)
                     {
@@ -300,12 +309,12 @@ namespace Barotrauma
             {
                 return Receivers.Count > 1
                     ? TextManager.GetWithVariable("Undo.RemovedItemsMultiple", "[count]", Receivers.Count.ToString())
-                    : TextManager.GetWithVariable("Undo.RemovedItem", "[item]", Receivers.FirstOrDefault()?.Name);
+                    : TextManager.GetWithVariable("Undo.RemovedItem", "[item]", Receivers.FirstOrDefault()?.Name ?? "null");
             }
 
             return Receivers.Count > 1
                 ? TextManager.GetWithVariable("Undo.AddedItemsMultiple", "[count]", Receivers.Count.ToString())
-                : TextManager.GetWithVariable("Undo.AddedItem", "[item]", Receivers.FirstOrDefault()?.Name);
+                : TextManager.GetWithVariable("Undo.AddedItem", "[item]", Receivers.FirstOrDefault()?.Name ?? "null");
         }
     }
 
@@ -323,7 +332,7 @@ namespace Barotrauma
         public InventoryPlaceCommand(Inventory inventory, List<Item> items, bool dropped)
         {
             Inventory = inventory;
-            Receivers = items.Select(item => new InventorySlotItem(Array.IndexOf(inventory.Items, item), item)).ToList();
+            Receivers = items.Select(item => new InventorySlotItem(inventory.FindIndex(item), item)).ToList();
             wasDropped = dropped;
         }
 

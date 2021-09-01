@@ -50,6 +50,11 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        /// <summary>
+        /// Defines items that boost the weapon functionality, like battery cell for stun batons.
+        /// </summary>
+        public readonly string[] PreferredContainedItems;
+
         public MeleeWeapon(Item item, XElement element)
             : base(item, element)
         {
@@ -57,10 +62,12 @@ namespace Barotrauma.Items.Components
             {
                 if (!subElement.Name.ToString().Equals("attack", StringComparison.OrdinalIgnoreCase)) { continue; }
                 Attack = new Attack(subElement, item.Name + ", MeleeWeapon");
+                Attack.DamageRange = item.body == null ? 10.0f : ConvertUnits.ToDisplayUnits(item.body.GetMaxExtent());
             }
             item.IsShootable = true;
             // TODO: should define this in xml if we have melee weapons that don't require aim to use
             item.RequireAimToUse = true;
+            PreferredContainedItems = element.GetAttributeStringArray("preferredcontaineditems", new string[0], convertToLowerInvariant: true);
         }
 
         public override void Equip(Character character)
@@ -76,11 +83,9 @@ namespace Barotrauma.Items.Components
             if (Item.RequireAimToUse && !character.IsKeyDown(InputType.Aim) || hitting) { return false; }
 
             //don't allow hitting if the character is already hitting with another weapon
-            for (int i = 0; i < 2; i++ )
+            foreach (Item heldItem in character.HeldItems)
             {
-                if (character.SelectedItems[i] == null || character.SelectedItems[i] == Item) { continue; }
-
-                var otherWeapon = character.SelectedItems[i].GetComponent<MeleeWeapon>();
+                var otherWeapon = heldItem.GetComponent<MeleeWeapon>();
                 if (otherWeapon == null) { continue; }
                 if (otherWeapon.hitting) { return false; }
             }
@@ -127,7 +132,12 @@ namespace Barotrauma.Items.Components
             }
             return false;
         }
-        
+
+        public override bool SecondaryUse(float deltaTime, Character character = null)
+        {
+            return characterUsable || character == null;
+        }
+
         public override void Drop(Character dropper)
         {
             base.Drop(dropper);
@@ -143,13 +153,15 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             if (!item.body.Enabled) { impactQueue.Clear(); return; }
-            if (!picker.HasSelectedItem(item)) { impactQueue.Clear(); IsActive = false; }
+            if (picker == null && !picker.HeldItems.Contains(item)) { impactQueue.Clear(); IsActive = false; }
 
             while (impactQueue.Count > 0)
             {
                 var impact = impactQueue.Dequeue();
                 HandleImpact(impact.Body);
             }
+            //in case handling the impact does something to the picker
+            if (picker == null) { return; }
 
             reloadTimer -= deltaTime;
             if (reloadTimer < 0) { reloadTimer = 0; }
@@ -242,12 +254,14 @@ namespace Barotrauma.Items.Components
                 return true;
             }
 
-            //ignore collision if there's a wall between the user and the weapon to prevent hitting through walls
+            contact.GetWorldManifold(out Vector2 normal, out var points);
+
+            //ignore collision if there's a wall between the user and the contact point to prevent hitting through walls
             if (Submarine.PickBody(User.AnimController.AimSourceSimPos,
-                item.SimPosition,
+                points[0],
                 collisionCategory: Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking,
                 allowInsideFixture: true,
-                customPredicate: (Fixture fixture) => { return fixture.CollidesWith.HasFlag(Physics.CollisionItem); }) != null)
+                customPredicate: (Fixture fixture) => { return fixture.CollidesWith.HasFlag(Physics.CollisionItem) && fixture.Body != f2.Body; }) != null)
             {
                 return false;
             }

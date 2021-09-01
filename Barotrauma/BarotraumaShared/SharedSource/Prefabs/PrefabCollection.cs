@@ -35,13 +35,13 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns the active prefab with identifier k.
+        /// Returns the active prefab with the identifier.
         /// </summary>
-        /// <param name="k">Prefab identifier</param>
-        /// <returns>Active prefab with identifier k</returns>
-        public T this[string k]
+        /// <param name="identifier">Prefab identifier</param>
+        /// <returns>Active prefab with the identifier</returns>
+        public T this[string identifier]
         {
-            get { return prefabs[k].Last(); }
+            get { return prefabs[identifier].Last(); }
         }
 
         /// <summary>
@@ -63,13 +63,13 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns true if a prefab with identifier k exists, false otherwise.
+        /// Returns true if a prefab with the identifier exists, false otherwise.
         /// </summary>
-        /// <param name="k">Prefab identifier</param>
-        /// <returns>Whether a prefab with identifier k exists or not</returns>
-        public bool ContainsKey(string k)
+        /// <param name="identifier">Prefab identifier</param>
+        /// <returns>Whether a prefab with the identifier exists or not</returns>
+        public bool ContainsKey(string identifier)
         {
-            return prefabs.ContainsKey(k);
+            return prefabs.ContainsKey(identifier);
         }
 
         /// <summary>
@@ -88,35 +88,29 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Prefab \"{prefab.OriginalName}\" has no identifier!");
             }
 
-            List<T> newList = null;
-            if (!prefabs.TryGetValue(prefab.Identifier, out List<T> list))
+            bool basePrefabExists = prefabs.TryGetValue(prefab.Identifier, out List<T> list);
+
+            //Handle bad overrides and duplicates
+            if (basePrefabExists && !isOverride)
             {
-                newList = new List<T>(); newList.Add(null);
-                list = newList;
+                DebugConsole.ThrowError($"Failed to add the prefab \"{prefab.OriginalName}\", \"{prefab.Identifier}\" ({typeof(T)}): a prefab with the same identifier already exists; try overriding\n{Environment.StackTrace}");
+                return;
             }
 
-            if (isOverride)
+            //Add to list
+            if (!basePrefabExists)
             {
-                /*if (list[0] == null)
-                {
-                    DebugConsole.ThrowError($"Error registering \"{prefab.OriginalName}\", \"{prefab.Identifier}\" ({typeof(T).ToString()}): overriding when base doesn't exist");
-                    return;
-                }*/
-                list.Add(prefab);
+                list = new List<T>();
             }
-            else
-            {
-                if (list[0] != null)
-                {
-                    DebugConsole.ThrowError($"Error registering \"{prefab.OriginalName}\", \"{prefab.Identifier}\" ({typeof(T).ToString()}): base already exists; try overriding");
-                    return;
-                }
-                list[0] = prefab;
-            }
+
+            list.Add(prefab);
 
             Sort(list);
 
-            if (newList != null) { prefabs.Add(prefab.Identifier, newList); }
+            if (!basePrefabExists)
+            {
+                prefabs.Add(prefab.Identifier, list);
+            }
         }
 
         /// <summary>

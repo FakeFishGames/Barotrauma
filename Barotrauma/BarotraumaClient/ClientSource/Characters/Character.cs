@@ -55,6 +55,11 @@ namespace Barotrauma
             set
             {
                 if (controlled == value) return;
+                if ((!(controlled is null)) && (!(Screen.Selected?.Cam is null)) && value is null)
+                {
+                    Screen.Selected.Cam.TargetPos = Vector2.Zero;
+                    Lights.LightManager.ViewTarget = null;
+                }
                 controlled = value;
                 if (controlled != null) controlled.Enabled = true;
                 CharacterHealth.OpenHealthWindow = null;                
@@ -96,6 +101,15 @@ namespace Barotrauma
             get { return chromaticAberrationStrength; }
             set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
+        
+        public Color GrainColor { get; set; }
+        
+        private float grainStrength;
+        public float GrainStrength
+        {
+            get => grainStrength;
+            set => grainStrength = Math.Max(0, value);
+        }
 
         private readonly List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> BloodEmitters
@@ -114,6 +128,9 @@ namespace Barotrauma
         {
             get { return gibEmitters; }
         }
+
+        public static bool IsMouseOnUI => GUI.MouseOn != null ||
+                    (CharacterInventory.IsMouseOnInventory() && !CharacterInventory.DraggingItemToWorld);
 
         public class ObjectiveEntity
         {
@@ -184,12 +201,17 @@ namespace Barotrauma
         /// </summary>
         public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
-            if (DisableControls || GUI.PauseMenuOpen || GUI.SettingsMenuOpen)
+            if (DisableControls || GUI.InputBlockingMenuOpen)
             {
                 foreach (Key key in keys)
                 {
-                    if (key == null) continue;
+                    if (key == null) { continue; }
                     key.Reset();
+                }
+                if (GUI.InputBlockingMenuOpen)
+                {
+                    cursorPosition = 
+                        Position + PlayerInput.MouseSpeed.ClampLength(10.0f); //apply a little bit of movement to the cursor pos to prevent AFK kicking
                 }
             }
             else
@@ -217,8 +239,7 @@ namespace Barotrauma
                 float targetOffsetAmount = 0.0f;
                 if (moveCam)
                 {
-                    if (NeedsAir &&
-                        pressureProtection < 80.0f &&
+                    if (NeedsAir && !IsProtectedFromPressure() &&
                         (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 0.0f))
                     {
                         float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
@@ -264,13 +285,13 @@ namespace Barotrauma
                 {
                     cam.OffsetAmount = targetOffsetAmount = item.Prefab.OffsetOnSelected * item.OffsetOnSelectedMultiplier;
                 }
-                else if (SelectedConstruction != null && ViewTarget == null && 
+                else if (SelectedConstruction != null && ViewTarget == null &&
                     SelectedConstruction.Components.Any(ic => ic?.GuiFrame != null && ic.ShouldDrawHUD(this)))
                 {
                     cam.OffsetAmount = targetOffsetAmount = 0.0f;
-                    cursorPosition = 
-                        SelectedConstruction.Position + 
-                        new Vector2(cursorPosition.X % 10.0f, cursorPosition.Y % 10.0f); //apply a little bit of movement to the cursor pos to prevent AFK kicking
+                    cursorPosition =
+                        SelectedConstruction.Position +
+                        PlayerInput.MouseSpeed.ClampLength(10.0f); //apply a little bit of movement to the cursor pos to prevent AFK kicking
                 }
                 else if (!GameMain.Config.EnableMouseLook)
                 {
@@ -284,6 +305,10 @@ namespace Barotrauma
                         {
                             cam.OffsetAmount = targetOffsetAmount = 0.0f;
                         }
+                    }
+                    else if (IsMouseOnUI)
+                    {
+                        targetOffsetAmount = cam.OffsetAmount;
                     }
                     else if (Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
                     {
@@ -303,7 +328,7 @@ namespace Barotrauma
                 DoInteractionUpdate(deltaTime, mouseSimPos);
             }
 
-            if (!GUI.PauseMenuOpen && !GUI.SettingsMenuOpen)
+            if (!GUI.InputBlockingMenuOpen)
             {
                 if (SelectedConstruction != null &&
                     (SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)) ||
@@ -375,25 +400,63 @@ namespace Barotrauma
 
         partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log)
         {
+            HintManager.OnCharacterKilled(this);
+
             if (GameMain.NetworkMember != null && controlled == this)
             {
                 string chatMessage = CauseOfDeath.Type == CauseOfDeathType.Affliction ?
                     CauseOfDeath.Affliction.SelfCauseOfDeathDescription :
                     TextManager.Get("Self_CauseOfDeathDescription." + CauseOfDeath.Type.ToString(), fallBackTag: "Self_CauseOfDeathDescription.Damage");
 
-                if (GameMain.Client != null) chatMessage += " " + TextManager.Get("DeathChatNotification");
+                if (GameMain.Client != null) { chatMessage += " " + TextManager.Get("DeathChatNotification"); }
+
+                if (GameMain.NetworkMember.RespawnManager?.UseRespawnPrompt ?? false)
+                {
+                    CoroutineManager.InvokeAfter(() =>
+                    {
+                        if (controlled != null || (!(GameMain.GameSession?.IsRunning ?? false))) { return; }
+                        var respawnPrompt = new GUIMessageBox(
+                            TextManager.Get("tutorial.tryagainheader"), TextManager.Get("respawnquestionprompt"),
+                            new string[] { TextManager.Get("respawnquestionpromptrespawn"), TextManager.Get("respawnquestionpromptwait") });
+                        respawnPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                        {
+                            GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: false);
+                            respawnPrompt.Close();
+                            return true;
+                        };
+                        respawnPrompt.Buttons[1].OnClicked += (btn, userdata) =>
+                        {
+                            GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: true);
+                            respawnPrompt.Close();
+                            return true;
+                        };
+                    }, delay: 5.0f);
+                }
 
                 GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
                 GameMain.LightManager.LosEnabled = false;
                 controlled = null;
+                if (!(Screen.Selected?.Cam is null))
+                {
+                    Screen.Selected.Cam.TargetPos = Vector2.Zero;
+                    Lights.LightManager.ViewTarget = null;
+                }
             }
-            
+
             PlaySound(CharacterSound.SoundType.Die);
         }
 
         partial void DisposeProjSpecific()
         {
-            if (controlled == this) controlled = null;
+            if (controlled == this)
+            {
+                controlled = null;
+                if (!(Screen.Selected?.Cam is null))
+                {
+                    Screen.Selected.Cam.TargetPos = Vector2.Zero;
+                    Lights.LightManager.ViewTarget = null;
+                }
+            }
 
             if (GameMain.GameSession?.CrewManager != null &&
                 GameMain.GameSession.CrewManager.GetCharacters().Contains(this))
@@ -449,15 +512,17 @@ namespace Barotrauma
                 {
                     continue;
                 }
-                if (item.body != null && !item.body.Enabled) continue;
-                if (item.ParentInventory != null) continue;
-                if (ignoredItems != null && ignoredItems.Contains(item)) continue;
+                if (item.body != null && !item.body.Enabled) { continue; }
+                if (item.ParentInventory != null) { continue; }
+                if (ignoredItems != null && ignoredItems.Contains(item)) { continue; }
+                if (item.Prefab.RequireCampaignInteract && item.CampaignInteractionType == CampaignMode.InteractionType.None) { continue; }
                 if (Screen.Selected is SubEditorScreen editor && editor.WiringMode && item.GetComponent<ConnectionPanel>() == null) { continue; }
 
                 if (draggingItemToWorld)
                 {
                     if (item.OwnInventory == null || 
-                        !item.OwnInventory.CanBePut(CharacterInventory.draggingItem) ||
+                        !item.OwnInventory.Container.AllowDragAndDrop ||
+                        !item.OwnInventory.CanBePut(CharacterInventory.DraggingItems.First()) ||
                         !CanAccessInventory(item.OwnInventory))
                     {
                         continue;
@@ -520,7 +585,7 @@ namespace Barotrauma
 
             foreach (Character c in CharacterList)
             {
-                if (!CanInteractWith(c, checkVisibility: false)) continue;
+                if (!CanInteractWith(c, checkVisibility: false) || (c.AnimController?.SimplePhysicsEnabled ?? true)) { continue; }
 
                 float dist = Vector2.DistanceSquared(mouseSimPos, c.SimPosition);
                 if (dist < maxDist * maxDist && (closestCharacter == null || dist < closestDist))
@@ -561,7 +626,7 @@ namespace Barotrauma
         {
             if (InvisibleTimer > 0.0f)
             {
-                if (Controlled == null || (Controlled.CharacterHealth.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
+                if (Controlled == null || Controlled == this || (Controlled.CharacterHealth.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
                 {
                     InvisibleTimer = 0.0f;
                 }
@@ -579,15 +644,15 @@ namespace Barotrauma
                 {
                     soundTimer -= deltaTime;
                 }
-                else if (AIController != null)
+                else if (AIController is EnemyAIController enemyAI)
                 {
-                    switch (AIController.State)
+                    switch (enemyAI.State)
                     {
                         case AIState.Attack:
                             PlaySound(CharacterSound.SoundType.Attack);
                             break;
                         default:
-                            var petBehavior = (AIController as EnemyAIController)?.PetBehavior;
+                            var petBehavior = enemyAI.PetBehavior;
                             if (petBehavior != null && petBehavior.Happiness < petBehavior.MaxHappiness * 0.25f)
                             {
                                 PlaySound(CharacterSound.SoundType.Unhappy);
@@ -621,7 +686,7 @@ namespace Barotrauma
                     else
                     {
                         //Ideally it shouldn't send the character entirely if we can't see them but /shrug, this isn't the most hacker-proof game atm
-                        hudInfoVisible = controlled.CanSeeCharacter(this, controlled.ViewTarget == null ? controlled.WorldPosition : controlled.ViewTarget.WorldPosition);
+                        hudInfoVisible = controlled.CanSeeTarget(this, controlled.ViewTarget);
                     }
                     hudInfoTimer = Rand.Range(0.5f, 1.0f);
                 }
@@ -634,9 +699,9 @@ namespace Barotrauma
             }
         }
 
-        partial void SetOrderProjSpecific(Order order, string orderOption)
+        partial void SetOrderProjSpecific(Order order, string orderOption, int priority)
         {
-            GameMain.GameSession?.CrewManager?.AddCurrentOrderIcon(this, order, orderOption);
+            GameMain.GameSession?.CrewManager?.AddCurrentOrderIcon(this, order, orderOption, priority);
         }
 
         public static void AddAllToGUIUpdateList()
@@ -686,7 +751,7 @@ namespace Barotrauma
         
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
         {
-            if (!Enabled || InvisibleTimer > 0.0f) { return; }
+            if (!Enabled || InvisibleTimer > 0.0f || (AnimController?.SimplePhysicsEnabled ?? true)) { return; }
 
             if (GameMain.DebugDraw)
             {
@@ -741,7 +806,7 @@ namespace Barotrauma
 
             if (speechBubbleTimer > 0.0f)
             {
-                GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 30,
+                GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 5,
                     speechBubbleColor * Math.Min(speechBubbleTimer, 1.0f), 0.0f,
                     Math.Min(speechBubbleTimer, 1.0f));
             }
@@ -803,19 +868,26 @@ namespace Barotrauma
                     Color nameColor = Color.White;
                     if (Controlled != null && TeamID != Controlled.TeamID)
                     {
-                        nameColor = TeamID == TeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
+                        if (TeamID == CharacterTeamType.FriendlyNPC)
+                        {
+                            nameColor = UniqueNameColor ?? Color.SkyBlue;
+                        }
+                        else
+                        {
+                            nameColor = GUI.Style.Red;
+                        }
                     }
                     if (CampaignInteractionType != CampaignMode.InteractionType.None && AllowCustomInteract)
                     {
                         var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionBubble." + CampaignInteractionType);
                         if (iconStyle != null)
                         {
-                            Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.WorldPosition ?? WorldPosition + Vector2.UnitY * 100.0f;
+                            Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.body?.DrawPosition ?? DrawPosition + Vector2.UnitY * 100.0f;
                             Vector2 iconPos = headPos;
                             iconPos.Y = -iconPos.Y;
                             nameColor = iconStyle.Color;
                             var icon = iconStyle.Sprites[GUIComponent.ComponentState.None].First();
-                            float iconScale = 30.0f / icon.Sprite.size.X / cam.Zoom;                 
+                            float iconScale = (30.0f / icon.Sprite.size.X / cam.Zoom) * GUI.Scale;
                             icon.Sprite.Draw(spriteBatch, iconPos + new Vector2(-35.0f, -25.0f), iconStyle.Color * hudInfoAlpha, scale: iconScale);
                         }
                     }
@@ -835,7 +907,7 @@ namespace Barotrauma
                     var iconStyle = GUI.Style.GetComponentStyle("PetIcon." + petStatus);
                     if (iconStyle != null)
                     {
-                        Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.WorldPosition ?? WorldPosition + Vector2.UnitY * 100.0f;
+                        Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.body?.DrawPosition ?? DrawPosition + Vector2.UnitY * 100.0f;
                         Vector2 iconPos = headPos;
                         iconPos.Y = -iconPos.Y;
                         var icon = iconStyle.Sprites[GUIComponent.ComponentState.None].First();
@@ -902,7 +974,7 @@ namespace Barotrauma
             }
             var selectedSound = matchingSounds.GetRandom();
             if (selectedSound?.Sound == null) { return; }
-            soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, AnimController.WorldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: CurrentHull);
+            soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, AnimController.WorldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: CurrentHull, ignoreMuffling: selectedSound.IgnoreMuffling);
             soundTimer = soundInterval;
         }
 

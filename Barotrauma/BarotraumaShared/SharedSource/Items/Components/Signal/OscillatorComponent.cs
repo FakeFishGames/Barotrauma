@@ -59,29 +59,29 @@ namespace Barotrauma.Items.Components
                     float pulseInterval = 1.0f / frequency;
                     while (phase >= pulseInterval)
                     {
-                        item.SendSignal(0, "1", "signal_out", null);
+                        item.SendSignal("1", "signal_out");
                         phase -= pulseInterval;
                     }
                     break;
                 case WaveType.Square:
                     phase = (phase + deltaTime * frequency) % 1.0f;
-                    item.SendSignal(0, phase < 0.5f ? "0" : "1", "signal_out", null);
+                    item.SendSignal(phase < 0.5f ? "0" : "1", "signal_out");
                     break;
                 case WaveType.Sine:
                     phase = (phase + deltaTime * frequency) % 1.0f;
-                    item.SendSignal(0, Math.Sin(phase * MathHelper.TwoPi).ToString(CultureInfo.InvariantCulture), "signal_out", null);
+                    item.SendSignal(Math.Sin(phase * MathHelper.TwoPi).ToString(CultureInfo.InvariantCulture), "signal_out");
                     break;
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "set_frequency":
                 case "frequency_in":
                     float newFrequency;
-                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out newFrequency))
+                    if (float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out newFrequency))
                     {
                         Frequency = newFrequency;
                     }
@@ -90,7 +90,7 @@ namespace Barotrauma.Items.Components
                 case "set_outputtype":
                 case "set_wavetype":
                     WaveType newOutputType;
-                    if (Enum.TryParse(signal, out newOutputType))
+                    if (Enum.TryParse(signal.value, out newOutputType))
                     {
                         OutputType = newOutputType;
                     }

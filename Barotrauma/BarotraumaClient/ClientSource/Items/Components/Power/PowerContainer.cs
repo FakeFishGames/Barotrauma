@@ -98,8 +98,11 @@ namespace Barotrauma.Items.Components
         
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            float chargeRatio = charge / capacity;
-            chargeIndicator.Color = ToolBox.GradientLerp(chargeRatio, Color.Red, Color.Orange, Color.Green);
+            if (chargeIndicator != null)
+            {
+                float chargeRatio = charge / capacity;
+                chargeIndicator.Color = ToolBox.GradientLerp(chargeRatio, Color.Red, Color.Orange, Color.Green);
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)

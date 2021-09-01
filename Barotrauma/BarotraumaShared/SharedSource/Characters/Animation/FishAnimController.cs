@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
@@ -23,7 +22,11 @@ namespace Barotrauma
             {
                 if (_ragdollParams == null)
                 {
-                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character.SpeciesName);
+                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character.VariantOf ?? character.SpeciesName);
+                    if (character.VariantOf != null)
+                    {
+                        _ragdollParams.ApplyVariantScale(character.Params.VariantFile);
+                    }
                 }
                 return _ragdollParams;
             }
@@ -338,9 +341,21 @@ namespace Barotrauma
                 float dragForce = MathHelper.Clamp(eatSpeed * 10, 0, 40);
                 if (dragForce > 0.1f)
                 {
-                    target.AnimController.MainLimb.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + dragForce));
+                    Vector2 targetPos = mouthPos;
+                    if (target.Submarine != null && character.Submarine == null)
+                    {
+                        targetPos -= target.Submarine.SimPosition;
+                    }
+                    else if (target.Submarine == null && character.Submarine != null)
+                    {
+                        targetPos += character.Submarine.SimPosition;
+                    }
                     target.AnimController.MainLimb.body.SmoothRotate(mouthLimb.Rotation, dragForce * 2);
-                    target.AnimController.Collider.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + dragForce));
+                    if (!target.AnimController.SimplePhysicsEnabled)
+                    {
+                        target.AnimController.MainLimb.MoveToPos(targetPos, (float)(Math.Sin(eatTimer) + dragForce));
+                    }
+                    target.AnimController.Collider.MoveToPos(targetPos, (float)(Math.Sin(eatTimer) + dragForce));
                 }
 
                 if (InWater)
@@ -407,25 +422,27 @@ namespace Barotrauma
         {
             if (CurrentSwimParams == null) { return; }
             movement = TargetMovement;
-
-            if (movement.LengthSquared() > 0.00001f)
+            bool isMoving = movement.LengthSquared() > 0.00001f;
+            var mainLimb = MainLimb;
+            if (isMoving)
             {
                 float t = 0.5f;
-                if (CurrentSwimParams.RotateTowardsMovement && VectorExtensions.Angle(VectorExtensions.Forward(Collider.Rotation + MathHelper.PiOver2), movement) > MathHelper.PiOver2)
+                if (!SimplePhysicsEnabled && CurrentSwimParams.RotateTowardsMovement)
                 {
-                    // Reduce the linear movement speed when not facing the movement direction
-                    t /= 5;
+                    Vector2 forward = VectorExtensions.Forward(Collider.Rotation + MathHelper.PiOver2);
+                    float dot = Vector2.Dot(forward, Vector2.Normalize(movement));
+                    if (dot < 0)
+                    {
+                        // Reduce the linear movement speed when not facing the movement direction
+                        t = MathHelper.Clamp((1 + dot) / 10, 0.01f, 0.1f);
+                    }
                 }
                 Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, t);
             }
-
             //limbs are disabled when simple physics is enabled, no need to move them
             if (SimplePhysicsEnabled) { return; }
-            var mainLimb = MainLimb;
             mainLimb.PullJointEnabled = true;
-            //mainLimb.PullJointWorldAnchorB = Collider.SimPosition;
-
-            if (movement.LengthSquared() < 0.00001f)
+            if (!isMoving)
             {
                 WalkPos = MathHelper.SmoothStep(WalkPos, MathHelper.PiOver2, deltaTime * 5);
                 mainLimb.PullJointWorldAnchorB = Collider.SimPosition;
@@ -625,11 +642,12 @@ namespace Barotrauma
                 if (limb.IsSevered) { continue; }
                 if (Math.Abs(limb.Params.ConstantTorque) > 0)
                 {
-                    limb.body.SmoothRotate(MainLimb.Rotation + MathHelper.ToRadians(limb.Params.ConstantAngle) * Dir, limb.Mass * limb.Params.ConstantTorque, wrapAngle: true);
+                    float movementFactor = Math.Max(character.AnimController.Collider.LinearVelocity.Length() * 0.5f, 1);
+                    limb.body.SmoothRotate(MainLimb.Rotation + MathHelper.ToRadians(limb.Params.ConstantAngle) * Dir, limb.Mass * limb.Params.ConstantTorque * movementFactor, wrapAngle: true);
                 }
                 if (limb.Params.BlinkFrequency > 0)
                 {
-                    limb.Blink(deltaTime, MainLimb.Rotation);
+                    limb.UpdateBlink(deltaTime, MainLimb.Rotation);
                 }
             }
 
@@ -771,7 +789,7 @@ namespace Barotrauma
                 }
                 if (limb.Params.BlinkFrequency > 0)
                 {
-                    limb.Blink(deltaTime, MainLimb.Rotation);
+                    limb.UpdateBlink(deltaTime, MainLimb.Rotation);
                 }
                 switch (limb.type)
                 {

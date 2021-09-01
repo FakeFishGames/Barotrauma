@@ -13,6 +13,9 @@ namespace Barotrauma
         [Serialize(0.0f, true)]
         public float RequiredLevel { get; set; }
 
+        [Serialize(true, true)]
+        public bool ProbabilityBased { get; set; }
+
         [Serialize("", true)]
         public string TargetTag { get; set; }
 
@@ -27,7 +30,15 @@ namespace Barotrauma
         protected override bool? DetermineSuccess()
         {
             var potentialTargets = ParentEvent.GetTargets(TargetTag).Where(e => e is Character).Select(e => e as Character);
-            return potentialTargets.Any(chr => chr.GetSkillLevel(RequiredSkill?.ToLowerInvariant()) >= RequiredLevel);
+
+            if (ProbabilityBased)
+            {
+                return potentialTargets.Any(chr => chr.GetSkillLevel(RequiredSkill?.ToLowerInvariant()) / RequiredLevel > Rand.Range(0.0f, 1.0f, Rand.RandSync.Unsynced));
+            }
+            else
+            {
+                return potentialTargets.Any(chr => chr.GetSkillLevel(RequiredSkill?.ToLowerInvariant()) >= RequiredLevel);
+            }
         }
 
         public override string ToDebugString()

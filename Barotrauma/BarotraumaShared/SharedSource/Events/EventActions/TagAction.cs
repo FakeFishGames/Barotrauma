@@ -6,11 +6,19 @@ namespace Barotrauma
 {
     class TagAction : EventAction
     {
+        public enum SubType { Any = 0, Player = 1, Outpost = 2, Wreck = 4, BeaconStation = 8 }
+
         [Serialize("", true)]
         public string Criteria { get; set; }
 
         [Serialize("", true)]
         public string Tag { get; set; }
+
+        [Serialize(SubType.Any, true)]
+        public SubType SubmarineType { get; set; }
+
+        [Serialize(true, true)]
+        public bool IgnoreIncapacitatedCharacters { get; set; }
 
         private bool isFinished = false;
 
@@ -27,12 +35,26 @@ namespace Barotrauma
 
         private void TagPlayers()
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsPlayer);
+            if (IgnoreIncapacitatedCharacters)
+            {
+                ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsPlayer && !c.IsIncapacitated);
+            }
+            else
+            {
+                ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsPlayer);
+            }
         }
 
-        private void TagBots()
+        private void TagBots(bool playerCrewOnly)
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsBot);
+            if (IgnoreIncapacitatedCharacters)
+            {
+                ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsBot && !c.IsIncapacitated && (!playerCrewOnly || c.TeamID == CharacterTeamType.Team1));
+            }
+            else
+            {
+                ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsBot && (!playerCrewOnly || c.TeamID == CharacterTeamType.Team1));
+            }
         }
 
         private void TagCrew()
@@ -40,23 +62,54 @@ namespace Barotrauma
 #if CLIENT
             GameMain.GameSession.CrewManager.GetCharacters().ForEach(c => ParentEvent.AddTarget(Tag, c));
 #else
-            TagPlayers(); TagBots(); //TODO: this seems like it would tag more than it should, fix
+            TagPlayers(); 
+            TagBots(playerCrewOnly: true);
 #endif
         }
 
+        private void TagHumansByIdentifier(string identifier)
+        {
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.Prefab?.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase) ?? false)
+                {
+                    ParentEvent.AddTarget(Tag, c);
+                }
+            }
+        }
         private void TagStructuresByIdentifier(string identifier)
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Structure s && s.Prefab.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase));
+            ParentEvent.AddTargetPredicate(Tag, e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.Prefab.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase));
         }
 
         private void TagItemsByIdentifier(string identifier)
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && it.Prefab.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase));
+            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && SubmarineTypeMatches(it.Submarine) && it.Prefab.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase));
         }
 
         private void TagItemsByTag(string tag)
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && it.HasTag(tag));
+            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && SubmarineTypeMatches(it.Submarine) && it.HasTag(tag));
+        }
+
+        private bool SubmarineTypeMatches(Submarine sub)
+        {
+            if (SubmarineType == SubType.Any) { return true; }
+            if (sub == null) { return false; }
+            switch (sub.Info.Type)
+            {
+                case Barotrauma.SubmarineType.Player:
+                    return SubmarineType.HasFlag(SubType.Player);
+                case Barotrauma.SubmarineType.Outpost:
+                case Barotrauma.SubmarineType.OutpostModule:
+                    return SubmarineType.HasFlag(SubType.Outpost);
+                case Barotrauma.SubmarineType.Wreck:
+                    return SubmarineType.HasFlag(SubType.Wreck);
+                case Barotrauma.SubmarineType.BeaconStation:
+                    return SubmarineType.HasFlag(SubType.BeaconStation);
+                default:
+                    return false;
+            }
         }
 
         public override void Update(float deltaTime)
@@ -74,10 +127,13 @@ namespace Barotrauma
                         TagPlayers();
                         break;
                     case "bot":
-                        TagBots();
+                        TagBots(playerCrewOnly: false);
                         break;
                     case "crew":
                         TagCrew();
+                        break;
+                    case "humanprefabidentifier":
+                        if (kvp.Length > 1) { TagHumansByIdentifier(kvp[1].Trim()); }
                         break;
                     case "structureidentifier":
                         if (kvp.Length > 1) { TagStructuresByIdentifier(kvp[1].Trim()); }
@@ -96,7 +152,7 @@ namespace Barotrauma
 
         public override string ToDebugString()
         {
-            return $"{ToolBox.GetDebugSymbol(isFinished)} {nameof(TagAction)} -> (Criteria: {Criteria.ColorizeObject()}, Tag: {Tag.ColorizeObject()})";
+            return $"{ToolBox.GetDebugSymbol(isFinished)} {nameof(TagAction)} -> (Criteria: {Criteria.ColorizeObject()}, Tag: {Tag.ColorizeObject()}, Sub: {SubmarineType.ColorizeObject()})";
         }
     }
 }

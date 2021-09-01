@@ -135,7 +135,7 @@ namespace Voronoi2
 
     public enum CellType
     {
-        Solid, Empty, Edge, Path, Removed
+        Solid, Empty, Path, Removed
     }
 
     public class VoronoiCell
@@ -150,6 +150,11 @@ namespace Voronoi2
         public CellType CellType;
 
         public Vector2 Translation;
+
+        public bool Island;
+
+        public bool IsDestructible;
+        public bool DoesDamage;
 
         public Vector2 Center
         {
@@ -204,8 +209,8 @@ namespace Voronoi2
         public VoronoiCell Cell1, Cell2;
 
         public bool IsSolid;
-
         public bool OutsideLevel;
+        public bool NextToCave, NextToMainPath, NextToSidePath;
 
         public Vector2 Center
         {

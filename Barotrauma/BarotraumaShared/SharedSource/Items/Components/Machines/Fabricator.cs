@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -96,6 +97,12 @@ namespace Barotrauma.Items.Components
                     fabricationRecipes.Add(recipe);
                 }
             }
+            fabricationRecipes.Sort((r1, r2) =>
+            {
+                int hash1 = (int)r1.TargetItem.UIntIdentifier;
+                int hash2 = (int)r2.TargetItem.UIntIdentifier;
+                return hash1 - hash2;
+            });
 
             state = FabricatorState.Stopped;
 
@@ -114,11 +121,10 @@ namespace Barotrauma.Items.Components
 
             inputContainer = containers[0];
             outputContainer = containers[1];
-                        
+
             foreach (var recipe in fabricationRecipes)
             {
-                int ingredientCount = recipe.RequiredItems.Sum(it => it.Amount);
-                if (ingredientCount > inputContainer.Capacity)
+                if (recipe.RequiredItems.Count > inputContainer.Capacity)
                 {
                     DebugConsole.ThrowError("Error in item \"" + item.Name + "\": There's not enough room in the input inventory for the ingredients of \"" + recipe.TargetItem.Name + "\"!");
                 }
@@ -142,7 +148,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Pick(Character picker)
         {
-            return (picker != null);
+            return picker != null;
         }
 
         public void RemoveFabricationRecipes(List<string> allowedIdentifiers)
@@ -161,10 +167,10 @@ namespace Barotrauma.Items.Components
 
         partial void CreateRecipes();
 
-        private void StartFabricating(FabricationRecipe selectedItem, Character user)
+        private void StartFabricating(FabricationRecipe selectedItem, Character user, bool addToServerLog = true)
         {
             if (selectedItem == null) { return; }
-            if (!outputContainer.Inventory.IsEmpty()) { return; }
+            if (!outputContainer.Inventory.CanBePut(selectedItem.TargetItem, selectedItem.OutCondition * selectedItem.TargetItem.Health)) { return; }
 
 #if CLIENT
             itemList.Enabled = false;
@@ -190,7 +196,7 @@ namespace Barotrauma.Items.Components
                 State = FabricatorState.Active;
             }
 #if SERVER
-            if (user != null)
+            if (user != null && addToServerLog)
             {
                 GameServer.Log(GameServer.CharacterLogName(user) + " started fabricating " + selectedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
@@ -205,6 +211,7 @@ namespace Barotrauma.Items.Components
 
             progressState = 0.0f;
             timeUntilReady = 0.0f;
+            UpdateRequiredTimeProjSpecific();
             inputContainer.Inventory.Locked = false;
             outputContainer.Inventory.Locked = false;
 
@@ -272,6 +279,7 @@ namespace Barotrauma.Items.Components
             if (powerConsumption <= 0) { Voltage = 1.0f; }
 
             timeUntilReady -= deltaTime * Math.Min(Voltage, 1.0f);
+            UpdateRequiredTimeProjSpecific();
 
             if (timeUntilReady > 0.0f) { return; }
 
@@ -282,10 +290,12 @@ namespace Barotrauma.Items.Components
                 {
                     for (int i = 0; i < ingredient.Amount; i++)
                     {
-                        var availableItem = availableIngredients.FirstOrDefault(it => it != null && ingredient.ItemPrefabs.Contains(it.Prefab) && it.ConditionPercentage >= ingredient.MinCondition * 100.0f);
+                        var availableItem = availableIngredients.FirstOrDefault(it => 
+                            it != null && ingredient.ItemPrefabs.Contains(it.Prefab) && 
+                            it.ConditionPercentage >= ingredient.MinCondition * 100.0f &&
+                            it.ConditionPercentage <= ingredient.MaxCondition * 100.0f);
                         if (availableItem == null) { continue; }
-                                            
-                        //Item4 = use condition bool
+
                         if (ingredient.UseCondition && availableItem.ConditionPercentage - ingredient.MinCondition * 100 > 0.0f) //Leave it behind with reduced condition if it has enough to stay above 0
                         {
                             availableItem.Condition -= availableItem.Prefab.Health * ingredient.MinCondition;
@@ -298,20 +308,24 @@ namespace Barotrauma.Items.Components
                 }
 
                 Character tempUser = user;
-                if (outputContainer.Inventory.Items.All(i => i != null))
+                int amountFittingContainer = outputContainer.Inventory.HowManyCanBePut(fabricatedItem.TargetItem, fabricatedItem.OutCondition * fabricatedItem.TargetItem.Health);
+                for (int i = 0; i < fabricatedItem.Amount; i++)
                 {
-                    Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition,
-                        onSpawned: (Item spawnedItem) => { onItemSpawned(spawnedItem, tempUser); });
-                }
-                else
-                {
-                    Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition, 
-                        onSpawned: (Item spawnedItem) => { onItemSpawned(spawnedItem, tempUser); });
+                    if (i < amountFittingContainer)
+                    {
+                        Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition,
+                            onSpawned: (Item spawnedItem) => { onItemSpawned(spawnedItem, tempUser); });
+                    }
+                    else
+                    {
+                        Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition,
+                            onSpawned: (Item spawnedItem) => { onItemSpawned(spawnedItem, tempUser); });
+                    }
                 }
 
                 static void onItemSpawned(Item spawnedItem, Character user)
                 {
-                    if (user != null && user.TeamID != Character.TeamType.None)
+                    if (user != null && user.TeamID != CharacterTeamType.None)
                     {
                         foreach (WifiComponent wifiComponent in spawnedItem.GetComponents<WifiComponent>())
                         {
@@ -320,7 +334,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
             
-                if (user != null && !user.Removed)
+                if (user?.Info != null && !user.Removed)
                 {
                     foreach (Skill skill in fabricatedItem.RequiredSkills)
                     {
@@ -328,13 +342,28 @@ namespace Barotrauma.Items.Components
                         user.Info.IncreaseSkillLevel(
                             skill.Identifier,
                             skill.Level * SkillSettings.Current.SkillIncreasePerFabricatorRequiredSkill / Math.Max(userSkill, 1.0f),
-                            user.WorldPosition + Vector2.UnitY * 150.0f);
+                            user.Position + Vector2.UnitY * 150.0f);
                     }
                 }
+
+                //disabled "continuous fabrication" for now
+                //before we enable it, there should be some UI controls for fabricating a specific number of items
+
+                /*var prevFabricatedItem = fabricatedItem;
+                var prevUser = user;
+                CancelFabricating();
+                if (CanBeFabricated(prevFabricatedItem))
+                {
+                    //keep fabricating if we can fabricate more
+                    StartFabricating(prevFabricatedItem, prevUser, addToServerLog: false);
+                }*/
+
 
                 CancelFabricating();
             }
         }
+
+        partial void UpdateRequiredTimeProjSpecific();
 
         private bool CanBeFabricated(FabricationRecipe fabricableItem)
         {
@@ -375,7 +404,7 @@ namespace Barotrauma.Items.Components
             float skillSum = (from t in skills let characterLevel = character.GetSkillLevel(t.Identifier) select (characterLevel - (t.Level * SkillRequirementMultiplier))).Sum();
             float average = skillSum / skills.Count;
 
-            return ((average + 100.0f) / 2.0f) / 100.0f;
+            return (average + 100.0f) / 2.0f / 100.0f;
         }
 
         public override float GetSkillMultiplier()
@@ -390,7 +419,7 @@ namespace Barotrauma.Items.Components
         private List<Item> GetAvailableIngredients()
         {
             List<Item> availableIngredients = new List<Item>();
-            availableIngredients.AddRange(inputContainer.Inventory.Items.Where(it => it != null));
+            availableIngredients.AddRange(inputContainer.Inventory.AllItems);
             foreach (MapEntity linkedTo in item.linkedTo)
             {
                 if (linkedTo is Item linkedItem)
@@ -404,18 +433,18 @@ namespace Barotrauma.Items.Components
                         itemContainer = deconstructor.OutputContainer;
                     }
 
-                    availableIngredients.AddRange(itemContainer.Inventory.Items.Where(it => it != null));
+                    availableIngredients.AddRange(itemContainer.Inventory.AllItems);
                 }
             }
 #if CLIENT
             if (Character.Controlled?.Inventory != null)
             {
-                availableIngredients.AddRange(Character.Controlled.Inventory.Items.Distinct().Where(it => it != null));
+                availableIngredients.AddRange(Character.Controlled.Inventory.AllItems);
             }
 #else
             if (user?.Inventory != null)
             {
-                availableIngredients.AddRange(user.Inventory.Items.Distinct().Where(it => it != null));
+                availableIngredients.AddRange(user.Inventory.AllItems);
             }
 #endif
 
@@ -450,9 +479,9 @@ namespace Barotrauma.Items.Components
                     }
                     else //in another inventory, we need to move the item
                     {
-                        if (inputContainer.Inventory.Items.All(it => it != null))
+                        if (!inputContainer.Inventory.CanBePut(matchingItem))
                         {
-                            var unneededItem = inputContainer.Inventory.Items.FirstOrDefault(it => !usedItems.Contains(it));
+                            var unneededItem = inputContainer.Inventory.AllItems.FirstOrDefault(it => !usedItems.Contains(it));
                             unneededItem?.Drop(null, createNetworkEvent: !isClient);
                         }
                         inputContainer.Inventory.TryPutItem(matchingItem, user: null, createNetworkEvent: !isClient);
@@ -466,7 +495,8 @@ namespace Barotrauma.Items.Components
             return 
                 item != null && 
                 requiredItem.ItemPrefabs.Contains(item.prefab) && 
-                item.Condition / item.Prefab.Health >= requiredItem.MinCondition;
+                item.Condition / item.Prefab.Health >= requiredItem.MinCondition &&
+                item.Condition / item.Prefab.Health <= requiredItem.MaxCondition;
         }
 
         public override XElement Save(XElement parentElement)
@@ -482,9 +512,9 @@ namespace Barotrauma.Items.Components
             return componentElement;
         }
 
-        public override void Load(XElement componentElement, bool usePrefabValues)
+        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
-            base.Load(componentElement, usePrefabValues);
+            base.Load(componentElement, usePrefabValues, idRemap);
             savedFabricatedItem = componentElement.GetAttributeString("fabricateditemidentifier", "");
             savedTimeUntilReady = componentElement.GetAttributeFloat("savedtimeuntilready", 0.0f);
             savedRequiredTime = componentElement.GetAttributeFloat("savedrequiredtime", 0.0f);

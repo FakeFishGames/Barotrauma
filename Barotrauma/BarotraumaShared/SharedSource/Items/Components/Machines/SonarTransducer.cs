@@ -24,7 +24,7 @@ namespace Barotrauma.Items.Components
                 sendSignalTimer += deltaTime;
                 if (sendSignalTimer > SendSignalInterval)
                 {
-                    item.SendSignal(0, "0101101101101011010", "data_out", sender: null);
+                    item.SendSignal("0101101101101011010", "data_out");
                     sendSignalTimer = SendSignalInterval;
                 }
             }

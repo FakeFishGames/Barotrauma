@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     class AIObjectiveContainItem: AIObjective
     {
-        public override string DebugTag => "contain item";
+        public override string Identifier { get; set; } = "contain item";
 
         public Func<Item, float> GetItemPriority;
 
@@ -21,7 +21,8 @@ namespace Barotrauma
         //can either be a tag or an identifier
         public readonly string[] itemIdentifiers;
         public readonly ItemContainer container;
-        public readonly Item item;
+        private readonly Item item;
+        public Item ItemToContain { get; private set; }
 
         private AIObjectiveGetItem getItemObjective;
         private AIObjectiveGoTo goToObjective;
@@ -30,9 +31,13 @@ namespace Barotrauma
 
         public bool AllowToFindDivingGear { get; set; } = true;
         public bool AllowDangerousPressure { get; set; }
-        public float ConditionLevel { get; set; }
+        public float ConditionLevel { get; set; } = 1;
         public bool Equip { get; set; }
         public bool RemoveEmpty { get; set; } = true;
+        public bool RemoveExisting { get; set; }
+
+        public bool MoveWholeStack { get; set; }
+
 
         public AIObjectiveContainItem(Character character, Item item, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier)
@@ -56,24 +61,24 @@ namespace Barotrauma
             this.container = container;
         }
 
-        protected override bool Check()
+        protected override bool CheckObjectiveSpecific()
         {
             if (IsCompleted) { return true; }
-            if (container == null)
+            if (container == null || (container.Item != null && container.Item.IsThisOrAnyContainerIgnoredByAI(character)))
             {
                 Abandon = true;
                 return false;
             }
             if (item != null)
             {
-                return container.Inventory.Items.Contains(item);
+                return container.Inventory.Contains(item);
             }
             else
             {
                 int containedItemCount = 0;
-                foreach (Item i in container.Inventory.Items)
+                foreach (Item it in container.Inventory.AllItems)
                 {
-                    if (i != null && CheckItem(i))
+                    if (CheckItem(it))
                     {
                         containedItemCount++;
                     }
@@ -82,71 +87,70 @@ namespace Barotrauma
             }
         }
 
-        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage > ConditionLevel;
+        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage >= ConditionLevel && !i.IsThisOrAnyContainerIgnoredByAI(character);
 
         protected override void Act(float deltaTime)
         {
-            if (container == null)
+            if (container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI(character))
             {
                 Abandon = true;
                 return;
             }
-            Item itemToContain = item ?? character.Inventory.FindItem(i => CheckItem(i) && i.Container != container.Item, recursive: true);
-            if (itemToContain != null)
+            ItemToContain = item ?? character.Inventory.FindItem(i => CheckItem(i) && i.Container != container.Item, recursive: true);
+            if (ItemToContain != null)
             {
-                if (character.CanInteractWith(container.Item, out _, checkLinked: false))
+                if (!character.CanInteractWith(ItemToContain, checkLinked: false))
                 {
-                    if (RemoveEmpty)
+                    Abandon = true;
+                    return;
+                }
+                if (character.CanInteractWith(container.Item, checkLinked: false))
+                {
+                    if (RemoveExisting)
                     {
-                        foreach (var emptyItem in container.Inventory.Items)
-                        {
-                            if (emptyItem == null) { continue; }
-                            if (emptyItem.Condition <= 0)
-                            {
-                                emptyItem.Drop(character);
-                            }
-                        }
+                        HumanAIController.UnequipContainedItems(container.Item);
                     }
-                    // Contain the item
-                    if (itemToContain.ParentInventory == character.Inventory)
+                    else if (RemoveEmpty)
                     {
-                        if (!container.Inventory.CanBePut(itemToContain))
+                        HumanAIController.UnequipEmptyItems(container.Item);
+                    }
+                    Inventory originalInventory = ItemToContain.ParentInventory;
+                    var slots = originalInventory?.FindIndices(ItemToContain);
+                    if (container.Inventory.TryPutItem(ItemToContain, null))
+                    {
+                        if (MoveWholeStack && slots != null)
                         {
-                            Abandon = true;
-                        }
-                        else
-                        {
-                            character.Inventory.RemoveItem(itemToContain);
-                            if (container.Inventory.TryPutItem(itemToContain, null))
+                            foreach (int slot in slots)
                             {
-                                IsCompleted = true;
+                                foreach (Item item in originalInventory.GetItemsAt(slot).ToList())
+                                {
+                                    container.Inventory.TryPutItem(item, null);
+                                }
                             }
-                            else
-                            {
-                                itemToContain.Drop(character);
-                                Abandon = true;
-                            }
+
+                            IsCompleted = true;
                         }
                     }
                     else
                     {
-                        if (container.Combine(itemToContain, character))
+                        if (ItemToContain.ParentInventory == character.Inventory && character.IsInFriendlySub)
                         {
-                            IsCompleted = true;
+                            ItemToContain.Drop(character);
                         }
-                        else
-                        {
-                            Abandon = true;
-                        }
+                        Abandon = true;
                     }
                 }
                 else
                 {
-                    // TODO: should we just use GetItem?
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager, getDivingGearIfNeeded: AllowToFindDivingGear)
                     {
                         DialogueIdentifier = "dialogcannotreachtarget",
-                        TargetName = container.Item.Name
+                        TargetName = container.Item.Name,
+                        AbortCondition = obj =>
+                            container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI(character) ||
+                            ItemToContain == null || ItemToContain.Removed ||
+                            !ItemToContain.IsOwnedBy(character) || container.Item.GetRootInventoryOwner() is Character c && c != character,
+                        SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>()
                     },
                     onAbandon: () => Abandon = true,
                     onCompleted: () => RemoveSubObjective(ref goToObjective));
@@ -169,7 +173,8 @@ namespace Barotrauma
                             ignoredItems = containedItems,
                             AllowToFindDivingGear = AllowToFindDivingGear,
                             AllowDangerousPressure = AllowDangerousPressure,
-                            TargetCondition = ConditionLevel
+                            TargetCondition = ConditionLevel,
+                            ItemFilter = (Item potentialItem) => RemoveEmpty ? container.CanBeContained(potentialItem) : container.Inventory.CanBePut(potentialItem)
                         }, onAbandon: () =>
                         {
                             Abandon = true;

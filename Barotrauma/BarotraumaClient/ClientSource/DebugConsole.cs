@@ -13,6 +13,9 @@ using System.Globalization;
 using FarseerPhysics;
 using Barotrauma.Extensions;
 using Barotrauma.Steam;
+using System.Threading.Tasks;
+using Barotrauma.MapCreatures.Behavior;
+using static Barotrauma.FabricationRecipe;
 
 namespace Barotrauma
 {
@@ -68,6 +71,8 @@ namespace Barotrauma
         public static GUITextBox TextBox => textBox;
         
         private static readonly ChatManager chatManager = new ChatManager(true, 64);
+
+        public static Dictionary<Keys, string> Keybinds = new Dictionary<Keys, string>();
 
         public static void Init()
         {
@@ -141,6 +146,17 @@ namespace Barotrauma
                             SaveLogs();
                             unsavedMessages.Clear();
                         }
+                    }
+                }
+            }
+
+            if (!IsOpen && GUI.KeyboardDispatcher.Subscriber == null)
+            {
+                foreach (var (key, command) in Keybinds)
+                {
+                    if (PlayerInput.KeyHit(key))
+                    {
+                        ExecuteCommand(command);
                     }
                 }
             }
@@ -225,8 +241,16 @@ namespace Barotrauma
                 case "toggleupperhud":
                 case "togglecharacternames":
                 case "fpscounter":
+                case "showperf":
                 case "dumptofile":
                 case "findentityids":
+                case "setfreecamspeed":
+                case "togglevoicechatfilters":
+                case "bindkey":
+                case "savebinds":
+                case "unbindkey":
+                case "wikiimage_character":
+                case "wikiimage_sub":
                     return true;
                 default:
                     return client.HasConsoleCommandPermission(command);
@@ -235,20 +259,23 @@ namespace Barotrauma
 
         public static void DequeueMessages()
         {
-            while (queuedMessages.Count > 0)
+            lock (queuedMessages)
             {
-                var newMsg = queuedMessages.Dequeue();
-                if (listBox == null)
+                while (queuedMessages.Count > 0)
                 {
-                    //don't attempt to add to the listbox if it hasn't been created yet                    
-                    Messages.Add(newMsg);
-                }
-                else
-                {
-                    AddMessage(newMsg);
-                }
+                    var newMsg = queuedMessages.Dequeue();
+                    if (listBox == null)
+                    {
+                        //don't attempt to add to the listbox if it hasn't been created yet                    
+                        Messages.Add(newMsg);
+                    }
+                    else
+                    {
+                        AddMessage(newMsg);
+                    }
 
-                if (GameSettings.SaveDebugConsoleLogs) unsavedMessages.Add(newMsg);
+                    if (GameSettings.SaveDebugConsoleLogs) unsavedMessages.Add(newMsg);
+                }
             }
         }
 
@@ -274,7 +301,12 @@ namespace Barotrauma
                 {
                     var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), style: "InnerFrame", color: Color.White)
                     {
-                        CanBeFocused = false
+                        CanBeFocused = true,
+                        OnSecondaryClicked = (component, data) =>
+                        {
+                            GUIContextMenu.CreateContextMenu(new ContextMenuOption("editor.copytoclipboard", true, () => { Clipboard.SetText(msg.Text); }));
+                            return true;
+                        }
                     };
                     var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 5, 0), textContainer.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(2, 2) },
                         msg.Text, textAlignment: Alignment.TopLeft, font: GUI.SmallFont, wrap: true)
@@ -455,7 +487,7 @@ namespace Barotrauma
                     var subInfo = new SubmarineInfo(string.Join(" ", args));
                     Submarine.MainSub = Submarine.Load(subInfo, true);
                 }
-                GameMain.SubEditorScreen.Select();
+                GameMain.SubEditorScreen.Select(enableAutoSave: Screen.Selected != GameMain.GameScreen);
             }, isCheat: true));
 
             commands.Add(new Command("editparticles|particleeditor", "editparticles/particleeditor: Switch to the Particle Editor to edit particle effects.", (string[] args) =>
@@ -487,11 +519,131 @@ namespace Barotrauma
                 GameMain.CharacterEditorScreen.Select();
             }));
 
+            commands.Add(new Command("quickstart", "Starts a singleplayer sandbox", (string[] args) =>
+            {
+                if (Screen.Selected != GameMain.MainMenuScreen)
+                {
+                    ThrowError("This command can only be executed from the main menu.");
+                    return;
+                }
+
+                string subName = args.Length > 0 ? args[0] : "";
+                if (string.IsNullOrWhiteSpace(subName))
+                {
+                    ThrowError("No submarine specified.");
+                    return;
+                }
+
+                GameMain.MainMenuScreen.QuickStart(fixedSeed: false, subName);
+            }, getValidArgs: () => new[] { SubmarineInfo.SavedSubmarines.Select(s => s.Name).Distinct().ToArray() }));
+
             commands.Add(new Command("steamnetdebug", "steamnetdebug: Toggles Steamworks networking debug logging.", (string[] args) =>
             {
                 SteamManager.NetworkingDebugLog = !SteamManager.NetworkingDebugLog;
                 SteamManager.SetSteamworksNetworkingDebugLog(SteamManager.NetworkingDebugLog);
+            }));
 
+            commands.Add(new Command("readycheck", "Commence a ready check in multiplayer.", (string[] args) =>
+            {
+                NewMessage("Ready checks can only be commenced in multiplayer.", Color.Red);
+            }));
+            
+            commands.Add(new Command("bindkey", "bindkey [key] [command]: Binds a key to a command.", (string[] args) =>
+            {
+                if (args.Length < 2)
+                {
+                    ThrowError("No key or command specified.");
+                    return;
+                }
+
+                string keyString = args[0];
+                string command = args[1];
+
+                if (Enum.TryParse(typeof(Keys), keyString, ignoreCase: true, out object outKey) && outKey is Keys key)
+                {
+                    if (Keybinds.ContainsKey(key))
+                    {
+                        Keybinds[key] = command;
+                    }
+                    else
+                    {
+                        Keybinds.Add(key, command);
+                    }
+                    NewMessage($"\"{command}\" bound to {key}.", GUI.Style.Green);
+
+                    if (GameMain.Config.keyMapping.FirstOrDefault(bind => bind.Key != Keys.None && bind.Key == key) is { } existingBind)
+                    {
+                        AddWarning($"\"{key}\" has already been bound to {(InputType)GameMain.Config.keyMapping.IndexOf(existingBind)}. The keybind will perform both actions when pressed.");
+                    }
+
+                    return;
+                }
+
+                ThrowError($"Invalid key {keyString}.");
+            }, isCheat: false, getValidArgs: () => new[] { Enum.GetNames(typeof(Keys)), new[] { "\"\"" } }));
+            
+            commands.Add(new Command("unbindkey", "unbindkey [key]: Unbinds a command.", (string[] args) =>
+            {
+                if (args.Length < 1)
+                {
+                    ThrowError("No key specified.");
+                    return;
+                }
+
+                string keyString = args[0];
+                if (Enum.TryParse(typeof(Keys), keyString, ignoreCase: true, out object outKey) && outKey is Keys key)
+                {
+                    if (Keybinds.ContainsKey(key))
+                    {
+                        Keybinds.Remove(key);
+                    }
+                    NewMessage("Keybind unbound.", GUI.Style.Green);
+                    return;
+                }
+                ThrowError($"Invalid key {keyString}.");
+            }, isCheat: false, getValidArgs: () => new[] { Keybinds.Keys.Select(keys => keys.ToString()).Distinct().ToArray() }));
+            
+            commands.Add(new Command("savebinds", "savebinds: Writes current keybinds into the config file.", (string[] args) =>
+            {
+                ShowQuestionPrompt($"Some keybinds may render the game unusable, are you sure you want to make these keybinds persistent? ({Keybinds.Count} keybind(s) assigned) Y/N",
+                    (option2) =>
+                    {
+                        if (option2.ToLower() != "y")
+                        {
+                            NewMessage("Aborted.", GUI.Style.Red);
+                            return;
+                        }
+
+                        GameSettings.ConsoleKeybinds = new Dictionary<Keys, string>(Keybinds);
+                        GameMain.Config.SaveNewPlayerConfig();
+
+                        NewMessage($"{Keybinds.Count} keybind(s) written to the config file.", GUI.Style.Green);
+                    });
+            }, isCheat: false));
+            
+            commands.Add(new Command("togglegrid", "Toggle visual snap grid in sub editor.", (string[] args) =>
+            {
+                SubEditorScreen.ShouldDrawGrid = !SubEditorScreen.ShouldDrawGrid;
+                NewMessage(SubEditorScreen.ShouldDrawGrid ? "Enabled submarine grid." : "Disabled submarine grid.", GUI.Style.Green);
+            }));
+
+            commands.Add(new Command("spreadsheetexport", "Export items in format recognized by the spreadsheet importer.", (string[] args) =>
+            {
+                SpreadsheetExport.Export();
+            }));
+
+            commands.Add(new Command("wikiimage_character", "Save an image of the currently controlled character with a transparent background.", (string[] args) =>
+            {
+                if (Character.Controlled == null) { return; }
+                WikiImage.Create(Character.Controlled);
+            }));
+
+            commands.Add(new Command("wikiimage_sub", "Save an image of the main submarine with a transparent background.", (string[] args) =>
+            {
+                if (Submarine.MainSub == null) { return; }
+                MapEntity.SelectedList.Clear();
+                MapEntity.mapEntityList.ForEach(me => me.IsHighlighted = false);
+                WikiImage.Create(Submarine.MainSub);
             }));
 
             AssignRelayToServer("kick", false);
@@ -506,11 +658,19 @@ namespace Barotrauma
             AssignRelayToServer("verboselogging", false);
             AssignRelayToServer("freecam", false);
             AssignRelayToServer("steamnetdebug", false);
+            AssignRelayToServer("quickstart", false);
+            AssignRelayToServer("togglegrid", false);
+            AssignRelayToServer("bindkey", false);
+            AssignRelayToServer("unbindkey", false);
+            AssignRelayToServer("savebinds", false);
+            AssignRelayToServer("spreadsheetexport", false);
 #if DEBUG
             AssignRelayToServer("crash", false);
+            AssignRelayToServer("showballastflorasprite", false);
             AssignRelayToServer("simulatedlatency", false);
             AssignRelayToServer("simulatedloss", false);
             AssignRelayToServer("simulatedduplicateschance", false);
+            AssignRelayToServer("storeinfo", false);
 #endif
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
@@ -527,6 +687,7 @@ namespace Barotrauma
             AssignRelayToServer("traitorlist", true);
             AssignRelayToServer("money", true);
             AssignRelayToServer("setskill", true);
+            AssignRelayToServer("readycheck", true);
 
             AssignOnExecute("control", (string[] args) =>
             {
@@ -547,14 +708,15 @@ namespace Barotrauma
             AssignOnExecute("explosion", (string[] args) =>
             {
                 Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
-                float range = 500, force = 10, damage = 50, structureDamage = 10, itemDamage = 100, empStrength = 0.0f;
+                float range = 500, force = 10, damage = 50, structureDamage = 10, itemDamage = 100, empStrength = 0.0f, ballastFloraStrength = 50f;
                 if (args.Length > 0) float.TryParse(args[0], out range);
                 if (args.Length > 1) float.TryParse(args[1], out force);
                 if (args.Length > 2) float.TryParse(args[2], out damage);
                 if (args.Length > 3) float.TryParse(args[3], out structureDamage);
                 if (args.Length > 4) float.TryParse(args[4], out itemDamage);
                 if (args.Length > 5) float.TryParse(args[5], out empStrength);
-                new Explosion(range, force, damage, structureDamage, itemDamage, empStrength).Explode(explosionPos, null);
+                if (args.Length > 6) float.TryParse(args[6], out ballastFloraStrength);
+                new Explosion(range, force, damage, structureDamage, itemDamage, empStrength, ballastFloraStrength).Explode(explosionPos, null);
             });
 
             AssignOnExecute("teleportcharacter|teleport", (string[] args) =>
@@ -992,6 +1154,17 @@ namespace Barotrauma
             });
             AssignRelayToServer("debugdraw", false);
 
+            AssignOnExecute("togglevoicechatfilters", (string[] args) =>
+            {
+                if (args.None() || !bool.TryParse(args[0], out bool state))
+                {
+                    state = !GameMain.Config.DisableVoiceChatFilters;
+                }
+                GameMain.Config.DisableVoiceChatFilters = state;
+                NewMessage("Voice chat filters " + (GameMain.Config.DisableVoiceChatFilters ? "disabled" : "enabled"), Color.White);
+            });
+            AssignRelayToServer("togglevoicechatfilters", false);
+
             commands.Add(new Command("fpscounter", "fpscounter: Toggle the FPS counter.", (string[] args) =>
             {
                 GameMain.ShowFPS = !GameMain.ShowFPS;
@@ -1078,6 +1251,7 @@ namespace Barotrauma
                     GameMain.DebugDraw = false;
                     GameMain.LightManager.LightingEnabled = true;
                     GameMain.LightManager.LosEnabled = true;
+                    GameMain.LightManager.LosAlpha = 1f;
                 }
                 NewMessage(HumanAIController.debugai ? "AI debug info visible" : "AI debug info hidden", Color.White);
             });
@@ -1195,6 +1369,241 @@ namespace Barotrauma
                         }
                     }
                 }
+            }, isCheat: false));
+
+            commands.Add(new Command("analyzeitem", "analyzeitem: Analyzes one item for exploits.", (string[] args) =>
+            {
+                if (args.Length < 1) return;
+
+                List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
+                foreach (ItemPrefab iPrefab in ItemPrefab.Prefabs)
+                {
+                    fabricableItems.AddRange(iPrefab.FabricationRecipes);
+                }
+
+                string itemNameOrId = args[0].ToLowerInvariant();
+
+                ItemPrefab itemPrefab =
+                    (MapEntityPrefab.Find(itemNameOrId, identifier: null, showErrorMessages: false) ??
+                    MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+
+                if (itemPrefab == null)
+                {
+                    NewMessage("Item not found for analyzing.");
+                    return;
+                }
+                NewMessage("Analyzing item " + itemPrefab.Name + " with base cost " + itemPrefab.DefaultPrice.Price);
+
+                var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == itemPrefab);
+                // omega nesting incoming
+                if (fabricationRecipe != null)
+                {
+                    foreach (KeyValuePair<string, PriceInfo> itemLocationPrice in itemPrefab.GetSellPricesOver(0))
+                    {
+                        NewMessage("    If bought at " + itemLocationPrice.Key + " it costs " + itemLocationPrice.Value.Price);
+                        int totalPrice = 0;
+                        int? totalBestPrice = 0;
+                        foreach (var ingredient in fabricationRecipe.RequiredItems)
+                        {
+                            foreach (ItemPrefab ingredientItemPrefab in ingredient.ItemPrefabs)
+                            {
+                                NewMessage("        Its ingredient " + ingredientItemPrefab.Name + " has base cost " + ingredientItemPrefab.DefaultPrice.Price);
+                                totalPrice += ingredientItemPrefab.DefaultPrice.Price;
+                                totalBestPrice += ingredientItemPrefab.GetMinPrice();
+                                int basePrice = ingredientItemPrefab.DefaultPrice.Price;
+                                foreach (KeyValuePair<string, PriceInfo> ingredientItemLocationPrice in ingredientItemPrefab.GetBuyPricesUnder())
+                                {
+                                    if (basePrice > ingredientItemLocationPrice.Value.Price)
+                                    {
+                                        NewMessage("            Location " + ingredientItemLocationPrice.Key + " sells ingredient " + ingredientItemPrefab.Name + " for cheaper, " + ingredientItemLocationPrice.Value.Price, Color.Yellow);
+                                    }
+                                    else
+                                    {
+                                        NewMessage("            Location " + ingredientItemLocationPrice.Key + " sells ingredient " + ingredientItemPrefab.Name + " for more, " + ingredientItemLocationPrice.Value.Price, Color.Teal);
+                                    }
+                                }
+                            }
+                        }
+                        int costDifference = itemPrefab.DefaultPrice.Price - totalPrice;
+                        NewMessage("    Constructing the item from store-bought items provides " + costDifference + " profit with default values.");
+
+                        if (totalBestPrice.HasValue)
+                        {
+                            int? bestDifference = itemLocationPrice.Value.Price - totalBestPrice;
+                            NewMessage("    Constructing the item from store-bought items provides " + bestDifference + " profit with best-case scenario values.");
+                        }
+                    }
+                }
+            },
+            () =>
+            {
+                return new string[][] { ItemPrefab.Prefabs.SelectMany(p => p.Aliases).Concat(ItemPrefab.Prefabs.Select(p => p.Identifier)).ToArray() };
+            }, isCheat: false));
+
+            commands.Add(new Command("checkcraftingexploits", "checkcraftingexploits: Finds outright item exploits created by buying store-bought ingredients and constructing them into sellable items.", (string[] args) =>
+            {
+                List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
+                foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
+                {
+                    fabricableItems.AddRange(itemPrefab.FabricationRecipes);
+                }
+                List<Tuple<string, int>> costDifferences = new List<Tuple<string, int>>();
+
+                int maximumAllowedCost = 5;
+
+                if (args.Length > 0)
+                {
+                    Int32.TryParse(args[0], out maximumAllowedCost);
+                }
+                foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
+                {
+                    int? defaultCost = itemPrefab.DefaultPrice?.Price;
+                    int? fabricationCostStore = null;
+
+                    var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == itemPrefab);
+                    if (fabricationRecipe == null)
+                    {
+                        continue;
+                    }
+
+                    bool canBeBought = true;
+
+                    foreach (var ingredient in fabricationRecipe.RequiredItems)
+                    {
+                        int? ingredientPrice = ingredient.ItemPrefabs.Where(p => p.CanBeBought).Min(ip => ip.DefaultPrice?.Price);
+                        if (ingredientPrice.HasValue)
+                        {
+                            if (!fabricationCostStore.HasValue) { fabricationCostStore = 0; }
+                            float useAmount = ingredient.UseCondition ? ingredient.MinCondition : 1.0f;
+                            fabricationCostStore += (int)(ingredientPrice.Value * ingredient.Amount * useAmount);
+                        }
+                        else
+                        {
+                            canBeBought = false;
+                        }
+                    }
+                    if (fabricationCostStore.HasValue && defaultCost.HasValue && canBeBought)
+                    {
+                        int costDifference = defaultCost.Value - fabricationCostStore.Value;
+                        if (costDifference > maximumAllowedCost || costDifference < 0f)
+                        {
+                            float ratio = (float)fabricationCostStore.Value / defaultCost.Value;
+                            string message = "Fabricating \"" + itemPrefab.Name + "\" costs " + (int)(ratio * 100) + "% of the price of the item, or " + costDifference + " more. Item price: " + defaultCost.Value + ", ingredient prices: " + fabricationCostStore.Value;
+                            costDifferences.Add(new Tuple<string, int>(message, costDifference));
+                        }
+                    }
+                }
+
+                costDifferences.Sort((x, y) => x.Item2.CompareTo(y.Item2));
+
+                foreach (Tuple<string, int> costDifference in costDifferences)
+                {
+                    Color color = Color.Yellow;
+                    NewMessage(costDifference.Item1, color);
+                }
+            }, isCheat: false));
+
+            commands.Add(new Command("adjustprice", "adjustprice: Recursively prints out expected price adjustments for items derived from this item.", (string[] args) =>
+            {
+                List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
+                foreach (ItemPrefab iP in ItemPrefab.Prefabs)
+                {
+                    fabricableItems.AddRange(iP.FabricationRecipes);
+                }
+                if (args.Length < 2)
+                {
+                    NewMessage("Item or value not defined.");
+                    return;
+                }
+                string itemNameOrId = args[0].ToLowerInvariant();
+
+                ItemPrefab materialPrefab =
+                    (MapEntityPrefab.Find(itemNameOrId, identifier: null, showErrorMessages: false) ??
+                    MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+
+                if (materialPrefab == null)
+                {
+                    NewMessage("Item not found for price adjustment.");
+                    return;
+                }
+
+                AdjustItemTypes adjustItemType = AdjustItemTypes.NoAdjustment;
+                if (args.Length > 2)
+                {
+                    switch (args[2].ToLowerInvariant())
+                    {
+                        case "add":
+                            adjustItemType = AdjustItemTypes.Additive;
+                            break;
+                        case "mult":
+                            adjustItemType = AdjustItemTypes.Multiplicative;
+                            break;
+                    }
+                }
+
+                if (Int32.TryParse(args[1].ToLowerInvariant(), out int newPrice))
+                {
+                    Dictionary<ItemPrefab, int> newPrices = new Dictionary<ItemPrefab, int>();
+                    PrintItemCosts(newPrices, materialPrefab, fabricableItems, newPrice, true, adjustItemType: adjustItemType);
+                    PrintItemCosts(newPrices, materialPrefab, fabricableItems, newPrice, false, adjustItemType: adjustItemType);
+                }
+
+            }, isCheat: false));
+
+            commands.Add(new Command("deconstructvalue", "deconstructvalue: Views and compares deconstructed component prices for this item.", (string[] args) =>
+            {
+                List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
+                foreach (ItemPrefab iP in ItemPrefab.Prefabs)
+                {
+                    fabricableItems.AddRange(iP.FabricationRecipes);
+                }
+                if (args.Length < 1)
+                {
+                    NewMessage("Item not defined.");
+                    return;
+                }
+                string itemNameOrId = args[0].ToLowerInvariant();
+
+                ItemPrefab parentItem =
+                    (MapEntityPrefab.Find(itemNameOrId, identifier: null, showErrorMessages: false) ??
+                    MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+
+                if (parentItem == null)
+                {
+                    NewMessage("Item not found for price adjustment.");
+                    return;
+                }
+
+                var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == parentItem);
+                int totalValue = 0;
+                NewMessage(parentItem.Name + " has the price " + parentItem.DefaultPrice.Price);
+                if (fabricationRecipe != null)
+                {
+                    NewMessage("    It constructs from:");
+
+                    foreach (RequiredItem requiredItem in fabricationRecipe.RequiredItems)
+                    {
+                        foreach (ItemPrefab itemPrefab in requiredItem.ItemPrefabs)
+                        {
+                            NewMessage("        " + itemPrefab.Name + " has the price " + itemPrefab.DefaultPrice.Price);
+                            totalValue += itemPrefab.DefaultPrice.Price;
+                        }
+                    }
+                    NewMessage("Its total value was: " + totalValue);
+                    totalValue = 0;
+                }
+                NewMessage("    The item deconstructs into:");
+                foreach (DeconstructItem deconstructItem in parentItem.DeconstructItems)
+                {
+                    ItemPrefab itemPrefab =
+                        (MapEntityPrefab.Find(deconstructItem.ItemIdentifier, identifier: null, showErrorMessages: false) ??
+                        MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+
+                    NewMessage("       " + itemPrefab.Name + " has the price " + itemPrefab.DefaultPrice.Price);
+                    totalValue += itemPrefab.DefaultPrice.Price;
+                }
+                NewMessage("Its deconstruct value was: " + totalValue);
+
             }, isCheat: false));
 
             commands.Add(new Command("setentityproperties", "setentityproperties [property name] [value]: Sets the value of some property on all selected items/structures in the sub editor.", (string[] args) =>
@@ -1365,7 +1774,9 @@ namespace Barotrauma
                 List<string> lines = missingTags.Select(t => "\"" + t.Key + "\"\n    missing from " + string.Join(", ", t.Value)).ToList();
 
                 string filePath = "missingloca.txt";
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, lines);
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
                 TextManager.Language = "English";
             }));
@@ -1374,9 +1785,21 @@ namespace Barotrauma
             {
                 var debugLines = EventSet.GetDebugStatistics();
                 string filePath = "eventstats.txt";
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, debugLines);
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
             }));
+
+            commands.Add(new Command("setfreecamspeed", "setfreecamspeed [speed]: Set the camera movement speed when not controlling a character. Defaults to 1.", (string[] args) =>
+            {
+                if (args.Length > 0) 
+                { 
+                    float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out float speed);
+                    Screen.Selected.Cam.FreeCamMoveSpeed = speed;
+                }
+            }));
+
 #if DEBUG
             commands.Add(new Command("setplanthealth", "setplanthealth [value]: Sets the health of the selected plant in sub editor.", (string[] args) =>
             {
@@ -1409,6 +1832,12 @@ namespace Barotrauma
                         }
                     }
                 }
+            }));
+
+            commands.Add(new Command("showballastflorasprite", "", (string[] args) =>
+            {
+                BallastFloraBehavior.AlwaysShowBallastFloraSprite = !BallastFloraBehavior.AlwaysShowBallastFloraSprite;
+                NewMessage("ok", GUI.Style.Green);
             }));
 
             commands.Add(new Command("printreceivertransfers", "", (string[] args) =>
@@ -1531,6 +1960,15 @@ namespace Barotrauma
             {
                 GameMain.Client?.ForceTimeOut();
             }, isCheat: false));
+            commands.Add(new Command("bumpitem", "", (string[] args) =>
+            {
+                float vel = 10.0f;
+                if (args.Length > 0)
+                {
+                    float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out vel);
+                }
+                Character.Controlled?.FocusedItem?.body?.ApplyLinearImpulse(Rand.Vector(vel));
+            }, isCheat: false));
 
 #endif
 
@@ -1639,7 +2077,9 @@ namespace Barotrauma
                     lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</EntityName." + me.Identifier + ">");
                     lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</EntityDescription." + me.Identifier + ">");
                 }
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, lines);
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
             }));
 
             commands.Add(new Command("dumpeventtexts", "dumpeventtexts [filepath]: gets the texts from event files and and writes them into a file along with xml tags that can be used in translation files. If the filepath is omitted, the file is written to Content/Texts/EventTexts.txt", (string[] args) =>
@@ -1658,16 +2098,15 @@ namespace Barotrauma
                     docs.Add(eventPrefab.ConfigElement.Document);
                     getTextsFromElement(eventPrefab.ConfigElement, lines, eventPrefab.Identifier);
                 }
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, lines);
-
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
 
                 System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
                 {
                     Indent = true,
                     NewLineOnAttributes = false
-                };
-
+                };                
                 foreach (XDocument doc in docs)
                 {
                     using (var writer = XmlWriter.Create(new System.Uri(doc.BaseUri).LocalPath, settings))
@@ -1676,6 +2115,7 @@ namespace Barotrauma
                         writer.Flush();
                     }
                 }
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
 
                 void getTextsFromElement(XElement element, List<string> list, string parentName)
                 {
@@ -1822,19 +2262,28 @@ namespace Barotrauma
                     lines.Add("[/table]");
                     lines.Add("");
                 }
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, lines);
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
             }));
 #if DEBUG
+            commands.Add(new Command("playovervc", "Plays a sound over voice chat.", (args) =>
+            {
+                VoipCapture.Instance?.SetOverrideSound(args.Length > 0 ? args[0] : null);
+            }));
+
             commands.Add(new Command("querylobbies", "Queries all SteamP2P lobbies", (args) =>
             {
-                Steamworks.Data.LobbyQuery lobbyQuery = Steamworks.SteamMatchmaking.CreateLobbyQuery().FilterDistanceWorldwide();
-
-                Steamworks.Data.Lobby[] lobbies = lobbyQuery.RequestAsync().Result;
-                foreach (var lobby in lobbies)
-                {
-                    DebugConsole.NewMessage(lobby.GetData("name") + ", " + lobby.GetData("lobbyowner"));
-                }
+                TaskPool.Add("DebugQueryLobbies",
+                    SteamManager.LobbyQueryRequest(), (t) => {
+                        var lobbies = ((Task<List<Steamworks.Data.Lobby>>)t).Result;
+                        foreach (var lobby in lobbies)
+                        {
+                            NewMessage(lobby.GetData("name") + ", " + lobby.GetData("lobbyowner"), Color.Yellow);
+                        }
+                        NewMessage($"Retrieved a total of {lobbies.Count} lobbies", Color.Lime);
+                    });
             }));
 
             commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
@@ -1857,7 +2306,9 @@ namespace Barotrauma
             commands.Add(new Command("printproperties", "Goes through the currently collected property list for missing localizations and writes them to a file.", (string[] args) =>
             {
                 string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\propertylocalization.txt";
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(path, SerializableEntityEditor.MissingLocalizations);
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
             }));
 
             commands.Add(new Command("getproperties", "Goes through the MapEntity prefabs and checks their serializable properties for localization issues.", (string[] args) =>
@@ -2072,12 +2523,15 @@ namespace Barotrauma
                 "revokeperm",
                 (string[] args) =>
                 {
-                    if (args.Length < 1) return;
+                    if (args.Length < 1) { return; }
 
-                    NewMessage("Valid permissions are:", Color.White);
-                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    if (args.Length < 2)
                     {
-                        NewMessage(" - " + permission.ToString(), Color.White);
+                        NewMessage("Valid permissions are:", Color.White);
+                        foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                        {
+                            NewMessage(" - " + permission.ToString(), Color.White);
+                        }
                     }
 
                     ShowQuestionPrompt("Permission to revoke from client " + args[0] + "?", (perm) =>
@@ -2230,6 +2684,37 @@ namespace Barotrauma
                     }
                 }
             );
+
+#if DEBUG
+            commands.Add(new Command("setcurrentlocationtype", "setcurrentlocationtype [location type]: Change the type of the current location.", (string[] args) =>
+            {
+                var character = Character.Controlled;
+                if (GameMain.GameSession?.Campaign == null)
+                {
+                    ThrowError("Campaign not active!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please give the location type after the command.");
+                    return;
+                }
+                var locationType = LocationType.List.Find(lt => lt.Identifier.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                if (locationType == null)
+                {
+                    ThrowError($"Could not find the location type \"{args[0]}\".");
+                    return;
+                }
+                GameMain.GameSession.Campaign.Map.CurrentLocation.ChangeType(locationType);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    LocationType.List.Select(lt => lt.Identifier).ToArray()
+                };
+            }));
+#endif
 
             commands.Add(new Command("limbscale", "Define the limbscale for the controlled character. Provide id or name if you want to target another character. Note: the changes are not saved!", (string[] args) =>
             {
@@ -2687,6 +3172,156 @@ namespace Barotrauma
                 default:
                     ThrowError("The first argument must be either 'name' or 'id'");
                     return false;
+            }
+        }
+
+
+        private enum AdjustItemTypes
+        {
+            NoAdjustment,
+            Additive,
+            Multiplicative
+        }
+
+        private static void PrintItemCosts(Dictionary<ItemPrefab, int> newPrices, ItemPrefab materialPrefab, List<FabricationRecipe> fabricableItems, int newPrice, bool adjustDown, string depth = "", AdjustItemTypes adjustItemType = AdjustItemTypes.NoAdjustment)
+        {
+            if (newPrice < 1)
+            {
+                NewMessage(depth + materialPrefab.Name + " cannot be adjusted to this price, because it would become less than 1.");
+                return;
+            }
+
+            depth += "   ";
+
+            if (newPrice > 0)
+            {
+                newPrices.TryAdd(materialPrefab, newPrice);
+            }
+
+            int componentCost = 0;
+            int newComponentCost = 0;
+
+            var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == materialPrefab);
+
+            if (fabricationRecipe != null)
+            {
+                foreach (RequiredItem requiredItem in fabricationRecipe.RequiredItems)
+                {
+                    foreach (ItemPrefab itemPrefab in requiredItem.ItemPrefabs)
+                    {
+                        GetAdjustedPrice(itemPrefab, ref componentCost, ref newComponentCost, newPrices);
+                    }
+                }
+            }
+            string componentCostMultiplier = "";
+            if (componentCost > 0)
+            {
+                componentCostMultiplier = $" (Relative difference to component cost {GetComponentCostDifference(materialPrefab.DefaultPrice.Price, componentCost)} => {GetComponentCostDifference(newPrice, newComponentCost)}, or flat profit {(int)(materialPrefab.DefaultPrice.Price - (int)componentCost)} => {newPrice - newComponentCost})";
+            }
+            string priceAdjustment = "";
+            if (newPrice != materialPrefab.DefaultPrice.Price)
+            {
+                priceAdjustment = ", Suggested price adjustment is " + materialPrefab.DefaultPrice.Price + " => " + newPrice;
+            }
+            NewMessage(depth + materialPrefab.Name + "(" + materialPrefab.DefaultPrice.Price + ") " + priceAdjustment + componentCostMultiplier);
+
+            if (adjustDown)
+            {
+                if (componentCost > 0)
+                {
+                    double newPriceMult = (double)newPrice / (double)(materialPrefab.DefaultPrice.Price);
+                    int newPriceDiff = componentCost + newPrice - materialPrefab.DefaultPrice.Price;
+
+                    switch (adjustItemType)
+                    {
+                        case AdjustItemTypes.Additive:
+                            NewMessage(depth + materialPrefab.Name + "'s components should be adjusted " + componentCost + " => " + newPriceDiff);
+                            break;
+                        case AdjustItemTypes.Multiplicative:
+                            NewMessage(depth + materialPrefab.Name + "'s components should be adjusted " + componentCost + " => " + Math.Round(newPriceMult * componentCost));
+                            break;
+                    }
+
+                    if (fabricationRecipe != null)
+                    {
+                        foreach (RequiredItem requiredItem in fabricationRecipe.RequiredItems)
+                        {
+                            foreach (ItemPrefab itemPrefab in requiredItem.ItemPrefabs)
+                            {
+                                if (itemPrefab.DefaultPrice != null)
+                                {
+                                    switch (adjustItemType)
+                                    {
+                                        case AdjustItemTypes.NoAdjustment:
+                                            PrintItemCosts(newPrices, itemPrefab, fabricableItems, itemPrefab.DefaultPrice.Price, adjustDown, depth, adjustItemType);
+                                            break;
+                                        case AdjustItemTypes.Additive:
+                                            PrintItemCosts(newPrices, itemPrefab, fabricableItems, itemPrefab.DefaultPrice.Price + (int)((newPrice - materialPrefab.DefaultPrice.Price) / (double)fabricationRecipe.RequiredItems.Count), adjustDown, depth, adjustItemType);
+                                            break;
+                                        case AdjustItemTypes.Multiplicative:
+                                            PrintItemCosts(newPrices, itemPrefab, fabricableItems, (int)(itemPrefab.DefaultPrice.Price * newPriceMult), adjustDown, depth, adjustItemType);
+                                            break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                var fabricationRecipes = fabricableItems.Where(f => f.RequiredItems.Any(x => x.ItemPrefabs.Contains(materialPrefab)));
+
+                foreach (FabricationRecipe fabricationRecipeParent in fabricationRecipes)
+                {
+                    if (fabricationRecipeParent.TargetItem.DefaultPrice != null)
+                    {
+                        int targetComponentCost = 0;
+                        int newTargetComponentCost = 0;
+
+                        foreach (RequiredItem requiredItem in fabricationRecipeParent.RequiredItems)
+                        {
+                            foreach (ItemPrefab itemPrefab in requiredItem.ItemPrefabs)
+                            {
+                                GetAdjustedPrice(itemPrefab, ref targetComponentCost, ref newTargetComponentCost, newPrices);
+                            }
+                        }
+                        switch (adjustItemType)
+                        {
+                            case AdjustItemTypes.NoAdjustment:
+                                PrintItemCosts(newPrices, fabricationRecipeParent.TargetItem, fabricableItems, fabricationRecipeParent.TargetItem.DefaultPrice.Price, adjustDown, depth, adjustItemType);
+                                break;
+                            case AdjustItemTypes.Additive:
+                                PrintItemCosts(newPrices, fabricationRecipeParent.TargetItem, fabricableItems, fabricationRecipeParent.TargetItem.DefaultPrice.Price + newPrice - materialPrefab.DefaultPrice.Price, adjustDown, depth, adjustItemType);
+                                break;
+                            case AdjustItemTypes.Multiplicative:
+                                double maintainedMultiplier = GetComponentCostDifference(fabricationRecipeParent.TargetItem.DefaultPrice.Price, targetComponentCost);
+                                PrintItemCosts(newPrices, fabricationRecipeParent.TargetItem, fabricableItems, (int)(newTargetComponentCost * maintainedMultiplier), adjustDown, depth, adjustItemType);
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static double GetComponentCostDifference(int itemCost, int componentCost)
+        {
+            return Math.Round((double)(itemCost / (double)componentCost), 2);
+        }
+
+        private static void GetAdjustedPrice(ItemPrefab itemPrefab, ref int componentCost, ref int newComponentCost, Dictionary<ItemPrefab, int> newPrices)
+        {
+            if (newPrices.TryGetValue(itemPrefab, out int newPrice))
+            {
+                newComponentCost += newPrice;
+            }
+            else if (itemPrefab.DefaultPrice != null)
+            {
+                newComponentCost += itemPrefab.DefaultPrice.Price;
+            }
+            if (itemPrefab.DefaultPrice != null)
+            {
+                componentCost += itemPrefab.DefaultPrice.Price;
             }
         }
     }

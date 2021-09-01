@@ -34,6 +34,11 @@ namespace Barotrauma
 
         public readonly Sprite[] CursorSprite = new Sprite[7];
 
+        public UISprite RadiationSprite { get; private set; }
+        public SpriteSheet RadiationAnimSpriteSheet { get; private set; }
+
+        public SpriteSheet SavingIndicator { get; private set; }
+
         public UISprite UIGlow { get; private set; }
         public UISprite UIGlowCircular { get; private set; }
 
@@ -70,11 +75,18 @@ namespace Barotrauma
         public Color ColorInventoryHalf { get; private set; } = Color.Orange;
         public Color ColorInventoryFull { get; private set; } = Color.LightGreen;
         public Color ColorInventoryBackground { get; private set; } = Color.Gray;
+        public Color ColorInventoryEmptyOverlay { get; private set; } = Color.Red;
 
         public Color TextColor { get; private set; } = Color.White * 0.8f;
         public Color TextColorBright { get; private set; } = Color.White * 0.9f;
         public Color TextColorDark { get; private set; } = Color.Black * 0.9f;
         public Color TextColorDim { get; private set; } = Color.White * 0.6f;
+
+        public Color ColorReputationVeryLow { get; private set; } = Color.Red;
+        public Color ColorReputationLow { get; private set; } = Color.Orange;
+        public Color ColorReputationNeutral { get; private set; } = Color.White * 0.8f;
+        public Color ColorReputationHigh { get; private set; } = Color.LightBlue;
+        public Color ColorReputationVeryHigh { get; private set; } = Color.Blue;
 
         // Inventory
         public Color EquipmentSlotIconColor { get; private set; } = new Color(99, 70, 64);
@@ -150,6 +162,9 @@ namespace Barotrauma
                     case "colorinventorybackground":
                         ColorInventoryBackground = subElement.GetAttributeColor("color", ColorInventoryBackground);
                         break;
+                    case "colorinventoryemptyoverlay":
+                        ColorInventoryEmptyOverlay = subElement.GetAttributeColor("color", ColorInventoryEmptyOverlay);
+                        break;
                     case "textcolordark":
                         TextColorDark = subElement.GetAttributeColor("color", TextColorDark);
                         break;
@@ -162,6 +177,21 @@ namespace Barotrauma
                     case "textcolornormal":
                     case "textcolor":
                         TextColor = subElement.GetAttributeColor("color", TextColor);
+                        break;
+                    case "colorreputationverylow":
+                        ColorReputationVeryLow = subElement.GetAttributeColor("color", TextColor);
+                        break;
+                    case "colorreputationlow":
+                        ColorReputationLow = subElement.GetAttributeColor("color", TextColor);
+                        break;
+                    case "colorreputationneutral":
+                        ColorReputationNeutral = subElement.GetAttributeColor("color", TextColor);
+                        break;
+                    case "colorreputationhigh":
+                        ColorReputationHigh = subElement.GetAttributeColor("color", TextColor);
+                        break;
+                    case "colorreputationveryhigh":
+                        ColorReputationVeryHigh = subElement.GetAttributeColor("color", TextColor);
                         break;
                     case "equipmentsloticoncolor":
                         EquipmentSlotIconColor = subElement.GetAttributeColor("color", EquipmentSlotIconColor);
@@ -205,6 +235,12 @@ namespace Barotrauma
                     case "uiglow":
                         UIGlow = new UISprite(subElement);
                         break;
+                    case "radiation":
+                        RadiationSprite = new UISprite(subElement);
+                        break;
+                    case "radiationanimspritesheet":
+                        RadiationAnimSpriteSheet = new SpriteSheet(subElement);
+                        break;
                     case "uiglowcircular":
                         UIGlowCircular = new UISprite(subElement);
                         break;
@@ -213,6 +249,9 @@ namespace Barotrauma
                         break;
                     case "focusindicator":
                         FocusIndicator = new SpriteSheet(subElement);
+                        break;
+                    case "savingindicator":
+                        SavingIndicator = new SpriteSheet(subElement);
                         break;
                     case "font":
                         Font = LoadFont(subElement, graphicsDevice);
@@ -344,7 +383,7 @@ namespace Barotrauma
                 if (GameMain.Config.Language.Equals(subElement.GetAttributeString("language", ""), StringComparison.OrdinalIgnoreCase))
                 {
                     uint overrideFontSize = GetFontSize(subElement, 0);
-                    if (overrideFontSize > 0) { return overrideFontSize; }
+                    if (overrideFontSize > 0) { return (uint)Math.Round(overrideFontSize * GameSettings.TextScale); }
                 }
             }
 
@@ -354,10 +393,10 @@ namespace Barotrauma
                 Point maxResolution = subElement.GetAttributePoint("maxresolution", new Point(int.MaxValue, int.MaxValue));
                 if (GameMain.GraphicsWidth <= maxResolution.X && GameMain.GraphicsHeight <= maxResolution.Y)
                 {
-                    return (uint)subElement.GetAttributeInt("size", 14);
+                    return (uint)Math.Round(subElement.GetAttributeInt("size", 14) * GameSettings.TextScale);
                 }
             }
-            return defaultSize;
+            return (uint)Math.Round(defaultSize * GameSettings.TextScale);
         }
 
         private string GetFontFilePath(XElement element)

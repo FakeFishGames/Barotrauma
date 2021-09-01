@@ -61,7 +61,7 @@ namespace Barotrauma
             {
                 var temp = LoadException;
                 LoadException = null;
-                throw temp;
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(temp).Throw();
             }
         }
     }

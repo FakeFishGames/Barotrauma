@@ -8,9 +8,18 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
+        private CoroutineHandle logPropertyChangeCoroutine;
+
+        public Inventory PreviousParentInventory;
+
         public override Sprite Sprite
         {
             get { return prefab?.sprite; }
+        }
+
+        partial void AssignCampaignInteractionTypeProjSpecific(CampaignMode.InteractionType interactionType)
+        {
+            GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
         }
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
@@ -85,6 +94,9 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.Status:
                     msg.Write(condition);
+                    break;
+                case NetEntityEvent.Type.AssignCampaignInteraction:
+                    msg.Write((byte)CampaignInteractionType);
                     break;
                 case NetEntityEvent.Type.Treatment:
                     {
@@ -238,7 +250,7 @@ namespace Barotrauma
 
         public void WriteSpawnData(IWriteMessage msg, UInt16 entityID, UInt16 originalInventoryID, byte originalItemContainerIndex)
         {
-            if (GameMain.Server == null) return;
+            if (GameMain.Server == null) { return; }
 
             msg.Write(Prefab.OriginalName);
             msg.Write(Prefab.Identifier);
@@ -269,6 +281,7 @@ namespace Barotrauma
 
             msg.Write(body == null ? (byte)0 : (byte)body.BodyType);
             msg.Write(SpawnedInOutpost);
+            msg.Write(AllowStealing);
 
             byte teamID = 0;
             foreach (WifiComponent wifiComponent in GetComponents<WifiComponent>())
@@ -282,9 +295,16 @@ namespace Barotrauma
             msg.Write(tagsChanged);
             if (tagsChanged)
             {
-                msg.Write(Tags);
+                string[] splitTags = Tags.Split(',');
+                msg.Write(string.Join(',', splitTags.Where(t => !prefab.Tags.Contains(t))));
+                msg.Write(string.Join(',', prefab.Tags.Where(t => !splitTags.Contains(t))));
             }
-
+            var nameTag = GetComponent<NameTag>();
+            msg.Write(nameTag != null);
+            if (nameTag != null)
+            {
+                msg.Write(nameTag.WrittenName ?? "");
+            }
         }
 
         partial void UpdateNetPosition(float deltaTime)

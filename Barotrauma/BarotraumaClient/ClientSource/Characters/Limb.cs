@@ -22,8 +22,8 @@ namespace Barotrauma
             float strength = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, MathHelper.Pi, diff));
             float jointAngle = JointAngle * strength;
 
-            JointBendDeformation limbADeformation = LimbA.Deformations.Find(d => d is JointBendDeformation) as JointBendDeformation;
-            JointBendDeformation limbBDeformation = LimbB.Deformations.Find(d => d is JointBendDeformation) as JointBendDeformation;
+            JointBendDeformation limbADeformation = LimbA.ActiveDeformations.Find(d => d is JointBendDeformation) as JointBendDeformation;
+            JointBendDeformation limbBDeformation = LimbB.ActiveDeformations.Find(d => d is JointBendDeformation) as JointBendDeformation;
 
             if (limbADeformation != null && limbBDeformation != null)
             {
@@ -114,7 +114,10 @@ namespace Barotrauma
         /// Note that different limbs can share the same deformations.
         /// Use ragdoll.SpriteDeformations for a collection that cannot have duplicates.
         /// </summary>
-        public List<SpriteDeformation> Deformations { get; private set; } = new List<SpriteDeformation>();
+        private List<SpriteDeformation> Deformations { get; set; } = new List<SpriteDeformation>();
+        private List<SpriteDeformation> NonConditionalDeformations { get; set; } = new List<SpriteDeformation>();
+        private List<(ConditionalSprite, IEnumerable<SpriteDeformation>)> ConditionalDeformations { get; set; } = new List<(ConditionalSprite, IEnumerable<SpriteDeformation>)>();
+        public List<SpriteDeformation> ActiveDeformations { get; set; } = new List<SpriteDeformation>();
 
         public Sprite Sprite { get; protected set; }
 
@@ -178,6 +181,9 @@ namespace Barotrauma
         {
             public float RotationState;
             public float OffsetState;
+            public Vector2 RandomOffsetMultiplier = new Vector2(Rand.Range(-1.0f, 1.0f), Rand.Range(-1.0f, 1.0f));
+            public float RandomRotationFactor = Rand.Range(0.0f, 1.0f);
+            public float RandomScaleFactor = Rand.Range(0.0f, 1.0f);
             public bool IsActive = true;
         }
 
@@ -282,12 +288,16 @@ namespace Barotrauma
                         ConditionalSprites.Add(conditionalSprite);
                         if (conditionalSprite.DeformableSprite != null)
                         {
-                            CreateDeformations(subElement.GetChildElement("deformablesprite"));
+                            var conditionalDeformations = CreateDeformations(subElement.GetChildElement("deformablesprite"));
+                            Deformations.AddRange(conditionalDeformations);
+                            ConditionalDeformations.Add((conditionalSprite, conditionalDeformations));
                         }
                         break;
                     case "deformablesprite":
                         _deformSprite = new DeformableSprite(subElement, filePath: GetSpritePath(subElement, Params.deformSpriteParams));
-                        CreateDeformations(subElement);
+                        var deformations = CreateDeformations(subElement);
+                        Deformations.AddRange(deformations);
+                        NonConditionalDeformations.AddRange(deformations);
                         break;
                     case "lightsource":
                         LightSource = new LightSource(subElement, GetConditionalTarget())
@@ -315,8 +325,9 @@ namespace Barotrauma
                     return targetEntity;
                 }
 
-                void CreateDeformations(XElement e)
+                IEnumerable<SpriteDeformation> CreateDeformations(XElement e)
                 {
+                    List<SpriteDeformation> deformations = new List<SpriteDeformation>();
                     foreach (XElement animationElement in e.GetChildElements("spritedeformation"))
                     {
                         int sync = animationElement.GetAttributeInt("sync", -1);
@@ -328,8 +339,7 @@ namespace Barotrauma
                             deformation = ragdoll.Limbs
                                 .Where(l => l != null)
                                 .SelectMany(l => l.Deformations)
-                                .Where(d => d.TypeName == typeName && d.Sync == sync)
-                                .FirstOrDefault();
+                                .FirstOrDefault(d => d.TypeName == typeName && d.Sync == sync);
                         }
                         if (deformation == null)
                         {
@@ -341,12 +351,37 @@ namespace Barotrauma
                         }
                         if (deformation != null)
                         {
-                            Deformations.Add(deformation);
+                            deformations.Add(deformation);
                         }
                     }
+                    return deformations;
                 }
             }
             LightSource?.CheckConditionals();
+        }
+
+        private void RefreshDeformations()
+        {
+            if (_deformSprite == null) { return; }
+            if (ConditionalSprites.None())
+            {
+                ActiveDeformations = Deformations;
+            }
+            else
+            {
+                ActiveDeformations.Clear();
+                if (_deformSprite == DeformSprite)
+                {
+                    ActiveDeformations.AddRange(NonConditionalDeformations);
+                }
+                foreach (var conditionalDeformation in ConditionalDeformations)
+                {
+                    if (conditionalDeformation.Item1.IsActive)
+                    {
+                        ActiveDeformations.AddRange(conditionalDeformation.Item2);
+                    }
+                }
+            }
         }
 
         public void RecreateSprites()
@@ -391,18 +426,24 @@ namespace Barotrauma
             character.Info?.CalculateHeadPosition(sprite);
         }
 
+        private string _texturePath;
         private string GetSpritePath(XElement element, SpriteParams spriteParams)
         {
-            if (spriteParams != null)
+            if (_texturePath == null)
             {
-                return GetSpritePath(spriteParams.GetTexturePath());
+                if (spriteParams != null)
+                {
+                    string texturePath = character.Params.VariantFile?.Root?.GetAttributeString("texture", null) ?? spriteParams.GetTexturePath();
+                    _texturePath = GetSpritePath(texturePath);
+                }
+                else
+                {
+                    string texturePath = element.GetAttributeString("texture", null);
+                    texturePath = string.IsNullOrWhiteSpace(texturePath) ? ragdoll.RagdollParams.Texture : texturePath;
+                    _texturePath = GetSpritePath(texturePath);
+                }
             }
-            else
-            {
-                string texturePath = element.GetAttributeString("texture", null);
-                texturePath = string.IsNullOrWhiteSpace(texturePath) ? ragdoll.RagdollParams.Texture : texturePath;
-                return GetSpritePath(texturePath);
-            }
+            return _texturePath;
         }
 
         /// <summary>
@@ -538,7 +579,7 @@ namespace Barotrauma
             else
             {
                 var spriteParams = Params.GetSprite();
-                if (spriteParams.DeadColorTime > 0 && deadTimer < spriteParams.DeadColorTime)
+                if (spriteParams != null && spriteParams.DeadColorTime > 0 && deadTimer < spriteParams.DeadColorTime)
                 {
                     deadTimer += deltaTime;
                 }
@@ -588,6 +629,7 @@ namespace Barotrauma
             }
 
             UpdateSpriteStates(deltaTime);
+            RefreshDeformations();
         }
 
         public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null)
@@ -638,13 +680,13 @@ namespace Barotrauma
                 var deformSprite = DeformSprite;
                 if (deformSprite != null)
                 {
-                    if (Deformations != null && Deformations.Any())
+                    if (ActiveDeformations.Any())
                     {
-                        var deformation = SpriteDeformation.GetDeformation(Deformations, deformSprite.Size);
+                        var deformation = SpriteDeformation.GetDeformation(ActiveDeformations, deformSprite.Size);
                         deformSprite.Deform(deformation);
                         if (LightSource != null && LightSource.DeformableLightSprite != null)
                         {
-                            deformation = SpriteDeformation.GetDeformation(Deformations, deformSprite.Size, dir == Direction.Left);
+                            deformation = SpriteDeformation.GetDeformation(ActiveDeformations, deformSprite.Size, dir == Direction.Left);
                             LightSource.DeformableLightSprite.Deform(deformation);
                         }
                     }
@@ -667,9 +709,9 @@ namespace Barotrauma
                     if (conditionalSprite.DeformableSprite != null)
                     {
                         var defSprite = conditionalSprite.DeformableSprite;
-                        if (Deformations != null && Deformations.Any())
+                        if (ActiveDeformations.Any())
                         {
-                            var deformation = SpriteDeformation.GetDeformation(Deformations, defSprite.Size);
+                            var deformation = SpriteDeformation.GetDeformation(ActiveDeformations, defSprite.Size);
                             defSprite.Deform(deformation);
                         }
                         else
@@ -706,13 +748,13 @@ namespace Barotrauma
                     c = Color.Lerp(c, spriteParams.DeadColor, MathUtils.InverseLerp(0, Params.GetSprite().DeadColorTime, deadTimer));
                 }
                 c = overrideColor ?? c;
-                float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
-                Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
+                float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
+                Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier) * Scale;
                 var ca = (float)Math.Cos(-body.Rotation);
                 var sa = (float)Math.Sin(-body.Rotation);
                 Vector2 transformedOffset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
                 decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), c,
-                    -body.Rotation + rotation, decorativeSprite.Scale * Scale, spriteEffect,
+                    -body.Rotation + rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, spriteEffect,
                     depth: decorativeSprite.Sprite.Depth);
             }
             float depthStep = 0.000001f;
@@ -955,7 +997,7 @@ namespace Barotrauma
                 }
                 wearableColor = wearableItemComponent.Item.GetSpriteColor();
             }
-            float textureScale = wearable.InheritTextureScale ? TextureScale : 1;
+            float textureScale = wearable.InheritTextureScale ? TextureScale : wearable.Scale;
 
             wearable.Sprite.Draw(spriteBatch,
                 new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
@@ -971,11 +1013,11 @@ namespace Barotrauma
             XElement element;
             if (random)
             {
-                element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), type)?.GetRandom(Rand.RandSync.ClientOnly);
+                element = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables, info.Gender, info.Race), type, info.Head.HeadSpriteId)?.GetRandom(Rand.RandSync.ClientOnly);
             }
             else
             {
-                element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), type)?.FirstOrDefault();
+                element = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables, info.Gender, info.Race), type, info.Head.HeadSpriteId)?.FirstOrDefault();
             }
             if (element != null)
             {

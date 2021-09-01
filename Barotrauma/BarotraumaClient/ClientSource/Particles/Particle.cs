@@ -26,14 +26,14 @@ namespace Barotrauma.Particles
 
         private float angularVelocity;
 
-        private Vector2 dragVec = Vector2.Zero;
-        private int dragWait = 0;
+        private float collisionIgnoreTimer = 0;
 
         private Vector2 size;
         private Vector2 sizeChange;
 
         private Color color;
         private bool changeColor;
+        private bool UseMiddleColor;
 
         private int spriteIndex;
 
@@ -65,7 +65,7 @@ namespace Barotrauma.Particles
         public Vector4 ColorMultiplier;
 
         public bool DrawOnTop { get; private set; }
-                
+
         public ParticlePrefab.DrawTargetType DrawTarget
         {
             get { return prefab.DrawTarget; }        
@@ -102,8 +102,7 @@ namespace Barotrauma.Particles
         {
             return debugName;
         }
-
-        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false)
+        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             this.prefab = prefab;
             debugName = $"Particle ({prefab.Name})";
@@ -112,10 +111,18 @@ namespace Barotrauma.Particles
 
             animState = 0;
             animFrame = 0;
-            dragWait = 0;
-            dragVec = Vector2.Zero;
-
+        
             currentHull = Hull.FindHull(position, hullGuess);
+
+            size = prefab.StartSizeMin + (prefab.StartSizeMax - prefab.StartSizeMin) * Rand.Range(0.0f, 1.0f);
+
+            if (tracerPoints != null)
+            {
+                size = new Vector2(Vector2.Distance(tracerPoints.Item1, tracerPoints.Item2), size.Y);
+                position = (tracerPoints.Item1 + tracerPoints.Item2) / 2;
+            }
+
+            sizeChange = prefab.SizeChangeMin + (prefab.SizeChangeMax - prefab.SizeChangeMin) * Rand.Range(0.0f, 1.0f);
 
             this.position = position;
             prevPosition = position;
@@ -134,14 +141,21 @@ namespace Barotrauma.Particles
 
             angularVelocity = Rand.Range(prefab.AngularVelocityMinRad, prefab.AngularVelocityMaxRad);
 
-            totalLifeTime = prefab.LifeTime;
-            lifeTime = prefab.LifeTime;
+          
+            if (prefab.LifeTimeMin <= 0.0f)
+            {
+                totalLifeTime = prefab.LifeTime;
+                lifeTime = prefab.LifeTime;
+            }
+            else
+            {
+                totalLifeTime = Rand.Range(prefab.LifeTimeMin, prefab.LifeTime);
+                lifeTime = totalLifeTime;
+            }
+
             startDelay = Rand.Range(prefab.StartDelayMin, prefab.StartDelayMax);
-            
-            size = prefab.StartSizeMin + (prefab.StartSizeMax - prefab.StartSizeMin) * Rand.Range(0.0f, 1.0f);
 
-            sizeChange = prefab.SizeChangeMin + (prefab.SizeChangeMax - prefab.SizeChangeMin) * Rand.Range(0.0f, 1.0f);
-
+            UseMiddleColor = prefab.UseMiddleColor;
             color = prefab.StartColor;
             changeColor = prefab.StartColor != prefab.EndColor;
             ColorMultiplier = Vector4.One;
@@ -174,14 +188,22 @@ namespace Barotrauma.Particles
             }
 
             DrawOnTop = drawOnTop;
+
+            this.collisionIgnoreTimer = collisionIgnoreTimer;
         }
         
-        public bool Update(float deltaTime)
+        public enum UpdateResult
+        {
+            Normal,
+            Delete
+        }
+
+        public UpdateResult Update(float deltaTime)
         {
             if (startDelay > 0.0f)
             {
                 startDelay -= deltaTime;
-                return true;
+                return UpdateResult.Normal;
             }
 
             prevPosition = position;
@@ -229,22 +251,43 @@ namespace Barotrauma.Particles
             }
 
             size.X += sizeChange.X * deltaTime;
-            size.Y += sizeChange.Y * deltaTime;  
+            size.Y += sizeChange.Y * deltaTime;
 
-            if (changeColor)
+            if (UseMiddleColor)
             {
-                color = Color.Lerp(prefab.EndColor, prefab.StartColor, lifeTime / prefab.LifeTime);
+                if (lifeTime > totalLifeTime * 0.5f)
+                {
+                    color = Color.Lerp(prefab.MiddleColor, prefab.StartColor, (lifeTime / totalLifeTime - 0.5f) * 2.0f);
+                }
+                else
+                {
+                    color = Color.Lerp(prefab.EndColor, prefab.MiddleColor, lifeTime / totalLifeTime * 2.0f);
+                }
             }
-            
+            else
+            {
+                if (changeColor)
+                {
+                    color = Color.Lerp(prefab.EndColor, prefab.StartColor, lifeTime / totalLifeTime);
+                }
+            }
+
             if (prefab.Sprites[spriteIndex] is SpriteSheet)
             {
                 animState += deltaTime;
                 int frameCount = ((SpriteSheet)prefab.Sprites[spriteIndex]).FrameCount;
-                animFrame = (int)Math.Min(Math.Floor(animState / prefab.AnimDuration * frameCount), frameCount - 1);
+                if (prefab.LoopAnim)
+                {
+                    animFrame = (int)(Math.Floor(animState / prefab.AnimDuration * frameCount) % frameCount);
+                }
+                else
+                {
+                    animFrame = (int)Math.Min(Math.Floor(animState / prefab.AnimDuration * frameCount), frameCount - 1);
+                }
             }
             
             lifeTime -= deltaTime;
-            if (lifeTime <= 0.0f || color.A <= 0 || size.X <= 0.0f || size.Y <= 0.0f) { return false; }
+            if (lifeTime <= 0.0f || color.A <= 0 || size.X <= 0.0f || size.Y <= 0.0f) { return UpdateResult.Delete; }
 
             if (hasSubEmitters)
             {
@@ -254,7 +297,13 @@ namespace Barotrauma.Particles
                 }
             }
 
-            if (!prefab.UseCollision) { return true; }
+            if (collisionIgnoreTimer > 0f)
+            {
+                collisionIgnoreTimer -= deltaTime;
+                if (collisionIgnoreTimer <= 0f) { currentHull ??= Hull.FindHull(position); }
+                return UpdateResult.Normal;
+            }
+            if (!prefab.UseCollision) { return UpdateResult.Normal; }
 
             if (HighQualityCollisionDetection)
             {
@@ -271,17 +320,17 @@ namespace Barotrauma.Particles
                 }
             }
 
-            return true;
+            return UpdateResult.Normal;
         }
 
-        private bool CollisionUpdate()
+        private UpdateResult CollisionUpdate()
         {
             if (currentHull == null)
             {
                 Hull collidedHull = Hull.FindHull(position);
                 if (collidedHull != null)
                 {
-                    if (prefab.DeleteOnCollision) return false;
+                    if (prefab.DeleteOnCollision) return UpdateResult.Delete;
                     OnWallCollisionOutside(collidedHull);
                 }
             }
@@ -291,12 +340,12 @@ namespace Barotrauma.Particles
                 Vector2 collisionNormal = Vector2.Zero;
                 if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < hullRect.Y - hullRect.Height)
                 {
-                    if (prefab.DeleteOnCollision) { return false; }
+                    if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
                     collisionNormal = new Vector2(0.0f, 1.0f);
                 }
                 else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > hullRect.Y)
                 {
-                    if (prefab.DeleteOnCollision) { return false; }
+                    if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
                     collisionNormal = new Vector2(0.0f, -1.0f);
                 }
 
@@ -321,12 +370,12 @@ namespace Barotrauma.Particles
 
                 if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < hullRect.X)
                 {
-                    if (prefab.DeleteOnCollision) { return false; }
+                    if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
                     collisionNormal = new Vector2(1.0f, 0.0f);
                 }
                 else if (velocity.X > 0.0f && position.X + prefab.CollisionRadius * size.X > hullRect.Right)
                 {
-                    if (prefab.DeleteOnCollision) { return false; }
+                    if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
                     collisionNormal = new Vector2(-1.0f, 0.0f);
                 }
 
@@ -367,33 +416,39 @@ namespace Barotrauma.Particles
                 }
             }
 
-            return true;
+            return UpdateResult.Normal;
         }
 
         private void ApplyDrag(float dragCoefficient, float deltaTime)
         {
-            if (velocity.LengthSquared() < dragVec.LengthSquared())
+            Vector2 relativeVel = velocity;
+            if (currentHull?.Submarine != null)
             {
-                velocity = Vector2.Zero;
-                return;
-            }
-            if (Math.Abs(velocity.X) < 0.0001f && Math.Abs(velocity.Y) < 0.0001f) return;
-            
-            //TODO: some better way to handle particle drag
-            //this doesn't work that well because the drag vector is only updated every 0.5 seconds, allowing the particle to accelerate way more than it should
-            //(e.g. a falling particle can freely accelerate for 0.5 seconds before the drag takes effect)
-            dragWait--;
-            if (dragWait <= 0)
-            {
-                dragWait = 30;
-
-                float speed = velocity.Length();
-
-                dragVec = (velocity / speed) * Math.Min(speed * speed * dragCoefficient * deltaTime, 1.0f);
+                relativeVel = velocity - ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
             }
 
-            velocity -= dragVec;
+            float speed = relativeVel.Length();
+
+            relativeVel /= speed;
+
+            float drag = speed * speed * dragCoefficient * 0.01f * deltaTime;
+            if (drag > speed)
+            {
+                relativeVel = Vector2.Zero;
+            }
+            else
+            {
+                speed -= drag;
+                relativeVel *= speed;
+            }
+
+            velocity = relativeVel;
+            if (currentHull?.Submarine != null)
+            {
+                velocity += ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
+            }
         }
+
 
         private void OnWallCollisionInside(Hull prevHull, Vector2 collisionNormal)
         {

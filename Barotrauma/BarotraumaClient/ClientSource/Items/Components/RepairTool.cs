@@ -66,10 +66,14 @@ namespace Barotrauma.Items.Components
         {
             foreach (ParticleEmitter particleEmitter in particleEmitters)
             {
-                float particleAngle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                float particleAngle = MathHelper.ToRadians(BarrelRotation);
+                if (item.body != null)
+                {
+                    particleAngle += item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                }
                 particleEmitter.Emit(
                     deltaTime, ConvertUnits.ToDisplayUnits(raystart),
-                    item.CurrentHull, particleAngle, particleEmitter.Prefab.CopyEntityAngle ? -particleAngle : 0);
+                    item.CurrentHull, particleAngle, particleEmitter.Prefab.Properties.CopyEntityAngle ? -particleAngle : 0);
             }
         }
 
@@ -109,25 +113,28 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem)
+        partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem, bool showProgressBar)
         {
-            float progressBarState = targetItem.ConditionPercentage / 100.0f;
-            if (!MathUtils.NearlyEqual(progressBarState, prevProgressBarState) || prevProgressBarTarget != targetItem)
+            if (showProgressBar)
             {
-                var door = targetItem.GetComponent<Door>();
-                if (door == null || door.Stuck <= 0)
+                float progressBarState = targetItem.ConditionPercentage / 100.0f;
+                if (!MathUtils.NearlyEqual(progressBarState, prevProgressBarState) || prevProgressBarTarget != targetItem)
                 {
-                    Vector2 progressBarPos = targetItem.DrawPosition;
-                    var progressBar = user.UpdateHUDProgressBar(
-                        targetItem,
-                        progressBarPos,
-                        progressBarState,
-                        GUI.Style.Red, GUI.Style.Green,
-                        progressBarState < prevProgressBarState ? "progressbar.cutting" : "");
-                    if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
+                    var door = targetItem.GetComponent<Door>();
+                    if (door == null || door.Stuck <= 0)
+                    {
+                        Vector2 progressBarPos = targetItem.DrawPosition;
+                        var progressBar = user?.UpdateHUDProgressBar(
+                            targetItem,
+                            progressBarPos,
+                            progressBarState,
+                            GUI.Style.Red, GUI.Style.Green,
+                            progressBarState < prevProgressBarState ? "progressbar.cutting" : "");
+                        if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
+                    }
+                    prevProgressBarState = progressBarState;
+                    prevProgressBarTarget = targetItem;
                 }
-                prevProgressBarState = progressBarState;
-                prevProgressBarTarget = targetItem;
             }
 
             Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);

@@ -28,7 +28,7 @@ namespace Barotrauma
                             return spr;
                         }
                         return null;
-                    }).Where(s => s!=null).ToList();
+                    }).Where(s => s != null).ToList();
                 }
                 return retVal;
             }
@@ -324,7 +324,7 @@ namespace Barotrauma
             {
                 if (!path.EndsWith("/")) path += "/";
             }
-            FilePath = path + file;
+            FilePath = (path + file).CleanUpPathCrossPlatform(correctFilenameCase: true);
             if (!string.IsNullOrEmpty(FilePath))
             {
                 FullPath = Path.GetFullPath(FilePath);

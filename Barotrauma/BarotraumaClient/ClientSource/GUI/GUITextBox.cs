@@ -49,8 +49,11 @@ namespace Barotrauma
             get { return _caretIndex; }
             set
             {
-                _caretIndex = value;
-                caretPosDirty = true;
+                if (value >= 0)
+                {
+                    _caretIndex = value;
+                    caretPosDirty = true;
+                }
             }
         }
         private bool caretPosDirty;
@@ -251,7 +254,7 @@ namespace Barotrauma
         public bool Readonly { get; set; }
 
         public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, ScalableFont font = null,
-                          Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool createClearButton = false)
+                          Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool createClearButton = false, bool createPenIcon = true)
             : base(style, rectT)
         {
             HoverCursor = CursorState.IBeam;
@@ -283,7 +286,7 @@ namespace Barotrauma
                 clearButtonWidth = (int)(clearButton.Rect.Width * 1.2f);
             }
 
-            if (this.style != null && this.style.ChildStyles.ContainsKey("textboxicon"))
+            if (this.style != null && this.style.ChildStyles.ContainsKey("textboxicon") && createPenIcon)
             {
                 icon = new GUIImage(new RectTransform(new Vector2(0.6f, 0.6f), frame.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point(5 + clearButtonWidth, 0) }, null, scaleToFit: true);
                 icon.ApplyStyle(this.style.ChildStyles["textboxicon"]);
@@ -454,7 +457,12 @@ namespace Barotrauma
             }
             if (!isSelecting)
             {
-                isSelecting = PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift);
+                isSelecting = PlayerInput.IsShiftDown();
+            }
+
+            if (mouseHeldInside && !PlayerInput.PrimaryMouseButtonHeld())
+            {
+                mouseHeldInside = false;
             }
 
             if (CaretEnabled)
@@ -621,6 +629,9 @@ namespace Barotrauma
         {
             if (Text == null) Text = "";
 
+            // Prevent alt gr from triggering any of these as that combination is often needed for special characters
+            if (PlayerInput.IsAltDown()) return;
+
             switch (command)
             {
                 case '\b' when !Readonly: //backspace
@@ -662,7 +673,10 @@ namespace Barotrauma
                     }
                     break;
                 case (char)0x1: // ctrl-a
-                    SelectAll();
+                    if (PlayerInput.IsCtrlDown())
+                    {
+                        SelectAll();
+                    }
                     break;
                 case (char)0x1A when !Readonly && !SubEditorScreen.IsSubEditor(): // ctrl-z
                     text = memento.Undo();
@@ -868,15 +882,22 @@ namespace Barotrauma
             selectionEndIndex = Math.Min(CaretIndex, textDrawn.Length);
             selectionEndPos = caretPos;
             selectedCharacters = Math.Abs(selectionStartIndex - selectionEndIndex);
-            if (IsLeftToRight)
+            try
             {
-                selectedText = Text.Substring(selectionStartIndex, selectedCharacters);
-                selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionStartIndex, selectedCharacters)) * TextBlock.TextScale;
+                if (IsLeftToRight)
+                {
+                    selectedText = Text.Substring(selectionStartIndex, Math.Min(selectedCharacters, Text.Length));
+                    selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionStartIndex, Math.Min(selectedCharacters, textDrawn.Length))) * TextBlock.TextScale;
+                }
+                else
+                {
+                    selectedText = Text.Substring(selectionEndIndex, Math.Min(selectedCharacters, Text.Length));
+                    selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionEndIndex, Math.Min(selectedCharacters, textDrawn.Length))) * TextBlock.TextScale;
+                }
             }
-            else
+            catch (ArgumentOutOfRangeException exception)
             {
-                selectedText = Text.Substring(selectionEndIndex, Math.Min(selectedCharacters, textDrawn.Length - selectionEndIndex));
-                selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionEndIndex, selectedCharacters)) * TextBlock.TextScale;
+                DebugConsole.ThrowError($"GUITextBox: Invalid selection: ({exception})");
             }
         }
     }

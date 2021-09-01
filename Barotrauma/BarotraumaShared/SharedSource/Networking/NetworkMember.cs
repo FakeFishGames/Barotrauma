@@ -29,7 +29,9 @@ namespace Barotrauma.Networking
         REQUEST_STARTGAMEFINALIZE, //tell the server you're ready to finalize round initialization
 
         ERROR,           //tell the server that an error occurred
-        CREW
+        CREW,
+        READY_CHECK,
+        READY_TO_SPAWN
         
     }
     enum ClientNetObject
@@ -77,8 +79,8 @@ namespace Barotrauma.Networking
         TRAITOR_MESSAGE,
         MISSION,
         EVENTACTION,
-        RESET_UPGRADES,     //inform the clients that the upgrades on the submarine have been reset
-        CREW                //anything related to managing bots in multiplayer
+        CREW,               //anything related to managing bots in multiplayer
+        READY_CHECK         //start, end and update a ready check 
     }
     enum ServerNetObject
     {
@@ -111,6 +113,13 @@ namespace Barotrauma.Networking
         PurchaseAndSwitchSub,
         PurchaseSub,
         SwitchSub
+    }
+
+    public enum ReadyCheckState
+    {
+        Start,
+        Update,
+        End
     }
 
     enum DisconnectReason
@@ -163,7 +172,7 @@ namespace Barotrauma.Networking
 #endif
         
         protected ServerSettings serverSettings;
-        
+
         protected TimeSpan updateInterval;
         protected DateTime updateTimer;
 
@@ -217,19 +226,19 @@ namespace Barotrauma.Networking
 
         public bool CanUseRadio(Character sender)
         {
-            if (sender == null) return false;
+            if (sender == null) { return false; }
 
-            var radio = sender.Inventory.Items.FirstOrDefault(i => i != null && i.GetComponent<WifiComponent>() != null);
-            if (radio == null || !sender.HasEquippedItem(radio)) return false;
+            var radio = sender.Inventory.AllItems.FirstOrDefault(i => i.GetComponent<WifiComponent>() != null);
+            if (radio == null || !sender.HasEquippedItem(radio)) { return false; }
                        
             var radioComponent = radio.GetComponent<WifiComponent>();
-            if (radioComponent == null) return false;
+            if (radioComponent == null) { return false; }
             return radioComponent.HasRequiredContainedItems(sender, addMessage: false);
         }
 
-        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Character senderCharacter = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None)
+        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Client senderClient = null, Character senderCharacter = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None)
         {
-            AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter, changeType: changeType));
+            AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter, senderClient, changeType: changeType));
         }
 
         public virtual void AddChatMessage(ChatMessage message)
@@ -240,6 +249,18 @@ namespace Barotrauma.Networking
             {
                 message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)message.Type]);
             }
+        }
+
+        public static string ClientLogName(Client client, string name = null)
+        {
+            if (client == null) { return name; }
+            string retVal = "‖";
+            if (client.Karma < 40.0f)
+            {
+                retVal += "color:#ff9900;";
+            }
+            retVal += "metadata:" + (client.SteamID != 0 ? client.SteamID.ToString() : client.ID.ToString()) + "‖" + (name ?? client.Name).Replace("‖", "") + "‖end‖";
+            return retVal;
         }
 
         public virtual void KickPlayer(string kickedName, string reason) { }

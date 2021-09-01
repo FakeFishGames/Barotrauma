@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -10,6 +11,9 @@ namespace Barotrauma.Items.Components
         private bool throwing, throwDone;
 
         private bool midAir;
+
+        //continuous collision detection is used while the item is moving faster than this
+        const float ContinuousCollisionThreshold = 5.0f;
 
         public Character CurrentThrower
         {
@@ -60,6 +64,13 @@ namespace Barotrauma.Items.Components
             if (!item.body.Enabled) { return; }
             if (midAir)
             {
+                if (item.body.FarseerBody.IsBullet)
+                {
+                    if (item.body.LinearVelocity.LengthSquared() < ContinuousCollisionThreshold * ContinuousCollisionThreshold)
+                    {
+                        item.body.FarseerBody.IsBullet = false;
+                    }
+                }
                 if (item.body.LinearVelocity.LengthSquared() < 0.01f)
                 {
                     CurrentThrower = null;
@@ -83,7 +94,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (picker == null || picker.Removed || !picker.HasSelectedItem(item))
+            if (picker == null || picker.Removed || !picker.HeldItems.Contains(item))
             {
                 IsActive = false;
                 return;
@@ -155,6 +166,7 @@ namespace Barotrauma.Items.Components
 
                     //disable platform collisions until the item comes back to rest again
                     item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+                    item.body.FarseerBody.IsBullet = true;
                     midAir = true;
 
                     ac.GetLimb(LimbType.Head).body.ApplyLinearImpulse(throwVector * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
@@ -164,6 +176,7 @@ namespace Barotrauma.Items.Components
                     item.body.AngularVelocity = rightHand.body.AngularVelocity;
                     throwPos = 0;
                     throwDone = true;
+                    IsActive = true;
 
                     if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                     {

@@ -81,10 +81,13 @@ namespace Barotrauma
         private float floatValue;
         public float FloatValue
         {
-            get { return floatValue; }
+            get
+            {
+                return floatValue;
+            }
             set
             {
-                if (MathUtils.NearlyEqual(value, floatValue)) return;
+                if (MathUtils.NearlyEqual(value, floatValue)) { return; }
                 floatValue = value;
                 ClampFloatValue();
                 float newValue = floatValue;
@@ -129,11 +132,15 @@ namespace Barotrauma
         private int intValue;
         public int IntValue
         {
-            get { return intValue; }
+            get 
+            {
+                return intValue; 
+            }
             set
             {
-                if (value == intValue) return;
+                if (value == intValue) { return; }
                 intValue = value;
+                ClampIntValue();
                 UpdateText();
             }
         }
@@ -192,6 +199,29 @@ namespace Barotrauma
             };
             TextBox.CaretColor = TextBox.TextColor;
             TextBox.OnTextChanged += TextChanged;
+            TextBox.OnDeselected += (sender, key) =>
+            {
+                if (inputType == NumberType.Int)
+                {
+                    ClampIntValue();
+                }
+                else
+                {
+                    ClampFloatValue();
+                }
+            };
+            TextBox.OnEnterPressed += (textBox, text) =>
+            {
+                if (inputType == NumberType.Int)
+                {
+                    ClampIntValue();
+                }
+                else
+                {
+                    ClampFloatValue();
+                }
+                return true;
+            };
 
             var buttonArea = new GUIFrame(new RectTransform(new Vector2(_relativeButtonAreaWidth, 1.0f), LayoutGroup.RectTransform, Anchor.CenterRight), style: null);
             PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), style: null);
@@ -299,10 +329,12 @@ namespace Barotrauma
             if (inputType == NumberType.Int)
             {
                 IntValue -= valueStep > 0 ? (int)valueStep : 1;
+                ClampIntValue();
             }
             else if (maxValueFloat.HasValue && minValueFloat.HasValue)
             {
                 FloatValue -= valueStep > 0 ? valueStep : Round();
+                ClampFloatValue();
             }
         }
 
@@ -311,10 +343,12 @@ namespace Barotrauma
             if (inputType == NumberType.Int)
             {
                 IntValue += valueStep > 0 ? (int)valueStep : 1;
+                ClampIntValue();
             }
             else if (inputType == NumberType.Float)
             {
                 FloatValue += valueStep > 0 ? valueStep : Round();
+                ClampFloatValue();
             }
         }
 
@@ -325,7 +359,7 @@ namespace Barotrauma
         /// </summary>
         private float Round()
         {
-            if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return 0;
+            if (!maxValueFloat.HasValue || !minValueFloat.HasValue) { return 0; }
             float onePercent = MathHelper.Lerp(minValueFloat.Value, maxValueFloat.Value, 0.01f);
             float diff = maxValueFloat.Value - minValueFloat.Value;
             int decimals = (int)MathHelper.Lerp(3, 0, MathUtils.InverseLerp(10, 1000, diff));
@@ -337,28 +371,24 @@ namespace Barotrauma
             switch (InputType)
             {
                 case NumberType.Int:
-                    int newIntValue = IntValue;
                     if (string.IsNullOrWhiteSpace(text) || text == "-")
                     {
                         intValue = 0;
                     }
-                    else if (int.TryParse(text, out newIntValue))
+                    else if (int.TryParse(text, out int newIntValue))
                     {
                         intValue = newIntValue;
                     }
-                    ClampIntValue();
                     break;
                 case NumberType.Float:
-                    float newFloatValue = FloatValue;
                     if (string.IsNullOrWhiteSpace(text) || text == "-")
                     {
                         floatValue = 0;
                     }
-                    else if (float.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out newFloatValue))
+                    else if (float.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out float newFloatValue))
                     {
                         floatValue = newFloatValue;
                     }
-                    ClampFloatValue();
                     break;
             }
             OnValueChanged?.Invoke(this);

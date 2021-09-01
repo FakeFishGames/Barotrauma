@@ -56,6 +56,7 @@ namespace Barotrauma.Networking
             Steamworks.SteamNetworking.AllowP2PPacketRelay(true);
 
             ServerConnection = new SteamP2PConnection("Server", hostSteamId);
+            ServerConnection.SetOwnerSteamIDIfUnknown(hostSteamId);
 
             incomingInitializationMessages = new List<IReadMessage>();
             incomingDataMessages = new List<IReadMessage>();
@@ -318,7 +319,7 @@ namespace Barotrauma.Networking
                 }
                 if (!successSend)
                 {
-                    DebugConsole.ThrowError("Failed to send message to remote peer! (" + length.ToString() + " bytes)");
+                    DebugConsole.AddWarning("Failed to send message to remote peer! (" + length.ToString() + " bytes)");
                 }
             }
         }

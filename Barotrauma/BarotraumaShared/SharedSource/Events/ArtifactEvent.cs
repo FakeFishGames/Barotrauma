@@ -56,8 +56,10 @@ namespace Barotrauma
         public override void Init(bool affectSubImmediately)
         {
             spawnPos = Level.Loaded.GetRandomItemPos(
-                (Rand.Value(Rand.RandSync.Server) < 0.5f) ? Level.PositionType.MainPath : Level.PositionType.Cave | Level.PositionType.Ruin,
-                500.0f, 10000.0f, 30.0f);
+                (Rand.Value(Rand.RandSync.Server) < 0.5f) ? 
+                Level.PositionType.MainPath | Level.PositionType.SidePath : 
+                Level.PositionType.Cave | Level.PositionType.Ruin,
+                500.0f, 10000.0f, 30.0f, SpawnPosFilter);
 
             spawnPending = true;
         }
@@ -107,7 +109,7 @@ namespace Barotrauma
                     state = 1;
                     break;
                 case 1:
-                    if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition) return;
+                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) return;
 
                     Finished();
                     state = 2;

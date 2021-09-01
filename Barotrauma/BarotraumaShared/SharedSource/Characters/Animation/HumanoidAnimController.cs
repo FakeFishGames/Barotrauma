@@ -26,7 +26,7 @@ namespace Barotrauma
                 {
                     if (_ragdollParams == null)
                     {
-                        _ragdollParams = RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(character.SpeciesName);
+                        _ragdollParams = RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(character.VariantOf ?? character.SpeciesName);
                     }
                     return _ragdollParams;
                 }
@@ -201,6 +201,8 @@ namespace Barotrauma
         public float LegBendTorque => CurrentGroundedParams.LegBendTorque * RagdollParams.JointScale;
         public Vector2 HandMoveOffset => CurrentGroundedParams.HandMoveOffset * RagdollParams.JointScale;
 
+        public float LockFlippingUntil;
+
         public override Vector2 AimSourceSimPos
         {
             get
@@ -268,14 +270,16 @@ namespace Barotrauma
                 else
                 {
                     LimbJoint rightWrist = GetJointBetweenLimbs(LimbType.RightForearm, LimbType.RightHand);
+                    if (rightWrist != null)
+                    {
+                        forearmLength = Vector2.Distance(
+                            rightElbow.LimbA.type == LimbType.RightForearm ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB,
+                            rightWrist.LimbA.type == LimbType.RightForearm ? rightWrist.LocalAnchorA : rightWrist.LocalAnchorB);
 
-                    forearmLength = Vector2.Distance(
-                        rightElbow.LimbA.type == LimbType.RightForearm ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB,
-                        rightWrist.LimbA.type == LimbType.RightForearm ? rightWrist.LocalAnchorA : rightWrist.LocalAnchorB);
-
-                    forearmLength += Vector2.Distance(
-                        rightHand.PullJointLocalAnchorA,
-                        rightElbow.LimbA.type == LimbType.RightHand ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB);
+                        forearmLength += Vector2.Distance(
+                            rightHand.PullJointLocalAnchorA,
+                            rightElbow.LimbA.type == LimbType.RightHand ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB);
+                    }
                 }
             }
         }
@@ -518,7 +522,7 @@ namespace Barotrauma
                     break;
             }
 
-            if (TargetDir != dir && !IsStuck)
+            if (Timing.TotalTime > LockFlippingUntil && TargetDir != dir && !IsStuck)
             {
                 Flip();
             }
@@ -1315,16 +1319,23 @@ namespace Barotrauma
                 var thigh = i == 0 ? GetLimb(LimbType.LeftThigh) : GetLimb(LimbType.RightThigh);
                 if (thigh == null) { continue; }
                 if (thigh.IsSevered) { continue; }
-
                 float thighDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, thigh.Rotation));
-                float thighTorque = thighDiff * thigh.Mass * Math.Sign(torso.Rotation - thigh.Rotation) * 5.0f;
-                thigh.body.ApplyTorque(thighTorque * strength);                
+                float diff = torso.Rotation - thigh.Rotation;
+                if (MathUtils.IsValid(diff))
+                {
+                    float thighTorque = thighDiff * thigh.Mass * Math.Sign(diff) * 5.0f;
+                    thigh.body.ApplyTorque(thighTorque * strength);
+                }               
 
                 var leg = i == 0 ? GetLimb(LimbType.LeftLeg) : GetLimb(LimbType.RightLeg);
                 if (leg == null || leg.IsSevered) { continue; }
                 float legDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, leg.Rotation));
-                float legTorque = legDiff * leg.Mass * Math.Sign(torso.Rotation - leg.Rotation) * 5.0f;
-                leg.body.ApplyTorque(legTorque * strength);                
+                diff = torso.Rotation - leg.Rotation;
+                if (MathUtils.IsValid(diff))
+                {
+                    float legTorque = legDiff * leg.Mass * Math.Sign(diff) * 5.0f;
+                    leg.body.ApplyTorque(legTorque * strength);
+                }
             }
         }
 
@@ -1452,7 +1463,7 @@ namespace Barotrauma
                 target.CharacterHealth.CalculateVitality();
                 if (wasCritical && target.Vitality > 0.0f && Timing.TotalTime > lastReviveTime + 10.0f)
                 {
-                    character.Info.IncreaseSkillLevel("medical", SkillSettings.Current.SkillIncreasePerCprRevive, character.WorldPosition + Vector2.UnitY * 150.0f);
+                    character.Info?.IncreaseSkillLevel("medical", SkillSettings.Current.SkillIncreasePerCprRevive, character.Position + Vector2.UnitY * 150.0f);
                     SteamAchievementManager.OnCharacterRevived(target, character);
                     lastReviveTime = (float)Timing.TotalTime;
 #if SERVER
@@ -1460,7 +1471,7 @@ namespace Barotrauma
 #endif
                     //reset attacker, we don't want the character to start attacking us
                     //because we caused a bit of damage to them during CPR
-                    if (target.LastAttacker == character) { target.LastAttacker = null; }
+                    target.ForgiveAttacker(character);
                 }
             }
         }
@@ -1764,13 +1775,13 @@ namespace Barotrauma
             Vector2 transformedHoldPos = rightShoulder.WorldAnchorA;
             if (itemPos == Vector2.Zero || isClimbing || usingController)
             {
-                if (character.SelectedItems[0] == item)
+                if (character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == item)
                 {
                     if (rightHand == null || rightHand.IsSevered) { return; }
                     transformedHoldPos = rightHand.PullJointWorldAnchorA - transformedHandlePos[0];
                     itemAngle = (rightHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
                 }
-                else if (character.SelectedItems[1] == item)
+                else if (character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand) == item)
                 {
                     if (leftHand == null || leftHand.IsSevered) { return; }
                     transformedHoldPos = leftHand.PullJointWorldAnchorA - transformedHandlePos[1];
@@ -1779,13 +1790,13 @@ namespace Barotrauma
             }
             else
             {
-                if (character.SelectedItems[0] == item)
+                if (character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == item)
                 {
                     if (rightHand == null || rightHand.IsSevered) { return; }
                     transformedHoldPos = rightShoulder.WorldAnchorA;
                     rightHand.Disabled = true;
                 }
-                if (character.SelectedItems[1] == item)
+                if (character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand) == item)
                 {
                     if (leftHand == null || leftHand.IsSevered) { return; }
                     transformedHoldPos = leftShoulder.WorldAnchorA;
@@ -1798,7 +1809,7 @@ namespace Barotrauma
 
             item.body.ResetDynamics();
 
-            Vector2 currItemPos = (character.SelectedItems[0] == item) ?
+            Vector2 currItemPos = (character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == item) ?
                 rightHand.PullJointWorldAnchorA - transformedHandlePos[0] :
                 leftHand.PullJointWorldAnchorA - transformedHandlePos[1];
 
@@ -1846,15 +1857,14 @@ namespace Barotrauma
                 }
             }
 
-            item.SetTransform(currItemPos, itemAngle + itemAngleRelativeToHoldAngle * Dir, setPrevTransform: false);            
+            item.SetTransform(currItemPos, itemAngle + itemAngleRelativeToHoldAngle * Dir, setPrevTransform: false);
 
-            if (!isClimbing && !character.IsIncapacitated)
+            if (!isClimbing && !character.IsIncapacitated && itemPos != Vector2.Zero)
             {
                 for (int i = 0; i < 2; i++)
                 {
-                    if (character.SelectedItems[i] != item || itemPos == Vector2.Zero) { continue; }
-                    Limb hand = (i == 0) ? rightHand : leftHand;
-                    HandIK(hand, transformedHoldPos + transformedHandlePos[i]);
+                    if (!character.Inventory.IsInLimbSlot(item, i == 0 ? InvSlotType.RightHand : InvSlotType.LeftHand)) { continue; }
+                    HandIK(i == 0 ? rightHand : leftHand, transformedHoldPos + transformedHandlePos[i]);
                 }
             }
         }
@@ -1974,9 +1984,6 @@ namespace Barotrauma
 
         public override void UpdateUseItem(bool allowMovement, Vector2 handWorldPos)
         {
-            var leftHand = GetLimb(LimbType.LeftHand);
-            var rightHand = GetLimb(LimbType.RightHand);
-
             useItemTimer = 0.5f;
             Anim = Animation.UsingConstruction;
 
@@ -1999,13 +2006,21 @@ namespace Barotrauma
                 handSimPos -= character.Submarine.SimPosition;
             }
 
-            leftHand.Disabled = true;
-            leftHand.PullJointEnabled = true;
-            leftHand.PullJointWorldAnchorB = handSimPos;
+            var leftHand = GetLimb(LimbType.LeftHand);
+            if (leftHand != null)
+            {
+                leftHand.Disabled = true;
+                leftHand.PullJointEnabled = true;
+                leftHand.PullJointWorldAnchorB = handSimPos;
+            }
 
-            rightHand.Disabled = true;
-            rightHand.PullJointEnabled = true;
-            rightHand.PullJointWorldAnchorB = handSimPos;
+            var rightHand = GetLimb(LimbType.RightHand);
+            if (rightHand != null)
+            {
+                rightHand.Disabled = true;
+                rightHand.PullJointEnabled = true;
+                rightHand.PullJointWorldAnchorB = handSimPos;
+            }
         }
 
         public override void Flip()
@@ -2020,16 +2035,13 @@ namespace Barotrauma
 
             Matrix torsoTransform = Matrix.CreateRotationZ(torso.Rotation);
 
-            for (int i = 0; i < character.SelectedItems.Length; i++)
+            foreach (Item heldItem in character.HeldItems)
             {
-                if (i == 1 && character.SelectedItems[0] == character.SelectedItems[1])
+                if (heldItem?.body != null && !heldItem.Removed && heldItem.GetComponent<Holdable>() != null)
                 {
-                    break;
+                    heldItem.FlipX(relativeToSub: false);
                 }
-                if (character.SelectedItems[i]?.body != null && !character.SelectedItems[i].Removed && character.SelectedItems[i].GetComponent<Holdable>() != null)
-                {
-                    character.SelectedItems[i].FlipX(relativeToSub: false);
-                }
+                heldItem.FlipX(relativeToSub: false);
             }
 
             foreach (Limb limb in Limbs)

@@ -30,6 +30,8 @@ namespace Barotrauma.Sounds
         private readonly SoundSourcePool[] sourcePools;
         
         private readonly List<Sound> loadedSounds;
+        public IReadOnlyList<Sound> LoadedSounds => loadedSounds;
+
         private readonly SoundChannel[][] playingChannels = new SoundChannel[2][];
         private readonly object threadDeathMutex = new object();
 
@@ -165,10 +167,10 @@ namespace Barotrauma.Sounds
             public CategoryModifier(int gainMultiplierIndex, float gain, bool muffle)
             {
                 Muffle = muffle;
-                GainMultipliers = new float[gainMultiplierIndex+1];
-                for (int i=0;i<GainMultipliers.Length;i++)
+                GainMultipliers = new float[gainMultiplierIndex + 1];
+                for (int i = 0; i < GainMultipliers.Length; i++)
                 {
-                    if (i==gainMultiplierIndex)
+                    if (i == gainMultiplierIndex)
                     {
                         GainMultipliers[i] = gain;
                     }
@@ -181,11 +183,11 @@ namespace Barotrauma.Sounds
 
             public void SetGainMultiplier(int index, float gain)
             {
-                if (GainMultipliers.Length < index+1)
+                if (GainMultipliers.Length < index + 1)
                 {
                     int oldLength = GainMultipliers.Length;
                     Array.Resize(ref GainMultipliers, index + 1);
-                    for (int i=oldLength;i<GainMultipliers.Length;i++)
+                    for (int i = oldLength; i < GainMultipliers.Length; i++)
                     {
                         GainMultipliers[i] = 1.0f;
                     }
@@ -512,6 +514,18 @@ namespace Barotrauma.Sounds
             }
         }
 
+        public void MoveSoundToPosition(Sound sound, int pos)
+        {
+            lock (loadedSounds)
+            {
+                int index = loadedSounds.IndexOf(sound);
+                if (index >= 0)
+                {
+                    loadedSounds.SiftElement(index, pos);
+                }
+            }
+        }
+
         public void SetCategoryGainMultiplier(string category, float gain, int index=0)
         {
             if (Disabled) { return; }
@@ -561,13 +575,13 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public void SetCategoryMuffle(string category,bool muffle)
+        public void SetCategoryMuffle(string category, bool muffle)
         {
             if (Disabled) { return; }
 
             category = category.ToLower();
 
-            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, CategoryModifier>();
+            if (categoryModifiers == null) { categoryModifiers = new Dictionary<string, CategoryModifier>(); }
             if (!categoryModifiers.ContainsKey(category))
             {
                 categoryModifiers.Add(category, new CategoryModifier(0, 1.0f, muffle));
@@ -585,7 +599,7 @@ namespace Barotrauma.Sounds
                     {
                         if (playingChannels[i][j] != null && playingChannels[i][j].IsPlaying)
                         {
-                            if (playingChannels[i][j].Category.ToLower() == category) playingChannels[i][j].Muffled = muffle;
+                            if (playingChannels[i][j]?.Category.ToLower() == category) { playingChannels[i][j].Muffled = muffle; }
                         }
                     }
                 }
@@ -597,7 +611,7 @@ namespace Barotrauma.Sounds
             if (Disabled) { return false; }
 
             category = category.ToLower();
-            if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) return false;
+            if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) { return false; }
             return categoryModifiers[category].Muffle;
         }
 
@@ -706,9 +720,11 @@ namespace Barotrauma.Sounds
         }
 
         bool areStreamsPlaying = false;
+        ManualResetEvent streamMre = null;
 
         void UpdateStreaming()
         {
+            streamMre = new ManualResetEvent(false);
             bool killThread = false;
             while (!killThread)
             {
@@ -745,12 +761,18 @@ namespace Barotrauma.Sounds
                         }
                     }
                 }
+                streamMre.WaitOne(10);
+                streamMre.Reset();
                 lock (threadDeathMutex)
                 {
                     areStreamsPlaying = !killThread;
                 }
-                Thread.Sleep(10); //TODO: use a separate thread for network audio?
             }
+        }
+
+        public void ForceStreamUpdate()
+        {
+            streamMre?.Set();
         }
 
         private void ReloadSounds()
@@ -788,6 +810,8 @@ namespace Barotrauma.Sounds
             }
             sourcePools[(int)SourcePoolIndex.Default]?.Dispose();
             sourcePools[(int)SourcePoolIndex.Voice]?.Dispose();
+
+            SoundBuffers.ClearPool();
         }
 
         public void Dispose()

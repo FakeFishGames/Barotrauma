@@ -22,6 +22,8 @@ namespace Barotrauma
         public readonly float Range;
         public readonly Vector2 FrequencyMultiplierRange;
         public readonly bool Stream;
+        public readonly bool IgnoreMuffling;
+
 
         public string Filename
         {
@@ -55,7 +57,7 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError($"Loaded frequency range exceeds max value: {FrequencyMultiplierRange} (original string was \"{freqMultAttr}\")");
             }
-            sound.IgnoreMuffling = element.GetAttributeBool("dontmuffle", false);
+            IgnoreMuffling = element.GetAttributeBool("dontmuffle", false);
         }
 
         public float GetRandomFrequencyMultiplier()
@@ -376,30 +378,25 @@ namespace Barotrauma
 
         public static void DrawGrid(SpriteBatch spriteBatch, int gridCells, Vector2 gridCenter, Vector2 roundedGridCenter, float alpha = 1.0f)
         {
-            var horizontalLine = GUI.Style.GetComponentStyle("HorizontalLine").GetDefaultSprite();
-            var verticalLine = GUI.Style.GetComponentStyle("VerticalLine").GetDefaultSprite();
-
             Vector2 topLeft = roundedGridCenter - Vector2.One * GridSize * gridCells / 2;
             Vector2 bottomRight = roundedGridCenter + Vector2.One * GridSize * gridCells / 2;
 
             for (int i = 0; i < gridCells; i++)
             {
                 float distFromGridX = (MathUtils.RoundTowardsClosest(gridCenter.X, GridSize.X) - gridCenter.X) / GridSize.X;
-                float distFromGridY = (MathUtils.RoundTowardsClosest(gridCenter.X, GridSize.Y) - gridCenter.X) / GridSize.Y;
+                float distFromGridY = (MathUtils.RoundTowardsClosest(gridCenter.Y, GridSize.Y) - gridCenter.Y) / GridSize.Y;
 
                 float normalizedDistX = Math.Abs(i + distFromGridX - gridCells / 2) / (gridCells / 2);
                 float normalizedDistY = Math.Abs(i - distFromGridY - gridCells / 2) / (gridCells / 2);
 
-                float expandX = MathHelper.Lerp(30.0f, 0.0f, normalizedDistX);
-                float expandY = MathHelper.Lerp(30.0f, 0.0f, normalizedDistY);
+                float expandX = MathHelper.Lerp(30.0f, 0.0f, normalizedDistY);
+                float expandY = MathHelper.Lerp(30.0f, 0.0f, normalizedDistX);
 
                 GUI.DrawLine(spriteBatch,
-                    horizontalLine,
                     new Vector2(topLeft.X - expandX, -bottomRight.Y + i * GridSize.Y),
                     new Vector2(bottomRight.X + expandX, -bottomRight.Y + i * GridSize.Y),
                     Color.White * (1.0f - normalizedDistY) * alpha, depth: 0.6f, width: 3);
                 GUI.DrawLine(spriteBatch,
-                    verticalLine,
                     new Vector2(topLeft.X + i * GridSize.X, -topLeft.Y + expandY),
                     new Vector2(topLeft.X + i * GridSize.X, -bottomRight.Y - expandY),
                     Color.White * (1.0f - normalizedDistX) * alpha, depth: 0.6f, width: 3);
@@ -422,9 +419,10 @@ namespace Barotrauma
                 parent.RectTransform, Anchor.Center), 
                 style: null);
 
+            var connectedSubs = GetConnectedSubs();
             foreach (Hull hull in Hull.hullList)
             {
-                if (hull.Submarine != this && !(DockedTo.Contains(hull.Submarine))) continue;
+                if (hull.Submarine != this && !connectedSubs.Contains(hull.Submarine)) { continue; }
                 if (ignoreOutpost && !IsEntityFoundOnThisSub(hull, true)) { continue; }
 
                 Vector2 relativeHullPos = new Vector2(
@@ -535,11 +533,11 @@ namespace Barotrauma
                     for (int i = 0; i < item.Connections.Count; i++)
                     {
                         int wireCount = item.Connections[i].Wires.Count(w => w != null);
-                        if (doorLinks + wireCount > Connection.MaxLinked)
+                        if (doorLinks + wireCount > item.Connections[i].MaxWires)
                         {
                             errorMsgs.Add(TextManager.GetWithVariables("InsufficientFreeConnectionsWarning", 
                                 new string[] { "[doorcount]", "[freeconnectioncount]" },
-                                new string[] { doorLinks.ToString(), (Connection.MaxLinked - wireCount).ToString() }));
+                                new string[] { doorLinks.ToString(), (item.Connections[i].MaxWires - wireCount).ToString() }));
                             break;
                         }
                     }

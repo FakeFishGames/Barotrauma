@@ -1,7 +1,5 @@
 ﻿using Barotrauma.Networking;
-using FarseerPhysics;
 using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -21,11 +19,24 @@ namespace Barotrauma.Items.Components
 
         private List<ushort> disconnectedWireIds;
 
+        /// <summary>
+        /// Allows rewiring the connection panel despite rewiring being disabled on a server
+        /// </summary>
+        public bool AlwaysAllowRewiring
+        {
+            get { return item.Submarine?.Info.Type == SubmarineType.BeaconStation; }
+        }
+
         [Editable, Serialize(false, true, description: "Locked connection panels cannot be rewired in-game.", alwaysUseInstanceValues: true)]
         public bool Locked
         {
             get;
             set;
+        }
+
+        public bool TemporarilyLocked
+        {
+            get { return Level.IsLoadedOutpost && item.GetComponent<DockingPort>() != null; }
         }
 
         //connection panels can't be deactivated externally (by signals or status effects)
@@ -50,19 +61,19 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString())
                 {
                     case "input":                        
-                        Connections.Add(new Connection(subElement, this));
+                        Connections.Add(new Connection(subElement, this, IdRemap.DiscardId));
                         break;
                     case "output":
-                        Connections.Add(new Connection(subElement, this));
+                        Connections.Add(new Connection(subElement, this, IdRemap.DiscardId));
                         break;
                 }
             }
 
             base.IsActive = true;
-            InitProjSpecific(element);
+            InitProjSpecific();
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific();
 
         private bool linksInitialized;
         public override void OnMapLoaded()
@@ -103,7 +114,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
-            if (item.body != null)
+            if (item.body != null && item.body.BodyType == FarseerPhysics.BodyType.Dynamic)
             {
                 var holdable = item.GetComponent<Holdable>();
                 if (holdable == null || !holdable.Attachable)
@@ -122,12 +133,12 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Wire wire in c.Wires)
                 {
-                    if (wire == null) continue;
+                    if (wire == null) { continue; }
 #if CLIENT
-                    if (wire.Item.IsSelected) continue;
+                    if (wire.Item.IsSelected) { continue; }
 #endif
                     var wireNodes = wire.GetNodes();
-                    if (wireNodes.Count == 0) continue;
+                    if (wireNodes.Count == 0) { continue; }
 
                     if (Submarine.RectContains(item.Rect, wireNodes[0] + wireNodeOffset))
                     {
@@ -176,7 +187,7 @@ namespace Barotrauma.Items.Components
         {
             //attaching wires to items with a body is not allowed
             //(signal items remove their bodies when attached to a wall)
-            if (item.body != null)
+            if (item.body != null && item.body.BodyType == FarseerPhysics.BodyType.Dynamic)
             {
                 return false;
             }
@@ -218,9 +229,9 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void Load(XElement element, bool usePrefabValues)
+        public override void Load(XElement element, bool usePrefabValues, IdRemap idRemap)
         {
-            base.Load(element, usePrefabValues);
+            base.Load(element, usePrefabValues, idRemap);
 
             List<Connection> loadedConnections = new List<Connection>();
 
@@ -229,20 +240,42 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString())
                 {
                     case "input":
-                        loadedConnections.Add(new Connection(subElement, this));
+                        loadedConnections.Add(new Connection(subElement, this, idRemap));
                         break;
                     case "output":
-                        loadedConnections.Add(new Connection(subElement, this));
+                        loadedConnections.Add(new Connection(subElement, this, idRemap));
                         break;
                 }
             }
 
             for (int i = 0; i < loadedConnections.Count && i < Connections.Count; i++)
             {
-                loadedConnections[i].wireId.CopyTo(Connections[i].wireId, 0);
+                if (loadedConnections[i].wireId.Length == Connections[i].wireId.Length)
+                {
+                    loadedConnections[i].wireId.CopyTo(Connections[i].wireId, 0);
+                }
+                else
+                {
+                    //backwards compatibility when maximum number of wires has changed                    
+                    foreach (ushort id in loadedConnections[i].wireId)
+                    {
+                        for (int j = 0; j < Connections[i].wireId.Length; j++)
+                        {
+                            if (Connections[i].wireId[j] == 0)
+                            {
+                                Connections[i].wireId[j] = id;
+                                break;
+                            }
+                        }
+                    }
+                }
             }
 
             disconnectedWireIds = element.GetAttributeUshortArray("disconnectedwires", new ushort[0]).ToList();
+            for (int i = 0; i < disconnectedWireIds.Count; i++)
+            {
+                disconnectedWireIds[i] = idRemap.GetOffsetId(disconnectedWireIds[i]);
+            }
         }
 
         public override XElement Save(XElement parentElement)
@@ -324,7 +357,7 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             //do nothing
         }

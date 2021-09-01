@@ -24,9 +24,15 @@ namespace Barotrauma.Items.Components
             get { return GuiFrame.Rect.Width / 400.0f; }
         }
 
-        partial void InitProjSpecific(XElement element)
+        private Point originalMaxSize;
+        private Vector2 originalRelativeSize;
+
+        partial void InitProjSpecific()
         {
             if (GuiFrame == null) { return; }
+            originalMaxSize = GuiFrame.RectTransform.MaxSize;
+            originalRelativeSize = GuiFrame.RectTransform.RelativeSize;
+            CheckForLabelOverlap();
             new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform), DrawConnections, null)
             {
                 UserData = this
@@ -40,7 +46,7 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime)
         {
-            foreach (Wire wire in DisconnectedWires)
+            foreach (var _ in DisconnectedWires)
             {
                 if (Rand.Range(0.0f, 500.0f) < 1.0f)
                 {
@@ -112,6 +118,32 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        protected override void OnResolutionChanged()
+        {
+            base.OnResolutionChanged();
+            if (GuiFrame == null) { return; }
+            CheckForLabelOverlap();
+        }
+
+        private void CheckForLabelOverlap()
+        {
+            GuiFrame.RectTransform.MaxSize = originalMaxSize;
+            GuiFrame.RectTransform.Resize(originalRelativeSize);
+            if (Connection.CheckConnectionLabelOverlap(this, out Point newRectSize))
+            {
+                int xCenter = (int)(GameMain.GraphicsWidth / 2.0f);
+                int maxNewWidth = 2 * Math.Min(xCenter - HUDLayoutSettings.CrewArea.Right, xCenter - HUDLayoutSettings.ChatBoxArea.Right);
+                int yCenter = (int)(GameMain.GraphicsHeight / 2.0f);
+                int maxNewHeight = 2 * Math.Min(yCenter - HUDLayoutSettings.MessageAreaTop.Bottom, HUDLayoutSettings.InventoryTopY - yCenter);
+                // Make sure we don't expand the panel interface too much
+                newRectSize = new Point(Math.Min(newRectSize.X, maxNewWidth), Math.Min(newRectSize.Y, maxNewHeight));
+                GuiFrame.RectTransform.MaxSize = new Point(
+                    Math.Max(GuiFrame.RectTransform.MaxSize.X, newRectSize.X),
+                    Math.Max(GuiFrame.RectTransform.MaxSize.Y, newRectSize.Y));
+                GuiFrame.RectTransform.Resize(newRectSize);
+            }
+        }
+
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (GameMain.Client.MidRoundSyncing)
@@ -122,7 +154,7 @@ namespace Barotrauma.Items.Components
                 msg.ReadUInt16(); //user ID
                 foreach (Connection connection in Connections)
                 {
-                    for (int i = 0; i < Connection.MaxLinked; i++)
+                    for (int i = 0; i < connection.MaxWires; i++)
                     {
                         msg.ReadUInt16();
                     }
@@ -168,7 +200,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Connection connection in Connections)
             {
-                for (int i = 0; i < Connection.MaxLinked; i++)
+                for (int i = 0; i < connection.MaxWires; i++)
                 {
                     ushort wireId = msg.ReadUInt16();
 

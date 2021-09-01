@@ -31,6 +31,7 @@ namespace Barotrauma.Items.Components
             msg.Write(isBroken);
             msg.Write(extraData.Length == 3 ? (bool)extraData[2] : false); //forced open
             msg.Write(isStuck);
+            msg.Write(isJammed);
             msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);
             msg.Write(lastUser == null ? (UInt16)0 : lastUser.ID);
         }

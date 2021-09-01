@@ -131,7 +131,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!powerOnSoundPlayed && powerOnSound != null)
                 {
-                    SoundPlayer.PlaySound(powerOnSound.Sound, item.WorldPosition, powerOnSound.Volume, powerOnSound.Range, hullGuess: item.CurrentHull);                    
+                    SoundPlayer.PlaySound(powerOnSound.Sound, item.WorldPosition, powerOnSound.Volume, powerOnSound.Range, hullGuess: item.CurrentHull, ignoreMuffling: powerOnSound.IgnoreMuffling);                    
                     powerOnSoundPlayed = true;
                 }
             }
@@ -231,8 +231,16 @@ namespace Barotrauma.Items.Components
             //and send out a "probe signal" which the PowerTransfer components use to add up the grid power/load
             foreach (Powered powered in poweredList)
             {
-                if (powered is PowerTransfer) { continue; }
-                if (powered.currPowerConsumption > 0.0f)
+                if (powered is PowerTransfer pt)
+                {
+                    if (pt.ExtraLoad > 0.0f) 
+                    { 
+                        lastPowerProbeRecipients.Clear();
+                        powered.powerIn?.SendPowerProbeSignal(powered.item, -pt.ExtraLoad);
+                    }
+                    continue; 
+                }
+                else if (powered.currPowerConsumption > 0.0f)
                 {
                     //consuming power
                     lastPowerProbeRecipients.Clear();

@@ -53,6 +53,8 @@ namespace Barotrauma.Items.Components
 
         private GUIFrame inventoryContainer;
 
+        private GUILayoutGroup paddedFrame;
+
         private readonly Dictionary<string, GUIButton> warningButtons = new Dictionary<string, GUIButton>();
 
         private static readonly string[] warningTexts = new string[]
@@ -74,7 +76,7 @@ namespace Barotrauma.Items.Components
             tempRangeIndicator = new Sprite(element.GetChildElement("temprangeindicator")?.GetChildElement("sprite"));
             graphLine = new Sprite(element.GetChildElement("graphline")?.GetChildElement("sprite"));
 
-            var paddedFrame = new GUILayoutGroup(new RectTransform(
+            paddedFrame = new GUILayoutGroup(new RectTransform(
                     GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) 
                     { AbsoluteOffset = GUIStyle.ItemFrameOffset }, 
                 isHorizontal: true)
@@ -128,26 +130,26 @@ namespace Barotrauma.Items.Components
 
 
             Point maxIndicatorSize = new Point(int.MaxValue, (int)(40 * GUI.Scale));
-            criticalHeatWarning = new GUITickBox(new RectTransform(new Vector2(0.33f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
+            criticalHeatWarning = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
                 TextManager.Get("ReactorWarningCriticalTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
             {
                 Selected = false,
                 Enabled = false,
                 ToolTip = TextManager.Get("ReactorHeatTip")
             };
-            lowTemperatureWarning = new GUITickBox(new RectTransform(new Vector2(0.33f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
-                TextManager.Get("ReactorWarningCriticalLowTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
-            {
-                Selected = false,
-                Enabled = false,
-                ToolTip = TextManager.Get("ReactorTempTip")
-            };
-            criticalOutputWarning = new GUITickBox(new RectTransform(new Vector2(0.33f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
+            criticalOutputWarning = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
                 TextManager.Get("ReactorWarningCriticalOutput"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
             {
                 Selected = false,
                 Enabled = false,
                 ToolTip = TextManager.Get("ReactorOutputTip")
+            };
+            lowTemperatureWarning = new GUITickBox(new RectTransform(new Vector2(0.4f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
+                TextManager.Get("ReactorWarningCriticalLowTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
+            {
+                Selected = false,
+                Enabled = false,
+                ToolTip = TextManager.Get("ReactorTempTip")
             };
             List<GUITickBox> indicatorLights = new List<GUITickBox>() { criticalHeatWarning, lowTemperatureWarning, criticalOutputWarning };
             indicatorLights.ForEach(l => l.TextBlock.OverrideTextColor(GUI.Style.TextColor));
@@ -334,8 +336,9 @@ namespace Barotrauma.Items.Components
             };
 
             topRightArea.Recalculate();
-            autoTempLight.TextBlock.Wrap = true;
-            indicatorLights.Add(autoTempLight);
+            autoTempLight.TextBlock.Padding = new Vector4(autoTempLight.TextBlock.Padding.X, 0.0f, 0.0f, 0.0f);
+            autoTempLight.TextBlock.Text = autoTempLight.TextBlock.Text.Replace(' ', '\n');
+            autoTempLight.TextBlock.AutoScaleHorizontal = true;
             GUITextBlock.AutoScaleAndNormalize(indicatorLights.Select(l => l.TextBlock));
 
             // right bottom (graph area) -----------------------
@@ -502,8 +505,16 @@ namespace Barotrauma.Items.Components
         {
             if (item.Removed) { return; }
 
+            Vector2 clampedOptimalTurbineOutput = optimalTurbineOutput;
+            Vector2 clampedAllowedTurbineOutput = allowedTurbineOutput;
+            if (clampedOptimalTurbineOutput.X > 100.0f)
+            {
+                clampedOptimalTurbineOutput = new Vector2(92.0f, 110.0f);
+                clampedAllowedTurbineOutput = new Vector2(85.0f, 110.0f);
+            }
+
             DrawMeter(spriteBatch, container.Rect,
-                turbineOutputMeter, TurbineOutput, new Vector2(0.0f, 100.0f), optimalTurbineOutput, allowedTurbineOutput);
+                turbineOutputMeter, TurbineOutput, new Vector2(0.0f, 100.0f), clampedOptimalTurbineOutput, clampedAllowedTurbineOutput);
         }
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
@@ -525,8 +536,7 @@ namespace Barotrauma.Items.Components
             warningButtons["ReactorWarningMeltdown"].Selected = meltDownTimer > MeltdownDelay * 0.5f || item.Condition == 0.0f && lightOn;
             warningButtons["ReactorWarningSCRAM"].Selected = temperature > 0.1f && !PowerOn;
 
-            if ((FissionRateScrollBar.Rect.Contains(PlayerInput.MousePosition) || FissionRateScrollBar.Children.Contains(GUIScrollBar.DraggingBar) ||
-                TurbineOutputScrollBar.Rect.Contains(PlayerInput.MousePosition) || TurbineOutputScrollBar.Children.Contains(GUIScrollBar.DraggingBar)) &&
+            if (paddedFrame.Rect.Contains(PlayerInput.MousePosition) &&
                 !PlayerInput.KeyDown(InputType.Deselect) && !PlayerInput.KeyHit(InputType.Deselect))
             {
                 Character.DisableControls = true;

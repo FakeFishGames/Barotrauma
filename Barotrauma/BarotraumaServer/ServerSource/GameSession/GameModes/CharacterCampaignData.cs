@@ -6,6 +6,11 @@ namespace Barotrauma
     {
         public bool HasSpawned;
 
+        public bool HasItemData
+        {
+            get { return itemData != null; }
+        }
+
         partial void InitProjSpecific(Client client)
         {
             ClientEndPoint = client.Connection.EndPointString;
@@ -30,14 +35,27 @@ namespace Barotrauma
             return other.SteamID == SteamID && other.ClientEndPoint == ClientEndPoint;
         }
 
-        public void SpawnInventoryItems(CharacterInfo characterInfo, Inventory inventory)
+        public void SpawnInventoryItems(Character character, Inventory inventory)
         {
-            characterInfo.SpawnInventoryItems(inventory, itemData);
+            if (character == null)
+            {
+                throw new System.InvalidOperationException($"Failed to spawn inventory items. Character was null.");
+            }
+            if (itemData == null)
+            {
+                throw new System.InvalidOperationException($"Failed to spawn inventory items for the character \"{character.Name}\". No saved inventory data.");
+            }
+            character.SpawnInventoryItems(inventory, itemData);
         }
 
-        public void ApplyHealthData(CharacterInfo characterInfo, Character character)
+        public void ApplyHealthData(Character character)
         {            
-            characterInfo.ApplyHealthData(character, healthData);
+            CharacterInfo.ApplyHealthData(character, healthData);
         }
+
+        public void ApplyOrderData(Character character)
+        {
+            CharacterInfo.ApplyOrderData(character, OrderData);
+        } 
     }
 }

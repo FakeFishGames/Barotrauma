@@ -468,6 +468,17 @@ namespace FarseerPhysics.Dynamics
             }
         }
 
+        private float gravityScale = 1.0f;
+        public float GravityScale
+        {
+            get { return gravityScale; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) { return; }
+                gravityScale = value;
+            }
+        }
+
         /// <summary>
         /// Gets or sets a value indicating whether this body ignores gravity.
         /// </summary>
@@ -585,7 +596,7 @@ namespace FarseerPhysics.Dynamics
         /// Warning: This method is locked during callbacks.
         /// </summary>>
         /// <exception cref="System.InvalidOperationException">Thrown when the world is Locked/Stepping.</exception>
-        public void Add(Fixture fixture)
+        public void Add(Fixture fixture, bool resetMassData = true)
         {
             if (World != null && World.IsLocked)
                 throw new WorldLockedException("Cannot add fixtures to a body when the World is locked.");
@@ -607,7 +618,7 @@ namespace FarseerPhysics.Dynamics
 #endif
 
             // Adjust mass properties if needed.
-            if (fixture.Shape._density > 0.0f)
+            if (fixture.Shape._density > 0.0f && resetMassData)
                 ResetMassData();
 
             if (World != null)
@@ -1303,6 +1314,7 @@ namespace FarseerPhysics.Dynamics
             body.IsBullet = IsBullet;
             body.IgnoreCCD = IgnoreCCD;
             body.IgnoreGravity = IgnoreGravity;
+            body.gravityScale = gravityScale;
             body._torque = _torque;
 
             return body;

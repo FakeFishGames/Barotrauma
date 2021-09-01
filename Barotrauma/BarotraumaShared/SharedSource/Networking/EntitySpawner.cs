@@ -26,6 +26,9 @@ namespace Barotrauma
             public readonly Submarine Submarine;
             public readonly float Condition;
 
+            public bool SpawnIfInventoryFull = true;
+            public bool IgnoreLimbSlots = false;
+
             private readonly Action<Item> onSpawned;
 
             public ItemSpawnInfo(ItemPrefab prefab, Vector2 worldPosition, Action<Item> onSpawned, float? condition = null)
@@ -62,9 +65,27 @@ namespace Barotrauma
                 Item spawnedItem;
                 if (Inventory?.Owner != null)
                 {
-                    spawnedItem = new Item(Prefab, Vector2.Zero, null);
+                    if (!SpawnIfInventoryFull && !Inventory.CanBePut(Prefab))
+                    {
+                        return null;
+                    }
+                    spawnedItem = new Item(Prefab, Vector2.Zero, null)
+                    {
+                        Condition = Condition
+                    };
                     if (!Inventory.Owner.Removed && !Inventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots))
                     {
+                        if (IgnoreLimbSlots)
+                        {
+                            for (int i = 0; i < Inventory.Capacity; i++)
+                            {
+                                if (Inventory.GetItemAt(i) == null)
+                                {
+                                    Inventory.ForceToSlot(spawnedItem, i);
+                                    break;
+                                }
+                            }
+                        }
                         spawnedItem.SetTransform(FarseerPhysics.ConvertUnits.ToSimUnits(Inventory.Owner?.WorldPosition ?? Vector2.Zero), spawnedItem.body?.Rotation ?? 0.0f, findNewHull: false);
                     }
                 }
@@ -85,6 +106,7 @@ namespace Barotrauma
         class CharacterSpawnInfo : IEntitySpawnInfo
         {
             public readonly string identifier;
+            public readonly CharacterInfo CharacterInfo;
 
             public readonly Vector2 Position;
             public readonly Submarine Submarine;
@@ -106,14 +128,48 @@ namespace Barotrauma
                 this.onSpawned = onSpawn;
             }
 
+            public CharacterSpawnInfo(string identifier, Vector2 position, CharacterInfo characterInfo, Action<Character> onSpawn = null) : this (identifier, position, onSpawn)
+            {
+                CharacterInfo = characterInfo;
+            }
 
             public Entity Spawn()
             {
                 var character = string.IsNullOrEmpty(identifier) ? null :
                     Character.Create(identifier,
                     Submarine == null ? Position : Submarine.Position + Position,
-                    ToolBox.RandomSeed(8), createNetworkEvent: false);
+                    ToolBox.RandomSeed(8), CharacterInfo, createNetworkEvent: false);
                 return character;
+            }
+
+            public void OnSpawned(Entity spawnedCharacter)
+            {
+                if (!(spawnedCharacter is Character character)) { throw new ArgumentException($"The entity passed to CharacterSpawnInfo.OnSpawned must be a Character (value was {spawnedCharacter?.ToString() ?? "null"})."); }
+                onSpawned?.Invoke(character);
+            }
+        }
+
+        class SubmarineSpawnInfo : IEntitySpawnInfo
+        {
+            public readonly string Name;
+
+            public readonly Vector2 Position;
+
+            private readonly Action<Character> onSpawned;
+
+            public SubmarineSpawnInfo(string name, Vector2 worldPosition, Action<Character> onSpawn = null)
+            {
+                this.Name = name ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
+                Position = worldPosition;
+                this.onSpawned = onSpawn;
+            }
+
+
+            public Entity Spawn()
+            {
+                var submarine = string.IsNullOrEmpty(Name) ? null :
+                    new Submarine(SubmarineInfo.SavedSubmarines.First(s => s.Name.Equals(Name, StringComparison.OrdinalIgnoreCase)));
+                return submarine;
             }
 
             public void OnSpawned(Entity spawnedCharacter)
@@ -135,6 +191,14 @@ namespace Barotrauma
             public readonly byte OriginalItemContainerIndex;
 
             public readonly bool Remove = false;
+
+            public override string ToString()
+            {
+                return
+                    (Remove ? "Remove" : "Spawn") + "(" +
+                    ((Entity as MapEntity)?.Name ?? "[NULL]") +
+                    $", {OriginalID}, {OriginalInventoryID})";
+            }
 
             public SpawnOrRemove(Entity entity, bool remove)
             {
@@ -163,7 +227,7 @@ namespace Barotrauma
         }
         
         public EntitySpawner()
-            : base(null)
+            : base(null, Entity.EntitySpawnerID)
         {
             spawnQueue = new Queue<IEntitySpawnInfo>();
             removeQueue = new Queue<Entity>();
@@ -200,7 +264,7 @@ namespace Barotrauma
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub, onSpawned, condition));
         }
 
-        public void AddToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory, float? condition = null, Action<Item> onSpawned = null)
+        public void AddToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory, float? condition = null, Action<Item> onSpawned = null, bool spawnIfInventoryFull = true, bool ignoreLimbSlots = false)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (itemPrefab == null)
@@ -210,7 +274,11 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue3:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
-            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory, onSpawned, condition));
+            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory, onSpawned, condition) 
+            { 
+                SpawnIfInventoryFull = spawnIfInventoryFull, 
+                IgnoreLimbSlots = ignoreLimbSlots 
+            });
         }
 
         public void AddToSpawnQueue(string speciesName, Vector2 worldPosition, Action<Character> onSpawn = null)
@@ -239,6 +307,19 @@ namespace Barotrauma
             spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, position, sub, onSpawn));
         }
 
+        public void AddToSpawnQueue(string speciesName, Vector2 worldPosition, CharacterInfo characterInfo, Action<Character> onSpawn = null)
+        {
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (string.IsNullOrEmpty(speciesName))
+            {
+                string errorMsg = "Attempted to add an empty/null species name to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue4:SpeciesNameNullOrEmpty", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
+            spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, worldPosition, characterInfo, onSpawn));
+        }
+
         public void AddToRemoveQueue(Entity entity)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
@@ -253,7 +334,7 @@ namespace Barotrauma
                     if (client != null) GameMain.Server.SetClientCharacter(client, null);
                 }
 #endif
-            }            
+            }
 
             removeQueue.Enqueue(entity);
         }
@@ -264,7 +345,7 @@ namespace Barotrauma
             if (removeQueue.Contains(item) || item.Removed) { return; }
 
             removeQueue.Enqueue(item);
-            var containedItems = item.OwnInventory?.Items;
+            var containedItems = item.OwnInventory?.AllItems;
             if (containedItems == null) { return; }
             foreach (Item containedItem in containedItems)
             {
@@ -291,7 +372,12 @@ namespace Barotrauma
             return spawnQueue.Count(s => predicate(s));
         }
 
-        public void Update()
+        public bool IsInRemoveQueue(Entity entity)
+        {
+            return removeQueue.Contains(entity);
+        }
+
+        public void Update(bool createNetworkEvents = true)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             while (spawnQueue.Count > 0)
@@ -301,10 +387,13 @@ namespace Barotrauma
                 var spawnedEntity = entitySpawnInfo.Spawn();
                 if (spawnedEntity != null)
                 {
-                    CreateNetworkEventProjSpecific(spawnedEntity, false);
-                    if (spawnedEntity is Item)
+                    if (createNetworkEvents) 
+                    { 
+                        CreateNetworkEventProjSpecific(spawnedEntity, false); 
+                    }
+                    if (spawnedEntity is Item item)
                     {
-                        ((Item)spawnedEntity).Condition = ((ItemSpawnInfo)entitySpawnInfo).Condition;
+                        item.Condition = ((ItemSpawnInfo)entitySpawnInfo).Condition;
                     }
                     entitySpawnInfo.OnSpawned(spawnedEntity);
                 }
@@ -317,7 +406,10 @@ namespace Barotrauma
                 {
                     item.SendPendingNetworkUpdates();
                 }
-                CreateNetworkEventProjSpecific(removedEntity, true);
+                if (createNetworkEvents)
+                {
+                    CreateNetworkEventProjSpecific(removedEntity, true);
+                }
                 removedEntity.Remove();
             }
         }

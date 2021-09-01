@@ -31,18 +31,22 @@ namespace Barotrauma
     {
         public static readonly List<DelayedListElement> DelayList = new List<DelayedListElement>();
 
-        private enum DelayTypes { timer = 0, reachcursor = 1 }
+        private enum DelayTypes { Timer = 0, ReachCursor = 1 }
 
-        private DelayTypes delayType;
-        private float delay;
+        private readonly DelayTypes delayType;
+        private readonly float delay;
 
         public DelayedEffect(XElement element, string parentDebugName)
             : base(element, parentDebugName)
         {
-            delayType = (DelayTypes)Enum.Parse(typeof(DelayTypes), element.GetAttributeString("delaytype", "timer"));
+            string delayTypeStr = element.GetAttributeString("delaytype", "timer");
+            if (!Enum.TryParse(typeof(DelayTypes), delayTypeStr, ignoreCase: true, out var delayType))
+            {
+                DebugConsole.ThrowError("Invalid delay type \"" + delayTypeStr + "\" in StatusEffect (" + parentDebugName + ")");
+            }
             switch (delayType)
             {
-                case DelayTypes.timer:
+                case DelayTypes.Timer:
                     delay = element.GetAttributeFloat("delay", 1.0f);
                     break;
             }
@@ -52,15 +56,15 @@ namespace Barotrauma
         {
             if (this.type != type || !HasRequiredItems(entity)) { return; }
             if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.FirstOrDefault() == target)) { return; }
-            if (targetIdentifiers != null && !IsValidTarget(target)) { return; }
+            if (!IsValidTarget(target)) { return; }
             if (!HasRequiredConditions(target.ToEnumerable())) { return; }
 
             switch (delayType)
             {
-                case DelayTypes.timer:
+                case DelayTypes.Timer:
                     DelayList.Add(new DelayedListElement(this, entity, target.ToEnumerable(), delay, worldPosition, null));
                     break;
-                case DelayTypes.reachcursor:
+                case DelayTypes.ReachCursor:
                     Projectile projectile = (entity as Item)?.GetComponent<Projectile>();
                     if (projectile == null)
                     {
@@ -83,16 +87,12 @@ namespace Barotrauma
         {
             if (this.type != type || !HasRequiredItems(entity)) { return; }
             if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.SequenceEqual(targets))) { return; }
-            if (delayType == DelayTypes.reachcursor && Character.Controlled == null) return;
+            if (delayType == DelayTypes.ReachCursor && Character.Controlled == null) { return; }
 
             currentTargets.Clear();
             foreach (ISerializableEntity target in targets)
             {
-                if (targetIdentifiers != null)
-                {
-                    //ignore invalid targets
-                    if (!IsValidTarget(target)) { continue; }
-                }
+                if (!IsValidTarget(target)) { continue; }
                 currentTargets.Add(target);
             }
 
@@ -100,10 +100,10 @@ namespace Barotrauma
 
             switch (delayType)
             {
-                case DelayTypes.timer:
+                case DelayTypes.Timer:
                     DelayList.Add(new DelayedListElement(this, entity, targets, delay, worldPosition, null));
                     break;
-                case DelayTypes.reachcursor:
+                case DelayTypes.ReachCursor:
                     Projectile projectile = (entity as Item)?.GetComponent<Projectile>();
                     if (projectile == null)
                     {
@@ -139,12 +139,12 @@ namespace Barotrauma
 
                 switch (element.Parent.delayType)
                 {
-                    case DelayTypes.timer:
+                    case DelayTypes.Timer:
                         element.Delay -= deltaTime;
                         if (element.Delay > 0.0f) { continue; }
                         break;
-                    case DelayTypes.reachcursor:
-                        if (Vector2.Distance(element.Entity.WorldPosition, element.StartPosition.Value) < element.Delay) continue;
+                    case DelayTypes.ReachCursor:
+                        if (Vector2.Distance(element.Entity.WorldPosition, element.StartPosition.Value) < element.Delay) { continue; }
                         break;
                 }
 

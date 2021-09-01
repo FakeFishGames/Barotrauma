@@ -52,35 +52,38 @@ namespace Barotrauma.Items.Components
 
         sealed public override void Update(float deltaTime, Camera cam)
         {
+            bool deactivate = true;
+            bool earlyReturn = false;
             for (int i = 0; i < timeSinceReceived.Length; i++)
             {
-                if (timeSinceReceived[i] > timeFrame) 
-                {
-                    IsActive = false;
-                    return;
-                }
+                deactivate &= timeSinceReceived[i] > timeFrame;
+                earlyReturn |= timeSinceReceived[i] > timeFrame;
                 timeSinceReceived[i] += deltaTime;
             }
+            // only stop Update() if both signals timed-out. if IsActive == false, then the component stops updating.
+            IsActive = !deactivate;
+            // early return if either of the signal timed-out
+            if (earlyReturn) { return; }
             float output = Calculate(receivedSignal[0], receivedSignal[1]);
             if (MathUtils.IsValid(output))
             {
-                item.SendSignal(0, MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                item.SendSignal(MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), "signal_out");
             }           
         }
 
         protected abstract float Calculate(float signal1, float signal2);
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "signal_in1":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
                     timeSinceReceived[0] = 0.0f;
                     IsActive = true;
                     break;
                 case "signal_in2":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
                     timeSinceReceived[1] = 0.0f;
                     IsActive = true;
                     break;

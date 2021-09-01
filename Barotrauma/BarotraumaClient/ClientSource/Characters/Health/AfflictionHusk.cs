@@ -10,6 +10,7 @@ namespace Barotrauma
     {
         partial void UpdateMessages()
         {
+            if (Prefab is AfflictionPrefabHusk { SendMessages: false }) { return; }
             switch (State)
             {
                 case InfectionState.Dormant:

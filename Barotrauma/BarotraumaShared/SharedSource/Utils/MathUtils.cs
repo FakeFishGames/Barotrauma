@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using Barotrauma.Extensions;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -13,6 +14,7 @@ namespace Barotrauma
         TopLeft = (Top | Left), TopCenter = (CenterX | Top), TopRight = (Top | Right),
         CenterLeft = (Left | CenterY), Center = (CenterX | CenterY), CenterRight = (Right | CenterY),
         BottomLeft = (Bottom | Left), BottomCenter = (CenterX | Bottom), BottomRight = (Bottom | Right),
+        Any = Left | Right | Top | Bottom | Center
     }
 
     static class MathUtils
@@ -368,7 +370,7 @@ namespace Barotrauma
 
         public static bool GetLineRectangleIntersection(Vector2 a1, Vector2 a2, Rectangle rect, out Vector2 intersection)
         {
-            if (GetAxisAlignedLineIntersection(a1, a2, 
+            if (GetAxisAlignedLineIntersection(a1, a2,
                 new Vector2(rect.X, rect.Y),
                 new Vector2(rect.Right, rect.Y),
                 true, out intersection))
@@ -377,14 +379,14 @@ namespace Barotrauma
             }
 
             if (GetAxisAlignedLineIntersection(a1, a2,
-                new Vector2(rect.X, rect.Y-rect.Height),
-                new Vector2(rect.Right, rect.Y-rect.Height),
+                new Vector2(rect.X, rect.Y - rect.Height),
+                new Vector2(rect.Right, rect.Y - rect.Height),
                 true, out intersection))
             {
                 return true;
             }
 
-            if(GetAxisAlignedLineIntersection(a1, a2,
+            if (GetAxisAlignedLineIntersection(a1, a2,
                 new Vector2(rect.X, rect.Y),
                 new Vector2(rect.X, rect.Y - rect.Height),
                 false, out intersection))
@@ -548,8 +550,72 @@ namespace Barotrauma
             }
 
             float numerator = xDiff * (lineA.Y - point.Y) - yDiff * (lineA.X - point.X);
-            return (numerator*numerator) /
-                (xDiff * xDiff + yDiff * yDiff);
+            return (numerator * numerator) / (xDiff * xDiff + yDiff * yDiff);
+        }
+
+        public static double LineSegmentToPointDistanceSquared(Point lineA, Point lineB, Point point)
+        {
+            double xDiff = lineB.X - lineA.X;
+            double yDiff = lineB.Y - lineA.Y;
+
+            if (xDiff == 0 && yDiff == 0)
+            {
+                double v1 = lineA.X - point.X;
+                double v2 = lineA.Y - point.Y;
+                return (v1 * v1) + (v2 * v2);
+            }
+
+            // Calculate the t that minimizes the distance.
+            double t = ((point.X - lineA.X) * xDiff + (point.Y - lineA.Y) * yDiff) / (xDiff * xDiff + yDiff * yDiff);
+
+            // See if this represents one of the segment's
+            // end points or a point in the middle.
+            if (t < 0)
+            {
+                xDiff = point.X - lineA.X;
+                yDiff = point.Y - lineA.Y;
+            }
+            else if (t > 1)
+            {
+                xDiff = point.X - lineB.X;
+                yDiff = point.Y - lineB.Y;
+            }
+            else
+            {
+                xDiff = point.X - (lineA.X + t * xDiff);
+                yDiff = point.Y - (lineA.Y + t * yDiff);
+            }
+
+            return xDiff * xDiff + yDiff * yDiff;
+        }
+
+        public static Vector2 GetClosestPointOnLineSegment(Vector2 lineA, Vector2 lineB, Vector2 point)
+        {
+            float xDiff = lineB.X - lineA.X;
+            float yDiff = lineB.Y - lineA.Y;
+
+            if (xDiff == 0 && yDiff == 0)
+            {
+                return lineA;
+            }
+
+            // Calculate the t that minimizes the distance.
+            float t = ((point.X - lineA.X) * xDiff + (point.Y - lineA.Y) * yDiff) / (xDiff * xDiff + yDiff * yDiff);
+
+            // See if this represents one of the segment's
+            // end points or a point in the middle.
+            if (t < 0)
+            {
+                return lineA;
+            }
+            else if (t > 1)
+            {
+                return lineB;
+            }
+            else
+            {
+                return new Vector2(lineA.X + t * xDiff, lineA.Y + t * yDiff);
+            }
         }
 
         public static bool CircleIntersectsRectangle(Vector2 circlePos, float radius, Rectangle rect)
@@ -613,27 +679,11 @@ namespace Barotrauma
         public static List<Vector2[]> TriangulateConvexHull(List<Vector2> vertices, Vector2 center)
         {
             List<Vector2[]> triangles = new List<Vector2[]>();
-
-            int triangleCount = vertices.Count - 2;
-
             vertices.Sort(new CompareCCW(center));
-
-            int lastIndex = 1;
-            for (int i = 0; i < triangleCount; i++)
+            for (int i = 0; i < vertices.Count; i++)
             {
-                Vector2[] triangleVertices = new Vector2[3];
-                triangleVertices[0] = vertices[0];
-                int k = 1;
-                for (int j = lastIndex; j <= lastIndex + 1; j++)
-                {
-                    triangleVertices[k] = vertices[j];
-                    k++;
-                }
-                lastIndex += 1;
-
-                triangles.Add(triangleVertices);
+                triangles.Add(new Vector2[3] { center, vertices[i], vertices[(i + 1) % vertices.Count] });
             }
-
             return triangles;
         }
 
@@ -658,7 +708,7 @@ namespace Barotrauma
 
                 for (int i = 1; i < points.Count; i++)
                 {
-                    if (points[i] == currPoint) continue;
+                    if (points[i].NearlyEquals(currPoint)) continue;
                     if (currPoint == endPoint ||
                         MathUtils.VectorOrientation(currPoint, endPoint, points[i]) == -1)
                     {
@@ -674,7 +724,7 @@ namespace Barotrauma
             return wrappedPoints;
         }
 
-        public static List<Vector2[]> GenerateJaggedLine(Vector2 start, Vector2 end, int iterations, float offsetAmount)
+        public static List<Vector2[]> GenerateJaggedLine(Vector2 start, Vector2 end, int iterations, float offsetAmount, Rectangle? bounds = null)
         {
             List<Vector2[]> segments = new List<Vector2[]>
             {
@@ -695,6 +745,26 @@ namespace Barotrauma
                     Vector2 normal = Vector2.Normalize(endSegment - startSegment);
                     normal = new Vector2(-normal.Y, normal.X);
                     midPoint += normal * Rand.Range(-offsetAmount, offsetAmount, Rand.RandSync.Server);
+
+                    if (bounds.HasValue)
+                    {
+                        if (midPoint.X < bounds.Value.X)
+                        {
+                            midPoint.X = bounds.Value.X + (bounds.Value.X - midPoint.X);
+                        }
+                        else if (midPoint.X > bounds.Value.Right)
+                        {
+                            midPoint.X = bounds.Value.Right - (midPoint.X - bounds.Value.Right);
+                        }
+                        if (midPoint.Y < bounds.Value.Y)
+                        {
+                            midPoint.Y = bounds.Value.Y + (bounds.Value.Y - midPoint.Y);
+                        }
+                        else if (midPoint.Y > bounds.Value.Bottom)
+                        {
+                            midPoint.Y = bounds.Value.Bottom - (midPoint.Y - bounds.Value.Bottom);
+                        }
+                    }
 
                     segments.Insert(i, new Vector2[] { startSegment, midPoint });
                     segments.Insert(i + 1, new Vector2[] { midPoint, endSegment });
@@ -851,6 +921,8 @@ namespace Barotrauma
             return (float)Math.Pow(f, p);
         }
 
+        public static float Pow2(float f) => f * f;
+
         /// <summary>
         /// Converts the alignment to a vector where -1,-1 is the top-left corner, 0,0 the center and 1,1 bottom-right
         /// </summary>
@@ -881,12 +953,10 @@ namespace Barotrauma
         /// Modified from:
         /// http://www.gamefromscratch.com/post/2012/11/24/GameDev-math-recipes-Rotating-one-point-around-another-point.aspx
         /// </summary>
-        public static Vector2 RotatePointAroundTarget(Vector2 point, Vector2 target, float degrees, bool clockWise = true)
+        public static Vector2 RotatePointAroundTarget(Vector2 point, Vector2 target, float radians, bool clockWise = true)
         {
-            // (Math.PI / 180) * degrees
-            var angle = MathHelper.ToRadians(degrees);
-            var sin = Math.Sin(angle);
-            var cos = Math.Cos(angle);
+            var sin = Math.Sin(radians);
+            var cos = Math.Cos(radians);
             if (!clockWise)
             {
                 sin = -sin;
@@ -996,6 +1066,16 @@ namespace Barotrauma
             // Ensure that we don't get division by zero exceptions.
             if (diff == 0) { return v >= max ? 1f : 0f; }
             return MathHelper.Clamp((v - min) / diff, 0f, 1f);
+        }
+
+        public static float Min(params float[] vals)
+        {
+            return vals.Min();
+        }
+
+        public static float Max(params float[] vals)
+        {
+            return vals.Max();
         }
     }
 

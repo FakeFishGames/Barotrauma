@@ -48,6 +48,7 @@ namespace Barotrauma.Lights
         private readonly List<LightSource> lights;
 
         public bool LosEnabled = true;
+        public float LosAlpha = 1f;
         public LosMode LosMode = LosMode.Transparent;
 
         public bool LightingEnabled = true;
@@ -132,7 +133,7 @@ namespace Barotrauma.Lights
 
         public void AddLight(LightSource light)
         {
-            if (!lights.Contains(light)) lights.Add(light);
+            if (!lights.Contains(light)) { lights.Add(light); }
         }
 
         public void RemoveLight(LightSource light)
@@ -151,7 +152,16 @@ namespace Barotrauma.Lights
 
         private readonly List<LightSource> activeLights = new List<LightSource>(capacity: 100);
 
-        public void UpdateLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, RenderTarget2D backgroundObstructor = null)
+        public void Update(float deltaTime)
+        {
+            foreach (LightSource light in activeLights)
+            {
+                if (!light.Enabled) { continue; }
+                light.Update(deltaTime);
+            }
+        }
+
+        public void RenderLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, RenderTarget2D backgroundObstructor = null)
         {
             if (!LightingEnabled) { return; }
 
@@ -203,9 +213,9 @@ namespace Barotrauma.Lights
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, transformMatrix: spriteBatchTransform);
             foreach (LightSource light in activeLights)
             {
-                if (light.IsBackground) { continue; }
+                if (light.IsBackground || light.CurrentBrightness <= 0.0f) { continue; }
                 //draw limb lights at this point, because they were skipped over previously to prevent them from being obstructed
-                if (light.ParentBody?.UserData is Limb) { light.DrawSprite(spriteBatch, cam); }
+                if (light.ParentBody?.UserData is Limb limb && !limb.Hide) { light.DrawSprite(spriteBatch, cam); }
             }
             spriteBatch.End();
 
@@ -215,9 +225,10 @@ namespace Barotrauma.Lights
             graphics.Clear(AmbientLight);
             graphics.BlendState = BlendState.Additive;
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
+            Level.Loaded?.BackgroundCreatureManager?.DrawLights(spriteBatch, cam);
             foreach (LightSource light in activeLights)
             {
-                if (!light.IsBackground) { continue; }
+                if (!light.IsBackground || light.CurrentBrightness <= 0.0f) { continue; }
                 light.DrawSprite(spriteBatch, cam);
                 light.DrawLightVolume(spriteBatch, lightEffect, transform);
             }
@@ -262,7 +273,7 @@ namespace Barotrauma.Lights
             foreach (LightSource light in activeLights)
             {
                 //don't draw limb lights at this point, they need to be drawn after lights have been obstructed by characters
-                if (light.IsBackground || light.ParentBody?.UserData is Limb) { continue; }
+                if (light.IsBackground || light.ParentBody?.UserData is Limb || light.CurrentBrightness <= 0.0f) { continue; }
                 light.DrawSprite(spriteBatch, cam);
             }
             spriteBatch.End();
@@ -327,7 +338,7 @@ namespace Barotrauma.Lights
 
             foreach (LightSource light in activeLights)
             {
-                if (light.IsBackground) { continue; }
+                if (light.IsBackground || light.CurrentBrightness <= 0.0f) { continue; }
                 light.DrawLightVolume(spriteBatch, lightEffect, transform);
             }
 
@@ -350,6 +361,7 @@ namespace Barotrauma.Lights
 
             void DrawHalo(Character character)
             {
+                if (character == null || character.Removed) { return; }
                 Vector2 haloDrawPos = character.DrawPosition;
                 haloDrawPos.Y = -haloDrawPos.Y;
 
@@ -381,7 +393,7 @@ namespace Barotrauma.Lights
             if (GUI.DisableItemHighlights) { return false; }
 
             highlightedEntities.Clear();
-            if (Character.Controlled != null && (!Character.Controlled.IsKeyDown(InputType.Aim) || Character.Controlled.SelectedItems.Any(it => it?.GetComponent<Sprayer>() == null)))
+            if (Character.Controlled != null && (!Character.Controlled.IsKeyDown(InputType.Aim) || Character.Controlled.HeldItems.Any(it => it.GetComponent<Sprayer>() == null)))
             {
                 if (Character.Controlled.FocusedItem != null)
                 {
@@ -393,7 +405,7 @@ namespace Barotrauma.Lights
                 }
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.IsHighlighted && !highlightedEntities.Contains(item))
+                    if ((item.IsHighlighted || item.IconStyle != null) && !highlightedEntities.Contains(item))
                     {
                         highlightedEntities.Add(item);
                     }
@@ -414,11 +426,34 @@ namespace Barotrauma.Lights
             {
                 if (highlighted is Item item)
                 {
-                    item.Draw(spriteBatch, false, true);
+                    if (item.IconStyle != null && (item != Character.Controlled.FocusedItem || Character.Controlled.FocusedItem == null))
+                    {
+                        //wait until next pass
+                    }
+                    else
+                    {
+                        item.Draw(spriteBatch, false, true);
+                    }
                 }
                 else if (highlighted is Character character)
                 {
                     character.Draw(spriteBatch, cam);
+                }
+            }
+            spriteBatch.End();
+
+            //draw items with iconstyles in the style's color
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, samplerState: SamplerState.LinearWrap, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
+            foreach (Entity highlighted in highlightedEntities)
+            {
+                if (highlighted is Item item)
+                {
+                    if (item.IconStyle != null && (item != Character.Controlled.FocusedItem || Character.Controlled.FocusedItem == null))
+                    {
+                        SolidColorEffect.Parameters["color"].SetValue(item.IconStyle.Color.ToVector4());
+                        SolidColorEffect.CurrentTechnique.Passes[0].Apply();
+                        item.Draw(spriteBatch, false, true);
+                    }
                 }
             }
             spriteBatch.End();
@@ -487,7 +522,6 @@ namespace Barotrauma.Lights
 
             graphics.SetRenderTarget(LosTexture);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f)));
             if (ObstructVision)
             {
                 graphics.Clear(Color.Black);
@@ -497,16 +531,17 @@ namespace Barotrauma.Lights
                 float rotation = MathUtils.VectorToAngle(losOffset);
 
                 Vector2 scale = new Vector2(
-                    MathHelper.Clamp(losOffset.Length() / 256.0f, 2.0f, 5.0f), 2.0f);
+                    MathHelper.Clamp(losOffset.Length() / 256.0f, 4.0f, 5.0f), 3.0f);
 
+                spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f)));
                 spriteBatch.Draw(visionCircle, new Vector2(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y), null, Color.White, rotation,
                     new Vector2(visionCircle.Width * 0.2f, visionCircle.Height / 2), scale, SpriteEffects.None, 0.0f);
+                spriteBatch.End();
             }
             else
             {
                 graphics.Clear(Color.White);
             }
-            spriteBatch.End();
             
 
             //--------------------------------------

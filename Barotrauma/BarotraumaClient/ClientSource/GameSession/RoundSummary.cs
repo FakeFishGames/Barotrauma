@@ -16,7 +16,7 @@ namespace Barotrauma
         private int jobColumnWidth, characterColumnWidth, statusColumnWidth;
 
         private readonly SubmarineInfo sub;
-        private readonly Mission selectedMission;
+        private readonly List<Mission> selectedMissions;
         private readonly Location startLocation, endLocation;
 
         private readonly GameMode gameMode;
@@ -32,11 +32,11 @@ namespace Barotrauma
 
 
 
-        public RoundSummary(SubmarineInfo sub, GameMode gameMode, Mission selectedMission, Location startLocation, Location endLocation)
+        public RoundSummary(SubmarineInfo sub, GameMode gameMode, IEnumerable<Mission> selectedMissions, Location startLocation, Location endLocation)
         {
             this.sub = sub;
             this.gameMode = gameMode;
-            this.selectedMission = selectedMission;
+            this.selectedMissions = selectedMissions.ToList();
             this.startLocation = startLocation;
             this.endLocation = endLocation;
             initialLocationReputation = startLocation?.Reputation?.Value ?? 0.0f;
@@ -75,7 +75,7 @@ namespace Barotrauma
 
             //crew panel -------------------------------------------------------------------------------
 
-            GUIFrame crewFrame = new GUIFrame(new RectTransform(new Vector2(0.35f, 0.55f), background.RectTransform, Anchor.TopCenter, minSize: new Point(minWidth, minHeight)));
+            GUIFrame crewFrame = new GUIFrame(new RectTransform(new Vector2(0.35f, 0.45f), background.RectTransform, Anchor.TopCenter, minSize: new Point(minWidth, minHeight)));
             GUIFrame crewFrameInner = new GUIFrame(new RectTransform(new Point(crewFrame.Rect.Width - padding * 2, crewFrame.Rect.Height - padding * 2), crewFrame.RectTransform, Anchor.Center), style: "InnerFrame");
 
             var crewContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), crewFrameInner.RectTransform, Anchor.Center))
@@ -87,13 +87,13 @@ namespace Barotrauma
                 TextManager.Get("crew"), textAlignment: Alignment.TopLeft, font: GUI.SubHeadingFont);
             crewHeader.RectTransform.MinSize = new Point(0, GUI.IntScale(crewHeader.Rect.Height * 2.0f));
 
-            CreateCrewList(crewContent, gameSession.CrewManager.GetCharacterInfos().Where(c => c.TeamID != Character.TeamType.Team2));
+            CreateCrewList(crewContent, gameSession.CrewManager.GetCharacterInfos().Where(c => c.TeamID != CharacterTeamType.Team2));
 
             //another crew frame for the 2nd team in combat missions
-            if (gameSession.Mission is CombatMission)
+            if (gameSession.Missions.Any(m => m is CombatMission))
             {
-                crewHeader.Text = CombatMission.GetTeamName(Character.TeamType.Team1);
-                GUIFrame crewFrame2 = new GUIFrame(new RectTransform(new Vector2(0.35f, 0.55f), background.RectTransform, Anchor.TopCenter, minSize: new Point(minWidth, minHeight)));
+                crewHeader.Text = CombatMission.GetTeamName(CharacterTeamType.Team1);
+                GUIFrame crewFrame2 = new GUIFrame(new RectTransform(new Vector2(0.35f, 0.45f), background.RectTransform, Anchor.TopCenter, minSize: new Point(minWidth, minHeight)));
                 rightPanels.Add(crewFrame2);
                 GUIFrame crewFrameInner2 = new GUIFrame(new RectTransform(new Point(crewFrame2.Rect.Width - padding * 2, crewFrame2.Rect.Height - padding * 2), crewFrame2.RectTransform, Anchor.Center), style: "InnerFrame");
                 var crewContent2 = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), crewFrameInner2.RectTransform, Anchor.Center))
@@ -101,9 +101,9 @@ namespace Barotrauma
                     Stretch = true
                 };
                 var crewHeader2 = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), crewContent2.RectTransform),
-                    CombatMission.GetTeamName(Character.TeamType.Team2), textAlignment: Alignment.TopLeft, font: GUI.SubHeadingFont);
+                    CombatMission.GetTeamName(CharacterTeamType.Team2), textAlignment: Alignment.TopLeft, font: GUI.SubHeadingFont);
                 crewHeader2.RectTransform.MinSize = new Point(0, GUI.IntScale(crewHeader2.Rect.Height * 2.0f));
-                CreateCrewList(crewContent2, gameSession.CrewManager.GetCharacterInfos().Where(c => c.TeamID == Character.TeamType.Team2));
+                CreateCrewList(crewContent2, gameSession.CrewManager.GetCharacterInfos().Where(c => c.TeamID == CharacterTeamType.Team2));
             }
 
             //header -------------------------------------------------------------------------------
@@ -183,7 +183,8 @@ namespace Barotrauma
 
             //reputation panel -------------------------------------------------------------------------------
 
-            if (gameMode is CampaignMode campaignMode)
+            var campaignMode = gameMode as CampaignMode;
+            if (campaignMode != null)
             {
                 GUIFrame reputationframe = new GUIFrame(new RectTransform(crewFrame.RectTransform.RelativeSize, background.RectTransform, Anchor.TopCenter, minSize: crewFrame.RectTransform.MinSize));
                 rightPanels.Add(reputationframe);
@@ -198,158 +199,166 @@ namespace Barotrauma
                     TextManager.Get("reputation"), textAlignment: Alignment.TopLeft, font: GUI.SubHeadingFont);
                 reputationHeader.RectTransform.MinSize = new Point(0, GUI.IntScale(reputationHeader.Rect.Height * 2.0f));
 
-                GUIListBox reputationList = new GUIListBox(new RectTransform(Vector2.One, reputationContent.RectTransform))
-                {
-                    Padding = new Vector4(2, 5, 0, 0)
-                };
-                reputationList.ContentBackground.Color = Color.Transparent;
-
-                if (startLocation.Type.HasOutpost && startLocation.Reputation != null)
-                {
-                    var iconStyle = GUI.Style.GetComponentStyle("LocationReputationIcon");
-                    CreateReputationElement(
-                        reputationList.Content,
-                        startLocation.Name,
-                        startLocation.Reputation.Value, startLocation.Reputation.NormalizedValue, initialLocationReputation,
-                        startLocation.Type.Name, "",
-                        iconStyle?.GetDefaultSprite(), startLocation.Type.GetPortrait(0), iconStyle?.Color ?? Color.White);
-                }
-
-                foreach (Faction faction in campaignMode.Factions)
-                {
-                    float initialReputation = faction.Reputation.Value;
-                    if (initialFactionReputations.ContainsKey(faction))
-                    {
-                        initialReputation = initialFactionReputations[faction];
-                    }
-                    else
-                    {
-                        DebugConsole.AddWarning($"Could not determine reputation change for faction \"{faction.Prefab.Name}\" (faction was not present at the start of the round).");
-                    }
-                    CreateReputationElement(
-                        reputationList.Content,
-                        faction.Prefab.Name,
-                        faction.Reputation.Value, faction.Reputation.NormalizedValue, initialReputation,
-                        faction.Prefab.ShortDescription, faction.Prefab.Description,
-                        faction.Prefab.Icon, faction.Prefab.BackgroundPortrait, faction.Prefab.IconColor);
-                }
-
-                float otherElementHeight = 0.0f;
-                float maxDescriptionHeight = 0.0f;
-                foreach (GUIComponent child in reputationList.Content.Children)
-                {
-                    var descriptionElement = child.FindChild("description", recursive: true) as GUITextBlock;
-                    maxDescriptionHeight = Math.Max(maxDescriptionHeight, descriptionElement.TextSize.Y * 1.1f);
-                    otherElementHeight = Math.Max(otherElementHeight, descriptionElement.Parent.Rect.Height - descriptionElement.TextSize.Y);
-                }
-                foreach (GUIComponent child in reputationList.Content.Children)
-                {
-                    var descriptionElement = child.FindChild("description", recursive: true) as GUITextBlock;
-                    descriptionElement.RectTransform.MaxSize = new Point(int.MaxValue, (int)(maxDescriptionHeight));
-                    child.RectTransform.MaxSize = new Point(int.MaxValue, (int)((maxDescriptionHeight + otherElementHeight) * 1.2f));
-                    (descriptionElement?.Parent as GUILayoutGroup).Recalculate();
-                }
+                CreateReputationInfoPanel(reputationContent, campaignMode);
             }
 
             //mission panel -------------------------------------------------------------------------------
 
-            GUIFrame missionframe = new GUIFrame(new RectTransform(new Vector2(0.39f, 0.22f), background.RectTransform, Anchor.TopCenter, minSize: new Point(minWidth, minHeight / 4)));
-            GUIFrame missionframeInner = new GUIFrame(new RectTransform(new Point(missionframe.Rect.Width - padding * 2, missionframe.Rect.Height - padding * 2), missionframe.RectTransform, Anchor.Center), style: "InnerFrame");
-
-            var missionContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), missionframeInner.RectTransform, Anchor.Center))
+            GUIFrame missionframe = new GUIFrame(new RectTransform(new Vector2(0.39f, 0.3f), background.RectTransform, Anchor.TopCenter, minSize: new Point(minWidth, minHeight / 4)));
+            GUILayoutGroup missionFrameContent = new GUILayoutGroup(new RectTransform(new Point(missionframe.Rect.Width - padding * 2, missionframe.Rect.Height - padding * 2), missionframe.RectTransform, Anchor.Center))
             {
-                RelativeSpacing = 0.05f,
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+            GUIFrame missionframeInner = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), missionFrameContent.RectTransform, Anchor.Center), style: "InnerFrame");
+
+            var missionContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.93f), missionframeInner.RectTransform, Anchor.Center))
+            {
                 Stretch = true
             };
+
+            List<Mission> missionsToDisplay = new List<Mission>(selectedMissions);
+            if (!selectedMissions.Any() && startLocation != null)
+            {
+                foreach (Mission mission in startLocation.SelectedMissions)
+                {
+                    if (mission.Locations[0] == mission.Locations[1] ||
+                        mission.Locations.Contains(campaignMode?.Map.SelectedLocation))
+                    {
+                        missionsToDisplay.Add(mission);
+                    }
+                }
+            }
+
+            if (missionsToDisplay.Any())
+            {
+                var missionHeader = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionContent.RectTransform),
+                    TextManager.Get(missionsToDisplay.Count > 1 ? "Missions" : "Mission"), textAlignment: Alignment.TopLeft, font: GUI.SubHeadingFont);
+                missionHeader.RectTransform.MinSize = new Point(0, (int)(missionHeader.Rect.Height * 1.2f));
+            }
+
+            GUIListBox missionList = new GUIListBox(new RectTransform(Vector2.One, missionContent.RectTransform, Anchor.Center))
+            {
+                Padding = new Vector4(4, 10, 0, 0) * GUI.Scale
+            };
+            missionList.ContentBackground.Color = Color.Transparent;
+
+            ButtonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), missionFrameContent.RectTransform, Anchor.BottomCenter), isHorizontal: true, childAnchor: Anchor.BottomRight)
+            {
+                RelativeSpacing = 0.025f
+            };
+
+            missionFrameContent.Recalculate();
+            missionContent.Recalculate();
 
             if (!string.IsNullOrWhiteSpace(endMessage))
             {
-                var endText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionContent.RectTransform),
-                    TextManager.GetServerMessage(endMessage), wrap: true);
+                var endText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionList.Content.RectTransform),
+                    TextManager.GetServerMessage(endMessage), wrap: true)
+                {
+                    CanBeFocused = false
+                };
                 endText.RectTransform.MinSize = new Point(0, endText.Rect.Height);
-                var line = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), missionContent.RectTransform), style: "HorizontalLine");
+                var line = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), missionList.Content.RectTransform), style: "HorizontalLine");
                 line.RectTransform.NonScaledSize = new Point(line.Rect.Width, GUI.IntScale(5.0f));
             }
 
-            var missionContentHorizontal = new GUILayoutGroup(new RectTransform(Vector2.One, missionContent.RectTransform), childAnchor: Anchor.TopLeft, isHorizontal: true)
+            foreach (Mission displayedMission in missionsToDisplay)
             {
-                RelativeSpacing = 0.025f,
-                Stretch = true
-            };
-
-            Mission displayedMission = selectedMission ?? startLocation.SelectedMission;
-            string missionMessage = "";
-            GUIImage missionIcon;
-            if (displayedMission != null)
-            {
-                missionMessage =
-                    displayedMission == selectedMission ?
-                    displayedMission.Completed ? displayedMission.SuccessMessage : displayedMission.FailureMessage : 
-                    displayedMission.Description;
-                missionIcon = new GUIImage(new RectTransform(new Point(missionContentHorizontal.Rect.Height), missionContentHorizontal.RectTransform), displayedMission.Prefab.Icon, scaleToFit: true)
+                var missionContentHorizontal = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), missionList.Content.RectTransform), childAnchor: Anchor.CenterLeft, isHorizontal: true)
                 {
-                    Color = displayedMission.Prefab.IconColor
+                    RelativeSpacing = 0.025f,
+                    Stretch = true
                 };
-                if (displayedMission == selectedMission)
-                {
-                    new GUIImage(new RectTransform(Vector2.One, missionIcon.RectTransform), displayedMission.Completed ? "MissionCompletedIcon" : "MissionFailedIcon", scaleToFit: true);                    
-                }
-            }
-            else
-            {
-                missionIcon = new GUIImage(new RectTransform(new Point(missionContentHorizontal.Rect.Height), missionContentHorizontal.RectTransform), style: "NoMissionIcon", scaleToFit: true);
-            }
-            var missionTextContent = new GUILayoutGroup(new RectTransform(Vector2.One, missionContentHorizontal.RectTransform))
-            {
-                RelativeSpacing = 0.05f
-            };
-            missionContentHorizontal.Recalculate();
-            missionContent.Recalculate();
-            missionIcon.RectTransform.MinSize = new Point(0, missionContentHorizontal.Rect.Height);
-            missionTextContent.RectTransform.MaxSize = new Point(int.MaxValue, missionIcon.Rect.Width);
 
-            GUITextBlock missionDescription = null;
-            if (displayedMission == null)
+                string missionMessage =
+                    selectedMissions.Contains(displayedMission) ?
+                    displayedMission.Completed ? displayedMission.SuccessMessage : displayedMission.FailureMessage :
+                    displayedMission.Description;
+                GUIImage missionIcon = new GUIImage(new RectTransform(new Point((int)(missionContentHorizontal.Rect.Height)), missionContentHorizontal.RectTransform), displayedMission.Prefab.Icon, scaleToFit: true)
+                {
+                    Color = displayedMission.Prefab.IconColor,
+                    HoverColor = displayedMission.Prefab.IconColor,
+                    SelectedColor = displayedMission.Prefab.IconColor
+                }; 
+                missionIcon.RectTransform.MinSize = new Point((int)(missionContentHorizontal.Rect.Height * 0.9f));
+                if (selectedMissions.Contains(displayedMission))
+                {
+                    new GUIImage(new RectTransform(Vector2.One, missionIcon.RectTransform), displayedMission.Completed ? "MissionCompletedIcon" : "MissionFailedIcon", scaleToFit: true);
+                }
+
+                var missionTextContent = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1.0f), missionContentHorizontal.RectTransform))
+                {
+                    AbsoluteSpacing = GUI.IntScale(5)
+                };
+                missionContentHorizontal.Recalculate();
+                var missionNameTextBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
+                    displayedMission.Name, font: GUI.SubHeadingFont);
+                if (displayedMission.Difficulty.HasValue)
+                {
+                    var groupSize = missionNameTextBlock.Rect.Size;
+                    groupSize.X -= (int)(missionNameTextBlock.Padding.X + missionNameTextBlock.Padding.Z);
+                    var indicatorGroup = new GUILayoutGroup(new RectTransform(groupSize, missionTextContent.RectTransform) { AbsoluteOffset = new Point((int)missionNameTextBlock.Padding.X, 0) },
+                        isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                    {
+                        AbsoluteSpacing = 1
+                    };
+                    var difficultyColor = displayedMission.GetDifficultyColor();
+                    for (int i = 0; i < displayedMission.Difficulty; i++)
+                    {
+                        new GUIImage(new RectTransform(Vector2.One, indicatorGroup.RectTransform, scaleBasis: ScaleBasis.Smallest) { IsFixedSize = true }, "DifficultyIndicator", scaleToFit: true)
+                        {
+                            CanBeFocused = false,
+                            Color = difficultyColor
+                        };
+                    }
+                }
+                var missionDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
+                    missionMessage, wrap: true, parseRichText: true);
+                int reward = displayedMission.GetReward(Submarine.MainSub);
+                if (selectedMissions.Contains(displayedMission) && displayedMission.Completed && reward > 0)
+                {
+                    string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", reward));
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), displayedMission.GetMissionRewardText(Submarine.MainSub), parseRichText: true);
+                }
+
+                if (displayedMission != missionsToDisplay.Last())
+                {
+                    var spacing = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), missionList.Content.RectTransform) { MaxSize = new Point(int.MaxValue, GUI.IntScale(15)) }, style: null);
+                    new GUIFrame(new RectTransform(new Vector2(0.8f, 1.0f), spacing.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.1f, 0.0f) }, "HorizontalLine");
+                }
+
+                foreach (GUIComponent child in missionTextContent.Children)
+                {
+                    child.RectTransform.IsFixedSize = true;
+                }
+                missionTextContent.RectTransform.MinSize = new Point(0, missionTextContent.Children.Sum(c => c.Rect.Height + missionTextContent.AbsoluteSpacing));
+                missionContentHorizontal.RectTransform.MinSize = new Point(0, (int)(missionTextContent.Rect.Height / missionTextContent.RectTransform.RelativeSize.Y));
+            }
+
+            if (!missionsToDisplay.Any())
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
+                var missionContentHorizontal = new GUILayoutGroup(new RectTransform(Vector2.One, missionList.Content.RectTransform), childAnchor: Anchor.TopLeft, isHorizontal: true)
+                {
+                    RelativeSpacing = 0.025f,
+                    Stretch = true
+                };
+                GUIImage missionIcon = new GUIImage(new RectTransform(new Point((int)(missionContentHorizontal.Rect.Height * 0.7f)), missionContentHorizontal.RectTransform), style: "NoMissionIcon", scaleToFit: true);
+                missionIcon.RectTransform.MinSize = new Point((int)(missionContentHorizontal.Rect.Height * 0.7f));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionContentHorizontal.RectTransform),
                     TextManager.Get("nomission"), font: GUI.LargeFont);
             }
-            else
-            {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
-                    TextManager.AddPunctuation(':', TextManager.Get("Mission"), displayedMission.Name), font: GUI.SubHeadingFont);
-                missionDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
-                    missionMessage, wrap: true);
-                if (displayedMission == selectedMission && displayedMission.Completed)
-                {
-                    string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", displayedMission.Reward));
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
-                        TextManager.GetWithVariable("MissionReward", "[reward]", rewardText));
-                }
-            }
 
-            ButtonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), missionContent.RectTransform, Anchor.BottomCenter), isHorizontal: true, childAnchor: Anchor.BottomRight)
-            {
-                IgnoreLayoutGroups = true,
-                RelativeSpacing = 0.025f
-            };
+            /*missionContentHorizontal.Recalculate();
+            missionContent.Recalculate();
+            missionIcon.RectTransform.MinSize = new Point(0, missionContentHorizontal.Rect.Height);
+            missionTextContent.RectTransform.MaxSize = new Point(int.MaxValue, missionIcon.Rect.Width);*/
 
             ContinueButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), ButtonArea.RectTransform), TextManager.Get("Close"));
             ButtonArea.RectTransform.NonScaledSize = new Point(ButtonArea.Rect.Width, ContinueButton.Rect.Height);
             ButtonArea.RectTransform.IsFixedSize = true;
 
-            missionContent.Recalculate();
-            //description overlapping with the buttons -> switch to small font
-            if (missionDescription != null && missionDescription.Rect.Y + missionDescription.TextSize.Y > ButtonArea.Rect.Y)
-            {
-                missionDescription.Font = GUI.Style.SmallFont;
-                //still overlapping -> shorten the text
-                if (missionDescription.Rect.Y + missionDescription.TextSize.Y > ButtonArea.Rect.Y && missionDescription.WrappedText.Contains('\n'))
-                {
-                    missionDescription.ToolTip = missionDescription.Text;
-                    missionDescription.Text = missionDescription.WrappedText.Split('\n').First() + "...";
-                }
-            }
+            missionFrameContent.Recalculate();
 
             // set layout -------------------------------------------------------------------
 
@@ -378,9 +387,114 @@ namespace Barotrauma
             return background;
         }
 
+        public void CreateReputationInfoPanel(GUIComponent parent, CampaignMode campaignMode)
+        {
+            GUIListBox reputationList = new GUIListBox(new RectTransform(Vector2.One, parent.RectTransform))
+            {
+                Padding = new Vector4(4, 10, 0, 0) * GUI.Scale
+            };
+            reputationList.ContentBackground.Color = Color.Transparent;
+
+            if (startLocation.Type.HasOutpost && startLocation.Reputation != null)
+            {
+                var iconStyle = GUI.Style.GetComponentStyle("LocationReputationIcon");
+                var locationFrame = CreateReputationElement(
+                    reputationList.Content,
+                    startLocation.Name,
+                    startLocation.Reputation.Value, startLocation.Reputation.NormalizedValue, initialLocationReputation,
+                    startLocation.Type.Name, "",
+                    iconStyle?.GetDefaultSprite(), startLocation.Type.GetPortrait(0), iconStyle?.Color ?? Color.White);
+                CreatePathUnlockElement(locationFrame, null, startLocation);
+            }
+
+            foreach (Faction faction in campaignMode.Factions)
+            {
+                float initialReputation = faction.Reputation.Value;
+                if (initialFactionReputations.ContainsKey(faction))
+                {
+                    initialReputation = initialFactionReputations[faction];
+                }
+                else
+                {
+                    DebugConsole.AddWarning($"Could not determine reputation change for faction \"{faction.Prefab.Name}\" (faction was not present at the start of the round).");
+                }
+                var factionFrame = CreateReputationElement(
+                    reputationList.Content,
+                    faction.Prefab.Name,
+                    faction.Reputation.Value, faction.Reputation.NormalizedValue, initialReputation,
+                    faction.Prefab.ShortDescription, faction.Prefab.Description,
+                    faction.Prefab.Icon, faction.Prefab.BackgroundPortrait, faction.Prefab.IconColor);
+                CreatePathUnlockElement(factionFrame, faction, null);
+            }
+
+            float maxDescriptionHeight = 0.0f;
+            foreach (GUIComponent child in reputationList.Content.Children)
+            {
+                var descriptionElement = child.FindChild("description", recursive: true) as GUITextBlock;
+                maxDescriptionHeight = Math.Max(maxDescriptionHeight, descriptionElement.TextSize.Y * 1.1f);
+            }
+            foreach (GUIComponent child in reputationList.Content.Children)
+            {
+                var headerElement = child.FindChild("header", recursive: true) as GUITextBlock;
+                var descriptionElement = child.FindChild("description", recursive: true) as GUITextBlock;
+                descriptionElement.RectTransform.NonScaledSize = new Point(descriptionElement.Rect.Width, (int)maxDescriptionHeight);
+                descriptionElement.RectTransform.IsFixedSize = true;
+                child.RectTransform.NonScaledSize = new Point(child.Rect.Width, headerElement.Rect.Height + descriptionElement.RectTransform.Parent.Children.Sum(c => c.Rect.Height + ((GUILayoutGroup)descriptionElement.Parent).AbsoluteSpacing));
+            }
+
+            void CreatePathUnlockElement(GUIComponent reputationFrame, Faction faction, Location location)
+            {
+                if (GameMain.GameSession?.Campaign?.Map != null)
+                {
+                    foreach (LocationConnection connection in GameMain.GameSession.Campaign.Map.Connections)
+                    {
+                        if (!connection.Locked || (!connection.Locations[0].Discovered && !connection.Locations[1].Discovered)) { continue; }
+
+                        var gateLocation = connection.Locations[0].IsGateBetweenBiomes ? connection.Locations[0] : connection.Locations[1];
+                        var unlockEvent =
+                            EventSet.PrefabList.Find(ep => ep.UnlockPathEvent && ep.BiomeIdentifier == gateLocation.LevelData.Biome.Identifier) ??
+                            EventSet.PrefabList.Find(ep => ep.UnlockPathEvent && string.IsNullOrEmpty(ep.BiomeIdentifier));
+
+                        if (unlockEvent == null) { continue; }
+                        if (string.IsNullOrEmpty(unlockEvent.UnlockPathFaction) || unlockEvent.UnlockPathFaction.Equals("location", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (location == null || gateLocation != location) { continue; }
+                        }
+                        else
+                        {
+                            if (faction == null || !faction.Prefab.Identifier.Equals(unlockEvent.UnlockPathFaction, StringComparison.OrdinalIgnoreCase)) { continue; }
+                        }
+
+                        if (unlockEvent != null)
+                        {
+                            Reputation unlockReputation = gateLocation.Reputation;
+                            Faction unlockFaction = null;
+                            if (!string.IsNullOrEmpty(unlockEvent.UnlockPathFaction))
+                            {
+                                unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier.Equals(unlockEvent.UnlockPathFaction, StringComparison.OrdinalIgnoreCase));
+                                unlockReputation = unlockFaction?.Reputation;
+                            }
+                            float normalizedUnlockReputation = MathUtils.InverseLerp(unlockReputation.MinReputation, unlockReputation.MaxReputation, unlockEvent.UnlockPathReputation);
+                            string unlockText = TextManager.GetWithVariables(
+                                "lockedpathreputationrequirement",
+                                new string[] { "[reputation]", "[biomename]" },
+                                new string[] { Reputation.GetFormattedReputationText(normalizedUnlockReputation, unlockEvent.UnlockPathReputation, addColorTags: true), $"‖color:gui.orange‖{connection.LevelData.Biome.DisplayName}‖end‖" });
+                            var unlockInfoPanel = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), reputationFrame.RectTransform, Anchor.BottomCenter) { MinSize = new Point(0, GUI.IntScale(30)), AbsoluteOffset = new Point(0, GUI.IntScale(3)) },
+                                unlockText, style: "GUIButtonRound", textAlignment: Alignment.Center, textColor: GUI.Style.TextColor, parseRichText: true);
+                            unlockInfoPanel.Color = Color.Lerp(unlockInfoPanel.Color, Color.Black, 0.8f);
+                            if (unlockInfoPanel.TextSize.X > unlockInfoPanel.Rect.Width * 0.7f)
+                            {
+                                unlockInfoPanel.Font = GUI.SmallFont;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         private string GetHeaderText(bool gameOver, CampaignMode.TransitionType transitionType)
         {
-            string locationName = Submarine.MainSub.AtEndPosition ? endLocation?.Name : startLocation?.Name;
+            string locationName = Submarine.MainSub.AtEndExit ? endLocation?.Name : startLocation?.Name;
 
             string textTag;
             if (gameOver)
@@ -396,17 +510,23 @@ namespace Barotrauma
                         textTag = "RoundSummaryLeaving";
                         break;
                     case CampaignMode.TransitionType.ProgressToNextLocation:
-                    case CampaignMode.TransitionType.ProgressToNextEmptyLocation:
                         locationName = endLocation?.Name;
                         textTag = "RoundSummaryProgress";
                         break;
+                    case CampaignMode.TransitionType.ProgressToNextEmptyLocation:
+                        locationName = endLocation?.Name;
+                        textTag = "RoundSummaryProgressToEmptyLocation";
+                        break;
                     case CampaignMode.TransitionType.ReturnToPreviousLocation:
-                    case CampaignMode.TransitionType.ReturnToPreviousEmptyLocation:
                         locationName = startLocation?.Name;
                         textTag = "RoundSummaryReturn";
                         break;
+                    case CampaignMode.TransitionType.ReturnToPreviousEmptyLocation:
+                        locationName = startLocation?.Name;
+                        textTag = "RoundSummaryReturnToEmptyLocation";
+                        break;
                     default:
-                        textTag = Submarine.MainSub.AtEndPosition ? "RoundSummaryProgress" : "RoundSummaryReturn";
+                        textTag = Submarine.MainSub.AtEndExit ? "RoundSummaryProgress" : "RoundSummaryReturn";
                         break;
                 }
             }
@@ -456,7 +576,7 @@ namespace Barotrauma
 
             GUIListBox crewList = new GUIListBox(new RectTransform(Vector2.One, parent.RectTransform))
             {
-                Padding = new Vector4(2, 5, 0, 0),
+                Padding = new Vector4(4, 10, 0, 0) * GUI.Scale,
                 AutoHideScrollBar = false
             };
             crewList.ContentBackground.Color = Color.Transparent;
@@ -503,7 +623,7 @@ namespace Barotrauma
             Character character = characterInfo.Character;
             if (character == null || character.IsDead)
             {
-                if (character == null && characterInfo.IsNewHire)
+                if (character == null && characterInfo.IsNewHire && characterInfo.CauseOfDeath == null)
                 {
                     statusText = TextManager.Get("CampaignCrew.NewHire");
                     statusColor = GUI.Style.Blue;
@@ -547,11 +667,11 @@ namespace Barotrauma
                 ToolBox.LimitString(statusText, GUI.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: statusColor);
         }
 
-        private void CreateReputationElement(GUIComponent parent, 
+        private GUIFrame CreateReputationElement(GUIComponent parent, 
             string name, float reputation, float normalizedReputation, float initialReputation,
             string shortDescription, string fullDescription, Sprite icon, Sprite backgroundPortrait, Color iconColor)
         {
-            var factionFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.3f), parent.RectTransform), style: null);
+            var factionFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform), style: null);
 
             if (backgroundPortrait != null)
             {
@@ -568,13 +688,13 @@ namespace Barotrauma
 
             var factionInfoHorizontal = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), factionFrame.RectTransform, Anchor.Center), childAnchor: Anchor.CenterLeft, isHorizontal: true)
             {
-                RelativeSpacing = 0.02f,
+                AbsoluteSpacing = GUI.IntScale(5),
                 Stretch = true
             };
 
             var factionTextContent = new GUILayoutGroup(new RectTransform(Vector2.One, factionInfoHorizontal.RectTransform))
             {
-                RelativeSpacing = 0.05f,
+                AbsoluteSpacing = GUI.IntScale(10),
                 Stretch = true
             };
             var factionIcon = new GUIImage(new RectTransform(new Point((int)(factionInfoHorizontal.Rect.Height * 0.7f)), factionInfoHorizontal.RectTransform, scaleBasis: ScaleBasis.Smallest), icon, scaleToFit: true)
@@ -583,12 +703,48 @@ namespace Barotrauma
             };
             factionInfoHorizontal.Recalculate();
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), factionTextContent.RectTransform),
+            var header = new GUITextBlock(new RectTransform(new Point(factionTextContent.Rect.Width, GUI.IntScale(40)), factionTextContent.RectTransform),
                 name, font: GUI.SubHeadingFont)
             {
-                Padding = Vector4.Zero
+                Padding = Vector4.Zero,
+                UserData = "header"
             };
-            var factionDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.6f), factionTextContent.RectTransform),
+            header.RectTransform.IsFixedSize = true;
+
+            var sliderHolder = new GUILayoutGroup(new RectTransform(new Point((int)(factionTextContent.Rect.Width * 0.8f), GUI.IntScale(20.0f)), factionTextContent.RectTransform),
+                childAnchor: Anchor.CenterLeft, isHorizontal: true)
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = true
+            };
+            sliderHolder.RectTransform.IsFixedSize = true;
+            factionTextContent.Recalculate();
+            
+            new GUICustomComponent(new RectTransform(new Vector2(0.8f, 1.0f), sliderHolder.RectTransform),
+                onDraw: (sb, customComponent) => DrawReputationBar(sb, customComponent.Rect, normalizedReputation));
+
+            string reputationText = Reputation.GetFormattedReputationText(normalizedReputation, reputation, addColorTags: true);
+            int reputationChange = (int)Math.Round(reputation - initialReputation);
+            if (Math.Abs(reputationChange) > 0)
+            {
+                string changeText = $"{(reputationChange > 0 ? "+" : "") + reputationChange}";
+                string colorStr = XMLExtensions.ColorToString(reputationChange > 0 ? GUI.Style.Green : GUI.Style.Red);
+                var rtData = RichTextData.GetRichTextData($"{reputationText} (‖color:{colorStr}‖{changeText}‖color:end‖)", out string sanitizedText);
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), sliderHolder.RectTransform),
+                    rtData, sanitizedText,
+                    textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont);
+            }
+            else
+            {
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), sliderHolder.RectTransform),
+                    reputationText,
+                    textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont, parseRichText: true);
+            }
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), factionTextContent.RectTransform) { MinSize = new Point(0, GUI.IntScale(5)) }, style: null);
+
+            var factionDescription = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.6f), factionTextContent.RectTransform),
                 shortDescription, font: GUI.SmallFont, wrap: true)
             {
                 UserData = "description",
@@ -599,51 +755,32 @@ namespace Barotrauma
                 factionDescription.ToolTip = fullDescription;
             }
 
-            var sliderHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), factionTextContent.RectTransform),
-                childAnchor: Anchor.CenterLeft, isHorizontal: true)
-            {
-                RelativeSpacing = 0.05f,
-                Stretch = true
-            };
-            sliderHolder.RectTransform.MaxSize = new Point(int.MaxValue, GUI.IntScale(25.0f));
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), factionTextContent.RectTransform) { MinSize = new Point(0, GUI.IntScale(5)) }, style: null);
+
+            factionInfoHorizontal.Recalculate();
             factionTextContent.Recalculate();
 
-            new GUICustomComponent(new RectTransform(new Vector2(0.8f, 1.0f), sliderHolder.RectTransform),
-                onDraw: (sb, customComponent) => DrawReputationBar(sb, customComponent.Rect, normalizedReputation));
-
-            string reputationText = ((int)Math.Round(reputation)).ToString();
-            int reputationChange = (int)Math.Round( reputation - initialReputation);
-            if (Math.Abs(reputationChange) > 0)
-            {
-                string changeText = $"{(reputationChange > 0 ? "+" : "") + reputationChange}";
-                string colorStr = XMLExtensions.ColorToString(reputationChange > 0 ? GUI.Style.Green : GUI.Style.Red);
-                var rtData = RichTextData.GetRichTextData($"{reputationText} (‖color:{colorStr}‖{changeText}‖color:end‖)", out string sanitizedText);
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), sliderHolder.RectTransform),
-                    rtData, sanitizedText,
-                    textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont);     
-            }
-            else
-            {
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), sliderHolder.RectTransform),
-                    reputationText,
-                    textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont);
-            }
+            return factionFrame;
         }
 
         public static void DrawReputationBar(SpriteBatch sb, Rectangle rect, float normalizedReputation)
         {
-            GUI.DrawRectangle(sb, rect, GUI.Style.ColorInventoryBackground, isFilled: true);
-            if (normalizedReputation < 0.5f)
+            int segmentWidth = rect.Width / 5;
+            rect.Width = segmentWidth * 5;
+            for (int i = 0; i < 5; i++)
             {
-                int barWidth = (int)((0.5f - normalizedReputation) * rect.Width);
-                GUI.DrawRectangle(sb, new Rectangle(rect.Center.X - barWidth, rect.Y, barWidth, rect.Height), GUI.Style.Red, isFilled: true);
+                GUI.DrawRectangle(sb, new Rectangle(rect.X + (segmentWidth * i), rect.Y, segmentWidth, rect.Height), Reputation.GetReputationColor(i / 5.0f), isFilled: true);
+                GUI.DrawRectangle(sb, new Rectangle(rect.X + (segmentWidth * i), rect.Y, segmentWidth, rect.Height), GUI.Style.ColorInventoryBackground, isFilled: false);
             }
-            else if (normalizedReputation > 0.5f)
-            {
-                int barWidth = (int)((normalizedReputation - 0.5f) * rect.Width);
-                GUI.DrawRectangle(sb, new Rectangle(rect.Center.X, rect.Y, barWidth, rect.Height), GUI.Style.Green, isFilled: true);
-            }
-            GUI.DrawLine(sb, new Vector2(rect.Center.X, rect.Y - 2), new Vector2(rect.Center.X, rect.Bottom + 2), GUI.Style.TextColor);
+            GUI.DrawRectangle(sb, rect, GUI.Style.ColorInventoryBackground, isFilled: false);
+
+            GUI.Arrow.Draw(sb, new Vector2(rect.X + rect.Width * normalizedReputation, rect.Y), GUI.Style.ColorInventoryBackground, scale: GUI.Scale, spriteEffect: SpriteEffects.FlipVertically);
+            GUI.Arrow.Draw(sb, new Vector2(rect.X + rect.Width * normalizedReputation, rect.Y), GUI.Style.TextColor, scale: GUI.Scale * 0.8f, spriteEffect: SpriteEffects.FlipVertically);
+
+            GUI.DrawString(sb, new Vector2(rect.X, rect.Bottom), "-100", GUI.Style.TextColor, font: GUI.SmallFont);
+            Vector2 textSize = GUI.SmallFont.MeasureString("100");
+            GUI.DrawString(sb, new Vector2(rect.Right - textSize.X, rect.Bottom), "100", GUI.Style.TextColor, font: GUI.SmallFont);
         }
     }
 }

@@ -94,20 +94,24 @@ namespace Barotrauma
         {
             Vector2 targetVel = target - host.SimPosition;
 
-            if (targetVel.LengthSquared() < 0.00001f) return Vector2.Zero;
+            if (targetVel.LengthSquared() < 0.00001f) { return Vector2.Zero; }
 
             targetVel = Vector2.Normalize(targetVel) * weight;
-            Vector2 newSteering = targetVel - host.Steering;
+            // TODO: the code below doesn't quite work as it should, and I'm not sure what the purpose of it is/was.
+            // So, we'll just return the targetVel for now, as it produces smooth results.
+            return targetVel;
 
-            if (newSteering == Vector2.Zero) return Vector2.Zero;
+            //Vector2 newSteering = targetVel - host.Steering;
 
-            float steeringSpeed = (newSteering + host.Steering).Length();
-            if (steeringSpeed > Math.Abs(weight))
-            {
-                newSteering = Vector2.Normalize(newSteering) * Math.Abs(weight);
-            }
+            //if (newSteering == Vector2.Zero) return Vector2.Zero;
 
-            return newSteering;
+            //float steeringSpeed = (newSteering + host.Steering).Length();
+            //if (steeringSpeed > Math.Abs(weight))
+            //{
+            //    newSteering = Vector2.Normalize(newSteering) * Math.Abs(weight);
+            //}
+
+            //return newSteering;
         }
 
         protected virtual Vector2 DoSteeringWander(float weight)

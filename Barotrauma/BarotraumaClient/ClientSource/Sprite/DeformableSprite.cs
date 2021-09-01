@@ -296,7 +296,7 @@ namespace Barotrauma
 
             Matrix matrix = GetTransform(pos, origin, rotate, scale);
             effect.Parameters["xTransform"].SetValue(matrix * cam.ShaderTransform
-                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f);
+                * Matrix.CreateOrthographic(cam.Resolution.X, cam.Resolution.Y, -1, 1) * 0.5f);
             effect.Parameters["tintColor"].SetValue(color.ToVector4());
             effect.Parameters["deformArray"].SetValue(deformAmount);
             effect.Parameters["deformArrayWidth"].SetValue(deformArrayWidth);

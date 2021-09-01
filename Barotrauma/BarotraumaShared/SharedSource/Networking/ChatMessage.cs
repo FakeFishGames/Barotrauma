@@ -8,7 +8,18 @@ namespace Barotrauma.Networking
 {
     public enum ChatMessageType
     {
-        Default, Error, Dead, Server, Radio, Private, Console, MessageBox, Order, ServerLog, ServerMessageBox, ServerMessageBoxInGame
+        Default = 0,
+        Error = 1,
+        Dead = 2,
+        Server = 3,
+        Radio = 4,
+        Private = 5,
+        Console = 6,
+        MessageBox = 7,
+        Order = 8,
+        ServerLog = 9,
+        ServerMessageBox = 10,
+        ServerMessageBoxInGame = 11
     }
 
     public enum PlayerConnectionChangeType { None = 0, Joined = 1, Kicked = 2, Disconnected = 3, Banned = 4 }
@@ -82,7 +93,7 @@ namespace Barotrauma.Networking
         {
             get
             {
-                return string.IsNullOrWhiteSpace(SenderName) ? TranslatedText : SenderName + ": " + TranslatedText;
+                return string.IsNullOrWhiteSpace(SenderName) ? TranslatedText : NetworkMember.ClientLogName(SenderClient, SenderName) + ": " + TranslatedText;
             }
         }
 
@@ -209,11 +220,11 @@ namespace Barotrauma.Networking
                 case ChatMessageType.Order:
                     if (receiver != null && !receiver.IsDead)
                     {
-                        var receiverItem = receiver.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                        var receiverItem = receiver.Inventory?.AllItems.FirstOrDefault(i => i.GetComponent<WifiComponent>() != null);
                         //character doesn't have a radio -> don't send
                         if (receiverItem == null || !receiver.HasEquippedItem(receiverItem)) { return spokenMsg; }
 
-                        var senderItem = sender.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                        var senderItem = sender.Inventory?.AllItems.FirstOrDefault(i => i.GetComponent<WifiComponent>() != null);
                         if (senderItem == null || !sender.HasEquippedItem(senderItem)) { return spokenMsg; }
 
                         var receiverRadio = receiverItem.GetComponent<WifiComponent>();
@@ -253,9 +264,17 @@ namespace Barotrauma.Networking
         {
             radio = null;
             if (sender?.Inventory == null || sender.Removed) { return false; }
-            radio = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null)?.GetComponent<WifiComponent>();
-            if (radio?.Item == null) { return false; }
-            return sender.HasEquippedItem(radio.Item) && radio.CanTransmit();
+
+            foreach (Item item in sender.Inventory.AllItems)
+            {
+                var wifiComponent = item.GetComponent<WifiComponent>();
+                if (wifiComponent == null || !wifiComponent.CanTransmit() || !sender.HasEquippedItem(item)) { continue; }
+                if (radio == null || wifiComponent.Range > radio.Range)
+                {
+                    radio = wifiComponent;
+                }
+            }
+            return radio?.Item != null;
         }
     }
 }

@@ -23,7 +23,7 @@ namespace Barotrauma
         HideInMenus = 2
     }
 
-    public enum SubmarineType { Player, Outpost, OutpostModule, Wreck }
+    public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation, EnemySubmarine }
     public enum SubmarineClass { Undefined, Scout, Attack, Transport, DeepDiver }
 
     partial class SubmarineInfo : IDisposable
@@ -95,8 +95,9 @@ namespace Barotrauma
 
         public OutpostModuleInfo OutpostModuleInfo { get; set; }
 
-        public bool IsOutpost => Type == SubmarineType.Outpost;
+        public bool IsOutpost => Type == SubmarineType.Outpost || Type == SubmarineType.OutpostModule;
         public bool IsWreck => Type == SubmarineType.Wreck;
+        public bool IsBeacon => Type == SubmarineType.BeaconStation;
         public bool IsPlayer => Type == SubmarineType.Player;
 
         public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && SubmarineClass != SubmarineClass.Undefined;
@@ -108,8 +109,11 @@ namespace Barotrauma
             {
                 if (hash == null)
                 {
-                    XDocument doc = OpenFile(FilePath);
-                    StartHashDocTask(doc);
+                    if (hashTask == null)
+                    {
+                        XDocument doc = OpenFile(FilePath);
+                        StartHashDocTask(doc);
+                    }
                     hashTask.Wait();
                     hashTask = null;
                 }
@@ -118,7 +122,18 @@ namespace Barotrauma
             }
         }
 
+        public bool CalculatingHash
+        {
+            get { return hashTask != null && !hashTask.IsCompleted; }
+        }
+
         public Vector2 Dimensions
+        {
+            get;
+            private set;
+        }
+
+        public int CargoCapacity
         {
             get;
             private set;
@@ -252,6 +267,7 @@ namespace Barotrauma
             SubmarineClass = original.SubmarineClass;
             hash = !string.IsNullOrEmpty(original.FilePath) ? original.MD5Hash : null;
             Dimensions = original.Dimensions;
+            CargoCapacity = original.CargoCapacity;
             FilePath = original.FilePath;
             RequiredContentPackages = new HashSet<string>(original.RequiredContentPackages);
             IsFileCorrupted = original.IsFileCorrupted;
@@ -266,7 +282,7 @@ namespace Barotrauma
                 OutpostModuleInfo = new OutpostModuleInfo(original.OutpostModuleInfo);
             }
 #if CLIENT
-            PreviewImage = original.PreviewImage != null ? new Sprite(original.PreviewImage.Texture, null, null) : null;
+            PreviewImage = original.PreviewImage != null ? new Sprite(original.PreviewImage) : null;
 #endif
         }
 
@@ -314,6 +330,7 @@ namespace Barotrauma
                 Tags = tags;
             }
             Dimensions = SubmarineElement.GetAttributeVector2("dimensions", Vector2.Zero);
+            CargoCapacity = SubmarineElement.GetAttributeInt("cargocapacity", -1);
             RecommendedCrewSizeMin = SubmarineElement.GetAttributeInt("recommendedcrewsizemin", 0);
             RecommendedCrewSizeMax = SubmarineElement.GetAttributeInt("recommendedcrewsizemax", 0);
             RecommendedCrewExperience = SubmarineElement.GetAttributeString("recommendedcrewexperience", "Unknown");
@@ -373,6 +390,10 @@ namespace Barotrauma
 
         public void Dispose()
         {
+#if CLIENT
+            PreviewImage?.Remove();
+            PreviewImage = null;
+#endif
             if (savedSubmarines.Contains(this)) { savedSubmarines.Remove(this); }
         }
 
@@ -383,6 +404,8 @@ namespace Barotrauma
             {
                 var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine)
                     .Concat(vanilla.GetFilesOfType(ContentType.Wreck))
+                    .Concat(vanilla.GetFilesOfType(ContentType.BeaconStation))
+                    .Concat(vanilla.GetFilesOfType(ContentType.EnemySubmarine))
                     .Concat(vanilla.GetFilesOfType(ContentType.Outpost))
                     .Concat(vanilla.GetFilesOfType(ContentType.OutpostModule));
                 string pathToCompare = FilePath.Replace(@"\", @"/").ToLowerInvariant();
@@ -451,14 +474,61 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Calculated from <see cref="SubmarineElement"/>. Can be used when the sub hasn't been loaded and we can't access <see cref="Submarine.RealWorldCrushDepth"/>.
+        /// </summary>
+        public float GetRealWorldCrushDepth()
+        {
+            if (SubmarineElement == null) { return Level.DefaultRealWorldCrushDepth; }
+            bool structureCrushDepthsDefined = false;
+            float realWorldCrushDepth = float.PositiveInfinity;
+            foreach (var structureElement in SubmarineElement.GetChildElements("structure"))
+            {
+                string name = structureElement.Attribute("name")?.Value ?? "";
+                string identifier = structureElement.GetAttributeString("identifier", "");
+                var structurePrefab = Structure.FindPrefab(name, identifier);
+                if (structurePrefab == null || !structurePrefab.Body) { continue; }
+                if (!structureCrushDepthsDefined && structureElement.Attribute("crushdepth") != null)
+                {
+                    structureCrushDepthsDefined = true;
+                }
+                float structureCrushDepth = structureElement.GetAttributeFloat("crushdepth", float.PositiveInfinity);
+                realWorldCrushDepth = Math.Min(structureCrushDepth, realWorldCrushDepth);
+            }
+            if (!structureCrushDepthsDefined)
+            {
+                realWorldCrushDepth = Level.DefaultRealWorldCrushDepth;
+            }
+            realWorldCrushDepth *= GetRealWorldCrushDepthMultiplier();
+            return realWorldCrushDepth;
+        }
+
+        /// <summary>
+        /// Based on <see cref="SubmarineClass"/>
+        /// </summary>
+        public float GetRealWorldCrushDepthMultiplier()
+        {
+            if (SubmarineClass == SubmarineClass.DeepDiver)
+            {
+                return 1.2f;
+            }
+            else
+            {
+                return 1.0f;
+            }
+        }
 
         //saving/loading ----------------------------------------------------
         public bool SaveAs(string filePath, System.IO.MemoryStream previewImage = null)
         {
-            var newElement = new XElement(SubmarineElement.Name,
-                SubmarineElement.Attributes().Where(a => !string.Equals(a.Name.LocalName, "previewimage", StringComparison.InvariantCultureIgnoreCase) &&
-                                                         !string.Equals(a.Name.LocalName, "name", StringComparison.InvariantCultureIgnoreCase)),
+            var newElement = new XElement(
+                SubmarineElement.Name, 
+                SubmarineElement.Attributes()
+                    .Where(a => 
+                        !string.Equals(a.Name.LocalName, "previewimage", StringComparison.InvariantCultureIgnoreCase) &&
+                        !string.Equals(a.Name.LocalName, "name", StringComparison.InvariantCultureIgnoreCase)), 
                 SubmarineElement.Elements());
+
             if (Type == SubmarineType.OutpostModule)
             {
                 OutpostModuleInfo.Save(newElement);
@@ -467,7 +537,6 @@ namespace Barotrauma
             XDocument doc = new XDocument(newElement);
 
             doc.Root.Add(new XAttribute("name", Name));
-
             if (previewImage != null)
             {
                 doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
@@ -517,16 +586,18 @@ namespace Barotrauma
         {
             var contentPackageSubs = ContentPackage.GetFilesOfType(
                 GameMain.Config.AllEnabledPackages, 
-                ContentType.Submarine, ContentType.Outpost, ContentType.OutpostModule, ContentType.Wreck);
+                ContentType.Submarine, ContentType.Outpost, ContentType.OutpostModule,
+                ContentType.Wreck, ContentType.BeaconStation, ContentType.EnemySubmarine);
 
             for (int i = savedSubmarines.Count - 1; i >= 0; i--)
             {
-                if (File.Exists(savedSubmarines[i].FilePath) &&
-                    savedSubmarines[i].LastModifiedTime == File.GetLastWriteTime(savedSubmarines[i].FilePath) &&
-                    (Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SavePath) ||
-                    contentPackageSubs.Any(fp => Path.GetFullPath(fp.Path).CleanUpPath() == Path.GetFullPath(savedSubmarines[i].FilePath).CleanUpPath())))
+                if (File.Exists(savedSubmarines[i].FilePath))
                 {
-                    continue;
+                    bool isDownloadedSub = Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
+                    bool isInSubmarinesFolder = Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SavePath);
+                    bool isInContentPackage = contentPackageSubs.Any(fp => Path.GetFullPath(fp.Path).CleanUpPath() == Path.GetFullPath(savedSubmarines[i].FilePath).CleanUpPath());
+                    if (isDownloadedSub) { continue; }
+                    if (savedSubmarines[i].LastModifiedTime == File.GetLastWriteTime(savedSubmarines[i].FilePath) && (isInSubmarinesFolder || isInContentPackage)) { continue; }
                 }
                 savedSubmarines[i].Dispose();
             }
@@ -553,7 +624,7 @@ namespace Barotrauma
                 subDirectories = Directory.GetDirectories(SavePath).Where(s =>
                 {
                     DirectoryInfo dir = new DirectoryInfo(s);
-                    return (dir.Attributes & System.IO.FileAttributes.Hidden) == 0;
+                    return !dir.Attributes.HasFlag(System.IO.FileAttributes.Hidden) && !dir.Name.StartsWith(".");
                 }).ToArray();
             }
             catch (Exception e)
@@ -622,8 +693,6 @@ namespace Barotrauma
             }
         }
 
-        static readonly string TempFolder = Path.Combine("Submarine", "Temp");
-
         public static XDocument OpenFile(string file)
         {
             return OpenFile(file, out _);
@@ -653,7 +722,7 @@ namespace Barotrauma
 
             if (extension == ".sub")
             {
-                System.IO.Stream stream = null;
+                System.IO.Stream stream;
                 try
                 {
                     stream = SaveUtil.DecompressFiletoStream(file);

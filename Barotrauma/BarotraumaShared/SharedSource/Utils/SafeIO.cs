@@ -7,7 +7,10 @@ namespace Barotrauma.IO
     {
         static readonly string[] unwritableDirs = new string[] { "Content", "Data/ContentPackages" };
 
-        public static bool DevException;
+        /// <summary>
+        /// When set to true, the game is allowed to modify the vanilla content in debug builds. Has no effect in non-debug builds.
+        /// </summary>
+        public static bool SkipValidationInDebugBuilds;
 
         public static bool CanWrite(string path)
         {
@@ -20,7 +23,7 @@ namespace Barotrauma.IO
                 if (path.StartsWith(dir, StringComparison.InvariantCultureIgnoreCase))
                 {
 #if DEBUG
-                    return DevException;
+                    return SkipValidationInDebugBuilds;
 #else
                     return false;
 #endif
@@ -37,7 +40,7 @@ namespace Barotrauma.IO
         {
             if (!Validation.CanWrite(path))
             {
-                DebugConsole.ThrowError($"Cannot save XML document to \"{path}\": failed validation");
+                DebugConsole.ThrowError($"Cannot save XML document to \"{path}\": modifying the files in the folder is not allowed.");
                 return;
             }
             doc.Save(path);
@@ -47,7 +50,7 @@ namespace Barotrauma.IO
         {
             if (!Validation.CanWrite(path))
             {
-                DebugConsole.ThrowError($"Cannot save XML element to \"{path}\": failed validation");
+                DebugConsole.ThrowError($"Cannot save XML element to \"{path}\": modifying the files in the folder is not allowed.");
                 return;
             }
             element.Save(path);
@@ -72,7 +75,7 @@ namespace Barotrauma.IO
         {
             if (!Validation.CanWrite(path))
             {
-                DebugConsole.ThrowError($"Cannot write XML document to \"{path}\": failed validation");
+                DebugConsole.ThrowError($"Cannot write XML document to \"{path}\": modifying the files in the folder is not allowed.");
                 Writer = null;
                 return;
             }
@@ -222,7 +225,7 @@ namespace Barotrauma.IO
         {
             if (!Validation.CanWrite(path))
             {
-                DebugConsole.ThrowError($"Cannot create directory \"{path}\": failed validation");
+                DebugConsole.ThrowError($"Cannot create directory \"{path}\": modifying the contents of the folder is not allowed.");
                 return null;
             }
             return System.IO.Directory.CreateDirectory(path);
@@ -232,7 +235,7 @@ namespace Barotrauma.IO
         {
             if (!Validation.CanWrite(path))
             {
-                DebugConsole.ThrowError($"Cannot delete directory \"{path}\": failed validation");
+                DebugConsole.ThrowError($"Cannot delete directory \"{path}\": modifying the contents of the folder is not allowed.");
                 return;
             }
             //TODO: validate recursion?
@@ -251,7 +254,7 @@ namespace Barotrauma.IO
         {
             if (!Validation.CanWrite(dest))
             {
-                DebugConsole.ThrowError($"Cannot copy \"{src}\" to \"{dest}\": failed validation");
+                DebugConsole.ThrowError($"Cannot copy \"{src}\" to \"{dest}\": modifying the contents of the folder is not allowed.");
                 return;
             }
             System.IO.File.Copy(src, dest, overwrite);
@@ -261,12 +264,12 @@ namespace Barotrauma.IO
         {
             if (!Validation.CanWrite(src))
             {
-                DebugConsole.ThrowError($"Cannot move \"{src}\" to \"{dest}\": src failed validation");
+                DebugConsole.ThrowError($"Cannot move \"{src}\" to \"{dest}\": modifying the contents of the source folder is not allowed.");
                 return;
             }
             if (!Validation.CanWrite(dest))
             {
-                DebugConsole.ThrowError($"Cannot move \"{src}\" to \"{dest}\": dest failed validation");
+                DebugConsole.ThrowError($"Cannot move \"{src}\" to \"{dest}\": modifying the contents of the destination folder is not allowed");
                 return;
             }
             System.IO.File.Move(src, dest);
@@ -276,7 +279,7 @@ namespace Barotrauma.IO
         {
             if (!Validation.CanWrite(path))
             {
-                DebugConsole.ThrowError($"Cannot delete file \"{path}\": failed validation");
+                DebugConsole.ThrowError($"Cannot delete file \"{path}\": modifying the contents of the folder is not allowed.");
                 return;
             }
             System.IO.File.Delete(path);
@@ -298,7 +301,7 @@ namespace Barotrauma.IO
                 case System.IO.FileMode.Truncate:
                     if (!Validation.CanWrite(path))
                     {
-                        DebugConsole.ThrowError($"Cannot open \"{path}\" in {mode} mode: failed validation");
+                        DebugConsole.ThrowError($"Cannot open \"{path}\" in {mode} mode: modifying the contents of the folder is not allowed.");
                         return null;
                     }
                     break;
@@ -328,7 +331,7 @@ namespace Barotrauma.IO
         {
             if (!Validation.CanWrite(path))
             {
-                DebugConsole.ThrowError($"Cannot write all bytes to \"{path}\": failed validation");
+                DebugConsole.ThrowError($"Cannot write all bytes to \"{path}\": modifying the files in the folder is not allowed.");
                 return;
             }
             System.IO.File.WriteAllBytes(path, contents);
@@ -338,7 +341,7 @@ namespace Barotrauma.IO
         {
             if (!Validation.CanWrite(path))
             {
-                DebugConsole.ThrowError($"Cannot write all text to \"{path}\": failed validation");
+                DebugConsole.ThrowError($"Cannot write all text to \"{path}\": modifying the files in the folder is not allowed.");
                 return;
             }
             System.IO.File.WriteAllText(path, contents, encoding ?? System.Text.Encoding.UTF8);
@@ -348,7 +351,7 @@ namespace Barotrauma.IO
         {
             if (!Validation.CanWrite(path))
             {
-                DebugConsole.ThrowError($"Cannot write all lines to \"{path}\": failed validation");
+                DebugConsole.ThrowError($"Cannot write all lines to \"{path}\": modifying the files in the folder is not allowed.");
                 return;
             }
             System.IO.File.WriteAllLines(path, contents, encoding ?? System.Text.Encoding.UTF8);
@@ -420,7 +423,7 @@ namespace Barotrauma.IO
             }
             else
             {
-                DebugConsole.ThrowError($"Cannot write to file \"{fileName}\": failed validation");
+                DebugConsole.ThrowError($"Cannot write to file \"{fileName}\": modifying the files in the folder is not allowed.");
             }
         }
 
@@ -487,7 +490,7 @@ namespace Barotrauma.IO
         {
             if (!Validation.CanWrite(innerInfo.FullName))
             {
-                DebugConsole.ThrowError($"Cannot delete directory \"{Name}\": failed validation");
+                DebugConsole.ThrowError($"Cannot delete directory \"{Name}\": modifying the contents of the folder is not allowed.");
                 return;
             }
             innerInfo.Delete();
@@ -523,7 +526,7 @@ namespace Barotrauma.IO
             {
                 if (!Validation.CanWrite(innerInfo.FullName))
                 {
-                    DebugConsole.ThrowError($"Cannot set read-only to {value} for \"{Name}\": failed validation");
+                    DebugConsole.ThrowError($"Cannot set read-only to {value} for \"{Name}\": modifying the files in the folder is not allowed.");
                     return;
                 }
                 innerInfo.IsReadOnly = value;
@@ -534,7 +537,7 @@ namespace Barotrauma.IO
         {
             if (!Validation.CanWrite(dest))
             {
-                DebugConsole.ThrowError($"Cannot copy \"{Name}\" to \"{dest}\": failed validation");
+                DebugConsole.ThrowError($"Cannot copy \"{Name}\" to \"{dest}\": modifying the contents of the destination folder is not allowed.");
                 return;
             }
             innerInfo.CopyTo(dest, overwriteExisting);
@@ -544,7 +547,7 @@ namespace Barotrauma.IO
         {
             if (!Validation.CanWrite(innerInfo.FullName))
             {
-                DebugConsole.ThrowError($"Cannot delete file \"{Name}\": failed validation");
+                DebugConsole.ThrowError($"Cannot delete file \"{Name}\": modifying the files in the folder is not allowed.");
                 return;
             }
             innerInfo.Delete();

@@ -14,16 +14,19 @@ namespace Barotrauma.Items.Components
         private Color lightColor;
         private float lightBrightness;
         private float blinkFrequency;
+        private float pulseFrequency, pulseAmount;
         private float range;
-        private float flicker, flickerState;
+        private float flicker, flickerSpeed;
         private bool castShadows;
         private bool drawBehindSubs;
 
-        private float blinkTimer;
-
         private double lastToggleSignalTime;
 
+        private string prevColorSignal;
+
         public PhysicsBody ParentBody;
+
+        private Turret turret;
 
         [Serialize(100.0f, true, description: "The range of the emitted light. Higher values are more performance-intensive.", alwaysUseInstanceValues: true),
             Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
@@ -35,7 +38,7 @@ namespace Barotrauma.Items.Components
                 range = MathHelper.Clamp(value, 0.0f, 4096.0f);
 #if CLIENT
                 item.ResetCachedVisibleSize();
-                if (light != null) { light.Range = range; }
+                if (Light != null) { Light.Range = range; }
 #endif
             }
         }
@@ -51,7 +54,7 @@ namespace Barotrauma.Items.Components
             {
                 castShadows = value;
 #if CLIENT
-                if (light != null) light.CastShadows = value;
+                if (Light != null) Light.CastShadows = value;
 #endif
             }
         }
@@ -65,7 +68,7 @@ namespace Barotrauma.Items.Components
             {
                 drawBehindSubs = value;
 #if CLIENT
-                if (light != null) light.IsBackground = drawBehindSubs;
+                if (Light != null) Light.IsBackground = drawBehindSubs;
 #endif
             }
         }
@@ -90,14 +93,49 @@ namespace Barotrauma.Items.Components
             set
             {
                 flicker = MathHelper.Clamp(value, 0.0f, 1.0f);
+#if CLIENT
+                if (Light != null) { Light.LightSourceParams.Flicker = flicker; }
+#endif
             }
         }
 
         [Editable, Serialize(1.0f, false, description: "How fast the light flickers.")]
         public float FlickerSpeed
         {
-            get;
-            set;
+            get { return flickerSpeed; }
+            set
+            {
+                flickerSpeed = value;
+#if CLIENT
+                if (Light != null) { Light.LightSourceParams.FlickerSpeed = flickerSpeed; }
+#endif
+            }
+        }
+
+        [Editable, Serialize(0.0f, true, description: "How rapidly the light pulsates (in Hz). 0 = no blinking.")]
+        public float PulseFrequency
+        {
+            get { return pulseFrequency; }
+            set
+            {
+                pulseFrequency = MathHelper.Clamp(value, 0.0f, 60.0f);
+#if CLIENT
+                if (Light != null) { Light.LightSourceParams.PulseFrequency = pulseFrequency; }
+#endif
+            }
+        }
+
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.0f, true, description: "How much light pulsates (in Hz). 0 = not at all, 1 = alternates between full brightness and off.")]
+        public float PulseAmount
+        {
+            get { return pulseAmount; }
+            set
+            {
+                pulseAmount = MathHelper.Clamp(value, 0.0f, 1.0f);
+#if CLIENT
+                if (Light != null) { Light.LightSourceParams.PulseAmount = pulseAmount; }
+#endif
+            }
         }
 
         [Editable, Serialize(0.0f, true, description: "How rapidly the light blinks on and off (in Hz). 0 = no blinking.")]
@@ -107,6 +145,9 @@ namespace Barotrauma.Items.Components
             set
             {
                 blinkFrequency = MathHelper.Clamp(value, 0.0f, 60.0f);
+#if CLIENT
+                if (Light != null) { Light.LightSourceParams.BlinkFrequency = blinkFrequency; }
+#endif
             }
         }
 
@@ -118,7 +159,7 @@ namespace Barotrauma.Items.Components
             {
                 lightColor = value;
 #if CLIENT
-                if (light != null) light.Color = IsActive ? lightColor : Color.Transparent;
+                if (Light != null) Light.Color = IsActive ? lightColor : Color.Transparent;
 #endif
             }
         }
@@ -133,7 +174,7 @@ namespace Barotrauma.Items.Components
         public override void Move(Vector2 amount)
         {
 #if CLIENT
-            light.Position += amount;
+            Light.Position += amount;
 #endif
         }
 
@@ -157,21 +198,33 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
 #if CLIENT
-            light = new LightSource(element)
+            Light = new LightSource(element)
             {
                 ParentSub = item.CurrentHull?.Submarine,
                 Position = item.Position,
-                CastShadows = castShadows,
+                CastShadows = castShadows,                
                 IsBackground = drawBehindSubs,
                 SpriteScale = Vector2.One * item.Scale,
                 Range = range
             };
+            Light.LightSourceParams.Flicker = flicker;
+            Light.LightSourceParams.FlickerSpeed = FlickerSpeed;
+            Light.LightSourceParams.PulseAmount = pulseAmount;
+            Light.LightSourceParams.PulseFrequency = pulseFrequency;
+            Light.LightSourceParams.BlinkFrequency = blinkFrequency;
 #endif
 
             IsActive = IsOn;
             item.AddTag("light");
         }
-        
+
+        public override void OnItemLoaded()
+        {
+            base.OnItemLoaded();
+            SetLightSourceState(IsActive, lightBrightness);
+            turret = item.GetComponent<Turret>();
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             if (item.AiTarget != null)
@@ -181,7 +234,7 @@ namespace Barotrauma.Items.Components
             UpdateOnActiveEffects(deltaTime);
 
 #if CLIENT
-            light.ParentSub = item.Submarine;
+            Light.ParentSub = item.Submarine;
 #endif
             if (item.Container != null)
             {
@@ -189,15 +242,25 @@ namespace Barotrauma.Items.Components
                 return;
             }
 #if CLIENT
-            light.Position = ParentBody != null ? ParentBody.Position : item.Position;
+            if (ParentBody != null)
+            {
+                Light.Position = ParentBody.Position;
+            }
+            else if (turret != null)
+            {
+                Light.Position = new Vector2(item.Rect.X + turret.TransformedBarrelPos.X, item.Rect.Y - turret.TransformedBarrelPos.Y);
+            }
+            else
+            {
+                Light.Position = item.Position;
+            }
 #endif
-
             PhysicsBody body = ParentBody ?? item.body;
             if (body != null)
             {
 #if CLIENT
-                light.Rotation = body.Dir > 0.0f ? body.DrawRotation : body.DrawRotation - MathHelper.Pi;
-                light.LightSpriteEffect = (body.Dir > 0.0f) ? SpriteEffects.None : SpriteEffects.FlipVertically;
+                Light.Rotation = body.Dir > 0.0f ? body.DrawRotation : body.DrawRotation - MathHelper.Pi;
+                Light.LightSpriteEffect = (body.Dir > 0.0f) ? SpriteEffects.None : SpriteEffects.FlipVertically;
 #endif
                 if (!body.Enabled)
                 {
@@ -208,8 +271,8 @@ namespace Barotrauma.Items.Components
             else
             {
 #if CLIENT
-                light.Rotation = -Rotation - MathHelper.ToRadians(item.Rotation);
-                light.LightSpriteEffect = item.SpriteEffects;
+                Light.Rotation = -Rotation - MathHelper.ToRadians(item.Rotation);
+                Light.LightSpriteEffect = item.SpriteEffects;
 #endif
             }
 
@@ -229,22 +292,7 @@ namespace Barotrauma.Items.Components
                 lightBrightness = MathHelper.Lerp(lightBrightness, powerConsumption <= 0.0f ? 1.0f : Math.Min(Voltage, 1.0f), 0.1f);
             }
 
-            if (blinkFrequency > 0.0f)
-            {
-                blinkTimer = (blinkTimer + deltaTime * blinkFrequency) % 1.0f;
-            }
-
-            if (blinkTimer > 0.5f)
-            {
-                SetLightSourceState(false, lightBrightness);
-            }
-            else
-            {
-                flickerState += deltaTime * FlickerSpeed;
-                flickerState %= 255;
-                float noise = PerlinNoise.GetPerlin(flickerState, flickerState * 0.5f) * flicker;
-                SetLightSourceState(true, lightBrightness * (1.0f - noise));
-            }
+            SetLightSourceState(true, lightBrightness);
 
             if (powerIn == null && powerConsumption > 0.0f) { Voltage -= deltaTime; }
         }
@@ -261,12 +309,12 @@ namespace Barotrauma.Items.Components
 
         partial void OnStateChanged();
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "toggle":
-                    if (signal != "0")
+                    if (signal.value != "0")
                     {
                         if (!IgnoreContinuousToggle || lastToggleSignalTime < Timing.TotalTime - 0.1)
                         {
@@ -276,10 +324,14 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "set_state":
-                    IsOn = signal != "0";
+                    IsOn = signal.value != "0";
                     break;
                 case "set_color":
-                    LightColor = XMLExtensions.ParseColor(signal, false);
+                    if (signal.value != prevColorSignal)
+                    {
+                        LightColor = XMLExtensions.ParseColor(signal.value, false);
+                        prevColorSignal = signal.value;
+                    }
                     break;
             }
         }

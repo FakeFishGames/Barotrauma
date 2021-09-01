@@ -8,11 +8,7 @@ namespace Barotrauma
 {
     partial class LevelObjectPrefab : ISerializableEntity
     {
-        private static List<LevelObjectPrefab> list = new List<LevelObjectPrefab>();
-        public static List<LevelObjectPrefab> List
-        {
-            get { return list; }
-        }
+        public static List<LevelObjectPrefab> List { get; } = new List<LevelObjectPrefab>();
 
         public class ChildObject
         {
@@ -38,21 +34,19 @@ namespace Barotrauma
         public enum SpawnPosType
         {
             None = 0,
-            Wall = 1,
-            RuinWall = 2,
-            SeaFloor = 4,
-            MainPath = 8,
-            LevelStart = 16,
-            LevelEnd = 32,
+            MainPathWall = 1,
+            SidePathWall = 2,
+            CaveWall = 4,
+            NestWall = 8,
+            RuinWall = 16,
+            SeaFloor = 32,
+            MainPath = 64,
+            LevelStart = 128,
+            LevelEnd = 256,
+            Wall = MainPathWall | SidePathWall | CaveWall,
         }
 
         public List<Sprite> Sprites
-        {
-            get;
-            private set;
-        } = new List<Sprite>();
-
-        public List<Sprite> SpecularSprites
         {
             get;
             private set;
@@ -117,7 +111,13 @@ namespace Barotrauma
         {
             get;
             private set;
-        }
+        } = -1;
+
+        public Dictionary<Sprite, XElement> SpriteSpecificPhysicsBodyElements
+        {
+            get;
+            private set;
+        } = new Dictionary<Sprite, XElement>();
 
 
         [Serialize(10000, false, description: "Maximum number of this specific object per level."), Editable(MinValueFloat = 0.01f, MaxValueFloat = 10.0f)]
@@ -162,8 +162,29 @@ namespace Barotrauma
             private set;
         }
 
+        [Editable, Serialize("0,0", true, description: "Random offset from the surface the object spawns on.")]
+        public Vector2 RandomOffset
+        {
+            get;
+            private set;
+        }
+
         [Editable, Serialize(false, true, description: "Should the object be rotated to align it with the wall surface it spawns on.")]
         public bool AlignWithSurface
+        {
+            get;
+            private set;
+        }
+
+        [Editable, Serialize(true, true, description: "Can the object be placed near the start of the level.")]
+        public bool AllowAtStart
+        {
+            get;
+            private set;
+        }
+
+        [Editable, Serialize(true, true, description: "Can the object be placed near the end of the level.")]
+        public bool AllowAtEnd
         {
             get;
             private set;
@@ -243,10 +264,37 @@ namespace Barotrauma
             private set;
         }
 
-        public string Name
+        [Serialize(false, true, description: "Can the object take damage from weapons/attacks that damage level walls."), Editable]
+        public bool TakeLevelWallDamage
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, true), Editable]
+        public bool HideWhenBroken
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(100.0f, true), Editable]
+        public float Health
+        {
+            get;
+            private set;
+        }
+
+        public string Identifier
         {
             get;
             set;
+        }
+
+
+        public string Name
+        {
+            get { return Identifier; }
         }
 
         public List<ChildObject> ChildObjects
@@ -272,12 +320,12 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            return "LevelObjectPrefab (" + Name + ")";
+            return "LevelObjectPrefab (" + Identifier + ")";
         }
 
         public static void LoadAll()
         {
-            list.Clear();
+            List.Clear();
             var files = GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs);
             if (files.Count() > 0)
             {
@@ -303,35 +351,62 @@ namespace Barotrauma
                 {
                     mainElement = doc.Root.FirstElement();
                     DebugConsole.NewMessage($"Overriding all level object prefabs with '{configPath}'", Color.Yellow);
-                    list.Clear();
+                    List.Clear();
                 }
-                else if (list.Any())
+                else if (List.Any())
                 {
-                    DebugConsole.NewMessage($"Loading additional level object prefabs from file '{configPath}'");
+                    DebugConsole.Log($"Loading additional level object prefabs from file '{configPath}'");
                 }
-                foreach (XElement element in mainElement.Elements())
+                foreach (XElement subElement in mainElement.Elements())
                 {
-                    list.Add(new LevelObjectPrefab(element));
+                    var element = subElement.IsOverride() ? subElement.FirstElement() : subElement;
+                    string identifier = element.GetAttributeString("identifier", "");
+                    var existingPrefab = List.Find(p => p.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+                    if (existingPrefab != null)
+                    {
+                        if (subElement.IsOverride())
+                        {
+                            DebugConsole.NewMessage($"Overriding the existing level object prefab '{identifier}' using the file '{configPath}'", Color.Yellow);
+                            List.Remove(existingPrefab);
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError($"Error in '{configPath}': Duplicate level object prefab '{identifier}' found in '{configPath}'! Each level object prefab must have a unique identifier. " +
+                                "Use <override></override> tags to override prefabs.");
+                            continue;
+                        }
+                    }
+                    List.Add(new LevelObjectPrefab(element));
                 }
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError(String.Format("Failed to load LevelObject prefabs from {0}", configPath), e);
+                DebugConsole.ThrowError(string.Format("Failed to load LevelObject prefabs from {0}", configPath), e);
             }
         }
         
-        public LevelObjectPrefab(XElement element)
+        public LevelObjectPrefab(XElement element, string identifier = null)
         {
             ChildObjects = new List<ChildObject>();
             LevelTriggerElements = new List<XElement>();
             OverrideProperties = new List<LevelObjectPrefab>();
             OverrideCommonness = new Dictionary<string, float>();
 
+            Identifier = null;
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             if (element != null)
             {
                 Config = element;
-                Name = element.Name.ToString();
+                Identifier = element.GetAttributeString("identifier", null) ?? identifier;
+                if (string.IsNullOrEmpty(Identifier))
+                {
+#if DEBUG
+                    DebugConsole.ThrowError($"Level object prefab \"{element.Name}\" has no identifier! Using the name as the identifier instead...");
+#else
+                    DebugConsole.AddWarning($"Level object prefab \"{element.Name}\" has no identifier! Using the name as the identifier instead...");
+#endif
+                    Identifier = element.Name.ToString();
+                }
                 LoadElements(element, -1);
                 InitProjSpecific(element);
             }
@@ -346,21 +421,27 @@ namespace Barotrauma
 
         private void LoadElements(XElement element, int parentTriggerIndex)
         {
+            int propertyOverrideCount = 0;
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
-                        Sprites.Add( new Sprite(subElement, lazyLoad: true));
-                        break;
-                    case "specularsprite":
-                        SpecularSprites.Add(new Sprite(subElement, lazyLoad: true));
+                        var newSprite = new Sprite(subElement, lazyLoad: true);
+                        Sprites.Add(newSprite);
+                        var spriteSpecificPhysicsBodyElement = 
+                            subElement.Element("PhysicsBody") ?? subElement.Element("Body") ?? 
+                            subElement.Element("physicsbody") ?? subElement.Element("body");
+                        if (spriteSpecificPhysicsBodyElement != null)
+                        {
+                            SpriteSpecificPhysicsBodyElements.Add(newSprite, spriteSpecificPhysicsBodyElement);
+                        }
                         break;
                     case "deformablesprite":
                         DeformableSprite = new DeformableSprite(subElement, lazyLoad: true);
                         break;
                     case "overridecommonness":
-                        string levelType = subElement.GetAttributeString("leveltype", "");
+                        string levelType = subElement.GetAttributeString("leveltype", "").ToLowerInvariant();
                         if (!OverrideCommonness.ContainsKey(levelType))
                         {
                             OverrideCommonness.Add(levelType, subElement.GetAttributeFloat("commonness", 1.0f));
@@ -376,13 +457,14 @@ namespace Barotrauma
                         ChildObjects.Add(new ChildObject(subElement));
                         break;
                     case "overrideproperties":
-                        var propertyOverride = new LevelObjectPrefab(subElement);
+                        var propertyOverride = new LevelObjectPrefab(subElement, identifier: Identifier + "-" + propertyOverrideCount);
                         OverrideProperties[OverrideProperties.Count - 1] = propertyOverride;
                         if (!propertyOverride.Sprites.Any() && propertyOverride.DeformableSprite == null)
                         {
                             propertyOverride.Sprites = Sprites;
                             propertyOverride.DeformableSprite = DeformableSprite;
                         }
+                        propertyOverrideCount++;
                         break;
                     case "body":
                     case "physicsbody":
@@ -395,13 +477,26 @@ namespace Barotrauma
         
         partial void InitProjSpecific(XElement element);
 
-        public float GetCommonness(string levelType)
+
+        public float GetCommonness(CaveGenerationParams generationParams, bool requireCaveSpecificOverride = true)
         {
-            if (!OverrideCommonness.TryGetValue(levelType, out float commonness))
+            if (generationParams?.Identifier != null &&
+                OverrideCommonness.TryGetValue(generationParams.Identifier, out float commonness))
             {
-                return Commonness;
+                return commonness;
             }
-            return commonness;
+            return requireCaveSpecificOverride ? 0.0f : Commonness;
+        }
+
+        public float GetCommonness(LevelGenerationParams generationParams)
+        {
+            if (generationParams?.Identifier != null && 
+                (OverrideCommonness.TryGetValue(generationParams.Identifier, out float commonness) || 
+                (generationParams.OldIdentifier != null && OverrideCommonness.TryGetValue(generationParams.OldIdentifier, out commonness))))
+            {
+                return commonness;
+            }
+            return Commonness;
         }
     }
 }

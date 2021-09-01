@@ -6,16 +6,18 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    abstract class AIObjective
+    abstract partial class AIObjective
     {
         public virtual float Devotion => AIObjectiveManager.baseDevotion;
 
-        public abstract string DebugTag { get; }
+        public abstract string Identifier { get; set; }
+        public virtual string DebugTag => Identifier;
         public virtual bool ForceRun => false;
         public virtual bool IgnoreUnsafeHulls => false;
         public virtual bool AbandonWhenCannotCompleteSubjectives => true;
         public virtual bool AllowSubObjectiveSorting => false;
         public virtual bool ForceOrderPriority => true;
+        public virtual bool PrioritizeIfSubObjectivesActive => false;
 
         /// <summary>
         /// Can there be multiple objective instaces of the same type?
@@ -52,8 +54,32 @@ namespace Barotrauma
         /// </summary>
         public float Priority { get; set; }
         public float BasePriority { get; set; }
-
         public float PriorityModifier { get; private set; } = 1;
+
+        private float resetPriorityTimer;
+        private readonly float resetPriorityTime = 1;
+        private bool _forceHighestPriority;
+        // For forcing the highest priority temporarily. Will reset automatically after one second, unless kept alive by something.
+        public bool ForceHighestPriority
+        {
+            get { return _forceHighestPriority; }
+            set
+            {
+                if (_forceHighestPriority == value) { return; }
+                _forceHighestPriority = value;
+                if (_forceHighestPriority)
+                {
+                    resetPriorityTimer = resetPriorityTime;
+                }
+            }
+        }
+
+        // For temporarily forcing walking. Will reset after each priority calculation, so it will need to be kept alive by something.
+        // The intention of this boolean to allow walking even when the priority is higher than AIObjectiveManager.RunPriority.
+        public bool ForceWalk { get; set; }
+
+        public bool IgnoreAtOutpost { get; set; }
+
         public readonly Character character;
         public readonly AIObjectiveManager objectiveManager;
         public string Option { get; private set; }
@@ -67,6 +93,12 @@ namespace Barotrauma
                 _abandon = value;
                 if (_abandon)
                 {
+#if DEBUG
+                    if (HumanAIController.debugai && objectiveManager.IsOrder(this) && !objectiveManager.IsCurrentOrder<AIObjectiveGoTo>())
+                    {
+                        throw new Exception("Order abandoned!");
+                    }
+#endif
                     OnAbandon();
                 }
             }
@@ -96,9 +128,28 @@ namespace Barotrauma
             return all;
         }
 
+#pragma warning disable CS0649
+        /// <summary>
+        /// Aborts the objective when this condition is true.
+        /// </summary>
+        public Func<AIObjective, bool> AbortCondition;
+#pragma warning restore CS0649
+
+        /// <summary>
+        /// A single shot event. Automatically cleared after launching. Use OnCompleted method for implementing (internal) persistent behavior.
+        /// </summary>
         public event Action Completed;
+        /// <summary>
+        /// A single shot event. Automatically cleared after launching. Use OnAbandoned method for implementing (internal) persistent behavior.
+        /// </summary>
         public event Action Abandoned;
+        /// <summary>
+        /// A single shot event. Automatically cleared after launching. Use OnSelected method for implementing (internal) persistent behavior.
+        /// </summary>
         public event Action Selected;
+        /// <summary>
+        /// A single shot event. Automatically cleared after launching. Use OnDeselected method for implementing (internal) persistent behavior.
+        /// </summary>
         public event Action Deselected;
 
         protected HumanAIController HumanAIController => character.AIController as HumanAIController;
@@ -135,7 +186,6 @@ namespace Barotrauma
             Act(deltaTime);
         }
 
-        // TODO: check turret aioperate
         public void AddSubObjective(AIObjective objective, bool addFirst = false)
         {
             var type = objective.GetType();
@@ -199,20 +249,24 @@ namespace Barotrauma
         protected bool IsAllowed
         {
             get 
-            { 
+            {
+                if (IgnoreAtOutpost && Level.IsLoadedOutpost && character.TeamID != CharacterTeamType.FriendlyNPC)
+                {
+                    if (Submarine.MainSub != null && Submarine.MainSub.DockedTo.None(s => s.TeamID != CharacterTeamType.FriendlyNPC && s.TeamID != character.TeamID))
+                    {
+                        return false;
+                    }
+                }
                 if (!AllowOutsideSubmarine && character.Submarine == null) { return false; }
                 if (AllowInAnySub) { return true; }
-                if (AllowInFriendlySubs && character.Submarine.TeamID == Character.TeamType.FriendlyNPC) { return true; }
+                if ((AllowInFriendlySubs && character.Submarine.TeamID == CharacterTeamType.FriendlyNPC) || character.IsEscorted) { return true; }
                 return character.Submarine.TeamID == character.TeamID || character.Submarine.DockedTo.Any(sub => sub.TeamID == character.TeamID);
             }
         }
 
-        /// <summary>
-        /// Call this only when the priority needs to be recalculated. Use the cached Priority property when you don't need to recalculate.
-        /// </summary>
-        public virtual float GetPriority()
+        protected virtual float GetPriority()
         {
-            bool isOrder = objectiveManager.CurrentOrder == this;
+            bool isOrder = objectiveManager.IsOrder(this);
             if (!IsAllowed)
             {
                 Priority = 0;
@@ -221,12 +275,23 @@ namespace Barotrauma
             }
             if (isOrder)
             {
-                Priority = AIObjectiveManager.OrderPriority;
+                Priority = objectiveManager.GetOrderPriority(this);
             }
             else
             {
                 Priority = BasePriority + CumulatedDevotion;
             }
+            return Priority;
+        }
+
+        /// <summary>
+        /// Call this only when the priority needs to be recalculated. Use the cached Priority property when you don't need to recalculate.
+        /// </summary>
+        public float CalculatePriority()
+        {
+            Priority = GetPriority();
+            ForceHighestPriority = false;
+            ForceWalk = false;
             return Priority;
         }
 
@@ -243,7 +308,15 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime)
         {
-            if (objectiveManager.CurrentOrder != this && objectiveManager.WaitTimer <= 0)
+            if (resetPriorityTimer > 0)
+            {
+                resetPriorityTimer -= deltaTime;
+            }
+            else
+            {
+                ForceHighestPriority = false;
+            }
+            if (!objectiveManager.IsOrder(this) && objectiveManager.WaitTimer <= 0)
             {
                 UpdateDevotion(deltaTime);
             }
@@ -318,22 +391,26 @@ namespace Barotrauma
         {
             Reset();
             Selected?.Invoke();
+            Selected = null;
         }
 
         public virtual void OnDeselected()
         {
             CumulatedDevotion = 0;
             Deselected?.Invoke();
+            Deselected = null;
         }
 
         protected virtual void OnCompleted()
         {
             Completed?.Invoke();
+            Completed = null;
         }
 
         protected virtual void OnAbandon()
         {
             Abandoned?.Invoke();
+            Abandoned = null;
         }
 
         public virtual void Reset()
@@ -371,7 +448,17 @@ namespace Barotrauma
             }
         }
 
-        protected abstract bool Check();
+        protected virtual bool Check()
+        {
+            if (AbortCondition != null && AbortCondition(this))
+            {
+                Abandon = true;
+                return false;
+            }
+            return CheckObjectiveSpecific();
+        }
+
+        protected abstract bool CheckObjectiveSpecific();
 
         private bool CheckState()
         {
@@ -408,7 +495,14 @@ namespace Barotrauma
                     subObjectives.Remove(subObjective);
                     if (AbandonWhenCannotCompleteSubjectives)
                     {
-                        Abandon = true;
+                        if (objectiveManager.IsOrder(this))
+                        {
+                            Reset();
+                        }
+                        else
+                        {
+                            Abandon = true;
+                        }
                     }
                 }
             }

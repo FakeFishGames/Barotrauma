@@ -14,6 +14,9 @@ namespace Barotrauma
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
 
+        public float PendingAdditionStrength { get; set; }
+        public float AdditionStrength { get; set; }
+
         protected float _strength;
 
         [Serialize(0f, true), Editable]
@@ -26,7 +29,12 @@ namespace Barotrauma
                 {
                     _nonClampedStrength = value;
                 }
-                _strength = MathHelper.Clamp(value, 0.0f, Prefab.MaxStrength);
+                float newValue = MathHelper.Clamp(value, 0.0f, Prefab.MaxStrength);
+                if (newValue > _strength)
+                {
+                    PendingAdditionStrength = Prefab.GrainBurst;
+                }
+                _strength = newValue;
             }
         }
 
@@ -56,6 +64,7 @@ namespace Barotrauma
         public Affliction(AfflictionPrefab prefab, float strength)
         {
             Prefab = prefab;
+            PendingAdditionStrength = Prefab.GrainBurst;
             _strength = strength;
             Identifier = prefab?.Identifier;
 
@@ -82,10 +91,12 @@ namespace Barotrauma
 
         public override string ToString() => Prefab == null ? "Affliction (Invalid)" : $"Affliction ({Prefab.Name})";
 
+        public AfflictionPrefab.Effect GetActiveEffect() => Prefab.GetActiveEffect(Strength);
+
         public float GetVitalityDecrease(CharacterHealth characterHealth)
         {
             if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
             if (currentEffect == null) { return 0.0f; }
             if (currentEffect.MaxStrength - currentEffect.MinStrength <= 0.0f) { return 0.0f; }
 
@@ -101,13 +112,33 @@ namespace Barotrauma
 
             return currVitalityDecrease;
         }
+        
+        public float GetScreenGrainStrength()
+        {
+            if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
+            if (currentEffect == null) { return 0.0f; }
+            if (MathUtils.NearlyEqual(currentEffect.MaxGrainStrength, 0f)) { return 0.0f; }
+
+            float amount = MathHelper.Lerp(
+                currentEffect.MinGrainStrength,
+                currentEffect.MaxGrainStrength,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+
+            if (Prefab.GrainBurst > 0 && AdditionStrength > amount)
+            {
+                return Math.Min(AdditionStrength, 1.0f);
+            }
+
+            return amount;
+        }
 
         public float GetScreenDistortStrength()
         {
-            if (Strength < Prefab.ActivationThreshold) return 0.0f;
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
-            if (currentEffect == null) return 0.0f;
-            if (currentEffect.MaxScreenDistortStrength - currentEffect.MinScreenDistortStrength <= 0.0f) return 0.0f;
+            if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
+            if (currentEffect == null) { return 0.0f; }
+            if (currentEffect.MaxScreenDistortStrength - currentEffect.MinScreenDistortStrength < 0.0f) { return 0.0f; }
 
             return MathHelper.Lerp(
                 currentEffect.MinScreenDistortStrength,
@@ -117,10 +148,10 @@ namespace Barotrauma
 
         public float GetRadialDistortStrength()
         {
-            if (Strength < Prefab.ActivationThreshold) return 0.0f;
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
-            if (currentEffect == null) return 0.0f;
-            if (currentEffect.MaxRadialDistortStrength - currentEffect.MinRadialDistortStrength <= 0.0f) return 0.0f;
+            if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
+            if (currentEffect == null) { return 0.0f; }
+            if (currentEffect.MaxRadialDistortStrength - currentEffect.MinRadialDistortStrength < 0.0f) { return 0.0f; }
 
             return MathHelper.Lerp(
                 currentEffect.MinRadialDistortStrength,
@@ -130,10 +161,10 @@ namespace Barotrauma
 
         public float GetChromaticAberrationStrength()
         {
-            if (Strength < Prefab.ActivationThreshold) return 0.0f;
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
-            if (currentEffect == null) return 0.0f;
-            if (currentEffect.MaxChromaticAberrationStrength - currentEffect.MinChromaticAberrationStrength <= 0.0f) return 0.0f;
+            if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
+            if (currentEffect == null) { return 0.0f; }
+            if (currentEffect.MaxChromaticAberrationStrength - currentEffect.MinChromaticAberrationStrength < 0.0f) { return 0.0f; }
 
             return MathHelper.Lerp(
                 currentEffect.MinChromaticAberrationStrength,
@@ -143,15 +174,29 @@ namespace Barotrauma
 
         public float GetScreenBlurStrength()
         {
-            if (Strength < Prefab.ActivationThreshold) return 0.0f;
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
-            if (currentEffect == null) return 0.0f;
-            if (currentEffect.MaxScreenBlurStrength - currentEffect.MinScreenBlurStrength <= 0.0f) return 0.0f;
+            if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
+            if (currentEffect == null) { return 0.0f; }
+            if (currentEffect.MaxScreenBlurStrength - currentEffect.MinScreenBlurStrength < 0.0f) { return 0.0f; }
 
             return MathHelper.Lerp(
                 currentEffect.MinScreenBlurStrength,
                 currentEffect.MaxScreenBlurStrength,
                 (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
+        public float GetSkillMultiplier()
+        {
+            if (Strength < Prefab.ActivationThreshold) { return 1.0f; }
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
+            if (currentEffect == null) { return 1.0f; }
+
+            float amount = MathHelper.Lerp(
+                currentEffect.MinSkillMultiplier,
+                currentEffect.MaxSkillMultiplier,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+
+            return amount;
         }
 
         public void CalculateDamagePerSecond(float currentVitalityDecrease)
@@ -167,11 +212,11 @@ namespace Barotrauma
 
         public float GetResistance(string afflictionId)
         {
-            if (Strength < Prefab.ActivationThreshold) return 0.0f;
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
-            if (currentEffect == null) return 0.0f;
-            if (currentEffect.MaxResistance - currentEffect.MinResistance <= 0.0f) return 0.0f;
-            if (afflictionId != null && afflictionId != currentEffect.ResistanceFor) return 0.0f;
+            if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
+            if (currentEffect == null) { return 0.0f; }
+            if (currentEffect.MaxResistance - currentEffect.MinResistance <= 0.0f) { return 0.0f; }
+            if (afflictionId != null && afflictionId != currentEffect.ResistanceFor) { return 0.0f; }
 
             return MathHelper.Lerp(
                 currentEffect.MinResistance,
@@ -181,10 +226,10 @@ namespace Barotrauma
 
         public float GetSpeedMultiplier()
         {
-            if (Strength < Prefab.ActivationThreshold) return 1.0f;
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
-            if (currentEffect == null) return 1.0f;
-            if (currentEffect.MaxSpeedMultiplier - currentEffect.MinSpeedMultiplier <= 0.0f) return 1.0f;
+            if (Strength < Prefab.ActivationThreshold) { return 1.0f; }
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
+            if (currentEffect == null) { return 1.0f; }
+            if (currentEffect.MaxSpeedMultiplier - currentEffect.MinSpeedMultiplier <= 0.0f) { return 1.0f; }
 
             return MathHelper.Lerp(
                 currentEffect.MinSpeedMultiplier,
@@ -207,14 +252,14 @@ namespace Barotrauma
                     {
                         foreach (StatusEffect statusEffect in periodicEffect.StatusEffects)
                         {
-                            ApplyStatusEffect(statusEffect, 1.0f, characterHealth, targetLimb);
+                            ApplyStatusEffect(ActionType.OnActive, statusEffect, 1.0f, characterHealth, targetLimb);
                             PeriodicEffectTimers[periodicEffect] = Rand.Range(periodicEffect.MinInterval, periodicEffect.MaxInterval);
                         }
                     }
                 }
-            }            
+            }
 
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
             if (currentEffect == null) { return; }
 
             if (currentEffect.StrengthChange < 0) // Reduce diminishing of buffs if boosted
@@ -230,40 +275,68 @@ namespace Barotrauma
 
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
-                ApplyStatusEffect(statusEffect, deltaTime, characterHealth, targetLimb);
+                ApplyStatusEffect(ActionType.OnActive, statusEffect, deltaTime, characterHealth, targetLimb);
+            }
+
+            float amount = deltaTime;
+            if (Prefab.GrainBurst > 0)
+            {
+                amount /= Prefab.GrainBurst;
+            }
+            if (PendingAdditionStrength >= 0)
+            {
+                AdditionStrength += amount;
+                PendingAdditionStrength -= deltaTime;
+            } 
+            else if (AdditionStrength > 0)
+            {
+                AdditionStrength -= amount;
             }
         }
 
-        public void ApplyStatusEffect(StatusEffect statusEffect, float deltaTime, CharacterHealth characterHealth, Limb targetLimb)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, CharacterHealth characterHealth, Limb targetLimb)
+        {
+            var currentEffect = GetActiveEffect();
+            if (currentEffect != null)
+            {
+                currentEffect.StatusEffects.ForEach(se => ApplyStatusEffect(type, se, deltaTime, characterHealth, targetLimb));
+            }
+        }
+
+        private readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
+        public void ApplyStatusEffect(ActionType type, StatusEffect statusEffect, float deltaTime, CharacterHealth characterHealth, Limb targetLimb)
         {
             statusEffect.SetUser(Source);
             if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
             {
-                statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, characterHealth.Character);
+                statusEffect.Apply(type, deltaTime, characterHealth.Character, characterHealth.Character);
             }
             if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
             {
-                statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, targetLimb);
+                statusEffect.Apply(type, deltaTime, characterHealth.Character, targetLimb);
             }
             if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
             {
-                statusEffect.Apply(ActionType.OnActive, deltaTime, targetLimb.character, targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
+                statusEffect.Apply(type, deltaTime, targetLimb.character, targets: targetLimb.character.AnimController.Limbs);
             }
             if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                 statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
             {
-                var targets = new List<ISerializableEntity>();
-                statusEffect.GetNearbyTargets(characterHealth.Character.WorldPosition, targets);
-                statusEffect.Apply(ActionType.OnActive, deltaTime, targetLimb.character, targets);
+                targets.Clear();
+                targets.AddRange(statusEffect.GetNearbyTargets(characterHealth.Character.WorldPosition, targets));
+                statusEffect.Apply(type, deltaTime, characterHealth.Character, targets);
             }
         }
 
         /// <summary>
         /// Use this method to skip clamping and additional logic of the setters.
-        /// Intended only to be used when the value is already clamped! (networking code)
         /// Ideally we would keep this private, but doing so would require too much refactoring.
         /// </summary>
-        public void SetStrength(float strength) => _strength = strength;
+        public void SetStrength(float strength)
+        {
+            _nonClampedStrength = strength;
+            _strength = _nonClampedStrength;
+        }
 
         public bool ShouldShowIcon(Character afflictedCharacter)
         {

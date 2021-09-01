@@ -34,7 +34,7 @@ namespace Barotrauma.Items.Components
 
         private GUIComponent steerArea;
 
-        private GUITextBlock pressureWarningText;
+        private GUITextBlock pressureWarningText, iceSpireWarningText;
 
         private GUITextBlock tipContainer;
 
@@ -112,7 +112,7 @@ namespace Barotrauma.Items.Components
 
         protected override void CreateGUI()
         {
-            controlContainer = new GUIFrame(new RectTransform(new Vector2(Sonar.controlBoxSize.X, 1 - Sonar.controlBoxSize.Y * 2), GuiFrame.RectTransform, Anchor.CenterLeft), "ItemUI");
+            controlContainer = new GUIFrame(new RectTransform(new Vector2(Sonar.controlBoxSize.X, 1 - Sonar.controlBoxSize.Y * 2), GuiFrame.RectTransform, Anchor.CenterRight), "ItemUI");
             var paddedControlContainer = new GUIFrame(new RectTransform(controlContainer.Rect.Size - GUIStyle.ItemFrameMargin, controlContainer.RectTransform, Anchor.Center)
             {
                 AbsoluteOffset = GUIStyle.ItemFrameOffset
@@ -265,7 +265,7 @@ namespace Barotrauma.Items.Components
                                           levelStartSelected ? Destination.LevelStart : Destination.LevelEnd);
 
             // Status ->
-            statusContainer = new GUIFrame(new RectTransform(Sonar.controlBoxSize, GuiFrame.RectTransform, Anchor.BottomLeft)
+            statusContainer = new GUIFrame(new RectTransform(Sonar.controlBoxSize, GuiFrame.RectTransform, Anchor.BottomRight)
             {
                 RelativeOffset = Sonar.controlBoxOffset
             }, "ItemUI");
@@ -311,6 +311,7 @@ namespace Barotrauma.Items.Components
                         {
                             Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
                             var realWorldVel = ConvertUnits.ToDisplayUnits(vel.X * Physics.DisplayToRealWorldRatio) * 3.6f;
+                            if (controlledSub != null && controlledSub.FlippedX) { realWorldVel *= -1; }
                             return ((int)realWorldVel).ToString();
                         };
                         break;
@@ -319,8 +320,7 @@ namespace Barotrauma.Items.Components
                         centerText = $"({TextManager.Get("Meter")})";
                         rightTextGetter = () =>
                         {
-                            Vector2 pos = controlledSub == null ? Vector2.Zero : controlledSub.Position;
-                            float realWorldDepth = Level.Loaded == null ? 0.0f : Math.Abs(pos.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
+                            float realWorldDepth = controlledSub == null ? -1000.0f : controlledSub.RealWorldDepth;
                             return ((int)realWorldDepth).ToString();
                         };
                         break;
@@ -340,9 +340,9 @@ namespace Barotrauma.Items.Components
             //docking interface ----------------------------------------------------
             float dockingButtonSize = 1.1f;
             float elementScale = 0.6f;
-            dockingContainer = new GUIFrame(new RectTransform(Sonar.controlBoxSize, GuiFrame.RectTransform, Anchor.BottomLeft, scaleBasis: ScaleBasis.Smallest)
+            dockingContainer = new GUIFrame(new RectTransform(Sonar.controlBoxSize, GuiFrame.RectTransform, Anchor.BottomRight, scaleBasis: ScaleBasis.Smallest)
             {
-                RelativeOffset = new Vector2(Sonar.controlBoxOffset.X + 0.05f, Sonar.controlBoxOffset.Y)
+                RelativeOffset = new Vector2(Sonar.controlBoxOffset.X + 0.05f, -0.05f)
             }, style: null);
 
             dockText = TextManager.Get("label.navterminaldock", fallBackTag: "captain.dock");
@@ -351,14 +351,19 @@ namespace Barotrauma.Items.Components
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+                    if (GameMain.GameSession?.Missions.Any(m => !m.AllowUndocking) ?? false)
+                    {
+                        new GUIMessageBox("", TextManager.Get("undockingdisabledbymission"));
+                        return false;
+                    }
+                    else if (GameMain.GameSession?.Campaign is CampaignMode campaign)
                     {
                         if (Level.IsLoadedOutpost &&
                             DockingSources.Any(d => d.Docked && (d.DockingTarget?.Item.Submarine?.Info?.IsOutpost ?? false)))
                         {
                             // Undocking from an outpost
-                            campaign.CampaignUI.SelectTab(CampaignMode.InteractionType.Map);
                             campaign.ShowCampaignUI = true;
+                            campaign.CampaignUI.SelectTab(CampaignMode.InteractionType.Map); 
                             return false;
                         }
                         else if (!Level.IsLoadedOutpost && DockingModeEnabled && ActiveDockingSource != null &&
@@ -398,7 +403,7 @@ namespace Barotrauma.Items.Components
             {
                 if (GameMain.Client == null)
                 {
-                    item.SendSignal(0, "1", "toggle_docking", sender: null);
+                    item.SendSignal("1", "toggle_docking");
                 }
                 else
                 {
@@ -437,12 +442,17 @@ namespace Barotrauma.Items.Components
             };
 
             // Sonar area
-            steerArea = new GUICustomComponent(new RectTransform(Sonar.GUISizeCalculation, GuiFrame.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest),
+            steerArea = new GUICustomComponent(new RectTransform(Sonar.GUISizeCalculation, GuiFrame.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.Smallest),
                 (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
             steerRadius = steerArea.Rect.Width / 2;
 
-            pressureWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), steerArea.RectTransform, Anchor.Center, Pivot.TopCenter), 
-                TextManager.Get("SteeringDepthWarning"), Color.Red, GUI.LargeFont, Alignment.Center)
+            iceSpireWarningText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.25f), steerArea.RectTransform, Anchor.Center, Pivot.TopCenter),
+                TextManager.Get("NavTerminalIceSpireWarning"), GUI.Style.Red, GUI.SubHeadingFont, Alignment.Center, color: Color.Black * 0.8f, wrap: true)
+            {
+                Visible = false
+            };
+            pressureWarningText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.25f), steerArea.RectTransform, Anchor.Center, Pivot.TopCenter), 
+                TextManager.Get("SteeringDepthWarning"), GUI.Style.Red, GUI.SubHeadingFont, Alignment.Center, color: Color.Black * 0.8f)
             {
                 Visible = false
             };
@@ -472,7 +482,11 @@ namespace Barotrauma.Items.Components
         public void AttachToSonarHUD(GUICustomComponent sonarView)
         {
             steerArea.Visible = false;
-            sonarView.OnDraw += (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); };
+            sonarView.OnDraw += (spriteBatch, guiCustomComponent) => 
+            { 
+                DrawHUD(spriteBatch, guiCustomComponent.Rect);
+                steerArea.DrawChildren(spriteBatch, recursive: true);
+            };
         }
 
         public void DrawHUD(SpriteBatch spriteBatch, Rectangle rect)
@@ -713,12 +727,25 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.5f;
+            pressureWarningText.Visible = item.Submarine != null && Timing.TotalTime % 1.0f < 0.8f;
+            float depthEffectThreshold = 500.0f;
+            if (Level.Loaded != null && pressureWarningText.Visible && 
+                item.Submarine.RealWorldDepth > Level.Loaded.RealWorldCrushDepth - depthEffectThreshold && item.Submarine.RealWorldDepth > item.Submarine.RealWorldCrushDepth - depthEffectThreshold)
+            {
+                pressureWarningText.Visible = true;
+                pressureWarningText.Text = item.Submarine.AtDamageDepth ? TextManager.Get("SteeringDepthWarning") : TextManager.Get("SteeringDepthWarningLow").Replace("[crushdepth]", ((int)item.Submarine.RealWorldCrushDepth).ToString());
+            }
+            else
+            {
+                pressureWarningText.Visible = false;
+            }
+
+            iceSpireWarningText.Visible = item.Submarine != null && !pressureWarningText.Visible && showIceSpireWarning && Timing.TotalTime % 1.0f < 0.8f;
 
             if (Vector2.DistanceSquared(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius * steerRadius)
             {
                 if (PlayerInput.PrimaryMouseButtonHeld() && !CrewManager.IsCommandInterfaceOpen && !GameSession.IsTabMenuOpen && 
-                    (!GameMain.GameSession?.Campaign?.ShowCampaignUI ?? true) && !GUIMessageBox.MessageBoxes.Any())
+                    (!GameMain.GameSession?.Campaign?.ShowCampaignUI ?? true) && !GUIMessageBox.MessageBoxes.Any(msgBox => msgBox is GUIMessageBox { MessageBoxType: GUIMessageBox.Type.Default }))
                 {
                     Vector2 inputPos = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
                     inputPos.Y = -inputPos.Y;
@@ -738,7 +765,7 @@ namespace Barotrauma.Items.Components
             }
             if (!AutoPilot && Character.DisableControls && GUI.KeyboardDispatcher.Subscriber == null)
             {
-                steeringAdjustSpeed = character == null ? 0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
+                steeringAdjustSpeed = character == null ? DefaultSteeringAdjustSpeed : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
                 Vector2 input = Vector2.Zero;
                 if (PlayerInput.KeyDown(InputType.Left)) { input -= Vector2.UnitX; }
                 if (PlayerInput.KeyDown(InputType.Right)) { input += Vector2.UnitX; }
@@ -904,7 +931,7 @@ namespace Barotrauma.Items.Components
 
             if (dockingButtonClicked)
             {
-                item.SendSignal(0, "1", "toggle_docking", sender: null);
+                item.SendSignal("1", "toggle_docking");
             }
 
             if (autoPilot)

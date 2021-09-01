@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveExtinguishFires : AIObjectiveLoop<Hull>
     {
-        public override string DebugTag => "extinguish fires";
+        public override string Identifier { get; set; } = "extinguish fires";
         public override bool ForceRun => true;
         public override bool AllowInAnySub => true;
 
@@ -42,6 +42,15 @@ namespace Barotrauma
             if (hull.Submarine == null) { return false; }
             if (character.Submarine == null) { return false; }
             if (!character.Submarine.IsEntityFoundOnThisSub(hull, includingConnectedSubs: true)) { return false; }
+            if (hull.BallastFlora != null) { return false; }
+            foreach (var ballastFlora in MapCreatures.Behavior.BallastFloraBehavior.EntityList)
+            {
+                if (ballastFlora.Parent?.Submarine != character.Submarine) { continue; }
+                if (ballastFlora.Branches.Any(b => !b.Removed && b.Health > 0 && b.CurrentHull == hull))
+                {
+                    return false;
+                }
+            }
             return true;
         }
     }

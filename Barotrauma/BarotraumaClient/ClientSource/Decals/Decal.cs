@@ -10,6 +10,8 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch, Hull hull, float depth)
         {
+            if (Sprite.Texture == null) { return; }
+
             Vector2 drawPos = position + hull.Rect.Location.ToVector2();
             if (hull.Submarine != null) { drawPos += hull.Submarine.DrawPosition; }
             drawPos.Y = -drawPos.Y;

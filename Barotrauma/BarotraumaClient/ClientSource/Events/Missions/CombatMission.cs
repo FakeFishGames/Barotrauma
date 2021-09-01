@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    partial class CombatMission
+    partial class CombatMission : Mission
     {
         public override string Description
         {
@@ -17,7 +17,7 @@ namespace Barotrauma
                 }
 
                 //team specific
-                return descriptions[GameMain.Client.Character.TeamID == Character.TeamType.Team1 ? 1 : 2];
+                return descriptions[GameMain.Client.Character.TeamID == CharacterTeamType.Team1 ? 1 : 2];
             }
         }
 

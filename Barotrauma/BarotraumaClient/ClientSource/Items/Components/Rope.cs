@@ -36,10 +36,28 @@ namespace Barotrauma.Items.Components
             get 
             {
                 if (target == null || source == null) { return Vector2.Zero; }
+
+                Vector2 sourcePos = GetSourcePos();
+
                 return new Vector2(
-                    Math.Abs(target.DrawPosition.X - source.DrawPosition.X),
-                    Math.Abs(target.DrawPosition.Y - source.DrawPosition.Y)) * 1.5f;
+                    Math.Abs(target.DrawPosition.X - sourcePos.X),
+                    Math.Abs(target.DrawPosition.Y - sourcePos.Y)) * 1.5f;
             }
+        }
+
+        private Vector2 GetSourcePos()
+        {
+            Vector2 sourcePos = source.WorldPosition;
+            if (source is Item sourceItem)
+            {
+                sourcePos = sourceItem.DrawPosition;
+            }
+            else if (source is Limb sourceLimb && sourceLimb.body != null)
+            {
+                sourcePos = sourceLimb.body.DrawPosition;
+            }
+            return sourcePos;
+
         }
 
         partial void InitProjSpecific(XElement element)
@@ -65,14 +83,18 @@ namespace Barotrauma.Items.Components
         {
             if (target == null) { return; }
 
-            Vector2 startPos = new Vector2(source.DrawPosition.X, -source.DrawPosition.Y);
-            var turret = source?.GetComponent<Turret>();
-            if (turret != null)
+            Vector2 startPos = GetSourcePos();
+            startPos.Y = -startPos.Y;
+            if (source is Item sourceItem)
             {
-                startPos = new Vector2(source.WorldRect.X + turret.TransformedBarrelPos.X, -(source.WorldRect.Y - turret.TransformedBarrelPos.Y));
-                if (turret.BarrelSprite != null)
+                var turret = sourceItem?.GetComponent<Turret>();
+                if (turret != null)
                 {
-                    startPos += new Vector2((float)Math.Cos(turret.Rotation), (float)Math.Sin(turret.Rotation)) * turret.BarrelSprite.size.Y * turret.BarrelSprite.RelativeOrigin.Y * item.Scale * 0.9f;
+                    startPos = new Vector2(sourceItem.WorldRect.X + turret.TransformedBarrelPos.X, -(sourceItem.WorldRect.Y - turret.TransformedBarrelPos.Y));
+                    if (turret.BarrelSprite != null)
+                    {
+                        startPos += new Vector2((float)Math.Cos(turret.Rotation), (float)Math.Sin(turret.Rotation)) * turret.BarrelSprite.size.Y * turret.BarrelSprite.RelativeOrigin.Y * item.Scale * 0.9f;
+                    }
                 }
             }
             Vector2 endPos = new Vector2(target.DrawPosition.X, -target.DrawPosition.Y);
@@ -80,7 +102,7 @@ namespace Barotrauma.Items.Components
             if (Snapped)
             {
                 float snapState = 1.0f - snapTimer / SnapAnimDuration;
-                Vector2 diff = target.DrawPosition - source.DrawPosition;
+                Vector2 diff = target.DrawPosition - new Vector2(startPos.X, -startPos.Y);
                 diff.Y = -diff.Y;
 
                 int width = (int)(SpriteWidth * snapState);

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,7 +15,9 @@ namespace Barotrauma.Items.Components
         public enum BlipType
         {
             Default,
-            Disruption
+            Disruption,
+            Destructible,
+            LongRange
         }
 
         private PathFinder pathFinder;
@@ -28,10 +31,17 @@ namespace Barotrauma.Items.Components
         private GUITickBox activeTickBox, passiveTickBox;
         private GUITextBlock signalWarningText;
 
+        private GUIFrame lowerAreaFrame;
+
         private GUIScrollBar zoomSlider;
 
         private GUIButton directionalModeSwitch;
         private Vector2? pingDragDirection = null;
+
+        /// <summary>
+        /// Can be null if the property HasMineralScanner is false
+        /// </summary>
+        private GUIButton mineralScannerSwitch;
 
         private GUIFrame controlContainer;
 
@@ -46,7 +56,7 @@ namespace Barotrauma.Items.Components
         private Sprite sonarBlip;
         private Sprite lineSprite;
 
-        private readonly Dictionary<string, Sprite> targetIcons = new Dictionary<string, Sprite>();
+        private readonly Dictionary<string, Tuple<Sprite, Color>> targetIcons = new Dictionary<string, Tuple<Sprite, Color>>();
 
         private float displayBorderSize;
 
@@ -60,28 +70,22 @@ namespace Barotrauma.Items.Components
         private const float DisruptionUpdateInterval = 0.2f;
         private float disruptionUpdateTimer;
 
-        private float zoomSqrt;
+        private const float LongRangeUpdateInterval = 10.0f;
+        private float longRangeUpdateTimer;
 
         private float showDirectionalIndicatorTimer;
+
+        private readonly List<LevelObject> nearbyObjects = new List<LevelObject>();
+        private const float NearbyObjectUpdateInterval = 1.0f;
+        float nearbyObjectUpdateTimer;
+
+        private List<Submarine> connectedSubs = new List<Submarine>();
+        private const float ConnectedSubUpdateInterval = 1.0f;
+        float connectedSubUpdateTimer;
 
         //Vector2 = vector from the ping source to the position of the disruption
         //float = strength of the disruption, between 0-1
         private readonly List<Pair<Vector2, float>> disruptedDirections = new List<Pair<Vector2, float>>();
-
-        class CachedDistance
-        {
-            public readonly Vector2 TransducerWorldPos;
-            public readonly Vector2 WorldPos;
-            public readonly float Distance;
-            public double RecalculationTime;
-
-            public CachedDistance(Vector2 transducerWorldPos, Vector2 worldPos, float dist)
-            {
-                TransducerWorldPos = transducerWorldPos;
-                WorldPos = worldPos;
-                Distance = dist;
-            }
-        }
 
         private readonly Dictionary<object, CachedDistance> markerDistances = new Dictionary<object, CachedDistance>();
 
@@ -103,6 +107,14 @@ namespace Barotrauma.Items.Components
             {
                 BlipType.Disruption,
                 new Color[] { Color.TransparentBlack, new Color(254, 68, 19), new Color(255, 220, 62), new Color(255, 255, 255) }
+            },
+            {
+                BlipType.Destructible,
+                new Color[] { Color.TransparentBlack, new Color(74, 113, 75) * 0.8f, new Color(151, 236, 172) * 0.8f, new Color(153, 217, 234) * 0.8f }
+            },
+            {
+                BlipType.LongRange,
+                new Color[] { Color.TransparentBlack, Color.TransparentBlack, new Color(254, 68, 19) * 0.8f, Color.TransparentBlack }
             }
         };
 
@@ -114,10 +126,25 @@ namespace Barotrauma.Items.Components
 
         public static Vector2 GUISizeCalculation => Vector2.One * Math.Min(GUI.RelativeHorizontalAspectRatio, 1f) * sonarAreaSize;
 
+        private List<(Vector2 center, List<Item> resources)> MineralClusters { get; set; }
+
+        private readonly List<GUITextBlock> textBlocksToScaleAndNormalize = new List<GUITextBlock>();
+
+        private bool isConnectedToSteering;
+
+        private static string caveLabel;
+
+        private bool AllowUsingMineralScanner =>
+            HasMineralScanner && !isConnectedToSteering;
+
         partial void InitProjSpecific(XElement element)
         {
             System.Diagnostics.Debug.Assert(Enum.GetValues(typeof(BlipType)).Cast<BlipType>().All(t => blipColorGradient.ContainsKey(t)));
             sonarBlips = new List<SonarBlip>();
+
+            caveLabel = 
+                TextManager.Get("cave", returnNull: true) ?? 
+                TextManager.Get("missiontype.nest");
 
             foreach (XElement subElement in element.Elements())
             {
@@ -151,7 +178,9 @@ namespace Barotrauma.Items.Components
                         break;
                     case "icon":
                         var targetIconSprite = new Sprite(subElement);
-                        targetIcons.Add(subElement.GetAttributeString("identifier", ""), targetIconSprite);
+                        var color = subElement.GetAttributeColor("color", Color.White);
+                        targetIcons.Add(subElement.GetAttributeString("identifier", ""),
+                            new Tuple<Sprite, Color>(targetIconSprite, color));
                         break;
                 }
             }
@@ -166,16 +195,20 @@ namespace Barotrauma.Items.Components
 
         protected override void CreateGUI()
         {
-            bool isConnectedToSteering = item.GetComponent<Steering>() != null;
-            Vector2 size = isConnectedToSteering ? controlBoxSize : new Vector2(controlBoxSize.X * 2.0f, controlBoxSize.Y);
+            isConnectedToSteering = item.GetComponent<Steering>() != null;
+            Vector2 size = isConnectedToSteering ? controlBoxSize : new Vector2(0.46f, 0.4f);
 
-            controlContainer = new GUIFrame(new RectTransform(size, GuiFrame.RectTransform, Anchor.BottomRight, Pivot.BottomLeft), "ItemUI");
+            controlContainer = new GUIFrame(new RectTransform(size, GuiFrame.RectTransform, Anchor.BottomLeft), "ItemUI");
+            if (!isConnectedToSteering && !GUI.IsFourByThree())
+            {
+                controlContainer.RectTransform.MaxSize = new Point((int)(380 * GUI.xScale), (int)(300 * GUI.yScale));
+            }
             var paddedControlContainer = new GUIFrame(new RectTransform(controlContainer.Rect.Size - GUIStyle.ItemFrameMargin, controlContainer.RectTransform, Anchor.Center)
             {
                 AbsoluteOffset = GUIStyle.ItemFrameOffset
             }, style: null);
             // Based on the height difference to the steering control box so that the elements keep the same size
-            float extraHeight = 0.03f;
+            float extraHeight = 0.0694f;
             var sonarModeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.4f + extraHeight), paddedControlContainer.RectTransform, Anchor.TopCenter), style: null);
             SonarModeSwitch = new GUIButton(new RectTransform(new Vector2(0.2f, 1), sonarModeArea.RectTransform), string.Empty, style: "SwitchVertical")
             {
@@ -215,10 +248,15 @@ namespace Barotrauma.Items.Components
             passiveTickBox.TextBlock.OverrideTextColor(GUI.Style.TextColor);
             activeTickBox.TextBlock.OverrideTextColor(GUI.Style.TextColor);
 
-            var lowerArea = new GUIFrame(new RectTransform(new Vector2(1, 0.4f + extraHeight), paddedControlContainer.RectTransform, Anchor.BottomCenter), style: null);
-            var zoomContainer = new GUIFrame(new RectTransform(new Vector2(1, 0.45f), lowerArea.RectTransform, Anchor.TopCenter), style: null);
+            textBlocksToScaleAndNormalize.Clear();
+            textBlocksToScaleAndNormalize.Add(passiveTickBox.TextBlock);
+            textBlocksToScaleAndNormalize.Add(activeTickBox.TextBlock);
+
+            lowerAreaFrame = new GUIFrame(new RectTransform(new Vector2(1, 0.4f + extraHeight), paddedControlContainer.RectTransform, Anchor.BottomCenter), style: null);
+            var zoomContainer = new GUIFrame(new RectTransform(new Vector2(1, 0.45f), lowerAreaFrame.RectTransform, Anchor.TopCenter), style: null);
             var zoomText = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.6f), zoomContainer.RectTransform, Anchor.CenterLeft),
                 TextManager.Get("SonarZoom"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterRight);
+            textBlocksToScaleAndNormalize.Add(zoomText);
             zoomSlider = new GUIScrollBar(new RectTransform(new Vector2(0.5f, 0.8f), zoomContainer.RectTransform, Anchor.CenterLeft)
             {
                 RelativeOffset = new Vector2(0.35f, 0)
@@ -236,9 +274,10 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            new GUIFrame(new RectTransform(new Vector2(0.8f, 0.01f), paddedControlContainer.RectTransform, Anchor.Center), style: "HorizontalLine");
+            new GUIFrame(new RectTransform(new Vector2(0.8f, 0.01f), paddedControlContainer.RectTransform, Anchor.Center), style: "HorizontalLine")
+            { UserData = "horizontalline" };
 
-            var directionalModeFrame = new GUIFrame(new RectTransform(new Vector2(1, 0.45f), lowerArea.RectTransform, Anchor.BottomCenter), style: null);
+            var directionalModeFrame = new GUIFrame(new RectTransform(new Vector2(1, 0.45f), lowerAreaFrame.RectTransform, Anchor.BottomCenter), style: null);
             directionalModeSwitch = new GUIButton(new RectTransform(new Vector2(0.3f, 0.8f), directionalModeFrame.RectTransform, Anchor.CenterLeft), string.Empty, style: "SwitchHorizontal")
             {
                 OnClicked = (button, data) =>
@@ -255,11 +294,20 @@ namespace Barotrauma.Items.Components
             };
             var directionalModeSwitchText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1), directionalModeFrame.RectTransform, Anchor.CenterRight),
                 TextManager.Get("SonarDirectionalPing"), GUI.Style.TextColor, GUI.SubHeadingFont, Alignment.CenterLeft);
+            textBlocksToScaleAndNormalize.Add(directionalModeSwitchText);
 
+            if (AllowUsingMineralScanner)
+            {
+                AddMineralScannerSwitchToGUI();
+            }
+            else
+            {
+                mineralScannerSwitch = null;
+            }
 
             GuiFrame.CanBeFocused = false;
-
-            GUITextBlock.AutoScaleAndNormalize(passiveTickBox.TextBlock, activeTickBox.TextBlock, zoomText, directionalModeSwitchText);
+            
+            GUITextBlock.AutoScaleAndNormalize(textBlocksToScaleAndNormalize);
 
             sonarView = new GUICustomComponent(new RectTransform(Vector2.One * 0.7f, GuiFrame.RectTransform, Anchor.BottomRight, scaleBasis: ScaleBasis.BothHeight),
                 (spriteBatch, guiCustomComponent) => { DrawSonar(spriteBatch, guiCustomComponent.Rect); }, null);
@@ -271,11 +319,16 @@ namespace Barotrauma.Items.Components
             if (isConnectedToSteering)
             {
                 controlContainer.RectTransform.RelativeOffset = controlBoxOffset;
-                controlContainer.RectTransform.SetPosition(Anchor.TopLeft);
+                controlContainer.RectTransform.SetPosition(Anchor.TopRight);
                 sonarView.RectTransform.ScaleBasis = ScaleBasis.Smallest;
-                sonarView.RectTransform.SetPosition(Anchor.CenterRight);
+                sonarView.RectTransform.SetPosition(Anchor.CenterLeft);
                 sonarView.RectTransform.Resize(GUISizeCalculation);
-                GUITextBlock.AutoScaleAndNormalize(passiveTickBox.TextBlock, activeTickBox.TextBlock, zoomText, directionalModeSwitchText);
+                GUITextBlock.AutoScaleAndNormalize(textBlocksToScaleAndNormalize);
+            }
+            else if (GUI.RelativeHorizontalAspectRatio > 0.75f)
+            {
+                sonarView.RectTransform.RelativeOffset = new Vector2(0.13f * GUI.RelativeHorizontalAspectRatio, 0);
+                sonarView.RectTransform.SetPosition(Anchor.BottomRight);
             }
         }
 
@@ -293,8 +346,56 @@ namespace Barotrauma.Items.Components
         {
             base.OnItemLoaded();
             zoomSlider.BarScroll = MathUtils.InverseLerp(MinZoom, MaxZoom, zoom);
+            if (AllowUsingMineralScanner && mineralScannerSwitch == null)
+            {
+                AddMineralScannerSwitchToGUI();
+                GUITextBlock.AutoScaleAndNormalize(textBlocksToScaleAndNormalize);
+            }
             //make the sonarView customcomponent render the steering view so it gets drawn in front of the sonar
             item.GetComponent<Steering>()?.AttachToSonarHUD(sonarView);
+        }
+
+        private void AddMineralScannerSwitchToGUI()
+        {
+            // First adjust other elements to make room for the additional switch
+            controlContainer.RectTransform.RelativeSize = new Vector2(
+                controlContainer.RectTransform.RelativeSize.X,
+                controlContainer.RectTransform.RelativeSize.Y * 1.25f);
+            SonarModeSwitch.Parent.RectTransform.RelativeSize = new Vector2(
+                SonarModeSwitch.Parent.RectTransform.RelativeSize.X,
+                SonarModeSwitch.Parent.RectTransform.RelativeSize.Y * 0.8f);
+            lowerAreaFrame.Parent.GetChildByUserData("horizontalline").RectTransform.RelativeOffset =
+                new Vector2(0.0f, -0.1f);
+            lowerAreaFrame.RectTransform.RelativeSize = new Vector2(
+                lowerAreaFrame.RectTransform.RelativeSize.X,
+                lowerAreaFrame.RectTransform.RelativeSize.Y * 1.2f);
+            zoomSlider.Parent.RectTransform.RelativeSize = new Vector2(
+                zoomSlider.Parent.RectTransform.RelativeSize.X,
+                zoomSlider.Parent.RectTransform.RelativeSize.Y * (2.0f / 3.0f));
+            directionalModeSwitch.Parent.RectTransform.RelativeSize = new Vector2(
+                directionalModeSwitch.Parent.RectTransform.RelativeSize.X,
+                zoomSlider.Parent.RectTransform.RelativeSize.Y);
+            directionalModeSwitch.Parent.RectTransform.SetPosition(Anchor.Center);
+
+            // Then add the scanner switch
+            var mineralScannerFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, zoomSlider.Parent.RectTransform.RelativeSize.Y), lowerAreaFrame.RectTransform, Anchor.BottomCenter), style: null);
+            mineralScannerSwitch = new GUIButton(new RectTransform(new Vector2(0.3f, 0.8f), mineralScannerFrame.RectTransform, Anchor.CenterLeft), string.Empty, style: "SwitchHorizontal")
+            {
+                OnClicked = (button, data) =>
+                {
+                    useMineralScanner = !useMineralScanner;
+                    button.Selected = useMineralScanner;
+                    if (GameMain.Client != null)
+                    {
+                        unsentChanges = true;
+                        correctionTimer = CorrectionDelay;
+                    }
+                    return true;
+                }
+            };
+            var mineralScannerSwitchText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1), mineralScannerFrame.RectTransform, Anchor.CenterRight),
+                TextManager.Get("SonarMineralScanner"), GUI.Style.TextColor, GUI.SubHeadingFont, Alignment.CenterLeft);
+            textBlocksToScaleAndNormalize.Add(mineralScannerSwitchText);
         }
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
@@ -315,7 +416,29 @@ namespace Barotrauma.Items.Components
                 networkUpdateTimer -= deltaTime;
             }
 
-            if (sonarView.Rect.Contains(PlayerInput.MousePosition))
+            connectedSubUpdateTimer -= deltaTime;
+            if (connectedSubUpdateTimer <= 0.0f)
+            {
+                connectedSubs.Clear();
+                if (UseTransducers)
+                {
+                    foreach (var transducer in connectedTransducers)
+                    {
+                        if (transducer.Transducer.Item.Submarine == null) { continue; }
+                        if (connectedSubs.Contains(transducer.Transducer.Item.Submarine)) { continue; }
+                        connectedSubs = transducer.Transducer.Item.Submarine?.GetConnectedSubs();
+                    }
+                }
+                else if (item.Submarine != null)
+                {
+                    connectedSubs = item.Submarine?.GetConnectedSubs();
+                }
+                connectedSubUpdateTimer = ConnectedSubUpdateInterval;
+            }
+
+            Steering steering = item.GetComponent<Steering>();
+            if (sonarView.Rect.Contains(PlayerInput.MousePosition) && 
+                (GUI.MouseOn == null || GUI.MouseOn == sonarView || sonarView.IsParentOf(GUI.MouseOn) || GUI.MouseOn == steering?.GuiFrame || (steering?.GuiFrame?.IsParentOf(GUI.MouseOn) ?? false)))
             {
                 float scrollSpeed = PlayerInput.ScrollWheelSpeed / 1000.0f;
                 if (Math.Abs(scrollSpeed) > 0.0001f)
@@ -323,8 +446,13 @@ namespace Barotrauma.Items.Components
                     zoomSlider.BarScroll += PlayerInput.ScrollWheelSpeed / 1000.0f;
                     zoomSlider.OnMoved(zoomSlider, zoomSlider.BarScroll);
                 }
+
+                if (PlayerInput.KeyHit(InputType.Run))
+                {
+                    SonarModeSwitch.OnClicked(SonarModeSwitch, null);
+                }
             }
-            
+
             float distort = 1.0f - item.Condition / item.MaxCondition;
             for (int i = sonarBlips.Count - 1; i >= 0; i--)
             {
@@ -339,6 +467,33 @@ namespace Barotrauma.Items.Components
                 Vector2.DistanceSquared(sonarView.Rect.Center.ToVector2(), PlayerInput.MousePosition) <
                 (sonarView.Rect.Width / 2 * sonarView.Rect.Width / 2);
 
+            if (AllowUsingMineralScanner && Level.Loaded != null && !Level.Loaded.Generating)
+            {
+                if (MineralClusters == null)
+                {
+                    MineralClusters = new List<(Vector2, List<Item>)>();
+                    Level.Loaded.PathPoints.ForEach(p => p.ClusterLocations.ForEach(c => AddIfValid(c)));
+                    Level.Loaded.AbyssResources.ForEach(c => AddIfValid(c));
+
+                    void AddIfValid(Level.ClusterLocation c)
+                    {
+                        if (c.Resources == null) { return; }
+                        if (c.Resources.None(i => i != null && !i.Removed && i.Tags.Contains("ore"))) { return; }
+                        var pos = Vector2.Zero;
+                        foreach (var r in c.Resources)
+                        {
+                            pos += r.WorldPosition;
+                        }
+                        pos /= c.Resources.Count;
+                        MineralClusters.Add((center: pos, resources: c.Resources));
+                    }
+                }
+                else
+                {
+                    MineralClusters.RemoveAll(c => c.resources == null || c.resources.None() || c.resources.All(i => i == null || i.Removed));
+                }
+            }
+
             if (UseTransducers && connectedTransducers.Count == 0)
             {
                 return;
@@ -348,20 +503,44 @@ namespace Barotrauma.Items.Components
 
             if (Level.Loaded != null)
             {
+                nearbyObjectUpdateTimer -= deltaTime;
+                if (nearbyObjectUpdateTimer <= 0.0f)
+                {
+                    nearbyObjects.Clear();
+                    foreach (var nearbyObject in Level.Loaded.LevelObjectManager.GetAllObjects(transducerCenter, range * zoom))
+                    {
+                        if (!nearbyObject.VisibleOnSonar) { continue; }
+                        float objectRange = range + nearbyObject.SonarRadius;
+                        if (Vector2.DistanceSquared(transducerCenter, nearbyObject.WorldPosition) < objectRange * objectRange)
+                        {
+                            nearbyObjects.Add(nearbyObject);
+                        }
+                    }
+                    nearbyObjectUpdateTimer = NearbyObjectUpdateInterval;
+                }
+
+                List<LevelTrigger> ballastFloraSpores = new List<LevelTrigger>();
                 Dictionary<LevelTrigger, Vector2> levelTriggerFlows = new Dictionary<LevelTrigger, Vector2>();
                 for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
                 {
                     var activePing = activePings[pingIndex];
-                    foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(transducerCenter, range * activePing.State / zoom))
+                    float pingRange = range * activePing.State / zoom;
+                    foreach (LevelObject levelObject in nearbyObjects)
                     {
+                        if (levelObject.Triggers == null) { continue; }
                         //gather all nearby triggers that are causing the water to flow into the dictionary
                         foreach (LevelTrigger trigger in levelObject.Triggers)
                         {
                             Vector2 flow = trigger.GetWaterFlowVelocity();
-                            //ignore ones that are barely doing anything (flow^2 < 1)
-                            if (flow.LengthSquared() > 1.0f && !levelTriggerFlows.ContainsKey(trigger))
+                            //ignore ones that are barely doing anything (flow^2 <= 1)
+                            if (flow.LengthSquared() >= 1.0f && !levelTriggerFlows.ContainsKey(trigger))
                             {
                                 levelTriggerFlows.Add(trigger, flow);
+                            }
+                            if (!string.IsNullOrWhiteSpace(trigger.InfectIdentifier) && 
+                                Vector2.DistanceSquared(transducerCenter, trigger.WorldPosition) < pingRange / 2 * pingRange / 2)
+                            {
+                                ballastFloraSpores.Add(trigger);
                             }
                         }
                     }
@@ -400,6 +579,19 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
+                foreach (LevelTrigger spore in ballastFloraSpores)
+                {
+                    Vector2 blipPos = spore.WorldPosition + Rand.Vector(spore.ColliderRadius * Rand.Range(0.0f, 1.0f));
+                    SonarBlip sporeBlip = new SonarBlip(blipPos, Rand.Range(0.1f, 0.5f), 0.5f)
+                    {
+                        Rotation = Rand.Range(-MathHelper.TwoPi, MathHelper.TwoPi),
+                        BlipType = BlipType.Default,
+                        Velocity = Rand.Vector(100f, Rand.RandSync.Unsynced)
+                    };
+
+                    sonarBlips.Add(sporeBlip);
+                }
+
                 float outsideLevelFlow = 0.0f;
                 if (transducerCenter.X < 0.0f)
                 {
@@ -423,7 +615,6 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Steering steering = item.GetComponent<Steering>();
             if (steering != null && steering.DockingModeEnabled && steering.ActiveDockingSource != null)
             {
                 float dockingDist = Vector2.Distance(steering.ActiveDockingSource.Item.WorldPosition, steering.DockingTarget.Item.WorldPosition);
@@ -482,7 +673,6 @@ namespace Barotrauma.Items.Components
             }
             
             disruptionUpdateTimer -= deltaTime;
-
             for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
             {
                 var activePing = activePings[pingIndex];
@@ -492,10 +682,44 @@ namespace Barotrauma.Items.Components
                     pingRadius, activePing.PrevPingRadius, displayScale, range / zoom, passive: false, pingStrength: 2.0f);
                 activePing.PrevPingRadius = pingRadius;
             }
-
             if (disruptionUpdateTimer <= 0.0f)
             {
                 disruptionUpdateTimer = DisruptionUpdateInterval;
+            }
+
+            longRangeUpdateTimer -= deltaTime;
+            if (longRangeUpdateTimer <= 0.0f)
+            {
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (c.AnimController.CurrentHull != null || !c.Enabled) { continue; }
+                    if (c.Params.HideInSonar) { continue; }
+
+                    if (!c.IsUnconscious && c.Params.DistantSonarRange > 0.0f &&
+                        ((c.WorldPosition - transducerCenter) * displayScale).LengthSquared() > DisplayRadius * DisplayRadius)
+                    {
+                        Vector2 targetVector = c.WorldPosition - transducerCenter;
+                        if (targetVector.LengthSquared() > MathUtils.Pow2(c.Params.DistantSonarRange)) { continue; }
+                        float dist = targetVector.Length();
+                        Vector2 targetDir = targetVector / dist;
+                        int blipCount = (int)MathHelper.Clamp(c.Mass, 50, 200);
+                        for (int i = 0; i < blipCount; i++)
+                        {
+                            float angle = Rand.Range(-0.5f, 0.5f);
+                            Vector2 blipDir = MathUtils.RotatePoint(targetDir, angle);
+                            Vector2 invBlipDir = MathUtils.RotatePoint(targetDir, -angle);
+                            var longRangeBlip = new SonarBlip(transducerCenter + blipDir * Range * 0.9f, Rand.Range(1.9f, 2.1f), Rand.Range(1.0f, 1.5f), BlipType.LongRange)
+                            {
+                                Velocity = -invBlipDir * (MathUtils.Round(Rand.Range(8000.0f, 15000.0f), 2000.0f) - Math.Abs(angle * angle * 10000.0f)),
+                                Rotation = (float)Math.Atan2(-invBlipDir.Y, invBlipDir.X),
+                                Alpha = MathUtils.Pow2((c.Params.DistantSonarRange - dist) / c.Params.DistantSonarRange)
+                            };
+                            longRangeBlip.Size.Y *= 5.0f;
+                            sonarBlips.Add(longRangeBlip);
+                        }
+                    }
+                }
+                longRangeUpdateTimer = LongRangeUpdateInterval;
             }
 
             if (currentMode == Mode.Active && currentPingIndex != -1)
@@ -557,10 +781,7 @@ namespace Barotrauma.Items.Components
             DisplayRadius = (rect.Width / 2.0f) * (1.0f - displayBorderSize);
             displayScale = DisplayRadius / range * zoom;
 
-            if (screenBackground != null)
-            {
-                screenBackground.Draw(spriteBatch, center, 0.0f, rect.Width / screenBackground.size.X);
-            }
+            screenBackground?.Draw(spriteBatch, center, 0.0f, rect.Width / screenBackground.size.X);
 
             if (useDirectionalPing)
             {
@@ -637,8 +858,8 @@ namespace Barotrauma.Items.Components
             float directionalPingVisibility = useDirectionalPing && currentMode == Mode.Active ? 1.0f : showDirectionalIndicatorTimer;
             if (directionalPingVisibility > 0.0f)
             {
-                Vector2 sector1 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, DirectionalPingSector * 0.5f);
-                Vector2 sector2 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, -DirectionalPingSector * 0.5f);
+                Vector2 sector1 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, MathHelper.ToRadians(DirectionalPingSector * 0.5f));
+                Vector2 sector2 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, MathHelper.ToRadians(-DirectionalPingSector * 0.5f));
                 DrawLine(spriteBatch, Vector2.Zero, sector1, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
                 DrawLine(spriteBatch, Vector2.Zero, sector2, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
             }
@@ -648,10 +869,7 @@ namespace Barotrauma.Items.Components
                 GUI.DrawString(spriteBatch, rect.Location.ToVector2(), sonarBlips.Count.ToString(), Color.White);
             }
 
-            if (screenOverlay != null)
-            {
-                screenOverlay.Draw(spriteBatch, center, 0.0f, rect.Width / screenOverlay.size.X);
-            }
+            screenOverlay?.Draw(spriteBatch, center, 0.0f, rect.Width / screenOverlay.size.X);
 
             if (signalStrength <= 0.5f)
             {
@@ -665,32 +883,10 @@ namespace Barotrauma.Items.Components
                 signalWarningText.Visible = false;
             }
 
-            if (GameMain.GameSession == null || Level.Loaded == null) { return; }
-
-            if (Level.Loaded.StartLocation != null)
-            {
-                DrawMarker(spriteBatch,
-                    Level.Loaded.StartLocation.Name,
-                    "outpost",
-                    Level.Loaded.StartLocation.Name,
-                    Level.Loaded.StartPosition, transducerCenter,
-                    displayScale, center, DisplayRadius);
-            }
-
-            if (Level.Loaded.EndLocation != null && Level.Loaded.Type == LevelData.LevelType.LocationConnection)
-            {
-                DrawMarker(spriteBatch,
-                    Level.Loaded.EndLocation.Name,
-                    "outpost",
-                    Level.Loaded.EndLocation.Name,
-                    Level.Loaded.EndPosition, transducerCenter,
-                    displayScale, center, DisplayRadius);
-            }
-
             foreach (AITarget aiTarget in AITarget.List)
             {
-                if (!aiTarget.Enabled) continue;
-                if (string.IsNullOrEmpty(aiTarget.SonarLabel) || aiTarget.SoundRange <= 0.0f) continue;
+                if (!aiTarget.Enabled) { continue; }
+                if (string.IsNullOrEmpty(aiTarget.SonarLabel) || aiTarget.SoundRange <= 0.0f) { continue; }
 
                 if (Vector2.DistanceSquared(aiTarget.WorldPosition, transducerCenter) < aiTarget.SoundRange * aiTarget.SoundRange)
                 {
@@ -698,42 +894,103 @@ namespace Barotrauma.Items.Components
                         aiTarget.SonarLabel,
                         aiTarget.SonarIconIdentifier,
                         aiTarget,
-                        aiTarget.WorldPosition, transducerCenter, 
+                        aiTarget.WorldPosition, transducerCenter,
                         displayScale, center, DisplayRadius * 0.975f);
                 }
             }
-            
-            if (GameMain.GameSession.Mission != null)
-            {
-                var mission = GameMain.GameSession.Mission;
 
+            if (GameMain.GameSession == null || Level.Loaded == null) { return; }
+
+            if (Level.Loaded.StartLocation != null)
+            {
+                DrawMarker(spriteBatch,
+                    Level.Loaded.StartLocation.Name,
+                    Level.Loaded.StartOutpost != null ? "outpost" : "location",
+                    Level.Loaded.StartLocation.Name,
+                    Level.Loaded.StartExitPosition, transducerCenter,
+                    displayScale, center, DisplayRadius);
+            }
+
+            if (Level.Loaded.EndLocation != null && Level.Loaded.Type == LevelData.LevelType.LocationConnection)
+            {
+                DrawMarker(spriteBatch,
+                    Level.Loaded.EndLocation.Name,
+                    Level.Loaded.EndOutpost != null ? "outpost" : "location",
+                    Level.Loaded.EndLocation.Name,
+                    Level.Loaded.EndExitPosition, transducerCenter,
+                    displayScale, center, DisplayRadius);
+            }
+
+            for (int i = 0; i < Level.Loaded.Caves.Count; i++)
+            {
+                var cave = Level.Loaded.Caves[i];
+                if (!cave.DisplayOnSonar) { continue; }
+                DrawMarker(spriteBatch,
+                    caveLabel,
+                    "cave",
+                    "cave" + i,
+                    cave.StartPos.ToVector2(), transducerCenter,
+                    displayScale, center, DisplayRadius);
+            }
+
+            int missionIndex = 0;
+            foreach (Mission mission in GameMain.GameSession.Missions)
+            {
                 if (!string.IsNullOrWhiteSpace(mission.SonarLabel))
                 {
+                    int i = 0;
                     foreach (Vector2 sonarPosition in mission.SonarPositions)
                     {
                         DrawMarker(spriteBatch,
                             mission.SonarLabel,
                             mission.SonarIconIdentifier,
-                            mission,
-                            sonarPosition, transducerCenter, 
+                            "mission" + missionIndex + ":" + i,
+                            sonarPosition, transducerCenter,
                             displayScale, center, DisplayRadius * 0.95f);
+                        i++;
                     }
+                }
+                missionIndex++;
+            }
+
+            if (AllowUsingMineralScanner && useMineralScanner && CurrentMode == Mode.Active && MineralClusters != null)
+            {
+                foreach (var c in MineralClusters)
+                {
+                    var unobtainedMinerals = c.resources.Where(i => i != null && i.GetRootInventoryOwner() == i);
+                    if (unobtainedMinerals.None()) { continue; }
+                    if (!CheckResourceMarkerVisibility(c.center, transducerCenter)) { continue; }
+                    var i = unobtainedMinerals.FirstOrDefault();
+                    if (i == null) { continue; }
+                    DrawMarker(spriteBatch,
+                        i.Name, "mineral", "mineralcluster" + i,
+                        c.center, transducerCenter,
+                        displayScale, center, DisplayRadius * 0.95f,
+                        onlyShowTextOnMouseOver: true);
                 }
             }
 
             foreach (Submarine sub in Submarine.Loaded)
             {
                 if (!sub.ShowSonarMarker) { continue; }
-                if (UseTransducers ?
-                    connectedTransducers.Any(t => sub == t.Transducer.Item.Submarine || sub.DockedTo.Contains(t.Transducer.Item.Submarine)) :
-                    (sub == item.Submarine || sub.DockedTo.Contains(item.Submarine)))
-                {
-                    continue;
-                }
+                if (connectedSubs.Contains(sub)) { continue; }
                 if (sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
-                             
-                DrawMarker(spriteBatch, 
-                    sub.Info.DisplayName, 
+
+                if (item.Submarine != null || Character.Controlled != null)
+                {
+                    //hide enemy team
+                    if (sub.TeamID == CharacterTeamType.Team1 && (item.Submarine?.TeamID == CharacterTeamType.Team2 || Character.Controlled?.TeamID == CharacterTeamType.Team2))
+                    {
+                        continue;
+                    }
+                    else if (sub.TeamID == CharacterTeamType.Team2 && (item.Submarine?.TeamID == CharacterTeamType.Team1 || Character.Controlled?.TeamID == CharacterTeamType.Team1))
+                    {
+                        continue;
+                    }
+                }
+
+                DrawMarker(spriteBatch,
+                    sub.Info.DisplayName,
                     sub.Info.HasTag(SubmarineTag.Shuttle) ? "shuttle" : "submarine",
                     sub,
                     sub.WorldPosition, transducerCenter, 
@@ -753,10 +1010,8 @@ namespace Barotrauma.Items.Components
 
             foreach (Submarine submarine in Submarine.Loaded)
             {
-                if (UseTransducers ?
-                    !connectedTransducers.Any(t => submarine == t.Transducer.Item.Submarine || submarine.DockedTo.Contains(t.Transducer.Item.Submarine)) :
-                    submarine != item.Submarine && !submarine.DockedTo.Contains(item.Submarine)) continue;
-                if (submarine.HullVertices == null) continue;
+                if (!connectedSubs.Contains(submarine)) { continue; }
+                if (submarine.HullVertices == null) { continue; }
 
                 Vector2 offset = ConvertUnits.ToSimUnits(submarine.WorldPosition - transducerCenter);
 
@@ -833,18 +1088,19 @@ namespace Barotrauma.Items.Components
             foreach (DockingPort dockingPort in DockingPort.List)
             {
                 if (Level.Loaded != null && dockingPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
-
                 if (dockingPort.Item.Submarine == null) { continue; }
                 if (dockingPort.Item.Submarine.Info.IsWreck) { continue; }
+                // docking ports should be shown even if defined as not, if the submarine is the same as the sonar's
+                if (!dockingPort.Item.Submarine.ShowSonarMarker && dockingPort.Item.Submarine != item.Submarine && !dockingPort.Item.Submarine.Info.IsOutpost) { continue; }
 
                 //don't show the docking ports of the opposing team on the sonar
-                if (item.Submarine != null)
+                if (item.Submarine != null && 
+                    item.Submarine != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle &&
+                    dockingPort.Item.Submarine != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle &&
+                    dockingPort.Item.Submarine.Info.Type != SubmarineType.Outpost)
                 {
-                    if ((dockingPort.Item.Submarine.TeamID == Character.TeamType.Team1 && item.Submarine.TeamID == Character.TeamType.Team2) ||
-                        (dockingPort.Item.Submarine.TeamID == Character.TeamType.Team2 && item.Submarine.TeamID == Character.TeamType.Team1))
-                    {
-                        continue;
-                    }
+                    // specifically checking for friendlyNPC seems more logical here
+                    if (dockingPort.Item.Submarine.TeamID != item.Submarine.TeamID && dockingPort.Item.Submarine.TeamID != CharacterTeamType.FriendlyNPC) { continue; } 
                 }
 
                 Vector2 offset = (dockingPort.Item.WorldPosition - transducerCenter) * scale;
@@ -967,8 +1223,7 @@ namespace Barotrauma.Items.Components
 
             for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
             {
-                var activePing = activePings[pingIndex];
-                foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(pingSource, range * activePing.State))
+                foreach (LevelObject levelObject in nearbyObjects)
                 {
                     if (levelObject.ActivePrefab?.SonarDisruption <= 0.0f) { continue; }
 
@@ -1049,19 +1304,10 @@ namespace Barotrauma.Items.Components
 
             foreach (Submarine submarine in Submarine.Loaded)
             {
-                if (submarine.HullVertices == null) continue;
+                if (submarine.HullVertices == null) { continue; }
                 if (!DetectSubmarineWalls)
                 {
-                    if (UseTransducers)
-                    {
-                        if (connectedTransducers.Any(t => submarine == t.Transducer.Item.Submarine || 
-                            submarine.DockedTo.Contains(t.Transducer.Item.Submarine))) continue;
-                    }
-                    else
-                    {
-                        if (item.Submarine == submarine) continue;
-                        if (item.Submarine != null && item.Submarine.DockedTo.Contains(submarine)) continue;
-                    }
+                    if (connectedSubs.Contains(submarine)) { continue; }                    
                 }
 
                 for (int i = 0; i < submarine.HullVertices.Count; i++)
@@ -1101,9 +1347,9 @@ namespace Barotrauma.Items.Components
                 {
                     foreach (Voronoi2.GraphEdge edge in cell.Edges)
                     {
-                        if (!edge.IsSolid) continue;
+                        if (!edge.IsSolid) { continue; }
                         float cellDot = Vector2.Dot(cell.Center - pingSource, (edge.Center + cell.Translation) - cell.Center);
-                        if (cellDot > 0) continue;
+                        if (cellDot > 0) { continue; }
 
                         float facingDot = Vector2.Dot(
                             Vector2.Normalize(edge.Point1 - edge.Point2),
@@ -1114,7 +1360,8 @@ namespace Barotrauma.Items.Components
                             edge.Point2 + cell.Translation,
                             pingSource, transducerPos,
                             pingRadius, prevPingRadius,
-                            350.0f, 3.0f * (Math.Abs(facingDot) + 1.0f), range, pingStrength, passive);
+                            350.0f, 3.0f * (Math.Abs(facingDot) + 1.0f), range, pingStrength, passive,
+                            blipType : cell.IsDestructible ? BlipType.Destructible : BlipType.Default);
                     }
                 }
 
@@ -1178,6 +1425,7 @@ namespace Barotrauma.Items.Components
                             MathHelper.Clamp(c.Mass * 0.03f, 0.1f, 2.0f));
                         if (!passive && !CheckBlipVisibility(blip, transducerPos)) { continue; }
                         sonarBlips.Add(blip);
+                        HintManager.OnSonarSpottedCharacter(Item, c);
                     }
                     continue;
                 }
@@ -1197,13 +1445,14 @@ namespace Barotrauma.Items.Components
                             MathHelper.Clamp(limb.Mass * 0.1f, 0.1f, 2.0f));
                         if (!passive && !CheckBlipVisibility(blip, transducerPos)) { continue; }
                         sonarBlips.Add(blip);
+                        HintManager.OnSonarSpottedCharacter(Item, c);
                     }
                 }
             }
         }
         
         private void CreateBlipsForLine(Vector2 point1, Vector2 point2, Vector2 pingSource, Vector2 transducerPos, float pingRadius, float prevPingRadius,
-            float lineStep, float zStep, float range, float pingStrength, bool passive)
+            float lineStep, float zStep, float range, float pingStrength, bool passive, BlipType blipType = BlipType.Default)
         {
             lineStep /= zoom;
             zStep /= zoom;
@@ -1219,13 +1468,13 @@ namespace Barotrauma.Items.Components
                 //ignore if outside the display
                 Vector2 transducerDiff = point - transducerPos;
                 Vector2 transducerDisplayDiff = transducerDiff * displayScale;
-                if (transducerDisplayDiff.LengthSquared() > DisplayRadius * DisplayRadius) continue;
+                if (transducerDisplayDiff.LengthSquared() > DisplayRadius * DisplayRadius) { continue; }
 
                 //ignore if the point is not within the ping
                 Vector2 pointDiff = point - pingSource;
                 Vector2 displayPointDiff = pointDiff * displayScale;
                 float displayPointDistSqr = displayPointDiff.LengthSquared();
-                if (displayPointDistSqr < prevPingRadius * prevPingRadius || displayPointDistSqr > pingRadius * pingRadius) continue;
+                if (displayPointDistSqr < prevPingRadius * prevPingRadius || displayPointDistSqr > pingRadius * pingRadius) { continue; }
 
                 //ignore if direction is disrupted
                 float transducerDist = transducerDiff.Length();
@@ -1240,7 +1489,7 @@ namespace Barotrauma.Items.Components
                         break;
                     }
                 }
-                if (disrupted) continue;
+                if (disrupted) { continue; }
 
                 float displayPointDist = (float)Math.Sqrt(displayPointDistSqr);
                 float alpha = pingStrength * Rand.Range(1.5f, 2.0f);
@@ -1252,8 +1501,8 @@ namespace Barotrauma.Items.Components
                     int minDist = (int)(200 / zoom);
                     sonarBlips.RemoveAll(b => b.FadeTimer < fadeTimer && Math.Abs(pos.X - b.Position.X) < minDist && Math.Abs(pos.Y - b.Position.Y) < minDist);
 
-                    var blip = new SonarBlip(pos, fadeTimer, 1.0f + ((displayPointDist + z) / DisplayRadius));
-                    if (!passive && !CheckBlipVisibility(blip, transducerPos)) continue;
+                    var blip = new SonarBlip(pos, fadeTimer, 1.0f + ((displayPointDist + z) / DisplayRadius), blipType);
+                    if (!passive && !CheckBlipVisibility(blip, transducerPos)) { continue; }
 
                     sonarBlips.Add(blip);
                     zStep += 0.5f / zoom;
@@ -1267,7 +1516,7 @@ namespace Barotrauma.Items.Components
                         alpha -= 0.1f;
                     }
 
-                    if (alpha < 0) break;
+                    if (alpha < 0) { break; }
                 }
             }
         }
@@ -1290,6 +1539,30 @@ namespace Barotrauma.Items.Components
                 if (Vector2.Dot(activePings[currentPingIndex].Direction, dir) < DirectionalPingDotProduct)
                 {
                     blip.FadeTimer = 0.0f;
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Based largely on existing CheckBlipVisibility() code
+        /// </summary>
+        private bool CheckResourceMarkerVisibility(Vector2 resourcePos, Vector2 transducerPos)
+        {
+            var distSquared = Vector2.DistanceSquared(transducerPos, resourcePos);
+            if (distSquared > Range * Range)
+            {
+                return false;
+            }
+            if (currentPingIndex != -1 && activePings[currentPingIndex].IsDirectional)
+            {
+                var pos = (resourcePos - transducerPos) * displayScale * zoom;
+                pos.Y = -pos.Y;
+                var length = pos.Length();
+                var dir = pos / length;
+                if (Vector2.Dot(activePings[currentPingIndex].Direction, dir) < DirectionalPingDotProduct)
+                {
                     return false;
                 }
             }
@@ -1326,15 +1599,16 @@ namespace Barotrauma.Items.Components
             float scale = (strength + 3.0f) * blip.Scale * blipScale;
             Color color = ToolBox.GradientLerp(strength, blipColorGradient[blip.BlipType]);
 
-            sonarBlip.Draw(spriteBatch, center + pos, color, sonarBlip.Origin, blip.Rotation ?? MathUtils.VectorToAngle(pos),
+            sonarBlip.Draw(spriteBatch, center + pos, color * blip.Alpha, sonarBlip.Origin, blip.Rotation ?? MathUtils.VectorToAngle(pos),
                 blip.Size * scale * 0.5f, SpriteEffects.None, 0);
 
             pos += Rand.Range(0.0f, 1.0f) * dir + Rand.Range(-scale, scale) * normal;
 
-            sonarBlip.Draw(spriteBatch, center + pos, color * 0.5f, sonarBlip.Origin, 0, scale, SpriteEffects.None, 0);
+            sonarBlip.Draw(spriteBatch, center + pos, color * 0.5f * blip.Alpha, sonarBlip.Origin, 0, scale, SpriteEffects.None, 0);
         }
 
-        private void DrawMarker(SpriteBatch spriteBatch, string label, string iconIdentifier, object targetIdentifier, Vector2 worldPosition, Vector2 transducerPosition, float scale, Vector2 center, float radius)
+        private void DrawMarker(SpriteBatch spriteBatch, string label, string iconIdentifier, object targetIdentifier, Vector2 worldPosition, Vector2 transducerPosition, float scale, Vector2 center, float radius,
+            bool onlyShowTextOnMouseOver = false)
         {
             float linearDist = Vector2.Distance(worldPosition, transducerPosition);
             float dist = linearDist;
@@ -1342,9 +1616,7 @@ namespace Barotrauma.Items.Components
             {
                 if (markerDistances.TryGetValue(targetIdentifier, out CachedDistance cachedDistance))
                 {
-                    if (Timing.TotalTime > cachedDistance.RecalculationTime &&
-                        (Vector2.DistanceSquared(cachedDistance.TransducerWorldPos, transducerPosition) > 500 * 500 ||
-                        Vector2.DistanceSquared(cachedDistance.WorldPos, worldPosition) > 500 * 500))
+                    if (cachedDistance.ShouldUpdateDistance(transducerPosition, worldPosition))
                     {
                         markerDistances.Remove(targetIdentifier);
                         CalculateDistance();
@@ -1366,10 +1638,7 @@ namespace Barotrauma.Items.Components
                 var path = pathFinder.FindPath(ConvertUnits.ToSimUnits(transducerPosition), ConvertUnits.ToSimUnits(worldPosition));
                 if (!path.Unreachable)
                 {
-                    var cachedDistance = new CachedDistance(transducerPosition, worldPosition, path.TotalLength)
-                    {
-                        RecalculationTime = Timing.TotalTime + Rand.Range(1.0f, 5.0f)
-                    };
+                    var cachedDistance = new CachedDistance(transducerPosition, worldPosition, path.TotalLength, Timing.TotalTime + Rand.Range(1.0f, 5.0f));
                     markerDistances.Add(targetIdentifier, cachedDistance);
                     dist = path.TotalLength;
                 }
@@ -1391,26 +1660,38 @@ namespace Barotrauma.Items.Components
             markerPos.Y = (int)markerPos.Y;
 
             float alpha = 1.0f;
-            if (linearDist * scale < radius)
+            if (!onlyShowTextOnMouseOver)
             {
-                float normalizedDist = linearDist * scale / radius;
-                alpha = Math.Max(normalizedDist - 0.4f, 0.0f);
-
-                float mouseDist = Vector2.Distance(PlayerInput.MousePosition, markerPos);
-                float hoverThreshold = 150.0f;
-                if (mouseDist < hoverThreshold)
+                if (linearDist * scale < radius)
                 {
-                    alpha += (hoverThreshold - mouseDist) / hoverThreshold;
+                    float normalizedDist = linearDist * scale / radius;
+                    alpha = Math.Max(normalizedDist - 0.4f, 0.0f);
+
+                    float mouseDist = Vector2.Distance(PlayerInput.MousePosition, markerPos);
+                    float hoverThreshold = 150.0f;
+                    if (mouseDist < hoverThreshold)
+                    {
+                        alpha += (hoverThreshold - mouseDist) / hoverThreshold;
+                    }
+                }
+            }
+            else
+            {
+                float mouseDist = Vector2.Distance(PlayerInput.MousePosition, markerPos);
+                if (mouseDist > 5)
+                {
+                    alpha = 0.0f;
                 }
             }
 
-            if (string.IsNullOrEmpty(iconIdentifier) || !targetIcons.ContainsKey(iconIdentifier))
+            if (iconIdentifier == null || !targetIcons.ContainsKey(iconIdentifier))
             {
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X - 3, (int)markerPos.Y - 3, 6, 6), markerColor, thickness: 2);
             }
             else
             {
-                targetIcons[iconIdentifier].Draw(spriteBatch, markerPos);
+                var iconInfo = targetIcons[iconIdentifier];
+                iconInfo.Item1.Draw(spriteBatch, markerPos, iconInfo.Item2);
             }
 
             if (alpha <= 0.0f) { return; }
@@ -1441,11 +1722,13 @@ namespace Barotrauma.Items.Components
             screenBackground?.Remove();
             lineSprite?.Remove();
 
-            foreach (Sprite sprite in targetIcons.Values)
+            foreach (var t in targetIcons.Values)
             {
-                sprite.Remove();
+                t.Item1.Remove();
             }
             targetIcons.Clear();
+
+            MineralClusters = null;
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
@@ -1460,6 +1743,7 @@ namespace Barotrauma.Items.Components
                     float pingAngle = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(pingDirection));
                     msg.WriteRangedSingle(MathUtils.InverseLerp(0.0f, MathHelper.TwoPi, pingAngle), 0.0f, 1.0f, 8);
                 }
+                msg.Write(useMineralScanner);
             }
         }
         
@@ -1471,6 +1755,7 @@ namespace Barotrauma.Items.Components
             float zoomT             = 1.0f;
             bool directionalPing    = useDirectionalPing;
             float directionT        = 0.0f;
+            bool mineralScanner     = useMineralScanner;
             if (isActive)
             {
                 zoomT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
@@ -1479,6 +1764,7 @@ namespace Barotrauma.Items.Components
                 {
                     directionT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
                 }
+                mineralScanner = msg.ReadBoolean();
             }
 
             if (correctionTimer > 0.0f)
@@ -1500,6 +1786,11 @@ namespace Barotrauma.Items.Components
                     pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
                 }
                 useDirectionalPing = directionalModeSwitch.Selected = directionalPing;
+                useMineralScanner = mineralScanner;
+                if (mineralScannerSwitch != null)
+                {
+                    mineralScannerSwitch.Selected = mineralScanner;
+                }
             }
         }
 
@@ -1510,6 +1801,10 @@ namespace Barotrauma.Items.Components
             passiveTickBox.Selected = !isActive;
             activeTickBox.Selected = isActive;
             directionalModeSwitch.Selected = useDirectionalPing;
+            if (mineralScannerSwitch != null)
+            {
+                mineralScannerSwitch.Selected = useMineralScanner;
+            }
         }
     }
 
@@ -1522,6 +1817,7 @@ namespace Barotrauma.Items.Components
         public float? Rotation;
         public Vector2 Size;
         public Sonar.BlipType BlipType;
+        public float Alpha = 1.0f;
 
         public SonarBlip(Vector2 pos, float fadeTimer, float scale, Sonar.BlipType blipType = Sonar.BlipType.Default)
         {

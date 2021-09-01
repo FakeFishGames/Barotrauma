@@ -38,6 +38,7 @@ namespace Barotrauma
             CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, nameof(DamageEnemyKarmaIncrease));
             CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, nameof(ItemRepairKarmaIncrease));
             CreateLabeledSlider(parent, 0.0f, 10.0f, 0.05f, nameof(ExtinguishFireKarmaIncrease));
+            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, nameof(BallastFloraKarmaIncrease));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.12f), parent.RectTransform), TextManager.Get("Karma.NegativeActions"), 
                 textAlignment: Alignment.Center, font: GUI.SubHeadingFont)

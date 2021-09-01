@@ -27,8 +27,14 @@ namespace Barotrauma
 
     class ContainedItemSprite
     {
+        public enum DecorativeSpriteBehaviorType
+        {
+            None, HideWhenVisible, HideWhenNotVisible
+        }
+
         public readonly Sprite Sprite;
         public readonly bool UseWhenAttached;
+        public readonly DecorativeSpriteBehaviorType DecorativeSpriteBehavior;
         public readonly string[] AllowedContainerIdentifiers;
         public readonly string[] AllowedContainerTags;
 
@@ -36,6 +42,7 @@ namespace Barotrauma
         {
             Sprite = new Sprite(element, path, lazyLoad: lazyLoad);
             UseWhenAttached = element.GetAttributeBool("usewhenattached", false);
+            Enum.TryParse(element.GetAttributeString("decorativespritebehavior", "None"), ignoreCase: true, out DecorativeSpriteBehavior);
             AllowedContainerIdentifiers = element.GetAttributeStringArray("allowedcontaineridentifiers", new string[0], convertToLowerInvariant: true);
             AllowedContainerTags = element.GetAttributeStringArray("allowedcontainertags", new string[0], convertToLowerInvariant: true);
         }
@@ -56,6 +63,11 @@ namespace Barotrauma
         public Dictionary<int, List<DecorativeSprite>> DecorativeSpriteGroups = new Dictionary<int, List<DecorativeSprite>>();
         public Sprite InventoryIcon;
         public Sprite MinimapIcon;
+        public Sprite UpgradePreviewSprite;
+        public Sprite InfectedSprite;
+        public Sprite DamagedInfectedSprite;
+
+        public float UpgradePreviewScale = 1.0f;
 
         //only used to display correct color in the sub editor, item instances have their own property that can be edited on a per-item basis
         [Serialize("1.0,1.0,1.0,1.0", false)]

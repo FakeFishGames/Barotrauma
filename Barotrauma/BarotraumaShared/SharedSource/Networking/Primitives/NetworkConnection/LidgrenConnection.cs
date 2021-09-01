@@ -34,6 +34,13 @@ namespace Barotrauma.Networking
             EndPointString = IPString;
         }
 
+        public override bool SetSteamIDIfUnknown(UInt64 id)
+        {
+            if (SteamID != 0) { return false; } //do not allow the SteamID to be set multiple times
+            SteamID = id;
+            return true;
+        }
+
         public override bool EndpointMatches(string endPoint)
         {
             if (IPEndPoint?.Address == null) { return false; }

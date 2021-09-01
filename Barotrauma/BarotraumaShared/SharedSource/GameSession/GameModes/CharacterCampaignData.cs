@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -26,19 +27,32 @@ namespace Barotrauma
 
         private XElement itemData;
         private XElement healthData;
+        public XElement OrderData { get; private set; }
 
         partial void InitProjSpecific(Client client);
-        public CharacterCampaignData(Client client)
+        public CharacterCampaignData(Client client, bool giveRespawnPenaltyAffliction = false)
         {
             Name = client.Name;
             InitProjSpecific(client);
 
             healthData = new XElement("health");
-            client.Character.CharacterHealth.Save(healthData);
-            if (client.Character.Inventory != null)
+            client.Character?.CharacterHealth?.Save(healthData);
+            if (giveRespawnPenaltyAffliction)
+            {
+                var respawnPenaltyAffliction = RespawnManager.GetRespawnPenaltyAffliction();
+                healthData.Add(new XElement("Affliction",
+                    new XAttribute("identifier", respawnPenaltyAffliction.Identifier),
+                    new XAttribute("strength", respawnPenaltyAffliction.Strength.ToString("G", CultureInfo.InvariantCulture))));
+            }
+            if (client.Character?.Inventory != null)
             {
                 itemData = new XElement("inventory");
-                client.Character.SaveInventory(client.Character.Inventory, itemData);
+                Character.SaveInventory(client.Character.Inventory, itemData);
+            }
+            OrderData = new XElement("orders");
+            if (client.Character != null)
+            {
+                CharacterInfo.SaveOrderData(client.Character.Info, OrderData);
             }
         }
         
@@ -67,6 +81,9 @@ namespace Barotrauma
                     case "health":
                         healthData = subElement;
                         break;
+                    case "orders":
+                        OrderData = subElement;
+                        break;
                 }
             }
         }
@@ -78,8 +95,10 @@ namespace Barotrauma
             if (character.Inventory != null)
             {
                 itemData = new XElement("inventory");
-                character.SaveInventory(character.Inventory, itemData);
+                Character.SaveInventory(character.Inventory, itemData);
             }
+            OrderData = new XElement("orders");
+            CharacterInfo.SaveOrderData(character.Info, OrderData);
         }
 
         public XElement Save()
@@ -92,6 +111,7 @@ namespace Barotrauma
             CharacterInfo?.Save(element);
             if (itemData != null) { element.Add(itemData); }
             if (healthData != null) { element.Add(healthData); }
+            if (OrderData != null) { element.Add(OrderData); }
 
             return element;
         }        

@@ -36,7 +36,7 @@ namespace Barotrauma
 
         public Rectangle Bounds;
 
-        public ItemAssemblyPrefab(string filePath)
+        public ItemAssemblyPrefab(string filePath, bool allowOverwrite = false)
         {
             FilePath = filePath;
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
@@ -65,8 +65,21 @@ namespace Barotrauma
                 var containerElement = entityElement.Elements().FirstOrDefault(e => e.Name.LocalName.Equals("itemcontainer", StringComparison.OrdinalIgnoreCase));
                 if (containerElement == null) { continue; }
 
-                var itemIds = containerElement.GetAttributeIntArray("contained", new int[0]);
-                containedItemIDs.AddRange(itemIds.Select(id => (ushort)id));
+                string containedString = containerElement.GetAttributeString("contained", "");
+                string[] itemIdStrings = containedString.Split(',');
+                var itemIds = new List<ushort>[itemIdStrings.Length];
+                for (int i = 0; i < itemIdStrings.Length; i++)
+                {
+                    itemIds[i] ??= new List<ushort>();
+                    foreach (string idStr in itemIdStrings[i].Split(';'))
+                    {
+                        if (int.TryParse(idStr, out int id)) 
+                        { 
+                            itemIds[i].Add((ushort)id);
+                            containedItemIDs.Add((ushort)id);
+                        }                        
+                    }
+                }
             }
 
             int minX = int.MaxValue, minY = int.MaxValue;
@@ -100,6 +113,10 @@ namespace Barotrauma
                 new Rectangle(0, 0, 1, 1) :
                 new Rectangle(minX, minY, maxX - minX, maxY - minY);
 
+            if (allowOverwrite && Prefabs.ContainsKey(identifier))
+            {
+                Prefabs.Remove(Prefabs[identifier]);
+            }
             Prefabs.Add(this, doc.Root.IsOverride());
         }
 
@@ -110,21 +127,30 @@ namespace Barotrauma
         
         protected override void CreateInstance(Rectangle rect)
         {
-            var loaded = CreateInstance(rect.Location.ToVector2(), Submarine.MainSub);
 #if CLIENT
+            var loaded = CreateInstance(rect.Location.ToVector2(), Submarine.MainSub, selectInstance: Screen.Selected == GameMain.SubEditorScreen);
             if (Screen.Selected is SubEditorScreen)
             {
-                SubEditorScreen.StoreCommand(new AddOrDeleteCommand(loaded, false));
+                SubEditorScreen.StoreCommand(new AddOrDeleteCommand(loaded, false, handleInventoryBehavior: false));
             }
+#else
+            var loaded = CreateInstance(rect.Location.ToVector2(), Submarine.MainSub);
 #endif
         }
 
-        public List<MapEntity> CreateInstance(Vector2 position, Submarine sub, bool selectPrefabs = false)
+        public List<MapEntity> CreateInstance(Vector2 position, Submarine sub, bool selectInstance = false)
         {
-            List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, FilePath);
+            return PasteEntities(position, sub, configElement, FilePath, selectInstance);
+        }
+
+        public static List<MapEntity> PasteEntities(Vector2 position, Submarine sub, XElement configElement, string filePath = null, bool selectInstance = false)
+        {
+            int idOffset = Entity.FindFreeID(1);
+            if (MapEntity.mapEntityList.Any()) { idOffset = MapEntity.mapEntityList.Max(e => e.ID); }
+            List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, filePath, idOffset);
             if (entities.Count == 0) { return entities; }
 
-            Vector2 offset = sub == null ? Vector2.Zero : sub.HiddenSubPosition;
+            Vector2 offset = sub?.HiddenSubPosition ?? Vector2.Zero;
 
             foreach (MapEntity me in entities)
             {
@@ -132,19 +158,27 @@ namespace Barotrauma
                 me.Submarine = sub;
                 if (!(me is Item item)) { continue; }
                 Wire wire = item.GetComponent<Wire>();
-                if (wire != null) { wire.MoveNodes(position - offset); }
+                //Vector2 subPosition = Submarine == null ? Vector2.Zero : Submarine.HiddenSubPosition;
+                if (wire != null) 
+                { 
+                    //fix wires that have been erroneously saved at the "hidden position"
+                    if (sub != null && Vector2.Distance(me.Position, sub.HiddenSubPosition) > sub.HiddenSubPosition.Length() / 2)
+                    {
+                        me.Move(position);
+                    }
+                    wire.MoveNodes(position - offset); 
+                }
             }
 
             MapEntity.MapLoaded(entities, true);
 #if CLIENT
-            if (Screen.Selected == GameMain.SubEditorScreen && selectPrefabs)
+            if (Screen.Selected == GameMain.SubEditorScreen && selectInstance)
             {
                 MapEntity.SelectedList.Clear();
                 entities.ForEach(MapEntity.AddSelection);
             }
-#endif   
+#endif
             return entities;
-
         }
         
         public void Delete()

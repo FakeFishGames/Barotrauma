@@ -71,7 +71,7 @@ namespace Barotrauma.Items.Components
             get
             {
                 if (GameMain.NetworkMember?.ServerSettings != null && !GameMain.NetworkMember.ServerSettings.AllowRewiring) { return false; }
-                return locked || connections.Any(c => c != null && c.ConnectionPanel.Locked);
+                return locked || connections.Any(c => c != null && (c.ConnectionPanel.Locked || c.ConnectionPanel.TemporarilyLocked));
             }
             set { locked = value; }
         }
@@ -95,6 +95,20 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize(false, true, "If enabled, this wire will be ignored by the \"Lock all default wires\" setting.", alwaysUseInstanceValues: true)]
+        public bool NoAutoLock
+        {
+            get;
+            set;
+        }
+
+        [Editable, Serialize(false, true, "If enabled, this wire will use the sprite depth instead of a constant depth.")]
+        public bool UseSpriteDepth
+        {
+            get;
+            set;
+        }
+        
         public Wire(Item item, XElement element)
             : base(item, element)
         {
@@ -183,8 +197,12 @@ namespace Barotrauma.Items.Components
                 if (refSub == null)
                 {
                     Structure attachTarget = Structure.GetAttachTarget(newConnection.Item.WorldPosition);
-                    if (attachTarget == null) { continue; }
-                    refSub = attachTarget.Submarine;
+                    if (attachTarget == null && !(newConnection.Item.GetComponent<Holdable>()?.Attached ?? false))
+                    {
+                        connections[i] = null;
+                        continue; 
+                    }
+                    refSub = attachTarget?.Submarine;
                 }
 
                 Vector2 nodePos = refSub == null ? 
@@ -200,14 +218,16 @@ namespace Barotrauma.Items.Components
                 {
                     if (connections[0] != null && connections[0] != newConnection)
                     {
-                        if (Vector2.DistanceSquared(nodes[0], connections[0].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)) < Vector2.DistanceSquared(nodes[nodes.Count - 1], nodePos))
+                        if (Vector2.DistanceSquared(nodes[0], connections[0].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)) < 
+                            Vector2.DistanceSquared(nodes[nodes.Count - 1], connections[0].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)))
                         {
                             newNodeIndex = nodes.Count;
                         }
                     }
                     else if (connections[1] != null && connections[1] != newConnection)
                     {
-                        if (Vector2.DistanceSquared(nodes[0], connections[1].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)) < Vector2.DistanceSquared(nodes[nodes.Count - 1], nodePos))
+                        if (Vector2.DistanceSquared(nodes[0], connections[1].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)) < 
+                            Vector2.DistanceSquared(nodes[nodes.Count - 1], connections[1].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)))
                         {
                             newNodeIndex = nodes.Count;
                         }
@@ -236,18 +256,18 @@ namespace Barotrauma.Items.Components
             {
                 foreach (ItemComponent ic in item.Components)
                 {
-                    if (ic == this) continue;
+                    if (ic == this) { continue; }
                     ic.Drop(null);
                 }
-                if (item.Container != null) item.Container.RemoveContained(this.item);
-                if (item.body != null) item.body.Enabled = false;
+                if (item.Container != null) { item.Container.RemoveContained(this.item); }
+                if (item.body != null) { item.body.Enabled = false; }
 
                 IsActive = false;
 
                 CleanNodes();
             }
-            
-            if (item.body != null) item.Submarine = newConnection.Item.Submarine;
+
+            if (item.body != null) { item.Submarine = newConnection.Item.Submarine; }
 
             if (sendNetworkEvent)
             {
@@ -298,6 +318,8 @@ namespace Barotrauma.Items.Components
 
             if (Screen.Selected != GameMain.SubEditorScreen)
             {
+                if (user != null) { NoAutoLock = true; }
+
                 //cannot run wires from sub to another
                 if (item.Submarine != sub && sub != null && item.Submarine != null)
                 {
@@ -620,8 +642,8 @@ namespace Barotrauma.Items.Components
             {
                 if (connections[i]?.Item != null)
                 {
-                    var pt = connections[i].Item.GetComponent<PowerTransfer>();
-                    if (pt != null) pt.SetConnectionDirty(connections[i]);
+                    connections[i].Item.GetComponent<PowerTransfer>()?.SetConnectionDirty(connections[i]);
+                    connections[i].SetRecipientsDirty();
                 }
             }
         }
@@ -651,17 +673,29 @@ namespace Barotrauma.Items.Components
             } while (removed);
         }
 
-        private void FixNodeEnds()
+        public void FixNodeEnds()
         {
-            if (connections[0] == null || connections[1] == null || nodes.Count == 0) { return; }
+            Item item0 = connections[0]?.Item;
+            Item item1 = connections[1]?.Item;
+
+            if (item0 == null && item1 != null)
+            {
+                item0 = Item.ItemList.Find(it => it.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(this) ?? false);
+            }
+            else if (item0 != null && item1 == null)
+            {
+                item1 = Item.ItemList.Find(it => it.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(this) ?? false);
+            }
+
+            if (item0 == null || item1 == null || nodes.Count == 0) { return; }
 
             Vector2 nodePos = nodes[0];
 
-            Submarine refSub = connections[0].Item.Submarine ?? connections[1].Item.Submarine;
+            Submarine refSub = item0.Submarine ?? item1.Submarine;
             if (refSub != null) { nodePos += refSub.HiddenSubPosition; }
 
-            float dist1 = Vector2.DistanceSquared(connections[0].Item.Position, nodePos);
-            float dist2 = Vector2.DistanceSquared(connections[1].Item.Position, nodePos);
+            float dist1 = Vector2.DistanceSquared(item0.Position, nodePos);
+            float dist2 = Vector2.DistanceSquared(item1.Position, nodePos);
 
             //first node is closer to the second item
             //= the nodes are "backwards", need to reverse them
@@ -721,6 +755,11 @@ namespace Barotrauma.Items.Components
         public override void FlipX(bool relativeToSub)
         {
             if (item.ParentInventory != null) { return; }
+#if CLIENT
+            if (!relativeToSub && Screen.Selected != GameMain.SubEditorScreen) { return; }
+#else
+            if (!relativeToSub) { return; }
+#endif
 
             Vector2 refPos = item.Submarine == null ?
                 Vector2.Zero :
@@ -750,9 +789,9 @@ namespace Barotrauma.Items.Components
             UpdateSections();
         }
 
-        public override void Load(XElement componentElement, bool usePrefabValues)
+        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
-            base.Load(componentElement, usePrefabValues);
+            base.Load(componentElement, usePrefabValues, idRemap);
 
             string nodeString = componentElement.GetAttributeString("nodes", "");
             if (nodeString == "") return;
@@ -805,10 +844,11 @@ namespace Barotrauma.Items.Components
             ClearConnections();
             base.RemoveComponentSpecific();
 #if CLIENT
+            if (DraggingWire == this) { draggingWire = null; }
             overrideSprite?.Remove();
             overrideSprite = null;
             wireSprite = null;
 #endif
-        }        
+        }
     }
 }

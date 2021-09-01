@@ -443,7 +443,7 @@ namespace Barotrauma
 
         public static bool KeyHit(Keys button)
         {
-            return (AllowInput && oldKeyboardState.IsKeyDown(button) && keyboardState.IsKeyUp(button));
+            return AllowInput && oldKeyboardState.IsKeyUp(button) && keyboardState.IsKeyDown(button);
         }
 
         public static bool InventoryKeyHit(int index)
@@ -454,7 +454,7 @@ namespace Barotrauma
 
         public static bool KeyDown(Keys button)
         {
-            return (AllowInput && keyboardState.IsKeyDown(button));
+            return AllowInput && keyboardState.IsKeyDown(button);
         }
 
         public static bool KeyUp(Keys button)
@@ -474,6 +474,11 @@ namespace Barotrauma
 #else
             return KeyDown(Keys.LeftWindows) || KeyDown(Keys.RightWindows);
 #endif
+        }
+
+        public static bool IsAltDown()
+        {
+            return KeyDown(Keys.LeftAlt) || KeyDown(Keys.RightAlt);
         }
 
         public static void Update(double deltaTime)

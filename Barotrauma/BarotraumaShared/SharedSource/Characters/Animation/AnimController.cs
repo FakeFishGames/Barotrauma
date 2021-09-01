@@ -108,6 +108,16 @@ namespace Barotrauma
         public enum Animation { None, Climbing, UsingConstruction, Struggle, CPR };
         public Animation Anim;
 
+        public Vector2 AimSourceWorldPos
+        {
+            get
+            {
+                Vector2 sourcePos = character.AnimController.AimSourcePos;
+                if (character.Submarine != null) { sourcePos += character.Submarine.Position; }
+                return sourcePos;
+            }
+        }
+
         public Vector2 AimSourcePos => ConvertUnits.ToDisplayUnits(AimSourceSimPos);
         public virtual Vector2 AimSourceSimPos => Collider.SimPosition;
 

@@ -21,11 +21,21 @@ namespace Barotrauma.Items.Components
 
         private float[] charWidths;
 
+        private float prevScale;
+        private Rectangle prevRect;
+        private StringBuilder sb;
+
+        private Vector4 padding;
+
         [Serialize("0,0,0,0", true, description: "The amount of padding around the text in pixels (left,top,right,bottom).")]
         public Vector4 Padding
         {
-            get { return TextBlock.Padding; }
-            set { TextBlock.Padding = value; }
+            get { return padding; }
+            set 
+            {
+                padding = value;
+                TextBlock.Padding = value * item.Scale; 
+            }
         }
 
         private string text;
@@ -41,15 +51,23 @@ namespace Barotrauma.Items.Components
                 {
                     textBlock = null;
                 }
-                
+
                 text = value;
-                DisplayText = TextManager.Get(text, returnNull: true) ?? value;
-                TextBlock.Text = DisplayText;
-                if (Screen.Selected == GameMain.SubEditorScreen && Scrollable)
-                {
-                    TextBlock.Text = ToolBox.LimitString(DisplayText, textBlock.Font, item.Rect.Width);
-                }
-                SetScrollingText();
+                SetDisplayText(value); 
+                UpdateScrollingText();
+            }
+        }
+
+        private bool ignoreLocalization;
+
+        [Editable, Serialize(false, true, "Whether or not to skip localization and always display the raw value.")]
+        public bool IgnoreLocalization
+        {
+            get => ignoreLocalization;
+            set
+            {
+                ignoreLocalization = value;
+                SetDisplayText(Text);
             }
         }
 
@@ -107,13 +125,7 @@ namespace Barotrauma.Items.Components
             {
                 if (textBlock == null)
                 {
-                    textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "",
-                        textColor: textColor, font: GUI.UnscaledSmallFont, textAlignment: scrollable ? Alignment.CenterLeft : Alignment.Center, wrap: true, style: null)
-                    {
-                        TextDepth = item.SpriteDepth - 0.00001f,
-                        RoundToNearestPixel = false,
-                        TextScale = TextScale
-                    };
+                    RecreateTextBlock();
                 }
                 return textBlock;
             }
@@ -126,7 +138,7 @@ namespace Barotrauma.Items.Components
 
         private void SetScrollingText()
         {
-            if (!scrollable) return;
+            if (!scrollable) { return; }
 
             float totalWidth = textBlock.Font.MeasureString(DisplayText).X;
             float textAreaWidth = Math.Max(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z, 0);
@@ -143,6 +155,7 @@ namespace Barotrauma.Items.Components
                 //whole text can fit in the textblock, no need to scroll
                 needsScrolling = false;
                 scrollingText = DisplayText;
+                scrollPadding = 0;
                 scrollAmount = 0.0f;
                 scrollIndex = 0;
                 return;
@@ -161,21 +174,52 @@ namespace Barotrauma.Items.Components
             scrollIndex = MathHelper.Clamp(scrollIndex, 0, DisplayText.Length);
         }
 
+        private void SetDisplayText(string value)
+        {
+            DisplayText = IgnoreLocalization ? value : TextManager.Get(value, returnNull: true) ?? value;
+            TextBlock.Text = DisplayText;
+            if (Screen.Selected == GameMain.SubEditorScreen && Scrollable)
+            {
+                TextBlock.Text = ToolBox.LimitString(DisplayText, TextBlock.Font, item.Rect.Width);
+            }
+
+            SetScrollingText();
+        }
+
+        private void RecreateTextBlock()
+        {
+            textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "",
+                textColor: textColor, font: GUI.UnscaledSmallFont, textAlignment: scrollable ? Alignment.CenterLeft : Alignment.Center, wrap: !scrollable, style: null)
+            {
+                TextDepth = item.SpriteDepth - 0.00001f,
+                RoundToNearestPixel = false,
+                TextScale = TextScale,
+                Padding = padding * item.Scale
+            };
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
-            if (!scrollable) return;
+            if (!scrollable) { return; }
 
             if (scrollingText == null)
             {
                 SetScrollingText();
             }
 
-            if (!needsScrolling) return;
+            if (!needsScrolling) { return; }
 
             scrollAmount -= deltaTime * ScrollSpeed;
+            UpdateScrollingText();
+        }
+
+        private void UpdateScrollingText()
+        {
+            if (!scrollable || !needsScrolling) { return; }
 
             float currLength = 0;
-            StringBuilder sb = new StringBuilder();
+            sb ??= new StringBuilder();
+            sb.Clear();
             float textAreaWidth = textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z;
             for (int i = scrollIndex; i < scrollingText.Length; i++)
             {
@@ -204,26 +248,36 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            TextBlock.Text = sb.ToString();            
+            TextBlock.Text = sb.ToString();
         }
-                
+
+        public override void OnScaleChanged()
+        {
+            RecreateTextBlock();
+            SetDisplayText(Text);
+            prevScale = item.Scale;
+            prevRect = item.Rect;
+        }
+        
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
+            if (editing)
+            {
+                if (!MathUtils.NearlyEqual(prevScale, item.Scale) || prevRect != item.Rect)
+                {
+                    RecreateTextBlock();
+                    SetDisplayText(Text);
+                    prevScale = item.Scale;
+                    prevRect = item.Rect;
+                }
+            }
+
             var drawPos = new Vector2(
                 item.DrawPosition.X - item.Rect.Width / 2.0f,
                 -(item.DrawPosition.Y + item.Rect.Height / 2.0f));
 
-            Rectangle worldRect = item.WorldRect;
-            if (worldRect.X > Screen.Selected.Cam.WorldView.Right ||
-                worldRect.Right < Screen.Selected.Cam.WorldView.X ||
-                worldRect.Y < Screen.Selected.Cam.WorldView.Y - Screen.Selected.Cam.WorldView.Height ||
-                worldRect.Y - worldRect.Height > Screen.Selected.Cam.WorldView.Y)
-            {
-                return;
-            }
-
             textBlock.TextDepth = item.SpriteDepth - 0.0001f;
-            textBlock.TextOffset = drawPos - textBlock.Rect.Location.ToVector2() + new Vector2(scrollAmount + scrollPadding, 0.0f);
+            textBlock.TextOffset = drawPos - textBlock.Rect.Location.ToVector2() + (editing ? Vector2.Zero : new Vector2(scrollAmount + scrollPadding, 0.0f));
             textBlock.DrawManually(spriteBatch);
         }
 

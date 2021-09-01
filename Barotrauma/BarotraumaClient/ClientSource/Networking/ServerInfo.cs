@@ -159,6 +159,20 @@ namespace Barotrauma.Networking
                     color: ServerListScreen.PlayStyleColors[(int)playStyle], style: "GUISlopedHeader");
                 playStyleName.RectTransform.NonScaledSize = (playStyleName.Font.MeasureString(playStyleName.Text) + new Vector2(20, 5) * GUI.Scale).ToPoint();
                 playStyleName.RectTransform.IsFixedSize = true;
+
+                var serverTypeContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.2f), playStyleBanner.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft),
+                "MainMenuNotifBackground", Color.Black)
+                {
+                    CanBeFocused = false,
+                };
+
+                var serverType = new GUITextBlock(new RectTransform(Vector2.One, serverTypeContainer.RectTransform, Anchor.CenterLeft),
+                    TextManager.Get((OwnerID != 0 || LobbyID != 0) ? "SteamP2PServer" : "DedicatedServer"), textAlignment: Alignment.CenterLeft);
+            }
+            else
+            {
+                var serverType = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), previewContainer.RectTransform, Anchor.CenterLeft),
+                    TextManager.Get((OwnerID != 0 || LobbyID != 0) ? "SteamP2PServer" : "DedicatedServer"), textAlignment: Alignment.CenterLeft);
             }
 
             var content = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), previewContainer.RectTransform))
@@ -378,8 +392,8 @@ namespace Barotrauma.Networking
 
             if (maxPlayersElement > NetConfig.MaxPlayers)
             {
-                DebugConsole.IsOpen = true;
-                DebugConsole.NewMessage($"Setting the maximum amount of players to {maxPlayersElement} failed due to exceeding the limit of {NetConfig.MaxPlayers} players per server. Using the maximum of {NetConfig.MaxPlayers} instead.", Color.Red);
+                /*DebugConsole.IsOpen = true;
+                DebugConsole.NewMessage($"Setting the maximum amount of players to {maxPlayersElement} failed due to exceeding the limit of {NetConfig.MaxPlayers} players per server. Using the maximum of {NetConfig.MaxPlayers} instead.", Color.Red);*/
                 maxPlayersElement = NetConfig.MaxPlayers;
             }
 
@@ -539,6 +553,24 @@ namespace Barotrauma.Networking
             element.SetAttributeValue("HasPassword", HasPassword.ToString());
 
             return element;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is ServerInfo other ? Equals(other) : base.Equals(obj);
+        }
+
+        public bool Equals(ServerInfo other)
+        {
+            return
+                other.OwnerID == OwnerID &&
+                (other.LobbyID == LobbyID || other.LobbyID == 0 || LobbyID == 0) &&
+                ((OwnerID == 0) ? (other.IP == IP && other.Port == Port) : true);
+        }
+
+        public bool MatchesByEndpoint(ServerInfo other)
+        {
+            return OwnerID == other.OwnerID && (OwnerID != 0 ? true : (IP == other.IP && Port == other.Port));
         }
     }
 }

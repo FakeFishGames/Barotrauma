@@ -22,10 +22,12 @@ namespace Barotrauma.Items.Components
 
         private string prevSignal;
 
-        private int[] channelMemory = new int[ChannelMemorySize];
+        private readonly int[] channelMemory = new int[ChannelMemorySize];
 
-        [Serialize(Character.TeamType.None, true, description: "WiFi components can only communicate with components that have the same Team ID.", alwaysUseInstanceValues: true)]
-        public Character.TeamType TeamID { get; set; }
+        private Connection signalOutConnection;
+
+        [Serialize(CharacterTeamType.None, true, description: "WiFi components can only communicate with components that have the same Team ID.", alwaysUseInstanceValues: true)]
+        public CharacterTeamType TeamID { get; set; }
 
         [Editable, Serialize(20000.0f, false, description: "How close the recipient has to be to receive a signal from this WiFi component.", alwaysUseInstanceValues: true)]
         public float Range
@@ -58,7 +60,8 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Editable, Serialize(false, false, description: "If enabled, any signals received from another chat-linked wifi component are displayed " +
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.AllowLinkingWifiToChat)]
+        [Serialize(false, false, description: "If enabled, any signals received from another chat-linked wifi component are displayed " +
             "as chat messages in the chatbox of the player holding the item.", alwaysUseInstanceValues: true)]
         public bool LinkToChat
         {
@@ -92,6 +95,10 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            if (item.Connections != null)
+            {
+                signalOutConnection = item.Connections.Find(c => c.Name == "signal_out");
+            }
             if (channelMemory.All(m => m == 0))
             {
                 for (int i = 0; i < channelMemory.Length; i++)
@@ -152,9 +159,13 @@ namespace Barotrauma.Items.Components
             channelMemory[index] = MathHelper.Clamp(value, 0, 10000);
         }
 
-        public void TransmitSignal(int stepsTaken, string signal, Item source, Character sender, bool sendToChat, float signalStrength = 1.0f)
+        public void TransmitSignal(Signal signal, bool sentFromChat)
         {
-            var senderComponent = source?.GetComponent<WifiComponent>();
+            if (sentFromChat)
+            {
+                item.LastSentSignalRecipients.Clear();
+            }
+            var senderComponent = signal.source?.GetComponent<WifiComponent>();
             if (senderComponent != null && !CanReceive(senderComponent)) { return; }
 
             bool chatMsgSent = false;
@@ -162,30 +173,39 @@ namespace Barotrauma.Items.Components
             var receivers = GetReceiversInRange();
             foreach (WifiComponent wifiComp in receivers)
             {
+                if (sentFromChat && !wifiComp.LinkToChat) { continue; }
+
                 //signal strength diminishes by distance
-                float sentSignalStrength = signalStrength *
+                float sentSignalStrength = signal.strength *
                     MathHelper.Clamp(1.0f - (Vector2.Distance(item.WorldPosition, wifiComp.item.WorldPosition) / wifiComp.range), 0.0f, 1.0f);
-                wifiComp.item.SendSignal(stepsTaken, signal, "signal_out", sender, 0, source, sentSignalStrength);
-                
-                if (source != null)
+                Signal s = new Signal(signal.value, ++signal.stepsTaken, sender: signal.sender, source: signal.source,
+                                      power: 0.0f, strength: sentSignalStrength);
+
+                if (wifiComp.signalOutConnection != null)
                 {
-                    foreach (Item receiverItem in wifiComp.item.LastSentSignalRecipients)
+                    wifiComp.item.SendSignal(s, wifiComp.signalOutConnection);
+                }
+
+                if (signal.source != null)
+                {
+                    foreach (Connection receiver in wifiComp.item.LastSentSignalRecipients)
                     {
-                        if (!source.LastSentSignalRecipients.Contains(receiverItem))
+                        if (!signal.source.LastSentSignalRecipients.Contains(receiver))
                         {
-                            source.LastSentSignalRecipients.Add(receiverItem);
+                            signal.source.LastSentSignalRecipients.Add(receiver);
                         }
                     }
-                }                
+                }
 
-                if (DiscardDuplicateChatMessages && signal == prevSignal) continue;
+                if (DiscardDuplicateChatMessages && signal.value == prevSignal) { continue; }
 
-                if (LinkToChat && wifiComp.LinkToChat && chatMsgCooldown <= 0.0f && sendToChat)
+                //create a chat message
+                if (LinkToChat && wifiComp.LinkToChat && chatMsgCooldown <= 0.0f && !sentFromChat)
                 {
                     if (wifiComp.item.ParentInventory != null &&
                         wifiComp.item.ParentInventory.Owner != null)
                     {
-                        string chatMsg = signal;
+                        string chatMsg = signal.value;
                         if (senderComponent != null)
                         {
                             chatMsg = ChatMessage.ApplyDistanceEffect(chatMsg, 1.0f - sentSignalStrength);
@@ -198,7 +218,7 @@ namespace Barotrauma.Items.Components
                         {
                             if (GameMain.Client == null)
                             {
-                                GameMain.GameSession?.CrewManager?.AddSinglePlayerChatMessage(source?.Name ?? "", signal, ChatMessageType.Radio, sender: null);
+                                GameMain.GameSession?.CrewManager?.AddSinglePlayerChatMessage(signal.source?.Name ?? "", signal.value, ChatMessageType.Radio, sender: null);
                             }
                         }
 #elif SERVER
@@ -208,7 +228,7 @@ namespace Barotrauma.Items.Components
                             if (recipientClient != null)
                             {
                                 GameMain.Server.SendDirectChatMessage(
-                                    ChatMessage.Create(source?.Name ?? "", chatMsg, ChatMessageType.Radio, null), recipientClient);
+                                    ChatMessage.Create(signal.source?.Name ?? "", chatMsg, ChatMessageType.Radio, null), recipientClient);
                             }
                         }
 #endif
@@ -222,26 +242,26 @@ namespace Barotrauma.Items.Components
                 IsActive = true;
             }
 
-            prevSignal = signal;
+            prevSignal = signal.value;
         }
                 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (connection == null) { return; }
 
             switch (connection.Name)
             {
                 case "signal_in":
-                    TransmitSignal(stepsTaken, signal, source, sender, true, signalStrength);
+                    TransmitSignal(signal, false);
                     break;
                 case "set_channel":
-                    if (int.TryParse(signal, out int newChannel))
+                    if (int.TryParse(signal.value, out int newChannel))
                     {
                         Channel = newChannel;
                     }
                     break;
                 case "set_range":
-                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newRange))
+                    if (float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newRange))
                     {
                         Range = newRange;
                     }

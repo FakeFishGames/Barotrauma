@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -10,6 +11,8 @@ namespace Barotrauma
         protected readonly EventPrefab prefab;
         
         public EventPrefab Prefab => prefab;
+
+        public Func<Level.InterestingPosition, bool> SpawnPosFilter;
 
         public bool IsFinished
         {
@@ -53,6 +56,11 @@ namespace Barotrauma
         }
         
         public virtual bool CanAffectSubImmediately(Level level)
+        {
+            return true;
+        }
+
+        public virtual bool LevelMeetsRequirements()
         {
             return true;
         }

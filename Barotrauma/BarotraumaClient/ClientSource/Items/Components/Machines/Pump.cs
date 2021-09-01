@@ -16,8 +16,8 @@ namespace Barotrauma.Items.Components
         private GUITickBox powerLight;
         private GUITickBox autoControlIndicator;
 
-        private List<Pair<Vector2, ParticleEmitter>> pumpOutEmitters = new List<Pair<Vector2, ParticleEmitter>>(); 
-        private List<Pair<Vector2, ParticleEmitter>> pumpInEmitters = new List<Pair<Vector2, ParticleEmitter>>();
+        private readonly List<(Vector2 position, ParticleEmitter emitter)> pumpOutEmitters = new List<(Vector2 position, ParticleEmitter emitter)>(); 
+        private readonly List<(Vector2 position, ParticleEmitter emitter)> pumpInEmitters = new List<(Vector2 position, ParticleEmitter emitter)>();
 
         public float CurrentBrokenVolume
         {
@@ -35,14 +35,10 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "pumpoutemitter":
-                        pumpOutEmitters.Add(new Pair<Vector2, ParticleEmitter>(
-                            subElement.GetAttributeVector2("position", Vector2.Zero), 
-                            new ParticleEmitter(subElement)));
+                        pumpOutEmitters.Add((subElement.GetAttributeVector2("position", Vector2.Zero), new ParticleEmitter(subElement)));
                         break;
                     case "pumpinemitter":
-                        pumpInEmitters.Add(new Pair<Vector2, ParticleEmitter>(
-                            subElement.GetAttributeVector2("position", Vector2.Zero),
-                            new ParticleEmitter(subElement)));
+                        pumpInEmitters.Add((subElement.GetAttributeVector2("position", Vector2.Zero), new ParticleEmitter(subElement)));
                         break;
                 }
             }
@@ -73,7 +69,7 @@ namespace Barotrauma.Items.Components
             {
                 OnClicked = (button, data) =>
                 {
-                    targetLevel = null;
+                    TargetLevel = null;
                     IsActive = !IsActive;
                     if (GameMain.Client != null)
                     {
@@ -112,7 +108,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (pumpSpeedLockTimer <= 0.0f)
                     {
-                        targetLevel = null;
+                        TargetLevel = null;
                     }
                     float newValue = barScroll * 200.0f - 100.0f;
                     if (Math.Abs(newValue - FlowPercentage) < 0.1f) { return false; }
@@ -148,21 +144,43 @@ namespace Barotrauma.Items.Components
         {
             if (FlowPercentage < 0.0f)
             {
-                foreach (Pair<Vector2, ParticleEmitter> pumpOutEmitter in pumpOutEmitters)
+                foreach (var (position, emitter) in pumpOutEmitters)
                 {
-                    //only emit "pump out" particles when underwater
-                    Vector2 particlePos = item.Rect.Location.ToVector2() + pumpOutEmitter.First;
-                    if (item.CurrentHull != null && item.CurrentHull.Surface < particlePos.Y) continue;
+                    if (item.CurrentHull != null && item.CurrentHull.Surface < item.Rect.Location.Y + position.Y) { continue; }
 
-                    pumpOutEmitter.Second.Emit(deltaTime, item.WorldRect.Location.ToVector2() + pumpOutEmitter.First * item.Scale, item.CurrentHull,
+                    //only emit "pump out" particles when underwater
+                    Vector2 relativeParticlePos = (item.WorldRect.Location.ToVector2() + position * item.Scale) - item.WorldPosition; 
+                    float angle = 0.0f;
+                    if (item.FlippedX)
+                    {
+                        relativeParticlePos.X = -relativeParticlePos.X;
+                        angle = MathHelper.Pi;
+                    }
+                    if (item.FlippedY)
+                    {
+                        relativeParticlePos.Y = -relativeParticlePos.Y;
+                    }
+
+                    emitter.Emit(deltaTime, item.WorldPosition + relativeParticlePos, item.CurrentHull, angle,
                         velocityMultiplier: MathHelper.Lerp(0.5f, 1.0f, -FlowPercentage / 100.0f));
                 }
             }
             else if (FlowPercentage > 0.0f)
             {
-                foreach (Pair<Vector2, ParticleEmitter> pumpInEmitter in pumpInEmitters)
+                foreach (var (position, emitter) in pumpInEmitters)
                 {
-                    pumpInEmitter.Second.Emit(deltaTime, item.WorldRect.Location.ToVector2() + pumpInEmitter.First * item.Scale, item.CurrentHull,
+                    Vector2 relativeParticlePos = (item.WorldRect.Location.ToVector2() + position * item.Scale) - item.WorldPosition;
+                    float angle = 0.0f;
+                    if (item.FlippedX)
+                    {
+                        relativeParticlePos.X = -relativeParticlePos.X;
+                        angle = MathHelper.Pi;
+                    }
+                    if (item.FlippedY)
+                    {
+                        relativeParticlePos.Y = -relativeParticlePos.Y;
+                    }
+                    emitter.Emit(deltaTime, item.WorldPosition + relativeParticlePos, item.CurrentHull, angle,
                         velocityMultiplier: MathHelper.Lerp(0.5f, 1.0f, FlowPercentage / 100.0f));
                 }
             }
@@ -215,14 +233,33 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
+            int msgStartPos = msg.BitPosition;
+
+            float flowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
+            bool isActive = msg.ReadBoolean();
+            bool hijacked = msg.ReadBoolean();
+            float? targetLevel;
+            if (msg.ReadBoolean())
+            {
+                targetLevel = msg.ReadSingle();
+            }
+            else
+            {
+                targetLevel = null;
+            }
+
             if (correctionTimer > 0.0f)
             {
-                StartDelayedCorrection(type, msg.ExtractBits(5 + 1), sendingTime);
+                int msgLength = msg.BitPosition - msgStartPos;
+                msg.BitPosition = msgStartPos;
+                StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime);
                 return;
             }
 
-            FlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
-            IsActive = msg.ReadBoolean();
+            FlowPercentage = flowPercentage;
+            IsActive = isActive;
+            Hijacked = hijacked;
+            TargetLevel = targetLevel;
         }
     }
 }

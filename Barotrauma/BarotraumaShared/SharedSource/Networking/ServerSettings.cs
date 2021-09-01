@@ -628,6 +628,20 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(false, true)]
+        public bool LockAllDefaultWires
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, true)]
+        public bool AllowLinkingWifiToChat
+        {
+            get;
+            set;
+        }
+
         [Serialize(true, true)]
         public bool AllowFriendlyFire
         {
@@ -787,7 +801,7 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        [Serialize(120.0f, true)]
+        [Serialize(300.0f, true)]
         public float KillDisconnectedTime
         {
             get;
@@ -872,6 +886,15 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        [Serialize(true, true)]
+        public bool RadiationEnabled
+        {
+            get;
+            set;
+        }
+        // we do not serialize this value because it relies on a default setting
+        public int MaxMissionCount { get; set; } = CampaignSettings.DefaultMaxMissionCount;
+
         public void SetPassword(string password)
         {
             if (string.IsNullOrEmpty(password))
@@ -900,7 +923,6 @@ namespace Barotrauma.Networking
         {
             if (!HasPassword) return true;
             byte[] saltedPw = SaltPassword(Encoding.UTF8.GetBytes(password), salt);
-            DebugConsole.NewMessage(ToolBox.ByteArrayToString(input) + " " + ToolBox.ByteArrayToString(saltedPw));
             if (input.Length != saltedPw.Length) return false;
             for (int i = 0; i < input.Length; i++)
             {

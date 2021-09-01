@@ -37,6 +37,10 @@ namespace Barotrauma
 
         private static RoundData roundData;
 
+        // Used for the Extravehicular Activity ("crewaway") achievement
+        private static PathFinder pathFinder;
+        private static readonly Dictionary<Character, CachedDistance> cachedDistances = new Dictionary<Character, CachedDistance>();
+
         public static void OnStartRound()
         {
             roundData = new RoundData();
@@ -45,6 +49,8 @@ namespace Barotrauma
                 Reactor reactor = item.GetComponent<Reactor>();
                 if (reactor != null) { roundData.Reactors.Add(reactor); }
             }
+            pathFinder = new PathFinder(WayPoint.WayPointList, indoorsSteering: false);
+            cachedDistances.Clear();
         }
 
         public static void Update(float deltaTime)
@@ -71,11 +77,11 @@ namespace Barotrauma
                     //achievement for descending below crush depth and coming back
                     if (Timing.TotalTime > GameMain.GameSession.RoundStartTime + 30.0f)
                     {
-                        if (c.WorldPosition.Y < SubmarineBody.DamageDepth || (c.Submarine != null && c.Submarine.WorldPosition.Y < SubmarineBody.DamageDepth))
+                        if (c.Submarine != null && c.Submarine.AtDamageDepth || Level.Loaded.GetRealWorldDepth(c.WorldPosition.Y) > Level.Loaded.RealWorldCrushDepth)
                         {
                             roundData.EnteredCrushDepth.Add(c);
                         }
-                        else if (c.WorldPosition.Y > SubmarineBody.DamageDepth * 0.5f)
+                        else if (Level.Loaded.GetRealWorldDepth(c.WorldPosition.Y) < Level.Loaded.RealWorldCrushDepth * 0.5f)
                         {
                             //all characters that have entered crush depth and are still alive get an achievement
                             if (roundData.EnteredCrushDepth.Contains(c)) UnlockAchievement(c, "survivecrushdepth");
@@ -108,7 +114,7 @@ namespace Barotrauma
                     }
 
                     //achievement for descending ridiculously deep
-                    float realWorldDepth = Math.Abs(sub.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
+                    float realWorldDepth = sub.RealWorldDepth;
                     if (realWorldDepth > 5000.0f && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 30.0f)
                     {
                         //all conscious characters inside the sub get an achievement
@@ -153,11 +159,43 @@ namespace Barotrauma
 
             if (Submarine.MainSub != null && c.Submarine == null && c.SpeciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
-                float dist = 500 / Physics.DisplayToRealWorldRatio;
-                if (Vector2.DistanceSquared(c.WorldPosition, Submarine.MainSub.WorldPosition) >
-                    dist * dist)
+                float requiredDist = 500 / Physics.DisplayToRealWorldRatio;
+                float distSquared = Vector2.DistanceSquared(c.WorldPosition, Submarine.MainSub.WorldPosition);
+                if (cachedDistances.TryGetValue(c, out var cachedDistance))
+                {
+                    if (cachedDistance.ShouldUpdateDistance(c.WorldPosition, Submarine.MainSub.WorldPosition))
+                    {
+                        cachedDistances.Remove(c);
+                        cachedDistance = CalculateNewCachedDistance(c);
+                        if (cachedDistance != null)
+                        {
+                            cachedDistances.Add(c, cachedDistance);
+                        }
+                    }
+                }
+                else
+                {
+                    cachedDistance = CalculateNewCachedDistance(c);
+                    if (cachedDistance != null)
+                    {
+                        cachedDistances.Add(c, cachedDistance);
+                    }
+                }
+                if (cachedDistance != null)
+                {
+                    distSquared = Math.Max(distSquared, cachedDistance.Distance * cachedDistance.Distance);
+                }
+                if (distSquared > requiredDist * requiredDist)
                 {
                     UnlockAchievement(c, "crewaway");
+                }
+
+                static CachedDistance CalculateNewCachedDistance(Character c)
+                {
+                    pathFinder ??= new PathFinder(WayPoint.WayPointList, indoorsSteering: false);
+                    var path = pathFinder.FindPath(ConvertUnits.ToSimUnits(c.WorldPosition), ConvertUnits.ToSimUnits(Submarine.MainSub.WorldPosition));
+                    if (path.Unreachable) { return null; }
+                    return new CachedDistance(c.WorldPosition, Submarine.MainSub.WorldPosition, path.TotalLength, Timing.TotalTime + Rand.Range(1.0f, 5.0f));
                 }
             }
         }
@@ -307,7 +345,7 @@ namespace Barotrauma
         public static void OnRoundEnded(GameSession gameSession)
         {
             //made it to the destination
-            if (gameSession?.Submarine != null && Level.Loaded != null && gameSession.Submarine.AtEndPosition)
+            if (gameSession?.Submarine != null && Level.Loaded != null && gameSession.Submarine.AtEndExit)
             {
                 float levelLengthMeters = Physics.DisplayToRealWorldRatio * Level.Loaded.Size.X;
                 float levelLengthKilometers = levelLengthMeters / 1000.0f;
@@ -331,32 +369,35 @@ namespace Barotrauma
                 }
             }
 
+            //make sure changed stats (kill count, kms traveled) get stored
+            SteamManager.StoreStats();
+
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
-            if (gameSession.Mission != null)
+            foreach (Mission mission in gameSession.Missions)
             {
-                if (gameSession.Mission is CombatMission combatMission && GameMain.GameSession.WinningTeam.HasValue)
+                if (mission is CombatMission combatMission && GameMain.GameSession.WinningTeam.HasValue)
                 {
                     //all characters that are alive and in the winning team get an achievement
-                    UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier + (int)GameMain.GameSession.WinningTeam, true, 
+                    UnlockAchievement(mission.Prefab.AchievementIdentifier + (int)GameMain.GameSession.WinningTeam, true,
                         c => c != null && !c.IsDead && !c.IsUnconscious && combatMission.IsInWinningTeam(c));
                 }
-                else if (gameSession.Mission.Completed)
+                else if (mission.Completed)
                 {
                     //all characters get an achievement
                     if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                     {
-                        UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier, true, c => c != null);
+                        UnlockAchievement(mission.Prefab.AchievementIdentifier, true, c => c != null);
                     }
                     else
                     {
-                        UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier);
+                        UnlockAchievement(mission.Prefab.AchievementIdentifier);
                     }
                 }
             }
             
             //made it to the destination
-            if (gameSession.Submarine.AtEndPosition)
+            if (gameSession.Submarine.AtEndExit)
             {
                 bool noDamageRun = !roundData.SubWasDamaged && !roundData.Casualties.Any(c => !(c.AIController is EnemyAIController));
 
@@ -380,7 +421,7 @@ namespace Barotrauma
 #endif
                 var charactersInSub = Character.CharacterList.FindAll(c => 
                     !c.IsDead && 
-                    c.TeamID != Character.TeamType.FriendlyNPC &&
+                    c.TeamID != CharacterTeamType.FriendlyNPC &&
                     !(c.AIController is EnemyAIController) &&
                     (c.Submarine == gameSession.Submarine || (Level.Loaded?.EndOutpost != null && c.Submarine == Level.Loaded.EndOutpost)));
 

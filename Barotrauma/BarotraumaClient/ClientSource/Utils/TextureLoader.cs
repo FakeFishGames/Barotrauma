@@ -19,6 +19,8 @@ namespace Barotrauma
             private set;
         }
 
+        private static volatile bool cancelAll = false;
+
         public static void Init(GraphicsDevice graphicsDevice, bool needsBmp = false)
         {
             _graphicsDevice = graphicsDevice;
@@ -34,6 +36,11 @@ namespace Barotrauma
                 PlaceHolderTexture = new Texture2D(graphicsDevice, 32, 32);
                 PlaceHolderTexture.SetData(data);
             });
+        }
+
+        public static void CancelAll()
+        {
+            cancelAll = true;
         }
 
         private static byte[] CompressDxt5(byte[] data, int width, int height)
@@ -208,18 +215,14 @@ namespace Barotrauma
                     }
                     else
                     {
-                        DebugConsole.NewMessage($"Could not compress a texture because the dimensions aren't a multiple of 4 (path: {path ?? "null"}, size: {width}x{height})", Color.Orange);
+                        DebugConsole.AddWarning($"Could not compress a texture because the dimensions aren't a multiple of 4 (path: {path ?? "null"}, size: {width}x{height})");
                     }
-                }
-
-                if (((width & 0x03) != 0) || ((height & 0x03) != 0))
-                {
-                    DebugConsole.AddWarning($"Cannot compress a texture because the dimensions are not a multiple of 4 (path: {path ?? "null"}, size: {width}x{height})");
                 }
 
                 Texture2D tex = null;
                 CrossThread.RequestExecutionOnMainThread(() =>
                 {
+                    if (cancelAll) { return; }
                     tex = new Texture2D(_graphicsDevice, width, height, mipmap, format);
                     tex.SetData(textureData);
                 });

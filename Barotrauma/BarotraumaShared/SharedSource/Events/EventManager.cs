@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
+using NLog;
 
 namespace Barotrauma
 {
@@ -12,7 +14,8 @@ namespace Barotrauma
         {
             CONVERSATION,
             STATUSEFFECT,
-            MISSION
+            MISSION,
+            UNLOCKPATH
         }
 
         const float IntensityUpdateInterval = 5.0f;
@@ -47,9 +50,15 @@ namespace Barotrauma
         private float calculateDistanceTraveledTimer;
         private float distanceTraveled;
 
-        private float avgCrewHealth, avgHullIntegrity, floodingAmount, fireAmount, enemyDanger;
+        private float avgCrewHealth, avgHullIntegrity, floodingAmount, fireAmount, enemyDanger, monsterTotalStrength;
 
         private float roundDuration;
+
+        private bool isCrewAway;
+        //how long it takes after the crew returns for the event manager to resume normal operation
+        const float CrewAwayResetDelay = 60.0f;
+        private float crewAwayResetTimer;
+        private float crewAwayDuration;
 
         private readonly List<EventSet> pendingEventSets = new List<EventSet>();
 
@@ -86,6 +95,8 @@ namespace Barotrauma
 
         public void StartRound(Level level)
         {
+            this.level = level;
+
             if (isClient) { return; }
 
             pendingEventSets.Clear();
@@ -96,22 +107,67 @@ namespace Barotrauma
             totalPathLength = 0.0f;
             if (level != null)
             {
-                var steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(Level.Loaded.StartPosition), ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
+                var steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(level.StartPosition), ConvertUnits.ToSimUnits(level.EndPosition));
                 totalPathLength = steeringPath.TotalLength;
             }
 
-            this.level = level;
             SelectSettings();
 
-            var initialEventSet = SelectRandomEvents(EventSet.List);
+            int seed = 0;            
+            if (level != null)
+            {
+                seed = ToolBox.StringToInt(level.Seed);
+                foreach (var previousEvent in level.LevelData.EventHistory)
+                {
+                    seed ^= ToolBox.StringToInt(previousEvent.Identifier);
+                }
+            }
+            MTRandom rand = new MTRandom(seed);
+
+            EventSet initialEventSet = SelectRandomEvents(EventSet.List, rand);
+            EventSet additiveSet = null;
+            if (initialEventSet != null && initialEventSet.Additive)
+            {
+                additiveSet = initialEventSet;
+                initialEventSet = SelectRandomEvents(EventSet.List.FindAll(e => !e.Additive), rand);
+            }
             if (initialEventSet != null)
             {
                 pendingEventSets.Add(initialEventSet);
-                CreateEvents(initialEventSet);
+                CreateEvents(initialEventSet, rand);
             }
-            
+            if (additiveSet != null)
+            {
+                pendingEventSets.Add(additiveSet);
+                CreateEvents(additiveSet, rand);
+            }
+
             if (level?.LevelData?.Type == LevelData.LevelType.Outpost)
             {
+                //if the outpost is connected to a locked connection, create an event to unlock it
+                if (level.StartLocation?.Connections.Any(c => c.Locked && level.StartLocation.MapPosition.X < c.OtherLocation(level.StartLocation).MapPosition.X) ?? false)
+                {
+                    var unlockPathPrefabs = EventSet.PrefabList.FindAll(e => e.UnlockPathEvent);
+                    var unlockPathPrefabsForBiome = unlockPathPrefabs.FindAll(e => 
+                        string.IsNullOrEmpty(e.BiomeIdentifier) || 
+                        e.BiomeIdentifier.Equals(level.LevelData.Biome.Identifier, StringComparison.OrdinalIgnoreCase));
+
+                    var unlockPathEventPrefab = unlockPathPrefabsForBiome.Any() ?
+                        ToolBox.SelectWeightedRandom(unlockPathPrefabsForBiome, unlockPathPrefabsForBiome.Select(b => b.Commonness).ToList(), rand) :
+                        ToolBox.SelectWeightedRandom(unlockPathPrefabs, unlockPathPrefabs.Select(b => b.Commonness).ToList(), rand);
+                    if (unlockPathEventPrefab != null)
+                    {
+                        var newEvent = unlockPathEventPrefab.CreateInstance();
+                        newEvent.Init(true);
+                        ActiveEvents.Add(newEvent);
+                    }
+                    else
+                    {
+                        //if no event that unlocks the path can be found, unlock it automatically
+                        level.StartLocation.Connections.ForEach(c => c.Locked = false);
+                    }
+                }
+
                 level.LevelData.EventHistory.AddRange(selectedEvents.Values.SelectMany(v => v).Select(e => e.Prefab).Where(e => !level.LevelData.EventHistory.Contains(e)));
                 if (level.LevelData.EventHistory.Count > MaxEventHistory)
                 {
@@ -121,11 +177,14 @@ namespace Barotrauma
                 void AddChildEvents(EventSet eventSet)
                 {
                     if (eventSet == null) { return; }
-                    foreach (EventPrefab ep in eventSet.EventPrefabs.Select(e => e.First))
+                    if (eventSet.OncePerOutpost)
                     {
-                        if (!level.LevelData.NonRepeatableEvents.Contains(ep)) 
+                        foreach (EventPrefab ep in eventSet.EventPrefabs.Select(e => e.prefab))
                         {
-                            level.LevelData.NonRepeatableEvents.Add(ep);
+                            if (!level.LevelData.NonRepeatableEvents.Contains(ep)) 
+                            {
+                                level.LevelData.NonRepeatableEvents.Add(ep);
+                            }
                         }
                     }
                     foreach (EventSet childSet in eventSet.ChildSets)
@@ -138,6 +197,9 @@ namespace Barotrauma
             PreloadContent(GetFilesToPreload());
 
             roundDuration = 0.0f;
+            isCrewAway = false;
+            crewAwayDuration = 0.0f;
+            crewAwayResetTimer = 0.0f;
             intensityUpdateTimer = 0.0f;
             CalculateCurrentIntensity(0.0f);
             currentIntensity = targetIntensity;
@@ -252,35 +314,41 @@ namespace Barotrauma
                         var doc = characterPrefab.XDocument;
                         var rootElement = doc.Root;
                         var mainElement = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
-
-                        foreach (var soundElement in mainElement.GetChildElements("sound"))
+                        mainElement.GetChildElements("sound").ForEach(e => Submarine.LoadRoundSound(e));
+                        if (!CharacterPrefab.CheckSpeciesName(mainElement, file.Path, out string speciesName)) { continue; }
+                        bool humanoid = mainElement.GetAttributeBool("humanoid", false);
+                        CharacterPrefab originalCharacter;
+                        if (characterPrefab.VariantOf != null)
                         {
-                            var sound = Submarine.LoadRoundSound(soundElement);
-                        }
-                        string speciesName = mainElement.GetAttributeString("speciesname", null);
-                        if (string.IsNullOrWhiteSpace(speciesName))
-                        {
-                            speciesName = mainElement.GetAttributeString("name", null);
-                            if (!string.IsNullOrWhiteSpace(speciesName))
+                            originalCharacter = CharacterPrefab.FindBySpeciesName(characterPrefab.VariantOf);
+                            var originalRoot = originalCharacter.XDocument.Root;
+                            var originalMainElement = originalRoot.IsOverride() ? originalRoot.FirstElement() : originalRoot;
+                            originalMainElement.GetChildElements("sound").ForEach(e => Submarine.LoadRoundSound(e));
+                            if (!CharacterPrefab.CheckSpeciesName(mainElement, file.Path, out string name)) { continue; }
+                            speciesName = name;
+                            if (mainElement.Attribute("humanoid") == null)
                             {
-                                DebugConsole.NewMessage($"Error in {file.Path}: 'name' is deprecated! Use 'speciesname' instead.", Color.Orange);
+                                humanoid = originalMainElement.GetAttributeBool("humanoid", false);
+                            }
+                        }
+                        RagdollParams ragdollParams;
+                        try
+                        {
+                            if (humanoid)
+                            {
+                                ragdollParams = RagdollParams.GetRagdollParams<HumanRagdollParams>(characterPrefab.VariantOf ?? speciesName);
                             }
                             else
                             {
-                                throw new Exception($"Species name null in {file.Path}");
+                                ragdollParams = RagdollParams.GetRagdollParams<FishRagdollParams>(characterPrefab.VariantOf ?? speciesName);
                             }
                         }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError($"Failed to preload a ragdoll file for the character \"{characterPrefab.Name}\"", e);
+                            continue;
+                        }
 
-                        bool humanoid = mainElement.GetAttributeBool("humanoid", false);
-                        RagdollParams ragdollParams;
-                        if (humanoid)
-                        {
-                            ragdollParams = RagdollParams.GetRagdollParams<HumanRagdollParams>(speciesName);
-                        }
-                        else
-                        {
-                            ragdollParams = RagdollParams.GetRagdollParams<FishRagdollParams>(speciesName);
-                        }
                         if (ragdollParams != null)
                         {
                             HashSet<string> texturePaths = new HashSet<string>
@@ -317,70 +385,108 @@ namespace Barotrauma
             preloadedSprites.Clear();
         }
 
-        private float CalculateCommonness(Pair<EventPrefab, float> eventPrefab)
+        private float CalculateCommonness(EventPrefab eventPrefab, float baseCommonness)
         {
-            if (level.LevelData.NonRepeatableEvents.Contains(eventPrefab.First)) { return 0.0f; }
-            float retVal = eventPrefab.Second;
-            if (level.LevelData.EventHistory.Contains(eventPrefab.First)) { retVal *= 0.1f; }
+            if (level.LevelData.NonRepeatableEvents.Contains(eventPrefab)) { return 0.0f; }
+            float retVal = baseCommonness;
+            if (level.LevelData.EventHistory.Contains(eventPrefab)) { retVal *= 0.1f; }
             return retVal;
         }
 
-        private void CreateEvents(EventSet eventSet)
+        private void CreateEvents(EventSet eventSet, Random rand)
         {
             if (level == null) { return; }
+            if (level.LevelData.HasHuntingGrounds && eventSet.DisableInHuntingGrounds) { return; }
+#if DEBUG
+            DebugConsole.NewMessage($"Loading event set {eventSet.DebugIdentifier}", Color.LightBlue);
+#else
+            DebugConsole.Log($"Loading event set {eventSet.DebugIdentifier}");
+#endif
             int applyCount = 1;
+            List<Func<Level.InterestingPosition, bool>> spawnPosFilter = new List<Func<Level.InterestingPosition, bool>>();
             if (eventSet.PerRuin)
             {
-                applyCount = Level.Loaded.Ruins.Count();
+                applyCount = level.Ruins.Count();
+                foreach (var ruin in level.Ruins)
+                {
+                    spawnPosFilter.Add((Level.InterestingPosition pos) => { return pos.Ruin == ruin; });
+                }
+            }
+            else if (eventSet.PerCave)
+            {
+                applyCount = level.Caves.Count();
+                foreach (var cave in level.Caves)
+                {
+                    spawnPosFilter.Add((Level.InterestingPosition pos) => { return pos.Cave == cave; });
+                }
             }
             else if (eventSet.PerWreck)
             {
-                applyCount = Submarine.Loaded.Count(s => s.Info.IsWreck && (s.WreckAI == null || !s.WreckAI.IsAlive));
+                var wrecks = Submarine.Loaded.Where(s => s.Info.IsWreck && (s.WreckAI == null || !s.WreckAI.IsAlive));
+                applyCount = wrecks.Count();
+                foreach (var wreck in wrecks)
+                {
+                    spawnPosFilter.Add((Level.InterestingPosition pos) => { return pos.Submarine == wreck; });
+                }
             }
+
+            var suitablePrefabs = eventSet.EventPrefabs.FindAll(e =>
+                string.IsNullOrEmpty(e.prefab.BiomeIdentifier) ||
+                e.prefab.BiomeIdentifier.Equals(level.LevelData?.Biome?.Identifier, StringComparison.OrdinalIgnoreCase));
+
             for (int i = 0; i < applyCount; i++)
             {
                 if (eventSet.ChooseRandom)
                 {
-                    if (eventSet.EventPrefabs.Count > 0)
+                    if (suitablePrefabs.Count > 0)
                     {
-                        int seed = ToolBox.StringToInt(level.Seed);
-                        foreach (var previousEvent in level.LevelData.EventHistory)
-                        {
-                            seed |= ToolBox.StringToInt(previousEvent.Identifier);
-                        }
-
-                        MTRandom rand = new MTRandom(seed);
-                        List<Pair<EventPrefab, float>> unusedEvents = new List<Pair<EventPrefab, float>>(eventSet.EventPrefabs);
+                        var unusedEvents = new List<(EventPrefab prefab, float commonness, float probability)>(suitablePrefabs);
                         for (int j = 0; j < eventSet.EventCount; j++)
                         {
-                            var eventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => CalculateCommonness(e)).ToList(), rand);
-                            if (eventPrefab != null)
+                            if (unusedEvents.All(e => CalculateCommonness(e.prefab, e.commonness) <= 0.0f)) { break; }
+                            (EventPrefab eventPrefab, float commonness, float probability) = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => CalculateCommonness(e.prefab, e.commonness)).ToList(), rand);
+                            if (eventPrefab != null && rand.NextDouble() <= probability)
                             {
-                                var newEvent = eventPrefab.First.CreateInstance();
+                                var newEvent = eventPrefab.CreateInstance();
+                                if (newEvent == null) { continue; }
                                 newEvent.Init(true);
-                                DebugConsole.Log("Initialized event " + newEvent.ToString());
+                                if (i < spawnPosFilter.Count) { newEvent.SpawnPosFilter = spawnPosFilter[i]; }
+#if DEBUG
+                                DebugConsole.NewMessage($"Initialized event {newEvent}");
+#else
+                                DebugConsole.Log($"Initialized event {newEvent}");
+#endif
                                 if (!selectedEvents.ContainsKey(eventSet))
                                 {
                                     selectedEvents.Add(eventSet, new List<Event>());
                                 }
                                 selectedEvents[eventSet].Add(newEvent);
-                                unusedEvents.Remove(eventPrefab);
+                                unusedEvents.Remove((eventPrefab, commonness, probability));
                             }
                         }
                     }
                     if (eventSet.ChildSets.Count > 0)
                     {
-                        var newEventSet = SelectRandomEvents(eventSet.ChildSets);
-                        if (newEventSet != null) { CreateEvents(newEventSet); }
+                        var newEventSet = SelectRandomEvents(eventSet.ChildSets, rand);
+                        if (newEventSet != null)
+                        {
+                            CreateEvents(newEventSet, rand);
+                        }
                     }
                 }
                 else
                 {
-                    foreach (Pair<EventPrefab, float> eventPrefab in eventSet.EventPrefabs)
+                    foreach ((EventPrefab eventPrefab, float commonness, float probability) in suitablePrefabs)
                     {
-                        var newEvent = eventPrefab.First.CreateInstance();
+                        if (rand.NextDouble() > probability) { continue; }
+                        var newEvent = eventPrefab.CreateInstance();
+                        if (newEvent == null) { continue; }
                         newEvent.Init(true);
-                        DebugConsole.Log("Initialized event " + newEvent.ToString());
+#if DEBUG
+                        DebugConsole.NewMessage($"Initialized event {newEvent}");
+#else
+                        DebugConsole.Log($"Initialized event {newEvent}");
+#endif
                         if (!selectedEvents.ContainsKey(eventSet))
                         {
                             selectedEvents.Add(eventSet, new List<Event>());
@@ -390,27 +496,36 @@ namespace Barotrauma
 
                     foreach (EventSet childEventSet in eventSet.ChildSets)
                     {
-                        CreateEvents(childEventSet);
+                        CreateEvents(childEventSet, rand);
                     }
                 }
             }
         }
 
-        private EventSet SelectRandomEvents(List<EventSet> eventSets)
+        private EventSet SelectRandomEvents(List<EventSet> eventSets, Random random = null)
         {
             if (level == null) { return null; }
-            MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
+            Random rand = random ?? new MTRandom(ToolBox.StringToInt(level.Seed));
 
             var allowedEventSets = 
-                eventSets.Where(es => level.Difficulty >= es.MinLevelDifficulty && level.Difficulty <= es.MaxLevelDifficulty && level.LevelData.Type == es.LevelType);
+                eventSets.Where(es => 
+                    level.Difficulty >= es.MinLevelDifficulty && level.Difficulty <= es.MaxLevelDifficulty && 
+                    level.LevelData.Type == es.LevelType && 
+                    (string.IsNullOrEmpty(es.BiomeIdentifier) || es.BiomeIdentifier.Equals(level.LevelData.Biome.Identifier, StringComparison.OrdinalIgnoreCase)));
+
+            Location location = (GameMain.GameSession?.GameMode as CampaignMode)?.Map?.CurrentLocation ?? level?.StartLocation;
+            LocationType locationType = location?.GetLocationType();
             
-            if (GameMain.GameSession?.GameMode is CampaignMode campaign && campaign.Map?.CurrentLocation?.Type != null)
+            if (location != null)
             {
-                allowedEventSets = allowedEventSets.Where(set => set.LocationTypeIdentifiers == null || set.LocationTypeIdentifiers.Any(identifier => string.Equals(identifier, campaign.Map.CurrentLocation.Type.Identifier, StringComparison.OrdinalIgnoreCase)));
+                allowedEventSets = allowedEventSets.Where(set => 
+                set.LocationTypeIdentifiers == null || 
+                set.LocationTypeIdentifiers.Any(identifier => string.Equals(identifier, locationType.Identifier, StringComparison.OrdinalIgnoreCase)));
             }
 
             float totalCommonness = allowedEventSets.Sum(e => e.GetCommonness(level));
-            float randomNumber = (float)rand.NextDouble() * totalCommonness;
+            float randomNumber = (float)rand.NextDouble();
+            randomNumber *= totalCommonness;
             foreach (EventSet eventSet in allowedEventSets)
             {
                 float commonness = eventSet.GetCommonness(level);
@@ -427,8 +542,8 @@ namespace Barotrauma
         private bool CanStartEventSet(EventSet eventSet)
         {
             ISpatialEntity refEntity = GetRefEntity();
-            float distFromStart = Vector2.Distance(refEntity.WorldPosition, level.StartPosition);
-            float distFromEnd = Vector2.Distance(refEntity.WorldPosition, level.EndPosition);
+            float distFromStart = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.StartExitPosition.ToPoint(), level.StartPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
+            float distFromEnd = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.EndExitPosition.ToPoint(), level.EndPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
 
             //don't create new events if within 50 meters of the start/end of the level
             if (!eventSet.AllowAtStart)
@@ -436,6 +551,14 @@ namespace Barotrauma
                 if (distanceTraveled <= 0.0f ||
                     distFromStart * Physics.DisplayToRealWorldRatio < 50.0f ||
                     distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
+                {
+                    return false;
+                }
+            }
+
+            if (eventSet.DelayWhenCrewAway)
+            {
+                if ((isCrewAway && crewAwayDuration < settings.FreezeDurationWhenCrewAway) || crewAwayResetTimer > 0.0f)
                 {
                     return false;
                 }
@@ -492,15 +615,31 @@ namespace Barotrauma
                 }
             }
 
+            if (IsCrewAway())
+            {
+                isCrewAway = true;
+                crewAwayResetTimer = CrewAwayResetDelay;
+                crewAwayDuration += deltaTime;
+            }
+            else if (crewAwayResetTimer > 0.0f)
+            {
+                isCrewAway = false;
+                crewAwayResetTimer -= deltaTime;
+            }
+            else
+            {
+                isCrewAway = false;
+                crewAwayDuration = 0.0f;
+                eventThreshold += settings.EventThresholdIncrease * deltaTime;
+                eventCoolDown -= deltaTime;
+            }
+
             calculateDistanceTraveledTimer -= deltaTime;
             if (calculateDistanceTraveledTimer <= 0.0f)
             {
                 distanceTraveled = CalculateDistanceTraveled();
                 calculateDistanceTraveledTimer = CalculateDistanceTraveledInterval;
             }
-
-            eventThreshold += settings.EventThresholdIncrease * deltaTime;
-            eventCoolDown -= deltaTime;
 
             if (currentIntensity < eventThreshold)
             {
@@ -525,7 +664,10 @@ namespace Barotrauma
                             {
                                 activeEvents.Add(ev);
                                 eventThreshold = settings.DefaultEventThreshold;
-                                eventCoolDown = settings.EventCooldown;
+                                if (eventSet.TriggerEventCooldown && selectedEvents[eventSet].Any(e => e.Prefab.TriggerEventCooldown))
+                                {
+                                    eventCoolDown = settings.EventCooldown;
+                                }
                             }
                         }
 
@@ -562,7 +704,7 @@ namespace Barotrauma
             int characterCount = 0;
             foreach (Character character in Character.CharacterList)
             {
-                if (character.IsDead || character.TeamID == Character.TeamType.FriendlyNPC) { continue; }
+                if (character.IsDead || character.TeamID == CharacterTeamType.FriendlyNPC) { continue; }
                 if (character.AIController is HumanAIController || character.IsRemotePlayer)
                 {
                     avgCrewHealth += character.Vitality / character.MaxVitality * (character.IsUnconscious ? 0.5f : 1.0f);
@@ -581,48 +723,103 @@ namespace Barotrauma
             // enemy amount --------------------------------------------------------
 
             enemyDanger = 0.0f;
+            monsterTotalStrength = 0;
             foreach (Character character in Character.CharacterList)
             {
-                if (character.IsDead || character.IsIncapacitated || !character.Enabled || character.IsPet || character.Params.CompareGroup("human")) { continue; }
+                if (character.IsIncapacitated || !character.Enabled || character.IsPet || character.Params.CompareGroup("human")) { continue; }
 
-                EnemyAIController enemyAI = character.AIController as EnemyAIController;
-                if (enemyAI == null) continue;
-                
+                if (!(character.AIController is EnemyAIController enemyAI)) { continue; }
+
+                if (!enemyAI.AIParams.StayInAbyss)
+                {
+                    // Ignore abyss monsters because they can stay active for quite great distances. They'll be taken into account when they target the sub.
+                    monsterTotalStrength += enemyAI.CombatStrength;
+                }
+
+                // Example combat strengths:
+                // Hammerheadspawn 1
+                // Moloch Pupa 1
+                // Terminal cell 20
+                // Leucocyte 40
+                // Husk 90
+                // Crawler 100
+                // Unarmored Mudraptor 140
+                // Spineling 150
+                // Tigerthresher 200
+                // Armored Mudraptor 210
+                // Watcher 400
+                // Golden Hammerhead 400
+                // Hammerhead 500
+                // Hammerhead Matriarch 550
+                // Bonethresher 600
+                // Moloch 1250
+                // Black Moloch 1500
+                // Endworm 10000
                 if (character.CurrentHull?.Submarine != null && 
                     (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine)))
                 {
-                    //crawler inside the sub adds 0.1f to enemy danger, mantis 0.25f
-                    enemyDanger += enemyAI.CombatStrength / 100.0f;
+                    // Enemy onboard -> Crawler inside the sub adds 0.2 to enemy danger, Mudraptor 0.42
+                    enemyDanger += enemyAI.CombatStrength / 500.0f;
                 }
                 else if (enemyAI.SelectedAiTarget?.Entity?.Submarine != null)
                 {
-                    //enemy outside and targeting the sub or something in it
-                    //moloch adds 0.24 to enemy danger, a crawler 0.02
-                    enemyDanger += enemyAI.CombatStrength / 1000.0f;
+                    // Enemy outside targeting the sub or something in it
+                    // -> One Crawler adds 0.02, a Mudraptor 0.042, a Hammerhead 0.1, and a Moloch 0.25.
+                    enemyDanger += enemyAI.CombatStrength / 5000.0f;
                 }
             }
+            // Add a portion of the total strength of active monsters to the enemy danger so that we don't spawn too many monsters around the sub.
+            // On top of the existing value, so if 10 crawlers are targeting the sub simultaneously from outside, the final value would be: 0.02 x 10 + 0.2 = 0.4.
+            // And if they get inside, we add 0.1 per crawler on that.
+            // So, in practice the danger per enemy that is attacking the sub is half of what it would be when the enemy is not targeting the sub.
+            // 10 Crawlers -> +0.2 (0.4 in total if all target the sub from outside).
+            // 5 Mudraptors -> +0.21 (0.42 in total, before they get inside).
+            // 3 Hammerheads -> +0.3 (0.6 in total, if they all target the sub).
+            // 2 Molochs -> +0.5 (1.0 in total, if both target the sub).
+            enemyDanger += monsterTotalStrength / 5000f;
             enemyDanger = MathHelper.Clamp(enemyDanger, 0.0f, 1.0f);
+
+            // The definitions above aim for that we never spawn more monsters that the player (and the performance) can handle.
+            // Some examples that result in the max intensity even when the creatures would just idle around.
+            // The values are theoretical, because in practice many of the monsters are targeting the sub, which will double the danger of those monster and effectively halve the max monster count.
+            // In practice we don't use the max intensity. For example on level 50 we use max intensity 50, which would mean that we'd halve the numbers below.
+            // There's no hard cap for the monster count, but if the amount of monsters is higher than this, we don't spawn more monsters from the events:
+            // 50 Crawlers (We shouldn't actually ever spawn that many. 12 is the max per event, but theoretically 25 crawlers would result in max intensity).
+            // 25 Tigerthreshers (Max 9 per event. 12 targeting the sub at the same time results in max intensity).
+            // 10 Hammerheads (Max 3 per event. 5 targeting the sub at the same time results in max intensity).
+            // 4 Molochs (Max 2 per event and 2 targeting the sub at the same time results in max intensity).
 
             // hull status (gaps, flooding, fire) --------------------------------------------------------
 
             float holeCount = 0.0f;
             float waterAmount = 0.0f;
-            float totalHullVolume = 0.0f;
+            float dryHullVolume = 0.0f;
             foreach (Hull hull in Hull.hullList)
             {
-                if (hull.Submarine == null || hull.Submarine.Info.Type != SubmarineType.Player) { continue; }
-                if (hull.RoomName != null && hull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (hull.Submarine == null || hull.Submarine.Info.Type != SubmarineType.Player) { continue; } 
+                if (GameMain.GameSession?.GameMode is PvPMode)
+                {
+                    if (hull.Submarine.TeamID != CharacterTeamType.Team1 && hull.Submarine.TeamID != CharacterTeamType.Team2) { continue; }
+                }
+                else
+                {
+                    if (hull.Submarine.TeamID != CharacterTeamType.Team1) { continue; }
+                }
+                fireAmount += hull.FireSources.Sum(fs => fs.Size.X);
+                if (hull.IsWetRoom) { continue; }
                 foreach (Gap gap in hull.ConnectedGaps)
                 {
-                    if (!gap.IsRoomToRoom) holeCount += gap.Open;
+                    if (!gap.IsRoomToRoom)
+                    {
+                        holeCount += gap.Open;
+                    }
                 }
                 waterAmount += hull.WaterVolume;
-                totalHullVolume += hull.Volume;
-                fireAmount += hull.FireSources.Sum(fs => fs.Size.X);
+                dryHullVolume += hull.Volume;
             }
-            if (totalHullVolume > 0)
+            if (dryHullVolume > 0)
             {
-                floodingAmount = waterAmount / totalHullVolume;
+                floodingAmount = waterAmount / dryHullVolume;
             }
 
             //hull integrity at 0.0 if there are 10 or more wide-open holes
@@ -667,7 +864,7 @@ namespace Barotrauma
         {
             if (level == null) { return 0.0f; }
             var refEntity = GetRefEntity();
-            Vector2 target = ConvertUnits.ToSimUnits(Level.Loaded.EndPosition);
+            Vector2 target = ConvertUnits.ToSimUnits(level.EndPosition);
             var steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(refEntity.WorldPosition), target);
             if (steeringPath.Unreachable || float.IsPositiveInfinity(totalPathLength))
             {
@@ -679,7 +876,6 @@ namespace Barotrauma
                 return MathHelper.Clamp(1.0f - steeringPath.TotalLength / totalPathLength, 0.0f, 1.0f);
             }
         }
-
 
         /// <summary>
         /// Finds all actions in a ScriptedEvent
@@ -748,6 +944,75 @@ namespace Barotrauma
             }
 #endif
             return refEntity;
+        }
+
+        private bool IsCrewAway()
+        {
+#if CLIENT
+            return Character.Controlled != null && IsCharacterAway(Character.Controlled);
+#else
+            int playerCount = 0;
+            int awayPlayerCount = 0;
+            foreach (Barotrauma.Networking.Client client in GameMain.Server.ConnectedClients)
+            {
+                if (client.Character == null || client.Character.IsDead || client.Character.IsIncapacitated) { continue; }
+                
+                playerCount++;
+                if (IsCharacterAway(client.Character)) { awayPlayerCount++; }
+            }
+            return playerCount > 0 && awayPlayerCount / (float)playerCount > 0.5f;
+#endif
+        }
+
+        private bool IsCharacterAway(Character character)
+        {
+            if (character.Submarine != null)
+            {
+                switch (character.Submarine.Info.Type)
+                {
+                    case SubmarineType.Player:
+                    case SubmarineType.Outpost:
+                    case SubmarineType.OutpostModule:
+                        return false;
+                    case SubmarineType.Wreck:
+                    case SubmarineType.BeaconStation:
+                        return true;
+                }
+            }
+
+            const int maxDist = 1000;
+
+            if (level != null)
+            {
+                foreach (var ruin in level.Ruins)
+                {
+                    Rectangle area = ruin.Area;
+                    area.Inflate(maxDist, maxDist);
+                    if (area.Contains(character.WorldPosition)) { return true; }
+                }
+                foreach (var cave in level.Caves)
+                {
+                    Rectangle area = cave.Area;
+                    area.Inflate(maxDist, maxDist);
+                    if (area.Contains(character.WorldPosition)) { return true; }
+                }
+            }
+
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                if (sub.Info.Type != SubmarineType.BeaconStation && sub.Info.Type != SubmarineType.Wreck) { continue; }
+                Rectangle worldBorders = new Rectangle(
+                    sub.Borders.X + (int)sub.WorldPosition.X - maxDist,
+                    sub.Borders.Y + (int)sub.WorldPosition.Y + maxDist,
+                    sub.Borders.Width + maxDist * 2,
+                    sub.Borders.Height + maxDist * 2);
+                if (Submarine.RectContains(worldBorders, character.WorldPosition))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

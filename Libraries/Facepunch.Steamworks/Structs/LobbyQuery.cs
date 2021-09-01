@@ -43,21 +43,44 @@ namespace Steamworks.Data
 		#region String key/value filter
 		internal Dictionary<string, string> stringFilters;
 
+
+		internal Dictionary<string, List<string>> stringFiltersExclude;
+
 		/// <summary>
 		/// Filter by specified key/value pair; string parameters
 		/// </summary>
-		public LobbyQuery WithKeyValue( string key, string value )
+		public LobbyQuery WithKeyValue(string key, string value)
 		{
-			if ( string.IsNullOrEmpty( key ) )
-				throw new System.ArgumentException( "Key string provided for LobbyQuery filter is null or empty", nameof( key ) );
+			if (string.IsNullOrEmpty(key))
+				throw new System.ArgumentException("Key string provided for LobbyQuery filter is null or empty", nameof(key));
 
-			if ( key.Length > SteamMatchmaking.MaxLobbyKeyLength )
-				throw new System.ArgumentException( $"Key length is longer than {SteamMatchmaking.MaxLobbyKeyLength}", nameof( key ) );
+			if (key.Length > SteamMatchmaking.MaxLobbyKeyLength)
+				throw new System.ArgumentException($"Key length is longer than {SteamMatchmaking.MaxLobbyKeyLength}", nameof(key));
 
-			if ( stringFilters == null )
+			if (stringFilters == null)
 				stringFilters = new Dictionary<string, string>();
 
-			stringFilters.Add( key, value );
+			stringFilters.Add(key, value);
+
+			return this;
+		}
+
+		public LobbyQuery WithoutKeyValue(string key, string value)
+		{
+			if (string.IsNullOrEmpty(key))
+				throw new System.ArgumentException("Key string provided for LobbyQuery filter is null or empty", nameof(key));
+
+			if (key.Length > SteamMatchmaking.MaxLobbyKeyLength)
+				throw new System.ArgumentException($"Key length is longer than {SteamMatchmaking.MaxLobbyKeyLength}", nameof(key));
+
+			if (stringFiltersExclude == null)
+				stringFiltersExclude = new Dictionary<string, List<string>>();
+
+			if (!stringFiltersExclude.ContainsKey(key))
+            {
+				stringFiltersExclude.Add(key, new List<string>());
+			}
+			stringFiltersExclude[key].Add(value);
 
 			return this;
 		}
@@ -184,20 +207,26 @@ namespace Steamworks.Data
 				SteamMatchmaking.Internal.AddRequestLobbyListFilterSlotsAvailable( slotsAvailable.Value );
 			}
 
-			if ( maxResults.HasValue )
+			if (stringFilters != null)
 			{
-				SteamMatchmaking.Internal.AddRequestLobbyListResultCountFilter( maxResults.Value );
-			}
-
-			if ( stringFilters != null )
-			{
-				foreach ( var k in stringFilters )
+				foreach (var k in stringFilters)
 				{
-					SteamMatchmaking.Internal.AddRequestLobbyListStringFilter( k.Key, k.Value, LobbyComparison.Equal );
+					SteamMatchmaking.Internal.AddRequestLobbyListStringFilter(k.Key, k.Value, LobbyComparison.Equal);
 				}
 			}
 
-			if( numericalFilters != null )
+			if (stringFiltersExclude != null)
+			{
+				foreach (var k in stringFiltersExclude)
+				{
+					foreach (var v in k.Value)
+					{
+						SteamMatchmaking.Internal.AddRequestLobbyListStringFilter(k.Key, v, LobbyComparison.NotEqual);
+					}
+				}
+			}
+
+			if ( numericalFilters != null )
 			{
 				foreach ( var n in numericalFilters )
 				{
@@ -212,6 +241,11 @@ namespace Steamworks.Data
 					SteamMatchmaking.Internal.AddRequestLobbyListNearValueFilter( v.Key, v.Value );
 				}
 			}
+
+			if (maxResults.HasValue)
+			{
+				SteamMatchmaking.Internal.AddRequestLobbyListResultCountFilter(maxResults.Value);
+			}
 		}
 
 		/// <summary>
@@ -219,6 +253,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public async Task<Lobby[]> RequestAsync()
 		{
+			await Task.Yield();
 			ApplyFilters();
 
 			LobbyMatchList_t? list = await SteamMatchmaking.Internal.RequestLobbyList();

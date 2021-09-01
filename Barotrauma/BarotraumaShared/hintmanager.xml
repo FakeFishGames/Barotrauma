@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hintmanager>
+
+  <divingsuitwarning/>
+  <onadjacenthull>
+    <highpressure/>
+    <highwaterpercentage/>
+  </onadjacenthull>
+  <onafflictiondisplayed/>
+  <onautopilotreachedoutpost/>
+  <onavailabletransition>
+    <progresstonextemptylocation/>
+    <returntopreviousemptylocation/>
+  </onavailabletransition>
+  <onballastflorainfected/>
+  <oncharacterkilled/>
+  <oncharacterunconscious/>
+  <ondivinggearoutofoxygen/>
+  <onhandcuffed/>
+  <onisinteracting>
+    <reactorwithextrarods/>
+  </onisinteracting>
+  <onreactoroutoffuel/>
+  <onrepairfailed/>
+  <onroundstarted>
+    <voipdisabled/>
+  </onroundstarted>
+  <onshootwithoutaiming tags="cuttingequipment,gun,weldingequipment"/>
+  <onshowcampaigninterface>
+    <map/>
+  </onshowcampaigninterface>
+  <onshowcommandinterface/>
+  <onshowhealthinterface/>
+  <onsonarspottedenemy/>
+  <onstartedcontrolling>
+    <job>
+      <assistant/>
+      <captain order="steer" orderoption="navigatetodestination"/>
+      <engineer order="operatereactor" orderoption="powerup"/>
+      <mechanic/>
+      <medicaldoctor/>
+      <securityofficer/>
+    </job>
+  </onstartedcontrolling>
+  <onstartedinteracting>
+    <brokenitem/>
+    <lootingisstealing/>
+    <turretperiscope/>
+    <item>
+      <deconstructor tags="deconstructor"/>
+      <fabricator tags="fabricator,medicalfabricator"/>
+      <gunloader tags="coilgunammosource,railgunammosource"/>
+      <navterminal tags="navterminal"/>
+      <reactor tags="reactor"/>
+    </item>
+  </onstartedinteracting>
+  <onstoleitem/>
+  <ontryopenstuckdoor/>
+  <onweldingdoor/>
+  
+  <reminder timebeforereminders="300" remindercooldown="120">
+    <characterchange/>
+    <commandinterface/>
+    <tabmenu/>
+    <toolbelt/>
+  </reminder>
+  
+</hintmanager>

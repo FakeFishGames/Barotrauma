@@ -7,44 +7,35 @@ namespace Barotrauma
 {
     class PathNode
     {
-        private readonly int wayPointID;
-
         public int state;
 
         public PathNode Parent;
 
-        private Vector2 position;
-
         public float F, G, H;
 
-        public List<PathNode> connections;
+        public readonly List<PathNode> connections = new List<PathNode>();
         public List<float> distances;
 
         public Vector2 TempPosition;
         public float TempDistance;
 
-        public WayPoint Waypoint { get; private set; }
-
-        public Vector2 Position
-        {
-            get { return position; }
-        }
+        public readonly WayPoint Waypoint;
+        public readonly Vector2 Position;
+        public readonly int WayPointID;
 
         public override string ToString()
         {
-            return $"PathNode {wayPointID}";
+            return $"PathNode {WayPointID}";
         }
 
         public PathNode(WayPoint wayPoint)
         {
-            this.Waypoint = wayPoint;
-            this.position = wayPoint.SimPosition;
-            wayPointID = wayPoint.ID;
-
-            connections = new List<PathNode>();
+            Waypoint = wayPoint;
+            Position = wayPoint.SimPosition;
+            WayPointID = Waypoint.ID;
         }
 
-        public static List<PathNode> GenerateNodes(List<WayPoint> wayPoints)
+        public static List<PathNode> GenerateNodes(List<WayPoint> wayPoints, bool removeOrphans)
         {
             var nodes = new Dictionary<int, PathNode>();
             foreach (WayPoint wayPoint in wayPoints)
@@ -72,13 +63,16 @@ namespace Barotrauma
             }
 
             var nodeList = nodes.Values.ToList();
-            nodeList.RemoveAll(n => n.connections.Count == 0);
+            if (removeOrphans)
+            {
+                nodeList.RemoveAll(n => n.connections.Count == 0);
+            }
             foreach (PathNode node in nodeList)
             {
                 node.distances = new List<float>();
                 for (int i = 0; i < node.connections.Count; i++)
                 {
-                    node.distances.Add(Vector2.Distance(node.position, node.connections[i].position));
+                    node.distances.Add(Vector2.Distance(node.Position, node.connections[i].Position));
                 }
             }
 
@@ -99,7 +93,7 @@ namespace Barotrauma
 
         public PathFinder(List<WayPoint> wayPoints, bool indoorsSteering = false)
         {
-            nodes = PathNode.GenerateNodes(wayPoints.FindAll(w => w.Submarine != null == indoorsSteering));
+            nodes = PathNode.GenerateNodes(wayPoints.FindAll(w => w.Submarine != null == indoorsSteering), removeOrphans: true);
 
             foreach (WayPoint wp in wayPoints)
             {
@@ -416,7 +410,10 @@ namespace Barotrauma
             if (end.state == 0 || end.Parent == null)
             {
 #if DEBUG
-                DebugConsole.NewMessage("Path not found. " + errorMsgStr, Color.Yellow);
+                if (errorMsgStr != null)
+                {
+                    DebugConsole.NewMessage("Path not found. " + errorMsgStr, Color.Yellow);
+                }
 #endif
                 return new SteeringPath(true);
             }

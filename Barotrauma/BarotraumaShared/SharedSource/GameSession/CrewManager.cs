@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,8 +26,12 @@ namespace Barotrauma
 
         public bool HasBots { get; set; }
 
-        public List<Pair<Order, float>> ActiveOrders { get; } = new List<Pair<Order, float>>();
+        public List<Pair<Order, float?>> ActiveOrders { get; } = new List<Pair<Order, float?>>();
         public bool IsSinglePlayer { get; private set; }
+
+        public ReadyCheck ActiveReadyCheck;
+
+        public XElement ActiveOrdersElement { get; set; }
 
         public CrewManager(bool isSinglePlayer)
         {
@@ -38,7 +43,7 @@ namespace Barotrauma
 
         partial void InitProjectSpecific();
 
-        public bool AddOrder(Order order, float fadeOutTime)
+        public bool AddOrder(Order order, float? fadeOutTime)
         {
             if (order.TargetEntity == null)
             {
@@ -46,40 +51,73 @@ namespace Barotrauma
                 return false;
             }
 
-            Pair<Order, float> existingOrder = ActiveOrders.Find(o => o.First.Prefab == order.Prefab && o.First.TargetEntity == order.TargetEntity);
+            // Ignore orders work a bit differently since the "unignore" order counters the "ignore" order
+            var isUnignoreOrder = order.Identifier == "unignorethis";
+            var orderPrefab = !isUnignoreOrder ? order.Prefab : Order.GetPrefab("ignorethis");
+            Pair<Order, float?> existingOrder = ActiveOrders.Find(o =>
+                    o.First.Prefab == orderPrefab && MatchesTarget(o.First.TargetEntity, order.TargetEntity) &&
+                    (o.First.TargetType != Order.OrderTargetType.WallSection || o.First.WallSectionIndex == order.WallSectionIndex));
+
             if (existingOrder != null)
             {
-                existingOrder.Second = fadeOutTime;
-                return false;
+                if (!isUnignoreOrder)
+                {
+                    existingOrder.Second = fadeOutTime;
+                    return false;
+                }
+                else
+                {
+                    ActiveOrders.Remove(existingOrder);
+                    return true;
+                }
             }
-            else
+            else if (!isUnignoreOrder)
             {
-                ActiveOrders.Add(new Pair<Order, float>(order, fadeOutTime));
+                ActiveOrders.Add(new Pair<Order, float?>(order, fadeOutTime));
+#if CLIENT
+                HintManager.OnActiveOrderAdded(order);
+#endif
                 return true;
             }
-        }
 
-        public void RemoveOrder(Order order)
-        {
-            ActiveOrders.RemoveAll(o => o.First == order);
+            static bool MatchesTarget(Entity existingTarget, Entity newTarget)
+            {
+                if (existingTarget == newTarget) { return true; }
+                if (existingTarget is Hull existingHullTarget && newTarget is Hull newHullTarget)
+                {
+                    return existingHullTarget.linkedTo.Contains(newHullTarget);
+                }
+                return false;
+            }
+
+            return false;
         }
 
         public void AddCharacterElements(XElement element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (XElement characterElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("character", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (!characterElement.Name.ToString().Equals("character", StringComparison.OrdinalIgnoreCase)) { continue; }
 
-                CharacterInfo characterInfo = new CharacterInfo(subElement);
+                CharacterInfo characterInfo = new CharacterInfo(characterElement);
 #if CLIENT
-                if (subElement.GetAttributeBool("lastcontrolled", false)) { characterInfo.LastControlled = true; }
+                if (characterElement.GetAttributeBool("lastcontrolled", false)) { characterInfo.LastControlled = true; }
 #endif
                 characterInfos.Add(characterInfo);
-                foreach (XElement invElement in subElement.Elements())
+                foreach (XElement subElement in characterElement.Elements())
                 {
-                    if (!invElement.Name.ToString().Equals("inventory", StringComparison.OrdinalIgnoreCase)) { continue; }
-                    characterInfo.InventoryData = invElement;
-                    break;
+                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    {
+                        case "inventory":
+                            characterInfo.InventoryData = subElement;
+                            break;
+                        case "health":
+                            characterInfo.HealthData = subElement;
+                            break;
+                        case "orders":
+                            characterInfo.OrderData = subElement;
+                            break;
+                    }
                 }
             }
         }
@@ -116,8 +154,22 @@ namespace Barotrauma
             }
 #if CLIENT
             AddCharacterToCrewList(character);
-            AddCurrentOrderIcon(character, character.CurrentOrder, character.CurrentOrderOption);
+            if (character.CurrentOrders != null)
+            {
+                foreach (var order in character.CurrentOrders)
+                {
+                    AddCurrentOrderIcon(character, order);
+                }
+            }
 #endif
+            if (character.AIController is HumanAIController humanAI)
+            {
+                var idleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
+                if (idleObjective != null)
+                {
+                    idleObjective.Behavior = character.Info.Job.Prefab.IdleBehavior;
+                }
+            }            
         }
 
         public void AddCharacterInfo(CharacterInfo characterInfo)
@@ -138,12 +190,12 @@ namespace Barotrauma
             List<WayPoint> spawnWaypoints = null;
             List<WayPoint> mainSubWaypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub).ToList();
 
-            if (Level.IsLoadedOutpost)
+            if (Level.IsLoadedOutpost && Submarine.Loaded.Any(s => s.Info.Type == SubmarineType.Outpost && (s.Info.OutpostGenerationParams?.SpawnCrewInsideOutpost ?? false)))
             {
                 spawnWaypoints = WayPoint.WayPointList.FindAll(wp => 
                     wp.SpawnType == SpawnType.Human &&
                     wp.Submarine == Level.Loaded.StartOutpost && 
-                    wp.CurrentHull?.OutpostModuleTags != null && 
+                    wp.CurrentHull != null &&
                     wp.CurrentHull.OutpostModuleTags.Contains("airlock"));
                 while (spawnWaypoints.Count > characterInfos.Count)
                 {
@@ -165,7 +217,7 @@ namespace Barotrauma
             for (int i = 0; i < spawnWaypoints.Count; i++)
             {
                 var info = characterInfos[i];
-                info.TeamID = Character.TeamType.Team1;
+                info.TeamID = CharacterTeamType.Team1;
                 Character character = Character.Create(info, spawnWaypoints[i].WorldPosition, info.Name);
                 if (character.Info != null)
                 {
@@ -175,7 +227,7 @@ namespace Barotrauma
                     }
                     if (character.Info.InventoryData != null)
                     {
-                        character.Info.SpawnInventoryItems(character.Inventory, character.Info.InventoryData);
+                        character.SpawnInventoryItems(character.Inventory, character.Info.InventoryData);
                     }
                     else if (!character.Info.StartItemsGiven)
                     {
@@ -183,10 +235,14 @@ namespace Barotrauma
                     }
                     if (character.Info.HealthData != null)
                     {
-                        character.Info.ApplyHealthData(character, character.Info.HealthData);
+                        CharacterInfo.ApplyHealthData(character, character.Info.HealthData);
                     }
                     character.GiveIdCardTags(spawnWaypoints[i]);
                     character.Info.StartItemsGiven = true;
+                    if (character.Info.OrderData != null)
+                    {
+                        character.Info.ApplyOrderData();
+                    }
                 }
                 
                 AddCharacter(character);
@@ -199,21 +255,50 @@ namespace Barotrauma
             conversationTimer = IsSinglePlayer ? Rand.Range(5.0f, 10.0f) : Rand.Range(45.0f, 60.0f);
         }
 
+        public void RenameCharacter(CharacterInfo characterInfo, string newName)
+        {
+            int identifier = characterInfo.GetIdentifierUsingOriginalName();
+            var match = characterInfos.FirstOrDefault(ci => ci.GetIdentifierUsingOriginalName() == identifier);
+            if (match == null)
+            {
+                DebugConsole.ThrowError($"Tried to rename an invalid crew member ({identifier})");
+                return;
+            }
+            match.Rename(newName);
+            RenameCharacterProjSpecific(match);
+        }
+
+        partial void RenameCharacterProjSpecific(CharacterInfo characterInfo);
+
         public void FireCharacter(CharacterInfo characterInfo)
         {
             RemoveCharacterInfo(characterInfo);
         }
 
+        public void ClearCurrentOrders()
+        {
+            foreach (var characterInfo in characterInfos)
+            {
+                characterInfo?.ClearCurrentOrders();
+            }
+        }
+
         public void Update(float deltaTime)
         {
-            foreach (Pair<Order, float> order in ActiveOrders)
+            foreach (Pair<Order, float?> order in ActiveOrders)
             {
-                order.Second -= deltaTime;
+                if (order.Second.HasValue) { order.Second -= deltaTime; }
             }
-            ActiveOrders.RemoveAll(o => o.Second <= 0.0f);
+            ActiveOrders.RemoveAll(o => (o.Second.HasValue && o.Second <= 0.0f) ||
+                (o.First.TargetEntity != null && o.First.TargetEntity.Removed));
 
             UpdateConversations(deltaTime);
             UpdateProjectSpecific(deltaTime);
+            ActiveReadyCheck?.Update(deltaTime);
+            if (ActiveReadyCheck != null && ActiveReadyCheck.IsFinished)
+            {
+                ActiveReadyCheck = null;
+            }
         }
 
         #region Dialog
@@ -228,6 +313,7 @@ namespace Barotrauma
 
         private void UpdateConversations(float deltaTime)
         {
+            if (GameMain.GameSession?.GameMode?.Preset == GameModePreset.TestMode) { return; }
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.ServerSettings.DisableBotConversations) { return; }
 
             conversationTimer -= deltaTime;
@@ -245,8 +331,8 @@ namespace Barotrauma
             {
                 foreach (Character npc in Character.CharacterList)
                 {
-                    if (npc.TeamID != Character.TeamType.FriendlyNPC || npc.CurrentHull == null || npc.IsIncapacitated) { continue; }   
-                    if (npc.AIController?.ObjectiveManager != null && (npc.AIController.ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>() || npc.AIController.ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>()))
+                    if ((npc.TeamID != CharacterTeamType.FriendlyNPC && npc.TeamID != CharacterTeamType.None) || npc.CurrentHull == null || npc.IsIncapacitated) { continue; }   
+                    if (npc.AIController is HumanAIController humanAI && (humanAI.ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>() || humanAI.ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>()))
                     {
                         continue;
                     }
@@ -256,19 +342,35 @@ namespace Barotrauma
                         {
                             List<Character> availableSpeakers = new List<Character>() { npc, player };
                             List<string> dialogFlags = new List<string>() { "OutpostNPC", "EnterOutpost" };
-                            if (GameMain.GameSession?.GameMode is CampaignMode campaignMode && campaignMode.Map?.CurrentLocation?.Reputation != null)
+                            if (GameMain.GameSession?.GameMode is CampaignMode campaignMode)
                             {
-                                float normalizedReputation = MathUtils.InverseLerp(
-                                    campaignMode.Map.CurrentLocation.Reputation.MinReputation,
-                                    campaignMode.Map.CurrentLocation.Reputation.MaxReputation,
-                                    campaignMode.Map.CurrentLocation.Reputation.Value);
-                                if (normalizedReputation < 0.2f)
+                                if (campaignMode.Map?.CurrentLocation?.Type?.Identifier.Equals("abandoned", StringComparison.OrdinalIgnoreCase) ?? false)
                                 {
-                                    dialogFlags.Add("LowReputation");
+                                    if (npc.TeamID == CharacterTeamType.None)
+                                    {
+                                        dialogFlags.Remove("OutpostNPC");
+                                        dialogFlags.Add("Bandit");
+                                    }
+                                    else if (npc.TeamID == CharacterTeamType.FriendlyNPC)
+                                    {
+                                        dialogFlags.Remove("OutpostNPC");
+                                        dialogFlags.Add("Hostage");
+                                    }
                                 }
-                                else if (normalizedReputation > 0.8f)
+                                else if (campaignMode.Map?.CurrentLocation?.Reputation != null)
                                 {
-                                    dialogFlags.Add("HighReputation");
+                                    float normalizedReputation = MathUtils.InverseLerp(
+                                        campaignMode.Map.CurrentLocation.Reputation.MinReputation,
+                                        campaignMode.Map.CurrentLocation.Reputation.MaxReputation,
+                                        campaignMode.Map.CurrentLocation.Reputation.Value);
+                                    if (normalizedReputation < 0.2f)
+                                    {
+                                        dialogFlags.Add("LowReputation");
+                                    }
+                                    else if (normalizedReputation > 0.8f)
+                                    {
+                                        dialogFlags.Add("HighReputation");
+                                    }
                                 }
                             }
                             pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers, dialogFlags));
@@ -308,6 +410,88 @@ namespace Barotrauma
 
 #endregion
 
+        public static Character GetCharacterForQuickAssignment(Order order, Character controlledCharacter, IEnumerable<Character> characters, bool includeSelf = false)
+        {
+            bool isControlledCharacterNull = controlledCharacter == null;
+#if !DEBUG
+            if (isControlledCharacterNull) { return null; }
+#endif
+            if (order.Category == OrderCategory.Operate && HumanAIController.IsItemTargetedBySomeone(order.TargetItemComponent, controlledCharacter != null ? controlledCharacter.TeamID : CharacterTeamType.Team1, out Character operatingCharacter) &&
+                (isControlledCharacterNull || operatingCharacter.CanHearCharacter(controlledCharacter)))
+            {
+                return operatingCharacter;
+            }
+            return GetCharactersSortedForOrder(order, characters, controlledCharacter, includeSelf).FirstOrDefault(c => isControlledCharacterNull || c.CanHearCharacter(controlledCharacter)) ?? controlledCharacter;
+        }
+
+        public static IEnumerable<Character> GetCharactersSortedForOrder(Order order, IEnumerable<Character> characters, Character controlledCharacter, bool includeSelf, IEnumerable<Character> extraCharacters = null)
+        {
+            var filteredCharacters = characters.Where(c => controlledCharacter == null || ((includeSelf || c != controlledCharacter) && c.TeamID == controlledCharacter.TeamID));
+            if (extraCharacters != null)
+            {
+                filteredCharacters = filteredCharacters.Union(extraCharacters);
+            }
+            return filteredCharacters
+                    // 1. Prioritize those who are on the same submarine than the controlled character
+                    .OrderByDescending(c => Character.Controlled == null || c.Submarine == Character.Controlled.Submarine)
+                    // 2. Prioritize those who have been given the same maintenance or operate order as now issued
+                    .ThenByDescending(c => c.CurrentOrders.Any(o =>
+                        o.Order != null && o.Order.Identifier == order.Identifier &&
+                        (order.Category == OrderCategory.Maintenance || order.Category == OrderCategory.Operate)))
+                    // 3. Prioritize those with the appropriate job for the order
+                    .ThenByDescending(c => order.HasAppropriateJob(c))
+                    // 4. Prioritize bots over player controlled characters
+                    .ThenByDescending(c => c.IsBot)
+                    // 5. Use the priority value of the current objective
+                    .ThenBy(c => c.AIController is HumanAIController humanAI ? humanAI.ObjectiveManager.CurrentObjective?.Priority : 0)
+                    // 6. Prioritize those with the best skill for the order
+                    .ThenByDescending(c => c.GetSkillLevel(order.AppropriateSkill));
+        }
+
         partial void UpdateProjectSpecific(float deltaTime);
+
+        private void SaveActiveOrders(XElement parentElement)
+        {
+            ActiveOrdersElement = new XElement("activeorders");
+            // Only save orders with no fade out time (e.g. ignore orders)
+            var ordersToSave = new List<OrderInfo>();
+            foreach (var activeOrder in ActiveOrders)
+            {
+                var order = activeOrder?.First;
+                if (order == null || activeOrder.Second.HasValue) { continue; }
+                ordersToSave.Add(new OrderInfo(order, null, CharacterInfo.HighestManualOrderPriority));
+            }
+            CharacterInfo.SaveOrders(ActiveOrdersElement, ordersToSave.ToArray());
+            parentElement?.Add(ActiveOrdersElement);
+        }
+
+        public void LoadActiveOrders()
+        {
+            if (ActiveOrdersElement == null) { return; }
+            foreach (var orderInfo in CharacterInfo.LoadOrders(ActiveOrdersElement))
+            {
+                IIgnorable ignoreTarget = null;
+                if (orderInfo.Order.IsIgnoreOrder)
+                {
+                    switch (orderInfo.Order.TargetType)
+                    {
+                        case Order.OrderTargetType.Entity:
+                            ignoreTarget = orderInfo.Order.TargetEntity as IIgnorable;
+                            break;
+                        case Order.OrderTargetType.WallSection when orderInfo.Order.TargetEntity is Structure s && orderInfo.Order.WallSectionIndex.HasValue:
+                            ignoreTarget = s.GetSection(orderInfo.Order.WallSectionIndex.Value) as IIgnorable;
+                            break;
+                        default:
+                            DebugConsole.ThrowError("Error loading an ignore order - can't find a proper ignore target");
+                            continue;
+                    }
+                }
+                if (ignoreTarget != null)
+                {
+                    ignoreTarget.OrderedToBeIgnored = true;
+                }
+                AddOrder(orderInfo.Order, null);
+            }
+        }
     }
 }

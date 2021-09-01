@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveFindSafety : AIObjective
     {
-        public override string DebugTag => "find safety";
+        public override string Identifier { get; set; } = "find safety";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         public override bool IgnoreUnsafeHulls => true;
@@ -32,12 +32,12 @@ namespace Barotrauma
 
         public AIObjectiveFindSafety(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
 
-        protected override bool Check() => false;
+        protected override bool CheckObjectiveSpecific() => false;
         public override bool CanBeCompleted => true;
 
         private bool resetPriority;
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             if (!IsAllowed)
             {
@@ -46,19 +46,27 @@ namespace Barotrauma
             }
             if (character.CurrentHull == null)
             {
-                Priority = objectiveManager.CurrentOrder is AIObjectiveGoTo && HumanAIController.HasDivingSuit(character) ? 0 : 100;
+                Priority = (objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() || objectiveManager.HasActiveObjective<AIObjectiveCombat>()) && HumanAIController.HasDivingSuit(character) ? 0 : 100;
             }
             else
             {
-                if (HumanAIController.NeedsDivingGear(character.CurrentHull, out _) && !HumanAIController.HasDivingGear(character))
+                if (HumanAIController.NeedsDivingGear(character.CurrentHull, out bool needsSuit) && 
+                    (needsSuit ? 
+                    !HumanAIController.HasDivingSuit(character, conditionPercentage: AIObjectiveFindDivingGear.MIN_OXYGEN) : 
+                    !HumanAIController.HasDivingGear(character, conditionPercentage: AIObjectiveFindDivingGear.MIN_OXYGEN)))
                 {
                     Priority = 100;
+                }
+                else if (objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() && character.Submarine != null && !HumanAIController.IsOnFriendlyTeam(character.TeamID, character.Submarine.TeamID))
+                {
+                    // Ordered to follow/hold position inside a hostile sub -> ignore find safety unless we need to find a diving gear
+                    Priority = 0;
                 }
                 Priority = MathHelper.Clamp(Priority, 0, 100);
                 if (divingGearObjective != null && !divingGearObjective.IsCompleted && divingGearObjective.CanBeCompleted)
                 {
                     // Boost the priority while seeking the diving gear
-                    Priority = Math.Max(Priority, Math.Min(AIObjectiveManager.OrderPriority + 20, 100));
+                    Priority = Math.Max(Priority, Math.Min(AIObjectiveManager.HighestOrderPriority + 20, 100));
                 }
             }
             return Priority;
@@ -168,7 +176,7 @@ namespace Barotrauma
                 {
                     searchHullTimer = SearchHullInterval * Rand.Range(0.9f, 1.1f);
                     previousSafeHull = currentSafeHull;
-                    currentSafeHull = FindBestHull(allowChangingTheSubmarine: character.TeamID != Character.TeamType.FriendlyNPC);
+                    currentSafeHull = FindBestHull(allowChangingTheSubmarine: character.TeamID != CharacterTeamType.FriendlyNPC);
                     cannotFindSafeHull = currentSafeHull == null || HumanAIController.NeedsDivingGear(currentSafeHull, out _);
                     if (currentSafeHull == null)
                     {
@@ -359,7 +367,7 @@ namespace Barotrauma
                     hullSafety *= distanceFactor;
                     // If the target is not inside a friendly submarine, considerably reduce the hull safety.
                     // Intentionally exclude wrecks from this check
-                    if (hull.Submarine.TeamID != character.TeamID && hull.Submarine.TeamID != Character.TeamType.FriendlyNPC)
+                    if (hull.Submarine.TeamID != character.TeamID && hull.Submarine.TeamID != CharacterTeamType.FriendlyNPC)
                     {
                         hullSafety /= 10;
                     }

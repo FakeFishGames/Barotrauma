@@ -12,9 +12,10 @@ namespace Barotrauma.Networking
     {
         protected class ServerContentPackage
         {
-            public string Name;
-            public string Hash;
-            public UInt64 WorkshopId;
+            public readonly string Name;
+            public readonly string Hash;
+            public readonly UInt64 WorkshopId;
+            public readonly DateTime InstallTime;
 
             public ContentPackage RegularPackage
             {
@@ -32,21 +33,22 @@ namespace Barotrauma.Networking
                 }
             }
 
-            public ServerContentPackage(string name, string hash, UInt64 workshopId)
+            public ServerContentPackage(string name, string hash, UInt64 workshopId, DateTime installTime)
             {
                 Name = name;
                 Hash = hash;
                 WorkshopId = workshopId;
+                InstallTime = installTime;
             }
         }
 
         protected string GetPackageStr(ContentPackage contentPackage)
         {
-            return "\"" + contentPackage.Name + "\" (hash " + contentPackage.MD5hash.ShortHash + ")";
+            return $"\"{contentPackage.Name}\" (hash {contentPackage.MD5hash.ShortHash})";
         }
         protected string GetPackageStr(ServerContentPackage contentPackage)
         {
-            return "\"" + contentPackage.Name + "\" (hash " + Md5Hash.GetShortHash(contentPackage.Hash) + ")";
+            return $"\"{contentPackage.Name}\" (hash {Md5Hash.GetShortHash(contentPackage.Hash)})";
         }
 
         public delegate void MessageCallback(IReadMessage message);
@@ -129,7 +131,10 @@ namespace Barotrauma.Networking
                         string name = inc.ReadString();
                         string hash = inc.ReadString();
                         UInt64 workshopId = inc.ReadUInt64();
-                        var pkg = new ServerContentPackage(name, hash, workshopId);
+                        UInt32 installTimeDiffSeconds = inc.ReadUInt32();
+                        DateTime installTime = DateTime.UtcNow + TimeSpan.FromSeconds(installTimeDiffSeconds);
+
+                        var pkg = new ServerContentPackage(name, hash, workshopId, installTime);
                         if (pkg.CorePackage != null)
                         {
                             corePackage = pkg;
@@ -147,13 +152,36 @@ namespace Barotrauma.Networking
                     if (missingPackages.Count > 0)
                     {
                         var nonDownloadable = missingPackages.Where(p => p.WorkshopId == 0);
+                        var mismatchedButDownloaded = missingPackages.Where(remote =>
+                        {
+                            return ContentPackage.AllPackages.Any(local =>
+                                local.SteamWorkshopId != 0 && /* is a Workshop item */
+                                remote.WorkshopId == local.SteamWorkshopId && /* ids match */
+                                remote.InstallTime < local.InstallTime/* remote is older than local */);
+                        });
 
-                        if (nonDownloadable.Any())
+                        if (mismatchedButDownloaded.Any())
+                        {
+                            string disconnectMsg;
+                            if (mismatchedButDownloaded.Count() == 1)
+                            {
+                                disconnectMsg = $"DisconnectMessage.MismatchedWorkshopMod~[incompatiblecontentpackage]={GetPackageStr(mismatchedButDownloaded.First())}";
+                            }
+                            else
+                            {
+                                List<string> packageStrs = new List<string>();
+                                mismatchedButDownloaded.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
+                                disconnectMsg = $"DisconnectMessage.MismatchedWorkshopMods~[incompatiblecontentpackages]={string.Join(", ", packageStrs)}";
+                            }
+                            Close(disconnectMsg, disableReconnect: true);
+                            OnDisconnectMessageReceived?.Invoke(DisconnectReason.MissingContentPackage + "/" + disconnectMsg);
+                        }
+                        else if (nonDownloadable.Any())
                         {
                             string disconnectMsg;
                             if (nonDownloadable.Count() == 1)
                             {
-                                disconnectMsg = $"DisconnectMessage.MissingContentPackage~[missingcontentpackage]={GetPackageStr(missingPackages[0])}";
+                                disconnectMsg = $"DisconnectMessage.MissingContentPackage~[missingcontentpackage]={GetPackageStr(nonDownloadable.First())}";
                             }
                             else
                             {
@@ -168,7 +196,19 @@ namespace Barotrauma.Networking
                         {
                             Close(disableReconnect: true);
 
-                            string missingModNames = "\n- " + string.Join("\n\n- ", missingPackages.Select(p => GetPackageStr(p))) + "\n\n";
+                            string missingModNames = "\n";
+                            int displayedModCount = 0;
+                            foreach (ServerContentPackage missingPackage in missingPackages)
+                            {
+                                missingModNames += "\n- " + GetPackageStr(missingPackage);
+                                displayedModCount++;
+                                if (GUI.Font.MeasureString(missingModNames).Y > GameMain.GraphicsHeight * 0.5f)
+                                {
+                                    missingModNames += "\n\n" + TextManager.GetWithVariable("workshopitemdownloadprompttruncated", "[number]", (missingPackages.Count - displayedModCount).ToString());
+                                    break;
+                                }
+                            }
+                            missingModNames += "\n\n";
 
                             var msgBox = new GUIMessageBox(
                                 TextManager.Get("WorkshopItemDownloadTitle"),
@@ -177,7 +217,9 @@ namespace Barotrauma.Networking
                             msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
                             {
                                 GameMain.ServerListScreen.Select();
-                                GameMain.ServerListScreen.DownloadWorkshopItems(missingPackages.Select(p => p.WorkshopId), serverName, ServerConnection.EndPointString);
+                                IEnumerable<ServerListScreen.PendingWorkshopDownload> downloads =
+                                    missingPackages.Select(p => new ServerListScreen.PendingWorkshopDownload(p.Hash, p.WorkshopId));
+                                GameMain.ServerListScreen.DownloadWorkshopItems(downloads, serverName, ServerConnection.EndPointString);
                                 return true;
                             };
                             msgBox.Buttons[0].OnClicked += msgBox.Close;
@@ -189,6 +231,7 @@ namespace Barotrauma.Networking
 
                     if (!contentPackageOrderReceived)
                     {
+                        GameMain.Config.BackUpModOrder();
                         GameMain.Config.SwapPackages(corePackage.CorePackage, regularPackages.Select(p => p.RegularPackage).ToList());
                         contentPackageOrderReceived = true;
                     }

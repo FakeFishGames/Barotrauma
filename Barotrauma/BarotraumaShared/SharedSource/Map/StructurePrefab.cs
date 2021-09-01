@@ -250,17 +250,21 @@ namespace Barotrauma
             var parentType = element.Parent?.GetAttributeString("prefabtype", "") ?? string.Empty;
             
             string nameIdentifier = element.GetAttributeString("nameidentifier", "");
+
+            //only used if the item doesn't have a name/description defined in the currently selected language
+            string fallbackNameIdentifier = element.GetAttributeString("fallbacknameidentifier", "");
+
             string descriptionIdentifier = element.GetAttributeString("descriptionidentifier", "");
 
             if (string.IsNullOrEmpty(sp.originalName))
             {
                 if (string.IsNullOrEmpty(nameIdentifier))
                 {
-                    sp.name = TextManager.Get("EntityName." + sp.identifier, true) ?? string.Empty;
+                    sp.name = TextManager.Get("EntityName." + sp.identifier, true, "EntityName." + fallbackNameIdentifier) ?? string.Empty;
                 }
                 else
                 {
-                    sp.name = TextManager.Get("EntityName." + nameIdentifier, true) ?? string.Empty;
+                    sp.name = TextManager.Get("EntityName." + nameIdentifier, true, "EntityName." + fallbackNameIdentifier) ?? string.Empty;
                 }
             }
             
@@ -360,7 +364,8 @@ namespace Barotrauma
                 }
             }
 
-            if (!Enum.TryParse(element.GetAttributeString("category", "Structure"), true, out MapEntityCategory category))
+            string categoryStr = element.GetAttributeString("category", "Structure");
+            if (!Enum.TryParse(categoryStr, true, out MapEntityCategory category))
             {
                 category = MapEntityCategory.Structure; 
             }
@@ -417,6 +422,13 @@ namespace Barotrauma
                     sp.size.X = element.GetAttributeFloat("width", 0.0f);
                     sp.size.Y = element.GetAttributeFloat("height", 0.0f);
                 }
+            }
+
+            //backwards compatibility
+            if (categoryStr.Equals("Thalamus", StringComparison.OrdinalIgnoreCase))
+            {
+                sp.Category = MapEntityCategory.Wrecked;
+                sp.Subcategory = "Thalamus";
             }
 
             if (string.IsNullOrEmpty(sp.identifier))

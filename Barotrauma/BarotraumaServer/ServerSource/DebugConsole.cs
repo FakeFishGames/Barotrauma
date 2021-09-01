@@ -73,17 +73,27 @@ namespace Barotrauma
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            int consoleWidth = Console.WindowWidth;
-            if (consoleWidth < 5) consoleWidth = 5;
-            int consoleHeight = Console.WindowHeight;
-            if (consoleHeight < 5) consoleHeight = 5;
+            int consoleWidth = 0;
+            int consoleHeight = 0;
+
+            if(!Console.IsOutputRedirected)
+            {
+                consoleWidth = Console.WindowWidth;
+                if (consoleWidth < 5) consoleWidth = 5;
+                consoleHeight = Console.WindowHeight;
+                if (consoleHeight < 5) consoleHeight = 5;
+            }
 
             //dequeue messages
             lock (queuedMessages)
             {
                 if (queuedMessages.Count > 0)
                 {
-                    Console.CursorLeft = 0;
+
+                    if (!Console.IsOutputRedirected)
+                    {
+                        Console.CursorLeft = 0;
+                    }
                     while (queuedMessages.Count > 0)
                     {
                         ColoredText msg = queuedMessages.Dequeue();
@@ -102,15 +112,21 @@ namespace Barotrauma
 
                         if (msg.IsCommand) commandMemory.Add(msgTxt);
 
-                        int paddingLen = consoleWidth - (msg.Text.Length % consoleWidth)-1;
-                        msgTxt += new string(' ', paddingLen>0 ? paddingLen : 0);
+                        if(!Console.IsOutputRedirected)
+                        {
+                            int paddingLen = consoleWidth - (msg.Text.Length % consoleWidth) - 1;
+                            msgTxt += new string(' ', paddingLen > 0 ? paddingLen : 0);
 
-                        Console.ForegroundColor = XnaToConsoleColor.Convert(msg.Color);
+                            Console.ForegroundColor = XnaToConsoleColor.Convert(msg.Color);
+                        }
                         Console.WriteLine(msgTxt);
 
                         if (sw.ElapsedMilliseconds >= maxTime) { break; }
                     }
-                    RewriteInputToCommandLine(input);
+                    if(!Console.IsOutputRedirected)
+                    {
+                        RewriteInputToCommandLine(input);
+                    }
                 }
                 if (Messages.Count > MaxMessages)
                 {
@@ -118,73 +134,78 @@ namespace Barotrauma
                 }
             }
 
-            //read player input
-            bool rewriteInput = false;
-            while (Console.KeyAvailable)
+            // No good way to display input when console output is redirected, and can't read from redirected input using KeyAvailable.
+            if(!Console.IsOutputRedirected && !Console.IsInputRedirected)
             {
-                if (sw.ElapsedMilliseconds >= maxTime)
+                //read player input
+                bool rewriteInput = false;
+                while (Console.KeyAvailable)
                 {
-                    rewriteInput = false;
-                    break;
-                }
-                rewriteInput = true;
-                ConsoleKeyInfo key = Console.ReadKey(true);
-                switch (key.Key)
-                {
-                    case ConsoleKey.Enter:
-                        lock (QueuedCommands)
-                        {
-                            QueuedCommands.Add(input);
-                        }
-                        input = "";
-                        memoryIndex = -1;
+                    if (sw.ElapsedMilliseconds >= maxTime)
+                    {
+                        rewriteInput = false;
                         break;
-                    case ConsoleKey.Backspace:
-                        if (input.Length > 0) input = input.Substring(0, input.Length - 1);
-                        memoryIndex = -1;
-                        break;
-                    case ConsoleKey.LeftArrow:
-                        input = AutoComplete(input, -1);
-                        break;
-                    case ConsoleKey.RightArrow:
-                        input = AutoComplete(input, 1);
-                        break;
-                    case ConsoleKey.UpArrow:
-                        memoryIndex--;
-                        if (memoryIndex < 0) memoryIndex = commandMemory.Count - 1;
-                        if (memoryIndex >= commandMemory.Count) memoryIndex = commandMemory.Count - 1;
-                        if (memoryIndex >= 0)
-                        {
-                            input = commandMemory[memoryIndex];
-                        }
-                        break;
-                    case ConsoleKey.DownArrow:
-                        memoryIndex++;
-                        if (memoryIndex < 0) memoryIndex = 0;
-                        if (memoryIndex >= commandMemory.Count) memoryIndex = 0;
-                        if (commandMemory.Count>0)
-                        {
-                            input = commandMemory[memoryIndex];
-                        }
-                        break;
-                    case ConsoleKey.Tab:
-                        if (input.Length > 0)
-                        {
-                            input = AutoComplete(input, 0);
+                    }
+                    rewriteInput = true;
+                    ConsoleKeyInfo key = Console.ReadKey(true);
+                    switch (key.Key)
+                    {
+                        case ConsoleKey.Enter:
+                            lock (QueuedCommands)
+                            {
+                                QueuedCommands.Add(input);
+                            }
+                            input = "";
                             memoryIndex = -1;
-                        }
-                        break;
-                    default:
-                        if (key.KeyChar != 0)
-                        {
-                            input += key.KeyChar;
+                            break;
+                        case ConsoleKey.Backspace:
+                            if (input.Length > 0) input = input.Substring(0, input.Length - 1);
+                            ResetAutoComplete();
                             memoryIndex = -1;
-                        }
-                        ResetAutoComplete();
-                        break;
+                            break;
+                        case ConsoleKey.LeftArrow:
+                            input = AutoComplete(input, -1);
+                            break;
+                        case ConsoleKey.RightArrow:
+                            input = AutoComplete(input, 1);
+                            break;
+                        case ConsoleKey.UpArrow:
+                            memoryIndex--;
+                            if (memoryIndex < 0) memoryIndex = commandMemory.Count - 1;
+                            if (memoryIndex >= commandMemory.Count) memoryIndex = commandMemory.Count - 1;
+                            if (memoryIndex >= 0)
+                            {
+                                input = commandMemory[memoryIndex];
+                            }
+                            break;
+                        case ConsoleKey.DownArrow:
+                            memoryIndex++;
+                            if (memoryIndex < 0) memoryIndex = 0;
+                            if (memoryIndex >= commandMemory.Count) memoryIndex = 0;
+                            if (commandMemory.Count>0)
+                            {
+                                input = commandMemory[memoryIndex];
+                            }
+                            break;
+                        case ConsoleKey.Tab:
+                            if (input.Length > 0)
+                            {
+                                input = AutoComplete(input, 0);
+                                memoryIndex = -1;
+                            }
+                            break;
+                        default:
+                            if (key.KeyChar != 0)
+                            {
+                                input += key.KeyChar;
+                                memoryIndex = -1;
+                            }
+                            ResetAutoComplete();
+                            break;
+                    }
                 }
+                if (rewriteInput) { RewriteInputToCommandLine(input); }
             }
-            if (rewriteInput) { RewriteInputToCommandLine(input); }
 
             sw.Stop();
         }
@@ -512,6 +533,13 @@ namespace Barotrauma
                         NewMessage(perm + " is not a valid permission!", Color.Red);
                         return;
                     }
+
+                    if (permission == ClientPermissions.None)
+                    {
+                        NewMessage($"No permissions were given to {client.Name}. Did you mean \"revokeperm {client.Name} All\"?");
+                        return;
+                    }
+
                     client.GivePermission(permission);
                     GameMain.Server.UpdateClientPermissions(client);
                     NewMessage("Granted " + perm + " permissions to " + client.Name + ".", Color.White);
@@ -539,10 +567,13 @@ namespace Barotrauma
                     return;
                 }
 
-                NewMessage("Valid permissions are:", Color.White);
-                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                if (args.Length < 2)
                 {
-                    NewMessage(" - " + permission.ToString(), Color.White);
+                    NewMessage("Valid permissions are:", Color.White);
+                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    {
+                        NewMessage(" - " + permission.ToString(), Color.White);
+                    }
                 }
                 ShowQuestionPrompt("Permission to revoke from \"" + client.Name + "\"?", (perm) =>
                 {
@@ -715,7 +746,6 @@ namespace Barotrauma
                     {
                         NewMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", Color.White);
                     }
-
                 }, args, 1);
             });
 
@@ -1333,7 +1363,15 @@ namespace Barotrauma
             commands.Add(new Command("startgame|startround|start", "start/startgame/startround: Start a new round.", (string[] args) =>
             {
                 if (Screen.Selected == GameMain.GameScreen) { return; }
-                if (!GameMain.Server.StartGame()) NewMessage("Failed to start a new round", Color.Yellow);
+                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign && 
+                    GameMain.NetLobbyScreen.SelectedMode == GameModePreset.MultiPlayerCampaign)
+                {
+                    MultiPlayerCampaign.LoadCampaign(GameMain.GameSession.SavePath);
+                }
+                else
+                {
+                    if (!GameMain.Server.StartGame()) { NewMessage("Failed to start a new round", Color.Yellow); }
+                }
             }));
 
             commands.Add(new Command("endgame|endround|end", "end/endgame/endround: End the current round.", (string[] args) =>
@@ -1650,13 +1688,18 @@ namespace Barotrauma
                 "heal",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    Character healedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args);
+                    bool healAll = args.Length > 1 && args[1].Equals("all", StringComparison.OrdinalIgnoreCase);
+                    Character healedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(healAll ? args.Take(args.Length - 1).ToArray() : args);
                     if (healedCharacter != null)
                     {
                         healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
                         healedCharacter.Oxygen = 100.0f;
                         healedCharacter.Bloodloss = 0.0f;
                         healedCharacter.SetStun(0.0f, true);
+                        if (healAll)
+                        {
+                            healedCharacter.CharacterHealth.RemoveAllAfflictions();
+                        }
                     }
                 }
             );
@@ -1708,14 +1751,15 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     Vector2 explosionPos = cursorWorldPos;
-                    float range = 500, force = 10, damage = 50, structureDamage = 10, itemDamage = 100, empStrength = 0.0f; ;
+                    float range = 500, force = 10, damage = 50, structureDamage = 10, itemDamage = 100, empStrength = 0.0f, ballastFloraStrength = 50f;
                     if (args.Length > 0) float.TryParse(args[0], out range);
                     if (args.Length > 1) float.TryParse(args[1], out force);
                     if (args.Length > 2) float.TryParse(args[2], out damage);
                     if (args.Length > 3) float.TryParse(args[3], out structureDamage);
                     if (args.Length > 4) float.TryParse(args[4], out itemDamage);
                     if (args.Length > 5) float.TryParse(args[5], out empStrength);
-                    new Explosion(range, force, damage, structureDamage, itemDamage, empStrength).Explode(explosionPos, null);
+                    if (args.Length > 6) float.TryParse(args[6], out ballastFloraStrength);
+                    new Explosion(range, force, damage, structureDamage, itemDamage, empStrength, ballastFloraStrength).Explode(explosionPos, null);
                 }
             );
 
@@ -1792,6 +1836,14 @@ namespace Barotrauma
                         GameMain.Server.SendConsoleMessage(perm + " is not a valid permission!", senderClient);
                         return;
                     }
+
+                    if (permission == ClientPermissions.None)
+                    {
+                        GameMain.Server.SendConsoleMessage($"No permissions were given to {client.Name}. Did you mean \"revokeperm {client.Name} All\"?", senderClient);
+                        NewMessage($"No permissions were given to {client.Name}. Did you mean \"revokeperm {client.Name} All\"?");
+                        return;
+                    }
+
                     client.GivePermission(permission);
                     GameMain.Server.UpdateClientPermissions(client);
                     GameMain.Server.SendConsoleMessage("Granted " + perm + " permissions to " + client.Name + ".", senderClient);
@@ -1945,7 +1997,6 @@ namespace Barotrauma
                     if (revokeAll)
                     {
                         revokedCommands.AddRange(commands);
-                        client.RemovePermission(ClientPermissions.ConsoleCommands);
                     }
                     else
                     {
@@ -1962,10 +2013,13 @@ namespace Barotrauma
                                 revokedCommands.Add(matchingCommand);
                             }
                         }
-                        client.GivePermission(ClientPermissions.ConsoleCommands);
                     }
 
                     client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Except(revokedCommands).ToList());
+                    if (client.PermittedConsoleCommands.Count == 0)
+                    {
+                        client.RemovePermission(ClientPermissions.ConsoleCommands);
+                    }
                     GameMain.Server.UpdateClientPermissions(client);
                     GameMain.Server.SendConsoleMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", senderClient);
                     if (revokeAll)
@@ -2152,6 +2206,43 @@ namespace Barotrauma
                     {
                         GameMain.Server.SendConsoleMessage($"{levelString} is not a valid level. Expected number or \"max\".", senderClient);
                     }                  
+                }
+            );
+
+            commands.Add(new Command("readycheck", "Commence a ready check.", (string[] args) =>
+            {
+                if (Screen.Selected == GameMain.GameScreen && GameMain.NetworkMember != null)
+                {
+                    CrewManager crewManager = GameMain.GameSession?.CrewManager;
+                    if (crewManager != null && crewManager.ActiveReadyCheck == null)
+                    {
+                        ReadyCheck.StartReadyCheck("");
+                        NewMessage("Attempted to commence a ready check.", Color.Green);
+                        return;
+                    }
+                    NewMessage("A ready check is already running.", Color.Red);
+                    return;
+                }
+                NewMessage("Ready checks cannot be commenced in the lobby.", Color.Red);
+            }));
+
+            AssignOnClientRequestExecute(
+                "readycheck",
+                (senderClient, cursorWorldPos, args) =>
+                {
+                    if (Screen.Selected == GameMain.GameScreen && GameMain.NetworkMember != null && !(GameMain.GameSession?.GameMode?.IsSinglePlayer ?? true))
+                    {
+                        CrewManager crewManager = GameMain.GameSession?.CrewManager;
+                        if (crewManager != null && crewManager.ActiveReadyCheck == null)
+                        {
+                            ReadyCheck.StartReadyCheck(senderClient.Name, senderClient);
+                            GameMain.Server.SendConsoleMessage("Attempted to commence a ready check.", senderClient);
+                            return;
+                        }
+                        GameMain.Server.SendConsoleMessage("A ready check is already running.", senderClient);
+                        return;
+                    }
+                    GameMain.Server.SendConsoleMessage("Ready checks cannot be commenced in the lobby.", senderClient);
                 }
             );
 

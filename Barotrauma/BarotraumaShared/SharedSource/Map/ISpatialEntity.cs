@@ -9,4 +9,10 @@ namespace Barotrauma
         Vector2 SimPosition { get; }
         Submarine Submarine { get; }
     }
+
+    interface IIgnorable : ISpatialEntity
+    {
+        bool IgnoreByAI(Character character);
+        bool OrderedToBeIgnored { get; set; }
+    }
 }

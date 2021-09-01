@@ -107,17 +107,14 @@ namespace Barotrauma.Sounds
                     readAmount += buf.Length;
                 }
             }
-            return readAmount*2;
+            return readAmount;
         }
 
         public override void Dispose()
         {
             lock (mutex)
             {
-                if (soundChannel != null)
-                {
-                    soundChannel.Dispose();
-                }
+                soundChannel?.Dispose();
                 base.Dispose();
             }
         }

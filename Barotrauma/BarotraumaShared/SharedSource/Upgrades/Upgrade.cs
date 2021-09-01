@@ -18,7 +18,7 @@ namespace Barotrauma
 
         private readonly string Multiplier;
 
-        private readonly char[] prefixCharacters = { '=', '/', '*', 'x', '-', '+' };
+        private static readonly char[] prefixCharacters = { '=', '/', '*', 'x', '-', '+' };
 
         private readonly Upgrade upgrade;
 
@@ -46,6 +46,8 @@ namespace Barotrauma
             {
                 var value = (float) OriginalValue;
 
+                if (level == 0) { return value; }
+
                 if (Multiplier[^1] != '%')
                 {
                     float multiplier = ParseValue();
@@ -66,7 +68,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    float multiplier = UpgradePrefab.ParsePercentage(Multiplier, Name, sourceElement, upgrade.Prefab.SupressWarnings);
+                    float multiplier = UpgradePrefab.ParsePercentage(Multiplier, Name, sourceElement, upgrade.Prefab.SuppressWarnings);
                     return ApplyPercentage(value, multiplier, level);
                 }
             }
@@ -77,6 +79,46 @@ namespace Barotrauma
             }
 
             return 0;
+        }
+
+        public static float CalculateUpgrade(object originalValue, int level, string Multiplier)
+        {
+            if (originalValue is float || originalValue is int || originalValue is double)
+            {
+                var value = (float)originalValue;
+
+                if (Multiplier[^1] != '%')
+                {
+                    float multiplier = 1.0f;
+                    if (Multiplier.Length > 1)
+                    {
+                        if (prefixCharacters.Contains(Multiplier[0]))
+                        {
+                            float.TryParse(Multiplier.Substring(1).Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out multiplier);
+                        }
+                    }
+                    switch (Multiplier[0])
+                    {
+                        case '*':
+                        case 'x':
+                            return value * (multiplier * level);
+                        case '/':
+                            return value / (multiplier * level);
+                        case '-':
+                            return value - (multiplier * level);
+                        case '+':
+                            return value + (multiplier * level);
+                        case '=':
+                            return multiplier;
+                    }
+                }
+                else
+                {
+                    float multiplier = UpgradePrefab.ParsePercentage(Multiplier, "", suppressWarnings: true);
+                    return ApplyPercentage(value, multiplier, level);
+                }
+            }
+            return float.NaN;
         }
 
         /// <summary>
@@ -125,7 +167,7 @@ namespace Barotrauma
                 }
             }
 
-            if (!upgrade.Prefab.SupressWarnings)
+            if (!upgrade.Prefab.SuppressWarnings)
             {
                 DebugConsole.AddWarning($"Multiplier for {Name} is too short or does not contain proper prefix. \n" +
                                         $"The value should start with {string.Join(",", prefixCharacters)} and contain a floating point value or another property. \n" +
@@ -305,7 +347,7 @@ namespace Barotrauma
                         subElement.Add(new XElement(propertyRef.Name,
                             new XAttribute("value", propertyRef.OriginalValue)));
                     }
-                    else if (!Prefab.SupressWarnings)
+                    else if (!Prefab.SuppressWarnings)
                     {
                         DebugConsole.AddWarning($"Failed to save upgrade \"{Prefab.Name}\" on {TargetEntity.Name} because property reference \"{propertyRef.Name}\" is missing original values. \n" +
                                                 "Upgrades should always call Upgrade.ApplyUpgrade() or manually set the original value in a property reference after they have been added. \n" +
@@ -340,22 +382,6 @@ namespace Barotrauma
                         propertyReference.SetOriginalValue(originalValue);
                         object newValue = Convert.ChangeType(propertyReference.CalculateUpgrade(Level, sourceElement), originalValue.GetType(), NumberFormatInfo.InvariantInfo);
                         property!.SetValue(entity, newValue);
-#if SERVER
-                        // if (TargetEntity is IServerSerializable clientSerializable && !IsEqual(originalValue, newValue))
-                        // {
-                        //     GameMain.Server.CreateEntityEvent(clientSerializable, new object[] { NetEntityEvent.Type.ChangeProperty, property });
-                        // }
-                        //
-                        // static bool IsEqual(object item1, object item2)
-                        // {
-                        //     if (item1 is float float1 && item2 is float float2)
-                        //     {
-                        //         return MathUtils.NearlyEqual(float1, float2);
-                        //     }
-                        //
-                        //     return item1 == item2;
-                        // }
-#endif
                     }
                     else
                     {

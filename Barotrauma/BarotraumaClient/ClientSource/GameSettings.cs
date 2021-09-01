@@ -20,6 +20,7 @@ namespace Barotrauma
             Audio,
             VoiceChat,
             Controls,
+            Gameplay,
 #if DEBUG
             Debug
 #endif
@@ -65,10 +66,11 @@ namespace Barotrauma
             keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
             keyMapping[(int)InputType.LocalVoice] = new KeyOrMouse(Keys.B);
             keyMapping[(int)InputType.Command] = new KeyOrMouse(MouseButton.MiddleMouse);
-#if DEBUG
             keyMapping[(int)InputType.PreviousFireMode] = new KeyOrMouse(MouseButton.MouseWheelDown);
             keyMapping[(int)InputType.NextFireMode] = new KeyOrMouse(MouseButton.MouseWheelUp);
-#endif
+
+            keyMapping[(int)InputType.TakeHalfFromInventorySlot] = new KeyOrMouse(Keys.LeftShift);
+            keyMapping[(int)InputType.TakeOneFromInventorySlot] = new KeyOrMouse(Keys.LeftControl);
 
             if (Language == "French")
             {
@@ -175,6 +177,13 @@ namespace Barotrauma
         {
             foreach (XAttribute attribute in element.Attributes())
             {
+                //backwards compatibility
+                if (attribute.Name.ToString() == "TakeAllFromInventorySlot")
+                {
+                    keyMapping[(int)InputType.TakeHalfFromInventorySlot] = new KeyOrMouse(Keys.LeftShift);
+                    keyMapping[(int)InputType.TakeOneFromInventorySlot] = new KeyOrMouse(Keys.LeftControl);
+                }
+
                 if (!Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType)) { continue; }
 
                 if (int.TryParse(attribute.Value.ToString(), out int mouseButtonInt))
@@ -225,6 +234,40 @@ namespace Barotrauma
             {
                 LoadInventoryKeybinds(inventoryKeyMapping);
             }
+            
+            XElement debugConsoleMapping = doc.Root.Element("debugconsolemapping");
+
+            if (debugConsoleMapping == null) { return; }
+            
+            ConsoleKeybinds.Clear();
+            DebugConsole.Keybinds.Clear();
+
+            foreach (XElement element in debugConsoleMapping.Elements())
+            {
+                string keyString = element.GetAttributeString("key", string.Empty);
+                string command = element.GetAttributeString("command", string.Empty);
+                
+                if (string.IsNullOrWhiteSpace(keyString) || string.IsNullOrWhiteSpace(command)) { continue; }
+
+                if (Enum.TryParse(typeof(Keys), keyString, ignoreCase: true, out object @out) && @out is Keys key)
+                {
+                    ConsoleKeybinds.TryAdd(key, command);
+                }
+            }
+
+            DebugConsole.Keybinds = new Dictionary<Keys, string>(ConsoleKeybinds);
+        }
+
+        private void LoadSubEditorImages(XDocument doc)
+        {
+            XElement element = doc.Root?.Element("editorimages");
+            if (element == null)
+            {
+                SubEditorScreen.ImageManager.Clear(alsoPending: true);
+                return;
+            }
+
+            SubEditorScreen.ImageManager.Load(element);
         }
 
         public KeyOrMouse KeyBind(InputType inputType)
@@ -244,7 +287,7 @@ namespace Barotrauma
 
         private GUIListBox contentPackageList;
 
-        private bool ChangeSliderText(GUIScrollBar scrollBar, float barScroll)
+        private bool ChangeSliderText(GUIScrollBar scrollBar, float scale)
         {
             UnsavedSettings = true;
             GUITextBlock text = scrollBar.UserData as GUITextBlock;
@@ -263,7 +306,7 @@ namespace Barotrauma
                 }
                 label = text.Text.Substring(0, index);
             }
-            text.Text = label + " " + (int)(barScroll * 100) + "%";
+            text.Text = label + " " + (int)Math.Round(scale * 100) + "%";
             return true;
         }
 
@@ -490,29 +533,19 @@ namespace Barotrauma
                     UserData = tab
                 };
 
-                float tabWidth = 0.25f;
+                float tabWidth = 1.0f / tabs.Length;
 #if DEBUG
-                tabWidth = 0.2f;
-                if (tab != Tab.Debug)
-                {
+                string buttonText = tab != Tab.Debug ? TextManager.Get("SettingsTab." + tab.ToString()) : "Debug";
+#else
+                string buttonText = TextManager.Get("SettingsTab." + tab.ToString());
 #endif
-                    tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(tabWidth, 1.0f), tabButtonHolder.RectTransform),
-                        TextManager.Get("SettingsTab." + tab.ToString()), style: "GUITabButton")
-                    {
-                        UserData = tab,
-                        OnClicked = (bt, userdata) => { SelectTab((Tab)userdata); return true; }
-                    };
-#if DEBUG
-                }
-                else
+
+                tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(tabWidth, 1.0f), tabButtonHolder.RectTransform), style: "GUITabButton")
                 {
-                    tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(tabWidth, 1.0f), tabButtonHolder.RectTransform), "Debug", style: "GUITabButton")
-                    {
-                        UserData = tab,
-                        OnClicked = (bt, userdata) => { SelectTab((Tab)userdata); return true; }
-                    };
-                }
-#endif
+                    UserData = tab,
+                    OnClicked = (bt, userdata) => { SelectTab((Tab)userdata); return true; }
+                };
+                tabButtons[(int)tab].Text = ToolBox.LimitString(buttonText, tabButtons[(int)tab].Font, (int)(0.75f * tabWidth * tabButtonHolder.Rect.Width));
             }
 
             new GUIButton(new RectTransform(new Vector2(0.05f, 0.75f), tabButtonHolder.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.2f) }, style: "GUIBugButton")
@@ -627,19 +660,6 @@ namespace Barotrauma
                 Selected = TextureCompressionEnabled
             };
 
-            GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform),
-                TextManager.Get("PauseOnFocusLost"))
-            {
-                Selected = PauseOnFocusLost,
-                ToolTip = TextManager.Get("PauseOnFocusLostToolTip"),
-                OnSelected = (tickBox) =>
-                {
-                    PauseOnFocusLost = tickBox.Selected;
-                    UnsavedSettings = true;
-                    return true;
-                }
-            };
-
             GUITextBlock particleLimitText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ParticleLimit"), font: GUI.SubHeadingFont, wrap: true);
             GUIScrollBar particleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), style: "GUISlider",
                 barSize: 0.1f)
@@ -707,6 +727,18 @@ namespace Barotrauma
                 }
             };*/
 
+            new GUITickBox(new RectTransform(tickBoxScale, rightColumn.RectTransform), TextManager.Get("RadialDistortion"))
+            {
+                ToolTip = TextManager.Get("RadialDistortionToolTip"),
+                Selected = EnableRadialDistortion,
+                OnSelected = (tickBox) =>
+                {
+                    EnableRadialDistortion = tickBox.Selected;
+                    UnsavedSettings = true;
+                    return true;
+                }
+            };
+
             new GUITickBox(new RectTransform(tickBoxScale, rightColumn.RectTransform), TextManager.Get("ChromaticAberration"))
             {
                 ToolTip = TextManager.Get("ChromaticAberrationToolTip"),
@@ -718,41 +750,6 @@ namespace Barotrauma
                     return true;
                 }
             };
-
-            GUITextBlock HUDScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("HUDScale"), font: GUI.SubHeadingFont, wrap: true);
-            GUIScrollBar HUDScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
-               style: "GUISlider", barSize: 0.1f)
-            {
-                UserData = HUDScaleText,
-                BarScroll = (HUDScale - MinHUDScale) / (MaxHUDScale - MinHUDScale),
-                OnMoved = (scrollBar, scroll) =>
-                {
-                    ChangeSliderText(scrollBar, scroll);
-                    HUDScale = MathHelper.Lerp(MinHUDScale, MaxHUDScale, scroll);
-                    UnsavedSettings = true;
-                    OnHUDScaleChanged?.Invoke();
-                    return true;
-                },
-                Step = 0.05f
-            };
-            HUDScaleScrollBar.OnMoved(HUDScaleScrollBar, HUDScaleScrollBar.BarScroll);
-
-            GUITextBlock inventoryScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("InventoryScale"), font: GUI.SubHeadingFont);
-            GUIScrollBar inventoryScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), 
-                style: "GUISlider", barSize: 0.1f)
-            {
-                UserData = inventoryScaleText,
-                BarScroll = (InventoryScale - MinInventoryScale) / (MaxInventoryScale - MinInventoryScale),
-                OnMoved = (scrollBar, scroll) =>
-                {
-                    ChangeSliderText(scrollBar, scroll);
-                    InventoryScale = MathHelper.Lerp(MinInventoryScale, MaxInventoryScale, scroll);
-                    UnsavedSettings = true;
-                    return true;
-                },
-                Step = 0.05f
-            };
-            inventoryScaleScrollBar.OnMoved(inventoryScaleScrollBar, inventoryScaleScrollBar.BarScroll);
 
             /// Audio tab ----------------------------------------------------------------
 
@@ -811,8 +808,7 @@ namespace Barotrauma
                     ChangeSliderText(scrollBar, scroll);
                     SoundVolume = scroll;
                     return true;
-                },
-                Step = 0.05f
+                }
             };
             soundScrollBar.OnMoved(soundScrollBar, soundScrollBar.BarScroll);
 
@@ -827,8 +823,7 @@ namespace Barotrauma
                     ChangeSliderText(scrollBar, scroll);
                     MusicVolume = scroll;
                     return true;
-                },
-                Step = 0.05f
+                }
             };
             musicScrollBar.OnMoved(musicScrollBar, musicScrollBar.BarScroll);
 
@@ -837,8 +832,7 @@ namespace Barotrauma
                 style: "GUISlider", barSize: 0.05f)
             {
                 UserData = voiceChatVolumeText,
-                Range = new Vector2(0.0f, 2.0f),
-                Step = 0.05f
+                Range = new Vector2(0.0f, 2.0f)
             };
             voiceChatScrollBar.BarScrollValue = VoiceChatVolume;
             voiceChatScrollBar.OnMoved = (scrollBar, scroll) =>
@@ -1016,6 +1010,19 @@ namespace Barotrauma
             {
                 Visible = VoiceSetting != VoiceMode.Disabled
             };
+            GUITickBox localVoiceByDefault = new GUITickBox(
+                new RectTransform(tickBoxScale, voiceActivityGroup.RectTransform), TextManager.Get("LocalVoiceByDefault"))
+            {
+                Visible = VoiceSetting == VoiceMode.Activity,
+                Selected = UseLocalVoiceByDefault,
+                ToolTip = TextManager.Get("LocalVoiceByDefaultTooltip"),
+                OnSelected = (tickBox) =>
+                {
+                    UseLocalVoiceByDefault = tickBox.Selected;
+                    UnsavedSettings = true;
+                    return true;
+                }
+            };
             GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), TextManager.Get("NoiseGateThreshold"), font: GUI.SubHeadingFont)
             {
                 Visible = VoiceSetting == VoiceMode.Activity,
@@ -1070,8 +1077,8 @@ namespace Barotrauma
                 new RectTransform(new Vector2(0.5f, 1.0f), voiceInputContainerHorizontal.RectTransform),
                 isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice"), font: GUI.SubHeadingFont);
-            var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), voiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.Voice))
+            var voiceKeybindLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice"), font: GUI.SubHeadingFont);
+            var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.3f, 1.0f), voiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.Voice))
             {
                 SelectedColor = Color.Gold * 0.3f,
                 UserData = InputType.Voice
@@ -1082,13 +1089,15 @@ namespace Barotrauma
                 new RectTransform(new Vector2(0.5f, 1.0f), voiceInputContainerHorizontal.RectTransform),
                 isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), localVoiceInputContainer.RectTransform), TextManager.Get("InputType.LocalVoice"), font: GUI.SubHeadingFont);
-            var localVoiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), localVoiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.LocalVoice))
+            var localVoiceKeybindLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), localVoiceInputContainer.RectTransform), TextManager.Get("InputType.LocalVoice"), font: GUI.SubHeadingFont);
+            var localVoiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.3f, 1.0f), localVoiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.LocalVoice))
             {
                 SelectedColor = Color.Gold * 0.3f,
                 UserData = InputType.LocalVoice
             };
             localVoiceKeyBox.OnSelected += KeyBoxSelected;
+
+            voiceKeybindLabel.RectTransform.SizeChanged += () => { GUITextBlock.AutoScaleAndNormalize(voiceKeybindLabel, localVoiceKeybindLabel); };
 
             var cutoffPreventionText = new GUITextBlock(new RectTransform(textBlockScale, voiceChatContent.RectTransform), TextManager.Get("CutoffPrevention"), font: GUI.SubHeadingFont)
             {
@@ -1098,13 +1107,14 @@ namespace Barotrauma
                 style: "GUISlider", barSize: 0.05f)
             {
                 UserData = micVolumeText,
-                Range = new Vector2(0,540),
-                Step = 1.0f / 9.0f
+                Range = new Vector2(0, ((float)VoipConfig.BUFFER_SIZE / (float)VoipConfig.FREQUENCY) * 1000.0f * 25.0f),
+                Step = 1.0f / 25.0f
             };
             cutoffPreventionSlider.BarScrollValue = VoiceChatCutoffPrevention;
             cutoffPreventionSlider.OnMoved = (scrollBar, scroll) =>
             {
-                VoiceChatCutoffPrevention = (int)scrollBar.BarScrollValue;
+                int bufferMsLength = (int)(((float)VoipConfig.BUFFER_SIZE / (float)VoipConfig.FREQUENCY) * 1000.0f);
+                VoiceChatCutoffPrevention = (int)Math.Round(scrollBar.BarScrollValue / bufferMsLength) * bufferMsLength;
                 cutoffPreventionText.Text = TextManager.Get("CutoffPrevention") +
                     " " + TextManager.GetWithVariable("timeformatmilliseconds", "[milliseconds]", VoiceChatCutoffPrevention.ToString());
                 return true;
@@ -1142,6 +1152,7 @@ namespace Barotrauma
 
                     noiseGateText.Visible = (vMode == VoiceMode.Activity);
                     noiseGateSlider.Visible = (vMode == VoiceMode.Activity);
+                    localVoiceByDefault.Visible = (vMode == VoiceMode.Activity);
                     voiceActivityGroup.Visible = (vMode != VoiceMode.Disabled);
                     voiceInputContainerHorizontal.Visible = (vMode == VoiceMode.PushToTalk);
                     UnsavedSettings = true;
@@ -1185,7 +1196,7 @@ namespace Barotrauma
                     AimAssistAmount = MathHelper.Lerp(0.0f, 5.0f, scroll);
                     return true;
                 },
-                Step = 0.1f
+                Step = 0.01f
             };
             aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
 
@@ -1201,19 +1212,21 @@ namespace Barotrauma
                 }
             };
 
-            var inputFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.75f), controlsLayoutGroup.RectTransform), isHorizontal: true)
-                { Stretch = true, RelativeSpacing = 0.03f };
+            var controlListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), controlsLayoutGroup.RectTransform));
+
+            var inputFrame = new GUILayoutGroup(new RectTransform(Vector2.One, controlListBox.Content.RectTransform), isHorizontal: true)
+                { Stretch = true, RelativeSpacing = 0.01f };
 
             var inputColumnLeft = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), inputFrame.RectTransform))
-                { Stretch = true, RelativeSpacing = 0.02f };
+                { Stretch = true, RelativeSpacing = 0.005f };
             var inputColumnRight = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), inputFrame.RectTransform))
-                { Stretch = true, RelativeSpacing = 0.02f };
+                { Stretch = true, RelativeSpacing = 0.005f };
 
             var inputNames = Enum.GetValues(typeof(InputType));
             var inputNameBlocks = new List<GUITextBlock>();
             for (int i = 0; i < inputNames.Length; i++)
             {
-                var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f),(i <= (inputNames.Length / 2.2f) ? inputColumnLeft : inputColumnRight).RectTransform))
+                var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f),(i <= (inputNames.Length / 2) ? inputColumnLeft : inputColumnRight).RectTransform))
                     { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.01f, Color = new Color(12, 14, 15, 215) };
                 var inputName = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(100, 0) },
                     TextManager.Get("InputType." + ((InputType)i)), font: GUI.SmallFont) { ForceUpperCase = true };
@@ -1228,14 +1241,17 @@ namespace Barotrauma
                 {
                     keyBox.Text = ToolBox.LimitString(keyText, keyBox.Font, (int)(keyBox.Rect.Width - keyBox.Padding.X - keyBox.Padding.Z));
                 };
+                inputContainer.RectTransform.MinSize = keyBox.RectTransform.MinSize;
                 keyBox.OnSelected += KeyBoxSelected;
                 keyBox.SelectedColor = Color.Gold * 0.3f;
             }
 
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), inputColumnRight.RectTransform, minSize: inputColumnRight.Children.First().RectTransform.MinSize), style: null);
+
             for (int i = 0; i < inventoryHotkeyCount; i++)
             {
                 var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), ((i + 1) <= inventoryHotkeyCount / 2 ? inputColumnLeft : inputColumnRight).RectTransform))
-                { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.01f, Color = new Color(12, 14, 15, 215) };
+                { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.01f, Color = new Color(12, 14, 15, 215), CanBeFocused = true };
                 var inputName = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(100, 0) },
                     TextManager.GetWithVariable("inventoryslotkeybind", "[slotnumber]", (i + 1).ToString()), font: GUI.SmallFont)
                 { ForceUpperCase = true };
@@ -1246,11 +1262,20 @@ namespace Barotrauma
                     UserData = i
                 };
                 keyBox.Text = ToolBox.LimitString(keyBox.Text, keyBox.Font, (int)(keyBox.Rect.Width - keyBox.Padding.X - keyBox.Padding.Z));
+                inputContainer.RectTransform.MinSize = keyBox.RectTransform.MinSize;
                 keyBox.OnSelected += InventoryKeyBoxSelected;
                 keyBox.SelectedColor = Color.Gold * 0.3f;
             }
 
-            GUITextBlock.AutoScaleAndNormalize(inputNameBlocks);
+            inputNameBlocks.First().RectTransform.SizeChanged += () =>
+            {
+                GUITextBlock.AutoScaleAndNormalize(inputNameBlocks);
+            };
+
+            inputFrame.RectTransform.MinSize = new Point(0, 
+                (int)Math.Max(
+                    inputColumnLeft.Children.Sum(c => c.Rect.Height * (1.0f + inputColumnLeft.RelativeSpacing)), 
+                    inputColumnRight.Children.Sum(c => c.Rect.Height * (1.0f + inputColumnLeft.RelativeSpacing))));
 
             var resetControlsArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.07f), controlsLayoutGroup.RectTransform), style: null);
             var resetControlsHolder = new GUILayoutGroup(new RectTransform(new Vector2(buttonArea.RectTransform.RelativeSize.X / controlsLayoutGroup.RectTransform.RelativeSize.X / rightPanel.RectTransform.RelativeSize.X, 1.0f), resetControlsArea.RectTransform, Anchor.Center), 
@@ -1285,6 +1310,110 @@ namespace Barotrauma
                 GUITextBlock.AutoScaleAndNormalize(defaultBindingsButton.TextBlock, legacyBindingsButton.TextBlock);
             };
 
+            /// Gameplay tab -------------------------------------------------------------
+            var gameplaySettingsGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.46f, 0.95f), tabs[(int)Tab.Gameplay].RectTransform, Anchor.TopLeft)
+            { RelativeOffset = new Vector2(0.025f, 0.02f) })
+            { RelativeSpacing = 0.01f };
+
+            GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale, gameplaySettingsGroup.RectTransform),
+                TextManager.Get("PauseOnFocusLost"))
+            {
+                Selected = PauseOnFocusLost,
+                ToolTip = TextManager.Get("PauseOnFocusLostToolTip"),
+                OnSelected = (tickBox) =>
+                {
+                    PauseOnFocusLost = tickBox.Selected;
+                    UnsavedSettings = true;
+                    return true;
+                }
+            };
+
+            new GUITickBox(new RectTransform(tickBoxScale, gameplaySettingsGroup.RectTransform), TextManager.Get("DisableInGameHints"))
+            {
+                Selected = DisableInGameHints,
+                ToolTip = TextManager.Get("DisableInGameHintsToolTip"),
+                OnSelected = (tickBox) =>
+                {
+                    DisableInGameHints = tickBox.Selected;
+                    UnsavedSettings = true;
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform),
+                text: TextManager.Get("ResetInGameHints"),
+                style: "GUIButtonSmall")
+            {
+                OnClicked = (button, userData) =>
+                {
+                    var msgBox = new GUIMessageBox(TextManager.Get("ResetInGameHints"),
+                        TextManager.Get("ResetInGameHintsTooltip"),
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                    {
+                        UserData = "verificationprompt"
+                    };
+                    msgBox.Buttons[0].OnClicked = (button, userData) =>
+                    {
+                        GameMain.Config.IgnoredHints.Clear();
+                        return true;
+                    };
+                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                    msgBox.Buttons[1].OnClicked = msgBox.Close;
+                    return false;
+                }
+            };
+
+            GUITextBlock HUDScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform), TextManager.Get("HUDScale"), font: GUI.SubHeadingFont, wrap: true);
+            GUIScrollBar HUDScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform),
+               style: "GUISlider", barSize: 0.1f)
+            {
+                UserData = HUDScaleText,
+                BarScroll = (HUDScale - MinHUDScale) / (MaxHUDScale - MinHUDScale),
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    HUDScale = MathHelper.Lerp(MinHUDScale, MaxHUDScale, scroll);
+                    ChangeSliderText(scrollBar, HUDScale);
+                    OnHUDScaleChanged?.Invoke();
+                    return true;
+                },
+                Step = 0.02f
+            };
+            HUDScaleScrollBar.OnMoved(HUDScaleScrollBar, HUDScaleScrollBar.BarScroll);
+
+            GUITextBlock inventoryScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform), TextManager.Get("InventoryScale"), font: GUI.SubHeadingFont);
+            GUIScrollBar inventoryScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform),
+                style: "GUISlider", barSize: 0.1f)
+            {
+                UserData = inventoryScaleText,
+                BarScroll = (InventoryScale - MinInventoryScale) / (MaxInventoryScale - MinInventoryScale),
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    InventoryScale = MathHelper.Lerp(MinInventoryScale, MaxInventoryScale, scroll);
+                    ChangeSliderText(scrollBar, InventoryScale);
+                    return true;
+                },
+                Step = 0.02f
+            };
+            inventoryScaleScrollBar.OnMoved(inventoryScaleScrollBar, inventoryScaleScrollBar.BarScroll);
+
+            GUITextBlock textScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform), TextManager.Get("TextScale"), font: GUI.SubHeadingFont);
+            GUIScrollBar textScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform),
+                style: "GUISlider", barSize: 0.1f)
+            {
+                UserData = textScaleText,
+                BarScroll = (TextScale - MinTextScale) / (MaxTextScale - MinTextScale),
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    TextScale = MathHelper.Lerp(MinTextScale, MaxTextScale, scroll);
+                    textScaleDirty = true;
+                    ChangeSliderText(scrollBar, TextScale);
+                    return true;
+                },
+                Step = 0.01f
+            };
+            textScaleScrollBar.OnMoved(textScaleScrollBar, textScaleScrollBar.BarScroll);
+
+            /// Bottom buttons -------------------------------------------------------------
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("Cancel"))
             {
@@ -1335,7 +1464,7 @@ namespace Barotrauma
                     };
                     msgBox.Buttons[0].OnClicked = (yesButton, obj) =>
                     {
-                        LoadDefaultConfig(setLanguage: false);
+                        LoadDefaultConfig(setLanguage: false, loadContentPackages: Screen.Selected != GameMain.GameScreen);
                         CheckBindings(true);
                         RefreshItemMessages();
                         ApplySettings();
@@ -1370,55 +1499,54 @@ namespace Barotrauma
             { RelativeOffset = new Vector2(0.02f, 0.02f) })
             { RelativeSpacing = 0.01f };
 
-            var automaticQuickStartTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Automatic quickstart enabled", style: "GUITickBox");
-            automaticQuickStartTickBox.Selected = AutomaticQuickStartEnabled;
-            automaticQuickStartTickBox.ToolTip = "Will the game automatically move on to Quickstart when the game is launched";
-            automaticQuickStartTickBox.OnSelected = (tickBox) =>
+            void addDebugTickBox(bool initialValue, Action<bool> set, string label, string tooltip)
             {
-                AutomaticQuickStartEnabled = tickBox.Selected;
-                UnsavedSettings = true;
-                return true;
-            };
+                var tickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), label, style: "GUITickBox");
+                tickBox.Selected = initialValue;
+                tickBox.ToolTip = tooltip;
+                tickBox.OnSelected = (tickBox) =>
+                {
+                    set(tickBox.Selected);
+                    UnsavedSettings = true;
+                    return true;
+                };
+            }
 
-            var automaticCampaignLoadTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Automatic campaign load enabled", style: "GUITickBox");
-            automaticCampaignLoadTickBox.Selected = AutomaticCampaignLoadEnabled;
-            automaticCampaignLoadTickBox.ToolTip = "Will the game automatically load the latest campaign save when the game is launched";
-            automaticCampaignLoadTickBox.OnSelected = (tickBox) =>
-            {
-                AutomaticCampaignLoadEnabled = tickBox.Selected;
-                UnsavedSettings = true;
-                return true;
-            };
+            addDebugTickBox(
+                AutomaticQuickStartEnabled,
+                (b) => AutomaticQuickStartEnabled = b,
+                "Automatic quickstart enabled",
+                "Will the game automatically move on to Quickstart when the game is launched");
 
-            var showSplashScreenTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Splash screen enabled", style: "GUITickBox");
-            showSplashScreenTickBox.Selected = EnableSplashScreen;
-            showSplashScreenTickBox.ToolTip = "Are the splash screens shown when the game is launched";
-            showSplashScreenTickBox.OnSelected = (tickBox) =>
-            {
-                EnableSplashScreen = tickBox.Selected;
-                UnsavedSettings = true;
-                return true;
-            };
+            addDebugTickBox(
+                AutomaticCampaignLoadEnabled,
+                (b) => AutomaticCampaignLoadEnabled = b,
+                "Automatic campaign load enabled",
+                "Will the game automatically load the latest campaign save when the game is launched");
 
-            var verboseLoggingTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Verbose logging enabled", style: "GUITickBox");
-            verboseLoggingTickBox.Selected = VerboseLogging;
-            verboseLoggingTickBox.ToolTip = "Should verbose logging be used";
-            verboseLoggingTickBox.OnSelected = (tickBox) =>
-            {
-                VerboseLogging = tickBox.Selected;
-                UnsavedSettings = true;
-                return true;
-            };
+            addDebugTickBox(
+                EnableSplashScreen,
+                (b) => EnableSplashScreen = b,
+                "Splash screen enabled",
+                "Are the splash screens shown when the game is launched");
 
-            var textManagerDebugModeTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "TextManager debug mode enabled", style: "GUITickBox");
-            textManagerDebugModeTickBox.Selected = TextManagerDebugModeEnabled;
-            textManagerDebugModeTickBox.ToolTip = "Does the TextManager return the text tags for debug purposes?";
-            textManagerDebugModeTickBox.OnSelected = (tickBox) =>
-            {
-                TextManagerDebugModeEnabled = tickBox.Selected;
-                UnsavedSettings = true;
-                return true;
-            };
+            addDebugTickBox(
+                VerboseLogging,
+                (b) => VerboseLogging = b,
+                "Verbose logging enabled",
+                "Should verbose logging be used");
+
+            addDebugTickBox(
+                TextManagerDebugModeEnabled,
+                (b) => TextManagerDebugModeEnabled = b,
+                "TextManager debug mode enabled",
+                "Does the TextManager return the text tags for debug purposes?");
+
+            addDebugTickBox(
+                ModBreakerMode,
+                (b) => ModBreakerMode = b,
+                "Mod breaker mode enabled",
+                "Do horrible things when loading mods to see if it breaks?");
 #endif
 
             UnsavedSettings = false; // Reset unsaved settings to false once the UI has been created
@@ -1599,7 +1727,7 @@ namespace Barotrauma
                 if (!EnabledRegularPackages.Contains(contentPackage)) { return; }
             }
 
-            ContentPackage.SortContentPackages(cp => listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp)), true);
+            ContentPackage.SortContentPackages(cp => listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp)), true, this);
 
             UnsavedSettings = true;
         }
@@ -1618,7 +1746,9 @@ namespace Barotrauma
             {
                 DisableRegularPackage(contentPackage);
             }
-            
+
+            ContentPackage.SortContentPackages(cp => contentPackageList.Content.GetChildIndex(contentPackageList.Content.GetChildByUserData(cp)), false, this);
+
             UnsavedSettings = true;
             return true;
         }
@@ -1709,22 +1839,11 @@ namespace Barotrauma
 
             SettingsFrame.Flash(GUI.Style.Green);
 
-            if (GameMain.WindowMode != GameMain.Config.WindowMode || GameMain.Config.GraphicsWidth != GameMain.GraphicsWidth || GameMain.Config.GraphicsHeight != GameMain.GraphicsHeight)
+            if (textScaleDirty || GameMain.WindowMode != GameMain.Config.WindowMode || GameMain.Config.GraphicsWidth != GameMain.GraphicsWidth || GameMain.Config.GraphicsHeight != GameMain.GraphicsHeight)
             {
                 GameMain.Instance.ApplyGraphicsSettings();
+                textScaleDirty = false;
             }
-
-            /*if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
-            {
-#if OSX
-                if (GameMain.Config.WindowMode != WindowMode.BorderlessWindowed)
-                {
-#endif
-                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredResolution"));
-#if OSX
-                }
-#endif
-            }*/
         }
 
         private bool ApplyClicked(GUIButton button, object userData)

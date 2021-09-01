@@ -291,6 +291,7 @@ namespace Barotrauma.Items.Components
             bool broken     = msg.ReadBoolean();
             bool forcedOpen = msg.ReadBoolean();
             bool isStuck    = msg.ReadBoolean();
+            bool isJammed   = msg.ReadBoolean();
             SetState(open, isNetworkMessage: true, sendNetworkMessage: false, forcedOpen: forcedOpen);
             stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             UInt16 lastUserID = msg.ReadUInt16();
@@ -301,6 +302,7 @@ namespace Barotrauma.Items.Components
                 toggleCooldownTimer = ToggleCoolDown;
             }
             this.isStuck = isStuck;
+            this.isJammed = isJammed;
             if (isStuck) { OpenState = 0.0f; }
             IsBroken = broken;
             PredictedState = null;

@@ -1,6 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Sounds;
+using Concentus.Structs;
+using Microsoft.Xna.Framework;
 using OpenAL;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -20,6 +23,8 @@ namespace Barotrauma.Networking
         private Thread captureThread;
 
         private bool capturing;
+
+        private OpusEncoder encoder;
 
         public double LastdB
         {
@@ -56,7 +61,7 @@ namespace Barotrauma.Networking
 
         public bool Disconnected { get; private set; }
 
-        public static void Create(string deviceName, UInt16? storedBufferID=null)
+        public static void Create(string deviceName, UInt16? storedBufferID = null)
         {
             if (Instance != null)
             {
@@ -77,14 +82,14 @@ namespace Barotrauma.Networking
         {
             Disconnected = false;
 
-            VoipConfig.SetupEncoding();
+            encoder = VoipConfig.CreateEncoder();
 
             //set up capture device
             captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMono16, VoipConfig.BUFFER_SIZE * 5);
 
             if (captureDevice == IntPtr.Zero)
             {
-                DebugConsole.NewMessage("Alc.CaptureOpenDevice attempt 1 failed: error code " + Alc.GetError(IntPtr.Zero).ToString(),Color.Orange);
+                DebugConsole.NewMessage("Alc.CaptureOpenDevice attempt 1 failed: error code " + Alc.GetError(IntPtr.Zero).ToString(), Color.Orange);
                 //attempt using a smaller buffer size
                 captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMono16, VoipConfig.BUFFER_SIZE * 2);
             }
@@ -162,6 +167,7 @@ namespace Barotrauma.Networking
             }
         }
 
+        IntPtr nativeBuffer;
         short[] uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
         short[] prevUncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
         bool prevCaptured = true;
@@ -171,143 +177,198 @@ namespace Barotrauma.Networking
         {
             Array.Copy(uncompressedBuffer, 0, prevUncompressedBuffer, 0, VoipConfig.BUFFER_SIZE);
             Array.Clear(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE);
-            while (capturing && !Disconnected)
+            nativeBuffer = Marshal.AllocHGlobal(VoipConfig.BUFFER_SIZE * 2);
+            try
             {
-                int alcError;
-
-                if (CanDetectDisconnect)
+                while (capturing)
                 {
-                    Alc.GetInteger(captureDevice, Alc.EnumConnected, out int isConnected);
+                    int alcError;
+
+                    if (CanDetectDisconnect)
+                    {
+                        Alc.GetInteger(captureDevice, Alc.EnumConnected, out int isConnected);
+                        alcError = Alc.GetError(captureDevice);
+                        if (alcError != Alc.NoError)
+                        {
+                            throw new Exception("Failed to determine if capture device is connected: " + alcError.ToString());
+                        }
+
+                        if (isConnected == 0)
+                        {
+                            DebugConsole.ThrowError("Capture device has been disconnected. You can select another available device in the settings.");
+                            Disconnected = true;
+                            break;
+                        }
+                    }
+
+                    FillBuffer();
+
                     alcError = Alc.GetError(captureDevice);
                     if (alcError != Alc.NoError)
                     {
-                        throw new Exception("Failed to determine if capture device is connected: " + alcError.ToString());
+                        throw new Exception("Failed to capture samples: " + alcError.ToString());
                     }
 
-                    if (isConnected == 0)
+                    double maxAmplitude = 0.0f;
+                    for (int i = 0; i < VoipConfig.BUFFER_SIZE; i++)
                     {
-                        DebugConsole.ThrowError("Capture device has been disconnected. You can select another available device in the settings.");
-                        Disconnected = true;
-                        break;
+                        uncompressedBuffer[i] = (short)MathHelper.Clamp((uncompressedBuffer[i] * Gain), -short.MaxValue, short.MaxValue);
+                        double sampleVal = uncompressedBuffer[i] / (double)short.MaxValue;
+                        maxAmplitude = Math.Max(maxAmplitude, Math.Abs(sampleVal));
                     }
-                }
+                    double dB = Math.Min(20 * Math.Log10(maxAmplitude), 0.0);
 
-                Alc.GetInteger(captureDevice, Alc.EnumCaptureSamples, out int sampleCount);
+                    LastdB = dB;
+                    LastAmplitude = maxAmplitude;
 
-                alcError = Alc.GetError(captureDevice);
-                if (alcError != Alc.NoError)
-                {
-                    throw new Exception("Failed to determine sample count: " + alcError.ToString());
-                }
-
-                if (sampleCount < VoipConfig.BUFFER_SIZE)
-                {
-                    int sleepMs = (VoipConfig.BUFFER_SIZE - sampleCount) * 800 / VoipConfig.FREQUENCY;
-                    if (sleepMs < 5) sleepMs = 5;
-                    Thread.Sleep(sleepMs);
-                    continue;
-                }
-
-                GCHandle handle = GCHandle.Alloc(uncompressedBuffer, GCHandleType.Pinned);
-                try
-                {
-                    Alc.CaptureSamples(captureDevice, handle.AddrOfPinnedObject(), VoipConfig.BUFFER_SIZE);
-                }
-                finally
-                {
-                    handle.Free();
-                }
-
-                alcError = Alc.GetError(captureDevice);
-                if (alcError != Alc.NoError)
-                {
-                    throw new Exception("Failed to capture samples: " + alcError.ToString());
-                }
-
-                double maxAmplitude = 0.0f;
-                for (int i = 0; i < VoipConfig.BUFFER_SIZE; i++)
-                {
-                    uncompressedBuffer[i] = (short)MathHelper.Clamp((uncompressedBuffer[i] * Gain), -short.MaxValue, short.MaxValue);
-                    double sampleVal = uncompressedBuffer[i] / (double)short.MaxValue;
-                    maxAmplitude = Math.Max(maxAmplitude, Math.Abs(sampleVal));                    
-                }
-                double dB = Math.Min(20 * Math.Log10(maxAmplitude), 0.0);
-
-                LastdB = dB;
-                LastAmplitude = maxAmplitude;
-
-                bool allowEnqueue = false;
-                if (GameMain.WindowActive)
-                {
-                    ForceLocal = captureTimer > 0 ? ForceLocal : false;
-                    bool pttDown = false;
-                    if ((PlayerInput.KeyDown(InputType.Voice) || PlayerInput.KeyDown(InputType.LocalVoice)) &&
-                            GUI.KeyboardDispatcher.Subscriber == null)
+                    bool allowEnqueue = overrideSound != null;
+                    if (GameMain.WindowActive)
                     {
-                        pttDown = true;
-                        if (PlayerInput.KeyDown(InputType.LocalVoice))
+                        ForceLocal = captureTimer > 0 ? ForceLocal : GameMain.Config.UseLocalVoiceByDefault;
+                        bool pttDown = false;
+                        if ((PlayerInput.KeyDown(InputType.Voice) || PlayerInput.KeyDown(InputType.LocalVoice)) &&
+                                GUI.KeyboardDispatcher.Subscriber == null)
                         {
-                            ForceLocal = true;
+                            pttDown = true;
+                            if (PlayerInput.KeyDown(InputType.LocalVoice))
+                            {
+                                ForceLocal = true;
+                            }
+                            else
+                            {
+                                ForceLocal = false;
+                            }
                         }
-                        else
+                        if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.Activity)
                         {
-                            ForceLocal = false;
+                            if (dB > GameMain.Config.NoiseGateThreshold)
+                            {
+                                allowEnqueue = true;
+                            }
+                        }
+                        else if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.PushToTalk)
+                        {
+                            if (pttDown)
+                            {
+                                allowEnqueue = true;
+                            }
                         }
                     }
-                    if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.Activity)
+
+                    if (allowEnqueue || captureTimer > 0)
                     {
-                        if (dB > GameMain.Config.NoiseGateThreshold)
+                        LastEnqueueAudio = DateTime.Now;
+                        if (GameMain.Client?.Character != null)
                         {
-                            allowEnqueue = true;
+                            var messageType = !ForceLocal && ChatMessage.CanUseRadio(GameMain.Client.Character, out _) ? ChatMessageType.Radio : ChatMessageType.Default;
+                            GameMain.Client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
                         }
-                    }
-                    else if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.PushToTalk)
-                    {
-                        if (pttDown)
+                        //encode audio and enqueue it
+                        lock (buffers)
                         {
-                            allowEnqueue = true;
+                            if (!prevCaptured) //enqueue the previous buffer if not sent to avoid cutoff
+                            {
+                                int compressedCountPrev = encoder.Encode(prevUncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
+                                EnqueueBuffer(compressedCountPrev);
+                            }
+                            int compressedCount = encoder.Encode(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
+                            EnqueueBuffer(compressedCount);
+                        }
+                        captureTimer -= (VoipConfig.BUFFER_SIZE * 1000) / VoipConfig.FREQUENCY;
+                        if (allowEnqueue)
+                        {
+                            captureTimer = GameMain.Config.VoiceChatCutoffPrevention;
+                        }
+                        prevCaptured = true;
+                    }
+                    else
+                    {
+                        captureTimer = 0;
+                        prevCaptured = false;
+                        //enqueue silence
+                        lock (buffers)
+                        {
+                            EnqueueBuffer(0);
                         }
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError($"VoipCapture threw an exception. Disabling capture...", e);
+                capturing = false;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(nativeBuffer);
+            }
+        }
 
-                if (allowEnqueue || captureTimer > 0)
+        private Sound overrideSound;
+        private int overridePos;
+        private short[] overrideBuf = new short[VoipConfig.BUFFER_SIZE];
+
+        private void FillBuffer()
+        {
+            if (overrideSound != null)
+            {
+                int totalSampleCount = 0;
+                while (totalSampleCount < VoipConfig.BUFFER_SIZE)
                 {
-                    LastEnqueueAudio = DateTime.Now;
-                    if (GameMain.Client?.Character != null)
+                    int sampleCount = overrideSound.FillStreamBuffer(overridePos, overrideBuf);
+                    overridePos += sampleCount * 2;
+                    Array.Copy(overrideBuf, 0, uncompressedBuffer, totalSampleCount, sampleCount);
+                    totalSampleCount += sampleCount;
+
+                    if (sampleCount == 0)
                     {
-                        var messageType = !ForceLocal && ChatMessage.CanUseRadio(GameMain.Client.Character, out _) ? ChatMessageType.Radio : ChatMessageType.Default;
-                        GameMain.Client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
+                        overridePos = 0;
                     }
-                    //encode audio and enqueue it
-                    lock (buffers)
+                }
+                int sleepMs = VoipConfig.BUFFER_SIZE * 800 / VoipConfig.FREQUENCY;
+                Thread.Sleep(sleepMs - 1);
+            }
+            else
+            {
+                int sampleCount = 0;
+
+                while (sampleCount < VoipConfig.BUFFER_SIZE)
+                {
+                    Alc.GetInteger(captureDevice, Alc.EnumCaptureSamples, out sampleCount);
+
+                    int alcError = Alc.GetError(captureDevice);
+                    if (alcError != Alc.NoError)
                     {
-                        if (!prevCaptured) //enqueue the previous buffer if not sent to avoid cutoff
+                        throw new Exception("Failed to determine sample count: " + alcError.ToString());
+                    }
+
+                    if (sampleCount < VoipConfig.BUFFER_SIZE)
+                    {
+                        int sleepMs = (VoipConfig.BUFFER_SIZE - sampleCount) * 800 / VoipConfig.FREQUENCY;
+                        if (sleepMs >= 1)
                         {
-                            int compressedCountPrev = VoipConfig.Encoder.Encode(prevUncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
-                            EnqueueBuffer(compressedCountPrev);
+                            Thread.Sleep(sleepMs);
                         }
-                        int compressedCount = VoipConfig.Encoder.Encode(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
-                        EnqueueBuffer(compressedCount);
                     }
-                    captureTimer -= (VoipConfig.BUFFER_SIZE * 1000) / VoipConfig.FREQUENCY;
-                    if (allowEnqueue)
-                    {
-                        captureTimer = GameMain.Config.VoiceChatCutoffPrevention;
-                    }
-                    prevCaptured = true;
-                }
-                else
-                {
-                    captureTimer = 0;
-                    prevCaptured = false;
-                    //enqueue silence
-                    lock (buffers)
-                    {
-                        EnqueueBuffer(0);
-                    }
+
+                    if (!capturing) { return; }
                 }
 
-                Thread.Sleep(10);
+                Alc.CaptureSamples(captureDevice, nativeBuffer, VoipConfig.BUFFER_SIZE);
+                Marshal.Copy(nativeBuffer, uncompressedBuffer, 0, uncompressedBuffer.Length);
+            }
+        }
+
+        public void SetOverrideSound(string fileName)
+        {
+            overrideSound?.Dispose();
+            if (string.IsNullOrEmpty(fileName))
+            {
+                overrideSound = null;
+            }
+            else
+            {
+                overrideSound = GameMain.SoundManager.LoadSound(fileName, true);
             }
         }
 

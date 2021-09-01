@@ -139,7 +139,7 @@ namespace Barotrauma.Items.Components
             //backwards compatibility
             var repairThresholdAttribute = 
                 element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals("showrepairuithreshold", StringComparison.OrdinalIgnoreCase)) ??
-                element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals("airepairth44reshold", StringComparison.OrdinalIgnoreCase));
+                element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals("airepairthreshold", StringComparison.OrdinalIgnoreCase));
             if (repairThresholdAttribute != null)
             {
                 if (float.TryParse(repairThresholdAttribute.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float repairThreshold))
@@ -349,9 +349,9 @@ namespace Barotrauma.Items.Components
                         foreach (Skill skill in requiredSkills)
                         {
                             float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
-                            CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
+                            CurrentFixer.Info?.IncreaseSkillLevel(skill.Identifier,
                                 SkillSettings.Current.SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f),
-                                CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
+                                CurrentFixer.Position + Vector2.UnitY * 100.0f);
                         }
                         SteamAchievementManager.OnItemRepaired(item, CurrentFixer);
                     }
@@ -379,9 +379,9 @@ namespace Barotrauma.Items.Components
                         foreach (Skill skill in requiredSkills)
                         {
                             float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
-                            CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
+                            CurrentFixer.Info?.IncreaseSkillLevel(skill.Identifier,
                                 SkillSettings.Current.SkillIncreasePerSabotage / Math.Max(characterSkillLevel, 1.0f),
-                                CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
+                                CurrentFixer.Position + Vector2.UnitY * 100.0f);
                         }
 
                         deteriorationTimer = 0.0f;
@@ -446,7 +446,7 @@ namespace Barotrauma.Items.Components
                     //oxygen generators don't deteriorate if they're not running
                     if (oxyGenerator.CurrFlow > 0.1f) { return true; }
                 }
-                else if (ic is Powered powered)
+                else if (ic is Powered powered && !(powered is LightComponent))
                 {
                     if (powered.Voltage >= powered.MinVoltage) { return true; }
                 }
@@ -477,10 +477,11 @@ namespace Barotrauma.Items.Components
 
         private void UpdateFixAnimation(Character character)
         {
+            if (character == null || character.IsDead || character.IsIncapacitated) { return; }
             character.AnimController.UpdateUseItem(false, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((item.Condition / item.MaxCondition) % 0.1f));
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             //do nothing
             //Repairables should always stay active, so we don't want to use the default behavior 

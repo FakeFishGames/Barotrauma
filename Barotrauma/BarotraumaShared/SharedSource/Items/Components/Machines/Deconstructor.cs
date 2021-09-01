@@ -1,5 +1,7 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -59,7 +61,7 @@ namespace Barotrauma.Items.Components
         {
             MoveInputQueue();
 
-            if (inputContainer == null || inputContainer.Inventory.Items.All(i => i == null))
+            if (inputContainer == null || inputContainer.Inventory.IsEmpty())
             {
                 SetActive(false);
                 return;
@@ -79,7 +81,7 @@ namespace Barotrauma.Items.Components
             if (powerConsumption <= 0.0f) { Voltage = 1.0f; }
             progressTimer += deltaTime * Math.Min(Voltage, 1.0f);
 
-            var targetItem = inputContainer.Inventory.Items.LastOrDefault(i => i != null);
+            var targetItem = inputContainer.Inventory.LastOrDefault();
             if (targetItem == null) { return; }
 
             float deconstructTime = targetItem.Prefab.DeconstructItems.Any() ? targetItem.Prefab.DeconstructTime / DeconstructionSpeed : 1.0f;
@@ -87,78 +89,107 @@ namespace Barotrauma.Items.Components
             progressState = Math.Min(progressTimer / deconstructTime, 1.0f);
             if (progressTimer > deconstructTime)
             {
-                int emptySlots = outputContainer.Inventory.Items.Where(i => i == null).Count();
+                // In multiplayer, the server handles the deconstruction into new items
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
-                foreach (DeconstructItem deconstructProduct in targetItem.Prefab.DeconstructItems)
+                if (targetItem.Prefab.RandomDeconstructionOutput)
+                {
+                    int amount = targetItem.Prefab.RandomDeconstructionOutputAmount;
+                    List<int> deconstructItemIndexes = new List<int>();
+                    for (int i = 0; i < targetItem.Prefab.DeconstructItems.Count; i++)
+                    {
+                        deconstructItemIndexes.Add(i);
+                    }
+                    List<float> commonness = targetItem.Prefab.DeconstructItems.Select(i => i.Commonness).ToList();
+                    List<DeconstructItem> products = new List<DeconstructItem>();
+
+                    for (int i = 0; i < amount; i++)
+                    {
+                        if (deconstructItemIndexes.Count < 1) { break; }
+                        var itemIndex = ToolBox.SelectWeightedRandom(deconstructItemIndexes, commonness, Rand.RandSync.Unsynced);
+                        products.Add(targetItem.Prefab.DeconstructItems[itemIndex]);
+                        var removeIndex = deconstructItemIndexes.IndexOf(itemIndex);
+                        deconstructItemIndexes.RemoveAt(removeIndex);
+                        commonness.RemoveAt(removeIndex);
+                    }
+                    foreach (DeconstructItem deconstructProduct in products)
+                    {
+                        CreateDeconstructProduct(deconstructProduct);
+                    }
+                }
+                else
+                {
+                    foreach (DeconstructItem deconstructProduct in targetItem.Prefab.DeconstructItems)
+                    {
+                        CreateDeconstructProduct(deconstructProduct);
+                    }
+                }
+
+                void CreateDeconstructProduct(DeconstructItem deconstructProduct)
                 {
                     float percentageHealth = targetItem.Condition / targetItem.Prefab.Health;
-                    if (percentageHealth <= deconstructProduct.MinCondition || percentageHealth > deconstructProduct.MaxCondition) continue;
+                    if (percentageHealth <= deconstructProduct.MinCondition || percentageHealth > deconstructProduct.MaxCondition) { return; }
 
                     if (!(MapEntityPrefab.Find(null, deconstructProduct.ItemIdentifier) is ItemPrefab itemPrefab))
                     {
                         DebugConsole.ThrowError("Tried to deconstruct item \"" + targetItem.Name + "\" but couldn't find item prefab \"" + deconstructProduct.ItemIdentifier + "\"!");
-                        continue;
+                        return;
                     }
 
                     float condition = deconstructProduct.CopyCondition ?
                         percentageHealth * itemPrefab.Health :
                         itemPrefab.Health * deconstructProduct.OutCondition;
 
-                    //container full, drop the items outside the deconstructor
-                    if (emptySlots <= 0)
+                    Entity.Spawner.AddToSpawnQueue(itemPrefab, outputContainer.Inventory, condition, onSpawned: (Item spawnedItem) =>
                     {
-                        Entity.Spawner.AddToSpawnQueue(itemPrefab, item.Position, item.Submarine, condition);
-                    }
-                    else
-                    {
-                        Entity.Spawner.AddToSpawnQueue(itemPrefab, outputContainer.Inventory, condition);
-                        emptySlots--;
-                    }
-                }
-
-                if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
-                {
-                    if (targetItem.Prefab.AllowDeconstruct)
-                    {
-                        //drop all items that are inside the deconstructed item
-                        foreach (ItemContainer ic in targetItem.GetComponents<ItemContainer>())
+                        for (int i = 0; i < outputContainer.Capacity; i++)
                         {
-                            if (ic?.Inventory?.Items == null) { continue; }
-                            foreach (Item containedItem in ic.Inventory.Items)
+                            var containedItem = outputContainer.Inventory.GetItemAt(i);
+                            if (containedItem?.Combine(spawnedItem, null) ?? false)
                             {
-                                containedItem?.Drop(dropper: null, createNetworkEvent: true);
+                                break;
                             }
                         }
-
-                        inputContainer.Inventory.RemoveItem(targetItem);
-                        Entity.Spawner.AddToRemoveQueue(targetItem);
-                        MoveInputQueue();
                         PutItemsToLinkedContainer();
+                    });
+                }
+
+                if (targetItem.Prefab.AllowDeconstruct)
+                {
+                    //drop all items that are inside the deconstructed item
+                    foreach (ItemContainer ic in targetItem.GetComponents<ItemContainer>())
+                    {
+                        if (ic?.Inventory == null || ic.RemoveContainedItemsOnDeconstruct) { continue; }
+                        ic.Inventory.AllItemsMod.ForEach(containedItem => outputContainer.Inventory.TryPutItem(containedItem, user: null));
+                    }
+                    inputContainer.Inventory.RemoveItem(targetItem);
+                    Entity.Spawner.AddToRemoveQueue(targetItem);
+                    MoveInputQueue();
+                    PutItemsToLinkedContainer();
+                }
+                else
+                {
+                    if (!outputContainer.Inventory.CanBePut(targetItem))
+                    {
+                        targetItem.Drop(dropper: null);
                     }
                     else
                     {
-                        if (outputContainer.Inventory.Items.All(i => i != null))
-                        {
-                            targetItem.Drop(dropper: null);
-                        }
-                        else
-                        {
-                            outputContainer.Inventory.TryPutItem(targetItem, user: null, createNetworkEvent: true);
-                        }
+                        outputContainer.Inventory.TryPutItem(targetItem, user: null, createNetworkEvent: true);
                     }
-#if SERVER
-                    item.CreateServerEvent(this);
-#endif
-                    progressTimer = 0.0f;
-                    progressState = 0.0f;
                 }
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
+                progressTimer = 0.0f;
+                progressState = 0.0f;
             }
         }
 
         private void PutItemsToLinkedContainer()
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (outputContainer.Inventory.Items.All(it => it == null)) return;
+            if (outputContainer.Inventory.IsEmpty()) { return; }
             
             foreach (MapEntity linkedTo in item.linkedTo)
             {
@@ -168,13 +199,7 @@ namespace Barotrauma.Items.Components
                     if (fabricator != null) { continue; }
                     var itemContainer = linkedItem.GetComponent<ItemContainer>();
                     if (itemContainer == null) { continue; }
-
-                    foreach (Item containedItem in outputContainer.Inventory.Items)
-                    {
-                        if (containedItem == null) { continue; }
-                        if (itemContainer.Inventory.Items.All(it => it != null)) { break; }
-                        itemContainer.Inventory.TryPutItem(containedItem, user: null, createNetworkEvent: true);
-                    }
+                    outputContainer.Inventory.AllItemsMod.ForEach(containedItem => itemContainer.Inventory.TryPutItem(containedItem, user: null, createNetworkEvent: true));
                 }
             }            
         }
@@ -186,9 +211,12 @@ namespace Barotrauma.Items.Components
         {
             for (int i = inputContainer.Inventory.Capacity - 2; i >= 0; i--)
             {
-                if (inputContainer.Inventory.Items[i] != null && inputContainer.Inventory.Items[i + 1] == null)
+                while (inputContainer.Inventory.GetItemAt(i) is Item item1 && inputContainer.Inventory.CanBePutInSlot(item1, i + 1))
                 {
-                    inputContainer.Inventory.TryPutItem(inputContainer.Inventory.Items[i], i + 1, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: true);
+                    if (!inputContainer.Inventory.TryPutItem(item1, i + 1, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: true))
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -197,18 +225,16 @@ namespace Barotrauma.Items.Components
         {
             PutItemsToLinkedContainer();
 
-            if (inputContainer.Inventory.Items.All(i => i == null)) { active = false; }
+            if (inputContainer.Inventory.IsEmpty()) { active = false; }
 
             IsActive = active;
             currPowerConsumption = IsActive ? powerConsumption : 0.0f;
-
 #if SERVER
             if (user != null)
             {
                 GameServer.Log(GameServer.CharacterLogName(user) + (IsActive ? " activated " : " deactivated ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 #endif
-
             if (!IsActive)
             {
                 progressTimer = 0.0f;

@@ -14,6 +14,8 @@ namespace Barotrauma
 
         private BackgroundCreatureManager backgroundCreatureManager;
 
+        public BackgroundCreatureManager BackgroundCreatureManager => backgroundCreatureManager;
+
         public LevelRenderer Renderer => renderer;
 
         public void ReloadTextures()
@@ -33,14 +35,6 @@ namespace Barotrauma
                         uniqueSprites.Add(sprite);
                     }
                 }
-                foreach (Sprite specularSprite in levelObj.Prefab.SpecularSprites)
-                {
-                    if (!uniqueTextures.Contains(specularSprite.Texture))
-                    {
-                        uniqueTextures.Add(specularSprite.Texture);
-                        uniqueSprites.Add(specularSprite);
-                    }
-                }
             }
 
             foreach (Sprite sprite in uniqueSprites)
@@ -49,10 +43,10 @@ namespace Barotrauma
             }
         }
         
-        public void DrawFront(SpriteBatch spriteBatch, Camera cam)
+        public void DrawDebugOverlay(SpriteBatch spriteBatch, Camera cam)
         {
-            if (renderer == null) return;
-            renderer.Draw(spriteBatch, cam);
+            if (renderer == null) { return; }
+            renderer.DrawDebugOverlay(spriteBatch, cam);
 
             if (GameMain.DebugDraw && Screen.Selected.Cam.Zoom > 0.1f)
             {
@@ -120,25 +114,40 @@ namespace Barotrauma
 
             graphics.Clear(BackgroundColor);
 
-            if (renderer == null) return;
-            renderer.DrawBackground(spriteBatch, cam, LevelObjectManager, backgroundCreatureManager);
+            renderer?.DrawBackground(spriteBatch, cam, LevelObjectManager, backgroundCreatureManager);
         }
-        
+
+        public void DrawFront(SpriteBatch spriteBatch, Camera cam)
+        {
+            renderer?.DrawForeground(spriteBatch, cam, LevelObjectManager);
+        }
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            foreach (LevelWall levelWall in ExtraWalls)
+            bool isGlobalUpdate = msg.ReadBoolean();
+            if (isGlobalUpdate)
             {
-                if (levelWall.Body.BodyType == BodyType.Static) continue;
-
-                Vector2 bodyPos = new Vector2(
-                    msg.ReadSingle(), 
-                    msg.ReadSingle());
-                
-                levelWall.MoveState = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 16);
-
-                if (Vector2.DistanceSquared(bodyPos, levelWall.Body.Position) > 0.5f)
+                foreach (LevelWall levelWall in ExtraWalls)
                 {
-                    levelWall.Body.SetTransformIgnoreContacts(ref bodyPos, levelWall.Body.Rotation);
+                    if (levelWall.Body.BodyType == BodyType.Static) { continue; }
+
+                    Vector2 bodyPos = new Vector2(
+                        msg.ReadSingle(),
+                        msg.ReadSingle());
+                    levelWall.MoveState = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 16);
+                    DestructibleLevelWall destructibleWall = levelWall as DestructibleLevelWall;
+                    if (Vector2.DistanceSquared(bodyPos, levelWall.Body.Position) > 0.5f && (destructibleWall == null || !destructibleWall.Destroyed))
+                    {
+                        levelWall.Body.SetTransformIgnoreContacts(ref bodyPos, levelWall.Body.Rotation);
+                    }
+                }
+            }
+            else
+            {
+                int index = msg.ReadUInt16();
+                byte damageByte = msg.ReadByte();
+                if (index < ExtraWalls.Count && ExtraWalls[index] is DestructibleLevelWall destructibleWall)
+                {
+                    destructibleWall.SetDamage(destructibleWall.MaxHealth * damageByte / 255.0f);
                 }
             }
         }

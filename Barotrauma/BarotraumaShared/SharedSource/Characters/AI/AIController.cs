@@ -1,17 +1,16 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
+using Barotrauma.Items.Components;
+using System.Linq;
 
 namespace Barotrauma
 {
-    public enum AIState { Idle, Attack, Escape, Eat, Flee, Avoid, Aggressive, PassiveAggressive, Protect, Observe, Freeze, Follow }
-
     abstract partial class AIController : ISteerable
     {
         public bool Enabled;
 
         public readonly Character Character;
-
-        private AIState state;
 
         // Update only when the value changes, not when it keeps the same.
         protected AITarget _lastAiTarget;
@@ -74,24 +73,7 @@ namespace Barotrauma
             get { return true; }
         }
 
-        public virtual AIObjectiveManager ObjectiveManager
-        {
-            get { return null; }
-        }
-
-        public AIState State
-        {
-            get { return state; }
-            set
-            {
-                if (state == value) { return; }
-                PreviousState = state;
-                OnStateChanged(state, value);
-                state = value;
-            }
-        }
-
-        public AIState PreviousState { get; protected set; }
+        public virtual bool IsMentallyUnstable => false;
 
         private IEnumerable<Hull> visibleHulls;
         private float hullVisibilityTimer;
@@ -111,6 +93,9 @@ namespace Barotrauma
                 visibleHulls = value;
             }
         }
+
+        protected bool HasValidPath(bool requireNonDirty = false) => 
+            steeringManager is IndoorsSteeringManager pathSteering && pathSteering.CurrentPath != null && !pathSteering.CurrentPath.Finished && !pathSteering.CurrentPath.Unreachable && (!requireNonDirty || !pathSteering.IsPathDirty);
 
         public AIController (Character c)
         {
@@ -149,8 +134,199 @@ namespace Barotrauma
 
         public void FaceTarget(ISpatialEntity target) => Character.AnimController.TargetDir = target.WorldPosition.X > Character.WorldPosition.X ? Direction.Right : Direction.Left;
 
+        public bool IsSteeringThroughGap { get; protected set; }
+
+        public virtual bool SteerThroughGap(Structure wall, WallSection section, Vector2 targetWorldPos, float deltaTime)
+        {
+            if (wall == null) { return false; }
+            if (section == null) { return false; }
+            Gap gap = section.gap;
+            if (gap == null) { return false; }
+            float maxDistance = Math.Min(wall.Rect.Width, wall.Rect.Height);
+            if (Vector2.DistanceSquared(Character.WorldPosition, targetWorldPos) > maxDistance * maxDistance) { return false; }
+            Hull targetHull = gap.FlowTargetHull;
+            if (targetHull == null) { return false; }
+            if (wall.IsHorizontal)
+            {
+                targetWorldPos.Y = targetHull.WorldRect.Y - targetHull.Rect.Height / 2;
+            }
+            else
+            {
+                targetWorldPos.X = targetHull.WorldRect.Center.X;
+            }
+            return SteerThroughGap(gap, targetWorldPos, deltaTime, maxDistance: -1);
+        }
+
+        public virtual bool SteerThroughGap(Gap gap, Vector2 targetWorldPos, float deltaTime, float maxDistance = -1)
+        {
+            Hull targetHull = gap.FlowTargetHull;
+            if (targetHull == null) { return false; }
+            if (maxDistance > 0)
+            {
+                if (Vector2.DistanceSquared(Character.WorldPosition, targetWorldPos) > maxDistance * maxDistance) { return false; }
+            }
+            if (SteeringManager is IndoorsSteeringManager pathSteering)
+            {
+                pathSteering.ResetPath();
+            }
+            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(targetWorldPos - Character.WorldPosition));
+            return true;
+        }
+
+        public bool CanPassThroughHole(Structure wall, int sectionIndex, int requiredHoleCount)
+        {
+            if (!wall.SectionBodyDisabled(sectionIndex)) { return false; }
+            int holeCount = 1;
+            for (int j = sectionIndex - 1; j > sectionIndex - requiredHoleCount; j--)
+            {
+                if (wall.SectionBodyDisabled(j))
+                {
+                    holeCount++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            for (int j = sectionIndex + 1; j < sectionIndex + requiredHoleCount; j++)
+            {
+                if (wall.SectionBodyDisabled(j))
+                {
+                    holeCount++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            return holeCount >= requiredHoleCount;
+        }
+
+        protected bool IsWallDisabled(Structure wall)
+        {
+            bool isDisabled = true;
+            for (int i = 0; i < wall.Sections.Length; i++)
+            {
+                if (!wall.SectionBodyDisabled(i))
+                {
+                    isDisabled = false;
+                    break;
+                }
+            }
+            return isDisabled;
+        }
+
+        private readonly HashSet<Item> unequippedItems = new HashSet<Item>();
+        public bool TakeItem(Item item, CharacterInventory targetInventory, bool equip, bool wear = false, bool dropOtherIfCannotMove = true, bool allowSwapping = false, bool storeUnequipped = false)
+        {
+            var pickable = item.GetComponent<Pickable>();
+            if (pickable == null) { return false; }
+            if (wear)
+            {
+                var wearable = item.GetComponent<Wearable>();
+                if (wearable != null)
+                {
+                    pickable = wearable;
+                }
+            }
+            else
+            {
+                var holdable = item.GetComponent<Holdable>();
+                if (holdable != null)
+                {
+                    pickable = holdable;
+                }
+            }
+            if (item.ParentInventory is ItemInventory itemInventory)
+            {
+                if (!itemInventory.Container.HasRequiredItems(Character, addMessage: false)) { return false; }
+            }
+            if (equip)
+            {
+                int targetSlot = -1;
+                //check if all the slots required by the item are free
+                foreach (InvSlotType slots in pickable.AllowedSlots)
+                {
+                    if (slots.HasFlag(InvSlotType.Any)) { continue; }
+                    for (int i = 0; i < targetInventory.Capacity; i++)
+                    {
+                        if (targetInventory is CharacterInventory characterInventory)
+                        {
+                            //slot not needed by the item, continue
+                            if (!slots.HasFlag(characterInventory.SlotTypes[i])) { continue; }
+                        }
+                        targetSlot = i;
+                        //slot free, continue
+                        var otherItem = targetInventory.GetItemAt(i);
+                        if (otherItem == null) { continue; }
+                        //try to move the existing item to LimbSlot.Any and continue if successful
+                        if (otherItem.AllowedSlots.Contains(InvSlotType.Any) && targetInventory.TryPutItem(otherItem, Character, CharacterInventory.anySlot))
+                        {
+                            if (storeUnequipped && targetInventory.Owner == Character)
+                            {
+                                unequippedItems.Add(otherItem);
+                            }
+                            continue;
+                        }
+                        if (dropOtherIfCannotMove)
+                        {
+                            //if everything else fails, simply drop the existing item
+                            otherItem.Drop(Character);
+                        }
+                    }
+                }
+                return targetInventory.TryPutItem(item, targetSlot, allowSwapping, allowCombine: false, Character);
+            }
+            else
+            {
+                return targetInventory.TryPutItem(item, Character, CharacterInventory.anySlot);
+            }
+        }
+
+        public void UnequipEmptyItems(Item parentItem, bool avoidDroppingInSea = true) => UnequipEmptyItems(Character, parentItem, avoidDroppingInSea);
+
+        public void UnequipContainedItems(Item parentItem, Func<Item, bool> predicate = null, bool avoidDroppingInSea = true) => UnequipContainedItems(Character, parentItem, predicate, avoidDroppingInSea);
+
+        public static void UnequipEmptyItems(Character character, Item parentItem, bool avoidDroppingInSea = true) => UnequipContainedItems(character, parentItem, it => it.Condition <= 0, avoidDroppingInSea);
+
+        public static void UnequipContainedItems(Character character, Item parentItem, Func<Item, bool> predicate, bool avoidDroppingInSea = true)
+        {
+            var inventory = parentItem.OwnInventory;
+            if (inventory == null) { return; }
+            if (predicate == null || inventory.AllItems.Any(predicate))
+            {
+                foreach (Item containedItem in inventory.AllItemsMod)
+                {
+                    if (containedItem == null) { continue; }
+                    if (predicate == null || predicate(containedItem))
+                    {
+                        if (avoidDroppingInSea && !character.IsInFriendlySub)
+                        {
+                            // If we are not inside a friendly sub (= same team), try to put the item in the inventory instead dropping it.
+                            if (character.Inventory.TryPutItem(containedItem, character, CharacterInventory.anySlot))
+                            {
+                                continue;
+                            }
+                        }
+                        containedItem.Drop(character);
+                    }
+                }
+            }
+        }
+
+        public void ReequipUnequipped()
+        {
+            foreach (var item in unequippedItems)
+            {
+                if (item != null && !item.Removed && Character.HasItem(item))
+                {
+                    TakeItem(item, Character.Inventory, equip: true, wear: true, dropOtherIfCannotMove: true, allowSwapping: true, storeUnequipped: false);
+                }
+            }
+            unequippedItems.Clear();
+        }
+
         protected virtual void OnStateChanged(AIState from, AIState to) { }
         protected virtual void OnTargetChanged(AITarget previousTarget, AITarget newTarget) { }
-
     }
 }
