@@ -174,6 +174,8 @@ namespace Barotrauma
 
         public float GetAfflictionOverlayMultiplier()
         {
+            //If the overlay's alpha progresses linearly, then don't worry about affliction effects.
+            if (Prefab.AfflictionOverlayAlphaIsLinear) { return (Strength / Prefab.MaxStrength); }
             if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
             AfflictionPrefab.Effect currentEffect = GetActiveEffect();
             if (currentEffect == null) { return 0.0f; }

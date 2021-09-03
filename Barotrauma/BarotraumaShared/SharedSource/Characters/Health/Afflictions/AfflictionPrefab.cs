@@ -323,6 +323,7 @@ namespace Barotrauma
         public readonly Color[] IconColors;
 
         public readonly Sprite AfflictionOverlay;
+        public readonly bool AfflictionOverlayAlphaIsLinear;
 
         private readonly List<Effect> effects = new List<Effect>();
         private readonly List<PeriodicEffect> periodicEffects = new List<PeriodicEffect>();
@@ -611,6 +612,7 @@ namespace Barotrauma
             SelfCauseOfDeathDescription = TextManager.Get("AfflictionCauseOfDeathSelf." + translationId, true) ?? element.GetAttributeString("selfcauseofdeathdescription", "");
 
             IconColors = element.GetAttributeColorArray("iconcolors", null);
+            AfflictionOverlayAlphaIsLinear = element.GetAttributeBool("afflictionoverlayalphaislinear", false);
             AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
 
             foreach (XElement subElement in element.Elements())
