@@ -172,6 +172,19 @@ namespace Barotrauma
                 (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
         }
 
+        public float GetAfflictionOverlayMultiplier()
+        {
+            if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
+            if (currentEffect == null) { return 0.0f; }
+            if (currentEffect.MaxAfflictionOverlayAlphaMultiplier - currentEffect.MinAfflictionOverlayAlphaMultiplier < 0.0f) { return 0.0f; }
+
+            return MathHelper.Lerp(
+                currentEffect.MinAfflictionOverlayAlphaMultiplier,
+                currentEffect.MaxAfflictionOverlayAlphaMultiplier,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
         public float GetScreenBlurStrength()
         {
             if (Strength < Prefab.ActivationThreshold) { return 0.0f; }

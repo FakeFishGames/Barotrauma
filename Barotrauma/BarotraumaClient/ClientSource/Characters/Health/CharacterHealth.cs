@@ -1071,6 +1071,16 @@ namespace Barotrauma
                 UpdateAlignment();
             }
 
+            foreach (Affliction affliction in afflictions)
+            {
+                if (affliction.Prefab.AfflictionOverlay != null)
+                {
+                    Sprite ScreenAfflictionOverlay = affliction.Prefab.AfflictionOverlay;
+                    ScreenAfflictionOverlay?.Draw(spriteBatch, Vector2.Zero, Color.White * (affliction.GetAfflictionOverlayMultiplier()), Vector2.Zero, 0.0f,
+                        new Vector2(GameMain.GraphicsWidth / DamageOverlay.size.X, GameMain.GraphicsHeight / DamageOverlay.size.Y));
+                }
+            }
+
             float damageOverlayAlpha = DamageOverlayTimer;
             if (Vitality < MaxVitality * 0.1f)
             {

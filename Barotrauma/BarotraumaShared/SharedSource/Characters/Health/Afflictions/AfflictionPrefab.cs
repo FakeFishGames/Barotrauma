@@ -131,6 +131,7 @@ namespace Barotrauma
             public float MinGrainStrength, MaxGrainStrength;
             public float MinRadialDistortStrength, MaxRadialDistortStrength;
             public float MinChromaticAberrationStrength, MaxChromaticAberrationStrength;
+            public float MinAfflictionOverlayAlphaMultiplier, MaxAfflictionOverlayAlphaMultiplier;
             public float MinSpeedMultiplier, MaxSpeedMultiplier;
             public float MinBuffMultiplier, MaxBuffMultiplier;
 
@@ -165,6 +166,10 @@ namespace Barotrauma
                 MinChromaticAberrationStrength = element.GetAttributeFloat("minchromaticaberration", 0.0f);
                 MaxChromaticAberrationStrength = element.GetAttributeFloat("maxchromaticaberration", 0.0f);
                 MaxChromaticAberrationStrength = Math.Max(MinChromaticAberrationStrength, MaxChromaticAberrationStrength);
+
+                MinAfflictionOverlayAlphaMultiplier = element.GetAttributeFloat("minafflictionoverlayalphamultiplier", 0.0f);
+                MaxAfflictionOverlayAlphaMultiplier = element.GetAttributeFloat("maxafflictionoverlayalphamultiplier", 1.0f);
+                MaxAfflictionOverlayAlphaMultiplier = Math.Max(MinAfflictionOverlayAlphaMultiplier, MaxAfflictionOverlayAlphaMultiplier);
 
                 MinGrainStrength = element.GetAttributeFloat(nameof(MinGrainStrength).ToLower(), 0.0f);
                 MaxGrainStrength = element.GetAttributeFloat(nameof(MaxGrainStrength).ToLower(), 0.0f);
@@ -316,6 +321,8 @@ namespace Barotrauma
 
         public readonly Sprite Icon;
         public readonly Color[] IconColors;
+
+        public readonly Sprite AfflictionOverlay;
 
         private readonly List<Effect> effects = new List<Effect>();
         private readonly List<PeriodicEffect> periodicEffects = new List<PeriodicEffect>();
@@ -612,6 +619,9 @@ namespace Barotrauma
                 {
                     case "icon":
                         Icon = new Sprite(subElement);
+                        break;
+                    case "afflictionoverlay":
+                        AfflictionOverlay = new Sprite(subElement);
                         break;
                 }
             }
