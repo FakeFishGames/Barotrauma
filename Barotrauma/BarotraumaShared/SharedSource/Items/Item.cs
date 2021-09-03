@@ -540,6 +540,12 @@ namespace Barotrauma
             set => indestructible = value;
         }
 
+        public bool AllowDeconstruct
+        {
+            get;
+            set;
+        }
+
         [Editable, Serialize(false, isSaveable: true, "When enabled will prevent the item from taking damage from all sources")]
         public bool InvulnerableToDamage { get; set; }
 
@@ -766,6 +772,8 @@ namespace Barotrauma
 
             condition = MaxCondition;
             lastSentCondition = condition;
+
+            AllowDeconstruct = itemPrefab.AllowDeconstruct;
 
             allPropertyObjects.Add(this);
 
@@ -1431,7 +1439,7 @@ namespace Barotrauma
             bool hasTargets = effect.TargetIdentifiers == null;
 
             targets.Clear();
-            
+
             if (effect.HasTargetType(StatusEffect.TargetType.Contained))
             {
                 foreach (Item containedItem in ContainedItems)
@@ -1441,6 +1449,11 @@ namespace Barotrauma
                         !effect.TargetIdentifiers.Any(id => containedItem.HasTag(id)))
                     {
                         continue;
+                    }
+
+                    if (effect.TargetSlot > -1)
+                    {
+                        if (OwnInventory.FindIndex(containedItem) != effect.TargetSlot) { continue; }
                     }
 
                     hasTargets = true;
@@ -1500,8 +1513,8 @@ namespace Barotrauma
             {
                 targets.Add(limb);
             }
-            
-            if (Container != null && effect.HasTargetType(StatusEffect.TargetType.Parent)) targets.Add(Container);
+
+            if (Container != null && effect.HasTargetType(StatusEffect.TargetType.Parent)) { targets.Add(Container); }
             
             effect.Apply(type, deltaTime, this, targets, worldPosition);            
         }
@@ -2298,8 +2311,8 @@ namespace Barotrauma
         public void ApplyTreatment(Character user, Character character, Limb targetLimb)
         {
             //can't apply treatment to dead characters
-            if (character.IsDead) return;
-            if (!UseInHealthInterface) return;
+            if (character.IsDead) { return; }
+            if (!UseInHealthInterface) { return; }
 
 #if CLIENT
             if (GameMain.Client != null)
@@ -2312,7 +2325,7 @@ namespace Barotrauma
             bool remove = false;
             foreach (ItemComponent ic in components)
             {
-                if (!ic.HasRequiredContainedItems(user, addMessage: user == Character.Controlled)) continue;
+                if (!ic.HasRequiredContainedItems(user, addMessage: user == Character.Controlled)) { continue; }
 
                 bool success = Rand.Range(0.0f, 0.5f) < ic.DegreeOfSuccess(user);
                 ActionType actionType = success ? ActionType.OnUse : ActionType.OnFailure;
@@ -2331,7 +2344,7 @@ namespace Barotrauma
                     });
                 }
 
-                if (ic.DeleteOnUse) remove = true;
+                if (ic.DeleteOnUse) { remove = true; }
             }
 
             if (remove) { Spawner?.AddToRemoveQueue(this); }

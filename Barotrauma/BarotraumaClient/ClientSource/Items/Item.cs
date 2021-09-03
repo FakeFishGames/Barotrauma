@@ -1194,7 +1194,14 @@ namespace Barotrauma
                 }
             }
 
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != this) { return; }
+            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != this)
+            { 
+                if (Character.Controlled.SelectedConstruction?.GetComponent<RemoteController>()?.TargetItem != this && 
+                    !Character.Controlled.HeldItems.Any(it => it.GetComponent<RemoteController>()?.TargetItem == this))
+                {
+                    return;
+                }
+            }
 
             bool needsLayoutUpdate = false;
             foreach (ItemComponent ic in activeHUDs)

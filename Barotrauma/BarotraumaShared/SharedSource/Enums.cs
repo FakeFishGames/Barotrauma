@@ -45,14 +45,18 @@
         OnReduceAffliction,
         OnAddDamageAffliction,
         OnSelfRagdoll,
+        OnRoundEnd,
         OnAnyMissionCompleted,
         OnAllMissionsCompleted,
         OnGiveOrder,
         OnCrewKillCharacter,
+        OnKillCharacter,
         OnDieToCharacter,
         OnAllyGainMissionExperience,
         OnGainMissionExperience,
         OnGainMissionMoney,
+        OnItemDeconstructed,
+        OnItemDeconstructedMaterial,
         AfterSubmarineAttacked,
     }
 
@@ -68,23 +72,32 @@
         // Character attributes
         MaximumHealthMultiplier,
         MovementSpeed,
+        WalkingSpeed,
         SwimmingSpeed,
         BuffDurationMultiplier,
         DebuffDurationMultiplier,
+        MedicalItemEffectivenessMultiplier,
         // Combat
         AttackMultiplier,
+        TeamAttackMultiplier,
         RangedAttackSpeed,
         TurretAttackSpeed,
+        TurretPowerCostReduction,
         MeleeAttackSpeed,
-        SpreadMultiplier,
+        MeleeAttackMultiplier,
+        RangedSpreadReduction,
         // Utility
         RepairSpeed,
+        DeconstructorSpeedMultiplier,
         // Misc
         ReputationGainMultiplier,
         MissionMoneyGainMultiplier,
         ExperienceGainMultiplier,
         MissionExperienceGainMultiplier,
-
+        // these should be deprecated and moved to their own implementation, no sense making them share space with stat values
+        Coathor,
+        WarriorPoetMissionRuns,
+        WarriorPoetEnemiesKilled,
     }
 
     public enum AbilityFlags
@@ -95,6 +108,8 @@
         IgnoredByEnemyAI,
         MoveNormallyWhileDragging,
         CanTinker,
+        GainSkillPastMaximum,
+        RetainExperienceForNewCharacter
     }
 
 }

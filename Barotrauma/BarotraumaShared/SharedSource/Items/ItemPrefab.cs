@@ -18,9 +18,18 @@ namespace Barotrauma
         //maxCondition does > check, meaning that above this max the deconstruct item will be skipped.
         public readonly float MaxCondition;
         //Condition of item on creation
-        public readonly float OutCondition;
+        public readonly float OutConditionMin, OutConditionMax;
         //should the condition of the deconstructed item be copied to the output items
         public readonly bool CopyCondition;
+        //tag/identifier of the deconstructor(s) that can be used to deconstruct the item into this
+        public readonly string[] RequiredDeconstructor;
+        //tag/identifier of other item(s) that that need to be present in the deconstructor to deconstruct the item into this
+        public readonly string[] RequiredOtherItem;
+        //text to display on the deconstructor's activate button when this output is available
+        public readonly string ActivateButtonText;
+        public readonly string InfoText;
+        public readonly string InfoTextOnOtherItemMissing;
+
         public float Commonness { get; }
 
         public DeconstructItem(XElement element, string parentDebugName)
@@ -28,14 +37,20 @@ namespace Barotrauma
             ItemIdentifier = element.GetAttributeString("identifier", "notfound");
             MinCondition = element.GetAttributeFloat("mincondition", -0.1f);
             MaxCondition = element.GetAttributeFloat("maxcondition", 1.0f);
-            OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
+            OutConditionMin = element.GetAttributeFloat("outconditionmin", element.GetAttributeFloat("outcondition", 1.0f));
+            OutConditionMax = element.GetAttributeFloat("outconditionmax", element.GetAttributeFloat("outcondition", 1.0f));
             CopyCondition = element.GetAttributeBool("copycondition", false);
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
-
             if (element.Attribute("copycondition") != null && element.Attribute("outcondition") != null)
             {
                 DebugConsole.AddWarning($"Invalid deconstruction output in \"{parentDebugName}\": the output item \"{ItemIdentifier}\" has the out condition set, but is also set to copy the condition of the deconstructed item. Ignoring the out condition.");
             }
+            RequiredDeconstructor = element.GetAttributeStringArray("requireddeconstructor", new string[0]);
+            RequiredOtherItem = element.GetAttributeStringArray("requiredotheritem", new string[0]);
+            ActivateButtonText = element.GetAttributeString("activatebuttontext", string.Empty);
+            InfoText = element.GetAttributeString("infotext", string.Empty);
+            InfoTextOnOtherItemMissing = element.GetAttributeString("infotextonotheritemmissing", string.Empty);
+
         }
     }
 

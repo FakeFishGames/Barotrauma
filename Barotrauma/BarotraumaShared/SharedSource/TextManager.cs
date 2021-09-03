@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Barotrauma.Extensions;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -441,6 +442,42 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("TextManager.GetFormatted:FormatException", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return text;
             }
+        }
+
+        /// <summary>
+        /// Constructs a string from XML in a way that allows replacing one or more variables with hard-coded or localized values. Usage example in the method's comments.
+        /// </summary>
+        public static void ConstructDescription(ref string Description, XElement descriptionElement)
+        {
+            /*
+            <Description tag="talentdescription.simultaneousskillgain">
+                <Replace tag="[skillname1]" value="skillname.helm"/>
+                <Replace tag="[skillname2]" value="skillname.weapons"/>
+                <Replace tag="[somevalue]" value="45.3"/>
+            </Description>
+            */
+
+            string extraDescriptionLine = Get(descriptionElement.GetAttributeString("tag", string.Empty));
+            if (string.IsNullOrEmpty(extraDescriptionLine)) { return; }
+            foreach (XElement replaceElement in descriptionElement.Elements())
+            {
+                if (replaceElement.Name.ToString().ToLowerInvariant() != "replace") { continue; }
+
+                string tag = replaceElement.GetAttributeString("tag", string.Empty);
+                string[] replacementValues = replaceElement.GetAttributeStringArray("value", new string[0]);
+                string replacementValue = string.Empty;
+                for (int i = 0; i < replacementValues.Length; i++)
+                {
+                    replacementValue += Get(replacementValues[i], returnNull: true) ?? replacementValues[i];
+                    if (i < replacementValues.Length - 1)
+                    {
+                        replacementValue += ", ";
+                    }
+                }
+                extraDescriptionLine = extraDescriptionLine.Replace(tag, replacementValue);
+            }
+            if (!string.IsNullOrEmpty(Description)) { Description += "\n"; }
+            Description += extraDescriptionLine;
         }
 
         public static string FormatServerMessage(string textId)

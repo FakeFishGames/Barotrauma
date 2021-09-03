@@ -14,6 +14,7 @@ namespace Barotrauma.Abilities
         private float effectDelay;
         private float effectDelayTimer;
 
+
         public CharacterAbilityGroupInterval(CharacterTalent characterTalent, XElement abilityElementGroup) : base(characterTalent, abilityElementGroup)
         {            
             // too many overlapping intervals could cause hitching? maybe randomize a little
@@ -42,6 +43,7 @@ namespace Barotrauma.Abilities
         }
         private bool IsApplicable()
         {
+            if (timesTriggered >= maxTriggerCount) { return false; }
             return abilityConditions.All(c => c.MatchesCondition());
         }
     }

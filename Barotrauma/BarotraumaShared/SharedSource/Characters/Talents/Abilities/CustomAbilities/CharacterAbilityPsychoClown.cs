@@ -5,14 +5,14 @@ namespace Barotrauma.Abilities
     class CharacterAbilityPsychoClown : CharacterAbility
     {
         private StatTypes statType;
-        private float value;
+        private float maxValue;
         private string afflictionIdentifier;
         private float lastValue = 0f;
 
         public CharacterAbilityPsychoClown(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statType = CharacterAbilityGroup.ParseStatType(abilityElement.GetAttributeString("stattype", ""), CharacterTalent.DebugIdentifier);
-            value = abilityElement.GetAttributeFloat("value", 0f);
+            maxValue = abilityElement.GetAttributeFloat("maxvalue", 0f);
             afflictionIdentifier = abilityElement.GetAttributeString("afflictionidentifier", "");
         }
 
@@ -32,7 +32,7 @@ namespace Barotrauma.Abilities
                     afflictionStrength = affliction.Strength / affliction.Prefab.MaxStrength;
                 }
 
-                lastValue = afflictionStrength * value;
+                lastValue = afflictionStrength * maxValue;
                 Character.ChangeStat(statType, lastValue);
             }
             else

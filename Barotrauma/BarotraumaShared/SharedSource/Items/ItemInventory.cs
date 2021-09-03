@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     partial class ItemInventory : Inventory
     {
-        private ItemContainer container;
+        private readonly ItemContainer container;
         public ItemContainer Container
         {
             get { return container; }
@@ -48,14 +48,14 @@ namespace Barotrauma
             if (ItemOwnsSelf(item)) { return false; }
             if (i < 0 || i >= slots.Length) { return false; }
             if (!container.CanBeContained(item)) { return false; }
-            return item != null && slots[i].CanBePut(item, ignoreCondition) && slots[i].ItemCount < container.MaxStackSize;
+            return item != null && slots[i].CanBePut(item, ignoreCondition) && slots[i].ItemCount < container.GetMaxStackSize(i);
         }
 
         public override bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition)
         {
             if (i < 0 || i >= slots.Length) { return false; }
             if (!container.CanBeContained(itemPrefab)) { return false; }
-            return itemPrefab != null && slots[i].CanBePut(itemPrefab, condition) && slots[i].ItemCount < container.MaxStackSize;
+            return itemPrefab != null && slots[i].CanBePut(itemPrefab, condition) && slots[i].ItemCount < container.GetMaxStackSize(i);
         }
 
         public override int HowManyCanBePut(ItemPrefab itemPrefab, int i, float? condition)
@@ -63,7 +63,7 @@ namespace Barotrauma
             if (itemPrefab == null) { return 0; }
             if (i < 0 || i >= slots.Length) { return 0; }
             if (!container.CanBeContained(itemPrefab)) { return 0; }
-            return slots[i].HowManyCanBePut(itemPrefab, maxStackSize: Math.Min(itemPrefab.MaxStackSize, container.MaxStackSize), condition);
+            return slots[i].HowManyCanBePut(itemPrefab, maxStackSize: Math.Min(itemPrefab.MaxStackSize, container.GetMaxStackSize(i)), condition);
         }
 
         public override bool IsFull(bool takeStacksIntoAccount = false)
@@ -74,7 +74,7 @@ namespace Barotrauma
                 {
                     if (!slots[i].Any()) { return false; }
                     var item = slots[i].FirstOrDefault();
-                    if (slots[i].ItemCount < Math.Min(item.Prefab.MaxStackSize, container.MaxStackSize)) { return false; }
+                    if (slots[i].ItemCount < Math.Min(item.Prefab.MaxStackSize, container.GetMaxStackSize(i))) { return false; }
                 }
             }
             else

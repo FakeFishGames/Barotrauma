@@ -28,6 +28,15 @@ namespace Barotrauma
                 }
             }
 
+            if (HasAbilityFlag(AbilityFlags.RetainExperienceForNewCharacter))
+            {
+                var ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
+                if (ownerClient != null)
+                {
+                    (GameMain.GameSession?.GameMode as MultiPlayerCampaign)?.SaveExperiencePoints(ownerClient);
+                }
+            }
+
             healthUpdateTimer = 0.0f;
 
             if (CauseOfDeath.Killer != null && CauseOfDeath.Killer.IsTraitor && CauseOfDeath.Killer != this)

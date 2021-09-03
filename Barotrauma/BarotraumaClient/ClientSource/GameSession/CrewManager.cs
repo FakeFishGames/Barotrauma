@@ -99,7 +99,9 @@ namespace Barotrauma
             crewList = new GUIListBox(new RectTransform(Vector2.One, crewArea.RectTransform), style: null, isScrollBarOnDefaultSide: false)
             {
                 AutoHideScrollBar = false,
+                CanBeFocused = false,
                 CanDragElements = true,
+                CanInteractWhenUnfocusable = true,
                 OnSelected = (component, userData) => false,
                 SelectMultiple = false,
                 Spacing = (int)(GUI.Scale * 10),
@@ -770,7 +772,7 @@ namespace Barotrauma
                 if (IsSinglePlayer)
                 {
                     character.SetOrder(order, option, priority, orderGiver, speak: orderGiver != character);
-                    string message = order?.GetChatMessage(character.Name, orderGiver.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver, orderOption: option, priority: priority);
+                    string message = order?.GetChatMessage(character.Name, orderGiver?.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver, orderOption: option, priority: priority);
                     orderGiver?.Speak(message);
                 }
                 else if (orderGiver != null)
@@ -1905,13 +1907,23 @@ namespace Barotrauma
             }
         }
 
-        private bool CanSomeoneHearCharacter()
+        private bool CanCharacterBeHeard()
         {
 #if DEBUG
             if (Character.Controlled == null) { return true; }
 #endif
-            return Character.Controlled != null && 
-                (characters.Any(c => c != Character.Controlled && c.CanHearCharacter(Character.Controlled)) || GetOrderableFriendlyNPCs().Any(c => c != Character.Controlled && c.CanHearCharacter(Character.Controlled)));
+            if (Character.Controlled != null)
+            {
+                if (characterContext == null)
+                {
+                    return characters.Any(c => c != Character.Controlled && c.CanHearCharacter(Character.Controlled)) || GetOrderableFriendlyNPCs().Any(c => c != Character.Controlled && c.CanHearCharacter(Character.Controlled));
+                }
+                else
+                {
+                    return characterContext.CanHearCharacter(Character.Controlled);
+                }
+            }
+            return false;
         }
 
         private Entity FindEntityContext()
@@ -2580,7 +2592,7 @@ namespace Barotrauma
             for (int i = 0; i < orders.Count; i++)
             {
                 order = orders[i];
-                disableNode = !CanSomeoneHearCharacter() ||
+                disableNode = !CanCharacterBeHeard() ||
                     (order.MustSetTarget && (order.ItemComponentType != null || order.TargetItems.Length > 0) &&
                      order.GetMatchingItems(true, interactableFor: characterContext ?? Character.Controlled).None());
                 optionNodes.Add(new Tuple<GUIComponent, Keys>(
@@ -2728,7 +2740,7 @@ namespace Barotrauma
             }
 
             var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance, contextualOrders.Count, MathHelper.ToRadians(90f + 180f / contextualOrders.Count));
-            bool disableNode = !CanSomeoneHearCharacter();
+            bool disableNode = !CanCharacterBeHeard();
             for (int i = 0; i < contextualOrders.Count; i++)
             {
                 optionNodes.Add(new Tuple<GUIComponent, Keys>(
@@ -2766,7 +2778,7 @@ namespace Barotrauma
 
             if (checkIfOrderCanBeHeard && !disableNode)
             {
-                disableNode = !CanSomeoneHearCharacter();
+                disableNode = !CanCharacterBeHeard();
             }
 
             var mustSetOptionOrTarget = order.HasOptions;
@@ -2827,7 +2839,7 @@ namespace Barotrauma
             if (disableNode)
             {
                 node.CanBeFocused = icon.CanBeFocused = false;
-                CreateBlockIcon(node.RectTransform, tooltip: TextManager.Get("nocharactercanhear"));
+                CreateBlockIcon(node.RectTransform, tooltip: TextManager.Get(characterContext == null ? "nocharactercanhear" : "thischaractercanthear"));
             }
             else if (hotkey >= 0)
             {
@@ -2999,11 +3011,11 @@ namespace Barotrauma
                         "\n" + (!PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.leftmouse") : TextManager.Get("input.rightmouse")) + ": " + TextManager.Get("commandui.quickassigntooltip") +
                         "\n" + (!PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.rightmouse") : TextManager.Get("input.leftmouse")) + ": " + TextManager.Get("commandui.manualassigntooltip"));
             }
-            if (!CanSomeoneHearCharacter())
+            if (!CanCharacterBeHeard())
             {
                 node.CanBeFocused = false;
                 if (icon != null) { icon.CanBeFocused = false; }
-                CreateBlockIcon(node.RectTransform, tooltip: TextManager.Get("nocharactercanhear"));
+                CreateBlockIcon(node.RectTransform, tooltip: TextManager.Get(characterContext == null ? "nocharactercanhear" : "thischaractercanthear"));
             }
             else if (hotkey >= 0)
             {

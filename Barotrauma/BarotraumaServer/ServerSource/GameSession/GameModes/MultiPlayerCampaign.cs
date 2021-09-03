@@ -27,6 +27,29 @@ namespace Barotrauma
 
         public bool GameOver { get; private set; }
 
+        class SavedExperiencePoints
+        {
+            public readonly ulong SteamID;
+            public readonly string EndPoint;
+            public readonly int ExperiencePoints;
+
+            public SavedExperiencePoints(Client client)
+            {
+                SteamID = client.SteamID;
+                EndPoint = client.Connection.EndPointString;
+                ExperiencePoints = client.Character?.Info?.ExperiencePoints ?? 0;
+            }
+
+            public SavedExperiencePoints(XElement element)
+            {
+                SteamID = element.GetAttributeUInt64("steamid", 0);
+                EndPoint = element.GetAttributeString("endpoint", string.Empty);
+                ExperiencePoints = element.GetAttributeInt("points", 0);
+            }
+        }
+
+        private readonly List<SavedExperiencePoints> savedExperiencePoints = new List<SavedExperiencePoints>();
+
         public override bool Paused
         {
             get { return ForceMapUI || CoroutineManager.IsCoroutineRunning("LevelTransition"); }
@@ -155,6 +178,20 @@ namespace Barotrauma
                     c.InGame && (IsOwner(c) || c.HasPermission(ClientPermissions.ManageCampaign)));
         }
 
+        public void SaveExperiencePoints(Client client)
+        {
+            ClearSavedExperiencePoints(client);
+            savedExperiencePoints.Add(new SavedExperiencePoints(client));
+        }
+        public int GetSavedExperiencePoints(Client client)
+        {
+            return savedExperiencePoints.Find(s => s.SteamID != 0 && client.SteamID == s.SteamID || client.EndpointMatches(s.EndPoint))?.ExperiencePoints ?? 0;
+        }
+        public void ClearSavedExperiencePoints(Client client)
+        {
+            savedExperiencePoints.RemoveAll(s => s.SteamID != 0 && client.SteamID == s.SteamID || client.EndpointMatches(s.EndPoint));
+        }
+
         public void LoadPets()
         {
             if (petsElement != null)
@@ -259,6 +296,16 @@ namespace Barotrauma
             Map.ProgressWorld(transitionType, (float)(Timing.TotalTime - GameMain.GameSession.RoundStartTime));
 
             bool success = GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
+            if (success)
+            {
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    if (c.Character?.HasAbilityFlag(AbilityFlags.RetainExperienceForNewCharacter) ?? false)
+                    {
+                        (GameMain.GameSession?.GameMode as MultiPlayerCampaign)?.SaveExperiencePoints(c);
+                    }
+                }
+            }
 
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
             
@@ -964,6 +1011,15 @@ namespace Barotrauma
 
             // save bots
             CrewManager.SaveMultiplayer(modeElement);
+
+            XElement savedExperiencePointsElement = new XElement("SavedExperiencePoints");
+            foreach (var savedExperiencePoint in savedExperiencePoints)
+            {
+                savedExperiencePointsElement.Add(new XElement("Point",
+                    new XAttribute("steamid", savedExperiencePoint.SteamID),
+                    new XAttribute("endpoint", savedExperiencePoint?.EndPoint ?? string.Empty),
+                    new XAttribute("points", savedExperiencePoint.ExperiencePoints)));
+            }
 
             // save available submarines
             XElement availableSubsElement = new XElement("AvailableSubs");

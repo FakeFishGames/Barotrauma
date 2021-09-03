@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -16,7 +17,7 @@ namespace Barotrauma.Abilities
 
         public CharacterAbilityApplyStatusEffectsToRandomAlly(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            squaredMaxDistance = DistanceToSquaredDistance(abilityElement.GetAttributeFloat("maxdistance", float.MaxValue));
+            squaredMaxDistance = MathF.Pow(abilityElement.GetAttributeFloat("maxdistance", float.MaxValue), 2);
             allowDifferentSub = abilityElement.GetAttributeBool("mustbeonsamesub", true);
             allowSelf = abilityElement.GetAttributeBool("allowself", true);
         }
@@ -26,9 +27,9 @@ namespace Barotrauma.Abilities
             Character chosenCharacter = null;
 
             chosenCharacter = Character.GetFriendlyCrew(Character).Where(c =>
-                    (allowSelf ||c != Character) && 
+                    (allowSelf || c != Character) &&
                     (allowDifferentSub || c.Submarine == Character.Submarine) &&
-                    Vector2.DistanceSquared(Character.SimPosition, Character.GetRelativeSimPosition(c)) is float tempDistance &&
+                    Vector2.DistanceSquared(Character.WorldPosition, c.WorldPosition) is float tempDistance &&
                     tempDistance < squaredMaxDistance).GetRandom();
 
             if (chosenCharacter == null) { return; }

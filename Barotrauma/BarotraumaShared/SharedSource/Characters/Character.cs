@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using FarseerPhysics.Dynamics;
 using Barotrauma.Extensions;
+using Barotrauma.Abilities;
 #if SERVER
 using System.Text;
 #endif
@@ -1366,7 +1367,6 @@ namespace Barotrauma
                 }
             }
         }
-        private List<Item> wearableItems = new List<Item>();
 
         public float GetSkillLevel(string skillIdentifier)
         {
@@ -2075,11 +2075,10 @@ namespace Barotrauma
                 return SelectedCharacter == owner && owner.CanInventoryBeAccessed;
             }
 
-            if (inventory.Owner is Item)
+            if (inventory.Owner is Item item)
             {
-                var owner = (Item)inventory.Owner;
-                if (!CanInteractWith(owner) && !owner.linkedTo.Any(lt => lt is Item item && item.DisplaySideBySideWhenLinked && CanInteractWith(item))) { return false; }
-                ItemContainer container = owner.GetComponents<ItemContainer>().FirstOrDefault(ic => ic.Inventory == inventory);
+                if (!CanInteractWith(item) && !item.linkedTo.Any(lt => lt is Item item && item.DisplaySideBySideWhenLinked && CanInteractWith(item))) { return false; }
+                ItemContainer container = item.GetComponents<ItemContainer>().FirstOrDefault(ic => ic.Inventory == inventory);
                 if (container != null && !container.HasRequiredItems(this, addMessage: false)) { return false; }
             }
             return true;
@@ -2216,6 +2215,12 @@ namespace Barotrauma
                         }
                     }
                 }
+            }
+
+            if (SelectedConstruction?.GetComponent<RemoteController>()?.TargetItem == item ||
+                HeldItems.Any(it => it.GetComponent<RemoteController>()?.TargetItem == item))
+            {
+                return true;
             }
 
             if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) { return false; }
@@ -3355,10 +3360,18 @@ namespace Barotrauma
 
             float attackImpulse = attack.TargetImpulse + attack.TargetForce * deltaTime;
 
-            AttackData attackData = new AttackData(attack);
-            attacker.CheckTalents(AbilityEffectType.OnAttack, attackData);
-            CheckTalents(AbilityEffectType.OnAttacked, attackData);
-            attackData.DamageMultiplier *= (1 + attacker.GetStatValue(StatTypes.AttackMultiplier));
+            AbilityAttackData attackData = new AbilityAttackData(attack, this);
+            if (attacker != null)
+            {
+                attackData.Attacker = attacker;
+                attacker.CheckTalents(AbilityEffectType.OnAttack, attackData);
+                CheckTalents(AbilityEffectType.OnAttacked, attackData);
+                attackData.DamageMultiplier *= 1 + attacker.GetStatValue(StatTypes.AttackMultiplier);
+                if (attacker.TeamID == TeamID)
+                {
+                    attackData.DamageMultiplier *= 1 + attacker.GetStatValue(StatTypes.TeamAttackMultiplier);
+                }
+            }
 
             IEnumerable<Affliction> attackAfflictions;
 
@@ -3495,6 +3508,7 @@ namespace Barotrauma
             {
                 attackerCrewmember.CheckTalents(AbilityEffectType.OnCrewKillCharacter, target);
             }
+            CheckTalents(AbilityEffectType.OnKillCharacter, target);
 
             if (!IsOnPlayerTeam) { return; }
             if (GameMain.Config.KilledCreatures.Any(name => name.Equals(target.SpeciesName, StringComparison.OrdinalIgnoreCase))) { return; }
@@ -3653,10 +3667,7 @@ namespace Barotrauma
                 if (statusEffect.type != actionType) { continue; }
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
-                    if (statusEffect.AllowedAfflictions != null && (LastDamage.Afflictions == null || LastDamage.Afflictions.None(a => statusEffect.AllowedAfflictions.Contains(a.Prefab.AfflictionType) || statusEffect.AllowedAfflictions.Contains(a.Prefab.Identifier))))
-                    {
-                        continue;
-                    }
+                    if (!statusEffect.HasRequiredAfflictions(LastDamage)) { continue; }
                     if (statusEffect.OnlyPlayerTriggered)
                     {
                         if (LastAttacker == null || !LastAttacker.IsPlayer)
@@ -3719,7 +3730,7 @@ namespace Barotrauma
             }
         }
 
-        private void Implode(bool isNetworkMessage = false)
+        public void Implode(bool isNetworkMessage = false)
         {
             if (CharacterHealth.Unkillable || GodMode || IsDead) { return; }
 
@@ -3829,7 +3840,7 @@ namespace Barotrauma
             if (info != null) 
             {
                 info.CauseOfDeath = CauseOfDeath;
-                info.ResetSavedStatValues();
+                info.MissionsCompletedSinceDeath = 0;
             }
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;
@@ -4434,7 +4445,7 @@ namespace Barotrauma
             }
         }
 
-        private StatTypes GetSkillStatType(string skillIdentifier)
+        public static StatTypes GetSkillStatType(string skillIdentifier)
         {
             // Using this method to translate between skill identifiers and stat types. Feel free to replace it if there's a better way
             switch (skillIdentifier)

@@ -5,7 +5,7 @@ namespace Barotrauma.Abilities
     class CharacterAbilityResetPermanentStat : CharacterAbility
     {
         private readonly string statIdentifier;
-        public override bool RequiresAlive => false;
+        public override bool AppliesEffectOnIntervalUpdate => true;
 
         public CharacterAbilityResetPermanentStat(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {

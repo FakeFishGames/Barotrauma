@@ -4,18 +4,23 @@ namespace Barotrauma.Abilities
 {
     class CharacterAbilityGiveResistance : CharacterAbility
     {
-        private string resistanceId;
-        private float resistance;
+        private readonly string resistanceId;
+        private readonly float multiplier;
 
         public CharacterAbilityGiveResistance(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             resistanceId = abilityElement.GetAttributeString("resistanceid", "");
-            resistance = abilityElement.GetAttributeFloat("resistance", 1f);
+            multiplier = abilityElement.GetAttributeFloat("multiplier", 1f);
+
+            if (string.IsNullOrEmpty(resistanceId))
+            {
+                DebugConsole.ThrowError("Error in CharacterAbilityGiveResistance - resistance identifier not set.");
+            }
         }
 
         public override void InitializeAbility(bool addingFirstTime)
         {
-            Character.ChangeAbilityResistance(resistanceId, resistance);
+            Character.ChangeAbilityResistance(resistanceId, multiplier);
         }
     }
 }

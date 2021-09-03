@@ -1366,6 +1366,7 @@ namespace Barotrauma
             LogButtons.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
             GameMain.Client.ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
             roundControlsHolder.Children.ForEach(c => c.IgnoreLayoutGroups = !c.Visible);
+            roundControlsHolder.Children.ForEach(c => c.RectTransform.RelativeSize = Vector2.One);
             roundControlsHolder.Recalculate();
 
             ReadyToStartBox.Parent.Visible = !GameMain.Client.GameStarted;

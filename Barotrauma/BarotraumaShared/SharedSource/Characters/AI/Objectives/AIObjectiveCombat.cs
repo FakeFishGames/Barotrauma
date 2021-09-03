@@ -588,8 +588,9 @@ namespace Barotrauma
                 // assume that it's required for the stun effect
                 // as we can't check the status effect conditions here.
                 var mobileBatteryTag = "mobilebattery";
-                var containers = weapon.Item.Components.Where(ic => ic is ItemContainer container &&
-                    container.ContainableItems.Any(containable => containable.Identifiers.Any(id => id.Equals(mobileBatteryTag))));
+                var containers = weapon.Item.Components.Where(ic => 
+                    ic is ItemContainer container &&
+                    container.ContainableItemIdentifiers.Contains(mobileBatteryTag));
                 // If there's no such container, assume that the melee weapon can stun without a battery.
                 return containers.None() || containers.Any(container =>
                     (container as ItemContainer)?.Inventory.AllItems.Any(i => i != null && i.HasTag(mobileBatteryTag) && i.Condition > 0.0f) ?? false);

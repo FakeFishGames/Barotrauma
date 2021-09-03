@@ -14,6 +14,10 @@ namespace Barotrauma.Abilities
         // currently only used to turn off simulation if random conditions are in use
         public bool IsActive { get; private set; } = true;
 
+        protected int maxTriggerCount { get; }
+        protected int timesTriggered = 0;
+
+
         // add support for OR conditions? 
         protected readonly List<AbilityCondition> abilityConditions = new List<AbilityCondition>();
 
@@ -24,7 +28,7 @@ namespace Barotrauma.Abilities
         {
             CharacterTalent = characterTalent;
             Character = CharacterTalent.Character;
-
+            maxTriggerCount = abilityElementGroup.GetAttributeInt("maxtriggercount", int.MaxValue);
             foreach (XElement subElement in abilityElementGroup.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())

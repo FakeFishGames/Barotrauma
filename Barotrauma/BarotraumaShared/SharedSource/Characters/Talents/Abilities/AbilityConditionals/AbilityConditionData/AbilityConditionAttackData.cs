@@ -15,7 +15,7 @@ namespace Barotrauma.Abilities
 
         private readonly string itemIdentifier;
         private readonly string[] tags;
-        private WeaponType weapontype;
+        private readonly WeaponType weapontype;
         public AbilityConditionAttackData(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
         {
             itemIdentifier = conditionElement.GetAttributeString("itemidentifier", "");
@@ -33,7 +33,7 @@ namespace Barotrauma.Abilities
 
         protected override bool MatchesConditionSpecific(object abilityData)
         {
-            if (abilityData is AttackData attackData)
+            if (abilityData is AbilityAttackData attackData)
             {
                 Item item = attackData?.SourceAttack?.SourceItem;
 
@@ -71,7 +71,7 @@ namespace Barotrauma.Abilities
             }
             else
             {
-                LogAbilityConditionError(abilityData, typeof(AttackData));
+                LogAbilityConditionError(abilityData, typeof(AbilityAttackData));
                 return false;
             }
         }

@@ -10,20 +10,20 @@ namespace Barotrauma.Abilities
     {
         private readonly List<StatusEffect> statusEffects;
         private readonly List<StatusEffect> statusEffectsReset;
-        private int maxEnemyCount;
-        private float squaredDistance;
+        private readonly int maxEnemyCount;
+        private readonly float squaredDistance;
 
         public CharacterAbilityStonewall(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statusEffects = CharacterAbilityGroup.ParseStatusEffects(CharacterTalent, abilityElement.GetChildElement("statuseffects"));
             statusEffectsReset = CharacterAbilityGroup.ParseStatusEffects(CharacterTalent, abilityElement.GetChildElement("statuseffectsreset"));
             maxEnemyCount = abilityElement.GetAttributeInt("maxenemycount", 0);
-            squaredDistance = DistanceToSquaredDistance(abilityElement.GetAttributeFloat("distance", 0));
+            squaredDistance = MathF.Pow(abilityElement.GetAttributeFloat("distance", 0), 2);
         }
 
         protected override void VerifyState(bool conditionsMatched, float timeSinceLastUpdate)
         {
-            int numberOfEnemiesInRange = Character.CharacterList.Where(c => !HumanAIController.IsFriendly(Character, c) && !c.IsDead && Vector2.DistanceSquared(Character.SimPosition, Character.GetRelativeSimPosition(c)) < squaredDistance).Count();
+            int numberOfEnemiesInRange = Character.CharacterList.Count(c => !HumanAIController.IsFriendly(Character, c) && !c.IsDead && Vector2.DistanceSquared(Character.WorldPosition, c.WorldPosition) < squaredDistance);
 
             foreach (var statusEffect in statusEffectsReset)
             {

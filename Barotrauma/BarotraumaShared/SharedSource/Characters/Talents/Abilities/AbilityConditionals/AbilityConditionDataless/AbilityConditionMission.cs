@@ -24,13 +24,13 @@ namespace Barotrauma.Abilities
 
         protected override bool MatchesConditionSpecific(object abilityData)
         {
-            if (abilityData is (Mission mission, AbilityValue missionAbilityValue))
+            if (abilityData is IAbilityMission abilityMission)
             {
-                return mission.Prefab.Type == missionType;
+                return abilityMission.Mission.Prefab.Type == missionType;
             }
             else
             {
-                LogAbilityConditionError(abilityData, typeof((Mission, AbilityValue)));
+                LogAbilityConditionError(abilityData, typeof(IAbilityMission));
                 return false;
             }
         }

@@ -55,6 +55,8 @@ namespace Barotrauma
 
         public float Scale { get; private set; }
 
+        public float Rotation { get; private set; }
+
         public LimbType DepthLimb { get; private set; }
         private Wearable _wearableComponent;
         public Wearable WearableComponent
@@ -177,6 +179,7 @@ namespace Barotrauma
             DepthLimb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("depthlimb", "None"), true);
             Sound = SourceElement.GetAttributeString("sound", "");
             Scale = SourceElement.GetAttributeFloat("scale", 1.0f);
+            Rotation = MathHelper.ToRadians(SourceElement.GetAttributeFloat("rotation", 0.0f));
             var index = SourceElement.GetAttributePoint("sheetindex", new Point(-1, -1));
             if (index.X > -1 && index.Y > -1)
             {

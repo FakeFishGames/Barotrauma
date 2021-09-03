@@ -623,6 +623,7 @@ namespace Barotrauma
                 bool removeOnDeath = inc.ReadBoolean();
                 ch.ChangeSavedStatValue((StatTypes)statType, statValue, statIdentifier, removeOnDeath);
             }
+            ch.ExperiencePoints = inc.ReadUInt16();
 
             return ch;
         }

@@ -51,10 +51,15 @@ namespace Barotrauma
             }
 
             // ????????
-            submarine = new Submarine(SubmarineInfo.SavedSubmarines.FirstOrDefault(info => info.Name.Equals("Kastrull", StringComparison.OrdinalIgnoreCase)));
+            submarine = new Submarine(SubmarineInfo.SavedSubmarines.FirstOrDefault(info => info.Name.Equals("Crescent", StringComparison.OrdinalIgnoreCase)));
             miniMapItem = new Item(ItemPrefab.Find(null, "statusmonitor"), Vector2.Zero, submarine);
             MiniMap miniMap = miniMapItem.GetComponent<MiniMap>();
             miniMap.PowerConsumption = 0;
+
+            foreach (var hull in Hull.hullList)
+            {
+                hull.WaterVolume = hull.Volume / 2f;
+            }
 
             dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.DummyID, hasAi: false);
             dummyCharacter.Info.Name = "Galldren";

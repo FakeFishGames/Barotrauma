@@ -632,7 +632,7 @@ namespace Barotrauma
             RefreshDeformations();
         }
 
-        public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null)
+        public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null, bool disableDeformations = false)
         {
             float brightness = 1.0f - (burnOverLayStrength / 100.0f) * 0.5f;
             var spriteParams = Params.GetSprite();
@@ -678,7 +678,7 @@ namespace Barotrauma
             if (!hideLimb)
             {
                 var deformSprite = DeformSprite;
-                if (deformSprite != null)
+                if (deformSprite != null && !disableDeformations)
                 {
                     if (ActiveDeformations.Any())
                     {
@@ -999,10 +999,12 @@ namespace Barotrauma
             }
             float textureScale = wearable.InheritTextureScale ? TextureScale : wearable.Scale;
 
+            float rotation = -body.DrawRotation - wearable.Rotation * Dir;
+
             wearable.Sprite.Draw(spriteBatch,
                 new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                 new Color((color.R * wearableColor.R) / (255.0f * 255.0f), (color.G * wearableColor.G) / (255.0f * 255.0f), (color.B * wearableColor.B) / (255.0f * 255.0f)) * ((color.A * wearableColor.A) / (255.0f * 255.0f)),
-                origin, -body.DrawRotation,
+                origin, rotation,
                 Scale * textureScale, spriteEffect, depth);
         }
 

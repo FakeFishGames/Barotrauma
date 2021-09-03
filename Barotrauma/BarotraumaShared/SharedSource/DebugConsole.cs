@@ -212,7 +212,7 @@ namespace Barotrauma
                 };
             }, isCheat: true));
 
-            commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
+            commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]] [amount]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
             (string[] args) =>
             {
                 try
@@ -841,8 +841,8 @@ namespace Barotrauma
 
             commands.Add(new Command("givetalent", "give [player] testing [talent]", (string[] args) =>
             {
-                if (args.Length < 2) return;
-                var character = FindMatchingCharacter(args.Skip(1).ToArray()) ?? Character.Controlled;
+                if (args.Length == 0) { return; }
+                var character = args.Length >= 2 ? FindMatchingCharacter(args.Skip(1).ToArray()) : Character.Controlled;
                 if (character != null)
                 {
                     character.GiveTalent(args[0]);
@@ -858,8 +858,8 @@ namespace Barotrauma
 
                 return new string[][]
                 {
-                talentNames.ToArray(),
-                Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    talentNames.ToArray(),
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
             }, isCheat: true));
 
@@ -2033,9 +2033,17 @@ namespace Barotrauma
                 return;
             }
 
+            int amount = 1;
             if (args.Length > 1)
             {
-                switch (args.Last())
+                string spawnLocation = args.Last();
+                if (args.Length > 2)
+                {
+                    spawnLocation = args[^2];
+                    if (!int.TryParse(args[^1], NumberStyles.Any, CultureInfo.InvariantCulture, out amount)) { amount = 1; }
+                }
+                
+                switch (spawnLocation)
                 {
                     case "cursor":
                         spawnPos = cursorPos;
@@ -2063,37 +2071,40 @@ namespace Barotrauma
                 spawnPos = wp == null ? Vector2.Zero : wp.WorldPosition;
             }
 
-            if (spawnPos != null)
+            for (int i = 0; i < amount; i++)
             {
-                if (Entity.Spawner == null)
+                if (spawnPos != null)
                 {
-                    new Item(itemPrefab, spawnPos.Value, null);
-                }
-                else
-                {
-                    Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnPos.Value);
-                }
-            }
-            else if (spawnInventory != null)
-            {
-                if (Entity.Spawner == null)
-                {
-                    var spawnedItem = new Item(itemPrefab, Vector2.Zero, null);
-                    spawnInventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots);
-                    onItemSpawned(spawnedItem);
-                }
-                else
-                {
-                    Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnInventory, onSpawned: onItemSpawned);
-                }
-
-                static void onItemSpawned(Item item)
-                {
-                    if (item.ParentInventory?.Owner is Character character)
+                    if (Entity.Spawner == null)
                     {
-                        foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+                        new Item(itemPrefab, spawnPos.Value, null);
+                    }
+                    else
+                    {
+                        Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnPos.Value);
+                    }
+                }
+                else if (spawnInventory != null)
+                {
+                    if (Entity.Spawner == null)
+                    {
+                        var spawnedItem = new Item(itemPrefab, Vector2.Zero, null);
+                        spawnInventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots);
+                        onItemSpawned(spawnedItem);
+                    }
+                    else
+                    {
+                        Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnInventory, onSpawned: onItemSpawned);
+                    }
+
+                    static void onItemSpawned(Item item)
+                    {
+                        if (item.ParentInventory?.Owner is Character character)
                         {
-                            wifiComponent.TeamID = character.TeamID;
+                            foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+                            {
+                                wifiComponent.TeamID = character.TeamID;
+                            }
                         }
                     }
                 }

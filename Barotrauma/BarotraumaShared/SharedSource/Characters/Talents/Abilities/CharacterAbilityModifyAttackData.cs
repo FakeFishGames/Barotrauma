@@ -7,8 +7,9 @@ namespace Barotrauma.Abilities
     {
         private readonly List<Affliction> afflictions;
 
-        float addedDamageMultiplier;
-        float addedPenetration;
+        private readonly float addedDamageMultiplier;
+        private readonly float addedPenetration;
+        private readonly bool implode;
 
         public CharacterAbilityModifyAttackData(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
@@ -18,11 +19,12 @@ namespace Barotrauma.Abilities
             }
             addedDamageMultiplier = abilityElement.GetAttributeFloat("addeddamagemultiplier", 0f);
             addedPenetration = abilityElement.GetAttributeFloat("addedpenetration", 0f);
+            implode = abilityElement.GetAttributeBool("implode", false);
         }
 
         protected override void ApplyEffect(object abilityData)
         {
-            if (abilityData is AttackData attackData)
+            if (abilityData is AbilityAttackData attackData)
             {
                 if (attackData.Afflictions == null)
                 {
@@ -34,6 +36,13 @@ namespace Barotrauma.Abilities
                 }
                 attackData.DamageMultiplier += addedDamageMultiplier;
                 attackData.AddedPenetration += addedPenetration;
+
+                if (implode)
+                {
+                    // might have issues, as the method used to be private and only used for pressure death
+                    attackData.Character?.Implode();
+                }
+
             }
             else
             {

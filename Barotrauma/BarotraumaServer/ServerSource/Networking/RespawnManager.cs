@@ -379,6 +379,12 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
+                    if (GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign && character.Info != null)
+                    {
+                        character.Info.SetExperience(Math.Max(character.Info.ExperiencePoints, mpCampaign.GetSavedExperiencePoints(clients[i])));
+                        mpCampaign.ClearSavedExperiencePoints(clients[i]);
+                    }
+
                     //tell the respawning client they're no longer a traitor
                     if (GameMain.Server.TraitorManager?.Traitors != null && clients[i].Character != null)
                     {

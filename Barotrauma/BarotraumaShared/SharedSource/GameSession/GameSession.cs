@@ -661,7 +661,7 @@ namespace Barotrauma
 #if SERVER
             return GameMain.Server.ConnectedClients.Select(c => c.Character).Where(c => c.Info != null);
 #else
-            return GameMain.GameSession.CrewManager.CharacterInfos.Select(i => i.Character).Where(c => c != null);
+            return GameMain.GameSession.CrewManager.GetCharacters().Where(c => c.Info != null);
 #endif        
         }
 
@@ -671,28 +671,33 @@ namespace Barotrauma
 
             try
             {
-                IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters();
+                IEnumerable<Character> crewCharacters = GetSessionCrewCharacters();
 
                 foreach (Mission mission in missions)
                 {
                     mission.End();
                 }
 
+                foreach (Character character in crewCharacters)
+                {
+                    character.CheckTalents(AbilityEffectType.OnRoundEnd);
+                }
+
                 if (missions.Any())
                 {
                     if (missions.Any(m => m.Completed))
                     {
-                        foreach (CharacterInfo characterInfo in GameMain.GameSession.CrewManager.CharacterInfos)
+                        foreach (Character character in crewCharacters)
                         {
-                            characterInfo.Character?.CheckTalents(AbilityEffectType.OnAnyMissionCompleted);
+                            character.CheckTalents(AbilityEffectType.OnAnyMissionCompleted);
                         }
                     }
 
                     if (missions.All(m => m.Completed))
                     {
-                        foreach (CharacterInfo characterInfo in GameMain.GameSession.CrewManager.CharacterInfos)
+                        foreach (Character character in crewCharacters)
                         {
-                            characterInfo.Character?.CheckTalents(AbilityEffectType.OnAllMissionsCompleted);
+                            character.CheckTalents(AbilityEffectType.OnAllMissionsCompleted);
                         }
                     }
                 }

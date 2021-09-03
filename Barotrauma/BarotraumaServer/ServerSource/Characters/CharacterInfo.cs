@@ -73,6 +73,7 @@ namespace Barotrauma
                     msg.Write(savedStatValue.RemoveOnDeath);
                 }
             }
+            msg.Write((ushort)ExperiencePoints);
         }
     }
 }

@@ -174,6 +174,12 @@ namespace Barotrauma
                     (int)SlotPositions[i].X, 
                     (int)SlotPositions[i].Y,
                     (int)(slotSprite.size.X * multiplier), (int)(slotSprite.size.Y * multiplier));
+
+                if (SlotTypes[i] == InvSlotType.HealthInterface &&
+                    character.CharacterHealth?.InventorySlotContainer != null)
+                {
+                    slotRect.Width = slotRect.Height = (int)(character.CharacterHealth.InventorySlotContainer.Rect.Width * 1.2f);
+                }
              
                 ItemContainer itemContainer = slots[i].FirstOrDefault()?.GetComponent<ItemContainer>();
                 if (itemContainer != null)
@@ -237,6 +243,8 @@ namespace Barotrauma
         protected override bool HideSlot(int i)
         {
             if (visualSlots[i].Disabled || (slots[i].HideIfEmpty && slots[i].Empty())) { return true; }
+
+            if (CharacterHealth.OpenHealthWindow != Character.Controlled?.CharacterHealth && SlotTypes[i] == InvSlotType.HealthInterface) { return true; }
 
             if (layout == Layout.Default)
             {
@@ -359,7 +367,7 @@ namespace Barotrauma
                         int personalSlotX = HUDLayoutSettings.InventoryAreaLower.Right - SlotSize.X - Spacing;
                         for (int i = 0; i < visualSlots.Length; i++)
                         {
-                            if (HideSlot(i)) { continue; }
+                            if (HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
                             if (SlotTypes[i] == InvSlotType.RightHand || SlotTypes[i] == InvSlotType.LeftHand) { continue; }
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
@@ -383,7 +391,7 @@ namespace Barotrauma
                                 continue;
                             }
 
-                            if (HideSlot(i)) { continue; }
+                            if (HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
                                 SlotPositions[i] = new Vector2(personalSlotX, personalSlotY);
@@ -399,7 +407,7 @@ namespace Barotrauma
                         x = lowerX;
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
-                            if (!HideSlot(i)) { continue; }
+                            if (!HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
                             if (SlotTypes[i] == InvSlotType.RightHand || SlotTypes[i] == InvSlotType.LeftHand) { continue; }
                             x -= visualSlots[i].Rect.Width + Spacing;
                             SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
@@ -414,7 +422,7 @@ namespace Barotrauma
 
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
-                            if (HideSlot(i)) { continue; }
+                            if (HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
                             if (SlotTypes[i] == InvSlotType.RightHand || SlotTypes[i] == InvSlotType.LeftHand) { continue; }
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
@@ -436,7 +444,7 @@ namespace Barotrauma
                                 SlotPositions[i] = new Vector2(rightSlot ? handSlotX : handSlotX - visualSlots[0].Rect.Width - Spacing, personalSlotY);
                                 continue;
                             }
-                            if (!HideSlot(i)) { continue; }
+                            if (!HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
                             SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
                             x += visualSlots[i].Rect.Width + Spacing;
                         }
@@ -450,7 +458,7 @@ namespace Barotrauma
                         int x = startX, y = startY;
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
-                            if (HideSlot(i)) continue;
+                            if (HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
                             if (SlotTypes[i] == InvSlotType.Card || SlotTypes[i] == InvSlotType.Headset || SlotTypes[i] == InvSlotType.InnerClothes)
                             {
                                 SlotPositions[i] = new Vector2(x, y);
@@ -462,7 +470,7 @@ namespace Barotrauma
                         int n = 0;
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
-                            if (HideSlot(i)) continue;
+                            if (HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
                             if (SlotTypes[i] != InvSlotType.Card && SlotTypes[i] != InvSlotType.Headset && SlotTypes[i] != InvSlotType.InnerClothes)
                             {
                                 SlotPositions[i] = new Vector2(x, y);
@@ -479,13 +487,23 @@ namespace Barotrauma
                     }
                     break;
             }
-            
+
+            if (character.CharacterHealth?.UseHealthWindow ?? false)
+            {
+                Vector2 pos = character.CharacterHealth.InventorySlotContainer.Rect.Location.ToVector2();
+                for (int i = 0; i < capacity; i++)
+                {
+                    if (SlotTypes[i] != InvSlotType.HealthInterface) { continue; }
+                    SlotPositions[i] = pos;
+                    pos.Y += visualSlots[i].Rect.Height + Spacing;
+                }
+            }
+
             CreateSlots();
             if (layout == Layout.Default)
             {
                 HUDLayoutSettings.InventoryTopY = visualSlots[0].EquipButtonRect.Y - (int)(15 * GUI.Scale);
             }
-
         }
 
         protected override void ControlInput(Camera cam)
@@ -679,7 +697,7 @@ namespace Barotrauma
                 if (item != null)
                 {
                     var slot = visualSlots[i];
-                    if (item.AllowedSlots.Any(a => a != InvSlotType.Any))
+                    if (item.AllowedSlots.Any(a => a != InvSlotType.Any && a != InvSlotType.HealthInterface))
                     {
                         HandleButtonEquipStates(item, slot, deltaTime);
                     }
@@ -858,7 +876,9 @@ namespace Barotrauma
 
         private QuickUseAction GetQuickUseAction(Item item, bool allowEquip, bool allowInventorySwap, bool allowApplyTreatment)
         {
-            if (allowApplyTreatment && CharacterHealth.OpenHealthWindow != null)
+            if (allowApplyTreatment && CharacterHealth.OpenHealthWindow != null && 
+                //if the item can be equipped in the health interface slot, don't use it as a treatment but try to equip it
+                !item.AllowedSlots.Contains(InvSlotType.HealthInterface))
             {
                 return QuickUseAction.UseTreatment;
             }
@@ -1153,7 +1173,7 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (HideSlot(i)) { continue; }
+                if (HideSlot(i) || SlotTypes[i] == InvSlotType.HealthInterface) { continue; }
 
                 //don't draw the item if it's being dragged out of the slot
                 bool drawItem = !DraggingItems.Any() || !slots[i].Items.All(it => DraggingItems.Contains(it)) || visualSlots[i].MouseOn();
@@ -1207,7 +1227,7 @@ namespace Barotrauma
                     highlightedQuickUseSlot = visualSlots[i];
                 }
 
-                if (!slots[i].First().AllowedSlots.Any(a => a == InvSlotType.Any))
+                if (!slots[i].First().AllowedSlots.Any(a => a == InvSlotType.Any) || SlotTypes[i] == InvSlotType.HealthInterface)
                 {
                     continue;
                 }

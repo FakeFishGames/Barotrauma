@@ -1,4 +1,40 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1500.1.0
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- Gene splicing. You can find alien genetic material inside ruins (and for the time being, wrecks), and use these materials to gain special abilities and buffs. The materials can be processed using a Research Station (which atm can be found in research outpost) and applied on a character using a Gene Splicer.
+- Added WIP talent trees for security officers and assistants.
+- Streamlined the health interface.
+- Allow administering meds by clicking on the "suitable treatments" suggestions in the health interface.
+- Physical injuries to the head can cause concussions.
+- Play editor music in multiplayer lobby.
+- Option to specify the amount of items to spawn with the "spawnitem" command.
+- Optimized cave vent and ballast flora spore particles.
+- Added a 5 second "cooldown" before a junction box broken by overloading can take damage from overloading again. Prevents continuous fires and particles when continuously repairing an overloaded junction box.
+- Small monsters don't eat the inventory contents of a character they're eating (the items drop instead).
+- Disabled new status monitor features from handheld status monitors.
+- Round water and oxygen percentage readings on the status monitor (e.g. 99.999998% shows up as 100% instead of 99%).
+
+Fixes:
+- Fixed crashing when an attack is applied on a character from a source other than another character, e.g. propeller (unstable only).
+- Fixed current_position_y output not working on nav terminals (unstable only).
+- Fixed fuel rods having a bullet as a contained indicator (unstable only).
+- Removed duplicate welcome messages from humpack's terminal.
+- Fixed start and spectate buttons shrinking in the server lobby every time they're hidden and re-enabled.
+- Fixed contained items inside contained items not moving when repositioning a container in the sub editor (e.g. when moving a weapon holder that contains a weapon with a magazine).
+- Fixed issues with inaccurate tooltips and incorrectly blocked out order nodes in character-specific command interface.
+- Fixed contained items' status effects appearing at the top-left corner of the container if the contained items are not visible (e.g. particle-emitting fuel rods would emit the particles from the top-left corner of the reactor instead of the center).
+- Fixed hanging wires not getting selected when selecting the items they're connected to.
+- Fixed "divide by zero" console error when scaling construction barrier.
+- Fixed ability to wire item between two submarines as long as you stay inside the same sub.
+- Fixed crew list background blocking mouse input (again).
+- Fixed crashing when the majority of the players are controlling characters belonging to a non-player team while the sub is at the end of the level (e.g. if you're alone in the sub and take control of a monster with console commands).
+
+Modding:
+- Option to configure minimum damage for OnDamage status effects that require a specific type of affliction (see the "vigor on damage" affliction for an usage example).
+
+---------------------------------------------------------------------------------------------------------
 v0.1500.0.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -24,6 +60,7 @@ Additions and changes:
 - Endworms no longer always bleed to death when their tail is cut.
 - Lever state is visualized on its sprite.
 - Enabled NVidia Optimus on Windows.
+
 
 Overhauled status monitor: 
 - Improved visuals.

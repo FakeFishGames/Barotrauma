@@ -203,8 +203,8 @@ namespace Barotrauma
 
                 if (!ResizeHorizontal || !ResizeVertical)
                 {
-                    int newWidth = ResizeHorizontal ? rect.Width : (int)(defaultRect.Width * relativeScale);
-                    int newHeight = ResizeVertical ? rect.Height : (int)(defaultRect.Height * relativeScale);
+                    int newWidth = Math.Max(ResizeHorizontal ? rect.Width : (int)(defaultRect.Width * relativeScale), 1);
+                    int newHeight = Math.Max(ResizeVertical ? rect.Height : (int)(defaultRect.Height * relativeScale), 1);
                     Rect = new Rectangle(rect.X, rect.Y, newWidth, newHeight);
                     if (StairDirection != Direction.None)
                     {

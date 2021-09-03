@@ -3641,9 +3641,10 @@ namespace Barotrauma
             }
             if (LevelData.IsBeaconActive)
             {
-                if (reactorContainer != null && reactorContainer.Inventory.IsEmpty())
+                if (reactorContainer != null && reactorContainer.Inventory.IsEmpty() && 
+                    reactorContainer.ContainableItemIdentifiers.Any() && ItemPrefab.Prefabs.ContainsKey(reactorContainer.ContainableItemIdentifiers.FirstOrDefault()))
                 {
-                    ItemPrefab fuelPrefab = ItemPrefab.Prefabs[reactorContainer.ContainableItems[0].Identifiers[0]];
+                    ItemPrefab fuelPrefab = ItemPrefab.Prefabs[reactorContainer.ContainableItemIdentifiers.FirstOrDefault()];
                     Spawner.AddToSpawnQueue(
                         fuelPrefab, reactorContainer.Inventory,
                         onSpawned: (it) => reactorComponent.PowerUpImmediately());

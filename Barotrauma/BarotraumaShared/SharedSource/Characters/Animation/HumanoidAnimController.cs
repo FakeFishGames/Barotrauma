@@ -150,6 +150,13 @@ namespace Barotrauma
         private float upperLegLength = 0.0f, lowerLegLength = 0.0f;
 
         private bool aiming;
+        private bool wasAiming;
+
+        private bool aimingMelee;
+        private bool wasAimingMelee;
+
+        public bool IsAiming => wasAiming;
+        public bool IsAimingMelee => wasAimingMelee;
 
         private readonly float movementLerp;
 
@@ -532,7 +539,10 @@ namespace Barotrauma
                 limb.Disabled = false;
             }
 
+            wasAiming = aiming;
             aiming = false;
+            wasAimingMelee = aimingMelee;
+            aimingMelee = false;
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer) return;
         }
 
@@ -1718,7 +1728,7 @@ namespace Barotrauma
         }
 
         //TODO: refactor this method, it's way too convoluted
-        public override void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle, float itemAngleRelativeToHoldAngle = 0.0f)
+        public override void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle, float itemAngleRelativeToHoldAngle = 0.0f, bool aimingMelee = false)
         {
             if (character.Stun > 0.0f || character.IsIncapacitated)
             {
@@ -1748,6 +1758,8 @@ namespace Barotrauma
 
             Holdable holdable = item.GetComponent<Holdable>();
 
+            this.aimingMelee = aimingMelee;
+
             if (!isClimbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero && !character.IsIncapacitated)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.SmoothedCursorPosition);
@@ -1771,7 +1783,6 @@ namespace Barotrauma
 
                     aiming = true;
                 }
-
             }
             else
             {

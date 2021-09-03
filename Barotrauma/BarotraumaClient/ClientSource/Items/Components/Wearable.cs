@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
             description += $"\n  ‖color:{colorStr}‖{roundedValue.ToString("-0;+#")}%‖color:end‖ {AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.Equals(afflictionIdentifier, StringComparison.OrdinalIgnoreCase))?.Name ?? afflictionIdentifier}";
         }
 
-        public override void AddTooltipInfo(ref string description)
+        public override void AddTooltipInfo(ref string name, ref string description)
         {
             if (damageModifiers.Any(d => !MathUtils.NearlyEqual(d.DamageMultiplier, 1f)) || SkillModifiers.Any())
             {

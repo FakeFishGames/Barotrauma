@@ -496,7 +496,7 @@ namespace Barotrauma
                 var itemInSlot = slots[i].First();
                 if (itemInSlot.OwnInventory != null && 
                     !itemInSlot.OwnInventory.Contains(item) &&
-                    (itemInSlot.GetComponent<ItemContainer>()?.MaxStackSize ?? 0) == 1 && 
+                    (itemInSlot.GetComponent<ItemContainer>()?.GetMaxStackSize(0) ?? 0) == 1 && 
                     itemInSlot.OwnInventory.TrySwapping(0, item, user, createNetworkEvent, swapWholeStack: false))
                 {
                     return true;

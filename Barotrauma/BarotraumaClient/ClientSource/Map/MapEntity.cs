@@ -423,20 +423,24 @@ namespace Barotrauma
 
                     //select wire if both items it's connected to are selected
                     var selectedItems = SelectedList.Where(e => e is Item).Cast<Item>().ToList();
-                    foreach (Item item in selectedItems)
+                    foreach (Item item in Item.ItemList)
                     {
-                        if (item.Connections == null) continue;
-                        foreach (Connection c in item.Connections)
-                        {
-                            foreach (Wire w in c.Wires)
-                            {
-                                if (w == null || SelectedList.Contains(w.Item)) continue;
+                        var wire = item.GetComponent<Wire>();
+                        if (wire == null) { continue; }
+                        Item item0 = wire.Connections[0]?.Item;
+                        Item item1 = wire.Connections[1]?.Item;
 
-                                if (w.OtherConnection(c) != null && SelectedList.Contains(w.OtherConnection(c).Item))
-                                {
-                                    SelectedList.Add(w.Item);
-                                }
-                            }
+                        if (item0 == null && item1 != null)
+                        {
+                            item0 = Item.ItemList.Find(it => it.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(wire) ?? false);
+                        }
+                        else if (item0 != null && item1 == null)
+                        {
+                            item1 = Item.ItemList.Find(it => it.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(wire) ?? false);
+                        }
+                        if (item0 != null && item1 != null && SelectedList.Contains(item0) && SelectedList.Contains(item1))
+                        {
+                            SelectedList.Add(item);
                         }
                     }
 

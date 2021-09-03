@@ -97,6 +97,10 @@ namespace Barotrauma
             CauseSpeechImpediment = element.GetAttributeBool("causespeechimpediment", true);
             NeedsAir = element.GetAttributeBool("needsair", false);
             ControlHusk = element.GetAttributeBool("controlhusk", false);
+
+            DormantThreshold = element.GetAttributeFloat("dormantthreshold", MaxStrength * 0.5f);
+            ActiveThreshold = element.GetAttributeFloat("activethreshold", MaxStrength * 0.75f);
+            TransitionThreshold = element.GetAttributeFloat("transitionthreshold", MaxStrength);
         }
 
         // Use any of these to define which limb the appendage is attached to.
@@ -104,6 +108,8 @@ namespace Barotrauma
         public readonly int AttachLimbId;
         public readonly string AttachLimbName;
         public readonly LimbType AttachLimbType;
+
+        public float ActiveThreshold, DormantThreshold, TransitionThreshold;
 
         public readonly string HuskedSpeciesName;
         public readonly string[] TargetSpecies;
@@ -141,34 +147,40 @@ namespace Barotrauma
             public bool MultiplyByMaxVitality { get; private set; }
 
             [Serialize(0.0f, false)]
-            public float MinScreenBlurStrength { get; private set; }
+            public float MinScreenBlur { get; private set; }
 
             [Serialize(0.0f, false)]
-            public float MaxScreenBlurStrength { get; private set; }
+            public float MaxScreenBlur { get; private set; }
 
             [Serialize(0.0f, false)]
-            public float MinScreenDistortStrength { get; private set; }
+            public float MinScreenDistort { get; private set; }
 
             [Serialize(0.0f, false)]
-            public float MaxScreenDistortStrength { get; private set; }
+            public float MaxScreenDistort { get; private set; }
 
             [Serialize(0.0f, false)]
-            public float MinRadialDistortStrength { get; private set; }
+            public float MinRadialDistort { get; private set; }
 
             [Serialize(0.0f, false)]
-            public float MaxRadialDistortStrength { get; private set; }
+            public float MaxRadialDistort { get; private set; }
 
             [Serialize(0.0f, false)]
-            public float MinChromaticAberrationStrength { get; private set; }
+            public float MinChromaticAberration { get; private set; }
 
             [Serialize(0.0f, false)]
-            public float MaxChromaticAberrationStrength { get; private set; }
+            public float MaxChromaticAberration { get; private set; }
+
+            [Serialize("255,255,255,255", false)]
+            public Color GrainColor { get; private set; }
 
             [Serialize(0.0f, false)]
             public float MinGrainStrength { get; private set; }
 
             [Serialize(0.0f, false)]
             public float MaxGrainStrength { get; private set; }
+
+            [Serialize(0.0f, false)]
+            public float ScreenEffectFluctuationFrequency { get; private set; }
 
             [Serialize(1.0f, false)]
             public float MinBuffMultiplier { get; private set; }
@@ -188,8 +200,11 @@ namespace Barotrauma
             [Serialize(1.0f, false)]
             public float MaxSkillMultiplier { get; private set; }
 
-            [Serialize("", false)]
-            public string ResistanceFor { get; private set; }
+            private readonly string[] resistanceFor;
+            public IEnumerable<string> ResistanceFor 
+            {
+                get { return resistanceFor; }
+            }
 
             [Serialize(0.0f, false)]
             public float MinResistance { get; private set; }
@@ -208,6 +223,8 @@ namespace Barotrauma
             public Effect(XElement element, string parentDebugName)
             {
                 SerializableProperty.DeserializeProperties(this, element);
+
+                resistanceFor = element.GetAttributeStringArray("resistancefor", new string[0], convertToLowerInvariant: true);
 
                 foreach (XElement subElement in element.Elements())
                 {

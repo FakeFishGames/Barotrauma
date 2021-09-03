@@ -184,7 +184,7 @@ namespace Barotrauma.Particles
 
         public ParticlePrefab FindPrefab(string prefabName)
         {
-            return Prefabs.Find(p => p.Identifier == prefabName);
+            return Prefabs.Find(p => p.Identifier.Equals(prefabName, StringComparison.OrdinalIgnoreCase));
         }
 
         private void RemoveParticle(int index)

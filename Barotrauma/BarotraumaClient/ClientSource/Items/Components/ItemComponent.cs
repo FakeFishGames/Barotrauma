@@ -621,6 +621,6 @@ namespace Barotrauma.Items.Components
             }
             OnResolutionChanged();
         }
-        public virtual void AddTooltipInfo(ref string description) { }
+        public virtual void AddTooltipInfo(ref string name, ref string description) { }
     }
 }

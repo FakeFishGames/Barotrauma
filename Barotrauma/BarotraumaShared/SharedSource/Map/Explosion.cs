@@ -33,6 +33,9 @@ namespace Barotrauma
         private readonly float? flashRange;
         private readonly string decal;
         private readonly float decalSize;
+        // used to apply friendly afflictions in an area without effects displaying
+        private readonly bool abilityExplosion;
+        private readonly bool applyToSelf;
 
         private readonly float itemRepairStrength;
 
@@ -63,8 +66,10 @@ namespace Barotrauma
 
             force = element.GetAttributeFloat("force", 0.0f);
 
-            bool showEffects = element.GetAttributeBool("showeffects", true);
+            abilityExplosion = element.GetAttributeBool("abilityexplosion", false);
+            applyToSelf = element.GetAttributeBool("applytoself", true);
 
+            bool showEffects = !abilityExplosion;
             sparks = element.GetAttributeBool("sparks", showEffects);
             shockwave = element.GetAttributeBool("shockwave", showEffects);
             flames = element.GetAttributeBool("flames", showEffects);
@@ -191,12 +196,12 @@ namespace Barotrauma
                 }
             }
 
-            if (MathUtils.NearlyEqual(force, 0.0f) && MathUtils.NearlyEqual(Attack.Stun, 0.0f) && MathUtils.NearlyEqual(Attack.GetTotalDamage(false), 0.0f))
+            if (MathUtils.NearlyEqual(force, 0.0f) && MathUtils.NearlyEqual(Attack.Stun, 0.0f) && MathUtils.NearlyEqual(Attack.GetTotalDamage(false), 0.0f) && !abilityExplosion)
             {
                 return;
             }
 
-            DamageCharacters(worldPosition, Attack, force, damageSource, attacker);
+            DamageCharacters(worldPosition, Attack, force, damageSource, attacker, applyToSelf);
 
             if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
             {
@@ -250,7 +255,7 @@ namespace Barotrauma
 
         partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull);
         
-        private void DamageCharacters(Vector2 worldPosition, Attack attack, float force, Entity damageSource, Character attacker)
+        private void DamageCharacters(Vector2 worldPosition, Attack attack, float force, Entity damageSource, Character attacker, bool applyToSelf)
         {
             if (attack.Range <= 0.0f) { return; }
 
@@ -265,6 +270,8 @@ namespace Barotrauma
                 {
                     continue;
                 }
+                if (c == attacker && !applyToSelf) { continue; }
+
                 if (onlyInside && c.Submarine == null) { continue; }
                 else if (onlyOutside && c.Submarine != null) { continue; }
 

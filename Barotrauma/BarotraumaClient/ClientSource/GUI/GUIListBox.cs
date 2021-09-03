@@ -251,6 +251,11 @@ namespace Barotrauma
         
         private readonly bool isHorizontal;
 
+        /// <summary>
+        /// Setting this to true and CanBeFocused to false allows the list background to be unfocusable while the elements can still be interacted with.
+        /// </summary>
+        public bool CanInteractWhenUnfocusable { get; set; } = false;
+
         /// <param name="isScrollBarOnDefaultSide">For horizontal listbox, default side is on the bottom. For vertical, it's on the right.</param>
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "", bool isScrollBarOnDefaultSide = true, bool useMouseDownToSelect = false) : base(style, rectT)
         {
@@ -570,7 +575,7 @@ namespace Barotrauma
                 if (child == null || !child.Visible) { continue; }
 
                 // selecting
-                if (Enabled && CanBeFocused && child.CanBeFocused && child.Rect.Contains(PlayerInput.MousePosition) && GUI.IsMouseOn(child))
+                if (Enabled && (CanBeFocused || CanInteractWhenUnfocusable) && child.CanBeFocused && child.Rect.Contains(PlayerInput.MousePosition) && GUI.IsMouseOn(child))
                 {
                     child.State = ComponentState.Hover;
 

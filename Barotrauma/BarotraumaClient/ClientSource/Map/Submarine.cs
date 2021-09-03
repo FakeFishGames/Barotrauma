@@ -326,7 +326,7 @@ namespace Barotrauma
                     depthSortedDamageable.Insert(i, structure);
                 }
             }
-            
+
             foreach (Structure s in depthSortedDamageable)
             {
                 s.DrawDamage(spriteBatch, damageEffect, editing);
@@ -418,8 +418,8 @@ namespace Barotrauma
             float scale = 0.9f;
 
             GUIFrame hullContainer = new GUIFrame(new RectTransform(
-                (parentAspectRatio > aspectRatio ? new Vector2(aspectRatio / parentAspectRatio, 1.0f) : new Vector2(1.0f, parentAspectRatio / aspectRatio)) * scale, 
-                parent.RectTransform, Anchor.Center), 
+                (parentAspectRatio > aspectRatio ? new Vector2(aspectRatio / parentAspectRatio, 1.0f) : new Vector2(1.0f, parentAspectRatio / aspectRatio)) * scale,
+                parent.RectTransform, Anchor.Center),
                 style: null)
             {
                 UserData = "hullcontainer"
@@ -444,9 +444,9 @@ namespace Barotrauma
                 {
                     if (!combinedHulls.ContainsKey(hull))
                     {
-                        combinedHulls.Add(hull, new HashSet<Hull>());   
+                        combinedHulls.Add(hull, new HashSet<Hull>());
                     }
-                    
+
                     combinedHulls[hull].Add(linkedHull);
                 }
             }
@@ -454,14 +454,14 @@ namespace Barotrauma
             foreach (Hull hull in hullList)
             {
                 Vector2 relativeHullPos = new Vector2(
-                    (hull.WorldRect.X - worldBorders.X) / (float)worldBorders.Width, 
+                    (hull.WorldRect.X - worldBorders.X) / (float)worldBorders.Width,
                     (worldBorders.Y - hull.WorldRect.Y) / (float)worldBorders.Height);
                 Vector2 relativeHullSize = new Vector2(hull.Rect.Width / (float)worldBorders.Width, hull.Rect.Height / (float)worldBorders.Height);
 
                 bool hideHull = combinedHulls.ContainsKey(hull) || combinedHulls.Values.Any(hh => hh.Contains(hull));
 
                 if (hideHull) { continue; }
-                
+
                 Color color = Color.DarkCyan * 0.8f;
 
                 var hullFrame = new GUIFrame(new RectTransform(relativeHullSize, hullContainer.RectTransform) { RelativeOffset = relativeHullPos }, style: "MiniMapRoom", color: color)
@@ -477,7 +477,7 @@ namespace Barotrauma
                 MiniMapHullData data = ConstructLinkedHulls(mainHull, linkedHulls, hullContainer, worldBorders);
 
                 Vector2 relativeHullPos = new Vector2(
-                    (data.Bounds.X - worldBorders.X) / worldBorders.Width, 
+                    (data.Bounds.X - worldBorders.X) / worldBorders.Width,
                     (worldBorders.Y - data.Bounds.Y) / worldBorders.Height);
 
                 Vector2 relativeHullSize = new Vector2(data.Bounds.Width / worldBorders.Width, data.Bounds.Height / worldBorders.Height);
@@ -507,9 +507,6 @@ namespace Barotrauma
                     var (parentW, parentH) = hullContainer.Rect.Size.ToVector2();
                     Vector2 size = new Vector2(rect.Width / parentW, rect.Height / parentH);
                     // TODO this won't be required if we some day switch RectTransform to use RectangleF
-                    const float padding = 0.001f; 
-                    size.X += padding;
-                    size.Y += padding;
                     Vector2 pos = new Vector2(rect.X / parentW, rect.Y / parentH);
 
                     GUIFrame hullFrame = new GUIFrame(new RectTransform(size, hullContainer.RectTransform) { RelativeOffset = pos }, style: "ScanLinesSeamless", color: color)
@@ -586,7 +583,7 @@ namespace Barotrauma
                 wRect.Y = -wRect.Y;
 
                 var (posX, posY) = new Vector2(
-                    (wRect.X - worldBorders.X) / (float)worldBorders.Width, 
+                    (wRect.X - worldBorders.X) / (float)worldBorders.Width,
                     (worldBorders.Y - wRect.Y) / (float)worldBorders.Height);
 
                 var (scaleX, scaleY) = new Vector2(wRect.Width / (float)worldBorders.Width, wRect.Height / (float)worldBorders.Height);
@@ -629,7 +626,7 @@ namespace Barotrauma
                 }
             }
 
-            if (Info.Type != SubmarineType.OutpostModule || 
+            if (Info.Type != SubmarineType.OutpostModule ||
                 (Info.OutpostModuleInfo?.ModuleFlags.Any(f => !f.Equals("hallwayvertical", StringComparison.OrdinalIgnoreCase) && !f.Equals("hallwayhorizontal", StringComparison.OrdinalIgnoreCase)) ?? true))
             {
                 if (!WayPoint.WayPointList.Any(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Path))
@@ -697,7 +694,7 @@ namespace Barotrauma
                         int wireCount = item.Connections[i].Wires.Count(w => w != null);
                         if (doorLinks + wireCount > item.Connections[i].MaxWires)
                         {
-                            errorMsgs.Add(TextManager.GetWithVariables("InsufficientFreeConnectionsWarning", 
+                            errorMsgs.Add(TextManager.GetWithVariables("InsufficientFreeConnectionsWarning",
                                 new string[] { "[doorcount]", "[freeconnectioncount]" },
                                 new string[] { doorLinks.ToString(), (item.Connections[i].MaxWires - wireCount).ToString() }));
                             break;
@@ -794,7 +791,7 @@ namespace Barotrauma
                 return SubEditorScreen.SuppressedWarnings.Contains(type);
             }
         }
-        
+
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (type != ServerNetObject.ENTITY_POSITION)

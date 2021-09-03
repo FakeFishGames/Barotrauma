@@ -39,6 +39,34 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool SeeThroughWalls
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(true, false)]
+        public bool ShowDeadCharacters
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(true, false)]
+        public bool ShowTexts
+        {
+            get;
+            private set;
+        }
+
+        [Serialize("72,119,72,120", false)]
+        public Color OverlayColor
+        {
+            get;
+            private set;
+        }
+
         private readonly List<Character> visibleCharacters = new List<Character>();
 
         private const float UpdateInterval = 0.5f;
@@ -91,12 +119,13 @@ namespace Barotrauma.Items.Components
             foreach (Character c in Character.CharacterList)
             {
                 if (c == equipper || !c.Enabled || c.Removed) { continue; }
+                if (!ShowDeadCharacters && c.IsDead) { continue; }
 
                 float dist = Vector2.DistanceSquared(refEntity.WorldPosition, c.WorldPosition);
                 if (dist < Range * Range)
                 {
                     Vector2 diff = c.WorldPosition - refEntity.WorldPosition;
-                    if (Submarine.CheckVisibility(refEntity.SimPosition, refEntity.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
+                    if (SeeThroughWalls || Submarine.CheckVisibility(refEntity.SimPosition, refEntity.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
                     {
                         visibleCharacters.Add(c);
                     }
@@ -123,27 +152,54 @@ namespace Barotrauma.Items.Components
         {
             if (character == null) { return; }
 
-            GUI.UIGlow.Draw(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
-                Color.LightGreen * 0.5f);
-
-            Character closestCharacter = null;
-            float closestDist = float.PositiveInfinity;
-            foreach (Character c in visibleCharacters)
+            if (OverlayColor.A > 0)
             {
-                if (c == character || !c.Enabled || c.Removed) { continue; }
-
-                float dist = Vector2.DistanceSquared(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), c.WorldPosition);
-                if (dist < closestDist)
-                {
-                    closestCharacter = c;
-                    closestDist = dist;
-                }              
+                GUI.UIGlow.Draw(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), OverlayColor);
             }
 
-            if (closestCharacter != null)
+            if (ShowTexts)
             {
-                float dist = Vector2.Distance(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), closestCharacter.WorldPosition);
-                DrawCharacterInfo(spriteBatch, closestCharacter, 1.0f - MathHelper.Max((dist - (Range - FadeOutRange)) / FadeOutRange, 0.0f));
+                Character closestCharacter = null;
+                float closestDist = float.PositiveInfinity;
+                foreach (Character c in visibleCharacters)
+                {
+                    if (c == character || !c.Enabled || c.Removed) { continue; }
+
+                    float dist = Vector2.DistanceSquared(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), c.WorldPosition);
+                    if (dist < closestDist)
+                    {
+                        closestCharacter = c;
+                        closestDist = dist;
+                    }              
+                }
+
+                if (closestCharacter != null)
+                {
+                    float dist = Vector2.Distance(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), closestCharacter.WorldPosition);
+                    DrawCharacterInfo(spriteBatch, closestCharacter, 1.0f - MathHelper.Max((dist - (Range - FadeOutRange)) / FadeOutRange, 0.0f));
+                }
+            }
+
+            if (SeeThroughWalls)
+            {
+                spriteBatch.End();
+                GameMain.LightManager.SolidColorEffect.Parameters["color"].SetValue(Color.Red.ToVector4() * (0.35f + (float)Math.Sin(Timing.TotalTime * 1.6f) * 0.05f));
+                GameMain.LightManager.SolidColorEffect.CurrentTechnique = GameMain.LightManager.SolidColorEffect.Techniques["SolidColorBlur"];
+                GameMain.LightManager.SolidColorEffect.Parameters["blurDistance"].SetValue(0.03f + (float)Math.Sin(Timing.TotalTime) * 0.01f);
+                GameMain.LightManager.SolidColorEffect.CurrentTechnique.Passes[0].Apply();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: Screen.Selected.Cam.Transform, effect: GameMain.LightManager.SolidColorEffect);
+
+                foreach (Character c in visibleCharacters)
+                {
+                    if (c == character || !c.Enabled || c.Removed) { continue; }
+                    foreach (Limb limb in c.AnimController.Limbs)
+                    {
+                        limb.Draw(spriteBatch, Screen.Selected.Cam, disableDeformations: true);
+                    }
+                }
+
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
             }
         }
 

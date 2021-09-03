@@ -8,7 +8,8 @@ namespace Barotrauma
     public enum HitDetection
     {
         Distance,
-        Contact
+        Contact,
+        None
     }
 
     public enum AttackContext
@@ -72,20 +73,6 @@ namespace Barotrauma
             Afflictions = null;
             AppliedDamageModifiers = appliedDamageModifiers;
         }
-    }
-
-    class AttackData
-    {
-        public float DamageMultiplier { get; set; } = 1f;
-        public float AddedPenetration { get; set; } = 0f;
-        public List<Affliction> Afflictions { get; set; }
-        public Attack SourceAttack { get; }
-
-        public AttackData(Attack sourceAttack)
-        {
-            SourceAttack = sourceAttack;
-        }
-
     }
 
     partial class Attack : ISerializableEntity
@@ -466,7 +453,7 @@ namespace Barotrauma
 
             DamageParticles(deltaTime, worldPosition);
             
-            var attackResult = target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
+            var attackResult = target?.AddDamage(attacker, worldPosition, this, deltaTime, playSound) ?? new AttackResult();
             var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
             if (targetCharacter != null && targetCharacter.IsDead)
             {

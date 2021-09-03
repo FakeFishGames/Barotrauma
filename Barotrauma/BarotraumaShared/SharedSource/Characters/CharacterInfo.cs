@@ -462,6 +462,9 @@ namespace Barotrauma
 
         public bool IsAttachmentsLoaded => HairIndex > -1 && BeardIndex > -1 && MoustacheIndex > -1 && FaceAttachmentIndex > -1;
 
+        // talent-relevant values
+        public int MissionsCompletedSinceDeath = 0;
+
         // Used for creating the data
         public CharacterInfo(string speciesName, string name = "", string originalName = "", JobPrefab jobPrefab = null, string ragdollFileName = null, int variant = 0, Rand.RandSync randSync = Rand.RandSync.Unsynced, string npcIdentifier = "")
         {
@@ -605,7 +608,10 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(personalityName))
             {
                 personalityTrait = NPCPersonalityTrait.List.Find(p => p.Name == personalityName);
-            }      
+            }
+
+            MissionsCompletedSinceDeath = infoElement.GetAttributeInt("missionscompletedsincedeath", 0);
+
             foreach (XElement subElement in infoElement.Elements())
             {
                 bool jobCreated = false;
@@ -973,16 +979,17 @@ namespace Barotrauma
             }
 
             float prevLevel = Job.GetSkillLevel(skillIdentifier);
-            Job.IncreaseSkillLevel(skillIdentifier, increase);
+            Job.IncreaseSkillLevel(skillIdentifier, increase, Character.HasAbilityFlag(AbilityFlags.GainSkillPastMaximum));
 
             float newLevel = Job.GetSkillLevel(skillIdentifier);
+
             if ((int)newLevel > (int)prevLevel)
             {
                 Character.CheckTalents(AbilityEffectType.OnGainSkillPoint, skillIdentifier);
-
                 foreach (Character character in Character.GetFriendlyCrew(Character))
                 {
-                    character.CheckTalents(AbilityEffectType.OnAllyGainSkillPoint, (skillIdentifier, Character));
+                    var abilityStringCharacter = new AbilityStringCharacter(skillIdentifier, Character);
+                    character.CheckTalents(AbilityEffectType.OnAllyGainSkillPoint, abilityStringCharacter);
                 }
             }
 
@@ -1139,8 +1146,9 @@ namespace Barotrauma
                 new XAttribute("startitemsgiven", StartItemsGiven),
                 new XAttribute("ragdoll", ragdollFileName),
                 new XAttribute("personality", personalityTrait == null ? "" : personalityTrait.Name));
-
             // TODO: animations?
+
+            charElement.Add(new XAttribute("missionscompletedsincedeath", MissionsCompletedSinceDeath));
 
             if (Character != null)
             {
@@ -1158,6 +1166,7 @@ namespace Barotrauma
                 foreach (var savedStat in statValuePair.Value)
                 {
                     if (savedStat.StatValue == 0f) { continue; }
+                    if (savedStat.RemoveAfterRound) { continue; }
 
                     savedStatElement.Add(new XElement("savedstatvalue",
                         new XAttribute("stattype", statValuePair.Key.ToString()),
@@ -1167,6 +1176,8 @@ namespace Barotrauma
                         ));
                 }
             }
+
+
 
             charElement.Add(savedStatElement);
 
@@ -1496,7 +1507,6 @@ namespace Barotrauma
                 }
             }
         }
-
         public void ResetSavedStatValue(string statIdentifier)
         {
             savedStatValues.SelectMany(s => s.Value).Where(s => s.StatIdentifier == statIdentifier).ForEach(v => v.StatValue = 0f);
@@ -1514,7 +1524,7 @@ namespace Barotrauma
             }
         }
 
-        public void ChangeSavedStatValue(StatTypes statType, float value, string statIdentifier, bool removeOnDeath)
+        public void ChangeSavedStatValue(StatTypes statType, float value, string statIdentifier, bool removeOnDeath, bool removeAfterRound = false, float maxValue = float.MaxValue)
         {
             if (!savedStatValues.ContainsKey(statType))
             {
@@ -1523,12 +1533,11 @@ namespace Barotrauma
 
             if (savedStatValues[statType].FirstOrDefault(s => s.StatIdentifier == statIdentifier) is SavedStatValue savedStat)
             {
-                savedStat.StatValue += value;
-                savedStat.RemoveOnDeath = removeOnDeath;
+                savedStat.StatValue = MathHelper.Min(savedStat.StatValue + value, maxValue);
             }
             else
             {
-                savedStatValues[statType].Add(new SavedStatValue(statIdentifier, value, removeOnDeath));
+                savedStatValues[statType].Add(new SavedStatValue(statIdentifier, MathHelper.Min(value, maxValue), removeOnDeath, removeAfterRound));
             }
         }
     }
@@ -1538,12 +1547,14 @@ namespace Barotrauma
         public string StatIdentifier { get; set; }
         public float StatValue { get; set; }
         public bool RemoveOnDeath { get; set; }
+        public bool RemoveAfterRound { get; set; }
 
-        public SavedStatValue(string statIdentifier, float value, bool removeOnDeath)
+        public SavedStatValue(string statIdentifier, float value, bool removeOnDeath, bool retainAfterRound)
         {
             StatValue = value;
             RemoveOnDeath = removeOnDeath;
             StatIdentifier = statIdentifier;
+            RemoveAfterRound = retainAfterRound;
         }
     }
 }

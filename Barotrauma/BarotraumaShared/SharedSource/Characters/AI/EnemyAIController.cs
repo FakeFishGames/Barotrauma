@@ -1915,12 +1915,12 @@ namespace Barotrauma
 #if SERVER
                     GameMain.NetworkMember.CreateEntityEvent(Character, new object[]
                     {
-                    Networking.NetEntityEvent.Type.SetAttackTarget,
-                    attackingLimb,
-                    (damageTarget as Entity)?.ID ?? Entity.NullEntityID,
-                    damageTarget is Character character && targetLimb != null ? Array.IndexOf(character.AnimController.Limbs, targetLimb) : 0,
-                    SimPosition.X,
-                    SimPosition.Y
+                        Networking.NetEntityEvent.Type.SetAttackTarget,
+                        attackingLimb,
+                        (damageTarget as Entity)?.ID ?? Entity.NullEntityID,
+                        damageTarget is Character character && targetLimb != null ? Array.IndexOf(character.AnimController.Limbs, targetLimb) : 0,
+                        SimPosition.X,
+                        SimPosition.Y
                     });
 #else
                     Character.PlaySound(CharacterSound.SoundType.Attack, maxInterval: 3);

@@ -403,7 +403,7 @@ namespace Barotrauma.Items.Components
             scissorComponent = new GUIScissorComponent(new RectTransform(Vector2.One, submarineContainer.RectTransform, Anchor.Center));
             miniMapContainer = new GUIFrame(new RectTransform(Vector2.One, scissorComponent.Content.RectTransform, Anchor.Center), style: null) { CanBeFocused = false };
 
-            miniMapFrame = CreateMiniMap(item.Submarine, miniMapContainer, MiniMapSettings.Default, null, out hullStatusComponents);
+            miniMapFrame = CreateMiniMap(item.Submarine, submarineContainer, MiniMapSettings.Default, null, out hullStatusComponents);
 
             IEnumerable<Item> pointsOfInterest = Item.ItemList.Where(it => it.Submarine == item.Submarine && !it.HiddenInGame && !it.NonInteractable && it.GetComponent<Repairable>() != null);
             electricalFrame = CreateMiniMap(item.Submarine, miniMapContainer, new MiniMapSettings(createHullElements: false), pointsOfInterest, out electricalMapComponents);
@@ -458,7 +458,7 @@ namespace Barotrauma.Items.Components
                 CreateHUD();
             }
 
-            if (PlayerInput.PrimaryMouseButtonDown())
+            if (PlayerInput.PrimaryMouseButtonDown() && currentMode != MiniMapMode.HullStatus)
             {
                 if (GUI.MouseOn == scissorComponent || scissorComponent.IsParentOf(GUI.MouseOn))
                 {
@@ -466,19 +466,15 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            float newZoom = Zoom;
 
-            if (Math.Abs(PlayerInput.ScrollWheelSpeed) > 0 && (GUI.MouseOn == scissorComponent || scissorComponent.IsParentOf(GUI.MouseOn)))
+            if (currentMode != MiniMapMode.HullStatus && Math.Abs(PlayerInput.ScrollWheelSpeed) > 0 && (GUI.MouseOn == scissorComponent || scissorComponent.IsParentOf(GUI.MouseOn)))
             {
-                newZoom = Math.Clamp(Zoom + PlayerInput.ScrollWheelSpeed / 1000.0f * Zoom, minZoom, maxZoom);
+                float newZoom = Math.Clamp(Zoom + PlayerInput.ScrollWheelSpeed / 1000.0f * Zoom, minZoom, maxZoom);
                 float distanceScale = newZoom / Zoom;
                 mapOffset *= distanceScale;
+                recalculate |= !MathUtils.NearlyEqual(Zoom, newZoom);
+                Zoom = newZoom;
             }
-
-            recalculate |= !MathUtils.NearlyEqual(Zoom, newZoom);
-            Zoom = newZoom;
-
-            Vector2 elementScale = new Vector2(Zoom);
 
             if (dragMapStart is { } dragStart)
             {
@@ -487,15 +483,10 @@ namespace Barotrauma.Items.Components
                     mapOffset.X += PlayerInput.MouseSpeed.X;
                     mapOffset.Y += PlayerInput.MouseSpeed.Y;
 
-                    recalculate |= PlayerInput.MouseSpeed != Vector2.Zero;
+                    recalculate = true;
                     dragMap = true;
                 }
             }
-
-            var (maxWidth, maxHeight) = miniMapContainer.Rect.Size.ToVector2() / 2f / Zoom;
-
-            mapOffset.X = Math.Clamp(mapOffset.X, -maxWidth, maxWidth);
-            mapOffset.Y = Math.Clamp(mapOffset.Y, -maxHeight, maxHeight);
 
             if (!PlayerInput.PrimaryMouseButtonHeld())
             {
@@ -505,10 +496,15 @@ namespace Barotrauma.Items.Components
 
             if (recalculate)
             {
-                miniMapContainer.RectTransform.LocalScale = elementScale;
+                miniMapContainer.RectTransform.LocalScale = new Vector2(Zoom);
                 miniMapContainer.RectTransform.RecalculateChildren(true, true);
                 miniMapContainer.RectTransform.AbsoluteOffset = mapOffset.ToPoint();
                 recalculate = false;
+
+                var (maxWidth, maxHeight) = miniMapContainer.Rect.Size.ToVector2() / 2f / Zoom;
+
+                mapOffset.X = Math.Clamp(mapOffset.X, -maxWidth, maxWidth);
+                mapOffset.Y = Math.Clamp(mapOffset.Y, -maxHeight, maxHeight);
             }
 
             // is there a better way to do this?
@@ -583,6 +579,7 @@ namespace Barotrauma.Items.Components
         private void DrawHUDFront(SpriteBatch spriteBatch, GUICustomComponent container)
         {
             // TODO remove
+            #warning remove
             if (currentMode == MiniMapMode.HullCondition)
             {
                 const string wipText = "work in progress";
@@ -757,7 +754,7 @@ namespace Barotrauma.Items.Components
             foreach (Item foundItem in foundItems)
             {
                 RelativeEntityRect scaledRect = new RelativeEntityRect(dockedBorders, foundItem.WorldRect);
-                Vector2 pos = (scaledRect.PositionRelativeTo(parentRect, skipOffset: true) + scaledRect.SizeRelativeTo(parentRect) / 2f) / Zoom;
+                Vector2 pos = scaledRect.PositionRelativeTo(parentRect, skipOffset: true) + scaledRect.SizeRelativeTo(parentRect) / 2f;
                 positions.Add(pos);
             }
 
@@ -873,10 +870,14 @@ namespace Barotrauma.Items.Components
                     string line1 = gapOpenSum > 0.1f ? TextManager.Get("MiniMapHullBreach") : string.Empty;
                     Color line1Color = GUI.Style.Red;
 
-                    string line2 = oxygenAmount == null ? TextManager.Get("MiniMapAirQualityUnavailable") : TextManager.AddPunctuation(':', TextManager.Get("MiniMapAirQuality"), +(int)oxygenAmount + " %");
+                    string line2 = oxygenAmount == null ?
+                        TextManager.Get("MiniMapAirQualityUnavailable") :
+                        TextManager.AddPunctuation(':', TextManager.Get("MiniMapAirQuality"), (int)Math.Round(oxygenAmount.Value) + "%");
                     Color line2Color = oxygenAmount == null ? GUI.Style.Red : Color.Lerp(GUI.Style.Red, Color.LightGreen, (float)oxygenAmount / 100.0f);
 
-                    string line3 = waterAmount == null ? TextManager.Get("MiniMapWaterLevelUnavailable") : TextManager.AddPunctuation(':', TextManager.Get("MiniMapWaterLevel"), (int)(waterAmount * 100.0f) + " %");
+                    string line3 = waterAmount == null ?
+                        TextManager.Get("MiniMapWaterLevelUnavailable") :
+                        TextManager.AddPunctuation(':', TextManager.Get("MiniMapWaterLevel"), (int)Math.Round(waterAmount.Value * 100.0f) + "%");
                     Color line3Color = waterAmount == null ? GUI.Style.Red : Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)waterAmount);
 
                     SetTooltip(borderComponent.Rect.Center, header, line1, line2, line3, line1Color, line2Color, line3Color);
@@ -958,7 +959,7 @@ namespace Barotrauma.Items.Components
                 Rectangle parentRect = container.Rect;
                 if (miniMapFrame is { } miniMap) { parentRect = miniMap.Rect; }
 
-                DrawSubmarine(spriteBatch, parentRect);
+                DrawSubmarine(spriteBatch);
             }
 
             if (Voltage < MinVoltage) { return; }
@@ -979,7 +980,7 @@ namespace Barotrauma.Items.Components
                         Vector2 spriteScale = targetSize / pingCircle.size;
                         float scale = Math.Min(blipState, maxBlipState / 2f);
                         float alpha = 1.0f - Math.Clamp((blipState - maxBlipState * 0.25f) * 2f, 0f, 1f);
-                        pingCircle.Draw(spriteBatch, miniMapFrame.Rect.Location.ToVector2() + (blip * Zoom), GUI.Style.Red * alpha, pingCircle.Origin, 0f, spriteScale * scale, SpriteEffects.None);
+                        pingCircle.Draw(spriteBatch, electricalFrame.Rect.Location.ToVector2() + blip * Zoom, GUI.Style.Red * alpha, pingCircle.Origin, 0f, spriteScale * scale, SpriteEffects.None);
                     }
                 }
             }
@@ -1002,8 +1003,15 @@ namespace Barotrauma.Items.Components
                         {
                             RectangleF waterRect = new RectangleF(hullFrame.Rect.X, hullFrame.Rect.Y + hullFrame.Rect.Height * (1.0f - waterAmount), hullFrame.Rect.Width, hullFrame.Rect.Height * waterAmount);
 
+                            const float width = 1f;
+
                             GUI.DrawFilledRectangle(spriteBatch, waterRect, HullWaterColor);
-                            GUI.DrawLine(spriteBatch, waterRect.Location, new Vector2(waterRect.Right, waterRect.Y), HullWaterLineColor);
+
+                            if (!MathUtils.NearlyEqual(waterAmount, 1.0f))
+                            {
+                                Vector2 offset = new Vector2(0, width);
+                                GUI.DrawLine(spriteBatch, waterRect.Location + offset, new Vector2(waterRect.Right, waterRect.Y) + offset, HullWaterLineColor, width: width);
+                            }
                         }
                     }
 
@@ -1079,7 +1087,7 @@ namespace Barotrauma.Items.Components
             submarinePreview = rt;
         }
 
-        private void DrawSubmarine(SpriteBatch spriteBatch, Rectangle parentRect)
+        private void DrawSubmarine(SpriteBatch spriteBatch)
         {
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.End();
@@ -1094,7 +1102,8 @@ namespace Barotrauma.Items.Components
                 Color blueprintBlue = BlueprintBlue * currentMode switch { MiniMapMode.HullStatus => 0.1f, MiniMapMode.ElectricalView => 0.1f, _ => 0.5f };
 
                 Vector2 origin = new Vector2(texture.Width / 2f, texture.Height / 2f);
-                spriteBatch.Draw(texture, parentRect.Center.ToVector2(), null, blueprintBlue, 0f, origin, Zoom, SpriteEffects.None, 0f);
+                float scale = currentMode == MiniMapMode.HullStatus ? 1.0f : Zoom;
+                spriteBatch.Draw(texture, miniMapContainer.Center, null, blueprintBlue, 0f, origin, scale, SpriteEffects.None, 0f);
 
                 spriteBatch.End();
             }
@@ -1281,12 +1290,12 @@ namespace Barotrauma.Items.Components
             GUIFrame hullContainer = new GUIFrame(new RectTransform(containerScale * elementPadding, parent.RectTransform, Anchor.Center), style: null);
 
             ImmutableHashSet<Submarine> connectedSubs = sub.GetConnectedSubs().ToImmutableHashSet();
-            ImmutableHashSet<Hull> hullList = ImmutableHashSet<Hull>.Empty;
-            ImmutableDictionary<Hull, ImmutableHashSet<Hull>> combinedHulls = ImmutableDictionary<Hull, ImmutableHashSet<Hull>>.Empty;
+            ImmutableArray<Hull> hullList = ImmutableArray<Hull>.Empty;
+            ImmutableDictionary<Hull, ImmutableArray<Hull>> combinedHulls = ImmutableDictionary<Hull, ImmutableArray<Hull>>.Empty;
 
             if (settings.CreateHullElements)
             {
-                hullList = Hull.hullList.Where(IsPartofSub).ToImmutableHashSet();
+                hullList = Hull.hullList.Where(IsPartofSub).ToImmutableArray();
                 combinedHulls = CombinedHulls(hullList);
             }
 
@@ -1436,7 +1445,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private static ImmutableDictionary<Hull, ImmutableHashSet<Hull>> CombinedHulls(ImmutableHashSet<Hull> hulls)
+        private static ImmutableDictionary<Hull, ImmutableArray<Hull>> CombinedHulls(ImmutableArray<Hull> hulls)
         {
             Dictionary<Hull, HashSet<Hull>> combinedHulls = new Dictionary<Hull, HashSet<Hull>>();
 
@@ -1460,10 +1469,10 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            return combinedHulls.ToImmutableDictionary(pair => pair.Key, pair => pair.Value.ToImmutableHashSet());
+            return combinedHulls.ToImmutableDictionary(pair => pair.Key, pair => pair.Value.ToImmutableArray());
         }
 
-        private static MiniMapHullData ConstructHullPolygon(Hull mainHull, ImmutableHashSet<Hull> linkedHulls, GUIComponent parent, RectangleF worldBorders)
+        private static MiniMapHullData ConstructHullPolygon(Hull mainHull, ImmutableArray<Hull> linkedHulls, GUIComponent parent, RectangleF worldBorders)
         {
             Rectangle parentRect = parent.Rect;
 
@@ -1500,6 +1509,8 @@ namespace Barotrauma.Items.Components
                 hullRefs.Add(hull);
             }
 
+            hullRefs.Reverse(); // I have no idea why this is required
+
             ImmutableArray<RectangleF> snappedRectangles = ToolBox.SnapRectangles(normalizedRects, treshold: 1);
 
             List<List<Vector2>> polygon = ToolBox.CombineRectanglesIntoShape(snappedRectangles);
@@ -1508,6 +1519,7 @@ namespace Barotrauma.Items.Components
 
             foreach (List<Vector2> list in polygon)
             {
+                // scale down the polygon just a tiny bit
                 var (polySizeX, polySizeY) = ToolBox.GetPolygonBoundingBoxSize(list);
                 float sizeX = polySizeX - 1f,
                       sizeY = polySizeY - 1f;

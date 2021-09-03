@@ -395,12 +395,18 @@ namespace Barotrauma
 
             if (character.IsHusk && character.Params.UseHuskAppendage)
             {
+                bool inEditor = false;
+#if CLIENT
+                inEditor = Screen.Selected == GameMain.CharacterEditorScreen;
+#endif
+
                 var characterPrefab = CharacterPrefab.FindByFilePath(character.ConfigPath);
                 if (characterPrefab?.XDocument != null)
                 {
                     var mainElement = characterPrefab.XDocument.Root.IsOverride() ? characterPrefab.XDocument.Root.FirstElement() : characterPrefab.XDocument.Root;
                     foreach (var huskAppendage in mainElement.GetChildElements("huskappendage"))
                     {
+                        if (!inEditor && huskAppendage.GetAttributeBool("onlyfromafflictions", false)) { continue; }
                         AfflictionHusk.AttachHuskAppendage(character, huskAppendage.GetAttributeString("affliction", string.Empty), huskAppendage, ragdoll: this);
                     }
                 }

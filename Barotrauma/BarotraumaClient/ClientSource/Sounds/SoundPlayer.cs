@@ -1012,7 +1012,8 @@ namespace Barotrauma
                 Screen.Selected == GameMain.SpriteEditorScreen ||
                 Screen.Selected == GameMain.SubEditorScreen ||
                 Screen.Selected == GameMain.EventEditorScreen ||
-                (Screen.Selected == GameMain.GameScreen && GameMain.GameSession?.GameMode is TestGameMode))
+                (Screen.Selected == GameMain.GameScreen && GameMain.GameSession?.GameMode is TestGameMode) ||
+                Screen.Selected == GameMain.NetLobbyScreen)
             {
                 return "editor";
             }

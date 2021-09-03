@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
@@ -10,7 +9,7 @@ namespace Barotrauma.Abilities
         protected float squaredMaxDistance;
         public CharacterAbilityApplyStatusEffectsToNearestAlly(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            squaredMaxDistance = DistanceToSquaredDistance(abilityElement.GetAttributeFloat("maxdistance", float.MaxValue));
+            squaredMaxDistance = MathF.Pow(abilityElement.GetAttributeFloat("maxdistance", float.MaxValue), 2);
         }
 
         protected override void ApplyEffect()
@@ -20,7 +19,7 @@ namespace Barotrauma.Abilities
 
             foreach (Character crewCharacter in Character.GetFriendlyCrew(Character))
             {
-                if (crewCharacter != Character && Vector2.DistanceSquared(Character.SimPosition, Character.GetRelativeSimPosition(crewCharacter)) is float tempDistance && tempDistance < closestDistance)
+                if (crewCharacter != Character && Vector2.DistanceSquared(Character.WorldPosition, crewCharacter.WorldPosition) is float tempDistance && tempDistance < closestDistance)
                 {
                     closestCharacter = crewCharacter;
                     closestDistance = tempDistance;

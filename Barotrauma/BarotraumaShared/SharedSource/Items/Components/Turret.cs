@@ -64,6 +64,8 @@ namespace Barotrauma.Items.Components
         private Character currentTarget; 
         const float aiFindTargetInterval = 5.0f;
 
+        private const float TinkeringPowerCostReduction = 1.25f;
+
         public float Rotation
         {
             get { return rotation; }
@@ -504,9 +506,19 @@ namespace Barotrauma.Items.Components
             return TryLaunch(deltaTime, character);
         }
 
+        public float GetPowerRequiredToShoot()
+        {
+            float powerCost = powerConsumption;
+            if (user != null)
+            {
+                powerCost /= (1 + user.GetStatValue(StatTypes.TurretPowerCostReduction));
+            }
+            return powerCost;
+        }
+
         public bool HasPowerToShoot()
         {
-            return GetAvailableBatteryPower() >= powerConsumption;
+            return GetAvailableBatteryPower() >= GetPowerRequiredToShoot();
         }
 
         private bool TryLaunch(float deltaTime, Character character = null, bool ignorePower = false)
@@ -617,10 +629,12 @@ namespace Barotrauma.Items.Components
                 if (!ignorePower)
                 {
                     var batteries = item.GetConnectedComponents<PowerContainer>();
-                    float neededPower = powerConsumption;
+                    float neededPower = GetPowerRequiredToShoot();
+                    // tinkering is currently not factored into the common method as it is checked only when shooting
+                    // but this is a minor issue that causes mostly cosmetic woes. might still be worth refactoring later
                     if (isTinkering)
                     {
-                        neededPower /= 1.25f;
+                        neededPower /= TinkeringPowerCostReduction;
                     }
                     while (neededPower > 0.0001f && batteries.Count > 0)
                     {
@@ -1022,7 +1036,7 @@ namespace Barotrauma.Items.Components
                     container = containerItem.GetComponent<ItemContainer>();
                     if (container != null) { break; }
                 }
-                if (container == null || container.ContainableItems.Count == 0)
+                if (container == null || !container.ContainableItemIdentifiers.Any())
                 {
                     if (character.IsOnPlayerTeam)
                     {
@@ -1046,7 +1060,7 @@ namespace Barotrauma.Items.Components
                     {
                         if (!character.IsOnPlayerTeam) { return; }
                         if (character.Submarine != Submarine.MainSub) { return; }
-                        string ammoType = container.ContainableItems.First().Identifiers.FirstOrDefault() ?? "ammobox";
+                        string ammoType = container.ContainableItemIdentifiers.FirstOrDefault() ?? "ammobox";
                         int remainingAmmo = Submarine.MainSub.GetItems(false).Count(i => i.HasTag(ammoType) && i.Condition > 1);
                         if (remainingAmmo == 0)
                         {

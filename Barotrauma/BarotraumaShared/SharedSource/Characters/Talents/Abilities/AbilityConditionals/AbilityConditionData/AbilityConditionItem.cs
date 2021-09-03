@@ -22,10 +22,9 @@ namespace Barotrauma.Abilities
             {
                 item = tempItem.Prefab;
             }
-            // this and other instances of this type of casting will be refactored
-            else if (abilityData is (ItemPrefab itemPrefab, object _))
+            else if (abilityData is IAbilityItemPrefab abilityItemPrefab)
             {
-                item = itemPrefab;
+                item = abilityItemPrefab.ItemPrefab;
             }
 
             if (item != null)

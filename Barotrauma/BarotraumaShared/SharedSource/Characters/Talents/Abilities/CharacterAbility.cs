@@ -12,11 +12,15 @@ namespace Barotrauma.Abilities
         public CharacterTalent CharacterTalent { get; }
         public Character Character { get; }
 
-        public virtual bool RequiresAlive => true;
+        public bool RequiresAlive { get; }
+
         public virtual bool AllowClientSimulation => false;
         public virtual bool AppliesEffectOnIntervalUpdate => false;
 
         private const float DefaultEffectTime = 1.0f;
+
+        // currently resets if the character dies. would need to be stored in a dictionary of sorts to maintain through death
+
 
         /// <summary>
         /// Used primarily for StatusEffects. Default to constant outside interval abilities.
@@ -28,6 +32,7 @@ namespace Barotrauma.Abilities
             CharacterAbilityGroup = characterAbilityGroup;
             CharacterTalent = characterAbilityGroup.CharacterTalent;
             Character = CharacterTalent.Character;
+            RequiresAlive = abilityElement.GetAttributeBool("requiresalive", true);
         }
 
         public bool IsViable()
@@ -132,11 +137,5 @@ namespace Barotrauma.Abilities
             }
             return flagType;
         }
-
-        public static float DistanceToSquaredDistance(float distance)
-        {
-            return distance * distance;
-        }
-
     }
 }

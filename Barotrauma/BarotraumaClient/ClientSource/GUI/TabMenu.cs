@@ -1219,7 +1219,11 @@ namespace Barotrauma
             GUIFrame characterInfoFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.3f), talentInfoLayoutGroup.RectTransform, Anchor.TopLeft), style: null);
             GUILayoutGroup characterInfoColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), characterInfoFrame.RectTransform, anchor: Anchor.TopLeft), childAnchor: Anchor.TopLeft, isHorizontal: true);
 
-            CreateCharacterSheet(characterInfoColumn);
+            // move to a different tab menu
+            if (GameSettings.VerboseLogging)
+            {
+                CreateCharacterSheet(characterInfoColumn);
+            }
 
             if (!TalentTree.JobTalentTrees.TryGetValue(controlledCharacter.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return; }
 
@@ -1254,7 +1258,7 @@ namespace Barotrauma
                             Stretch = true,
                         };
 
-                        foreach (Talent talent in talentOption.Talents)
+                        foreach (TalentPrefab talent in talentOption.Talents)
                         {
                             int optionPadding = GUI.IntScale(10);
                             GUIFrame talentFrame = new GUIFrame(new RectTransform(new Point(talentOptionFrame.Rect.Width, talentOptionFrame.Rect.Height - optionPadding), talentOptionLayoutGroup.RectTransform), style: null)
@@ -1269,13 +1273,13 @@ namespace Barotrauma
 
                             GUIButton talentButton = new GUIButton(new RectTransform(Vector2.One, talentFrame.RectTransform, anchor: Anchor.Center), style: "TalentFrame")
                             {
-                                ToolTip = $"{TextManager.Get("talentname." + talent.Identifier, returnNull: true) ?? talent.Identifier} \n\n{TextManager.Get("talentdescription." + talent.Identifier, returnNull: true) ?? string.Empty}",
+                                ToolTip = $"{talent.DisplayName}\n\n{talent.Description}",
                                 UserData = talent.Identifier,
                                 PressedColor = pressedColor,
                                 OnClicked = (button, userData) =>
                                 {
-                                    talentTitleText.Text = TextManager.Get("talentname." + talent.Identifier, returnNull: true) ?? string.Empty;
-                                    talentDescriptionText.Text = TextManager.Get("talentdescription." + talent.Identifier, returnNull: true) ?? string.Empty;
+                                    talentTitleText.Text = talent.DisplayName;
+                                    talentDescriptionText.Text = talent.Description;
 
                                     // deselect other buttons in tier by removing their selected talents from pool
                                     foreach (GUIButton guiButton in talentOptionLayoutGroup.GetAllChildren<GUIButton>())
@@ -1440,10 +1444,10 @@ namespace Barotrauma
 
         private readonly StatTypes[] combatStats = new StatTypes[]
         {
-            StatTypes.MaximumHealthMultiplier,
-            StatTypes.MovementSpeed,
-            StatTypes.SwimmingSpeed,
-            StatTypes.RepairSpeed,
+            StatTypes.MeleeAttackMultiplier,
+            StatTypes.MeleeAttackSpeed,
+            StatTypes.RangedAttackSpeed,
+            StatTypes.TurretAttackSpeed,
         };
 
         private readonly StatTypes[] miscStats = new StatTypes[]

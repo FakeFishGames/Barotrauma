@@ -107,7 +107,7 @@ namespace Barotrauma.Items.Components
             if (ReloadTimer < 0.0f)
             {
                 ReloadTimer = 0.0f;
-                // was this an optimization or related to something else? currently disabled for charge-type weapons
+                // was this an optimization or related to something else? it cannot occur for charge-type weapons
                 //IsActive = false;
                 if (MaxChargeTime == 0.0f)
                 {
@@ -118,7 +118,7 @@ namespace Barotrauma.Items.Components
 
             float previousChargeTime = currentChargeTime;
 
-            float chargeDeltaTime = tryingToCharge ? deltaTime : -deltaTime;
+            float chargeDeltaTime = tryingToCharge && ReloadTimer <= 0f ? deltaTime : -deltaTime;
             currentChargeTime = Math.Clamp(currentChargeTime + chargeDeltaTime, 0f, MaxChargeTime);
 
             tryingToCharge = false;

@@ -27,6 +27,7 @@ namespace Barotrauma.Abilities
 
         private bool IsApplicable(object abilityData)
         {
+            if (timesTriggered >= maxTriggerCount) { return false; }
             return abilityConditions.All(c => c.MatchesCondition(abilityData));
         }
     }

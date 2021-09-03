@@ -14,6 +14,7 @@ namespace Barotrauma
 
         private static HashSet<string> subtreeTalents = new HashSet<string>();
 
+        private const string PlaceholderTalent = "placeholder";
         public XElement ConfigElement
         {
             get;
@@ -41,6 +42,7 @@ namespace Barotrauma
             HashSet<string> duplicateSet = new HashSet<string>();
             foreach (string talent in TalentSubTrees.SelectMany(s => s.TalentOptionStages.SelectMany(o => o.Talents.Select(t => t.Identifier))))
             {
+                if (talent == PlaceholderTalent) { continue; }
                 TalentPrefab talentPrefab = TalentPrefab.TalentPrefabs.Find(c => c.Identifier.Equals(talent, StringComparison.OrdinalIgnoreCase));
                 if (talentPrefab == null)
                 {
@@ -118,6 +120,7 @@ namespace Barotrauma
 
         public static bool IsViableTalentForCharacter(Character character, string talentIdentifier, IEnumerable<string> selectedTalents)
         {
+            if (talentIdentifier == PlaceholderTalent) { return false; }
             if (character?.Info?.Job.Prefab == null) { return false; }
             if (character.Info.GetTotalTalentPoints() - selectedTalents.Count() <= 0) { return false; }
 
@@ -178,7 +181,7 @@ namespace Barotrauma
 
             foreach (XElement talentOptionsElement in subTreeElement.GetChildElements("talentoptions"))
             {
-                TalentOptionStages.Add(new TalentOption(talentOptionsElement));
+                TalentOptionStages.Add(new TalentOption(talentOptionsElement, Identifier));
             }
         }
 
@@ -186,32 +189,19 @@ namespace Barotrauma
 
     class TalentOption
     {
-        public readonly List<Talent> Talents = new List<Talent>();
+        public readonly List<TalentPrefab> Talents = new List<TalentPrefab>();
 
-        public TalentOption(XElement talentOptionsElement)
+        public TalentOption(XElement talentOptionsElement, string debugIdentifier)
         {
             foreach (XElement talentOptionElement in talentOptionsElement.GetChildElements("talentoption"))
             {
-                Talents.Add(new Talent(talentOptionElement));
-            }
-        }
-    }
-
-    class Talent
-    {
-        public readonly string Identifier;
-        public readonly Sprite Icon;
-        public Talent(XElement talentOptionElement)
-        {
-            Identifier = talentOptionElement.GetAttributeString("identifier", "");
-            foreach (XElement subElement in talentOptionElement.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
+                string identifier = talentOptionElement.GetAttributeString("identifier", string.Empty);
+                if (!TalentPrefab.TalentPrefabs.ContainsKey(identifier))
                 {
-                    case "icon":
-                        Icon = new Sprite(subElement);
-                        break;
+                    DebugConsole.ThrowError($"Error in talent tree \"{debugIdentifier}\" - could not find a talent with the identifier \"{identifier}\".");
+                    return;
                 }
+                Talents.Add(TalentPrefab.TalentPrefabs[identifier]);
             }
         }
     }

@@ -58,6 +58,9 @@ namespace Barotrauma.Items.Components
         [Serialize(null, false)]
         public string ContainedStateIndicatorStyle { get; set; }
 
+        [Serialize(-1, false, description: "Can be used to make the contained state indicator display the condition of the item in a specific slot even when the container's capacity is more than 1.")]
+        public int ContainedStateIndicatorSlot { get; set; }
+
         [Serialize(true, false, description: "Should an indicator displaying the state of the contained items be displayed on this item's inventory slot. "+
             "If this item can only contain one item, the indicator will display the condition of the contained item, otherwise it will indicate how full the item is.")]
         public bool ShowContainedStateIndicator { get; set; }

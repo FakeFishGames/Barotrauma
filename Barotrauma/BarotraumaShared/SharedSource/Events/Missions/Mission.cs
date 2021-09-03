@@ -362,11 +362,16 @@ namespace Barotrauma
             }
 
             // apply money gains afterwards to prevent them from affecting XP gains
-            var moneyGainMultiplier = new AbilityValue(1f);
-            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnGainMissionMoney, (this, moneyGainMultiplier)));
-            crewCharacters.ForEach(c => moneyGainMultiplier.Value += c.GetStatValue(StatTypes.MissionMoneyGainMultiplier));
+            var moneyGainMission = new AbilityValueMission(1f, this);
+            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnGainMissionMoney, moneyGainMission));
+            crewCharacters.ForEach(c => moneyGainMission.Value += c.GetStatValue(StatTypes.MissionMoneyGainMultiplier));
 
-            campaign.Money += (int)(reward * moneyGainMultiplier.Value);
+            campaign.Money += (int)(reward * moneyGainMission.Value);
+
+            foreach (Character character in crewCharacters)
+            {
+                character.Info.MissionsCompletedSinceDeath++;
+            }
 
             foreach (KeyValuePair<string, float> reputationReward in ReputationRewards)
             {

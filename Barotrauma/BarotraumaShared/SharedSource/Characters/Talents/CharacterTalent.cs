@@ -111,8 +111,7 @@ namespace Barotrauma
 
         public static AbilityEffectType ParseAbilityEffectType(CharacterTalent characterTalent, string abilityEffectTypeString)
         {
-            AbilityEffectType abilityEffectType = AbilityEffectType.Undefined;
-            if (!Enum.TryParse(abilityEffectTypeString, true, out abilityEffectType))
+            if (!Enum.TryParse(abilityEffectTypeString, true, out AbilityEffectType abilityEffectType))
             {
                 DebugConsole.ThrowError("Invalid ability effect type \"" + abilityEffectTypeString + "\" in CharacterTalent (" + characterTalent.DebugIdentifier + ")");
             }

@@ -63,11 +63,11 @@ namespace Barotrauma.Items.Components
             }
 
             OutputValue = input;
-            ShowOnDisplay(input);
+            ShowOnDisplay(input, addToHistory: true);
             item.SendSignal(input, "signal_out");
         }
 
-        partial void ShowOnDisplay(string input, bool addToHistory = true)
+        partial void ShowOnDisplay(string input, bool addToHistory)
         {
             if (addToHistory)
             {

@@ -316,7 +316,7 @@ namespace Barotrauma.Items.Components
                                 availablePrefab.Condition -= availablePrefab.Prefab.Health * requiredItem.MinCondition;
                                 continue;
                             }
-                            
+
                             availablePrefabs.Remove(availablePrefab);
                             Entity.Spawner.AddToRemoveQueue(availablePrefab);
                             inputContainer.Inventory.RemoveItem(availablePrefab);
@@ -324,18 +324,20 @@ namespace Barotrauma.Items.Components
                     }
                 });
 
-                Character tempUser = user;
-
                 int amountFittingContainer = outputContainer.Inventory.HowManyCanBePut(fabricatedItem.TargetItem, fabricatedItem.OutCondition * fabricatedItem.TargetItem.Health);
-                var itemsCreated = new AbilityValue(fabricatedItem.Amount);
-                foreach (Character character in Character.CharacterList.Where(c => c.TeamID == user.TeamID))
+
+                var fabricationValueItem = new AbilityValueItem(fabricatedItem.Amount, fabricatedItem.TargetItem);
+                if (user != null)
                 {
-                    character.CheckTalents(AbilityEffectType.OnAllyItemFabricatedAmount, (fabricatedItem.TargetItem, itemsCreated));
+                    foreach (Character character in Character.CharacterList.Where(c => c.TeamID == user.TeamID))
+                    {
+                        character.CheckTalents(AbilityEffectType.OnAllyItemFabricatedAmount, fabricationValueItem);
+                    }
+                    user.CheckTalents(AbilityEffectType.OnItemFabricatedAmount, fabricationValueItem);
                 }
 
-                tempUser.CheckTalents(AbilityEffectType.OnItemFabricatedAmount, (fabricatedItem.TargetItem, itemsCreated));
-
-                for (int i = 0; i < (int)itemsCreated.Value; i++)
+                var tempUser = user;
+                for (int i = 0; i < (int)fabricationValueItem.Value; i++)
                 {
                     if (i < amountFittingContainer)
                     {
@@ -359,14 +361,13 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-            
                 if (user?.Info != null && !user.Removed)
                 {
                     foreach (Skill skill in fabricatedItem.RequiredSkills)
                     {
                         float userSkill = user.GetSkillLevel(skill.Identifier);
                         float addedSkill = skill.Level * SkillSettings.Current.SkillIncreasePerFabricatorRequiredSkill / Math.Max(userSkill, 1.0f);
-                        var addedSkillValue = new AbilityValue(0f);
+                        var addedSkillValue = new AbilityValueString(0f, skill.Identifier);
                         user.CheckTalents(AbilityEffectType.OnItemFabricationSkillGain, addedSkillValue);
 
                         user.Info.IncreaseSkillLevel(

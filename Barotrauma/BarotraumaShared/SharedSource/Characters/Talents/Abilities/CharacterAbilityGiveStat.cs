@@ -4,10 +4,9 @@ namespace Barotrauma.Abilities
 {
     class CharacterAbilityGiveStat : CharacterAbility
     {
-        private StatTypes statType;
-        private float value;
+        private readonly StatTypes statType;
+        private readonly float value;
 
-        // this and resistance giving should probably be moved directly to charactertalent attributes, as they don't need to interact with either ability group types
         public CharacterAbilityGiveStat(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statType = CharacterAbilityGroup.ParseStatType(abilityElement.GetAttributeString("stattype", ""), CharacterTalent.DebugIdentifier);

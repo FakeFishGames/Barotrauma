@@ -8,6 +8,8 @@ namespace Barotrauma.Abilities
 {
     class CharacterAbilityRegenerateLoot : CharacterAbility
     {
+        // not maintained through death, so it's possible for players to respawn and re-loot chests
+        // seems like a minor issue for now
         List<Item> openedContainers = new List<Item>();
 
         public CharacterAbilityRegenerateLoot(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)

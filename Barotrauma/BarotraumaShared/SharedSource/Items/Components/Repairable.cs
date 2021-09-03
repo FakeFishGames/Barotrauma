@@ -339,7 +339,7 @@ namespace Barotrauma.Items.Components
 
             if (currentFixerAction == FixActions.Tinker)
             {
-                // this is a bit code rotty to interject it here, should be less reliant on returning
+                // not great to interject it here, should be less reliant on returning
                 if (!CanTinker(CurrentFixer))
                 {
                     StopRepairing(CurrentFixer);

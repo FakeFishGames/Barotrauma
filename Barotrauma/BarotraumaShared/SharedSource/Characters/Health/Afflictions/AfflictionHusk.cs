@@ -34,6 +34,10 @@ namespace Barotrauma
                 float threshold = _strength > ActiveThreshold ? ActiveThreshold + 1 : DormantThreshold - 1;
                 float max = Math.Max(threshold, previousValue);
                 _strength = Math.Clamp(value, 0, max);
+                if (previousValue > 0.0f && value <= 0.0f)
+                {
+                    DeactivateHusk();
+                }
             }
         }
 
@@ -51,8 +55,10 @@ namespace Barotrauma
             }
         }
 
-        private float DormantThreshold => Prefab.MaxStrength * 0.5f;
-        private float ActiveThreshold => Prefab.MaxStrength * 0.75f;
+        private float DormantThreshold => (Prefab as AfflictionPrefabHusk)?.DormantThreshold ?? Prefab.MaxStrength * 0.5f;
+        private float ActiveThreshold => (Prefab as AfflictionPrefabHusk)?.ActiveThreshold ?? Prefab.MaxStrength * 0.75f;
+
+        private float TransitionThreshold => (Prefab as AfflictionPrefabHusk)?.TransitionThreshold ?? Prefab.MaxStrength * 0.75f;
 
         public AfflictionHusk(AfflictionPrefab prefab, float strength) : base(prefab, strength) { }
 
@@ -83,7 +89,7 @@ namespace Barotrauma
                 }
                 State = InfectionState.Transition;
             }
-            else if (Strength < Prefab.MaxStrength)
+            else if (Strength < TransitionThreshold)
             {
                 if (State != InfectionState.Active)
                 {

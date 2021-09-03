@@ -30,7 +30,7 @@ namespace Barotrauma.Abilities
             }
             else
             {
-                LogAbilityConditionError(abilityData, typeof(AttackData));
+                LogAbilityConditionError(abilityData, typeof(AbilityAttackData));
                 return false;
             }
         }

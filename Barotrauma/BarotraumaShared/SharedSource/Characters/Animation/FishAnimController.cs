@@ -390,11 +390,17 @@ namespace Barotrauma
                 }
                 if (eatTimer % 1.0f < 0.5f && (eatTimer - deltaTime * eatSpeed) % 1.0f > 0.5f)
                 {
-                    bool CanBeSevered(LimbJoint j) => !j.IsSevered && j.CanBeSevered && j.LimbA != null && !j.LimbA.IsSevered && j.LimbB != null && !j.LimbB.IsSevered;
+                    static bool CanBeSevered(LimbJoint j) => !j.IsSevered && j.CanBeSevered && j.LimbA != null && !j.LimbA.IsSevered && j.LimbB != null && !j.LimbB.IsSevered;
                     //keep severing joints until there is only one limb left
                     var nonSeveredJoints = target.AnimController.LimbJoints.Where(CanBeSevered);
                     if (nonSeveredJoints.None())
                     {
+                        //small monsters don't eat the contents of the character's inventory
+                        if (Mass < target.AnimController.Mass)
+                        {
+                            target.Inventory?.AllItemsMod.ForEach(it => it?.Drop(dropper: null));
+                        }
+
                         //only one limb left, the character is now full eaten
                         Entity.Spawner?.AddToRemoveQueue(target);
 

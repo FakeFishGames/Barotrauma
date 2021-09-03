@@ -134,20 +134,30 @@ namespace Barotrauma.Items.Components
                 foreach (Wire wire in c.Wires)
                 {
                     if (wire == null) { continue; }
-#if CLIENT
-                    if (wire.Item.IsSelected) { continue; }
-#endif
-                    var wireNodes = wire.GetNodes();
-                    if (wireNodes.Count == 0) { continue; }
+                    TryMoveWire(wire);
+                }
+            }
 
-                    if (Submarine.RectContains(item.Rect, wireNodes[0] + wireNodeOffset))
-                    {
-                        wire.MoveNode(0, amount);
-                    }
-                    else if (Submarine.RectContains(item.Rect, wireNodes[wireNodes.Count - 1] + wireNodeOffset))
-                    {
-                        wire.MoveNode(wireNodes.Count - 1, amount);
-                    }
+            foreach (var wire in DisconnectedWires)
+            {
+                TryMoveWire(wire);
+            }
+
+            void TryMoveWire(Wire wire)
+            {
+#if CLIENT
+                if (wire.Item.IsSelected) { return; }
+#endif
+                var wireNodes = wire.GetNodes();
+                if (wireNodes.Count == 0) { return; }
+
+                if (Submarine.RectContains(item.Rect, wireNodes[0] + wireNodeOffset))
+                {
+                    wire.MoveNode(0, amount);
+                }
+                else if (Submarine.RectContains(item.Rect, wireNodes[wireNodes.Count - 1] + wireNodeOffset))
+                {
+                    wire.MoveNode(wireNodes.Count - 1, amount);
                 }
             }
         }

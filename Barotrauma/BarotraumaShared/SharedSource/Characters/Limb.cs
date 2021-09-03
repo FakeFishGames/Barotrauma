@@ -868,7 +868,7 @@ namespace Barotrauma
         /// </summary>
         public bool UpdateAttack(float deltaTime, Vector2 attackSimPos, IDamageable damageTarget, out AttackResult attackResult, float distance = -1, Limb targetLimb = null)
         {
-            attackResult = default(AttackResult);
+            attackResult = default;
             Vector2 simPos = ragdoll.SimplePhysicsEnabled ? character.SimPosition : SimPosition;
             float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(simPos, attackSimPos));
             bool wasRunning = attack.IsRunning;
@@ -971,7 +971,7 @@ namespace Barotrauma
                 wasHit = damageTarget != null;
             }
 
-            if (wasHit)
+            if (wasHit || attack.HitDetectionType == HitDetection.None)
             {
                 if (character == Character.Controlled || GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
@@ -1132,10 +1132,7 @@ namespace Barotrauma
                 if (statusEffect.type != actionType) { continue; }
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
-                    if (statusEffect.AllowedAfflictions != null && (character.LastDamage.Afflictions == null || character.LastDamage.Afflictions.None(a => statusEffect.AllowedAfflictions.Contains(a.Prefab.AfflictionType) || statusEffect.AllowedAfflictions.Contains(a.Prefab.Identifier))))
-                    {
-                        continue;
-                    }
+                    if (!statusEffect.HasRequiredAfflictions(character.LastDamage)) { continue; }
                     if (statusEffect.OnlyPlayerTriggered)
                     {
                         if (character.LastAttacker == null || !character.LastAttacker.IsPlayer)

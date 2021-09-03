@@ -23,6 +23,7 @@
   <Item file="Content/Items/Electricity/signalitems.xml" />
   <Item file="Content/Items/Engine/engine.xml" />
   <Item file="Content/Items/Fabricators/fabricators.xml" />
+  <Item file="Content/Items/Genetic/genetic.xml" />
   <Item file="Content/Items/Labels/labels.xml" />
   <Item file="Content/Items/Ladder/ladder.xml" />
   <Item file="Content/Items/Materials/materials.xml" />
@@ -63,6 +64,7 @@
   <Item file="Content/Items/Gardening/gardeningtools.xml" />
   <Item file="Content/Items/Gardening/plantproducts.xml" />
   <Item file="Content/Map/Pirates/PirateItems.xml" />
+  <Item file="Content/Items/Jobgear/Assistant/assistant_talent_items.xml" />
   <Item file="Content/Items/Jobgear/Mechanic/mechanic_talent_items.xml" />
   <Item file="Content/Items/Jobgear/Security/securityofficer_talent_items.xml" />
   <Item file="Content/Items/Jobgear/Engineer/engineer_talent_items.xml" />
@@ -152,6 +154,7 @@
   <Text file="Content/Texts/Korean/KoreanVanilla.xml" />
   <UIStyle file="Content/UI/style.xml" />
   <Afflictions file="Content/Afflictions.xml" />
+  <Afflictions file="Content/AfflictionsGeneticMaterial.xml" />
   <Afflictions file="Content/Talents/Assistant/AfflictionsAssistant.xml" />
   <Afflictions file="Content/Talents/Captain/AfflictionsCaptain.xml" />
   <Afflictions file="Content/Talents/Doctor/AfflictionsDoctor.xml" />

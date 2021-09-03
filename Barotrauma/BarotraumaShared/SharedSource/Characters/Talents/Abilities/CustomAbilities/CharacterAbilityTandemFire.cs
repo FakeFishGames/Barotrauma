@@ -8,6 +8,7 @@ namespace Barotrauma.Abilities
 {
     class CharacterAbilityTandemFire : CharacterAbilityApplyStatusEffectsToNearestAlly
     {
+        // this should just be its own class, misleading to inherit here
         private string tag;
         public CharacterAbilityTandemFire(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {

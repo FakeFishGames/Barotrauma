@@ -1320,11 +1320,13 @@ namespace Barotrauma
                             continue;
                         }
 
+                        float avgOutCondition = (deconstructItem.OutConditionMin + deconstructItem.OutConditionMax) / 2;
+
                         int? deconstructProductPrice = targetItem.GetMinPrice();
                         if (deconstructProductPrice.HasValue)
                         {
                             if (!deconstructProductCost.HasValue) { deconstructProductCost = 0; }
-                            deconstructProductCost += (int)(deconstructProductPrice * deconstructItem.OutCondition);
+                            deconstructProductCost += (int)(deconstructProductPrice * avgOutCondition);
                         }
 
                         if (fabricationRecipe != null)
@@ -1334,9 +1336,9 @@ namespace Barotrauma
                             {
                                 NewMessage("Deconstructing \"" + itemPrefab.Name + "\" produces \"" + deconstructItem.ItemIdentifier + "\", which isn't required in the fabrication recipe of the item.", Color.Red);
                             }
-                            else if (ingredient.UseCondition && ingredient.MinCondition < deconstructItem.OutCondition)
+                            else if (ingredient.UseCondition && ingredient.MinCondition < avgOutCondition)
                             {
-                                NewMessage($"Deconstructing \"{itemPrefab.Name}\" produces more \"{deconstructItem.ItemIdentifier}\", than what's required to fabricate the item (required: {targetItem.Name} {(int)(ingredient.MinCondition * 100)}%, output: {deconstructItem.ItemIdentifier} {(int)(deconstructItem.OutCondition * 100)}%)", Color.Red);
+                                NewMessage($"Deconstructing \"{itemPrefab.Name}\" produces more \"{deconstructItem.ItemIdentifier}\", than what's required to fabricate the item (required: {targetItem.Name} {(int)(ingredient.MinCondition * 100)}%, output: {deconstructItem.ItemIdentifier} {(int)(avgOutCondition * 100)}%)", Color.Red);
                             }
                         }
                     }

@@ -297,9 +297,10 @@ namespace Barotrauma
                         }
                     }
 
+                    string name = item.Name;
                     foreach (ItemComponent component in item.Components)
                     {
-                        component.AddTooltipInfo(ref description);
+                        component.AddTooltipInfo(ref name, ref description);
                     }
 
                     if (item.Prefab.ShowContentsInTooltip && item.OwnInventory != null)
@@ -315,7 +316,7 @@ namespace Barotrauma
 
                     string colorStr = XMLExtensions.ColorToString(!item.AllowStealing ? GUI.Style.Red : Color.White);
 
-                    toolTip = $"‖color:{colorStr}‖{item.Name}‖color:end‖";
+                    toolTip = $"‖color:{colorStr}‖{name}‖color:end‖";
                     if (itemsInSlot.All(it => it.NonInteractable || it.NonPlayerTeamInteractable))
                     {
                         toolTip += " " + TextManager.Get("connectionlocked");
@@ -719,7 +720,7 @@ namespace Barotrauma
                 spacing = new Vector2(10 * UIScale, (10 + UnequippedIndicator.size.Y) * UIScale);
             }
 
-            int columns = (int)Math.Max(Math.Floor(Math.Sqrt(itemCapacity)), 1);
+            int columns = MathHelper.Clamp((int)Math.Floor(Math.Sqrt(itemCapacity)), 1, container.SlotsPerRow);
             while (itemCapacity / columns * (subRect.Height + spacing.Y) > GameMain.GraphicsHeight * 0.5f)
             {
                 columns++;
@@ -1543,13 +1544,13 @@ namespace Barotrauma
                         }
                         else
                         {
-                            var containedItem = itemContainer.Inventory.slots[0].FirstOrDefault();
-                            containedState = itemContainer.Inventory.Capacity == 1 ?
+                            var containedItem = itemContainer.Inventory.slots[Math.Max(itemContainer.ContainedStateIndicatorSlot, 0)].FirstOrDefault();
+                            containedState = itemContainer.Inventory.Capacity == 1 || itemContainer.ContainedStateIndicatorSlot > -1 ?
                                 (containedItem == null ? 0.0f : containedItem.Condition / containedItem.MaxCondition) :
                                 itemContainer.Inventory.slots.Count(i => !i.Empty()) / (float)itemContainer.Inventory.capacity;
                             if (containedItem != null && itemContainer.Inventory.Capacity == 1)
                             {
-                                int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, itemContainer.MaxStackSize);
+                                int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, itemContainer.GetMaxStackSize(0));
                                 if (maxStackSize > 1)
                                 {
                                     containedState = itemContainer.Inventory.slots[0].ItemCount / (float)maxStackSize;
@@ -1631,7 +1632,7 @@ namespace Barotrauma
                 int maxStackSize = item.Prefab.MaxStackSize;
                 if (item.Container != null)
                 {
-                    maxStackSize = Math.Min(maxStackSize, item.Container.GetComponent<ItemContainer>()?.MaxStackSize ?? maxStackSize);
+                    maxStackSize = Math.Min(maxStackSize, item.Container.GetComponent<ItemContainer>()?.GetMaxStackSize(slotIndex) ?? maxStackSize);
                 }
                 if (maxStackSize > 1 && inventory != null)
                 {

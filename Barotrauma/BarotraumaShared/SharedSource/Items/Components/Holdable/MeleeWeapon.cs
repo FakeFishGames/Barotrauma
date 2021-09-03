@@ -181,7 +181,7 @@ namespace Barotrauma.Items.Components
                 if (aim)
                 {
                     hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 5f, MathHelper.PiOver4));
-                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, false, hitPos, holdAngle + hitPos);
+                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, false, hitPos, holdAngle + hitPos, aimingMelee: true);
                 }
                 else
                 {
@@ -356,6 +356,7 @@ namespace Barotrauma.Items.Components
             if (Attack != null)
             {
                 Attack.SetUser(User);
+                Attack.DamageMultiplier = 1 + User.GetStatValue(StatTypes.MeleeAttackMultiplier);
 
                 if (targetLimb != null)
                 {

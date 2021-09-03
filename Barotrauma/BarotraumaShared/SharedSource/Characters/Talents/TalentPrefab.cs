@@ -1,7 +1,5 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -12,6 +10,12 @@ namespace Barotrauma
         public string OriginalName => Identifier;
         public ContentPackage ContentPackage { get; private set; }
         public string FilePath { get; private set; }
+
+        public string DisplayName { get; private set; }
+
+        public string Description { get; private set; }
+
+        public readonly Sprite Icon;
 
         public static readonly PrefabCollection<TalentPrefab> TalentPrefabs = new PrefabCollection<TalentPrefab>();
 
@@ -26,7 +30,51 @@ namespace Barotrauma
             FilePath = filePath;
             ConfigElement = element;
             Identifier = element.GetAttributeString("identifier", "noidentifier");
+            DisplayName = TextManager.Get("talentname." + Identifier, returnNull: true) ?? Identifier;
             this.CalculatePrefabUIntIdentifier(TalentPrefabs);
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "icon":
+                        Icon = new Sprite(subElement);
+                        break;
+                    case "description":
+                        string tempDescription = Description;
+                        TextManager.ConstructDescription(ref tempDescription, subElement);
+                        Description = tempDescription;
+                        break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(Description))
+            {
+                if (element.Attribute("description") != null)
+                {
+                    string description = element.GetAttributeString("description", string.Empty);
+                    Description = TextManager.Get(description, returnNull: true) ?? description;
+                }
+                else
+                {
+                    Description = TextManager.Get("talentdescription." + Identifier, returnNull: true) ?? string.Empty;
+                }
+            }
+
+#if DEBUG
+            if (!TextManager.ContainsTag("talentname." + Identifier))
+            {
+                DebugConsole.AddWarning($"Name for the talent \"{Identifier}\" not found in the text files.");
+            }
+            if (string.IsNullOrEmpty(Description))
+            {
+                DebugConsole.AddWarning($"Description for the talent \"{Identifier}\" not configured");
+            }
+            if (Description.Contains('['))
+            {
+                DebugConsole.ThrowError($"Description for the talent \"{Identifier}\" contains brackets - was some variable not replaced correctly? ({Description})");
+            }
+#endif
         }
 
         private bool disposed = false;
@@ -94,9 +142,6 @@ namespace Barotrauma
             {
                 LoadFromFile(file);
             }
-
         }
-
-
     }
 }
