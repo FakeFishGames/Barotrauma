@@ -212,6 +212,12 @@ namespace Barotrauma
             public bool TransferController { get; private set; }
 
             [Serialize(false, false)]
+            public bool TransferBuffs { get; private set; }
+
+            [Serialize(false, false)]
+            public bool TransferAfflictions { get; private set; }
+
+            [Serialize(false, false)]
             public bool TransferInventory { get; private set; }
 
             [Serialize(false, false)]
@@ -1241,6 +1247,20 @@ namespace Barotrauma
                                             for (int i = 0; i < character.Inventory.Capacity && i < newCharacter.Inventory.Capacity; i++)
                                             {
                                                 character.Inventory.GetItemsAt(i).ForEachMod(item => newCharacter.Inventory.TryPutItem(item, i, true, false, null));
+                                            }
+                                        }
+                                        if (characterSpawnInfo.TransferBuffs || characterSpawnInfo.TransferAfflictions)
+                                        {
+                                            foreach (Affliction affliction in character.CharacterHealth.Afflictions)
+                                            {
+                                                if (!characterSpawnInfo.TransferAfflictions && characterSpawnInfo.TransferBuffs && affliction.Prefab.IsBuff)
+                                                {
+                                                    newCharacter.CharacterHealth.ApplyAffliction(null, affliction.Prefab.Instantiate(affliction.Strength));
+                                                }
+                                                if (characterSpawnInfo.TransferAfflictions)
+                                                {
+                                                    newCharacter.CharacterHealth.ApplyAffliction(null, affliction.Prefab.Instantiate(affliction.Strength));
+                                                }
                                             }
                                         }
                                         bool LastCharacter = false;
