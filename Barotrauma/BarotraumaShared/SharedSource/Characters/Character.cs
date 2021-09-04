@@ -1134,7 +1134,7 @@ namespace Barotrauma
                 {
                     nonHuskedSpeciesName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, matchingAffliction);
                 }
-                if (ragdollParams == null)
+                if (ragdollParams == null && prefab.VariantOf == null)
                 {
                     string name = Params.UseHuskAppendage ? nonHuskedSpeciesName : speciesName;
                     ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(name) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(name) as RagdollParams;
