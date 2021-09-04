@@ -1251,15 +1251,15 @@ namespace Barotrauma
                                         }
                                         if (characterSpawnInfo.TransferBuffs || characterSpawnInfo.TransferAfflictions)
                                         {
-                                            foreach (Affliction affliction in character.CharacterHealth.Afflictions)
+                                            foreach (Affliction affliction in character.CharacterHealth.GetAllAfflictions())
                                             {
                                                 if (!characterSpawnInfo.TransferAfflictions && characterSpawnInfo.TransferBuffs && affliction.Prefab.IsBuff)
                                                 {
-                                                    newCharacter.CharacterHealth.ApplyAffliction(null, affliction.Prefab.Instantiate(affliction.Strength));
+                                                    newCharacter.CharacterHealth.ApplyAffliction(newCharacter.AnimController.MainLimb, affliction.Prefab.Instantiate(affliction.Strength));
                                                 }
                                                 if (characterSpawnInfo.TransferAfflictions)
                                                 {
-                                                    newCharacter.CharacterHealth.ApplyAffliction(null, affliction.Prefab.Instantiate(affliction.Strength));
+                                                    newCharacter.CharacterHealth.ApplyAffliction(newCharacter.AnimController.MainLimb, affliction.Prefab.Instantiate(affliction.Strength));
                                                 }
                                             }
                                         }
