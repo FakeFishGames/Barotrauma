@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<contentpackage name="Burst Fire Carbine" path="Mods/Burst Fire Carbine/filelist.xml" corepackage="false" gameversion="0.14.6.0" >
+  <Item file="Mods/Burst Fire Carbine/Items/Weapons/weapons.xml" />
+</contentpackage>
