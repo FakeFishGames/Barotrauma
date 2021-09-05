@@ -906,6 +906,7 @@ namespace Barotrauma
             currentTargets.Clear();
             foreach (ISerializableEntity target in targets)
             {
+                if (!HasRequiredConditions(target.ToEnumerable())) { continue; }
                 if (!IsValidTarget(target)) { continue; }
                 currentTargets.Add(target);
             }
