@@ -42,6 +42,7 @@ namespace Barotrauma
         public readonly Vector2 IntensityRange;
 
         public readonly bool ContinueFromPreviousTime;
+        public readonly bool MuteIntensityMusic;
         public int PreviousTime;
 
         public readonly XElement Element;
@@ -53,6 +54,7 @@ namespace Barotrauma
             this.IntensityRange = element.GetAttributeVector2("intensityrange", new Vector2(0.0f, 100.0f));
             this.DuckVolume = element.GetAttributeBool("duckvolume", false);
             this.ContinueFromPreviousTime = element.GetAttributeBool("continuefromprevioustime", false);
+            this.MuteIntensityMusic = element.GetAttributeBool("muteintensitymusic", false);
             this.Element = element;
         }
     }
@@ -891,6 +893,20 @@ namespace Barotrauma
                     
                 foreach (BackgroundMusic intensityMusic in suitableIntensityMusic)
                 {
+                    //if the current maintrack is meant to mute all intensity music, loop through all the intensity channels and set them to null, then continue
+                    if ((targetMusic[mainTrackIndex] != null) && (targetMusic[mainTrackIndex].MuteIntensityMusic))
+                    {
+                        for (int i = intensityTrackStartIndex; i < MaxMusicChannels; i++)
+                        {
+                            if (targetMusic[i] != null)
+                            {
+                                targetMusic[i] = null;
+                                break;
+                            }
+                        }
+                        continue;
+                    }
+
                     //already playing, do nothing
                     if (targetMusic.Any(m => m != null && m.File == intensityMusic.File)) { continue; }
 
@@ -1048,6 +1064,43 @@ namespace Barotrauma
             }
 
             Submarine targetSubmarine = Character.Controlled?.Submarine;
+
+            float enemyDistThreshold = 5000.0f;
+
+            if (targetSubmarine != null)
+            {
+                enemyDistThreshold = Math.Max(enemyDistThreshold, Math.Max(targetSubmarine.Borders.Width, targetSubmarine.Borders.Height) * 2.0f);
+            }
+
+            List<Character> MonsterMusicCharacters = new List<Character>();
+
+            foreach (Character character in Character.CharacterList)
+            {
+                if (character.IsDead || !character.Enabled) continue;
+                if (!(character.AIController is EnemyAIController enemyAI) || !enemyAI.Enabled || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) { continue; }
+
+                if (targetSubmarine != null)
+                {
+                    if (Vector2.DistanceSquared(character.WorldPosition, targetSubmarine.WorldPosition) < enemyDistThreshold * enemyDistThreshold * character.MusicRangeMultiplier)
+                    {
+                        MonsterMusicCharacters.Add(character);
+                    }
+                }
+                else if (Character.Controlled != null)
+                {
+                    if (Vector2.DistanceSquared(character.WorldPosition, Character.Controlled.WorldPosition) < enemyDistThreshold * enemyDistThreshold * character.MusicRangeMultiplier)
+                    {
+                        MonsterMusicCharacters.Add(character);
+                    }
+                }
+            }
+
+            if (MonsterMusicCharacters.Any())
+            {
+                Character chosencharacter = MonsterMusicCharacters.RandomElementByWeight(c => c.MusicWeight);
+                return chosencharacter.MusicType;
+            }
+
             if (targetSubmarine != null && targetSubmarine.AtDamageDepth)
             {
                 return "deep";
@@ -1058,8 +1111,8 @@ namespace Barotrauma
                 return "deep";
             }
 
-                if (targetSubmarine != null)
-            {                
+            if (targetSubmarine != null)
+            {
                 float floodedArea = 0.0f;
                 float totalArea = 0.0f;
                 foreach (Hull hull in Hull.hullList)
@@ -1069,35 +1122,7 @@ namespace Barotrauma
                     totalArea += hull.Volume;
                 }
 
-                if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) { return "flooded"; }        
-            }
-            
-            float enemyDistThreshold = 5000.0f;
-
-            if (targetSubmarine != null)
-            {
-                enemyDistThreshold = Math.Max(enemyDistThreshold, Math.Max(targetSubmarine.Borders.Width, targetSubmarine.Borders.Height) * 2.0f);
-            }
-
-            foreach (Character character in Character.CharacterList)
-            {
-                if (character.IsDead || !character.Enabled) continue;
-                if (!(character.AIController is EnemyAIController enemyAI) || !enemyAI.Enabled || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) { continue; }
-
-                if (targetSubmarine != null)
-                {
-                    if (Vector2.DistanceSquared(character.WorldPosition, targetSubmarine.WorldPosition) < enemyDistThreshold * enemyDistThreshold)
-                    {
-                        return "monster";
-                    }
-                }
-                else if (Character.Controlled != null)
-                {
-                    if (Vector2.DistanceSquared(character.WorldPosition, Character.Controlled.WorldPosition) < enemyDistThreshold * enemyDistThreshold)
-                    {
-                        return "monster";
-                    }
-                }
+                if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) { return "flooded"; }
             }
 
             if (GameMain.GameSession != null)
