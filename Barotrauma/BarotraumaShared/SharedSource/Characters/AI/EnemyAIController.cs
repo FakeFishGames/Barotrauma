@@ -329,17 +329,17 @@ namespace Barotrauma
                 {
                     targetingTag = "dead";
                 }
+                if (AIParams.TryGetAfflictionTarget(targetCharacter, out CharacterParams.TargetParams tA))
+                {
+                    targetingTag = tA.Tag;
+                }
                 else if (PetBehavior != null && aiTarget.Entity == PetBehavior.Owner) 
                 { 
                     targetingTag = "owner"; 
                 }
-                else if (AIParams.TryGetTarget(targetCharacter.SpeciesName, out CharacterParams.TargetParams tP))
+                else if (AIParams.TryGetTarget(targetCharacter, out CharacterParams.TargetParams tP))
                 {
                     targetingTag = tP.Tag;
-                }
-                else if (AIParams.TryGetTarget(targetCharacter.Params.Group.ToString().ToLowerInvariant() + "_group", out CharacterParams.TargetParams tG))
-                {
-                    targetingTag = tG.Tag;
                 }
                 else if (targetCharacter.AIController is EnemyAIController enemy)
                 {
@@ -1040,6 +1040,29 @@ namespace Barotrauma
 
             bool canAttack = true;
             bool pursue = false;
+
+            if (SelectedAiTarget.Entity is Character character)
+            {
+                if (AIParams.TryGetAfflictionTarget(character, out CharacterParams.TargetParams tA))
+                {
+                    switch (tA.State)
+                    {
+                        // Don't attack a target which currently has an affliction AI tag which doesn't involve attacking.
+                        case AIState.Idle:
+                        case AIState.Follow:
+                        case AIState.Freeze:
+                        case AIState.Protect:
+                        case AIState.Observe:
+                        case AIState.Avoid:
+                        case AIState.Escape:
+                        case AIState.Flee:
+                            State = tA.State;
+                            canAttack = false;
+                            return;
+                    }
+                }
+            }
+
             if (IsCoolDownRunning)
             {
                 var currentAttackLimb = AttackingLimb ?? _previousAttackingLimb;
@@ -1835,7 +1858,7 @@ namespace Barotrauma
                         ChangeTargetState(attacker, canAttack ? AIState.Attack : AIState.Escape, 100);
                     }
                 }
-                else if (canAttack && attacker.IsHuman && AIParams.TryGetTarget(attacker.SpeciesName, out CharacterParams.TargetParams targetingParams))
+                else if (canAttack && attacker.IsHuman && AIParams.TryGetTarget(attacker, out CharacterParams.TargetParams targetingParams))
                 {
                     if (targetingParams.State == AIState.Aggressive || targetingParams.State == AIState.PassiveAggressive)
                     {
@@ -2133,17 +2156,17 @@ namespace Barotrauma
                     {
                         targetingTag = "dead";
                     }
+                    if (AIParams.TryGetAfflictionTarget(targetCharacter, out CharacterParams.TargetParams tA))
+                    {
+                        targetingTag = tA.Tag;
+                    }
                     else if (PetBehavior != null && aiTarget.Entity == PetBehavior.Owner)
                     {
                         targetingTag = "owner";
                     }
-                    else if (AIParams.TryGetTarget(targetCharacter.SpeciesName, out CharacterParams.TargetParams tP))
+                    else if (AIParams.TryGetTarget(targetCharacter, out CharacterParams.TargetParams tP))
                     {
                         targetingTag = tP.Tag;
-                    }
-                    else if (AIParams.TryGetTarget(targetCharacter.Params.Group.ToString().ToLowerInvariant()+"_group", out CharacterParams.TargetParams tG))
-                    {
-                        targetingTag = tG.Tag;
                     }
                     else
                     {
@@ -3055,10 +3078,11 @@ namespace Barotrauma
         /// </summary>
         private void ChangeTargetState(Character target, AIState state, float? priority = null)
         {
+            // Don't continue if the current target has an affliction tag that we recognize.
+            if (AIParams.TryGetAfflictionTarget(target, out CharacterParams.TargetParams tA)) { return; }
             isStateChanged = true;
             SetStateResetTimer();
             ChangeParams(target.SpeciesName, state, priority);
-            ChangeParams(target.Params.Group.ToString().ToLowerInvariant()+"_group", state, priority);
             if (target.IsHuman)
             {
                 // Target also items, because if we are blind and the target doesn't move, we can only perceive the target when it uses items

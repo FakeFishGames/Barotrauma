@@ -139,6 +139,7 @@ namespace Barotrauma
             public float MinResistance, MaxResistance;
             public string ResistanceFor;
             public string DialogFlag;
+            public string AITargetingTag;
 
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
@@ -191,6 +192,7 @@ namespace Barotrauma
                 MaxBuffMultiplier = Math.Max(MinBuffMultiplier, MaxBuffMultiplier);
 
                 DialogFlag = element.GetAttributeString("dialogflag", "");
+                AITargetingTag = element.GetAttributeString("aitargetingtag", "");
 
                 StrengthChange = element.GetAttributeFloat("strengthchange", 0.0f);
 

@@ -620,9 +620,36 @@ namespace Barotrauma
 
             public bool RemoveTarget(TargetParams target) => RemoveSubParam(target, targets);
 
-            public bool TryGetTarget(string targetTag, out TargetParams target)
+            public bool TryGetTarget(Character character, out TargetParams target)
             {
-                target = targets.FirstOrDefault(t => string.Equals(t.Tag, targetTag, StringComparison.OrdinalIgnoreCase));
+                // Try to get a tag for the character's species name.
+                target = target = targets.FirstOrDefault(t => string.Equals(t.Tag, character.SpeciesName, StringComparison.OrdinalIgnoreCase));
+                // Try to get a tag for the character's species group if there isn't any for their species name. 
+                if (target == null) { target = targets.FirstOrDefault(t => string.Equals(t.Tag, character.Params.Group.ToString().ToLowerInvariant() + "_group", StringComparison.OrdinalIgnoreCase)); }
+                return target != null;
+            }
+
+            public bool TryGetTarget(string tag, out TargetParams target)
+            {
+                target = targets.FirstOrDefault(t => string.Equals(t.Tag, tag, StringComparison.OrdinalIgnoreCase));
+                return target != null;
+            }
+
+            public bool TryGetAfflictionTarget(Character character, out TargetParams target)
+            {
+                List<string> afflictiontargets = new List<string>();
+                foreach (Affliction affliction in character.CharacterHealth.GetAllAfflictions())
+                {
+                    var currentEffect = affliction.GetActiveEffect();
+                    if (currentEffect != null && !string.IsNullOrEmpty(currentEffect.AITargetingTag) && !afflictiontargets.Contains(currentEffect.AITargetingTag))
+                    {
+                        afflictiontargets.Add(currentEffect.AITargetingTag);
+                    }
+                }
+                
+                // Get the uppermost target that has the same tag as an affliction target tag. This heavily relies on how the target tags are ordered in the XML file.
+                target = targets.FirstOrDefault(t => string.Equals(t.Tag, afflictiontargets.Find(aitarget => string.Equals(aitarget, t.Tag, StringComparison.OrdinalIgnoreCase)), StringComparison.OrdinalIgnoreCase));
+
                 return target != null;
             }
 
