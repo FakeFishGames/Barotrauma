@@ -108,7 +108,7 @@ namespace Barotrauma
         private AITargetMemory selectedTargetMemory;
         private float targetValue;
         private CharacterParams.TargetParams selectedTargetingParams;
-
+                
         private Dictionary<AITarget, AITargetMemory> targetMemories;
 
         private Dictionary<Character, AIDamageMemory> damageMemories;
@@ -1062,7 +1062,6 @@ namespace Barotrauma
                         case AIState.Escape:
                         case AIState.Flee:
                             State = tA.State;
-                            canAttack = false;
                             return;
                     }
                 }
@@ -2978,8 +2977,8 @@ namespace Barotrauma
                 var memory = atk.Value;
                 // Slowly decrease all damage memories
                 memory.TotalDamageInflicted -= 2f * deltaTime;
-                // Remove targets that haven't deal any damage to us or have been removed
-                if (memory.TotalDamageInflicted <= 0 || target == null || target.Removed)
+                // Remove targets that haven't dealt any damage to us, have been removed or have died.
+                if (memory.TotalDamageInflicted <= 0 || target == null || target.Removed || target.IsDead)
                 {
                     attackremovals.Add(target);
                 }
