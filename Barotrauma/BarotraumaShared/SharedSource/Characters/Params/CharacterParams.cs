@@ -706,6 +706,9 @@ namespace Barotrauma
             [Serialize(0f, true, description: "How much damage the protected target should take from an attacker before the creature starts defending it."), Editable]
             public float DamageThreshold { get; private set; }
 
+            [Serialize(10f, true, description: "How much damage should the character take from an attacker with an affliction AI target before it stops using that tag to deal with the attacker? E.g stop idling if the attacker deals any damage to you and attack."), Editable]
+            public float MinDamageToIgnoreAfflictionTag { get; private set; }
+
             [Serialize(AttackPattern.Straight, true), Editable]
             public AttackPattern AttackPattern { get; set; }
 

@@ -108,9 +108,11 @@ namespace Barotrauma
         private AITargetMemory selectedTargetMemory;
         private float targetValue;
         private CharacterParams.TargetParams selectedTargetingParams;
-                
+
         private Dictionary<AITarget, AITargetMemory> targetMemories;
-        
+
+        private Dictionary<Character, AIDamageMemory> damageMemories;
+
         private readonly float colliderWidth;
         private readonly float colliderLength;
         private readonly int requiredHoleCount;
@@ -230,6 +232,7 @@ namespace Barotrauma
             }
             var mainElement = c.Params.OriginalElement.IsOverride() ? c.Params.OriginalElement.FirstElement() : c.Params.OriginalElement;
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
+            damageMemories = new Dictionary<Character, AIDamageMemory>();
             steeringManager = outsideSteering;
             //allow targeting outposts and outpost NPCs in outpost levels
             TargetOutposts = Level.Loaded != null && Level.Loaded.Type == LevelData.LevelType.Outpost;
@@ -329,7 +332,8 @@ namespace Barotrauma
                 {
                     targetingTag = "dead";
                 }
-                if (AIParams.TryGetAfflictionTarget(targetCharacter, out CharacterParams.TargetParams tA))
+                AIDamageMemory damageMemory = GetTargetDamageMemory(targetCharacter, 0.0f, true);
+                if ((AIParams.TryGetAfflictionTarget(targetCharacter, out CharacterParams.TargetParams tA)) && (damageMemory.TotalDamageInflicted < tA.MinDamageToIgnoreAfflictionTag))
                 {
                     targetingTag = tA.Tag;
                 }
@@ -1043,7 +1047,8 @@ namespace Barotrauma
 
             if (SelectedAiTarget.Entity is Character character)
             {
-                if (AIParams.TryGetAfflictionTarget(character, out CharacterParams.TargetParams tA))
+                AIDamageMemory damageMemory = GetTargetDamageMemory(character, 0.0f, true);
+                if ((AIParams.TryGetAfflictionTarget(character, out CharacterParams.TargetParams tA)) && (damageMemory.TotalDamageInflicted < tA.MinDamageToIgnoreAfflictionTag))
                 {
                     switch (tA.State)
                     {
@@ -1791,6 +1796,25 @@ namespace Barotrauma
             Character.AnimController.ReleaseStuckLimbs();
             LatchOntoAI?.DeattachFromBody(reset: true, cooldown: 1);
             if (attacker == null || attacker.AiTarget == null || attacker.Removed || attacker.IsDead) { return; }
+
+            AIDamageMemory damageMemory = GetTargetDamageMemory(attacker, attackResult.Damage, true);
+            damageMemory.TotalDamageInflicted += attackResult.Damage;
+            foreach (Character otherCharacter in Character.CharacterList)
+            {
+                if (otherCharacter == this.Character) { continue; }
+                if (!IsFriendly(Character, otherCharacter)) { continue; }
+                float maxDistance = 1000.0f;
+                if (otherCharacter.AIController is EnemyAIController otherCharacterAIController)
+                {
+                    if (Vector2.DistanceSquared(Character.WorldPosition, otherCharacter.WorldPosition) < maxDistance * maxDistance)
+                    {
+                        // All friendly characters in the vicinity receive this damage memory but forget it faster.
+                        AIDamageMemory otherCharacterDamageMemory = otherCharacterAIController.GetTargetDamageMemory(attacker, 0.0f, true);
+                        otherCharacterDamageMemory.TotalDamageInflicted += attackResult.Damage / 2; ;
+                    }
+                }
+            }
+
             bool isFriendly = IsFriendly(Character, attacker);
             if (wasLatched)
             {
@@ -2156,7 +2180,8 @@ namespace Barotrauma
                     {
                         targetingTag = "dead";
                     }
-                    if (AIParams.TryGetAfflictionTarget(targetCharacter, out CharacterParams.TargetParams tA))
+                    AIDamageMemory damageMemory = GetTargetDamageMemory(targetCharacter, 0.0f, true);
+                    if ((AIParams.TryGetAfflictionTarget(targetCharacter, out CharacterParams.TargetParams tA)) && (damageMemory.TotalDamageInflicted < tA.MinDamageToIgnoreAfflictionTag))
                     {
                         targetingTag = tA.Tag;
                     }
@@ -2886,6 +2911,19 @@ namespace Barotrauma
             return memory;
         }
 
+        private AIDamageMemory GetTargetDamageMemory(Character target, float damageinflicted, bool addIfNotFound)
+        {
+            if (!damageMemories.TryGetValue(target, out AIDamageMemory memory))
+            {
+                if (addIfNotFound)
+                {
+                    memory = new AIDamageMemory(target, damageinflicted);
+                    damageMemories.Add(target, memory);
+                }
+            }
+            return memory;
+        }
+
         private void UpdateCurrentMemoryLocation()
         {
             if (_selectedAiTarget != null)
@@ -2906,9 +2944,11 @@ namespace Barotrauma
         }
 
         private readonly List<AITarget> removals = new List<AITarget>();
+        private readonly List<Character> attackremovals = new List<Character>();
         private void FadeMemories(float deltaTime)
         {
             removals.Clear();
+            attackremovals.Clear();
             foreach (var kvp in targetMemories)
             {
                 var target = kvp.Key;
@@ -2932,7 +2972,20 @@ namespace Barotrauma
                     removals.Add(target);
                 }
             }
+            foreach (var atk in damageMemories)
+            {
+                var target = atk.Key;
+                var memory = atk.Value;
+                // Slowly decrease all damage memories
+                memory.TotalDamageInflicted -= 2f * deltaTime;
+                // Remove targets that haven't deal any damage to us or have been removed
+                if (memory.TotalDamageInflicted <= 0 || target == null || target.Removed)
+                {
+                    attackremovals.Add(target);
+                }
+            }
             removals.ForEach(r => targetMemories.Remove(r));
+            attackremovals.ForEach(r => damageMemories.Remove(r));
         }
 
         private readonly float targetIgnoreTime = 10;
@@ -3078,8 +3131,9 @@ namespace Barotrauma
         /// </summary>
         private void ChangeTargetState(Character target, AIState state, float? priority = null)
         {
-            // Don't continue if the current target has an affliction tag that we recognize.
-            if (AIParams.TryGetAfflictionTarget(target, out CharacterParams.TargetParams tA)) { return; }
+            AIDamageMemory damageMemory = GetTargetDamageMemory(target, 0.0f, true);
+            // Don't continue if the current target has an affliction tag that we recognize and don't ignore.
+            if ((AIParams.TryGetAfflictionTarget(target, out CharacterParams.TargetParams tA)) && (damageMemory.TotalDamageInflicted < tA.MinDamageToIgnoreAfflictionTag)) { return; }
             isStateChanged = true;
             SetStateResetTimer();
             ChangeParams(target.SpeciesName, state, priority);
@@ -3365,6 +3419,18 @@ namespace Barotrauma
             Target = target;
             Location = target.WorldPosition;
             this.priority = priority;
+        }
+    }
+    class AIDamageMemory
+    {
+        public readonly Character AttackerCharacter;
+
+        public float TotalDamageInflicted = 0.0f;
+
+        public AIDamageMemory(Character target, float damageinflicted)
+        {
+            AttackerCharacter = target;
+            this.TotalDamageInflicted = damageinflicted;
         }
     }
 }
