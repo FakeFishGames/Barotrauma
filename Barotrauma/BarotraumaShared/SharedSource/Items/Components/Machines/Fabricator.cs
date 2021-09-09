@@ -327,6 +327,7 @@ namespace Barotrauma.Items.Components
                 int amountFittingContainer = outputContainer.Inventory.HowManyCanBePut(fabricatedItem.TargetItem, fabricatedItem.OutCondition * fabricatedItem.TargetItem.Health);
 
                 var fabricationValueItem = new AbilityValueItem(fabricatedItem.Amount, fabricatedItem.TargetItem);
+
                 if (user != null)
                 {
                     foreach (Character character in Character.CharacterList.Where(c => c.TeamID == user.TeamID))
@@ -369,10 +370,11 @@ namespace Barotrauma.Items.Components
                         float addedSkill = skill.Level * SkillSettings.Current.SkillIncreasePerFabricatorRequiredSkill / Math.Max(userSkill, 1.0f);
                         var addedSkillValue = new AbilityValueString(0f, skill.Identifier);
                         user.CheckTalents(AbilityEffectType.OnItemFabricationSkillGain, addedSkillValue);
+                        addedSkill += addedSkillValue.Value;
 
                         user.Info.IncreaseSkillLevel(
                             skill.Identifier,
-                            addedSkill + addedSkillValue.Value,
+                            addedSkill,
                             user.Position + Vector2.UnitY * 150.0f);
                     }
                 }

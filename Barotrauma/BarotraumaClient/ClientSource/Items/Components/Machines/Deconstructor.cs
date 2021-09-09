@@ -24,6 +24,9 @@ namespace Barotrauma.Items.Components
         [Serialize("DeconstructorDeconstruct", true)]
         public string ActivateButtonText { get; set; }
 
+        [Serialize("", true)]
+        public string InfoText { get; set; }
+
         [Serialize(0.0f, true)]
         public float InfoAreaWidth { get; set; }
 
@@ -102,8 +105,8 @@ namespace Barotrauma.Items.Components
 
             var outputArea = new GUILayoutGroup(new RectTransform(new Vector2(1f, 1f), bottomFrame.RectTransform, Anchor.CenterLeft), childAnchor: Anchor.BottomLeft, isHorizontal: true) { Stretch = true, RelativeSpacing = 0.05f };
 
-                // === OUTPUT SLOTS === //
-                outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1f - InfoAreaWidth, 1f), outputArea.RectTransform, Anchor.CenterLeft), style: null);
+            // === OUTPUT SLOTS === //
+            outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1f - InfoAreaWidth, 1f), outputArea.RectTransform, Anchor.CenterLeft), style: null);
 
             if (InfoAreaWidth >= 0.0f)
             {
@@ -114,10 +117,18 @@ namespace Barotrauma.Items.Components
             ActivateButton.OnAddedToGUIUpdateList += (GUIComponent component) =>
             {
                 activateButton.Enabled = true;
-                infoArea.Text = string.Empty;
+                if (string.IsNullOrEmpty(InfoText))
+                {
+                    infoArea.Text = string.Empty;
+                }
+                else
+                {
+                    infoArea.Text = TextManager.Get(InfoText, returnNull: true) ?? InfoText;
+                }
                 if (IsActive)
                 {
                     activateButton.Text = TextManager.Get("DeconstructorCancel");
+                    infoArea.Text = string.Empty;
                     return;
                 }
                 bool outputsFound = false;

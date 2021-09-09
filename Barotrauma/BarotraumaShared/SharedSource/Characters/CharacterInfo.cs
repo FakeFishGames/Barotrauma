@@ -220,7 +220,7 @@ namespace Barotrauma
 
         public HashSet<string> UnlockedTalents { get; private set; } = new HashSet<string>();
 
-        public int AdditionalTalentPoints { get; private set; }
+        public int AdditionalTalentPoints { get; set; }
 
         private Sprite headSprite;
         public Sprite HeadSprite
@@ -541,6 +541,7 @@ namespace Barotrauma
             Salary = infoElement.GetAttributeInt("salary", 1000);
             ExperiencePoints = infoElement.GetAttributeInt("experiencepoints", 0);
             UnlockedTalents = new HashSet<string>(infoElement.GetAttributeStringArray("unlockedtalents", new string[0], convertToLowerInvariant: true));
+            AdditionalTalentPoints = infoElement.GetAttributeInt("additionaltalentpoints", 0);
             Enum.TryParse(infoElement.GetAttributeString("race", "White"), true, out Race race);
             Enum.TryParse(infoElement.GetAttributeString("gender", "None"), true, out Gender gender);
             _speciesName = infoElement.GetAttributeString("speciesname", null);
@@ -984,12 +985,14 @@ namespace Barotrauma
             float newLevel = Job.GetSkillLevel(skillIdentifier);
 
             if ((int)newLevel > (int)prevLevel)
-            {
-                Character.CheckTalents(AbilityEffectType.OnGainSkillPoint, skillIdentifier);
+            {                
+                // assume we are getting at least 1 point in skill, since this logic only runs in such cases
+                float increaseSinceLastSkillPoint = MathHelper.Max(increase, 1f);
+                var abilitySkillGain = new AbilityValueStringCharacter(increaseSinceLastSkillPoint, skillIdentifier, Character);
+                Character.CheckTalents(AbilityEffectType.OnGainSkillPoint, abilitySkillGain);
                 foreach (Character character in Character.GetFriendlyCrew(Character))
                 {
-                    var abilityStringCharacter = new AbilityStringCharacter(skillIdentifier, Character);
-                    character.CheckTalents(AbilityEffectType.OnAllyGainSkillPoint, abilityStringCharacter);
+                    character.CheckTalents(AbilityEffectType.OnAllyGainSkillPoint, abilitySkillGain);
                 }
             }
 
@@ -1138,6 +1141,7 @@ namespace Barotrauma
                 new XAttribute("salary", Salary),
                 new XAttribute("experiencepoints", ExperiencePoints),
                 new XAttribute("unlockedtalents", string.Join(",", UnlockedTalents)),
+                new XAttribute("additionaltalentpoints", AdditionalTalentPoints),
                 new XAttribute("headspriteid", HeadSpriteId),
                 new XAttribute("hairindex", HairIndex),
                 new XAttribute("beardindex", BeardIndex),

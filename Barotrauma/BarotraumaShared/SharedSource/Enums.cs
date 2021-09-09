@@ -57,6 +57,7 @@
         OnGainMissionMoney,
         OnItemDeconstructed,
         OnItemDeconstructedMaterial,
+        OnStopTinkering,
         AfterSubmarineAttacked,
     }
 
@@ -89,6 +90,7 @@
         // Utility
         RepairSpeed,
         DeconstructorSpeedMultiplier,
+        TinkeringDuration,
         // Misc
         ReputationGainMultiplier,
         MissionMoneyGainMultiplier,
@@ -108,6 +110,8 @@
         IgnoredByEnemyAI,
         MoveNormallyWhileDragging,
         CanTinker,
+        CanTinkerFabricatorsAndDeconstructors,
+        TinkeringPowersDevices,
         GainSkillPastMaximum,
         RetainExperienceForNewCharacter
     }

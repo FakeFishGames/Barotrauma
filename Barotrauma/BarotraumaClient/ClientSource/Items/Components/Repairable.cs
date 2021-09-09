@@ -244,7 +244,7 @@ namespace Barotrauma.Items.Components
                 sabotageButtonText :
                 sabotagingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
-            TinkerButton.Visible = CanTinker(character);
+            TinkerButton.Visible = IsTinkerable(character);
             TinkerButton.IgnoreLayoutGroups = !TinkerButton.Visible;
             TinkerButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Tinker)) && CanTinker(character);
             TinkerButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Tinker && CanTinker(character)) ?
@@ -303,6 +303,7 @@ namespace Barotrauma.Items.Components
             deteriorationTimer = msg.ReadSingle();
             deteriorateAlwaysResetTimer = msg.ReadSingle();
             DeteriorateAlways = msg.ReadBoolean();
+            tinkeringDuration = msg.ReadSingle();
             ushort currentFixerID = msg.ReadUInt16();
             currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
             CurrentFixer = currentFixerID != 0 ? Entity.FindEntityByID(currentFixerID) as Character : null;

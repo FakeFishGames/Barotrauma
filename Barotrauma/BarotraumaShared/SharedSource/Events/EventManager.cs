@@ -103,7 +103,7 @@ namespace Barotrauma
             selectedEvents.Clear();
             activeEvents.Clear();
 
-            pathFinder = new PathFinder(WayPoint.WayPointList, indoorsSteering: false);
+            pathFinder = new PathFinder(WayPoint.WayPointList, false);
             totalPathLength = 0.0f;
             if (level != null)
             {

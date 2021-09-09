@@ -471,9 +471,8 @@ namespace Barotrauma
             {
                 aiTarget = new AITarget(this)
                 {
-                    MinSightRange = 2000,
+                    MinSightRange = 1000,
                     MaxSightRange = 5000,
-                    MaxSoundRange = 5000,
                     SoundRange = 0
                 };
             }
@@ -787,7 +786,7 @@ namespace Barotrauma
 
             if (aiTarget != null)
             {
-                aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;
+                aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : MathHelper.Lerp(aiTarget.MinSightRange, aiTarget.MaxSightRange, Submarine.Velocity.Length() / 10);
                 aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
          
@@ -1242,6 +1241,44 @@ namespace Barotrauma
                 roomPos |= Alignment.Right;
 
             return "RoomName.Sub" + roomPos.ToString();
+        }
+
+        /// <summary>
+        /// Is this hull or any of the items inside it tagged as "airlock"?
+        /// </summary>
+        public bool IsTaggedAirlock()
+        {
+            if (RoomName != null && RoomName.Contains("airlock", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            else
+            {
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.CurrentHull != this && item.HasTag("airlock"))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Does this hull have any doors leading outside?
+        /// </summary>
+        /// <param name="character">Used to check if this character has access to the door leading outside</param>
+        public bool LeadsOutside(Character character)
+        {
+            foreach (var gap in ConnectedGaps)
+            {
+                if (gap.ConnectedDoor == null) { continue; }
+                if (gap.IsRoomToRoom) { continue; }
+                if (!gap.ConnectedDoor.CanBeTraversed && (character == null || !gap.ConnectedDoor.HasAccess(character))) { continue; }
+                return true;
+            }
+            return false;
         }
 
 #region BackgroundSections

@@ -60,8 +60,6 @@ namespace Barotrauma
         // Min priority for the memorized targets. The actual value fades gradually, unless kept fresh by selecting the target.
         private const float minPriority = 10;
 
-        private readonly float avoidLookAheadDistance;
-
         private IndoorsSteeringManager PathSteering => insideSteering as IndoorsSteeringManager;
         private SteeringManager outsideSteering, insideSteering;
 
@@ -113,20 +111,21 @@ namespace Barotrauma
                 lastAttackUpdateTime = Timing.TotalTime; 
             }
         }
-        
+
+        public AITargetMemory SelectedTargetMemory => selectedTargetMemory;
         private AITargetMemory selectedTargetMemory;
         private float targetValue;
         private CharacterParams.TargetParams selectedTargetingParams;
                 
         private Dictionary<AITarget, AITargetMemory> targetMemories;
         
-        private readonly float colliderWidth;
-        private readonly float colliderLength;
         private readonly int requiredHoleCount;
         private bool canAttackWalls;
+        public bool CanAttackDoors => canAttackDoors;
         private bool canAttackDoors;
         private bool canAttackCharacters;
 
+        public float PriorityFearIncrement => priorityFearIncreasement;
         private readonly float priorityFearIncreasement = 2;
         private readonly float memoryFadeTime = 0.5f;
 
@@ -299,12 +298,8 @@ namespace Barotrauma
             steeringManager = outsideSteering;
             State = AIState.Idle;
 
-            var size = Character.AnimController.Collider.GetSize();
-            colliderWidth = size.X;
-            colliderLength = size.Y;
             requiredHoleCount = (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderWidth) / Structure.WallSectionSize);
 
-            avoidLookAheadDistance = Math.Max(Math.Max(colliderWidth, colliderLength) * 3, 1.5f);
             myBodies = Character.AnimController.Limbs.Select(l => l.body.FarseerBody);
         }
 
@@ -440,9 +435,9 @@ namespace Barotrauma
             if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater &&
                 (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer || Character.Controlled == Character))
             {
-                if (SelectedAiTarget?.Entity != null || escapeTarget != null)
+                if (SelectedAiTarget?.Entity != null || EscapeTarget != null)
                 {
-                    Entity t = SelectedAiTarget?.Entity ?? escapeTarget;
+                    Entity t = SelectedAiTarget?.Entity ?? EscapeTarget;
                     float referencePos = Vector2.DistanceSquared(Character.WorldPosition, t.WorldPosition) > 100 * 100 && HasValidPath(true) ? PathSteering.CurrentPath.CurrentNode.WorldPosition.X : t.WorldPosition.X;
                     Character.AnimController.TargetDir = Character.WorldPosition.X < referencePos ? Direction.Right : Direction.Left;
                 }
@@ -585,7 +580,7 @@ namespace Barotrauma
                 case AIState.Escape:
                 case AIState.Flee:
                     run = true;
-                    UpdateEscape(deltaTime);
+                    Escape(deltaTime);
                     break;
                 case AIState.Avoid:
                 case AIState.PassiveAggressive:
@@ -602,7 +597,7 @@ namespace Barotrauma
                         run = true;
                         if (State == AIState.Avoid)
                         {
-                            UpdateEscape(deltaTime);
+                            Escape(deltaTime);
                         }
                         else
                         {
@@ -820,142 +815,6 @@ namespace Barotrauma
                 steeringManager.SteeringWander();
                 if (Character.AnimController.InWater)
                 {
-                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
-                }
-            }
-        }
-
-        #endregion
-
-        #region Escape
-        private readonly float escapeTargetSeekInterval = 2;
-        private float escapeTimer;
-        private Gap escapeTarget;
-        private bool allGapsSearched;
-        private readonly HashSet<Gap> unreachableGaps = new HashSet<Gap>();
-        private void UpdateEscape(float deltaTime)
-        {
-            if (SelectedAiTarget != null && (SelectedAiTarget.Entity == null || SelectedAiTarget.Entity.Removed))
-            {
-                State = AIState.Idle;
-                return;
-            }
-            else if (selectedTargetMemory != null && SelectedAiTarget?.Entity is Character)
-            {
-                selectedTargetMemory.Priority += deltaTime * priorityFearIncreasement;
-            }
-            IndoorsSteeringManager pathSteering = SteeringManager as IndoorsSteeringManager;
-            bool hasValidPath = pathSteering?.CurrentPath != null && !pathSteering.IsPathDirty && !pathSteering.CurrentPath.Unreachable;
-            if (allGapsSearched)
-            {
-                escapeTimer -= deltaTime;
-                if (escapeTimer <= 0)
-                {
-                    allGapsSearched = false;
-                }
-            }
-            if (Character.CurrentHull != null && pathSteering != null)
-            {
-                // Seek exit if inside
-                if (!allGapsSearched)
-                {
-                    float closestDistance = 0;
-                    foreach (Gap gap in Gap.GapList)
-                    {
-                        if (gap == null || gap.Removed) { continue; }
-                        if (escapeTarget == gap) { continue; }
-                        if (unreachableGaps.Contains(gap)) { continue; }
-                        if (gap.Submarine != Character.Submarine) { continue; }
-                        if (gap.IsRoomToRoom) { continue; }
-                        float multiplier = 1;
-                        var door = gap.ConnectedDoor;
-                        if (door != null)
-                        {
-                            if (!door.CanBeTraversed)
-                            {
-                                if (!door.HasAccess(Character))
-                                {
-                                    if (!canAttackDoors) { continue; }
-                                    // Treat doors that don't have access to like they were farther, because it will take time to break them.
-                                    multiplier = 5;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (gap.Open < 1) { continue; }
-                            bool canGetThrough = ConvertUnits.ToDisplayUnits(colliderWidth) < gap.Size;
-                            if (!canGetThrough) { continue; }
-                        }
-                        if (gap.FlowTargetHull == Character.CurrentHull)
-                        {
-                            // If the gap is in the same room, it's close enough.
-                            escapeTarget = gap;
-                            break;
-                        }
-                        float distance = Vector2.DistanceSquared(Character.WorldPosition, gap.WorldPosition) * multiplier;
-                        if (escapeTarget == null || distance < closestDistance)
-                        {
-                            escapeTarget = gap;
-                            closestDistance = distance;
-                        }
-                    }
-                    allGapsSearched = true;
-                    escapeTimer = escapeTargetSeekInterval;
-                }
-                else if (escapeTarget != null && escapeTarget.FlowTargetHull != Character.CurrentHull)
-                {
-                    if (pathSteering.CurrentPath != null && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
-                    {
-                        unreachableGaps.Add(escapeTarget);
-                        escapeTarget = null;
-                        allGapsSearched = false;
-                    }
-                }
-            }
-            if (escapeTarget != null && Character.CurrentHull != null && Vector2.DistanceSquared(Character.SimPosition, escapeTarget.SimPosition) > 0.5f)
-            {
-                if (hasValidPath && pathSteering.CurrentPath.Finished)
-                {
-                    // Steer manually towards the gap
-                    SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(escapeTarget.WorldPosition - Character.WorldPosition));
-                }
-                else if (SelectedAiTarget?.Entity is Character targetCharacter && targetCharacter.CurrentHull == Character.CurrentHull)
-                {
-                    // Steer away from the target if in the same room
-                    Vector2 escapeDir = Vector2.Normalize(SelectedAiTarget != null ? WorldPosition - SelectedAiTarget.WorldPosition : Character.AnimController.TargetMovement);
-                    if (!MathUtils.IsValid(escapeDir)) { escapeDir = Vector2.UnitY; }
-                    SteeringManager.SteeringManual(deltaTime, escapeDir);
-                    return;
-                }
-                else if (pathSteering != null)
-                {
-                    if (hasValidPath && canAttackDoors)
-                    {
-                        var door = pathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? pathSteering.CurrentPath.NextNode?.ConnectedDoor;
-                        if (door != null && !door.CanBeTraversed && !door.HasAccess(Character))
-                        {
-                            if (SelectedAiTarget != door.Item.AiTarget || State != AIState.Attack)
-                            {
-                                SelectTarget(door.Item.AiTarget, selectedTargetMemory.Priority);
-                                State = AIState.Attack;
-                                return;
-                            }
-                        }
-                    }
-                }
-                SteeringManager.SteeringSeek(escapeTarget.SimPosition, 10);
-            }
-            else
-            {
-                escapeTarget = null;
-                allGapsSearched = false;
-                Vector2 escapeDir = Vector2.Normalize(SelectedAiTarget != null ? WorldPosition - SelectedAiTarget.WorldPosition : Character.AnimController.TargetMovement);
-                if (!MathUtils.IsValid(escapeDir)) escapeDir = Vector2.UnitY;
-                SteeringManager.SteeringManual(deltaTime, escapeDir);
-                if (Character.CurrentHull == null)
-                {
-                    SteeringManager.SteeringWander();
                     SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
                 }
             }
@@ -3129,11 +2988,9 @@ namespace Barotrauma
         {
             LatchOntoAI?.DeattachFromBody(reset: true);
             Character.AnimController.ReleaseStuckLimbs();
-            escapeTarget = null;
             AttackingLimb = null;
             movementMargin = 0;
-            allGapsSearched = false;
-            unreachableGaps.Clear();
+            ResetEscape();
             if (isStateChanged && to == AIState.Idle && from != to)
             {
                 SetStateResetTimer();
@@ -3282,6 +3139,71 @@ namespace Barotrauma
         }
 
         public bool CanPassThroughHole(Structure wall, int sectionIndex) => CanPassThroughHole(wall, sectionIndex, requiredHoleCount);
+
+        public override void Escape(float deltaTime)
+        {
+            if (SelectedAiTarget != null && (SelectedAiTarget.Entity == null || SelectedAiTarget.Entity.Removed))
+            {
+                State = AIState.Idle;
+                return;
+            }
+            else if (SelectedTargetMemory is AITargetMemory targetMemory && SelectedAiTarget?.Entity is Character)
+            {
+                targetMemory.Priority += deltaTime * PriorityFearIncrement;
+            }
+            bool isSteeringThroughGap = UpdateEscape(deltaTime, canAttackDoors);
+            if (!isSteeringThroughGap)
+            {
+                if (SelectedAiTarget?.Entity is Character targetCharacter && targetCharacter.CurrentHull == Character.CurrentHull)
+                {
+                    SteerAwayFromTheEnemy();
+                }
+                else if (canAttackDoors && HasValidPath(requireNonDirty: true, requireUnfinished: true))
+                {
+                    var door = PathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? PathSteering.CurrentPath.NextNode?.ConnectedDoor;
+                    if (door != null && !door.CanBeTraversed && !door.HasAccess(Character))
+                    {
+                        if (SelectedAiTarget != door.Item.AiTarget || State != AIState.Attack)
+                        {
+                            SelectTarget(door.Item.AiTarget, SelectedTargetMemory.Priority);
+                            State = AIState.Attack;
+                        }
+                    }
+                }
+            }
+            if (EscapeTarget == null)
+            {
+                if (SelectedAiTarget?.Entity is Character)
+                {
+                    SteerAwayFromTheEnemy();
+                }
+                else
+                {
+                    SteeringManager.SteeringWander();
+                    if (Character.CurrentHull == null)
+                    {
+                        SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
+                    }
+                }
+            }
+
+            void SteerAwayFromTheEnemy()
+            {
+                if (SelectedAiTarget == null) { return; }
+                Vector2 escapeDir = Vector2.Normalize(WorldPosition - SelectedAiTarget.WorldPosition);
+                if (Character.CurrentHull != null && !Character.AnimController.InWater)
+                {
+                    // Inside
+                    escapeDir = new Vector2(Math.Sign(escapeDir.X), 0);
+                }
+                if (!MathUtils.IsValid(escapeDir))
+                {
+                    escapeDir = Vector2.UnitY;
+                }
+                SteeringManager.Reset();
+                SteeringManager.SteeringManual(deltaTime, escapeDir);
+            }
+        }
 
         private readonly List<Limb> targetLimbs = new List<Limb>();
         public Limb GetTargetLimb(Limb attackLimb, Character target, LimbType targetLimbType = LimbType.None)

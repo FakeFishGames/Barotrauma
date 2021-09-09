@@ -127,6 +127,13 @@ namespace Barotrauma
                 ID.ToString(),
                 new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 30),
                 color);
+            if (Tunnel?.Type != null)
+            {
+                GUI.SmallFont.DrawString(spriteBatch,
+                Tunnel.Type.ToString(),
+                new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 45),
+                color);
+            }
         }
 
         public override bool IsMouseOn(Vector2 position)

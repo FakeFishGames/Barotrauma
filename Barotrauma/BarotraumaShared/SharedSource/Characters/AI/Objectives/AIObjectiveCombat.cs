@@ -252,9 +252,40 @@ namespace Barotrauma
             {
                 case CombatMode.Offensive:
                 case CombatMode.Arrest:
-                    Engage();
+                    Engage(deltaTime);
                     break;
                 case CombatMode.Defensive:
+                    if (character.IsOnPlayerTeam && !Enemy.IsPlayer && objectiveManager.IsCurrentOrder<AIObjectiveGoTo>())
+                    {
+                        if ((character.CurrentHull == null || character.CurrentHull == Enemy.CurrentHull) && sqrDistance < 200 * 200)
+                        {
+                            Engage(deltaTime);
+                        }
+                        else
+                        {
+                            // Keep following the goto target
+                            var gotoObjective = objectiveManager.GetOrder<AIObjectiveGoTo>();
+                            if (gotoObjective != null)
+                            {
+                                gotoObjective.ForceAct(deltaTime);
+                                if (!character.AnimController.InWater)
+                                {
+                                    HumanAIController.FaceTarget(Enemy);
+                                    ForceWalk = true;
+                                    HumanAIController.AutoFaceMovement = false;
+                                }
+                            }
+                            else
+                            {
+                                SteeringManager.Reset();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Retreat(deltaTime);
+                    }
+                    break;
                 case CombatMode.Retreat:
                     Retreat(deltaTime);
                     break;
@@ -671,6 +702,14 @@ namespace Barotrauma
             {
                 RemoveSubObjective(ref retreatObjective);
             }
+            if (character.Submarine == null && sqrDistance < MathUtils.Pow2(maxDistance))
+            {
+                // Swim away
+                SteeringManager.Reset();
+                SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.WorldPosition - Enemy.WorldPosition));
+                SteeringManager.SteeringAvoid(deltaTime, 5, weight: 2);
+                return;
+            }
             if (retreatTarget == null || (retreatObjective != null && !retreatObjective.CanBeCompleted))
             {
                 if (findHullTimer > 0)
@@ -704,7 +743,7 @@ namespace Barotrauma
             }
         }
 
-        private void Engage()
+        private void Engage(float deltaTime)
         {
             if (WeaponComponent == null)
             {
@@ -722,6 +761,21 @@ namespace Barotrauma
             RemoveSubObjective(ref retreatObjective);
             RemoveSubObjective(ref seekAmmunitionObjective);
             RemoveSubObjective(ref seekWeaponObjective);
+            if (character.Submarine == null && WeaponComponent is MeleeWeapon meleeWeapon)
+            {
+                if (sqrDistance > MathUtils.Pow2(meleeWeapon.Range))
+                {
+                    // Swim towards the target
+                    SteeringManager.Reset();
+                    SteeringManager.SteeringSeek(character.GetRelativeSimPosition(Enemy), weight: 10);
+                    SteeringManager.SteeringAvoid(deltaTime, 5, weight: 15);
+                }
+                else
+                {
+                    SteeringManager.Reset();
+                }
+                return;
+            }
             if (followTargetObjective != null && followTargetObjective.Target != Enemy)
             {
                 RemoveFollowTarget();

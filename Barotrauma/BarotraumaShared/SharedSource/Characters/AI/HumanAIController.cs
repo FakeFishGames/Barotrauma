@@ -20,6 +20,11 @@ namespace Barotrauma
         private float reactTimer;
         private float unreachableClearTimer;
         private bool shouldCrouch;
+        public bool IsInsideCave { get; private set; }
+        /// <summary>
+        /// Resets each frame
+        /// </summary>
+        public bool AutoFaceMovement = true;
 
         const float reactionTime = 0.3f;
         const float crouchRaycastInterval = 1;
@@ -52,7 +57,7 @@ namespace Barotrauma
         private readonly float steeringBufferIncreaseSpeed = 100;
         private float steeringBuffer;
 
-        private readonly float obstacleRaycastInterval = 1;
+        private readonly float obstacleRaycastIntervalShort = 1, obstacleRaycastIntervalLong = 5;
         private float obstacleRaycastTimer;
 
         private readonly float enemyCheckInterval = 0.2f;
@@ -85,6 +90,8 @@ namespace Barotrauma
         private readonly Dictionary<Character, AttackResult> previousAttackResults = new Dictionary<Character, AttackResult>();
 
         private readonly SteeringManager outsideSteering, insideSteering;
+
+        public bool UseIndoorSteeringOutside { get; set; } = false;
 
         public IndoorsSteeringManager PathSteering => insideSteering as IndoorsSteeringManager;
         public HumanoidAnimController AnimController => Character.AnimController as HumanoidAnimController;
@@ -207,32 +214,77 @@ namespace Barotrauma
                 IgnoredItems.Clear();
             }
 
-            bool IsCloseEnoughToTargetSub(float threshold) => SelectedAiTarget?.Entity?.Submarine is Submarine sub && sub != null && Vector2.DistanceSquared(Character.WorldPosition, sub.WorldPosition) < MathUtils.Pow(Math.Max(sub.Borders.Size.X, sub.Borders.Size.Y) / 2 + threshold, 2);
+            bool IsCloseEnoughToTarget(float threshold, bool useTargetSub = true)
+            {
+                Entity target = SelectedAiTarget?.Entity;
+                if (target == null)
+                {
+                    return false;
+                }
+                if (useTargetSub)
+                {
+                    if (target.Submarine is Submarine sub)
+                    {
+                        target = sub;
+                        threshold += Math.Max(sub.Borders.Size.X, sub.Borders.Size.Y) / 2;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                return Vector2.DistanceSquared(Character.WorldPosition, target.WorldPosition) < MathUtils.Pow(threshold, 2);
+            }
+
             bool hasValidPath = HasValidPath();
 
             if (Character.Submarine == null)
             {
-                if (hasValidPath)
+                // When the character is outside, far enough from the target, and the direct route is blocked,
+                // use the indoor steering with the main and side path waypoints to help avoid getting stuck in level walls
+                if (SelectedAiTarget?.Entity != null && !IsCloseEnoughToTarget(2000, useTargetSub: false))
                 {
                     obstacleRaycastTimer -= deltaTime;
                     if (obstacleRaycastTimer <= 0)
                     {
-                        obstacleRaycastTimer = obstacleRaycastInterval;
-                        // Swimming outside and using the path finder -> check that the path is not blocked with anything (the path finder doesn't know about other subs).
-                        foreach (var connectedSub in Submarine.MainSub.GetConnectedSubs())
+                        obstacleRaycastTimer = obstacleRaycastIntervalLong;
+                        Vector2 rayEnd = SelectedAiTarget.Entity.SimPosition;
+                        if (SelectedAiTarget.Entity.Submarine != null)
                         {
-                            if (connectedSub == Submarine.MainSub) { continue; }
-                            Vector2 rayStart = SimPosition - connectedSub.SimPosition;
-                            Vector2 dir = PathSteering.CurrentPath.CurrentNode.WorldPosition - WorldPosition;
-                            Vector2 rayEnd = rayStart + dir.ClampLength(Character.AnimController.Collider.GetLocalFront().Length() * 5);
-                            if (Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true) != null)
+                            rayEnd += SelectedAiTarget.Entity.Submarine.SimPosition;
+                        }
+                        UseIndoorSteeringOutside = Submarine.PickBody(SimPosition, rayEnd, collisionCategory: Physics.CollisionLevel) != null;
+                    }
+                }
+                else
+                {
+                    UseIndoorSteeringOutside = false;
+                    if (hasValidPath)
+                    {
+                        obstacleRaycastTimer -= deltaTime;
+                        if (obstacleRaycastTimer <= 0)
+                        {
+                            obstacleRaycastTimer = obstacleRaycastIntervalShort;
+                            // Swimming outside and using the path finder -> check that the path is not blocked with anything (the path finder doesn't know about other subs).
+                            foreach (var connectedSub in Submarine.MainSub.GetConnectedSubs())
                             {
-                                PathSteering.CurrentPath.Unreachable = true;
-                                break;
+                                if (connectedSub == Submarine.MainSub) { continue; }
+                                Vector2 rayStart = SimPosition - connectedSub.SimPosition;
+                                Vector2 dir = PathSteering.CurrentPath.CurrentNode.WorldPosition - WorldPosition;
+                                Vector2 rayEnd = rayStart + dir.ClampLength(Character.AnimController.Collider.GetLocalFront().Length() * 5);
+                                if (Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true) != null)
+                                {
+                                    PathSteering.CurrentPath.Unreachable = true;
+                                    break;
+                                }
                             }
                         }
                     }
                 }
+            }
+            else
+            {
+                UseIndoorSteeringOutside = false;
             }
             
             if (Character.Submarine == null || !IsOnFriendlyTeam(Character.TeamID, Character.Submarine.TeamID) && !Character.IsEscorted)
@@ -273,13 +325,31 @@ namespace Barotrauma
                     }
                 }
             }
-            if (Character.Submarine != null || hasValidPath && IsCloseEnoughToTargetSub(maxSteeringBuffer) || IsCloseEnoughToTargetSub(steeringBuffer))
+
+            // Check whether the character is inside a cave
+            if (IsInsideCave)
+            {
+                // If the character was inside a cave, require them to move a bit further from the area to set the field back to false
+                // This is to avoid any twitchy behavior with the steering managers
+                IsInsideCave = Character.CurrentHull == null && Level.Loaded?.Caves.FirstOrDefault(c =>
+                {
+                    var area = c.Area;
+                    area.Inflate(new Vector2(100));
+                    return area.Contains(Character.WorldPosition);
+                }) is Level.Cave;
+            }
+            else
+            {
+                IsInsideCave = Character.CurrentHull == null && Level.Loaded?.Caves.FirstOrDefault(c => c.Area.Contains(Character.WorldPosition)) is Level.Cave;
+            }
+
+            if (UseIndoorSteeringOutside || IsInsideCave || Character.Submarine != null || hasValidPath && IsCloseEnoughToTarget(maxSteeringBuffer) || IsCloseEnoughToTarget(steeringBuffer))
             {
                 if (steeringManager != insideSteering)
                 {
                     insideSteering.Reset();
+                    steeringManager = insideSteering;
                 }
-                steeringManager = insideSteering;
                 steeringBuffer += steeringBufferIncreaseSpeed * deltaTime;
             }
             else
@@ -287,8 +357,8 @@ namespace Barotrauma
                 if (steeringManager != outsideSteering)
                 {
                     outsideSteering.Reset();
+                    steeringManager = outsideSteering;
                 }
-                steeringManager = outsideSteering;
                 steeringBuffer = minSteeringBuffer;
             }
             steeringBuffer = Math.Clamp(steeringBuffer, minSteeringBuffer, maxSteeringBuffer);
@@ -419,7 +489,7 @@ namespace Barotrauma
                         Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
                     }
                 }
-                else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
+                else if (AutoFaceMovement && Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
                 {
                     newDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
                 }
@@ -429,6 +499,7 @@ namespace Barotrauma
                     flipTimer = FlipInterval;
                 }
             }
+            AutoFaceMovement = true;
 
             MentalStateManager?.Update(deltaTime);
             ShipCommandManager?.Update(deltaTime);
@@ -1240,10 +1311,7 @@ namespace Barotrauma
             {
                 var objective = new AIObjectiveCombat(Character, target, mode, objectiveManager)
                 {
-                    HoldPosition = 
-                        Character.Info?.Job?.Prefab.Identifier == "watchman" || 
-                        Character.CurrentHull == null ||
-                        Character.IsOnPlayerTeam && !target.IsPlayer && ObjectiveManager.GetActiveObjective<AIObjectiveGoTo>()?.Target is Character followTarget && followTarget.IsPlayer,
+                    HoldPosition = Character.Info?.Job?.Prefab.Identifier == "watchman",
                     AbortCondition = abortCondition,
                     allowHoldFire = allowHoldFire,
                 };
@@ -1291,6 +1359,11 @@ namespace Barotrauma
                 waitDuration *= 2;
             }
             ObjectiveManager.WaitTimer = waitDuration;
+        }
+
+        public override void Escape(float deltaTime)
+        {
+            UpdateEscape(deltaTime, canAttackDoors: false);
         }
 
         private void CheckCrouching(float deltaTime)

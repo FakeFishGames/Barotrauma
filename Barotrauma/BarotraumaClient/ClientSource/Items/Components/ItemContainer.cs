@@ -19,6 +19,8 @@ namespace Barotrauma.Items.Components
         /// </summary>
         private float[] containedSpriteDepths;
 
+        private Sprite[] slotIcons;
+
         public Sprite InventoryTopSprite
         {
             get { return inventoryTopSprite; }
@@ -88,6 +90,7 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
+            slotIcons = new Sprite[capacity];
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -106,6 +109,17 @@ namespace Barotrauma.Items.Components
                         break;
                     case "containedstateindicatorempty":
                         ContainedStateIndicatorEmpty = new Sprite(subElement);
+                        break;
+                    case "sloticon":
+                        int index = subElement.GetAttributeInt("slotindex", -1);
+                        Sprite icon = new Sprite(subElement);
+                        for (int i = 0; i < capacity; i++)
+                        {
+                            if (i == index || index == -1)
+                            {
+                                slotIcons[i] = icon;
+                            }
+                        }
                         break;
                 }
             }
@@ -206,6 +220,12 @@ namespace Barotrauma.Items.Components
             {
                 return item?.Name;
             }            
+        }
+
+        public Sprite GetSlotIcon(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= slotIcons.Length) { return null; }
+            return slotIcons[slotIndex];
         }
 
         public bool KeepOpenWhenEquippedBy(Character character)

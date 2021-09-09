@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using Barotrauma.Networking;
 using Barotrauma.Extensions;
 using System.Globalization;
+using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
@@ -483,9 +484,12 @@ namespace Barotrauma
             {
                 var matchingAffliction = matchingAfflictions[i];
 
-                // kind of bad to create a tuple every time, but I can't think of another way to easily do this
-                var afflictionReduction = (matchingAffliction, reduceAmount);
-                Character.CheckTalents(AbilityEffectType.OnReduceAffliction, afflictionReduction);
+                // this logic runs very often, so culling unnecessary object creation and talent checking with this method
+                if (Character.HasTalents())
+                {
+                    var afflictionReduction = new AbilityValueAffliction(reduceAmount, matchingAffliction);
+                    Character.CheckTalents(AbilityEffectType.OnReduceAffliction, afflictionReduction);
+                }
 
                 if (matchingAffliction.Strength < reduceAmount)
                 {

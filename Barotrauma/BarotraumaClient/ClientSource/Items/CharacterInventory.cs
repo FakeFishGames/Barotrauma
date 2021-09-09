@@ -688,6 +688,11 @@ namespace Barotrauma
                     {
                         break;
                     }
+                    //if putting an item to a container with a max stack size of 1, only put one item from the stack
+                    if (quickUseAction == QuickUseAction.PutToContainer && (character.SelectedConstruction?.GetComponent<ItemContainer>()?.MaxStackSize ?? 0) <= 1)
+                    {
+                        break;
+                    }
                 }
             }
 

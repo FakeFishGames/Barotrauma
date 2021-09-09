@@ -12,9 +12,9 @@ namespace Barotrauma.Abilities
             vitalityPercentage = abilityElement.GetAttributeFloat("vitalitypercentage", 0f);
         }
 
-        protected override void ApplyEffect(object abilityData)
+        protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if (abilityData is Character character)
+            if ((abilityObject as IAbilityCharacter)?.Character is Character character)
             {
                 Character.GiveMoney((int)(vitalityPercentage * character.MaxVitality));
             }

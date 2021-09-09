@@ -22,9 +22,9 @@ namespace Barotrauma.Abilities
             implode = abilityElement.GetAttributeBool("implode", false);
         }
 
-        protected override void ApplyEffect(object abilityData)
+        protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if (abilityData is AbilityAttackData attackData)
+            if (abilityObject is AbilityAttackData attackData)
             {
                 if (attackData.Afflictions == null)
                 {
@@ -46,7 +46,7 @@ namespace Barotrauma.Abilities
             }
             else
             {
-                LogAbilityDataMismatch();
+                LogabilityObjectMismatch();
             }
         }
     }

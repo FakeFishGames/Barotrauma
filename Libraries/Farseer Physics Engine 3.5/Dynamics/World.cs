@@ -999,7 +999,7 @@ namespace FarseerPhysics.Dynamics
             if (body == null)
                 throw new ArgumentNullException("body");
             if (body.World != this)
-                throw new ArgumentException("You are removing a body that is not in the simulation.", "body");
+                throw new ArgumentException($"You are removing a body that is not in the simulation (userdata: {body.UserData?.ToString() ?? "null"}).", "body");
 
 #if USE_AWAKE_BODY_SET
             Debug.Assert(!AwakeBodySet.Contains(body));

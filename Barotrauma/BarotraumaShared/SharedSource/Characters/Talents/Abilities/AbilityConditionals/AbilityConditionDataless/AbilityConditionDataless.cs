@@ -12,7 +12,7 @@ namespace Barotrauma.Abilities
             return invert ? !MatchesConditionSpecific() : MatchesConditionSpecific();
         }
 
-        public override bool MatchesCondition(object abilityData)
+        public override bool MatchesCondition(AbilityObject abilityObject)
         {
             return invert ? !MatchesConditionSpecific() : MatchesConditionSpecific();
         }

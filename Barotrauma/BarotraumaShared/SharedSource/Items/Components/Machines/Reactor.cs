@@ -367,23 +367,19 @@ namespace Barotrauma.Items.Components
                         item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
                     }
                 }
-
-                if (item.CurrentHull != null)
-                {
-                    var aiTarget = item.CurrentHull.AiTarget;
-                    if (aiTarget != null && MaxPowerOutput > 0)
-                    {
-                        float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
-                        float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
-                        aiTarget.SoundRange = Math.Max(aiTarget.SoundRange, noise);
-                    }
-                }
-
                 if (item.AiTarget != null && MaxPowerOutput > 0)
                 {
                     var aiTarget = item.AiTarget;
                     float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
                     aiTarget.SoundRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
+                    if (item.CurrentHull != null)
+                    {
+                        var hullAITarget = item.CurrentHull.AiTarget;
+                        if (hullAITarget != null)
+                        {
+                            hullAITarget.SoundRange = Math.Max(hullAITarget.SoundRange, aiTarget.SoundRange);
+                        }
+                    }
                 }
             }
 

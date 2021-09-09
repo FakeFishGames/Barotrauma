@@ -74,6 +74,7 @@ namespace Barotrauma
                 }
             }
             msg.Write((ushort)ExperiencePoints);
+            msg.Write((ushort)AdditionalTalentPoints);
         }
     }
 }

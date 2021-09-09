@@ -10,25 +10,25 @@ namespace Barotrauma.Abilities
     {
         public CharacterAbilityGroupEffect(CharacterTalent characterTalent, XElement abilityElementGroup) : base(characterTalent, abilityElementGroup) { }
 
-        public void CheckAbilityGroup(object abilityData)
+        public void CheckAbilityGroup(AbilityObject abilityObject)
         {
             if (!IsActive) { return; }
-            if (IsApplicable(abilityData))
+            if (IsApplicable(abilityObject))
             {
                 foreach (var characterAbility in characterAbilities)
                 {
                     if (characterAbility.IsViable())
                     {
-                        characterAbility.ApplyAbilityEffect(abilityData);
+                        characterAbility.ApplyAbilityEffect(abilityObject);
                     }
                 }
             }
         }
 
-        private bool IsApplicable(object abilityData)
+        private bool IsApplicable(AbilityObject abilityObject)
         {
             if (timesTriggered >= maxTriggerCount) { return false; }
-            return abilityConditions.All(c => c.MatchesCondition(abilityData));
+            return abilityConditions.All(c => c.MatchesCondition(abilityObject));
         }
     }
 }

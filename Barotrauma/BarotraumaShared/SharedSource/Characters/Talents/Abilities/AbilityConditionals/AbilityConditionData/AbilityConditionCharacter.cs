@@ -12,9 +12,9 @@ namespace Barotrauma.Abilities
             targetTypes = ParseTargetTypes(conditionElement.GetAttributeStringArray("targettypes", new string[0], convertToLowerInvariant: true));
         }
 
-        protected override bool MatchesConditionSpecific(object abilityData)
+        protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
-            if (abilityData is Character character)
+            if ((abilityObject as IAbilityCharacter)?.Character is Character character)
             {
                 if (!IsViableTarget(targetTypes, character)) { return false; }
 
@@ -22,7 +22,7 @@ namespace Barotrauma.Abilities
             }
             else
             {
-                LogAbilityConditionError(abilityData, typeof(Character));
+                LogAbilityConditionError(abilityObject, typeof(IAbilityCharacter));
                 return false;
             }
         }

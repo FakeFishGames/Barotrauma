@@ -11,7 +11,7 @@ namespace Barotrauma.Abilities
         {
             statIdentifier = abilityElement.GetAttributeString("statidentifier", "").ToLowerInvariant();
         }
-        protected override void ApplyEffect(object abilityData)
+        protected override void ApplyEffect(AbilityObject abilityObject)
         {
             ApplyEffectSpecific();
         }

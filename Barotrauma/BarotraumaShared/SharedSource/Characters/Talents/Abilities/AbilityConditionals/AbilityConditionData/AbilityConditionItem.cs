@@ -15,33 +15,33 @@ namespace Barotrauma.Abilities
             tags = conditionElement.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
         }
 
-        protected override bool MatchesConditionSpecific(object abilityData)
+        protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
-            ItemPrefab item = null;
-            if (abilityData is Item tempItem)
+            ItemPrefab itemPrefab = null;
+            if ((abilityObject as IAbilityItemPrefab)?.ItemPrefab is ItemPrefab abilityItemPrefab) 
             {
-                item = tempItem.Prefab;
+                itemPrefab = abilityItemPrefab;
             }
-            else if (abilityData is IAbilityItemPrefab abilityItemPrefab)
+            else if ((abilityObject as IAbilityItem)?.Item is Item abilityItem)
             {
-                item = abilityItemPrefab.ItemPrefab;
+                itemPrefab = abilityItem.Prefab;
             }
 
-            if (item != null)
+            if (itemPrefab != null)
             {
                 if (!string.IsNullOrEmpty(identifier))
                 {
-                    if (item.Identifier != identifier)
+                    if (itemPrefab.Identifier != identifier)
                     {
                         return false;
                     }
                 }
 
-                return tags.Any(t => item.Tags.Any(p => t == p));
+                return tags.Any(t => itemPrefab.Tags.Any(p => t == p));
             }
             else
             {
-                LogAbilityConditionError(abilityData, typeof(Item));
+                LogAbilityConditionError(abilityObject, typeof(IAbilityItemPrefab));
                 return false;
             }
         }

@@ -16,15 +16,15 @@ namespace Barotrauma.Abilities
             return this.skillIdentifier == skillIdentifier;
         }
 
-        protected override bool MatchesConditionSpecific(object abilityData)
+        protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
-            if ((abilityData as string ?? (abilityData as IAbilityString)?.String) is string skillIdentifier)
+            if ((abilityObject as IAbilityString)?.String is string skillIdentifier)
             {
                 return MatchesConditionSpecific(skillIdentifier);
             }
             else
             {
-                LogAbilityConditionError(abilityData, typeof(string));
+                LogAbilityConditionError(abilityObject, typeof(IAbilityString));
                 return false;
             }
         }

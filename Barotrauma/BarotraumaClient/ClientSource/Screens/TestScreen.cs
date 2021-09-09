@@ -56,11 +56,6 @@ namespace Barotrauma
             MiniMap miniMap = miniMapItem.GetComponent<MiniMap>();
             miniMap.PowerConsumption = 0;
 
-            foreach (var hull in Hull.hullList)
-            {
-                hull.WaterVolume = hull.Volume / 2f;
-            }
-
             dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.DummyID, hasAi: false);
             dummyCharacter.Info.Name = "Galldren";
             dummyCharacter.Inventory.CreateSlots();

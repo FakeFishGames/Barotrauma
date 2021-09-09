@@ -31,9 +31,9 @@ namespace Barotrauma.Abilities
             }
         }
 
-        protected override bool MatchesConditionSpecific(object abilityData)
+        protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
-            if (abilityData is AbilityAttackData attackData)
+            if (abilityObject is AbilityAttackData attackData)
             {
                 Item item = attackData?.SourceAttack?.SourceItem;
 
@@ -71,7 +71,7 @@ namespace Barotrauma.Abilities
             }
             else
             {
-                LogAbilityConditionError(abilityData, typeof(AbilityAttackData));
+                LogAbilityConditionError(abilityObject, typeof(AbilityAttackData));
                 return false;
             }
         }

@@ -230,8 +230,7 @@ namespace Barotrauma
         public bool IsInteractable(Character character)
         {
             if (character != null && character.IsOnPlayerTeam)
-            {
-                
+            {                
                 return IsPlayerTeamInteractable;
             }
             else

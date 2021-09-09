@@ -41,6 +41,11 @@ namespace Barotrauma
             get { return type; }
         }
 
+        /// <summary>
+        /// Index of the slot the target must be in when targeting a Contained item
+        /// </summary>
+        public int TargetSlot = -1;
+
         public string JoinedIdentifiers
         {
             get { return string.Join(",", Identifiers); }
@@ -147,7 +152,9 @@ namespace Barotrauma
 
             foreach (Item contained in parentItem.ContainedItems)
             {
+                if (TargetSlot > -1 && parentItem.OwnInventory.FindIndex(contained) != TargetSlot) { continue; }
                 if ((!ExcludeBroken || contained.Condition > 0.0f) && MatchesItem(contained)) { return true; }
+
                 if (CheckContained(contained)) { return true; }
             }
             return false;
@@ -271,6 +278,8 @@ namespace Barotrauma
             ri.IsOptional = element.GetAttributeBool("optional", false);
             ri.IgnoreInEditor = element.GetAttributeBool("ignoreineditor", false);
             ri.MatchOnEmpty = element.GetAttributeBool("matchonempty", false);
+            ri.TargetSlot = element.GetAttributeInt("targetslot", -1);
+
             return ri;
         }
     }

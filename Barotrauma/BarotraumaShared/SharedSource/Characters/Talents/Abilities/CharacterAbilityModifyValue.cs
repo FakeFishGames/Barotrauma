@@ -13,9 +13,9 @@ namespace Barotrauma.Abilities
             multiplyValue = abilityElement.GetAttributeFloat("multiplyvalue", 1f);
         }
 
-        protected override void ApplyEffect(object abilityData)
+        protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if (abilityData is IAbilityValue abilityValue)
+            if (abilityObject is IAbilityValue abilityValue)
             {
                 abilityValue.Value += addedValue;
                 abilityValue.Value *= multiplyValue;

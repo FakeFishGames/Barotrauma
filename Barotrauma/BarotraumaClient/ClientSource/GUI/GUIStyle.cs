@@ -49,7 +49,7 @@ namespace Barotrauma
         public UISprite ButtonPulse { get; private set; }
 
         public SpriteSheet FocusIndicator { get; private set; }
-        
+
         public UISprite IconOverflowIndicator { get; private set; }
 
         /// <summary>
@@ -462,7 +462,7 @@ namespace Barotrauma
 
         public void Apply(GUIComponent targetComponent, string styleName = "", GUIComponent parent = null)
         {
-            GUIComponentStyle componentStyle = null;  
+            GUIComponentStyle componentStyle = null;
             if (parent != null)
             {
                 GUIComponentStyle parentStyle = parent.Style;
@@ -477,7 +477,7 @@ namespace Barotrauma
                         return;
                     }
                 }
-                
+
                 string childStyleName = string.IsNullOrEmpty(styleName) ? targetComponent.GetType().Name : styleName;
                 parentStyle.ChildStyles.TryGetValue(childStyleName.ToLowerInvariant(), out componentStyle);
             }
@@ -493,8 +493,8 @@ namespace Barotrauma
                     return;
                 }
             }
-            
-            targetComponent.ApplyStyle(componentStyle);            
+
+            targetComponent.ApplyStyle(componentStyle);
         }
     }
 }

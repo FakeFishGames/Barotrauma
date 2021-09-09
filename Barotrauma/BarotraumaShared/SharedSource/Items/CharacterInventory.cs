@@ -291,11 +291,25 @@ namespace Barotrauma
                 {
                     currentSlot = i;
                     if (allowedSlots.Any(a => a.HasFlag(SlotTypes[i])))
-                        inSuitableSlot = true;
+                    {
+                        if ((SlotTypes[i] == InvSlotType.RightHand || SlotTypes[i] == InvSlotType.LeftHand) && !allowedSlots.Contains(SlotTypes[i]))
+                        {
+                            //allowed slot = InvSlotType.RightHand | InvSlotType.LeftHand
+                            // -> make sure the item is in both hand slots
+                            inSuitableSlot = IsInLimbSlot(item, InvSlotType.RightHand) && IsInLimbSlot(item, InvSlotType.LeftHand);
+                        }
+                        else
+                        {
+                            inSuitableSlot = true;
+                        }
+                    }
                     else if (!allowedSlots.Any(a => a.HasFlag(SlotTypes[i])))
+                    {
                         inWrongSlot = true;
+                    }
                 }
             }
+
             //all good
             if (inSuitableSlot && !inWrongSlot) { return true; }
 

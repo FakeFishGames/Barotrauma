@@ -2,16 +2,16 @@
 
 namespace Barotrauma.Abilities
 {
-    class AbilityConditionScavenger : AbilityConditionData
+    class AbilityConditionScrounger : AbilityConditionData
     {
 
-        public AbilityConditionScavenger(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) { }
+        public AbilityConditionScrounger(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) { }
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
             if ((abilityObject as IAbilityItem)?.Item is Item item)
             {
-                return item.Submarine == null || item.Submarine.TeamID != character.Info.TeamID;
+                return item.Submarine?.Info?.IsWreck ?? false;
             }
             else
             {

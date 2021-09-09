@@ -18,9 +18,9 @@ namespace Barotrauma.Abilities
             tags = abilityElement.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
         }
 
-        protected override void ApplyEffect(object abilityData)
+        protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if (abilityData is AbilityAttackData attackData)
+            if (abilityObject is AbilityAttackData attackData)
             {
                 float totalAddedDamageMultiplier = 0f;
                 foreach (Item item in Character.Inventory.AllItems)
@@ -34,7 +34,7 @@ namespace Barotrauma.Abilities
             }
             else
             {
-                LogAbilityDataMismatch();
+                LogabilityObjectMismatch();
             }
         }
     }

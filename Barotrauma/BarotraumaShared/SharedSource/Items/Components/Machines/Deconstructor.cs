@@ -106,7 +106,7 @@ namespace Barotrauma.Items.Components
                         if ((Entity.Spawner?.IsInRemoveQueue(targetItem) ?? false) || !inputContainer.Inventory.AllItems.Contains(targetItem)) { continue; }
                         var validDeconstructItems = targetItem.Prefab.DeconstructItems.FindAll(it =>
                             (it.RequiredDeconstructor.Length == 0 || it.RequiredDeconstructor.Any(r => item.HasTag(r) || item.Prefab.Identifier.Equals(r, StringComparison.OrdinalIgnoreCase))) &&
-                            (it.RequiredOtherItem.Length == 0 || it.RequiredOtherItem.Any(r => items.Any(it => it.HasTag(r) || it.Prefab.Identifier.Equals(r, StringComparison.OrdinalIgnoreCase)))));
+                            (it.RequiredOtherItem.Length == 0 || it.RequiredOtherItem.Any(r => items.Any(it => it != targetItem && (it.HasTag(r) || it.Prefab.Identifier.Equals(r, StringComparison.OrdinalIgnoreCase))))));
 
                         ProcessItem(targetItem, items, validDeconstructItems, allowRemove: validDeconstructItems.Any() || !targetItem.Prefab.DeconstructItems.Any());                        
                     }
@@ -148,6 +148,12 @@ namespace Barotrauma.Items.Components
             // In multiplayer, the server handles the deconstruction into new items
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
+            if (user != null && !user.Removed)
+            {
+                var abilityTargetItem = new AbilityItem(targetItem);
+                user.CheckTalents(AbilityEffectType.OnItemDeconstructed, abilityTargetItem);
+            }
+
             if (targetItem.Prefab.RandomDeconstructionOutput)
             {
                 int amount = targetItem.Prefab.RandomDeconstructionOutputAmount;
@@ -168,8 +174,6 @@ namespace Barotrauma.Items.Components
                     deconstructItemIndexes.RemoveAt(removeIndex);
                     commonness.RemoveAt(removeIndex);
                 }
-
-                user.CheckTalents(AbilityEffectType.OnItemDeconstructed, targetItem);
 
                 foreach (DeconstructItem deconstructProduct in products)
                 {
@@ -225,10 +229,15 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-                var itemsCreated = new AbilityValue(1f);
-                user.CheckTalents(AbilityEffectType.OnItemDeconstructedMaterial, (targetItem.Prefab, itemsCreated));
 
-                int amount = (int)itemsCreated.Value;
+                int amount = 1;
+
+                if (user != null && !user.Removed)
+                {
+                    var itemsCreated = new AbilityValueItem(1f, targetItem.Prefab);
+                    user.CheckTalents(AbilityEffectType.OnItemDeconstructedMaterial, itemsCreated);
+                    amount = (int)itemsCreated.Value;
+                }
 
                 for (int i = 0; i < amount; i++)
                 {

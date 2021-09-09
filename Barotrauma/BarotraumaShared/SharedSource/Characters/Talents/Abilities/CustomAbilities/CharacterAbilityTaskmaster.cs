@@ -16,9 +16,9 @@ namespace Barotrauma.Abilities
             statusEffectsRemove = CharacterAbilityGroup.ParseStatusEffects(CharacterTalent, abilityElement.GetChildElement("statuseffectsremove"));
         }
 
-        protected override void ApplyEffect(object abilityData)
+        protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if (abilityData is Character targetCharacter)
+            if ((abilityObject as IAbilityCharacter)?.Character is Character targetCharacter)
             {
                 if (targetCharacter == Character) { return; }
 

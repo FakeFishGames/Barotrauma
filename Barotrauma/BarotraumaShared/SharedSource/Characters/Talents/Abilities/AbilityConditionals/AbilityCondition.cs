@@ -20,7 +20,7 @@ namespace Barotrauma.Abilities
             character = characterTalent.Character;
             invert = conditionElement.GetAttributeBool("invert", false);
         }
-        public abstract bool MatchesCondition(object abilityData);
+        public abstract bool MatchesCondition(AbilityObject abilityObject);
         public abstract bool MatchesCondition();
 
 

@@ -140,6 +140,12 @@ namespace Barotrauma
 
         public override int GetReward(Submarine sub)
         {
+            // If we are not at the location of the mission, skip the calculation of the reward
+            if (GameMain.GameSession?.StartLocation != Locations[0])
+            {
+                return calculatedReward;
+            }
+
             bool missionsChanged = false;
             if (GameMain.GameSession?.StartLocation?.SelectedMissions != null)
             {

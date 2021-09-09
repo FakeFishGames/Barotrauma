@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using Barotrauma.Extensions;
 using FarseerPhysics;
 using System.Collections.Immutable;
+using Barotrauma.Abilities;
 
 namespace Barotrauma.Items.Components
 {
@@ -109,6 +110,13 @@ namespace Barotrauma.Items.Components
 
         [Serialize(true, false, "Allow dragging and dropping items to deposit items into this inventory.")]
         public bool AllowDragAndDrop
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, false)]
+        public bool AllowSwappingContainedItems
         {
             get;
             set;
@@ -414,7 +422,8 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            character.CheckTalents(AbilityEffectType.OnOpenItemContainer, item);
+            var abilityItem = new AbilityItem(item);
+            character.CheckTalents(AbilityEffectType.OnOpenItemContainer, abilityItem);
 
             return base.Select(character);
         }
@@ -588,6 +597,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            Inventory.AllowSwappingContainedItems = AllowSwappingContainedItems;
             containableItemIdentifiers = slotRestrictions.SelectMany(s => s.ContainableItems?.SelectMany(ri => ri.Identifiers) ?? Enumerable.Empty<string>()).ToImmutableHashSet();
             if (item.Submarine == null || !item.Submarine.Loading)
             {
@@ -616,7 +626,21 @@ namespace Barotrauma.Items.Components
                 }
                 itemIds = null;
             }
-            SpawnAlwaysContainedItems();
+
+            //outpost and ruins are loaded in multiple stages (each module is loaded separately)
+            //spawning items at this point during the generation will cause ID overlaps with the entities in the modules loaded afterwards
+            //so let's not spawn them at this point, but in the 1st Update()
+            if (item.Submarine?.Info != null && (item.Submarine.Info.IsOutpost || item.Submarine.Info.IsRuin))
+            {
+                if (SpawnWithId.Length > 0)
+                {
+                    IsActive = true;
+                }
+            }
+            else
+            {
+                SpawnAlwaysContainedItems();
+            }
         }
 
         private void SpawnAlwaysContainedItems()

@@ -742,10 +742,10 @@ namespace Barotrauma.Items.Components
                 Projectile projectileComponent = projectile.GetComponent<Projectile>();
                 if (projectileComponent != null)
                 {
-                    projectileComponent.Attacker = user;
+                    projectileComponent.Attacker = projectileComponent.User = user;
                     if (isTinkering)
                     {
-                        projectileComponent.Attack.DamageMultiplier *= 1.25f;
+                        projectileComponent.Attack.DamageMultiplier = 1.25f;
                     }
                     projectileComponent.Use();
                     projectile.GetComponent<Rope>()?.Attach(item, projectile);

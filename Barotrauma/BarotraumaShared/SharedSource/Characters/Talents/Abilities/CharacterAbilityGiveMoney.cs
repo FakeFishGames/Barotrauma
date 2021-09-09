@@ -27,9 +27,9 @@ namespace Barotrauma.Abilities
             targetCharacter.GiveMoney((int)(multiplier * amount));
         }
 
-        protected override void ApplyEffect(object abilityData)
+        protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if ((abilityData as Character ?? (abilityData as IAbilityCharacter)?.Character) is Character targetCharacter)
+            if ((abilityObject as IAbilityCharacter)?.Character is Character targetCharacter)
             {
                 ApplyEffectSpecific(targetCharacter);
             }

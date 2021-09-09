@@ -993,6 +993,10 @@ namespace Barotrauma
                 clone.Move(moveAmount);
                 clone.Submarine = Submarine.MainSub;
             }
+            foreach (MapEntity clone in SelectedList)
+            {
+                (clone as Item)?.GetComponent<ItemContainer>()?.SetContainedItemPositions();
+            }
 
             SubEditorScreen.StoreCommand(new AddOrDeleteCommand(clones, false, handleInventoryBehavior: false));
         }

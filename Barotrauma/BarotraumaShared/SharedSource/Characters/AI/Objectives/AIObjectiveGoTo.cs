@@ -159,6 +159,8 @@ namespace Barotrauma
             }
         }
 
+        public void ForceAct(float deltaTime) => Act(deltaTime);
+
         protected override void Act(float deltaTime)
         {
             if (followControlledCharacter)
@@ -240,7 +242,7 @@ namespace Barotrauma
                 if (getDivingGearIfNeeded && !character.LockHands)
                 {
                     Character followTarget = Target as Character;
-                    bool needsDivingSuit = targetIsOutside;
+                    bool needsDivingSuit = !isInside || targetIsOutside;
                     bool needsDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit);
                     if (mimic)
                     {
@@ -444,13 +446,22 @@ namespace Barotrauma
                 }
                 if (SteeringManager == PathSteering)
                 {
+                    Vector2 targetPos = character.GetRelativeSimPosition(Target);
                     Func<PathNode, bool> nodeFilter = null;
                     if (isInside && !AllowGoingOutside)
                     {
                         nodeFilter = n => n.Waypoint.CurrentHull != null;
                     }
+                    else if (!isInside && HumanAIController.UseIndoorSteeringOutside)
+                    {
+                        if (character.Submarine == null && Target.Submarine != null)
+                        {
+                            targetPos += Target.Submarine.SimPosition;
+                        }
+                        nodeFilter = n => n.Waypoint.Tunnel != null;
+                    }
 
-                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(Target), 1, 
+                    PathSteering.SteeringSeek(targetPos, 1,
                         startNodeFilter: n => (n.Waypoint.CurrentHull == null) == (character.CurrentHull == null), 
                         endNodeFilter, 
                         nodeFilter, 

@@ -15,9 +15,9 @@ namespace Barotrauma.Abilities
             addedMultiplier = abilityElement.GetAttributeFloat("addedmultiplier", 0f);
         }
 
-        protected override void ApplyEffect(object abilityData)
+        protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if (abilityData is Affliction affliction)
+            if ((abilityObject as IAbilityAffliction)?.Affliction is Affliction affliction)
             {
                 foreach (string afflictionIdentifier in afflictionIdentifiers)
                 {
@@ -29,7 +29,7 @@ namespace Barotrauma.Abilities
             }
             else
             {
-                LogAbilityDataMismatch();
+                LogabilityObjectMismatch();
             }
         }
     }

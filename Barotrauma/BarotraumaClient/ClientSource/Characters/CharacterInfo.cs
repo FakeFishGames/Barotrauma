@@ -1,12 +1,12 @@
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Xml.Linq;
-using System.IO;
+using Barotrauma.IO;
 using Barotrauma.Items.Components;
 
 namespace Barotrauma
@@ -624,7 +624,7 @@ namespace Barotrauma
                 ch.ChangeSavedStatValue((StatTypes)statType, statValue, statIdentifier, removeOnDeath);
             }
             ch.ExperiencePoints = inc.ReadUInt16();
-
+            ch.AdditionalTalentPoints = inc.ReadUInt16();
             return ch;
         }
     }

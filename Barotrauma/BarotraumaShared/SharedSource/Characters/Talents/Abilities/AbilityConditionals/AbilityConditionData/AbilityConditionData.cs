@@ -16,21 +16,21 @@ namespace Barotrauma.Abilities
         /// </summary>
         public AbilityConditionData(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) { }
 
-        protected void LogAbilityConditionError<T>(T abilityData, Type expectedData)
+        protected void LogAbilityConditionError(AbilityObject abilityObject, Type expectedData)
         {
-            DebugConsole.ThrowError($"Used data-reliant ability condition when data is incompatible! Expected {expectedData}, but received {abilityData}");
+            DebugConsole.ThrowError($"Used data-reliant ability condition when data is incompatible! Expected {expectedData}, but received {abilityObject}");
         }
 
-        protected abstract bool MatchesConditionSpecific(object abilityData);
+        protected abstract bool MatchesConditionSpecific(AbilityObject abilityObject);
         public override bool MatchesCondition()
         {
             DebugConsole.ThrowError("Used data-reliant ability condition in a state-based ability! This is not allowed.");
             return false;
         }
-        public override bool MatchesCondition(object abilityData)
+        public override bool MatchesCondition(AbilityObject abilityObject)
         {
-            if (abilityData is null) { return invert; }
-            return invert ? !MatchesConditionSpecific(abilityData) : MatchesConditionSpecific(abilityData);
+            if (abilityObject is null) { return invert; }
+            return invert ? !MatchesConditionSpecific(abilityObject) : MatchesConditionSpecific(abilityObject);
         }
     }
 }

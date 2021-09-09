@@ -11,6 +11,7 @@ using System.Xml.Linq;
 using Barotrauma.Networking;
 using LimbParams = Barotrauma.RagdollParams.LimbParams;
 using JointParams = Barotrauma.RagdollParams.JointParams;
+using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
@@ -741,7 +742,11 @@ namespace Barotrauma
                 {
                     newAffliction.SetStrength(affliction.NonClampedStrength);
                 }
-                attacker?.CheckTalents(AbilityEffectType.OnAddDamageAffliction, newAffliction);
+                if (attacker != null)
+                {
+                    var abilityAffliction = new AbilityAffliction(newAffliction);
+                    attacker.CheckTalents(AbilityEffectType.OnAddDamageAffliction, abilityAffliction);
+                }
                 if (applyAffliction)
                 {
                     afflictionsCopy.Add(newAffliction);

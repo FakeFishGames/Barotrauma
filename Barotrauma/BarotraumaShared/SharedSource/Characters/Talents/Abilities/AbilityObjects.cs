@@ -2,8 +2,30 @@
 
 namespace Barotrauma.Abilities
 {
+    class AbilityObject
+    {
+        // kept as blank for now, as we are using a composition and only using this object to enforce parameter types
+    }
 
-    class AbilityValue : IAbilityValue
+    class AbilityCharacter : AbilityObject, IAbilityCharacter
+    {
+        public AbilityCharacter(Character character)
+        {
+            Character = character;
+        }
+        public Character Character { get; set; }
+    }
+
+    class AbilityItem : AbilityObject, IAbilityItem
+    {
+        public AbilityItem(Item item)
+        {
+            Item = item;
+        }
+        public Item Item { get; set; }
+    }
+
+    class AbilityValue : AbilityObject, IAbilityValue
     {
         public AbilityValue(float value)
         {
@@ -12,7 +34,16 @@ namespace Barotrauma.Abilities
         public float Value { get; set; }
     }
 
-    class AbilityValueItem : IAbilityValue, IAbilityItemPrefab
+    class AbilityAffliction : AbilityObject, IAbilityAffliction
+    {
+        public AbilityAffliction(Affliction affliction)
+        {
+            Affliction = affliction;
+        }
+        public Affliction Affliction { get; set; }
+    }
+
+    class AbilityValueItem : AbilityObject, IAbilityValue, IAbilityItemPrefab
     {
         public AbilityValueItem(float value, ItemPrefab itemPrefab)
         {
@@ -23,7 +54,7 @@ namespace Barotrauma.Abilities
         public ItemPrefab ItemPrefab { get; set; }
     }
 
-    class AbilityValueString : IAbilityValue, IAbilityString
+    class AbilityValueString : AbilityObject, IAbilityValue, IAbilityString
     {
         public AbilityValueString(float value, string abilityString)
         {
@@ -34,7 +65,20 @@ namespace Barotrauma.Abilities
         public string String { get; set; }
     }
 
-    class AbilityStringCharacter : IAbilityCharacter, IAbilityString
+    class AbilityValueStringCharacter : AbilityObject, IAbilityValue, IAbilityString
+    {
+        public AbilityValueStringCharacter(float value, string abilityString, Character character)
+        {
+            Value = value;
+            String = abilityString;
+            Character = character;
+        }
+        public Character Character { get; set; }
+        public float Value { get; set; }
+        public string String { get; set; }
+    }
+
+    class AbilityStringCharacter : AbilityObject, IAbilityCharacter, IAbilityString
     {
         public AbilityStringCharacter(string abilityString, Character character)
         {
@@ -45,7 +89,7 @@ namespace Barotrauma.Abilities
         public string String { get; set; }
     }
 
-    class AbilityValueAffliction : IAbilityValue, IAbilityAffliction
+    class AbilityValueAffliction : AbilityObject, IAbilityValue, IAbilityAffliction
     {
         public AbilityValueAffliction(float value, Affliction affliction)
         {
@@ -56,7 +100,7 @@ namespace Barotrauma.Abilities
         public Affliction Affliction { get; set; }
     }
 
-    class AbilityValueMission : IAbilityValue, IAbilityMission
+    class AbilityValueMission : AbilityObject, IAbilityValue, IAbilityMission
     {
         public AbilityValueMission(float value, Mission mission)
         {
@@ -67,7 +111,8 @@ namespace Barotrauma.Abilities
         public Mission Mission { get; set; }
     }
 
-    class AbilityAttackData : IAbilityCharacter
+    // this is an exception class that should only be passed in this form, so classes that use it should cast into it directly
+    class AbilityAttackData : AbilityObject, IAbilityCharacter
     {
         public float DamageMultiplier { get; set; } = 1f;
         public float AddedPenetration { get; set; } = 0f;
@@ -82,4 +127,26 @@ namespace Barotrauma.Abilities
             Character = character;
         }
     }
+
+    class AbilityAttackResult : AbilityObject, IAbilityAttackResult
+    {
+        public AttackResult AttackResult { get; set; }
+
+        public AbilityAttackResult(AttackResult attackResult)
+        {
+            AttackResult = attackResult;
+        }
+    }
+
+    class AbilityCharacterSubmarine : AbilityObject, IAbilityCharacter, IAbilitySubmarine
+    {
+        public AbilityCharacterSubmarine(Character character, Submarine submarine)
+        {
+            Character = character;
+            Submarine = submarine;
+        }
+        public Character Character { get; set; }
+        public Submarine Submarine { get; set; }
+    }
+
 }

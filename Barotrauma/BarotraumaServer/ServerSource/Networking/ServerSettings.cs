@@ -163,9 +163,7 @@ namespace Barotrauma.Networking
                 RadiationEnabled = incMsg.ReadBoolean();
 
                 int maxMissionCount = MaxMissionCount + incMsg.ReadByte() - 1;
-                if (maxMissionCount < CampaignSettings.MinMissionCountLimit) maxMissionCount = CampaignSettings.MaxMissionCountLimit;
-                if (maxMissionCount > CampaignSettings.MaxMissionCountLimit) maxMissionCount = CampaignSettings.MinMissionCountLimit;
-                MaxMissionCount = maxMissionCount;
+                MaxMissionCount = MathHelper.Clamp(maxMissionCount, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit);
 
                 changed |= true;
             }

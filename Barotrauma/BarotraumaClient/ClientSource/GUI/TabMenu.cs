@@ -125,7 +125,7 @@ namespace Barotrauma
 
         public TabMenu()
         {
-            if (!initialized) Initialize();
+            if (!initialized) { Initialize(); }
 
             CreateInfoFrame(selectedTab);
             SelectInfoFrameTab(null, selectedTab);
@@ -260,6 +260,10 @@ namespace Barotrauma
             }
 
             var talentsButton = createTabButton(InfoFrameTab.Talents, "tabmenu.talents");
+            talentsButton.OnAddedToGUIUpdateList += (GUIComponent component) =>
+            {
+                talentsButton.Enabled = Character.Controlled?.Info != null && GameMain.GameSession?.Campaign != null;
+            };
         }
 
         private bool SelectInfoFrameTab(GUIButton button, object userData)
@@ -1177,8 +1181,6 @@ namespace Barotrauma
         private GUITextBlock talentPointsText;
 
         private GUITextBlock experienceText;
-        private Color experienceBackgroundColor = new Color(255, 255, 255, 155);
-
         private GUIProgressBar experienceBar;
 
         private void CreateTalentInfo(GUIFrame infoFrame)
@@ -1186,11 +1188,12 @@ namespace Barotrauma
             infoFrame.ClearChildren();
             talentButtons.Clear();
 
+            Character controlledCharacter = Character.Controlled;
+            if (controlledCharacter == null) { return; }
+
             GUIFrame talentFrameBackground = new GUIFrame(new RectTransform(Vector2.One, infoFrame.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
             int padding = GUI.IntScale(15);
             GUIFrame talentFrameContent = new GUIFrame(new RectTransform(new Point(talentFrameBackground.Rect.Width - padding, talentFrameBackground.Rect.Height - padding), infoFrame.RectTransform, Anchor.Center), style: null);
-
-            Character controlledCharacter = Character.Controlled;
 
             if (controlledCharacter.Info == null)
             {

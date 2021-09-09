@@ -1,12 +1,11 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Networking;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -17,11 +16,17 @@ namespace Barotrauma
         // Anything that uses this field I wasn't sure if actually needed the proper campaign settings to be passed down
         public static CampaignSettings Unsure = Empty;
         public bool RadiationEnabled { get; set; }
-        public int MaxMissionCount { get; set; }
+
         public int AddedMissionCount { get; set; }
 
         public int TotalMaxMissionCount => MaxMissionCount + AddedMissionCount;
 
+        private int maxMissionCount;
+        public int MaxMissionCount
+        {
+            get { return maxMissionCount; }
+            set { maxMissionCount = MathHelper.Clamp(value, MinMissionCountLimit, MaxMissionCountLimit); }
+        }
 
         public const int DefaultMaxMissionCount = 2;
         public const int MaxMissionCountLimit = 10;
@@ -29,16 +34,18 @@ namespace Barotrauma
 
         public CampaignSettings(IReadMessage inc)
         {
+            maxMissionCount = DefaultMaxMissionCount;
             RadiationEnabled = inc.ReadBoolean();
-            MaxMissionCount = inc.ReadInt32();
             AddedMissionCount = inc.ReadInt32();
+            MaxMissionCount = inc.ReadInt32();
         }
 
         public CampaignSettings(XElement element)
         {
+            maxMissionCount = DefaultMaxMissionCount;
             RadiationEnabled = element.GetAttributeBool(nameof(RadiationEnabled).ToLowerInvariant(), true);
-            MaxMissionCount = element.GetAttributeInt(nameof(MaxMissionCount).ToLowerInvariant(), DefaultMaxMissionCount);
             AddedMissionCount = element.GetAttributeInt(nameof(AddedMissionCount).ToLowerInvariant(), 0);
+            MaxMissionCount = element.GetAttributeInt(nameof(MaxMissionCount).ToLowerInvariant(), DefaultMaxMissionCount);
         }
 
         public void Serialize(IWriteMessage msg)

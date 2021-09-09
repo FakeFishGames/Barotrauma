@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,8 @@ namespace Barotrauma
         public readonly WayPoint Waypoint;
         public readonly Vector2 Position;
         public readonly int WayPointID;
+
+        public bool blocked;
 
         public override string ToString()
         {
@@ -86,21 +89,19 @@ namespace Barotrauma
         public GetNodePenaltyHandler GetNodePenalty;
 
         private readonly List<PathNode> nodes;
-        public readonly bool IndoorsSteering;
+        private readonly bool isCharacter;
 
         public bool InsideSubmarine { get; set; }
         public bool ApplyPenaltyToOutsideNodes { get; set; }
 
-        public PathFinder(List<WayPoint> wayPoints, bool indoorsSteering = false)
+        public PathFinder(List<WayPoint> wayPoints, bool isCharacter)
         {
-            nodes = PathNode.GenerateNodes(wayPoints.FindAll(w => w.Submarine != null == indoorsSteering), removeOrphans: true);
-
+            nodes = PathNode.GenerateNodes(wayPoints.FindAll(w => (w.Submarine != null == isCharacter) || (isCharacter && w.Tunnel != null)), removeOrphans: true);
             foreach (WayPoint wp in wayPoints)
             {
                 wp.OnLinksChanged += WaypointLinksChanged;
             }
-
-            IndoorsSteering = indoorsSteering;
+            this.isCharacter = isCharacter;
         }
 
         void WaypointLinksChanged(WayPoint wp)
@@ -145,6 +146,8 @@ namespace Barotrauma
 
         public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true)
         {
+            UpdateBlockedNodes();
+
             //sort nodes roughly according to distance
             sortedNodes.Clear();
             foreach (PathNode node in nodes)
@@ -152,7 +155,9 @@ namespace Barotrauma
                 node.TempPosition = node.Position;
                 if (hostSub != null)
                 {
-                    Vector2 diff = hostSub.SimPosition - node.Waypoint.Submarine.SimPosition;
+                    Vector2 diff = node.Waypoint.Submarine != null ?
+                        hostSub.SimPosition - node.Waypoint.Submarine.SimPosition :
+                        hostSub.SimPosition - node.Waypoint.SimPosition;
                     node.TempPosition -= diff;
                 }
                 float xDiff = Math.Abs(start.X - node.TempPosition.X);
@@ -174,29 +179,34 @@ namespace Barotrauma
                 sortedNodes.Insert(i, node);
             }
 
+            bool IsWaypointVisible(PathNode node, Vector2 rayStart, bool checkVisibility = true)
+            {
+                //if searching for a path inside the sub, make sure the waypoint is visible
+                if (checkVisibility && isCharacter)
+                {
+                    if (node.Waypoint.isObstructed) { return false; }
+                    var body = Submarine.PickBody(rayStart, node.TempPosition,
+                        collisionCategory: Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs);
+                    if (body != null)
+                    {
+                        if (body.UserData is Structure s && !s.IsPlatform) { return false; }
+                        if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { return false; }
+                    }
+                }
+                return true;
+            }
+
             //find the most suitable start node, starting from the ones that are the closest
             PathNode startNode = null;
             foreach (PathNode node in sortedNodes)
             {
                 if (startNode == null || node.TempDistance < startNode.TempDistance)
                 {
+                    if (node.blocked) { continue; }
                     if (nodeFilter != null && !nodeFilter(node)) { continue; }
                     if (startNodeFilter != null && !startNodeFilter(node)) { continue; }
-                    //if searching for a path inside the sub, make sure the waypoint is visible
-                    if (IndoorsSteering)
-                    {
-                        if (node.Waypoint.isObstructed) { continue; }
-
-                        // Always check the visibility for the start node
-                        var body = Submarine.PickBody(
-                            start, node.TempPosition, null,
-                            Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs);
-                        if (body != null)
-                        {
-                            if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) { continue; }
-                            if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { continue; }
-                        }
-                    }
+                    // Always check the visibility for the start node
+                    if (!IsWaypointVisible(node, start)) { continue; }
                     startNode = node;
                 }
             }
@@ -241,24 +251,11 @@ namespace Barotrauma
             {
                 if (endNode == null || node.TempDistance < endNode.TempDistance)
                 {
+                    if (node.blocked) { continue; }
                     if (nodeFilter != null && !nodeFilter(node)) { continue; }
                     if (endNodeFilter != null && !endNodeFilter(node)) { continue; }
-                    if (IndoorsSteering)
-                    {
-                        if (node.Waypoint.isObstructed) { continue; }
-                        //if searching for a path inside the sub, make sure the waypoint is visible
-                        if (checkVisibility)
-                        {
-                            // Only check the visibility for the end node when allowed (fix leaks)
-                            var body = Submarine.PickBody(end, node.TempPosition, null,
-                                Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs);
-                            if (body != null)
-                            {
-                                if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) { continue; }
-                                if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { continue; }
-                            }
-                        }
-                    }
+                    // Only check the visibility for the end node when allowed (fix leaks)
+                    if (!IsWaypointVisible(node, end, checkVisibility: checkVisibility)) { continue; }
                     endNode = node;
                 }
             }
@@ -330,7 +327,8 @@ namespace Barotrauma
                 foreach (PathNode node in nodes)
                 {
                     if (node.state != 1) { continue; }
-                    if (IndoorsSteering && node.Waypoint.isObstructed) { continue; }
+                    if (isCharacter && node.Waypoint.isObstructed) { continue; }
+                    if (node.blocked) { continue; }
                     if (filter != null && !filter(node)) { continue; }
                     if (node.F < dist)
                     {
@@ -437,6 +435,25 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(finalPath.Count == path.Nodes.Count);
 
             return path;
+        }
+
+        private void UpdateBlockedNodes()
+        {
+            if (!isCharacter) { return; }
+            foreach (var n in nodes)
+            {
+                n.blocked = false;
+                if (n.Waypoint.Submarine != null) { continue; }
+                if (n.Waypoint.Tunnel?.Type != Level.TunnelType.Cave) { continue; }
+                foreach (var w in Level.Loaded.ExtraWalls)
+                {
+                    if (!(w is DestructibleLevelWall d)) { continue; }
+                    if (d.Destroyed) { continue; }
+                    if (!d.IsPointInside(n.Waypoint.Position)) { continue; }
+                    n.blocked = true;
+                    break;
+                }
+            }
         }
     }
 }

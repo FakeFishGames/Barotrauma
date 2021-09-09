@@ -1316,6 +1316,15 @@ namespace Barotrauma
                     {
                         selectedSlot = null;
                     }
+                    var parentItem = (selectedSlot?.ParentInventory?.Owner as Item) ?? selectedSlot?.Item;
+                    if ((parentItem?.GetRootInventoryOwner() is Character ownerCharacter) &&
+                        ownerCharacter == Character.Controlled &&
+                        CharacterHealth.OpenHealthWindow?.Character != ownerCharacter &&
+                        ownerCharacter.Inventory.IsInLimbSlot(parentItem, InvSlotType.HealthInterface))
+                    {
+                        highlightedSubInventorySlots.RemoveWhere(s => s.Item == parentItem);
+                        selectedSlot = null;
+                    }
                 }
             }
         }
@@ -1394,7 +1403,7 @@ namespace Barotrauma
                     float scale = Math.Min(Math.Min(iconSize / sprite.size.X, iconSize / sprite.size.Y), 1.5f);
                     Vector2 itemPos = PlayerInput.MousePosition;
 
-                    bool mouseOnHealthInterface = CharacterHealth.OpenHealthWindow != null && CharacterHealth.OpenHealthWindow.MouseOnElement;
+                    bool mouseOnHealthInterface = CharacterHealth.OpenHealthWindow != null && CharacterHealth.OpenHealthWindow.MouseOnElement && DraggingItems.Any(it => it.UseInHealthInterface);
 
                     if ((GUI.MouseOn == null || mouseOnHealthInterface) && selectedSlot == null)
                     {
@@ -1453,7 +1462,8 @@ namespace Barotrauma
             }
 
             Color slotColor = Color.White;
-            if (inventory?.Owner is Item i && !i.IsPlayerTeamInteractable) { slotColor = Color.Gray; }
+            Item parentItem = inventory?.Owner as Item;
+            if (parentItem != null && !parentItem.IsPlayerTeamInteractable) { slotColor = Color.Gray; }
             var itemContainer = item?.GetComponent<ItemContainer>();
             if (itemContainer != null && (itemContainer.InventoryTopSprite != null || itemContainer.InventoryBottomSprite != null))
             {
@@ -1576,6 +1586,14 @@ namespace Barotrauma
                             pulsate: !usingDefaultSprite && containedState >= 0.0f && containedState < 0.25f && inventory == Character.Controlled?.Inventory && Character.Controlled.HasEquippedItem(item));
                     }
                 }
+                else
+                {
+                    var slotIcon = parentItem?.GetComponent<ItemContainer>()?.GetSlotIcon(slotIndex);
+                    if (slotIcon != null)
+                    {
+                        slotIcon.Draw(spriteBatch, rect.Center.ToVector2(), GUI.Style.EquipmentSlotIconColor, scale: Math.Min(rect.Width / slotIcon.size.X, rect.Height / slotIcon.size.Y) * 0.8f);
+                    }
+                }
             }
 
             if (GameMain.DebugDraw)
@@ -1609,7 +1627,7 @@ namespace Barotrauma
 
                 Color spriteColor = sprite == item.Sprite ? item.GetSpriteColor() : item.GetInventoryIconColor();
                 if (inventory != null && (inventory.Locked || inventory.slots[slotIndex].Items.All(it => it.NonInteractable || it.NonPlayerTeamInteractable))) { spriteColor *= 0.5f; }
-                if (CharacterHealth.OpenHealthWindow != null && !item.UseInHealthInterface)
+                if (CharacterHealth.OpenHealthWindow != null && !item.UseInHealthInterface && !item.AllowedSlots.Contains(InvSlotType.HealthInterface) && item.GetComponent<GeneticMaterial>() == null)
                 {
                     spriteColor = Color.Lerp(spriteColor, Color.TransparentBlack, 0.5f);
                 }

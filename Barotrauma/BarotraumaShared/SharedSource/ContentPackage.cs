@@ -420,7 +420,9 @@ namespace Barotrauma
                     default:
                         try
                         {
-                            XDocument.Load(file.Path);
+                            using FileStream stream = File.Open(file.Path, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                            using var reader = XMLExtensions.CreateReader(stream);
+                            XDocument.Load(reader);
                         }
                         catch (Exception e)
                         {

@@ -101,6 +101,7 @@ namespace Barotrauma
             DormantThreshold = element.GetAttributeFloat("dormantthreshold", MaxStrength * 0.5f);
             ActiveThreshold = element.GetAttributeFloat("activethreshold", MaxStrength * 0.75f);
             TransitionThreshold = element.GetAttributeFloat("transitionthreshold", MaxStrength);
+            TransformThresholdOnDeath = element.GetAttributeFloat("transformthresholdondeath", ActiveThreshold);
         }
 
         // Use any of these to define which limb the appendage is attached to.
@@ -110,6 +111,7 @@ namespace Barotrauma
         public readonly LimbType AttachLimbType;
 
         public float ActiveThreshold, DormantThreshold, TransitionThreshold;
+        public float TransformThresholdOnDeath;
 
         public readonly string HuskedSpeciesName;
         public readonly string[] TargetSpecies;
@@ -181,6 +183,12 @@ namespace Barotrauma
 
             [Serialize(0.0f, false)]
             public float ScreenEffectFluctuationFrequency { get; private set; }
+
+            [Serialize(1.0f, false)]
+            public float MinAfflictionOverlayAlphaMultiplier { get; private set; }
+
+            [Serialize(1.0f, false)]
+            public float MaxAfflictionOverlayAlphaMultiplier { get; private set; }
 
             [Serialize(1.0f, false)]
             public float MinBuffMultiplier { get; private set; }
@@ -357,6 +365,9 @@ namespace Barotrauma
 
         public readonly Sprite Icon;
         public readonly Color[] IconColors;
+
+        public readonly Sprite AfflictionOverlay;
+        public readonly bool AfflictionOverlayAlphaIsLinear;
 
         private readonly List<Effect> effects = new List<Effect>();
         private readonly List<PeriodicEffect> periodicEffects = new List<PeriodicEffect>();
@@ -645,6 +656,7 @@ namespace Barotrauma
             SelfCauseOfDeathDescription = TextManager.Get("AfflictionCauseOfDeathSelf." + translationId, true) ?? element.GetAttributeString("selfcauseofdeathdescription", "");
 
             IconColors = element.GetAttributeColorArray("iconcolors", null);
+            AfflictionOverlayAlphaIsLinear = element.GetAttributeBool("afflictionoverlayalphaislinear", false);
             AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
 
             foreach (XElement subElement in element.Elements())
@@ -653,6 +665,9 @@ namespace Barotrauma
                 {
                     case "icon":
                         Icon = new Sprite(subElement);
+                        break;
+                    case "afflictionoverlay":
+                        AfflictionOverlay = new Sprite(subElement);
                         break;
                 }
             }

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Collision;
 using FarseerPhysics.Dynamics;
@@ -158,10 +159,14 @@ namespace Barotrauma.Items.Components
             if (currentChargeTime < MaxChargeTime) { return false; }
 
             IsActive = true;
-            ReloadTimer = reload / (1 + character.GetStatValue(StatTypes.RangedAttackSpeed));
+            ReloadTimer = reload / (1 + character?.GetStatValue(StatTypes.RangedAttackSpeed) ?? 0f);
             currentChargeTime = 0f;
 
-            character.CheckTalents(AbilityEffectType.OnUseRangedWeapon, item);
+            if (character != null)
+            {
+                var abilityItem = new AbilityItem(item);
+                character.CheckTalents(AbilityEffectType.OnUseRangedWeapon, abilityItem);
+            }
 
             if (item.AiTarget != null)
             {

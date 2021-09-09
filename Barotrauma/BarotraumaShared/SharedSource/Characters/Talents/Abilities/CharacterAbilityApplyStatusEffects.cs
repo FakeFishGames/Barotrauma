@@ -34,32 +34,33 @@ namespace Barotrauma.Abilities
                 {
                     targets.Clear();
                     targets.AddRange(statusEffect.GetNearbyTargets(targetCharacter.WorldPosition, targets));
+                    statusEffect.SetUser(Character);
                     statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, targetCharacter, targets);
                 }
-                else if (statusEffect.HasTargetType(StatusEffect.TargetType.This))
+                else if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+                {
+                    statusEffect.SetUser(Character);
+                    statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, Character, targetCharacter);
+                }
+                else
                 {
                     statusEffect.SetUser(Character);
                     statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, Character, Character);
                 }
-                else
-                {
-                    statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, Character, targetCharacter);
-                }
             }
         }
-        
         protected override void ApplyEffect()
         {
             ApplyEffectSpecific(Character);
         }
 
-        protected override void ApplyEffect(object abilityData)
+        protected override void ApplyEffect(AbilityObject abilityObject)
         {
             if (applyToSelected && Character.SelectedCharacter is Character selectedCharacter)
             {
                 ApplyEffectSpecific(selectedCharacter);
             }
-            else if ((abilityData as Character ?? (abilityData as IAbilityCharacter)?.Character) is Character targetCharacter)
+            else if ((abilityObject as IAbilityCharacter)?.Character is Character targetCharacter)
             {
                 ApplyEffectSpecific(targetCharacter);
             }

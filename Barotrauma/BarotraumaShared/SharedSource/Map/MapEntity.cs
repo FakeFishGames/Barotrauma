@@ -415,14 +415,13 @@ namespace Barotrauma
             //connect clone wires to the clone items and refresh links between doors and gaps
             for (int i = 0; i < clones.Count; i++)
             {
-                var cloneItem = clones[i] as Item;
-                if (cloneItem == null) { continue; }
+                if (!(clones[i] is Item cloneItem)) { continue; }
 
                 var door = cloneItem.GetComponent<Door>();
                 door?.RefreshLinkedGap();
 
                 var cloneWire = cloneItem.GetComponent<Wire>();
-                if (cloneWire == null) continue;
+                if (cloneWire == null) { continue; }
 
                 var originalWire = ((Item)entitiesToClone[i]).GetComponent<Wire>();
 
@@ -430,10 +429,23 @@ namespace Barotrauma
 
                 for (int n = 0; n < 2; n++)
                 {
-                    if (originalWire.Connections[n] == null) { continue; }
+                    if (originalWire.Connections[n] == null)
+                    {
+                        var disconnectedFrom = entitiesToClone.Find(e => e is Item item && (item.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(originalWire) ?? false));
+                        if (disconnectedFrom == null) { continue; }
+
+                        int disconnectedFromIndex = entitiesToClone.IndexOf(disconnectedFrom);
+                        var disconnectedFromClone = (clones[disconnectedFromIndex] as Item)?.GetComponent<ConnectionPanel>();
+                        if (disconnectedFromClone == null) { continue; }
+
+                        disconnectedFromClone.DisconnectedWires.Add(cloneWire);
+                        if (cloneWire.Item.body != null) { cloneWire.Item.body.Enabled = false; }
+                        cloneWire.IsActive = false;
+                        continue; 
+                    }
 
                     var connectedItem = originalWire.Connections[n].Item;
-                    if (connectedItem == null) continue;
+                    if (connectedItem == null) { continue; }
 
                     //index of the item the wire is connected to
                     int itemIndex = entitiesToClone.IndexOf(connectedItem);

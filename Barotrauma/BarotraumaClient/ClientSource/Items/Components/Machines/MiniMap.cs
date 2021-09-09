@@ -12,24 +12,24 @@ namespace Barotrauma.Items.Components
 {
     internal readonly struct MiniMapGUIComponent
     {
-        public readonly GUIComponent Component;
+        public readonly GUIComponent RectComponent;
         public readonly GUIComponent BorderComponent;
 
-        public MiniMapGUIComponent(GUIComponent component)
+        public MiniMapGUIComponent(GUIComponent rectComponent)
         {
-            Component = component;
-            BorderComponent = component;
+            RectComponent = rectComponent;
+            BorderComponent = rectComponent;
         }
 
         public MiniMapGUIComponent(GUIComponent frame, GUIComponent linkedHullComponent)
         {
-            Component = frame;
+            RectComponent = frame;
             BorderComponent = linkedHullComponent;
         }
 
         public void Deconstruct(out GUIComponent component, out GUIComponent borderComponent)
         {
-            component = Component;
+            component = RectComponent;
             borderComponent = BorderComponent;
         }
     }
@@ -183,6 +183,7 @@ namespace Barotrauma.Items.Components
         private ImmutableDictionary<MapEntity, MiniMapGUIComponent> hullStatusComponents;
         private ImmutableDictionary<MapEntity, MiniMapGUIComponent> electricalMapComponents;
         private ImmutableDictionary<MiniMapGUIComponent, GUIComponent> electricalChildren;
+        private ImmutableDictionary<MiniMapGUIComponent, GUIComponent> doorChildren;
 
         private ImmutableHashSet<ItemPrefab> itemsFoundOnSub;
 
@@ -190,7 +191,7 @@ namespace Barotrauma.Items.Components
         private float blipState;
         private const float maxBlipState = 1f;
 
-        private const float maxZoom = 2f,
+        private const float maxZoom = 10f,
                             minZoom = 0.5f,
                             defaultZoom = 1f;
 
@@ -209,13 +210,15 @@ namespace Barotrauma.Items.Components
 
         private bool recalculate;
 
-        public static readonly Color MiniMapBaseColor = Color.DarkCyan;
+        public static readonly Color MiniMapBaseColor = new Color(15, 178, 107);
 
-        private static readonly Color WetHullColor = new Color(9, 80, 159),
+        private static readonly Color WetHullColor = new Color(11, 122, 205),
+                                      DoorIndicatorColor = GUI.Style.Green,
+                                      NoPowerDoorColor = DoorIndicatorColor * 0.1f,
                                       DefaultNeutralColor = MiniMapBaseColor * 0.8f,
                                       HoverColor = Color.White,
-                                      BlueprintBlue = new Color(48, 87, 255),
-                                      HullWaterColor = new Color(85, 136, 147),
+                                      BlueprintBlue = new Color(23, 38, 33),
+                                      HullWaterColor = new Color(17, 173, 179),
                                       HullWaterLineColor = Color.LightBlue,
                                       NoPowerColor = MiniMapBaseColor * 0.1f,
                                       ElectricalBaseColor = GUI.Style.Orange,
@@ -323,7 +326,7 @@ namespace Barotrauma.Items.Components
                 CanBeFocused = false
             };
 
-            SetTooltipPosition(searchAutoComplete, searchBar);
+            SetAutoCompletePosition(searchAutoComplete, searchBar);
 
             GUIListBox listBox = new GUIListBox(new RectTransform(Vector2.One, searchAutoComplete.RectTransform))
             {
@@ -403,16 +406,17 @@ namespace Barotrauma.Items.Components
             scissorComponent = new GUIScissorComponent(new RectTransform(Vector2.One, submarineContainer.RectTransform, Anchor.Center));
             miniMapContainer = new GUIFrame(new RectTransform(Vector2.One, scissorComponent.Content.RectTransform, Anchor.Center), style: null) { CanBeFocused = false };
 
-            miniMapFrame = CreateMiniMap(item.Submarine, submarineContainer, MiniMapSettings.Default, null, out hullStatusComponents);
+            ImmutableHashSet<Item> hullPointsOfInterest = Item.ItemList.Where(it => it.Submarine == item.Submarine && !it.HiddenInGame && !it.NonInteractable && it.Prefab.ShowInStatusMonitor && it.GetComponent<Door>() != null).ToImmutableHashSet();
+            miniMapFrame = CreateMiniMap(item.Submarine, submarineContainer, MiniMapSettings.Default, hullPointsOfInterest, out hullStatusComponents);
 
-            IEnumerable<Item> pointsOfInterest = Item.ItemList.Where(it => it.Submarine == item.Submarine && !it.HiddenInGame && !it.NonInteractable && it.GetComponent<Repairable>() != null);
-            electricalFrame = CreateMiniMap(item.Submarine, miniMapContainer, new MiniMapSettings(createHullElements: false), pointsOfInterest, out electricalMapComponents);
+            IEnumerable<Item> electrialPointsOfInterest = Item.ItemList.Where(it => it.Submarine == item.Submarine && !it.HiddenInGame && !it.NonInteractable && it.GetComponent<Repairable>() != null);
+            electricalFrame = CreateMiniMap(item.Submarine, miniMapContainer, new MiniMapSettings(createHullElements: false), electrialPointsOfInterest, out electricalMapComponents);
 
             Dictionary<MiniMapGUIComponent, GUIComponent> electricChildren = new Dictionary<MiniMapGUIComponent, GUIComponent>();
 
             foreach (var (entity, component) in electricalMapComponents)
             {
-                GUIComponent parent = component.Component;
+                GUIComponent parent = component.RectComponent;
                 if (!(entity is Item it )) { continue; }
                 Sprite? sprite = it.Prefab.UpgradePreviewSprite;
                 if (sprite is null) { continue; }
@@ -429,6 +433,31 @@ namespace Barotrauma.Items.Components
             }
 
             electricalChildren = electricChildren.ToImmutableDictionary();
+
+            Dictionary<MiniMapGUIComponent, GUIComponent> doorChilds = new Dictionary<MiniMapGUIComponent, GUIComponent>();
+
+            foreach (var (entity, component) in hullStatusComponents)
+            {
+                if (!hullPointsOfInterest.Contains(entity)) { continue; }
+
+                const int minSize = 8;
+                const int borderMaxSize = 2;
+
+                Point size = component.BorderComponent.Rect.Size;
+
+                size.X = Math.Max(size.X, minSize);
+                size.Y = Math.Max(size.Y, minSize);
+                float width = Math.Min(borderMaxSize, Math.Min(size.X, size.Y) / 8f);
+
+                GUIFrame frame = new GUIFrame(new RectTransform(size, component.RectComponent.RectTransform, anchor: Anchor.Center), style: "ScanLines", color: DoorIndicatorColor)
+                {
+                    OutlineColor = GUI.Style.Green,
+                    OutlineThickness = width
+                };
+                doorChilds.Add(component, frame);
+            }
+
+            doorChildren = doorChilds.ToImmutableDictionary();
 
             Rectangle parentRect = miniMapFrame.Rect;
 
@@ -466,7 +495,6 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-
             if (currentMode != MiniMapMode.HullStatus && Math.Abs(PlayerInput.ScrollWheelSpeed) > 0 && (GUI.MouseOn == scissorComponent || scissorComponent.IsParentOf(GUI.MouseOn)))
             {
                 float newZoom = Math.Clamp(Zoom + PlayerInput.ScrollWheelSpeed / 1000.0f * Zoom, minZoom, maxZoom);
@@ -501,10 +529,10 @@ namespace Barotrauma.Items.Components
                 miniMapContainer.RectTransform.AbsoluteOffset = mapOffset.ToPoint();
                 recalculate = false;
 
-                var (maxWidth, maxHeight) = miniMapContainer.Rect.Size.ToVector2() / 2f / Zoom;
-
-                mapOffset.X = Math.Clamp(mapOffset.X, -maxWidth, maxWidth);
-                mapOffset.Y = Math.Clamp(mapOffset.Y, -maxHeight, maxHeight);
+                // var (maxWidth, maxHeight) = miniMapContainer.Rect.Size.ToVector2() / 2f;
+                //
+                // mapOffset.X = Math.Clamp(mapOffset.X, -maxWidth, maxWidth);
+                // mapOffset.Y = Math.Clamp(mapOffset.Y, -maxHeight, maxHeight);
             }
 
             // is there a better way to do this?
@@ -610,7 +638,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (!(entity is Hull hull)) { continue; }
                     if (!hullDatas.TryGetValue(hull, out HullData? hullData) || hullData is null) { continue; }
-                    DrawHullCards(spriteBatch, hull, hullData, component.Component);
+                    DrawHullCards(spriteBatch, hull, hullData, component.RectComponent);
                 }
 
                 spriteBatch.End();
@@ -645,7 +673,7 @@ namespace Barotrauma.Items.Components
             MiniMapBlips = null;
             searchedPrefab = null;
             searchAutoComplete.Visible = true;
-            SetTooltipPosition(searchAutoComplete, box);
+            SetAutoCompletePosition(searchAutoComplete, box);
 
             GUIListBox listBox = searchAutoComplete.GetChild<GUIListBox>();
             if (listBox is null) { return false; }
@@ -677,7 +705,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private void SetTooltipPosition(GUIComponent tooltip, GUITextBox box)
+        private void SetAutoCompletePosition(GUIComponent tooltip, GUITextBox box)
         {
             int height = GuiFrame.Rect.Height / 2;
             tooltip.RectTransform.NonScaledSize = new Point(box.Rect.Width, height);
@@ -707,7 +735,6 @@ namespace Barotrauma.Items.Components
         {
             if (searchedPrefab is null)
             {
-                Console.WriteLine("Bruh");
                 ItemPrefab? first = ItemPrefab.Prefabs.FirstOrDefault(p => p.Name.ToLower().Equals(text.ToLower()));
 
                 if (first is null)
@@ -790,12 +817,39 @@ namespace Barotrauma.Items.Components
 
         private void UpdateHullStatus()
         {
+            bool canHoverOverHull = true;
+
+            foreach (var (entity, component) in hullStatusComponents)
+            {
+                // we are only interested in non-hull components
+                if (entity is Hull) { continue; }
+
+                GUIComponent rectComponent = component.RectComponent;
+
+                if (doorChildren.TryGetValue(component, out GUIComponent? child) && child != null)
+                {
+                    if (item.Submarine == null || !hasPower)
+                    {
+                        child.Color = child.OutlineColor = NoPowerDoorColor;
+                    }
+
+                    if (Voltage < MinVoltage) { continue; }
+
+                    child.Color = child.OutlineColor = DoorIndicatorColor;
+                    if (GUI.MouseOn == child)
+                    {
+                        SetTooltip(rectComponent.Rect.Center, entity.Name, string.Empty, string.Empty, string.Empty);
+                        canHoverOverHull = false;
+                        child.Color = child.OutlineColor = HoverColor;
+                    }
+                }
+            }
+
             foreach (var (entity, (component, borderComponent)) in hullStatusComponents)
             {
                 if (item.Submarine == null || !hasPower)
                 {
-                    component.Color = NoPowerColor;
-                    borderComponent.OutlineColor = NoPowerColor;
+                    component.Color = borderComponent.OutlineColor = NoPowerColor;
                 }
 
                 if (Voltage < MinVoltage) { continue; }
@@ -848,7 +902,7 @@ namespace Barotrauma.Items.Components
                     borderColor = Color.Lerp(neutralColor, GUI.Style.Red, Math.Min(gapOpenSum, 1.0f));
                 }
 
-                bool isHoveringOver = GUI.MouseOn == component;
+                bool isHoveringOver = canHoverOverHull && GUI.MouseOn == component;
 
                 // When drawing tooltip we are only interested in the component we are hovering over
                 if (isHoveringOver)
@@ -888,7 +942,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (!hullStatusComponents.ContainsKey(linkedHull)) { continue; }
 
-                    isHoveringOver |= hullStatusComponents[linkedHull].Component == GUI.MouseOn;
+                    isHoveringOver |= canHoverOverHull && hullStatusComponents[linkedHull].RectComponent == GUI.MouseOn;
                     if (isHoveringOver) { break; }
                 }
 
@@ -919,7 +973,7 @@ namespace Barotrauma.Items.Components
                     component.Color = component.OutlineColor = NoPowerElectricalColor;
                 }
 
-                if (Voltage < MinVoltage || !miniMapGuiComponent.Component.Visible) { continue; }
+                if (Voltage < MinVoltage || !miniMapGuiComponent.RectComponent.Visible) { continue; }
 
                 int durability = (int)(it.Condition / it.MaxCondition * 100f);
                 Color color = ToolBox.GradientLerp(durability / 100f, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green, GUI.Style.Green);
@@ -956,9 +1010,6 @@ namespace Barotrauma.Items.Components
         {
             if (item.Submarine != null)
             {
-                Rectangle parentRect = container.Rect;
-                if (miniMapFrame is { } miniMap) { parentRect = miniMap.Rect; }
-
                 DrawSubmarine(spriteBatch);
             }
 
@@ -995,7 +1046,7 @@ namespace Barotrauma.Items.Components
 
                     if (hullData.Distort) { continue; }
 
-                    GUIComponent hullFrame = component.Component;
+                    GUIComponent hullFrame = component.RectComponent;
 
                     if (hullsVisible && hullData.HullWaterAmount is { } waterAmount)
                     {
@@ -1197,10 +1248,12 @@ namespace Barotrauma.Items.Components
             const float padding = 8f;
             float totalWidth = 0f;
 
+            float parentWidth = submarineContainer.Rect.Width / 24f;
+
             int i = 0;
             foreach (MiniMapSprite info in cardsToDraw)
             {
-                float spriteSize = info.Sprite.size.X * (frame.Rect.Height / info.Sprite.size.Y) + padding;
+                float spriteSize = info.Sprite.size.X * (parentWidth / info.Sprite.size.X) + padding;
                 if (totalWidth + spriteSize > frame.Rect.Width) { break; }
 
                 totalWidth += spriteSize;
@@ -1213,10 +1266,11 @@ namespace Barotrauma.Items.Components
 
             float offset = 0;
             int amount = 0;
+
             foreach (MiniMapSprite info in cardsToDraw)
             {
                 Sprite sprite = info.Sprite;
-                float scale = frame.Rect.Height / sprite.size.Y;
+                float scale = parentWidth / sprite.size.X;
                 float spriteSize = sprite.size.X * scale;
                 float posX = adjustedCenterX + offset;
 
@@ -1243,7 +1297,7 @@ namespace Barotrauma.Items.Components
                 float halfSize = spriteSize / 2f;
                 if (i > 0) { offset += halfSize; }
                 Vector2 pos = new Vector2(adjustedCenterX + offset, centerY);
-                sprite.Draw(spriteBatch, pos, info.Color, scale: scale, origin: sprite.size / 2f);
+                sprite.Draw(spriteBatch, pos, info.Color * 0.8f, scale: scale, origin: sprite.size / 2f);
                 offset += halfSize + padding;
                 amount++;
             }

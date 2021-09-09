@@ -176,6 +176,21 @@ namespace Barotrauma
                 (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength)) * GetScreenEffectFluctuation(currentEffect);
         }
 
+        public float GetAfflictionOverlayMultiplier()
+        {
+            //If the overlay's alpha progresses linearly, then don't worry about affliction effects.
+            if (Prefab.AfflictionOverlayAlphaIsLinear) { return (Strength / Prefab.MaxStrength); }
+            if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
+            if (currentEffect == null) { return 0.0f; }
+            if (currentEffect.MaxAfflictionOverlayAlphaMultiplier - currentEffect.MinAfflictionOverlayAlphaMultiplier < 0.0f) { return 0.0f; }
+
+            return MathHelper.Lerp(
+                currentEffect.MinAfflictionOverlayAlphaMultiplier,
+                currentEffect.MaxAfflictionOverlayAlphaMultiplier,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
         public float GetScreenBlurStrength()
         {
             if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
@@ -344,6 +359,8 @@ namespace Barotrauma
         private readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
         public void ApplyStatusEffect(ActionType type, StatusEffect statusEffect, float deltaTime, CharacterHealth characterHealth, Limb targetLimb)
         {
+            if (type == ActionType.OnDamaged && !statusEffect.HasRequiredAfflictions(characterHealth.Character.LastDamage)) { return; }
+
             statusEffect.SetUser(Source);
             if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
             {

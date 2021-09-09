@@ -6,15 +6,15 @@ namespace Barotrauma.Abilities
     {
         public AbilityConditionEvasiveManeuvers(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) { }
 
-        protected override bool MatchesConditionSpecific(object abilityData)
+        protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
-            if (abilityData is Submarine submarine)
+            if ((abilityObject as IAbilitySubmarine)?.Submarine is Submarine submarine && (abilityObject as IAbilityCharacter)?.Character is Character attackingCharacter)
             {
-                return submarine.TeamID == character.TeamID && character.Submarine == submarine;
+                return submarine.TeamID == character.TeamID && character.Submarine == submarine && attackingCharacter.TeamID != character.TeamID;
             }
             else
             {
-                LogAbilityConditionError(abilityData, typeof(Submarine));
+                LogAbilityConditionError(abilityObject, typeof(IAbilitySubmarine));
                 return false;
             }
         }

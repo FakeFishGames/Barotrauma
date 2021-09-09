@@ -116,7 +116,11 @@ namespace Barotrauma.Items.Components
 #if SERVER
                 item.CreateServerEvent(this);
 #endif      
-            }            
+            }
+            foreach (Item containedItem in item.ContainedItems)
+            {
+                containedItem.GetComponent<GeneticMaterial>()?.Equip(character);
+            }
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -124,12 +128,16 @@ namespace Barotrauma.Items.Components
             base.Update(deltaTime, cam);
             if (targetCharacter != null)
             {
+                var rootContainer = item.GetRootContainer();
                 if (!targetCharacter.HasEquippedItem(item) && 
-                    (item.Container == null || !targetCharacter.HasEquippedItem(item.Container) || !(item.Container.GetComponent<ItemContainer>()?.AutoInject ?? false)))
+                    (rootContainer == null || !targetCharacter.HasEquippedItem(rootContainer) || !targetCharacter.Inventory.IsInLimbSlot(rootContainer, InvSlotType.HealthInterface)))
                 {
                     item.ApplyStatusEffects(ActionType.OnSevered, 1.0f, targetCharacter);
-                    var currentEffect = tainted ? selectedTaintedEffect : selectedEffect;
-                    targetCharacter.CharacterHealth.ReduceAffliction(null, currentEffect.Identifier, currentEffect.MaxStrength);
+                    targetCharacter.CharacterHealth.ReduceAffliction(null, selectedEffect.Identifier, selectedEffect.MaxStrength);
+                    if (tainted)
+                    {
+                        targetCharacter.CharacterHealth.ReduceAffliction(null, selectedTaintedEffect.Identifier, selectedTaintedEffect.MaxStrength);
+                    }
                     targetCharacter = null;
                     IsActive = false;
                 }

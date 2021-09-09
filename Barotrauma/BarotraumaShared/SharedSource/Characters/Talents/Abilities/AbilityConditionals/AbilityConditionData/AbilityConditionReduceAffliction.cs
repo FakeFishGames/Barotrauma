@@ -13,19 +13,19 @@ namespace Barotrauma.Abilities
             identifier = conditionElement.GetAttributeString("identifier", "");
         }
 
-        protected override bool MatchesConditionSpecific(object abilityData)
+        protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
-            if (abilityData is IAbilityAffliction abilityAffliction)
+            if ((abilityObject as IAbilityAffliction)?.Affliction is Affliction affliction)
             {
-                if (allowedTypes.Find(c => c == abilityAffliction.Affliction.Prefab.AfflictionType) == null) { return false; }
+                if (allowedTypes.Find(c => c == affliction.Prefab.AfflictionType) == null) { return false; }
 
-                if (!string.IsNullOrEmpty(identifier) && abilityAffliction.Affliction.Prefab.Identifier != identifier) { return false; }
+                if (!string.IsNullOrEmpty(identifier) && affliction.Prefab.Identifier != identifier) { return false; }
 
                 return true;
             }
             else
             {
-                LogAbilityConditionError(abilityData, typeof(IAbilityAffliction));
+                LogAbilityConditionError(abilityObject, typeof(IAbilityAffliction));
                 return false;
             }
         }

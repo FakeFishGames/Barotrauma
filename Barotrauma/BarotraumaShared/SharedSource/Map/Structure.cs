@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Abilities;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 #endif
@@ -437,8 +438,8 @@ namespace Barotrauma
             {
                 aiTarget = new AITarget(this)
                 {
-                    MinSightRange = 2000,
-                    MaxSightRange = 5000,
+                    MinSightRange = 1000,
+                    MaxSightRange = 4000,
                     MaxSoundRange = 0
                 };
             }
@@ -956,11 +957,12 @@ namespace Barotrauma
             }
 #endif
 
-            if (Submarine != null && damageAmount > 0)
+            if (Submarine != null && damageAmount > 0 && attacker != null)
             {
+                var abilityAttackerSubmarine = new AbilityCharacterSubmarine(attacker, Submarine);
                 foreach (Character character in Character.CharacterList)
                 {
-                    character.CheckTalents(AbilityEffectType.AfterSubmarineAttacked, Submarine);
+                    character.CheckTalents(AbilityEffectType.AfterSubmarineAttacked, abilityAttackerSubmarine);
                 }
             }
 
@@ -1462,7 +1464,7 @@ namespace Barotrauma
         {
             if (aiTarget != null)
             {
-                aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;
+                aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : MathHelper.Lerp(aiTarget.MinSightRange, aiTarget.MaxSightRange, Submarine.Velocity.Length() / 10);
             }
         }
     }

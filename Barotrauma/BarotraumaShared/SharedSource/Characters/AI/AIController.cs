@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -95,14 +96,26 @@ namespace Barotrauma
             }
         }
 
-        protected bool HasValidPath(bool requireNonDirty = false) => 
-            steeringManager is IndoorsSteeringManager pathSteering && pathSteering.CurrentPath != null && !pathSteering.CurrentPath.Finished && !pathSteering.CurrentPath.Unreachable && (!requireNonDirty || !pathSteering.IsPathDirty);
+        public bool HasValidPath(bool requireNonDirty = false, bool requireUnfinished = true) => 
+            steeringManager is IndoorsSteeringManager pathSteering &&
+            pathSteering.CurrentPath != null &&
+            (!requireUnfinished || !pathSteering.CurrentPath.Finished) &&
+            !pathSteering.CurrentPath.Unreachable &&
+            (!requireNonDirty || !pathSteering.IsPathDirty);
+
+        protected readonly float colliderWidth;
+        protected readonly float colliderLength;
+        protected readonly float avoidLookAheadDistance;
 
         public AIController (Character c)
         {
             Character = c;
             hullVisibilityTimer = Rand.Range(0f, hullVisibilityTimer);
             Enabled = true;
+            var size = Character.AnimController.Collider.GetSize();
+            colliderWidth = size.X;
+            colliderLength = size.Y;
+            avoidLookAheadDistance = Math.Max(Math.Max(colliderWidth, colliderLength) * 3, 1.5f);
         }
 
         public virtual void OnAttacked(Character attacker, AttackResult attackResult) { }
@@ -326,6 +339,119 @@ namespace Barotrauma
             }
             unequippedItems.Clear();
         }
+
+        #region Escape
+        public abstract void Escape(float deltaTime);
+
+        public Gap EscapeTarget { get; private set; }
+
+        private readonly float escapeTargetSeekInterval = 2;
+        private float escapeTimer;
+        protected bool allGapsSearched;
+        protected readonly HashSet<Gap> unreachableGaps = new HashSet<Gap>();
+        protected bool UpdateEscape(float deltaTime, bool canAttackDoors)
+        {
+            IndoorsSteeringManager pathSteering = SteeringManager as IndoorsSteeringManager;
+            if (allGapsSearched)
+            {
+                escapeTimer -= deltaTime;
+                if (escapeTimer <= 0)
+                {
+                    allGapsSearched = false;
+                }
+            }
+            if (Character.CurrentHull != null && pathSteering != null)
+            {
+                // Seek exit if inside
+                if (!allGapsSearched)
+                {
+                    float closestDistance = 0;
+                    foreach (Gap gap in Gap.GapList)
+                    {
+                        if (gap == null || gap.Removed) { continue; }
+                        if (EscapeTarget == gap) { continue; }
+                        if (unreachableGaps.Contains(gap)) { continue; }
+                        if (gap.Submarine != Character.Submarine) { continue; }
+                        if (gap.IsRoomToRoom) { continue; }
+                        float multiplier = 1;
+                        var door = gap.ConnectedDoor;
+                        if (door != null)
+                        {
+                            if (!door.CanBeTraversed)
+                            {
+                                if (!door.HasAccess(Character))
+                                {
+                                    if (!canAttackDoors) { continue; }
+                                    // Treat doors that don't have access to like they were farther, because it will take time to break them.
+                                    multiplier = 5;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (gap.Open < 1) { continue; }
+                            bool canGetThrough = ConvertUnits.ToDisplayUnits(colliderWidth) < gap.Size;
+                            if (!canGetThrough) { continue; }
+                        }
+                        if (gap.FlowTargetHull == Character.CurrentHull)
+                        {
+                            // If the gap is in the same room, it's close enough.
+                            EscapeTarget = gap;
+                            break;
+                        }
+                        float distance = Vector2.DistanceSquared(Character.WorldPosition, gap.WorldPosition) * multiplier;
+                        if (EscapeTarget == null || distance < closestDistance)
+                        {
+                            EscapeTarget = gap;
+                            closestDistance = distance;
+                        }
+                    }
+                    allGapsSearched = true;
+                    escapeTimer = escapeTargetSeekInterval;
+                }
+                else if (EscapeTarget != null && EscapeTarget.FlowTargetHull != Character.CurrentHull)
+                {
+                    if (pathSteering.CurrentPath != null && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
+                    {
+                        unreachableGaps.Add(EscapeTarget);
+                        EscapeTarget = null;
+                        allGapsSearched = false;
+                    }
+                }
+            }
+            if (EscapeTarget != null)
+            {
+                SteeringManager.SteeringSeek(EscapeTarget.SimPosition, 10);
+                float sqrDist = Vector2.DistanceSquared(Character.SimPosition, EscapeTarget.SimPosition);
+                if (sqrDist < 0.5f || Character.CurrentHull == null || HasValidPath(requireNonDirty: true, requireUnfinished: false) && pathSteering.CurrentPath.Finished)
+                {
+                    // Very close to the target, outside, or at the end of the path -> just steer towards it manually without using the path
+                    SteeringManager.Reset();
+                    SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(EscapeTarget.WorldPosition - Character.WorldPosition));
+                    if (sqrDist < 4)
+                    {
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                // Can't find the target
+                EscapeTarget = null;
+                allGapsSearched = false;
+                unreachableGaps.Clear();
+            }
+            return false;
+        }
+
+        public void ResetEscape()
+        {
+            EscapeTarget = null;
+            allGapsSearched = false;
+            unreachableGaps.Clear();
+        }
+
+        #endregion
 
         protected virtual void OnStateChanged(AIState from, AIState to) { }
         protected virtual void OnTargetChanged(AITarget previousTarget, AITarget newTarget) { }

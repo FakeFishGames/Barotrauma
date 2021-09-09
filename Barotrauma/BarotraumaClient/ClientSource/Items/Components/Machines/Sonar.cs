@@ -446,13 +446,8 @@ namespace Barotrauma.Items.Components
                     zoomSlider.BarScroll += PlayerInput.ScrollWheelSpeed / 1000.0f;
                     zoomSlider.OnMoved(zoomSlider, zoomSlider.BarScroll);
                 }
-
-                if (PlayerInput.KeyHit(InputType.Run))
-                {
-                    SonarModeSwitch.OnClicked(SonarModeSwitch, null);
-                }
             }
-
+            
             float distort = 1.0f - item.Condition / item.MaxCondition;
             for (int i = sonarBlips.Count - 1; i >= 0; i--)
             {
@@ -1634,7 +1629,7 @@ namespace Barotrauma.Items.Components
 
             void CalculateDistance()
             {
-                pathFinder ??= new PathFinder(WayPoint.WayPointList, indoorsSteering: false);
+                pathFinder ??= new PathFinder(WayPoint.WayPointList, false);
                 var path = pathFinder.FindPath(ConvertUnits.ToSimUnits(transducerPosition), ConvertUnits.ToSimUnits(worldPosition));
                 if (!path.Unreachable)
                 {

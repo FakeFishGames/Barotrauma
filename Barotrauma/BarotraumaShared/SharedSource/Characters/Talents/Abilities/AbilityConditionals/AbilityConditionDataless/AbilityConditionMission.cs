@@ -22,15 +22,15 @@ namespace Barotrauma.Abilities
             }
         }
 
-        protected override bool MatchesConditionSpecific(object abilityData)
+        protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
-            if (abilityData is IAbilityMission abilityMission)
+            if ((abilityObject as IAbilityMission)?.Mission is Mission mission)
             {
-                return abilityMission.Mission.Prefab.Type == missionType;
+                return mission.Prefab.Type == missionType;
             }
             else
             {
-                LogAbilityConditionError(abilityData, typeof(IAbilityMission));
+                LogAbilityConditionError(abilityObject, typeof(IAbilityMission));
                 return false;
             }
         }

@@ -5,8 +5,8 @@ using System.Linq;
 namespace Barotrauma
 {
     public class GUIFrame : GUIComponent
-    {      
-        public int OutlineThickness { get; set; }
+    {
+        public float OutlineThickness { get; set; }
 
         public GUIFrame(RectTransform rectT, string style = "", Color? color = null) : base(style, rectT)
         {

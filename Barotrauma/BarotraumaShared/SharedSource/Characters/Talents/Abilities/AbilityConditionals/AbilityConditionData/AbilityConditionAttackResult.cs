@@ -15,9 +15,9 @@ namespace Barotrauma.Abilities
             afflictions = conditionElement.GetAttributeStringArray("afflictions", new string[0], convertToLowerInvariant: true);
         }
 
-        protected override bool MatchesConditionSpecific(object abilityData)
+        protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
-            if (abilityData is AttackResult attackResult)
+            if ((abilityObject as IAbilityAttackResult)?.AttackResult is AttackResult attackResult)
             {
                 if (!IsViableTarget(targetTypes, attackResult.HitLimb?.character)) { return false; }
 
@@ -30,7 +30,7 @@ namespace Barotrauma.Abilities
             }
             else
             {
-                LogAbilityConditionError(abilityData, typeof(AbilityAttackData));
+                LogAbilityConditionError(abilityObject, typeof(IAbilityAttackResult));
                 return false;
             }
         }

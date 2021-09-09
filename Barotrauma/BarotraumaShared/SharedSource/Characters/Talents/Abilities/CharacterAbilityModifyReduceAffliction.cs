@@ -12,15 +12,15 @@ namespace Barotrauma.Abilities
             addedAmountMultiplier = abilityElement.GetAttributeFloat("addedamountmultiplier", 0f);
         }
 
-        protected override void ApplyEffect(object abilityData)
+        protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if (abilityData is (Affliction affliction, float reduceAmount))
+            if (abilityObject is AbilityValueAffliction afflictionReduceAmount)
             {
-                affliction.Strength -= addedAmountMultiplier * reduceAmount;
+                afflictionReduceAmount.Affliction.Strength -= addedAmountMultiplier * afflictionReduceAmount.Value;
             }
             else
             {
-                LogAbilityDataMismatch();
+                LogabilityObjectMismatch();
             }
         }
     }

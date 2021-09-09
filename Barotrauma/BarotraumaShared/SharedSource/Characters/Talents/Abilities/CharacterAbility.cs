@@ -65,15 +65,15 @@ namespace Barotrauma.Abilities
             DebugConsole.ThrowError($"Ability {this} does not have an implementation for VerifyState! This ability does not work in interval ability groups.");
         }
 
-        public void ApplyAbilityEffect(object abilityData)
+        public void ApplyAbilityEffect(AbilityObject abilityObject)
         {
-            if (abilityData is null)
+            if (abilityObject is null)
             {
                 ApplyEffect();
             } 
             else
             {
-                ApplyEffect(abilityData);
+                ApplyEffect(abilityObject);
             }
         }
 
@@ -82,12 +82,12 @@ namespace Barotrauma.Abilities
             DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not have a definition for ApplyEffect");
         }
 
-        protected virtual void ApplyEffect(object abilityData)
+        protected virtual void ApplyEffect(AbilityObject abilityObject)
         {
             DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not take a parameter for ApplyEffect");
         }
 
-        protected void LogAbilityDataMismatch()
+        protected void LogabilityObjectMismatch()
         {
             DebugConsole.ThrowError($"Incompatible ability! Ability {this} is incompatitible with this type of ability effect type.");
         }

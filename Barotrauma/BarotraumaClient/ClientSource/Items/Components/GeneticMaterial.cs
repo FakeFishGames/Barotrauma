@@ -31,10 +31,22 @@ namespace Barotrauma.Items.Components
                 name = TextManager.GetWithVariable("entityname.taintedgeneticmaterial", "[geneticmaterialname]", name);
             }
 
-            if (TextManager.ContainsTag("entitydescription."+Item.prefab.Identifier))
+            if (TextManager.ContainsTag("entitydescription." + Item.prefab.Identifier))
             {
-                int value = (int)MathHelper.Lerp(TooltipValueMin, TooltipValueMax, item.ConditionPercentage / 100.0f);                
+                int value = (int)MathHelper.Lerp(TooltipValueMin, TooltipValueMax, item.ConditionPercentage / 100.0f);
                 description = TextManager.GetWithVariable("entitydescription." + Item.prefab.Identifier, "[value]", value.ToString());
+            }
+            foreach (Item containedItem in item.ContainedItems)
+            {
+                var containedGeneticMaterial = containedItem.GetComponent<GeneticMaterial>();
+                if (containedGeneticMaterial == null) { continue; }
+                string _ = string.Empty;
+                string containedDescription = containedItem.Description;
+                containedGeneticMaterial.AddTooltipInfo(ref _, ref containedDescription);
+                if (!string.IsNullOrEmpty(containedDescription))
+                {
+                    description += '\n' + containedDescription;
+                }
             }
         }
 

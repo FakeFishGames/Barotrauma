@@ -21,9 +21,9 @@ namespace Barotrauma.Abilities
             ApplyEffectSpecific(Character);
         }
 
-        protected override void ApplyEffect(object abilityData)
+        protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if (abilityData is Character character)
+            if ((abilityObject as IAbilityCharacter)?.Character is Character character)
             {
                 ApplyEffectSpecific(character);
             }

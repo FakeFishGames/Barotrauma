@@ -1130,7 +1130,7 @@ namespace Barotrauma
                 {
                     nonHuskedSpeciesName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, matchingAffliction);
                 }
-                if (ragdollParams == null)
+                if (ragdollParams == null && prefab.VariantOf == null)
                 {
                     string name = Params.UseHuskAppendage ? nonHuskedSpeciesName : speciesName;
                     ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(name) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(name) as RagdollParams;
@@ -3078,30 +3078,47 @@ namespace Barotrauma
             //set the character order only if the character is close enough to hear the message
             if (!force && orderGiver != null && !CanHearCharacter(orderGiver)) { return; }
 
-            if (order.OrderGiver != orderGiver)
+            if (order != null && order.OrderGiver != orderGiver)
             {
                 order.OrderGiver = orderGiver;
             }
 
-            // If there's another character operating the same device, make them dismiss themself
-            if (order != null && order.Category == OrderCategory.Operate && order.TargetEntity != null)
+            switch (order?.Category)
             {
-                foreach (var character in CharacterList)
-                {
-                    if (character == this) { continue; }
-                    if (character.TeamID != TeamID) { continue; }
-                    if (!(character.AIController is HumanAIController)) { continue; }
-                    if (!HumanAIController.IsActive(character)) { continue; }
-                    foreach (var currentOrder in character.CurrentOrders)
+                case OrderCategory.Operate when order?.TargetEntity != null:
+                    // If there's another character operating the same device, make them dismiss themself
+                    foreach (var character in CharacterList)
+                    {
+                        if (character == this) { continue; }
+                        if (character.TeamID != TeamID) { continue; }
+                        if (!(character.AIController is HumanAIController)) { continue; }
+                        if (!HumanAIController.IsActive(character)) { continue; }
+                        foreach (var currentOrder in character.CurrentOrders)
+                        {
+                            if (currentOrder.Order == null) { continue; }
+                            if (currentOrder.Order.Category != OrderCategory.Operate) { continue; }
+                            if (currentOrder.Order.Identifier != order.Identifier) { continue; }
+                            if (currentOrder.Order.TargetEntity != order.TargetEntity) { continue; }
+                            character.SetOrder(Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(currentOrder), currentOrder.ManualPriority, character, speak: speak, force: force);
+                            break;
+                        }
+                    }
+                    break;
+                case OrderCategory.Movement:
+                    // If there character has another movement order, dismiss that order
+                    OrderInfo? orderToReplace = null;
+                    foreach (var currentOrder in CurrentOrders)
                     {
                         if (currentOrder.Order == null) { continue; }
-                        if (currentOrder.Order.Category != OrderCategory.Operate) { continue; }
-                        if (currentOrder.Order.Identifier != order.Identifier) { continue; }
-                        if (currentOrder.Order.TargetEntity != order.TargetEntity) { continue; }
-                        character.SetOrder(Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(currentOrder), currentOrder.ManualPriority, character, speak: speak, force: force);
+                        if (currentOrder.Order.Category != OrderCategory.Movement) { continue; }
+                        orderToReplace = currentOrder;
                         break;
                     }
-                }
+                    if (orderToReplace.HasValue)
+                    {
+                        SetOrder(Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(orderToReplace.Value), orderToReplace.Value.ManualPriority, this, speak: speak, force: force);
+                    }
+                    break;
             }
 
             // Prevent adding duplicate orders
@@ -3112,7 +3129,8 @@ namespace Barotrauma
 
             if (orderGiver != null)
             {
-                orderGiver.CheckTalents(AbilityEffectType.OnGiveOrder, this);
+                var abilityOrderedCharacter = new AbilityCharacter(this);
+                orderGiver.CheckTalents(AbilityEffectType.OnGiveOrder, abilityOrderedCharacter);
             }
 
             if (AIController is HumanAIController humanAI)
@@ -3504,11 +3522,12 @@ namespace Barotrauma
 
         public void RecordKill(Character target)
         {
+            var abilityCharacter = new AbilityCharacter(target);
             foreach (Character attackerCrewmember in GetFriendlyCrew(this))
             {
-                attackerCrewmember.CheckTalents(AbilityEffectType.OnCrewKillCharacter, target);
+                attackerCrewmember.CheckTalents(AbilityEffectType.OnCrewKillCharacter, abilityCharacter);
             }
-            CheckTalents(AbilityEffectType.OnKillCharacter, target);
+            CheckTalents(AbilityEffectType.OnKillCharacter, abilityCharacter);
 
             if (!IsOnPlayerTeam) { return; }
             if (GameMain.Config.KilledCreatures.Any(name => name.Equals(target.SpeciesName, StringComparison.OrdinalIgnoreCase))) { return; }
@@ -3604,8 +3623,11 @@ namespace Barotrauma
                 ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
                 hitLimb.ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
             }
-
-            attacker?.CheckTalents(AbilityEffectType.OnAttackResult, attackResult);
+            if (attacker != null)
+            {
+                var abilityAttackResult = new AbilityAttackResult(attackResult);
+                attacker.CheckTalents(AbilityEffectType.OnAttackResult, abilityAttackResult);
+            }
 
             return attackResult;
         }
@@ -3828,7 +3850,8 @@ namespace Barotrauma
                 causeOfDeathAffliction?.Source ?? LastAttacker, LastDamageSource);
             OnDeath?.Invoke(this, CauseOfDeath);
 
-            CheckTalents(AbilityEffectType.OnDieToCharacter, CauseOfDeath.Killer);
+            var abilityKiller = new AbilityCharacter(CauseOfDeath.Killer);
+            CheckTalents(AbilityEffectType.OnDieToCharacter, abilityKiller);
 
             if (GameMain.GameSession != null && Screen.Selected == GameMain.GameScreen)
             {
@@ -4347,11 +4370,16 @@ namespace Barotrauma
             return CharacterList.Where(c => HumanAIController.IsFriendly(character, c, onlySameTeam: true) && !c.IsDead);
         }
 
-        public void CheckTalents(AbilityEffectType abilityEffectType, object abilityData)
+        public bool HasTalents()
+        {
+            return characterTalents.Any();
+        }
+
+        public void CheckTalents(AbilityEffectType abilityEffectType, AbilityObject abilityObject)
         {
             foreach (var characterTalent in characterTalents)
             {
-                characterTalent.CheckTalent(abilityEffectType, abilityData);
+                characterTalent.CheckTalent(abilityEffectType, abilityObject);
             }
         }
 
@@ -4359,7 +4387,7 @@ namespace Barotrauma
         {
             foreach (var characterTalent in characterTalents)
             {
-                characterTalent.CheckTalent(abilityEffectType, (object)null);
+                characterTalent.CheckTalent(abilityEffectType, null);
             }
         }
 
@@ -4421,7 +4449,8 @@ namespace Barotrauma
             //replace by updating the character wearable stat values when equipping or unequipping wearables
             for (int i = 0; i < Inventory.Capacity; i++)
             {
-                if (Inventory.SlotTypes[i] != InvSlotType.Any && Inventory.GetItemAt(i)?.GetComponent<Wearable>() is Wearable wearable)
+                if (Inventory.SlotTypes[i] != InvSlotType.Any && Inventory.SlotTypes[i] != InvSlotType.LeftHand && Inventory.SlotTypes[i] != InvSlotType.RightHand 
+                    && Inventory.GetItemAt(i)?.GetComponent<Wearable>() is Wearable wearable)
                 {
                     if (wearable.WearableStatValues.TryGetValue(statType, out float wearableValue))
                     {

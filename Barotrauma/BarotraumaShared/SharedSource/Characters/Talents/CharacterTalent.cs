@@ -60,13 +60,13 @@ namespace Barotrauma
             }
         }
 
-        public void CheckTalent(AbilityEffectType abilityEffectType, object abilityData)
+        public void CheckTalent(AbilityEffectType abilityEffectType, AbilityObject abilityObject)
         {
             if (characterAbilityGroupEffectDictionary.TryGetValue(abilityEffectType, out var characterAbilityGroups))
             {
                 foreach (var characterAbilityGroup in characterAbilityGroups)
                 {
-                    characterAbilityGroup.CheckAbilityGroup(abilityData);
+                    characterAbilityGroup.CheckAbilityGroup(abilityObject);
                 }
             }
         }

@@ -258,6 +258,8 @@ namespace Barotrauma
             get { return capacity; }
         }
 
+        public bool AllowSwappingContainedItems = true;
+
         public Inventory(Entity owner, int capacity, int slotsPerRow = 5)
         {
             this.capacity = capacity;
@@ -623,6 +625,8 @@ namespace Barotrauma
         protected bool TrySwapping(int index, Item item, Character user, bool createNetworkEvent, bool swapWholeStack)
         {
             if (item?.ParentInventory == null || !slots[index].Any()) { return false; }
+            if (slots[index].Items.Any(it => !it.IsInteractable(user))) { return false; }
+            if (!AllowSwappingContainedItems) { return false; }
 
             //swap to InvSlotType.Any if possible
             Inventory otherInventory = item.ParentInventory;

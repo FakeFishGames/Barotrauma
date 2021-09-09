@@ -422,6 +422,8 @@ namespace Barotrauma
                     }
                 }
             }
+
+            healthWindowVerticalLayout.Recalculate();
         }
 
         private void OnAttacked(Character attacker, AttackResult attackResult)
@@ -948,6 +950,16 @@ namespace Barotrauma
                 Math.Abs(uiScale - GUI.Scale) > 0.01f)
             {
                 UpdateAlignment();
+            }
+
+            foreach (Affliction affliction in afflictions)
+            {
+                if (affliction.Prefab.AfflictionOverlay != null)
+                {
+                    Sprite ScreenAfflictionOverlay = affliction.Prefab.AfflictionOverlay;
+                    ScreenAfflictionOverlay?.Draw(spriteBatch, Vector2.Zero, Color.White * (affliction.GetAfflictionOverlayMultiplier()), Vector2.Zero, 0.0f,
+                        new Vector2(GameMain.GraphicsWidth / DamageOverlay.size.X, GameMain.GraphicsHeight / DamageOverlay.size.Y));
+                }
             }
 
             float damageOverlayAlpha = DamageOverlayTimer;

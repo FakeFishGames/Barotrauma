@@ -106,7 +106,7 @@ namespace Barotrauma.Items.Components
 
             currFlow = flowPercentage / 100.0f * maxFlow * powerFactor;
 
-            if (item.GetComponent<Repairable>()?.IsTinkering ?? false)
+            if (item.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering)
             {
                 currFlow *= 2.5f;
             }

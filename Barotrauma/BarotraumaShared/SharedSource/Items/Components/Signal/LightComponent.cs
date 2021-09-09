@@ -233,6 +233,8 @@ namespace Barotrauma.Items.Components
             }
             UpdateOnActiveEffects(deltaTime);
 
+            if (powerIn == null && powerConsumption > 0.0f) { Voltage -= deltaTime; }
+
 #if CLIENT
             Light.ParentSub = item.Submarine;
 #endif
@@ -293,8 +295,6 @@ namespace Barotrauma.Items.Components
             }
 
             SetLightSourceState(true, lightBrightness);
-
-            if (powerIn == null && powerConsumption > 0.0f) { Voltage -= deltaTime; }
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)

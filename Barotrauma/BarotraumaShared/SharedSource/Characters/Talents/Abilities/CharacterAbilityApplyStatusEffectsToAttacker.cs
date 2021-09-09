@@ -9,9 +9,9 @@ namespace Barotrauma.Abilities
         {
         }
 
-        protected override void ApplyEffect(object abilityData)
+        protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if ((abilityData as AbilityAttackData)?.Attacker is Character attacker)
+            if ((abilityObject as AbilityAttackData)?.Attacker is Character attacker)
             {
                 ApplyEffectSpecific(attacker);
             }

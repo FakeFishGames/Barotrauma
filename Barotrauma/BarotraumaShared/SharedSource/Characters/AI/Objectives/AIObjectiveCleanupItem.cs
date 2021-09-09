@@ -83,12 +83,13 @@ namespace Barotrauma
                 if (suitableContainer != null)
                 {
                     bool equip = item.GetComponent<Holdable>() != null ||
-                            item.AllowedSlots.None(s =>
-                            s == InvSlotType.Card ||
-                            s == InvSlotType.Head ||
-                            s == InvSlotType.Headset ||
-                            s == InvSlotType.InnerClothes ||
-                            s == InvSlotType.OuterClothes);
+                        item.AllowedSlots.Any(s => s != InvSlotType.Any) &&
+                        item.AllowedSlots.None(s =>
+                        s == InvSlotType.Card ||
+                        s == InvSlotType.Head ||
+                        s == InvSlotType.Headset ||
+                        s == InvSlotType.InnerClothes ||
+                        s == InvSlotType.OuterClothes);
 
                     TryAddSubObjective(ref decontainObjective, () => new AIObjectiveDecontainItem(character, item, objectiveManager, targetContainer: suitableContainer.GetComponent<ItemContainer>())
                     {
