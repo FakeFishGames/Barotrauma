@@ -77,6 +77,7 @@ namespace Barotrauma
         private static BackgroundMusic previousDefaultMusic;
 
         private static float updateMusicTimer;
+        private static bool increaseUpdateMusictimer;
 
         //ambience
         private static Sound waterAmbienceIn, waterAmbienceOut, waterAmbienceMoving;
@@ -821,6 +822,7 @@ namespace Barotrauma
             updateMusicTimer -= deltaTime;
             if (updateMusicTimer <= 0.0f)
             {
+                increaseUpdateMusictimer = false;
                 //find appropriate music for the current situation
                 string currentMusicType = GetCurrentMusicType();
                 float currentIntensity = GameMain.GameSession?.EventManager != null ?
@@ -921,6 +923,10 @@ namespace Barotrauma
                 }
 
                 updateMusicTimer = UpdateMusicInterval;
+                if (increaseUpdateMusictimer)
+                {
+                    updateMusicTimer += 30.0f;
+                }
             }
 
             int activeTrackCount = targetMusic.Count(m => m != null);
@@ -1098,6 +1104,8 @@ namespace Barotrauma
             if (MonsterMusicCharacters.Any())
             {
                 Character chosencharacter = MonsterMusicCharacters.RandomElementByWeight(c => c.MusicWeight);
+                // Allow the music to play for some time instead of constantly changing if multiple monsters with similiar music weight and different music types are present.
+                increaseUpdateMusictimer = true;
                 return chosencharacter.MusicType;
             }
 
