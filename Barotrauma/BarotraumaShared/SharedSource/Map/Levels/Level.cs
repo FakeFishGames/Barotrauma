@@ -3366,6 +3366,11 @@ namespace Barotrauma
                 if ((mission.Prefab.RequiredWreckType) != null && (mission.Prefab.RequireWreck == true))
                 {
                     requiredwreckidentifiers.Add(mission.Prefab.RequiredWreckType);
+                    // Make sure that there's enough space to spawn multiple required specific wrecks
+                    if (requiredwreckidentifiers.Count < wreckCount)
+                    {
+                        wreckCount =+ 1;
+                    }
                 }
             }
 
