@@ -90,6 +90,7 @@ namespace Barotrauma
         public readonly bool IsSideObjective;
 
         public readonly bool RequireWreck;
+        public readonly string RequiredWreckType;
 
         /// <summary>
         /// The mission can only be received when travelling from Pair.First to Pair.Second
@@ -187,7 +188,8 @@ namespace Barotrauma
             AllowRetry  = element.GetAttributeBool("allowretry", false);
             IsSideObjective = element.GetAttributeBool("sideobjective", false);
             RequireWreck = element.GetAttributeBool("requirewreck", false);
-            Commonness  = element.GetAttributeInt("commonness", 1);
+            RequiredWreckType = element.GetAttributeString("requiredwrecktype", null);
+            Commonness = element.GetAttributeInt("commonness", 1);
             if (element.GetAttribute("difficulty") != null)
             {
                 int difficulty = element.GetAttributeInt("difficulty", MinDifficulty);

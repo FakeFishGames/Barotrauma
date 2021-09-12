@@ -131,7 +131,7 @@ namespace Barotrauma
                         case Level.PositionType.Wreck:
                             foreach (Item it in suitableItems)
                             {
-                                if (it.Submarine == null || it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
+                                if (it.Submarine == null || it.Submarine.Info.Type != SubmarineType.Wreck || ((Prefab.RequiredWreckType != null) && (it.Submarine.Info.DisplayName != Prefab.RequiredWreckType))) { continue; }
                                 Rectangle worldBorders = it.Submarine.Borders;
                                 worldBorders.Location += it.Submarine.WorldPosition.ToPoint();
                                 if (Submarine.RectContains(worldBorders, it.WorldPosition))
@@ -184,7 +184,7 @@ namespace Barotrauma
                                 if (it.ParentRuin == null) { continue; }
                                 break;
                             case Level.PositionType.Wreck:
-                                if (it.Submarine == null || it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
+                                if (it.Submarine == null || it.Submarine.Info.Type != SubmarineType.Wreck || ((Prefab.RequiredWreckType != null) && (it.Submarine.Info.DisplayName != Prefab.RequiredWreckType))) { continue; }
                                 break;
                         }
                         var itemContainer = it.GetComponent<ItemContainer>();

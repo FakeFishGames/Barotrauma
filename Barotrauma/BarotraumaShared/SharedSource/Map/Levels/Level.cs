@@ -3354,19 +3354,41 @@ namespace Barotrauma
             int minWreckCount = Math.Min(Loaded.GenerationParams.MinWreckCount, wreckFiles.Count);
             int maxWreckCount = Math.Min(Loaded.GenerationParams.MaxWreckCount, wreckFiles.Count);
             int wreckCount = Rand.Range(minWreckCount, maxWreckCount + 1, Rand.RandSync.Server);
+            List<string> requiredwreckidentifiers = new List<string>();
 
             if (GameMain.GameSession?.GameMode?.Missions.Any(m => m.Prefab.RequireWreck) ?? false)
             {
                 wreckCount = Math.Max(wreckCount, 1);
             }
 
+            foreach (Mission mission in GameMain.GameSession?.GameMode?.Missions)
+            {
+                if ((mission.Prefab.RequiredWreckType) != null && (mission.Prefab.RequireWreck == true))
+                {
+                    requiredwreckidentifiers.Add(mission.Prefab.RequiredWreckType);
+                }
+            }
+
             Wrecks = new List<Submarine>(wreckCount);
             for (int i = 0; i < wreckCount; i++)
             {
-                ContentFile contentFile = wreckFiles[i];
-                if (contentFile == null) { continue; }
-                string wreckName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path);
-                SpawnSubOnPath(wreckName, contentFile, SubmarineType.Wreck);
+                // No mission specific wrecks to spawn, pick a random one.
+                if (requiredwreckidentifiers.Count == 0)
+                {
+                    ContentFile contentFile = wreckFiles[i];
+                    if (contentFile == null) { continue; }
+                    string wreckName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path);
+                    SpawnSubOnPath(wreckName, contentFile, SubmarineType.Wreck);
+                }
+                else
+                {
+                    var chosenwreck = requiredwreckidentifiers.GetRandom();
+                    ContentFile contentFile = wreckFiles.FirstOrDefault(s => s.Path.EndsWith(chosenwreck+".sub"));
+                    requiredwreckidentifiers.Remove(chosenwreck);
+                    if (contentFile == null) { DebugConsole.ThrowError($"Could not find a wreck with the identifier “{chosenwreck}” in the selected content packages!"); continue; }
+                    string wreckName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path);
+                    SpawnSubOnPath(wreckName, contentFile, SubmarineType.Wreck);
+                }
             }
             totalSW.Stop();
             Debug.WriteLine($"{Wrecks.Count} wrecks created in { totalSW.ElapsedMilliseconds} (ms)");
