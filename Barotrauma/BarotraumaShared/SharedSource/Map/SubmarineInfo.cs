@@ -20,7 +20,9 @@ namespace Barotrauma
         [Description("Shuttle")]
         Shuttle = 1,
         [Description("Hide in menus")]
-        HideInMenus = 2
+        HideInMenus = 2,
+        [Description("Don't spawn wreck randomly")]
+        DontSpawnWreckRandomly = 3
     }
 
     public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation, EnemySubmarine }
@@ -102,6 +104,7 @@ namespace Barotrauma
 
         public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && SubmarineClass != SubmarineClass.Undefined;
         public bool IsCampaignCompatibleIgnoreClass => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus);
+        public bool SpawnWreckRandomly => !HasTag(SubmarineTag.DontSpawnWreckRandomly);
 
         public Md5Hash MD5Hash
         {

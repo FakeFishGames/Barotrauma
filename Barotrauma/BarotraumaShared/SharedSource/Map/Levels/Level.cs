@@ -3349,10 +3349,21 @@ namespace Barotrauma
                 DebugConsole.ThrowError("No wreck files found in the selected content packages!");
                 return;
             }
-            wreckFiles.Shuffle(Rand.RandSync.Server);
+            List<ContentFile> spawnableWrecks = new List<ContentFile>();
+            for (int i = 0; i < wreckFiles.Count; i++)
+            {
+                ContentFile contentFile = wreckFiles[i];
+                SubmarineInfo info = new SubmarineInfo(contentFile.Path);
+                if (info.SpawnWreckRandomly)
+                {
+                    spawnableWrecks.Add(contentFile);
+                }
+            }
+            wreckFiles.Shuffle(Rand.RandSync.Server); // All wrecked submarines
+            spawnableWrecks.Shuffle(Rand.RandSync.Server); // All wrecked submarines that can be spawned randomly through level generation
 
-            int minWreckCount = Math.Min(Loaded.GenerationParams.MinWreckCount, wreckFiles.Count);
-            int maxWreckCount = Math.Min(Loaded.GenerationParams.MaxWreckCount, wreckFiles.Count);
+            int minWreckCount = Math.Min(Loaded.GenerationParams.MinWreckCount, spawnableWrecks.Count);
+            int maxWreckCount = Math.Min(Loaded.GenerationParams.MaxWreckCount, spawnableWrecks.Count);
             int wreckCount = Rand.Range(minWreckCount, maxWreckCount + 1, Rand.RandSync.Server);
             List<string> requiredwreckidentifiers = new List<string>();
 
@@ -3367,9 +3378,9 @@ namespace Barotrauma
                 {
                     requiredwreckidentifiers.Add(mission.Prefab.RequiredWreckType);
                     // Make sure that there's enough space to spawn multiple required specific wrecks
-                    if (requiredwreckidentifiers.Count < wreckCount)
+                    if (requiredwreckidentifiers.Count > wreckCount)
                     {
-                        wreckCount =+ 1;
+                        wreckCount += 1;
                     }
                 }
             }
@@ -3380,14 +3391,14 @@ namespace Barotrauma
                 // No mission specific wrecks to spawn, pick a random one.
                 if (requiredwreckidentifiers.Count == 0)
                 {
-                    ContentFile contentFile = wreckFiles[i];
+                    ContentFile contentFile = spawnableWrecks[i];
                     if (contentFile == null) { continue; }
                     string wreckName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path);
                     SpawnSubOnPath(wreckName, contentFile, SubmarineType.Wreck);
                 }
                 else
                 {
-                    var chosenwreck = requiredwreckidentifiers.GetRandom();
+                    var chosenwreck = requiredwreckidentifiers.GetRandom(Rand.RandSync.Server);
                     ContentFile contentFile = wreckFiles.FirstOrDefault(s => s.Path.EndsWith(chosenwreck+".sub"));
                     requiredwreckidentifiers.Remove(chosenwreck);
                     if (contentFile == null) { DebugConsole.ThrowError($"Could not find a wreck with the identifier “{chosenwreck}” in the selected content packages!"); continue; }
