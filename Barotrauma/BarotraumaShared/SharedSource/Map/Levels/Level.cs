@@ -3372,8 +3372,9 @@ namespace Barotrauma
                 wreckCount = Math.Max(wreckCount, 1);
             }
 
-            foreach (Mission mission in GameMain.GameSession?.GameMode?.Missions)
+            for (int i = 0; i < GameMain.GameSession?.GameMode?.Missions.Count(); i++)
             {
+                Mission mission = GameMain.GameSession?.GameMode?.Missions.ToList()[i];
                 if ((mission.Prefab.RequiredWreckType) != null && (mission.Prefab.RequireWreck == true))
                 {
                     requiredwreckidentifiers.Add(mission.Prefab.RequiredWreckType);
