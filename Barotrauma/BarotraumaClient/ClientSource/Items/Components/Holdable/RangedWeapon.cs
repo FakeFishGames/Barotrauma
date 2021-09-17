@@ -8,6 +8,7 @@ using Barotrauma.IO;
 using System.Text;
 using System.Xml.Linq;
 using Barotrauma.Sounds;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -145,7 +146,9 @@ namespace Barotrauma.Items.Components
             if (character == null || !character.IsKeyDown(InputType.Aim)) { return; }
 
             //camera focused on some other item/device, don't draw the crosshair
-            if (character.ViewTarget != null && (character.ViewTarget is Item item) && item.Prefab.FocusOnSelected) { return; }
+            if (character.ViewTarget != null && (character.ViewTarget is Item viewTargetItem) && viewTargetItem.Prefab.FocusOnSelected) { return; }
+            //don't draw the crosshair if the item is in some other type of equip slot than hands (e.g. assault rifle in the bag slot)
+            if (!character.HeldItems.Contains(item)) { return; }
 
             GUI.HideCursor = (crosshairSprite != null || crosshairPointerSprite != null) &&
                 GUI.MouseOn == null && !Inventory.IsMouseOnInventory && !GameMain.Instance.Paused;

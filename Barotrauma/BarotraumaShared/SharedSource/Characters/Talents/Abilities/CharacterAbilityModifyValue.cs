@@ -4,8 +4,8 @@ namespace Barotrauma.Abilities
 {
     class CharacterAbilityModifyValue : CharacterAbility
     {
-        private float addedValue;
-        private float multiplyValue;
+        private readonly float addedValue;
+        private readonly float multiplyValue;
 
         public CharacterAbilityModifyValue(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {

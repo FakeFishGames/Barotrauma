@@ -1430,6 +1430,7 @@ namespace Barotrauma
 
             //throwing conscious/moving characters around takes more force -> double the flow force
             if (character.CanMove) { flowForce *= 2.0f; }
+            flowForce *= 1 - Math.Clamp(character.GetStatValue(StatTypes.FlowResistance), 0f, 1f);
 
             float flowForceMagnitude = flowForce.Length();
             float limbMultipier = limbs.Count(l => l.inWater) / (float)limbs.Length;

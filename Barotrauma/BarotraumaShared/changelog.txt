@@ -1,4 +1,33 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1500.3.0
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- More talents and talent-related items (all talent trees now functional and most of the talents implemented).
+
+Changes:
+- Ignore hidden afflictions when determining treatment suggestions to show in the health interface.
+- Visualize leaks on the status monitor's hull condition tab (unstable only).
+- Added "condition_out" output to outpost O2 generator (unstable only).
+
+Fixes:
+- Fixed crashing when reloading sprites or resetting to prefab in the sub editor.
+- Fixed ability to combine unidentified genetic materials with other genetic materials (unstable only).
+- Organ damage doesn't cause concussions (unstable only).
+- Fixed talent menu being accessible if you leave it open and switch to a game mode where it shouldn't be accessible (unstable only).
+- Fixed ability to contain items other than batteries in cargo scooter's battery slot (unstable only).
+- Damaging the mudraptor beak given by mudraptor genes damages the head instead of torso, added damage protection to the beak (unstable only).
+- Items that are set to be hidden in menus aren't shown in the status monitor's item finder (unstable only).
+- Fixed status monitor's item finder not showing wearable items (unstable only).
+- Fixed "in use by xxxx" warning being always visible when using a Reactor PDA (unstable only).
+- Fixed Reactor PDA rendering over the command interface (unstable only).
+- Fixed assault rifle crosshair being drawn when it's in the bag slot (unstable only).
+- Fixed equip buttons not being drawn on equipped items that can only be put to other equip slots, but not on the non-limb slots (e.g. assault rifle).
+
+Modding:
+- Option to make property conditionals target contained items using the attribute targetcontaineditem="true".
+
+---------------------------------------------------------------------------------------------------------
 v0.1500.2.0
 ---------------------------------------------------------------------------------------------------------
 

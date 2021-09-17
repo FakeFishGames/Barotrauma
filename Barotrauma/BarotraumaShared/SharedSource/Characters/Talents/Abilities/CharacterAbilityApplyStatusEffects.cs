@@ -10,6 +10,7 @@ namespace Barotrauma.Abilities
 
         protected readonly List<StatusEffect> statusEffects;
 
+        private readonly bool nearbyCharactersAppliesToSelf;
         private readonly bool applyToSelected;
 
         readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
@@ -18,6 +19,7 @@ namespace Barotrauma.Abilities
         {
             statusEffects = CharacterAbilityGroup.ParseStatusEffects(CharacterTalent, abilityElement.GetChildElement("statuseffects"));
             applyToSelected = abilityElement.GetAttributeBool("applytoselected", false);
+            nearbyCharactersAppliesToSelf = abilityElement.GetAttributeBool("nearbycharactersappliestoself", true);
         }
 
         protected void ApplyEffectSpecific(Character targetCharacter)
@@ -26,7 +28,7 @@ namespace Barotrauma.Abilities
             {
                 if (statusEffect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
-                    // currently used this to spawn items on the targeted character
+                    // currently used to spawn items on the targeted character
                     statusEffect.SetUser(targetCharacter);
                     statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, targetCharacter, targetCharacter);
                 }
@@ -34,6 +36,10 @@ namespace Barotrauma.Abilities
                 {
                     targets.Clear();
                     targets.AddRange(statusEffect.GetNearbyTargets(targetCharacter.WorldPosition, targets));
+                    if (!nearbyCharactersAppliesToSelf)
+                    {
+                        targets.RemoveAll(c => c == Character);
+                    }
                     statusEffect.SetUser(Character);
                     statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, targetCharacter, targets);
                 }

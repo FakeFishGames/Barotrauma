@@ -1068,7 +1068,7 @@ namespace Barotrauma
                 foreach (Character otherCharacter in Character.CharacterList)
                 {
                     if (otherCharacter != character &&
-                        otherCharacter.SelectedConstruction == character.SelectedConstruction)
+                        otherCharacter.SelectedConstruction == this)
                     {
                         ItemInUseWarning.Visible = true;
                         if (mergedHUDRect.Width > GameMain.GraphicsWidth / 2) { mergedHUDRect.Inflate(-GameMain.GraphicsWidth / 4, 0); }
@@ -1194,7 +1194,7 @@ namespace Barotrauma
                 }
             }
 
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != this)
+            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != this && GetComponent<RemoteController>() == null)
             { 
                 if (Character.Controlled.SelectedConstruction?.GetComponent<RemoteController>()?.TargetItem != this && 
                     !Character.Controlled.HeldItems.Any(it => it.GetComponent<RemoteController>()?.TargetItem == this))
@@ -1537,6 +1537,7 @@ namespace Barotrauma
             byte bodyType           = msg.ReadByte();
             bool spawnedInOutpost   = msg.ReadBoolean();
             bool allowStealing      = msg.ReadBoolean();
+            int quality             = msg.ReadRangedInteger(0, Items.Components.Quality.MaxQuality);
             byte teamID             = msg.ReadByte();
             bool tagsChanged        = msg.ReadBoolean();
             string tags = "";
@@ -1612,7 +1613,8 @@ namespace Barotrauma
                 item = new Item(itemPrefab, pos, sub, id: itemId)
                 {
                     SpawnedInOutpost = spawnedInOutpost,
-                    AllowStealing = allowStealing
+                    AllowStealing = allowStealing,
+                    Quality = quality
                 };
             }
             catch (Exception e)

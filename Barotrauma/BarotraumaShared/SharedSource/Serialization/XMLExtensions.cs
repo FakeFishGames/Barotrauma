@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
@@ -8,6 +9,7 @@ using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using File = Barotrauma.IO.File;
 using FileStream = Barotrauma.IO.FileStream;
+using Path = Barotrauma.IO.Path;
 
 namespace Barotrauma
 {
@@ -18,11 +20,12 @@ namespace Barotrauma
         public static readonly XmlReaderSettings ReaderSettings = new XmlReaderSettings
         {
             DtdProcessing = DtdProcessing.Prohibit,
-            XmlResolver = null
+            XmlResolver = null,
+            IgnoreWhitespace = true,
         };
-        
-        public static XmlReader CreateReader(System.IO.Stream stream)
-            => XmlReader.Create(stream, ReaderSettings);
+
+        public static XmlReader CreateReader(System.IO.Stream stream, string baseUri = "")
+            => XmlReader.Create(stream, ReaderSettings, baseUri);
         
         public static XDocument TryLoadXml(System.IO.Stream stream)
         {
@@ -52,8 +55,8 @@ namespace Barotrauma
             {
                 ToolBox.IsProperFilenameCase(filePath);
                 using FileStream stream = File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-                using XmlReader reader = CreateReader(stream);
-                doc = XDocument.Load(reader);
+                using XmlReader reader = CreateReader(stream, Path.GetFullPath(filePath));
+                doc = XDocument.Load(reader, LoadOptions.SetBaseUri);
             }
             catch (Exception e)
             {
@@ -79,7 +82,7 @@ namespace Barotrauma
                 try
                 {
                     using FileStream stream = File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-                    using XmlReader reader = CreateReader(stream);
+                    using XmlReader reader = CreateReader(stream, Path.GetFullPath(filePath));
                     doc = XDocument.Load(reader);
                 }
                 catch

@@ -316,12 +316,17 @@ namespace Barotrauma
 
                     string colorStr = XMLExtensions.ColorToString(!item.AllowStealing ? GUI.Style.Red : Color.White);
 
+                    if (item.Quality > 0)
+                    {
+                        name = TextManager.GetWithVariable("itemname.quality" + item.Quality, "[itemname]", name, fallBackTag: "itemname.quality3");
+                    }
                     toolTip = $"‖color:{colorStr}‖{name}‖color:end‖";
+
                     if (itemsInSlot.All(it => it.NonInteractable || it.NonPlayerTeamInteractable))
                     {
                         toolTip += " " + TextManager.Get("connectionlocked");
                     }
-                    if (!item.IsFullCondition && !item.Prefab.HideConditionBar)
+                    if (!item.IsFullCondition && !item.Prefab.HideConditionInTooltip)
                     {
                         string conditionColorStr = XMLExtensions.ColorToString(ToolBox.GradientLerp(item.Condition / item.MaxCondition, GUI.Style.ColorInventoryEmpty, GUI.Style.ColorInventoryHalf, GUI.Style.ColorInventoryFull));
                         toolTip += $"‖color:{conditionColorStr}‖ ({(int)item.ConditionPercentage} %)‖color:end‖";

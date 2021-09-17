@@ -37,7 +37,7 @@ namespace Barotrauma.Items.Components
 
         private FabricationRecipe pendingFabricatedItem;
 
-        private Pair<Rectangle, string> tooltip;
+        private (Rectangle area, string text)? tooltip;
 
         private GUITextBlock requiredTimeBlock;
 
@@ -270,7 +270,7 @@ namespace Barotrauma.Items.Components
             });
 
             var sufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform),
-                TextManager.Get("fabricatorsufficientskills", returnNull: true) ?? "Sufficient skills to fabricate", textColor: GUI.Style.Green, font: GUI.SubHeadingFont)
+                TextManager.Get("fabricatorsufficientskills"), textColor: GUI.Style.Green, font: GUI.SubHeadingFont)
             {
                 AutoScaleHorizontal = true,
                 CanBeFocused = false
@@ -278,7 +278,7 @@ namespace Barotrauma.Items.Components
             sufficientSkillsText.RectTransform.SetAsFirstChild();
 
             var insufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform),
-                TextManager.Get("fabricatorinsufficientskills", returnNull: true) ?? "Insufficient skills to fabricate", textColor: Color.Orange, font: GUI.SubHeadingFont)
+                TextManager.Get("fabricatorinsufficientskills"), textColor: Color.Orange, font: GUI.SubHeadingFont)
             {
                 AutoScaleHorizontal = true,
                 CanBeFocused = false
@@ -290,7 +290,7 @@ namespace Barotrauma.Items.Components
             }
 
             var requiresRecipeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform),
-                TextManager.Get("fabricatorrequiresrecipe", returnNull: true) ?? "Requires recipe to fabricate", textColor: Color.Red, font: GUI.SubHeadingFont)
+                TextManager.Get("fabricatorrequiresrecipe"), textColor: Color.Red, font: GUI.SubHeadingFont)
             {
                 AutoScaleHorizontal = true,
                 CanBeFocused = false
@@ -403,7 +403,7 @@ namespace Barotrauma.Items.Components
                         {
                             toolTipText += '\n' + requiredItem.ItemPrefabs.First().Description;
                         }
-                        tooltip = new Pair<Rectangle, string>(slotRect, toolTipText);
+                        tooltip = (slotRect, toolTipText);
                     }
 
                     slotIndex++;
@@ -443,7 +443,7 @@ namespace Barotrauma.Items.Components
             
             if (tooltip != null)
             {
-                GUIComponent.DrawToolTip(spriteBatch, tooltip.Second, tooltip.First);
+                GUIComponent.DrawToolTip(spriteBatch, tooltip.Value.text, tooltip.Value.area);
                 tooltip = null;
             }
         }
@@ -463,6 +463,22 @@ namespace Barotrauma.Items.Components
                 if (recipe?.DisplayName == null) { continue; }
                 child.Visible = recipe.DisplayName.ToLower().Contains(filter);
             }
+
+            //go through the elements backwards, and disable the labels ("insufficient skills to fabricate", "recipe required...") if there's no items below them
+            bool recipeVisible = false;
+            foreach (GUIComponent child in itemList.Content.Children.Reverse())
+            {
+                if (!(child.UserData is FabricationRecipe recipe))
+                {
+                    child.Visible = recipeVisible;
+                    recipeVisible = false;
+                }
+                else
+                {
+                    recipeVisible = child.Visible;
+                }
+            }
+
             itemList.UpdateScrollBarSize();
             itemList.BarScroll = 0.0f;
 
@@ -498,9 +514,20 @@ namespace Barotrauma.Items.Components
                 };
             }*/
 
+            string name = GetRecipeNameAndAmount(selectedItem);
+
+            float quality = 0;
+            foreach (string tag in selectedItem.TargetItem.Tags)
+            {
+                quality += user?.Info?.GetSavedStatValue(StatTypes.IncreaseFabricationQuality, tag) ?? 0;
+            }
+            if (quality > 0)
+            {
+                name = TextManager.GetWithVariable("itemname.quality" + (int)quality, "[itemname]", name+'\n', fallBackTag: "itemname.quality3");
+            }
 
             var nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
-                GetRecipeNameAndAmount(selectedItem), textAlignment: Alignment.CenterLeft, textColor: Color.Aqua, font: GUI.SubHeadingFont)
+               name, textAlignment: Alignment.CenterLeft, textColor: Color.Aqua, font: GUI.SubHeadingFont, parseRichText: true)
             {
                 AutoScaleHorizontal = true
             };

@@ -256,6 +256,17 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            if (user != null && !user.Removed)
+            {
+                var deconstructItemRetainProbability = new AbilityValueItem(0f, targetItem.Prefab);
+                user.CheckTalents(AbilityEffectType.OnItemDeconstructedRetainProbability, deconstructItemRetainProbability);
+
+                if (deconstructItemRetainProbability.Value > Rand.Range(0f, 1f, Rand.RandSync.Unsynced))
+                {
+                    allowRemove = false;
+                }
+            }
+
             if (targetItem.AllowDeconstruct && allowRemove)
             {
                 //drop all items that are inside the deconstructed item

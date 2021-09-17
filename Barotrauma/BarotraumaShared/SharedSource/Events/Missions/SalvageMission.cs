@@ -247,8 +247,8 @@ namespace Barotrauma
 
         public override void End()
         {
-            var root = item.GetRootContainer() ?? item;
-            if (root.CurrentHull?.Submarine == null || (!root.CurrentHull.Submarine.AtEndExit && !root.CurrentHull.Submarine.AtStartExit) || item.Removed) 
+            var root = item?.GetRootContainer() ?? item;
+            if (root?.CurrentHull?.Submarine == null || (!root.CurrentHull.Submarine.AtEndExit && !root.CurrentHull.Submarine.AtStartExit) || item.Removed) 
             { 
                 return; 
             }

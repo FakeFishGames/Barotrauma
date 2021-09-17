@@ -81,7 +81,7 @@ namespace Barotrauma
 
         private readonly object loadMutex = new object();
         private float? loadState;
-        
+
         public float? LoadState
         {
             get
@@ -90,8 +90,8 @@ namespace Barotrauma
                 {
                     return loadState;
                 }
-            }        
-            set 
+            }
+            set
             {
                 lock (loadMutex)
                 {
@@ -141,7 +141,7 @@ namespace Barotrauma
                     GameMain.Config.EnableSplashScreen = false;
                 }
             }
-                        
+
             var titleStyle = GUI.Style?.GetComponentStyle("TitleText");
             Sprite titleSprite = null;
             if (!WaitForLanguageSelection && titleStyle != null && titleStyle.Sprites.ContainsKey(GUIComponent.ComponentState.None))
@@ -177,8 +177,8 @@ namespace Barotrauma
                 color: Color.White * noiseStrength * 0.1f,
                 textureScale: Vector2.One * noiseScale);
 
-            titleSprite?.Draw(spriteBatch, new Vector2(GameMain.GraphicsWidth * 0.05f, GameMain.GraphicsHeight * 0.125f), 
-                Color.White, origin: new Vector2(0.0f, titleSprite.SourceRect.Height / 2.0f), 
+            titleSprite?.Draw(spriteBatch, new Vector2(GameMain.GraphicsWidth * 0.05f, GameMain.GraphicsHeight * 0.125f),
+                Color.White, origin: new Vector2(0.0f, titleSprite.SourceRect.Height / 2.0f),
                 scale: GameMain.GraphicsHeight / 2000.0f);
 
             if (WaitForLanguageSelection)
@@ -211,6 +211,13 @@ namespace Barotrauma
                         if (LoadState != null)
                         {
                             loadText += " " + (int)LoadState + " %";
+
+#if DEBUG
+                            if (GameMain.FirstLoad && GameMain.CancelQuickStart)
+                            {
+                                loadText += " (Quickstart aborted)";
+                            }
+#endif
                         }
                     }
                     if (GUI.LargeFont != null)
@@ -265,7 +272,7 @@ namespace Barotrauma
             decorativeGraph.Draw(spriteBatch, (int)(decorativeGraph.FrameCount * noiseVal),
                 new Vector2(GameMain.GraphicsWidth * 0.001f, GameMain.GraphicsHeight * 0.24f),
                 Color.White, Vector2.Zero, 0.0f, decorativeScale, SpriteEffects.FlipVertically);
-            
+
             decorativeMap.Draw(spriteBatch, (int)(decorativeMap.FrameCount * noiseVal),
                 new Vector2(GameMain.GraphicsWidth * 0.99f, GameMain.GraphicsHeight * 0.66f),
                 Color.White, decorativeMap.FrameSize.ToVector2(), 0.0f, decorativeScale);
@@ -281,9 +288,9 @@ namespace Barotrauma
             }
             else if (noiseVal < 0.5f)
             {
-                randText = 
-                    Rand.Int(100).ToString().PadLeft(2, '0') + " " + 
-                    Rand.Int(100).ToString().PadLeft(2, '0') + " " + 
+                randText =
+                    Rand.Int(100).ToString().PadLeft(2, '0') + " " +
+                    Rand.Int(100).ToString().PadLeft(2, '0') + " " +
                     Rand.Int(100).ToString().PadLeft(2, '0') + " " +
                     Rand.Int(100).ToString().PadLeft(2, '0');
             }
@@ -299,12 +306,12 @@ namespace Barotrauma
         {
             if (languageSelectionFont == null)
             {
-                languageSelectionFont = new ScalableFont("Content/Fonts/NotoSans/NotoSans-Bold.ttf", 
+                languageSelectionFont = new ScalableFont("Content/Fonts/NotoSans/NotoSans-Bold.ttf",
                     (uint)(30 * (GameMain.GraphicsHeight / 1080.0f)), graphicsDevice);
             }
             if (languageSelectionFontCJK == null)
             {
-                languageSelectionFontCJK = new ScalableFont("Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf", 
+                languageSelectionFontCJK = new ScalableFont("Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf",
                     (uint)(30 * (GameMain.GraphicsHeight / 1080.0f)), graphicsDevice, dynamicLoading: true);
             }
             if (languageSelectionCursor == null)
@@ -320,11 +327,11 @@ namespace Barotrauma
                 var font = TextManager.IsCJK(localizedLanguageName) ? languageSelectionFontCJK : languageSelectionFont;
 
                 Vector2 textSize = font.MeasureString(localizedLanguageName);
-                bool hover = 
-                    Math.Abs(PlayerInput.MousePosition.X - textPos.X) < textSize.X / 2 && 
+                bool hover =
+                    Math.Abs(PlayerInput.MousePosition.X - textPos.X) < textSize.X / 2 &&
                     Math.Abs(PlayerInput.MousePosition.Y - textPos.Y) < textSpacing.Y / 2;
 
-                font.DrawString(spriteBatch, localizedLanguageName, textPos - textSize / 2, 
+                font.DrawString(spriteBatch, localizedLanguageName, textPos - textSize / 2,
                     hover ? Color.White : Color.White * 0.6f);
                 if (hover && PlayerInput.PrimaryMouseButtonClicked())
                 {
@@ -394,14 +401,14 @@ namespace Barotrauma
             LoadState = null;
             SetSelectedTip(TextManager.Get("LoadingScreenTip", true));
             currentBackgroundTexture = LocationType.List.GetRandom()?.GetPortrait(Rand.Int(int.MaxValue))?.Texture;
-            
+
             while (!drawn)
             {
                 yield return CoroutineStatus.Running;
             }
 
             CoroutineManager.StartCoroutine(loader);
-            
+
             yield return CoroutineStatus.Running;
 
             while (CoroutineManager.IsCoroutineRunning(loader.ToString()))

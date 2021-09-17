@@ -382,11 +382,11 @@ namespace Barotrauma
             State = newState;
         }
 
-        private bool CheckWinState() => !IsClient && (characters.All(m => !Survived(m)));
+        private bool CheckWinState() => !IsClient && characters.All(m => DeadOrCaptured(m));
 
-        private bool Survived(Character character)
+        private bool DeadOrCaptured(Character character)
         {
-            return character != null && !character.Removed && !character.IsDead;
+            return character != null && !character.Removed && (character.IsDead || (character.LockHands && character.Submarine == Submarine.MainSub));
         }
 
         public override void End()

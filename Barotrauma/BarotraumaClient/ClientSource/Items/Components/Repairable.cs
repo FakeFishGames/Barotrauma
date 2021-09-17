@@ -19,9 +19,11 @@ namespace Barotrauma.Items.Components
 
         private GUIProgressBar progressBar;
 
-        private List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
+        private GUITextBlock progressBarOverlayText;
+
+        private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
         //the corresponding particle emitter is active when the condition is within this range
-        private List<Vector2> particleEmitterConditionRanges = new List<Vector2>();
+        private readonly List<Vector2> particleEmitterConditionRanges = new List<Vector2>();
 
         private SoundChannel repairSoundChannel;
 
@@ -88,7 +90,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void CreateGUI()
+        protected override void CreateGUI()
         {
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.75f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
@@ -123,6 +125,11 @@ namespace Barotrauma.Items.Components
 
             progressBar = new GUIProgressBar(new RectTransform(new Vector2(0.6f, 1.0f), progressBarHolder.RectTransform),
                 color: GUI.Style.Green, barSize: 0.0f, style: "DeviceProgressBar");
+            progressBarOverlayText = new GUITextBlock(new RectTransform(Vector2.One, progressBar.RectTransform), string.Empty, font: GUI.SubHeadingFont, textAlignment: Alignment.Center)
+            {
+                IgnoreLayoutGroups = true
+            };
+
             repairButtonText = TextManager.Get("RepairButton");
             repairingText = TextManager.Get("Repairing");
             RepairButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), progressBarHolder.RectTransform, Anchor.TopCenter), repairButtonText)
@@ -137,6 +144,7 @@ namespace Barotrauma.Items.Components
             RepairButton.TextBlock.AutoScaleHorizontal = true;
             progressBarHolder.RectTransform.MinSize = RepairButton.RectTransform.MinSize;
             RepairButton.RectTransform.MinSize = new Point((int)(RepairButton.TextBlock.TextSize.X * 1.2f), RepairButton.RectTransform.MinSize.Y);
+
 
             sabotageButtonText = TextManager.Get("SabotageButton");
             sabotagingText = TextManager.Get("Sabotaging");
@@ -229,8 +237,22 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
 
-            progressBar.BarSize = item.Condition / item.MaxCondition;
+            float defaultMaxCondition = (item.MaxCondition / item.MaxRepairConditionMultiplier);
+
+            progressBar.BarSize = item.Condition / defaultMaxCondition;
             progressBar.Color = ToolBox.GradientLerp(progressBar.BarSize, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green);
+
+            if (item.Condition > defaultMaxCondition)
+            {
+                float extraCondition = item.MaxCondition * (item.MaxRepairConditionMultiplier - 1.0f);
+                progressBar.Color = ToolBox.GradientLerp((item.Condition - defaultMaxCondition) / extraCondition, GUI.Style.ColorReputationHigh, GUI.Style.ColorReputationVeryHigh);
+                progressBarOverlayText.Visible = true;
+                progressBarOverlayText.Text = $"{(int)Math.Round((item.Condition / defaultMaxCondition) * 100)}%";
+            }
+            else
+            {
+                progressBarOverlayText.Visible = false;
+            }
 
             RepairButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Repair)) && !item.IsFullCondition;
             RepairButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Repair) ? 

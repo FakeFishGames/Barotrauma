@@ -7,12 +7,12 @@ namespace Barotrauma.Abilities
     {
         private enum WeaponType
         {
-            Any = 0, 
-            Melee = 1, 
+            Any = 0,
+            Melee = 1,
             Ranged = 2
         };
 
-        private WeaponType weapontype;
+        private readonly WeaponType weapontype;
         public AbilityConditionIsAiming(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
         {
             switch (conditionElement.GetAttributeString("weapontype", ""))
@@ -43,7 +43,7 @@ namespace Barotrauma.Abilities
                             break;
                         default:
                             aimingCorrectItem |= animController.IsAiming || animController.IsAimingMelee;
-                                break;
+                            break;
                     }
                 }
             }

@@ -315,7 +315,11 @@ namespace Barotrauma.IO
             return System.IO.File.GetLastWriteTime(path);
         }
 
-        public static FileStream Open(string path, System.IO.FileMode mode, System.IO.FileAccess access = System.IO.FileAccess.ReadWrite)
+        public static FileStream Open(
+            string path,
+            System.IO.FileMode mode,
+            System.IO.FileAccess access = System.IO.FileAccess.ReadWrite,
+            System.IO.FileShare? share = null)
         {
             switch (mode)
             {
@@ -331,10 +335,12 @@ namespace Barotrauma.IO
                     }
                     break;
             }
-            return new FileStream(path, System.IO.File.Open(path, mode,
+            access =
                 !Validation.CanWrite(path, false) ?
                 System.IO.FileAccess.Read :
-                access));
+                access;
+            var shareVal = share ?? (access == System.IO.FileAccess.Read ? System.IO.FileShare.Read : System.IO.FileShare.None);
+            return new FileStream(path, System.IO.File.Open(path, mode, access, shareVal));
         }
 
         public static FileStream OpenRead(string path)

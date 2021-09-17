@@ -97,13 +97,15 @@ namespace Barotrauma
 
         private Dictionary<string, Connection> connections;
 
-        private List<Repairable> repairables;
+        private readonly List<Repairable> repairables;
 
-        private Queue<float> impactQueue = new Queue<float>();
+        private Quality qualityComponent;
+
+        private readonly Queue<float> impactQueue = new Queue<float>();
 
         //a dictionary containing lists of the status effects in all the components of the item
-        private bool[] hasStatusEffectsOfType;
-        private Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
+        private readonly bool[] hasStatusEffectsOfType;
+        private readonly Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
         
         public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
 
@@ -447,7 +449,7 @@ namespace Barotrauma
         }
 
         public bool IsFullCondition => MathUtils.NearlyEqual(Condition, MaxCondition);
-        public float MaxCondition => Prefab.Health * healthMultiplier;
+        public float MaxCondition => Prefab.Health * healthMultiplier * maxRepairConditionMultiplier * (1.0f + GetQualityModifier(Items.Components.Quality.StatType.Condition));
         public float ConditionPercentage => MathUtils.Percentage(Condition, MaxCondition);
 
         private float offsetOnSelectedMultiplier = 1.0f;
@@ -465,12 +467,18 @@ namespace Barotrauma
         public float HealthMultiplier
         {
             get => healthMultiplier;
-            set
-            {
-                healthMultiplier = value;
-            }
+            set { healthMultiplier = MathHelper.Clamp(value, 0.0f, float.PositiveInfinity); }
         }
-        
+
+        private float maxRepairConditionMultiplier = 1.0f;
+
+        [Serialize(1.0f, true)]
+        public float MaxRepairConditionMultiplier
+        {
+            get => maxRepairConditionMultiplier;
+            set { maxRepairConditionMultiplier = MathHelper.Clamp(value, 0.0f, float.PositiveInfinity); }
+        }
+
         //the default value should be Prefab.Health, but because we can't use it in the attribute, 
         //we'll just use NaN (which does nothing) and set the default value in the constructor/load
         [Serialize(float.NaN, false), Editable]
@@ -616,6 +624,21 @@ namespace Barotrauma
         public bool UseInHealthInterface
         {
             get { return Prefab.UseInHealthInterface; }
+        }
+
+        public int Quality
+        {
+            get 
+            { 
+                return qualityComponent?.QualityLevel ?? 0; 
+            }
+            set
+            {
+                if (qualityComponent != null)
+                {
+                    qualityComponent.QualityLevel = value;
+                }
+            }
         }
 
         public bool InWater
@@ -933,6 +956,8 @@ namespace Barotrauma
                 ownInventory = itemContainer.Inventory;
             }
 
+            qualityComponent = GetComponent<Quality>();
+
             InitProjSpecific();
 
             if (callOnItemLoaded)
@@ -1121,6 +1146,11 @@ namespace Barotrauma
             }
             if (!componentsByType.ContainsKey(typeof(T))) { return Enumerable.Empty<T>(); }
             return components.Where(c => c is T).Cast<T>();
+        }
+
+        public float GetQualityModifier(Quality.StatType statType)
+        {
+            return GetComponent<Quality>()?.GetValue(statType) ?? 0.0f;
         }
         
         public void RemoveContained(Item contained)

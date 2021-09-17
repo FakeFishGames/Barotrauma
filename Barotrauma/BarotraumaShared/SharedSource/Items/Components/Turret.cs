@@ -383,6 +383,10 @@ namespace Barotrauma.Items.Components
             else
             {
                 float chargeDeltaTime = tryingToCharge ? deltaTime : -deltaTime;
+                if (chargeDeltaTime > 0f && user != null)
+                {
+                    chargeDeltaTime *= 1f + user.GetStatValue(StatTypes.TurretChargeSpeed);
+                }
                 currentChargeTime = Math.Clamp(currentChargeTime + chargeDeltaTime, 0f, MaxChargeTime);
             }
             tryingToCharge = false;

@@ -92,5 +92,12 @@ namespace Barotrauma.Extensions
         {
             return MathUtils.NearlyEqual(v.X, other.X) && MathUtils.NearlyEqual(v.Y, other.Y);
         }
+
+        public static Vector2 Pad(this Vector2 v, Vector4 padding)
+        {
+            v.X += padding.X + padding.Z;
+            v.Y += padding.Y + padding.W;
+            return v;
+        }
     }
 }

@@ -14,6 +14,8 @@ namespace Barotrauma.Abilities
         // currently only used to turn off simulation if random conditions are in use
         public bool IsActive { get; private set; } = true;
 
+        public readonly AbilityEffectType AbilityEffectType;
+
         protected int maxTriggerCount { get; }
         protected int timesTriggered = 0;
 
@@ -24,8 +26,9 @@ namespace Barotrauma.Abilities
         // separate dictionaries for each type of characterability?
         protected readonly List<CharacterAbility> characterAbilities = new List<CharacterAbility>();
 
-        public CharacterAbilityGroup(CharacterTalent characterTalent, XElement abilityElementGroup)
+        public CharacterAbilityGroup(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, XElement abilityElementGroup)
         {
+            AbilityEffectType = abilityEffectType;
             CharacterTalent = characterTalent;
             Character = CharacterTalent.Character;
             maxTriggerCount = abilityElementGroup.GetAttributeInt("maxtriggercount", int.MaxValue);
@@ -168,8 +171,7 @@ namespace Barotrauma.Abilities
 
         public static StatTypes ParseStatType(string statTypeString, string debugIdentifier)
         {
-            StatTypes statType;
-            if (!Enum.TryParse(statTypeString, true, out statType))
+            if (!Enum.TryParse(statTypeString, true, out StatTypes statType))
             {
                 DebugConsole.ThrowError("Invalid stat type type \"" + statTypeString + "\" in CharacterTalent (" + debugIdentifier + ")");
             }

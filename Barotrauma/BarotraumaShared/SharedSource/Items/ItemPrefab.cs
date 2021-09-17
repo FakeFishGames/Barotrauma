@@ -370,6 +370,9 @@ namespace Barotrauma
         [Serialize(false, false, description: "Hides the condition bar displayed at the bottom of the inventory slot the item is in.")]
         public bool HideConditionBar { get; set; }
 
+        [Serialize(false, false, description: "Hides the condition displayed in the item's tooltip.")]
+        public bool HideConditionInTooltip { get; set; }
+
         //if true and the item has trigger areas defined, characters need to be within the trigger to interact with the item
         //if false, trigger areas define areas that can be used to highlight the item
         [Serialize(true, false)]
@@ -1163,6 +1166,8 @@ namespace Barotrauma
             {
                 DefaultPrice ??= new PriceInfo(GetMinPrice() ?? 0, false);
             }
+
+            HideConditionInTooltip = element.GetAttributeBool("hideconditionintooltip", HideConditionBar);
 
             //backwards compatibility
             if (categoryStr.Equals("Thalamus", StringComparison.OrdinalIgnoreCase))

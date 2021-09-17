@@ -128,6 +128,11 @@ namespace Barotrauma
             }
 
             float displayRange = Attack.Range;
+            if (damageSource is Item sourceItem)
+            {
+                displayRange *= 1.0f + sourceItem.GetQualityModifier(Quality.StatType.ExplosionRadius);
+                Attack.DamageMultiplier *= 1.0f + sourceItem.GetQualityModifier(Quality.StatType.ExplosionDamage);
+            }
 
             Vector2 cameraPos = GameMain.GameScreen.Cam.Position;
             float cameraDist = Vector2.Distance(cameraPos, worldPosition) / 2.0f;
@@ -142,7 +147,7 @@ namespace Barotrauma
 
             if (displayRange < 0.1f) { return; }
 
-            if (Attack.GetStructureDamage(1.0f) > 0.0f || Attack.GetLevelWallDamage(1.0f) > 0.0f)
+            if (!MathUtils.NearlyEqual(Attack.GetStructureDamage(1.0f), 0.0f) || !MathUtils.NearlyEqual(Attack.GetLevelWallDamage(1.0f), 0.0f))
             {
                 RangedStructureDamage(worldPosition, displayRange, Attack.GetStructureDamage(1.0f), Attack.GetLevelWallDamage(1.0f), attacker);
             }
@@ -211,9 +216,9 @@ namespace Barotrauma
                     float dist = Vector2.Distance(item.WorldPosition, worldPosition);
                     float itemRadius = item.body == null ? 0.0f : item.body.GetMaxExtent();
                     dist = Math.Max(0.0f, dist - ConvertUnits.ToDisplayUnits(itemRadius));
-                    if (dist > Attack.Range) { continue; }
+                    if (dist > displayRange) { continue; }
 
-                    if (dist < Attack.Range * 0.5f && applyFireEffects && !item.FireProof && ignoreFireEffectsForTags.None(t => item.HasTag(t)))
+                    if (dist < displayRange * 0.5f && applyFireEffects && !item.FireProof && ignoreFireEffectsForTags.None(t => item.HasTag(t)))
                     {
                         //don't apply OnFire effects if the item is inside a fireproof container
                         //(or if it's inside a container that's inside a fireproof container, etc)
@@ -240,7 +245,7 @@ namespace Barotrauma
 
                     if (item.Prefab.DamagedByExplosions && !item.Indestructible)
                     {
-                        float distFactor = 1.0f - dist / Attack.Range;
+                        float distFactor = 1.0f - dist / displayRange;
                         float damageAmount = Attack.GetItemDamage(1.0f) * item.Prefab.ExplosionDamageMultiplier;
 
                         Vector2 explosionPos = worldPosition;

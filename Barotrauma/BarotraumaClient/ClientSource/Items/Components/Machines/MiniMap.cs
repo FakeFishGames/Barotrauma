@@ -218,8 +218,8 @@ namespace Barotrauma.Items.Components
                                       DefaultNeutralColor = MiniMapBaseColor * 0.8f,
                                       HoverColor = Color.White,
                                       BlueprintBlue = new Color(23, 38, 33),
-                                      HullWaterColor = new Color(17, 173, 179),
-                                      HullWaterLineColor = Color.LightBlue,
+                                      HullWaterColor = new Color(17, 173, 179) * 0.5f,
+                                      HullWaterLineColor = Color.LightBlue * 0.5f,
                                       NoPowerColor = MiniMapBaseColor * 0.1f,
                                       ElectricalBaseColor = GUI.Style.Orange,
                                       NoPowerElectricalColor = ElectricalBaseColor * 0.1f;
@@ -307,10 +307,13 @@ namespace Barotrauma.Items.Components
 
             if (reports.Any())
             {
-                CrewManager.CreateReports(GameMain.GameSession?.CrewManager, reportFrame, reports, true);
+                CrewManager.CreateReportButtons(GameMain.GameSession?.CrewManager, reportFrame, reports, true);
             }
 
-            searchBarFrame = new GUILayoutGroup(new RectTransform(new Vector2(1), bottomFrame.RectTransform), isHorizontal: true, childAnchor: Anchor.Center);
+            searchBarFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.5f, 1.0f), bottomFrame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.Center)
+            {
+                Visible = false
+            };
             searchBar = new GUITextBox(new RectTransform(new Vector2(1), searchBarFrame.RectTransform), string.Empty, createClearButton: true, createPenIcon: true)
             {
                 OnEnterPressed = (box, text) =>
@@ -345,6 +348,7 @@ namespace Barotrauma.Items.Components
 
             foreach (ItemPrefab prefab in ItemPrefab.Prefabs.OrderBy(prefab => prefab.Name))
             {
+                if (prefab.HideInMenus) { continue; }
                 CreateItemFrame(prefab, listBox.Content.RectTransform);
             }
 
@@ -355,7 +359,10 @@ namespace Barotrauma.Items.Components
 
             searchBar.OnSelected += (sender, key) =>
             {
-                itemsFoundOnSub = Item.ItemList.Where(it => it.Submarine == item.Submarine && !it.NonInteractable && !it.HiddenInGame && it.Components.OfType<Holdable>().Any()).Select(it => it.Prefab).ToImmutableHashSet();
+                itemsFoundOnSub = Item.ItemList.Where(it => 
+                    it.Submarine == item.Submarine && 
+                    !it.NonInteractable && !it.HiddenInGame && 
+                    (it.GetComponent<Holdable>() != null || it.GetComponent<Wearable>() != null)).Select(it => it.Prefab).ToImmutableHashSet();
             };
 
             searchBar.OnKeyHit += ControlSearchTooltip;
@@ -487,21 +494,24 @@ namespace Barotrauma.Items.Components
                 CreateHUD();
             }
 
-            if (PlayerInput.PrimaryMouseButtonDown() && currentMode != MiniMapMode.HullStatus)
+            if (scissorComponent != null)
             {
-                if (GUI.MouseOn == scissorComponent || scissorComponent.IsParentOf(GUI.MouseOn))
+                if (PlayerInput.PrimaryMouseButtonDown() && currentMode != MiniMapMode.HullStatus)
                 {
-                    dragMapStart = PlayerInput.MousePosition;
+                    if (GUI.MouseOn == scissorComponent || scissorComponent.IsParentOf(GUI.MouseOn))
+                    {
+                        dragMapStart = PlayerInput.MousePosition;
+                    }
                 }
-            }
 
-            if (currentMode != MiniMapMode.HullStatus && Math.Abs(PlayerInput.ScrollWheelSpeed) > 0 && (GUI.MouseOn == scissorComponent || scissorComponent.IsParentOf(GUI.MouseOn)))
-            {
-                float newZoom = Math.Clamp(Zoom + PlayerInput.ScrollWheelSpeed / 1000.0f * Zoom, minZoom, maxZoom);
-                float distanceScale = newZoom / Zoom;
-                mapOffset *= distanceScale;
-                recalculate |= !MathUtils.NearlyEqual(Zoom, newZoom);
-                Zoom = newZoom;
+                if (currentMode != MiniMapMode.HullStatus && Math.Abs(PlayerInput.ScrollWheelSpeed) > 0 && (GUI.MouseOn == scissorComponent || scissorComponent.IsParentOf(GUI.MouseOn)))
+                {
+                    float newZoom = Math.Clamp(Zoom + PlayerInput.ScrollWheelSpeed / 1000.0f * Zoom, minZoom, maxZoom);
+                    float distanceScale = newZoom / Zoom;
+                    mapOffset *= distanceScale;
+                    recalculate |= !MathUtils.NearlyEqual(Zoom, newZoom);
+                    Zoom = newZoom;
+                }
             }
 
             if (dragMapStart is { } dragStart)
@@ -524,15 +534,13 @@ namespace Barotrauma.Items.Components
 
             if (recalculate)
             {
-                miniMapContainer.RectTransform.LocalScale = new Vector2(Zoom);
-                miniMapContainer.RectTransform.RecalculateChildren(true, true);
-                miniMapContainer.RectTransform.AbsoluteOffset = mapOffset.ToPoint();
+                if (miniMapContainer != null)
+                {
+                    miniMapContainer.RectTransform.LocalScale = new Vector2(Zoom);
+                    miniMapContainer.RectTransform.RecalculateChildren(true, true);
+                    miniMapContainer.RectTransform.AbsoluteOffset = mapOffset.ToPoint();
+                }
                 recalculate = false;
-
-                // var (maxWidth, maxHeight) = miniMapContainer.Rect.Size.ToVector2() / 2f;
-                //
-                // mapOffset.X = Math.Clamp(mapOffset.X, -maxWidth, maxWidth);
-                // mapOffset.Y = Math.Clamp(mapOffset.Y, -maxHeight, maxHeight);
             }
 
             // is there a better way to do this?
@@ -606,17 +614,6 @@ namespace Barotrauma.Items.Components
 
         private void DrawHUDFront(SpriteBatch spriteBatch, GUICustomComponent container)
         {
-            // TODO remove
-            #warning remove
-            if (currentMode == MiniMapMode.HullCondition)
-            {
-                const string wipText = "work in progress";
-                Vector2 textSize = GUI.LargeFont.MeasureString(wipText);
-                Vector2 textPos = GuiFrame.Rect.Center.ToVector2();
-
-                GUI.DrawString(spriteBatch, textPos - textSize / 2, wipText.ToUpper(), GUI.Style.Orange, Color.Black * 0.8f, backgroundPadding: 8, font: GUI.LargeFont);
-            }
-
             if (Voltage < MinVoltage)
             {
                 Vector2 textSize = GUI.Font.MeasureString(noPowerTip);
@@ -627,18 +624,45 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (currentMode == MiniMapMode.HullStatus)
+            if (currentMode == MiniMapMode.HullStatus || currentMode == MiniMapMode.HullCondition)
             {
                 Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
                 spriteBatch.GraphicsDevice.ScissorRectangle = submarineContainer.Rect;
 
-                foreach (var (entity, component) in hullStatusComponents)
+                if (currentMode == MiniMapMode.HullCondition && item.Submarine != null)
                 {
-                    if (!(entity is Hull hull)) { continue; }
-                    if (!hullDatas.TryGetValue(hull, out HullData? hullData) || hullData is null) { continue; }
-                    DrawHullCards(spriteBatch, hull, hullData, component.RectComponent);
+                    var sprite = GUI.Style.UIGlowSolidCircular?.Sprite;
+                    float alpha = (MathF.Sin(blipState / maxBlipState * MathHelper.TwoPi) + 1.5f) * 0.5f;
+                    if (sprite != null)
+                    {
+                        Vector2 spriteSize = sprite.size;
+                        Rectangle worldBorders = item.Submarine.GetDockedBorders();
+                        worldBorders.Location += item.Submarine.WorldPosition.ToPoint();
+                        foreach (Gap gap in Gap.GapList)
+                        {
+                            if (gap.IsRoomToRoom || gap.Submarine != item.Submarine || gap.ConnectedDoor != null) { continue; }
+                            RectangleF entityRect = ScaleRectToUI(gap, miniMapFrame.Rect, worldBorders);
+
+                            Vector2 scale = new Vector2(entityRect.Size.X / spriteSize.X, entityRect.Size.Y / spriteSize.Y) * 2.0f;
+
+                            Color color = ToolBox.GradientLerp(gap.Open, GUI.Style.HealthBarColorMedium, GUI.Style.HealthBarColorLow) * alpha;
+                            sprite.Draw(spriteBatch,
+                                miniMapFrame.Rect.Location.ToVector2() + entityRect.Center,
+                                color, origin: sprite.Origin, rotate: 0.0f, scale: scale);
+                        }
+                    }
+                }
+
+                if (currentMode == MiniMapMode.HullStatus)
+                {
+                    foreach (var (entity, component) in hullStatusComponents)
+                    {
+                        if (!(entity is Hull hull)) { continue; }
+                        if (!hullDatas.TryGetValue(hull, out HullData? hullData) || hullData is null) { continue; }
+                        DrawHullCards(spriteBatch, hull, hullData, component.RectComponent);
+                    }
                 }
 
                 spriteBatch.End();
@@ -721,14 +745,21 @@ namespace Barotrauma.Items.Components
                 UserData = prefab
             };
 
-            GUILayoutGroup layout = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform), isHorizontal: true);
+            GUILayoutGroup layout = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
             new GUIImage(new RectTransform(Vector2.One, layout.RectTransform, scaleBasis: ScaleBasis.BothHeight), sprite)
             {
-                Color = prefab.InventoryIconColor
+                Color = prefab.InventoryIconColor,
+                UserData = prefab
             };
 
-            new GUITextBlock(new RectTransform(Vector2.One, layout.RectTransform), prefab.Name, font: GUI.SubHeadingFont);
-            layout.UserData = prefab;
+            var nameText = new GUITextBlock(new RectTransform(Vector2.One, layout.RectTransform), prefab.Name);
+            nameText.RectTransform.SizeChanged += () =>
+            {
+                nameText.Text = ToolBox.LimitString(prefab.Name, nameText.Font, nameText.Rect.Width);
+            };
         }
 
         private void SearchItems(string text)
@@ -792,15 +823,18 @@ namespace Barotrauma.Items.Components
 
         private void UpdateHUDBack()
         {
+            if (item.Submarine == null) { return; }
+
             hullInfoFrame.Visible = false;
-            electricalFrame.Visible = false;
-            miniMapFrame.Visible = false;
             reportFrame.Visible = false;
             searchBarFrame.Visible = false;
+            electricalFrame.Visible = false;
+            miniMapFrame.Visible = false;
 
             switch (currentMode)
             {
                 case MiniMapMode.HullStatus:
+                case MiniMapMode.HullCondition:
                     UpdateHullStatus();
                     miniMapFrame.Visible = true;
                     reportFrame.Visible = true;
@@ -937,16 +971,19 @@ namespace Barotrauma.Items.Components
                     SetTooltip(borderComponent.Rect.Center, header, line1, line2, line3, line1Color, line2Color, line3Color);
                 }
 
+                bool draggingReport = GameMain.GameSession?.CrewManager?.DraggedOrder != null;
                 // When setting the colors we want to know the linked hulls too or else the linked hull will not realize its being hovered over and reset the border color
                 foreach (Hull linkedHull in hullData.LinkedHulls)
                 {
                     if (!hullStatusComponents.ContainsKey(linkedHull)) { continue; }
 
-                    isHoveringOver |= canHoverOverHull && hullStatusComponents[linkedHull].RectComponent == GUI.MouseOn;
+                    isHoveringOver |= 
+                        canHoverOverHull && 
+                        (hullStatusComponents[linkedHull].RectComponent == GUI.MouseOn || (draggingReport && hullStatusComponents[linkedHull].RectComponent.MouseRect.Contains(PlayerInput.MousePosition)));
                     if (isHoveringOver) { break; }
                 }
 
-                if (isHoveringOver)
+                if (isHoveringOver || (draggingReport && component.MouseRect.Contains(PlayerInput.MousePosition)))
                 {
                     borderColor = Color.Lerp(borderColor, Color.White, 0.5f);
                     componentColor = HoverColor;
@@ -1037,7 +1074,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                bool hullsVisible = currentMode == MiniMapMode.HullStatus;
+                bool hullsVisible = currentMode == MiniMapMode.HullStatus || currentMode == MiniMapMode.HullCondition;
 
                 foreach (var (entity, component) in hullStatusComponents)
                 {
@@ -1150,7 +1187,7 @@ namespace Barotrauma.Items.Components
                 GameMain.GameScreen.BlueprintEffect.Parameters["width"].SetValue((float)texture.Width);
                 GameMain.GameScreen.BlueprintEffect.Parameters["height"].SetValue((float)texture.Height);
 
-                Color blueprintBlue = BlueprintBlue * currentMode switch { MiniMapMode.HullStatus => 0.1f, MiniMapMode.ElectricalView => 0.1f, _ => 0.5f };
+                Color blueprintBlue = BlueprintBlue * currentMode switch { MiniMapMode.HullStatus => 0.1f, MiniMapMode.HullCondition => 0.1f, MiniMapMode.ElectricalView => 0.1f, _ => 0.5f };
 
                 Vector2 origin = new Vector2(texture.Width / 2f, texture.Height / 2f);
                 float scale = currentMode == MiniMapMode.HullStatus ? 1.0f : Zoom;

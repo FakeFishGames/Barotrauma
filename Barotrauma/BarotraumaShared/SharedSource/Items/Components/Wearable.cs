@@ -285,7 +285,7 @@ namespace Barotrauma.Items.Components
             int i = 0;
             foreach (XElement subElement in element.Elements())
             {
-                switch (subElement.Name.ToString().ToLower())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
                         if (subElement.Attribute("texture") == null)

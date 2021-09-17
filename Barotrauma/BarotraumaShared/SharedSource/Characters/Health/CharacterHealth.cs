@@ -971,7 +971,7 @@ namespace Barotrauma
         /// <param name="treatmentSuitability">A dictionary where the key is the identifier of the item and the value the suitability</param>
         /// <param name="normalize">If true, the suitability values are normalized between 0 and 1. If not, they're arbitrary values defined in the medical item XML, where negative values are unsuitable, and positive ones suitable.</param>
         /// <param name="randomization">Amount of randomization to apply to the values (0 = the values are accurate, 1 = the values are completely random)</param>        
-        public void GetSuitableTreatments(Dictionary<string, float> treatmentSuitability, bool normalize, Limb limb = null, float randomization = 0.0f)
+        public void GetSuitableTreatments(Dictionary<string, float> treatmentSuitability, bool normalize, Limb limb = null, bool ignoreHiddenAfflictions = false, float randomization = 0.0f)
         {
             //key = item identifier
             //float = suitability
@@ -980,6 +980,7 @@ namespace Barotrauma
             foreach (Affliction affliction in getAfflictions(limb))
             {
                 if (affliction.Strength < affliction.Prefab.TreatmentThreshold) { continue; }
+                if (ignoreHiddenAfflictions && affliction.Strength < affliction.Prefab.ShowIconThreshold) { continue; }
                 foreach (KeyValuePair<string, float> treatment in affliction.Prefab.TreatmentSuitability)
                 {
                     if (!treatmentSuitability.ContainsKey(treatment.Key))

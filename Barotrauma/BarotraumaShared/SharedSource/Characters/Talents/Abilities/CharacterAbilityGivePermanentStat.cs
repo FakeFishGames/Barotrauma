@@ -27,8 +27,7 @@ namespace Barotrauma.Abilities
             targetAllies = abilityElement.GetAttributeBool("targetallies", false);
             removeOnDeath = abilityElement.GetAttributeBool("removeondeath", true);
             removeAfterRound = abilityElement.GetAttributeBool("removeafterround", false);
-            giveOnAddingFirstTime = abilityElement.GetAttributeBool("giveonaddingfirsttime", false);
-            //maximumValue = abilityElement.GetAttributeFloat("maximumvalue", float.MaxValue);
+            giveOnAddingFirstTime = abilityElement.GetAttributeBool("giveonaddingfirsttime", characterAbilityGroup.AbilityEffectType == AbilityEffectType.None);
         }
 
         public override void InitializeAbility(bool addingFirstTime)

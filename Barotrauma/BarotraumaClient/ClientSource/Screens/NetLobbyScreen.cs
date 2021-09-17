@@ -1694,7 +1694,7 @@ namespace Barotrauma
 
         private void CreateJobVariantTooltip(JobPrefab jobPrefab, int variant, GUIComponent parentSlot)
         {
-            jobVariantTooltip = new GUIFrame(new RectTransform(new Point((int)(500 * GUI.Scale), (int)(200 * GUI.Scale)), GUI.Canvas, pivot: Pivot.BottomRight), 
+            jobVariantTooltip = new GUIFrame(new RectTransform(new Point((int)(400 * GUI.Scale), (int)(180 * GUI.Scale)), GUI.Canvas, pivot: Pivot.BottomRight), 
                 style: "GUIToolTip")
             {
                 UserData = new Pair<JobPrefab, int>(jobPrefab, variant)
@@ -1707,17 +1707,7 @@ namespace Barotrauma
                 AbsoluteSpacing = (int)(15 * GUI.Scale)
             };
 
-            string name =
-                TextManager.Get("jobname." + jobPrefab.Identifier + (variant + 1), returnNull: true, fallBackTag: "jobname." + jobPrefab.Identifier) ?? 
-                "";
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), name, font: GUI.SubHeadingFont);
-                       
-            string description = 
-                TextManager.Get("jobdescription." + jobPrefab.Identifier + (variant + 1), returnNull: true, fallBackTag: "jobdescription." + jobPrefab.Identifier) ??
-                "";
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), description, wrap: true, font: GUI.SmallFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.GetWithVariable("startingequipmentname", "[number]", (variant + 1).ToString()), font: GUI.SubHeadingFont, textAlignment: Alignment.Center);
 
             var itemIdentifiers = jobPrefab.ItemIdentifiers[variant]
                 .Distinct()
@@ -1726,7 +1716,7 @@ namespace Barotrauma
             int itemsPerRow = 5;
             int rows = (int)Math.Max(Math.Ceiling(itemIdentifiers.Count() / (float)itemsPerRow), 1);
 
-            new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.4f * rows), content.RectTransform, Anchor.BottomLeft),
+            new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.4f * rows), content.RectTransform, Anchor.BottomCenter),
                 onDraw: (sb, component) => { DrawJobVariantItems(sb, component, new Pair<JobPrefab, int>(jobPrefab, variant), itemsPerRow); });
 
             jobVariantTooltip.RectTransform.MinSize = new Point(0, content.RectTransform.Children.Sum(c => c.Rect.Height + content.AbsoluteSpacing));

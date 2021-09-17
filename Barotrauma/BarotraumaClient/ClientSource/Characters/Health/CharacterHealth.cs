@@ -801,7 +801,11 @@ namespace Barotrauma
                 {
                     var treatmentButton = component.GetChild<GUIButton>();
                     if (!(treatmentButton?.UserData is ItemPrefab itemPrefab)) { continue; }
-                    treatmentButton.Enabled = Character.Controlled.Inventory.AllItems.Any(it => it.prefab == itemPrefab);
+                    treatmentButton.Enabled = Character.Controlled.Inventory.AllItems.Any(it => it.prefab == itemPrefab);  
+                    foreach (GUIComponent child in treatmentButton.Children)
+                    {
+                        child.Enabled = treatmentButton.Enabled;
+                    }
                 }
             }
 
@@ -1155,7 +1159,10 @@ namespace Barotrauma
             //key = item identifier
             //float = suitability
             Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
-            GetSuitableTreatments(treatmentSuitability, normalize: true, limb: selectedLimbIndex == -1 ? null : Character.AnimController.Limbs.Find(l => l.HealthIndex == selectedLimbIndex));
+            GetSuitableTreatments(treatmentSuitability, 
+                normalize: true,
+                ignoreHiddenAfflictions: true,
+                limb: selectedLimbIndex == -1 ? null : Character.AnimController.Limbs.Find(l => l.HealthIndex == selectedLimbIndex));
 
             foreach (string treatment in treatmentSuitability.Keys.ToList())
             {
@@ -1260,10 +1267,11 @@ namespace Barotrauma
                     UserData = item
                 };
 
-                var innerFrame = new GUIButton(new RectTransform(Vector2.One, itemSlot.RectTransform, Anchor.Center, Pivot.Center, scaleBasis: ScaleBasis.Smallest), style: "GUIButtonRound")
+                var innerFrame = new GUIButton(new RectTransform(Vector2.One, itemSlot.RectTransform, Anchor.Center, Pivot.Center, scaleBasis: ScaleBasis.Smallest), style: "SubtreeHeader")
                 {
                     UserData = item,
                     ToolTip = $"‖color:255,255,255,255‖{item.Name}‖color:end‖" + '\n' + item.Description,
+                    DisabledColor = Color.White * 0.1f,
                     OnClicked = (btn, userdata) =>
                     {
                         if (!(userdata is ItemPrefab itemPrefab)) { return false; }
@@ -1274,6 +1282,17 @@ namespace Barotrauma
                         return true;
                     }
                 };
+
+                new GUIImage(new RectTransform(Vector2.One, innerFrame.RectTransform, Anchor.Center), style: "TalentBackgroundGlow")
+                {
+                    CanBeFocused = false,
+                    Color = Color.White * 0.7f,
+                    HoverColor = Color.White,
+                    PressedColor = Color.DarkGray,
+                    SelectedColor = Color.Transparent,
+                    DisabledColor = Color.Transparent
+                };
+
                 Sprite itemSprite = item.InventoryIcon ?? item.sprite;
                 Color itemColor = itemSprite == item.sprite ? item.SpriteColor : item.InventoryIconColor;
                 var itemIcon = new GUIImage(new RectTransform(new Vector2(0.8f, 0.8f), innerFrame.RectTransform, Anchor.Center),
@@ -1283,7 +1302,7 @@ namespace Barotrauma
                     Color = itemColor * 0.9f,
                     HoverColor = itemColor,
                     SelectedColor = itemColor,
-                    DisabledColor = itemColor * 0.7f
+                    DisabledColor = itemColor * 0.8f
                 };
             }
 

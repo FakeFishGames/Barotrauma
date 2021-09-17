@@ -47,14 +47,14 @@ namespace Barotrauma
         {
             if (ItemOwnsSelf(item)) { return false; }
             if (i < 0 || i >= slots.Length) { return false; }
-            if (!container.CanBeContained(item)) { return false; }
+            if (!container.CanBeContained(item, i)) { return false; }
             return item != null && slots[i].CanBePut(item, ignoreCondition) && slots[i].ItemCount < container.GetMaxStackSize(i);
         }
 
         public override bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition)
         {
             if (i < 0 || i >= slots.Length) { return false; }
-            if (!container.CanBeContained(itemPrefab)) { return false; }
+            if (!container.CanBeContained(itemPrefab, i)) { return false; }
             return itemPrefab != null && slots[i].CanBePut(itemPrefab, condition) && slots[i].ItemCount < container.GetMaxStackSize(i);
         }
 
@@ -62,7 +62,7 @@ namespace Barotrauma
         {
             if (itemPrefab == null) { return 0; }
             if (i < 0 || i >= slots.Length) { return 0; }
-            if (!container.CanBeContained(itemPrefab)) { return 0; }
+            if (!container.CanBeContained(itemPrefab, i)) { return 0; }
             return slots[i].HowManyCanBePut(itemPrefab, maxStackSize: Math.Min(itemPrefab.MaxStackSize, container.GetMaxStackSize(i)), condition);
         }
 

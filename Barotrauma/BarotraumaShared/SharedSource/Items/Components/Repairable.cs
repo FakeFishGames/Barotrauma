@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Repairable : ItemComponent, IServerSerializable, IClientSerializable
     {
-        private string header;
+        private readonly string header;
 
         private float deteriorationTimer;
         private float deteriorateAlwaysResetTimer;
@@ -182,6 +182,10 @@ namespace Barotrauma.Items.Components
             if (Rand.Range(0.0f, 0.5f) < RepairDegreeOfSuccess(character, requiredSkills)) { return true; }
 
             ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
+            if (bestRepairItem != null && bestRepairItem.GetComponent<Holdable>() is Holdable h)
+            {
+                h.ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
+            }
             return false;
         }
 
@@ -217,6 +221,11 @@ namespace Barotrauma.Items.Components
                     {
                         GameServer.Log($"{GameServer.CharacterLogName(character)} failed to {(action == FixActions.Sabotage ? "sabotage" : "repair")} {item.Name}", ServerLog.MessageType.ItemInteraction);
                         GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, character.ID });
+                        if (bestRepairItem != null && bestRepairItem.GetComponent<Holdable>() is Holdable h)
+                        {
+                            GameMain.Server?.CreateEntityEvent(bestRepairItem, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, h, character.ID });
+                        }
+
                         return false;
                     }
 
@@ -243,7 +252,7 @@ namespace Barotrauma.Items.Components
                 }
                 return true;
 
-                Item GetBestRepairItem(Character character)
+                static Item GetBestRepairItem(Character character)
                 {
                     return character.HeldItems.OrderByDescending(i => i.Prefab.AddedRepairSpeedMultiplier).FirstOrDefault();
                 }
@@ -386,6 +395,9 @@ namespace Barotrauma.Items.Components
 
             float fixDuration = MathHelper.Lerp(FixDurationLowSkill, FixDurationHighSkill, successFactor);
             fixDuration /= 1 + CurrentFixer.GetStatValue(StatTypes.RepairSpeed) + currentRepairItem?.Prefab.AddedRepairSpeedMultiplier ?? 0f;
+            fixDuration /= 1 + item.GetQualityModifier(Quality.StatType.RepairSpeed);
+
+            item.MaxRepairConditionMultiplier = 1 + CurrentFixer.GetStatValue(StatTypes.MaxRepairConditionMultiplier);
 
             if (currentFixerAction == FixActions.Repair)
             {

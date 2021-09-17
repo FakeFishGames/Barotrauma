@@ -13,7 +13,7 @@ namespace Barotrauma.Abilities
 
         protected override bool MatchesConditionSpecific()
         {
-            if (character.Submarine == null || character.Submarine.TeamID != character.TeamID) { return false; }
+            if (!character.IsInFriendlySub) { return false; }
             float currentFloodPercentage = character.Submarine.GetHulls(false).Average(h => h.WaterPercentage);
             return currentFloodPercentage / 100 > floodPercentage;
         }

@@ -116,6 +116,8 @@ namespace Barotrauma.Items.Components
 
             item.CurrentHull.WaterVolume += currFlow;
             if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 0.5f; }
+
+            Voltage -= deltaTime;
         }
 
         public void InfectBallast(string identifier, bool allowMultiplePerShip = false)

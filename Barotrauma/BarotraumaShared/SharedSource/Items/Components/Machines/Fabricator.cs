@@ -24,12 +24,6 @@ namespace Barotrauma.Items.Components
 
         private Character user;
 
-        public float FabricationSpeedMultiplier
-        {
-            get;
-            set;
-        }
-
         private ItemContainer inputContainer, outputContainer;
         
         [Serialize(1.0f, true)]
@@ -249,7 +243,6 @@ namespace Barotrauma.Items.Components
             var availableIngredients = GetAvailableIngredients();
             if (fabricatedItem == null || !CanBeFabricated(fabricatedItem, availableIngredients, user))
             {
-                FabricationSpeedMultiplier = 1f;
                 CancelFabricating();
                 return;
             }
@@ -286,8 +279,7 @@ namespace Barotrauma.Items.Components
 
             if (powerConsumption <= 0) { Voltage = 1.0f; }
 
-            timeUntilReady -= deltaTime * Math.Min(Voltage, 1.0f) * FabricationSpeedMultiplier;
-            FabricationSpeedMultiplier = 1f;
+            timeUntilReady -= deltaTime * Math.Min(Voltage, 1.0f);
 
             UpdateRequiredTimeProjSpecific();
 
@@ -328,13 +320,21 @@ namespace Barotrauma.Items.Components
 
                 var fabricationValueItem = new AbilityValueItem(fabricatedItem.Amount, fabricatedItem.TargetItem);
 
-                if (user != null)
+                int quality = 0;
+                if (user?.Info != null)
                 {
                     foreach (Character character in Character.CharacterList.Where(c => c.TeamID == user.TeamID))
                     {
                         character.CheckTalents(AbilityEffectType.OnAllyItemFabricatedAmount, fabricationValueItem);
                     }
                     user.CheckTalents(AbilityEffectType.OnItemFabricatedAmount, fabricationValueItem);
+
+                    float floatQuality = 0.0f;
+                    foreach (string tag in fabricatedItem.TargetItem.Tags)
+                    {
+                        floatQuality += user.Info.GetSavedStatValue(StatTypes.IncreaseFabricationQuality, tag);
+                    }
+                    quality = (int)floatQuality;
                 }
 
                 var tempUser = user;
@@ -343,12 +343,20 @@ namespace Barotrauma.Items.Components
                     if (i < amountFittingContainer)
                     {
                         Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition,
-                            onSpawned: (Item spawnedItem) => { onItemSpawned(spawnedItem, tempUser); });
+                            onSpawned: (Item spawnedItem) => 
+                            { 
+                                onItemSpawned(spawnedItem, tempUser);
+                                spawnedItem.Quality = quality;
+                            });
                     }
                     else
                     {
                         Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition,
-                            onSpawned: (Item spawnedItem) => { onItemSpawned(spawnedItem, tempUser); });
+                            onSpawned: (Item spawnedItem) => 
+                            { 
+                                onItemSpawned(spawnedItem, tempUser);
+                                spawnedItem.Quality = quality;
+                            });
                     }
                 }
 

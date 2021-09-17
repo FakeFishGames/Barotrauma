@@ -251,6 +251,8 @@ namespace Barotrauma
         private readonly List<Attacker> lastAttackers = new List<Attacker>();
         public IEnumerable<Attacker> LastAttackers => lastAttackers;
         public Character LastAttacker => lastAttackers.LastOrDefault()?.Character;
+        public Character LastOrderedCharacter { get; private set; }
+        public Character SecondLastOrderedCharacter { get; private set; }
 
         public Entity LastDamageSource;
 
@@ -2720,7 +2722,7 @@ namespace Barotrauma
 
             //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
             bool allowRagdoll = GameMain.NetworkMember?.ServerSettings?.AllowRagdollButton ?? true;
-            bool tooFastToUnragdoll = AnimController.Collider.LinearVelocity.LengthSquared() > 5.0f * 5.0f;
+            bool tooFastToUnragdoll = AnimController.Collider.LinearVelocity.LengthSquared() > 2.5f * 2.5f;
             bool wasRagdolled = false;
             bool selfRagdolled = false;
 
@@ -3131,6 +3133,12 @@ namespace Barotrauma
             {
                 var abilityOrderedCharacter = new AbilityCharacter(this);
                 orderGiver.CheckTalents(AbilityEffectType.OnGiveOrder, abilityOrderedCharacter);
+
+                if (orderGiver.LastOrderedCharacter != this)
+                {
+                    orderGiver.SecondLastOrderedCharacter = orderGiver.LastOrderedCharacter;
+                    orderGiver.LastOrderedCharacter = this;
+                }
             }
 
             if (AIController is HumanAIController humanAI)
@@ -3406,6 +3414,13 @@ namespace Barotrauma
                 AddDamage(worldPosition, attackAfflictions, attack.Stun, playSound, attackImpulse, out limbHit, attacker, attack.DamageMultiplier * attackData.DamageMultiplier) :
                 DamageLimb(worldPosition, targetLimb, attackAfflictions, attack.Stun, playSound, attackImpulse, attacker, attack.DamageMultiplier * attackData.DamageMultiplier, penetration: penetration + attackData.AddedPenetration);
 
+            if (attacker != null)
+            {
+                var abilityAttackResult = new AbilityAttackResult(attackResult);
+                attacker.CheckTalents(AbilityEffectType.OnAttackResult, abilityAttackResult);
+                CheckTalents(AbilityEffectType.OnAttackedResult, abilityAttackResult);
+            }
+
             if (limbHit == null) { return new AttackResult(); }
             Vector2 forceWorld = attack.TargetImpulseWorld + attack.TargetForceWorld;
             if (attacker != null)
@@ -3622,11 +3637,6 @@ namespace Barotrauma
                 }
                 ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
                 hitLimb.ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
-            }
-            if (attacker != null)
-            {
-                var abilityAttackResult = new AbilityAttackResult(attackResult);
-                attacker.CheckTalents(AbilityEffectType.OnAttackResult, abilityAttackResult);
             }
 
             return attackResult;

@@ -12,16 +12,16 @@
 
     public enum ActionType
     {
-        Always, OnPicked, OnUse, OnSecondaryUse,
-        OnWearing, OnContaining, OnContained, OnNotContained,
-        OnActive, OnFailure, OnBroken,
-        OnFire, InWater, NotInWater,
-        OnImpact,
-        OnEating,
-        OnDamaged,
-        OnSevered,
-        OnProduceSpawned,
-        OnOpen, OnClose,
+        Always = 0, OnPicked = 1, OnUse = 2, OnSecondaryUse = 3,
+        OnWearing = 4, OnContaining = 5, OnContained = 6, OnNotContained = 7,
+        OnActive = 8, OnFailure = 9, OnBroken = 10,
+        OnFire = 11, InWater = 12, NotInWater = 13,
+        OnImpact = 14,
+        OnEating = 15,
+        OnDamaged = 16,
+        OnSevered = 17,
+        OnProduceSpawned = 18,
+        OnOpen = 19, OnClose = 20,
         OnDeath = OnBroken,
         OnSuccess,
         OnAbility,
@@ -34,6 +34,7 @@
         OnAttack,
         OnAttackResult,
         OnAttacked,
+        OnAttackedResult,
         OnGainSkillPoint, 
         OnAllyGainSkillPoint, 
         OnRepairComplete,
@@ -57,7 +58,9 @@
         OnGainMissionMoney,
         OnItemDeconstructed,
         OnItemDeconstructedMaterial,
+        OnItemDeconstructedRetainProbability,
         OnStopTinkering,
+        OnItemPicked,
         AfterSubmarineAttacked,
     }
 
@@ -78,26 +81,37 @@
         BuffDurationMultiplier,
         DebuffDurationMultiplier,
         MedicalItemEffectivenessMultiplier,
+        FlowResistance,
         // Combat
         AttackMultiplier,
         TeamAttackMultiplier,
         RangedAttackSpeed,
         TurretAttackSpeed,
         TurretPowerCostReduction,
+        TurretChargeSpeed,
         MeleeAttackSpeed,
         MeleeAttackMultiplier,
+        RangedAttackMultiplier,
         RangedSpreadReduction,
         // Utility
         RepairSpeed,
         DeconstructorSpeedMultiplier,
         TinkeringDuration,
+        RepairToolStructureRepairMultiplier,
+        RepairToolStructureDamageMultiplier,
+        RepairToolDeattachTimeMultiplier,
+        MaxRepairConditionMultiplier,
+        IncreaseFabricationQuality,
+        GeneticMaterialRefineBonus,
+        GeneticMaterialTaintedProbabilityReductionOnCombine,
+        SkillGainSpeed,
         // Misc
         ReputationGainMultiplier,
         MissionMoneyGainMultiplier,
         ExperienceGainMultiplier,
         MissionExperienceGainMultiplier,
         // these should be deprecated and moved to their own implementation, no sense making them share space with stat values
-        Coathor,
+        Coauthor,
         WarriorPoetMissionRuns,
         WarriorPoetEnemiesKilled,
     }
@@ -113,7 +127,8 @@
         CanTinkerFabricatorsAndDeconstructors,
         TinkeringPowersDevices,
         GainSkillPastMaximum,
-        RetainExperienceForNewCharacter
+        RetainExperienceForNewCharacter,
+        AllowSecondOrderedTarget,
     }
 
 }

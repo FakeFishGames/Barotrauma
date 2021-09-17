@@ -1697,13 +1697,14 @@ namespace Barotrauma
                     //check missing mission texts
                     foreach (var missionPrefab in MissionPrefab.List)
                     {
-                        string nameIdentifier = "missionname." + missionPrefab.Identifier;
+                        string missionId = (missionPrefab.ConfigElement.Attribute("textidentifier") == null ? missionPrefab.Identifier : missionPrefab.ConfigElement.GetAttributeString("textidentifier", string.Empty));
+                        string nameIdentifier = "missionname." + missionId;
                         if (!tags[language].Contains(nameIdentifier))
                         {
                             if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
                             missingTags[nameIdentifier].Add(language);
                         }
-                        string descriptionIdentifier = "missiondescription." + missionPrefab.Identifier;
+                        string descriptionIdentifier = "missiondescription." + missionId;
                         if (!tags[language].Contains(descriptionIdentifier))
                         {
                             if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }
@@ -1713,6 +1714,7 @@ namespace Barotrauma
 
                     foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
                     {
+                        if (sub.Type != SubmarineType.Player) { continue; }
                         string nameIdentifier = "submarine.name." + sub.Name.ToLowerInvariant();
                         if (!tags[language].Contains(nameIdentifier))
                         {
@@ -1729,18 +1731,50 @@ namespace Barotrauma
 
                     foreach (AfflictionPrefab affliction in AfflictionPrefab.List)
                     {
-                        string nameIdentifier = "afflictionname." + affliction.Identifier;
+                        if (affliction.ShowIconThreshold > affliction.MaxStrength && 
+                            affliction.ShowIconToOthersThreshold > affliction.MaxStrength && 
+                            affliction.ShowInHealthScannerThreshold > affliction.MaxStrength)
+                        {
+                            //hidden affliction, no need for localization
+                            continue;
+                        }
+
+                        string afflictionId = affliction.TranslationOverride ?? affliction.Identifier;
+                        string nameIdentifier = "afflictionname." + afflictionId;
                         if (!tags[language].Contains(nameIdentifier))
                         {
                             if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
                             missingTags[nameIdentifier].Add(language);
                         }
 
-                        string descriptionIdentifier = "afflictiondescription." + affliction.Identifier;
+                        string descriptionIdentifier = "afflictiondescription." + afflictionId;
                         if (!tags[language].Contains(descriptionIdentifier))
                         {
                             if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }
                             missingTags[descriptionIdentifier].Add(language);
+                        }
+                    }
+
+                    foreach (var talentTree in TalentTree.JobTalentTrees)
+                    {
+                        foreach (var talentSubTree in talentTree.Value.TalentSubTrees)
+                        {
+                            string nameIdentifier = "talenttree." + talentSubTree.Identifier;
+                            if (!tags[language].Contains(nameIdentifier))
+                            {
+                                if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
+                                missingTags[nameIdentifier].Add(language);
+                            }
+                        }
+                    }
+
+                    foreach (var talent in TalentPrefab.TalentPrefabs)
+                    {
+                        string nameIdentifier = "talentname." + talent.Identifier;
+                        if (!tags[language].Contains(nameIdentifier))
+                        {
+                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
+                            missingTags[nameIdentifier].Add(language);
                         }
                     }
 

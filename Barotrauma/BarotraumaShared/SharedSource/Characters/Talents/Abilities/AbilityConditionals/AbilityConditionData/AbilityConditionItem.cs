@@ -6,12 +6,12 @@ namespace Barotrauma.Abilities
 {
     class AbilityConditionItem : AbilityConditionData
     {
-        private readonly string identifier;
+        private readonly string[] identifiers;
         private readonly string[] tags;
 
         public AbilityConditionItem(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
         {
-            identifier = conditionElement.GetAttributeString("identifier", string.Empty).ToLowerInvariant();
+            identifiers = conditionElement.GetAttributeStringArray("identifiers", Array.Empty<string>(), convertToLowerInvariant: true);
             tags = conditionElement.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
         }
 
@@ -29,15 +29,15 @@ namespace Barotrauma.Abilities
 
             if (itemPrefab != null)
             {
-                if (!string.IsNullOrEmpty(identifier))
+                if (identifiers.Any())
                 {
-                    if (itemPrefab.Identifier != identifier)
+                    if (!identifiers.Any(t => itemPrefab.Identifier == t))
                     {
                         return false;
                     }
                 }
 
-                return tags.Any(t => itemPrefab.Tags.Any(p => t == p));
+                return !tags.Any() || tags.Any(t => itemPrefab.Tags.Any(p => t == p));
             }
             else
             {

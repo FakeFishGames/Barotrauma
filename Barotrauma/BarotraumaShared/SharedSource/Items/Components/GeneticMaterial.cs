@@ -60,7 +60,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-
         public GeneticMaterial(Item item, XElement element)
             : base(item, element)
         {
@@ -85,7 +84,7 @@ namespace Barotrauma.Items.Components
 
         public bool CanBeCombinedWith(GeneticMaterial otherGeneticMaterial)
         {
-            return !tainted && otherGeneticMaterial != null && !otherGeneticMaterial.tainted;
+            return !tainted && otherGeneticMaterial != null && !otherGeneticMaterial.tainted && item.AllowDeconstruct && otherGeneticMaterial.item.AllowDeconstruct;
         }
 
         public override void Equip(Character character)
@@ -147,9 +146,12 @@ namespace Barotrauma.Items.Components
         public bool Combine(GeneticMaterial otherGeneticMaterial, Character user)
         {
             if (!CanBeCombinedWith(otherGeneticMaterial)) { return false; }
+
+            float conditionIncrease = Rand.Range(ConditionIncreaseOnCombineMin, ConditionIncreaseOnCombineMax);
+            conditionIncrease *= 1.0f + user.GetStatValue(StatTypes.GeneticMaterialRefineBonus);
             if (item.Prefab == otherGeneticMaterial.item.Prefab)
             {
-                item.Condition = Math.Max(item.Condition, otherGeneticMaterial.item.Condition) + Rand.Range(ConditionIncreaseOnCombineMin, ConditionIncreaseOnCombineMax);
+                item.Condition = Math.Max(item.Condition, otherGeneticMaterial.item.Condition) + conditionIncrease;
                 float taintedProbability = GetTaintedProbabilityOnRefine(user);
                 if (taintedProbability >= Rand.Range(0.0f, 1.0f))
                 {
@@ -160,9 +162,14 @@ namespace Barotrauma.Items.Components
             else
             {
                 item.Condition = otherGeneticMaterial.Item.Condition =
-                    (item.Condition + otherGeneticMaterial.Item.Condition) / 2.0f + Rand.Range(ConditionIncreaseOnCombineMin, ConditionIncreaseOnCombineMax);
+                    (item.Condition + otherGeneticMaterial.Item.Condition) / 2.0f + conditionIncrease;
                 item.OwnInventory?.TryPutItem(otherGeneticMaterial.Item, user: null);
-                MakeTainted();
+                item.AllowDeconstruct = false;
+                otherGeneticMaterial.Item.AllowDeconstruct = false;
+                if (GetTaintedProbabilityOnCombine(user) >= Rand.Range(0.0f, 1.0f))
+                {
+                    MakeTainted();
+                }
                 return false;
             }
         }
@@ -172,7 +179,14 @@ namespace Barotrauma.Items.Components
             if (user == null) { return 1.0f; }
             float probability = MathHelper.Lerp(0.0f, 0.99f, item.Condition / 100.0f);
             probability *= MathHelper.Lerp(1.0f, 0.25f, DegreeOfSuccess(user));
-            return probability;
+            return MathHelper.Clamp(probability, 0.0f, 1.0f);
+        }
+
+        private float GetTaintedProbabilityOnCombine(Character user)
+        {
+            if (user == null) { return 1.0f; }
+            float probability = 1.0f - user.GetStatValue(StatTypes.GeneticMaterialTaintedProbabilityReductionOnCombine);
+            return MathHelper.Clamp(probability, 0.0f, 1.0f);
         }
 
         private void MakeTainted()

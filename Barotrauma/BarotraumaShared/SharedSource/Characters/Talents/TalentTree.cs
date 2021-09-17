@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -8,13 +7,19 @@ namespace Barotrauma
 {
     class TalentTree
     {
+        public enum TalentTreeStageState
+        {
+            Invalid,
+            Locked,
+            Unlocked,
+            Available,
+            Highlighted
+        }
+
         public static readonly Dictionary<string, TalentTree> JobTalentTrees = new Dictionary<string, TalentTree>();
 
         public readonly List<TalentSubTree> TalentSubTrees = new List<TalentSubTree>();
 
-        private static HashSet<string> subtreeTalents = new HashSet<string>();
-
-        private const string PlaceholderTalent = "placeholder";
         public XElement ConfigElement
         {
             get;
@@ -35,14 +40,13 @@ namespace Barotrauma
 
             foreach (XElement subTreeElement in element.GetChildElements("subtree"))
             {
-                TalentSubTrees.Add(new TalentSubTree(subTreeElement)); 
+                TalentSubTrees.Add(new TalentSubTree(subTreeElement));
             }
 
             // talents found and unlocked using the identifier wihin the talent tree, so no duplicates may occur
             HashSet<string> duplicateSet = new HashSet<string>();
             foreach (string talent in TalentSubTrees.SelectMany(s => s.TalentOptionStages.SelectMany(o => o.Talents.Select(t => t.Identifier))))
             {
-                if (talent == PlaceholderTalent) { continue; }
                 TalentPrefab talentPrefab = TalentPrefab.TalentPrefabs.Find(c => c.Identifier.Equals(talent, StringComparison.OrdinalIgnoreCase));
                 if (talentPrefab == null)
                 {
@@ -97,7 +101,7 @@ namespace Barotrauma
                     }
                     break;
                 default:
-                    DebugConsole.ThrowError($"Invalid XML root element: '{rootElement.Name.ToString()}' in {file.Path}");
+                    DebugConsole.ThrowError($"Invalid XML root element: '{rootElement.Name}' in {file.Path}");
                     break;
             }
         }
@@ -117,10 +121,63 @@ namespace Barotrauma
             return IsViableTalentForCharacter(character, talentIdentifier, character?.Info?.UnlockedTalents ?? Enumerable.Empty<string>());
         }
 
+        // i hate this function - markus
+        public static TalentTreeStageState GetTalentOptionStageState(Character character, string subTreeIdentifier, int index, List<string> selectedTalents)
+        {
+            if (character?.Info?.Job.Prefab is null) { return TalentTreeStageState.Invalid; }
+
+            if (!JobTalentTrees.TryGetValue(character.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return TalentTreeStageState.Invalid; }
+
+            TalentSubTree subTree = talentTree.TalentSubTrees.FirstOrDefault(tst => tst.Identifier == subTreeIdentifier);
+
+            if (subTree == null) { return TalentTreeStageState.Invalid; }
+
+            TalentOption targetTalentOption = subTree.TalentOptionStages[index];
+
+            if (targetTalentOption.Talents.Any(t => character.HasTalent(t.Identifier)))
+            {
+                return TalentTreeStageState.Unlocked;
+            }
+
+            if (targetTalentOption.Talents.Any(t => selectedTalents.Contains(t.Identifier)))
+            {
+                return TalentTreeStageState.Highlighted;
+            }
+
+            bool hasTalentInLastTier = true;
+            bool isLastTalentPurchased = true;
+
+            int lastindex = index - 1;
+            if (lastindex >= 0)
+            {
+                TalentOption lastLatentOption = subTree.TalentOptionStages[lastindex];
+                hasTalentInLastTier = lastLatentOption.Talents.Any(HasTalent);
+                isLastTalentPurchased = lastLatentOption.Talents.Any(t => character.HasTalent(t.Identifier));
+            }
+
+            if (!hasTalentInLastTier)
+            {
+                return TalentTreeStageState.Locked;
+            }
+
+            bool hasPointsForNewTalent = character.Info.GetTotalTalentPoints() - selectedTalents.Count > 0;
+
+            if (hasPointsForNewTalent)
+            {
+                return isLastTalentPurchased ? TalentTreeStageState.Highlighted : TalentTreeStageState.Available;
+            }
+
+            return TalentTreeStageState.Locked;
+
+            bool HasTalent(TalentPrefab t)
+            {
+                return selectedTalents.Contains(t.Identifier);
+            }
+        }
+
 
         public static bool IsViableTalentForCharacter(Character character, string talentIdentifier, IEnumerable<string> selectedTalents)
         {
-            if (talentIdentifier == PlaceholderTalent) { return false; }
             if (character?.Info?.Job.Prefab == null) { return false; }
             if (character.Info.GetTotalTalentPoints() - selectedTalents.Count() <= 0) { return false; }
 
@@ -173,11 +230,15 @@ namespace Barotrauma
     {
         public string Identifier { get; }
 
+        public string DisplayName { get; }
+
         public readonly List<TalentOption> TalentOptionStages = new List<TalentOption>();
 
         public TalentSubTree(XElement subTreeElement)
         {
             Identifier = subTreeElement.GetAttributeString("identifier", "");
+
+            DisplayName = TextManager.Get("talenttree." + Identifier, returnNull: true) ?? Identifier;
 
             foreach (XElement talentOptionsElement in subTreeElement.GetChildElements("talentoptions"))
             {
@@ -196,6 +257,7 @@ namespace Barotrauma
             foreach (XElement talentOptionElement in talentOptionsElement.GetChildElements("talentoption"))
             {
                 string identifier = talentOptionElement.GetAttributeString("identifier", string.Empty);
+
                 if (!TalentPrefab.TalentPrefabs.ContainsKey(identifier))
                 {
                     DebugConsole.ThrowError($"Error in talent tree \"{debugIdentifier}\" - could not find a talent with the identifier \"{identifier}\".");

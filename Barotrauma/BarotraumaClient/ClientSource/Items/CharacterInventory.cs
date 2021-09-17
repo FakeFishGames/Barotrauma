@@ -1232,7 +1232,7 @@ namespace Barotrauma
                     highlightedQuickUseSlot = visualSlots[i];
                 }
 
-                if (!slots[i].First().AllowedSlots.Any(a => a == InvSlotType.Any) || SlotTypes[i] == InvSlotType.HealthInterface)
+                if (slots[i].First().AllowedSlots.Count() == 1 || SlotTypes[i] == InvSlotType.HealthInterface)
                 {
                     continue;
                 }

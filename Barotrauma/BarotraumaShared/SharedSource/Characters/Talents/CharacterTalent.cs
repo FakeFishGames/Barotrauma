@@ -85,14 +85,13 @@ namespace Barotrauma
         // XML logic
         private void LoadAbilityGroupInterval(XElement abilityGroup)
         {
-            string name = abilityGroup.Name.ToString().ToLowerInvariant();
-            characterAbilityGroupIntervals.Add(new CharacterAbilityGroupInterval(this, abilityGroup));
+            characterAbilityGroupIntervals.Add(new CharacterAbilityGroupInterval(AbilityEffectType.Undefined, this, abilityGroup));
         }
 
         private void LoadAbilityGroupEffect(XElement abilityGroup)
         {
             AbilityEffectType abilityEffectType = ParseAbilityEffectType(this, abilityGroup.GetAttributeString("abilityeffecttype", "none"));
-            AddAbilityGroupEffect(new CharacterAbilityGroupEffect(this, abilityGroup), abilityEffectType);
+            AddAbilityGroupEffect(new CharacterAbilityGroupEffect(abilityEffectType, this, abilityGroup), abilityEffectType);
         }
 
         public void AddAbilityGroupEffect(CharacterAbilityGroupEffect characterAbilityGroup, AbilityEffectType abilityEffectType = AbilityEffectType.None)

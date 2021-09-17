@@ -208,7 +208,7 @@ namespace Barotrauma
 
             ReportButtonFrame.RectTransform.AbsoluteOffset = new Point(0, -chatBox.ToggleButton.Rect.Height);
 
-            CreateReports(this, ReportButtonFrame, reports, false);
+            CreateReportButtons(this, ReportButtonFrame, reports, false);
 
             #endregion
 
@@ -218,7 +218,7 @@ namespace Barotrauma
             dismissedOrderPrefab ??= Order.GetPrefab("dismissed");
         }
 
-        public static void CreateReports(CrewManager crewManager, GUIComponent parent, List<Order> reports, bool isHorizontal)
+        public static void CreateReportButtons(CrewManager crewManager, GUIComponent parent, List<Order> reports, bool isHorizontal)
         {
             //report buttons
             foreach (Order order in reports)
@@ -228,22 +228,21 @@ namespace Barotrauma
                 {
                     OnClicked = (button, userData) =>
                     {
-                        if (!CanIssueOrders) { return false; }
+                        if (!CanIssueOrders || crewManager?.DraggedOrder != null) { return false; }
                         var sub = Character.Controlled.Submarine;
                         if (sub == null || sub.TeamID != Character.Controlled.TeamID || sub.Info.IsWreck) { return false; }
 
                         if (crewManager != null)
                         {
                             crewManager.SetCharacterOrder(null, order, null, CharacterInfo.HighestManualOrderPriority, Character.Controlled);
-
                             if (crewManager.IsSinglePlayer) { HumanAIController.ReportProblem(Character.Controlled, order); }
                         }
                         return true;
                     },
                     UserData = order,
-                    ToolTip = order.Name,
                     ClampMouseRectToParent = false
                 };
+                btn.ToolTip = $"‖color:{XMLExtensions.ColorToString(order.Prefab.Color)}‖{order.Name}‖color:end‖\n{TextManager.Get("draganddropreports")}";
 
                 if (crewManager != null)
                 {
@@ -272,8 +271,9 @@ namespace Barotrauma
                 {
                     Color = order.Color,
                     HoverColor = Color.Lerp(order.Color, Color.White, 0.5f),
-                    ToolTip = order.Name,
-                    SpriteEffects = SpriteEffects.FlipHorizontally
+                    ToolTip = btn.RawToolTip,
+                    SpriteEffects = SpriteEffects.FlipHorizontally,
+                    UserData = order
                 };
             }
         }
@@ -717,7 +717,7 @@ namespace Barotrauma
                     hull ??= orderGiver.CurrentHull;
                     AddOrder(new Order(order.Prefab ?? order, hull, null, orderGiver), order.FadeOutTime);
                 }
-                else if(order.IsIgnoreOrder)
+                else if (order.IsIgnoreOrder)
                 {
                     WallSection ws = null;
                     if (order.TargetType == Order.OrderTargetType.Entity && order.TargetEntity is IIgnorable ignorable)

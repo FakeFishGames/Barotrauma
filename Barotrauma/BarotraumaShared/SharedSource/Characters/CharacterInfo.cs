@@ -979,6 +979,8 @@ namespace Barotrauma
                 increase *= SkillSettings.Current.AssistantSkillIncreaseMultiplier;
             }
 
+            increase *= 1f + Character.GetStatValue(StatTypes.SkillGainSpeed);
+
             float prevLevel = Job.GetSkillLevel(skillIdentifier);
             Job.IncreaseSkillLevel(skillIdentifier, increase, Character.HasAbilityFlag(AbilityFlags.GainSkillPastMaximum));
 
@@ -1521,6 +1523,17 @@ namespace Barotrauma
             if (savedStatValues.TryGetValue(statType, out var statValues))
             {
                 return statValues.Sum(v => v.StatValue);
+            }
+            else
+            {
+                return 0f;
+            }
+        }
+        public float GetSavedStatValue(StatTypes statType, string statIdentifier)
+        {
+            if (savedStatValues.TryGetValue(statType, out var statValues))
+            {
+                return statValues.Where(s => s.StatIdentifier.Equals(statIdentifier, StringComparison.OrdinalIgnoreCase)).Sum(v => v.StatValue);
             }
             else
             {

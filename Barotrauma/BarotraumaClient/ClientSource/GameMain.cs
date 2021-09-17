@@ -194,6 +194,8 @@ namespace Barotrauma
 
 #if DEBUG
         public static bool FirstLoad = true;
+
+        public static bool CancelQuickStart;
 #endif
 
         public GameMain(string[] args)
@@ -309,7 +311,7 @@ namespace Barotrauma
 
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
-            
+
             GraphicsDeviceManager.ApplyChanges();
 
             if (windowMode == WindowMode.BorderlessWindowed)
@@ -588,7 +590,7 @@ namespace Barotrauma
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             TitleScreen.LoadState = 55.0f;
         yield return CoroutineStatus.Running;
-        
+
             UpgradePrefab.LoadAll(GetFilesOfType(ContentType.UpgradeModules));
             TitleScreen.LoadState = 56.0f;
         yield return CoroutineStatus.Running;
@@ -601,7 +603,7 @@ namespace Barotrauma
             ItemAssemblyPrefab.LoadAll();
             TitleScreen.LoadState = 60.0f;
         yield return CoroutineStatus.Running;
-            
+
             GameModePreset.Init();
 
             SaveUtil.DeleteDownloadedSubs();
@@ -654,7 +656,7 @@ namespace Barotrauma
             ParticleManager.LoadPrefabs();
             TitleScreen.LoadState = 88.0f;
             LevelObjectPrefab.LoadAll();
-            
+
             TitleScreen.LoadState = 90.0f;
         yield return CoroutineStatus.Running;
 
@@ -804,7 +806,9 @@ namespace Barotrauma
                     }
 
 #if DEBUG
-                    if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen && (Config.AutomaticQuickStartEnabled || Config.AutomaticCampaignLoadEnabled || Config.TestScreenEnabled) && FirstLoad && !PlayerInput.KeyDown(Keys.LeftShift))
+                    CancelQuickStart |= PlayerInput.KeyDown(Keys.LeftShift);
+
+                    if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen && (Config.AutomaticQuickStartEnabled || Config.AutomaticCampaignLoadEnabled || Config.TestScreenEnabled) && FirstLoad && !CancelQuickStart)
                     {
                         loadingScreenOpen = false;
                         FirstLoad = false;
@@ -812,7 +816,7 @@ namespace Barotrauma
                         if (Config.TestScreenEnabled)
                         {
                             TestScreen.Select();
-                        } 
+                        }
                         else if (Config.AutomaticQuickStartEnabled)
                         {
                             MainMenuScreen.QuickStart();
@@ -930,8 +934,8 @@ namespace Barotrauma
                         static bool itemHudActive()
                         {
                             if (Character.Controlled?.SelectedConstruction == null) { return false; }
-                            return 
-                                Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null) || 
+                            return
+                                Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null) ||
                                 ((Character.Controlled.ViewTarget as Item)?.Prefab?.FocusOnSelected ?? false);
                         }
                     }
@@ -1095,7 +1099,7 @@ namespace Barotrauma
             if (save)
             {
                 GUI.SetSavingIndicatorState(true);
-                
+
                 if (GameSession.Submarine != null && !GameSession.Submarine.Removed)
                 {
                     GameSession.SubmarineInfo = new SubmarineInfo(GameSession.Submarine);
@@ -1267,7 +1271,7 @@ namespace Barotrauma
             string text = TextManager.GetWithVariable("openlinkinbrowserprompt", "[link]", url);
             string extensionText = TextManager.Get(promptExtensionTag, returnNull: true, useEnglishAsFallBack: false);
             if (!string.IsNullOrEmpty(extensionText))
-            {   
+            {
                 text += $"\n\n{extensionText}";
             }
 

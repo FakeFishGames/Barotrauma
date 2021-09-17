@@ -214,7 +214,7 @@ namespace Barotrauma.Items.Components
             if (UILabel == string.Empty) { return string.Empty; }
             if (UILabel != null)
             {
-                return TextManager.Get("UILabel." + UILabel);
+                return TextManager.Get("UILabel." + UILabel, returnNull: true) ?? TextManager.Get(UILabel);
             }
             else
             {

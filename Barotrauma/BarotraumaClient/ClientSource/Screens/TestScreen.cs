@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Linq;
+using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -22,6 +23,8 @@ namespace Barotrauma
         private Submarine? submarine;
         private Character? dummyCharacter;
         public static Effect BlueprintEffect;
+
+        private TabMenu tabMenu;
 
         public TestScreen()
         {
@@ -50,18 +53,15 @@ namespace Barotrauma
                 dummyCharacter?.Remove();
             }
 
-            // ????????
-            submarine = new Submarine(SubmarineInfo.SavedSubmarines.FirstOrDefault(info => info.Name.Equals("Crescent", StringComparison.OrdinalIgnoreCase)));
-            miniMapItem = new Item(ItemPrefab.Find(null, "statusmonitor"), Vector2.Zero, submarine);
-            MiniMap miniMap = miniMapItem.GetComponent<MiniMap>();
-            miniMap.PowerConsumption = 0;
-
             dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.DummyID, hasAi: false);
+            dummyCharacter.Info.Job = new Job(JobPrefab.Prefabs.Where(jp => TalentTree.JobTalentTrees.ContainsKey(jp.Identifier)).GetRandom());
             dummyCharacter.Info.Name = "Galldren";
             dummyCharacter.Inventory.CreateSlots();
 
             Character.Controlled = dummyCharacter;
             GameMain.World.ProcessChanges();
+            TabMenu.selectedTab = TabMenu.InfoFrameTab.Talents;
+            tabMenu = new TabMenu();
         }
 
         public override void AddToGUIUpdateList()
@@ -69,34 +69,21 @@ namespace Barotrauma
             Frame.AddToGUIUpdateList();
             CharacterHUD.AddToGUIUpdateList(dummyCharacter);
             dummyCharacter?.SelectedConstruction?.AddToGUIUpdateList();
+            tabMenu.AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
+            tabMenu.Update();
 
-            if (dummyCharacter is { } dummy && miniMapItem is { } item)
+            if (dummyCharacter is { } dummy)
             {
-                if (dummy.SelectedConstruction != item)
-                {
-                    dummy.SelectedConstruction = item;
-                }
-                dummy.SelectedConstruction?.UpdateHUD(Cam, dummy, (float)deltaTime);
-                Vector2 pos = FarseerPhysics.ConvertUnits.ToSimUnits(item.Position);
-                foreach (Limb limb in dummy.AnimController.Limbs)
-                {
-                    limb.body.SetTransform(pos, 0.0f);
-                }
-
-                if (dummy.AnimController?.Collider is { } collider)
-                {
-                    collider.SetTransform(pos, 0);
-                }
-
                 dummy.ControlLocalPlayer((float)deltaTime, Cam, false);
                 dummy.Control((float)deltaTime, Cam);
-                dummy.Submarine = submarine;
             }
+
+            GUI.Update((float)deltaTime);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)

@@ -61,7 +61,7 @@ namespace Barotrauma.Items.Components
         public int Capacity
         {
             get { return capacity; }
-            set { capacity = Math.Max(value, 1); }
+            set { capacity = Math.Max(value, 0); }
         }
 
         //how many items can be contained
@@ -86,15 +86,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-#if DEBUG
-        [Editable]
-#endif
         [Serialize("0.0,0.0", false, description: "The position where the contained items get drawn at (offset from the upper left corner of the sprite in pixels).")]
         public Vector2 ItemPos { get; set; }
 
-#if DEBUG
-        [Editable]
-#endif
         [Serialize("0.0,0.0", false, description: "The interval at which the contained items are spaced apart from each other (in pixels).")]
         public Vector2 ItemInterval { get; set; }
 
@@ -329,9 +323,22 @@ namespace Barotrauma.Items.Components
         {
             return slotRestrictions.Any(s => s.MatchesItem(item));
         }
+
+        public bool CanBeContained(Item item, int index)
+        {
+            if (index < 0 || index >= capacity) { return false; }
+            return slotRestrictions[index].MatchesItem(item);
+        }
+
         public bool CanBeContained(ItemPrefab itemPrefab)
         {
             return slotRestrictions.Any(s => s.MatchesItem(itemPrefab));
+        }
+
+        public bool CanBeContained(ItemPrefab itemPrefab, int index)
+        {
+            if (index < 0 || index >= capacity) { return false; }
+            return slotRestrictions[index].MatchesItem(itemPrefab);
         }
 
         readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
