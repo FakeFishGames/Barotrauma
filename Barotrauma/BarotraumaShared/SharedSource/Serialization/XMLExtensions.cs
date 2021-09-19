@@ -1,5 +1,4 @@
 ﻿using System;
-using Barotrauma.IO;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -7,6 +6,8 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
+using File = Barotrauma.IO.File;
+using FileStream = Barotrauma.IO.FileStream;
 
 namespace Barotrauma
 {
@@ -14,13 +15,45 @@ namespace Barotrauma
     {
         public static string ParseContentPathFromUri(this XObject element) => ToolBox.ConvertAbsoluteToRelativePath(element.BaseUri);
 
+        public static readonly XmlReaderSettings ReaderSettings = new XmlReaderSettings
+        {
+            DtdProcessing = DtdProcessing.Prohibit,
+            XmlResolver = null
+        };
+        
+        public static XmlReader CreateReader(System.IO.Stream stream)
+            => XmlReader.Create(stream, ReaderSettings);
+        
+        public static XDocument TryLoadXml(System.IO.Stream stream)
+        {
+            XDocument doc;
+            try
+            {
+                using XmlReader reader = CreateReader(stream);
+                doc = XDocument.Load(reader);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError($"Couldn't load xml document from stream!", e);
+                return null;
+            }
+            if (doc?.Root == null)
+            {
+                DebugConsole.ThrowError("XML could not be loaded from stream: Document or the root element is invalid!");
+                return null;
+            }
+            return doc;
+        }
+        
         public static XDocument TryLoadXml(string filePath)
         {
             XDocument doc;
             try
             {
                 ToolBox.IsProperFilenameCase(filePath);
-                doc = XDocument.Load(filePath, LoadOptions.SetBaseUri);
+                using FileStream stream = File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                using XmlReader reader = CreateReader(stream);
+                doc = XDocument.Load(reader);
             }
             catch (Exception e)
             {
@@ -45,7 +78,9 @@ namespace Barotrauma
             {
                 try
                 {
-                    doc = XDocument.Load(filePath, LoadOptions.SetBaseUri);
+                    using FileStream stream = File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                    using XmlReader reader = CreateReader(stream);
+                    doc = XDocument.Load(reader);
                 }
                 catch
                 {

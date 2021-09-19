@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 
 namespace Barotrauma
@@ -16,7 +16,7 @@ namespace Barotrauma
             {
                 forbiddenWords = File.ReadAllLines(fileListPath).Select(s => s.ToLowerInvariant()).ToHashSet();
             }
-            catch (IOException e)
+            catch (System.IO.IOException e)
             {
                 DebugConsole.ThrowError($"Failed to load the list of forbidden words from {fileListPath}.", e);
             }

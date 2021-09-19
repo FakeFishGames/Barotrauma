@@ -494,7 +494,26 @@ namespace Barotrauma.Networking
                     stream?.Close();
                     break;
                 case FileTransferType.CampaignSave:
-                    //TODO: verify that the received file is a valid save file
+                    try
+                    {
+                        var files = SaveUtil.EnumerateContainedFiles(fileTransfer.FilePath);
+                        foreach (var file in files)
+                        {
+                            string extension = Path.GetExtension(file);
+                            if ((!extension.Equals(".sub", StringComparison.OrdinalIgnoreCase)
+                                && !file.Equals("gamesession.xml"))
+                                || file.CleanUpPathCrossPlatform(correctFilenameCase: false).Contains('/'))
+                            {
+                                ErrorMessage = $"Found unexpected file in \"{fileTransfer.FileName}\"! ({file})";
+                                return false;
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        ErrorMessage = $"Loading received campaign save \"{fileTransfer.FileName}\" failed! {{{e.Message}}}";
+                        return false;
+                    }
                     break;
             }
 

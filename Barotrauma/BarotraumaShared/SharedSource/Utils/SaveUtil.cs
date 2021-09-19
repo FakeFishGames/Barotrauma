@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Barotrauma.IO;
 using System.IO.Compression;
@@ -362,8 +363,10 @@ namespace Barotrauma
             }
         }
 
-        public static bool DecompressFile(string sDir, GZipStream zipStream, ProgressDelegate progress)
+        private static bool DecompressFile(bool writeFile, string sDir, GZipStream zipStream, ProgressDelegate progress, out string fileName)
         {
+            fileName = null;
+            
             //Decompress file name
             byte[] bytes = new byte[sizeof(int)];
             int Readed = zipStream.Read(bytes, 0, sizeof(int));
@@ -385,6 +388,8 @@ namespace Barotrauma
                 sb.Append(c);
             }
             string sFileName = sb.ToString();
+            
+            fileName = sFileName;
             progress?.Invoke(sFileName);
 
             //Decompress file content
@@ -397,6 +402,17 @@ namespace Barotrauma
 
             string sFilePath = Path.Combine(sDir, sFileName);
             string sFinalDir = Path.GetDirectoryName(sFilePath);
+
+            string sDirFull = (string.IsNullOrEmpty(sDir) ? Directory.GetCurrentDirectory() : Path.GetFullPath(sDir)).CleanUpPathCrossPlatform(correctFilenameCase: false);
+            string sFinalDirFull = (string.IsNullOrEmpty(sFinalDir) ? Directory.GetCurrentDirectory() : Path.GetFullPath(sFinalDir)).CleanUpPathCrossPlatform(correctFilenameCase: false);
+            
+            if (!sFinalDirFull.StartsWith(sDirFull, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    $"Error extracting \"{sFileName}\": cannot be extracted to parent directory");
+            }
+
+            if (!writeFile) { return true; }
             if (!Directory.Exists(sFinalDir))
                 Directory.CreateDirectory(sFinalDir);
 
@@ -431,7 +447,7 @@ namespace Barotrauma
                 {
                     using (FileStream inFile = File.Open(sCompressedFile, System.IO.FileMode.Open, System.IO.FileAccess.Read))
                     using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
-                        while (DecompressFile(sDir, zipStream, progress)) { };
+                        while (DecompressFile(true, sDir, zipStream, progress, out _)) { };
 
                     break;
                 }
@@ -442,6 +458,35 @@ namespace Barotrauma
                     Thread.Sleep(250);
                 }
             }
+        }
+
+        public static IEnumerable<string> EnumerateContainedFiles(string sCompressedFile)
+        {
+            int maxRetries = 4;
+            HashSet<string> paths = new HashSet<string>();
+            for (int i = 0; i <= maxRetries; i++)
+            {
+                try
+                {
+                    using FileStream inFile = File.Open(sCompressedFile, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                    using GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true);
+                    while (DecompressFile(false, "", zipStream, null, out string fileName))
+                    {
+                        paths.Add(fileName);
+                    }
+                }
+                catch (System.IO.IOException e)
+                {
+                    if (i >= maxRetries || !File.Exists(sCompressedFile)) { throw; }
+
+                    DebugConsole.NewMessage(
+                        $"Failed to decompress file \"{sCompressedFile}\" for enumeration {{{e.Message}}}, retrying in 250 ms...",
+                        Color.Red);
+                    Thread.Sleep(250);
+                }
+            }
+
+            return paths;
         }
 
         public static void CopyFolder(string sourceDirName, string destDirName, bool copySubDirs, bool overwriteExisting = false)
