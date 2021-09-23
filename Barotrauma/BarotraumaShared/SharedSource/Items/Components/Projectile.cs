@@ -227,10 +227,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void Launch(Character user, Vector2 simPosition, float rotation)
+        private void Launch(Character user, Vector2 simPosition, float rotation, float damageMultiplier = 1f)
         {
             Item.body.ResetDynamics();
             Item.SetTransform(simPosition, rotation);
+            Attack.DamageMultiplier = damageMultiplier;
             // Set user for hitscan projectiles to work properly.
             User = user;
             // Need to set null for non-characterusable items.
@@ -243,7 +244,7 @@ namespace Barotrauma.Items.Components
             Item.SetTransform(simPosition, rotation + (Item.body.Dir * LaunchRotationRadians));
         }
 
-        public void Shoot(Character user, Vector2 weaponPos, Vector2 spawnPos, float rotation, List<Body> ignoredBodies, bool createNetworkEvent)
+        public void Shoot(Character user, Vector2 weaponPos, Vector2 spawnPos, float rotation, List<Body> ignoredBodies, bool createNetworkEvent, float damageMultiplier = 1f)
         {
             //add the limbs of the shooter to the list of bodies to be ignored
             //so that the player can't shoot himself
@@ -264,7 +265,7 @@ namespace Barotrauma.Items.Components
                     projectilePos = newPos;
                 }
             }
-            Launch(user, projectilePos, rotation);
+            Launch(user, projectilePos, rotation, damageMultiplier);
             if (createNetworkEvent && !Item.Removed && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
 #if SERVER

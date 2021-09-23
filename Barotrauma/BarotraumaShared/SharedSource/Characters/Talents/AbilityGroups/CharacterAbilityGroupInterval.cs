@@ -39,6 +39,10 @@ namespace Barotrauma.Abilities
                         characterAbility.UpdateCharacterAbility(conditionsMatched, TimeSinceLastUpdate);
                     }
                 }
+                if (conditionsMatched)
+                {
+                    timesTriggered++;
+                }
                 TimeSinceLastUpdate = 0;
             }
         }

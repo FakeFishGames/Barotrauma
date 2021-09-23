@@ -72,3 +72,9 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:blueprintshader_opengl.fx
+
+#begin thresholdtint_opengl.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:thresholdtint_opengl.fx

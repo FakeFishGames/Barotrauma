@@ -979,7 +979,7 @@ namespace Barotrauma
             float minSuitability = -10, maxSuitability = 10;
             foreach (Affliction affliction in getAfflictions(limb))
             {
-                if (affliction.Strength < affliction.Prefab.TreatmentThreshold) { continue; }
+                if (affliction.Strength <= affliction.Prefab.TreatmentThreshold) { continue; }
                 if (ignoreHiddenAfflictions && affliction.Strength < affliction.Prefab.ShowIconThreshold) { continue; }
                 foreach (KeyValuePair<string, float> treatment in affliction.Prefab.TreatmentSuitability)
                 {
@@ -1088,7 +1088,7 @@ namespace Barotrauma
         /// Automatically filters out buffs.
         /// </summary>
         public static IEnumerable<Affliction> SortAfflictionsBySeverity(IEnumerable<Affliction> afflictions, bool excludeBuffs = true) =>
-            afflictions.Where(a => !excludeBuffs || !a.Prefab.IsBuff).OrderByDescending(a => a.DamagePerSecond).ThenByDescending(a => a.Strength);
+            afflictions.Where(a => !excludeBuffs || !a.Prefab.IsBuff).OrderByDescending(a => a.DamagePerSecond).ThenByDescending(a => a.Strength / a.Prefab.MaxStrength);
 
         public void Save(XElement healthElement)
         {

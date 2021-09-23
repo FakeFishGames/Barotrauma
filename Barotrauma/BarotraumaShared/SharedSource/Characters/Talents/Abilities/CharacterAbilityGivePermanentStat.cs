@@ -13,6 +13,7 @@ namespace Barotrauma.Abilities
         private readonly bool removeOnDeath;
         private readonly bool removeAfterRound;
         private readonly bool giveOnAddingFirstTime;
+        private readonly bool setValue;
 
         //private readonly float maximumValue;
 
@@ -28,6 +29,7 @@ namespace Barotrauma.Abilities
             removeOnDeath = abilityElement.GetAttributeBool("removeondeath", true);
             removeAfterRound = abilityElement.GetAttributeBool("removeafterround", false);
             giveOnAddingFirstTime = abilityElement.GetAttributeBool("giveonaddingfirsttime", characterAbilityGroup.AbilityEffectType == AbilityEffectType.None);
+            setValue = abilityElement.GetAttributeBool("setvalue", false);
         }
 
         public override void InitializeAbility(bool addingFirstTime)
@@ -52,11 +54,11 @@ namespace Barotrauma.Abilities
         {
             if (targetAllies)
             {
-                Character.GetFriendlyCrew(Character).ForEach(c => c?.Info.ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath, removeAfterRound, maxValue));
+                Character.GetFriendlyCrew(Character).ForEach(c => c?.Info.ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath, removeAfterRound, maxValue, setValue));
             }
             else
             {
-                Character?.Info.ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath, removeAfterRound, maxValue);
+                Character?.Info.ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath, removeAfterRound, maxValue, setValue);
             }
         }
     }

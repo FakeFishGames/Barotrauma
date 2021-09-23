@@ -464,7 +464,7 @@ namespace Barotrauma
                     };
                     break;
                 case "return":
-                    newObjective = new AIObjectiveReturn(character, this, priorityModifier: priorityModifier);
+                    newObjective = new AIObjectiveReturn(character, orderGiver, this, priorityModifier: priorityModifier);
                     newObjective.Abandoned += () => DismissSelf(order, option);
                     newObjective.Completed += () => DismissSelf(order, option);
                     break;

@@ -20,6 +20,11 @@
         public Mission Mission { get; set; }
     }
 
+    interface IAbilityLocation
+    {
+        public Location Location { get; set; }
+    }
+
     interface IAbilityCharacter
     {
         public Character Character { get; set; }

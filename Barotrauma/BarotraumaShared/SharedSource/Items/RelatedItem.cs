@@ -167,7 +167,8 @@ namespace Barotrauma
                 new XAttribute("type", type.ToString()),
                 new XAttribute("optional", IsOptional),
                 new XAttribute("ignoreineditor", IgnoreInEditor),
-                new XAttribute("excludebroken", ExcludeBroken));
+                new XAttribute("excludebroken", ExcludeBroken),
+                new XAttribute("targetslot", TargetSlot));
 
             if (excludedIdentifiers.Length > 0)
             {

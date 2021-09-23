@@ -628,6 +628,11 @@ namespace Barotrauma
             Description = TextManager.Get("AfflictionDescription." + translationId, true) ?? element.GetAttributeString("description", "");
             IsBuff = element.GetAttributeBool("isbuff", false);
 
+            if (element.Attribute("nameidentifier") != null)
+            {
+                Name = TextManager.Get(element.GetAttributeString("nameidentifier", string.Empty), returnNull: true) ?? Name;
+            }
+
             LimbSpecific = element.GetAttributeBool("limbspecific", false);
             if (!LimbSpecific)
             {
@@ -668,6 +673,15 @@ namespace Barotrauma
                         break;
                     case "afflictionoverlay":
                         AfflictionOverlay = new Sprite(subElement);
+                        break;
+                    case "statvalue":
+                        DebugConsole.ThrowError($"Error in affliction \"{Identifier}\" - stat values should be configured inside the affliction's effects.");
+                        break;
+                    case "effect":
+                    case "periodiceffect":
+                        break;
+                    default:
+                        DebugConsole.AddWarning($"Unrecognized element in affliction \"{Identifier}\" ({subElement.Name})");
                         break;
                 }
             }

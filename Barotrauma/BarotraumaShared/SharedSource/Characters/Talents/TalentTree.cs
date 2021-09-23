@@ -34,7 +34,7 @@ namespace Barotrauma
 
             if (string.IsNullOrEmpty(jobIdentifier))
             {
-                DebugConsole.ThrowError("No job defined for talent tree!");
+                DebugConsole.ThrowError($"No job defined for talent tree in \"{filePath}\"!");
                 return;
             }
 

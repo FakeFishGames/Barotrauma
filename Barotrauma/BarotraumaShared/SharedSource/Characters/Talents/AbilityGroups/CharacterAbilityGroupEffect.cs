@@ -23,6 +23,7 @@ namespace Barotrauma.Abilities
                         characterAbility.ApplyAbilityEffect(abilityObject);
                     }
                 }
+                timesTriggered++;
             }
         }
 

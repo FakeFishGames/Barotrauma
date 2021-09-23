@@ -61,8 +61,10 @@ namespace Barotrauma.Items.Components
             foreach (XElement subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("attack", StringComparison.OrdinalIgnoreCase)) { continue; }
-                Attack = new Attack(subElement, item.Name + ", MeleeWeapon", item);
-                Attack.DamageRange = item.body == null ? 10.0f : ConvertUnits.ToDisplayUnits(item.body.GetMaxExtent());
+                Attack = new Attack(subElement, item.Name + ", MeleeWeapon", item)
+                {
+                    DamageRange = item.body == null ? 10.0f : ConvertUnits.ToDisplayUnits(item.body.GetMaxExtent())
+                };
             }
             item.IsShootable = true;
             // TODO: should define this in xml if we have melee weapons that don't require aim to use
@@ -266,16 +268,10 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            Character targetCharacter = null;
-            Limb targetLimb = null;
-            Structure targetStructure = null;
-            Item targetItem = null;
-
-            if (f2.Body.UserData is Limb)
+            if (f2.Body.UserData is Limb targetLimb)
             {
-                targetLimb = (Limb)f2.Body.UserData;
                 if (targetLimb.IsSevered || targetLimb.character == null || targetLimb.character == User) { return false; }
-                targetCharacter = targetLimb.character;
+                var targetCharacter = targetLimb.character;
                 if (targetCharacter == picker) { return false; }
                 if (AllowHitMultiple)
                 {
@@ -287,9 +283,8 @@ namespace Barotrauma.Items.Components
                 }
                 hitTargets.Add(targetCharacter);
             }
-            else if (f2.Body.UserData is Character)
+            else if (f2.Body.UserData is Character targetCharacter)
             {
-                targetCharacter = (Character)f2.Body.UserData;
                 if (targetCharacter == picker || targetCharacter == User) { return false; }
                 targetLimb = targetCharacter.AnimController.GetLimb(LimbType.Torso); //Otherwise armor can be bypassed in strange ways
                 if (AllowHitMultiple)
@@ -302,9 +297,8 @@ namespace Barotrauma.Items.Components
                 }
                 hitTargets.Add(targetCharacter);
             }
-            else if (f2.Body.UserData is Structure)
+            else if (f2.Body.UserData is Structure targetStructure)
             {
-                targetStructure = (Structure)f2.Body.UserData;
                 if (AllowHitMultiple)
                 {
                     if (hitTargets.Contains(targetStructure)) { return true; }
@@ -315,9 +309,8 @@ namespace Barotrauma.Items.Components
                 }
                 hitTargets.Add(targetStructure);
             }
-            else if (f2.Body.UserData is Item)
+            else if (f2.Body.UserData is Item targetItem)
             {
-                targetItem = (Item)f2.Body.UserData;
                 if (AllowHitMultiple)
                 {
                     if (hitTargets.Contains(targetItem)) { return true; }
@@ -350,13 +343,11 @@ namespace Barotrauma.Items.Components
             
             Limb targetLimb = target.UserData as Limb;
             Character targetCharacter = targetLimb?.character ?? target.UserData as Character;
-            Structure targetStructure = target.UserData as Structure;
-            Item targetItem = target.UserData as Item;
-            
             if (Attack != null)
             {
                 Attack.SetUser(User);
                 Attack.DamageMultiplier = 1 + User.GetStatValue(StatTypes.MeleeAttackMultiplier);
+                Attack.DamageMultiplier *= 1.0f + item.GetQualityModifier(Quality.StatType.AttackMultiplier);
 
                 if (targetLimb != null)
                 {
@@ -370,12 +361,12 @@ namespace Barotrauma.Items.Components
                     targetCharacter.LastDamageSource = item;
                     Attack.DoDamage(User, targetCharacter, item.WorldPosition, 1.0f);
                 }
-                else if (targetStructure != null)
+                else if (target.UserData is Structure targetStructure)
                 {
                     if (targetStructure.Removed) { return; }
                     Attack.DoDamage(User, targetStructure, item.WorldPosition, 1.0f);
                 }
-                else if (targetItem != null && targetItem.Prefab.DamagedByMeleeWeapons && targetItem.Condition > 0)
+                else if (target.UserData is Item targetItem && targetItem.Prefab.DamagedByMeleeWeapons && targetItem.Condition > 0)
                 {
                     if (targetItem.Removed) { return; }
                     Attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);

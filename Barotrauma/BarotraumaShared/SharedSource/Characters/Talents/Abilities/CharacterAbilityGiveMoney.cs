@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -8,7 +7,7 @@ namespace Barotrauma.Abilities
         public override bool AppliesEffectOnIntervalUpdate => true;
 
         private readonly int amount;
-        private StatTypes scalingStatType;
+        private readonly StatTypes scalingStatType;
 
         public CharacterAbilityGiveMoney(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {

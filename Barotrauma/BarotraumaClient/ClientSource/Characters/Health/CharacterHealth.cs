@@ -601,8 +601,13 @@ namespace Barotrauma
                     .FindAll(a => a.ShouldShowIcon(Character) && a.Prefab.Icon != null);
                 currentDisplayedAfflictions.Sort((a1, a2) =>
                 {
-                    int dmgPerSecond = Math.Sign(a2.DamagePerSecond - a1.DamagePerSecond);
-                    return dmgPerSecond != 0 ? dmgPerSecond : Math.Sign(a1.Strength - a1.Strength);
+                    int dmgPerSecond = Math.Sign(a1.DamagePerSecond - a2.DamagePerSecond);
+                    if (dmgPerSecond != 0) { return dmgPerSecond; }
+                    return Math.Sign(GetStr(a1) - GetStr(a2));
+                    static float GetStr(Affliction affliction)
+                    {
+                        return affliction.Strength / affliction.Prefab.MaxStrength * (affliction.Prefab.IsBuff ? 1.0f : 10.0f);
+                    }
                 });
                 HintManager.OnAfflictionDisplayed(Character, currentDisplayedAfflictions);
                 updateDisplayedAfflictionsTimer = UpdateDisplayedAfflictionsInterval;
@@ -1131,6 +1136,8 @@ namespace Barotrauma
 
         public static Color GetAfflictionIconColor(Affliction affliction) => GetAfflictionIconColor(affliction.Prefab, affliction);
 
+        private readonly List<(Affliction affliction, float strength)> displayedAfflictions = new List<(Affliction affliction, float strength)>();
+
         private void UpdateAfflictionContainer(LimbHealth selectedLimb)
         {
             if (selectedLimb == null)
@@ -1139,45 +1146,33 @@ namespace Barotrauma
                 return;
             }
             var currentAfflictions = GetMatchingAfflictions(selectedLimb, a => a.ShouldShowIcon(Character));
-            var displayedAfflictions = afflictionIconContainer.Content.Children.Select(c => c.UserData as Affliction);
-            if (currentAfflictions.Any(a => !displayedAfflictions.Contains(a)) || 
-                displayedAfflictions.Any(a => !currentAfflictions.Contains(a)))
+            if (currentAfflictions.Any(a => !displayedAfflictions.Any(d => d.affliction == a)) || 
+                displayedAfflictions.Any(a => !currentAfflictions.Contains(a.affliction)))
             {
                 CreateAfflictionInfos(currentAfflictions);
+                CreateRecommendedTreatments();
+            }
+            //update recommended treatments if the strength of some displayed affliction has changed by > 1
+            else if (displayedAfflictions.Any(d => Math.Abs(d.strength - currentAfflictions.First(a => a == d.affliction).Strength) > 1.0f))
+            {
+                CreateRecommendedTreatments();
             }
 
-            UpdateAfflictionInfos(displayedAfflictions);
+            UpdateAfflictionInfos(displayedAfflictions.Select(d => d.affliction));
         }
 
         private void CreateAfflictionInfos(IEnumerable<Affliction> afflictions)
         {
             afflictionIconContainer.ClearChildren();
-            recommendedTreatmentContainer.Content.ClearChildren();
-            
-            float characterSkillLevel = Character.Controlled == null ? 0.0f : Character.Controlled.GetSkillLevel("medical");
-
-            //key = item identifier
-            //float = suitability
-            Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
-            GetSuitableTreatments(treatmentSuitability, 
-                normalize: true,
-                ignoreHiddenAfflictions: true,
-                limb: selectedLimbIndex == -1 ? null : Character.AnimController.Limbs.Find(l => l.HealthIndex == selectedLimbIndex));
-
-            foreach (string treatment in treatmentSuitability.Keys.ToList())
-            {
-                //prefer suggestions for items the player has
-                if (Character.Controlled.Inventory.FindItemByIdentifier(treatment) != null)
-                {
-                    treatmentSuitability[treatment] *= 10.0f;
-                }
-            }
+            displayedAfflictions.Clear();
 
             Affliction mostSevereAffliction = SortAfflictionsBySeverity(afflictions).FirstOrDefault();
             GUIButton buttonToSelect = null;
 
             foreach (Affliction affliction in afflictions)
             {
+                displayedAfflictions.Add((affliction, affliction.Strength));
+
                 var child = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), afflictionIconContainer.Content.RectTransform, Anchor.TopCenter))
                 {
                     Stretch = true,
@@ -1233,6 +1228,39 @@ namespace Barotrauma
                 child.Recalculate();
             }
 
+            buttonToSelect?.OnClicked(buttonToSelect, "selectaffliction");
+            afflictionIconContainer.RecalculateChildren();
+        }
+
+        private void CreateRecommendedTreatments()
+        {
+            ItemPrefab prevHighlightedItem = null;
+            if (GUI.MouseOn?.UserData is ItemPrefab && recommendedTreatmentContainer.Content.IsParentOf(GUI.MouseOn))
+            {
+                prevHighlightedItem = (ItemPrefab)GUI.MouseOn.UserData;
+            }
+
+            recommendedTreatmentContainer.Content.ClearChildren();
+
+            float characterSkillLevel = Character.Controlled == null ? 0.0f : Character.Controlled.GetSkillLevel("medical");
+
+            //key = item identifier
+            //float = suitability
+            Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
+            GetSuitableTreatments(treatmentSuitability,
+                normalize: true,
+                ignoreHiddenAfflictions: true,
+                limb: selectedLimbIndex == -1 ? null : Character.AnimController.Limbs.Find(l => l.HealthIndex == selectedLimbIndex));
+
+            foreach (string treatment in treatmentSuitability.Keys.ToList())
+            {
+                //prefer suggestions for items the player has
+                if (Character.Controlled.Inventory.FindItemByIdentifier(treatment) != null)
+                {
+                    treatmentSuitability[treatment] *= 10.0f;
+                }
+            }
+
             if (!treatmentSuitability.Any())
             {
                 new GUITextBlock(new RectTransform(Vector2.One, recommendedTreatmentContainer.Content.RectTransform), TextManager.Get("none"), textAlignment: Alignment.Center)
@@ -1247,10 +1275,6 @@ namespace Barotrauma
                 recommendedTreatmentContainer.ScrollBarVisible = true;
                 recommendedTreatmentContainer.AutoHideScrollBar = true;
             }
-
-            buttonToSelect?.OnClicked(buttonToSelect, "selectaffliction");
-
-            afflictionIconContainer.RecalculateChildren();
 
             List<KeyValuePair<string, float>> treatmentSuitabilities = treatmentSuitability.OrderByDescending(t => t.Value).ToList();
 
@@ -1286,7 +1310,7 @@ namespace Barotrauma
                 new GUIImage(new RectTransform(Vector2.One, innerFrame.RectTransform, Anchor.Center), style: "TalentBackgroundGlow")
                 {
                     CanBeFocused = false,
-                    Color = Color.White * 0.7f,
+                    Color = GUI.Style.Green,
                     HoverColor = Color.White,
                     PressedColor = Color.DarkGray,
                     SelectedColor = Color.Transparent,
@@ -1304,6 +1328,12 @@ namespace Barotrauma
                     SelectedColor = itemColor,
                     DisabledColor = itemColor * 0.8f
                 };
+
+                if (item == prevHighlightedItem)
+                {
+                    innerFrame.State = GUIComponent.ComponentState.Hover;
+                    innerFrame.Children.ForEach(c => c.State = GUIComponent.ComponentState.Hover);
+                }
             }
 
             recommendedTreatmentContainer.RecalculateChildren();
@@ -1315,6 +1345,19 @@ namespace Barotrauma
                 int dmgPerSecond = Math.Sign(second.DamagePerSecond - first.DamagePerSecond);
                 return dmgPerSecond != 0 ? dmgPerSecond : Math.Sign(second.Strength - first.Strength);
             });
+
+            if (count > 0)
+            {
+                var treatmentIconSize = recommendedTreatmentContainer.Content.Children.Sum(c => c.Rect.Width + recommendedTreatmentContainer.Spacing);
+                if (treatmentIconSize < recommendedTreatmentContainer.Content.Rect.Width)
+                {
+                    var spacing = new GUIFrame(new RectTransform(new Point((recommendedTreatmentContainer.Content.Rect.Width - treatmentIconSize) / 2, 0), recommendedTreatmentContainer.Content.RectTransform), style: null)
+                    {
+                        CanBeFocused = false
+                    };
+                    spacing.RectTransform.SetAsFirstChild();
+                }
+            }
         }
 
         private void CreateAfflictionInfoElements(GUIComponent parent, Affliction affliction)

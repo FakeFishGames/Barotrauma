@@ -619,7 +619,7 @@ namespace Barotrauma.Items.Components
                     levelResource.requiredItems.Any() &&
                     levelResource.HasRequiredItems(user, addMessage: false))
                 {
-                    float addedDetachTime = deltaTime * (1f + user.GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier);
+                    float addedDetachTime = deltaTime * (1f + user.GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * (1f + item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier));
                     levelResource.DeattachTimer += addedDetachTime;
 #if CLIENT
                     Character.Controlled?.UpdateHUDProgressBar(

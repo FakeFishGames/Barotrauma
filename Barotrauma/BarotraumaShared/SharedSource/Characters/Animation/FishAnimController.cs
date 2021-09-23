@@ -97,9 +97,9 @@ namespace Barotrauma
         public new FishSwimParams CurrentSwimParams => base.CurrentSwimParams as FishSwimParams;
 
         public float? TailAngle => GetValidOrNull(CurrentAnimationParams, CurrentFishAnimation?.TailAngleInRadians);
-        public float FootTorque => CurrentFishAnimation.FootTorque;
-        public float HeadTorque => CurrentFishAnimation.HeadTorque;
-        public float TorsoTorque => CurrentFishAnimation.TorsoTorque;
+        public float FootTorque => CurrentAnimationParams.FootTorque;
+        public float HeadTorque => CurrentAnimationParams.HeadTorque;
+        public float TorsoTorque => CurrentAnimationParams.TorsoTorque;
         public float TailTorque => CurrentFishAnimation.TailTorque;
         public float HeadMoveForce => CurrentGroundedParams.HeadMoveForce;
         public float TorsoMoveForce => CurrentGroundedParams.TorsoMoveForce;

@@ -67,6 +67,12 @@
 /processorParam:DebugMode=Auto
 /build:grainshader.fx
 
+#begin thresholdtint.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:thresholdtint.fx
+
 #begin blueprintshader.fx
 /importer:EffectImporter
 /processor:EffectProcessor

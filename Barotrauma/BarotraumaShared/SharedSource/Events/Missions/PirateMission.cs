@@ -180,7 +180,11 @@ namespace Barotrauma
                 var path = pathFinder.FindPath(ConvertUnits.ToSimUnits(patrolPos), ConvertUnits.ToSimUnits(preferredSpawnPos));
                 if (!path.Unreachable)
                 {
-                    preferredSpawnPos = path.Nodes[Rand.Range(0, path.Nodes.Count - 1)].WorldPosition; // spawn the sub in a random point in the path if possible
+                    var validNodes = path.Nodes.FindAll(n => !Level.Loaded.ExtraWalls.Any(w => w.Cells.Any(c => c.IsPointInside(n.WorldPosition))));
+                    if (validNodes.Any())
+                    {
+                        preferredSpawnPos = validNodes.GetRandom().WorldPosition; // spawn the sub in a random point in the path if possible
+                    }
                 }
 
                 int graceDistance = 500; // the sub still spawns awkwardly close to walls, so this helps. could also be given as a parameter instead

@@ -60,7 +60,7 @@ namespace Barotrauma
             var newCampaignContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), campaignContainer.RectTransform, Anchor.Center), style: null);
             var loadCampaignContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), campaignContainer.RectTransform, Anchor.Center), style: null);
 
-            GameMain.NetLobbyScreen.CampaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer, null, saveFiles);
+            GameMain.NetLobbyScreen.CampaignSetupUI = new MultiPlayerCampaignSetupUI(newCampaignContainer, loadCampaignContainer, null, saveFiles);
 
             var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("NewCampaign"), style: "GUITabButton")

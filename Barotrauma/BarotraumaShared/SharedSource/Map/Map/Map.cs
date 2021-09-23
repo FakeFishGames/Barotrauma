@@ -231,7 +231,7 @@ namespace Barotrauma
             }
             System.Diagnostics.Debug.Assert(StartLocation != null, "Start location not assigned after level generation.");
 
-            CurrentLocation.Discovered = true;
+            CurrentLocation.Discover(true);
             CurrentLocation.CreateStore();
 
             InitProjectSpecific();
@@ -671,7 +671,7 @@ namespace Barotrauma
             SelectedConnection.Passed = true;
 
             CurrentLocation = SelectedLocation;
-            CurrentLocation.Discovered = true;
+            CurrentLocation.Discover();
             SelectedLocation = null;
 
             CurrentLocation.CreateStore();
@@ -702,7 +702,7 @@ namespace Barotrauma
 
             Location prevLocation = CurrentLocation;
             CurrentLocation = Locations[index];
-            CurrentLocation.Discovered = true;
+            CurrentLocation.Discover();
 
             if (prevLocation != CurrentLocation)
             {
@@ -1055,7 +1055,10 @@ namespace Barotrauma
                             }
                         }
                         location.LoadLocationTypeChange(subElement);
-                        location.Discovered = subElement.GetAttributeBool("discovered", false);
+                        if (subElement.GetAttributeBool("discovered", false))
+                        {
+                            location.Discover(checkTalents: false);
+                        }
                         if (location.Discovered)
                         {
 #if CLIENT

@@ -83,7 +83,7 @@ namespace Barotrauma
             if (character.AIController is HumanAIController humanAI)
             {
                 if (GetVitalityFactor(target) >= GetVitalityThreshold(humanAI.ObjectiveManager, character, target) ||
-                    target.CharacterHealth.GetAllAfflictions().All(a => a.Strength < a.Prefab.TreatmentThreshold)) 
+                    target.CharacterHealth.GetAllAfflictions().All(a => a.Strength <= a.Prefab.TreatmentThreshold)) 
                 {
                     return false; 
                 }

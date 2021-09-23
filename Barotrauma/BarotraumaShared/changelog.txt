@@ -1,4 +1,39 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1500.4.0
+---------------------------------------------------------------------------------------------------------
+
+- Overhauled character sprites, ragdolls and animations (WIP).
+- Option to customize the starting crew in the single player campaign.
+- Talent improvements and additions.
+- Merged the talent and character tabs in the tab menu.
+- Disable deconstructor button when there's no deconstructable items in the input slots (also applies to research terminals which are technically deconstructors).
+
+Fixes:
+- Fixed inability to install/update mods that have periods in the name.
+- Fixed stack sizes being displayed incorrectly on items with multiple inventories, e.g. deconstructor (unstable only).
+- Fixed depleted fuel not being craftable (unstable only).
+- Fixed leftmost inventory slot overlapping with the chatbox (unstable only).
+- Fixed medic bots trying to treat genetic afflictions (unstable only).
+- Fixed nav terminals "current_position_x" output being in pixels when "current_position_y" is in meters.
+- Fixed tall subs overlapping with the buttons on the status monitor (unstable only).
+- Fixed status monitor's item finder not finding wires (unstable only).
+- Cargo scooters can't be put in toolbelts, crates, bandoliers or each other (unstable only).
+- Fixed status monitor elements getting misaligned when 1st viewing it while linked to another interface and then individually or vice versa (unstable only).
+- Fixed minerals sometimes spawning in unreachable spots in mining missions (on cells that are next to a cave, but at the wrong side of that cell if there's empty space behind it).
+- Fixed items' "allow swapping" property being editable in-game.
+- Fixed tainted genetic materials becoming untainted when saving and loading (unstable only).
+- Fixed genetic material effects' strengths changing when saving and reloading (unstable only).
+- Fixed tainted genetic materials sometimes giving the user hammerhead matriarch's genetic effects.
+- Fixed inability to tinker loaders (unstable only).
+- Fixed RegEx components with a non-continuous output always sending a signal out after being loaded.
+- Fixed pirate subs sometimes spawning inside floating ice chunks.
+- Fixed recommended treatments not changing when the strengths of the displayed afflictions change.
+- Fixed cargo scooters working with a battery in an incorrect slot (unstable only).
+- Fixed cargo scooters and volatile fulgurium fuel rods being craftable by anyone (unstable only).
+- Fixed misaligned nav terminal and status monitor in pirate humpback.
+- Fixed crash when ordering friendly NPCs (e.g. hostages) to return to the sub.
+
+---------------------------------------------------------------------------------------------------------
 v0.1500.3.0
 ---------------------------------------------------------------------------------------------------------
 

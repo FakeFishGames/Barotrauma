@@ -130,6 +130,7 @@ namespace Barotrauma
         public static GUIStyle Style;
 
         private static Texture2D t;
+        public static Texture2D WhiteTexture => t;
         private static Sprite[] MouseCursorSprites => Style.CursorSprite;
 
         private static bool debugDrawSounds, debugDrawEvents, debugDrawMetadata;
@@ -862,11 +863,10 @@ namespace Barotrauma
                     int index = 0;
                     if (updateList.Count > 0)
                     {
-                        index = updateList.Count - 1;
-                        while (updateList[index].UpdateOrder > item.UpdateOrder)
+                        index = updateList.Count;
+                        while (index > 0 && updateList[index-1].UpdateOrder > item.UpdateOrder)
                         {
                             index--;
-                            if (index == 0) { break; }
                         }
                     }
                     if (!updateListSet.Contains(item))
@@ -1057,12 +1057,15 @@ namespace Barotrauma
                         if (listBox.DraggedElement != null) { return CursorState.Dragging; }
                         if (listBox.CanDragElements) { return CursorState.Move; }
 
-                        var hoverParent = c;
-                        while (true)
+                        if (listBox.HoverCursor != CursorState.Default)
                         {
-                            if (hoverParent == parent || hoverParent == null) { break; }
-                            if (hoverParent.State == GUIComponent.ComponentState.Hover) { return CursorState.Hand; }
-                            hoverParent = hoverParent.Parent;
+                            var hoverParent = c;
+                            while (true)
+                            {
+                                if (hoverParent == parent || hoverParent == null) { break; }
+                                if (hoverParent.State == GUIComponent.ComponentState.Hover) { return CursorState.Hand; }
+                                hoverParent = hoverParent.Parent;
+                            }
                         }
                     }
 

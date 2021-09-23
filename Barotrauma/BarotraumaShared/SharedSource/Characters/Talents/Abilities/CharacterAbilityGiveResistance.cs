@@ -9,7 +9,7 @@ namespace Barotrauma.Abilities
 
         public CharacterAbilityGiveResistance(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            resistanceId = abilityElement.GetAttributeString("resistanceid", "");
+            resistanceId = abilityElement.GetAttributeString("resistanceid", abilityElement.GetAttributeString("resistance", string.Empty));
             multiplier = abilityElement.GetAttributeFloat("multiplier", 1f);
 
             if (string.IsNullOrEmpty(resistanceId))

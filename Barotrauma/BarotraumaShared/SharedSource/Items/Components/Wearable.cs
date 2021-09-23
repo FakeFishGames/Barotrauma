@@ -5,7 +5,6 @@ using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
-using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Barotrauma.Abilities;
 
@@ -49,7 +48,13 @@ namespace Barotrauma
         public bool HideOtherWearables { get; private set; }
         public List<WearableType> HideWearablesOfType { get; private set; }
         public bool InheritLimbDepth { get; private set; }
-        public bool InheritTextureScale { get; private set; }
+        /// <summary>
+        /// Does the wearable inherit all the scalings of the wearer? Also the wearable's own scale is used!
+        /// </summary>
+        public bool InheritScale { get; private set; }
+        public bool IgnoreRagdollScale { get; private set; }
+        public bool IgnoreLimbScale { get; private set; }
+        public bool IgnoreTextureScale { get; private set; }
         public bool InheritOrigin { get; private set; }
         public bool InheritSourceRect { get; private set; }
 
@@ -113,10 +118,9 @@ namespace Barotrauma
                 case WearableType.Husk:
                 case WearableType.Herpes:
                     Limb = LimbType.Head;
-                    HideLimb = type == WearableType.Husk || type == WearableType.Herpes;
                     HideOtherWearables = false;
                     InheritLimbDepth = true;
-                    InheritTextureScale = true;
+                    InheritScale = true;
                     InheritOrigin = true;
                     InheritSourceRect = true;
                     break;
@@ -173,7 +177,19 @@ namespace Barotrauma
             HideLimb = SourceElement.GetAttributeBool("hidelimb", false);
             HideOtherWearables = SourceElement.GetAttributeBool("hideotherwearables", false);
             InheritLimbDepth = SourceElement.GetAttributeBool("inheritlimbdepth", true);
-            InheritTextureScale = SourceElement.GetAttributeBool("inherittexturescale", false);
+            var scale = SourceElement.GetAttribute("inheritscale");
+            if (scale != null)
+            {
+                InheritScale = scale.GetAttributeBool(false);
+            }
+            else
+            {
+                InheritScale = SourceElement.GetAttributeBool("inherittexturescale", false);
+            }
+            IgnoreLimbScale = SourceElement.GetAttributeBool("ignorelimbscale", false);
+            IgnoreTextureScale = SourceElement.GetAttributeBool("ignoretexturescale", false);
+            IgnoreRagdollScale = SourceElement.GetAttributeBool("ignoreragdollscale", false);
+            SourceElement.GetAttributeBool("inherittexturescale", false);
             InheritOrigin = SourceElement.GetAttributeBool("inheritorigin", false);
             InheritSourceRect = SourceElement.GetAttributeBool("inheritsourcerect", false);
             DepthLimb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("depthlimb", "None"), true);

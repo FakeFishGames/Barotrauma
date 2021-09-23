@@ -275,7 +275,8 @@ namespace Barotrauma
 
             Skills.Sort((x,y) => y.LevelRange.X.CompareTo(x.LevelRange.X));
 
-            ClothingElement = element.GetChildElement("PortraitClothing");
+            // Disabled on purpose, TODO: remove all references?
+            //ClothingElement = element.GetChildElement("PortraitClothing");
         }
         
 

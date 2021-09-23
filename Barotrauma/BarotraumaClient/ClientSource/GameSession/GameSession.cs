@@ -21,7 +21,8 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember != null && GameMain.NetLobbyScreen != null)
             {
-                if (GameMain.NetLobbyScreen.HeadSelectionList != null) { GameMain.NetLobbyScreen.HeadSelectionList.Visible = false; }
+                GameMain.NetLobbyScreen.CharacterAppearanceCustomizationMenu?.Dispose();
+                GameMain.NetLobbyScreen.CharacterAppearanceCustomizationMenu = null;
                 if (GameMain.NetLobbyScreen.JobSelectionFrame != null) { GameMain.NetLobbyScreen.JobSelectionFrame.Visible = false; }
             }
             if (tabMenu == null && !(GameMode is TutorialMode) && !ConversationAction.IsDialogOpen)
@@ -39,6 +40,7 @@ namespace Barotrauma
 
         private GUILayoutGroup topLeftButtonGroup;
         private GUIButton crewListButton, commandButton, tabMenuButton;
+        private GUIImage talentPointNotification;
 
         private GUIComponent respawnInfoFrame, respawnButtonContainer;
         private GUITextBlock respawnInfoText;
@@ -88,11 +90,11 @@ namespace Barotrauma
             tabMenuButton = new GUIButton(new RectTransform(buttonSize, parent: topLeftButtonGroup.RectTransform), style: "TabMenuButton")
             {
                 ToolTip = TextManager.GetWithVariable("hudbutton.tabmenu", "[key]", GameMain.Config.KeyBindText(InputType.InfoTab)),
-                OnClicked = (button, userData) =>
-                {
-                    return ToggleTabMenu();
-                }
+                OnClicked = (button, userData) => ToggleTabMenu()
             };
+
+            talentPointNotification = CreateTalentIconNotification(tabMenuButton);
+
             GameMain.Instance.ResolutionChanged += CreateTopLeftButtons;
 
             respawnInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), parent: topLeftButtonGroup.RectTransform)
@@ -139,8 +141,38 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember != null)
             {
-                GameMain.NetLobbyScreen?.HeadSelectionList?.AddToGUIUpdateList();
+                GameMain.NetLobbyScreen.CharacterAppearanceCustomizationMenu?.AddToGUIUpdateList();
                 GameMain.NetLobbyScreen?.JobSelectionFrame?.AddToGUIUpdateList();
+            }
+        }
+
+        public static GUIImage CreateTalentIconNotification(GUIComponent parent, bool offset = true)
+        {
+            GUIImage indicator = new GUIImage(new RectTransform(new Vector2(0.45f), parent.RectTransform, anchor: Anchor.TopRight, scaleBasis: ScaleBasis.BothWidth), style: "TalentPointNotification")
+            {
+                Visible = false,
+                CanBeFocused = false
+            };
+            Point notificationSize = indicator.RectTransform.NonScaledSize;
+            if (offset)
+            {
+                indicator.RectTransform.AbsoluteOffset = new Point(-(notificationSize.X / 2), -(notificationSize.Y / 2));
+            }
+            return indicator;
+        }
+
+        public static void UpdateTalentNotificationIndicator(GUIImage indicator)
+        {
+            if (indicator != null)
+            {
+                if (Character.Controlled?.Info == null)
+                {
+                    indicator.Visible = false;
+                }
+                else
+                {
+                    indicator.Visible = Character.Controlled.Info.GetAvailableTalentPoints() > 0;
+                }
             }
         }
 
@@ -158,28 +190,24 @@ namespace Barotrauma
             else
             {
                 tabMenu.Update();
-                if ((PlayerInput.KeyHit(InputType.InfoTab) || PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape)) && 
+                if ((PlayerInput.KeyHit(InputType.InfoTab) || PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape)) &&
                     !(GUI.KeyboardDispatcher.Subscriber is GUITextBox))
                 {
                     ToggleTabMenu();
                 }
             }
 
+            UpdateTalentNotificationIndicator(talentPointNotification);
+
             if (GameMain.NetworkMember != null)
             {
-                if (GameMain.NetLobbyScreen?.HeadSelectionList != null)
-                {
-                    if (PlayerInput.PrimaryMouseButtonDown() && !GUI.IsMouseOn(GameMain.NetLobbyScreen.HeadSelectionList))
-                    {
-                        if (GameMain.NetLobbyScreen.HeadSelectionList != null) { GameMain.NetLobbyScreen.HeadSelectionList.Visible = false; }
-                    }
-                }
+                GameMain.NetLobbyScreen?.CharacterAppearanceCustomizationMenu?.Update();
                 if (GameMain.NetLobbyScreen?.JobSelectionFrame != null)
                 {
-                    if (PlayerInput.PrimaryMouseButtonDown() && !GUI.IsMouseOn(GameMain.NetLobbyScreen.JobSelectionFrame))
+                    if (GameMain.NetLobbyScreen.JobSelectionFrame != null && PlayerInput.PrimaryMouseButtonDown() && !GUI.IsMouseOn(GameMain.NetLobbyScreen.JobSelectionFrame))
                     {
                         GameMain.NetLobbyScreen.JobList.Deselect();
-                        if (GameMain.NetLobbyScreen.JobSelectionFrame != null) { GameMain.NetLobbyScreen.JobSelectionFrame.Visible = false; }
+                        GameMain.NetLobbyScreen.JobSelectionFrame.Visible = false;
                     }
                 }
             }

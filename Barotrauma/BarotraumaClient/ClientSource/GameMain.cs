@@ -1068,7 +1068,6 @@ namespace Barotrauma
                 spriteBatch.End();
             }
 
-
             sw.Stop();
             PerformanceCounter.AddElapsedTicks("Draw total", sw.ElapsedTicks);
             PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks * 1000.0f / (float)Stopwatch.Frequency);

@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         private Dictionary<string, GUIComponentStyle> componentStyles;
 
-        private XElement configElement;
+        private readonly XElement configElement;
 
         private GraphicsDevice graphicsDevice;
 

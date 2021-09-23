@@ -370,7 +370,7 @@ namespace Barotrauma.Items.Components
                 item.SendSignal(new Signal((ConvertUnits.ToDisplayUnits(sub.Velocity.X * Physics.DisplayToRealWorldRatio) * 3.6f).ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_velocity_x");
                 item.SendSignal(new Signal((ConvertUnits.ToDisplayUnits(sub.Velocity.Y * Physics.DisplayToRealWorldRatio) * -3.6f).ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_velocity_y");
 
-                item.SendSignal(new Signal(sub.WorldPosition.X.ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_position_x");
+                item.SendSignal(new Signal((sub.WorldPosition.X * Physics.DisplayToRealWorldRatio).ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_position_x");
                 item.SendSignal(new Signal(sub.RealWorldDepth.ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_position_y");
             }
 

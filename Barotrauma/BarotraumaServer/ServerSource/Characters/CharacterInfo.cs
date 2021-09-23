@@ -39,10 +39,13 @@ namespace Barotrauma
             msg.Write((byte)Gender);
             msg.Write((byte)Race);
             msg.Write((byte)HeadSpriteId);
-            msg.Write((byte)Head.HairIndex);
-            msg.Write((byte)Head.BeardIndex);
-            msg.Write((byte)Head.MoustacheIndex);
-            msg.Write((byte)Head.FaceAttachmentIndex);
+            msg.Write((byte)HairIndex);
+            msg.Write((byte)BeardIndex);
+            msg.Write((byte)MoustacheIndex);
+            msg.Write((byte)FaceAttachmentIndex);
+            msg.WriteColorR8G8B8(SkinColor);
+            msg.WriteColorR8G8B8(HairColor);
+            msg.WriteColorR8G8B8(FacialHairColor);
             msg.Write(ragdollFileName);
 
             if (Job != null)

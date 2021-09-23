@@ -118,6 +118,7 @@
   <Character file="Content/Characters/Variants/Mudraptor_hatchling/Mudraptor_hatchling.xml" />
   <Character file="Content/Characters/Variants/Mudraptor_passive/Mudraptor_passive.xml" />
   <Character file="Content/Characters/Variants/Tigerthresher_hatchling/Tigerthresher_hatchling.xml" />
+  <Character file="Content/Characters/TintTest/TintTest.xml" />
   <MapCreature file="Content/Items/Gardening/ballastflora.xml" />
   <Wreck file="Content/Map/Wrecks/Dugong_Wrecked.sub" />
   <Wreck file="Content/Map/Wrecks/Kastrull_Wrecked.sub" />

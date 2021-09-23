@@ -64,7 +64,9 @@ namespace Barotrauma.Items.Components
         private Character currentTarget; 
         const float aiFindTargetInterval = 5.0f;
 
-        private const float TinkeringPowerCostReduction = 1.25f;
+        private const float TinkeringPowerCostReduction = 0.2f;
+        private const float TinkeringDamageIncrease = 0.2f;
+        private const float TinkeringReloadDecrease = 0.2f;
 
         public float Rotation
         {
@@ -560,7 +562,8 @@ namespace Barotrauma.Items.Components
 
             Projectile launchedProjectile = null;
             bool loaderBroken = false;
-            bool isTinkering = false;
+            float tinkeringStrength = 0f;
+
             for (int i = 0; i < ProjectileCount; i++)
             {
                 var projectiles = GetLoadedProjectiles();
@@ -624,9 +627,9 @@ namespace Barotrauma.Items.Components
                 {
                     if (!(e is Item linkedItem)) { continue; }
                     if (!item.prefab.IsLinkAllowed(e.prefab)) { continue; }
-                    if (linkedItem.GetComponent<Repairable>() is Repairable repairable && linkedItem.HasTag("turretammosource"))
+                    if (linkedItem.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering && linkedItem.HasTag("turretammosource"))
                     {
-                        isTinkering = repairable.IsTinkering;
+                        tinkeringStrength = repairable.TinkeringStrength;
                     }
                 }
 
@@ -636,10 +639,8 @@ namespace Barotrauma.Items.Components
                     float neededPower = GetPowerRequiredToShoot();
                     // tinkering is currently not factored into the common method as it is checked only when shooting
                     // but this is a minor issue that causes mostly cosmetic woes. might still be worth refactoring later
-                    if (isTinkering)
-                    {
-                        neededPower /= TinkeringPowerCostReduction;
-                    }
+                    neededPower /= 1f + (tinkeringStrength * TinkeringPowerCostReduction);
+
                     while (neededPower > 0.0001f && batteries.Count > 0)
                     {
                         batteries.RemoveAll(b => b.Charge <= 0.0001f || b.MaxOutPut <= 0.0001f);
@@ -673,12 +674,12 @@ namespace Barotrauma.Items.Components
                     {
                         foreach (Projectile projectile in projectiles)
                         {
-                            Launch(projectile.Item, character, isTinkering: isTinkering);
+                            Launch(projectile.Item, character, tinkeringStrength: tinkeringStrength);
                         }
                     }
                     else
                     {
-                        Launch(null, character, isTinkering: isTinkering);
+                        Launch(null, character, tinkeringStrength: tinkeringStrength);
                     }
                     if (item.AiTarget != null)
                     {
@@ -712,13 +713,10 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private void Launch(Item projectile, Character user = null, float? launchRotation = null, bool isTinkering = false)
+        private void Launch(Item projectile, Character user = null, float? launchRotation = null, float tinkeringStrength = 0f)
         {
             reload = reloadTime;
-            if (isTinkering) 
-            {
-                reload /= 1.25f;
-            }
+            reload /= 1f + (tinkeringStrength * TinkeringReloadDecrease);
 
             if (user != null)
             {
@@ -747,10 +745,8 @@ namespace Barotrauma.Items.Components
                 if (projectileComponent != null)
                 {
                     projectileComponent.Attacker = projectileComponent.User = user;
-                    if (isTinkering)
-                    {
-                        projectileComponent.Attack.DamageMultiplier = 1.25f;
-                    }
+                    projectileComponent.Attack.DamageMultiplier = 1f + (TinkeringDamageIncrease * tinkeringStrength);
+
                     projectileComponent.Use();
                     projectile.GetComponent<Rope>()?.Attach(item, projectile);
                     projectileComponent.User = user;

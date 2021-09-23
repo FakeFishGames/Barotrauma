@@ -143,14 +143,7 @@ namespace Barotrauma
             return true;
         }
 
-        public int CharacterHeadIndex { get; set; }
-        public int CharacterHairIndex { get; set; }
-        public int CharacterBeardIndex { get; set; }
-        public int CharacterMoustacheIndex { get; set; }
-        public int CharacterFaceAttachmentIndex { get; set; }
-
-        public Gender CharacterGender { get; set; }
-        public Race CharacterRace { get; set; }
+        internal CharacterInfo.HeadInfo PlayerCharacterCustomization { get; set; }
 
         private float aimAssistAmount;
         public float AimAssistAmount
@@ -855,171 +848,6 @@ namespace Barotrauma
             UnsavedSettings = false;
         }
 
-        private void SaveNewDefaultConfig()
-        {
-            XDocument doc = new XDocument();
-
-            if (doc.Root == null)
-            {
-                doc.Add(new XElement("config"));
-            }
-
-            doc.Root.Add(
-                new XAttribute("language", TextManager.Language),
-                new XAttribute("masterserverurl", MasterServerUrl),
-                new XAttribute("remotecontenturl", RemoteContentUrl),
-                new XAttribute("autocheckupdates", AutoCheckUpdates),
-                new XAttribute("musicvolume", musicVolume),
-                new XAttribute("soundvolume", soundVolume),
-                new XAttribute("microphonevolume", microphoneVolume),
-                new XAttribute("voicechatvolume", voiceChatVolume),
-                new XAttribute("voicechatcutoffprevention", VoiceChatCutoffPrevention),
-                new XAttribute("verboselogging", VerboseLogging),
-                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
-                new XAttribute("submarineautosave", EnableSubmarineAutoSave),
-                new XAttribute("maxautosaves", MaximumAutoSaves),
-                new XAttribute("autosaveintervalseconds", AutoSaveIntervalSeconds),
-                new XAttribute("subeditorbackground", XMLExtensions.ColorToString(SubEditorBackgroundColor)),
-                new XAttribute("subeditorundobuffer", SubEditorMaxUndoBuffer),
-                new XAttribute("enablesplashscreen", EnableSplashScreen),
-                new XAttribute("usesteammatchmaking", UseSteamMatchmaking),
-                new XAttribute("quickstartsub", QuickStartSubmarineName),
-                new XAttribute("requiresteamauthentication", RequireSteamAuthentication),
-                new XAttribute("aimassistamount", aimAssistAmount),
-                new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning));
-
-            if (!ShowUserStatisticsPrompt)
-            {
-                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
-            }
-
-            XElement gMode = doc.Root.Element("graphicsmode");
-            if (gMode == null)
-            {
-                gMode = new XElement("graphicsmode");
-                doc.Root.Add(gMode);
-            }
-            if (GraphicsWidth == 0 || GraphicsHeight == 0)
-            {
-                gMode.ReplaceAttributes(new XAttribute("displaymode", windowMode));
-            }
-            else
-            {
-                gMode.ReplaceAttributes(
-                    new XAttribute("width", GraphicsWidth),
-                    new XAttribute("height", GraphicsHeight),
-                    new XAttribute("vsync", VSyncEnabled),
-                    new XAttribute("framelimit", Timing.FrameLimit),
-                    new XAttribute("displaymode", windowMode));
-            }
-
-            XElement gSettings = doc.Root.Element("graphicssettings");
-            if (gSettings == null)
-            {
-                gSettings = new XElement("graphicssettings");
-                doc.Root.Add(gSettings);
-            }
-
-            gSettings.ReplaceAttributes(
-                new XAttribute("particlelimit", ParticleLimit),
-                new XAttribute("lightmapscale", LightMapScale),
-                new XAttribute("chromaticaberration", ChromaticAberrationEnabled),
-                new XAttribute("losmode", LosMode),
-                new XAttribute("hudscale", HUDScale),
-                new XAttribute("inventoryscale", InventoryScale));
-
-            foreach (ContentPackage contentPackage in ContentPackage.CorePackages)
-            {
-                if (contentPackage.Path.Contains(VanillaContentPackagePath))
-                {
-                    doc.Root.Add(new XElement("contentpackages", new XElement("core", new XAttribute("name", contentPackage.Name))));
-                    break;
-                }
-            }
-
-#if CLIENT
-            var keyMappingElement = new XElement("keymapping");
-            doc.Root.Add(keyMappingElement);
-            for (int i = 0; i < keyMapping.Length; i++)
-            {
-                KeyOrMouse bind = keyMapping[i];
-                if (bind.MouseButton == MouseButton.None)
-                {
-                    keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), bind.Key));
-                }
-                else
-                {
-                    keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), bind.MouseButton));
-                }
-            }
-
-            var inventoryKeyMappingElement = new XElement("inventorykeymapping");
-            doc.Root.Add(inventoryKeyMappingElement);
-            for (int i = 0; i < inventoryKeyMapping.Length; i++)
-            {
-                KeyOrMouse bind = inventoryKeyMapping[i];
-                if (bind.MouseButton == MouseButton.None)
-                {
-                    inventoryKeyMappingElement.Add(new XAttribute($"slot{i}", bind.Key));
-                }
-                else
-                {
-                    inventoryKeyMappingElement.Add(new XAttribute($"slot{i}", bind.MouseButton));
-                }
-            }
-#endif
-
-            var gameplay = new XElement("gameplay");
-            var jobPreferences = new XElement("jobpreferences");
-            foreach (Pair<string, int> job in JobPreferences)
-            {
-                XElement jobElement = new XElement("job");
-                jobElement.Add(new XAttribute("identifier", job.First));
-                jobElement.Add(new XAttribute("variant", job.Second));
-                jobPreferences.Add(jobElement);
-            }
-            gameplay.Add(jobPreferences);
-
-            var teamPreference = new XElement("teampreference");
-            teamPreference.Add(new XAttribute("team", TeamPreference.ToString()));
-            gameplay.Add(teamPreference);
-
-            doc.Root.Add(gameplay);
-
-            var playerElement = new XElement("player",
-                new XAttribute("name", playerName ?? ""),
-                new XAttribute("headindex", CharacterHeadIndex),
-                new XAttribute("gender", CharacterGender),
-                new XAttribute("race", CharacterRace),
-                new XAttribute("hairindex", CharacterHairIndex),
-                new XAttribute("beardindex", CharacterBeardIndex),
-                new XAttribute("moustacheindex", CharacterMoustacheIndex),
-                new XAttribute("faceattachmentindex", CharacterFaceAttachmentIndex));
-            doc.Root.Add(playerElement);
-
-            System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
-            {
-                Indent = true,
-                OmitXmlDeclaration = true,
-                NewLineOnAttributes = true
-            };
-
-            try
-            {
-                using (var writer = XmlWriter.Create(SavePath, settings))
-                {
-                    doc.WriteTo(writer);
-                    writer.Flush();
-                }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Saving game settings failed.", e);
-                GameAnalyticsManager.AddErrorEventOnce("GameSettings.Save:SaveFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Saving game settings failed.\n" + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
-            }
-        }
-
 #region Load PlayerConfig
         public void LoadPlayerConfig()
         {
@@ -1307,15 +1135,20 @@ namespace Barotrauma
             gameplay.Add(jobPreferences);
             doc.Root.Add(gameplay);
 
-            var playerElement = new XElement("player",
-                new XAttribute("name", playerName ?? ""),
-                new XAttribute("headindex", CharacterHeadIndex),
-                new XAttribute("gender", CharacterGender),
-                new XAttribute("race", CharacterRace),
-                new XAttribute("hairindex", CharacterHairIndex),
-                new XAttribute("beardindex", CharacterBeardIndex),
-                new XAttribute("moustacheindex", CharacterMoustacheIndex),
-                new XAttribute("faceattachmentindex", CharacterFaceAttachmentIndex));
+            var playerElement = new XElement("player", new XAttribute("name", playerName ?? ""));
+            if (PlayerCharacterCustomization != null)
+            {
+                playerElement.SetAttributeValue("headindex", PlayerCharacterCustomization.HeadSpriteId);
+                playerElement.SetAttributeValue("gender", PlayerCharacterCustomization.gender);
+                playerElement.SetAttributeValue("race", PlayerCharacterCustomization.race);
+                playerElement.SetAttributeValue("hairindex", PlayerCharacterCustomization.HairIndex);
+                playerElement.SetAttributeValue("beardindex", PlayerCharacterCustomization.BeardIndex);
+                playerElement.SetAttributeValue("moustacheindex", PlayerCharacterCustomization.MoustacheIndex);
+                playerElement.SetAttributeValue("faceattachmentindex", PlayerCharacterCustomization.FaceAttachmentIndex);
+                playerElement.SetAttributeValue("skincolor", XMLExtensions.ColorToString(PlayerCharacterCustomization.SkinColor));
+                playerElement.SetAttributeValue("haircolor", XMLExtensions.ColorToString(PlayerCharacterCustomization.HairColor));
+                playerElement.SetAttributeValue("facialhaircolor", XMLExtensions.ColorToString(PlayerCharacterCustomization.FacialHairColor));
+            }
             doc.Root.Add(playerElement);
 
 #if CLIENT
@@ -1434,23 +1267,22 @@ namespace Barotrauma
             if (playerElement != null)
             {
                 playerName = playerElement.GetAttributeString("name", playerName);
-                CharacterHeadIndex = playerElement.GetAttributeInt("headindex", CharacterHeadIndex);
-                if (Enum.TryParse(playerElement.GetAttributeString("gender", "none"), true, out Gender g))
+                int head = playerElement.GetAttributeInt("headindex", -1);
+                Enum.TryParse(playerElement.GetAttributeString("gender", "none"), true, out Gender gender);
+                Enum.TryParse(playerElement.GetAttributeString("race", "white"), true, out Race race);
+                int hair = playerElement.GetAttributeInt("hairindex", -1);
+                int beard = playerElement.GetAttributeInt("beardindex", -1);
+                int moustache = playerElement.GetAttributeInt("moustacheindex", -1);
+                int faceAttachment = playerElement.GetAttributeInt("faceattachmentindex", -1);
+                Color skinColor = playerElement.GetAttributeColor("skincolor", Color.Black);
+                Color hairColor = playerElement.GetAttributeColor("haircolor", Color.Black);
+                Color facialHairColor = playerElement.GetAttributeColor("facialhaircolor", Color.Black);
+                PlayerCharacterCustomization = new CharacterInfo.HeadInfo(head, gender, race, hair, beard, moustache, faceAttachment)
                 {
-                    CharacterGender = g;
-                }
-                if (Enum.TryParse(playerElement.GetAttributeString("race", "white"), true, out Race r))
-                {
-                    CharacterRace = r;
-                }
-                else
-                {
-                    CharacterRace = Race.White;
-                }
-                CharacterHairIndex = playerElement.GetAttributeInt("hairindex", CharacterHairIndex);
-                CharacterBeardIndex = playerElement.GetAttributeInt("beardindex", CharacterBeardIndex);
-                CharacterMoustacheIndex = playerElement.GetAttributeInt("moustacheindex", CharacterMoustacheIndex);
-                CharacterFaceAttachmentIndex = playerElement.GetAttributeInt("faceattachmentindex", CharacterFaceAttachmentIndex);
+                    SkinColor = skinColor,
+                    HairColor = hairColor,
+                    FacialHairColor = facialHairColor
+                };
             }
         }
 
@@ -1656,13 +1488,7 @@ namespace Barotrauma
             UseSteamMatchmaking = true;
             RequireSteamAuthentication = true;
             QuickStartSubmarineName = string.Empty;
-            CharacterHeadIndex = 1;
-            CharacterHairIndex = -1;
-            CharacterBeardIndex = -1;
-            CharacterMoustacheIndex = -1;
-            CharacterFaceAttachmentIndex = -1;
-            CharacterGender = Gender.None;
-            CharacterRace = Race.White;
+            PlayerCharacterCustomization = null;
             aimAssistAmount = 0.5f;
             EnableMouseLook = true;
             EnableRadialDistortion = true;

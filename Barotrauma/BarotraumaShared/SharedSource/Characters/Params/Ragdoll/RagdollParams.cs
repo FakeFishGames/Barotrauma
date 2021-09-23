@@ -34,6 +34,9 @@ namespace Barotrauma
         [Serialize("", true, description: "Default path for the limb sprite textures. Used only if the limb specific path for the limb is not defined"), Editable]
         public string Texture { get; set; }
 
+        [Serialize("1.0,1.0,1.0,1.0", true), Editable()]
+        public Color Color { get; set; }
+
         [Serialize(0.0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'. Used mainly for animations and widgets."), Editable(-360, 360)]
         public float SpritesheetOrientation { get; set; }
 
@@ -556,7 +559,7 @@ namespace Barotrauma
                 }
             }
 
-            public override string GenerateName() => $"Limb {ID}";
+            public override string GenerateName() => Type != LimbType.None ? $"{Type} ({ID})" : $"Limb {ID}";
 
             public SpriteParams GetSprite() => deformSpriteParams ?? normalSpriteParams;
 
@@ -574,7 +577,7 @@ namespace Barotrauma
             [Serialize("", true), Editable]
             public string Notes { get; set; }
 
-            [Serialize(1f, true), Editable]
+            [Serialize(1f, true), Editable(DecimalCount = 2)]
             public float Scale { get; set; }
 
             [Serialize(true, true, description: "Does the limb flip when the character flips?"), Editable()]
@@ -888,6 +891,9 @@ namespace Barotrauma
 
             [Serialize("", true), Editable()]
             public string Texture { get; set; }
+
+            [Serialize(false, true), Editable()]
+            public bool IgnoreTint { get; set; }
 
             [Serialize("1.0,1.0,1.0,1.0", true), Editable()]
             public Color Color { get; set; }

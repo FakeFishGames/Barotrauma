@@ -868,6 +868,7 @@ namespace Barotrauma
         {
             if (level == null) { return 0.0f; }
             var refEntity = GetRefEntity();
+            if (refEntity == null) { return 0.0f; }
             Vector2 target = ConvertUnits.ToSimUnits(level.EndPosition);
             var steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(refEntity.WorldPosition), target);
             if (steeringPath.Unreachable || float.IsPositiveInfinity(totalPathLength))

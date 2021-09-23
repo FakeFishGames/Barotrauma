@@ -88,7 +88,7 @@ namespace Barotrauma
                     return GameMain.NetworkMember?.ServerSettings?.AllowLinkingWifiToChat ?? true;
                 case ConditionType.IsSwappableItem:
                     {
-                        return entity is Item item && item.Prefab.SwappableItem != null;
+                        return entity is Item item && item.Prefab.SwappableItem != null && Screen.Selected == GameMain.SubEditorScreen;
                     }
                 case ConditionType.AllowRotating:
                     {

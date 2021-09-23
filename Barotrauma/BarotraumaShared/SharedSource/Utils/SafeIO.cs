@@ -23,17 +23,19 @@ namespace Barotrauma.IO
         {
             path = System.IO.Path.GetFullPath(path).CleanUpPath();
 
-            string extension = System.IO.Path.GetExtension(path).Replace(" ", "");
-            if (unwritableExtensions.Any(e => e.Equals(extension, StringComparison.OrdinalIgnoreCase)))
+            if (!isDirectory)
             {
-                return false;
-            }
-
-            if (!path.StartsWith(System.IO.Path.GetFullPath("Mods/").CleanUpPath(), StringComparison.OrdinalIgnoreCase)
-                && (extension.Equals(".dll", StringComparison.OrdinalIgnoreCase)
-                    || extension.Equals(".exe", StringComparison.OrdinalIgnoreCase)))
-            {
-                return false;
+                string extension = System.IO.Path.GetExtension(path).Replace(" ", "");
+                if (unwritableExtensions.Any(e => e.Equals(extension, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return false;
+                }
+                if (!path.StartsWith(System.IO.Path.GetFullPath("Mods/").CleanUpPath(), StringComparison.OrdinalIgnoreCase)
+                    && (extension.Equals(".dll", StringComparison.OrdinalIgnoreCase)
+                        || extension.Equals(".exe", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return false;
+                }
             }
             
             foreach (string unwritableDir in unwritableDirs)
@@ -251,6 +253,7 @@ namespace Barotrauma.IO
             if (!Validation.CanWrite(path, true))
             {
                 DebugConsole.ThrowError($"Cannot create directory \"{path}\": modifying the contents of this folder/using this extension is not allowed.");
+                Validation.CanWrite(path, true);
                 return null;
             }
             return System.IO.Directory.CreateDirectory(path);

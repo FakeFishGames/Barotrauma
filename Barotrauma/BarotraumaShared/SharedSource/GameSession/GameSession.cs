@@ -452,9 +452,11 @@ namespace Barotrauma
             StatusEffect.StopAll();
 
 #if CLIENT
+#if !DEBUG
             GameMain.LightManager.LosEnabled = GameMain.Client == null || GameMain.Client.CharacterInfo != null;
+#endif
             if (GameMain.LightManager.LosEnabled) { GameMain.LightManager.LosAlpha = 1f; }
-            if (GameMain.Client == null) GameMain.LightManager.LosMode = GameMain.Config.LosMode;
+            if (GameMain.Client == null) { GameMain.LightManager.LosMode = GameMain.Config.LosMode; }
 #endif
             LevelData = level?.LevelData;
             Level = level;
@@ -661,6 +663,7 @@ namespace Barotrauma
 #if SERVER
             return GameMain.Server.ConnectedClients.Select(c => c.Character).Where(c => c?.Info != null);
 #else
+            if (GameMain.GameSession == null) { return Enumerable.Empty<Character>(); }
             return GameMain.GameSession.CrewManager.GetCharacters().Where(c => c?.Info != null);
 #endif        
         }

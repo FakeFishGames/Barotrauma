@@ -4,14 +4,14 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
-    class CharacterAbilityEnigmaMachine : CharacterAbility
+    class CharacterAbilityAtmosMachine : CharacterAbility
     {
         private readonly float addedValue;
         private readonly float multiplyValue;
         private readonly string[] tags;
         private readonly int maxMultiplyCount;
 
-        public CharacterAbilityEnigmaMachine(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityAtmosMachine(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             addedValue = abilityElement.GetAttributeFloat("addedvalue", 0f);
             multiplyValue = abilityElement.GetAttributeFloat("multiplyvalue", 1f);

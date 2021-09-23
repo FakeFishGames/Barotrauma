@@ -2563,10 +2563,18 @@ namespace Barotrauma
             if (PositionsOfInterest.Any(p => p.PositionType == PositionType.Cave))
             {
                 positionType = PositionType.Cave;
+                if (allValidLocations.Any(l => l.Edge.NextToCave))
+                {
+                    allValidLocations.RemoveAll(l => !l.Edge.NextToCave);
+                }
             }
             else if (PositionsOfInterest.Any(p => p.PositionType == PositionType.SidePath))
             {
                 positionType = PositionType.SidePath;
+                if (allValidLocations.Any(l => l.Edge.NextToSidePath))
+                {
+                    allValidLocations.RemoveAll(l => !l.Edge.NextToSidePath);
+                }
             }
 
             var poi = PositionsOfInterest.GetRandom(p => p.PositionType == positionType, randSync: Rand.RandSync.Server);

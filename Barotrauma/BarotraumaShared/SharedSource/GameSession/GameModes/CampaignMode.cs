@@ -659,16 +659,7 @@ namespace Barotrauma
             }
             foreach (Location location in Map.Locations)
             {
-                if (location.Type != location.OriginalType)
-                {
-                    location.ChangeType(location.OriginalType);
-                    location.PendingLocationTypeChange = null;
-                }
-                location.CreateStore(force: true);
-                location.ClearMissions();
-                location.Discovered = false;
-                location.LevelData?.EventHistory?.Clear();
-                location.UnlockInitialMissions();
+                location.Reset();
             }
             Map.SetLocation(Map.Locations.IndexOf(Map.StartLocation));
             Map.SelectLocation(-1);

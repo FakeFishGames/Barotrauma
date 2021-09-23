@@ -316,11 +316,12 @@ namespace Barotrauma
 
                     string colorStr = XMLExtensions.ColorToString(!item.AllowStealing ? GUI.Style.Red : Color.White);
 
+                    toolTip = $"‖color:{colorStr}‖{name}‖color:end‖";
                     if (item.Quality > 0)
                     {
-                        name = TextManager.GetWithVariable("itemname.quality" + item.Quality, "[itemname]", name, fallBackTag: "itemname.quality3");
+                        // substring by to get rid of the empty space at start, text file should be adjusted
+                        toolTip += $"\n{TextManager.GetWithVariable("itemname.quality" + item.Quality, "[itemname]", "", fallBackTag: "itemname.quality3")?.Substring(1)}";
                     }
-                    toolTip = $"‖color:{colorStr}‖{name}‖color:end‖";
 
                     if (itemsInSlot.All(it => it.NonInteractable || it.NonPlayerTeamInteractable))
                     {
@@ -1653,9 +1654,9 @@ namespace Barotrauma
                         scale: iconSize.X / stealIcon.size.X);
                 }
                 int maxStackSize = item.Prefab.MaxStackSize;
-                if (item.Container != null)
+                if (inventory is ItemInventory itemInventory)
                 {
-                    maxStackSize = Math.Min(maxStackSize, item.Container.GetComponent<ItemContainer>()?.GetMaxStackSize(slotIndex) ?? maxStackSize);
+                    maxStackSize = Math.Min(maxStackSize, itemInventory.Container.GetMaxStackSize(slotIndex));
                 }
                 if (maxStackSize > 1 && inventory != null)
                 {

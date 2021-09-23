@@ -323,7 +323,7 @@ namespace Barotrauma
                 case Layout.Default:
                     {
                         int personalSlotCount = SlotTypes.Count(s => PersonalSlots.HasFlag(s));
-                        int normalSlotCount = SlotTypes.Count(s => !PersonalSlots.HasFlag(s));
+                        int normalSlotCount = SlotTypes.Count(s => !PersonalSlots.HasFlag(s) && s != InvSlotType.HealthInterface);
 
                         int x = GameMain.GraphicsWidth / 2 - normalSlotCount * (SlotSize.X + Spacing) / 2;
                         int upperX = HUDLayoutSettings.BottomRightInfoArea.X - SlotSize.X - Spacing * 4 - HideButtonWidth;

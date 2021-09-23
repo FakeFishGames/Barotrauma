@@ -603,6 +603,11 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        public override bool SecondaryUse(float deltaTime, Character character = null)
+        {
+            return true;
+        }
+
         private Vector2 GetAttachPosition(Character user, bool useWorldCoordinates = false)
         {
             if (user == null) { return useWorldCoordinates ? item.WorldPosition : item.Position; }

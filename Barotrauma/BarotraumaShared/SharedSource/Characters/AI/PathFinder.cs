@@ -24,8 +24,6 @@ namespace Barotrauma
         public readonly Vector2 Position;
         public readonly int WayPointID;
 
-        public bool blocked;
-
         public override string ToString()
         {
             return $"PathNode {WayPointID}";
@@ -80,6 +78,31 @@ namespace Barotrauma
             }
 
             return nodeList;            
+        }
+
+        private bool? blocked;
+        public bool IsBlocked()
+        {
+            if (blocked.HasValue) { return blocked.Value; }
+
+            blocked = false;
+
+            if (Waypoint.Submarine != null) { return blocked.Value; }
+            if (Waypoint.Tunnel?.Type != Level.TunnelType.Cave) { return blocked.Value; }
+            foreach (var w in Level.Loaded.ExtraWalls)
+            {
+                if (!(w is DestructibleLevelWall d)) { return blocked.Value; }
+                if (d.Destroyed) { return blocked.Value; }
+                if (!d.IsPointInside(Waypoint.Position)) { return blocked.Value; }
+                blocked = true;
+                break;
+            }
+            return blocked.Value;
+        }
+
+        public void ResetBlocked()
+        {
+            blocked = null;
         }
     }
 
@@ -146,7 +169,10 @@ namespace Barotrauma
 
         public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true)
         {
-            UpdateBlockedNodes();
+            foreach (PathNode node in nodes)
+            {
+                node.ResetBlocked();
+            }
 
             //sort nodes roughly according to distance
             sortedNodes.Clear();
@@ -202,11 +228,11 @@ namespace Barotrauma
             {
                 if (startNode == null || node.TempDistance < startNode.TempDistance)
                 {
-                    if (node.blocked) { continue; }
                     if (nodeFilter != null && !nodeFilter(node)) { continue; }
                     if (startNodeFilter != null && !startNodeFilter(node)) { continue; }
                     // Always check the visibility for the start node
                     if (!IsWaypointVisible(node, start)) { continue; }
+                    if (node.IsBlocked()) { continue; }
                     startNode = node;
                 }
             }
@@ -251,11 +277,11 @@ namespace Barotrauma
             {
                 if (endNode == null || node.TempDistance < endNode.TempDistance)
                 {
-                    if (node.blocked) { continue; }
                     if (nodeFilter != null && !nodeFilter(node)) { continue; }
                     if (endNodeFilter != null && !endNodeFilter(node)) { continue; }
                     // Only check the visibility for the end node when allowed (fix leaks)
                     if (!IsWaypointVisible(node, end, checkVisibility: checkVisibility)) { continue; }
+                    if (node.IsBlocked()) { continue; }
                     endNode = node;
                 }
             }
@@ -326,15 +352,13 @@ namespace Barotrauma
                 float dist = float.MaxValue;
                 foreach (PathNode node in nodes)
                 {
-                    if (node.state != 1) { continue; }
+                    if (node.state != 1 || node.F > dist) { continue; }
                     if (isCharacter && node.Waypoint.isObstructed) { continue; }
-                    if (node.blocked) { continue; }
                     if (filter != null && !filter(node)) { continue; }
-                    if (node.F < dist)
-                    {
-                        dist = node.F;
-                        currNode = node;
-                    }
+                    if (node.IsBlocked()) { continue; }
+               
+                    dist = node.F;
+                    currNode = node;                    
                 }
 
                 if (currNode == null || currNode == end) { break; }
@@ -435,25 +459,6 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(finalPath.Count == path.Nodes.Count);
 
             return path;
-        }
-
-        private void UpdateBlockedNodes()
-        {
-            if (!isCharacter) { return; }
-            foreach (var n in nodes)
-            {
-                n.blocked = false;
-                if (n.Waypoint.Submarine != null) { continue; }
-                if (n.Waypoint.Tunnel?.Type != Level.TunnelType.Cave) { continue; }
-                foreach (var w in Level.Loaded.ExtraWalls)
-                {
-                    if (!(w is DestructibleLevelWall d)) { continue; }
-                    if (d.Destroyed) { continue; }
-                    if (!d.IsPointInside(n.Waypoint.Position)) { continue; }
-                    n.blocked = true;
-                    break;
-                }
-            }
         }
     }
 }

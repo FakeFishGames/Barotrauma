@@ -19,6 +19,8 @@ namespace Barotrauma.Items.Components
 
         private float userDeconstructorSpeedMultiplier = 1.0f;
 
+        private const float TinkeringSpeedIncrease = 1.5f;
+
         private ItemContainer inputContainer, outputContainer;
 
         public ItemContainer InputContainer
@@ -89,12 +91,20 @@ namespace Barotrauma.Items.Components
             if (powerConsumption <= 0.0f) { Voltage = 1.0f; }
             progressTimer += deltaTime * Math.Min(Voltage, 1.0f);
 
+            float tinkeringStrength = 0f;
+            if (repairable.IsTinkering)
+            {
+                tinkeringStrength = repairable.TinkeringStrength;
+            }
+            // doesn't quite work properly, remaining time changes if tinkering stops
+            float deconstructionSpeedModifier = userDeconstructorSpeedMultiplier * (1f + tinkeringStrength * TinkeringSpeedIncrease);
+
             if (DeconstructItemsSimultaneously)
             {
                 float deconstructTime = 0.0f;
                 foreach (Item targetItem in inputContainer.Inventory.AllItems)
                 {
-                    deconstructTime += targetItem.Prefab.DeconstructTime / (DeconstructionSpeed * userDeconstructorSpeedMultiplier);
+                    deconstructTime += targetItem.Prefab.DeconstructTime / (DeconstructionSpeed * deconstructionSpeedModifier);
                 }
 
                 progressState = Math.Min(progressTimer / deconstructTime, 1.0f);
@@ -126,7 +136,7 @@ namespace Barotrauma.Items.Components
                 var validDeconstructItems = targetItem.Prefab.DeconstructItems.FindAll(it =>
                     it.RequiredDeconstructor.Length == 0 || it.RequiredDeconstructor.Any(r => item.HasTag(r) || item.Prefab.Identifier.Equals(r, StringComparison.OrdinalIgnoreCase)));
 
-                float deconstructTime = validDeconstructItems.Any() ? targetItem.Prefab.DeconstructTime / DeconstructionSpeed : 1.0f;
+                float deconstructTime = validDeconstructItems.Any() ? targetItem.Prefab.DeconstructTime / (DeconstructionSpeed * deconstructionSpeedModifier) : 1.0f;
 
                 progressState = Math.Min(progressTimer / deconstructTime, 1.0f);
                 if (progressTimer > deconstructTime)
@@ -234,9 +244,13 @@ namespace Barotrauma.Items.Components
 
                 if (user != null && !user.Removed)
                 {
-                    var itemsCreated = new AbilityValueItem(1f, targetItem.Prefab);
+                    var itemsCreated = new AbilityValueItem(amount, targetItem.Prefab);
                     user.CheckTalents(AbilityEffectType.OnItemDeconstructedMaterial, itemsCreated);
                     amount = (int)itemsCreated.Value;
+
+                    // used to spawn items directly into the deconstructor
+                    var itemContainer = new AbilityItemPrefabItem(item, targetItem.Prefab);
+                    user.CheckTalents(AbilityEffectType.OnItemDeconstructedInventory, itemContainer);
                 }
 
                 for (int i = 0; i < amount; i++)
@@ -253,17 +267,6 @@ namespace Barotrauma.Items.Components
                         }
                         PutItemsToLinkedContainer();
                     });
-                }
-            }
-
-            if (user != null && !user.Removed)
-            {
-                var deconstructItemRetainProbability = new AbilityValueItem(0f, targetItem.Prefab);
-                user.CheckTalents(AbilityEffectType.OnItemDeconstructedRetainProbability, deconstructItemRetainProbability);
-
-                if (deconstructItemRetainProbability.Value > Rand.Range(0f, 1f, Rand.RandSync.Unsynced))
-                {
-                    allowRemove = false;
                 }
             }
 

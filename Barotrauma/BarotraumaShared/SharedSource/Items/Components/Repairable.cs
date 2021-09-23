@@ -114,6 +114,9 @@ namespace Barotrauma.Items.Components
         private Item currentRepairItem;
 
         private float tinkeringDuration;
+        private float tinkeringStrength;
+
+        public float TinkeringStrength => tinkeringStrength;
 
         public enum FixActions : int
         {
@@ -240,6 +243,8 @@ namespace Barotrauma.Items.Components
                 CurrentFixerAction = action;
                 if (action == FixActions.Tinker)
                 {
+                    tinkeringStrength = 1f + CurrentFixer.GetStatValue(StatTypes.TinkeringStrength);
+
                     if (character.HasAbilityFlag(AbilityFlags.CanTinkerFabricatorsAndDeconstructors) && item.GetComponent<Deconstructor>() != null || item.GetComponent<Fabricator>() != null)
                     {
                         // fabricators and deconstructors can be tinkered indefinitely (more or less)
@@ -370,6 +375,10 @@ namespace Barotrauma.Items.Components
             {
                 tinkeringDuration -= deltaTime;
                 // not great to interject it here, should be less reliant on returning
+
+                float conditionDecrease = deltaTime * (CurrentFixer.GetStatValue(StatTypes.TinkeringDamage) / item.MaxCondition) * 100f;
+                item.Condition -= conditionDecrease;
+
                 if (!CanTinker(CurrentFixer) || tinkeringDuration <= 0f)
                 {
                     StopRepairing(CurrentFixer);
@@ -476,8 +485,8 @@ namespace Barotrauma.Items.Components
         {
             if (!character.HasAbilityFlag(AbilityFlags.CanTinker)) { return false; }
             if (item.GetComponent<Engine>() != null) { return true; }
-            if (item.GetComponent<Turret>() != null) { return true; }
             if (item.GetComponent<Pump>() != null) { return true; }
+            if (item.HasTag("turretammosource")) { return true; }
             if (!character.HasAbilityFlag(AbilityFlags.CanTinkerFabricatorsAndDeconstructors)) { return false; }
             if (item.GetComponent<Fabricator>() != null) { return true; }
             if (item.GetComponent<Deconstructor>() != null) { return true; }

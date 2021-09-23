@@ -246,25 +246,26 @@ namespace Barotrauma.Items.Components
 
         protected override void CreateGUI()
         {
+            GuiFrame.ClearChildren();
+
             GuiFrame.RectTransform.RelativeOffset = new Vector2(0.05f, 0.0f);
             GuiFrame.CanBeFocused = true;
-            new GUICustomComponent(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset }, DrawHUDBack, null);
-            GUIFrame paddedContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), style: null);
+            var submarineBack = new GUICustomComponent(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset }, DrawHUDBack, null);
+            GUIFrame paddedContainer = new GUIFrame(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center), style: null);
             submarineContainer = new GUIFrame(new RectTransform(Vector2.One, paddedContainer.RectTransform, Anchor.Center), style: null);
-
-            new GUICustomComponent(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset }, DrawHUDFront, null)
+            var submarineFront = new GUICustomComponent(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset }, DrawHUDFront, null)
             {
                 CanBeFocused = false
             };
 
-            GUILayoutGroup buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.2f), paddedContainer.RectTransform), isHorizontal: true);
+            GUILayoutGroup buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.15f), paddedContainer.RectTransform) { MaxSize = new Point(int.MaxValue, GUI.IntScale(40)) }, isHorizontal: true) { CanBeFocused = true };
 
             modeSwitchButtons = ImmutableArray.Create
             (
-                new GUIButton(new RectTransform(new Vector2(0.25f, 0.5f), buttonLayout.RectTransform), string.Empty, style: "StatusMonitorButton.HullStatus") { UserData = MiniMapMode.HullStatus, Enabled = EnableHullStatus, ToolTip = TextManager.Get("StatusMonitorButton.HullStatus.Tooltip") },
-                new GUIButton(new RectTransform(new Vector2(0.25f, 0.5f), buttonLayout.RectTransform), string.Empty, style: "StatusMonitorButton.ElectricalView") { UserData = MiniMapMode.ElectricalView, Enabled = EnableHullCondition, ToolTip = TextManager.Get("StatusMonitorButton.ElectricalView.Tooltip") },
-                new GUIButton(new RectTransform(new Vector2(0.25f, 0.5f), buttonLayout.RectTransform), string.Empty, style: "StatusMonitorButton.HullCondition") { UserData = MiniMapMode.HullCondition, Enabled = EnableHullCondition, ToolTip = TextManager.Get("StatusMonitorButton.HullCondition.Tooltip") },
-                new GUIButton(new RectTransform(new Vector2(0.25f, 0.5f), buttonLayout.RectTransform), string.Empty, style: "StatusMonitorButton.ItemFinder") { UserData = MiniMapMode.ItemFinder, Enabled = EnableItemFinder, ToolTip = TextManager.Get("StatusMonitorButton.ItemFinder.Tooltip") }
+                new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonLayout.RectTransform), string.Empty, style: "StatusMonitorButton.HullStatus") { UserData = MiniMapMode.HullStatus, Enabled = EnableHullStatus, ToolTip = TextManager.Get("StatusMonitorButton.HullStatus.Tooltip") },
+                new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonLayout.RectTransform), string.Empty, style: "StatusMonitorButton.ElectricalView") { UserData = MiniMapMode.ElectricalView, Enabled = EnableHullCondition, ToolTip = TextManager.Get("StatusMonitorButton.ElectricalView.Tooltip") },
+                new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonLayout.RectTransform), string.Empty, style: "StatusMonitorButton.HullCondition") { UserData = MiniMapMode.HullCondition, Enabled = EnableHullCondition, ToolTip = TextManager.Get("StatusMonitorButton.HullCondition.Tooltip") },
+                new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonLayout.RectTransform), string.Empty, style: "StatusMonitorButton.ItemFinder") { UserData = MiniMapMode.ItemFinder, Enabled = EnableItemFinder, ToolTip = TextManager.Get("StatusMonitorButton.ItemFinder.Tooltip") }
             );
 
             foreach (GUIButton button in modeSwitchButtons)
@@ -295,14 +296,15 @@ namespace Barotrauma.Items.Components
 
             List<Order> reports = Order.PrefabList.FindAll(o => o.IsReport && o.SymbolSprite != null && !o.Hidden);
 
-            GUIFrame bottomFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.15f), paddedContainer.RectTransform, Anchor.BottomCenter), style: null)
+            GUIFrame bottomFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.15f), paddedContainer.RectTransform, Anchor.BottomCenter) { MaxSize = new Point(int.MaxValue, GUI.IntScale(40)) }, style: null)
             {
                 CanBeFocused = false
             };
 
             reportFrame = new GUILayoutGroup(new RectTransform(new Vector2(1), bottomFrame.RectTransform), isHorizontal: true)
             {
-                AbsoluteSpacing = (int)(5 * GUI.Scale)
+                Stretch = true,
+                AbsoluteSpacing = GUI.IntScale(5)
             };
 
             if (reports.Any())
@@ -359,10 +361,7 @@ namespace Barotrauma.Items.Components
 
             searchBar.OnSelected += (sender, key) =>
             {
-                itemsFoundOnSub = Item.ItemList.Where(it => 
-                    it.Submarine == item.Submarine && 
-                    !it.NonInteractable && !it.HiddenInGame && 
-                    (it.GetComponent<Holdable>() != null || it.GetComponent<Wearable>() != null)).Select(it => it.Prefab).ToImmutableHashSet();
+                itemsFoundOnSub = Item.ItemList.Where(it => VisibleOnItemFinder(it)).Select(it => it.Prefab).ToImmutableHashSet();
             };
 
             searchBar.OnKeyHit += ControlSearchTooltip;
@@ -390,6 +389,28 @@ namespace Barotrauma.Items.Components
                 c.CanBeFocused = false;
                 c.Children.ForEach(c2 => c2.CanBeFocused = false);
             });
+
+            submarineBack.RectTransform.MaxSize = 
+                submarineFront.RectTransform.MaxSize =
+                submarineContainer.RectTransform.MaxSize = 
+                new Point(int.MaxValue, paddedContainer.Rect.Height - bottomFrame.Rect.Height - buttonLayout.Rect.Height);
+        }
+
+        private bool VisibleOnItemFinder(Item it)
+        {
+            if (it.Submarine != item.Submarine) { return false; }
+            if (it.NonInteractable || it.HiddenInGame) { return false; }
+            if (it.GetComponent<Pickable>() == null) { return false; }
+
+            var holdable = it.GetComponent<Holdable>();
+            if (holdable != null && holdable.Attached) { return false; }
+
+            var wire = it.GetComponent<Wire>();
+            if (wire != null && wire.Connections.Any(c => c != null)) { return false; }
+
+            if (it.HasTag("traitormissionitem")) { return false; }
+
+            return true;
         }
 
         public override void AddToGUIUpdateList()
@@ -546,10 +567,7 @@ namespace Barotrauma.Items.Components
             // is there a better way to do this?
             if (GuiFrame.Rect.Size != elementSize)
             {
-                if (item.Submarine is { } sub)
-                {
-                    BakeSubmarine(sub, miniMapFrame.Rect);
-                }
+                CreateGUI();
                 elementSize = GuiFrame.Rect.Size;
             }
 
@@ -782,10 +800,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Item it in Item.ItemList)
             {
-                if (it.Submarine != item.Submarine) { continue; }
-                if (it.HiddenInGame || it.NonInteractable) { continue; }
-                if (it.GetComponent<Wire>() is { Connections: { } conn} && conn.Any()) { continue; }
-                if (it.HasTag("traitormissionitem")) { continue; }
+                if (!VisibleOnItemFinder(it)) { continue; }
 
                 if (it.Prefab == searchedPrefab)
                 {
@@ -794,7 +809,7 @@ namespace Barotrauma.Items.Components
 
                     if (it.FindParentInventory(inventory => inventory is ItemInventory { Owner: Item { ParentInventory: null } }) is ItemInventory parent)
                     {
-                        foundItems.Add((Item) parent.Owner);
+                        foundItems.Add((Item)parent.Owner);
                     }
                     else
                     {
@@ -1165,7 +1180,7 @@ namespace Barotrauma.Items.Components
 
                 if (entity is Item it)
                 {
-                    if (it.GetComponent<Holdable>() != null || it.ParentInventory != null) { continue; }
+                    if (it.GetComponent<Pickable>() != null || it.ParentInventory != null) { continue; }
                     DrawItem(spriteBatch, it, parentRect, worldBorders, inflate);
                 }
             }

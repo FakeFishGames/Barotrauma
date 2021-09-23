@@ -2755,6 +2755,9 @@ namespace Barotrauma.Networking
             msg.Write((byte)characterInfo.BeardIndex);
             msg.Write((byte)characterInfo.MoustacheIndex);
             msg.Write((byte)characterInfo.FaceAttachmentIndex);
+            msg.WriteColorR8G8B8(characterInfo.SkinColor);
+            msg.WriteColorR8G8B8(characterInfo.HairColor);
+            msg.WriteColorR8G8B8(characterInfo.FacialHairColor);
 
             var jobPreferences = GameMain.NetLobbyScreen.JobPreferences;
             int count = Math.Min(jobPreferences.Count, 3);

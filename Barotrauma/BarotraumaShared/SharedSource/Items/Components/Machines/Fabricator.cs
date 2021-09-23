@@ -32,6 +32,8 @@ namespace Barotrauma.Items.Components
         [Serialize(1.0f, true)]
         public float SkillRequirementMultiplier { get; set; }
 
+        private const float TinkeringSpeedIncrease = 1.5f;
+
         private enum FabricatorState
         {
             Active = 1,
@@ -279,7 +281,14 @@ namespace Barotrauma.Items.Components
 
             if (powerConsumption <= 0) { Voltage = 1.0f; }
 
-            timeUntilReady -= deltaTime * Math.Min(Voltage, 1.0f);
+            float tinkeringStrength = 0f;
+            if (repairable.IsTinkering)
+            {
+                tinkeringStrength = repairable.TinkeringStrength;
+            }
+            float fabricationSpeedIncrease = 1f + tinkeringStrength * TinkeringSpeedIncrease;
+
+            timeUntilReady -= deltaTime * fabricationSpeedIncrease * Math.Min(Voltage, 1.0f);
 
             UpdateRequiredTimeProjSpecific();
 
@@ -329,12 +338,7 @@ namespace Barotrauma.Items.Components
                     }
                     user.CheckTalents(AbilityEffectType.OnItemFabricatedAmount, fabricationValueItem);
 
-                    float floatQuality = 0.0f;
-                    foreach (string tag in fabricatedItem.TargetItem.Tags)
-                    {
-                        floatQuality += user.Info.GetSavedStatValue(StatTypes.IncreaseFabricationQuality, tag);
-                    }
-                    quality = (int)floatQuality;
+                    quality = GetFabricatedItemQuality(fabricatedItem, user);
                 }
 
                 var tempUser = user;
@@ -402,6 +406,25 @@ namespace Barotrauma.Items.Components
 
                 CancelFabricating();
             }
+        }
+
+        private int GetFabricatedItemQuality(FabricationRecipe fabricatedItem, Character user)
+        {
+            if (user == null) { return 0; }
+            if (fabricatedItem.TargetItem.ConfigElement.GetChildElement("Quality") == null) { return 0; }
+            int quality = 0;
+            float floatQuality = 0.0f;
+            foreach (string tag in fabricatedItem.TargetItem.Tags)
+            {
+                floatQuality += user.Info.GetSavedStatValue(StatTypes.IncreaseFabricationQuality, tag);
+            }
+            quality = (int)floatQuality;
+
+            const int MaxCraftingSkill = 100;
+
+            quality += fabricatedItem.RequiredSkills.All(s => user.GetSkillLevel(s.Identifier) >= MaxCraftingSkill) ? 1 : 0;
+            quality += FabricationDegreeOfSuccess(user, fabricatedItem.RequiredSkills) >= 0.5f ? 1 : 0;
+            return quality;
         }
 
         partial void UpdateRequiredTimeProjSpecific();

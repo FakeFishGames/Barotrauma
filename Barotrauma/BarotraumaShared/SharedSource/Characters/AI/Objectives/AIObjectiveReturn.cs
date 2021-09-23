@@ -12,7 +12,7 @@ namespace Barotrauma
         private bool usingEscapeBehavior;
         public Submarine ReturnTarget { get; }
 
-        public AIObjectiveReturn(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1.0f) : base(character, objectiveManager, priorityModifier)
+        public AIObjectiveReturn(Character character, Character orderGiver, AIObjectiveManager objectiveManager, float priorityModifier = 1.0f) : base(character, objectiveManager, priorityModifier)
         {
             ReturnTarget = GetReturnTarget(Submarine.MainSubs) ?? GetReturnTarget(Submarine.Loaded);
             if (ReturnTarget == null)
@@ -23,10 +23,12 @@ namespace Barotrauma
 
             Submarine GetReturnTarget(IEnumerable<Submarine> subs)
             {
+                var requiredTeamID = orderGiver?.TeamID ?? character?.TeamID;
                 Submarine returnTarget = null;
                 foreach (var sub in subs)
                 {
-                    if (sub?.TeamID != character.TeamID) { continue; }
+                    if (sub == null) { continue; }
+                    if (sub.TeamID != requiredTeamID) { continue; }
                     returnTarget = sub;
                     break;
                 }
@@ -229,7 +231,7 @@ namespace Barotrauma
         protected override void OnAbandon()
         {
             base.OnAbandon();
-            SteeringManager.Reset();
+            SteeringManager?.Reset();
             if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder == objectiveManager.CurrentObjective)
             {
                 string msg = TextManager.Get("dialogcannotreturn", returnNull: true);

@@ -42,6 +42,10 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (this is HumanoidAnimController humanAnimController && humanAnimController.Crouching)
+                    {
+                        return humanAnimController.HumanCrouchParams;
+                    }
                     return IsMovingFast ? RunParams : WalkParams;
                 }
             }
@@ -96,7 +100,12 @@ namespace Barotrauma
             {
                 if (CanWalk)
                 {
-                    return new List<AnimationParams> { WalkParams, RunParams, SwimSlowParams, SwimFastParams };
+                    var anims = new List<AnimationParams> { WalkParams, RunParams, SwimSlowParams, SwimFastParams };
+                    if (this is HumanoidAnimController humanAnimController)
+                    {
+                        anims.Add(humanAnimController.HumanCrouchParams);
+                    }
+                    return anims;
                 }
                 else
                 {
@@ -154,7 +163,7 @@ namespace Barotrauma
 
         public virtual void UpdateUseItem(bool allowMovement, Vector2 handWorldPos) { }
 
-        public float GetSpeed(AnimationType type)
+        public virtual float GetSpeed(AnimationType type)
         {
             GroundedMovementParams movementParams;
             switch (type)
@@ -207,7 +216,14 @@ namespace Barotrauma
                 }
                 else
                 {
-                    animType = AnimationType.Walk;
+                    if (this is HumanoidAnimController humanAnimController && humanAnimController.Crouching)
+                    {
+                        animType = AnimationType.Crouch;
+                    }
+                    else
+                    {
+                        animType = AnimationType.Walk;
+                    }
                 }
             }
             return GetSpeed(animType);
@@ -221,6 +237,12 @@ namespace Barotrauma
                     return WalkParams;
                 case AnimationType.Run:
                     return RunParams;
+                case AnimationType.Crouch:
+                    if (this is HumanoidAnimController humanAnimController)
+                    {
+                        return humanAnimController.HumanCrouchParams;
+                    }
+                    throw new NotImplementedException(type.ToString());
                 case AnimationType.SwimSlow:
                     return SwimSlowParams;
                 case AnimationType.SwimFast:

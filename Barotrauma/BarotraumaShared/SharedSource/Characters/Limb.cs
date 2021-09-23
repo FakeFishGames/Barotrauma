@@ -744,7 +744,7 @@ namespace Barotrauma
                 }
                 if (attacker != null)
                 {
-                    var abilityAffliction = new AbilityAffliction(newAffliction);
+                    var abilityAffliction = new AbilityAfflictionCharacter(newAffliction, character);
                     attacker.CheckTalents(AbilityEffectType.OnAddDamageAffliction, abilityAffliction);
                 }
                 if (applyAffliction)

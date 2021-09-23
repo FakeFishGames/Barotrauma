@@ -284,7 +284,7 @@ namespace Barotrauma.CharacterEditor
                                             }
 
                                             isTextureSelected = true;
-                                            texturePathElement.Text = destinationPath;
+                                            texturePathElement.Text = destinationPath.CleanUpPath();
                                         };
                                         FileSelection.ClearFileTypeFilters();
                                         FileSelection.AddFileTypeFilter("PNG", "*.png");
@@ -431,7 +431,7 @@ namespace Barotrauma.CharacterEditor
                 box.Header.Font = GUI.LargeFont;
                 box.Content.ChildAnchor = Anchor.TopCenter;
                 box.Content.AbsoluteSpacing = (int)(20 * GUI.Scale);
-                int elementSize = (int)(30 * GUI.Scale);
+                int elementSize = (int)(40 * GUI.Scale);
                 var frame = new GUIFrame(new RectTransform(new Point(box.Content.Rect.Width - (int)(80 * GUI.xScale), box.Content.Rect.Height - (int)(200 * GUI.yScale)),
                     box.Content.RectTransform, Anchor.Center), style: null, color: ParamsEditor.Color)
                 {
@@ -625,8 +625,12 @@ namespace Barotrauma.CharacterEditor
                 var jointsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), content.RectTransform), style: null) { CanBeFocused = false };
                 new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), jointsElement.RectTransform), GetCharacterEditorTranslation("Joints"), font: GUI.SubHeadingFont);
                 var jointButtonElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 1f), jointsElement.RectTransform)
-                { RelativeOffset = new Vector2(0.15f, 0) }, style: null)
-                { CanBeFocused = false };
+                { 
+                    RelativeOffset = new Vector2(0.15f, 0) 
+                }, style: null)
+                { 
+                    CanBeFocused = false 
+                };
                 var jointsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), content.RectTransform));
                 var removeJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform), style: "GUIMinusButton")
                 {
@@ -824,7 +828,7 @@ namespace Barotrauma.CharacterEditor
                 {
                     CanBeFocused = false
                 };
-                var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
+                var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 16 };
                 var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), name, font: GUI.SubHeadingFont);
                 var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                 var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);

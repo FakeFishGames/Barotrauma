@@ -3464,15 +3464,15 @@ namespace Barotrauma.Networking
             }
             catch (Exception e)
             {
-                //gender = Gender.Male;
-                //race = Race.White;
-                //headSpriteId = 0;
                 DebugConsole.Log("Received invalid characterinfo from \"" + sender.Name + "\"! { " + e.Message + " }");
             }
             int hairIndex = message.ReadByte();
             int beardIndex = message.ReadByte();
             int moustacheIndex = message.ReadByte();
             int faceAttachmentIndex = message.ReadByte();
+            Color skinColor = message.ReadColorR8G8B8();
+            Color hairColor = message.ReadColorR8G8B8();
+            Color facialHairColor = message.ReadColorR8G8B8();
 
             List<Pair<JobPrefab, int>> jobPreferences = new List<Pair<JobPrefab, int>>();
             int count = message.ReadByte();
@@ -3489,6 +3489,9 @@ namespace Barotrauma.Networking
 
             sender.CharacterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, sender.Name);
             sender.CharacterInfo.RecreateHead(headSpriteId, race, gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
+            sender.CharacterInfo.SkinColor = skinColor;
+            sender.CharacterInfo.HairColor = hairColor;
+            sender.CharacterInfo.FacialHairColor = facialHairColor;
 
             if (jobPreferences.Count > 0)
             {

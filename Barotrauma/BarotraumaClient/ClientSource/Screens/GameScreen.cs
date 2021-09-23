@@ -25,6 +25,7 @@ namespace Barotrauma
         public Effect PostProcessEffect { get; private set; }
         public Effect GradientEffect { get; private set; }
         public Effect GrainEffect { get; private set; }
+        public Effect ThresholdTintEffect { get; private set; }
         public Effect BlueprintEffect { get; set; }
 
         public GameScreen(GraphicsDevice graphics, ContentManager content)
@@ -38,21 +39,20 @@ namespace Barotrauma
                 CreateRenderTargets(graphics);
             };
 
+            Effect LoadEffect(string path)
+                => content.Load<Effect>(path
 #if LINUX || OSX
-            //var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
-            damageEffect = content.Load<Effect>("Effects/damageshader_opengl");
-            PostProcessEffect = content.Load<Effect>("Effects/postprocess_opengl");
-            GradientEffect = content.Load<Effect>("Effects/gradientshader_opengl");
-            GrainEffect = content.Load<Effect>("Effects/grainshader_opengl");
-            BlueprintEffect = content.Load<Effect>("Effects/blueprintshader_opengl");
-#else
-            //var blurEffect = content.Load<Effect>("Effects/blurshader");
-            damageEffect = content.Load<Effect>("Effects/damageshader");
-            PostProcessEffect = content.Load<Effect>("Effects/postprocess");
-            GradientEffect = content.Load<Effect>("Effects/gradientshader");
-            GrainEffect = content.Load<Effect>("Effects/grainshader");
-            BlueprintEffect = content.Load<Effect>("Effects/blueprintshader");
+                        +"_opengl"
 #endif
+                );
+
+            //var blurEffect = LoadEffect("Effects/blurshader");
+            damageEffect = LoadEffect("Effects/damageshader");
+            PostProcessEffect = LoadEffect("Effects/postprocess");
+            GradientEffect = LoadEffect("Effects/gradientshader");
+            GrainEffect = LoadEffect("Effects/grainshader");
+            ThresholdTintEffect = LoadEffect("Effects/thresholdtint");
+            BlueprintEffect = LoadEffect("Effects/blueprintshader");
 
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
             damageEffect.Parameters["xStencil"].SetValue(damageStencil);

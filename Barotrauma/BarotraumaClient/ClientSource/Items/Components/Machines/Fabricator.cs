@@ -516,11 +516,7 @@ namespace Barotrauma.Items.Components
 
             string name = GetRecipeNameAndAmount(selectedItem);
 
-            float quality = 0;
-            foreach (string tag in selectedItem.TargetItem.Tags)
-            {
-                quality += user?.Info?.GetSavedStatValue(StatTypes.IncreaseFabricationQuality, tag) ?? 0;
-            }
+            float quality = GetFabricatedItemQuality(selectedItem, user);
             if (quality > 0)
             {
                 name = TextManager.GetWithVariable("itemname.quality" + (int)quality, "[itemname]", name+'\n', fallBackTag: "itemname.quality3");

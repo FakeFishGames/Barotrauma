@@ -80,6 +80,7 @@ namespace Barotrauma.Items.Components
         public RegExFindComponent(Item item, XElement element)
             : base(item, element)
         {
+            nonContinuousOutputSent = true;
             IsActive = true;
         }
 

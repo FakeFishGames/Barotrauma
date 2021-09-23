@@ -457,7 +457,14 @@ namespace Barotrauma
             </Description>
             */
 
-            string extraDescriptionLine = Get(descriptionElement.GetAttributeString("tag", string.Empty));
+            if (descriptionElement.GetAttributeBool("linebreak", false))
+            {
+                Description += "\n";
+                return;
+            }
+
+            string descriptionTag = descriptionElement.GetAttributeString("tag", string.Empty);
+            string extraDescriptionLine = Get(descriptionTag);
             if (string.IsNullOrEmpty(extraDescriptionLine)) { return; }
             foreach (XElement replaceElement in descriptionElement.Elements())
             {
@@ -468,11 +475,22 @@ namespace Barotrauma
                 string replacementValue = string.Empty;
                 for (int i = 0; i < replacementValues.Length; i++)
                 {
+#if DEBUG
+                    if (!int.TryParse(replacementValues[i], out int _) && !float.TryParse(replacementValues[i], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float __) && !ContainsTag(replacementValues[i]))
+                    {
+                        DebugConsole.AddWarning($"Couldn't find the tag \"{replacementValues[i]}\" in text files for description \"{descriptionTag}\". Is the tag correct?");
+                    }
+#endif
                     replacementValue += Get(replacementValues[i], returnNull: true) ?? replacementValues[i];
                     if (i < replacementValues.Length - 1)
                     {
                         replacementValue += ", ";
                     }
+                }
+                if (replaceElement.Attribute("color") != null)
+                {
+                    string colorStr = replaceElement.GetAttributeString("color", "255,255,255,255");
+                    replacementValue = $"‖color:{colorStr}‖{replacementValue}‖color:end‖";
                 }
                 extraDescriptionLine = extraDescriptionLine.Replace(tag, replacementValue);
             }

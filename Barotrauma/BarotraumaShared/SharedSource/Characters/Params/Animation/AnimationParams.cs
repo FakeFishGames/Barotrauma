@@ -14,6 +14,7 @@ namespace Barotrauma
         NotDefined,
         Walk,
         Run,
+        Crouch,
         SwimSlow,
         SwimFast
     }
@@ -56,12 +57,15 @@ namespace Barotrauma
     {
         [Serialize(25.0f, true, description: "Turning speed (or rather a force applied on the main collider to make it turn). Note that you can set a limb-specific steering forces too (additional)."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
         public float SteerTorque { get; set; }
+
+        [Serialize(25.0f, true, description: "How much torque is used to move the legs."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
+        public float LegTorque { get; set; }
     }
 
     abstract class AnimationParams : EditableParams, IMemorizable<AnimationParams>
     {
         public string SpeciesName { get; private set; }
-        public bool IsGroundedAnimation => AnimationType == AnimationType.Walk || AnimationType == AnimationType.Run;
+        public bool IsGroundedAnimation => AnimationType == AnimationType.Walk || AnimationType == AnimationType.Run || AnimationType == AnimationType.Crouch;
         public bool IsSwimAnimation => AnimationType == AnimationType.SwimSlow || AnimationType == AnimationType.SwimFast;
 
         protected static Dictionary<string, Dictionary<string, AnimationParams>> allAnimations = new Dictionary<string, Dictionary<string, AnimationParams>>();
@@ -110,7 +114,17 @@ namespace Barotrauma
                 }
             }
         }
+
         public float TorsoAngleInRadians { get; private set; } = float.NaN;
+
+        [Serialize(50.0f, true, description: "How much torque is used to rotate the head to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
+        public float HeadTorque { get; set; }
+
+        [Serialize(50.0f, true, description: "How much torque is used to rotate the torso to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
+        public float TorsoTorque { get; set; }
+
+        [Serialize(25.0f, true, description: "How much torque is used to rotate the feet to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
+        public float FootTorque { get; set; }
 
         [Serialize(AnimationType.NotDefined, true), Editable]
         public virtual AnimationType AnimationType { get; protected set; }
@@ -402,6 +416,8 @@ namespace Barotrauma
                         return typeof(HumanWalkParams);
                     case AnimationType.Run:
                         return typeof(HumanRunParams);
+                    case AnimationType.Crouch:
+                        return typeof(HumanCrouchParams);
                     case AnimationType.SwimSlow:
                         return typeof(HumanSwimSlowParams);
                     case AnimationType.SwimFast:

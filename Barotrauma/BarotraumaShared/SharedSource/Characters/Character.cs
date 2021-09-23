@@ -309,8 +309,6 @@ namespace Barotrauma
 
         public string TraitorCurrentObjective = "";
         public bool IsHuman => SpeciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase);
-        public bool IsMale => Info != null && Info.HasGenders && Info.Gender == Gender.Male;
-        public bool IsFemale => Info != null && Info.HasGenders && Info.Gender == Gender.Female;
 
         private float attackCoolDown;
 
@@ -1665,9 +1663,9 @@ namespace Barotrauma
                 AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < -0.1f;
             }
 
-            if (AnimController is HumanoidAnimController)
+            if (AnimController is HumanoidAnimController humanAnimController)
             {
-                ((HumanoidAnimController)AnimController).Crouching = IsKeyDown(InputType.Crouch);
+                humanAnimController.Crouching = humanAnimController.ForceSelectAnimationType == AnimationType.Crouch || IsKeyDown(InputType.Crouch);
             }
 
             if (!aiControlled &&
@@ -2760,9 +2758,9 @@ namespace Barotrauma
             //ragdoll button
             if (IsRagdolled || !CanMove)
             {
-                if (AnimController is HumanoidAnimController) 
+                if (AnimController is HumanoidAnimController humanAnimController) 
                 { 
-                    ((HumanoidAnimController)AnimController).Crouching = false; 
+                    humanAnimController.Crouching = false; 
                 }
                 AnimController.ResetPullJoints();
                 SelectedConstruction = null;
@@ -3505,9 +3503,9 @@ namespace Barotrauma
             }            
         }
 
-        public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse = 0.0f, Character attacker = null)
+        public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse = 0.0f, Character attacker = null, float damageMultiplier = 1f)
         {
-            return AddDamage(worldPosition, afflictions, stun, playSound, attackImpulse, out _, attacker);
+            return AddDamage(worldPosition, afflictions, stun, playSound, attackImpulse, out _, attacker, damageMultiplier: damageMultiplier);
         }
 
         public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, out Limb hitLimb, Character attacker = null, float damageMultiplier = 1)
@@ -4351,7 +4349,7 @@ namespace Barotrauma
             return GiveTalent(talentPrefab, addingFirstTime);
         }
 
-        private bool GiveTalent(TalentPrefab talentPrefab, bool addingFirstTime = true)
+        public bool GiveTalent(TalentPrefab talentPrefab, bool addingFirstTime = true)
         {
             if (addingFirstTime)
             {

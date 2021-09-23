@@ -24,6 +24,11 @@ namespace Barotrauma
         /// The item isn't available in stores unless the level's difficulty is above this value
         /// </summary>
         public readonly int MinLevelDifficulty;
+        /// <summary>
+        /// The cost of item when sold by the store. Higher modifier means the item costs more to buy from the store.
+        /// </summary>
+        public readonly float BuyingPriceMultiplier = 1f;
+
 
         /// <summary>
         /// Support for the old style of determining item prices
@@ -34,6 +39,7 @@ namespace Barotrauma
         {
             Price = element.GetAttributeInt("buyprice", 0);
             MinLevelDifficulty = element.GetAttributeInt("minleveldifficulty", 0);
+            BuyingPriceMultiplier = element.GetAttributeFloat("buyingpricemultiplier", 1f);
             CanBeBought = true;
             var minAmount = GetMinAmount(element);
             MinAvailableAmount = Math.Min(minAmount, CargoManager.MaxQuantity);
@@ -42,11 +48,12 @@ namespace Barotrauma
             MaxAvailableAmount = Math.Max(maxAmount, MinAvailableAmount);
         }
 
-        public PriceInfo(int price, bool canBeBought, int minAmount = 0, int maxAmount = 0, bool canBeSpecial = true, int minLevelDifficulty = 0)
+        public PriceInfo(int price, bool canBeBought, int minAmount = 0, int maxAmount = 0, bool canBeSpecial = true, int minLevelDifficulty = 0, float buyingPriceMultiplier = 1f)
         {
             Price = price;
             CanBeBought = canBeBought;
             MinAvailableAmount = Math.Min(minAmount, CargoManager.MaxQuantity);
+            BuyingPriceMultiplier = buyingPriceMultiplier;
             maxAmount = Math.Min(maxAmount, CargoManager.MaxQuantity);
             MaxAvailableAmount = Math.Max(maxAmount, minAmount);
             MinLevelDifficulty = minLevelDifficulty;
@@ -62,6 +69,7 @@ namespace Barotrauma
             var maxAmount = GetMaxAmount(element);
             var minLevelDifficulty = element.GetAttributeInt("minleveldifficulty", 0);
             var canBeSpecial = element.GetAttributeBool("canbespecial", true);
+            var buyingPriceMultiplier = element.GetAttributeFloat("buyingpricemultiplier", 1f);
             var priceInfos = new List<Tuple<string, PriceInfo>>();
 
             foreach (XElement childElement in element.GetChildElements("price"))
@@ -73,7 +81,7 @@ namespace Barotrauma
                         minAmount: sold ? GetMinAmount(childElement, minAmount) : 0,
                         maxAmount: sold ? GetMaxAmount(childElement, maxAmount) : 0,
                         canBeSpecial,
-                        childElement.GetAttributeInt("minleveldifficulty", minLevelDifficulty))));
+                        childElement.GetAttributeInt("minleveldifficulty", minLevelDifficulty), childElement.GetAttributeFloat("buyingpricemultiplier", buyingPriceMultiplier))));
             }
 
             var canBeBoughtAtOtherLocations = soldByDefault && element.GetAttributeBool("soldeverywhere", true);
@@ -81,7 +89,7 @@ namespace Barotrauma
                 minAmount: canBeBoughtAtOtherLocations ? minAmount : 0,
                 maxAmount: canBeBoughtAtOtherLocations ? maxAmount : 0,
                 canBeSpecial, 
-                minLevelDifficulty);
+                minLevelDifficulty, buyingPriceMultiplier);
             
             return priceInfos;
         }

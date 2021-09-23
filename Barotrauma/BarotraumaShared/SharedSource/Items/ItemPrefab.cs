@@ -842,6 +842,8 @@ namespace Barotrauma
                 }
             }
 
+            name = GeneticMaterial.TryCreateName(this, element);
+
             if (string.IsNullOrEmpty(name))
             {
                 DebugConsole.ThrowError($"Unnamed item ({identifier}) in {filePath}!");

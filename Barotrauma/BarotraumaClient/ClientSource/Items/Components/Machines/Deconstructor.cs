@@ -164,7 +164,7 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-                activateButton.Enabled = inputContainer.Inventory.AllItems.Any();
+                activateButton.Enabled = outputsFound;
                 activateButton.Text = TextManager.Get(ActivateButtonText);
             };
         }

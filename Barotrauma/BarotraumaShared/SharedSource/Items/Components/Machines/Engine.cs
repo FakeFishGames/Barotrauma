@@ -73,6 +73,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private const float TinkeringForceIncrease = 1.5f;
+
         public Engine(Item item, XElement element)
             : base(item, element)
         {
@@ -128,7 +130,7 @@ namespace Barotrauma.Items.Components
                 currForce *= maxForce * forceMultiplier;
                 if (item.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering)
                 {
-                    currForce *= 2.5f;
+                    currForce *= 1f + repairable.TinkeringStrength * TinkeringForceIncrease;
                 }
 
                 //less effective when in a bad condition

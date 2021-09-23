@@ -43,6 +43,17 @@ namespace Barotrauma.Abilities
         public Affliction Affliction { get; set; }
     }
 
+    class AbilityAfflictionCharacter : AbilityObject, IAbilityAffliction, IAbilityCharacter
+    {
+        public AbilityAfflictionCharacter(Affliction affliction, Character character)
+        {
+            Affliction = affliction;
+            Character = character;
+        }
+        public Character Character { get; set; }
+        public Affliction Affliction { get; set; }
+    }
+
     class AbilityValueItem : AbilityObject, IAbilityValue, IAbilityItemPrefab
     {
         public AbilityValueItem(float value, ItemPrefab itemPrefab)
@@ -51,6 +62,17 @@ namespace Barotrauma.Abilities
             ItemPrefab = itemPrefab;
         }
         public float Value { get; set; }
+        public ItemPrefab ItemPrefab { get; set; }
+    }
+
+    class AbilityItemPrefabItem : AbilityObject, IAbilityItem, IAbilityItemPrefab
+    {
+        public AbilityItemPrefabItem(Item item, ItemPrefab itemPrefab)
+        {
+            Item = item;
+            ItemPrefab = itemPrefab;
+        }
+        public Item Item { get; set; }
         public ItemPrefab ItemPrefab { get; set; }
     }
 
@@ -65,7 +87,7 @@ namespace Barotrauma.Abilities
         public string String { get; set; }
     }
 
-    class AbilityValueStringCharacter : AbilityObject, IAbilityValue, IAbilityString
+    class AbilityValueStringCharacter : AbilityObject, IAbilityValue, IAbilityString, IAbilityCharacter
     {
         public AbilityValueStringCharacter(float value, string abilityString, Character character)
         {
@@ -109,6 +131,16 @@ namespace Barotrauma.Abilities
         }
         public float Value { get; set; }
         public Mission Mission { get; set; }
+    }
+
+    class AbilityLocation : AbilityObject, IAbilityLocation
+    {
+        public AbilityLocation(Location location)
+        {
+            Location = location;
+        }
+
+        public Location Location { get; set; }
     }
 
     // this is an exception class that should only be passed in this form, so classes that use it should cast into it directly

@@ -51,7 +51,7 @@ namespace Barotrauma.Items.Components
         public override bool ShouldDrawHUD(Character character)
         {
             if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) return false;
-            return item.ConditionPercentage < RepairThreshold || character.IsTraitor && item.ConditionPercentage > MinSabotageCondition || (CurrentFixer == character && (!item.IsFullCondition || (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition))) || CanTinker(character);
+            return item.ConditionPercentage < RepairThreshold || character.IsTraitor && item.ConditionPercentage > MinSabotageCondition || (CurrentFixer == character && (!item.IsFullCondition || (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition))) || IsTinkerable(character);
         }
 
         partial void InitProjSpecific(XElement element)
@@ -162,7 +162,7 @@ namespace Barotrauma.Items.Components
 
             tinkerButtonText = "Tinker";
             tinkeringText = "Tinkering";
-            TinkerButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter), tinkerButtonText, style: "GUIButtonSmall")
+            TinkerButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter), tinkerButtonText)
             {
                 IgnoreLayoutGroups = true,
                 Visible = false,
@@ -254,7 +254,7 @@ namespace Barotrauma.Items.Components
                 progressBarOverlayText.Visible = false;
             }
 
-            RepairButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Repair)) && !item.IsFullCondition;
+            RepairButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Repair)) && !item.IsFullCondition && item.ConditionPercentage < RepairThreshold;
             RepairButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Repair) ? 
                 repairButtonText : 
                 repairingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
@@ -269,7 +269,7 @@ namespace Barotrauma.Items.Components
             TinkerButton.Visible = IsTinkerable(character);
             TinkerButton.IgnoreLayoutGroups = !TinkerButton.Visible;
             TinkerButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Tinker)) && CanTinker(character);
-            TinkerButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Tinker && CanTinker(character)) ?
+            TinkerButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Tinker) ?
                 tinkerButtonText :
                 tinkeringText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
@@ -326,6 +326,7 @@ namespace Barotrauma.Items.Components
             deteriorateAlwaysResetTimer = msg.ReadSingle();
             DeteriorateAlways = msg.ReadBoolean();
             tinkeringDuration = msg.ReadSingle();
+            tinkeringStrength = msg.ReadSingle();
             ushort currentFixerID = msg.ReadUInt16();
             currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
             CurrentFixer = currentFixerID != 0 ? Entity.FindEntityByID(currentFixerID) as Character : null;

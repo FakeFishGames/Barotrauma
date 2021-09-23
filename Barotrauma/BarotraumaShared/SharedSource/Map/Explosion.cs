@@ -340,7 +340,7 @@ namespace Barotrauma
                     //ensures that the attack hits the correct limb and that the direction of the hit can be determined correctly in the AddDamage methods
                     Vector2 dir = worldPosition - limb.WorldPosition;
                     Vector2 hitPos = limb.WorldPosition + (dir.LengthSquared() <= 0.001f ? Rand.Vector(1.0f) : Vector2.Normalize(dir)) * 0.01f;
-                    AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker);
+                    AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker, damageMultiplier: attack.DamageMultiplier);
                     damages.Add(limb, attackResult.Damage);
                     
                     if (attack.StatusEffects != null && attack.StatusEffects.Any())

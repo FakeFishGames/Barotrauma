@@ -15,14 +15,14 @@ namespace Barotrauma.Items.Components
         private Character targetCharacter;
         private AfflictionPrefab selectedEffect, selectedTaintedEffect;
 
-        [Serialize("", false)]
+        [Serialize("", true)]
         public string Effect
         {
             get;
             set;
         }
 
-        [Serialize("geneticmaterialdebuff", false)]
+        [Serialize("geneticmaterialdebuff", true)]
         public string TaintedEffect
         {
             get;
@@ -30,7 +30,7 @@ namespace Barotrauma.Items.Components
         }
 
         private bool tainted;
-        [Serialize(false, false)]
+        [Serialize(false, true)]
         public bool Tainted
         {
             get { return tainted; }
@@ -49,7 +49,7 @@ namespace Barotrauma.Items.Components
         }
 
         //only for saving the selected tainted effect
-        [Serialize("", false)]
+        [Serialize("", true)]
         public string SelectedTaintedEffect
         {
             get { return selectedTaintedEffect?.Identifier ?? string.Empty; }
@@ -100,6 +100,11 @@ namespace Barotrauma.Items.Components
                 {
                     float selectedTaintedEffectStrength = item.ConditionPercentage / 100.0f * selectedTaintedEffect.MaxStrength;
                     character.CharacterHealth.ApplyAffliction(null, selectedTaintedEffect.Instantiate(selectedTaintedEffectStrength));
+                    var existingAffliction = character.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedTaintedEffect);
+                    if (existingAffliction != null)
+                    {
+                        existingAffliction.Strength = selectedTaintedEffectStrength;
+                    }
                     targetCharacter = character;
 #if SERVER
                     item.CreateServerEvent(this);
@@ -111,6 +116,11 @@ namespace Barotrauma.Items.Components
                 ApplyStatusEffects(ActionType.OnWearing, 1.0f);
                 float selectedEffectStrength = item.ConditionPercentage / 100.0f * selectedEffect.MaxStrength;
                 character.CharacterHealth.ApplyAffliction(null, selectedEffect.Instantiate(selectedEffectStrength));
+                var existingAffliction = character.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedEffect);
+                if (existingAffliction != null)
+                {
+                    existingAffliction.Strength = selectedEffectStrength;
+                }
                 targetCharacter = character;
 #if SERVER
                 item.CreateServerEvent(this);
@@ -196,6 +206,22 @@ namespace Barotrauma.Items.Components
 #if SERVER
             item.CreateServerEvent(this);
 #endif            
+        }
+
+        public static string TryCreateName(ItemPrefab prefab, XElement element)
+        {
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().Equals(nameof(GeneticMaterial), StringComparison.OrdinalIgnoreCase))
+                {
+                    string nameId = subElement.GetAttributeString("nameidentifier", "");
+                    if (!string.IsNullOrEmpty(nameId))
+                    {
+                        return prefab.Name.Replace("[type]", TextManager.Get(nameId, returnNull: true) ?? nameId);
+                    }
+                }
+            }
+            return prefab.Name;
         }
     }
 }

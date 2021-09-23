@@ -56,9 +56,10 @@
         OnAllyGainMissionExperience,
         OnGainMissionExperience,
         OnGainMissionMoney,
+        OnLocationDiscovered,
         OnItemDeconstructed,
         OnItemDeconstructedMaterial,
-        OnItemDeconstructedRetainProbability,
+        OnItemDeconstructedInventory,
         OnStopTinkering,
         OnItemPicked,
         AfterSubmarineAttacked,
@@ -96,7 +97,6 @@
         // Utility
         RepairSpeed,
         DeconstructorSpeedMultiplier,
-        TinkeringDuration,
         RepairToolStructureRepairMultiplier,
         RepairToolStructureDamageMultiplier,
         RepairToolDeattachTimeMultiplier,
@@ -105,6 +105,10 @@
         GeneticMaterialRefineBonus,
         GeneticMaterialTaintedProbabilityReductionOnCombine,
         SkillGainSpeed,
+        // Tinker
+        TinkeringDuration,
+        TinkeringStrength,
+        TinkeringDamage,
         // Misc
         ReputationGainMultiplier,
         MissionMoneyGainMultiplier,
@@ -114,6 +118,7 @@
         Coauthor,
         WarriorPoetMissionRuns,
         WarriorPoetEnemiesKilled,
+        QuickfixRepairCount,
     }
 
     public enum AbilityFlags
