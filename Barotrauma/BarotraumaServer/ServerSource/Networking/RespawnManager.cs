@@ -452,6 +452,11 @@ namespace Barotrauma.Networking
                         item.Description = shuttleSpawnPoints[i].IdCardDesc;
                     }
                 }
+
+                if (campaign == null && clients[i].AssignedJob.First.JobCharacterSpecies.Any())
+                {
+                    CoroutineManager.StartCoroutine(character.ReplaceWithMonsterJob(clients[i], clients[i].AssignedJob.First.JobCharacterSpecies));
+                }
             }
         }
 

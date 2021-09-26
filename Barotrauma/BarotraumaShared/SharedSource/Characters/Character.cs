@@ -1358,6 +1358,41 @@ namespace Barotrauma
             info.Job.GiveJobItems(this, spawnPoint);
         }
 
+        // Replace this character with another one at the start of the round or after the respawn shuttle is spawned.
+        public IEnumerable<object> ReplaceWithMonsterJob(Client client, Dictionary<string, bool> characters)
+        {
+#if SERVER
+            string characteridentifier = characters.Keys.GetRandom(Rand.RandSync.Server);
+            if (info.SpeciesName == characteridentifier) yield return CoroutineStatus.Success; // Don't create a new character if we are already that one.
+            if (CharacterPrefab.FindBySpeciesName(characteridentifier) != null)
+            {
+                Vector2 spawnPoint = WorldPosition;
+                if (characters[characteridentifier] == true) // Check if "spawnoutside" is set to true for this character.
+                {
+                    spawnPoint = WayPoint.GetRandom(SpawnType.Enemy, useSyncedRand: true).Position;
+                }
+                var monster = Create(characteridentifier, spawnPoint, ToolBox.RandomSeed(8));
+                GameMain.Server.SetClientCharacter(client, monster);
+                if (Inventory.Capacity == monster.Inventory.Capacity) 
+                {
+                    for (int i = 0; i < Inventory.Capacity && i < monster.Inventory.Capacity; i++)
+                    {
+                        Inventory.GetItemsAt(i).ForEachMod(item => monster.Inventory.TryPutItem(item, i, true, false, null));
+                    }
+                }
+                if (!Spawner.IsInRemoveQueue(this))
+                {
+                    Spawner.AddToRemoveQueue(this);
+                }
+            }
+            else
+            {
+                DebugConsole.NewMessage($"Could not replace {client}'s character. No character with the identifier {characteridentifier} found.", Color.Red);
+            }
+#endif
+            yield return CoroutineStatus.Success;
+        }
+
         public void GiveIdCardTags(WayPoint spawnPoint)
         {
             if (info?.Job == null || spawnPoint == null) { return; }

@@ -2358,6 +2358,10 @@ namespace Barotrauma.Networking
                     }
                     spawnedCharacter.OwnerClientEndPoint = teamClients[i].Connection.EndPointString;
                     spawnedCharacter.OwnerClientName = teamClients[i].Name;
+                    if (campaign == null && teamClients[i].AssignedJob.First.JobCharacterSpecies.Any())
+                    {
+                        CoroutineManager.StartCoroutine(spawnedCharacter.ReplaceWithMonsterJob(teamClients[i], teamClients[i].AssignedJob.First.JobCharacterSpecies));
+                    }
                 }
 
                 for (int i = teamClients.Count; i < teamClients.Count + bots.Count; i++)

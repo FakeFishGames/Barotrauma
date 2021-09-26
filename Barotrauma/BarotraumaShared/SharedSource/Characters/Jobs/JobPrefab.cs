@@ -74,6 +74,7 @@ namespace Barotrauma
         public readonly List<SkillPrefab> Skills = new List<SkillPrefab>();
         public readonly List<AutonomousObjective> AutonomousObjectives = new List<AutonomousObjective>();
         public readonly List<string> AppropriateOrders = new List<string>();
+        public readonly Dictionary<string, bool> JobCharacterSpecies = new Dictionary<string, bool>();
 
         [Serialize("1,1,1,1", false)]
         public Color UIColor
@@ -237,6 +238,11 @@ namespace Barotrauma
                     case "appropriateobjectives":
                     case "appropriateorders":
                         subElement.Elements().ForEach(order => AppropriateOrders.Add(order.GetAttributeString("identifier", "").ToLowerInvariant()));
+                        break;
+                    case "charactertype":
+                        string characteridentifier = subElement.GetAttributeString("identifier", null);
+                        bool spawnoutside = subElement.GetAttributeBool("spawnoutside", false);
+                        JobCharacterSpecies.Add(characteridentifier, spawnoutside);
                         break;
                     case "jobicon":
                         Icon = new Sprite(subElement.FirstElement());
