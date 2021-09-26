@@ -1362,7 +1362,7 @@ namespace Barotrauma
         public IEnumerable<object> ReplaceWithMonsterJob(Client client, Dictionary<string, bool> characters)
         {
 #if SERVER
-            string characteridentifier = characters.Keys.GetRandom(Rand.RandSync.Server);
+            string characteridentifier = characters.Keys.GetRandom(Rand.RandSync.Unsynced);
             if (info.SpeciesName == characteridentifier) yield return CoroutineStatus.Success; // Don't create a new character if we are already that one.
             if (CharacterPrefab.FindBySpeciesName(characteridentifier) != null)
             {

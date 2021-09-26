@@ -185,21 +185,16 @@ namespace Barotrauma
             private set;
         }
 
-        //whether the job should be available to NPCs
-        [Serialize(false, false)]
-        public bool HiddenJob
+        [Flags]
+        public enum Availability
         {
-            get;
-            private set;
+            Player = 0x1,
+            Npc = 0x2,
+            Both = 0x3
         }
 
-        //whether the job should be only available to players
-        [Serialize(false, false)]
-        public bool PlayerOnly
-        {
-            get;
-            private set;
-        }
+        [Serialize(Availability.Both, false)]
+        public Availability AvailableTo { get; private set; }
 
         public Sprite Icon;
         public Sprite IconSmall;
@@ -293,7 +288,7 @@ namespace Barotrauma
         }
         
 
-        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(p => !p.HiddenJob, sync);
+        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(p => (p.AvailableTo == Availability.Player || p.AvailableTo == Availability.Both), sync);
 
         public static void LoadAll(IEnumerable<ContentFile> files)
         {
