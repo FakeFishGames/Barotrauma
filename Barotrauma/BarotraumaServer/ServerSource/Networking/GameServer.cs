@@ -3735,6 +3735,7 @@ namespace Barotrauma.Networking
 
                     JobPrefab jobPrefab = spawnPoint.AssignedJob ?? JobPrefab.Prefabs.GetRandom();
                     if (assignedPlayerCount[jobPrefab] >= jobPrefab.MaxNumber) { continue; }
+                    if (jobPrefab.PlayerOnly || jobPrefab.JobCharacterSpecies.Any()) { continue; }
 
                     var variant = Rand.Range(0, jobPrefab.Variants, Rand.RandSync.Server);
                     unassignedBots[0].Job = new Job(jobPrefab, variant);
@@ -3748,7 +3749,7 @@ namespace Barotrauma.Networking
             foreach (CharacterInfo c in unassignedBots)
             {
                 //find all jobs that are still available
-                var remainingJobs = JobPrefab.Prefabs.Where(jp => assignedPlayerCount[jp] < jp.MaxNumber);
+                var remainingJobs = JobPrefab.Prefabs.Where(jp => assignedPlayerCount[jp] < jp.MaxNumber && (!jp.PlayerOnly || !jp.JobCharacterSpecies.Any()));
                 //all jobs taken, give a random job
                 if (remainingJobs.Count() == 0)
                 {

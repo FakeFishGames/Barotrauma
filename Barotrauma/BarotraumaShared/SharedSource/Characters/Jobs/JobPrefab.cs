@@ -193,6 +193,14 @@ namespace Barotrauma
             private set;
         }
 
+        //whether the job should be only available to players
+        [Serialize(false, false)]
+        public bool PlayerOnly
+        {
+            get;
+            private set;
+        }
+
         public Sprite Icon;
         public Sprite IconSmall;
 
