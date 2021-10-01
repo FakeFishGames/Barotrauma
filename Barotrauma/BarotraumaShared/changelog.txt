@@ -1,4 +1,40 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1500.5.0
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- Overhauled ruins: completely remade sprites, monsters, layouts, items and puzzles.
+- New Scan mission: scan an Alien ruin by placing down provided scanners at target locations and take the scanners back to the outpost.
+- New Alien Ruin mission: kill the guardians inhabiting the ruin and destroy their pods.
+- Improvements and fixes to the overhauled character sprites and animations.
+- More talent improvements and additions.
+- Balanced loot spawn rates.
+- Cap the amount argument of the spawnitem command to 100 to prevent freezing/crashing when trying to spawn a ridiculous amount of the item.
+- Nerfed concussions: they now require a larger amount of damage to the head to trigger and slowly heal by themselves.
+- Added "unlocktalents [job]" command.
+- Don't reset the selected limb when reopening the health interface.
+- Bots no longer ignore unconscious targets that regenerate health (i.e. they will finish off downed husks to prevent them from getting back up again).
+- The health interface displays a prediction of how much a medical item will reduce/increase the afflictions.
+- Certain afflictions make the characters' face change color a bit.
+- Added button to randomize character appearance in the character customization menus.
+- Permanently reduce character skills when respawning mid-round. The talent system makes it easier to gain skills and permanent improvements to the character, and this change is intended to balance that out.
+
+Fixes:
+- Fixed crash when firing a syring gun (unstable only).
+- Fixed crashing when using meds in multiplayer with friendly fire turned off (unstable only).
+- Fixed inability to repair with hardened/dementonite wrenches (unstable only).
+- Fixed item quality not persisting between rounds (unstable only).
+- Fixed fabricator not outputting high-quality items in full condition if the item's quality modifiers increase the max condition (unstable).
+- Display the max condition of the required item on the fabricator (i.e. show that depleted fuel needs to be fabricated from depleted fuel rods).
+- Fixed holdable components that block players (e.g. mudraptor shells) causing a "you are removing a body that is not in the simulation" exception when ending a round (unstable only).
+- Fixed handheld status monitor and electrical monitor UIs popping up when picking up the item.
+- Fixed tracer particles not starting from the position of ranged weapons' barrel.
+- Fixed inability to open the pause menu when the cursor is over an inventory slot.
+- Fixed handcuffs dropping off from characters' hands when they die or turn into a husk.
+- Fixed ability to crouch on ladders (unstable only).
+- Fixed loadsub command.
+
+---------------------------------------------------------------------------------------------------------
 v0.1500.4.0
 ---------------------------------------------------------------------------------------------------------
 

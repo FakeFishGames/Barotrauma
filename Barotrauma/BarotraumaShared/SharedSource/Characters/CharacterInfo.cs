@@ -218,30 +218,30 @@ namespace Barotrauma
 
         public int AdditionalTalentPoints { get; set; }
 
-        private Sprite headSprite;
+        private Sprite _headSprite;
         public Sprite HeadSprite
         {
             get
             {
-                if (headSprite == null)
+                if (_headSprite == null)
                 {
                     LoadHeadSprite();
                 }
 #if CLIENT
-                if (headSprite != null)
+                if (_headSprite != null)
                 {
-                    CalculateHeadPosition(headSprite);
+                    CalculateHeadPosition(_headSprite);
                 }
 #endif
-                return headSprite;
+                return _headSprite;
             }
             private set
             {
-                if (headSprite != null)
+                if (_headSprite != null)
                 {
-                    headSprite.Remove();
+                    _headSprite.Remove();
                 }
-                headSprite = value;
+                _headSprite = value;
             }
         }
 
@@ -287,25 +287,13 @@ namespace Barotrauma
                     Character.CharacterHealth.ApplyAffliction(Character.AnimController.GetLimb(LimbType.Head), AfflictionPrefab.List.FirstOrDefault(a => a.Identifier.Equals("disguised", StringComparison.OrdinalIgnoreCase)).Instantiate(100f));
                 }
 
+                idCard ??= Character.Inventory?.GetItemInLimbSlot(InvSlotType.Card)?.GetComponent<IdCard>();
                 if (idCard != null)
                 {
 #if CLIENT
                     GetDisguisedSprites(idCard);
 #endif
                     return;
-                }
-
-                if (Character.Inventory != null)
-                {
-                    idCard = Character.Inventory.GetItemInLimbSlot(InvSlotType.Card)?.GetComponent<IdCard>();
-                    if (idCard != null)
-                    {
-#if CLIENT
-                        GetDisguisedSprites(idCard);
-#endif
-                        return;
-                    }
-                    
                 }
             }
 
@@ -1085,7 +1073,7 @@ namespace Barotrauma
             }
         }
 
-        private static List<XElement> AddEmpty(IEnumerable<XElement> elements, WearableType type, float commonness = 1)
+        public static List<XElement> AddEmpty(IEnumerable<XElement> elements, WearableType type, float commonness = 1)
         {
             // Let's add an empty element so that there's a chance that we don't get any actual element -> allows bald and beardless guys, for example.
             var emptyElement = new XElement("EmptyWearable", type.ToString(), new XAttribute("commonness", commonness));
@@ -1094,9 +1082,9 @@ namespace Barotrauma
             return list;
         }
 
-        private XElement GetRandomElement(IEnumerable<XElement> elements)
+        public XElement GetRandomElement(IEnumerable<XElement> elements)
         {
-            var filtered = elements.Where(e => IsWearableAllowed(e));
+            var filtered = elements.Where(IsWearableAllowed);
             if (filtered.Count() == 0) { return null; }
             var element = ToolBox.SelectWeightedRandom(filtered.ToList(), GetWeights(filtered).ToList(), Rand.RandSync.Unsynced);
             return element == null || element.Name == "Empty" ? null : element;
@@ -1121,7 +1109,7 @@ namespace Barotrauma
             return true;
         }
 
-        private static bool IsValidIndex(int index, List<XElement> list) => index >= 0 && index < list.Count;
+        public static bool IsValidIndex(int index, List<XElement> list) => index >= 0 && index < list.Count;
 
         private static IEnumerable<float> GetWeights(IEnumerable<XElement> elements) => elements.Select(h => h.GetAttributeFloat("commonness", 1f));
 
@@ -1219,8 +1207,8 @@ namespace Barotrauma
             OnExperienceChanged(prevAmount, ExperiencePoints, Character.Position + Vector2.UnitY * 150.0f);
         }
 
-        const int BaseExperienceRequired = 150;
-        const int AddedExperienceRequiredPerLevel = 350;
+        const int BaseExperienceRequired = 50;
+        const int AddedExperienceRequiredPerLevel = 450;
 
         public int GetTotalTalentPoints()
         {

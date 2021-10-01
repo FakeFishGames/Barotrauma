@@ -129,6 +129,8 @@ namespace Barotrauma
             }
         }
 
+        public readonly HashSet<LatchOntoAI> Latchers = new HashSet<LatchOntoAI>();
+
         protected readonly Dictionary<string, ActiveTeamChange> activeTeamChanges = new Dictionary<string, ActiveTeamChange>();
         protected ActiveTeamChange currentTeamChange;
         const string OriginalTeamIdentifier = "original";
@@ -264,6 +266,7 @@ namespace Barotrauma
 
         public readonly CharacterParams Params;
         public string SpeciesName => Params.SpeciesName;
+        public string Group => Params.Group;
         public bool IsHumanoid => Params.Humanoid;
         public bool IsHusk => Params.Husk;
 
@@ -473,8 +476,7 @@ namespace Barotrauma
                 return true;
             }
         }
-
-        public bool CanInteract => AllowInput && IsHumanoid && !LockHands;
+        public bool CanInteract => AllowInput && Params.CanInteract && !LockHands;
 
         // Eating is not implemented for humanoids. If we implement that at some point, we could remove this restriction.
         public bool CanEat => !IsHumanoid && Params.CanEat && AllowInput && AnimController.GetLimb(LimbType.Head) != null;
@@ -592,6 +594,7 @@ namespace Barotrauma
             get
             {
                 if (IsUnconscious) { return true; }
+                if (IsDead) { return true; }
                 return CharacterHealth.Afflictions.Any(a => a.Prefab.AfflictionType == "paralysis" && a.Strength >= a.Prefab.MaxStrength);
             }
         }
@@ -626,7 +629,7 @@ namespace Barotrauma
 
         public float Stun
         {
-            get { return IsRagdolled ? 1.0f : CharacterHealth.Stun; }
+            get { return IsRagdolled && !AnimController.IsHanging ? 1.0f : CharacterHealth.Stun; }
             set
             {
                 if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
@@ -1172,6 +1175,7 @@ namespace Barotrauma
             {
                 LoadHeadAttachments();
             }
+            ApplyStatusEffects(ActionType.OnSpawn, 1.0f);
         }
         partial void InitProjSpecific(XElement mainElement);
 
@@ -1669,7 +1673,7 @@ namespace Barotrauma
             }
 
             if (!aiControlled &&
-                AnimController.onGround &&
+                AnimController.OnGround &&
                 !AnimController.InWater &&
                 AnimController.Anim != AnimController.Animation.UsingConstruction &&
                 AnimController.Anim != AnimController.Animation.CPR &&
@@ -2697,6 +2701,11 @@ namespace Barotrauma
             ApplyStatusEffects(AnimController.InWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
             ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
+            if (aiTarget != null)
+            {
+                aiTarget.InDetectable = false;
+            }
+
             UpdateControlled(deltaTime, cam);
 
             //Health effects
@@ -2720,7 +2729,7 @@ namespace Barotrauma
 
             //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
             bool allowRagdoll = GameMain.NetworkMember?.ServerSettings?.AllowRagdollButton ?? true;
-            bool tooFastToUnragdoll = AnimController.Collider.LinearVelocity.LengthSquared() > 2.5f * 2.5f;
+            bool tooFastToUnragdoll = AnimController.Collider.LinearVelocity.LengthSquared() > 8.0f * 8.0f;
             bool wasRagdolled = false;
             bool selfRagdolled = false;
 
@@ -2838,7 +2847,7 @@ namespace Barotrauma
                         // If the damage is very low, let's not forget so quickly, or we can't cumulate the damage from repair tools (high frequency, low damage)
                         reduction *= 0.5f;
                     }
-                    enemy.Damage = Math.Max(0.0f, enemy.Damage-reduction);
+                    enemy.Damage = Math.Max(0.0f, enemy.Damage - reduction);
                 }
             }
         }
@@ -3514,7 +3523,7 @@ namespace Barotrauma
 
             if (Removed) { return new AttackResult(); }
 
-            if (attacker != null && GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowFriendlyFire)
+            if (attacker != null && attacker != this && GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowFriendlyFire)
             {
                 if (attacker.TeamID == TeamID) { return new AttackResult(); }
             }
@@ -3676,6 +3685,7 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && !isNetworkMessage) { return; }
             if (Screen.Selected != GameMain.GameScreen) { return; }
+            if (newStun > 0 && Params.Health.StunImmunity) { return; }
             if ((newStun <= Stun && !allowStunDecrease) || !MathUtils.IsValid(newStun)) { return; }
             if (Math.Sign(newStun) != Math.Sign(Stun))
             {
@@ -3876,9 +3886,12 @@ namespace Barotrauma
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;
 
-            foreach (Item heldItem in HeldItems.ToList())
+            if (!LockHands)
             {
-                heldItem.Drop(this);
+                foreach (Item heldItem in HeldItems.ToList())
+                {
+                    heldItem.Drop(this);
+                }
             }
 
             SelectedConstruction = null;
@@ -4435,6 +4448,11 @@ namespace Barotrauma
         /// </summary>
         private readonly Dictionary<StatTypes, float> statValues = new Dictionary<StatTypes, float>();
 
+        /// <summary>
+        /// A dictionary with temporary values, updated when the character equips/unequips wearables. Used to reduce unnecessary inventory checking.
+        /// </summary>
+        private readonly Dictionary<StatTypes, float> wearableStatValues = new Dictionary<StatTypes, float>();
+
         public float GetStatValue(StatTypes statType)
         {
             if (!IsHuman) { return 0f; }
@@ -4453,21 +4471,35 @@ namespace Barotrauma
                 // could be optimized by instead updating the Character.cs statvalues dictionary whenever the CharacterInfo.cs values change
                 statValue += Info.GetSavedStatValue(statType);
             }
-
-            //replace by updating the character wearable stat values when equipping or unequipping wearables
-            for (int i = 0; i < Inventory.Capacity; i++)
+            if (wearableStatValues.TryGetValue(statType, out float wearableValue))
             {
-                if (Inventory.SlotTypes[i] != InvSlotType.Any && Inventory.SlotTypes[i] != InvSlotType.LeftHand && Inventory.SlotTypes[i] != InvSlotType.RightHand 
-                    && Inventory.GetItemAt(i)?.GetComponent<Wearable>() is Wearable wearable)
-                {
-                    if (wearable.WearableStatValues.TryGetValue(statType, out float wearableValue))
-                    {
-                        statValue += wearableValue;
-                    }
-                }
+                statValue += wearableValue;
             }
 
             return statValue;
+        }
+
+        public void OnWearablesChanged()
+        {
+            wearableStatValues.Clear();
+            for (int i = 0; i < Inventory.Capacity; i++)
+            {
+                if (Inventory.SlotTypes[i] != InvSlotType.Any && Inventory.SlotTypes[i] != InvSlotType.LeftHand && Inventory.SlotTypes[i] != InvSlotType.RightHand
+                    && Inventory.GetItemAt(i)?.GetComponent<Wearable>() is Wearable wearable)
+                {
+                    foreach (var statValuePair in wearable.WearableStatValues)
+                    {
+                        if (wearableStatValues.ContainsKey(statValuePair.Key))
+                        {
+                            wearableStatValues[statValuePair.Key] += statValuePair.Value;
+                        }
+                        else
+                        {
+                            wearableStatValues.Add(statValuePair.Key, statValuePair.Value);
+                        }
+                    }
+                }
+            }
         }
 
         public void ChangeStat(StatTypes statType, float value)
@@ -4516,7 +4548,7 @@ namespace Barotrauma
 
         public bool HasAbilityFlag(AbilityFlags abilityFlag)
         {
-            return abilityFlags.Contains(abilityFlag);
+            return abilityFlags.Contains(abilityFlag) || CharacterHealth.HasFlag(abilityFlag);
         }
 
         private readonly Dictionary<string, float> abilityResistances = new Dictionary<string, float>();

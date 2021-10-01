@@ -2,7 +2,7 @@
 
 namespace Barotrauma.Abilities
 {
-    class AbilityObject
+    abstract class AbilityObject
     {
         // kept as blank for now, as we are using a composition and only using this object to enforce parameter types
     }
@@ -157,6 +157,22 @@ namespace Barotrauma.Abilities
         {
             SourceAttack = sourceAttack;
             Character = character;
+        }
+    }
+
+    class AbilityApplyTreatment : AbilityObject, IAbilityCharacter, IAbilityItem
+    {
+        public Character Character { get; set; }
+
+        public Character User { get; set; }
+
+        public Item Item { get; set; }
+
+        public AbilityApplyTreatment(Character user, Character target, Item item)
+        {
+            Character = target;
+            User = user;
+            Item = item;
         }
     }
 

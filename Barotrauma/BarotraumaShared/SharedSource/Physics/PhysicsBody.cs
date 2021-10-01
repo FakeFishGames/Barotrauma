@@ -756,12 +756,13 @@ namespace Barotrauma
 
             Vector2 vel = FarseerBody.LinearVelocity;
             Vector2 deltaPos = simPosition - (Vector2)pullPos;
-#if DEBUG
             if (deltaPos.LengthSquared() > 100.0f * 100.0f)
             {
+#if DEBUG
                 DebugConsole.ThrowError("Attempted to move a physics body to an invalid position.\n" + Environment.StackTrace.CleanupStackTrace());
-            }
 #endif
+                return;
+            }
             deltaPos *= force;
             ApplyLinearImpulse((deltaPos - vel * 0.5f) * FarseerBody.Mass, (Vector2)pullPos);
         }

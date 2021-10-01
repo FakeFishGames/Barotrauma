@@ -21,6 +21,8 @@ namespace Barotrauma.Items.Components
 
         private GUITextBlock progressBarOverlayText;
 
+        private GUILayoutGroup extraButtonContainer;
+
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
         //the corresponding particle emitter is active when the condition is within this range
         private readonly List<Vector2> particleEmitterConditionRanges = new List<Vector2>();
@@ -145,10 +147,16 @@ namespace Barotrauma.Items.Components
             progressBarHolder.RectTransform.MinSize = RepairButton.RectTransform.MinSize;
             RepairButton.RectTransform.MinSize = new Point((int)(RepairButton.TextBlock.TextSize.X * 1.2f), RepairButton.RectTransform.MinSize.Y);
 
+            extraButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform), isHorizontal: true)
+            {
+                IgnoreLayoutGroups = true,
+                Stretch = true,
+                AbsoluteSpacing = GUI.IntScale(5)
+            };
 
             sabotageButtonText = TextManager.Get("SabotageButton");
             sabotagingText = TextManager.Get("Sabotaging");
-            SabotageButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter), sabotageButtonText, style: "GUIButtonSmall")
+            SabotageButton = new GUIButton(new RectTransform(Vector2.One, extraButtonContainer.RectTransform), sabotageButtonText, style: "GUIButtonSmall")
             {
                 IgnoreLayoutGroups = true,
                 Visible = false,
@@ -160,9 +168,9 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            tinkerButtonText = "Tinker";
-            tinkeringText = "Tinkering";
-            TinkerButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter), tinkerButtonText)
+            tinkerButtonText = TextManager.Get("TinkerButton", returnNull: true) ?? "Tinker";
+            tinkeringText = TextManager.Get("Tinkering", returnNull: true) ?? "Tinkering";
+            TinkerButton = new GUIButton(new RectTransform(Vector2.One, extraButtonContainer.RectTransform), tinkerButtonText, style: "GUIButtonSmall")
             {
                 IgnoreLayoutGroups = true,
                 Visible = false,
@@ -173,6 +181,8 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
+
+            extraButtonContainer.RectTransform.MinSize = new Point(0, SabotageButton.RectTransform.MinSize.Y);
         }
 
         partial void UpdateProjSpecific(float deltaTime)
@@ -274,6 +284,10 @@ namespace Barotrauma.Items.Components
                 tinkeringText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
             System.Diagnostics.Debug.Assert(GuiFrame.GetChild(0) is GUILayoutGroup, "Repair UI hierarchy has changed, could not find skill texts");
+
+            extraButtonContainer.Visible = SabotageButton.Visible || TinkerButton.Visible;
+            extraButtonContainer.IgnoreLayoutGroups = !extraButtonContainer.Visible;
+
             foreach (GUIComponent c in GuiFrame.GetChild(0).Children)
             {
                 if (!(c.UserData is Skill skill)) continue;

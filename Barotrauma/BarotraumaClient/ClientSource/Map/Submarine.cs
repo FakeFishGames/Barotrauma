@@ -178,7 +178,6 @@ namespace Barotrauma
 
         //drawing ----------------------------------------------------
         private static readonly HashSet<Submarine> visibleSubs = new HashSet<Submarine>();
-        private static readonly HashSet<Ruin> visibleRuins = new HashSet<Ruin>();
         public static void CullEntities(Camera cam)
         {
             visibleSubs.Clear();
@@ -198,24 +197,6 @@ namespace Barotrauma
                 }
             }
 
-            visibleRuins.Clear();
-            if (Level.Loaded != null)
-            {
-                foreach (Ruin ruin in Level.Loaded.Ruins)
-                {
-                    Rectangle worldBorders = new Rectangle(
-                        ruin.Area.X - 500,
-                        ruin.Area.Y + ruin.Area.Height + 500,
-                        ruin.Area.Width + 1000,
-                        ruin.Area.Height + 1000);
-
-                    if (RectsOverlap(worldBorders, cam.WorldView))
-                    {
-                        visibleRuins.Add(ruin);
-                    }
-                }
-            }
-
             if (visibleEntities == null)
             {
                 visibleEntities = new List<MapEntity>(MapEntity.mapEntityList.Count);
@@ -231,10 +212,6 @@ namespace Barotrauma
                 if (entity.Submarine != null)
                 {
                     if (!visibleSubs.Contains(entity.Submarine)) { continue; }
-                }
-                else if (entity.ParentRuin != null)
-                {
-                    if (!visibleRuins.Contains(entity.ParentRuin)) { continue; }
                 }
 
                 if (entity.IsVisible(worldView)) { visibleEntities.Add(entity); }

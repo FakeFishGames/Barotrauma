@@ -11,6 +11,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.MapCreatures.Behavior;
+using Barotrauma.Abilities;
 
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
@@ -36,7 +37,6 @@ namespace Barotrauma
             set
             {
                 currentHull = value;
-                ParentRuin = currentHull?.ParentRuin;
             }
         }
 
@@ -975,6 +975,9 @@ namespace Barotrauma
 
             if (Components.Any(ic => ic is Wire) && Components.All(ic => ic is Wire || ic is Holdable)) { isWire = true; }
             if (HasTag("logic")) { isLogic = true; }
+
+            ApplyStatusEffects(ActionType.OnSpawn, 1.0f);
+            Components.ForEach(c => c.ApplyStatusEffects(ActionType.OnSpawn, 1.0f));
         }
 
         partial void InitProjSpecific();
@@ -1603,7 +1606,10 @@ namespace Barotrauma
                 }
             }
 
-            aiTarget?.Update(deltaTime);
+            if (aiTarget != null)
+            {
+                aiTarget.Update(deltaTime);
+            }
 
             if (!isActive) { return; }
 
@@ -2351,6 +2357,8 @@ namespace Barotrauma
             }
 #endif
 
+            float applyOnSelfFraction = user?.GetStatValue(StatTypes.ApplyTreatmentsOnSelfFraction) ?? 0.0f;
+
             bool remove = false;
             foreach (ItemComponent ic in components)
             {
@@ -2363,7 +2371,19 @@ namespace Barotrauma
                 ic.PlaySound(actionType, user);
 #endif
                 ic.WasUsed = true;
-                ic.ApplyStatusEffects(actionType, 1.0f, character, targetLimb, user: user);
+                ic.ApplyStatusEffects(actionType, 1.0f, character, targetLimb, user: user, applyOnUserFraction: applyOnSelfFraction);
+
+                if (applyOnSelfFraction > 0.0f)
+                {
+                    //hacky af
+                    ic.statusEffectLists.TryGetValue(actionType, out var effectList);
+                    if (effectList != null)
+                    {
+                        effectList.ForEach(e => e.AfflictionMultiplier = applyOnSelfFraction);
+                        ic.ApplyStatusEffects(actionType, 1.0f, user, targetLimb == null ? null : user.AnimController.GetLimb(targetLimb.type), user: user);
+                        effectList.ForEach(e => e.AfflictionMultiplier = 1.0f);
+                    }
+                }
 
                 if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
@@ -2375,6 +2395,15 @@ namespace Barotrauma
 
                 if (ic.DeleteOnUse) { remove = true; }
             }
+
+            if (user != null)
+            {
+                var abilityItem = new AbilityApplyTreatment(user, character, this);
+                user.CheckTalents(AbilityEffectType.OnApplyTreatment, abilityItem);
+
+            }
+
+
 
             if (remove) { Spawner?.AddToRemoveQueue(this); }
         }
@@ -2549,6 +2578,14 @@ namespace Barotrauma
                 {
                     msg.Write((int)value);
                 }
+                else if (value is string[] a)
+                {
+                    msg.Write(a.Length);
+                    for (int i = 0; i < a.Length; i++)
+                    {
+                        msg.Write(a[i] ?? "");
+                    }
+                }
                 else
                 {
                     throw new NotImplementedException("Serializing item properties of the type \"" + value.GetType() + "\" not supported");
@@ -2655,6 +2692,19 @@ namespace Barotrauma
                 Rectangle val = new Rectangle(msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32());
                 logValue = XMLExtensions.RectToString(val);
                 if (allowEditing) { property.TrySetValue(parentObject, val); }
+            }
+            else if (type == typeof(string[]))
+            {
+                int arrayLength = msg.ReadInt32();
+                string[] val = new string[arrayLength];
+                for (int i = 0; i < arrayLength; i++)
+                {
+                    val[i] = msg.ReadString();
+                }
+                if (allowEditing)
+                {
+                    property.TrySetValue(parentObject, val);
+                }
             }
             else if (typeof(Enum).IsAssignableFrom(type))
             {

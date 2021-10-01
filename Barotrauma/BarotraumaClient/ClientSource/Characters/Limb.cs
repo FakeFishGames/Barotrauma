@@ -679,6 +679,14 @@ namespace Barotrauma
                 {
                     clr = clr.Multiply(character.Info.SkinColor);
                 }
+                if (character.CharacterHealth.FaceTint.A > 0 && type == LimbType.Head)
+                {
+                    clr = Color.Lerp(clr, character.CharacterHealth.FaceTint.Opaque(), character.CharacterHealth.FaceTint.A / 255.0f);
+                }
+                if (character.CharacterHealth.BodyTint.A > 0)
+                {
+                    clr = Color.Lerp(clr, character.CharacterHealth.BodyTint.Opaque(), character.CharacterHealth.BodyTint.A / 255.0f);
+                }
             }
             Color color = new Color((byte)(clr.R * brightness), (byte)(clr.G * brightness), (byte)(clr.B * brightness), clr.A);
             Color blankColor = new Color(brightness, brightness, brightness, 1);
@@ -720,6 +728,7 @@ namespace Barotrauma
             }
             
             body.UpdateDrawPosition();
+            float depthStep = 0.000001f;
 
             if (!hideLimb)
             {
@@ -794,7 +803,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        body.Draw(spriteBatch, conditionalSprite.Sprite, color, null, Scale * TextureScale, Params.MirrorHorizontally, Params.MirrorVertically);
+                        body.Draw(spriteBatch, conditionalSprite.Sprite, color, depth: activeSprite.Depth - (depthStep * 50), Scale * TextureScale, Params.MirrorHorizontally, Params.MirrorVertically);
                     }
                 }
             }
@@ -809,7 +818,7 @@ namespace Barotrauma
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                     color * Math.Min(damageOverlayStrength, 1.0f), activeSprite.Origin,
                     -body.DrawRotation,
-                    Scale, spriteEffect, activeSprite.Depth - 0.0000015f);
+                    Scale, spriteEffect, activeSprite.Depth - (depthStep * 90));
             }
             foreach (var decorativeSprite in DecorativeSprites)
             {
@@ -827,9 +836,8 @@ namespace Barotrauma
                 Vector2 transformedOffset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
                 decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), c,
                     -body.Rotation + rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, spriteEffect,
-                    depth: decorativeSprite.Sprite.Depth);
+                    depth: activeSprite.Depth - (depthStep * 100));
             }
-            float depthStep = 0.000001f;
             float step = depthStep;
             WearableSprite onlyDrawable = wearingItems.Find(w => w.HideOtherWearables);
             if (Params.MirrorHorizontally)

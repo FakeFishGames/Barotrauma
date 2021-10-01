@@ -125,7 +125,8 @@ namespace Barotrauma
         protected float surfaceY;
         
         protected bool inWater, headInWater;
-        public bool onGround;
+        protected bool onGround;
+        public bool OnGround => onGround;
         private Vector2 lastFloorCheckPos;
         private bool lastFloorCheckIgnoreStairs, lastFloorCheckIgnorePlatforms;
 
@@ -887,7 +888,7 @@ namespace Barotrauma
 
         
         /// <param name="pullFromCenter">if false, force is applied to the position of pullJoint</param>
-        protected void MoveLimb(Limb limb, Vector2 pos, float amount, bool pullFromCenter = false)
+        public void MoveLimb(Limb limb, Vector2 pos, float amount, bool pullFromCenter = false)
         {
             limb.MoveToPos(pos, amount, pullFromCenter);
         }
@@ -974,8 +975,7 @@ namespace Barotrauma
                     Vector2 newSubPos = newHull.Submarine == null ? Vector2.Zero : newHull.Submarine.Position;
                     Vector2 prevSubPos = currentHull.Submarine == null ? Vector2.Zero : currentHull.Submarine.Position;
 
-                    Teleport(ConvertUnits.ToSimUnits(prevSubPos - newSubPos),
-                        Vector2.Zero);
+                    Teleport(ConvertUnits.ToSimUnits(prevSubPos - newSubPos), Vector2.Zero);
                 }
             }
             
@@ -1099,6 +1099,7 @@ namespace Barotrauma
         }
 
         public bool forceStanding;
+        public bool forceNotStanding;
 
         public void Update(float deltaTime, Camera cam)
         {
@@ -1270,6 +1271,7 @@ namespace Barotrauma
                 }                
             }
             UpdateProjSpecific(deltaTime, cam);
+            forceNotStanding = false;
         }
 
         private void CheckBodyInRest(float deltaTime)
@@ -1569,7 +1571,7 @@ namespace Barotrauma
                 return closestFraction;
             }, rayStart, rayEnd, Physics.CollisionStairs | Physics.CollisionPlatform | Physics.CollisionWall | Physics.CollisionLevel);
 
-            if (standOnFloorFixture != null)
+            if (standOnFloorFixture != null && !IsHanging)
             {
                 standOnFloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * standOnFloorFraction;
                 if (rayStart.Y - standOnFloorY < Collider.height * 0.5f + Collider.radius + ColliderHeightFromFloor * 1.2f)
@@ -1606,6 +1608,13 @@ namespace Barotrauma
             }
             if (MainLimb == null) { return; }
 
+            if (Character.AIController is EnemyAIController enemyAI && enemyAI.LatchOntoAI != null && enemyAI.LatchOntoAI.IsAttached)
+            {
+                enemyAI.LatchOntoAI.DeattachFromBody(reset: true);
+            }
+            Character.Latchers.ForEachMod(l => l.DeattachFromBody(reset: true));
+            Character.Latchers.Clear();
+
             Vector2 limbMoveAmount = forceMainLimbToCollider ? simPosition - MainLimb.SimPosition : simPosition - Collider.SimPosition;
             if (lerp)
             {
@@ -1627,6 +1636,16 @@ namespace Barotrauma
                     TrySetLimbPosition(limb, simPosition, movePos, lerp, ignorePlatforms);
                 }
             }
+        }
+
+        public bool IsHanging { get; protected set; }
+
+        public void Hang()
+        {
+            ResetPullJoints();
+            onGround = false;
+            levitatingCollider = false;
+            IsHanging = true;
         }
 
         protected void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true)

@@ -307,6 +307,8 @@ namespace Barotrauma
             foreach (Hull hull in Hull.hullList.OrderByDescending(h => EstimateHullSuitability(h)))
             {
                 if (hull.Submarine == null) { continue; }
+                // Ruins are mazes filled with water. There's no safe hulls and we don't want to use the resources on it.
+                if (hull.Submarine.Info.IsRuin) { continue; }
                 if (!allowChangingTheSubmarine && hull.Submarine != character.Submarine) { continue; }
                 if (hull.Rect.Height < ConvertUnits.ToDisplayUnits(character.AnimController.ColliderHeightFromFloor) * 2) { continue; }
                 if (ignoredHulls != null && ignoredHulls.Contains(hull)) { continue; }

@@ -111,7 +111,7 @@ namespace Barotrauma
         public CombatMode Mode { get; private set; }
 
         private bool IsOffensiveOrArrest => initialMode == CombatMode.Offensive || initialMode == CombatMode.Arrest;
-        private bool TargetEliminated => IsEnemyDisabled || Enemy.IsUnconscious;
+        private bool TargetEliminated => IsEnemyDisabled || (Enemy.IsUnconscious && Enemy.Params.Health.ConstantHealthRegeneration <= 0.0f);
         private bool IsEnemyDisabled => Enemy == null || Enemy.Removed || Enemy.IsDead;
 
         private float AimSpeed => HumanAIController.AimSpeed;

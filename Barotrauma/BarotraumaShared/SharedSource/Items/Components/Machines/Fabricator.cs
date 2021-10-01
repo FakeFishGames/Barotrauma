@@ -344,22 +344,27 @@ namespace Barotrauma.Items.Components
                 var tempUser = user;
                 for (int i = 0; i < (int)fabricationValueItem.Value; i++)
                 {
+                    float outCondition = fabricatedItem.OutCondition;
                     if (i < amountFittingContainer)
                     {
-                        Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition,
-                            onSpawned: (Item spawnedItem) => 
-                            { 
+                        Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * outCondition,
+                            onSpawned: (Item spawnedItem) =>
+                            {
                                 onItemSpawned(spawnedItem, tempUser);
                                 spawnedItem.Quality = quality;
+                                //reset the condition in case the max condition is higher than the prefab's due to e.g. quality modifiers
+                                spawnedItem.Condition = spawnedItem.MaxCondition * outCondition;
                             });
                     }
                     else
                     {
-                        Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition,
-                            onSpawned: (Item spawnedItem) => 
-                            { 
+                        Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * outCondition,
+                            onSpawned: (Item spawnedItem) =>
+                            {
                                 onItemSpawned(spawnedItem, tempUser);
                                 spawnedItem.Quality = quality;
+                                //reset the condition in case the max condition is higher than the prefab's due to e.g. quality modifiers
+                                spawnedItem.Condition = spawnedItem.MaxCondition * outCondition;
                             });
                     }
                 }

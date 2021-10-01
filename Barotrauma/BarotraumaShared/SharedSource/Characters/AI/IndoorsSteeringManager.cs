@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
-using Barotrauma.Extensions;
 using FarseerPhysics;
 
 namespace Barotrauma
@@ -15,6 +14,11 @@ namespace Barotrauma
         private bool canOpenDoors;
         public bool CanBreakDoors { get; set; }
 
+        private bool ShouldBreakDoor(Door door) =>
+            CanBreakDoors &&
+            !door.Item.Indestructible && !door.Item.InvulnerableToDamage &&
+            (door.Item.Submarine == null || door.Item.Submarine.TeamID != character.TeamID);
+
         private Character character;
 
         private Vector2 currentTarget;
@@ -23,7 +27,7 @@ namespace Barotrauma
 
         private float buttonPressCooldown;
 
-        const float ButtonPressInterval = 0.5f;
+        const float ButtonPressInterval = 0.25f;
 
         public SteeringPath CurrentPath
         {
@@ -111,9 +115,9 @@ namespace Barotrauma
             IsPathDirty = true;
         }
 
-        public void SteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisiblity = true)
+        public void SteeringSeek(Vector2 target, float weight, float minGapWidth = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisiblity = true)
         {
-            steering += CalculateSteeringSeek(target, weight, startNodeFilter, endNodeFilter, nodeFilter, checkVisiblity);
+            steering += CalculateSteeringSeek(target, weight, minGapWidth, startNodeFilter, endNodeFilter, nodeFilter, checkVisiblity);
         }
 
         /// <summary>
@@ -158,7 +162,7 @@ namespace Barotrauma
             }
         }
 
-        private Vector2 CalculateSteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true)
+        private Vector2 CalculateSteeringSeek(Vector2 target, float weight, float minGapSize = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true)
         {
             bool needsNewPath = currentPath == null || currentPath.Unreachable;
             if (!needsNewPath && character.Submarine != null && character.Params.PathFinderPriority > 0.5f)
@@ -200,7 +204,7 @@ namespace Barotrauma
                     }
                     pathFinder.InsideSubmarine = character.Submarine != null;
                     pathFinder.ApplyPenaltyToOutsideNodes = character.PressureProtection <= 0;
-                    var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility);
+                    var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", minGapSize, startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility);
                     bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null || character.Submarine != null && findPathTimer < -1 && Math.Abs(character.AnimController.TargetMovement.X) <= 0;
                     if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                     {
@@ -241,6 +245,10 @@ namespace Barotrauma
                     }
                     if (useNewPath)
                     {
+                        if (currentPath != null)
+                        {
+                            CheckDoorsInPath();
+                        }
                         currentPath = newPath;
                     }
                     float priority = MathHelper.Lerp(3, 1, character.Params.PathFinderPriority);
@@ -306,10 +314,12 @@ namespace Barotrauma
                     pos2 -= CurrentPath.Nodes.Last().Submarine.SimPosition;
                 }
                 return currentTarget - pos2;
-            }  
-            if (canOpenDoors && !character.LockHands && buttonPressCooldown <= 0.0f)
+            }
+            bool doorsChecked = false;
+            if (!character.LockHands && buttonPressCooldown <= 0.0f)
             {
                 CheckDoorsInPath();
+                doorsChecked = true;
             }       
             Vector2 pos = host.SimPosition;
             if (character != null && CurrentPath.CurrentNode?.Submarine != null)
@@ -394,7 +404,7 @@ namespace Barotrauma
                     }
                     if (isAboveFloor || nextLadderSameAsCurrent)
                     {
-                        currentPath.SkipToNextNode();
+                        NextNode(!doorsChecked);
                     }
                 }
                 else if (nextLadder != null)
@@ -404,7 +414,7 @@ namespace Barotrauma
                     //e.g. no point in going down to reach the starting point of a path when we could go directly to the one above
                     if (Math.Sign(currentPath.CurrentNode.WorldPosition.Y - character.WorldPosition.Y) != Math.Sign(currentPath.NextNode.WorldPosition.Y - character.WorldPosition.Y))
                     {
-                        currentPath.SkipToNextNode();
+                        NextNode(!doorsChecked);
                     }
                 }
                 return diff;
@@ -426,7 +436,7 @@ namespace Barotrauma
                     float distance = horizontalDistance + verticalDistance;
                     if (ConvertUnits.ToSimUnits(distance) < targetDistance)
                     {
-                        currentPath.SkipToNextNode();
+                        NextNode(!doorsChecked);
                     }
                 }
             }
@@ -451,7 +461,7 @@ namespace Barotrauma
                 float targetDistance = Math.Max(colliderSize.X / 2 * margin, minWidth / 2);
                 if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh && (door == null || door.CanBeTraversed))
                 {
-                    currentPath.SkipToNextNode();
+                    NextNode(!doorsChecked);
                 }
             }
             if (currentPath.CurrentNode == null)
@@ -461,28 +471,51 @@ namespace Barotrauma
             return currentPath.CurrentNode.SimPosition - pos;
         }
 
+        private void NextNode(bool checkDoors)
+        {
+            if (checkDoors)
+            {
+                CheckDoorsInPath();
+            }
+            currentPath.SkipToNextNode();
+        }
+
         private bool CanAccessDoor(Door door, Func<Controller, bool> buttonFilter = null)
         {
-            if (door.IsOpen || door.IsBroken) { return true; }
-            if (!door.Item.IsInteractable(character)) { return false; }
-            if (!CanBreakDoors)
+            if (door.IsBroken) { return true; }
+            if (!door.IsOpen)
             {
-                if (door.IsStuck || door.IsJammed) { return false; }
-                if (!canOpenDoors || character.LockHands) { return false; }
+                if (!door.Item.IsInteractable(character)) { return false; }
+                if (!ShouldBreakDoor(door))
+                {
+                    if (door.IsStuck || door.IsJammed) { return false; }
+                    if (!canOpenDoors || character.LockHands) { return false; }
+                }
             }
             if (door.HasIntegratedButtons)
             {
-                return door.HasAccess(character) || CanBreakDoors;
+                return door.IsOpen || door.HasAccess(character) || ShouldBreakDoor(door);
             }
             else
             {
-                return door.Item.GetConnectedComponents<Controller>(true).Any(b => b.HasAccess(character) && (buttonFilter == null || buttonFilter(b))) || CanBreakDoors;
+                // We'll want this to run each time, because the delegate is used to find a valid button component.
+                bool canAccessButtons = door.Item.GetConnectedComponents<Controller>(true).Any(b => b.HasAccess(character) && (buttonFilter == null || buttonFilter(b)));
+                return canAccessButtons || door.IsOpen || ShouldBreakDoor(door);
             }
+        }
+
+        private Vector2 GetColliderSize() => ConvertUnits.ToDisplayUnits(character.AnimController.Collider.GetSize());
+
+        private float GetColliderLength()
+        {
+            Vector2 colliderSize = character.AnimController.Collider.GetSize();
+            return ConvertUnits.ToDisplayUnits(Math.Max(colliderSize.X, colliderSize.Y));
         }
 
         private void CheckDoorsInPath()
         {
-            for (int i = 0; i < 2; i++)
+            if (!canOpenDoors) { return; }
+            for (int i = 0; i < 5; i++)
             {
                 WayPoint currentWaypoint = null;
                 WayPoint nextWaypoint = null;
@@ -493,17 +526,21 @@ namespace Barotrauma
                 {
                     door = currentPath.Nodes.First().ConnectedDoor;
                     shouldBeOpen = door != null;
+                    if (i > 0) { break; }
                 }
                 else
                 {
-                    if (i == 0)
+                    bool closeDoors = character.IsBot && character.IsInFriendlySub || character.Params.AI != null && character.Params.AI.KeepDoorsClosed;
+                    if (i == 0 || !closeDoors)
                     {
                         currentWaypoint = currentPath.CurrentNode;
                         nextWaypoint = currentPath.NextNode;
                     }
                     else
                     {
-                        currentWaypoint = currentPath.PrevNode;
+                        int previousIndex = currentPath.CurrentIndex - i;
+                        if (previousIndex < 0) { break; }
+                        currentWaypoint = currentPath.Nodes[previousIndex];
                         nextWaypoint = currentPath.CurrentNode;
                     }
                     if (currentWaypoint?.ConnectedDoor == null) { continue; }
@@ -520,16 +557,18 @@ namespace Barotrauma
                     }
                     else
                     {
+                        float colliderLength = GetColliderLength();
                         door = currentWaypoint.ConnectedDoor;
                         if (door.LinkedGap.IsHorizontal)
                         {
                             int dir = Math.Sign(nextWaypoint.WorldPosition.X - door.Item.WorldPosition.X);
-                            shouldBeOpen = (door.Item.WorldPosition.X - character.WorldPosition.X) * dir > -50.0f;
+                            float size = character.AnimController.InWater ? colliderLength : GetColliderSize().X;
+                            shouldBeOpen = (door.Item.WorldPosition.X - character.WorldPosition.X) * dir > -size;
                         }
                         else
                         {
                             int dir = Math.Sign(nextWaypoint.WorldPosition.Y - door.Item.WorldPosition.Y);
-                            shouldBeOpen = (door.Item.WorldPosition.Y - character.WorldPosition.Y) * dir > -80.0f;
+                            shouldBeOpen = (door.Item.WorldPosition.Y - character.WorldPosition.Y) * dir > -colliderLength;
                         }
                     }
                 }
@@ -573,7 +612,7 @@ namespace Barotrauma
                         }
                         else if (closestButton != null)
                         {
-                            if (Vector2.DistanceSquared(closestButton.Item.WorldPosition, character.WorldPosition) < MathUtils.Pow(closestButton.Item.InteractDistance * 2, 2))
+                            if (Vector2.DistanceSquared(closestButton.Item.WorldPosition, character.WorldPosition) < MathUtils.Pow(closestButton.Item.InteractDistance + GetColliderLength(), 2))
                             {
                                 closestButton.Item.TryInteract(character, false, true);
                                 buttonPressCooldown = ButtonPressInterval;

@@ -30,7 +30,7 @@ namespace Barotrauma
         {
             ConfigElement = element;
 
-            string jobIdentifier = element.GetAttributeString("jobidentifier", "");
+            string jobIdentifier = element.GetAttributeString("jobidentifier", "").ToLowerInvariant();
 
             if (string.IsNullOrEmpty(jobIdentifier))
             {

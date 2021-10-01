@@ -27,7 +27,7 @@ namespace Barotrauma
                     state = value;
                     TryTriggerEvents(state);
 #if SERVER
-                    GameMain.Server?.UpdateMissionState(this, state);
+                    GameMain.Server?.UpdateMissionState(this);
 #endif
                     ShowMessage(State);
                 }
@@ -347,7 +347,10 @@ namespace Barotrauma
             if (!(GameMain.GameSession.GameMode is CampaignMode campaign)) { return; }
             int reward = GetReward(Submarine.MainSub);
 
-            float baseExperienceGain = reward * 0.15f;
+            float baseExperienceGain = reward * 0.1f;
+
+            float difficultyMultiplier = 1 + level.Difficulty / 100f;
+            baseExperienceGain *= difficultyMultiplier;
 
             IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters();
 
@@ -470,6 +473,56 @@ namespace Barotrauma
             characterItems.Add(spawnedCharacter, spawnedCharacter.Inventory.FindAllItems(recursive: true));
 
             return spawnedCharacter;
+        }
+
+        protected ItemPrefab FindItemPrefab(XElement element)
+        {
+            ItemPrefab itemPrefab;
+            if (element.Attribute("name") != null)
+            {
+                DebugConsole.ThrowError($"Error in mission \"{Name}\" - use item identifiers instead of names to configure the items");
+                string itemName = element.GetAttributeString("name", "");
+                itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": item prefab \"{itemName}\" not found");
+                }
+            }
+            else
+            {
+                string itemIdentifier = element.GetAttributeString("identifier", "");
+                itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": item prefab \"{itemIdentifier}\" not found");
+                }
+            }
+            return itemPrefab;
+        }
+
+        protected Vector2? GetCargoSpawnPosition(ItemPrefab itemPrefab, out Submarine cargoRoomSub)
+        {
+            cargoRoomSub = null;
+
+            WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub, useSyncedRand: true);
+            if (cargoSpawnPos == null)
+            {
+                DebugConsole.ThrowError($"Couldn't spawn items for mission \"{Name}\": no waypoints marked as Cargo were found");
+                return null;
+            }
+
+            var cargoRoom = cargoSpawnPos.CurrentHull;
+            if (cargoRoom == null)
+            {
+                DebugConsole.ThrowError($"Couldn't spawn items for mission \"{Name}\": waypoints marked as Cargo must be placed inside a room");
+                return null;
+            }
+
+            cargoRoomSub = cargoRoom.Submarine;
+
+            return new Vector2(
+                cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, Rand.RandSync.Server),
+                cargoRoom.Rect.Y - cargoRoom.Rect.Height + itemPrefab.Size.Y / 2);
         }
     }
 }

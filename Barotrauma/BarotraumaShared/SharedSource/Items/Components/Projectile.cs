@@ -137,6 +137,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, false, description: "Can the item stick even to deflective targets.")]
+        public bool StickToDeflective
+        {
+            get;
+            set;
+        }
+
         [Serialize(false, false, description: "Hitscan projectiles cast a ray forwards and immediately hit whatever the ray hits. "+
             "It is recommended to use hitscans for very fast-moving projectiles such as bullets, because using extremely fast launch velocities may cause physics glitches.")]
         public bool Hitscan
@@ -231,7 +238,10 @@ namespace Barotrauma.Items.Components
         {
             Item.body.ResetDynamics();
             Item.SetTransform(simPosition, rotation);
-            Attack.DamageMultiplier = damageMultiplier;
+            if (Attack != null)
+            {
+                Attack.DamageMultiplier = damageMultiplier;
+            }
             // Set user for hitscan projectiles to work properly.
             User = user;
             // Need to set null for non-characterusable items.
@@ -356,6 +366,7 @@ namespace Barotrauma.Items.Components
         {
             float rotation = item.body.Rotation;
             Vector2 simPositon = item.SimPosition;
+            Vector2 rayStartWorld = item.WorldPosition;
             item.Drop(null);
 
             item.body.Enabled = true;
@@ -367,7 +378,6 @@ namespace Barotrauma.Items.Components
             Vector2 rayStart = simPositon;
             Vector2 rayEnd = rayStart + dir * 500.0f;
 
-            Vector2 rayStartWorld = item.WorldPosition;
             float worldDist = 1000.0f;
 #if CLIENT
             worldDist = Screen.Selected?.Cam?.WorldView.Width ?? GameMain.GraphicsWidth;
@@ -579,7 +589,8 @@ namespace Barotrauma.Items.Components
 
             if (!removePending)
             {
-                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+                Entity useTarget = lastTarget?.Body.UserData is Limb limb ? limb.character : lastTarget?.Body.UserData as Entity;
+                ApplyStatusEffects(ActionType.OnActive, deltaTime, useTarget: useTarget, user: _user);
             }
 
             if (item.body != null && item.body.FarseerBody.IsBullet)
@@ -623,7 +634,6 @@ namespace Barotrauma.Items.Components
             if (StickTarget.UserData is Entity entity) { return entity.Removed; }
             return false;
         }
-
 
         private bool OnProjectileCollision(Fixture f1, Fixture target, Contact contact)
         {
@@ -695,7 +705,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
+        private readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
+        private Fixture lastTarget;
 
         private bool HandleProjectileCollision(Fixture target, Vector2 collisionNormal, Vector2 velocity)
         {
@@ -706,6 +717,7 @@ namespace Barotrauma.Items.Components
             {
                 return false;
             }
+            lastTarget = target;
 
             float projectileNewSpeed = 0.5f;
             float projectileDeflectedNewSpeed = 0.1f;
@@ -836,14 +848,16 @@ namespace Barotrauma.Items.Components
             }
 
             if (attackResult.AppliedDamageModifiers != null &&
-                attackResult.AppliedDamageModifiers.Any(dm => dm.DeflectProjectiles))
+                (attackResult.AppliedDamageModifiers.Any(dm => dm.DeflectProjectiles) && !StickToDeflective))
             {
                 item.body.LinearVelocity *= projectileDeflectedNewSpeed;
             }
-            else if (Vector2.Dot(velocity, collisionNormal) < 0.0f && hits.Count() >= MaxTargetsToHit &&
+            else if (   // When hitting characters the collision normal seems to sometimes point into wrong direction, resulting in a failed attempt to stick
+                        //Vector2.Dot(Vector2.Normalize(velocity), collisionNormal) < 0.0f && 
+                        hits.Count() >= MaxTargetsToHit &&
                         target.Body.Mass > item.body.Mass * 0.5f &&
                         (DoesStick ||
-                        (StickToCharacters && target.Body.UserData is Limb) ||
+                        (StickToCharacters && (target.Body.UserData is Limb || target.Body.UserData is Character)) ||
                         (StickToStructures && target.Body.UserData is Structure) ||
                         (StickToItems && target.Body.UserData is Item)))                
             {

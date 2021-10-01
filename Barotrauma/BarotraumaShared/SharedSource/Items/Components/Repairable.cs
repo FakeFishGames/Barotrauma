@@ -406,7 +406,15 @@ namespace Barotrauma.Items.Components
             fixDuration /= 1 + CurrentFixer.GetStatValue(StatTypes.RepairSpeed) + currentRepairItem?.Prefab.AddedRepairSpeedMultiplier ?? 0f;
             fixDuration /= 1 + item.GetQualityModifier(Quality.StatType.RepairSpeed);
 
-            item.MaxRepairConditionMultiplier = 1 + CurrentFixer.GetStatValue(StatTypes.MaxRepairConditionMultiplier);
+            // kind of rough to keep this in update, but seems most robust
+            if (requiredSkills.Any(s => s != null && s.Identifier.Equals("mechanical", StringComparison.OrdinalIgnoreCase)))
+            {
+                item.MaxRepairConditionMultiplier = 1 + CurrentFixer.GetStatValue(StatTypes.MaxRepairConditionMultiplierMechanical);
+            }
+            if (requiredSkills.Any(s => s != null && s.Identifier.Equals("electrical", StringComparison.OrdinalIgnoreCase)))
+            {
+                item.MaxRepairConditionMultiplier = 1 + CurrentFixer.GetStatValue(StatTypes.MaxRepairConditionMultiplierElectrical);
+            }
 
             if (currentFixerAction == FixActions.Repair)
             {

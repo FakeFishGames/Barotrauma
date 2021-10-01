@@ -31,7 +31,7 @@ namespace Barotrauma.Items.Components
 
         public void Initialize(CharacterInfo info)
         {
-            if (info == null) return;
+            if (info == null) { return; }
 
             if (info.Job?.Prefab != null)
             {
@@ -42,20 +42,22 @@ namespace Barotrauma.Items.Components
 
             var head = info.Head;
 
-            if (info != null && head != null)
-            {
-                item.AddTag("gender:" + head.gender.ToString().ToLowerInvariant());
-                item.AddTag("race:" + head.race.ToString());
-                item.AddTag("headspriteid:" + info.HeadSpriteId.ToString());
-                item.AddTag("hairindex:" + head.HairIndex);
-                item.AddTag("beardindex:" + head.BeardIndex);
-                item.AddTag("moustacheindex:" + head.MoustacheIndex);
-                item.AddTag("faceattachmentindex:" + head.FaceAttachmentIndex);
+            if (head == null) { return; }
+            
+            if (info.HasGenders) { item.AddTag($"gender:{head.gender.ToString().ToLowerInvariant()}"); }
+            if (info.HasRaces) { item.AddTag($"race:{head.race}"); }
+            item.AddTag($"headspriteid:{info.HeadSpriteId}");
+            item.AddTag($"hairindex:{head.HairIndex}");
+            item.AddTag($"beardindex:{head.BeardIndex}");
+            item.AddTag($"moustacheindex:{head.MoustacheIndex}");
+            item.AddTag($"faceattachmentindex:{head.FaceAttachmentIndex}");
+            item.AddTag($"haircolor:{head.HairColor.ToStringHex()}");
+            item.AddTag($"facialhaircolor:{head.FacialHairColor.ToStringHex()}");
+            item.AddTag($"skincolor:{head.SkinColor.ToStringHex()}");
 
-                if (head.SheetIndex != null)
-                {
-                    item.AddTag("sheetindex:" + head.SheetIndex.Value.X + ";" + head.SheetIndex.Value.Y);
-                }
+            if (head.SheetIndex != null)
+            {
+                item.AddTag($"sheetindex:{head.SheetIndex.Value.X};{head.SheetIndex.Value.Y}");
             }
         }
 

@@ -627,7 +627,7 @@ namespace Barotrauma
                 {
                     if (child == Content || child == ScrollBar || child == ContentBackground) { continue; }
                     child.AddToGUIUpdateList(ignoreChildren, order);
-                }       
+                }
             }
             
             foreach (GUIComponent child in Content.Children)
@@ -656,7 +656,7 @@ namespace Barotrauma
                 OnAddedToGUIUpdateList?.Invoke(this);
                 return;
             }
-            
+
             int lastVisible = 0;
             for (int i = 0; i < Content.CountChildren; i++)
             {
@@ -700,6 +700,8 @@ namespace Barotrauma
             }
         }
 
+        public void ForceUpdate() => Update((float)Timing.Step);
+        
         protected override void Update(float deltaTime)
         {
             if (!Visible) { return; }

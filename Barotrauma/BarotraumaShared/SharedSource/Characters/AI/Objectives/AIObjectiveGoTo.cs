@@ -461,11 +461,11 @@ namespace Barotrauma
                         nodeFilter = n => n.Waypoint.Tunnel != null;
                     }
 
-                    PathSteering.SteeringSeek(targetPos, 1,
-                        startNodeFilter: n => (n.Waypoint.CurrentHull == null) == (character.CurrentHull == null), 
-                        endNodeFilter, 
-                        nodeFilter, 
-                        CheckVisibility);
+                    PathSteering.SteeringSeek(targetPos, weight: 1,
+                        startNodeFilter: n => (n.Waypoint.CurrentHull == null) == (character.CurrentHull == null),
+                        endNodeFilter: endNodeFilter,
+                        nodeFilter: nodeFilter, 
+                        checkVisiblity: CheckVisibility);
 
                     if (!isInside && (PathSteering.CurrentPath == null || PathSteering.IsPathDirty || PathSteering.CurrentPath.Unreachable))
                     {

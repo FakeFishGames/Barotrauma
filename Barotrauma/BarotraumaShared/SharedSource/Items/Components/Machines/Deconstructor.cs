@@ -220,6 +220,12 @@ namespace Barotrauma.Items.Components
                         if (targetItem == otherItem) { continue; }
                         if (deconstructProduct.RequiredOtherItem.Any(r => otherItem.HasTag(r) || r.Equals(otherItem.Prefab.Identifier, StringComparison.OrdinalIgnoreCase)))
                         {
+                            user.CheckTalents(AbilityEffectType.OnGeneticMaterialCombinedOrRefined);
+                            foreach (Character character in Character.GetFriendlyCrew(user))
+                            {
+                                character.CheckTalents(AbilityEffectType.OnCrewGeneticMaterialCombinedOrRefined);
+                            }
+
                             var geneticMaterial1 = targetItem.GetComponent<GeneticMaterial>();
                             var geneticMaterial2 = otherItem.GetComponent<GeneticMaterial>();
                             if (geneticMaterial1 != null && geneticMaterial2 != null)

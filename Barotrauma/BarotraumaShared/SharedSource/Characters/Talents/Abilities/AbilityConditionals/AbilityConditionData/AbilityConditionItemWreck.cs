@@ -2,10 +2,10 @@
 
 namespace Barotrauma.Abilities
 {
-    class AbilityConditionScrounger : AbilityConditionData
+    class AbilityConditionItemWreck : AbilityConditionData
     {
 
-        public AbilityConditionScrounger(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) { }
+        public AbilityConditionItemWreck(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) { }
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {

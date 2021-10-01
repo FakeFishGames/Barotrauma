@@ -22,14 +22,17 @@ namespace Barotrauma
                 Place(subs);
                 subs.ForEach(s => s.Info.InitialSuppliesSpawned = true);
             }
-            
+
             foreach (var sub in Submarine.Loaded)
             {
-                if (sub.Info.Type == SubmarineType.Wreck || 
-                    sub.Info.Type == SubmarineType.BeaconStation)
+                if (sub.Info.Type == SubmarineType.Player || 
+                    sub.Info.Type == SubmarineType.Outpost || 
+                    sub.Info.Type == SubmarineType.OutpostModule ||
+                    sub.Info.Type == SubmarineType.EnemySubmarine)
                 {
-                    Place(sub.ToEnumerable());
+                    continue;
                 }
+                Place(sub.ToEnumerable());
             }
 
             if (Level.Loaded?.StartOutpost != null && Level.Loaded.Type == LevelData.LevelType.Outpost)

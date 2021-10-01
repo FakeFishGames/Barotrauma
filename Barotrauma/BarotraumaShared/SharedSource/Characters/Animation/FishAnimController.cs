@@ -139,7 +139,7 @@ namespace Barotrauma
             if (MainLimb == null) { return; }
             var mainLimb = MainLimb;
 
-            levitatingCollider = true;
+            levitatingCollider = !IsHanging;
 
             if (!character.CanMove)
             {
@@ -192,6 +192,11 @@ namespace Barotrauma
                 strongestImpact = 0.0f;
             }
 
+            if (aiming)
+            {
+                TargetMovement = TargetMovement.ClampLength(2);
+            }
+
             if (inWater && !forceStanding)
             {
                 Collider.FarseerBody.FixedRotation = false;
@@ -202,7 +207,7 @@ namespace Barotrauma
                 if (CurrentGroundedParams != null)
                 {
                     //rotate collider back upright
-                    float standAngle = dir == Direction.Right ? CurrentGroundedParams.ColliderStandAngleInRadians : -CurrentGroundedParams.ColliderStandAngleInRadians;
+                    float standAngle = CurrentGroundedParams.ColliderStandAngleInRadians * Dir;
                     if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, standAngle)) > 0.001f)
                     {
                         Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, standAngle) * 60.0f;
@@ -215,17 +220,19 @@ namespace Barotrauma
                 }
                 UpdateWalkAnim(deltaTime);
             }
-
             if (character.SelectedCharacter != null)
             {
                 DragCharacter(character.SelectedCharacter, deltaTime);
                 return;
             }
-
+            if (character.AnimController.AnimationTestPose)
+            {
+                ApplyTestPose();
+            }
             //don't flip when simply physics is enabled
             if (SimplePhysicsEnabled) { return; }
             
-            if (!character.IsRemotelyControlled && (character.AIController == null || character.AIController.CanFlip))
+            if (!character.IsRemotelyControlled && (character.AIController == null || character.AIController.CanFlip) && !aiming)
             {
                 if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
                 {
@@ -290,6 +297,10 @@ namespace Barotrauma
             {
                 flipTimer = 0.0f;
             }
+            wasAiming = aiming;
+            aiming = false;
+            wasAimingMelee = aimingMelee;
+            aimingMelee = false;
         }
 
         private bool CanDrag(Character target)
@@ -449,6 +460,16 @@ namespace Barotrauma
             //limbs are disabled when simple physics is enabled, no need to move them
             if (SimplePhysicsEnabled) { return; }
             mainLimb.PullJointEnabled = true;
+
+            if (aiming && movement.Length() <= 0.1f)
+            {
+                Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
+                Vector2 diff = (mousePos - (GetLimb(LimbType.Torso) ?? MainLimb).SimPosition) * Dir;
+                TargetMovement = new Vector2(0.0f, -0.1f);
+                float newRotation = MathUtils.VectorToAngle(diff);
+                Collider.SmoothRotate(newRotation, CurrentSwimParams.SteerTorque * character.SpeedMultiplier);
+            }
+
             if (!isMoving)
             {
                 WalkPos = MathHelper.SmoothStep(WalkPos, MathHelper.PiOver2, deltaTime * 5);

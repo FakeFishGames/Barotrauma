@@ -35,7 +35,7 @@ namespace Barotrauma.Items.Components
 
         private int qualityLevel;
 
-        [Serialize(0, false)]
+        [Serialize(0, true)]
         public int QualityLevel
         {
             get { return qualityLevel; }

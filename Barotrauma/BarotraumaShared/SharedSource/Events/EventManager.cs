@@ -981,6 +981,7 @@ namespace Barotrauma
                         return false;
                     case SubmarineType.Wreck:
                     case SubmarineType.BeaconStation:
+                    case SubmarineType.Ruin:
                         return true;
                 }
             }

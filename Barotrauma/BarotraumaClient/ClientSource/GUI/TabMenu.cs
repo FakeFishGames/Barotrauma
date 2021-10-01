@@ -1320,7 +1320,7 @@ namespace Barotrauma
                 if (!(characterLayout is null))
                 {
                     GUILayoutGroup characterCloseButtonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), characterLayout.RectTransform), childAnchor: Anchor.BottomRight);
-                    new GUIButton(new RectTransform(new Vector2(0.4f, 1f), characterCloseButtonLayout.RectTransform), TextManager.Get("close"))
+                    new GUIButton(new RectTransform(new Vector2(0.4f, 1f), characterCloseButtonLayout.RectTransform), TextManager.Get("ApplySettingsButton")) //TODO: Is this text appropriate for this circumstance for all languages?
                     {
                         OnClicked = (button, o) =>
                         {

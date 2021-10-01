@@ -224,12 +224,6 @@ namespace Barotrauma
             }
         }
 
-        public RuinGeneration.Ruin ParentRuin
-        {
-            get;
-            set;
-        }
-
         [Serialize(true, true)]
         public bool RemoveIfLinkedOutpostDoorInUse
         {

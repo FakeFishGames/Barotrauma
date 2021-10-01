@@ -11,7 +11,6 @@ namespace Barotrauma.Abilities
         private readonly float maxValue;
         private readonly bool targetAllies;
         private readonly bool removeOnDeath;
-        private readonly bool removeAfterRound;
         private readonly bool giveOnAddingFirstTime;
         private readonly bool setValue;
 
@@ -22,12 +21,12 @@ namespace Barotrauma.Abilities
         public CharacterAbilityGivePermanentStat(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statIdentifier = abilityElement.GetAttributeString("statidentifier", "").ToLowerInvariant();
-            statType = CharacterAbilityGroup.ParseStatType(abilityElement.GetAttributeString("stattype", ""), CharacterTalent.DebugIdentifier);
+            string statTypeName = abilityElement.GetAttributeString("stattype", string.Empty);
+            statType = string.IsNullOrEmpty(statTypeName) ? StatTypes.None : CharacterAbilityGroup.ParseStatType(statTypeName, CharacterTalent.DebugIdentifier);
             value = abilityElement.GetAttributeFloat("value", 0f);
             maxValue = abilityElement.GetAttributeFloat("maxvalue", float.MaxValue);
             targetAllies = abilityElement.GetAttributeBool("targetallies", false);
             removeOnDeath = abilityElement.GetAttributeBool("removeondeath", true);
-            removeAfterRound = abilityElement.GetAttributeBool("removeafterround", false);
             giveOnAddingFirstTime = abilityElement.GetAttributeBool("giveonaddingfirsttime", characterAbilityGroup.AbilityEffectType == AbilityEffectType.None);
             setValue = abilityElement.GetAttributeBool("setvalue", false);
         }
@@ -54,11 +53,11 @@ namespace Barotrauma.Abilities
         {
             if (targetAllies)
             {
-                Character.GetFriendlyCrew(Character).ForEach(c => c?.Info.ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath, removeAfterRound, maxValue, setValue));
+                Character.GetFriendlyCrew(Character).ForEach(c => c?.Info.ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath, maxValue: maxValue, setValue: setValue));
             }
             else
             {
-                Character?.Info.ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath, removeAfterRound, maxValue, setValue);
+                Character?.Info.ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath, maxValue: maxValue, setValue: setValue);
             }
         }
     }

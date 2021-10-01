@@ -922,8 +922,7 @@ namespace Barotrauma
                         }
                         //open the pause menu if not controlling a character OR if the character has no UIs active that can be closed with ESC
                         else if ((Character.Controlled == null || !itemHudActive())
-                            //TODO: do we need to check Inventory.SelectedSlot?
-                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null
+                            && CharacterHealth.OpenHealthWindow == null
                             && !CrewManager.IsCommandInterfaceOpen
                             && !(Screen.Selected is SubEditorScreen editor && !editor.WiringMode && Character.Controlled?.SelectedConstruction != null))
                         {

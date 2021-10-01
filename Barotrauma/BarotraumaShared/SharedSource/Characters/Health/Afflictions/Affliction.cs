@@ -191,6 +191,30 @@ namespace Barotrauma
                 (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
         }
 
+        public Color GetFaceTint()
+        {
+            if (Strength < Prefab.ActivationThreshold) { return Color.TransparentBlack; }
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
+            if (currentEffect == null) { return Color.TransparentBlack; }
+
+            return Color.Lerp(
+                currentEffect.MinFaceTint,
+                currentEffect.MaxFaceTint,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
+        public Color GetBodyTint()
+        {
+            if (Strength < Prefab.ActivationThreshold) { return Color.TransparentBlack; }
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
+            if (currentEffect == null) { return Color.TransparentBlack; }
+
+            return Color.Lerp(
+                currentEffect.MinBodyTint,
+                currentEffect.MaxBodyTint,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
         public float GetScreenBlurStrength()
         {
             if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
@@ -275,6 +299,13 @@ namespace Barotrauma
                     (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
             }
             return 0.0f;
+        }
+
+        public bool HasFlag(AbilityFlags flagType)
+        {
+            if (!(GetViableEffect() is AfflictionPrefab.Effect currentEffect)) { return false; }
+
+            return currentEffect.AfflictionAbilityFlags.Contains(flagType);
         }
 
         private AfflictionPrefab.Effect GetViableEffect()

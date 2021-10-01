@@ -1036,16 +1036,19 @@ namespace Barotrauma
             }
             if (previousAttackResults.ContainsKey(attacker))
             {
-                foreach (Affliction newAffliction in attackResult.Afflictions)
+                if (attackResult.Afflictions != null)
                 {
-                    var matchingAffliction = previousAttackResults[attacker].Afflictions.Find(a => a.Prefab == newAffliction.Prefab && a.Source == newAffliction.Source);
-                    if (matchingAffliction == null)
+                    foreach (Affliction newAffliction in attackResult.Afflictions)
                     {
-                        previousAttackResults[attacker].Afflictions.Add(newAffliction);
-                    }
-                    else
-                    {
-                        matchingAffliction.Strength += newAffliction.Strength;
+                        var matchingAffliction = previousAttackResults[attacker].Afflictions.Find(a => a.Prefab == newAffliction.Prefab && a.Source == newAffliction.Source);
+                        if (matchingAffliction == null)
+                        {
+                            previousAttackResults[attacker].Afflictions.Add(newAffliction);
+                        }
+                        else
+                        {
+                            matchingAffliction.Strength += newAffliction.Strength;
+                        }
                     }
                 }
                 previousAttackResults[attacker] = new AttackResult(previousAttackResults[attacker].Afflictions, previousAttackResults[attacker].HitLimb);
@@ -1062,9 +1065,12 @@ namespace Barotrauma
             float realDamage = attackResult.Damage;
             // including poisons etc
             float totalDamage = realDamage;
-            foreach (Affliction affliction in attackResult.Afflictions)
+            if (attackResult.Afflictions != null)
             {
-                totalDamage -= affliction.Prefab.KarmaChangeOnApplied * affliction.Strength;
+                foreach (Affliction affliction in attackResult.Afflictions)
+                {
+                    totalDamage -= affliction.Prefab.KarmaChangeOnApplied * affliction.Strength;
+                }
             }
             if (totalDamage <= 0.01f) { return; }
             if (Character.IsBot)
@@ -1255,7 +1261,7 @@ namespace Barotrauma
                             // Already targeting the attacker -> treat as a more serious threat.
                             cumulativeDamage *= 2;
                         }
-                        if (attackResult.Afflictions.Any(a => a is AfflictionHusk))
+                        if (attackResult.Afflictions != null && attackResult.Afflictions.Any(a => a is AfflictionHusk))
                         {
                             cumulativeDamage = 100;
                         }

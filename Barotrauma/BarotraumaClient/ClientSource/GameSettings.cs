@@ -1837,6 +1837,7 @@ namespace Barotrauma
                     ic.ParseMsg();
                 }
             }
+            CharacterHUD.ShouldRecreateHudTexts = true;
         }
 
         private void ApplySettings()

@@ -171,10 +171,7 @@ namespace Barotrauma
                 {
                     foreach (MapEntity e in mapEntityList)
                     {
-                        if (e.GetType() != typeof(WayPoint)) continue;
-                        if (e == this) continue;
-
-                        if (!Submarine.RectContains(e.Rect, position)) continue;
+                        if (!(e is WayPoint) || e == this || !e.IsHighlighted) { continue; }
 
                         if (linkedTo.Contains(e))
                         {

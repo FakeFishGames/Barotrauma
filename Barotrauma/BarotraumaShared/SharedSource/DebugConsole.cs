@@ -863,6 +863,60 @@ namespace Barotrauma
                 };
             }, isCheat: true));
 
+            commands.Add(new Command("unlocktalents", "unlocktalents [all/[jobname]]: give the controlled characters all the talents of the specified class", (string[] args) =>
+            {
+                if (Character.Controlled == null) { return; }
+                if (args.Length == 0 || args[0].Equals("all", StringComparison.OrdinalIgnoreCase)) 
+                { 
+                    foreach (var talentTree in TalentTree.JobTalentTrees)
+                    {
+                        foreach (var subTree in talentTree.Value.TalentSubTrees)
+                        {
+                            foreach (var option in subTree.TalentOptionStages)
+                            {
+                                foreach (var talent in option.Talents)
+                                {
+                                    Character.Controlled.GiveTalent(talent);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    var job = JobPrefab.Prefabs.Find(jp => jp.Name != null && jp.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                    if (job == null)
+                    {
+                        ThrowError($"Failed to find the job \"{args[0]}\".");
+                        return;
+                    }
+                    if (!TalentTree.JobTalentTrees.TryGetValue(job.Identifier, out TalentTree talentTree))
+                    {
+                        ThrowError($"No talents configured for the job \"{args[0]}\".");
+                        return; 
+                    }
+                    foreach (var subTree in talentTree.TalentSubTrees)
+                    {
+                        foreach (var option in subTree.TalentOptionStages)
+                        {
+                            foreach (var talent in option.Talents)
+                            {
+                                Character.Controlled.GiveTalent(talent);
+                            }
+                        }
+                    }
+                }
+            },
+            () =>
+            {
+                List<string> availableArgs = new List<string>() { "All" };
+                availableArgs.AddRange(JobPrefab.Prefabs.Select(j => j.Name));
+                return new string[][]
+                {
+                    availableArgs.ToArray()
+                };
+            }, isCheat: true));
+
             commands.Add(new Command("giveexperience", "giveexperience [amount] [character]: Give experience to character.", (string[] args) =>
             {
                 if (args.Length < 1)
@@ -892,7 +946,7 @@ namespace Barotrauma
             }, isCheat: true, getValidArgs: () =>
             {
                 return new[]
-                {                    
+                {
                     new string[] { "100" },
                     Character.CharacterList.Select(c => c.Name).Distinct().ToArray(),
                 };
@@ -2041,6 +2095,7 @@ namespace Barotrauma
                 {
                     spawnLocation = args[^2];
                     if (!int.TryParse(args[^1], NumberStyles.Any, CultureInfo.InvariantCulture, out amount)) { amount = 1; }
+                    amount = Math.Min(amount, 100);
                 }
                 
                 switch (spawnLocation)

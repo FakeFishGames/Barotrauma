@@ -287,7 +287,9 @@ namespace Barotrauma
 
                 characterInfo.CreateIcon(new RectTransform(new Vector2(1.0f, 0.275f), subLayout.RectTransform));
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), subLayout.RectTransform), job.Name, job.UIColor);
+                var jobTextContainer =
+                    new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), subLayout.RectTransform), style: null);
+                var jobText = new GUITextBlock(new RectTransform(Vector2.One, jobTextContainer.RectTransform), job.Name, job.UIColor);
 
                 var characterName = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), subLayout.RectTransform))
                 {
@@ -327,8 +329,11 @@ namespace Barotrauma
                                 characterName.Text = characterInfo.Name;
                                 characterName.UserData = "random";
                             }
+
+                            StealRandomizeButton(menu, jobTextContainer);
                         }
                     };
+                StealRandomizeButton(CharacterMenus[i], jobTextContainer);
             }
         }
         
@@ -381,6 +386,16 @@ namespace Barotrauma
             maxMissionCountContainer.Children.ForEach(c => c.ToolTip = maxMissionCountSettingHolder.ToolTip);
         }
 
+        private static void StealRandomizeButton(CharacterInfo.AppearanceCustomizationMenu menu, GUIComponent parent)
+        {
+            //This is just stupid
+            var randomizeButton = menu.RandomizeButton;
+            var oldButton = parent.GetChild<GUIButton>();
+            parent.RemoveChild(oldButton);
+            randomizeButton.RectTransform.Parent = parent.RectTransform;
+            randomizeButton.RectTransform.RelativeSize = Vector2.One * 1.3f;
+        }
+        
         private bool FinishSetup(GUIButton btn, object userdata)
         {
             if (string.IsNullOrWhiteSpace(saveNameBox.Text))

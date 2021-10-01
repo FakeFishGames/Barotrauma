@@ -23,7 +23,7 @@ namespace Barotrauma.Abilities
 
                 if (afflictions.Any())
                 {
-                    if (!afflictions.Any(a => attackResult.Afflictions.Select(c => c.Identifier).Contains(a))) { return false; }
+                    if (attackResult.Afflictions == null || !afflictions.Any(a => attackResult.Afflictions.Select(c => c.Identifier).Contains(a))) { return false; }
                 }
 
                 return true;

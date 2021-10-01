@@ -92,7 +92,16 @@ namespace Barotrauma
         public string SonarLabel;
         public string SonarIconIdentifier;
 
-        public bool Enabled => SoundRange > 0 || SightRange > 0;
+        private bool inDetectable;
+
+        /// <summary>
+        /// Should be reset to false each frame and kept indetectable by e.g. a status effect.
+        /// </summary>
+        public bool InDetectable
+        {
+            get => inDetectable || (SoundRange <= 0 && SightRange <= 0);
+            set => inDetectable = value;
+        }
 
         public float MinSoundRange, MinSightRange;
         public float MaxSoundRange = 100000, MaxSightRange = 100000;
@@ -181,14 +190,15 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            if (Enabled && !Static && FadeOutTime > 0)
+            InDetectable = false;
+            if (!Static && FadeOutTime > 0)
             {
                 // The aitarget goes silent/invisible if the components don't keep it active
-                if (!StaticSight)
+                if (!StaticSight && SightRange > 0)
                 {
                     DecreaseSightRange(deltaTime);
                 }
-                if (!StaticSound)
+                if (!StaticSound && SoundRange > 0)
                 {
                     DecreaseSoundRange(deltaTime);
                 }

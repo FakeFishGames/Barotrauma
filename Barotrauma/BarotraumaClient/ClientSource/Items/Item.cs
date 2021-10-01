@@ -276,7 +276,7 @@ namespace Barotrauma
             
             BrokenItemSprite fadeInBrokenSprite = null;
             float fadeInBrokenSpriteAlpha = 0.0f;
-            float displayCondition = FakeBroken ? 0.0f : condition;
+            float displayCondition = FakeBroken ? 0.0f : ConditionPercentage;
             Vector2 drawOffset = Vector2.Zero;
             if (displayCondition < MaxCondition)
             {
@@ -326,9 +326,14 @@ namespace Barotrauma
                                 size, color: color,
                                 textureScale: Vector2.One * Scale,
                                 depth: depth);
-                            fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)) + fadeInBrokenSprite.Offset.ToVector2() * Scale, size, color: color * fadeInBrokenSpriteAlpha,
-                                textureScale: Vector2.One * Scale,
-                                depth: depth - 0.000001f);
+
+                            if (fadeInBrokenSprite != null)
+                            {
+                                float d = Math.Min(depth + (fadeInBrokenSprite.Sprite.Depth - activeSprite.Depth - 0.000001f), 0.999f);
+                                fadeInBrokenSprite.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)) + fadeInBrokenSprite.Offset.ToVector2() * Scale, size, color: color * fadeInBrokenSpriteAlpha,
+                                    textureScale: Vector2.One * Scale,
+                                    depth: d);
+                            }
                             foreach (var decorativeSprite in Prefab.DecorativeSprites)
                             {
                                 if (!spriteAnimState[decorativeSprite].IsActive) { continue; }                            
@@ -357,7 +362,11 @@ namespace Barotrauma
                         if (color.A > 0)
                         {
                             activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + drawOffset, color, origin, rotationRad, Scale, activeSprite.effects, depth);
-                            fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + fadeInBrokenSprite.Offset.ToVector2() * Scale, color * fadeInBrokenSpriteAlpha, origin, rotationRad, Scale, activeSprite.effects, depth - 0.000001f);
+                            if (fadeInBrokenSprite != null)
+                            {
+                                float d = Math.Min(depth + (fadeInBrokenSprite.Sprite.Depth - activeSprite.Depth - 0.000001f), 0.999f);
+                                fadeInBrokenSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + fadeInBrokenSprite.Offset.ToVector2() * Scale, color * fadeInBrokenSpriteAlpha, origin, rotationRad, Scale, activeSprite.effects, d);
+                            }
                         }
                         if (Infector != null && (Infector.ParentBallastFlora.HasBrokenThrough || BallastFloraBehavior.AlwaysShowBallastFloraSprite))
                         {
@@ -410,8 +419,11 @@ namespace Barotrauma
                         }
                     }
                     body.Draw(spriteBatch, activeSprite, color, depth, Scale);
-                    if (fadeInBrokenSprite != null) { body.Draw(spriteBatch, fadeInBrokenSprite.Sprite, color * fadeInBrokenSpriteAlpha, depth - 0.000001f, Scale); }
-
+                    if (fadeInBrokenSprite != null)
+                    {
+                        float d = Math.Min(depth + (fadeInBrokenSprite.Sprite.Depth - activeSprite.Depth - 0.000001f), 0.999f);
+                        body.Draw(spriteBatch, fadeInBrokenSprite.Sprite, color * fadeInBrokenSpriteAlpha, d, Scale);
+                    }
                     foreach (var decorativeSprite in Prefab.DecorativeSprites)
                     {
                         if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
@@ -464,6 +476,11 @@ namespace Barotrauma
             if (GameMain.DebugDraw)
             {
                 body?.DebugDraw(spriteBatch, Color.White);
+                if (GetComponent<TriggerComponent>()?.PhysicsBody is PhysicsBody triggerBody)
+                {
+                    triggerBody.UpdateDrawPosition();
+                    triggerBody.DebugDraw(spriteBatch, Color.White);
+                }
             }
 
             if (editing && IsSelected && PlayerInput.KeyDown(Keys.Space))

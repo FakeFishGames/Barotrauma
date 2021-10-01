@@ -2,10 +2,10 @@
 
 namespace Barotrauma.Abilities
 {
-    class AbilityConditionScavenger : AbilityConditionData
+    class AbilityConditionItemOutsideSubmarine : AbilityConditionData
     {
 
-        public AbilityConditionScavenger(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) { }
+        public AbilityConditionItemOutsideSubmarine(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) { }
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {

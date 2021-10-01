@@ -3791,7 +3791,7 @@ namespace Barotrauma.Networking
             return preferredClient;
         }
 
-        public void UpdateMissionState(Mission mission, int state)
+        public void UpdateMissionState(Mission mission)
         {
             foreach (var client in connectedClients)
             {
@@ -3799,7 +3799,7 @@ namespace Barotrauma.Networking
                 msg.Write((byte)ServerPacketHeader.MISSION);
                 int missionIndex = GameMain.GameSession.GetMissionIndex(mission);
                 msg.Write((byte)(missionIndex == -1 ? 255: missionIndex));
-                msg.Write((ushort)state);
+                mission?.ServerWrite(msg);
                 serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
         }

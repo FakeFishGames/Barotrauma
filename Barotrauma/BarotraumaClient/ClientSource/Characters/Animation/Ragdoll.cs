@@ -562,8 +562,10 @@ namespace Barotrauma
             if (this is HumanoidAnimController humanoid)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(humanoid.RightHandIKPos);
+                if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.Position; }
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUI.Style.Green, true);
                 pos = ConvertUnits.ToDisplayUnits(humanoid.LeftHandIKPos);
+                if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.Position; }
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUI.Style.Green, true);
             }
 

@@ -289,7 +289,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
+                Matrix transform = Matrix.CreateRotationZ(item.body.DrawRotation);
                 if (item.body.Dir == -1.0f)
                 {
                     transformedItemPos.X = -transformedItemPos.X;
@@ -300,7 +300,7 @@ namespace Barotrauma.Items.Components
                 transformedItemPos = Vector2.Transform(transformedItemPos, transform);
                 transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
                 transformedItemIntervalHorizontal = Vector2.Transform(transformedItemIntervalHorizontal, transform);
-                transformedItemPos += item.DrawPosition;
+                transformedItemPos += item.body.DrawPosition;
             }
 
             Vector2 currentItemPos = transformedItemPos;

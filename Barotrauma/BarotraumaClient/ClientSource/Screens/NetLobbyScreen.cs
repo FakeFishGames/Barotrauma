@@ -982,22 +982,24 @@ namespace Barotrauma
                         Visible = false,
                         CanBeFocused = false
                     };
-                    continue;
                 }
-                missionTypeTickBoxes[index] = new GUITickBox(new RectTransform(Vector2.One, frame.RectTransform),
-                    TextManager.Get("MissionType." + missionType.ToString()))
+                else
                 {
-                    UserData = (int)missionType,
-                    ToolTip = TextManager.Get("MissionTypeDescription." + missionType.ToString(), returnNull: true),
-                    OnSelected = (tickbox) =>
+                    missionTypeTickBoxes[index] = new GUITickBox(new RectTransform(Vector2.One, frame.RectTransform),
+                    TextManager.Get("MissionType." + missionType.ToString()))
                     {
-                        int missionTypeOr = tickbox.Selected ? (int)tickbox.UserData : (int)MissionType.None;
-                        int missionTypeAnd = (int)MissionType.All & (!tickbox.Selected ? (~(int)tickbox.UserData) : (int)MissionType.All);
-                        GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, (int)missionTypeOr, (int)missionTypeAnd);
-                        return true;
-                    }
-                };
-                frame.RectTransform.MinSize = missionTypeTickBoxes[index].RectTransform.MinSize;
+                        UserData = (int)missionType,
+                        ToolTip = TextManager.Get("MissionTypeDescription." + missionType.ToString(), returnNull: true),
+                        OnSelected = (tickbox) =>
+                        {
+                            int missionTypeOr = tickbox.Selected ? (int)tickbox.UserData : (int)MissionType.None;
+                            int missionTypeAnd = (int)MissionType.All & (!tickbox.Selected ? (~(int)tickbox.UserData) : (int)MissionType.All);
+                            GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, (int)missionTypeOr, (int)missionTypeAnd);
+                            return true;
+                        }
+                    };
+                    frame.RectTransform.MinSize = missionTypeTickBoxes[index].RectTransform.MinSize;
+                }
                 index++;
             }
             clientDisabledElements.AddRange(missionTypeTickBoxes);
@@ -1428,9 +1430,9 @@ namespace Barotrauma
 
             bool isGameRunning = GameMain.GameSession?.IsRunning ?? false;
 
-            infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, isGameRunning ? 0.95f : 0.9f), parent.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter)
+            infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, isGameRunning ? 0.97f : 0.92f), parent.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter)
             {
-                RelativeSpacing = 0.015f,
+                RelativeSpacing = 0.0f,
                 Stretch = true,
                 UserData = characterInfo
             };
@@ -1486,21 +1488,24 @@ namespace Barotrauma
                 }
             };
 
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.006f), infoContainer.RectTransform), style: null);
+            
             if (allowEditing)
             {
-                GUILayoutGroup characterInfoTabs = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), infoContainer.RectTransform), isHorizontal: true)
+                GUILayoutGroup characterInfoTabs = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.016f), infoContainer.RectTransform), isHorizontal: true)
                 {
                     Stretch = true,
                     RelativeSpacing = 0.02f
                 };
 
-                jobPreferencesButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.33f), characterInfoTabs.RectTransform),
+                jobPreferencesButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1f), characterInfoTabs.RectTransform),
                     TextManager.Get("JobPreferences"), style: "GUITabButton")
                 {
                     Selected = true,
                     OnClicked = SelectJobPreferencesTab
                 };
-                appearanceButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.33f), characterInfoTabs.RectTransform),
+                appearanceButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1f), characterInfoTabs.RectTransform),
                     TextManager.Get("CharacterAppearance"), style: "GUITabButton")
                 {
                     OnClicked = SelectAppearanceTab
@@ -1515,7 +1520,7 @@ namespace Barotrauma
 
                 JobPreferenceContainer = new GUIFrame(new RectTransform(Vector2.One, characterInfoFrame.RectTransform),
                     style: "GUIFrameListBox");
-                characterInfo.CreateIcon(new RectTransform(new Vector2(1.0f, 0.4f), JobPreferenceContainer.RectTransform, Anchor.TopCenter));
+                characterInfo.CreateIcon(new RectTransform(new Vector2(1.0f, 0.4f), JobPreferenceContainer.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0f, 0.025f) });
                 JobList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.6f), JobPreferenceContainer.RectTransform, Anchor.BottomCenter), true)
                 {
                     Enabled = true,
@@ -3191,7 +3196,7 @@ namespace Barotrauma
         {
             GUICustomComponent characterIcon = JobPreferenceContainer.GetChild<GUICustomComponent>();
             JobPreferenceContainer.RemoveChild(characterIcon);
-            GameMain.Client.CharacterInfo.CreateIcon(new RectTransform(new Vector2(1.0f, 0.4f), JobPreferenceContainer.RectTransform, Anchor.TopCenter));
+            GameMain.Client.CharacterInfo.CreateIcon(new RectTransform(new Vector2(1.0f, 0.4f), JobPreferenceContainer.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.025f) });
 
             GUIListBox listBox = JobPreferenceContainer.GetChild<GUIListBox>();
             /*foreach (Sprite sprite in jobPreferenceSprites) { sprite.Remove(); }
@@ -3297,10 +3302,10 @@ namespace Barotrauma
 
         private GUIButton CreateJobVariantButton(Pair<JobPrefab, int> jobPrefab, int variantIndex, int variantCount, GUIComponent slot)
         {
-            float relativeSize = 0.2f;
+            float relativeSize = 0.15f;
 
             var btn = new GUIButton(new RectTransform(new Vector2(relativeSize), slot.RectTransform, Anchor.TopCenter, scaleBasis: ScaleBasis.BothHeight)
-                { RelativeOffset = new Vector2(relativeSize * 1.05f * (variantIndex - (variantCount - 1) / 2.0f), 0.02f) },
+                { RelativeOffset = new Vector2(relativeSize * 1.3f * (variantIndex - (variantCount - 1) / 2.0f), 0.02f) },
                 (variantIndex + 1).ToString(), style: "JobVariantButton")
             {
                 Selected = jobPrefab.Second == variantIndex,

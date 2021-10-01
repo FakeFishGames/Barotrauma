@@ -62,7 +62,7 @@ namespace Barotrauma.Abilities
 
         protected virtual void VerifyState(bool conditionsMatched, float timeSinceLastUpdate)
         {
-            DebugConsole.ThrowError($"Ability {this} does not have an implementation for VerifyState! This ability does not work in interval ability groups.");
+            DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}: Ability {this} does not have an implementation for VerifyState! This ability does not work in interval ability groups.");
         }
 
         public void ApplyAbilityEffect(AbilityObject abilityObject)
@@ -127,15 +127,6 @@ namespace Barotrauma.Abilities
 
             DebugConsole.AddWarning("Instantiated " + characterAbility + " for talent " + characterAbilityGroup.CharacterTalent.DebugIdentifier);
             return characterAbility;
-        }
-        public static AbilityFlags ParseFlagType(string flagTypeString, string debugIdentifier)
-        {
-            AbilityFlags flagType = AbilityFlags.None;
-            if (!Enum.TryParse(flagTypeString, true, out flagType))
-            {
-                DebugConsole.ThrowError("Invalid flag type type \"" + flagTypeString + "\" in CharacterTalent (" + debugIdentifier + ")");
-            }
-            return flagType;
         }
     }
 }

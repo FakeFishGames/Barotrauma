@@ -413,19 +413,19 @@ namespace Barotrauma.Items.Components
                         return i1.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes).CompareTo(i2.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes));
                     });
                 }
-
 #if CLIENT
                 equipLimb.UpdateWearableTypesToHide();
 #endif
             }
+            character.OnWearablesChanged();
         }
 
         public override void Drop(Character dropper)
         {
+            Character previousPicker = picker;
             Unequip(picker);
-
             base.Drop(dropper);
-
+            previousPicker?.OnWearablesChanged();
             picker = null;
             IsActive = false;
         }

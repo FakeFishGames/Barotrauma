@@ -96,6 +96,7 @@ namespace Barotrauma
 #if DEBUG
                     if (HumanAIController.debugai && objectiveManager.IsOrder(this) && !objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() && !objectiveManager.IsCurrentOrder<AIObjectiveReturn>())
                     {
+                        // TODO: dismiss
                         throw new Exception("Order abandoned!");
                     }
 #endif

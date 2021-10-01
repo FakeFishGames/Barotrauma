@@ -8,6 +8,11 @@ namespace Barotrauma.Networking
 {
     partial class RespawnManager : Entity, IServerSerializable
     {
+        /// <summary>
+        /// How much skills drop towards the job's default skill levels when respawning midround in the campaign
+        /// </summary>
+        const float SkillReductionOnCampaignMidroundRespawn = 0.5f;
+
         private DateTime despawnTime;
 
         private float shuttleEmptyTimer;
@@ -361,9 +366,21 @@ namespace Barotrauma.Networking
                 if (!bot && campaign != null)
                 {
                     var matchingData = campaign?.GetClientCharacterData(clients[i]);
-                    if (matchingData != null && !matchingData.HasSpawned)
+                    if (matchingData != null)
                     {
-                        forceSpawnInMainSub = true;
+                        if (!matchingData.HasSpawned)
+                        {
+                            forceSpawnInMainSub = true;
+                        }
+                        else
+                        {
+                            foreach (Skill skill in characterInfos[i].Job.Skills)
+                            {
+                                var skillPrefab = characterInfos[i].Job.Prefab.Skills.Find(s => skill.Prefab == s);
+                                if (skillPrefab == null) { continue; }
+                                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.X, SkillReductionOnCampaignMidroundRespawn);
+                            }
+                        }
                     }
                 }
 

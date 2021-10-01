@@ -7,20 +7,20 @@ namespace Barotrauma.Abilities
         public override bool AppliesEffectOnIntervalUpdate => true;
 
         private readonly int amount;
-        private readonly StatTypes scalingStatType;
+        private readonly string scalingStatIdentifier;
 
         public CharacterAbilityGiveMoney(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             amount = abilityElement.GetAttributeInt("amount", 0);
-            scalingStatType = CharacterAbilityGroup.ParseStatType(abilityElement.GetAttributeString("scalingstattype", "None"), CharacterTalent.DebugIdentifier);
+            scalingStatIdentifier = abilityElement.GetAttributeString("scalingstatidentifier", string.Empty);
         }
 
         private void ApplyEffectSpecific(Character targetCharacter)
         {
             float multiplier = 1f;
-            if (scalingStatType != StatTypes.None)
+            if (!string.IsNullOrEmpty(scalingStatIdentifier))
             {
-                multiplier = 0 + Character.Info.GetSavedStatValue(scalingStatType);
+                multiplier = 0 + Character.Info.GetSavedStatValue(StatTypes.None, scalingStatIdentifier);
             }
 
             targetCharacter.GiveMoney((int)(multiplier * amount));

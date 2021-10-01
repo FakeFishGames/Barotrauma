@@ -22,9 +22,10 @@
         OnSevered = 17,
         OnProduceSpawned = 18,
         OnOpen = 19, OnClose = 20,
-        OnDeath = OnBroken,
-        OnSuccess,
-        OnAbility,
+        OnSpawn = 21,
+        OnSuccess = 22,
+        OnAbility = 23,
+        OnDeath = OnBroken
     }
 
     public enum AbilityEffectType
@@ -62,7 +63,10 @@
         OnItemDeconstructedInventory,
         OnStopTinkering,
         OnItemPicked,
+        OnGeneticMaterialCombinedOrRefined,
+        OnCrewGeneticMaterialCombinedOrRefined,
         AfterSubmarineAttacked,
+        OnApplyTreatment,
     }
 
     public enum StatTypes
@@ -100,7 +104,8 @@
         RepairToolStructureRepairMultiplier,
         RepairToolStructureDamageMultiplier,
         RepairToolDeattachTimeMultiplier,
-        MaxRepairConditionMultiplier,
+        MaxRepairConditionMultiplierMechanical,
+        MaxRepairConditionMultiplierElectrical,
         IncreaseFabricationQuality,
         GeneticMaterialRefineBonus,
         GeneticMaterialTaintedProbabilityReductionOnCombine,
@@ -114,11 +119,9 @@
         MissionMoneyGainMultiplier,
         ExperienceGainMultiplier,
         MissionExperienceGainMultiplier,
-        // these should be deprecated and moved to their own implementation, no sense making them share space with stat values
-        Coauthor,
-        WarriorPoetMissionRuns,
-        WarriorPoetEnemiesKilled,
-        QuickfixRepairCount,
+        ExtraSpecialSalesCount,
+        ApplyTreatmentsOnSelfFraction,
+        MaxAttachableCount,
     }
 
     public enum AbilityFlags
@@ -134,6 +137,8 @@
         GainSkillPastMaximum,
         RetainExperienceForNewCharacter,
         AllowSecondOrderedTarget,
+        PowerfulCPR,
+        AlwaysStayConscious,
     }
 
 }

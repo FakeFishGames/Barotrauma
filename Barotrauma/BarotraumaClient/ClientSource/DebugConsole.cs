@@ -690,6 +690,7 @@ namespace Barotrauma
             AssignRelayToServer("readycheck", true);
 
             AssignRelayToServer("givetalent", true);
+            AssignRelayToServer("unlocktalents", true);
             AssignRelayToServer("giveexperience", true);
 
             AssignOnExecute("control", (string[] args) =>
@@ -1099,9 +1100,35 @@ namespace Barotrauma
 
             commands.Add(new Command("load|loadsub", "load [submarine name]: Load a submarine.", (string[] args) =>
             {
-                if (args.Length == 0) return;
-                SubmarineInfo subInfo = new SubmarineInfo(string.Join(" ", args));
+                if (args.Length == 0) { return; }
+
+                if (GameMain.GameSession != null)
+                {
+                    ThrowError("The loadsub command cannot be used when a round is running. You should probably be using spawnsub instead.");
+                    return;
+                }
+
+                string name = string.Join(" ", args);
+                SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => name.Equals(s.Name, StringComparison.OrdinalIgnoreCase));
+                if (subInfo == null)
+                {
+                    string path = Path.Combine(SubmarineInfo.SavePath, name);
+                    if (!File.Exists(path))
+                    {
+                        ThrowError($"Could not find a submarine with the name \"{name}\" or in the path {path}.");
+                        return;
+                    }
+                    subInfo = new SubmarineInfo(path);
+                }
+
                 Submarine.Load(subInfo, true);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    SubmarineInfo.SavedSubmarines.Select(s => s.Name).ToArray()
+                };
             }));
 
             commands.Add(new Command("cleansub", "", (string[] args) =>

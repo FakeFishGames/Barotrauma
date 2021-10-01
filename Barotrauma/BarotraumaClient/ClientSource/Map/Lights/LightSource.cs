@@ -1291,7 +1291,7 @@ namespace Barotrauma.Lights
                 if (ParentSub != null) { drawPos += ParentSub.DrawPosition; }
                 drawPos.Y = -drawPos.Y;
 
-                spriteBatch.Draw(currentTexture, drawPos, null, Color.Multiply(CurrentBrightness), -rotation, center, scale, SpriteEffects.None, 1);
+                spriteBatch.Draw(currentTexture, drawPos, null, Color.Multiply(CurrentBrightness), -rotation + MathHelper.ToRadians(LightSourceParams.Rotation), center, scale, SpriteEffects.None, 1);
                 return;
             }
 

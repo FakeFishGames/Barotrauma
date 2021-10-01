@@ -595,10 +595,10 @@ namespace Barotrauma
 
         private string GetPlayerBalanceText() => GetCurrencyFormatted(PlayerMoney);
 
-        private GUILayoutGroup CreateDealsGroup(GUIListBox parentList)
+        private GUILayoutGroup CreateDealsGroup(GUIListBox parentList, int elementCount = 4)
         {
             var elementHeight = (int)(GUI.yScale * 80);
-            var frame = new GUIFrame(new RectTransform(new Point(parentList.Content.Rect.Width, 4 * elementHeight + 3), parent: parentList.Content.RectTransform), style: null);
+            var frame = new GUIFrame(new RectTransform(new Point(parentList.Content.Rect.Width, elementCount * elementHeight + 3), parent: parentList.Content.RectTransform), style: null);
             frame.UserData = "deals";
             var dealsGroup = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform, anchor: Anchor.Center), childAnchor: Anchor.TopCenter);
             var dealsHeader = new GUILayoutGroup(new RectTransform(new Point((int)(0.95f * parentList.Content.Rect.Width), elementHeight), parent: dealsGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
@@ -726,6 +726,8 @@ namespace Barotrauma
             FilterStoreItems(category, searchBox.Text);
         }
 
+        int prevDailySpecialCount;
+
         private void RefreshStoreBuyList()
         {
             float prevBuyListScroll = storeBuyList.BarScroll;
@@ -734,11 +736,14 @@ namespace Barotrauma
             bool hasPermissions = HasPermissions;
             HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
 
-            if ((storeDailySpecialsGroup != null) != CurrentLocation.DailySpecials.Any())
+            int dailySpecialCount = CurrentLocation?.DailySpecials.Count() ?? 3;
+
+            if ((storeDailySpecialsGroup != null) != CurrentLocation.DailySpecials.Any() || dailySpecialCount != prevDailySpecialCount)
             {
-                if (storeDailySpecialsGroup == null)
+                if (storeDailySpecialsGroup == null || dailySpecialCount != prevDailySpecialCount)
                 {
-                    storeDailySpecialsGroup = CreateDealsGroup(storeBuyList);
+                    storeBuyList.RemoveChild(storeDailySpecialsGroup?.Parent);
+                    storeDailySpecialsGroup = CreateDealsGroup(storeBuyList, 1 + dailySpecialCount);
                     storeDailySpecialsGroup.Parent.SetAsFirstChild();
                 }
                 else
@@ -747,6 +752,7 @@ namespace Barotrauma
                     storeDailySpecialsGroup = null;
                 }
                 storeBuyList.RecalculateChildren();
+                prevDailySpecialCount = dailySpecialCount;
             }
 
             foreach (PurchasedItem item in CurrentLocation.StoreStock)

@@ -17,5 +17,10 @@ namespace Barotrauma
         }
 
         public abstract void ServerWriteInitial(IWriteMessage msg, Client c);
+
+        public virtual void ServerWrite(IWriteMessage msg)
+        {
+            msg.Write((ushort)State);
+        }
     }
 }

@@ -208,5 +208,15 @@ namespace Barotrauma.Abilities
 
             return afflictions;
         }
+
+        public static AbilityFlags ParseFlagType(string flagTypeString, string debugIdentifier)
+        {
+            AbilityFlags flagType = AbilityFlags.None;
+            if (!Enum.TryParse(flagTypeString, true, out flagType))
+            {
+                DebugConsole.ThrowError("Invalid flag type type \"" + flagTypeString + "\" in CharacterTalent (" + debugIdentifier + ")");
+            }
+            return flagType;
+        }
     }
 }

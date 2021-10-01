@@ -34,6 +34,9 @@ namespace Barotrauma
         [Serialize(false, true), Editable(ReadOnly = true)]
         public bool HasInfo { get; private set; }
 
+        [Serialize(false, true, description: "Can the creature interact with items?"), Editable]
+        public bool CanInteract { get; private set; }
+
         [Serialize(false, true), Editable]
         public bool Husk { get; private set; }
 
@@ -454,6 +457,9 @@ namespace Barotrauma
             [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
             public float HealthRegenerationWhenEating { get; private set; }
 
+            [Serialize(false, true), Editable]
+            public bool StunImmunity { get; set; }
+
             // TODO: limbhealths, sprite?
 
             public HealthParams(XElement element, CharacterParams character) : base(element, character) { }
@@ -553,14 +559,23 @@ namespace Barotrauma
             [Serialize(false, true, description: "If enabled, the character chooses randomly from the available attacks. The priority is used as a weight for weighted random."), Editable]
             public bool RandomAttack { get; private set; }
 
-            [Serialize(false, true, description:"Does the creature know how to open doors (still requires a proper ID card). Only applies on humanoids. Humans can always open doors (They don't use this AI definition)."), Editable]
+            [Serialize(false, true, description:"Does the creature know how to open doors (still requires a proper ID card). Humans can always open doors (They don't use this AI definition)."), Editable]
             public bool CanOpenDoors { get; private set; }
+
+            [Serialize(false, true, description: "Does the creature close the doors behind it. Humans don't use this AI definition."), Editable]
+            public bool KeepDoorsClosed { get; private set; }
 
             [Serialize(true, true, "Is the creature allowed to navigate from and into the depths of the abyss? When enabled, the creatures will try to avoid the depths."), Editable]
             public bool AvoidAbyss { get; set; }
 
             [Serialize(false, true, "Does the creature try to keep in the abyss? Has effect only when AvoidAbyss is false."), Editable]
             public bool StayInAbyss { get; set; }
+
+            [Serialize(false, true, "Does the creature patrol the flooded hulls while idling inside a friendly submarine?"), Editable]
+            public bool PatrolFlooded { get; set; }
+
+            [Serialize(false, true, "Does the creature patrol the dry hulls while idling inside a friendly submarine?"), Editable]
+            public bool PatrolDry { get; set; }
 
             [Serialize(0f, true, description: ""), Editable]
             public float StartAggression { get; private set; }
@@ -682,8 +697,14 @@ namespace Barotrauma
             [Serialize(false, true), Editable]
             public bool IgnoreIncapacitated { get; set; }
 
-            [Serialize(0f, true, description: "How much damage the protected target should take from an attacker before the creature starts defending it."), Editable]
-            public float DamageThreshold { get; private set; }
+            [Serialize(0f, true, description: "A generic threshold. For example, how much damage the protected target should take from an attacker before the creature starts defending it."), Editable]
+            public float Threshold { get; private set; }
+
+            [Serialize(-1f, true, description: "A generic min threshold. Not used if set to negative."), Editable]
+            public float ThresholdMin { get; private set; }
+
+            [Serialize(-1f, true, description: "A generic max threshold. Not used if set to negative."), Editable]
+            public float ThresholdMax { get; private set; }
 
             [Serialize(AttackPattern.Straight, true), Editable]
             public AttackPattern AttackPattern { get; set; }

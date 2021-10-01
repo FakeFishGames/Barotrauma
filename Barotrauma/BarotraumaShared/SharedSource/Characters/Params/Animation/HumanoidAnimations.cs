@@ -94,12 +94,6 @@ namespace Barotrauma
 
         [Serialize(1f, true, description: "How much force is used to move the hands."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
         public float HandMoveStrength { get; set; }
-
-        [Serialize(1f, true, description: "How much force is used to rotate the arms to the IK position."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
-        public float ArmIKStrength { get; set; }
-
-        [Serialize(1f, true, description: "How much force is used to rotate the hands to the IK position."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
-        public float HandIKStrength { get; set; }
     }
 
     abstract class HumanGroundedParams : GroundedMovementParams, IHumanAnimation
@@ -153,12 +147,6 @@ namespace Barotrauma
 
         [Serialize(1f, true, description: "How much force is used to move the hands."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
         public float HandMoveStrength { get; set; }
-
-        [Serialize(1f, true, description: "How much force is used to rotate the arms to the IK position."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
-        public float ArmIKStrength { get; set; }
-
-        [Serialize(1f, true, description: "How much force is used to rotate the hands to the IK position."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
-        public float HandIKStrength { get; set; }
     }
 
     public interface IHumanAnimation
@@ -169,9 +157,5 @@ namespace Barotrauma
         float ArmMoveStrength { get; set; }
 
         float HandMoveStrength { get; set; }
-
-        float ArmIKStrength { get; set; }
-
-        float HandIKStrength { get; set; }
     }
 }

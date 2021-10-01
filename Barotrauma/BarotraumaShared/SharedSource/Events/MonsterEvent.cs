@@ -285,11 +285,10 @@ namespace Barotrauma
                 spawnPos = chosenPosition.Position.ToVector2();
                 if (chosenPosition.Submarine != null || chosenPosition.Ruin != null)
                 {
-                    var spawnPoint = WayPoint.GetRandom(SpawnType.Enemy, sub: chosenPosition.Submarine, ruin: chosenPosition.Ruin, useSyncedRand: false);
+                    var spawnPoint = WayPoint.GetRandom(SpawnType.Enemy, sub: chosenPosition.Submarine ?? chosenPosition.Ruin?.Submarine, useSyncedRand: false);
                     if (spawnPoint != null) 
                     {
-                        System.Diagnostics.Debug.Assert(spawnPoint.Submarine == chosenPosition.Submarine);
-                        System.Diagnostics.Debug.Assert(spawnPoint.ParentRuin == chosenPosition.Ruin);
+                        System.Diagnostics.Debug.Assert(spawnPoint.Submarine == (chosenPosition.Submarine ?? chosenPosition.Ruin?.Submarine));
                         spawnPos = spawnPoint.WorldPosition; 
                     }
                     else

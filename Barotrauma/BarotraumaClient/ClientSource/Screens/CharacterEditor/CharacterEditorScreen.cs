@@ -483,20 +483,17 @@ namespace Barotrauma.CharacterEditor
                     // It's possible that the physics are disabled, because the angle widgets handle input logic in the draw method (which they shouldn't)
                     character.AnimController.Collider.PhysEnabled = true;
                 }
-                if (character.IsHumanoid)
+                animTestPoseToggle.Enabled = CurrentAnimation.IsGroundedAnimation;
+                if (animTestPoseToggle.Enabled)
                 {
-                    animTestPoseToggle.Enabled = CurrentAnimation.IsGroundedAnimation;
-                    if (animTestPoseToggle.Enabled)
+                    if (PlayerInput.KeyHit(Keys.X))
                     {
-                        if (PlayerInput.KeyHit(Keys.X))
-                        {
-                            SetToggle(animTestPoseToggle, !animTestPoseToggle.Selected);
-                        }
+                        SetToggle(animTestPoseToggle, !animTestPoseToggle.Selected);
                     }
-                    else
-                    {
-                        animTestPoseToggle.Selected = false;
-                    }
+                }
+                else
+                {
+                    animTestPoseToggle.Selected = false;
                 }
                 if (PlayerInput.KeyHit(InputType.Run))
                 {
@@ -1072,7 +1069,7 @@ namespace Barotrauma.CharacterEditor
                     {
                         if (jointCreationMode == JointCreationMode.Create)
                         {
-                            jointEndLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => l != null && l != jointStartLimb && l.ActiveSprite != null);
+                            jointEndLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => l != null && l != jointStartLimb && l.ActiveSprite != null && !l.Hidden);
                             if (jointEndLimb != null && PlayerInput.PrimaryMouseButtonClicked())
                             {
                                 Vector2 anchor1 = anchor1Pos.HasValue ? anchor1Pos.Value / spriteSheetZoom : Vector2.Zero;
@@ -1085,7 +1082,7 @@ namespace Barotrauma.CharacterEditor
                         }
                         else if (PlayerInput.PrimaryMouseButtonClicked())
                         {
-                            jointStartLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => selectedLimbs.Contains(l));
+                            jointStartLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => selectedLimbs.Contains(l) && !l.Hidden);
                             anchor1Pos = GetLimbSpritesheetRect(jointStartLimb).Center.ToVector2() - PlayerInput.MousePosition;
                             jointCreationMode = JointCreationMode.Create;
                         }
@@ -1094,7 +1091,7 @@ namespace Barotrauma.CharacterEditor
                     {
                         if (jointCreationMode == JointCreationMode.Create)
                         {
-                            jointEndLimb = GetClosestLimbOnRagdoll(PlayerInput.MousePosition, l => l != null && l != jointStartLimb && l.ActiveSprite != null);
+                            jointEndLimb = GetClosestLimbOnRagdoll(PlayerInput.MousePosition, l => l != null && l != jointStartLimb && l.ActiveSprite != null && !l.Hidden);
                             if (jointEndLimb != null && PlayerInput.PrimaryMouseButtonClicked())
                             {
                                 Vector2 anchor1 = anchor1Pos ?? Vector2.Zero;
@@ -1105,7 +1102,7 @@ namespace Barotrauma.CharacterEditor
                         }
                         else if (PlayerInput.PrimaryMouseButtonClicked())
                         {
-                            jointStartLimb = GetClosestLimbOnRagdoll(PlayerInput.MousePosition, l => selectedLimbs.Contains(l));
+                            jointStartLimb = GetClosestLimbOnRagdoll(PlayerInput.MousePosition, l => selectedLimbs.Contains(l) && !l.Hidden);
                             anchor1Pos = ConvertUnits.ToDisplayUnits(jointStartLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
                             jointCreationMode = JointCreationMode.Create;
                         }
@@ -1185,8 +1182,15 @@ namespace Barotrauma.CharacterEditor
 
         private void CreateLimb(XElement newElement)
         {
-            var lastLimbElement = RagdollParams.MainElement.Elements("limb").Last();
-            lastLimbElement.AddAfterSelf(newElement);
+            var lastElement = RagdollParams.MainElement.GetChildElements("limb").LastOrDefault();
+            if (lastElement != null)
+            {
+                lastElement.AddAfterSelf(newElement);
+            }
+            else
+            {
+                RagdollParams.MainElement.AddFirst(newElement);
+            }
             var newLimbParams = new RagdollParams.LimbParams(newElement, RagdollParams);
             RagdollParams.Limbs.Add(newLimbParams);
             character.AnimController.Recreate();
@@ -1217,12 +1221,7 @@ namespace Barotrauma.CharacterEditor
                 new XAttribute("limb1anchor", $"{a1.X.Format(2)}, {a1.Y.Format(2)}"),
                 new XAttribute("limb2anchor", $"{a2.X.Format(2)}, {a2.Y.Format(2)}")
                 );
-            var lastJointElement = RagdollParams.MainElement.Elements("joint").LastOrDefault();
-            if (lastJointElement == null)
-            {
-                // If no joints exist, use the last limb element.
-                lastJointElement = RagdollParams.MainElement.Elements("limb").LastOrDefault();
-            }
+            var lastJointElement = RagdollParams.MainElement.GetChildElements("joint").LastOrDefault() ?? RagdollParams.MainElement.GetChildElements("limb").LastOrDefault();
             if (lastJointElement == null)
             {
                 DebugConsole.ThrowError(GetCharacterEditorTranslation("CantAddJointsNoLimbElements"));
@@ -2196,7 +2195,7 @@ namespace Barotrauma.CharacterEditor
             animTestPoseToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AnimationTestPose"))
             {
                 Selected = character.AnimController.AnimationTestPose,
-                Enabled = character.IsHumanoid,
+                Enabled = true,
                 OnSelected = box =>
                 {
                     character.AnimController.AnimationTestPose = box.Selected;
@@ -2760,7 +2759,7 @@ namespace Barotrauma.CharacterEditor
                     return false;
                 }
 #endif
-                if (!string.IsNullOrEmpty(RagdollParams.Texture) && !File.Exists(RagdollParams.Texture))
+                if (!character.IsHuman && !string.IsNullOrEmpty(RagdollParams.Texture) && !File.Exists(RagdollParams.Texture))
                 {
                     DebugConsole.ThrowError($"Invalid texture path: {RagdollParams.Texture}");
                     return false;
@@ -3863,7 +3862,7 @@ namespace Barotrauma.CharacterEditor
             {
                 // Head angle
                 DrawRadialWidget(spriteBatch, SimToScreen(head.SimPosition), animParams.HeadAngle, GetCharacterEditorTranslation("HeadAngle"), Color.White,
-                    angle => TryUpdateAnimParam("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
+                    angle => TryUpdateAnimParam("headangle", angle), circleRadius: 25, rotationOffset: -collider.Rotation + head.Params.GetSpriteOrientation() * dir, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
                 // Head position and leaning
                 Color color = GUI.Style.Red;
                 if (animParams.IsGroundedAnimation)
@@ -3972,7 +3971,7 @@ namespace Barotrauma.CharacterEditor
                 }
                 // Torso angle
                 DrawRadialWidget(spriteBatch, SimToScreen(referencePoint), animParams.TorsoAngle, GetCharacterEditorTranslation("TorsoAngle"), Color.White,
-                    angle => TryUpdateAnimParam("torsoangle", angle), rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
+                    angle => TryUpdateAnimParam("torsoangle", angle), rotationOffset: -collider.Rotation + torso.Params.GetSpriteOrientation() * dir, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
                 Color color = Color.DodgerBlue;
                 if (animParams.IsGroundedAnimation)
                 {
@@ -4075,7 +4074,7 @@ namespace Barotrauma.CharacterEditor
             if (tail != null && fishParams != null)
             {
                 DrawRadialWidget(spriteBatch, SimToScreen(tail.SimPosition), fishParams.TailAngle, GetCharacterEditorTranslation("TailAngle"), Color.White,
-                    angle => TryUpdateAnimParam("tailangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
+                    angle => TryUpdateAnimParam("tailangle", angle), circleRadius: 25, rotationOffset: -collider.Rotation + tail.Params.GetSpriteOrientation() * dir, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
             }
             // Foot angle
             if (foot != null)
@@ -4101,13 +4100,13 @@ namespace Barotrauma.CharacterEditor
                                 fishParams.FootAnglesInRadians[limb.Params.ID] = MathHelper.ToRadians(angle);
                                 TryUpdateAnimParam("footangles", fishParams.FootAngles);
                             },
-                            circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0, wrapAnglePi: true, autoFreeze: true);
+                            circleRadius: 25, rotationOffset: -collider.Rotation + limb.Params.GetSpriteOrientation() * dir, clockWise: dir < 0, wrapAnglePi: true, autoFreeze: true);
                     }
                 }
                 else if (humanParams != null)
                 {
                     DrawRadialWidget(spriteBatch, SimToScreen(foot.SimPosition), humanParams.FootAngle, GetCharacterEditorTranslation("FootAngle"), Color.White,
-                        angle => TryUpdateAnimParam("footangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true);
+                        angle => TryUpdateAnimParam("footangle", angle), circleRadius: 25, rotationOffset: -collider.Rotation + foot.Params.GetSpriteOrientation() * dir, clockWise: dir > 0, wrapAnglePi: true);
                 }
                 // Grounded only
                 if (groundedParams != null)

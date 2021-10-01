@@ -167,7 +167,7 @@ namespace Barotrauma
 
         private readonly List<PathNode> sortedNodes = new List<PathNode>();
 
-        public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true)
+        public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, float minGapSize = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true)
         {
             foreach (PathNode node in nodes)
             {
@@ -233,6 +233,10 @@ namespace Barotrauma
                     // Always check the visibility for the start node
                     if (!IsWaypointVisible(node, start)) { continue; }
                     if (node.IsBlocked()) { continue; }
+                    if (node.Waypoint.ConnectedGap != null)
+                    {
+                        if (!CanFitThroughGap(node.Waypoint.ConnectedGap, minGapSize)) { continue; }
+                    }
                     startNode = node;
                 }
             }
@@ -282,6 +286,10 @@ namespace Barotrauma
                     // Only check the visibility for the end node when allowed (fix leaks)
                     if (!IsWaypointVisible(node, end, checkVisibility: checkVisibility)) { continue; }
                     if (node.IsBlocked()) { continue; }
+                    if (node.Waypoint.ConnectedGap != null)
+                    {
+                        if (!CanFitThroughGap(node.Waypoint.ConnectedGap, minGapSize)) { continue; }
+                    }
                     endNode = node;
                 }
             }
@@ -294,40 +302,12 @@ namespace Barotrauma
                 return new SteeringPath(true);
             }
 
-            var path = FindPath(startNode, endNode, nodeFilter, errorMsgStr);
+            var path = FindPath(startNode, endNode, nodeFilter, errorMsgStr, minGapSize);
 
             return path;
         }
 
-        public SteeringPath FindPath(WayPoint start, WayPoint end)
-        {
-            PathNode startNode = null, endNode = null;
-            foreach (PathNode node in nodes)
-            {
-                if (node.Waypoint == start)
-                {
-                    startNode = node;
-                    if (endNode != null) { break; }
-                }
-                if (node.Waypoint == end)
-                {
-                    endNode = node;
-                    if (startNode != null) { break; }
-                }
-            }
-
-            if (startNode == null || endNode == null)
-            {
-#if DEBUG
-                DebugConsole.NewMessage("Pathfinding error, couldn't find matching pathnodes to waypoints.", Color.DarkRed);
-#endif
-                return new SteeringPath(true);
-            }
-
-            return FindPath(startNode, endNode);
-        }
-
-        private SteeringPath FindPath(PathNode start, PathNode end, Func<PathNode, bool> filter = null, string errorMsgStr = "")
+        private SteeringPath FindPath(PathNode start, PathNode end, Func<PathNode, bool> filter = null, string errorMsgStr = "", float minGapSize = 0)
         {
             if (start == end)
             {
@@ -356,7 +336,10 @@ namespace Barotrauma
                     if (isCharacter && node.Waypoint.isObstructed) { continue; }
                     if (filter != null && !filter(node)) { continue; }
                     if (node.IsBlocked()) { continue; }
-               
+                    if (node.Waypoint.ConnectedGap != null)
+                    {
+                        if (!CanFitThroughGap(node.Waypoint.ConnectedGap, minGapSize)) { continue; }
+                    }              
                     dist = node.F;
                     currNode = node;                    
                 }
@@ -460,6 +443,8 @@ namespace Barotrauma
 
             return path;
         }
+
+        private bool CanFitThroughGap(Gap gap, float minWidth) => gap.IsHorizontal ? gap.RectHeight > minWidth : gap.RectWidth > minWidth;
     }
 }
 

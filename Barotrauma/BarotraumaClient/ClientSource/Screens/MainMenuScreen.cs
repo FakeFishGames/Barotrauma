@@ -435,7 +435,7 @@ namespace Barotrauma
             menuTabs[(int)Tab.Settings] = new GUIFrame(new RectTransform(new Vector2(relativeSize.X, 0.8f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing },
                 style: null);
 
-            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
+            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize * new Vector2(1.0f, 1.15f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
             menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
 
             CreateCampaignSetupUI();

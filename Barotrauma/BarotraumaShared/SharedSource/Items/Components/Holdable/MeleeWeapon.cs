@@ -50,6 +50,16 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize(true, false)]
+        public bool Swing { get; set; }
+
+        [Editable, Serialize("2.0, 0.0", false)]
+        public Vector2 SwingPos { get; set; }
+
+        [Editable, Serialize("3.0, -1.0", false)]
+        public Vector2 SwingForce { get; set; }
+
+
         /// <summary>
         /// Defines items that boost the weapon functionality, like battery cell for stun batons.
         /// </summary>
@@ -67,8 +77,6 @@ namespace Barotrauma.Items.Components
                 };
             }
             item.IsShootable = true;
-            // TODO: should define this in xml if we have melee weapons that don't require aim to use
-            item.RequireAimToUse = true;
             PreferredContainedItems = element.GetAttributeStringArray("preferredcontaineditems", new string[0], convertToLowerInvariant: true);
         }
 
@@ -82,6 +90,9 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || reloadTimer > 0.0f) { return false; }
+#if CLIENT
+            if (!Item.RequireAimToUse && character.IsPlayer && (GUI.MouseOn != null || character.Inventory.visualSlots.Any(s => s.MouseOn()) || Inventory.DraggingItems.Any())) { return false; }
+#endif
             if (Item.RequireAimToUse && !character.IsKeyDown(InputType.Aim) || hitting) { return false; }
 
             //don't allow hitting if the character is already hitting with another weapon
@@ -94,7 +105,7 @@ namespace Barotrauma.Items.Components
 
             SetUser(character);
 
-            if (hitPos < MathHelper.PiOver4) { return false; }
+            if (Item.RequireAimToUse && hitPos < MathHelper.PiOver4) { return false; }
 
             ActivateNearbySleepingCharacters();
             reloadTimer = reload / (1 + character.GetStatValue(StatTypes.MeleeAttackSpeed));
@@ -105,20 +116,28 @@ namespace Barotrauma.Items.Components
             item.body.FarseerBody.IsBullet = true;
             item.body.PhysEnabled = true;
 
-            if (!character.AnimController.InWater)
+            if (Swing && !character.AnimController.InWater)
             {
                 foreach (Limb l in character.AnimController.Limbs)
                 {
                     if (l.IsSevered) { continue; }
-                    if (l.type == LimbType.LeftFoot || l.type == LimbType.LeftThigh || l.type == LimbType.LeftLeg) { continue; }
-                    if (l.type == LimbType.Head || l.type == LimbType.Torso)
+                    Vector2 force = new Vector2(character.AnimController.Dir * SwingForce.X, SwingForce.Y) * l.Mass;
+                    switch (l.type)
                     {
-                        l.body.ApplyLinearImpulse(new Vector2(character.AnimController.Dir * 7.0f, -4.0f));                   
+                        case LimbType.Torso:
+                            force *= 2;
+                            break;
+                        case LimbType.Legs:
+                        case LimbType.LeftFoot:
+                        case LimbType.LeftThigh:
+                        case LimbType.LeftLeg:
+                        case LimbType.RightFoot:
+                        case LimbType.RightThigh:
+                        case LimbType.RightLeg:
+                            force = Vector2.Zero;
+                            break;
                     }
-                    else
-                    {
-                        l.body.ApplyLinearImpulse(new Vector2(character.AnimController.Dir * 5.0f, -2.0f));
-                    }                
+                    l.body.ApplyLinearImpulse(force);
                 }
             }
             
@@ -154,9 +173,16 @@ namespace Barotrauma.Items.Components
         
         public override void Update(float deltaTime, Camera cam)
         {
-            if (!item.body.Enabled) { impactQueue.Clear(); return; }
-            if (picker == null && !picker.HeldItems.Contains(item)) { impactQueue.Clear(); IsActive = false; }
-
+            if (!item.body.Enabled)
+            {
+                impactQueue.Clear();
+                return;
+            }
+            if (picker == null && !picker.HeldItems.Contains(item))
+            {
+                impactQueue.Clear();
+                IsActive = false;
+            }
             while (impactQueue.Count > 0)
             {
                 var impact = impactQueue.Dequeue();
@@ -164,37 +190,47 @@ namespace Barotrauma.Items.Components
             }
             //in case handling the impact does something to the picker
             if (picker == null) { return; }
-
             reloadTimer -= deltaTime;
-            if (reloadTimer < 0) { reloadTimer = 0; }
-
-            if (!picker.IsKeyDown(InputType.Aim) && !hitting) { hitPos = 0.0f; }
-
+            if (reloadTimer < 0)
+            {
+                reloadTimer = 0;
+            }
+            if (!picker.IsKeyDown(InputType.Aim) && !hitting)
+            {
+                hitPos = 0.0f;
+            }
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
-
-            if (item.body.Dir != picker.AnimController.Dir) { item.FlipX(relativeToSub: false); }
-
+            if (item.body.Dir != picker.AnimController.Dir)
+            {
+                item.FlipX(relativeToSub: false);
+            }
             AnimController ac = picker.AnimController;
-
-            //TODO: refactor the hitting logic (get rid of the magic numbers, make it possible to use different kinds of animations for different items)
             if (!hitting)
             {
-                bool aim = picker.AllowInput && picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0 && picker.CanAim;
+                bool aim = item.RequireAimToUse && picker.AllowInput && picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0 && picker.CanAim;
                 if (aim)
                 {
                     hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 5f, MathHelper.PiOver4));
-                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, false, hitPos, holdAngle + hitPos, aimingMelee: true);
+                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, aim: false, hitPos, holdAngle + hitPos, aimMelee: true);
                 }
                 else
                 {
                     hitPos = 0;
-                    ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, false, holdAngle);
+                    ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, aim: false, holdAngle);
                 }
             }
             else
             {
+                // TODO: We might want to make this configurable
                 hitPos = MathUtils.WrapAnglePi(hitPos - deltaTime * 15f);
-                ac.HoldItem(deltaTime, item, handlePos, new Vector2(2, 0), Vector2.Zero, false, hitPos, holdAngle + hitPos); // aimPos not used -> zero (new Vector2(-0.3f, 0.2f)), holdPos new Vector2(0.6f, -0.1f)
+                if (Swing)
+                {
+                    ac.HoldItem(deltaTime, item, handlePos, SwingPos, Vector2.Zero, aim: false, hitPos, holdAngle + hitPos);
+                }
+                else
+                {
+                    ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, aim: false, holdAngle);
+                }
                 if (hitPos < -MathHelper.PiOver2)
                 {
                     RestoreCollision();

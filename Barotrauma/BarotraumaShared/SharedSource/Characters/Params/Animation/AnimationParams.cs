@@ -129,6 +129,12 @@ namespace Barotrauma
         [Serialize(AnimationType.NotDefined, true), Editable]
         public virtual AnimationType AnimationType { get; protected set; }
 
+        [Serialize(1f, true, description: "How much force is used to rotate the arms to the IK position."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
+        public float ArmIKStrength { get; set; }
+
+        [Serialize(1f, true, description: "How much force is used to rotate the hands to the IK position."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
+        public float HandIKStrength { get; set; }
+
         public static string GetDefaultFileName(string speciesName, AnimationType animType) => $"{speciesName.CapitaliseFirstInvariant()}{animType}";
         public static string GetDefaultFile(string speciesName, AnimationType animType) => Path.Combine(GetFolder(speciesName), $"{GetDefaultFileName(speciesName, animType)}.xml");
 

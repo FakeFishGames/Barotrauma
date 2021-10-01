@@ -3,6 +3,7 @@ using System.Linq;
 using System.Xml.Linq;
 using System;
 using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -216,6 +217,11 @@ namespace Barotrauma
             XElement parentElement = new XElement("CharacterInfo");
             XElement infoElement = character.Info?.Save(parentElement);
             CharacterInfo huskCharacterInfo = infoElement == null ? null : new CharacterInfo(infoElement);
+
+            var bodyTint = GetBodyTint();
+            huskCharacterInfo.SkinColor =
+                    Color.Lerp(huskCharacterInfo.SkinColor, bodyTint.Opaque(), bodyTint.A / 255.0f);
+
             var husk = Character.Create(huskedSpeciesName, character.WorldPosition, ToolBox.RandomSeed(8), huskCharacterInfo, isRemotePlayer: false, hasAi: true);
             if (husk.Info != null)
             {

@@ -1139,8 +1139,8 @@ namespace Barotrauma
             if (PlayerCharacterCustomization != null)
             {
                 playerElement.SetAttributeValue("headindex", PlayerCharacterCustomization.HeadSpriteId);
-                playerElement.SetAttributeValue("gender", PlayerCharacterCustomization.gender);
-                playerElement.SetAttributeValue("race", PlayerCharacterCustomization.race);
+                if (PlayerCharacterCustomization.gender != Gender.None) { playerElement.SetAttributeValue("gender", PlayerCharacterCustomization.gender); }
+                if (PlayerCharacterCustomization.race != Race.None) { playerElement.SetAttributeValue("race", PlayerCharacterCustomization.race); }
                 playerElement.SetAttributeValue("hairindex", PlayerCharacterCustomization.HairIndex);
                 playerElement.SetAttributeValue("beardindex", PlayerCharacterCustomization.BeardIndex);
                 playerElement.SetAttributeValue("moustacheindex", PlayerCharacterCustomization.MoustacheIndex);
@@ -1269,7 +1269,7 @@ namespace Barotrauma
                 playerName = playerElement.GetAttributeString("name", playerName);
                 int head = playerElement.GetAttributeInt("headindex", -1);
                 Enum.TryParse(playerElement.GetAttributeString("gender", "none"), true, out Gender gender);
-                Enum.TryParse(playerElement.GetAttributeString("race", "white"), true, out Race race);
+                Enum.TryParse(playerElement.GetAttributeString("race", "none"), true, out Race race);
                 int hair = playerElement.GetAttributeInt("hairindex", -1);
                 int beard = playerElement.GetAttributeInt("beardindex", -1);
                 int moustache = playerElement.GetAttributeInt("moustacheindex", -1);

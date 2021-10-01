@@ -12,6 +12,7 @@ namespace Barotrauma
 
         partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos)
         {
+            if (Character == null || Character.Removed) { return; }
             if (!prevSentSkill.ContainsKey(skillIdentifier))
             {
                 prevSentSkill[skillIdentifier] = prevLevel;

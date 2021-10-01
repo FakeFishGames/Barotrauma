@@ -1,11 +1,10 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Abilities;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using System.Linq;
-using System.Security.Cryptography;
-using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
@@ -223,7 +222,20 @@ namespace Barotrauma
             [Serialize("", false)]
             public string DialogFlag { get; private set; }
 
+            [Serialize("0,0,0,0", false)]
+            public Color MinFaceTint { get; private set; }
+
+            [Serialize("0,0,0,0", false)]
+            public Color MaxFaceTint { get; private set; }
+
+            [Serialize("0,0,0,0", false)]
+            public Color MinBodyTint { get; private set; }
+
+            [Serialize("0,0,0,0", false)]
+            public Color MaxBodyTint { get; private set; }
+
             public readonly Dictionary<StatTypes, (float minValue, float maxValue)> AfflictionStatValues = new Dictionary<StatTypes, (float minValue, float maxValue)>();
+            public readonly HashSet<AbilityFlags> AfflictionAbilityFlags = new HashSet<AbilityFlags>();
 
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
@@ -249,6 +261,10 @@ namespace Barotrauma
                             float maxValue = subElement.GetAttributeFloat("maxvalue", defaultValue);
 
                             AfflictionStatValues.TryAdd(statType, (minValue, maxValue));
+                            break;
+                        case "abilityflag":
+                            var flagType = CharacterAbilityGroup.ParseFlagType(subElement.GetAttributeString("flagtype", ""), parentDebugName);
+                            AfflictionAbilityFlags.Add(flagType);
                             break;
                     }
                 }

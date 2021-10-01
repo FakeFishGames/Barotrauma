@@ -87,7 +87,9 @@ namespace Barotrauma
                     continue;
                 }
 
-                Entity.Spawner?.AddToSpawnQueue(itemPrefab, this, ignoreLimbSlots: subElement.GetAttributeBool("forcetoslot", false));
+                string slotString = subElement.GetAttributeString("slot", "None");
+                InvSlotType slot = Enum.TryParse(slotString, ignoreCase: true, out InvSlotType s) ? s : InvSlotType.None;
+                Entity.Spawner?.AddToSpawnQueue(itemPrefab, this, ignoreLimbSlots: subElement.GetAttributeBool("forcetoslot", false), slot: slot);
             }
         }
 

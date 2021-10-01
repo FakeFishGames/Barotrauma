@@ -1006,10 +1006,20 @@ namespace Barotrauma
             stockToRemove.ForEach(i => stock.Remove(i));
             StoreStock = stock;
 
-            if (++StepsSinceSpecialsUpdated >= SpecialsUpdateInterval)
+            int extraSpecialSalesCount = GetExtraSpecialSalesCount();
+
+            if (++StepsSinceSpecialsUpdated >= SpecialsUpdateInterval || 
+                DailySpecials.Count() != DailySpecialsCount + extraSpecialSalesCount)
             {
                 CreateStoreSpecials();
             }
+        }
+
+        private int GetExtraSpecialSalesCount()
+        {
+            var characters = GameSession.GetSessionCrewCharacters();
+            if (!characters.Any()) { return 0; }
+            return characters.Max(c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
         }
 
         private void GenerateRandomPriceModifier()
@@ -1035,7 +1045,9 @@ namespace Barotrauma
                 }
                 availableStock.Add(stockItem.ItemPrefab, weight);
             }
-            for (int i = 0; i < DailySpecialsCount; i++)
+
+            int extraSpecialSalesCount = GetExtraSpecialSalesCount();
+            for (int i = 0; i < DailySpecialsCount + extraSpecialSalesCount; i++)
             {
                 if (availableStock.None()) { break; }
                 var item = ToolBox.SelectWeightedRandom(availableStock.Keys.ToList(), availableStock.Values.ToList(), Rand.RandSync.Unsynced);

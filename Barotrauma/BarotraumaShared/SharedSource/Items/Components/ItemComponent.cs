@@ -767,7 +767,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null, float applyOnUserFraction = 0.0f)
         {
             if (statusEffectLists == null) { return; }
 
@@ -779,7 +779,13 @@ namespace Barotrauma.Items.Components
             {
                 if (broken && !effect.AllowWhenBroken && effect.type != ActionType.OnBroken) { continue; }
                 if (user != null) { effect.SetUser(user); }
-                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, useTarget, false, false, worldPosition);
+                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, useTarget, isNetworkEvent: false, checkCondition: false, worldPosition);
+                if (user != null && applyOnUserFraction > 0.0f && effect.HasTargetType(StatusEffect.TargetType.Character))
+                {
+                    effect.AfflictionMultiplier = applyOnUserFraction;
+                    item.ApplyStatusEffect(effect, type, deltaTime, user, targetLimb == null ? null : user.AnimController.GetLimb(targetLimb.type), useTarget, false, false, worldPosition);
+                    effect.AfflictionMultiplier = 1.0f;
+                }
                 reducesCondition |= effect.ReducesItemCondition();
             }
             //if any of the effects reduce the item's condition, set the user for OnBroken effects as well
@@ -959,7 +965,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ParseMsg()
+        public virtual void ParseMsg()
         {
             string msg = TextManager.Get(Msg, true);
             if (msg != null)

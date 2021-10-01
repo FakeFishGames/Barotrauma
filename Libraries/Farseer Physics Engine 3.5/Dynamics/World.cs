@@ -1042,8 +1042,6 @@ namespace FarseerPhysics.Dynamics
             body._world = null;
             BodyList.Remove(body);
 
-            body.UserData = null;
-
             if (BodyRemoved != null)
                 BodyRemoved(this, body);
 

@@ -829,7 +829,6 @@ namespace Barotrauma
                     GameMain.GameSession.EventManager.CurrentIntensity * 100.0f : 0.0f;
 
                 IEnumerable<BackgroundMusic> suitableMusic = GetSuitableMusicClips(currentMusicType, currentIntensity);
-
                 int mainTrackIndex = 0;
                 if (suitableMusic.Count() == 0)
                 {
@@ -861,7 +860,6 @@ namespace Barotrauma
                     IEnumerable<BackgroundMusic> suitableNoiseLoops = Screen.Selected == GameMain.GameScreen ?
                         GetSuitableMusicClips(Level.Loaded.LevelData?.Biome?.Identifier, currentIntensity) :
                         Enumerable.Empty<BackgroundMusic>();
-
                     if (suitableNoiseLoops.Count() == 0)
                     {
                         targetMusic[noiseLoopIndex] = null;
@@ -877,12 +875,23 @@ namespace Barotrauma
                     targetMusic[noiseLoopIndex] = null;
                 }
 
+                IEnumerable<BackgroundMusic> suitableTypeAmbiences = GetSuitableMusicClips($"{currentMusicType}ambience", currentIntensity);
+                int typeAmbienceTrackIndex = 2;
+                if (suitableTypeAmbiences.None())
+                {
+                    targetMusic[typeAmbienceTrackIndex] = null;
+                }
+                // Switch the type ambience if nothing playing atm or the currently playing clip is not suitable anymore
+                else if (targetMusic[typeAmbienceTrackIndex] == null || currentMusic[typeAmbienceTrackIndex] == null || !currentMusic[typeAmbienceTrackIndex].IsPlaying() || suitableTypeAmbiences.None(m => m.File == currentMusic[typeAmbienceTrackIndex].Filename))
+                {
+                    targetMusic[mainTrackIndex] = suitableMusic.GetRandom();
+                }
+
                 //get the appropriate intensity layers for current situation
                 IEnumerable<BackgroundMusic> suitableIntensityMusic = Screen.Selected == GameMain.GameScreen ?
                     GetSuitableMusicClips("intensity", currentIntensity) :
                     Enumerable.Empty<BackgroundMusic>();
-
-                int intensityTrackStartIndex = 2;
+                int intensityTrackStartIndex = 3;
                 for (int i = intensityTrackStartIndex; i < MaxMusicChannels; i++)
                 {
                     //disable targetmusics that aren't suitable anymore
@@ -891,7 +900,6 @@ namespace Barotrauma
                         targetMusic[i] = null;
                     }
                 }
-                    
                 foreach (BackgroundMusic intensityMusic in suitableIntensityMusic)
                 {
                     //already playing, do nothing

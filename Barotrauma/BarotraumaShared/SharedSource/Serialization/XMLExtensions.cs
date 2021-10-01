@@ -520,10 +520,12 @@ namespace Barotrauma
                    vector.W.ToString(format, CultureInfo.InvariantCulture);
         }
 
+        [Obsolete("Prefer XMLExtensions.ToStringHex")]
         public static string ColorToString(Color color)
-        {
-            return color.R + "," + color.G + "," + color.B + "," + color.A;
-        }
+            => $"{color.R},{color.G},{color.B},{color.A}";
+
+        public static string ToStringHex(this Color color)
+            => $"#{color.R:X2}{color.G:X2}{color.B:X2}{color.A:X2}";
 
         public static string RectToString(Rectangle rect)
         {
@@ -716,6 +718,11 @@ namespace Barotrauma
             }
 
             return floatArray;
+        }
+
+        public static string[] ParseStringArray(string stringArrayValues)
+        {
+            return string.IsNullOrEmpty(stringArrayValues) ? new string[0] : stringArrayValues.Split(';');
         }
 
         public static bool IsOverride(this XElement element) => element.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase);

@@ -133,7 +133,7 @@ namespace Barotrauma
 
         public bool IsUnconscious
         {
-            get { return Vitality <= 0.0f || Character.IsDead; }
+            get { return (Vitality <= 0.0f || Character.IsDead) && !Character.HasAbilityFlag(AbilityFlags.AlwaysStayConscious); }
         }
 
         public float PressureKillDelay { get; private set; } = 5.0f;
@@ -167,6 +167,20 @@ namespace Barotrauma
                 }
                 return minVitality;
             }
+        }
+
+        public Color DefaultFaceTint = Color.TransparentBlack;
+
+        public Color FaceTint
+        {
+            get;
+            private set;
+        }
+
+        public Color BodyTint
+        {
+            get;
+            private set;
         }
 
         public float OxygenAmount
@@ -409,7 +423,7 @@ namespace Barotrauma
             return strength;
         }
 
-        public void ApplyAffliction(Limb targetLimb, Affliction affliction)
+        public void ApplyAffliction(Limb targetLimb, Affliction affliction, bool allowStacking = true)
         {
             if (!affliction.Prefab.IsBuff && Unkillable || Character.GodMode) { return; }
             if (affliction.Prefab.LimbSpecific)
@@ -419,17 +433,17 @@ namespace Barotrauma
                     //if a limb-specific affliction is applied to no specific limb, apply to all limbs
                     foreach (LimbHealth limbHealth in limbHealths)
                     {
-                        AddLimbAffliction(limbHealth, affliction);
+                        AddLimbAffliction(limbHealth, affliction, allowStacking: allowStacking);
                     }
                 }
                 else
                 {
-                    AddLimbAffliction(targetLimb, affliction);
+                    AddLimbAffliction(targetLimb, affliction, allowStacking: allowStacking);
                 }
             }
             else
             {
-                AddAffliction(affliction);
+                AddAffliction(affliction, allowStacking: allowStacking);
             }
         }
 
@@ -451,6 +465,15 @@ namespace Barotrauma
                 value += afflictions[i].GetStatValue(statType);
             }
             return value;
+        }
+
+        public bool HasFlag(AbilityFlags flagType)
+        {
+            for (int i = 0; i < afflictions.Count; i++)
+            {
+                if (afflictions[i].HasFlag(flagType)) { return true; }
+            }
+            return false;
         }
 
         private readonly List<Affliction> matchingAfflictions = new List<Affliction>();
@@ -671,6 +694,7 @@ namespace Barotrauma
         private void AddAffliction(Affliction newAffliction, bool allowStacking = true)
         {
             if (!DoesBleed && newAffliction is AfflictionBleeding) { return; }
+            if (Character.Params.Health.StunImmunity && newAffliction.Prefab.AfflictionType == "stun") { return; }
             if (!Character.NeedsOxygen && newAffliction.Prefab == AfflictionPrefab.OxygenLow) { return; }
             if (newAffliction.Prefab is AfflictionPrefabHusk huskPrefab)
             {
@@ -725,6 +749,8 @@ namespace Barotrauma
 
             StunTimer = Stun > 0 ? StunTimer + deltaTime : 0;
 
+            FaceTint = DefaultFaceTint;
+
             for (int i = 0; i < limbHealths.Count; i++)
             {
                 for (int j = limbHealths[i].Afflictions.Count - 1; j >= 0; j--)
@@ -749,10 +775,14 @@ namespace Barotrauma
                     {
                         UpdateBleedingProjSpecific(bleeding, targetLimb, deltaTime);
                     }
+                    Color faceTint = affliction.GetFaceTint();
+                    if (faceTint.A > FaceTint.A) { FaceTint = faceTint; }
+                    Color bodyTint = affliction.GetBodyTint();
+                    if (bodyTint.A > BodyTint.A) { BodyTint = bodyTint; }
                     Character.StackSpeedMultiplier(affliction.GetSpeedMultiplier());
                 }
             }
-            
+
             for (int i = afflictions.Count - 1; i >= 0; i--)
             {
                 var affliction = afflictions[i];
@@ -768,6 +798,10 @@ namespace Barotrauma
                 var affliction = afflictions[i];
                 affliction.Update(this, null, deltaTime);
                 affliction.DamagePerSecondTimer += deltaTime;
+                Color faceTint = affliction.GetFaceTint();
+                if (faceTint.A > FaceTint.A) { FaceTint = faceTint; }
+                Color bodyTint = affliction.GetBodyTint();
+                if (bodyTint.A > BodyTint.A) { BodyTint = bodyTint; }
                 Character.StackSpeedMultiplier(affliction.GetSpeedMultiplier());
             }
 

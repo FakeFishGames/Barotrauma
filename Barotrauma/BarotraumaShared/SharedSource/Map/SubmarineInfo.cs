@@ -23,7 +23,7 @@ namespace Barotrauma
         HideInMenus = 2
     }
 
-    public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation, EnemySubmarine }
+    public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation, EnemySubmarine, Ruin }
     public enum SubmarineClass { Undefined, Scout, Attack, Transport, DeepDiver }
 
     partial class SubmarineInfo : IDisposable
@@ -97,11 +97,10 @@ namespace Barotrauma
 
         public bool IsOutpost => Type == SubmarineType.Outpost || Type == SubmarineType.OutpostModule;
 
-        //TODO: replace when the ruin branch is merged
-        public bool IsRuin => false;
         public bool IsWreck => Type == SubmarineType.Wreck;
         public bool IsBeacon => Type == SubmarineType.BeaconStation;
         public bool IsPlayer => Type == SubmarineType.Player;
+        public bool IsRuin => Type == SubmarineType.Ruin;
 
         public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && SubmarineClass != SubmarineClass.Undefined;
         public bool IsCampaignCompatibleIgnoreClass => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus);

@@ -151,6 +151,12 @@ namespace Barotrauma
             {
                 sourceVector = overrideElement.GetAttributeVector4("sourcerect", Vector4.Zero);
             }
+            if ((overrideElement ?? SourceElement).Attribute("sheetindex") != null)
+            {
+                Point sheetElementSize = (overrideElement ?? SourceElement).GetAttributePoint("sheetelementsize", Point.Zero);
+                Point sheetIndex = (overrideElement ?? SourceElement).GetAttributePoint("sheetindex", Point.Zero);
+                sourceVector = new Vector4(sheetIndex.X * sheetElementSize.X, sheetIndex.Y * sheetElementSize.Y, sheetElementSize.X, sheetElementSize.Y);
+            }
             Compress = SourceElement.GetAttributeBool("compress", true);
             bool shouldReturn = false;
             if (!lazyLoad)
@@ -293,6 +299,12 @@ namespace Barotrauma
                 if (overrideElement != null && overrideElement.Attribute("sourcerect") != null)
                 {
                     sourceRect = overrideElement.GetAttributeRect("sourcerect", Rectangle.Empty);
+                }
+                if ((overrideElement ?? SourceElement).Attribute("sheetindex") != null)
+                {
+                    Point sheetElementSize = (overrideElement ?? SourceElement).GetAttributePoint("sheetelementsize", Point.Zero);
+                    Point sheetIndex = (overrideElement ?? SourceElement).GetAttributePoint("sheetindex", Point.Zero);
+                    sourceRect = new Rectangle(sheetIndex.X * sheetElementSize.X, sheetIndex.Y * sheetElementSize.Y, sheetElementSize.X, sheetElementSize.Y);
                 }
                 size = SourceElement.GetAttributeVector2("size", Vector2.One);
                 size.X *= sourceRect.Width;

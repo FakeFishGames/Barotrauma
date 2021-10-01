@@ -846,16 +846,15 @@ namespace Barotrauma.Lights
                     if (chList.Submarine == null)
                     {
                         list.AddRange(chList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox)));
-
                     }
                     //light is outside, convexhull inside a sub
                     else
                     {
                         Rectangle subBorders = chList.Submarine.Borders;
                         subBorders.Y -= chList.Submarine.Borders.Height;
-                        if (!MathUtils.CircleIntersectsRectangle(lightPos - chList.Submarine.WorldPosition, range, subBorders)) continue;
+                        if (!MathUtils.CircleIntersectsRectangle(lightPos - chList.Submarine.WorldPosition, range, subBorders)) { continue; }
 
-                        lightPos -= (chList.Submarine.WorldPosition - chList.Submarine.HiddenSubPosition);
+                        lightPos -= chList.Submarine.WorldPosition - chList.Submarine.HiddenSubPosition;
 
                         list.AddRange(chList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox)));
                     }
@@ -865,14 +864,6 @@ namespace Barotrauma.Lights
                     //light is inside, convexhull outside
                     if (chList.Submarine == null)
                     {
-                        lightPos += (ParentSub.WorldPosition - ParentSub.HiddenSubPosition);
-                        HashSet<RuinGeneration.Ruin> visibleRuins = new HashSet<RuinGeneration.Ruin>();
-                        foreach (RuinGeneration.Ruin ruin in Level.Loaded.Ruins)
-                        {
-                            if (!MathUtils.CircleIntersectsRectangle(lightPos, range, ruin.Area)) { continue; }
-                            visibleRuins.Add(ruin);
-                        }
-                        list.AddRange(chList.List.FindAll(ch => ch.ParentEntity?.ParentRuin != null && visibleRuins.Contains(ch.ParentEntity.ParentRuin)));
                         continue;
                     }
                     //light and convexhull are both inside the same sub

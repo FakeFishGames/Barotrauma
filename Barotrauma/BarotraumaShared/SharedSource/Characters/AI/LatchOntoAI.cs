@@ -19,16 +19,19 @@ namespace Barotrauma
         private Body targetBody;
         private Vector2 attachSurfaceNormal;
         private Submarine targetSubmarine;
+        private Character targetCharacter;
         private readonly Character character;
 
         public bool AttachToSub { get; private set; }
         public bool AttachToWalls { get; private set; }
+        public bool AttachToCharacters { get; private set; }
 
-        private readonly float minDeattachSpeed, maxDeattachSpeed;
+        private readonly float minDeattachSpeed, maxDeattachSpeed, maxAttachDuration;
         private readonly float damageOnDetach, detachStun;
-        private float deattachTimer;
+        private readonly bool weld;
+        private float deattachCheckTimer;
 
-        private Vector2 wallAttachPos;
+        private Vector2 _attachPos;
 
         private float attachCooldown;
 
@@ -38,9 +41,9 @@ namespace Barotrauma
 
         private float jointDir;
 
-        public List<WeldJoint> AttachJoints { get; } = new List<WeldJoint>();
+        public List<Joint> AttachJoints { get; } = new List<Joint>();
 
-        public Vector2? WallAttachPos
+        public Vector2? AttachPos
         {
             get;
             private set;
@@ -48,18 +51,21 @@ namespace Barotrauma
 
         public bool IsAttached => AttachJoints.Count > 0;
 
-        public bool IsAttachedToSub => IsAttached && targetSubmarine != null;
+        public bool IsAttachedToSub => IsAttached && targetSubmarine != null && targetCharacter == null;
 
         public LatchOntoAI(XElement element, EnemyAIController enemyAI)
         {
             AttachToWalls = element.GetAttributeBool("attachtowalls", false);
             AttachToSub = element.GetAttributeBool("attachtosub", false);
+            AttachToCharacters = element.GetAttributeBool("attachtocharacters", false);
             minDeattachSpeed = element.GetAttributeFloat("mindeattachspeed", 5.0f);
             maxDeattachSpeed = Math.Max(minDeattachSpeed, element.GetAttributeFloat("maxdeattachspeed", 8.0f));
+            maxAttachDuration = element.GetAttributeFloat("maxattachduration", -1.0f);
             damageOnDetach = element.GetAttributeFloat("damageondetach", 0.0f);
             detachStun = element.GetAttributeFloat("detachstun", 0.0f);
             localAttachPos = ConvertUnits.ToSimUnits(element.GetAttributeVector2("localattachpos", Vector2.Zero));
             attachLimbRotation = MathHelper.ToRadians(element.GetAttributeFloat("attachlimbrotation", 0.0f));
+            weld = element.GetAttributeBool("weld", true);
 
             string limbString = element.GetAttributeString("attachlimb", null);
             attachLimb = enemyAI.Character.AnimController.Limbs.FirstOrDefault(l => string.Equals(l.Name, limbString, StringComparison.OrdinalIgnoreCase));
@@ -81,30 +87,54 @@ namespace Barotrauma
 
         public void SetAttachTarget(Structure wall, Vector2 attachPos, Vector2 attachSurfaceNormal)
         {
+            if (!AttachToSub) { return; }
             if (wall == null) { return; }
             var sub = wall.Submarine;
             if (sub == null) { return; }
+            Reset();
             targetWall = wall;
             targetSubmarine = sub;
             targetBody = targetSubmarine.PhysicsBody.FarseerBody;
             this.attachSurfaceNormal = attachSurfaceNormal;
-            wallAttachPos = attachPos;
+            _attachPos = attachPos;
+        }
+
+        public void SetAttachTarget(Character target)
+        {
+            if (!AttachToCharacters) { return; }
+            Reset();
+            targetCharacter = target;
+            targetSubmarine = target.Submarine;
+            targetBody = target.AnimController.Collider.FarseerBody;
+            attachSurfaceNormal = Vector2.Normalize(character.WorldPosition - target.WorldPosition);
         }
         
         public void Update(EnemyAIController enemyAI, float deltaTime)
         {
             if (character.Submarine != null)
             {
-                DeattachFromBody(reset: true);
-                return;
+                if (targetCharacter != null && targetCharacter.Submarine != targetSubmarine ||
+                    character.Submarine != null && targetSubmarine != null && targetCharacter == null)
+                {
+                    DeattachFromBody(reset: true);
+                    return;
+                }
             }
-            if (AttachJoints.Count > 0)
+            if (IsAttached)
             {
                 if (Math.Sign(attachLimb.Dir) != Math.Sign(jointDir))
                 {
-                    AttachJoints[0].LocalAnchorA =
-                        new Vector2(-AttachJoints[0].LocalAnchorA.X, AttachJoints[0].LocalAnchorA.Y);
-                    AttachJoints[0].ReferenceAngle = -AttachJoints[0].ReferenceAngle;
+                    var attachJoint = AttachJoints[0];
+                    if (attachJoint is WeldJoint weldJoint)
+                    {
+                        weldJoint.LocalAnchorA = new Vector2(-weldJoint.LocalAnchorA.X, weldJoint.LocalAnchorA.Y);
+                        weldJoint.ReferenceAngle = -weldJoint.ReferenceAngle;
+                    }
+                    else if (attachJoint is RevoluteJoint revoluteJoint)
+                    {
+                        revoluteJoint.LocalAnchorA = new Vector2(-revoluteJoint.LocalAnchorA.X, revoluteJoint.LocalAnchorA.Y);
+                        revoluteJoint.ReferenceAngle = -revoluteJoint.ReferenceAngle;
+                    }
                     jointDir = attachLimb.Dir;
                 }
                 for (int i = 0; i < AttachJoints.Count; i++)
@@ -113,10 +143,25 @@ namespace Barotrauma
                     if (Vector2.DistanceSquared(AttachJoints[i].WorldAnchorB, AttachJoints[i].BodyA.Position) > 10.0f * 10.0f)
                     {
 #if DEBUG
-                        DebugConsole.ThrowError("Limb body of the character \"" + character.Name + "\" is very far from the attach joint anchor -> deattach");
+                        DebugConsole.Log("Limb body of the character \"" + character.Name + "\" is very far from the attach joint anchor -> deattach");
 #endif
                         DeattachFromBody(reset: true);
                         return;
+                    }
+                }
+                if (targetCharacter != null)
+                {
+                    if (enemyAI.AttackingLimb?.attack == null)
+                    {
+                        DeattachFromBody(reset: true, cooldown: 1);
+                    }
+                    else
+                    {
+                        float range = enemyAI.AttackingLimb.attack.DamageRange * 2f;
+                        if (Vector2.DistanceSquared(targetCharacter.WorldPosition, enemyAI.AttackingLimb.WorldPosition) > range * range)
+                        {
+                            DeattachFromBody(reset: true, cooldown: 1);
+                        }
                     }
                 }
             }
@@ -125,19 +170,24 @@ namespace Barotrauma
             {
                 attachCooldown -= deltaTime;
             }
-            if (deattachTimer > 0)
+            if (deattachCheckTimer > 0)
             {
-                deattachTimer -= deltaTime;
+                deattachCheckTimer -= deltaTime;
             }
 
-            Vector2 transformedAttachPos = wallAttachPos;
+            if (targetCharacter != null)
+            {
+                // Own sim pos -> target where we are
+                _attachPos = character.SimPosition;
+            }
+            Vector2 transformedAttachPos = _attachPos;
             if (character.Submarine == null && targetSubmarine != null)
             {
                 transformedAttachPos += ConvertUnits.ToSimUnits(targetSubmarine.Position);
             }
             if (transformedAttachPos != Vector2.Zero)
             {
-                WallAttachPos = transformedAttachPos;
+                AttachPos = transformedAttachPos;
             }
 
             switch (enemyAI.State)
@@ -151,7 +201,7 @@ namespace Barotrauma
                             //check if there are any walls nearby the character could attach to
                             if (raycastTimer < 0.0f)
                             {
-                                wallAttachPos = Vector2.Zero;
+                                _attachPos = Vector2.Zero;
 
                                 var cells = Level.Loaded.GetCells(character.WorldPosition, 1);
                                 if (cells.Count > 0)
@@ -169,7 +219,7 @@ namespace Barotrauma
                                                 {
                                                     attachSurfaceNormal = edge.GetNormal(cell);
                                                     targetBody = cell.Body;
-                                                    wallAttachPos = potentialAttachPos;
+                                                    _attachPos = potentialAttachPos;
                                                     closestDist = distSqr;
                                                 }
                                                 break;
@@ -183,21 +233,20 @@ namespace Barotrauma
                     }
                     else
                     {
-                        wallAttachPos = Vector2.Zero;
+                        _attachPos = Vector2.Zero;
                     }
-
-                    if (wallAttachPos == Vector2.Zero || targetBody == null)
+                    if (_attachPos == Vector2.Zero || targetBody == null)
                     {
                         DeattachFromBody(reset: false);
                     }
                     else
                     {
-                        float squaredDistance = Vector2.DistanceSquared(character.SimPosition, wallAttachPos);
+                        float squaredDistance = Vector2.DistanceSquared(character.SimPosition, _attachPos);
                         float targetDistance = Math.Max(Math.Max(character.AnimController.Collider.radius, character.AnimController.Collider.width), character.AnimController.Collider.height) * 1.2f;
                         if (squaredDistance < targetDistance * targetDistance)
                         {
                             //close enough to a wall -> attach
-                            AttachToBody(wallAttachPos);
+                            AttachToBody(_attachPos);
                             enemyAI.SteeringManager.Reset();
                         }
                         else
@@ -205,25 +254,22 @@ namespace Barotrauma
                             //move closer to the wall
                             DeattachFromBody(reset: false);
                             enemyAI.SteeringManager.SteeringAvoid(deltaTime, 1.0f, 0.1f);
-                            enemyAI.SteeringManager.SteeringSeek(wallAttachPos);
+                            enemyAI.SteeringManager.SteeringSeek(_attachPos);
                         }
                     }
                     break;
                 case AIState.Attack:
                 case AIState.Aggressive:
-                    if (enemyAI.AttackingLimb != null)
+                    if (enemyAI.IsSteeringThroughGap) { break; }
+                    if (_attachPos == Vector2.Zero) { break; }
+                    if (!AttachToSub && !AttachToCharacters) { break; }
+                    if (enemyAI.AttackingLimb == null) { break; }
+                    if (targetBody == null) { break; }
+                    if (IsAttached && AttachJoints[0].BodyB == targetBody) { break; }
+                    Vector2 referencePos = targetCharacter != null ? targetCharacter.WorldPosition : ConvertUnits.ToDisplayUnits(transformedAttachPos);
+                    if (Vector2.DistanceSquared(referencePos, enemyAI.AttackingLimb.WorldPosition) < enemyAI.AttackingLimb.attack.DamageRange * enemyAI.AttackingLimb.attack.DamageRange)
                     {
-                        if (AttachToSub && !enemyAI.IsSteeringThroughGap && wallAttachPos != Vector2.Zero && targetBody != null)
-                        {
-                            // is not attached or is attached to something else
-                            if (!IsAttached || IsAttached && AttachJoints[0].BodyB != targetBody)
-                            {
-                                if (Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(transformedAttachPos), enemyAI.AttackingLimb.WorldPosition) < enemyAI.AttackingLimb.attack.DamageRange * enemyAI.AttackingLimb.attack.DamageRange)
-                                {
-                                    AttachToBody(transformedAttachPos);
-                                }
-                            }
-                        }
+                        AttachToBody(transformedAttachPos);
                     }
                     break;
                 default:
@@ -231,43 +277,50 @@ namespace Barotrauma
                     break;
             }
 
-            if (IsAttached && targetBody != null && targetWall != null && targetSubmarine != null && deattachTimer <= 0.0f)
+            if (IsAttached && targetBody != null && deattachCheckTimer <= 0.0f)
             {
                 bool deattach = false;
-                // Deattach if the wall is broken enough where we are attached to
-                int targetSection = targetWall.FindSectionIndex(attachLimb.WorldPosition, world: true, clamp: true);
-                if (enemyAI.CanPassThroughHole(targetWall, targetSection))
+                if (maxAttachDuration > 0)
                 {
                     deattach = true;
-                    attachCooldown = 2;
                 }
-                if (!deattach)
+                if (!deattach && targetWall != null && targetSubmarine != null)
                 {
-                    // Deattach if the velocity is high
-                    float velocity = targetSubmarine.Velocity == Vector2.Zero ? 0.0f : targetSubmarine.Velocity.Length();
-                    deattach = velocity > maxDeattachSpeed;
+                    // Deattach if the wall is broken enough where we are attached to
+                    int targetSection = targetWall.FindSectionIndex(attachLimb.WorldPosition, world: true, clamp: true);
+                    if (enemyAI.CanPassThroughHole(targetWall, targetSection))
+                    {
+                        deattach = true;
+                        attachCooldown = 2;
+                    }
                     if (!deattach)
                     {
-                        if (velocity > minDeattachSpeed)
+                        // Deattach if the velocity is high
+                        float velocity = targetSubmarine.Velocity == Vector2.Zero ? 0.0f : targetSubmarine.Velocity.Length();
+                        deattach = velocity > maxDeattachSpeed;
+                        if (!deattach)
                         {
-                            float velocityFactor = (maxDeattachSpeed - minDeattachSpeed <= 0.0f) ?
-                                Math.Sign(Math.Abs(velocity) - minDeattachSpeed) :
-                                (Math.Abs(velocity) - minDeattachSpeed) / (maxDeattachSpeed - minDeattachSpeed);
-
-                            if (Rand.Range(0.0f, 1.0f) < velocityFactor)
+                            if (velocity > minDeattachSpeed)
                             {
-                                deattach = true;
-                                character.AddDamage(character.WorldPosition, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageOnDetach) }, detachStun, true);
-                                attachCooldown = detachStun * 2;
+                                float velocityFactor = (maxDeattachSpeed - minDeattachSpeed <= 0.0f) ?
+                                    Math.Sign(Math.Abs(velocity) - minDeattachSpeed) :
+                                    (Math.Abs(velocity) - minDeattachSpeed) / (maxDeattachSpeed - minDeattachSpeed);
+
+                                if (Rand.Range(0.0f, 1.0f) < velocityFactor)
+                                {
+                                    deattach = true;
+                                    character.AddDamage(character.WorldPosition, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageOnDetach) }, detachStun, true);
+                                    attachCooldown = detachStun * 2;
+                                }
                             }
                         }
                     }
+                    deattachCheckTimer = 5.0f;
                 }
                 if (deattach)
                 {
                     DeattachFromBody(reset: true);
                 }
-                deattachTimer = 5.0f;
             }
         }
 
@@ -315,16 +368,30 @@ namespace Barotrauma
             }
             collider.SetTransform(attachPos + attachSurfaceNormal * colliderFront.Length(), MathUtils.VectorToAngle(-attachSurfaceNormal) - MathHelper.PiOver2);
 
-            var colliderJoint = new WeldJoint(collider.FarseerBody, targetBody, colliderFront, targetBody.GetLocalPoint(attachPos), false)
-            {
-                FrequencyHz = 10.0f,
-                DampingRatio = 0.5f,
-                KinematicBodyB = true,
-                CollideConnected = false,
-                //Length = 0.1f
-            };
+            Joint colliderJoint = weld ?
+                new WeldJoint(collider.FarseerBody, targetBody, colliderFront, targetBody.GetLocalPoint(attachPos), false)
+                {
+                    FrequencyHz = 10.0f,
+                    DampingRatio = 0.5f,
+                    KinematicBodyB = true,
+                    CollideConnected = false,
+                } : 
+                new RevoluteJoint(collider.FarseerBody, targetBody, colliderFront, targetBody.GetLocalPoint(attachPos), false)
+                {
+                    MotorEnabled = true,
+                    MaxMotorTorque = 0.25f
+                } as Joint;
+
             GameMain.World.Add(colliderJoint);
-            AttachJoints.Add(colliderJoint);            
+            AttachJoints.Add(colliderJoint); 
+            if (targetCharacter != null)
+            {
+                targetCharacter.Latchers.Add(this);
+            }
+            if (maxAttachDuration > 0)
+            {
+                deattachCheckTimer = maxAttachDuration;
+            }
         }
 
         public void DeattachFromBody(bool reset, float cooldown = 0)
@@ -342,14 +409,23 @@ namespace Barotrauma
             {
                 Reset();
             }
+            if (targetCharacter != null)
+            {
+                targetCharacter.Latchers.Remove(this);
+            }
         }
 
         private void Reset()
         {
+            if (targetCharacter != null)
+            {
+                targetCharacter.Latchers.Remove(this);
+            }
+            targetCharacter = null;
             targetWall = null;
             targetSubmarine = null;
             targetBody = null;
-            WallAttachPos = null;
+            AttachPos = null;
         }
 
         private void OnCharacterDeath(Character character, CauseOfDeath causeOfDeath)

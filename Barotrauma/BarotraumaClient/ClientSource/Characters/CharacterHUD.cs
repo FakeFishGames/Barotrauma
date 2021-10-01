@@ -100,7 +100,7 @@ namespace Barotrauma
             }
         }
 
-        private static bool shouldRecreateHudTexts = true;
+        public static bool ShouldRecreateHudTexts { get; set; } = true;
         private static bool heldDownShiftWhenGotHudTexts;
 
         public static bool IsCampaignInterfaceOpen =>
@@ -150,7 +150,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (character.IsHumanoid && character.SelectedCharacter != null)
+                if (character.Params.CanInteract && character.SelectedCharacter != null)
                 {
                     character.SelectedCharacter.CharacterHealth.AddToGUIUpdateList();
                 }
@@ -195,7 +195,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
+                if (character.Params.CanInteract && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
                     if (character.SelectedCharacter.CanInventoryBeAccessed)
                     {
@@ -219,7 +219,7 @@ namespace Barotrauma
                     if (focusedItemOverlayTimer <= 0.0f)
                     {
                         focusedItem = null;
-                        shouldRecreateHudTexts = true;
+                        ShouldRecreateHudTexts = true;
                     }
                 }
             }
@@ -285,6 +285,21 @@ namespace Barotrauma
                      i.GetRootInventoryOwner() == i);
             }
 
+            if (GameMain.GameSession != null)
+            {
+                foreach (var mission in GameMain.GameSession.Missions)
+                {
+                    if (!mission.DisplayTargetHudIcons) { continue; }
+                    foreach (var target in mission.HudIconTargets)
+                    {
+                        if (target.Submarine != character.Submarine) { continue; }
+                        float alpha = GetDistanceBasedIconAlpha(target, maxDistance: mission.Prefab.HudIconMaxDistance);
+                        if (alpha <= 0.0f) { continue; }
+                        GUI.DrawIndicator(spriteBatch, target.DrawPosition, cam, 100.0f, mission.Prefab.HudIcon, mission.Prefab.HudIconColor * alpha);
+                    }
+                }
+            }
+
             foreach (Character.ObjectiveEntity objectiveEntity in character.ActiveObjectiveEntities)
             {
                 DrawObjectiveIndicator(spriteBatch, cam, character, objectiveEntity, 1.0f);
@@ -317,7 +332,7 @@ namespace Barotrauma
                     if (focusedItem != character.FocusedItem)
                     {
                         focusedItemOverlayTimer = Math.Min(1.0f, focusedItemOverlayTimer);
-                        shouldRecreateHudTexts = true;
+                        ShouldRecreateHudTexts = true;
                     }
                     focusedItem = character.FocusedItem;
                 }
@@ -342,13 +357,13 @@ namespace Barotrauma
                     if (!GUI.DisableItemHighlights && !Inventory.DraggingItemToWorld)
                     {
                         bool shiftDown = PlayerInput.IsShiftDown();
-                        if (shouldRecreateHudTexts || heldDownShiftWhenGotHudTexts != shiftDown)
+                        if (ShouldRecreateHudTexts || heldDownShiftWhenGotHudTexts != shiftDown)
                         {
-                            shouldRecreateHudTexts = true;
+                            ShouldRecreateHudTexts = true;
                             heldDownShiftWhenGotHudTexts = shiftDown;
                         }
-                        var hudTexts = focusedItem.GetHUDTexts(character, shouldRecreateHudTexts);
-                        shouldRecreateHudTexts = false;
+                        var hudTexts = focusedItem.GetHUDTexts(character, ShouldRecreateHudTexts);
+                        ShouldRecreateHudTexts = false;
 
                         int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
 
@@ -490,7 +505,7 @@ namespace Barotrauma
 
             if (!character.IsIncapacitated && character.Stun <= 0.0f)
             {
-                if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
+                if (character.Params.CanInteract && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
                     if (character.SelectedCharacter.CanInventoryBeAccessed)
                     {

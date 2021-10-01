@@ -543,6 +543,8 @@ namespace Barotrauma
             get
             {
                 if (character.IsHumanoid) { return false; }
+                // TODO: We might need this or solve the cases where a limb is severed while holding on to an item
+                //if (character.Params.CanInteract) { return false; }
                 if (this == character.AnimController.MainLimb) { return false; }
                 if (character.AnimController.CanWalk)
                 {

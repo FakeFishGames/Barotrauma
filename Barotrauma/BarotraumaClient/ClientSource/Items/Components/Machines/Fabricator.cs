@@ -380,9 +380,20 @@ namespace Barotrauma.Items.Components
 
                     if (requiredItem.UseCondition && requiredItem.MinCondition < 1.0f)
                     {
-                        GUI.DrawRectangle(spriteBatch, new Rectangle(slotRect.X, slotRect.Bottom - 8, slotRect.Width, 8), Color.Black * 0.8f, true);
+                        DrawConditionBar(spriteBatch, requiredItem.MinCondition);
+                    }
+                    else if (requiredItem.MaxCondition < 1.0f)
+                    {
+                        DrawConditionBar(spriteBatch, requiredItem.MaxCondition);
+                    }
+
+                    void DrawConditionBar(SpriteBatch sb, float condition)
+                    {
+                        int spacing = GUI.IntScale(4);
+                        int height = GUI.IntScale(10);
+                        GUI.DrawRectangle(spriteBatch, new Rectangle(slotRect.X + spacing, slotRect.Bottom - spacing - height, slotRect.Width - spacing * 2, height), Color.Black * 0.8f, true);
                         GUI.DrawRectangle(spriteBatch,
-                            new Rectangle(slotRect.X, slotRect.Bottom - 8, (int)(slotRect.Width * requiredItem.MinCondition), 8),
+                            new Rectangle(slotRect.X + spacing, slotRect.Bottom - spacing - height, (int)((slotRect.Width - spacing * 2) * condition), height),
                             GUI.Style.Green * 0.8f, true);
                     }
 
@@ -394,6 +405,10 @@ namespace Barotrauma.Items.Components
                         if (requiredItem.UseCondition && requiredItem.MinCondition < 1.0f)
                         {
                             toolTipText += " " + (int)Math.Round(requiredItem.MinCondition * 100) + "%";
+                        }
+                        else if(requiredItem.MaxCondition < 1.0f)
+                        {
+                            toolTipText += " 0-" + (int)Math.Round(requiredItem.MaxCondition * 100) + "%";
                         }
                         else if (requiredItem.MaxCondition <= 0.0f)
                         {
@@ -649,8 +664,13 @@ namespace Barotrauma.Items.Components
             {
                 foreach (GUIComponent child in itemList.Content.Children)
                 {
-                    var itemPrefab = child.UserData as FabricationRecipe;
-                    if (itemPrefab == null) continue;
+                    if (!(child.UserData is FabricationRecipe itemPrefab)) { continue; }
+
+                    if (itemPrefab != selectedItem &&
+                        (child.Rect.Y > itemList.Rect.Bottom || child.Rect.Bottom < itemList.Rect.Y))
+                    {
+                        continue;
+                    }
 
                     bool canBeFabricated = CanBeFabricated(itemPrefab, availableIngredients, character);
                     if (itemPrefab == selectedItem)

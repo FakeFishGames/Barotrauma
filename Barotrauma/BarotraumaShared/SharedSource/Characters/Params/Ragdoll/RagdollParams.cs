@@ -37,7 +37,7 @@ namespace Barotrauma
         [Serialize("1.0,1.0,1.0,1.0", true), Editable()]
         public Color Color { get; set; }
 
-        [Serialize(0.0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'. Used mainly for animations and widgets."), Editable(-360, 360)]
+        [Serialize(0.0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'."), Editable(-360, 360)]
         public float SpritesheetOrientation { get; set; }
 
         public bool IsSpritesheetOrientationHorizontal
@@ -572,7 +572,9 @@ namespace Barotrauma
             /// <summary>
             /// The orientation of the sprite as drawn on the sprite sheet (in radians).
             /// </summary>
-            public float GetSpriteOrientation() => MathHelper.ToRadians(float.IsNaN(SpriteOrientation) ? Ragdoll.SpritesheetOrientation : SpriteOrientation);
+            public float GetSpriteOrientation() => MathHelper.ToRadians(GetSpriteOrientationInDegrees());
+
+            public float GetSpriteOrientationInDegrees() => float.IsNaN(SpriteOrientation) ? Ragdoll.SpritesheetOrientation : SpriteOrientation;
 
             [Serialize("", true), Editable]
             public string Notes { get; set; }
@@ -592,7 +594,7 @@ namespace Barotrauma
             [Serialize(false, true, description: "Disable drawing for this limb."), Editable()]
             public bool Hide { get; set; }
 
-            [Serialize(float.NaN, true, description: "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings. Used mainly for animations and widgets."), Editable(-360, 360, ValueStep = 90, DecimalCount = 0)]
+            [Serialize(float.NaN, true, description: "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings."), Editable(-360, 360, ValueStep = 90, DecimalCount = 0)]
             public float SpriteOrientation { get; set; }
 
             [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]

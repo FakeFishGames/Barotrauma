@@ -132,7 +132,7 @@ namespace Barotrauma.Items.Components
 
         private bool isConnectedToSteering;
 
-        private static string caveLabel;
+        private static string caveLabel, ruinLabel;
 
         private bool AllowUsingMineralScanner =>
             HasMineralScanner && !isConnectedToSteering;
@@ -880,7 +880,7 @@ namespace Barotrauma.Items.Components
 
             foreach (AITarget aiTarget in AITarget.List)
             {
-                if (!aiTarget.Enabled) { continue; }
+                if (aiTarget.InDetectable) { continue; }
                 if (string.IsNullOrEmpty(aiTarget.SonarLabel) || aiTarget.SoundRange <= 0.0f) { continue; }
 
                 if (Vector2.DistanceSquared(aiTarget.WorldPosition, transducerCenter) < aiTarget.SoundRange * aiTarget.SoundRange)
@@ -1234,7 +1234,7 @@ namespace Barotrauma.Items.Components
                 foreach (AITarget aiTarget in AITarget.List)
                 {
                     float disruption = aiTarget.Entity is Character c ? c.Params.SonarDisruption : aiTarget.SonarDisruption;
-                    if (disruption <= 0.0f || !aiTarget.Enabled) { continue; }
+                    if (disruption <= 0.0f || aiTarget.InDetectable) { continue; }
                     float distSqr = Vector2.DistanceSquared(aiTarget.WorldPosition, pingSource);
                     if (distSqr > worldPingRadiusSqr) { continue; }
                     float disruptionDist = (float)Math.Sqrt(distSqr);
@@ -1357,28 +1357,6 @@ namespace Barotrauma.Items.Components
                             pingRadius, prevPingRadius,
                             350.0f, 3.0f * (Math.Abs(facingDot) + 1.0f), range, pingStrength, passive,
                             blipType : cell.IsDestructible ? BlipType.Destructible : BlipType.Default);
-                    }
-                }
-
-                foreach (RuinGeneration.Ruin ruin in Level.Loaded.Ruins)
-                {
-                    if (!MathUtils.CircleIntersectsRectangle(pingSource, range, ruin.Area)) continue;
-
-                    foreach (var ruinShape in ruin.RuinShapes)
-                    {
-                        foreach (RuinGeneration.Line wall in ruinShape.Walls)
-                        {
-                            float cellDot = Vector2.Dot(
-                                Vector2.Normalize(ruinShape.Center - pingSource),
-                                Vector2.Normalize((wall.A + wall.B) / 2.0f - ruinShape.Center));
-                            if (cellDot > 0) continue;
-
-                            CreateBlipsForLine(
-                                wall.A, wall.B,
-                                pingSource, transducerPos,
-                                pingRadius, prevPingRadius,
-                                100.0f, 1000.0f, range, pingStrength, passive);
-                        }
                     }
                 }
             }

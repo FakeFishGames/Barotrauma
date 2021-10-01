@@ -144,6 +144,7 @@ namespace Barotrauma
             public readonly float Spread;
             public readonly SpawnRotationType RotationType;
             public readonly float AimSpread;
+            public readonly bool Equip;
 
             public ItemSpawnInfo(XElement element, string parentDebugName)
             {
@@ -181,6 +182,7 @@ namespace Barotrauma
                 Count = element.GetAttributeInt("count", 1);
                 Spread = element.GetAttributeFloat("spread", 0f);
                 AimSpread = element.GetAttributeFloat("aimspread", 0f);
+                Equip = element.GetAttributeBool("equip", false);
 
                 string spawnTypeStr = element.GetAttributeString("spawnposition", "This");
                 if (!Enum.TryParse(spawnTypeStr, ignoreCase: true, out SpawnPosition))
@@ -308,13 +310,15 @@ namespace Barotrauma
         /// </summary>
         private readonly HashSet<(string affliction, float strength)> requiredAfflictions;
 
+        public float AfflictionMultiplier = 1.0f;
+
         public List<Affliction> Afflictions
         {
             get;
             private set;
         }
 
-        private bool modifyAfflictionsByMaxVitality;
+        private readonly bool modifyAfflictionsByMaxVitality;
 
         public IEnumerable<CharacterSpawnInfo> SpawnCharacters
         {
@@ -571,11 +575,14 @@ namespace Barotrauma
                         requiredItems.Add(newRequiredItem);
                         break;
                     case "requiredaffliction":
-
                         requiredAfflictions ??= new HashSet<(string, float)>();
-                        requiredAfflictions.Add((
-                            subElement.GetAttributeString("identifier", string.Empty), 
-                            subElement.GetAttributeFloat("minstrength", 0.0f)));
+                        string[] ids = subElement.GetAttributeStringArray("identifier", new string[0]);
+                        foreach (string afflictionId in ids)
+                        {
+                            requiredAfflictions.Add((
+                                afflictionId,
+                                subElement.GetAttributeFloat("minstrength", 0.0f)));
+                        }
                         break;
                     case "conditional":
                         foreach (XAttribute attribute in subElement.Attributes())
@@ -798,7 +805,16 @@ namespace Barotrauma
                         {
                             var target = targets.FirstOrDefault(t => t is Item || t is ItemComponent);
                             var targetItem = target as Item ?? (target as ItemComponent)?.Item;
-                            if (targetItem?.ParentInventory == null) { continue; }
+                            if (targetItem?.ParentInventory == null) 
+                            {
+                                //if we're checking for inequality, not being inside a valid container counts as success
+                                //(not inside a container = the container doesn't have a specific tag/value)
+                                if (pc.Operator == PropertyConditional.OperatorType.NotEquals)
+                                {
+                                    return true;
+                                }
+                                continue; 
+                            }
                             var owner = targetItem.ParentInventory.Owner;
                             if (pc.TargetGrandParent && owner is Item ownerItem)
                             {
@@ -816,7 +832,7 @@ namespace Barotrauma
                                     if (HasRequiredConditions(container.AllPropertyObjects, pc.ToEnumerable(), targetingContainer: true)) { return true; } 
                                 }                                
                             }
-                            if (owner is Character character && HasRequiredConditions(character.ToEnumerable(), pc.ToEnumerable(), targetingContainer: true)) { return true; }
+                            if (owner is Character character && HasRequiredConditions(character.ToEnumerable(), pc.ToEnumerable(), targetingContainer: true)) { return true; }                            
                         }
                         else
                         {
@@ -841,7 +857,16 @@ namespace Barotrauma
                         {
                             var target = targets.FirstOrDefault(t => t is Item || t is ItemComponent);
                             var targetItem = target as Item ?? (target as ItemComponent)?.Item;
-                            if (targetItem?.ParentInventory == null) { return false; }
+                            if (targetItem?.ParentInventory == null) 
+                            {
+                                //if we're checking for inequality, not being inside a valid container counts as success
+                                //(not inside a container = the container doesn't have a specific tag/value)
+                                if (pc.Operator == PropertyConditional.OperatorType.NotEquals)
+                                {
+                                    continue;
+                                }
+                                return false; 
+                            }
                             var owner = targetItem.ParentInventory.Owner;
                             if (pc.TargetGrandParent && owner is Item ownerItem)
                             {
@@ -1424,7 +1449,19 @@ namespace Barotrauma
                                 }
                                 if (inventory != null && (inventory.CanBePut(chosenItemSpawnInfo.ItemPrefab) || chosenItemSpawnInfo.SpawnIfInventoryFull))
                                 {
-                                    Entity.Spawner.AddToSpawnQueue(chosenItemSpawnInfo.ItemPrefab, inventory, spawnIfInventoryFull: chosenItemSpawnInfo.SpawnIfInventoryFull);
+                                    Entity.Spawner.AddToSpawnQueue(chosenItemSpawnInfo.ItemPrefab, inventory, spawnIfInventoryFull: chosenItemSpawnInfo.SpawnIfInventoryFull, onSpawned: item =>
+                                    {
+                                        if (chosenItemSpawnInfo.Equip && entity is Character character && character.Inventory != null)
+                                        {
+                                            //if the item is both pickable and wearable, try to wear it instead of picking it up
+                                            List<InvSlotType> allowedSlots =
+                                               item.GetComponents<Pickable>().Count() > 1 ?
+                                               new List<InvSlotType>(item.GetComponent<Wearable>()?.AllowedSlots ?? item.GetComponent<Pickable>().AllowedSlots) :
+                                               new List<InvSlotType>(item.AllowedSlots);
+                                            allowedSlots.Remove(InvSlotType.Any);
+                                            character.Inventory.TryPutItem(item, null, allowedSlots);
+                                        }
+                                    });
                                 }
                             }
                             break;
@@ -1616,7 +1653,7 @@ namespace Barotrauma
             {
                 multiplier *= 1 + targetCharacter.GetStatValue(StatTypes.MedicalItemEffectivenessMultiplier);
             }
-            return multiplier;
+            return multiplier * AfflictionMultiplier;
         }
 
         private Affliction GetMultipliedAffliction(Affliction affliction, Entity entity, Character targetCharacter, float deltaTime, bool modifyByMaxVitality)
@@ -1636,11 +1673,11 @@ namespace Barotrauma
 
         private void RegisterTreatmentResults(Entity entity, Limb limb, Affliction affliction, AttackResult result)
         {
-            if (entity is Item item && item.UseInHealthInterface)
+            if (entity is Item item && item.UseInHealthInterface && limb != null)
             {
                 foreach (Affliction limbAffliction in limb.character.CharacterHealth.GetAllAfflictions())
                 {
-                    if (result.Afflictions.Any(a => a.Prefab == limbAffliction.Prefab) &&
+                    if (result.Afflictions != null && result.Afflictions.Any(a => a.Prefab == limbAffliction.Prefab) &&
                        (!affliction.Prefab.LimbSpecific || limb.character.CharacterHealth.GetAfflictionLimb(affliction) == limb))
                     {
                         if (type == ActionType.OnUse)

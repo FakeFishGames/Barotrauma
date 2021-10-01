@@ -5,13 +5,13 @@ namespace Barotrauma.Abilities
 {
     class CharacterAbilityModifyFlag : CharacterAbility
     {
-        private AbilityFlags abilityFlag;
+        private readonly AbilityFlags abilityFlag;
 
         private bool lastState;
 
         public CharacterAbilityModifyFlag(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            abilityFlag = ParseFlagType(abilityElement.GetAttributeString("flagtype", ""), CharacterTalent.DebugIdentifier);
+            abilityFlag = CharacterAbilityGroup.ParseFlagType(abilityElement.GetAttributeString("flagtype", ""), CharacterTalent.DebugIdentifier);
         }
 
         protected override void VerifyState(bool conditionsMatched, float timeSinceLastUpdate)
