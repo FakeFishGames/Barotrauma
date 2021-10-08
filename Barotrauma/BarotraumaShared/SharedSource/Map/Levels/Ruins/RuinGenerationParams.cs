@@ -44,7 +44,7 @@ namespace Barotrauma.RuinGeneration
             this.filePath = filePath;
         }
 
-        public static RuinGenerationParams GetRandom()
+        public static RuinGenerationParams GetRandom(Rand.RandSync randSync = Rand.RandSync.Server)
         {
             if (paramsList == null) { LoadAll(); }
 
@@ -54,7 +54,7 @@ namespace Barotrauma.RuinGeneration
                 return new RuinGenerationParams(null, null);
             }
 
-            return paramsList[Rand.Int(paramsList.Count, Rand.RandSync.Server)];
+            return paramsList[Rand.Int(paramsList.Count, randSync)];
         }
 
         private static void LoadAll()

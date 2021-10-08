@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Lights;
 
 namespace Barotrauma
 {
@@ -17,7 +18,7 @@ namespace Barotrauma
         private static Vector2 startMovingPos = Vector2.Zero;
 
         private static float keyDelay;
-        
+
         public static Vector2 StartMovingPos => startMovingPos;
 
         public event Action<Rectangle> Resized;
@@ -97,13 +98,13 @@ namespace Barotrauma
         /// </summary>
         public float GetDrawDepth(float baseDepth, Sprite sprite)
         {
-            float depth = baseDepth            
+            float depth = baseDepth
                 //take texture into account to get entities with (roughly) the same base depth and texture to render consecutively to minimize texture swaps
                 + (sprite?.Texture?.SortingKey ?? 0) % 100 * 0.00001f
                 + ID % 100 * 0.000001f;
             return Math.Min(depth, 1.0f);
         }
-        
+
         /// <summary>
         /// Update the selection logic in submarine editor
         /// </summary>
@@ -218,7 +219,7 @@ namespace Barotrauma
                         }
                     }
                 }
-            }            
+            }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
             MapEntity highLightedEntity = null;
@@ -284,13 +285,13 @@ namespace Barotrauma
                     //mouse released -> move the entities to the new position of the mouse
 
                     Vector2 moveAmount = position - startMovingPos;
-                                        
+
                     if (!isShiftDown)
                     {
                         moveAmount.X = (float)(moveAmount.X > 0.0f ? Math.Floor(moveAmount.X / Submarine.GridSize.X) : Math.Ceiling(moveAmount.X / Submarine.GridSize.X)) * Submarine.GridSize.X;
                         moveAmount.Y = (float)(moveAmount.Y > 0.0f ? Math.Floor(moveAmount.Y / Submarine.GridSize.Y) : Math.Ceiling(moveAmount.Y / Submarine.GridSize.Y)) * Submarine.GridSize.Y;
                     }
-                    
+
                     if (Math.Abs(moveAmount.X) >= Submarine.GridSize.X || Math.Abs(moveAmount.Y) >= Submarine.GridSize.Y || isShiftDown)
                     {
                         if (!isShiftDown) { moveAmount = Submarine.VectorToWorldGrid(moveAmount); }
@@ -321,10 +322,10 @@ namespace Barotrauma
                                     else
                                     {
                                         SoundPlayer.PlayUISound(GUISoundType.PickItemFail);
-                                    }                                 
+                                    }
                                 }
                             }
-                            
+
                             SubEditorScreen.StoreCommand(new TransformCommand(new List<MapEntity>(SelectedList),SelectedList.Select(entity => entity.Rect).ToList(), oldRects, false));
                             if (deposited.Any() && deposited.Any(entity => entity is Item))
                             {
@@ -457,8 +458,8 @@ namespace Barotrauma
             {
                 if (PlayerInput.PrimaryMouseButtonHeld() &&
                     PlayerInput.KeyUp(Keys.Space) &&
-                    PlayerInput.KeyUp(Keys.LeftAlt) && 
-                    PlayerInput.KeyUp(Keys.RightAlt) && 
+                    PlayerInput.KeyUp(Keys.LeftAlt) &&
+                    PlayerInput.KeyUp(Keys.RightAlt) &&
                     (highlightedListBox == null || (GUI.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUI.MouseOn))))
                 {
                     //if clicking a selected entity, start moving it
@@ -486,7 +487,7 @@ namespace Barotrauma
 
                 int xKeysDown = (left + right);
                 int yKeysDown = (up + down);
-                
+
                 if (xKeysDown != 0 || yKeysDown != 0) { keyDelay += (float) Timing.Step; } else { keyDelay = 0; }
 
 
@@ -516,7 +517,7 @@ namespace Barotrauma
             bool isShiftDown = PlayerInput.IsShiftDown();
 
             if (!isShiftDown) return null;
-            
+
             foreach (MapEntity e in mapEntityList)
             {
                 if (!e.SelectableInEditor ||!(e is Item potentialContainer)) { continue; }
@@ -666,7 +667,7 @@ namespace Barotrauma
         {
             if (SelectedList.Contains(entity)) { return; }
             SelectedList.Add(entity);
-            HandleDoorGapLinks(entity, 
+            HandleDoorGapLinks(entity,
                 onGapFound: (door, gap) =>
                 {
                     door.RefreshLinkedGap();
@@ -674,8 +675,8 @@ namespace Barotrauma
                     {
                         SelectedList.Add(gap);
                     }
-                }, 
-                onDoorFound: (door, gap) => 
+                },
+                onDoorFound: (door, gap) =>
                 {
                     if (!SelectedList.Contains(door.Item))
                     {
@@ -719,7 +720,7 @@ namespace Barotrauma
                 onGapFound: (door, gap) => SelectedList.Remove(gap),
                 onDoorFound: (door, gap) => SelectedList.Remove(door.Item));
         }
-        
+
         static partial void UpdateAllProjSpecific(float deltaTime)
         {
             var entitiesToRender = Submarine.VisibleEntities ?? mapEntityList;
@@ -752,7 +753,7 @@ namespace Barotrauma
                 moveAmount.Y = -moveAmount.Y;
 
                 bool isShiftDown = PlayerInput.IsShiftDown();
-                
+
                 if (!isShiftDown)
                 {
                     moveAmount.X = (float)(moveAmount.X > 0.0f ? Math.Floor(moveAmount.X / Submarine.GridSize.X) : Math.Ceiling(moveAmount.X / Submarine.GridSize.X)) * Submarine.GridSize.X;
@@ -765,21 +766,21 @@ namespace Barotrauma
                     foreach (MapEntity e in SelectedList)
                     {
                         SpriteEffects spriteEffects = SpriteEffects.None;
-                        switch (e) 
+                        switch (e)
                         {
-                            case Item item: 
+                            case Item item:
                             {
                                 if (item.FlippedX && item.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
                                 if (item.flippedY && item.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
                                 break;
                             }
-                            case Structure structure: 
+                            case Structure structure:
                             {
                                 if (structure.FlippedX && structure.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
                                 if (structure.flippedY && structure.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
                                 break;
                             }
-                            case WayPoint wayPoint: 
+                            case WayPoint wayPoint:
                             {
                                 Vector2 drawPos = e.WorldPosition;
                                 drawPos.Y = -drawPos.Y;
@@ -816,7 +817,7 @@ namespace Barotrauma
 
                 posY = -posY;
 
-                Vector2[] corners = 
+                Vector2[] corners =
                 {
                     new Vector2(posX, posY),
                     new Vector2(posX + sizeX, posY),
@@ -882,7 +883,7 @@ namespace Barotrauma
                 {
                     MapEntity firstSelected = SelectedList.First();
 
-                    float minX = firstSelected.WorldRect.X, 
+                    float minX = firstSelected.WorldRect.X,
                           maxX = firstSelected.WorldRect.Right;
 
                     foreach (MapEntity entity in SelectedList)
@@ -907,7 +908,7 @@ namespace Barotrauma
 
                     foreach (MapEntity entity in SelectedList)
                     {
-                        
+
                         minY = Math.Min(minY, entity.WorldRect.Y - entity.WorldRect.Height);
                         maxY = Math.Max(maxY, entity.WorldRect.Y);
                     }
@@ -947,21 +948,21 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Copy the selected entities to the "clipboard" (copiedList) 
+        /// Copy the selected entities to the "clipboard" (copiedList)
         /// </summary>
         public static void Copy(List<MapEntity> entities)
         {
             if (entities.Count == 0) { return; }
             CopyEntities(entities);
         }
-        
+
         /// <summary>
          /// Copy the entities to the "clipboard" (copiedList) and delete them
          /// </summary>
         public static void Cut(List<MapEntity> entities)
         {
             if (entities.Count == 0) { return; }
-            
+
             CopyEntities(entities);
 
             SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity>(entities), true));
@@ -1057,7 +1058,7 @@ namespace Barotrauma
 
                 editingHUD.RectTransform.Resize(
                     new Point(
-                        editingHUD.RectTransform.NonScaledSize.X, 
+                        editingHUD.RectTransform.NonScaledSize.X,
                         MathHelper.Clamp(contentHeight + padding * 2, 50, maxHeight)), resizeChildren: false);
                 listBox.RectTransform.Resize(new Point(listBox.RectTransform.NonScaledSize.X, editingHUD.RectTransform.NonScaledSize.Y - padding * 2), resizeChildren: false);
             }
@@ -1097,7 +1098,7 @@ namespace Barotrauma
                 {
                     prevRect = new Rectangle(Rect.Location, Rect.Size);
                 }
-                
+
                 Vector2 placePosition = new Vector2(rect.X, rect.Y);
                 Vector2 placeSize = new Vector2(rect.Width, rect.Height);
 
@@ -1147,6 +1148,15 @@ namespace Barotrauma
                         var newData = new List<Rectangle> { Rect };
                         var oldData = new List<Rectangle> { prevRect.Value };
                         SubEditorScreen.StoreCommand(new TransformCommand(new List<MapEntity> { this }, newData, oldData, true));
+                    }
+
+                    if (this is Structure structure)
+                    {
+                        foreach (LightSource light in structure.Lights)
+                        {
+                            light.LightTextureTargetSize = Rect.Size.ToVector2();
+                            light.Position = rect.Location.ToVector2();
+                        }
                     }
                     prevRect = null;
                 }

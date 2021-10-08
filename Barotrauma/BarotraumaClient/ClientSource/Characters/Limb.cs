@@ -109,6 +109,7 @@ namespace Barotrauma
         private float wetTimer;
         private float dripParticleTimer;
         private float deadTimer;
+        private Color? randomColor;
 
         /// <summary>
         /// Note that different limbs can share the same deformations.
@@ -165,6 +166,8 @@ namespace Barotrauma
                 }
             }
         }
+
+        public float DefaultSpriteDepth { get; private set; }
 
         public WearableSprite HuskSprite { get; private set; }
         public WearableSprite HerpesSprite { get; private set; }
@@ -309,12 +312,23 @@ namespace Barotrauma
                         Deformations.AddRange(deformations);
                         NonConditionalDeformations.AddRange(deformations);
                         break;
+                    case "randomcolor":
+                        randomColor = subElement.GetAttributeColorArray("colors", null)?.GetRandom();
+                        if (randomColor.HasValue)
+                        {
+                            Params.GetSprite().Color = randomColor.Value;
+                        }
+                        break;
                     case "lightsource":
                         LightSource = new LightSource(subElement, GetConditionalTarget())
                         {
                             ParentBody = body,
                             SpriteScale = Vector2.One * Scale * TextureScale
                         };
+                        if (randomColor.HasValue)
+                        {
+                            LightSource.Color = new Color(randomColor.Value.R, randomColor.Value.G, randomColor.Value.B, LightSource.Color.A);
+                        }
                         InitialLightSourceColor = LightSource.Color;
                         InitialLightSpriteAlpha = LightSource.OverrideLightSpriteAlpha;
                         break;
@@ -383,6 +397,7 @@ namespace Barotrauma
                     return deformations;
                 }
             }
+            DefaultSpriteDepth = ActiveSprite.Depth;
             LightSource?.CheckConditionals();
         }
 
@@ -571,8 +586,8 @@ namespace Barotrauma
             {
                 foreach (ParticleEmitter emitter in character.DamageEmitters)
                 {
-                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
-                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
+                    if (InWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
+                    if (!InWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
                     ParticlePrefab overrideParticle = null;
                     foreach (DamageModifier damageModifier in result.AppliedDamageModifiers)
                     {
@@ -593,8 +608,8 @@ namespace Barotrauma
 
                 foreach (ParticleEmitter emitter in character.BloodEmitters)
                 {
-                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
-                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
+                    if (InWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
+                    if (!InWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
                     emitter.Emit(1.0f, WorldPosition, character.CurrentHull, sizeMultiplier: bloodParticleSize, amountMultiplier: bloodParticleAmount);
                 }
             }   
@@ -618,7 +633,7 @@ namespace Barotrauma
                 }
             }
 
-            if (inWater)
+            if (InWater)
             {
                 wetTimer = 1.0f;
             }

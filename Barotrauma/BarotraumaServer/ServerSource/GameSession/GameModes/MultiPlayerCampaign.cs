@@ -200,7 +200,7 @@ namespace Barotrauma
             }
         }
 
-        public void SaveInventories()
+        public void SavePlayers()
         {
             List<CharacterCampaignData> prevCharacterData = new List<CharacterCampaignData>(characterData);
             //client character has spawned this round -> remove old data (and replace with an up-to-date one if the client still has a character)
@@ -220,12 +220,13 @@ namespace Barotrauma
                         continue;
                     }
                 }
-                if (c.Character?.Info == null) { continue; }
-                if (c.Character.IsDead && c.Character.CauseOfDeath?.Type != CauseOfDeathType.Disconnected)
+                var characterInfo = c.Character?.Info ?? c.CharacterInfo;
+                if (characterInfo == null) { continue; }
+                if (characterInfo.CauseOfDeath?.Type != CauseOfDeathType.Disconnected)
                 {
-                    continue;
+                    RespawnManager.ReduceCharacterSkills(characterInfo);
                 }
-                c.CharacterInfo = c.Character.Info;
+                c.CharacterInfo = characterInfo;
                 characterData.RemoveAll(cd => cd.MatchesClient(c));
                 characterData.Add(new CharacterCampaignData(c));                
             }
@@ -313,7 +314,7 @@ namespace Barotrauma
 
             if (success)
             {
-                SaveInventories();
+                SavePlayers();
 
                 yield return CoroutineStatus.Running;
 

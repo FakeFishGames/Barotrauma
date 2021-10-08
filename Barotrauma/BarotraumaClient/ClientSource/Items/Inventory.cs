@@ -317,7 +317,7 @@ namespace Barotrauma
                     string colorStr = XMLExtensions.ColorToString(!item.AllowStealing ? GUI.Style.Red : Color.White);
 
                     toolTip = $"‖color:{colorStr}‖{name}‖color:end‖";
-                    if (item.Quality > 0)
+                    if (item.GetComponent<Quality>() != null)
                     {
                         // substring by to get rid of the empty space at start, text file should be adjusted
                         toolTip += $"\n{TextManager.GetWithVariable("itemname.quality" + item.Quality, "[itemname]", "", fallBackTag: "itemname.quality3")?.Substring(1)}";
@@ -1567,7 +1567,7 @@ namespace Barotrauma
                             if (containedItem != null && itemContainer.Inventory.Capacity == 1)
                             {
                                 int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, itemContainer.GetMaxStackSize(0));
-                                if (maxStackSize > 1)
+                                if (maxStackSize > 1 || containedItem.Prefab.HideConditionBar)
                                 {
                                     containedState = itemContainer.Inventory.slots[0].ItemCount / (float)maxStackSize;
                                 }

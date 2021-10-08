@@ -359,10 +359,19 @@ namespace Barotrauma
             crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnAllyGainMissionExperience, experienceGainMultiplier));
             crewCharacters.ForEach(c => experienceGainMultiplier.Value += c.GetStatValue(StatTypes.MissionExperienceGainMultiplier));
 
+            int experienceGain = (int)(baseExperienceGain * experienceGainMultiplier.Value);
+#if CLIENT
             foreach (Character character in crewCharacters)
             {
-                character.Info.GiveExperience((int)(baseExperienceGain * experienceGainMultiplier.Value), isMissionExperience: true);
+                character.Info.GiveExperience(experienceGain, isMissionExperience: true);
             }
+#else
+            foreach (Barotrauma.Networking.Client c in GameMain.Server.ConnectedClients)
+            {
+                //give the experience to the stored characterinfo if the client isn't currently controlling a character
+                (c.Character?.Info ?? c.CharacterInfo)?.GiveExperience(experienceGain, isMissionExperience: true);
+            }
+#endif
 
             // apply money gains afterwards to prevent them from affecting XP gains
             var moneyGainMission = new AbilityValueMission(1f, this);

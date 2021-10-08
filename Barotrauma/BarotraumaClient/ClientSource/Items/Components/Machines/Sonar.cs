@@ -132,7 +132,15 @@ namespace Barotrauma.Items.Components
 
         private bool isConnectedToSteering;
 
-        private static string caveLabel, ruinLabel;
+        private static string caveLabel;
+
+
+        [Serialize(false, false)]
+        public bool RightLayout
+        {
+            get;
+            set;
+        }
 
         private bool AllowUsingMineralScanner =>
             HasMineralScanner && !isConnectedToSteering;
@@ -316,7 +324,7 @@ namespace Barotrauma.Items.Components
                 "", warningColor, GUI.LargeFont, Alignment.Center);
 
             // Setup layout for nav terminal
-            if (isConnectedToSteering)
+            if (isConnectedToSteering || RightLayout)
             {
                 controlContainer.RectTransform.RelativeOffset = controlBoxOffset;
                 controlContainer.RectTransform.SetPosition(Anchor.TopRight);

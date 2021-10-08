@@ -920,7 +920,8 @@ namespace Barotrauma
                         CanSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
                         sprite = new Sprite(subElement, spriteFolder, lazyLoad: true);
-                        if (subElement.Attribute("sourcerect") == null)
+                        if (subElement.Attribute("sourcerect") == null &&
+                            subElement.Attribute("sheetindex") == null)
                         {
                             DebugConsole.ThrowError("Warning - sprite sourcerect not configured for item \"" + Name + "\"!");
                         }
@@ -1152,11 +1153,8 @@ namespace Barotrauma
                         {
                             DebugConsole.ThrowError("Error in item prefab \"" + Name + "\" - suitable treatments should be defined using item identifiers, not item names.");
                         }
-
-                        string treatmentIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
-
+                        string treatmentIdentifier = (subElement.GetAttributeString("identifier", null) ?? subElement.GetAttributeString("type", string.Empty)).ToLowerInvariant();
                         float suitability = subElement.GetAttributeFloat("suitability", 0.0f);
-
                         treatmentSuitability.Add(treatmentIdentifier, suitability);
                         break;
                 }

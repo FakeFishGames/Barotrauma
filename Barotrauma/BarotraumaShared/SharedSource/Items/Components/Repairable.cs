@@ -376,7 +376,7 @@ namespace Barotrauma.Items.Components
                 tinkeringDuration -= deltaTime;
                 // not great to interject it here, should be less reliant on returning
 
-                float conditionDecrease = deltaTime * (CurrentFixer.GetStatValue(StatTypes.TinkeringDamage) / item.MaxCondition) * 100f;
+                float conditionDecrease = deltaTime * (CurrentFixer.GetStatValue(StatTypes.TinkeringDamage) / item.Prefab.Health) * 100f;
                 item.Condition -= conditionDecrease;
 
                 if (!CanTinker(CurrentFixer) || tinkeringDuration <= 0f)
@@ -424,7 +424,8 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    float conditionIncrease = deltaTime / (fixDuration / item.MaxCondition);
+                    // scale with prefab's health instead of real health to ensure repair speed remains static with upgrades
+                    float conditionIncrease = deltaTime / (fixDuration / item.Prefab.Health);
                     item.Condition += conditionIncrease;
 #if SERVER
                     GameMain.Server.KarmaManager.OnItemRepaired(CurrentFixer, this, conditionIncrease);
@@ -458,7 +459,8 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    float conditionDecrease = deltaTime / (fixDuration / item.MaxCondition);
+                    // scale with prefab's health instead of real health to ensure sabotage speed remains static with (any) upgrades
+                    float conditionDecrease = deltaTime / (fixDuration / item.Prefab.Health);
                     item.Condition -= conditionDecrease;
                 }
 

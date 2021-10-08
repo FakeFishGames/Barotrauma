@@ -313,6 +313,15 @@ namespace Barotrauma
         public string TraitorCurrentObjective = "";
         public bool IsHuman => SpeciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase);
 
+        /// <summary>
+        /// Can be used by status effects to check the character's gender
+        /// </summary>
+        public bool IsMale => Info != null && Info.HasGenders && Info.Gender == Gender.Male;
+        /// <summary>
+        /// Can be used by status effects to check the character's gender
+        /// </summary>
+        public bool IsFemale => Info != null && Info.HasGenders && Info.Gender == Gender.Female;
+
         private float attackCoolDown;
 
         public List<OrderInfo> CurrentOrders => Info?.CurrentOrders;
@@ -581,6 +590,14 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Can be used by status effects to check whether the characters is in a high-pressure environment
+        /// </summary>
+        public bool InPressure
+        {
+            get { return CurrentHull == null || CurrentHull.LethalPressure > 5.0f; }
+        }
+
         public const float KnockbackCooldown = 5.0f;
         public float KnockbackCooldownTimer;
 
@@ -641,22 +658,13 @@ namespace Barotrauma
 
         public bool DisableHealthWindow;
 
-        public float Vitality
-        {
-            get { return CharacterHealth.Vitality; }
-        }
-
-        public float Health
-        {
-            get { return CharacterHealth.Vitality; }
-        }
-
+        // These properties needs to be exposed for status effects
+        public float Vitality => CharacterHealth.Vitality;
+        public float Health => Vitality;
         public float HealthPercentage => CharacterHealth.HealthPercentage;
-
-        public float MaxVitality
-        {
-            get { return CharacterHealth.MaxVitality; }
-        }
+        public float MaxVitality => CharacterHealth.MaxVitality;
+        public float MaxHealth => MaxVitality;
+        public AIState AIState => AIController is EnemyAIController enemyAI ? enemyAI.State : AIState.Idle;
 
         public float Bloodloss
         {
@@ -2405,7 +2413,7 @@ namespace Barotrauma
             var head = AnimController.GetLimb(LimbType.Head);
             bool headInWater = head == null ? 
                 AnimController.InWater : 
-                head.inWater;
+                head.InWater;
             //climb ladders automatically when pressing up/down inside their trigger area
             Ladder currentLadder = SelectedConstruction?.GetComponent<Ladder>();
             if ((SelectedConstruction == null || currentLadder != null) &&
@@ -3813,6 +3821,7 @@ namespace Barotrauma
 
             foreach (var joint in AnimController.LimbJoints)
             {
+                if (joint.LimbA.type == LimbType.Head || joint.LimbB.type == LimbType.Head) { continue; }
                 if (joint.revoluteJoint != null)
                 {
                     joint.revoluteJoint.LimitEnabled = false;
@@ -3950,7 +3959,10 @@ namespace Barotrauma
             foreach (Limb limb in AnimController.Limbs)
             {
 #if CLIENT
-                if (limb.LightSource != null) limb.LightSource.Color = limb.InitialLightSourceColor;
+                if (limb.LightSource != null)
+                {
+                    limb.LightSource.Color = limb.InitialLightSourceColor;
+                }
 #endif
                 limb.body.Enabled = true;
                 limb.IsSevered = false;
@@ -4369,7 +4381,6 @@ namespace Barotrauma
                 if (!info.UnlockedTalents.Add(talentPrefab.Identifier)) { return false; }
             }
 
-            DebugConsole.AddWarning("added " + talentPrefab.OriginalName);
             CharacterTalent characterTalent = new CharacterTalent(talentPrefab, this);
             characterTalent.ActivateTalent(addingFirstTime);
             characterTalents.Add(characterTalent);
@@ -4377,7 +4388,10 @@ namespace Barotrauma
 #if SERVER
             GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.UpdateTalents });
 #endif
-
+            if (addingFirstTime)
+            {
+                OnTalentGiven(talentPrefab.Identifier);
+            }
             return true;
         }
 
@@ -4441,6 +4455,7 @@ namespace Barotrauma
         }
 
         partial void OnMoneyChanged(int prevAmount, int newAmount);
+        partial void OnTalentGiven(string talentIdentifier);
 
         /// <summary>
         /// This dictionary is used for stats that are required very frequently. Not very performant, but easier to develop with for now.

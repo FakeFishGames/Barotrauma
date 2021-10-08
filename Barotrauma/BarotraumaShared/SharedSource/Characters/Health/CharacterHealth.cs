@@ -749,7 +749,7 @@ namespace Barotrauma
 
             StunTimer = Stun > 0 ? StunTimer + deltaTime : 0;
 
-            FaceTint = DefaultFaceTint;
+            if (Character.GodMode) { return; }
 
             for (int i = 0; i < limbHealths.Count; i++)
             {
@@ -775,10 +775,6 @@ namespace Barotrauma
                     {
                         UpdateBleedingProjSpecific(bleeding, targetLimb, deltaTime);
                     }
-                    Color faceTint = affliction.GetFaceTint();
-                    if (faceTint.A > FaceTint.A) { FaceTint = faceTint; }
-                    Color bodyTint = affliction.GetBodyTint();
-                    if (bodyTint.A > BodyTint.A) { BodyTint = bodyTint; }
                     Character.StackSpeedMultiplier(affliction.GetSpeedMultiplier());
                 }
             }
@@ -798,10 +794,6 @@ namespace Barotrauma
                 var affliction = afflictions[i];
                 affliction.Update(this, null, deltaTime);
                 affliction.DamagePerSecondTimer += deltaTime;
-                Color faceTint = affliction.GetFaceTint();
-                if (faceTint.A > FaceTint.A) { FaceTint = faceTint; }
-                Color bodyTint = affliction.GetBodyTint();
-                if (bodyTint.A > BodyTint.A) { BodyTint = bodyTint; }
                 Character.StackSpeedMultiplier(affliction.GetSpeedMultiplier());
             }
 
@@ -818,12 +810,38 @@ namespace Barotrauma
             }
 
             UpdateLimbAfflictionOverlays();
-
+            UpdateSkinTint();
             CalculateVitality();
 
             if (Vitality <= MinVitality)
             {
                 Kill();
+            }
+        }
+
+        private void UpdateSkinTint()
+        {
+            FaceTint = DefaultFaceTint;
+            BodyTint = Color.TransparentBlack;
+
+            for (int i = 0; i < limbHealths.Count; i++)
+            {
+                for (int j = limbHealths[i].Afflictions.Count - 1; j >= 0; j--)
+                {
+                    var affliction = limbHealths[i].Afflictions[j];
+                    Color faceTint = affliction.GetFaceTint();
+                    if (faceTint.A > FaceTint.A) { FaceTint = faceTint; }
+                    Color bodyTint = affliction.GetBodyTint();
+                    if (bodyTint.A > BodyTint.A) { BodyTint = bodyTint; }
+                }
+            }
+            for (int i = 0; i < afflictions.Count; i++)
+            {
+                var affliction = afflictions[i];
+                Color faceTint = affliction.GetFaceTint();
+                if (faceTint.A > FaceTint.A) { FaceTint = faceTint; }
+                Color bodyTint = affliction.GetBodyTint();
+                if (bodyTint.A > BodyTint.A) { BodyTint = bodyTint; }
             }
         }
 
@@ -905,6 +923,7 @@ namespace Barotrauma
             if (Unkillable || Character.GodMode) { return; }
             
             var (type, affliction) = GetCauseOfDeath();
+            UpdateSkinTint();
             Character.Kill(type, affliction);
 #if CLIENT
             DisplayVitalityDelay = 0.0f;

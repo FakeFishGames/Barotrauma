@@ -2447,14 +2447,44 @@ namespace Barotrauma
         {
             if (messages.Any(msg => msg.Text == message)) { return; }
             messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), font ?? LargeFont));
-            if (playSound) SoundPlayer.PlayUISound(GUISoundType.UIMessage);
+            if (playSound) { SoundPlayer.PlayUISound(GUISoundType.UIMessage); }
         }
 
         public static void AddMessage(string message, Color color, Vector2 pos, Vector2 velocity, float lifeTime = 3.0f, bool playSound = true, GUISoundType soundType = GUISoundType.UIMessage, int subId = -1)
         {
             Submarine sub = Submarine.Loaded.FirstOrDefault(s => s.ID == subId);
-            messages.Add(new GUIMessage(message, color, pos, velocity, lifeTime, Alignment.Center, LargeFont, sub: sub));
-            if (playSound) SoundPlayer.PlayUISound(soundType);
+
+            var newMessage = new GUIMessage(message, color, pos, velocity, lifeTime, Alignment.Center, LargeFont, sub: sub);
+            if (playSound) { SoundPlayer.PlayUISound(soundType); }
+            bool overlapFound = true;
+            int tries = 0;
+            while (overlapFound)
+            {
+                overlapFound = false;
+                foreach (var otherMessage in messages)
+                {
+                    float xDiff = otherMessage.Pos.X - newMessage.Pos.X;
+                    if (Math.Abs(xDiff) > (newMessage.Size.X + otherMessage.Size.X) / 2) { continue; }
+                    float yDiff = otherMessage.Pos.Y - newMessage.Pos.Y;
+                    if (Math.Abs(yDiff) > (newMessage.Size.Y + otherMessage.Size.Y) / 2) { continue; }
+                    Vector2 moveDir = -(new Vector2(xDiff, yDiff) + Rand.Vector(1.0f));
+                    if (moveDir.LengthSquared() > 0.0001f)
+                    {
+                        moveDir = Vector2.Normalize(moveDir);
+                    }
+                    else
+                    {
+                        moveDir = Rand.Vector(1.0f);
+                    }
+                    moveDir.Y = -Math.Abs(moveDir.Y);
+                    newMessage.Pos += moveDir * 20;
+                    overlapFound = true;
+                }
+                tries++;
+                if (tries > 20) { break; }
+            }
+
+            messages.Add(newMessage);
         }
 
         public static void ClearMessages()

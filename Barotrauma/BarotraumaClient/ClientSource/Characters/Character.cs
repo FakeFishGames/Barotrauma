@@ -405,7 +405,7 @@ namespace Barotrauma
 
                 if (GameMain.NetworkMember.RespawnManager?.UseRespawnPrompt ?? false)
                 {
-                    CoroutineManager.InvokeAfter(() =>
+                    CoroutineManager.Invoke(() =>
                     {
                         if (controlled != null || (!(GameMain.GameSession?.IsRunning ?? false))) { return; }
                         var respawnPrompt = new GUIMessageBox(
@@ -1052,8 +1052,18 @@ namespace Barotrauma
                     Position + Vector2.UnitY * 150.0f,
                     Vector2.UnitY * 10.0f,
                     playSound: true,
-                    subId: Submarine?.ID ?? -1);;
+                    subId: Submarine?.ID ?? -1);
             }
+        }
+
+        partial void OnTalentGiven(string talentIdentifier)
+        {
+            GUI.AddMessage(TextManager.Get("talentname." + talentIdentifier.ToString()),
+                GUI.Style.Yellow,
+                Position + Vector2.UnitY * 150.0f,
+                Vector2.UnitY * 10.0f,
+                playSound: true,
+                subId: Submarine?.ID ?? -1);
         }
     }
 }

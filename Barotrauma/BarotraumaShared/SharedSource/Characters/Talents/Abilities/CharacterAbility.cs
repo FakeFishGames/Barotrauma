@@ -125,7 +125,6 @@ namespace Barotrauma.Abilities
                 return null;
             }
 
-            DebugConsole.AddWarning("Instantiated " + characterAbility + " for talent " + characterAbilityGroup.CharacterTalent.DebugIdentifier);
             return characterAbility;
         }
     }

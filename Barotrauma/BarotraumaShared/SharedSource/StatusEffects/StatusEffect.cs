@@ -197,6 +197,18 @@ namespace Barotrauma
             }
         }
 
+        public class GiveTalentInfo
+        {
+            public string[] TalentIdentifiers;
+            public bool GiveRandom;
+
+            public GiveTalentInfo(XElement element, string parentDebugName)
+            {
+                TalentIdentifiers = element.GetAttributeStringArray("talentidentifiers", new string[0], convertToLowerInvariant: true);
+                GiveRandom = element.GetAttributeBool("giverandom", false);
+            }
+        }
+
         public class CharacterSpawnInfo : ISerializableEntity
         {
             public string Name => $"Character Spawn Info ({SpeciesName})";
@@ -273,6 +285,8 @@ namespace Barotrauma
         private readonly List<ItemSpawnInfo> spawnItems;
         private readonly bool spawnItemRandomly;
         private readonly List<CharacterSpawnInfo> spawnCharacters;
+
+        public readonly List<GiveTalentInfo> giveTalentInfos;
 
         private readonly List<AITrigger> aiTriggers;
 
@@ -374,6 +388,7 @@ namespace Barotrauma
             spawnItems = new List<ItemSpawnInfo>();
             spawnItemRandomly = element.GetAttributeBool("spawnitemrandomly", false);
             spawnCharacters = new List<CharacterSpawnInfo>();
+            giveTalentInfos = new List<GiveTalentInfo>();
             aiTriggers = new List<AITrigger>();
             Afflictions = new List<Affliction>();
             Explosions = new List<Explosion>();
@@ -576,7 +591,7 @@ namespace Barotrauma
                         break;
                     case "requiredaffliction":
                         requiredAfflictions ??= new HashSet<(string, float)>();
-                        string[] ids = subElement.GetAttributeStringArray("identifier", new string[0]);
+                        string[] ids = subElement.GetAttributeStringArray("identifier", null) ?? subElement.GetAttributeStringArray("type", new string[0]);
                         foreach (string afflictionId in ids)
                         {
                             requiredAfflictions.Add((
@@ -668,6 +683,10 @@ namespace Barotrauma
                     case "spawncharacter":
                         var newSpawnCharacter = new CharacterSpawnInfo(subElement, parentDebugName);
                         if (!string.IsNullOrWhiteSpace(newSpawnCharacter.SpeciesName)) { spawnCharacters.Add(newSpawnCharacter); }
+                        break;
+                    case "givetalentinfo":
+                        var newGiveTalentInfo = new GiveTalentInfo(subElement, parentDebugName);
+                        if (newGiveTalentInfo.TalentIdentifiers.Any()) { giveTalentInfos.Add(newGiveTalentInfo); }
                         break;
                     case "aitrigger":
                         aiTriggers.Add(new AITrigger(subElement));
@@ -1305,6 +1324,33 @@ namespace Barotrauma
                         }
                     }
                 }
+                
+                if (giveTalentInfos.Any() && (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient))
+                {
+                    Character targetCharacter = CharacterFromTarget(target);
+                    if (targetCharacter?.Info == null) { continue; }
+                    if (!TalentTree.JobTalentTrees.TryGetValue(targetCharacter.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { continue; }
+                    // for the sake of technical simplicity, for now do not allow talents to be given if the character could unlock them in their talent tree as well
+                    IEnumerable<string> disallowedTalents = talentTree.TalentSubTrees.SelectMany(s => s.TalentOptionStages.SelectMany(o => o.Talents.Select(t => t.Identifier)));
+
+                    foreach (GiveTalentInfo giveTalentInfo in giveTalentInfos)
+                    {                    
+                        IEnumerable<string> viableTalents = giveTalentInfo.TalentIdentifiers.Where(s => !targetCharacter.Info.UnlockedTalents.Contains(s) && !disallowedTalents.Contains(s));
+                        if (viableTalents.None()) { continue; }
+
+                        if (giveTalentInfo.GiveRandom)
+                        {
+                            targetCharacter.GiveTalent(viableTalents.GetRandom(), true);
+                        }
+                        else
+                        {
+                            foreach (string talent in viableTalents)
+                            {
+                                targetCharacter.GiveTalent(talent, true);
+                            }
+                        }
+                    }
+                }
             }
 
             if (FireSize > 0.0f && entity != null)
@@ -1367,6 +1413,7 @@ namespace Barotrauma
                             });
                     }
                 }
+
                 if (spawnItemRandomly)
                 {
                     SpawnItem(spawnItems.GetRandom());

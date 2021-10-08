@@ -291,7 +291,8 @@ namespace Barotrauma
                 {
                     case "sprite":
                         sp.sprite = new Sprite(subElement, lazyLoad: true);
-                        if (subElement.Attribute("sourcerect") == null)
+                        if (subElement.Attribute("sourcerect") == null &&
+                            subElement.Attribute("sheetindex") == null)
                         {
                             DebugConsole.ThrowError("Warning - sprite sourcerect not configured for structure \"" + sp.name + "\"!");
                         }

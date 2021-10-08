@@ -34,9 +34,6 @@ namespace Barotrauma
         private float flipTimer;
         private const float FlipInterval = 0.5f;
 
-        private float teamChangeTimer;
-        private const float TeamChangeInterval = 0.5f;
-
         public const float HULL_SAFETY_THRESHOLD = 40;
         public const float HULL_LOW_OXYGEN_PERCENTAGE = 30;
 
@@ -1124,7 +1121,7 @@ namespace Barotrauma
                 {
                     (GameMain.GameSession?.GameMode as CampaignMode)?.OutpostNPCAttacked(Character, attacker, attackResult);
                     // Inform other NPCs
-                    if (cumulativeDamage > 1)
+                    if (cumulativeDamage > 1 || totalDamage >= 10)
                     {
                         InformOtherNPCs(cumulativeDamage);
                     }

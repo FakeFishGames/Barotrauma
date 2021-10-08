@@ -64,13 +64,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Editable, Serialize(true, true, description: "Enable hull condition mode.")]
-        public bool EnableHullCondition
-        {
-            get;
-            set;
-        }
-
         [Editable, Serialize(true, true, description: "Enable item finder mode.")]
         public bool EnableItemFinder
         {
@@ -148,30 +141,49 @@ namespace Barotrauma.Items.Components
                 hullDatas.Add(sourceHull, hullData);
             }
 
-            if (hullData.Distort) return;
+            if (hullData.Distort) { return; }
 
             switch (connection.Name)
             {
                 case "water_data_in":
                     //cheating a bit because water detectors don't actually send the water level
+                    float waterAmount;
                     if (source.GetComponent<WaterDetector>() == null)
                     {
-                        hullData.ReceivedWaterAmount = Rand.Range(0.0f, 1.0f);
+                        waterAmount = Rand.Range(0.0f, 1.0f);
                     }
                     else
                     {
-                        hullData.ReceivedWaterAmount = Math.Min(sourceHull.WaterVolume / sourceHull.Volume, 1.0f);
+                        waterAmount = Math.Min(sourceHull.WaterVolume / sourceHull.Volume, 1.0f);
+                    }
+                    hullData.ReceivedWaterAmount = waterAmount;
+                    foreach (var linked in sourceHull.linkedTo)
+                    {
+                        if (!(linked is Hull linkedHull)) { continue; }
+                        if (!hullDatas.TryGetValue(linkedHull, out HullData linkedHullData))
+                        {
+                            linkedHullData = new HullData();
+                            hullDatas.Add(linkedHull, linkedHullData);
+                        }
+                        linkedHullData.ReceivedWaterAmount = waterAmount;
                     }
                     break;
                 case "oxygen_data_in":
-                    float oxy;
-
-                    if (!float.TryParse(signal.value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out oxy))
+                    if (!float.TryParse(signal.value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float oxy))
                     {
                         oxy = Rand.Range(0.0f, 100.0f);
                     }
-
                     hullData.ReceivedOxygenAmount = oxy;
+                    foreach (var linked in sourceHull.linkedTo)
+                    {
+                        if (!(linked is Hull linkedHull)) { continue; }
+                        if (!hullDatas.TryGetValue(linkedHull, out HullData linkedHullData))
+                        {
+                            linkedHullData = new HullData();
+                            hullDatas.Add(linkedHull, linkedHullData);
+                        }
+                        linkedHullData.ReceivedOxygenAmount = oxy;
+                    }
                     break;
             }
         }

@@ -815,7 +815,7 @@ namespace Barotrauma
                 {
                     limb.body.SmoothRotate(MainLimb.Rotation + MathHelper.ToRadians(limb.Params.ConstantAngle) * Dir, limb.Mass * limb.Params.ConstantTorque, wrapAngle: true);
                 }
-                if (limb.Params.BlinkFrequency > 0)
+                if (limb.Params.BlinkFrequency > 0 && !limb.Params.OnlyBlinkInWater)
                 {
                     limb.UpdateBlink(deltaTime, MainLimb.Rotation);
                 }

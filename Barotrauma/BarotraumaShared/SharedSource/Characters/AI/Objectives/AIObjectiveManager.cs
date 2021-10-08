@@ -163,7 +163,7 @@ namespace Barotrauma
                 CoroutineManager.StopCoroutines(coroutine);
                 DelayedObjectives.Remove(objective);
             }
-            coroutine = CoroutineManager.InvokeAfter(() =>
+            coroutine = CoroutineManager.Invoke(() =>
             {
                 //round ended before the coroutine finished
 #if CLIENT

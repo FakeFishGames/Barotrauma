@@ -1318,7 +1318,7 @@ namespace Barotrauma.Networking
                             Log("Client \"" + GameServer.ClientLogName(sender) + "\" ended the round.", ServerLog.MessageType.ServerMessage);
                             if (mpCampaign != null && Level.IsLoadedOutpost)
                             {
-                                mpCampaign.SaveInventories();
+                                mpCampaign.SavePlayers();
                                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
                                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
                             }

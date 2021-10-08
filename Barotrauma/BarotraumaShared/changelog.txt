@@ -1,4 +1,55 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1500.6.0
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- Improvements and additions to the alien ruins and the new fractal guardians.
+- More improvements and fixes to the overhauled character sprites and animations.
+- Upgrade system reworked to work better in conjunction with new talents and quality systems. Quality of life upgrades made better or cheaper, hull upgrades are less effective towards the lategame but are better early, reorganized categories.
+- Talent adjustments and balancing.
+- Nerfed thermal goggles: some enemies are invisible to them and targets behind walls are much less clear.
+- Removed the "burndamage" damage type (not the same as "burn") that was added as a temporary workaround to allow pulse lasers to bypass monster's damage modifiers.
+- Made welding tools a bit less effective early to compensate for increases to their effectiveness from quality/talents.
+- Fuel tanks, rods, grenades and other quality-based items can be stacked again. Items of different qualities still can't be put in the same stack.
+- Endocrine Booster now gives a random talent.
+- New sprite for the mudraptor beak grown by splicing mudraptor genes.
+- Fabricating fuel rods now requirse electrical skills instead of mechanical.
+- Reactor now requires electrical skills instead of mechanical to repair.
+- When the status monitor receives the oxygen/water level for a hull, it registers it on all the linked hulls as well (-> no need to put an oxygen/water detector in all the hulls of a multi-hull room).
+- Changed how skillbooks work: the skills are gained when you "finish" reading the book instead of continuously to prevent UI message spam and overlap, the books can be used on others in the health interface or by hitting them with the book.
+- Color the selected (but unapplied) talent icons orange instead of changing the icon in the talent UI, made the apply button flash when there's unapplied talents.
+- Merged status monitor's status and hull condition tabs.
+- Halved concussion's damage threshold to make it possible for more sources of damage to trigger it, + halved the probability to compensate.
+
+Fixes:
+- Fixed high-quality batteries/tanks (or other items with an increased max condition) spawning in non-full condition (unstable only).
+- Fixed ropes sometimes crashing the game (unstable only).
+- Fixed some items occasionally disappearing from outposts when re-entering them. The most noticeable symptom was wires disappearing from the outpost's airlock, preventing the hatch from opening (unstable only).
+- Fixed multiplayer campaign characters resetting if they're dead when the round ends.
+- Fixed clients who aren't currently controlling a character not getting XP in the mp campaign (unstable only).
+- The overdosed NPC in the "good samaritan" event can't die until the player has triggered the event (completing the event after the NPC had already died made no sense).
+- Fixed paralyzant (and many other meds that don't do direct damage) not triggering guards.
+- Fixed sonar monitor's UI being unnecessarily small.
+- Fixed contained items inside contained items (e.g. magazines in a rifle on a weapon holder) not rotating in the sub editor.
+- Fixed boarding axe (unstable only).
+- Fixed signal source being wrong on delayed electrical signals (= signals that were delayed for the next frame after they'd passed through 10 steps). Most noticeably affected status monitors that need to know which oxygen/water detector a signal came from.
+- Fixed WifiComponents delaying the signals based on the number of receivers, not how many steps the signal has actually taken, contributing to the previous issue.
+- Hopefully fixed an oversight in sub editor where changing ItemComponent color with HSV picker would create an error in the console.
+- Fixed inability to hit downed characters with short melee weapons like the diving knife.
+- Fixed inability to sell nasonov and faraday artifacts (unstable only).
+- Fixed concussion description (unstable only).
+- Fixes gender-specific affliction sound effects (e.g. vomiting) not playing (unstable only).
+- Fixed humans' "aim source position" being too low, causing aim to be slightly off (unstable only).
+- Fixed artifact transport case displaying as empty when there's a nasonov/faraday artifact inside (unstable only).
+- Fixed "infiltration" event getting stuck on one of the conversation options.
+- Fixed ruin's physics bodies being dynamic in mirrored levels (causing them to sink).
+- Backwards compatibility: assign skin colors to characters saved in previous versions.
+- Assign random skin/hair colors to characters without one configured instead of defaulting to white. Fixes all tutorial characters having white skin/hair.
+Modding:
+- Added support for tileable light textures for Structures by using <light> XML element that has the same syntax as <LightComponent> does for Items.
+- Added "InPressure" property to characters.
+
+---------------------------------------------------------------------------------------------------------
 v0.1500.5.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -8,7 +59,6 @@ Additions and changes:
 - New Alien Ruin mission: kill the guardians inhabiting the ruin and destroy their pods.
 - Improvements and fixes to the overhauled character sprites and animations.
 - More talent improvements and additions.
-- Balanced loot spawn rates.
 - Cap the amount argument of the spawnitem command to 100 to prevent freezing/crashing when trying to spawn a ridiculous amount of the item.
 - Nerfed concussions: they now require a larger amount of damage to the head to trigger and slowly heal by themselves.
 - Added "unlocktalents [job]" command.
@@ -18,6 +68,17 @@ Additions and changes:
 - Certain afflictions make the characters' face change color a bit.
 - Added button to randomize character appearance in the character customization menus.
 - Permanently reduce character skills when respawning mid-round. The talent system makes it easier to gain skills and permanent improvements to the character, and this change is intended to balance that out.
+
+Balance changes:
+- Reduced loot in wrecks.
+- Difficulty affects the amount of loot.
+- Reduced the amount of weapons and grenades in wrecks, pirate ships and abandoned outposts.
+- Disabled stacking quality-based items (experimental change, feedback is welcome).
+- Reduced diving suits damage resistances.
+- Buffed vigor and haste.
+- Modifed characters' base vitalities.
+- Adjustments to monster stats.
+- Reduced mission experience gains, level difficulty affects mission experience.
 
 Fixes:
 - Fixed crash when firing a syring gun (unstable only).

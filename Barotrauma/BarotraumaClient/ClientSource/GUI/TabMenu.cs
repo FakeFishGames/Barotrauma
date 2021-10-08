@@ -141,6 +141,10 @@ namespace Barotrauma
             {
                 int talentCount = selectedTalents.Count - controlled.Info.UnlockedTalents.Count;
                 talentResetButton.Enabled = talentApplyButton.Enabled = talentCount > 0;
+                if (talentApplyButton.Enabled && talentApplyButton.FlashTimer <= 0.0f)
+                {
+                    talentApplyButton.Flash(GUI.Style.Orange);
+                }
             }
 
             if (selectedTab != InfoFrameTab.Crew) return;
@@ -1184,7 +1188,7 @@ namespace Barotrauma
         private Color unselectableColor = new Color(100, 100, 100, 225);
         private Color pressedColor = new Color(60, 60, 60, 225);
 
-        private readonly List<(GUIButton button, GUIComponent icon, GUIImage glow)> talentButtons = new List<(GUIButton button, GUIComponent icon, GUIImage glow)>();
+        private readonly List<(GUIButton button, GUIComponent icon)> talentButtons = new List<(GUIButton button, GUIComponent icon)>();
         private readonly List<(string talentTree, int index, GUIImage icon, GUIFrame background, GUIFrame backgroundGlow)> talentCornerIcons = new List<(string talentTree, int index, GUIImage icon, GUIFrame background, GUIFrame backgroundGlow)>();
         private List<string> selectedTalents = new List<string>();
 
@@ -1453,9 +1457,7 @@ namespace Barotrauma
                                 };
                             }
 
-                            GUIImage iconGlow = new GUIImage(new RectTransform(Vector2.One, iconImage.RectTransform, anchor: Anchor.Center), sprite: GUI.Style.TalentGlow.Sprite, scaleToFit: true) { Visible = false };
-
-                            talentButtons.Add((talentButton, iconImage, iconGlow));
+                            talentButtons.Add((talentButton, iconImage));
                         }
 
                         talentCornerIcons.Add((subTree.Identifier, i, cornerIcon, talentBackground, talentBackgroundHighlight));
@@ -1567,20 +1569,20 @@ namespace Barotrauma
                 string talentIdentifier = talentButton.button.UserData as string;
                 bool unselectable = !TalentTree.IsViableTalentForCharacter(controlledCharacter, talentIdentifier, selectedTalents) || controlledCharacter.HasTalent(talentIdentifier);
                 Color newTalentColor = unselectable ? unselectableColor : unselectedColor;
-
-                talentButton.glow.Visible = false;
+                Color hoverColor = Color.White;
 
                 if (controlledCharacter.HasTalent(talentIdentifier))
                 {
-                    newTalentColor = new Color(140,225,140,255);
+                    newTalentColor = GUI.Style.Green;
                 }
                 else if (selectedTalents.Contains(talentIdentifier))
                 {
-                    newTalentColor = new Color(174,164,124,255);
-                    talentButton.glow.Visible = true;
+                    newTalentColor = GUI.Style.Orange;
+                    hoverColor = Color.Lerp(GUI.Style.Orange, Color.White, 0.7f);
                 }
 
                 talentButton.icon.Color = newTalentColor;
+                talentButton.icon.HoverColor = hoverColor;
             }
 
             CreateTalentSkillList(controlledCharacter, skillListBox);

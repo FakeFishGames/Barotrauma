@@ -195,6 +195,7 @@
   <OutpostModule file="Content/Map/RuinModules/Alien_Chasm2.sub" />
   <OutpostModule file="Content/Map/RuinModules/Alien_Chasm3.sub" />
   <OutpostModule file="Content/Map/RuinModules/Alien_Entrance2.sub" />
+  <OutpostModule file="Content/Map/RuinModules/Alien_Entrance3.sub" />
   <OutpostModule file="Content/Map/RuinModules/Alien_Storage1R.sub" />
   <OutpostModule file="Content/Map/RuinModules/Alien_Storage1L.sub" />
   <OutpostModule file="Content/Map/RuinModules/Alien_Offices1.sub" />

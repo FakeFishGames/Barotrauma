@@ -357,8 +357,11 @@ namespace Barotrauma
             float itemAngle;
             Holdable holdable = item.GetComponent<Holdable>();
             float torsoRotation = torso.Rotation;
-            bool equippedInRightHand = character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == item && rightHand != null && !rightHand.IsSevered;
-            bool equippedInLefthand = character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand) == item && leftHand != null && !leftHand.IsSevered;
+
+            Item rightHandItem = character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand);
+            bool equippedInRightHand = rightHandItem == item && rightHand != null && !rightHand.IsSevered;
+            Item leftHandItem = character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand);
+            bool equippedInLefthand = leftHandItem == item && leftHand != null && !leftHand.IsSevered;
             if (aim && !isClimbing && !usingController && character.Stun <= 0.0f && itemPos != Vector2.Zero && !character.IsIncapacitated)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.SmoothedCursorPosition);
@@ -366,17 +369,23 @@ namespace Barotrauma
                 holdAngle = MathUtils.VectorToAngle(new Vector2(diff.X, diff.Y * Dir)) - torsoRotation * Dir;
                 holdAngle += GetAimWobble(rightHand, leftHand, item);
                 itemAngle = torsoRotation + holdAngle * Dir;
+
                 if (holdable.ControlPose)
                 {
-                    var head = GetLimb(LimbType.Head);
-                    if (head != null)
+                    //if holding two items that should control the characters' pose, let the item in the right hand do it
+                    bool anotherItemControlsPose = equippedInLefthand && rightHandItem != item && (rightHandItem?.GetComponent<Holdable>()?.ControlPose ?? false);
+                    if (!anotherItemControlsPose)
                     {
-                        head.body.SmoothRotate(itemAngle, force: 30 * head.Mass);
-                    }
-                    if (TargetMovement == Vector2.Zero && inWater)
-                    {
-                        torso.body.AngularVelocity -= torso.body.AngularVelocity * 0.1f;
-                        torso.body.ApplyForce(torso.body.LinearVelocity * -0.5f);
+                        var head = GetLimb(LimbType.Head);
+                        if (head != null)
+                        {
+                            head.body.SmoothRotate(itemAngle, force: 30 * head.Mass);
+                        }
+                        if (TargetMovement == Vector2.Zero && inWater)
+                        {
+                            torso.body.AngularVelocity -= torso.body.AngularVelocity * 0.1f;
+                            torso.body.ApplyForce(torso.body.LinearVelocity * -0.5f);
+                        }
                     }
                     aiming = true;
                 }
@@ -506,7 +515,11 @@ namespace Barotrauma
                         DebugConsole.AddWarning($"Aim position for the item {item.Name} may be incorrect (further than the length of the character's arm)");
                     }
 #endif
-                    HandIK(i == 0 ? rightHand : leftHand, transformedHoldPos + transformedHandlePos[i], CurrentAnimationParams.ArmIKStrength, CurrentAnimationParams.HandIKStrength);
+                    HandIK(
+                        i == 0 ? rightHand : leftHand, transformedHoldPos + transformedHandlePos[i],
+                        CurrentAnimationParams.ArmIKStrength,
+                        CurrentAnimationParams.HandIKStrength,
+                        maxAngularVelocity: 15.0f);
                 }
             }
         }
@@ -531,7 +544,7 @@ namespace Barotrauma
             return (lowFreqNoise * 1.0f + highFreqNoise * 0.1f) * wobbleStrength;
         }
 
-        public void HandIK(Limb hand, Vector2 pos, float armTorque = 1.0f, float handTorque = 1.0f)
+        public void HandIK(Limb hand, Vector2 pos, float armTorque = 1.0f, float handTorque = 1.0f, float maxAngularVelocity = float.PositiveInfinity)
         {
             Vector2 shoulderPos;
 
@@ -572,11 +585,20 @@ namespace Barotrauma
                 armAngle -= MathHelper.TwoPi;
             }
 
-            arm?.body.SmoothRotate(armAngle - upperArmAngle, 100.0f * armTorque * arm.Mass, wrapAngle: false);
+            if (arm?.body != null && Math.Abs(arm.body.AngularVelocity) < maxAngularVelocity)
+            {
+                arm.body.SmoothRotate(armAngle - upperArmAngle, 100.0f * armTorque * arm.Mass, wrapAngle: false);
+            }
             float forearmAngle = armAngle + lowerArmAngle;
-            forearm?.body.SmoothRotate(forearmAngle, 100.0f * handTorque * forearm.Mass, wrapAngle: false);
-            float handAngle = forearm != null ? forearmAngle : armAngle;
-            hand?.body.SmoothRotate(handAngle, 10.0f * handTorque * hand.Mass, wrapAngle: false);
+            if (forearm?.body != null && Math.Abs(forearm.body.AngularVelocity) < maxAngularVelocity)
+            {
+                forearm.body.SmoothRotate(forearmAngle, 100.0f * handTorque * forearm.Mass, wrapAngle: false);
+            }
+            if (hand?.body != null && Math.Abs(hand.body.AngularVelocity) < maxAngularVelocity)
+            {
+                float handAngle = forearm != null ? forearmAngle : armAngle;
+                hand.body.SmoothRotate(handAngle, 10.0f * handTorque * hand.Mass, wrapAngle: false);
+            }
         }
 
         public void ApplyPose(Vector2 leftHandPos, Vector2 rightHandPos, Vector2 leftFootPos, Vector2 rightFootPos, float footMoveForce = 10)
@@ -672,7 +694,7 @@ namespace Barotrauma
 
                         forearmLength += Vector2.Distance(
                             rightHand.PullJointLocalAnchorA,
-                            rightElbow.LimbA.type == LimbType.RightHand ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB);
+                            rightWrist.LimbA.type == LimbType.RightHand ? rightWrist.LocalAnchorA : rightWrist.LocalAnchorB);
                     }
                 }
             }

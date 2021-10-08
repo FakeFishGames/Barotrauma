@@ -40,7 +40,7 @@ namespace Barotrauma.Items.Components
         }
 
         [Serialize(false, false)]
-        public bool SeeThroughWalls
+        public bool ThermalGoggles
         {
             get;
             private set;
@@ -76,6 +76,8 @@ namespace Barotrauma.Items.Components
 
         private bool isEquippable;
 
+        private float thermalEffectState;
+
         public IEnumerable<Character> VisibleCharacters
         {
             get 
@@ -108,7 +110,10 @@ namespace Barotrauma.Items.Components
             {
                 refEntity = item;
             }
-            
+
+            thermalEffectState += deltaTime;
+            thermalEffectState %= 10000.0f;
+
             if (updateTimer > 0.0f)
             {
                 updateTimer -= deltaTime;
@@ -125,7 +130,7 @@ namespace Barotrauma.Items.Components
                 if (dist < Range * Range)
                 {
                     Vector2 diff = c.WorldPosition - refEntity.WorldPosition;
-                    if (SeeThroughWalls || Submarine.CheckVisibility(refEntity.SimPosition, refEntity.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
+                    if (Submarine.CheckVisibility(refEntity.SimPosition, refEntity.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
                     {
                         visibleCharacters.Add(c);
                     }
@@ -180,21 +185,38 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (SeeThroughWalls)
+            if (ThermalGoggles)
             {
                 spriteBatch.End();
-                GameMain.LightManager.SolidColorEffect.Parameters["color"].SetValue(Color.Red.ToVector4() * (0.35f + (float)Math.Sin(Timing.TotalTime * 1.6f) * 0.05f));
+                GameMain.LightManager.SolidColorEffect.Parameters["color"].SetValue(Color.Red.ToVector4() * (0.3f + MathF.Sin(thermalEffectState) * 0.05f));
                 GameMain.LightManager.SolidColorEffect.CurrentTechnique = GameMain.LightManager.SolidColorEffect.Techniques["SolidColorBlur"];
-                GameMain.LightManager.SolidColorEffect.Parameters["blurDistance"].SetValue(0.03f + (float)Math.Sin(Timing.TotalTime) * 0.01f);
+                GameMain.LightManager.SolidColorEffect.Parameters["blurDistance"].SetValue(0.01f + MathF.Sin(thermalEffectState) * 0.005f);
                 GameMain.LightManager.SolidColorEffect.CurrentTechnique.Passes[0].Apply();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: Screen.Selected.Cam.Transform, effect: GameMain.LightManager.SolidColorEffect);
 
-                foreach (Character c in visibleCharacters)
+                Entity refEntity = equipper;
+                if (!isEquippable || refEntity == null)
                 {
-                    if (c == character || !c.Enabled || c.Removed) { continue; }
+                    refEntity = item;
+                }
+
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (c == character || !c.Enabled || c.Removed || c.Params.HideInThermalGoggles) { continue; }
+                    if (!ShowDeadCharacters && c.IsDead) { continue; }
+
+                    float dist = Vector2.DistanceSquared(refEntity.WorldPosition, c.WorldPosition);
+                    if (dist > Range * Range) { continue; }
+
+                    Sprite pingCircle = GUI.Style.UIThermalGlow.Sprite;
                     foreach (Limb limb in c.AnimController.Limbs)
                     {
-                        limb.Draw(spriteBatch, Screen.Selected.Cam, disableDeformations: true);
+                        if (limb.Mass < 1.0f) { continue; }
+                        float noise1 = PerlinNoise.GetPerlin((thermalEffectState + limb.Params.ID + c.ID) * 0.01f, (thermalEffectState + limb.Params.ID + c.ID) * 0.02f);
+                        float noise2 = PerlinNoise.GetPerlin((thermalEffectState + limb.Params.ID + c.ID) * 0.01f, (thermalEffectState + limb.Params.ID + c.ID) * 0.008f);
+                        Vector2 spriteScale = ConvertUnits.ToDisplayUnits(limb.body.GetSize()) / pingCircle.size * (noise1 * 0.5f + 2f);
+                        Vector2 drawPos = new Vector2(limb.body.DrawPosition.X + (noise1 - 0.5f) * 100, -limb.body.DrawPosition.Y + (noise2 - 0.5f) * 100);
+                        pingCircle.Draw(spriteBatch, drawPos, 0.0f, scale: Math.Max(spriteScale.X, spriteScale.Y));
                     }
                 }
 

@@ -374,12 +374,7 @@ namespace Barotrauma.Networking
                         }
                         else
                         {
-                            foreach (Skill skill in characterInfos[i].Job.Skills)
-                            {
-                                var skillPrefab = characterInfos[i].Job.Prefab.Skills.Find(s => skill.Prefab == s);
-                                if (skillPrefab == null) { continue; }
-                                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.X, SkillReductionOnCampaignMidroundRespawn);
-                            }
+                            ReduceCharacterSkills(characterInfos[i]);
                         }
                     }
                 }
@@ -490,6 +485,17 @@ namespace Barotrauma.Networking
                         item.Description = shuttleSpawnPoints[i].IdCardDesc;
                     }
                 }
+            }
+        }
+
+        public static void ReduceCharacterSkills(CharacterInfo characterInfo)
+        {
+            if (characterInfo?.Job == null) { return; }
+            foreach (Skill skill in characterInfo.Job.Skills)
+            {
+                var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Prefab == s);
+                if (skillPrefab == null) { continue; }
+                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.X, SkillReductionOnCampaignMidroundRespawn);
             }
         }
 

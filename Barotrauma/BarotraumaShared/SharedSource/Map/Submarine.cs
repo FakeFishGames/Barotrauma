@@ -914,9 +914,11 @@ namespace Barotrauma
                 mapEntity.Move(-HiddenSubPosition);
             }
 
+            var prevBodyType = subBody.Body.BodyType;
             Vector2 pos = new Vector2(subBody.Position.X, subBody.Position.Y);
             subBody.Body.Remove();
             subBody = new SubmarineBody(this);
+            subBody.Body.BodyType = prevBodyType;
             SetPosition(pos, new List<Submarine>(parents.Where(p => p != this)));
 
             if (entityGrid != null)
@@ -1428,6 +1430,11 @@ namespace Barotrauma
                             structure.Indestructible = true;
                         }
                     }
+                }
+                else if (info.IsRuin)
+                {
+                    ShowSonarMarker = false;
+                    PhysicsBody.FarseerBody.BodyType = BodyType.Static;
                 }
             }
 

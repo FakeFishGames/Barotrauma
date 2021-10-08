@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -15,6 +16,22 @@ namespace Barotrauma
 {
     public static class XMLExtensions
     {
+        private static ImmutableDictionary<Type, Func<string, object, object>> converters
+            = new Dictionary<Type, Func<string, object, object>>()
+            {
+                { typeof(string), (str, defVal) => str },
+                { typeof(int), (str, defVal) => int.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out int result) ? result : defVal },
+                { typeof(uint), (str, defVal) => uint.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out uint result) ? result : defVal },
+                { typeof(UInt64), (str, defVal) => UInt64.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out UInt64 result) ? result : defVal },
+                { typeof(float), (str, defVal) => float.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out float result) ? result : defVal },
+                { typeof(bool), (str, defVal) => bool.TryParse(str, out bool result) ? result : defVal },
+                { typeof(Color), (str, defVal) => ParseColor(str) },
+                { typeof(Vector2), (str, defVal) => ParseVector2(str) },
+                { typeof(Vector3), (str, defVal) => ParseVector3(str) },
+                { typeof(Vector4), (str, defVal) => ParseVector4(str) },
+                { typeof(Rectangle), (str, defVal) => ParseRect(str, true) }
+            }.ToImmutableDictionary();
+        
         public static string ParseContentPathFromUri(this XObject element) => System.IO.Path.GetRelativePath(Environment.CurrentDirectory, element.BaseUri);
 
         public static readonly XmlReaderSettings ReaderSettings = new XmlReaderSettings
@@ -485,6 +502,25 @@ namespace Barotrauma
             return ParseRect(element.Attribute(name).Value, false);
         }
 
+        //TODO: nested tuples and and n-uples where n!=2 are unsupported
+        public static (T1, T2) GetAttributeTuple<T1, T2>(this XElement element, string name, (T1, T2) defaultValue)
+        {
+            string strValue = element.GetAttributeString(name, $"({defaultValue.Item1}, {defaultValue.Item2})").Trim();
+
+            return ParseTuple(strValue, defaultValue);
+        }
+
+        public static (T1, T2)[] GetAttributeTupleArray<T1, T2>(this XElement element, string name,
+            (T1, T2)[] defaultValue)
+        {
+            if (element?.Attribute(name) == null) { return defaultValue; }
+
+            string stringValue = element.Attribute(name).Value;
+            if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
+
+            return stringValue.Split(';').Select(s => ParseTuple<T1, T2>(s, default)).ToArray();
+        }
+
         public static string ElementInnerText(this XElement el)
         {
             StringBuilder str = new StringBuilder();
@@ -525,11 +561,27 @@ namespace Barotrauma
             => $"{color.R},{color.G},{color.B},{color.A}";
 
         public static string ToStringHex(this Color color)
-            => $"#{color.R:X2}{color.G:X2}{color.B:X2}{color.A:X2}";
+            => $"#{color.R:X2}{color.G:X2}{color.B:X2}"
+                + ((color.A < 255) ? $"{color.A:X2}" : "");
 
         public static string RectToString(Rectangle rect)
         {
             return rect.X + "," + rect.Y + "," + rect.Width + "," + rect.Height;
+        }
+
+        public static (T1, T2) ParseTuple<T1, T2>(string strValue, (T1, T2) defaultValue)
+        {
+            strValue = strValue.Trim();
+            //require parentheses
+            if (strValue[0] != '(' || strValue[^1] != ')') { return defaultValue; }
+            //remove parentheses
+            strValue = strValue[1..^1];
+
+            string[] elems = strValue.Split(',');
+            if (elems.Length != 2) { return defaultValue; }
+            
+            return ((T1)converters[typeof(T1)].Invoke(elems[0], defaultValue.Item1),
+                (T2)converters[typeof(T2)].Invoke(elems[1], defaultValue.Item2));
         }
         
         public static Point ParsePoint(string stringPoint, bool errorMessages = true)

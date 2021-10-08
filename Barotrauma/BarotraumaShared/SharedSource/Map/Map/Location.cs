@@ -90,7 +90,7 @@ namespace Barotrauma
 
         private const float StoreMaxReputationModifier = 0.1f;
         private const float StoreSellPriceModifier = 0.8f;
-        private const float DailySpecialPriceModifier = 0.9f;
+        private const float DailySpecialPriceModifier = 0.5f;
         private const float RequestGoodPriceModifier = 1.5f;
         public const int StoreInitialBalance = 5000;
         /// <summary>

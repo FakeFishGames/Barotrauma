@@ -41,13 +41,13 @@ namespace Barotrauma
         public SpriteSheet SavingIndicator { get; private set; }
 
         public UISprite UIGlow { get; private set; }
-        public UISprite TalentGlow { get; private set; }
 
         public UISprite PingCircle { get; private set; }
 
         public UISprite UIGlowCircular { get; private set; }
 
         public UISprite UIGlowSolidCircular { get; private set; }
+        public UISprite UIThermalGlow { get; private set; }
 
         public UISprite ButtonPulse { get; private set; }
 
@@ -91,8 +91,8 @@ namespace Barotrauma
         public Color TextColorDark { get; private set; } = Color.Black * 0.9f;
         public Color TextColorDim { get; private set; } = Color.White * 0.6f;
 
-        public Color ItemQualityColorPoor { get; private set; } = Color.Gray;
-        public Color ItemQualityColorNormal { get; private set; } = Color.White;
+        public Color ItemQualityColorPoor { get; private set; } = Color.DarkRed;
+        public Color ItemQualityColorNormal { get; private set; } = Color.Gray;
         public Color ItemQualityColorGood { get; private set; } = Color.LightGreen;
         public Color ItemQualityColorExcellent { get; private set; } = Color.LightBlue;
         public Color ItemQualityColorMasterwork { get; private set; } = Color.MediumPurple;
@@ -250,9 +250,6 @@ namespace Barotrauma
                     case "uiglow":
                         UIGlow = new UISprite(subElement);
                         break;
-                    case "talentglow":
-                        TalentGlow = new UISprite(subElement);
-                        break;
                     case "pingcircle":
                         PingCircle = new UISprite(subElement);
                         break;
@@ -267,6 +264,9 @@ namespace Barotrauma
                         break;
                     case "uiglowsolidcircular":
                         UIGlowSolidCircular = new UISprite(subElement);
+                        break;
+                    case "uithermalglow":
+                        UIThermalGlow = new UISprite(subElement);
                         break;
                     case "endroundbuttonpulse":
                         ButtonPulse = new UISprite(subElement);

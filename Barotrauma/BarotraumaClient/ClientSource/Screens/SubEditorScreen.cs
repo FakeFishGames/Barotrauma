@@ -1538,7 +1538,7 @@ namespace Barotrauma
                     var existingFiles = ContentPackage.GetFilesOfType(GameMain.VanillaContent.ToEnumerable(), contentType);
                     if (contentType == ContentType.OutpostModule)
                     {
-                        existingFiles = existingFiles.Where(f => f.Path.Contains("Ruin") == Submarine.MainSub.Info.OutpostModuleInfo.ModuleFlags.Contains("ruin"));                        
+                        existingFiles = existingFiles.Where(f => f.Path.Contains("Ruin") == Submarine.MainSub.Info.OutpostModuleInfo.ModuleFlags.Contains("ruin"));
                     }
 #else
                     var existingFiles = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages.Where(c => c != GameMain.VanillaContent), contentType);
@@ -3272,7 +3272,7 @@ namespace Barotrauma
                     oldProperties[color].Add(sEntity);
                 }
 
-                List<ISerializableEntity> affected = entities.Select(t => t.Entity).Where(se => se is MapEntity { Removed: false }).ToList();
+                List<ISerializableEntity> affected = entities.Select(t => t.Entity).Where(se => se is MapEntity { Removed: false } || se is ItemComponent).ToList();
                 StoreCommand(new PropertyCommand(affected, property.Name, newColor, oldProperties));
 
                 if (MapEntity.EditingHUD != null && (MapEntity.EditingHUD.UserData == entity || (!(entity is ItemComponent ic) || MapEntity.EditingHUD.UserData == ic.Item)))

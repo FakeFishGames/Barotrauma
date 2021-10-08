@@ -868,11 +868,12 @@ namespace Barotrauma
             }
         }
 
-        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, JobPrefab assignedJob = null, Submarine sub = null, bool useSyncedRand = false)
+        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, JobPrefab assignedJob = null, Submarine sub = null, bool useSyncedRand = false, string spawnPointTag = null)
         {
             return WayPointList.GetRandom(wp =>
                 wp.Submarine == sub && 
                 wp.spawnType == spawnType &&
+                (string.IsNullOrEmpty(spawnPointTag) || wp.Tags.Any(t => t.Equals(spawnPointTag, StringComparison.OrdinalIgnoreCase))) &&
                 (assignedJob == null || (assignedJob != null && wp.AssignedJob == assignedJob)), 
                 useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced);
         }

@@ -451,9 +451,9 @@ namespace Barotrauma
             set => Head.FaceAttachmentIndex = value;
         }
 
-        public readonly ImmutableArray<Color> HairColors;
-        public readonly ImmutableArray<Color> FacialHairColors;
-        public readonly ImmutableArray<Color> SkinColors;
+        public readonly ImmutableArray<(Color Color, float Commonness)> HairColors;
+        public readonly ImmutableArray<(Color Color, float Commonness)> FacialHairColors;
+        public readonly ImmutableArray<(Color Color, float Commonness)> SkinColors;
         
         public Color HairColor
         {
@@ -522,15 +522,12 @@ namespace Barotrauma
             // TODO: support for variants
             Head = new HeadInfo();
             HasGenders = CharacterConfigElement.GetAttributeBool("genders", false);
-            Head.gender = GetRandomGender(randSync);
             HasRaces = CharacterConfigElement.GetAttributeBool("races", false);
-            Head.race = GetRandomRace(randSync);
-            CalculateHeadSpriteRange();
-            HeadSpriteId = GetRandomHeadID(randSync);
+            SetGenderAndRace(randSync);
             Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Unsynced) : new Job(jobPrefab, variant);
-            HairColors = CharacterConfigElement.GetAttributeColorArray("haircolors", new Color[] { Color.WhiteSmoke }).ToImmutableArray();
-            FacialHairColors = CharacterConfigElement.GetAttributeColorArray("facialhaircolors", new Color[] { Color.WhiteSmoke }).ToImmutableArray();
-            SkinColors = CharacterConfigElement.GetAttributeColorArray("skincolors", new Color[] { new Color(255, 215, 200, 255) }).ToImmutableArray();
+            HairColors = CharacterConfigElement.GetAttributeTupleArray("haircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
+            FacialHairColors = CharacterConfigElement.GetAttributeTupleArray("facialhaircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
+            SkinColors = CharacterConfigElement.GetAttributeTupleArray("skincolors", new (Color, float)[] { (new Color(255, 215, 200, 255), 100f) }).ToImmutableArray();
             SetColors();
 
             if (!string.IsNullOrEmpty(name))
@@ -580,26 +577,38 @@ namespace Barotrauma
             return name;
         }
 
+        public static Color SelectRandomColor(in ImmutableArray<(Color Color, float Commonness)> array)
+            => ToolBox.SelectWeightedRandom(array, array.Select(p => p.Commonness).ToArray(), Rand.RandSync.Unsynced)
+                .Color;
+
+        private void SetGenderAndRace(Rand.RandSync randSync)
+        {
+            Head.gender = GetRandomGender(randSync);
+            Head.race = GetRandomRace(randSync);
+            CalculateHeadSpriteRange();
+            HeadSpriteId = GetRandomHeadID(randSync);
+        }
+        
         private void SetColors()
         {
-            HairColor = HairColors.GetRandom();
-            FacialHairColor = FacialHairColors.GetRandom();
-            SkinColor = SkinColors.GetRandom();
+            HairColor = SelectRandomColor(HairColors);
+            FacialHairColor = SelectRandomColor(FacialHairColors);
+            SkinColor = SelectRandomColor(SkinColors);
         }
 
         private void CheckColors()
         {
             if (HairColor == Color.Black)
             {
-                HairColor = HairColors.GetRandom();
+                HairColor = SelectRandomColor(HairColors);
             }
             if (FacialHairColor == Color.Black)
             {
-                FacialHairColor = FacialHairColors.GetRandom();
+                FacialHairColor = SelectRandomColor(FacialHairColors);
             }
             if (SkinColor == Color.Black)
             {
-                SkinColor = SkinColors.GetRandom();
+                SkinColor = SelectRandomColor(SkinColors);
             }
         }
 
@@ -610,7 +619,6 @@ namespace Barotrauma
             idCounter++;
             Name = infoElement.GetAttributeString("name", "");
             OriginalName = infoElement.GetAttributeString("originalname", null);
-            string genderStr = infoElement.GetAttributeString("gender", "male").ToLowerInvariant();
             Salary = infoElement.GetAttributeInt("salary", 1000);
             ExperiencePoints = infoElement.GetAttributeInt("experiencepoints", 0);
             UnlockedTalents = new HashSet<string>(infoElement.GetAttributeStringArray("unlockedtalents", new string[0], convertToLowerInvariant: true));
@@ -642,10 +650,10 @@ namespace Barotrauma
             {
                 race = GetRandomRace(Rand.RandSync.Unsynced);
             }
-            HairColors = CharacterConfigElement.GetAttributeColorArray("haircolors", new Color[] { Color.WhiteSmoke }).ToImmutableArray();
-            FacialHairColors = CharacterConfigElement.GetAttributeColorArray("facialhaircolors", new Color[] { Color.WhiteSmoke }).ToImmutableArray();
-            SkinColors = CharacterConfigElement.GetAttributeColorArray("skincolors", new Color[] { new Color(255, 215, 200, 255) }).ToImmutableArray();
-
+            HairColors = CharacterConfigElement.GetAttributeTupleArray("haircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
+            FacialHairColors = CharacterConfigElement.GetAttributeTupleArray("facialhaircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
+            SkinColors = CharacterConfigElement.GetAttributeTupleArray("skincolors", new (Color, float)[] { (new Color(255, 215, 200, 255), 100f) }).ToImmutableArray();
+            
             RecreateHead(
                 infoElement.GetAttributeInt("headspriteid", 1),
                 race,
@@ -655,9 +663,35 @@ namespace Barotrauma
                 infoElement.GetAttributeInt("moustacheindex", -1),
                 infoElement.GetAttributeInt("faceattachmentindex", -1));
 
-            SkinColor = infoElement.GetAttributeColor("skincolor", Color.White);
-            HairColor = infoElement.GetAttributeColor("haircolor", Color.White);
-            FacialHairColor = infoElement.GetAttributeColor("facialhaircolor", Color.White);
+            //backwards compatibility
+            if (infoElement.Attribute("skincolor") == null && infoElement.Attribute("race") != null)
+            {
+                string raceStr = infoElement.GetAttributeString("race", string.Empty);
+                Race obsoleteRace = Race.None;
+                Enum.TryParse(raceStr, ignoreCase: true, out obsoleteRace);
+                switch (obsoleteRace)
+                {
+                    case Race.White:
+                    case Race.None:
+                        SkinColor = new Color(255, 215, 200, 255);
+                        break;
+                    case Race.Brown:
+                        SkinColor = new Color(158, 95, 72, 255);
+                        break;
+                    case Race.Black:
+                        SkinColor = new Color(153, 75, 42, 255);
+                        break;
+                    case Race.Asian:
+                        SkinColor = new Color(191, 116, 61, 255);
+                        break;
+                }
+            }
+            else
+            {
+                SkinColor = infoElement.GetAttributeColor("skincolor", Color.Black);
+            }
+            HairColor = infoElement.GetAttributeColor("haircolor", Color.Black);
+            FacialHairColor = infoElement.GetAttributeColor("facialhaircolor", Color.Black);
             CheckColors();
 
             if (string.IsNullOrEmpty(Name))
@@ -1128,7 +1162,7 @@ namespace Barotrauma
             return (int)(salary * Job.Prefab.PriceMultiplier);
         }
 
-        public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 pos)
+        public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 pos, bool gainedFromApprenticeship = false)
         {
             if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) || Character == null) { return; }         
 
@@ -1148,7 +1182,7 @@ namespace Barotrauma
             {                
                 // assume we are getting at least 1 point in skill, since this logic only runs in such cases
                 float increaseSinceLastSkillPoint = MathHelper.Max(increase, 1f);
-                var abilitySkillGain = new AbilityValueStringCharacter(increaseSinceLastSkillPoint, skillIdentifier, Character);
+                var abilitySkillGain = new AbilitySkillGain(increaseSinceLastSkillPoint, skillIdentifier, Character, gainedFromApprenticeship);
                 Character.CheckTalents(AbilityEffectType.OnGainSkillPoint, abilitySkillGain);
                 foreach (Character character in Character.GetFriendlyCrew(Character))
                 {
@@ -1746,5 +1780,20 @@ namespace Barotrauma
             StatIdentifier = statIdentifier;
             RemoveAfterRound = retainAfterRound;
         }
+    }
+
+    class AbilitySkillGain : AbilityObject, IAbilityValue, IAbilityString, IAbilityCharacter
+    {
+        public AbilitySkillGain(float value, string abilityString, Character character, bool gainedFromApprenticeship)
+        {
+            Value = value;
+            String = abilityString;
+            Character = character;
+            GainedFromApprenticeship = gainedFromApprenticeship;
+        }
+        public Character Character { get; set; }
+        public float Value { get; set; }
+        public string String { get; set; }
+        public bool GainedFromApprenticeship { get; set; }
     }
 }

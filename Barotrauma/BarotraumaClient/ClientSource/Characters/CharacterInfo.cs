@@ -680,7 +680,7 @@ namespace Barotrauma
                 createAttachmentSlider(info.MoustacheIndex, WearableType.Moustache);
                 createAttachmentSlider(info.FaceAttachmentIndex, WearableType.FaceAttachment);
 
-                void createColorSelector(string labelTag, IEnumerable<Color> options, Func<Color> getter,
+                void createColorSelector(string labelTag, IEnumerable<(Color Color, float Commonness)> options, Func<Color> getter,
                     Action<Color> setter)
                 {
                     var selectorItemRT = createItemRectTransform(labelTag, 0.4f);
@@ -714,7 +714,7 @@ namespace Barotrauma
                                     dropdown.ListBox.Content.RectTransform),
                                 style: "ListBoxElement")
                             {
-                                UserData = option,
+                                UserData = option.Color,
                                 CanBeFocused = true
                             };
                         var colorElement =
@@ -723,9 +723,9 @@ namespace Barotrauma
                                     scaleBasis: ScaleBasis.Smallest),
                                 style: null)
                             {
-                                Color = option,
-                                HoverColor = option,
-                                OutlineColor = Color.Lerp(Color.Black, option, 0.5f),
+                                Color = option.Color,
+                                HoverColor = option.Color,
+                                OutlineColor = Color.Lerp(Color.Black, option.Color, 0.5f),
                                 CanBeFocused = false
                             };
                     }
@@ -784,19 +784,9 @@ namespace Barotrauma
                 {
                     OnClicked = (button, o) =>
                     {
-                        var headPreset = info.Heads.Keys.GetRandom(Rand.RandSync.Unsynced);
-                        info.Head.gender = headPreset.Gender;
-                        info.Head.race = headPreset.Race;
-                        info.Head.HeadSpriteId = headPreset.ID;
-
-                        info.Head.HairIndex = Rand.Int(countAttachmentsOfType(WearableType.Hair), Rand.RandSync.Unsynced);
-                        info.Head.BeardIndex = Rand.Int(countAttachmentsOfType(WearableType.Beard), Rand.RandSync.Unsynced);
-                        info.Head.MoustacheIndex = Rand.Int(countAttachmentsOfType(WearableType.Moustache), Rand.RandSync.Unsynced);
-                        info.Head.FaceAttachmentIndex = Rand.Int(countAttachmentsOfType(WearableType.FaceAttachment), Rand.RandSync.Unsynced);
-
-                        info.Head.HairColor = info.HairColors.GetRandom(Rand.RandSync.Unsynced);
-                        info.Head.FacialHairColor = info.FacialHairColors.GetRandom(Rand.RandSync.Unsynced);
-                        info.Head.SkinColor = info.SkinColors.GetRandom(Rand.RandSync.Unsynced);
+                        info.Head = new HeadInfo();
+                        info.SetGenderAndRace(Rand.RandSync.Unsynced);
+                        info.SetColors();
                         
                         RecreateFrameContents();
                         info.RefreshHead();

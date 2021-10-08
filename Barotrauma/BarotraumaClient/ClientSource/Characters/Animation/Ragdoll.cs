@@ -284,7 +284,7 @@ namespace Barotrauma
             limb.LastImpactSoundTime = (float)Timing.TotalTime;
             if (!string.IsNullOrWhiteSpace(limb.HitSoundTag))
             {
-                bool inWater = limb.inWater;
+                bool inWater = limb.InWater;
                 if (character.CurrentHull != null &&
                     character.CurrentHull.Surface > character.CurrentHull.Rect.Y - character.CurrentHull.Rect.Height + 5.0f &&
                     limb.SimPosition.Y < ConvertUnits.ToSimUnits(character.CurrentHull.Rect.Y - character.CurrentHull.Rect.Height) + limb.body.GetMaxExtent())
@@ -348,16 +348,27 @@ namespace Barotrauma
             float increment = 0.001f;
             foreach (Character otherCharacter in Character.CharacterList)
             {
-                if (otherCharacter == character) continue;
+                if (otherCharacter == character) { continue; }
                 startDepth += increment;
             }
-            //make sure each limb has a distinct depth value 
-            List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.ActiveSprite == null ? 0.0f : l.ActiveSprite.Depth).ToList();
+            //make sure each limb has a distinct depth value
+            List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.DefaultSpriteDepth).ToList();
             foreach (Limb limb in Limbs)
             {
-                if (limb.ActiveSprite != null)
-                    limb.ActiveSprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
+                if (limb.ActiveSprite == null) { continue; }
+                limb.ActiveSprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
             }
+            foreach (Limb limb in Limbs)
+            {
+                if (limb.ActiveSprite == null) { continue; }
+                if (limb.Params.InheritLimbDepth == LimbType.None) { continue; }
+                var matchingLimb = GetLimb(limb.Params.InheritLimbDepth);
+                if (matchingLimb != null)
+                {
+                    limb.ActiveSprite.Depth = matchingLimb.ActiveSprite.Depth - 0.0000001f;
+                }
+            }
+
             depthSortedLimbs.Reverse();
             inversedLimbDrawOrder = depthSortedLimbs.ToArray();
         }
@@ -567,6 +578,11 @@ namespace Barotrauma
                 pos = ConvertUnits.ToDisplayUnits(humanoid.LeftHandIKPos);
                 if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.Position; }
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUI.Style.Green, true);
+
+                Vector2 aimPos = humanoid.AimSourceWorldPos;
+                aimPos.Y = -aimPos.Y;
+                GUI.DrawLine(spriteBatch, aimPos - Vector2.UnitY * 3, aimPos + Vector2.UnitY * 3, Color.Red);
+                GUI.DrawLine(spriteBatch, aimPos - Vector2.UnitX * 3, aimPos + Vector2.UnitX * 3, Color.Red);
             }
 
             if (character.MemState.Count > 1)

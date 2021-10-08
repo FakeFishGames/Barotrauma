@@ -92,7 +92,7 @@ namespace Barotrauma
                     }
                 case ConditionType.AllowRotating:
                     {
-                        return entity is Item item && item.Prefab.AllowRotatingInEditor && Screen.Selected == GameMain.SubEditorScreen;
+                        return entity is Item item && item.body == null && item.Prefab.AllowRotatingInEditor && Screen.Selected == GameMain.SubEditorScreen;
                     }
             }
             return false;

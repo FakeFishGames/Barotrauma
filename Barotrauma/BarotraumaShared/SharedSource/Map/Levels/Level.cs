@@ -1829,7 +1829,7 @@ namespace Barotrauma
 
         private void GenerateRuin(Point ruinPos, bool mirror)
         {
-            var ruinGenerationParams = RuinGenerationParams.GetRandom();
+            var ruinGenerationParams = RuinGenerationParams.GetRandom(Rand.RandSync.Server);
 
             LocationType locationType = StartLocation?.Type;
             if (locationType == null)
@@ -1839,7 +1839,7 @@ namespace Barotrauma
                 {
                     locationType = LocationType.List.Where(lt =>
                         ruinGenerationParams.AllowedLocationTypes.Any(allowedType =>
-                          allowedType.Equals("any", StringComparison.OrdinalIgnoreCase) || lt.Identifier.Equals(allowedType, StringComparison.OrdinalIgnoreCase))).GetRandom();
+                          allowedType.Equals("any", StringComparison.OrdinalIgnoreCase) || lt.Identifier.Equals(allowedType, StringComparison.OrdinalIgnoreCase))).GetRandom(Rand.RandSync.Server);
                 }
             }
 
@@ -3594,7 +3594,7 @@ namespace Barotrauma
                             {
                                 locationType = LocationType.List.Where(lt => 
                                     outpostGenerationParams.AllowedLocationTypes.Any(allowedType => 
-                                      allowedType.Equals("any", StringComparison.OrdinalIgnoreCase) || lt.Identifier.Equals(allowedType, StringComparison.OrdinalIgnoreCase))).GetRandom();
+                                      allowedType.Equals("any", StringComparison.OrdinalIgnoreCase) || lt.Identifier.Equals(allowedType, StringComparison.OrdinalIgnoreCase))).GetRandom(Rand.RandSync.Server);
                             }
                         }
 
@@ -3953,7 +3953,7 @@ namespace Barotrauma
                 bool TryGetExtraSpawnPoint(out Vector2 point)
                 {
                     point = Vector2.Zero;
-                    var hull = Hull.hullList.FindAll(h => h.Submarine == wreck).GetRandom();
+                    var hull = Hull.hullList.FindAll(h => h.Submarine == wreck).GetRandom(Rand.RandSync.Unsynced);
                     if (hull != null)
                     {
                         point = hull.WorldPosition;

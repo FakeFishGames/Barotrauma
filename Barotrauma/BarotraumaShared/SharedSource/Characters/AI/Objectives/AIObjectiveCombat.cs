@@ -1048,6 +1048,7 @@ namespace Barotrauma
                 if (closeEnough)
                 {
                     UseWeapon(deltaTime);
+                    character.AIController.SteeringManager.Reset();
                 }
                 else if (!character.IsFacing(Enemy.WorldPosition))
                 {

@@ -1717,11 +1717,79 @@ namespace Barotrauma
                     {
                         foreach (Client c in GameMain.Server.ConnectedClients)
                         {
-                            if (c.Character != revivedCharacter) continue;
+                            if (c.Character != revivedCharacter) { continue; }
 
-                //clients stop controlling the character when it dies, force control back
-                GameMain.Server.SetClientCharacter(c, revivedCharacter);
+                            //clients stop controlling the character when it dies, force control back
+                            GameMain.Server.SetClientCharacter(c, revivedCharacter);
                             break;
+                        }
+                    }
+                }
+            );
+
+            AssignOnClientRequestExecute(
+                "givetalent",
+                (Client client, Vector2 cursorWorldPos, string[] args) =>
+                {
+                    Character targetCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args, false);
+                    if (targetCharacter == null) { return; }
+
+                    TalentPrefab talentPrefab = TalentPrefab.TalentPrefabs.Find(c =>
+                        c.Identifier.Equals(args[0], StringComparison.OrdinalIgnoreCase) ||
+                        c.DisplayName.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                    if (talentPrefab == null)
+                    {
+                        GameMain.Server.SendConsoleMessage("Couldn't find the talent \"" + args[0] + "\".", client);
+                        return;
+                    }
+                    targetCharacter.GiveTalent(talentPrefab);
+                    NewMessage($"Talent \"{talentPrefab.DisplayName}\" given to \"{targetCharacter.Name}\" by \"{client.Name}\".");
+                    GameMain.Server.SendConsoleMessage($"Gave talent \"{talentPrefab.DisplayName}\" to \"{targetCharacter.Name}\".", client);
+                }
+            );
+
+            AssignOnClientRequestExecute(
+                "unlocktalents",
+                (Client client, Vector2 cursorWorldPos, string[] args) =>
+                {
+                    var targetCharacter = args.Length >= 2 ? FindMatchingCharacter(args.Skip(1).ToArray()) : Character.Controlled;
+                    if (targetCharacter == null) { return; }
+
+                    List<TalentTree> talentTrees = new List<TalentTree>();
+                    if (args.Length == 0 || args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
+                    {
+                        talentTrees.AddRange(TalentTree.JobTalentTrees.Values);
+                    }
+                    else
+                    {
+                        var job = JobPrefab.Prefabs.Find(jp => jp.Name != null && jp.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                        if (job == null)
+                        {
+                            GameMain.Server.SendConsoleMessage($"Failed to find the job \"{args[0]}\".", client);
+                            return;
+                        }
+                        if (!TalentTree.JobTalentTrees.TryGetValue(job.Identifier, out TalentTree talentTree))
+                        {
+                            GameMain.Server.SendConsoleMessage($"No talents configured for the job \"{args[0]}\".", client);
+                            return;
+                        }
+                        talentTrees.Add(talentTree);
+                    }
+
+                    foreach (var talentTree in talentTrees)
+                    {
+                        foreach (var subTree in talentTree.TalentSubTrees)
+                        {
+                            foreach (var option in subTree.TalentOptionStages)
+                            {
+                                foreach (var talent in option.Talents)
+                                {
+                                    targetCharacter.GiveTalent(talent);
+                                    NewMessage($"Talent \"{talent.DisplayName}\" given to \"{targetCharacter.Name}\" by \"{client.Name}\".");
+                                    GameMain.Server.SendConsoleMessage($"Gave talent \"{talent.DisplayName}\" to \"{targetCharacter.Name}\".", client);
+                                    NewMessage($"Unlocked talent \"{talent.DisplayName}\".");
+                                }
+                            }
                         }
                     }
                 }

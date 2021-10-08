@@ -845,15 +845,24 @@ namespace Barotrauma
                 var character = args.Length >= 2 ? FindMatchingCharacter(args.Skip(1).ToArray()) : Character.Controlled;
                 if (character != null)
                 {
-                    character.GiveTalent(args[0]);
+                    TalentPrefab talentPrefab = TalentPrefab.TalentPrefabs.Find(c => 
+                        c.Identifier.Equals(args[0], StringComparison.OrdinalIgnoreCase) ||
+                        c.DisplayName.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                    if (talentPrefab == null)
+                    {
+                        ThrowError($"Couldn't find the talent \"{args[0]}\".");
+                        return;
+                    }
+                    character.GiveTalent(talentPrefab);
+                    NewMessage($"Gave talent \"{talentPrefab.DisplayName}\" to \"{character.Name}\".");
                 }
             },
             () =>
             {
                 List<string> talentNames = new List<string>();
-                foreach (TalentPrefab itemPrefab in TalentPrefab.TalentPrefabs)
+                foreach (TalentPrefab talent in TalentPrefab.TalentPrefabs)
                 {
-                    talentNames.Add(itemPrefab.Identifier);
+                    talentNames.Add(talent.DisplayName);
                 }
 
                 return new string[][]
@@ -863,24 +872,15 @@ namespace Barotrauma
                 };
             }, isCheat: true));
 
-            commands.Add(new Command("unlocktalents", "unlocktalents [all/[jobname]]: give the controlled characters all the talents of the specified class", (string[] args) =>
+            commands.Add(new Command("unlocktalents", "unlocktalents [all/[jobname]] [character]: give the specified character all the talents of the specified class", (string[] args) =>
             {
-                if (Character.Controlled == null) { return; }
-                if (args.Length == 0 || args[0].Equals("all", StringComparison.OrdinalIgnoreCase)) 
-                { 
-                    foreach (var talentTree in TalentTree.JobTalentTrees)
-                    {
-                        foreach (var subTree in talentTree.Value.TalentSubTrees)
-                        {
-                            foreach (var option in subTree.TalentOptionStages)
-                            {
-                                foreach (var talent in option.Talents)
-                                {
-                                    Character.Controlled.GiveTalent(talent);
-                                }
-                            }
-                        }
-                    }
+                var character = args.Length >= 2 ? FindMatchingCharacter(args.Skip(1).ToArray()) : Character.Controlled;
+                if (character == null) { return; }
+
+                List<TalentTree> talentTrees = new List<TalentTree>();
+                if (args.Length == 0 || args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
+                {
+                    talentTrees.AddRange(TalentTree.JobTalentTrees.Values);
                 }
                 else
                 {
@@ -893,15 +893,21 @@ namespace Barotrauma
                     if (!TalentTree.JobTalentTrees.TryGetValue(job.Identifier, out TalentTree talentTree))
                     {
                         ThrowError($"No talents configured for the job \"{args[0]}\".");
-                        return; 
+                        return;
                     }
+                    talentTrees.Add(talentTree);
+                }
+
+                foreach (var talentTree in talentTrees)
+                {
                     foreach (var subTree in talentTree.TalentSubTrees)
                     {
                         foreach (var option in subTree.TalentOptionStages)
                         {
                             foreach (var talent in option.Talents)
                             {
-                                Character.Controlled.GiveTalent(talent);
+                                character.GiveTalent(talent);
+                                NewMessage($"Unlocked talent \"{talent.DisplayName}\".");
                             }
                         }
                     }
@@ -913,7 +919,8 @@ namespace Barotrauma
                 availableArgs.AddRange(JobPrefab.Prefabs.Select(j => j.Name));
                 return new string[][]
                 {
-                    availableArgs.ToArray()
+                    availableArgs.ToArray(),
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
             }, isCheat: true));
 

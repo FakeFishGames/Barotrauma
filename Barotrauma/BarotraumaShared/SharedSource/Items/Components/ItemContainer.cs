@@ -522,7 +522,7 @@ namespace Barotrauma.Items.Components
                     if (Math.Abs(item.Rotation) > 0.01f)
                     {
                         Matrix transform = Matrix.CreateRotationZ(MathHelper.ToRadians(-item.Rotation));
-                        transformedItemPos = Vector2.Transform(transformedItemPos, transform);
+                        transformedItemPos = Vector2.Transform(transformedItemPos - item.Position, transform) + item.Position;
                         transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
                         transformedItemIntervalHorizontal = Vector2.Transform(transformedItemIntervalHorizontal, transform);
                         transformedItemIntervalVertical = Vector2.Transform(transformedItemIntervalVertical, transform);
@@ -549,6 +549,10 @@ namespace Barotrauma.Items.Components
             {
                 currentRotation *= item.body.Dir;
                 currentRotation += item.body.Rotation;
+            }
+            else
+            {
+                currentRotation += MathHelper.ToRadians(-item.Rotation);
             }
 
             int i = 0;

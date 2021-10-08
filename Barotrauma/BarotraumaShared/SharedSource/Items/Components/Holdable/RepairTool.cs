@@ -712,7 +712,7 @@ namespace Barotrauma.Items.Components
                     humanAnim.Crouching = true;
                 }
             }
-            if (dist > reach * 0.8f || dist > reach * 0.5f && character.AnimController.Limbs.Any(l => l.inWater))
+            if (dist > reach * 0.8f || dist > reach * 0.5f && character.AnimController.Limbs.Any(l => l.InWater))
             {
                 // Steer closer
                 if (character.AIController.SteeringManager is IndoorsSteeringManager indoorSteering)

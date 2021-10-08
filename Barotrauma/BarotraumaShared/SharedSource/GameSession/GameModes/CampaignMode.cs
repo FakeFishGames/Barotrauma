@@ -563,13 +563,16 @@ namespace Barotrauma
         public override void End(CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
         {
             List<Item> takenItems = new List<Item>();
-            foreach (Item item in Item.ItemList)
+            if (Level.Loaded?.Type == LevelData.LevelType.Outpost)
             {
-                if (!item.SpawnedInOutpost || item.OriginalModuleIndex < 0) { continue; }
-                var owner = item.GetRootInventoryOwner();
-                if ((!(owner?.Submarine?.Info?.IsOutpost ?? false)) || (owner is Character character && character.TeamID == CharacterTeamType.Team1) || item.Submarine == null || !item.Submarine.Info.IsOutpost)
+                foreach (Item item in Item.ItemList)
                 {
-                    takenItems.Add(item);
+                    if (!item.SpawnedInOutpost || item.OriginalModuleIndex < 0) { continue; }
+                    var owner = item.GetRootInventoryOwner();
+                    if ((!(owner?.Submarine?.Info?.IsOutpost ?? false)) || (owner is Character character && character.TeamID == CharacterTeamType.Team1) || item.Submarine == null || !item.Submarine.Info.IsOutpost)
+                    {
+                        takenItems.Add(item);
+                    }
                 }
             }
             if (map != null && CargoManager != null)

@@ -106,7 +106,7 @@ namespace Barotrauma
         //a dictionary containing lists of the status effects in all the components of the item
         private readonly bool[] hasStatusEffectsOfType;
         private readonly Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
-        
+
         public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
 
         private bool? hasInGameEditableProperties;
@@ -232,7 +232,7 @@ namespace Barotrauma
         public bool IsInteractable(Character character)
         {
             if (character != null && character.IsOnPlayerTeam)
-            {                
+            {
                 return IsPlayerTeamInteractable;
             }
             else
@@ -254,6 +254,12 @@ namespace Barotrauma
             {
                 if (!Prefab.AllowRotatingInEditor) { return; }
                 rotationRad = MathHelper.ToRadians(value);
+#if CLIENT
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    SetContainedItemPositions();
+                }
+#endif
             }
         }
 
@@ -478,7 +484,7 @@ namespace Barotrauma
             get => maxRepairConditionMultiplier;
             set { maxRepairConditionMultiplier = MathHelper.Clamp(value, 0.0f, float.PositiveInfinity); }
         }
-
+        
         //the default value should be Prefab.Health, but because we can't use it in the attribute, 
         //we'll just use NaN (which does nothing) and set the default value in the constructor/load
         [Serialize(float.NaN, false), Editable]
@@ -628,9 +634,9 @@ namespace Barotrauma
 
         public int Quality
         {
-            get 
-            { 
-                return qualityComponent?.QualityLevel ?? 0; 
+            get
+            {
+                return qualityComponent?.QualityLevel ?? 0;
             }
             set
             {
@@ -1155,7 +1161,7 @@ namespace Barotrauma
         {
             return GetComponent<Quality>()?.GetValue(statType) ?? 0.0f;
         }
-        
+
         public void RemoveContained(Item contained)
         {
             ownInventory?.RemoveItem(contained);
@@ -1867,7 +1873,8 @@ namespace Barotrauma
             foreach (ItemComponent component in components)
             {
                 component.FlipX(relativeToSub);
-            }            
+            }
+            SetContainedItemPositions();
         }
 
         public override void FlipY(bool relativeToSub)
@@ -1892,6 +1899,7 @@ namespace Barotrauma
             {
                 component.FlipY(relativeToSub);
             }
+            SetContainedItemPositions();
         }
 
         /// <summary>
@@ -2112,8 +2120,6 @@ namespace Barotrauma
             } while (CoroutineManager.DeltaTime <= 0.0f);
 
             delayedSignals.Remove((signal, connection));
-
-            signal.source = this;
             connection.SendSignal(signal);
 
             yield return CoroutineStatus.Success;
@@ -2470,6 +2476,8 @@ namespace Barotrauma
                 parentInventory.RemoveItem(this);
                 parentInventory = null;
             }
+
+            SetContainedItemPositions();
         }
 
         public void Equip(Character character)
@@ -2741,7 +2749,7 @@ namespace Barotrauma
                 {
                     CoroutineManager.StopCoroutines(logPropertyChangeCoroutine);
                 }
-                logPropertyChangeCoroutine = CoroutineManager.InvokeAfter(() =>
+                logPropertyChangeCoroutine = CoroutineManager.Invoke(() =>
                 {
                     GameServer.Log($"{sender.Character.Name} set the value \"{property.Name}\" of the item \"{Name}\" to \"{logValue}\".", ServerLog.MessageType.ItemInteraction);
                 }, delay: 1.0f);

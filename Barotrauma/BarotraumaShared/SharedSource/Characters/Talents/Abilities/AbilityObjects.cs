@@ -87,19 +87,6 @@ namespace Barotrauma.Abilities
         public string String { get; set; }
     }
 
-    class AbilityValueStringCharacter : AbilityObject, IAbilityValue, IAbilityString, IAbilityCharacter
-    {
-        public AbilityValueStringCharacter(float value, string abilityString, Character character)
-        {
-            Value = value;
-            String = abilityString;
-            Character = character;
-        }
-        public Character Character { get; set; }
-        public float Value { get; set; }
-        public string String { get; set; }
-    }
-
     class AbilityStringCharacter : AbilityObject, IAbilityCharacter, IAbilityString
     {
         public AbilityStringCharacter(string abilityString, Character character)

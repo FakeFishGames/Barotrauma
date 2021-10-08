@@ -598,9 +598,12 @@ namespace Barotrauma.Items.Components
                         DebugConsole.AddWarning("Character without CharacterInfo attempting to attach a limited attachable item!");
                         return false; 
                     }
+                    Vector2 attachPos = GetAttachPosition(character, useWorldCoordinates: true);
+                    Structure attachTarget = Structure.GetAttachTarget(attachPos);
+
                     int maxAttachableCount = (int)character.Info.GetSavedStatValue(StatTypes.MaxAttachableCount, item.Prefab.Identifier);
                     int currentlyAttachedCount = Item.ItemList.Count(
-                        i => i.Submarine == item.Submarine && i.GetComponent<Holdable>() is Holdable holdable && holdable.Attached && i.Prefab.Identifier == item.prefab.Identifier);
+                        i => i.Submarine == attachTarget?.Submarine && i.GetComponent<Holdable>() is Holdable holdable && holdable.Attached && i.Prefab.Identifier == item.prefab.Identifier);
                     if (currentlyAttachedCount >= maxAttachableCount) 
                     {
 #if CLIENT

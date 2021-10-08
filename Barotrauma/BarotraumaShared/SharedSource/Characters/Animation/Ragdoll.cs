@@ -1212,24 +1212,24 @@ namespace Barotrauma
                 //the room where the ragdoll is in is used as the "guess", meaning that it's checked first                
                 Hull limbHull = currentHull == null ? null : Hull.FindHull(limb.WorldPosition, currentHull);
 
-                bool prevInWater = limb.inWater;
-                limb.inWater = false;
+                bool prevInWater = limb.InWater;
+                limb.InWater = false;
 
                 if (forceStanding)
                 {
-                    limb.inWater = false;
+                    limb.InWater = false;
                 }
                 else if (limbHull == null)
                 {
                     //limb isn't in any room -> it's in the water
-                    limb.inWater = true;
+                    limb.InWater = true;
                     if (limb.type == LimbType.Head) headInWater = true;
                 }
                 else if (limbHull.WaterVolume > 0.0f && Submarine.RectContains(limbHull.Rect, limb.Position))
                 {
                     if (limb.Position.Y < limbHull.Surface)
                     {
-                        limb.inWater = true;
+                        limb.InWater = true;
                         surfaceY = limbHull.Surface;
                         if (limb.type == LimbType.Head)
                         {
@@ -1237,7 +1237,7 @@ namespace Barotrauma
                         }
                     }
                     //the limb has gone through the surface of the water
-                    if (Math.Abs(limb.LinearVelocity.Y) > 5.0f && limb.inWater != prevInWater)
+                    if (Math.Abs(limb.LinearVelocity.Y) > 5.0f && limb.InWater != prevInWater)
                     {
                         Splash(limb, limbHull);
 
@@ -1435,7 +1435,7 @@ namespace Barotrauma
             flowForce *= 1 - Math.Clamp(character.GetStatValue(StatTypes.FlowResistance), 0f, 1f);
 
             float flowForceMagnitude = flowForce.Length();
-            float limbMultipier = limbs.Count(l => l.inWater) / (float)limbs.Length;
+            float limbMultipier = limbs.Count(l => l.InWater) / (float)limbs.Length;
             //if the force strong enough, stun the character to let it get thrown around by the water
             if ((flowForceMagnitude * limbMultipier) - flowStunTolerance > StunForceThreshold)
             {
@@ -1472,7 +1472,7 @@ namespace Barotrauma
                 Collider.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                 foreach (Limb limb in limbs)
                 {
-                    if (!limb.inWater) { continue; }
+                    if (!limb.InWater) { continue; }
                     limb.body.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                 }
             }
@@ -1840,8 +1840,22 @@ namespace Barotrauma
 
         public void ReleaseStuckLimbs()
         {
-            Limbs.ForEach(l => l.Release());
+            // Commented out, because stuck limbs is not a feature that we currently use, as it would require that we sync all the limbs, which we don't do.
+            //Limbs.ForEach(l => l.Release());
         }
+
+        public void HideAndDisable(LimbType limbType, float duration = 0, bool ignoreCollisions = true)
+        {
+            foreach (var limb in Limbs)
+            {
+                if (limb.type == limbType)
+                {
+                    limb.HideAndDisable(duration, ignoreCollisions);
+                }
+            }
+        }
+
+        public void RestoreTemporarilyDisabled() => Limbs.ForEach(l => l.ReEnable());
 
         public void Remove()
         {

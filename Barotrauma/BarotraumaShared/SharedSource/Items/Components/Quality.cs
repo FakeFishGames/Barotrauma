@@ -9,6 +9,14 @@ namespace Barotrauma.Items.Components
     {
         public const int MaxQuality = 3;
 
+        public static readonly float[] QualityCommonnesses = new float[]
+        {
+            0.8f,
+            0.15f,
+            0.045f,
+            0.005f,
+        };
+
         public enum StatType
         {
             Condition,
@@ -39,7 +47,18 @@ namespace Barotrauma.Items.Components
         public int QualityLevel
         {
             get { return qualityLevel; }
-            set { qualityLevel = MathHelper.Clamp(value, 0, MaxQuality); }
+            set 
+            {
+                if (value == qualityLevel) { return; }
+
+                bool wasInFullCondition = item.IsFullCondition;
+                qualityLevel = MathHelper.Clamp(value, 0, MaxQuality); 
+                //set the condition to the new max condition
+                if (wasInFullCondition && statValues.ContainsKey(StatType.Condition))
+                {
+                    item.Condition = item.MaxCondition;
+                }
+            }
         }
 
         public Quality(Item item, XElement element) : base(item, element)

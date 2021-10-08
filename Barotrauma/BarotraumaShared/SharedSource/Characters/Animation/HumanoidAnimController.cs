@@ -170,7 +170,7 @@ namespace Barotrauma
         {
             get
             {
-                float shoulderHeight = Collider.height / 2.0f - 0.1f;
+                float shoulderHeight = Collider.height / 2.0f;
                 if (inWater)
                 {
                     shoulderHeight += 0.4f;
@@ -987,7 +987,7 @@ namespace Barotrauma
                 return;
             }
 
-            handPos += head.LinearVelocity * 0.1f;
+            handPos += head.LinearVelocity.ClampLength(1.0f) * 0.1f;
 
             // Not sure why the params has to be flipped, but it works.
             var handMoveAmount = CurrentSwimParams.HandMoveAmount.Flip();
@@ -1002,7 +1002,7 @@ namespace Barotrauma
                 Vector2 rightHandPos = new Vector2(-handPosX, -handPosY) + handMoveOffset;
                 rightHandPos.X = (Dir == 1.0f) ? Math.Max(0.3f, rightHandPos.X) : Math.Min(-0.3f, rightHandPos.X);
                 rightHandPos = Vector2.Transform(rightHandPos, rotationMatrix);
-                float speedMultiplier = character.SpeedMultiplier * (1 - Character.GetRightHandPenalty());
+                float speedMultiplier = Math.Min(character.SpeedMultiplier * (1 - Character.GetRightHandPenalty()), 1.0f);
                 // Limb hand, Vector2 pos, float force = 1.0f
                 HandIK(rightHand, handPos + rightHandPos, CurrentSwimParams.ArmMoveStrength * speedMultiplier, CurrentSwimParams.HandMoveStrength * speedMultiplier);
             }
@@ -1012,7 +1012,7 @@ namespace Barotrauma
                 Vector2 leftHandPos = new Vector2(handPosX, handPosY) + handMoveOffset;
                 leftHandPos.X = (Dir == 1.0f) ? Math.Max(0.3f, leftHandPos.X) : Math.Min(-0.3f, leftHandPos.X);
                 leftHandPos = Vector2.Transform(leftHandPos, rotationMatrix);
-                float speedMultiplier = character.SpeedMultiplier * (1 - Character.GetLeftHandPenalty());
+                float speedMultiplier = Math.Min(character.SpeedMultiplier * (1 - Character.GetLeftHandPenalty()), 1.0f);
                 HandIK(leftHand, handPos + leftHandPos, CurrentSwimParams.ArmMoveStrength * speedMultiplier, CurrentSwimParams.HandMoveStrength * speedMultiplier);
             }
         }

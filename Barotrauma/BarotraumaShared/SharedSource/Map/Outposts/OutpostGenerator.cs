@@ -85,7 +85,15 @@ namespace Barotrauma
                 var subInfo = new SubmarineInfo(outpostModuleFile.Path);
                 if (subInfo.OutpostModuleInfo != null)
                 {
-                    if (subInfo.OutpostModuleInfo.ModuleFlags.Contains("ruin") != generationParams is RuinGeneration.RuinGenerationParams) { continue; }                  
+                    if (generationParams is RuinGeneration.RuinGenerationParams) 
+                    { 
+                        //if the module doesn't have the ruin flag or any other flag used in the generation params, don't use it in ruins
+                        if (!subInfo.OutpostModuleInfo.ModuleFlags.Contains("ruin") &&
+                            !generationParams.ModuleCounts.Any(m => subInfo.OutpostModuleInfo.ModuleFlags.Contains(m.Key)))
+                        {
+                            continue;
+                        }
+                    }                  
                     outpostModules.Add(subInfo);
                 }
             }

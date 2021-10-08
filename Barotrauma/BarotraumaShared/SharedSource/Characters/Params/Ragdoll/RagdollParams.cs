@@ -597,6 +597,9 @@ namespace Barotrauma
             [Serialize(float.NaN, true, description: "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings."), Editable(-360, 360, ValueStep = 90, DecimalCount = 0)]
             public float SpriteOrientation { get; set; }
 
+            [Serialize(LimbType.None, true, description: "If set, the limb sprite will use the same sprite depth as the specified limb. Generally only useful for  limbs that get added on the ragdoll on the fly (e.g. extra limbs added via gene splicing).")]
+            public LimbType InheritLimbDepth { get; set; }
+
             [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
             public float SteerForce { get; set; }
 
@@ -678,6 +681,9 @@ namespace Barotrauma
 
             [Serialize(50f, true), Editable]
             public float BlinkForce { get; set; }
+
+            [Serialize(false, true), Editable]
+            public bool OnlyBlinkInWater { get; set; }
 
             [Serialize(TransitionMode.Linear, true), Editable]
             public TransitionMode BlinkTransitionIn { get; private set; }

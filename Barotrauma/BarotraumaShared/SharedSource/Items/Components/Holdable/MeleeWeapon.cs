@@ -77,6 +77,7 @@ namespace Barotrauma.Items.Components
                 };
             }
             item.IsShootable = true;
+            item.RequireAimToUse = element.Parent.GetAttributeBool("requireaimtouse", true);
             PreferredContainedItems = element.GetAttributeStringArray("preferredcontaineditems", new string[0], convertToLowerInvariant: true);
         }
 
@@ -210,7 +211,7 @@ namespace Barotrauma.Items.Components
                 bool aim = item.RequireAimToUse && picker.AllowInput && picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0 && picker.CanAim;
                 if (aim)
                 {
-                    hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 5f, MathHelper.PiOver4));
+                    hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 3f, MathHelper.PiOver4));
                     ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, aim: false, hitPos, holdAngle + hitPos, aimMelee: true);
                 }
                 else
@@ -222,16 +223,16 @@ namespace Barotrauma.Items.Components
             else
             {
                 // TODO: We might want to make this configurable
-                hitPos = MathUtils.WrapAnglePi(hitPos - deltaTime * 15f);
+                hitPos -= deltaTime * 15f;
                 if (Swing)
                 {
-                    ac.HoldItem(deltaTime, item, handlePos, SwingPos, Vector2.Zero, aim: false, hitPos, holdAngle + hitPos);
+                    ac.HoldItem(deltaTime, item, handlePos, SwingPos, Vector2.Zero, aim: false, hitPos, holdAngle);
                 }
                 else
                 {
                     ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, aim: false, holdAngle);
                 }
-                if (hitPos < -MathHelper.PiOver2)
+                if (hitPos < -MathHelper.Pi)
                 {
                     RestoreCollision();
                     hitting = false;

@@ -48,8 +48,8 @@ namespace Barotrauma
                             return false;
                         }
                     }
-                    if (items[0].Prefab.Identifier != item.Prefab.Identifier ||
-                        items.Count + 1 > item.Prefab.MaxStackSize)
+                    if (items[0].Quality != item.Quality) { return false; }
+                    if (items[0].Prefab.Identifier != item.Prefab.Identifier || items.Count + 1 > item.Prefab.MaxStackSize)
                     {
                         return false;
                     }

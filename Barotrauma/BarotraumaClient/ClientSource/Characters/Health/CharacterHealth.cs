@@ -998,10 +998,14 @@ namespace Barotrauma
             if (Character.Controlled?.SelectedCharacter == null && openHealthWindow == null)
             {
                 List<(Affliction affliction, string text)> statusIcons = new List<(Affliction affliction, string text)>();
-                if (Character.CurrentHull == null || Character.CurrentHull.LethalPressure > 5.0f)
+                if (Character.InPressure)
+                {
                     statusIcons.Add((pressureAffliction, TextManager.Get("PressureHUDWarning")));
+                }
                 if (Character.CurrentHull != null && Character.OxygenAvailable < LowOxygenThreshold && oxygenLowAffliction.Strength < oxygenLowAffliction.Prefab.ShowIconThreshold)
+                {
                     statusIcons.Add((oxygenLowAffliction, TextManager.Get("OxygenHUDWarning")));
+                }
                 
                 foreach (Affliction affliction in currentDisplayedAfflictions)
                 {

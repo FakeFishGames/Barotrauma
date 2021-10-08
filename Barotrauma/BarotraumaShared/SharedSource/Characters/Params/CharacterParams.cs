@@ -79,11 +79,17 @@ namespace Barotrauma
         [Serialize(10f, true, description: "How effectively/easily the character eats other characters. Affects the forces, the amount of particles, and the time required before the target is eaten away"), Editable(MinValueFloat = 1, MaxValueFloat = 1000, ValueStep = 1)]
         public float EatingSpeed { get; set; }
 
+        [Serialize(true, true), Editable]
+        public bool UsePathFinding { get; set; }
+
         [Serialize(1f, true, "Decreases the intensive path finding call frequency. Set to a lower value for insignificant creatures to improve performance."), Editable(minValue: 0f, maxValue: 1f)]
         public float PathFinderPriority { get; set; }
 
         [Serialize(false, true), Editable]
         public bool HideInSonar { get; set; }
+
+        [Serialize(false, true), Editable]
+        public bool HideInThermalGoggles { get; set; }
 
         [Serialize(0f, true), Editable]
         public float SonarDisruption { get; set; }
@@ -705,6 +711,9 @@ namespace Barotrauma
 
             [Serialize(-1f, true, description: "A generic max threshold. Not used if set to negative."), Editable]
             public float ThresholdMax { get; private set; }
+
+            [Serialize("0.0, 0.0", true), Editable]
+            public Vector2 Offset { get; private set; }
 
             [Serialize(AttackPattern.Straight, true), Editable]
             public AttackPattern AttackPattern { get; set; }

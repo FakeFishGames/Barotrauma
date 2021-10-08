@@ -1,6 +1,7 @@
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -58,13 +59,13 @@ namespace Barotrauma.Items.Components
             };
 
             float x = 1.0f / (1 + RequiredSignalCount);
-            float y = (x * paddedFrame.Rect.Width) / paddedFrame.Rect.Height;
+            float y = Math.Min((x * paddedFrame.Rect.Width) / paddedFrame.Rect.Height, 0.5f);
             Vector2 relativeSize = new Vector2(x, y);
 
             var containerSection = new GUIFrame(new RectTransform(new Vector2(x, 1.0f), paddedFrame.RectTransform), style: null);
             var containerSlot = new GUIFrame(new RectTransform(new Vector2(1.0f, y), containerSection.RectTransform, anchor: Anchor.Center), style: null);
             containerHolder = new GUIFrame(new RectTransform(new Vector2(1f, 1.2f), containerSlot.RectTransform, Anchor.BottomCenter), style: null);
-            containerIndicator = new GUIImage(new RectTransform(new Vector2(0.5f, 0.5f * y), containerSection.RectTransform, anchor: Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f + 0.5f * y) },
+            containerIndicator = new GUIImage(new RectTransform(new Vector2(0.5f, 0.5f * (1.0f - y)), containerSection.RectTransform, anchor: Anchor.BottomCenter),
                 style: "IndicatorLightRed", scaleToFit: true);
 
             for (int i = 0; i < RequiredSignalCount; i++)

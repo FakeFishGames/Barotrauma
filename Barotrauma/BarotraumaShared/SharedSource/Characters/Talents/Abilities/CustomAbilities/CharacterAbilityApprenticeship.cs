@@ -12,9 +12,9 @@ namespace Barotrauma.Abilities
 
         protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if ((abilityObject as IAbilityString)?.String is string skillIdentifier && (abilityObject as IAbilityCharacter)?.Character is Character character)
+            if (abilityObject is AbilitySkillGain abilitySkillGain && !abilitySkillGain.GainedFromApprenticeship && abilitySkillGain.Character != Character)
             {
-                Character.Info?.IncreaseSkillLevel(skillIdentifier, 1.0f, character.Position + Vector2.UnitY * 175.0f);
+                Character.Info?.IncreaseSkillLevel(abilitySkillGain.String, 1.0f, Character.Position + Vector2.UnitY * 175.0f, gainedFromApprenticeship: true);
             }
         }
     }

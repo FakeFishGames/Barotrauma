@@ -83,7 +83,7 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
-            if (target == null) { return; }
+            if (target == null || target.Removed) { return; }
 
             Vector2 startPos = GetSourcePos();
             startPos.Y = -startPos.Y;
@@ -103,7 +103,7 @@ namespace Barotrauma.Items.Components
                 {
                     Vector2 barrelPos = FarseerPhysics.ConvertUnits.ToDisplayUnits(weapon.TransformedBarrelPos);
                     barrelPos.Y = -barrelPos.Y;
-                    startPos += barrelPos * item.Scale;
+                    startPos += barrelPos;
                 }
             }
             Vector2 endPos = new Vector2(target.DrawPosition.X, target.DrawPosition.Y);

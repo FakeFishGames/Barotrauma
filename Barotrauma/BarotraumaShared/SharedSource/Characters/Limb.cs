@@ -218,7 +218,7 @@ namespace Barotrauma
                         
         public Vector2 StepOffset => ConvertUnits.ToSimUnits(Params.StepOffset) * ragdoll.RagdollParams.JointScale;
 
-        public bool inWater;
+        public bool InWater { get; set; }
 
         private FixedMouseJoint pullJoint;
 
@@ -535,8 +535,11 @@ namespace Barotrauma
 
         public string Name => Params.Name;
 
-        // Exposed for status effects
+        // These properties are exposed for status effects
         public bool IsDead => character.IsDead;
+        public float Health => character.Health;
+        public float HealthPercentage => character.HealthPercentage;
+        public AIState AIState => character.AIController is EnemyAIController enemyAI ? enemyAI.State : AIState.Idle;
 
         public bool CanBeSeveredAlive
         {
@@ -804,7 +807,7 @@ namespace Barotrauma
         {
             UpdateProjSpecific(deltaTime);
             
-            if (inWater)
+            if (InWater)
             {
                 body.ApplyWaterForces();
             }
@@ -847,20 +850,25 @@ namespace Barotrauma
             attack?.UpdateCoolDown(deltaTime);
         }
 
+        private bool temporarilyDisabled;
         private float reEnableTimer = -1;
-        public void HideAndDisable(float duration = 0)
+        public void HideAndDisable(float duration = 0, bool ignoreCollisions = true)
         {
+            if (Hidden || Disabled) { return; }
+            if (ignoreCollisions && IgnoreCollisions) { return; }
+            temporarilyDisabled = true;
             Hidden = true;
             Disabled = true;
-            IgnoreCollisions = true;
+            IgnoreCollisions = ignoreCollisions;
             if (duration > 0)
             {
                 reEnableTimer = duration;
             }
         }
 
-        private void ReEnable()
+        public void ReEnable()
         {
+            if (!temporarilyDisabled) { return; }
             Hidden = false;
             Disabled = false;
             IgnoreCollisions = false;

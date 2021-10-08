@@ -721,6 +721,7 @@ namespace Barotrauma
                 new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"), style: "GUIButtonSmall")
                 {
                     ToolTip = TextManager.Get("MirrorEntityXToolTip"),
+                    Enabled = Prefab.CanFlipX,
                     OnClicked = (button, data) =>
                     {
                         foreach (MapEntity me in SelectedList)
@@ -734,6 +735,7 @@ namespace Barotrauma
                 new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"), style: "GUIButtonSmall")
                 {
                     ToolTip = TextManager.Get("MirrorEntityYToolTip"),
+                    Enabled = Prefab.CanFlipY,
                     OnClicked = (button, data) =>
                     {
                         foreach (MapEntity me in SelectedList)
@@ -1212,8 +1214,8 @@ namespace Barotrauma
             }
 
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != this && GetComponent<RemoteController>() == null)
-            { 
-                if (Character.Controlled.SelectedConstruction?.GetComponent<RemoteController>()?.TargetItem != this && 
+            {
+                if (Character.Controlled.SelectedConstruction?.GetComponent<RemoteController>()?.TargetItem != this &&
                     !Character.Controlled.HeldItems.Any(it => it.GetComponent<RemoteController>()?.TargetItem == this))
                 {
                     return;

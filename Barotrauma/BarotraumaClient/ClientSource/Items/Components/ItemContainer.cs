@@ -342,7 +342,7 @@ namespace Barotrauma.Items.Components
                     new Vector2(currentItemPos.X, -currentItemPos.Y),
                     isWiringMode ? containedItem.GetSpriteColor() * 0.15f : containedItem.GetSpriteColor(),
                     origin,
-                    -(containedItem.body == null ? 0.0f : containedItem.body.DrawRotation + MathHelper.ToRadians(-item.Rotation)),
+                    -(containedItem.body == null ? 0.0f : containedItem.body.DrawRotation ),
                     containedItem.Scale,
                     spriteEffects,
                     depth: containedSpriteDepth);

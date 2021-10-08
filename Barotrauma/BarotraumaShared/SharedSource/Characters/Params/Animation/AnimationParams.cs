@@ -14,9 +14,9 @@ namespace Barotrauma
         NotDefined,
         Walk,
         Run,
-        Crouch,
         SwimSlow,
-        SwimFast
+        SwimFast,
+        Crouch
     }
 
     abstract class GroundedMovementParams : AnimationParams

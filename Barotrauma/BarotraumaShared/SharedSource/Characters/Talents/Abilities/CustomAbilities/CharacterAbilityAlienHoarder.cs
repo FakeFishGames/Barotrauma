@@ -8,13 +8,13 @@ namespace Barotrauma.Abilities
     class CharacterAbilityAlienHoarder : CharacterAbility
     {
         private readonly float addedDamageMultiplierPerItem;
-        private readonly int maxAmount;
+        private readonly float maxAddedDamageMultiplier;
         private readonly string[] tags;
 
         public CharacterAbilityAlienHoarder(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             addedDamageMultiplierPerItem = abilityElement.GetAttributeFloat("addeddamagemultiplierperitem", 0f);
-            maxAmount = abilityElement.GetAttributeInt("maxamount", 0);
+            maxAddedDamageMultiplier = abilityElement.GetAttributeFloat("maxaddedddamagemultiplier", float.MaxValue);
             tags = abilityElement.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
         }
 
@@ -30,7 +30,7 @@ namespace Barotrauma.Abilities
                         totalAddedDamageMultiplier += addedDamageMultiplierPerItem;
                     }
                 }
-                attackData.DamageMultiplier += addedDamageMultiplierPerItem;
+                attackData.DamageMultiplier += Math.Min(totalAddedDamageMultiplier, maxAddedDamageMultiplier);
             }
             else
             {

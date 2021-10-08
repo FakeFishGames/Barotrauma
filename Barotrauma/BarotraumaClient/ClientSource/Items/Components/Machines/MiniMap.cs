@@ -78,7 +78,6 @@ namespace Barotrauma.Items.Components
         None,
         HullStatus,
         ElectricalView,
-        HullCondition,
         ItemFinder
     }
 
@@ -238,7 +237,6 @@ namespace Barotrauma.Items.Components
             {
                 true when EnableHullStatus     => MiniMapMode.HullStatus,
                 true when EnableElectricalView => MiniMapMode.ElectricalView,
-                true when EnableHullCondition  => MiniMapMode.HullCondition,
                 true when EnableItemFinder     => MiniMapMode.ItemFinder,
                 _                              => MiniMapMode.None
             };
@@ -263,8 +261,7 @@ namespace Barotrauma.Items.Components
             modeSwitchButtons = ImmutableArray.Create
             (
                 new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonLayout.RectTransform), string.Empty, style: "StatusMonitorButton.HullStatus") { UserData = MiniMapMode.HullStatus, Enabled = EnableHullStatus, ToolTip = TextManager.Get("StatusMonitorButton.HullStatus.Tooltip") },
-                new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonLayout.RectTransform), string.Empty, style: "StatusMonitorButton.ElectricalView") { UserData = MiniMapMode.ElectricalView, Enabled = EnableHullCondition, ToolTip = TextManager.Get("StatusMonitorButton.ElectricalView.Tooltip") },
-                new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonLayout.RectTransform), string.Empty, style: "StatusMonitorButton.HullCondition") { UserData = MiniMapMode.HullCondition, Enabled = EnableHullCondition, ToolTip = TextManager.Get("StatusMonitorButton.HullCondition.Tooltip") },
+                new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonLayout.RectTransform), string.Empty, style: "StatusMonitorButton.ElectricalView") { UserData = MiniMapMode.ElectricalView, Enabled = EnableElectricalView, ToolTip = TextManager.Get("StatusMonitorButton.ElectricalView.Tooltip") },
                 new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonLayout.RectTransform), string.Empty, style: "StatusMonitorButton.ItemFinder") { UserData = MiniMapMode.ItemFinder, Enabled = EnableItemFinder, ToolTip = TextManager.Get("StatusMonitorButton.ItemFinder.Tooltip") }
             );
 
@@ -390,9 +387,9 @@ namespace Barotrauma.Items.Components
                 c.Children.ForEach(c2 => c2.CanBeFocused = false);
             });
 
-            submarineBack.RectTransform.MaxSize = 
+            submarineBack.RectTransform.MaxSize =
                 submarineFront.RectTransform.MaxSize =
-                submarineContainer.RectTransform.MaxSize = 
+                submarineContainer.RectTransform.MaxSize =
                 new Point(int.MaxValue, paddedContainer.Rect.Height - bottomFrame.Rect.Height - buttonLayout.Rect.Height);
         }
 
@@ -493,7 +490,7 @@ namespace Barotrauma.Items.Components
             displayedSubs.Add(item.Submarine);
             displayedSubs.AddRange(item.Submarine.DockedTo);
 
-            subEntities = MapEntity.mapEntityList.Where(me => me.Submarine == item.Submarine && !me.HiddenInGame).OrderByDescending(w => w.SpriteDepth).ToList();
+            subEntities = MapEntity.mapEntityList.Where(me => (item.Submarine is { } sub && sub.IsEntityFoundOnThisSub(me, includingConnectedSubs: true, allowDifferentType: false)) && !me.HiddenInGame).OrderByDescending(w => w.SpriteDepth).ToList();
 
             BakeSubmarine(item.Submarine, parentRect);
             elementSize = GuiFrame.Rect.Size;
@@ -598,7 +595,6 @@ namespace Barotrauma.Items.Components
 
             if (currentMode == MiniMapMode.HullStatus && !EnableHullStatus ||
                 currentMode == MiniMapMode.ElectricalView && !EnableElectricalView ||
-                currentMode == MiniMapMode.HullCondition && !EnableHullCondition ||
                 currentMode == MiniMapMode.ItemFinder && !EnableItemFinder)
             {
                 SetDefaultMode();
@@ -606,8 +602,7 @@ namespace Barotrauma.Items.Components
 
             modeSwitchButtons[0].Enabled = EnableHullStatus;
             modeSwitchButtons[1].Enabled = EnableElectricalView;
-            modeSwitchButtons[2].Enabled = EnableHullCondition;
-            modeSwitchButtons[3].Enabled = EnableItemFinder;
+            modeSwitchButtons[2].Enabled = EnableItemFinder;
         }
 
         private void UpdateIDCards(Submarine sub)
@@ -642,14 +637,14 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (currentMode == MiniMapMode.HullStatus || currentMode == MiniMapMode.HullCondition)
+            if (currentMode == MiniMapMode.HullStatus)
             {
                 Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
                 spriteBatch.GraphicsDevice.ScissorRectangle = submarineContainer.Rect;
 
-                if (currentMode == MiniMapMode.HullCondition && item.Submarine != null)
+                if (item.Submarine != null)
                 {
                     var sprite = GUI.Style.UIGlowSolidCircular?.Sprite;
                     float alpha = (MathF.Sin(blipState / maxBlipState * MathHelper.TwoPi) + 1.5f) * 0.5f;
@@ -849,7 +844,6 @@ namespace Barotrauma.Items.Components
             switch (currentMode)
             {
                 case MiniMapMode.HullStatus:
-                case MiniMapMode.HullCondition:
                     UpdateHullStatus();
                     miniMapFrame.Visible = true;
                     reportFrame.Visible = true;
@@ -992,8 +986,8 @@ namespace Barotrauma.Items.Components
                 {
                     if (!hullStatusComponents.ContainsKey(linkedHull)) { continue; }
 
-                    isHoveringOver |= 
-                        canHoverOverHull && 
+                    isHoveringOver |=
+                        canHoverOverHull &&
                         (hullStatusComponents[linkedHull].RectComponent == GUI.MouseOn || (draggingReport && hullStatusComponents[linkedHull].RectComponent.MouseRect.Contains(PlayerInput.MousePosition)));
                     if (isHoveringOver) { break; }
                 }
@@ -1089,7 +1083,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                bool hullsVisible = currentMode == MiniMapMode.HullStatus || currentMode == MiniMapMode.HullCondition;
+                bool hullsVisible = currentMode == MiniMapMode.HullStatus;
 
                 foreach (var (entity, component) in hullStatusComponents)
                 {
@@ -1202,7 +1196,7 @@ namespace Barotrauma.Items.Components
                 GameMain.GameScreen.BlueprintEffect.Parameters["width"].SetValue((float)texture.Width);
                 GameMain.GameScreen.BlueprintEffect.Parameters["height"].SetValue((float)texture.Height);
 
-                Color blueprintBlue = BlueprintBlue * currentMode switch { MiniMapMode.HullStatus => 0.1f, MiniMapMode.HullCondition => 0.1f, MiniMapMode.ElectricalView => 0.1f, _ => 0.5f };
+                Color blueprintBlue = BlueprintBlue * currentMode switch { MiniMapMode.HullStatus => 0.1f, MiniMapMode.ElectricalView => 0.1f, _ => 0.5f };
 
                 Vector2 origin = new Vector2(texture.Width / 2f, texture.Height / 2f);
                 float scale = currentMode == MiniMapMode.HullStatus ? 1.0f : Zoom;

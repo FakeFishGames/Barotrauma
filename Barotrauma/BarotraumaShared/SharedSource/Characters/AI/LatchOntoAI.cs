@@ -26,7 +26,7 @@ namespace Barotrauma
         public bool AttachToWalls { get; private set; }
         public bool AttachToCharacters { get; private set; }
 
-        private readonly float minDeattachSpeed, maxDeattachSpeed, maxAttachDuration;
+        private readonly float minDeattachSpeed, maxDeattachSpeed, maxAttachDuration, coolDown;
         private readonly float damageOnDetach, detachStun;
         private readonly bool weld;
         private float deattachCheckTimer;
@@ -61,6 +61,7 @@ namespace Barotrauma
             minDeattachSpeed = element.GetAttributeFloat("mindeattachspeed", 5.0f);
             maxDeattachSpeed = Math.Max(minDeattachSpeed, element.GetAttributeFloat("maxdeattachspeed", 8.0f));
             maxAttachDuration = element.GetAttributeFloat("maxattachduration", -1.0f);
+            coolDown = element.GetAttributeFloat("cooldown", 2f);
             damageOnDetach = element.GetAttributeFloat("damageondetach", 0.0f);
             detachStun = element.GetAttributeFloat("detachstun", 0.0f);
             localAttachPos = ConvertUnits.ToSimUnits(element.GetAttributeVector2("localattachpos", Vector2.Zero));
@@ -283,6 +284,7 @@ namespace Barotrauma
                 if (maxAttachDuration > 0)
                 {
                     deattach = true;
+                    attachCooldown = coolDown;
                 }
                 if (!deattach && targetWall != null && targetSubmarine != null)
                 {
@@ -291,7 +293,7 @@ namespace Barotrauma
                     if (enemyAI.CanPassThroughHole(targetWall, targetSection))
                     {
                         deattach = true;
-                        attachCooldown = 2;
+                        attachCooldown = coolDown;
                     }
                     if (!deattach)
                     {
@@ -310,7 +312,7 @@ namespace Barotrauma
                                 {
                                     deattach = true;
                                     character.AddDamage(character.WorldPosition, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageOnDetach) }, detachStun, true);
-                                    attachCooldown = detachStun * 2;
+                                    attachCooldown = Math.Max(detachStun * 2, coolDown);
                                 }
                             }
                         }

@@ -105,7 +105,6 @@ namespace Barotrauma
 
         protected readonly float colliderWidth;
         protected readonly float minGapSize;
-        protected readonly float minHullSize;
         protected readonly float colliderLength;
         protected readonly float avoidLookAheadDistance;
 
@@ -119,7 +118,6 @@ namespace Barotrauma
             colliderLength = size.Y;
             avoidLookAheadDistance = Math.Max(Math.Max(colliderWidth, colliderLength) * 3, 1.5f);
             minGapSize = ConvertUnits.ToDisplayUnits(Math.Min(colliderWidth, colliderLength));
-            minHullSize = ConvertUnits.ToDisplayUnits(Math.Max(colliderLength, colliderWidth) * 1.1f);
         }
 
         public virtual void OnAttacked(Character attacker, AttackResult attackResult) { }
