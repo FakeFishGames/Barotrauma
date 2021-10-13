@@ -1,7 +1,6 @@
 using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -69,7 +68,7 @@ namespace Barotrauma
                         HumanAIController.ResetEscape();
                     }
                     HumanAIController.Escape(deltaTime);
-                    if (HumanAIController.EscapeTarget == null || !HumanAIController.HasValidPath(requireNonDirty: true, requireUnfinished: false))
+                    if (HumanAIController.EscapeTarget == null || HumanAIController.IsCurrentPathUnreachable)
                     {
                         Abandon = true;
                     }
@@ -92,14 +91,16 @@ namespace Barotrauma
                         {
                             RemoveSubObjective(ref moveInCaveObjective);
                             RemoveSubObjective(ref moveOutsideObjective);
-                            // TODO: Check 'repeat' and 'onAbandon' parameters
                             TryAddSubObjective(ref moveInsideObjective,
                                 constructor: () => new AIObjectiveGoTo(targetHull, character, objectiveManager),
-                                onCompleted: () => moveInsideObjective = null);
+                                onCompleted: () => RemoveSubObjective(ref moveInsideObjective),
+                                onAbandon: () => Abandon = true);
                         }
                         else
                         {
+#if DEBUG
                             DebugConsole.ThrowError("Error with a Return objective: no suitable target for 'moveInsideObjective'");
+#endif
                         }
                     }
                 }
@@ -117,8 +118,7 @@ namespace Barotrauma
                     float closestDistance = float.MaxValue;
                     foreach (var w in WayPoint.WayPointList)
                     {
-                        if (w.Tunnel == null) { continue; }
-                        if (w.Tunnel.Type == Level.TunnelType.Cave) { continue; }
+                        if (w.Tunnel != null && w.Tunnel.Type == Level.TunnelType.Cave) { continue; }
                         if (w.linkedTo.None(l => l is WayPoint linkedWaypoint && linkedWaypoint.Tunnel?.Type == Level.TunnelType.Cave)) { continue; }
                         float distance = Vector2.DistanceSquared(character.WorldPosition, w.WorldPosition);
                         if (closestOutsideWaypoint == null || distance < closestDistance)
@@ -131,17 +131,19 @@ namespace Barotrauma
                     {
                         RemoveSubObjective(ref moveInsideObjective);
                         RemoveSubObjective(ref moveOutsideObjective);
-                        // TODO: Check 'repeat' and 'onAbandon' parameters
                         TryAddSubObjective(ref moveInCaveObjective,
                             constructor: () => new AIObjectiveGoTo(closestOutsideWaypoint, character, objectiveManager)
                             {
                                 endNodeFilter = n => n.Waypoint == closestOutsideWaypoint
                             },
-                            onCompleted: () => moveInCaveObjective = null);
+                            onCompleted: () => RemoveSubObjective(ref moveInCaveObjective),
+                            onAbandon: () => Abandon = true);
                     }
                     else
                     {
+#if DEBUG
                         DebugConsole.ThrowError("Error with a Return objective: no suitable main or side path node target found for 'moveOutsideObjective'");
+#endif
                     }
                 }
                 else
@@ -167,14 +169,16 @@ namespace Barotrauma
                     {
                         RemoveSubObjective(ref moveInsideObjective);
                         RemoveSubObjective(ref moveInCaveObjective);
-                        // TODO: Check 'repeat' and 'onAbandon' parameters
                         TryAddSubObjective(ref moveOutsideObjective,
                             constructor: () => new AIObjectiveGoTo(targetHull, character, objectiveManager),
-                            onCompleted: () => moveOutsideObjective = null);
+                            onCompleted: () => RemoveSubObjective(ref moveOutsideObjective),
+                            onAbandon: () => Abandon = true);
                     }
                     else
                     {
+#if DEBUG
                         DebugConsole.ThrowError("Error with a Return objective: no suitable target for 'moveOutsideObjective'");
+#endif
                     }
                 }
             }
@@ -182,19 +186,11 @@ namespace Barotrauma
             {
                 if (HumanAIController.IsInsideCave)
                 {
-                    if (moveOutsideObjective != null)
-                    {
-                        RemoveSubObjective(ref moveOutsideObjective);
-                        moveOutsideObjective = null;
-                    }
+                    RemoveSubObjective(ref moveOutsideObjective);
                 }
                 else
                 {
-                    if (moveInCaveObjective != null)
-                    {
-                        RemoveSubObjective(ref moveInCaveObjective);
-                        moveInCaveObjective = null;
-                    }
+                    RemoveSubObjective(ref moveInCaveObjective);
                 }
             }
             usingEscapeBehavior = shouldUseEscapeBehavior;

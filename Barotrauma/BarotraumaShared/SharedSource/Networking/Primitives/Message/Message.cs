@@ -238,7 +238,7 @@ namespace Barotrauma.Networking
         {
             byte retval = NetBitWriter.ReadByte(buf, 1, bitPos);
             bitPos++;
-            return (retval > 0 ? true : false);
+            return retval > 0;
         }
 
         internal static void ReadPadBits(byte[] buf, ref int bitPos)
@@ -672,14 +672,28 @@ namespace Barotrauma.Networking
                     }
                 }
                 buf = new byte[decompressedData.Length];
-                Array.Copy(decompressedData, 0, buf, 0, decompressedData.Length);
+                try
+                {
+                    Array.Copy(decompressedData, 0, buf, 0, decompressedData.Length);
+                }
+                catch (ArgumentException e)
+                {
+                    throw new ArgumentException($"Failed to copy the incoming compressed buffer. Source buffer length: {decompressedData.Length}, start position: {0}, length: {decompressedData.Length}, destination buffer length: {buf.Length}.", e);
+                }
                 lengthBits = decompressedData.Length * 8;
                 DebugConsole.Log("Decompressing message: " + inLength + " to " + LengthBytes);
             }
             else
             {
                 buf = new byte[inBuf.Length];
-                Array.Copy(inBuf, startPos, buf, 0, inLength);
+                try
+                {
+                    Array.Copy(inBuf, startPos, buf, 0, inLength);
+                }
+                catch (ArgumentException e)
+                {
+                    throw new ArgumentException($"Failed to copy the incoming uncompressed buffer. Source buffer length: {inBuf.Length}, start position: {startPos}, length: {inLength}, destination buffer length: {buf.Length}.", e);
+                }
                 lengthBits = inLength * 8;
             }
             seekPos = 0;

@@ -49,13 +49,12 @@ namespace Barotrauma.Abilities
             {
                 var skill = character.Info?.Job?.Skills?.GetRandom();
                 if (skill == null) { return; }
-                character.Info?.IncreaseSkillLevel(skill.Identifier, skillIncrease, character.Position + Vector2.UnitY * 175.0f);
+                character.Info?.IncreaseSkillLevel(skill.Identifier, skillIncrease);
             }
             else
             {
-                character.Info?.IncreaseSkillLevel(skillIdentifier, skillIncrease, character.Position + Vector2.UnitY * 175.0f);
+                character.Info?.IncreaseSkillLevel(skillIdentifier, skillIncrease);
             }
-
         }
     }
 }

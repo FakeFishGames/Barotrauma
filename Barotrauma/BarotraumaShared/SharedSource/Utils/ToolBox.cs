@@ -633,7 +633,12 @@ namespace Barotrauma
         {
             if (string.IsNullOrEmpty(path)) { return ""; }
 
-            path = path.Replace('\\', '/');
+            path = path
+                .Replace('\\', '/');
+            if (path.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+            {
+                path = path.Substring("file:".Length);
+            }
             while (path.IndexOf("//") >= 0)
             {
                 path = path.Replace("//", "/");

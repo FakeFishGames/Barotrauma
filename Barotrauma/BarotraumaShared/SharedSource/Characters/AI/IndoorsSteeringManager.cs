@@ -115,6 +115,11 @@ namespace Barotrauma
             IsPathDirty = true;
         }
 
+        public void SteeringSeekSimple(Vector2 targetSimPos, float weight = 1)
+        {
+            steering += base.DoSteeringSeek(targetSimPos, weight);
+        }
+
         public void SteeringSeek(Vector2 target, float weight, float minGapWidth = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisiblity = true)
         {
             steering += CalculateSteeringSeek(target, weight, minGapWidth, startNodeFilter, endNodeFilter, nodeFilter, checkVisiblity);
@@ -164,7 +169,7 @@ namespace Barotrauma
 
         private Vector2 CalculateSteeringSeek(Vector2 target, float weight, float minGapSize = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true)
         {
-            bool needsNewPath = currentPath == null || currentPath.Unreachable;
+            bool needsNewPath = currentPath == null || currentPath.Unreachable || currentPath.Finished;
             if (!needsNewPath && character.Submarine != null && character.Params.PathFinderPriority > 0.5f)
             {
                 Vector2 targetDiff = target - currentTarget;
@@ -194,16 +199,8 @@ namespace Barotrauma
                     SkipCurrentPathNodes();
                     currentTarget = target;
                     Vector2 currentPos = host.SimPosition;
-                    if (character != null && character.Submarine == null)
-                    {
-                        var targetHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(target), null, false);
-                        if (targetHull != null && targetHull.Submarine != null)
-                        {
-                            currentPos -= targetHull.Submarine.SimPosition;
-                        }
-                    }
-                    pathFinder.InsideSubmarine = character.Submarine != null;
-                    pathFinder.ApplyPenaltyToOutsideNodes = character.PressureProtection <= 0;
+                    pathFinder.InsideSubmarine = character.Submarine != null && !character.Submarine.Info.IsRuin;
+                    pathFinder.ApplyPenaltyToOutsideNodes = character.Submarine != null && character.PressureProtection <= 0;
                     var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", minGapSize, startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility);
                     bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null || character.Submarine != null && findPathTimer < -1 && Math.Abs(character.AnimController.TargetMovement.X) <= 0;
                     if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
@@ -218,7 +215,7 @@ namespace Barotrauma
                             // Use the new path if it has significantly lower cost (don't change the path if it has marginally smaller cost. This reduces navigating backwards due to new path that is calculated from the node just behind us).
                             float t = (float)currentPath.CurrentIndex / (currentPath.Nodes.Count - 1);
                             useNewPath = newPath.Cost < currentPath.Cost * MathHelper.Lerp(0.95f, 0, t);
-                            if (!useNewPath && character.Submarine != null)
+                            if (!useNewPath)
                             {
                                 // It's possible that the current path was calculated from a start point that is no longer valid.
                                 // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
@@ -322,15 +319,26 @@ namespace Barotrauma
                 doorsChecked = true;
             }       
             Vector2 pos = host.SimPosition;
-            if (character != null && CurrentPath.CurrentNode?.Submarine != null)
+            if (character != null && CurrentPath.CurrentNode != null)
             {
-                if (character.Submarine == null)
+                var nodeSub = CurrentPath.CurrentNode.Submarine;
+                if (nodeSub != null)
                 {
-                    pos -= CurrentPath.CurrentNode.Submarine.SimPosition;
+                    if (character.Submarine == null)
+                    {
+                        // Going inside
+                        pos -= ConvertUnits.ToSimUnits(nodeSub.Position);
+                    }
+                    else if (character.Submarine != nodeSub)
+                    {
+                        // Different subs
+                        pos -= ConvertUnits.ToSimUnits(nodeSub.Position - character.Submarine.Position);
+                    }
                 }
-                else if (character.Submarine != currentPath.CurrentNode.Submarine)
+                else if (character.Submarine != null)
                 {
-                    pos -= ConvertUnits.ToSimUnits(currentPath.CurrentNode.Submarine.Position - character.Submarine.Position);
+                    // Going outside
+                    pos += ConvertUnits.ToSimUnits(character.Submarine.Position);
                 }
             }
             bool isDiving = character.AnimController.InWater && character.AnimController.HeadInWater;

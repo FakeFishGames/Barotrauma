@@ -666,19 +666,19 @@ namespace Barotrauma
                     if (ForceVelocityLimit < 1000.0f)
                         body.ApplyForce(Force * currentForceFluctuation * distFactor, ForceVelocityLimit);
                     else
-                        body.ApplyForce(Force * currentForceFluctuation * distFactor, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                        body.ApplyForce(Force * currentForceFluctuation * distFactor);
                     break;
                 case TriggerForceMode.Acceleration:
                     if (ForceVelocityLimit < 1000.0f)
                         body.ApplyForce(Force * body.Mass * currentForceFluctuation * distFactor, ForceVelocityLimit);
                     else
-                        body.ApplyForce(Force * body.Mass * currentForceFluctuation * distFactor, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                        body.ApplyForce(Force * body.Mass * currentForceFluctuation * distFactor);
                     break;
                 case TriggerForceMode.Impulse:
                     if (ForceVelocityLimit < 1000.0f)
                         body.ApplyLinearImpulse(Force * currentForceFluctuation * distFactor, maxVelocity: ForceVelocityLimit);
                     else
-                        body.ApplyLinearImpulse(Force * currentForceFluctuation * distFactor, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                        body.ApplyLinearImpulse(Force * currentForceFluctuation * distFactor);
                     break;
                 case TriggerForceMode.LimitVelocity:
                     float maxVel = ForceVelocityLimit * currentForceFluctuation * distFactor;

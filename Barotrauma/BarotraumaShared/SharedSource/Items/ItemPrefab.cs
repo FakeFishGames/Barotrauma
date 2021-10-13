@@ -314,6 +314,8 @@ namespace Barotrauma
         /// </summary>
         public bool IsOverride;
 
+        public readonly ItemPrefab VariantOf;
+
         public XElement ConfigElement
         {
             get;
@@ -783,6 +785,7 @@ namespace Barotrauma
                 }
                 else
                 {
+                    VariantOf = basePrefab;
                     ConfigElement = element = CreateVariantXML(element, basePrefab);
                 }
             }

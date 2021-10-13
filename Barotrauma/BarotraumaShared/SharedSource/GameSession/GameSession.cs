@@ -661,10 +661,10 @@ namespace Barotrauma
         public static IEnumerable<Character> GetSessionCrewCharacters()
         {
 #if SERVER
-            return GameMain.Server.ConnectedClients.Select(c => c.Character).Where(c => c?.Info != null);
+            return GameMain.Server.ConnectedClients.Select(c => c.Character).Where(c => c?.Info != null && !c.IsDead);
 #else
             if (GameMain.GameSession == null) { return Enumerable.Empty<Character>(); }
-            return GameMain.GameSession.CrewManager.GetCharacters().Where(c => c?.Info != null);
+            return GameMain.GameSession.CrewManager.GetCharacters().Where(c => c?.Info != null && !c.IsDead);
 #endif        
         }
 

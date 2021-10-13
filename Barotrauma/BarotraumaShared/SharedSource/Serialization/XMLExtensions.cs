@@ -32,7 +32,10 @@ namespace Barotrauma
                 { typeof(Rectangle), (str, defVal) => ParseRect(str, true) }
             }.ToImmutableDictionary();
         
-        public static string ParseContentPathFromUri(this XObject element) => System.IO.Path.GetRelativePath(Environment.CurrentDirectory, element.BaseUri);
+        public static string ParseContentPathFromUri(this XObject element)
+            => !string.IsNullOrWhiteSpace(element.BaseUri)
+                ? System.IO.Path.GetRelativePath(Environment.CurrentDirectory, element.BaseUri.CleanUpPath())
+                : "";
 
         public static readonly XmlReaderSettings ReaderSettings = new XmlReaderSettings
         {

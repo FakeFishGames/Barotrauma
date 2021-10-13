@@ -440,8 +440,7 @@ namespace Barotrauma.Items.Components
                         {
                             float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
                             CurrentFixer.Info?.IncreaseSkillLevel(skill.Identifier,
-                                SkillSettings.Current.SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f),
-                                CurrentFixer.Position + Vector2.UnitY * 100.0f);
+                                SkillSettings.Current.SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f));
                         }
                         SteamAchievementManager.OnItemRepaired(item, CurrentFixer);
                         CurrentFixer.CheckTalents(AbilityEffectType.OnRepairComplete);
@@ -472,8 +471,7 @@ namespace Barotrauma.Items.Components
                         {
                             float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
                             CurrentFixer.Info?.IncreaseSkillLevel(skill.Identifier,
-                                SkillSettings.Current.SkillIncreasePerSabotage / Math.Max(characterSkillLevel, 1.0f),
-                                CurrentFixer.Position + Vector2.UnitY * 100.0f);
+                                SkillSettings.Current.SkillIncreasePerSabotage / Math.Max(characterSkillLevel, 1.0f));
                         }
 
                         deteriorationTimer = 0.0f;

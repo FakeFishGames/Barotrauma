@@ -358,7 +358,7 @@ namespace Barotrauma
                             {
                                 string skillIdentifier = msg.ReadString();
                                 float skillLevel = msg.ReadSingle();
-                                info?.SetSkillLevel(skillIdentifier, skillLevel, Position + Vector2.UnitY * 150.0f);
+                                info?.SetSkillLevel(skillIdentifier, skillLevel);
                             }
                             break;
                         case 4: // NetEntityEvent.Type.SetAttackTarget
@@ -390,7 +390,7 @@ namespace Barotrauma
                                 }
                                 targetLimb = targetCharacter.AnimController.Limbs[targetLimbIndex];
                             }
-                            if (attackLimb?.attack != null)
+                            if (attackLimb?.attack != null && Controlled != this)
                             {
                                 if (eventType == 4)
                                 {
@@ -467,8 +467,9 @@ namespace Barotrauma
                             ushort talentCount = msg.ReadUInt16();
                             for (int i = 0; i < talentCount; i++)
                             {
+                                bool addedThisRound = msg.ReadBoolean();
                                 UInt32 talentIdentifier = msg.ReadUInt32();
-                                GiveTalent(talentIdentifier);
+                                GiveTalent(talentIdentifier, addedThisRound);
                             }
                             break;
                         case 12: //NetEntityEvent.Type.UpdateMoney:

@@ -495,7 +495,7 @@ namespace Barotrauma
             float GetLevelDifficulty(float areaDifficulty)
             {
                 const float CurveModifier = 1.5f;
-                const float DifficultyMultiplier = 1.1f;
+                const float DifficultyMultiplier = 1.14f;
                 const float BaseDifficulty = -3f;
                 return (float)(1 - Math.Pow(1 - areaDifficulty, CurveModifier)) * DifficultyMultiplier * 100f + BaseDifficulty;
             }

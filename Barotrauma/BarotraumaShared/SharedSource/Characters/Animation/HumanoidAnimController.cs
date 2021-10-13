@@ -746,7 +746,7 @@ namespace Barotrauma
                     var arm = GetLimb(armType);
                     if (arm != null && Math.Abs(arm.body.AngularVelocity) < 10.0f)
                     {
-                        arm.body.SmoothRotate(MathHelper.Clamp(-arm.body.AngularVelocity, -0.5f, 0.5f), arm.Mass * 50.0f);
+                        arm.body.SmoothRotate(MathHelper.Clamp(-arm.body.AngularVelocity, -0.5f, 0.5f), arm.Mass * 50.0f * CurrentGroundedParams.ArmMoveStrength);
                     }
 
                     //get the elbow to a neutral rotation
@@ -757,7 +757,7 @@ namespace Barotrauma
                         if (elbow != null)
                         {
                             float diff = elbow.JointAngle - (Dir > 0 ? elbow.LowerLimit : elbow.UpperLimit);
-                            forearm.body.ApplyTorque(MathHelper.Clamp(-diff, -MathHelper.PiOver2, MathHelper.PiOver2) * forearm.Mass * 100.0f);
+                            forearm.body.ApplyTorque(MathHelper.Clamp(-diff, -MathHelper.PiOver2, MathHelper.PiOver2) * forearm.Mass * 100.0f * CurrentGroundedParams.ArmMoveStrength);
                         }
                     }
                 }
@@ -809,8 +809,8 @@ namespace Barotrauma
                 {
                     foreach (Gap gap in currentHull.ConnectedGaps)
                     {
-                        if (gap.IsHorizontal || gap.Open <= 0.0f) continue;
-                        if (Collider.SimPosition.X < ConvertUnits.ToSimUnits(gap.Rect.X) || Collider.SimPosition.X > ConvertUnits.ToSimUnits(gap.Rect.Right)) continue;
+                        if (gap.IsHorizontal || gap.Open <= 0.0f) { continue; }
+                        if (Collider.SimPosition.X < ConvertUnits.ToSimUnits(gap.Rect.X) || Collider.SimPosition.X > ConvertUnits.ToSimUnits(gap.Rect.Right)) { continue; }
                         
                         //if the gap is above us and leads outside, there's no surface to limit the movement
                         if (!gap.IsRoomToRoom && gap.Position.Y > currentHull.Position.Y)
@@ -830,7 +830,7 @@ namespace Barotrauma
                     }
                 }
 
-                surfaceLimiter = ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 0.4f) - surfacePos;
+                surfaceLimiter = ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 1.0f) - surfacePos;
                 surfaceLimiter = Math.Max(1.0f, surfaceLimiter);
                 if (surfaceLimiter > 50.0f) { return; }
             }
@@ -921,7 +921,7 @@ namespace Barotrauma
                     head.body.ApplyTorque(Dir);
                 }
 
-                movement.Y = movement.Y - (surfaceLimiter - 1.0f) * 0.01f;
+                movement.Y = movement.Y * (1.0f - ((surfaceLimiter - 1.0f) / 50.0f));
             }
 
             bool isNotRemote = true;
@@ -1003,7 +1003,10 @@ namespace Barotrauma
                 rightHandPos.X = (Dir == 1.0f) ? Math.Max(0.3f, rightHandPos.X) : Math.Min(-0.3f, rightHandPos.X);
                 rightHandPos = Vector2.Transform(rightHandPos, rotationMatrix);
                 float speedMultiplier = Math.Min(character.SpeedMultiplier * (1 - Character.GetRightHandPenalty()), 1.0f);
-                // Limb hand, Vector2 pos, float force = 1.0f
+                if (character.Inventory != null && character.Inventory.GetItemInLimbSlot(InvSlotType.RightHand) != null)
+                {
+                    speedMultiplier = Math.Min(speedMultiplier, 0.1f);
+                }
                 HandIK(rightHand, handPos + rightHandPos, CurrentSwimParams.ArmMoveStrength * speedMultiplier, CurrentSwimParams.HandMoveStrength * speedMultiplier);
             }
 
@@ -1013,6 +1016,10 @@ namespace Barotrauma
                 leftHandPos.X = (Dir == 1.0f) ? Math.Max(0.3f, leftHandPos.X) : Math.Min(-0.3f, leftHandPos.X);
                 leftHandPos = Vector2.Transform(leftHandPos, rotationMatrix);
                 float speedMultiplier = Math.Min(character.SpeedMultiplier * (1 - Character.GetLeftHandPenalty()), 1.0f);
+                if (character.Inventory != null && character.Inventory.GetItemInLimbSlot(InvSlotType.LeftHand) != null)
+                {
+                    speedMultiplier = Math.Min(speedMultiplier, 0.1f);
+                }
                 HandIK(leftHand, handPos + leftHandPos, CurrentSwimParams.ArmMoveStrength * speedMultiplier, CurrentSwimParams.HandMoveStrength * speedMultiplier);
             }
         }
@@ -1154,7 +1161,7 @@ namespace Barotrauma
             if (character.SimPosition.Y > ladderSimPos.Y) { climbForce.Y = Math.Min(0.0f, climbForce.Y); }
 
             //apply forces to the collider to move the Character up/down
-            Collider.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * Collider.Mass, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            Collider.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * Collider.Mass);
             float movementMultiplier = targetMovement.Y < 0 ? 0 : 1;
             head.body.SmoothRotate(MathHelper.PiOver4 * movementMultiplier * Dir, WalkParams.HeadTorque);
             
@@ -1383,7 +1390,7 @@ namespace Barotrauma
                 target.CharacterHealth.CalculateVitality();
                 if (wasCritical && target.Vitality > 0.0f && Timing.TotalTime > lastReviveTime + 10.0f)
                 {
-                    character.Info?.IncreaseSkillLevel("medical", SkillSettings.Current.SkillIncreasePerCprRevive, character.Position + Vector2.UnitY * 150.0f);
+                    character.Info?.IncreaseSkillLevel("medical", SkillSettings.Current.SkillIncreasePerCprRevive);
                     SteamAchievementManager.OnCharacterRevived(target, character);
                     lastReviveTime = (float)Timing.TotalTime;
 #if SERVER

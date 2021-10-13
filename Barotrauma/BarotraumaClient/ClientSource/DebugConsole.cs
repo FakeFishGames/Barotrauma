@@ -695,7 +695,12 @@ namespace Barotrauma
 
             AssignOnExecute("control", (string[] args) =>
             {
-                if (args.Length < 1) return;
+                if (args.Length < 1) { return; }
+                if (GameMain.NetworkMember != null)
+                {
+                    GameMain.Client?.SendConsoleCommand("control " + string.Join(' ', args[0]));
+                    return;
+                }
                 var character = FindMatchingCharacter(args, true);
                 if (character != null)
                 {

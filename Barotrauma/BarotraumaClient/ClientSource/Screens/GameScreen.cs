@@ -92,8 +92,7 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.GameSession != null) GameMain.GameSession.AddToGUIUpdateList();
-
+            GameMain.GameSession?.AddToGUIUpdateList();
             Character.AddAllToGUIUpdateList();
         }
         
@@ -139,7 +138,7 @@ namespace Barotrauma
                 for (int i = 0; i < Submarine.MainSubs.Length; i++)
                 {
                     if (Submarine.MainSubs[i] == null) continue;
-                    if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) continue;
+                    if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) { continue; }
 
                     Vector2 position = Submarine.MainSubs[i].SubBody != null ? Submarine.MainSubs[i].WorldPosition : Submarine.MainSubs[i].HiddenSubPosition;
 
@@ -148,6 +147,14 @@ namespace Barotrauma
                         spriteBatch, position, cam, 
                         Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height), 
                         GUI.SubmarineIcon, indicatorColor); 
+                }
+            }
+
+            if (!GUI.DisableHUD)
+            {
+                foreach (Character c in Character.CharacterList)
+                {
+                    c.DrawGUIMessages(spriteBatch, cam);
                 }
             }
 

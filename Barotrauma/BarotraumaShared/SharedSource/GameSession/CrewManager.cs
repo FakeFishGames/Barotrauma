@@ -489,6 +489,11 @@ namespace Barotrauma
                             continue;
                     }
                 }
+                if (orderInfo.Order.TargetEntity == null || (orderInfo.Order.IsIgnoreOrder && ignoreTarget == null))
+                {
+                    // The order target doesn't exist anymore, just discard the loaded order
+                    continue;
+                }
                 if (ignoreTarget != null)
                 {
                     ignoreTarget.OrderedToBeIgnored = true;

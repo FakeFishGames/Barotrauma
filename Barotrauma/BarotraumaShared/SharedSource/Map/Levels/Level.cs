@@ -1888,7 +1888,10 @@ namespace Barotrauma
             {
                 for (float x = waypointArea.X + outSideWaypointInterval; x < waypointArea.Right - outSideWaypointInterval; x += outSideWaypointInterval)
                 {
-                    var wayPoint = new WayPoint(new Vector2(x, waypointArea.Y + waypointArea.Height * i), SpawnType.Path, null);
+                    var wayPoint = new WayPoint(new Vector2(x, waypointArea.Y + waypointArea.Height * i), SpawnType.Path, null)
+                    {
+                        Ruin = ruin
+                    };
                     wayPoints.Add(wayPoint);
                     if (x == waypointArea.X + outSideWaypointInterval)
                     {
@@ -1907,7 +1910,10 @@ namespace Barotrauma
                 WayPoint wayPoint = null;
                 for (float y = waypointArea.Y; y < waypointArea.Y + waypointArea.Height; y += outSideWaypointInterval)
                 {
-                    wayPoint = new WayPoint(new Vector2(waypointArea.X + waypointArea.Width * i, y), SpawnType.Path, null);
+                    wayPoint = new WayPoint(new Vector2(waypointArea.X + waypointArea.Width * i, y), SpawnType.Path, null)
+                    {
+                        Ruin = ruin
+                    };
                     wayPoints.Add(wayPoint);
                     if (y == waypointArea.Y)
                     {
@@ -1940,12 +1946,33 @@ namespace Barotrauma
             //connect ruin entrances to the outside waypoints
             foreach (Gap g in Gap.GapList)
             {
-                if (g.Submarine != ruin.Submarine || g.IsRoomToRoom) { continue; }
+                if (g.Submarine != ruin.Submarine || g.IsRoomToRoom || g.linkedTo.Count == 0) { continue; }
                 var gapWaypoint = WayPoint.WayPointList.Find(wp => wp.ConnectedGap == g);
                 if (gapWaypoint == null) { continue; }
-                var closestWp = FindClosestWayPoint(gapWaypoint.WorldPosition, wayPoints);
+
+                //place another waypoint in front of the entrance
+                Vector2 entranceDir = Vector2.Zero;
+                if (g.IsHorizontal)
+                {
+                    entranceDir = Vector2.UnitX * Math.Sign(g.WorldPosition.X - g.linkedTo[0].WorldPosition.X);
+                }
+                else
+                {
+                    entranceDir = Vector2.UnitY * Math.Sign(g.WorldPosition.Y - g.linkedTo[0].WorldPosition.Y);
+                }
+                var entranceWayPoint = new WayPoint(g.WorldPosition + entranceDir * 64.0f, SpawnType.Path, null)
+                {
+                    Ruin = ruin
+                };
+                entranceWayPoint.ConnectTo(gapWaypoint);
+                var closestWp = FindClosestWayPoint(entranceWayPoint.WorldPosition, wayPoints, (wp) =>
+                {
+                    return Submarine.PickBody(
+                        ConvertUnits.ToSimUnits(wp.WorldPosition),
+                        ConvertUnits.ToSimUnits(entranceWayPoint.WorldPosition), collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) == null;
+                });
                 if (closestWp == null) { continue; }
-                gapWaypoint.ConnectTo(closestWp);
+                entranceWayPoint.ConnectTo(closestWp);
             }
 
             //create a waypoint path from the ruin to the closest tunnel

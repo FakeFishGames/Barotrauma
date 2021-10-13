@@ -167,6 +167,10 @@ namespace Barotrauma
             }
         }
 
+        public Sprite GetActiveSprite(bool excludeConditionalSprites = true)
+            => excludeConditionalSprites ? (_deformSprite != null ? _deformSprite.Sprite : Sprite) 
+            : ActiveSprite;
+
         public float DefaultSpriteDepth { get; private set; }
 
         public WearableSprite HuskSprite { get; private set; }
@@ -397,7 +401,7 @@ namespace Barotrauma
                     return deformations;
                 }
             }
-            DefaultSpriteDepth = ActiveSprite.Depth;
+            DefaultSpriteDepth = GetActiveSprite()?.Depth ?? 0.0f;
             LightSource?.CheckConditionals();
         }
 
@@ -901,7 +905,7 @@ namespace Barotrauma
             }
             foreach (WearableSprite wearable in WearingItems)
             {
-                if (onlyDrawable != null && onlyDrawable != wearable) continue;
+                if (onlyDrawable != null && onlyDrawable != wearable && wearable.CanBeHiddenByOtherWearables) { continue; }
                 DrawWearable(wearable, depthStep, spriteBatch, blankColor, alpha: color.A / 255f, spriteEffect);
                 //if there are multiple sprites on this limb, make the successive ones be drawn in front
                 depthStep += step;

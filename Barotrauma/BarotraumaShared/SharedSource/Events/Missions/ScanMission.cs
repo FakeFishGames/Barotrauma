@@ -18,7 +18,7 @@ namespace Barotrauma
         private readonly int targetsToScan;
         private readonly Dictionary<WayPoint, bool> scanTargets = new Dictionary<WayPoint, bool>();
         private readonly HashSet<WayPoint> newTargetsScanned = new HashSet<WayPoint>();
-        private readonly float minTargetDistance, minTargetDistanceSquared;
+        private readonly float minTargetDistance;
 
 
         private Ruin TargetRuin { get; set; }
@@ -58,7 +58,6 @@ namespace Barotrauma
             itemConfig = prefab.ConfigElement.Element("Items");
             targetsToScan = prefab.ConfigElement.GetAttributeInt("targets", 1);
             minTargetDistance = prefab.ConfigElement.GetAttributeFloat("mintargetdistance", 0.0f);
-            minTargetDistanceSquared = minTargetDistance * minTargetDistance;
         }
 
         protected override void StartMissionSpecific(Level level)
@@ -86,28 +85,57 @@ namespace Barotrauma
                 return;
             }
 
-            var availableWaypoints = TargetRuin.Submarine.GetWaypoints(false);
-            availableWaypoints.RemoveAll(wp => wp.CurrentHull == null);
-            if (availableWaypoints.Count < targetsToScan)
+            var ruinWaypoints = TargetRuin.Submarine.GetWaypoints(false);
+            ruinWaypoints.RemoveAll(wp => wp.CurrentHull == null);
+            if (ruinWaypoints.Count < targetsToScan)
             {
-                DebugConsole.ThrowError($"Failed to initialize a Scan mission: target ruin has less waypoints than required as scan targets ({availableWaypoints.Count} < {targetsToScan})");
+                DebugConsole.ThrowError($"Failed to initialize a Scan mission: target ruin has less waypoints than required as scan targets ({ruinWaypoints.Count} < {targetsToScan})");
                 return;
             }
-            for (int i = 0; i < targetsToScan; i++)
+            var availableWaypoints = new List<WayPoint>();
+            float minTargetDistanceSquared = minTargetDistance * minTargetDistance;
+            for (int tries = 0; tries < 15; tries++)
             {
-                var selectedWaypoint = availableWaypoints.GetRandom(randSync: Rand.RandSync.Server);
-                scanTargets.Add(selectedWaypoint, false);
-                availableWaypoints.Remove(selectedWaypoint);
-                if (i < (targetsToScan - 1))
+                scanTargets.Clear();
+                availableWaypoints.Clear();
+                availableWaypoints.AddRange(ruinWaypoints);
+                for (int i = 0; i < targetsToScan; i++)
                 {
-                    availableWaypoints.RemoveAll(wp => wp.CurrentHull == selectedWaypoint.CurrentHull);
-                    availableWaypoints.RemoveAll(wp => Vector2.DistanceSquared(wp.WorldPosition, selectedWaypoint.WorldPosition) < minTargetDistanceSquared);
-                    if (availableWaypoints.None())
+                    var selectedWaypoint = availableWaypoints.GetRandom(randSync: Rand.RandSync.Server);
+                    scanTargets.Add(selectedWaypoint, false);
+                    availableWaypoints.Remove(selectedWaypoint);
+                    if (i < (targetsToScan - 1))
                     {
-                        DebugConsole.ThrowError($"Error initializing a Scan mission: not enough targets available to reach the required scan target count (current targets: {scanTargets.Count}, required targets: {targetsToScan})");
-                        break;
+                        availableWaypoints.RemoveAll(wp => wp.CurrentHull == selectedWaypoint.CurrentHull);
+                        availableWaypoints.RemoveAll(wp => Vector2.DistanceSquared(wp.WorldPosition, selectedWaypoint.WorldPosition) < minTargetDistanceSquared);
+                        if (availableWaypoints.None())
+                        {
+#if DEBUG
+                            DebugConsole.ThrowError($"Error initializing a Scan mission: not enough targets available on try #{tries + 1} to reach the required scan target count (current targets: {scanTargets.Count}, required targets: {targetsToScan})");
+#endif
+                            break;
+                        }
                     }
                 }
+                if (scanTargets.Count >= targetsToScan)
+                {
+#if DEBUG
+                    DebugConsole.NewMessage($"Successfully initialized a Scan mission: targets set on try #{tries + 1}", Color.Green);
+#endif
+                    break;
+                }
+                if ((tries + 1) % 5 == 0)
+                {
+                    float reducedMinTargetDistance = (1.0f - (((tries + 1) / 5) * 0.1f)) * minTargetDistance;
+                    minTargetDistanceSquared = reducedMinTargetDistance * reducedMinTargetDistance;
+#if DEBUG
+                    DebugConsole.NewMessage($"Reducing minimum distance between Scan mission targets (new min: {reducedMinTargetDistance}) to reach the required target count", Color.Yellow);
+#endif
+                }
+            }
+            if (scanTargets.Count < targetsToScan)
+            {
+                DebugConsole.ThrowError($"Error initializing a Scan mission: not enough targets (current targets: {scanTargets.Count}, required targets: {targetsToScan})");
             }
         }
 
@@ -218,7 +246,7 @@ namespace Barotrauma
 
         public override void End()
         {
-            if (AllTargetsScanned && AllScannersReturned())
+            if (State == 2 && AllScannersReturned())
             {
                 GiveReward();
                 completed = true;

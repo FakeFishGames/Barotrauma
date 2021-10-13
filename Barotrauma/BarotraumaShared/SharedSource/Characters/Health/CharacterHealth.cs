@@ -206,7 +206,11 @@ namespace Barotrauma
         public float Stun
         {
             get { return stunAffliction.Strength; }
-            set { stunAffliction.Strength = MathHelper.Clamp(value, 0.0f, stunAffliction.Prefab.MaxStrength); }
+            set
+            {
+                if (Character.GodMode) { return; }
+                stunAffliction.Strength = MathHelper.Clamp(value, 0.0f, stunAffliction.Prefab.MaxStrength); 
+            }
         }
 
         public float StunTimer { get; private set; }
@@ -622,6 +626,22 @@ namespace Barotrauma
             }
 
             afflictions.RemoveAll(a => !irremovableAfflictions.Contains(a));
+            foreach (Affliction affliction in irremovableAfflictions)
+            {
+                affliction.Strength = 0.0f;
+            }
+            CalculateVitality();
+        }
+
+        public void RemoveNegativeAfflictions()
+        {
+            // also don't remove genetic effects, even if they're negative
+            foreach (LimbHealth limbHealth in limbHealths)
+            {
+                limbHealth.Afflictions.RemoveAll(a => !a.Prefab.IsBuff && a.Prefab.AfflictionType != "geneticmaterialbuff" && a.Prefab.AfflictionType != "geneticmaterialdebuff");
+            }
+
+            afflictions.RemoveAll(a => !irremovableAfflictions.Contains(a) && !a.Prefab.IsBuff && a.Prefab.AfflictionType != "geneticmaterialbuff" && a.Prefab.AfflictionType != "geneticmaterialdebuff");
             foreach (Affliction affliction in irremovableAfflictions)
             {
                 affliction.Strength = 0.0f;

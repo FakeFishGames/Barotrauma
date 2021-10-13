@@ -809,13 +809,13 @@ namespace Barotrauma
                     {
                         foreach (Skill skill in character.Info.Job.Skills)
                         {
-                            character.Info.SetSkillLevel(skill.Identifier, level, character.WorldPosition);
+                            character.Info.SetSkillLevel(skill.Identifier, level);
                         }
                         NewMessage($"Set all {character.Name}'s skills to {level}", Color.Green);
                     }
                     else
                     {
-                        character.Info.SetSkillLevel(skillIdentifier, level, character.WorldPosition);
+                        character.Info.SetSkillLevel(skillIdentifier, level);
                         NewMessage($"Set {character.Name}'s {skillIdentifier} level to {level}", Color.Green);
                     }
                 }
@@ -839,7 +839,7 @@ namespace Barotrauma
                 NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);
             }, isCheat: true));
 
-            commands.Add(new Command("givetalent", "give [player] testing [talent]", (string[] args) =>
+            commands.Add(new Command("givetalent", "givetalent [talent] [player]: give the talent to the specified character. If the character argument is omitted, the talent is given to the controlled character.", (string[] args) =>
             {
                 if (args.Length == 0) { return; }
                 var character = args.Length >= 2 ? FindMatchingCharacter(args.Skip(1).ToArray()) : Character.Controlled;
@@ -1886,13 +1886,15 @@ namespace Barotrauma
                     }
                     return;
                 }
-#if !DEBUG
                 if (!IsCommandPermitted(splitCommand[0].ToLowerInvariant(), GameMain.Client))
                 {
+#if DEBUG
+                    AddWarning("You're not permitted to use the command \"{matchingCommand.Name}\". Executing the command anyway because this is a debug build.");
+#else
                     ThrowError("You're not permitted to use the command \"" + splitCommand[0].ToLowerInvariant() + "\"!");
                     return;
-                }
 #endif
+                }
             }
 #endif
 

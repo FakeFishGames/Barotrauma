@@ -453,7 +453,7 @@ namespace Barotrauma
                 if (SelectedAiTarget?.Entity != null || EscapeTarget != null)
                 {
                     Entity t = SelectedAiTarget?.Entity ?? EscapeTarget;
-                    float referencePos = Vector2.DistanceSquared(Character.WorldPosition, t.WorldPosition) > 100 * 100 && HasValidPath(true) ? PathSteering.CurrentPath.CurrentNode.WorldPosition.X : t.WorldPosition.X;
+                    float referencePos = Vector2.DistanceSquared(Character.WorldPosition, t.WorldPosition) > 100 * 100 && HasValidPath(requireNonDirty: true) ? PathSteering.CurrentPath.CurrentNode.WorldPosition.X : t.WorldPosition.X;
                     Character.AnimController.TargetDir = Character.WorldPosition.X < referencePos ? Direction.Right : Direction.Left;
                 }
                 else
@@ -916,9 +916,7 @@ namespace Barotrauma
         {
             if (SteeringManager is IndoorsSteeringManager pathSteering)
             {
-                if (patrolTarget == null || 
-                    pathSteering.CurrentPath == null || 
-                    !pathSteering.IsPathDirty && (pathSteering.CurrentPath.Finished || pathSteering.CurrentPath.Unreachable))
+                if (patrolTarget == null || IsCurrentPathUnreachable || IsCurrentPathFinished)
                 {
                     newPatrolTargetTimer = Math.Min(newPatrolTargetTimer, newPatrolTargetIntervalMin);
                 }
@@ -936,8 +934,7 @@ namespace Barotrauma
                     else if (targetHulls.Any())
                     {
                         patrolTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
-                        var path = PathSteering.PathFinder.FindPath(Character.SimPosition, patrolTarget.SimPosition, minGapSize: minGapSize * 1.5f, nodeFilter: n => PatrolNodeFilter(n));
-
+                        var path = PathSteering.PathFinder.FindPath(Character.SimPosition, patrolTarget.SimPosition, Character.Submarine, minGapSize: minGapSize * 1.5f, nodeFilter: n => PatrolNodeFilter(n));
                         if (path.Unreachable)
                         {
                             //can't go to this room, remove it from the list and try another room
@@ -2331,33 +2328,31 @@ namespace Barotrauma
                     SelectedAiTarget.Entity is Character c && VisibleHulls.Contains(c.CurrentHull))
                 {
                     // Steer towards the target if in the same room and swimming
-                    Vector2 dir = Vector2.Normalize(SelectedAiTarget.Entity.WorldPosition - Character.WorldPosition);
-                    if (MathUtils.IsValid(dir))
-                    {
-                        SteeringManager.SteeringManual(deltaTime, dir);
-                    }
+                    SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SelectedAiTarget.Entity.WorldPosition - Character.WorldPosition));
                 }
                 else
                 {
                     // Use path finding
                     PathSteering.SteeringSeek(Character.GetRelativeSimPosition(SelectedAiTarget.Entity), weight: 2, minGapWidth: minGapSize);
-                    if (!PathSteering.IsPathDirty && PathSteering.CurrentPath.Unreachable)
-                    {
-                        // Can't reach
-                        State = AIState.Idle;
-                        IgnoreTarget(SelectedAiTarget);
-                        return;
-                    }
                 }
             }
             else
             {
                 // Outside
                 SteeringManager.SteeringSeek(Character.GetRelativeSimPosition(SelectedAiTarget.Entity), 5);
-                if (Character.AnimController.InWater)
+            }
+            if (steeringManager is IndoorsSteeringManager pathSteering)
+            {
+                if (!pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
                 {
-                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
+                    // Can't reach
+                    State = AIState.Idle;
+                    IgnoreTarget(SelectedAiTarget);
                 }
+            }
+            else if (Character.AnimController.InWater)
+            {
+                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
             }
         }
 
@@ -2510,6 +2505,11 @@ namespace Barotrauma
                             else if (targetingFromOutsideToInside)
                             {
                                 targetingTag = "room";
+                                if (item.Submarine?.Info.IsRuin != null)
+                                {
+                                    // Ignore ruin items when the creature is outside.
+                                    continue;
+                                }
                             }
                         }
                         else if (targetingTag == "nasonov")

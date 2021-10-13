@@ -1290,7 +1290,7 @@ namespace Barotrauma
                     Character targetCharacter = CharacterFromTarget(target);
                     if (targetCharacter != null && !targetCharacter.Removed)
                     {
-                        targetCharacter?.Info?.GiveExperience(giveExperience, popupOffset: i * 25f);
+                        targetCharacter?.Info?.GiveExperience(giveExperience);
                         i++;
                     }
                 }
@@ -1309,7 +1309,7 @@ namespace Barotrauma
                                     // don't let clients simulate random skill gain
                                     continue;
                                 }
-                                targetCharacter.Info?.IncreaseSkillLevel(GetRandomSkill(), amount, targetCharacter.Position + Vector2.UnitY * (150.0f + i * 25f));
+                                targetCharacter.Info?.IncreaseSkillLevel(GetRandomSkill(), amount);
                                 
                                 string GetRandomSkill()
                                 {
@@ -1318,9 +1318,8 @@ namespace Barotrauma
                             }
                             else
                             {
-                                targetCharacter.Info?.IncreaseSkillLevel(skillIdentifier?.ToLowerInvariant(), amount, targetCharacter.Position + Vector2.UnitY * (150.0f + i * 25f));
+                                targetCharacter.Info?.IncreaseSkillLevel(skillIdentifier?.ToLowerInvariant(), amount);
                             }
-                            i++;
                         }
                     }
                 }

@@ -340,7 +340,7 @@ namespace Barotrauma.Items.Components
                 item.AiTarget.SoundRange = item.AiTarget.MaxSoundRange;
             }
 
-            item.Drop(null);
+            item.Drop(null, createNetworkEvent: false);
 
             launchPos = item.SimPosition;
 

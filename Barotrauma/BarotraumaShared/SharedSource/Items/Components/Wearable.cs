@@ -46,6 +46,7 @@ namespace Barotrauma
         public LimbType Limb { get; private set; }
         public bool HideLimb { get; private set; }
         public bool HideOtherWearables { get; private set; }
+        public bool CanBeHiddenByOtherWearables { get; private set; }
         public List<WearableType> HideWearablesOfType { get; private set; }
         public bool InheritLimbDepth { get; private set; }
         /// <summary>
@@ -176,6 +177,7 @@ namespace Barotrauma
             Limb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("limb", "Head"), true);
             HideLimb = SourceElement.GetAttributeBool("hidelimb", false);
             HideOtherWearables = SourceElement.GetAttributeBool("hideotherwearables", false);
+            CanBeHiddenByOtherWearables = SourceElement.GetAttributeBool("canbehiddenbyotherwearables", true);
             InheritLimbDepth = SourceElement.GetAttributeBool("inheritlimbdepth", true);
             var scale = SourceElement.GetAttribute("inheritscale");
             if (scale != null)

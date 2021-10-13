@@ -13,7 +13,7 @@ namespace Barotrauma.Abilities
 
         private void ApplyEffectSpecific()
         {
-            Character.Revive();
+            Character.Revive(removeAllAfflictions: false);
         }
 
         protected override void ApplyEffect()

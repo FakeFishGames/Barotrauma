@@ -1731,7 +1731,9 @@ namespace Barotrauma
                 "givetalent",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    Character targetCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args, false);
+                    if (args.Length == 0) { return; }
+                    Character targetCharacter = (args.Length >= 2) ? FindMatchingCharacter(args.Skip(1).ToArray(), false) : client.Character;
+
                     if (targetCharacter == null) { return; }
 
                     TalentPrefab talentPrefab = TalentPrefab.TalentPrefabs.Find(c =>
@@ -1845,7 +1847,7 @@ namespace Barotrauma
                 "control",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    if (args.Length < 1) return;
+                    if (args.Length < 1) { return; }
                     var character = FindMatchingCharacter(args, ignoreRemotePlayers: true, allowedRemotePlayer: client);
                     if (character != null)
                     {
@@ -2259,13 +2261,13 @@ namespace Barotrauma
                         {
                             foreach (Skill skill in character.Info.Job.Skills)
                             {
-                                character.Info.SetSkillLevel(skill.Identifier, level, character.WorldPosition);
+                                character.Info.SetSkillLevel(skill.Identifier, level);
                             }
                             GameMain.Server.SendConsoleMessage($"Set all {character.Name}'s skills to {level}", senderClient);
                         }
                         else
                         {
-                            character.Info.SetSkillLevel(skillIdentifier, level, character.WorldPosition);
+                            character.Info.SetSkillLevel(skillIdentifier, level);
                             GameMain.Server.SendConsoleMessage($"Set {character.Name}'s {skillIdentifier} level to {level}", senderClient);
                         }
 

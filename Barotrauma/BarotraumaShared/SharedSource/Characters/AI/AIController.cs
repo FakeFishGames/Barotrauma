@@ -103,6 +103,9 @@ namespace Barotrauma
             !pathSteering.CurrentPath.Unreachable &&
             (!requireNonDirty || !pathSteering.IsPathDirty);
 
+        public bool IsCurrentPathUnreachable => steeringManager is IndoorsSteeringManager pathSteering && !pathSteering.IsPathDirty && pathSteering.CurrentPath != null && pathSteering.CurrentPath.Unreachable;
+        public bool IsCurrentPathFinished => steeringManager is IndoorsSteeringManager pathSteering && !pathSteering.IsPathDirty && pathSteering.CurrentPath != null && pathSteering.CurrentPath.Finished;
+
         protected readonly float colliderWidth;
         protected readonly float minGapSize;
         protected readonly float colliderLength;
@@ -412,7 +415,7 @@ namespace Barotrauma
                 }
                 else if (EscapeTarget != null && EscapeTarget.FlowTargetHull != Character.CurrentHull)
                 {
-                    if (pathSteering.CurrentPath != null && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
+                    if (IsCurrentPathUnreachable)
                     {
                         unreachableGaps.Add(EscapeTarget);
                         EscapeTarget = null;

@@ -49,13 +49,13 @@ namespace Barotrauma.Items.Components
         [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = int.MinValue, ValueStep = 10f), Serialize("0,0", true, "Offset of the spawn area from the center of the item")]
         public Vector2 SpawnAreaOffset { get; set; }
 
-        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = int.MinValue, ValueStep = 1f), Serialize("10,40", true, "Time range between spawn attempts in seconds")]
+        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = int.MinValue, ValueStep = 1f), Serialize("10,40", true, "Time range between spawn attempts in seconds. Set both to a negative value to disable automatic spawning.")]
         public Vector2 SpawnTimerRange { get; set; }
 
         [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 1f, ValueStep = 1f, DecimalCount = 0), Serialize("1,3", true, "Minumum and maximum amount of items or creatures to spawn in one attempt")]
         public Vector2 SpawnAmountRange { get; set; }
 
-        [Editable(MinValueInt = 0), Serialize(8, true, "Amount of items or creatures in the spawn area that will prevent further items or creatures from being spawned")]
+        [Editable(MinValueInt = int.MinValue, MaxValueInt = int.MaxValue), Serialize(8, true, "Amount of items or creatures in the spawn area that will prevent further items or creatures from being spawned")]
         public int MaximumAmount { get; set; }
 
         [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = int.MinValue, ValueStep = 10f), Serialize(500f, true, "Inflate the circle of rectangle by this value to extend the area that counts towards the maximum amount of items or enemies to be spawned")]
@@ -110,7 +110,12 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember is { IsClient: true }) { return; }
 
-            SpawnTimerGoal ??= Rand.Range(Math.Min(SpawnTimerRange.X, SpawnTimerRange.Y), Math.Max(SpawnTimerRange.X, SpawnTimerRange.Y), Rand.RandSync.Unsynced);
+            float minTime = Math.Min(SpawnTimerRange.X, SpawnTimerRange.Y),
+                  maxTime = Math.Max(SpawnTimerRange.X, SpawnTimerRange.Y);
+
+            if (minTime < 0 && maxTime < 0) { return; }
+
+            SpawnTimerGoal ??= Rand.Range(minTime, maxTime, Rand.RandSync.Unsynced);
 
             SpawnTimer += deltaTime;
 
@@ -120,12 +125,12 @@ namespace Barotrauma.Items.Components
                 SpawnTimerGoal = null;
                 SpawnTimer = 0;
             }
-
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
             bool isNonZero = signal.value != "0";
+            bool isClient = GameMain.NetworkMember is { IsClient: true };
 
             switch (connection.Name)
             {
@@ -134,6 +139,9 @@ namespace Barotrauma.Items.Components
                     break;
                 case "toggle" when isNonZero:
                     CanSpawn = !CanSpawn;
+                    break;
+                case "trigger_in" when isNonZero && !isClient:
+                    Spawn();
                     break;
             }
         }
@@ -162,6 +170,8 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
+
+            if (MaximumAmount < 0) { return true; }
 
             int amount;
 

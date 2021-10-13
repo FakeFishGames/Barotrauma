@@ -323,7 +323,7 @@ namespace Barotrauma
                     // This is relatively expensive, so let's do this only when it significantly improves the behavior.
                     // Only allow one path find call per frame.
                     hasCalledPathFinder = true;
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, item.SimPosition, errorMsgStr: $"AIObjectiveGetItem {character.DisplayName}", nodeFilter: node => node.Waypoint.CurrentHull != null);
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, item.SimPosition, character.Submarine, errorMsgStr: $"AIObjectiveGetItem {character.DisplayName}", nodeFilter: node => node.Waypoint.CurrentHull != null);
                     if (path.Unreachable) { continue; }
                 }
                 currItemPriority = itemPriority;

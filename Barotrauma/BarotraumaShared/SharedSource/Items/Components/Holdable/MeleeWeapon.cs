@@ -59,6 +59,7 @@ namespace Barotrauma.Items.Components
         [Editable, Serialize("3.0, -1.0", false)]
         public Vector2 SwingForce { get; set; }
 
+        public bool Hitting { get { return hitting; } }
 
         /// <summary>
         /// Defines items that boost the weapon functionality, like battery cell for stun batons.

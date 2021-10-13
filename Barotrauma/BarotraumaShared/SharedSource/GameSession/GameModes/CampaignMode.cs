@@ -17,9 +17,7 @@ namespace Barotrauma
         public static CampaignSettings Unsure = Empty;
         public bool RadiationEnabled { get; set; }
 
-        public int AddedMissionCount { get; set; }
-
-        public int TotalMaxMissionCount => MaxMissionCount + AddedMissionCount;
+        public int TotalMaxMissionCount => MaxMissionCount + GetAddedMissionCount();
 
         private int maxMissionCount;
         public int MaxMissionCount
@@ -36,7 +34,6 @@ namespace Barotrauma
         {
             maxMissionCount = DefaultMaxMissionCount;
             RadiationEnabled = inc.ReadBoolean();
-            AddedMissionCount = inc.ReadInt32();
             MaxMissionCount = inc.ReadInt32();
         }
 
@@ -44,7 +41,6 @@ namespace Barotrauma
         {
             maxMissionCount = DefaultMaxMissionCount;
             RadiationEnabled = element.GetAttributeBool(nameof(RadiationEnabled).ToLowerInvariant(), true);
-            AddedMissionCount = element.GetAttributeInt(nameof(AddedMissionCount).ToLowerInvariant(), 0);
             MaxMissionCount = element.GetAttributeInt(nameof(MaxMissionCount).ToLowerInvariant(), DefaultMaxMissionCount);
         }
 
@@ -52,12 +48,21 @@ namespace Barotrauma
         {
             msg.Write(RadiationEnabled);
             msg.Write(MaxMissionCount);
-            msg.Write(AddedMissionCount);
+        }
+
+        public int GetAddedMissionCount()
+        {
+            int count = 0;
+            foreach (Character character in GameSession.GetSessionCrewCharacters())
+            {
+                count += (int)character.GetStatValue(StatTypes.ExtraMissionCount);
+            }
+            return count;
         }
 
         public XElement Save()
         {
-            return new XElement(nameof(CampaignSettings), new XAttribute(nameof(RadiationEnabled).ToLowerInvariant(), RadiationEnabled), new XAttribute(nameof(MaxMissionCount).ToLowerInvariant(), MaxMissionCount), new XAttribute(nameof(AddedMissionCount).ToLowerInvariant(), AddedMissionCount));
+            return new XElement(nameof(CampaignSettings), new XAttribute(nameof(RadiationEnabled).ToLowerInvariant(), RadiationEnabled), new XAttribute(nameof(MaxMissionCount).ToLowerInvariant(), MaxMissionCount));
         }
     }
 

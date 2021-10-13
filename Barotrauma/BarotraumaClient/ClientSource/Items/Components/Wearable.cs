@@ -5,9 +5,9 @@ namespace Barotrauma.Items.Components
 {
     partial class Wearable
     {
-        private void GetDamageModifierText(ref string description, float damageMultiplier, string afflictionIdentifier)
+        private void GetDamageModifierText(ref string description, DamageModifier damageModifier, string afflictionIdentifier)
         {
-            int roundedValue = (int)Math.Round((1 - damageMultiplier) * 100);
+            int roundedValue = (int)Math.Round((1 - damageModifier.DamageMultiplier * damageModifier.ProbabilityMultiplier) * 100);
             if (roundedValue == 0) { return; }
             string colorStr = XMLExtensions.ColorToString(GUI.Style.Green);
             description += $"\n  ‖color:{colorStr}‖{roundedValue.ToString("-0;+#")}%‖color:end‖ {AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.Equals(afflictionIdentifier, StringComparison.OrdinalIgnoreCase))?.Name ?? afflictionIdentifier}";
@@ -15,7 +15,7 @@ namespace Barotrauma.Items.Components
 
         public override void AddTooltipInfo(ref string name, ref string description)
         {
-            if (damageModifiers.Any(d => !MathUtils.NearlyEqual(d.DamageMultiplier, 1f)) || SkillModifiers.Any())
+            if (damageModifiers.Any(d => !MathUtils.NearlyEqual(d.DamageMultiplier, 1f) || !MathUtils.NearlyEqual(d.ProbabilityMultiplier, 1f)) || SkillModifiers.Any())
             {
                 description += "\n";
             }
@@ -31,11 +31,11 @@ namespace Barotrauma.Items.Components
 
                     foreach (string afflictionIdentifier in damageModifier.ParsedAfflictionIdentifiers)
                     {
-                        GetDamageModifierText(ref description, damageModifier.DamageMultiplier, afflictionIdentifier);
+                        GetDamageModifierText(ref description, damageModifier, afflictionIdentifier);
                     }
                     foreach (string afflictionIdentifier in damageModifier.ParsedAfflictionTypes)
                     {
-                        GetDamageModifierText(ref description, damageModifier.DamageMultiplier, afflictionIdentifier);
+                        GetDamageModifierText(ref description, damageModifier, afflictionIdentifier);
                     }
                 }
             }

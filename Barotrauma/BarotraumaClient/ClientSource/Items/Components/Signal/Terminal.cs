@@ -118,9 +118,9 @@ namespace Barotrauma.Items.Components
         // This method is overrided instead of the UpdateHUD method because this ensures the input box is selected
         // even when the terminal component is selected for the very first time. Doing the input box selection in the
         // UpdateHUD method only selects the input box on every terminal selection except for the very first time.
-        public override void AddToGUIUpdateList()
+        public override void AddToGUIUpdateList(int order = 0)
         {
-            base.AddToGUIUpdateList();
+            base.AddToGUIUpdateList(order: order);
             if (shouldSelectInputBox)
             {
                 inputBox.Select();

@@ -759,6 +759,10 @@ namespace Barotrauma
                 appliedDamageModifiers.AddRange(tempModifiers);
             }
             var result = new AttackResult(afflictionsCopy, this, appliedDamageModifiers);
+            if (result.Afflictions.None())
+            {
+                playSound = false;
+            }
             AddDamageProjSpecific(playSound, result);
 
             float bleedingDamage = 0;

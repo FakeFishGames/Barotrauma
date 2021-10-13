@@ -1162,7 +1162,7 @@ namespace Barotrauma
             return (int)(salary * Job.Prefab.PriceMultiplier);
         }
 
-        public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 pos, bool gainedFromApprenticeship = false)
+        public void IncreaseSkillLevel(string skillIdentifier, float increase, bool gainedFromApprenticeship = false)
         {
             if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) || Character == null) { return; }         
 
@@ -1190,10 +1190,10 @@ namespace Barotrauma
                 }
             }
 
-            OnSkillChanged(skillIdentifier, prevLevel, newLevel, pos);
+            OnSkillChanged(skillIdentifier, prevLevel, newLevel);
         }
 
-        public void SetSkillLevel(string skillIdentifier, float level, Vector2 pos)
+        public void SetSkillLevel(string skillIdentifier, float level)
         {
             if (Job == null) { return; }
 
@@ -1201,19 +1201,19 @@ namespace Barotrauma
             if (skill == null)
             {
                 Job.Skills.Add(new Skill(skillIdentifier, level));
-                OnSkillChanged(skillIdentifier, 0.0f, level, pos);
+                OnSkillChanged(skillIdentifier, 0.0f, level);
             }
             else
             {
                 float prevLevel = skill.Level;
                 skill.Level = level;
-                OnSkillChanged(skillIdentifier, prevLevel, skill.Level, pos);
+                OnSkillChanged(skillIdentifier, prevLevel, skill.Level);
             }
         }
 
-        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos);
+        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel);
 
-        public void GiveExperience(int amount, float popupOffset = 0f, bool isMissionExperience = false)
+        public void GiveExperience(int amount, bool isMissionExperience = false)
         {
             int prevAmount = ExperiencePoints;
 
@@ -1229,7 +1229,7 @@ namespace Barotrauma
             if (amount < 0) { return; }
 
             ExperiencePoints += amount;
-            OnExperienceChanged(prevAmount, ExperiencePoints, Character.Position + Vector2.UnitY * (150.0f + popupOffset));
+            OnExperienceChanged(prevAmount, ExperiencePoints);
         }
 
         public void SetExperience(int newExperience)
@@ -1238,7 +1238,7 @@ namespace Barotrauma
 
             int prevAmount = ExperiencePoints;
             ExperiencePoints = newExperience;
-            OnExperienceChanged(prevAmount, ExperiencePoints, Character.Position + Vector2.UnitY * 150.0f);
+            OnExperienceChanged(prevAmount, ExperiencePoints);
         }
 
         const int BaseExperienceRequired = 50;
@@ -1295,7 +1295,7 @@ namespace Barotrauma
             return BaseExperienceRequired + AddedExperienceRequiredPerLevel * level;
         }
 
-        partial void OnExperienceChanged(int prevAmount, int newAmount, Vector2 textPopupPos);
+        partial void OnExperienceChanged(int prevAmount, int newAmount);
 
         public void Rename(string newName)
         {

@@ -511,5 +511,22 @@ namespace Barotrauma
 
             targetComponent.ApplyStyle(componentStyle);
         }
+
+        public Color GetQualityColor(int quality)
+        {
+            switch (quality)
+            {
+                case 1:
+                    return ItemQualityColorGood;
+                case 2:
+                    return ItemQualityColorExcellent;
+                case 3:
+                    return ItemQualityColorMasterwork;
+                case -1:
+                    return ItemQualityColorPoor;
+                default:
+                    return ItemQualityColorNormal;
+            }
+        }
     }
 }

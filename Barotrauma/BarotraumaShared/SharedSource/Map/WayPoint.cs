@@ -46,6 +46,7 @@ namespace Barotrauma
         public Hull CurrentHull { get; private set; }
 
         public Level.Tunnel Tunnel;
+        public RuinGeneration.Ruin Ruin;
 
         public SpawnType SpawnType
         {
@@ -1097,6 +1098,7 @@ namespace Barotrauma
             CurrentHull = null;
             ConnectedGap = null;
             Tunnel = null;
+            Ruin = null;
             Stairs = null;
             Ladders = null;
             OnLinksChanged = null;

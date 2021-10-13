@@ -10,7 +10,7 @@ namespace Barotrauma
     {
         private readonly Dictionary<string, float> prevSentSkill = new Dictionary<string, float>();
 
-        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos)
+        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel)
         {
             if (Character == null || Character.Removed) { return; }
             if (!prevSentSkill.ContainsKey(skillIdentifier))
@@ -24,9 +24,9 @@ namespace Barotrauma
             }            
         }
 
-        partial void OnExperienceChanged(int prevAmount, int newAmount, Vector2 textPopupPos)
+        partial void OnExperienceChanged(int prevAmount, int newAmount)
         {
-            if (Math.Abs(prevAmount - newAmount) > 0)
+            if (prevAmount != newAmount)
             {
                 GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateExperience });
             }

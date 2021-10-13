@@ -941,7 +941,7 @@ namespace Barotrauma
                     inventoryIndex = updateList.IndexOf(CharacterHUD.HUDFrame);
                 }
 
-                if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || prevMouseOn == null)
+                if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || (prevMouseOn == null && !PlayerInput.SecondaryMouseButtonHeld()))
                 {
                     for (var i = updateList.Count - 1; i > inventoryIndex; i--)
                     {
@@ -2454,7 +2454,7 @@ namespace Barotrauma
         {
             Submarine sub = Submarine.Loaded.FirstOrDefault(s => s.ID == subId);
 
-            var newMessage = new GUIMessage(message, color, pos, velocity, lifeTime, Alignment.Center, LargeFont, sub: sub);
+            var newMessage = new GUIMessage(message, color, pos, velocity, lifeTime, Alignment.Center, Font, sub: sub);
             if (playSound) { SoundPlayer.PlayUISound(soundType); }
             bool overlapFound = true;
             int tries = 0;
@@ -2477,8 +2477,7 @@ namespace Barotrauma
                         moveDir = Rand.Vector(1.0f);
                     }
                     moveDir.Y = -Math.Abs(moveDir.Y);
-                    newMessage.Pos += moveDir * 20;
-                    overlapFound = true;
+                    newMessage.Pos -= Vector2.UnitY * 10;
                 }
                 tries++;
                 if (tries > 20) { break; }

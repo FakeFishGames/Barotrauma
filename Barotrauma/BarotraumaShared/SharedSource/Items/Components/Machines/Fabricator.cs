@@ -391,8 +391,7 @@ namespace Barotrauma.Items.Components
 
                         user.Info.IncreaseSkillLevel(
                             skill.Identifier,
-                            addedSkill,
-                            user.Position + Vector2.UnitY * 150.0f);
+                            addedSkill);
                     }
                 }
 

@@ -14,9 +14,9 @@ namespace Barotrauma.Items.Components
             currentTarget?.UpdateHUD(cam, character,deltaTime);
         }
 
-        public override void AddToGUIUpdateList()
+        public override void AddToGUIUpdateList(int order = 0)
         {
-            currentTarget?.AddToGUIUpdateList();
+            currentTarget?.AddToGUIUpdateList(order: -1);
         }
     }
 }

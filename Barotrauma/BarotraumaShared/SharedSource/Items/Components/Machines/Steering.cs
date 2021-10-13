@@ -392,8 +392,7 @@ namespace Barotrauma.Items.Components
             float userSkill = Math.Max(user.GetSkillLevel("helm"), 1.0f) / 100.0f;
             user.Info.IncreaseSkillLevel(
                 "helm",
-                SkillSettings.Current.SkillIncreasePerSecondWhenSteering / userSkill * deltaTime,
-                user.Position + Vector2.UnitY * 150.0f);
+                SkillSettings.Current.SkillIncreasePerSecondWhenSteering / userSkill * deltaTime);
         }
 
         private void UpdateAutoPilot(float deltaTime)

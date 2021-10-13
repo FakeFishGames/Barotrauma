@@ -11,12 +11,12 @@ namespace Barotrauma
 {
     public enum AnimationType
     {
-        NotDefined,
-        Walk,
-        Run,
-        SwimSlow,
-        SwimFast,
-        Crouch
+        NotDefined = 0,
+        Walk = 1,
+        Run = 2,
+        Crouch = 3,
+        SwimSlow = 4,
+        SwimFast = 5
     }
 
     abstract class GroundedMovementParams : AnimationParams

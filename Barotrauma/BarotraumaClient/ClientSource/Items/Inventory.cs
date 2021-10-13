@@ -601,7 +601,10 @@ namespace Barotrauma
                 {
                     var slotRef = new SlotReference(this, slot, slotIndex, isSubSlot, slots[slotIndex].FirstOrDefault()?.GetComponent<ItemContainer>()?.Inventory);
                     if (Screen.Selected is SubEditorScreen editor && !editor.WiringMode && slotRef.ParentInventory is CharacterInventory) { return; }
-                    selectedSlot = slotRef;
+                    if (CanSelectSlot(slotRef))
+                    {
+                        selectedSlot = slotRef;
+                    }
                 }
 
                 if (!DraggingItems.Any())
@@ -1302,38 +1305,45 @@ namespace Barotrauma
                 DraggingItems.Clear();
             }
 
-            if (selectedSlot != null)
+            if (selectedSlot != null && !CanSelectSlot(selectedSlot))
             {
-                if (!selectedSlot.Slot.MouseOn())
+                selectedSlot = null;
+            }            
+        }
+
+        private static bool CanSelectSlot(SlotReference selectedSlot)
+        {
+            if (!selectedSlot.Slot.MouseOn())
+            {
+                return false;
+            }
+            else
+            {
+                var rootOwner = (selectedSlot.ParentInventory?.Owner as Item)?.GetRootInventoryOwner();
+                if (selectedSlot.ParentInventory?.Owner != Character.Controlled &&
+                   selectedSlot.ParentInventory?.Owner != Character.Controlled.SelectedCharacter &&
+                   selectedSlot.ParentInventory?.Owner != Character.Controlled.SelectedConstruction &&
+                   !(Character.Controlled.SelectedConstruction?.linkedTo.Contains(selectedSlot.ParentInventory?.Owner) ?? false) &&
+                   rootOwner != Character.Controlled &&
+                   rootOwner != Character.Controlled.SelectedCharacter &&
+                   rootOwner != Character.Controlled.SelectedConstruction &&
+                   !(Character.Controlled.SelectedConstruction?.linkedTo.Contains(rootOwner) ?? false))
                 {
-                    selectedSlot = null;
+                    return false;
                 }
-                else
+                var parentItem = (selectedSlot?.ParentInventory?.Owner as Item) ?? selectedSlot?.Item;
+                if ((parentItem?.GetRootInventoryOwner() is Character ownerCharacter) &&
+                    ownerCharacter == Character.Controlled &&
+                    CharacterHealth.OpenHealthWindow?.Character != ownerCharacter &&
+                    ownerCharacter.Inventory.IsInLimbSlot(parentItem, InvSlotType.HealthInterface))
                 {
-                    var rootOwner = (selectedSlot.ParentInventory?.Owner as Item)?.GetRootInventoryOwner();
-                    if (selectedSlot.ParentInventory?.Owner != Character.Controlled &&
-                       selectedSlot.ParentInventory?.Owner != Character.Controlled.SelectedCharacter &&
-                       selectedSlot.ParentInventory?.Owner != Character.Controlled.SelectedConstruction &&
-                       !(Character.Controlled.SelectedConstruction?.linkedTo.Contains(selectedSlot.ParentInventory?.Owner) ?? false) &&
-                       rootOwner != Character.Controlled &&
-                       rootOwner != Character.Controlled.SelectedCharacter &&
-                       rootOwner != Character.Controlled.SelectedConstruction &&
-                       !(Character.Controlled.SelectedConstruction?.linkedTo.Contains(rootOwner) ?? false))
-                    {
-                        selectedSlot = null;
-                    }
-                    var parentItem = (selectedSlot?.ParentInventory?.Owner as Item) ?? selectedSlot?.Item;
-                    if ((parentItem?.GetRootInventoryOwner() is Character ownerCharacter) &&
-                        ownerCharacter == Character.Controlled &&
-                        CharacterHealth.OpenHealthWindow?.Character != ownerCharacter &&
-                        ownerCharacter.Inventory.IsInLimbSlot(parentItem, InvSlotType.HealthInterface))
-                    {
-                        highlightedSubInventorySlots.RemoveWhere(s => s.Item == parentItem);
-                        selectedSlot = null;
-                    }
+                    highlightedSubInventorySlots.RemoveWhere(s => s.Item == parentItem);
+                    return false;
                 }
             }
+            return true;
         }
+
 
         protected static Rectangle GetSubInventoryHoverArea(SlotReference subSlot)
         {
@@ -1548,7 +1558,7 @@ namespace Barotrauma
                         var indicatorStyle = GUI.Style.GetComponentStyle("ContainedStateIndicator.Default");
                         Sprite indicatorSprite = indicatorStyle?.GetDefaultSprite();
                         Sprite emptyIndicatorSprite = indicatorStyle?.GetSprite(GUIComponent.ComponentState.Hover);
-                        DrawItemStateIndicator(spriteBatch,  inventory, indicatorSprite, emptyIndicatorSprite, conditionIndicatorArea, item.Condition / item.MaxCondition);
+                        DrawItemStateIndicator(spriteBatch, inventory, indicatorSprite, emptyIndicatorSprite, conditionIndicatorArea, item.Condition / item.MaxCondition);
                     }
 
                     if (itemContainer != null && itemContainer.ShowContainedStateIndicator)
@@ -1590,6 +1600,19 @@ namespace Barotrauma
 
                         DrawItemStateIndicator(spriteBatch, inventory, indicatorSprite, emptyIndicatorSprite, containedIndicatorArea, containedState, 
                             pulsate: !usingDefaultSprite && containedState >= 0.0f && containedState < 0.25f && inventory == Character.Controlled?.Inventory && Character.Controlled.HasEquippedItem(item));
+                    }
+
+                    if (item.Quality != 0)
+                    {
+                        var style = GUI.Style.GetComponentStyle("InnerGlowSmall");
+                        if (style == null)
+                        {
+                            GUI.DrawRectangle(spriteBatch, rect, GUI.Style.GetQualityColor(item.Quality) * 0.7f);
+                        }
+                        else
+                        {
+                            style.Sprites[GUIComponent.ComponentState.None].FirstOrDefault()?.Draw(spriteBatch, rect, GUI.Style.GetQualityColor(item.Quality) * 0.5f);
+                        }
                     }
                 }
                 else

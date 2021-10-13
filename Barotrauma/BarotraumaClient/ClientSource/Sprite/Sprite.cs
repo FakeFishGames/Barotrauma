@@ -169,7 +169,7 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError("Sprite \"" + file + "\" not found!");
+                DebugConsole.ThrowError($"Sprite \"{file}\" not found! {Environment.StackTrace.CleanupStackTrace()}");
             }
 
             return null;

@@ -12,9 +12,12 @@ namespace Barotrauma.Abilities
             Ranged = 2
         };
 
+        private readonly bool hittingCountsAsAiming;
+
         private readonly WeaponType weapontype;
         public AbilityConditionIsAiming(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
         {
+            hittingCountsAsAiming = conditionElement.GetAttributeBool("hittingcountsasaiming", false);
             switch (conditionElement.GetAttributeString("weapontype", ""))
             {
                 case "melee":
@@ -28,7 +31,6 @@ namespace Barotrauma.Abilities
 
         protected override bool MatchesConditionSpecific()
         {
-            bool aimingCorrectItem = false;
             if (character.AnimController is HumanoidAnimController animController)
             {
                 foreach (Item item in character.HeldItems)
@@ -36,19 +38,23 @@ namespace Barotrauma.Abilities
                     switch (weapontype)
                     {
                         case WeaponType.Melee:
-                            aimingCorrectItem |= item.GetComponent<MeleeWeapon>() != null && animController.IsAimingMelee;
+                            var meleeWeapon = item.GetComponent<MeleeWeapon>();
+                            if (meleeWeapon != null)
+                            {
+                                if (animController.IsAimingMelee || (meleeWeapon.Hitting && hittingCountsAsAiming)) { return true; }
+                            }
                             break;
                         case WeaponType.Ranged:
-                            aimingCorrectItem |= item.GetComponent<RangedWeapon>() != null && animController.IsAiming;
+                            if (animController.IsAiming && item.GetComponent<RangedWeapon>() != null) { return true; }
                             break;
                         default:
-                            aimingCorrectItem |= animController.IsAiming || animController.IsAimingMelee;
+                            if (animController.IsAiming || animController.IsAimingMelee) { return true; }
                             break;
                     }
                 }
             }
 
-            return aimingCorrectItem;
+            return false;
         }
     }
 }

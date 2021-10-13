@@ -13,6 +13,8 @@ namespace Barotrauma
 
         public readonly TalentPrefab Prefab;
 
+        public bool AddedThisRound = true;
+
         private readonly Dictionary<AbilityEffectType, List<CharacterAbilityGroupEffect>> characterAbilityGroupEffectDictionary = new Dictionary<AbilityEffectType, List<CharacterAbilityGroupEffect>>();
 
         private readonly List<CharacterAbilityGroupInterval> characterAbilityGroupIntervals = new List<CharacterAbilityGroupInterval>();

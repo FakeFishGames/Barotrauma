@@ -430,6 +430,7 @@ namespace Barotrauma
                         msg.Write((ushort)characterTalents.Count);
                         foreach (var unlockedTalent in characterTalents)
                         {
+                            msg.Write(unlockedTalent.AddedThisRound);
                             msg.Write(unlockedTalent.Prefab.UIntIdentifier);
                         }
                         break;

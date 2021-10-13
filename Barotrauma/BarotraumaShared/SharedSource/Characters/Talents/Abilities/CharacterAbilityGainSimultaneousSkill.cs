@@ -16,7 +16,7 @@ namespace Barotrauma.Abilities
         {
             if ((abilityObject as IAbilityValue)?.Value is float skillIncrease)
             {
-                Character.Info?.IncreaseSkillLevel(skillIdentifier, skillIncrease, Character.Position + Vector2.UnitY * 175.0f);
+                Character.Info?.IncreaseSkillLevel(skillIdentifier, skillIncrease);
             }
             else
             {

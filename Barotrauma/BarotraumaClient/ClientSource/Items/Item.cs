@@ -1199,7 +1199,7 @@ namespace Barotrauma
             return texts;
         }
 
-        public override void AddToGUIUpdateList()
+        public override void AddToGUIUpdateList(int order = 0)
         {
             if (Screen.Selected is SubEditorScreen)
             {
@@ -1231,7 +1231,7 @@ namespace Barotrauma
                 bool wasUsingAlternativeLayout = ic.UseAlternativeLayout;
                 ic.UseAlternativeLayout = useAlternativeLayout;
                 needsLayoutUpdate |= ic.UseAlternativeLayout != wasUsingAlternativeLayout;
-                ic.AddToGUIUpdateList();
+                ic.AddToGUIUpdateList(order);
             }
 
             if (itemInUseWarning != null && itemInUseWarning.Visible)

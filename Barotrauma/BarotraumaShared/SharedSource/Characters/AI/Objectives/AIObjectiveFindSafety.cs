@@ -334,7 +334,7 @@ namespace Barotrauma
                         continue;
                     }
                     // Don't allow to go outside if not already outside.
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition, nodeFilter: node => node.Waypoint.CurrentHull != null);
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition, character.Submarine, nodeFilter: node => node.Waypoint.CurrentHull != null);
                     if (path.Unreachable)
                     {
                         HumanAIController.UnreachableHulls.Add(hull);

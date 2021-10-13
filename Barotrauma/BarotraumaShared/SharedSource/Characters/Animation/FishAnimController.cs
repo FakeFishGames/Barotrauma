@@ -374,7 +374,7 @@ namespace Barotrauma
                 {
                     //pull the character's mouth to the target character (again with a fluctuating force)
                     float pullStrength = (float)(Math.Sin(eatTimer) * Math.Max(Math.Sin(eatTimer * 0.5f), 0.0f));
-                    mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * pullStrength, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * pullStrength);
                 }
                 else
                 {

@@ -119,7 +119,8 @@ namespace Barotrauma
 
         public PathFinder(List<WayPoint> wayPoints, bool isCharacter)
         {
-            nodes = PathNode.GenerateNodes(wayPoints.FindAll(w => (w.Submarine != null == isCharacter) || (isCharacter && w.Tunnel != null)), removeOrphans: true);
+            var filtered = isCharacter ? wayPoints : wayPoints.FindAll(w => w.Submarine == null);          
+            nodes = PathNode.GenerateNodes(filtered, removeOrphans: true);
             foreach (WayPoint wp in wayPoints)
             {
                 wp.OnLinksChanged += WaypointLinksChanged;
@@ -179,17 +180,37 @@ namespace Barotrauma
             foreach (PathNode node in nodes)
             {
                 node.TempPosition = node.Position;
-                if (hostSub != null)
+                var wpSub = node.Waypoint.Submarine;
+                if (hostSub != null && wpSub == null)
                 {
-                    Vector2 diff = node.Waypoint.Submarine != null ?
-                        hostSub.SimPosition - node.Waypoint.Submarine.SimPosition :
-                        hostSub.SimPosition - node.Waypoint.SimPosition;
-                    node.TempPosition -= diff;
+                    // inside and targeting outside
+                    node.TempPosition -= hostSub.SimPosition;
+                }
+                else if (wpSub != null && hostSub != null && wpSub != hostSub)
+                {
+                    // different subs
+                    node.TempPosition -= hostSub.SimPosition - wpSub.SimPosition;
+                }
+                else if (hostSub == null && wpSub != null)
+                {
+                    // Outside and targeting inside 
+                    node.TempPosition += wpSub.SimPosition;       
                 }
                 float xDiff = Math.Abs(start.X - node.TempPosition.X);
                 float yDiff = Math.Abs(start.Y - node.TempPosition.Y);
-                if (yDiff > 1.0f && node.Waypoint.Ladders == null && node.Waypoint.Stairs == null) { yDiff += 10.0f; }
-                node.TempDistance = xDiff + (InsideSubmarine ? yDiff * 10.0f : yDiff); //higher cost for vertical movement when inside the sub
+                if (InsideSubmarine)
+                {
+                    //higher cost for vertical movement when inside the sub
+                    if (yDiff > 1.0f && node.Waypoint.Ladders == null && node.Waypoint.Stairs == null)
+                    {
+                        yDiff += 10.0f;
+                    }
+                    node.TempDistance = xDiff + yDiff * 10.0f; 
+                }
+                else
+                {
+                    node.TempDistance = xDiff + yDiff;
+                }
 
                 //much higher cost to waypoints that are outside
                 if (node.Waypoint.CurrentHull == null && ApplyPenaltyToOutsideNodes) { node.TempDistance *= 10.0f; }

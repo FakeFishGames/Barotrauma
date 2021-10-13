@@ -21,6 +21,7 @@ namespace Barotrauma.Abilities
                 {
                     foreach (var talent in talentOption.Talents)
                     {
+                        if (talent == CharacterTalent.Prefab) { continue; }
                         Character.GiveTalent(talent);
                     }
                 }

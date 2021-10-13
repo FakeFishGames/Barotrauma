@@ -187,7 +187,7 @@ namespace Barotrauma
             return frame;
         }
 
-        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos)
+        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel)
         {
             if (TeamID == CharacterTeamType.FriendlyNPC) { return; }
             if (Character.Controlled != null && Character.Controlled.TeamID != TeamID) { return; }
@@ -198,17 +198,14 @@ namespace Barotrauma
             if ((int)newLevel > (int)prevLevel)
             {
                 int increase = Math.Max((int)newLevel - (int)prevLevel, 1);
-                GUI.AddMessage(
-                    string.Format("+{0} {1}", increase, TextManager.Get("SkillName." + skillIdentifier)),
-                    specialIncrease ? GUI.Style.Orange : GUI.Style.Green,
-                    textPopupPos,
-                    Vector2.UnitY * 10.0f,
-                    playSound: specialIncrease,
-                    subId: Character?.Submarine?.ID ?? -1);
+                Character?.AddMessage(
+                    "+[value] "+ TextManager.Get("SkillName." + skillIdentifier), 
+                    specialIncrease ? GUI.Style.Orange : GUI.Style.Green, 
+                    playSound: Character == Character.Controlled, skillIdentifier, increase);
             }
         }
 
-        partial void OnExperienceChanged(int prevAmount, int newAmount, Vector2 textPopupPos)
+        partial void OnExperienceChanged(int prevAmount, int newAmount)
         {
             if (Character.Controlled != null && Character.Controlled.TeamID != TeamID) { return; }
 
@@ -217,13 +214,9 @@ namespace Barotrauma
             if (newAmount > prevAmount)
             {
                 int increase = newAmount - prevAmount;
-                GUI.AddMessage(
-                    string.Format("+{0} {1}", increase, TextManager.Get("experienceshort")),
-                    GUI.Style.Blue,
-                    textPopupPos,
-                    Vector2.UnitY * 10.0f,
-                    playSound: true,
-                    subId: Character?.Submarine?.ID ?? -1);
+                Character?.AddMessage(
+                    "+[value] " + TextManager.Get("experienceshort"),
+                    GUI.Style.Blue, playSound: Character == Character.Controlled, "exp", increase);
             }
         }
 

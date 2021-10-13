@@ -35,7 +35,6 @@ namespace Barotrauma.Items.Components
         public RemoteController(Item item, XElement element)
             : base(item, element)
         {
-            DrawHudWhenEquipped = false;
         }
 
         public override bool Select(Character character)

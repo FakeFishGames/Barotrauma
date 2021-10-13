@@ -27,6 +27,7 @@ namespace Barotrauma
         public bool followControlledCharacter;
         public bool mimic;
         public bool SpeakIfFails { get; set; } = true;
+        public bool UsePathingOutside { get; set; } = true;
 
         public float extraDistanceWhileSwimming;
         public float extraDistanceOutsideSub;
@@ -121,13 +122,14 @@ namespace Barotrauma
         }
 
         private readonly float avoidLookAheadDistance = 5;
+        private readonly float pathWaitingTime = 3;
 
         public AIObjectiveGoTo(ISpatialEntity target, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1, float closeEnough = 0)
             : base(character, objectiveManager, priorityModifier)
         {
             Target = target;
             this.repeat = repeat;
-            waitUntilPathUnreachable = 3.0f;
+            waitUntilPathUnreachable = pathWaitingTime;
             this.getDivingGearIfNeeded = getDivingGearIfNeeded;
             if (Target is Item i)
             {
@@ -186,7 +188,6 @@ namespace Barotrauma
                 // Wait
                 character.AIController.SteeringManager.Reset();
             }
-            waitUntilPathUnreachable -= deltaTime;
             if (!character.IsClimbing)
             {
                 character.SelectedConstruction = null;
@@ -222,11 +223,13 @@ namespace Barotrauma
             {
                 Abandon = true;
             }
-            else if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && PathSteering.CurrentPath.Unreachable && !PathSteering.IsPathDirty)
+            else if (HumanAIController.IsCurrentPathUnreachable)
             {
+                waitUntilPathUnreachable -= deltaTime;
                 SteeringManager.Reset();
                 if (waitUntilPathUnreachable < 0)
                 {
+                    waitUntilPathUnreachable = pathWaitingTime;
                     if (repeat)
                     {
                         SpeakCannotReach();
@@ -325,25 +328,29 @@ namespace Barotrauma
                         }
                         else
                         {
-                            SeekGaps(maxGapDistance);
-                            seekGapsTimer = seekGapsInterval * Rand.Range(0.1f, 1.1f);
-                            if (TargetGap != null)
+                            bool isRuins = character.Submarine?.Info.IsRuin != null || Target.Submarine?.Info.IsRuin != null;
+                            if (!isRuins || !HumanAIController.HasValidPath(requireNonDirty: true, requireUnfinished: true))
                             {
-                                // Check that nothing is blocking the way
-                                Vector2 rayStart = character.SimPosition;
-                                Vector2 rayEnd = TargetGap.SimPosition;
-                                if (TargetGap.Submarine != null && character.Submarine == null)
+                                SeekGaps(maxGapDistance);
+                                seekGapsTimer = seekGapsInterval * Rand.Range(0.1f, 1.1f);
+                                if (TargetGap != null)
                                 {
-                                    rayStart -= TargetGap.Submarine.SimPosition;
-                                }
-                                else if (TargetGap.Submarine == null && character.Submarine != null)
-                                {
-                                    rayEnd -= character.Submarine.SimPosition;
-                                }
-                                var closestBody = Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true);
-                                if (closestBody != null)
-                                {
-                                    TargetGap = null;
+                                    // Check that nothing is blocking the way
+                                    Vector2 rayStart = character.SimPosition;
+                                    Vector2 rayEnd = TargetGap.SimPosition;
+                                    if (TargetGap.Submarine != null && character.Submarine == null)
+                                    {
+                                        rayStart -= TargetGap.Submarine.SimPosition;
+                                    }
+                                    else if (TargetGap.Submarine == null && character.Submarine != null)
+                                    {
+                                        rayEnd -= character.Submarine.SimPosition;
+                                    }
+                                    var closestBody = Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true);
+                                    if (closestBody != null)
+                                    {
+                                        TargetGap = null;
+                                    }
                                 }
                             }
                         }
@@ -454,19 +461,25 @@ namespace Barotrauma
                     }
                     else if (!isInside && HumanAIController.UseIndoorSteeringOutside)
                     {
-                        if (character.Submarine == null && Target.Submarine != null)
-                        {
-                            targetPos += Target.Submarine.SimPosition;
-                        }
-                        nodeFilter = n => n.Waypoint.Tunnel != null;
+                        nodeFilter = n => n.Waypoint.Submarine == null;
                     }
 
-                    PathSteering.SteeringSeek(targetPos, weight: 1,
-                        startNodeFilter: n => (n.Waypoint.CurrentHull == null) == (character.CurrentHull == null),
-                        endNodeFilter: endNodeFilter,
-                        nodeFilter: nodeFilter, 
-                        checkVisiblity: CheckVisibility);
-
+                    if (!isInside && !UsePathingOutside)
+                    {
+                        PathSteering.SteeringSeekSimple(character.GetRelativeSimPosition(Target), 10);
+                        if (character.AnimController.InWater)
+                        {
+                            SteeringManager.SteeringAvoid(deltaTime, avoidLookAheadDistance, weight: 15);
+                        }
+                    }
+                    else
+                    {
+                        PathSteering.SteeringSeek(targetPos, weight: 1,
+                            startNodeFilter: n => (n.Waypoint.CurrentHull == null) == (character.CurrentHull == null),
+                            endNodeFilter: endNodeFilter,
+                            nodeFilter: nodeFilter,
+                            checkVisiblity: CheckVisibility);
+                    }
                     if (!isInside && (PathSteering.CurrentPath == null || PathSteering.IsPathDirty || PathSteering.CurrentPath.Unreachable))
                     {
                         if (useScooter)

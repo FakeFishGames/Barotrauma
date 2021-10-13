@@ -452,7 +452,7 @@ namespace Barotrauma
 
         public void ApplyForce(Vector2 force)
         {
-            Body.ApplyForce(force, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            Body.ApplyForce(force);
         }
 
         public void SetPosition(Vector2 position)

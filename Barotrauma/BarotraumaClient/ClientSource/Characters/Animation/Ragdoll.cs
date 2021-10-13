@@ -342,7 +342,7 @@ namespace Barotrauma
 
         partial void SetupDrawOrder()
         {
-            //make sure every character gets drawn at a distinct "layer" 
+            //make sure every character  gets drawn at a distinct "layer" 
             //(instead of having some of the limbs appear behind and some in front of other characters)
             float startDepth = 0.1f;
             float increment = 0.001f;
@@ -355,8 +355,16 @@ namespace Barotrauma
             List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.DefaultSpriteDepth).ToList();
             foreach (Limb limb in Limbs)
             {
-                if (limb.ActiveSprite == null) { continue; }
-                limb.ActiveSprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
+                var sprite = limb.GetActiveSprite();
+                if (sprite == null) { continue; }
+                sprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
+                foreach (var conditionalSprite in limb.ConditionalSprites)
+                {
+                    if (conditionalSprite.Exclusive)
+                    {
+                        conditionalSprite.ActiveSprite.Depth = sprite.Depth;
+                    }
+                }
             }
             foreach (Limb limb in Limbs)
             {

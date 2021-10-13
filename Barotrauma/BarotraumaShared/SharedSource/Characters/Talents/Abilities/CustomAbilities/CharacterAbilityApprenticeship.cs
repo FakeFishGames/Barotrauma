@@ -14,7 +14,7 @@ namespace Barotrauma.Abilities
         {
             if (abilityObject is AbilitySkillGain abilitySkillGain && !abilitySkillGain.GainedFromApprenticeship && abilitySkillGain.Character != Character)
             {
-                Character.Info?.IncreaseSkillLevel(abilitySkillGain.String, 1.0f, Character.Position + Vector2.UnitY * 175.0f, gainedFromApprenticeship: true);
+                Character.Info?.IncreaseSkillLevel(abilitySkillGain.String, 1.0f, gainedFromApprenticeship: true);
             }
         }
     }

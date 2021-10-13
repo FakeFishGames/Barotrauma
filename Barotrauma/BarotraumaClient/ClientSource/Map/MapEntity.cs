@@ -1021,9 +1021,9 @@ namespace Barotrauma
             return newEntities;
         }
 
-        public virtual void AddToGUIUpdateList()
+        public virtual void AddToGUIUpdateList(int order = 0)
         {
-            if (editingHUD != null && editingHUD.UserData == this) editingHUD.AddToGUIUpdateList();
+            if (editingHUD != null && editingHUD.UserData == this) { editingHUD.AddToGUIUpdateList(order: order); }
         }
 
         public virtual void UpdateEditing(Camera cam, float deltaTime) { }

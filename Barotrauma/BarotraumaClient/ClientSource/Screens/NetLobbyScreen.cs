@@ -1737,9 +1737,10 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.GetWithVariable("startingequipmentname", "[number]", (variant + 1).ToString()), font: GUI.SubHeadingFont, textAlignment: Alignment.Center);
 
-            var itemIdentifiers = jobPrefab.ItemIdentifiers[variant]
-                .Distinct()
-                .Where(id => jobPrefab.ShowItemPreview[variant][id]);
+            var itemIdentifiers = jobPrefab.PreviewItems[variant]
+                .Where(it => it.ShowPreview)
+                .Select(it => it.ItemIdentifier)
+                .Distinct();
 
             int itemsPerRow = 5;
             int rows = (int)Math.Max(Math.Ceiling(itemIdentifiers.Count() / (float)itemsPerRow), 1);
@@ -2624,9 +2625,10 @@ namespace Barotrauma
 
         private void DrawJobVariantItems(SpriteBatch spriteBatch, GUICustomComponent component, Pair<JobPrefab, int> jobPrefab, int itemsPerRow)
         {
-            var itemIdentifiers = jobPrefab.First.ItemIdentifiers[jobPrefab.Second]
-                .Distinct()
-                .Where(id => jobPrefab.First.ShowItemPreview[jobPrefab.Second][id]);
+            var itemIdentifiers = jobPrefab.First.PreviewItems[jobPrefab.Second]
+                .Where(it => it.ShowPreview)
+                .Select(it => it.ItemIdentifier)
+                .Distinct();
 
             Point slotSize = new Point(component.Rect.Height);
             int spacing = (int)(5 * GUI.Scale);
@@ -2645,7 +2647,7 @@ namespace Barotrauma
             int i = 0;
             Rectangle tooltipRect = Rectangle.Empty;
             string tooltip = null;
-            foreach (string itemIdentifier in itemIdentifiers)
+            foreach (var itemIdentifier in itemIdentifiers)
             {
                 if (!(MapEntityPrefab.Find(null, identifier: itemIdentifier, showErrorMessages: false) is ItemPrefab itemPrefab)) { continue; }
 
@@ -2664,7 +2666,7 @@ namespace Barotrauma
                 float iconScale = Math.Min(Math.Min(slotSize.X / icon.size.X, slotSize.Y / icon.size.Y), 2.0f) * 0.9f;
                 icon.Draw(spriteBatch, slotPos + slotSize.ToVector2() * 0.5f, scale: iconScale);
 
-                int count = jobPrefab.First.ItemIdentifiers[jobPrefab.Second].Count(id => id == itemIdentifier);
+                int count = jobPrefab.First.PreviewItems[jobPrefab.Second].Count(it => it.ShowPreview && it.ItemIdentifier == itemIdentifier);
                 if (count > 1)
                 {
                     string itemCountText = "x" + count;

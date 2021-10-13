@@ -1803,7 +1803,7 @@ namespace Barotrauma
 
             Vector2 drag = body.LinearVelocity * volume;
 
-            body.ApplyForce((uplift - drag) * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            body.ApplyForce((uplift - drag) * 10.0f);
 
             //apply simple angular drag
             body.ApplyTorque(body.AngularVelocity * volume * -0.05f);

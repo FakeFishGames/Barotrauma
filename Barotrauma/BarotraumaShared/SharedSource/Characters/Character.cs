@@ -1745,8 +1745,12 @@ namespace Barotrauma
             }
             else if (IsKeyDown(InputType.Attack))
             {
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && Controlled != this)
                 {
+                    if ((currentAttackTarget.DamageTarget as Entity)?.Removed ?? false)
+                    {
+                        currentAttackTarget = default(AttackTargetData);                        
+                    }
                     currentAttackTarget.AttackLimb?.UpdateAttack(deltaTime, currentAttackTarget.AttackPos, currentAttackTarget.DamageTarget, out _);
                 }
                 else if (IsPlayer)
@@ -3670,16 +3674,14 @@ namespace Barotrauma
                 {
                     float attackerSkillLevel = attacker.GetSkillLevel("weapons");
                     attacker.Info?.IncreaseSkillLevel("weapons",
-                        -healthChange * SkillSettings.Current.SkillIncreasePerHostileDamage / Math.Max(attackerSkillLevel, 1.0f),
-                        attacker.Position + Vector2.UnitY * 100.0f);
+                        -healthChange * SkillSettings.Current.SkillIncreasePerHostileDamage / Math.Max(attackerSkillLevel, 1.0f));
                 }
             }
             else if (healthChange > 0.0f)
             {
                 float attackerSkillLevel = attacker.GetSkillLevel("medical");
                 attacker.Info?.IncreaseSkillLevel("medical",
-                    healthChange * SkillSettings.Current.SkillIncreasePerFriendlyHealed / Math.Max(attackerSkillLevel, 1.0f),
-                    attacker.Position + Vector2.UnitY * 100.0f);
+                    healthChange * SkillSettings.Current.SkillIncreasePerFriendlyHealed / Math.Max(attackerSkillLevel, 1.0f));
             }
         }
 
@@ -3927,7 +3929,7 @@ namespace Barotrauma
         }
         partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log);
 
-        public void Revive()
+        public void Revive(bool removeAllAfflictions = true)
         {
             if (Removed)
             {
@@ -3938,7 +3940,14 @@ namespace Barotrauma
             aiTarget?.Remove();
 
             aiTarget = new AITarget(this);
-            CharacterHealth.RemoveAllAfflictions();
+            if (removeAllAfflictions)
+            {
+                CharacterHealth.RemoveAllAfflictions();
+            }
+            else
+            {
+                CharacterHealth.RemoveNegativeAfflictions();
+            }
             SetAllDamage(0.0f, 0.0f, 0.0f);
             Oxygen = 100.0f;
             Bloodloss = 0.0f;
@@ -4284,12 +4293,8 @@ namespace Barotrauma
             }
             if (Submarine == null && target.Submarine != null)
             {
-                if (AIController == null || !(AIController.SteeringManager is IndoorsSteeringManager))
-                {
-                    // outside and targeting inside
-                    // doesn't work with inside steering
-                    targetPos += target.Submarine.SimPosition;
-                }
+                // outside and targeting inside
+                targetPos += target.Submarine.SimPosition;
             }
             else if (Submarine != null && target.Submarine == null)
             {
@@ -4376,14 +4381,14 @@ namespace Barotrauma
 
         public bool GiveTalent(TalentPrefab talentPrefab, bool addingFirstTime = true)
         {
-            if (addingFirstTime)
-            {
-                if (!info.UnlockedTalents.Add(talentPrefab.Identifier)) { return false; }
-            }
+            if (info == null) { return false; }
+            info.UnlockedTalents.Add(talentPrefab.Identifier);
+            if (characterTalents.Any(t => t.Prefab == talentPrefab)) { return false; }
 
             CharacterTalent characterTalent = new CharacterTalent(talentPrefab, this);
             characterTalent.ActivateTalent(addingFirstTime);
             characterTalents.Add(characterTalent);
+            characterTalent.AddedThisRound = addingFirstTime;
 
 #if SERVER
             GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.UpdateTalents });

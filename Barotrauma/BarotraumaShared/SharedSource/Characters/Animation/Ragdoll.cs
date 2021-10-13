@@ -1348,19 +1348,19 @@ namespace Barotrauma
             string errorMsg = null;
             if (!MathUtils.IsValid(body.SimPosition) || Math.Abs(body.SimPosition.X) > 1e10f || Math.Abs(body.SimPosition.Y) > 1e10f)
             {
-                errorMsg = GetBodyName() + " position invalid (" + body.SimPosition + ", character: " + character.Name + "), resetting the ragdoll.";
+                errorMsg = GetBodyName() + " position invalid (" + body.SimPosition + ", character: " + character.Name + ").";
             }
             else if (!MathUtils.IsValid(body.LinearVelocity) || Math.Abs(body.LinearVelocity.X) > 1000f || Math.Abs(body.LinearVelocity.Y) > 1000f)
             {
-                errorMsg = GetBodyName() + " velocity invalid (" + body.LinearVelocity + ", character: " + character.Name + "), resetting the ragdoll.";
+                errorMsg = GetBodyName() + " velocity invalid (" + body.LinearVelocity + ", character: " + character.Name + ").";
             }
             else if (!MathUtils.IsValid(body.Rotation))
             {
-                errorMsg = GetBodyName() + " rotation invalid (" + body.Rotation + ", character: " + character.Name + "), resetting the ragdoll.";
+                errorMsg = GetBodyName() + " rotation invalid (" + body.Rotation + ", character: " + character.Name + ").";
             }
             else if (!MathUtils.IsValid(body.AngularVelocity) || Math.Abs(body.AngularVelocity) > 1000f)
             {
-                errorMsg = GetBodyName() + " angular velocity invalid (" + body.AngularVelocity + ", character: " + character.Name + "), resetting the ragdoll.";
+                errorMsg = GetBodyName() + " angular velocity invalid (" + body.AngularVelocity + ", character: " + character.Name + ").";
             }
             if (errorMsg != null)
             {
@@ -1469,11 +1469,11 @@ namespace Barotrauma
 
             if (flowForce.LengthSquared() > 0.001f)
             {
-                Collider.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                Collider.ApplyForce(flowForce);
                 foreach (Limb limb in limbs)
                 {
                     if (!limb.InWater) { continue; }
-                    limb.body.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    limb.body.ApplyForce(flowForce);
                 }
             }
         }
@@ -1506,7 +1506,6 @@ namespace Barotrauma
             if (TorsoPosition.HasValue && MathUtils.IsValid(TorsoPosition.Value)) { height = Math.Max(height, TorsoPosition.Value); }
 
             Vector2 rayEnd = rayStart - new Vector2(0.0f, height);
-            Vector2 onGroundRayEnd = rayStart - Vector2.UnitY * (Collider.height * 0.5f + Collider.radius + ColliderHeightFromFloor * 1.2f);
             Vector2 colliderBottomDisplay = ConvertUnits.ToDisplayUnits(GetColliderBottom());
 
             Fixture standOnFloorFixture = null;
@@ -1587,7 +1586,25 @@ namespace Barotrauma
             if (closestFraction == 1) //raycast didn't hit anything
             {
                 floorNormal = Vector2.UnitY;
-                return (currentHull == null) ? -1000.0f : ConvertUnits.ToSimUnits(currentHull.Rect.Y - currentHull.Rect.Height);
+                if (CurrentHull == null)
+                {
+                    return -1000.0f;
+                }
+                else
+                {
+                    float hullBottom = currentHull.Rect.Y - currentHull.Rect.Height;
+                    //check if there's a connected hull below
+                    foreach (var gap in currentHull.ConnectedGaps)
+                    {
+                        if (!gap.IsRoomToRoom || gap.Open < 1.0f || gap.ConnectedDoor != null || gap.IsHorizontal) { continue; }
+                        if (WorldPosition.X > gap.WorldRect.X && WorldPosition.X < gap.WorldRect.Right && gap.WorldPosition.Y < WorldPosition.Y)
+                        {
+                            var lowerHull = gap.linkedTo[0] == currentHull ? gap.linkedTo[1] : gap.linkedTo[0];                    
+                            hullBottom = Math.Min(hullBottom, lowerHull.Rect.Y - lowerHull.Rect.Height);
+                        }
+                    }
+                    return ConvertUnits.ToSimUnits(hullBottom);
+                }
             }
             else
             {

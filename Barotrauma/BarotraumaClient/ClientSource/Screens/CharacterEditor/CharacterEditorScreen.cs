@@ -497,7 +497,6 @@ namespace Barotrauma.CharacterEditor
                 }
                 if (PlayerInput.KeyHit(InputType.Run))
                 {
-                    // TODO: refactor this horrible hacky index manipulation mess
                     int index = 0;
                     bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
                     bool isMovingFast = character.AnimController.ForceSelectAnimationType == AnimationType.Run || character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast;
@@ -505,23 +504,25 @@ namespace Barotrauma.CharacterEditor
                     {
                         if (isSwimming || !character.AnimController.CanWalk)
                         {
-                            index = !character.AnimController.CanWalk ? 0 : (int)AnimationType.SwimSlow - 1;
+                            index = !character.AnimController.CanWalk ? (int)AnimationType.SwimFast : (int)AnimationType.SwimSlow;
                         }
                         else
                         {
-                            index = (int)AnimationType.Walk - 1;
+                            index = (int)AnimationType.Walk;
                         }
+                        index -= 1;
                     }
                     else
                     {
                         if (isSwimming || !character.AnimController.CanWalk)
                         {
-                            index = !character.AnimController.CanWalk ? 1 : (int)AnimationType.SwimFast - 1;
+                            index = !character.AnimController.CanWalk ? (int)AnimationType.SwimSlow : (int)AnimationType.SwimFast;
                         }
                         else
                         {
-                            index = (int)AnimationType.Run - 1;
+                            index = (int)AnimationType.Run;
                         }
+                        index -= 1;
                     }
                     if (animSelection.SelectedIndex != index)
                     {

@@ -1177,8 +1177,7 @@ namespace Barotrauma
                     if (damageDiff < 0.0f)
                     {
                         attacker.Info?.IncreaseSkillLevel("mechanical",
-                            -damageDiff * SkillSettings.Current.SkillIncreasePerRepairedStructureDamage / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f),
-                            SectionPosition(sectionIndex));
+                            -damageDiff * SkillSettings.Current.SkillIncreasePerRepairedStructureDamage / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f));
                     }
                 }
             }

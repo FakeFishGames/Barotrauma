@@ -159,6 +159,8 @@ namespace Barotrauma.Items.Components
                     ApplyForce(i.body);
                 }
             }
+
+            item.SendSignal(IsActive ? "1" : "0", "state_out");
         }
 
         private void ApplyForce(PhysicsBody body)

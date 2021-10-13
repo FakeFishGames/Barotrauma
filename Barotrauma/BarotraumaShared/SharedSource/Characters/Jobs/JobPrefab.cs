@@ -68,9 +68,20 @@ namespace Barotrauma
             }
         }
 
+        public class PreviewItem
+        {
+            public readonly string ItemIdentifier;
+            public readonly bool ShowPreview;
+
+            public PreviewItem(string itemIdentifier, bool showPreview)
+            {
+                ItemIdentifier = itemIdentifier;
+                ShowPreview = showPreview;
+            }
+        }
+
         public readonly Dictionary<int, XElement> ItemSets = new Dictionary<int, XElement>();
-        public readonly Dictionary<int, List<string>> ItemIdentifiers = new Dictionary<int, List<string>>();
-        public readonly Dictionary<int, Dictionary<string, bool>> ShowItemPreview = new Dictionary<int, Dictionary<string, bool>>();
+        public readonly Dictionary<int, List<PreviewItem>> PreviewItems = new Dictionary<int, List<PreviewItem>>();
         public readonly List<SkillPrefab> Skills = new List<SkillPrefab>();
         public readonly List<AutonomousObjective> AutonomousObjectives = new List<AutonomousObjective>();
         public readonly List<string> AppropriateOrders = new List<string>();
@@ -220,8 +231,7 @@ namespace Barotrauma
                 {
                     case "itemset":
                         ItemSets.Add(variant, subElement);
-                        ItemIdentifiers[variant] = new List<string>();
-                        ShowItemPreview[variant] = new Dictionary<string, bool>();
+                        PreviewItems[variant] = new List<PreviewItem>();
                         loadItemIdentifiers(subElement, variant);
                         variant++;
                         break;
@@ -264,8 +274,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        ItemIdentifiers[variant].Add(itemIdentifier);
-                        ShowItemPreview[variant][itemIdentifier] = itemElement.GetAttributeBool("showpreview", true);
+                        PreviewItems[variant].Add(new PreviewItem(itemIdentifier, itemElement.GetAttributeBool("showpreview", true)));
                     }
                     loadItemIdentifiers(itemElement, variant);
                 }

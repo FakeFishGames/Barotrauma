@@ -119,6 +119,7 @@
         MissionMoneyGainMultiplier,
         ExperienceGainMultiplier,
         MissionExperienceGainMultiplier,
+        ExtraMissionCount,
         ExtraSpecialSalesCount,
         ApplyTreatmentsOnSelfFraction,
         MaxAttachableCount,

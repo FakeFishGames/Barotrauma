@@ -1181,6 +1181,10 @@ namespace Barotrauma.Networking
                         {
                             c.Character.ServerRead(objHeader, inc, c);
                         }
+                        else
+                        {
+                            DebugConsole.AddWarning($"Received character inputs from a client who's not controlling a character ({c.Name}).");
+                        }
                         break;
                     case ClientNetObject.ENTITY_STATE:
                         entityEventManager.Read(inc, c);

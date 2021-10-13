@@ -410,13 +410,13 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void AddToGUIUpdateList()
+        public override void AddToGUIUpdateList(int order = 0)
         {
-            base.AddToGUIUpdateList();
-            hullInfoFrame.AddToGUIUpdateList(order: 1);
+            base.AddToGUIUpdateList(order);
+            hullInfoFrame.AddToGUIUpdateList(order: order + 1);
             if (currentMode == MiniMapMode.ItemFinder && searchBar.Selected)
             {
-                searchAutoComplete.AddToGUIUpdateList(order: 1);
+                searchAutoComplete.AddToGUIUpdateList(order: order + 1);
             }
         }
 

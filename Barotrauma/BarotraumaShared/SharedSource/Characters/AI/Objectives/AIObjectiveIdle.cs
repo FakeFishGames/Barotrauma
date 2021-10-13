@@ -251,7 +251,7 @@ namespace Barotrauma
                         currentTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
                         bool isInWrongSub = (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted) && character.Submarine.TeamID != character.TeamID;
                         bool isCurrentHullAllowed = !isInWrongSub && !IsForbidden(character.CurrentHull);
-                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsgStr: null, nodeFilter: node =>
+                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, character.Submarine, nodeFilter: node =>
                         {
                             if (node.Waypoint.CurrentHull == null) { return false; }
                             // Check that there is no unsafe hulls on the way to the target

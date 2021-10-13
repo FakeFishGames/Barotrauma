@@ -1,4 +1,44 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1500.7.0
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- More improvements and fixes to the alien ruins and the new fractal guardians.
+- Added a colored border to high-quality items' inventory slots.
+- Changed the look of the skill/xp notifications to accommodate the larger numbers of notifications you can get from talents and skillbooks.
+- Added a fabricator and deconstructor to Azimuth and slightly lowered its maximum speed.
+- Increased Azimuth's battery out relay max power-
+- Field Medic now only triggers on missions.
+- Reduced gravity sphere's force to make it possible to escape it with a diving suit on.
+- Diving suit and human ragdoll damagemodifier changes: the suits now offer less protection, but humans have a bit more natural protection towards physical damage types.
+
+Fixes:
+- Fixed outpost generator sometimes using ruin hallways in normal outposts (unstable only).
+- Fixed ability to put fuel rods in reactors with the Reactor PDA (unstable only).
+- Fixed Reactor PDA interface popping up when the item is picked up (unstable only).
+- Fixed talents that increase max mission count increasing it every round (unstable only).
+- Fixed talent unlock notifications being shown at the beginning of every round (unstable only).
+- Fixed husks holding hands in an incorrect orientation when they run (unstable only).
+- Fixed "all-seeing eye" talent crashing the game (unstable only).
+- Fixed high-quality rods disappearing when deconstructed (unstable only).
+- Fixes to the colliders of the new items (unstable only).
+- Dementonite tools aren't sold in outposts (unstable only).
+- Fixed buccaneer talent's power attack ability not working (unstable only).
+- Fixed "strengthened alloys" not unlocking the hardened tool recipes (unstable only).
+- Fixes to ruin waypoints (unstable only).
+- Fixed limbs without a sprite (e.g. carrier's invisible limb that only serves as a spotlight) causing a crash (unstable only).
+- Fixed hidden items appearing in the job loadout preview if there are other items of the same type that are not hidden (didn't affect any vanilla loadouts).
+- Fixed diving suits hiding the weapons held in the bag slot.
+- Fixes to oxygen generator logic: the generator now periodically recalculates how to distribute the oxygen between the vents, as opposed to doing it once at the start of the round. Just doing it once caused issues if there were e.g. vents or doors that are initially open between the rooms.
+- Fixed some connection panels in alien ruins being rewireable without a screwdriver, when they shouldn't be rewireable at all (unstable only).
+- Fixed monster ranged attacks playing a damage sound when they "hit", when the monster shoots (unstable).
+- Fixed moving the cursor on an UI element interrupting the usage of scooters or other items that are used by holding LMB and RMB (unstable only). 
+- Fixed characters sometimes getting "stuck" when swimming in partially filled multi-hull rooms. Happened because the bottom of the current hull was used as the "floor" if the actual floor was too far below, even if there was another hull below the current one, causing the ragdoll to switch to walking animation and being unable to move because it's not touching the floor (unstable only).
+- Fixed characters getting permanently stunned if they get a forced stun (e.g. by getting hit by a door) while godmode is on.
+- Fixed console errors when an item a bot has been ordered to target was removed between rounds (e.g. an ignore order targeting a mission item that gets removed at the end of the round).
+- The "Still Kicking" talent doesn't remove genetic afflictions or buffs (unstable only).
+
+---------------------------------------------------------------------------------------------------------
 v0.1500.6.0
 ---------------------------------------------------------------------------------------------------------
 

@@ -165,12 +165,12 @@ namespace Barotrauma
 
         public override void End()
         {
-            if (AllTargetsEliminated())
+            if (State == 2)
             {
                 GiveReward();
                 completed = true;
             }
-            failed = !completed && state > 0;
+            failed = !completed && State > 0;
         }
     }
 }

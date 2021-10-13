@@ -128,6 +128,50 @@ namespace Barotrauma
             get { return gibEmitters; }
         }
 
+        private class GUIMessage
+        {
+            public string RawText;
+            public string Identifier;
+            public string Text;
+
+            private int _value;
+            public int Value
+            {
+                get { return _value; }
+                set
+                {
+                    _value = value;
+                    Text = RawText.Replace("[value]", _value.ToString());
+                    Size = GUI.Font.MeasureString(Text);
+                }
+            }
+
+            public Color Color;
+            public float Lifetime;
+            public float Timer;
+
+            public Vector2 Size;
+
+            public bool PlaySound;
+
+            public GUIMessage(string rawText, Color color, float delay, string identifier = null, int? value = null)
+            {
+                RawText = Text = rawText;
+                if (value.HasValue)
+                {
+                    Text = rawText.Replace("[value]", value.Value.ToString());
+                    Value = value.Value;
+                }
+                Timer = -delay;
+                Size = GUI.Font.MeasureString(Text);
+                Color = color;
+                Identifier = identifier;
+                Lifetime = 3.0f;
+            }
+        }
+
+        private List<GUIMessage> guiMessages = new List<GUIMessage>();
+
         public static bool IsMouseOnUI => GUI.MouseOn != null ||
                     (CharacterInventory.IsMouseOnInventory && !CharacterInventory.DraggingItemToWorld);
 
@@ -618,6 +662,17 @@ namespace Barotrauma
                 }
             }
 
+            foreach (GUIMessage message in guiMessages)
+            {
+                bool wasPending = message.Timer < 0.0f;
+                message.Timer += deltaTime;
+                if (wasPending && message.Timer >= 0.0f && message.PlaySound)
+                {
+                    SoundPlayer.PlayUISound(GUISoundType.UIMessage);
+                }
+            }
+            guiMessages.RemoveAll(m => m.Timer >= m.Lifetime);
+
             if (!enabled) { return; }
 
             if (!IsIncapacitated)
@@ -735,6 +790,27 @@ namespace Barotrauma
         {
             CharacterHUD.Draw(spriteBatch, this, cam);
             if (drawHealth && !CharacterHUD.IsCampaignInterfaceOpen) { CharacterHealth.DrawHUD(spriteBatch); }
+        }
+
+        public void DrawGUIMessages(SpriteBatch spriteBatch, Camera cam)
+        {
+            if (info == null || !Enabled || InvisibleTimer > 0.0f)
+            {
+                return;
+            }
+
+            Vector2 messagePos = DrawPosition;
+            messagePos.Y += hudInfoHeight;
+            messagePos = cam.WorldToScreen(messagePos) - Vector2.UnitY * GUI.IntScale(60);
+            foreach (GUIMessage message in guiMessages)
+            {
+                if (message.Timer < 0) { continue; }
+                Vector2 drawPos = messagePos + Vector2.UnitX * (GUI.IntScale(60) - message.Size.X);
+                drawPos = new Vector2((int)drawPos.X, (int)drawPos.Y);
+                float alpha = MathHelper.SmoothStep(1.0f, 0.0f, message.Timer / message.Lifetime);
+                GUI.DrawString(spriteBatch, drawPos, message.Text, message.Color * alpha);
+                messagePos -= Vector2.UnitY * message.Size.Y * 1.2f;
+            }            
         }
         
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
@@ -942,6 +1018,55 @@ namespace Barotrauma
             return nameColor;
         }
 
+        public void AddMessage(string rawText, Color color, bool playSound, string identifier = null, int? value = null)
+        {
+            GUIMessage existingMessage = null;
+
+            float delay = 0.0f;
+            if (guiMessages.Any())
+            {
+                delay = guiMessages.Min(m => m.Timer) - 0.5f;
+                if (delay < 0)
+                {
+                    delay = -delay;
+                    if (guiMessages.Count > 5)
+                    {
+                        //reduce delays if there's lots of messages
+                        guiMessages.Where(m => m.Timer < 0.0f).ForEach(m => m.Timer *= 0.9f);
+                    }
+                }
+                else
+                {
+                    delay = 0;
+                }
+            }
+
+            if (identifier != null)
+            {
+                existingMessage = guiMessages.Find(m => m.Identifier == identifier && m.Timer < m.Lifetime * 0.5f);
+            }
+            if (existingMessage == null || !value.HasValue)
+            {
+                var newMessage = new GUIMessage(rawText, color, delay, identifier, value);
+                guiMessages.Insert(0, newMessage);
+                if (playSound)
+                {
+                    if (delay > 0.0f) 
+                    { 
+                        newMessage.PlaySound = true;
+                    }
+                    else
+                    {
+                        SoundPlayer.PlayUISound(GUISoundType.UIMessage);
+                    }
+                }
+            }
+            else
+            {
+                existingMessage.Value += value.Value;
+            }
+        }
+
         /// <summary>
         /// Creates a progress bar that's "linked" to the specified object (or updates an existing one if there's one already linked to the object)
         /// The progress bar will automatically fade out after 1 sec if the method hasn't been called during that time
@@ -1046,24 +1171,14 @@ namespace Barotrauma
             if (newAmount > prevAmount)
             {
                 int increase = newAmount - prevAmount;
-                GUI.AddMessage(
-                    "+" + TextManager.GetWithVariable("currencyformat", "[credits]", increase.ToString()),
-                    GUI.Style.Yellow,
-                    Position + Vector2.UnitY * 150.0f,
-                    Vector2.UnitY * 10.0f,
-                    playSound: true,
-                    subId: Submarine?.ID ?? -1);
+                AddMessage("+" + TextManager.GetWithVariable("currencyformat", "[credits]", "[value]"),
+                    GUI.Style.Yellow, playSound: this == Controlled, "money", increase);
             }
         }
 
         partial void OnTalentGiven(string talentIdentifier)
         {
-            GUI.AddMessage(TextManager.Get("talentname." + talentIdentifier.ToString()),
-                GUI.Style.Yellow,
-                Position + Vector2.UnitY * 150.0f,
-                Vector2.UnitY * 10.0f,
-                playSound: true,
-                subId: Submarine?.ID ?? -1);
+            AddMessage(TextManager.Get("talentname." + talentIdentifier.ToString()), GUI.Style.Yellow, playSound: this == Controlled);
         }
     }
 }
