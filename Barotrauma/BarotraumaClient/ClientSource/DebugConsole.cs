@@ -476,6 +476,7 @@ namespace Barotrauma
                 if (Screen.Selected == GameMain.SubEditorScreen)
                 {
                     NewMessage("WARNING: Switching directly from the submarine editor to the game view may cause bugs and crashes. Use with caution.", Color.Orange);
+                    Entity.Spawner ??= new EntitySpawner();
                 }
                 GameMain.GameScreen.Select();
             }));
@@ -488,6 +489,8 @@ namespace Barotrauma
                     Submarine.MainSub = Submarine.Load(subInfo, true);
                 }
                 GameMain.SubEditorScreen.Select(enableAutoSave: Screen.Selected != GameMain.GameScreen);
+                Entity.Spawner?.Remove();
+                Entity.Spawner = null;
             }, isCheat: true));
 
             commands.Add(new Command("editparticles|particleeditor", "editparticles/particleeditor: Switch to the Particle Editor to edit particle effects.", (string[] args) =>

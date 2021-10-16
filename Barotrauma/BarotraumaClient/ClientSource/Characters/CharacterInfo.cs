@@ -688,8 +688,10 @@ namespace Barotrauma
                         new GUIFrame(
                             new RectTransform(Vector2.One * 0.7f, dropdownButton.RectTransform, Anchor.CenterLeft)
                                 { RelativeOffset = new Vector2(0.05f, 0.0f) }, style: null);
+                    Color? previewingColor = null;
                     dropdown.OnSelected = (component, color) =>
                     {
+                        previewingColor = null;
                         setter((Color)color);
                         buttonFrame.Color = getter();
                         buttonFrame.HoverColor = getter();
@@ -727,25 +729,24 @@ namespace Barotrauma
                     dropdown.Select(dropdown.ListBox.Content.GetChildIndex(childToSelect));
 
                     //The following exists to track mouseover to preview colors before selecting them
-                    bool previewingColor = false;
                     new GUICustomComponent(new RectTransform(Vector2.One, buttonFrame.RectTransform),
                         onUpdate: (deltaTime, component) =>
                         {
                             if (GUI.MouseOn is GUIFrame { Parent: { } p } hoveredFrame && dropdown.ListBox.Content.IsParentOf(hoveredFrame))
                             {
-                                previewingColor = true;
+                                previewingColor ??= getter();
                                 Color color = (Color)(dropdown.ListBox.Content.FindChild(c =>
-                                    c == hoveredFrame || c.IsParentOf(hoveredFrame))?.UserData ?? dropdown.SelectedData);
+                                    c == hoveredFrame || c.IsParentOf(hoveredFrame))?.UserData ?? dropdown.SelectedData ?? getter());
                                 setter(color);
                                 buttonFrame.Color = getter();
                                 buttonFrame.HoverColor = getter();
                             }
-                            else if (previewingColor)
+                            else if (previewingColor.HasValue)
                             {
-                                setter((Color)dropdown.SelectedData);
+                                setter(previewingColor.Value);
                                 buttonFrame.Color = getter();
                                 buttonFrame.HoverColor = getter();
-                                previewingColor = false;
+                                previewingColor = null;
                             }
                         }, onDraw: null)
                     {

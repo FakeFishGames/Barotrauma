@@ -26,6 +26,7 @@ namespace Barotrauma.Networking
             UpdateExperience,
             UpdateTalents,
             UpdateMoney,
+            UpdatePermanentStats,
         }
 
         public readonly Entity Entity;

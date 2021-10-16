@@ -57,7 +57,7 @@ namespace Barotrauma
                 return true;
             }
 
-            public bool CanBePut(ItemPrefab itemPrefab, float? condition = null)
+            public bool CanBePut(ItemPrefab itemPrefab, float? condition = null, int? quality = null)
             {
                 if (itemPrefab == null) { return false; }
                 if (items.Count > 0)
@@ -80,6 +80,11 @@ namespace Barotrauma
                     else
                     {
                         if (items.Any(it => !it.IsFullCondition)) { return false; }
+                    }
+
+                    if (quality.HasValue)
+                    {
+                        if (items[0].Quality != quality.Value) { return false; }
                     }
 
                     if (items[0].Prefab.Identifier != itemPrefab.Identifier ||
@@ -170,6 +175,11 @@ namespace Barotrauma
             public void RemoveAllItems()
             {
                 items.Clear();
+            }
+
+            public void RemoveWhere(Func<Item, bool> predicate)
+            {
+                items.RemoveAll(it => predicate(it));
             }
 
             public bool Any()
@@ -422,16 +432,16 @@ namespace Barotrauma
             return slots[i].CanBePut(item, ignoreCondition);
         }
 
-        public bool CanBePut(ItemPrefab itemPrefab, float? condition = null)
+        public bool CanBePut(ItemPrefab itemPrefab, float? condition = null, int? quality = null)
         {
             for (int i = 0; i < capacity; i++)
             {
-                if (CanBePutInSlot(itemPrefab, i, condition)) { return true; }
+                if (CanBePutInSlot(itemPrefab, i, condition, quality)) { return true; }
             }
             return false;
         }
 
-        public virtual bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition = null)
+        public virtual bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition = null, int? quality = null)
         {
             if (i < 0 || i >= slots.Length) { return false; }
             return slots[i].CanBePut(itemPrefab, condition);
@@ -503,7 +513,7 @@ namespace Barotrauma
                 {
                     return true;
                 }
-                return 
+                return
                     TrySwapping(i, item, user, createNetworkEvent, swapWholeStack: true) || 
                     TrySwapping(i, item, user, createNetworkEvent, swapWholeStack: false);
             }
@@ -776,11 +786,17 @@ namespace Barotrauma
                 {
                     for (int j = 0; j < capacity; j++)
                     {
-                        if (slots[j].Contains(item)) { slots[j].RemoveAllItems(); };
+                        if (slots[j].Contains(item))
+                        {
+                            slots[j].RemoveWhere(it => existingItems.Contains(it) || stackedItems.Contains(it));
+                        }
                     }
                     for (int j = 0; j < otherInventory.capacity; j++)
                     {
-                        if (otherInventory.slots[j].Contains(existingItems.FirstOrDefault())) { otherInventory.slots[j].RemoveAllItems(); }
+                        if (otherInventory.slots[j].Contains(existingItems.FirstOrDefault()))
+                        {
+                            otherInventory.slots[j].RemoveWhere(it => existingItems.Contains(it) || stackedItems.Contains(it));
+                        }
                     }
                 }
 

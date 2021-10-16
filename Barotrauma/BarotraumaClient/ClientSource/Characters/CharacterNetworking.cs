@@ -299,7 +299,7 @@ namespace Barotrauma
 
                     break;
                 case ServerNetObject.ENTITY_EVENT:
-                    int eventType = msg.ReadRangedInteger(0, 12);
+                    int eventType = msg.ReadRangedInteger(0, 13);
                     switch (eventType)
                     {
                         case 0: //NetEntityEvent.Type.InventoryState
@@ -475,6 +475,18 @@ namespace Barotrauma
                         case 12: //NetEntityEvent.Type.UpdateMoney:
                             int moneyAmount = msg.ReadInt32();
                             SetMoney(moneyAmount);
+                            break;
+                        case 13: //NetEntityEvent.Type.UpdatePermanentStats:
+                            byte savedStatValueCount = msg.ReadByte();
+                            StatTypes statType = (StatTypes)msg.ReadByte();                       
+                            info?.ClearSavedStatValues(statType);                        
+                            for (int i = 0; i < savedStatValueCount; i++)
+                            {
+                                string statIdentifier = msg.ReadString();
+                                float statValue = msg.ReadSingle();
+                                bool removeOnDeath = msg.ReadBoolean();
+                                info?.ChangeSavedStatValue(statType, statValue, statIdentifier, removeOnDeath, setValue: true);
+                            }
                             break;
 
                     }

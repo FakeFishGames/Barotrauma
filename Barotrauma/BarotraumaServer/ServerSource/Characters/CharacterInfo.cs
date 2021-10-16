@@ -32,6 +32,12 @@ namespace Barotrauma
             }
         }
 
+        partial void OnPermanentStatChanged(StatTypes statType)
+        {
+            if (Character == null || Character.Removed) { return; }
+            GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdatePermanentStats, statType });            
+        }
+
         public void ServerWrite(IWriteMessage msg)
         {
             msg.Write(ID);
@@ -66,8 +72,8 @@ namespace Barotrauma
                 msg.Write((byte)0);
             }
             // TODO: animations
-            msg.Write((byte)savedStatValues.SelectMany(s => s.Value).Count());
-            foreach (var savedStatValuePair in savedStatValues)
+            msg.Write((byte)SavedStatValues.SelectMany(s => s.Value).Count());
+            foreach (var savedStatValuePair in SavedStatValues)
             {
                 foreach (var savedStatValue in savedStatValuePair.Value)
                 {

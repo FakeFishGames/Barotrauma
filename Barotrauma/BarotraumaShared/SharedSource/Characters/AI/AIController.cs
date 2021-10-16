@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
@@ -346,7 +347,7 @@ namespace Barotrauma
         }
 
         #region Escape
-        public abstract void Escape(float deltaTime);
+        public abstract bool Escape(float deltaTime);
 
         public Gap EscapeTarget { get; private set; }
 
@@ -425,17 +426,38 @@ namespace Barotrauma
             }
             if (EscapeTarget != null)
             {
-                SteeringManager.SteeringSeek(EscapeTarget.SimPosition, 10);
-                float sqrDist = Vector2.DistanceSquared(Character.SimPosition, EscapeTarget.SimPosition);
-                if (sqrDist < 0.5f || Character.CurrentHull == null || HasValidPath(requireNonDirty: true, requireUnfinished: false) && pathSteering.CurrentPath.Finished)
+                Vector2 diff = EscapeTarget.WorldPosition - Character.WorldPosition;
+                float sqrDist = diff.LengthSquared();
+                if (Character.CurrentHull == null || sqrDist < MathUtils.Pow2(50) || pathSteering == null || IsCurrentPathUnreachable || IsCurrentPathFinished)
                 {
-                    // Very close to the target, outside, or at the end of the path -> just steer towards it manually without using the path
+                    // Very close to the target, outside, or at the end of the path -> try to steer through the gap
                     SteeringManager.Reset();
-                    SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(EscapeTarget.WorldPosition - Character.WorldPosition));
-                    if (sqrDist < 4)
+                    pathSteering?.ResetPath();
+                    if (sqrDist < MathUtils.Pow2(50))
                     {
-                        return true;
+                        // Very close -> just keep steering forward
+                        var forward = VectorExtensions.Forward(Character.AnimController.Collider.Rotation + MathHelper.PiOver2);
+                        SteeringManager.SteeringManual(deltaTime, forward);
                     }
+                    else if (Character.CurrentHull == null)
+                    {
+                        // Outside -> steer away from the target
+                        SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(-diff));
+                    }
+                    else
+                    {
+                        // Still inside -> steer towards the target
+                        SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(diff));
+                    }
+                    return sqrDist < MathUtils.Pow2(200);
+                }
+                else if (pathSteering != null)
+                {
+                    pathSteering.SteeringSeek(EscapeTarget.SimPosition, weight: 1, minGapSize);
+                }
+                else
+                {
+                    SteeringManager.SteeringSeek(EscapeTarget.SimPosition, 10);
                 }
             }
             else

@@ -529,21 +529,30 @@ namespace Barotrauma.Items.Components
                 };
             }*/
 
-            string name = GetRecipeNameAndAmount(selectedItem);
+            string itemName = GetRecipeNameAndAmount(selectedItem);
+            string name = itemName;
 
             float quality = GetFabricatedItemQuality(selectedItem, user);
             if (quality > 0)
             {
-                name = TextManager.GetWithVariable("itemname.quality" + (int)quality, "[itemname]", name+'\n', fallBackTag: "itemname.quality3");
+                name = TextManager.GetWithVariable("itemname.quality" + (int)quality, "[itemname]", itemName + '\n', fallBackTag: "itemname.quality3");
             }
 
             var nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
-               name, textAlignment: Alignment.CenterLeft, textColor: Color.Aqua, font: GUI.SubHeadingFont, parseRichText: true)
+               name, textAlignment: Alignment.TopLeft, textColor: Color.Aqua, font: GUI.SubHeadingFont, parseRichText: true)
             {
                 AutoScaleHorizontal = true
             };
-            
-            nameBlock.Padding = new Vector4(0, nameBlock.Padding.Y, nameBlock.Padding.Z, nameBlock.Padding.W);
+            nameBlock.Padding = new Vector4(0, nameBlock.Padding.Y, GUI.IntScale(5), nameBlock.Padding.W);
+            if (nameBlock.TextScale < 0.7f)
+            {
+                nameBlock.SetRichText(TextManager.GetWithVariable("itemname.quality" + (int)quality, "[itemname]", itemName, fallBackTag: "itemname.quality3"));
+                nameBlock.AutoScaleHorizontal = false;
+                nameBlock.TextScale = 0.7f;
+                nameBlock.Wrap = true;
+                nameBlock.SetTextPos();
+                nameBlock.RectTransform.MinSize = new Point(0, (int)(nameBlock.TextSize.Y * nameBlock.TextScale));
+            }            
             
             if (!string.IsNullOrWhiteSpace(selectedItem.TargetItem.Description))
             {
@@ -555,6 +564,7 @@ namespace Barotrauma.Items.Components
                 while (description.Rect.Height + nameBlock.Rect.Height > paddedFrame.Rect.Height)
                 {
                     var lines = description.WrappedText.Split('\n');
+                    if (lines.Length <= 1) { break; }
                     var newString = string.Join('\n', lines.Take(lines.Length - 1));
                     description.Text = newString.Substring(0, newString.Length - 4) + "...";
                     description.CalculateHeightFromText();

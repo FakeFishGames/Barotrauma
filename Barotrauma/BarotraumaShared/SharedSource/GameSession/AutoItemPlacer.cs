@@ -218,12 +218,12 @@ namespace Barotrauma
             return validContainers;
         }
 
-        private static readonly float[] qualityCommonnesses = new float[Quality.MaxQuality + 1]
+        private static readonly (int quality, float commonness)[] qualityCommonnesses = new (int quality, float commonness)[Quality.MaxQuality + 1]
         {
-            0.85f,
-            0.125f,
-            0.0225f,
-            0.0025f,
+            (0, 0.85f),
+            (1, 0.125f),
+            (2, 0.0225f),
+            (3, 0.0025f),
         };
 
         private static List<Item> SpawnItem(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer, float difficultyModifier)
@@ -243,20 +243,15 @@ namespace Barotrauma
                     containers.Remove(validContainer.Key);
                     break;
                 }
-                if (!validContainer.Key.Inventory.CanBePut(itemPrefab)) { break; }
 
-                int quality = 0;
-                float qualityCommmonnessSum = qualityCommonnesses.Sum();
-                float randomNumber = Rand.Range(0f, qualityCommmonnessSum, Rand.RandSync.Server);
-                for (int k = qualityCommonnesses.Length - 1; k >= 0; k--)
-                {
-                    if (randomNumber < qualityCommonnesses[k])
-                    {
-                        quality = k;
-                        break;
-                    }
-                }
-
+                var existingItem = validContainer.Key.Inventory.AllItems.FirstOrDefault(it => it.prefab == itemPrefab);
+                int quality = 
+                    existingItem?.Quality ??
+                    ToolBox.SelectWeightedRandom(
+                        qualityCommonnesses.Select(q => q.quality).ToList(),
+                        qualityCommonnesses.Select(q => q.commonness).ToList(),
+                        Rand.RandSync.Server);
+                if (!validContainer.Key.Inventory.CanBePut(itemPrefab, quality: quality)) { break; }
                 var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine)
                 {
                     SpawnedInOutpost = validContainer.Key.Item.SpawnedInOutpost,

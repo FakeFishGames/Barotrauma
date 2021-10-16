@@ -1284,68 +1284,66 @@ namespace Barotrauma
                     }
                 }
 
-                int i = 0;
-                foreach (int giveExperience in giveExperiences)
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
-                    Character targetCharacter = CharacterFromTarget(target);
-                    if (targetCharacter != null && !targetCharacter.Removed)
-                    {
-                        targetCharacter?.Info?.GiveExperience(giveExperience);
-                        i++;
-                    }
-                }
+                    // these effects do not need to be run clientside, as they are replicated from server to clients anyway
 
-                if (giveSkills.Any())
-                {
-                    foreach ((string skillIdentifier, float amount) in giveSkills)
+                    foreach (int giveExperience in giveExperiences)
                     {
                         Character targetCharacter = CharacterFromTarget(target);
                         if (targetCharacter != null && !targetCharacter.Removed)
                         {
-                            if (skillIdentifier?.ToLowerInvariant() == "randomskill")
+                            targetCharacter?.Info?.GiveExperience(giveExperience);
+                        }
+                    }
+
+                    if (giveSkills.Any())
+                    {
+                        foreach ((string skillIdentifier, float amount) in giveSkills)
+                        {
+                            Character targetCharacter = CharacterFromTarget(target);
+                            if (targetCharacter != null && !targetCharacter.Removed)
                             {
-                                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+                                if (skillIdentifier?.ToLowerInvariant() == "randomskill")
                                 {
-                                    // don't let clients simulate random skill gain
-                                    continue;
+                                    targetCharacter.Info?.IncreaseSkillLevel(GetRandomSkill(), amount);
+
+                                    string GetRandomSkill()
+                                    {
+                                        return targetCharacter.Info?.Job?.Skills.Select(s => s.Identifier).GetRandom();
+                                    }
                                 }
-                                targetCharacter.Info?.IncreaseSkillLevel(GetRandomSkill(), amount);
-                                
-                                string GetRandomSkill()
+                                else
                                 {
-                                    return targetCharacter.Info?.Job?.Skills.Select(s => s.Identifier).GetRandom();
+                                    targetCharacter.Info?.IncreaseSkillLevel(skillIdentifier?.ToLowerInvariant(), amount);
                                 }
-                            }
-                            else
-                            {
-                                targetCharacter.Info?.IncreaseSkillLevel(skillIdentifier?.ToLowerInvariant(), amount);
                             }
                         }
                     }
-                }
-                
-                if (giveTalentInfos.Any() && (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient))
-                {
-                    Character targetCharacter = CharacterFromTarget(target);
-                    if (targetCharacter?.Info == null) { continue; }
-                    if (!TalentTree.JobTalentTrees.TryGetValue(targetCharacter.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { continue; }
-                    // for the sake of technical simplicity, for now do not allow talents to be given if the character could unlock them in their talent tree as well
-                    IEnumerable<string> disallowedTalents = talentTree.TalentSubTrees.SelectMany(s => s.TalentOptionStages.SelectMany(o => o.Talents.Select(t => t.Identifier)));
 
-                    foreach (GiveTalentInfo giveTalentInfo in giveTalentInfos)
-                    {                    
-                        IEnumerable<string> viableTalents = giveTalentInfo.TalentIdentifiers.Where(s => !targetCharacter.Info.UnlockedTalents.Contains(s) && !disallowedTalents.Contains(s));
-                        if (viableTalents.None()) { continue; }
+                    if (giveTalentInfos.Any())
+                    {
+                        Character targetCharacter = CharacterFromTarget(target);
+                        if (targetCharacter?.Info == null) { continue; }
+                        if (!TalentTree.JobTalentTrees.TryGetValue(targetCharacter.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { continue; }
+                        // for the sake of technical simplicity, for now do not allow talents to be given if the character could unlock them in their talent tree as well
+                        IEnumerable<string> disallowedTalents = talentTree.TalentSubTrees.SelectMany(s => s.TalentOptionStages.SelectMany(o => o.Talents.Select(t => t.Identifier)));
 
-                        if (giveTalentInfo.GiveRandom)
+                        foreach (GiveTalentInfo giveTalentInfo in giveTalentInfos)
                         {
-                            targetCharacter.GiveTalent(viableTalents.GetRandom(), true);
-                        }
-                        else
-                        {
-                            foreach (string talent in viableTalents)
+                            IEnumerable<string> viableTalents = giveTalentInfo.TalentIdentifiers.Where(s => !targetCharacter.Info.UnlockedTalents.Contains(s) && !disallowedTalents.Contains(s));
+                            if (viableTalents.None()) { continue; }
+
+                            if (giveTalentInfo.GiveRandom)
                             {
-                                targetCharacter.GiveTalent(talent, true);
+                                targetCharacter.GiveTalent(viableTalents.GetRandom(), true);
+                            }
+                            else
+                            {
+                                foreach (string talent in viableTalents)
+                                {
+                                    targetCharacter.GiveTalent(talent, true);
+                                }
                             }
                         }
                     }

@@ -1023,7 +1023,12 @@ namespace Barotrauma
 #if CLIENT
             if (playSound && damageAmount > 0)
             {
-                SoundPlayer.PlayDamageSound(attack.StructureSoundType, damageAmount, worldPosition, tags: Tags);
+                string damageSound = Prefab.DamageSound;
+                if (string.IsNullOrWhiteSpace(damageSound))
+                {
+                    damageSound = attack.StructureSoundType;
+                }
+                SoundPlayer.PlayDamageSound(damageSound, damageAmount, worldPosition, tags: Tags);
             }
 #endif
 

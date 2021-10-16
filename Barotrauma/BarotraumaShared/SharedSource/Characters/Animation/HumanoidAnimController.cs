@@ -684,18 +684,15 @@ namespace Barotrauma
 
                 if (rightHand != null && !rightHand.Disabled)
                 {
-                    HandIK(rightHand, torso.SimPosition + posAddition +
-                        new Vector2(
-                            -handPos.X,
-                            (Math.Sign(walkPosX) == Math.Sign(Dir)) ? handPos.Y : lowerY), CurrentGroundedParams.ArmMoveStrength, CurrentGroundedParams.HandMoveStrength);
+                    HandIK(rightHand,
+                        torso.SimPosition + posAddition + new Vector2(-handPos.X, (Math.Sign(walkPosX) == Math.Sign(Dir)) ? handPos.Y : lowerY),
+                        CurrentGroundedParams.ArmMoveStrength, CurrentGroundedParams.HandMoveStrength);
                 }
-
                 if (leftHand != null && !leftHand.Disabled)
                 {
-                    HandIK(leftHand, torso.SimPosition + posAddition +
-                        new Vector2(
-                            handPos.X,
-                            (Math.Sign(walkPosX) == Math.Sign(-Dir)) ? handPos.Y : lowerY), CurrentGroundedParams.ArmMoveStrength, CurrentGroundedParams.HandMoveStrength);
+                    HandIK(leftHand,
+                        torso.SimPosition + posAddition + new Vector2(handPos.X, (Math.Sign(walkPosX) == Math.Sign(-Dir)) ? handPos.Y : lowerY),
+                        CurrentGroundedParams.ArmMoveStrength, CurrentGroundedParams.HandMoveStrength);
                 }
             }
             else
@@ -705,9 +702,7 @@ namespace Barotrauma
                     Vector2 footPos = colliderPos;
                     if (Crouching)
                     {
-                        footPos = new Vector2(
-                            Math.Sign(stepSize.X * i) * Dir * 0.4f,
-                            colliderPos.Y);
+                        footPos = new Vector2(Math.Sign(stepSize.X * i) * Dir * 0.35f, colliderPos.Y);
                         if (Math.Sign(footPos.X) != Math.Sign(Dir))
                         {
                             //lift the foot at the back up a bit
@@ -728,9 +723,16 @@ namespace Barotrauma
                     {
                         foot.DebugRefPos = colliderPos;
                         foot.DebugTargetPos = footPos;
-                        MoveLimb(foot, footPos, CurrentGroundedParams.FootMoveStrength);
-                        FootIK(foot, footPos, 
-                            CurrentGroundedParams.LegBendTorque, CurrentGroundedParams.FootTorque, CurrentGroundedParams.FootAngleInRadians);
+                        float footMoveForce = CurrentGroundedParams.FootMoveStrength;
+                        float legBendTorque = CurrentGroundedParams.LegBendTorque;
+                        if (Crouching)
+                        {
+                            // Keeps the pose
+                            legBendTorque = 100;
+                            footMoveForce *= 2;
+                        }
+                        MoveLimb(foot, footPos, footMoveForce);
+                        FootIK(foot, footPos, legBendTorque, CurrentGroundedParams.FootTorque, CurrentGroundedParams.FootAngleInRadians);
                     }
                 }
 
@@ -759,6 +761,12 @@ namespace Barotrauma
                             float diff = elbow.JointAngle - (Dir > 0 ? elbow.LowerLimit : elbow.UpperLimit);
                             forearm.body.ApplyTorque(MathHelper.Clamp(-diff, -MathHelper.PiOver2, MathHelper.PiOver2) * forearm.Mass * 100.0f * CurrentGroundedParams.ArmMoveStrength);
                         }
+                    }
+                    // Try to keep the wrist straight
+                    LimbJoint wrist = GetJointBetweenLimbs(foreArmType, hand.type);
+                    if (wrist != null)
+                    {
+                        hand.body.ApplyTorque(MathHelper.Clamp(-wrist.JointAngle, -MathHelper.PiOver2, MathHelper.PiOver2) * hand.Mass * 100f * CurrentGroundedParams.HandMoveStrength);
                     }
                 }
             }
@@ -1008,6 +1016,12 @@ namespace Barotrauma
                     speedMultiplier = Math.Min(speedMultiplier, 0.1f);
                 }
                 HandIK(rightHand, handPos + rightHandPos, CurrentSwimParams.ArmMoveStrength * speedMultiplier, CurrentSwimParams.HandMoveStrength * speedMultiplier);
+                // Try to keep the wrist straight
+                LimbJoint wrist = GetJointBetweenLimbs(LimbType.RightForearm, LimbType.RightHand);
+                if (wrist != null)
+                {
+                    rightHand.body.ApplyTorque(MathHelper.Clamp(-wrist.JointAngle, -MathHelper.PiOver2, MathHelper.PiOver2) * rightHand.Mass * 100f * CurrentSwimParams.HandMoveStrength);
+                }
             }
 
             if (leftHand != null && !leftHand.Disabled)
@@ -1021,6 +1035,12 @@ namespace Barotrauma
                     speedMultiplier = Math.Min(speedMultiplier, 0.1f);
                 }
                 HandIK(leftHand, handPos + leftHandPos, CurrentSwimParams.ArmMoveStrength * speedMultiplier, CurrentSwimParams.HandMoveStrength * speedMultiplier);
+                // Try to keep the wrist straight
+                LimbJoint wrist = GetJointBetweenLimbs(LimbType.LeftForearm, LimbType.LeftHand);
+                if (wrist != null)
+                {
+                    leftHand.body.ApplyTorque(MathHelper.Clamp(-wrist.JointAngle, -MathHelper.PiOver2, MathHelper.PiOver2) * leftHand.Mass * 100f * CurrentSwimParams.HandMoveStrength);
+                }
             }
         }
 

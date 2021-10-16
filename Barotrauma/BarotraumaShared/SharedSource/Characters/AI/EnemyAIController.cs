@@ -1903,7 +1903,7 @@ namespace Barotrauma
             Character.AnimController.ReleaseStuckLimbs();
             LatchOntoAI?.DeattachFromBody(reset: true, cooldown: 1);
             if (attacker == null || attacker.AiTarget == null || attacker.Removed || attacker.IsDead) { return; }
-            if (Character.Params.CanInteract)
+            if (Character.Params.CanInteract && attackResult.Damage > 10)
             {
                 ReleaseDragTargets();
             }
@@ -3607,12 +3607,12 @@ namespace Barotrauma
 
         public bool CanPassThroughHole(Structure wall, int sectionIndex) => CanPassThroughHole(wall, sectionIndex, requiredHoleCount);
 
-        public override void Escape(float deltaTime)
+        public override bool Escape(float deltaTime)
         {
             if (SelectedAiTarget != null && (SelectedAiTarget.Entity == null || SelectedAiTarget.Entity.Removed))
             {
                 State = AIState.Idle;
-                return;
+                return false;
             }
             else if (SelectedTargetMemory is AITargetMemory targetMemory && SelectedAiTarget?.Entity is Character)
             {
@@ -3653,6 +3653,7 @@ namespace Barotrauma
                     }
                 }
             }
+            return isSteeringThroughGap;
 
             void SteerAwayFromTheEnemy()
             {

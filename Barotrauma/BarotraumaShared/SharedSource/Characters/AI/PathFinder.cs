@@ -236,6 +236,7 @@ namespace Barotrauma
                         collisionCategory: Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs);
                     if (body != null)
                     {
+                        if (body.UserData is Submarine) { return false; }
                         if (body.UserData is Structure s && !s.IsPlatform) { return false; }
                         if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { return false; }
                     }

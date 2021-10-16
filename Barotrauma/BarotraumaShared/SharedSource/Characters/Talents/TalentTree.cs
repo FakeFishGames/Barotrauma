@@ -66,6 +66,11 @@ namespace Barotrauma
             }
         }
 
+        public bool TalentIsInTree(string talentIdentifier)
+        {
+            return TalentSubTrees.SelectMany(s => s.TalentOptionStages.SelectMany(o => o.Talents.Select(t => t.Identifier))).Any(c => c == talentIdentifier);
+        }
+
         public static void LoadFromFile(ContentFile file)
         {
             DebugConsole.Log("Loading talent tree: " + file.Path);

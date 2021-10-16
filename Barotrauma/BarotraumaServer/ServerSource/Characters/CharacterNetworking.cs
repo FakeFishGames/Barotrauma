@@ -310,7 +310,7 @@ namespace Barotrauma
 
             if (extraData != null)
             {
-                const int min = 0, max = 12;
+                const int min = 0, max = 13;
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
@@ -437,6 +437,30 @@ namespace Barotrauma
                     case NetEntityEvent.Type.UpdateMoney:
                         msg.WriteRangedInteger(12, min, max);
                         msg.Write(GameMain.GameSession.Campaign.Money);
+                        break;
+                    case NetEntityEvent.Type.UpdatePermanentStats:
+                        msg.WriteRangedInteger(13, min, max);
+                        if (Info == null || extraData.Length < 2 || !(extraData[1] is StatTypes statType))
+                        {
+                            msg.Write((byte)0);
+                            msg.Write((byte)0);
+                        }
+                        else if (!Info.SavedStatValues.ContainsKey(statType))
+                        {
+                            msg.Write((byte)0);
+                            msg.Write((byte)statType);
+                        }
+                        else
+                        {
+                            msg.Write((byte)Info.SavedStatValues[statType].Count);
+                            msg.Write((byte)statType);
+                            foreach (var savedStatValue in Info.SavedStatValues[statType])
+                            {
+                                msg.Write(savedStatValue.StatIdentifier);
+                                msg.Write(savedStatValue.StatValue);
+                                msg.Write(savedStatValue.RemoveOnDeath);
+                            }                            
+                        }
                         break;
                     default:
                         DebugConsole.ThrowError("Invalid NetworkEvent type for entity " + ToString() + " (" + (NetEntityEvent.Type)extraData[0] + ")");

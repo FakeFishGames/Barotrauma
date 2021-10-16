@@ -268,7 +268,7 @@ namespace Barotrauma.Items.Components
                 {
                     string[] allSpecies = SpeciesName.Split(',');
                     string species = allSpecies.GetRandom().Trim();
-                    Entity.Spawner.AddToSpawnQueue(species, pos);
+                    Entity.Spawner?.AddToSpawnQueue(species, pos);
                 }
                 else if (!string.IsNullOrWhiteSpace(ItemIdentifier))
                 {
@@ -282,7 +282,7 @@ namespace Barotrauma.Items.Components
                         pos -= sub.Position;
                     }
 
-                    Entity.Spawner.AddToSpawnQueue(prefab, pos, item.Submarine);
+                    Entity.Spawner?.AddToSpawnQueue(prefab, pos, item.Submarine);
                 }
             }
         }

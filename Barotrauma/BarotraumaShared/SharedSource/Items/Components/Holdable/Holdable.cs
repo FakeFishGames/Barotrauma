@@ -642,10 +642,8 @@ namespace Barotrauma.Items.Components
                     item.Drop(character);
                     item.SetTransform(ConvertUnits.ToSimUnits(GetAttachPosition(character)), 0.0f, findNewHull: false);
                 }
+                AttachToWall();
             }
-
-            AttachToWall();           
-
             return true;
         }
 

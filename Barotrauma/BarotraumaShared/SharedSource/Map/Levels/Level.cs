@@ -864,6 +864,16 @@ namespace Barotrauma
                 foreach (AbyssIsland island in AbyssIslands)
                 {
                     island.Area = new Rectangle(borders.Width - island.Area.Right, island.Area.Y, island.Area.Width, island.Area.Height);
+                    foreach (var cell in island.Cells)
+                    {
+                        if (!mirroredSites.Contains(cell.Site))
+                        {
+                            if (cell.Site.Coord.X % GridCellSize < 1.0f &&
+                                cell.Site.Coord.X % GridCellSize >= 0.0f) { cell.Site.Coord.X += 1.0f; }
+                            cell.Site.Coord.X = borders.Width - cell.Site.Coord.X;
+                            mirroredSites.Add(cell.Site);
+                        }
+                    }
                 }
 
                 for (int i = 0; i < ruinPositions.Count; i++)
@@ -1972,7 +1982,7 @@ namespace Barotrauma
                         ConvertUnits.ToSimUnits(entranceWayPoint.WorldPosition), collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) == null;
                 });
                 if (closestWp == null) { continue; }
-                entranceWayPoint.ConnectTo(closestWp);
+                ConnectWaypoints(entranceWayPoint, closestWp, outSideWaypointInterval);
             }
 
             //create a waypoint path from the ruin to the closest tunnel

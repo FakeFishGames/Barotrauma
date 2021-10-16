@@ -34,6 +34,8 @@ namespace Barotrauma.Items.Components
         public OxygenGenerator(Item item, XElement element)
             : base(item, element)
         {
+            //randomize update timer so all oxygen generators don't update at the same time
+            ventUpdateTimer = Rand.Range(0.0f, VentUpdateInterval);
             IsActive = true;
         }
 
@@ -78,6 +80,7 @@ namespace Barotrauma.Items.Components
 
         private void GetVents()
         {
+            totalHullVolume = 0.0f;
             ventList ??= new List<(Vent vent, float hullVolume)>();
             ventList.Clear();
             foreach (MapEntity entity in item.linkedTo)
@@ -87,13 +90,14 @@ namespace Barotrauma.Items.Components
                 Vent vent = linkedItem.GetComponent<Vent>();
                 if (vent?.Item.CurrentHull == null) { continue; }
 
+                totalHullVolume += vent.Item.CurrentHull.Volume;
                 ventList.Add((vent, vent.Item.CurrentHull.Volume));
             }
 
             for (int i = 0; i < ventList.Count; i++)
             {
                 Vent vent = ventList[i].vent;
-                foreach (Hull connectedHull in vent.Item.CurrentHull.GetConnectedHulls(includingThis: false, searchDepth: 5, ignoreClosedGaps: true))
+                foreach (Hull connectedHull in vent.Item.CurrentHull.GetConnectedHulls(includingThis: false, searchDepth: 3, ignoreClosedGaps: true))
                 {
                     //another vent in the connected hull -> don't add it to this vent's total hull volume
                     if (ventList.Any(v => v.vent != vent && v.vent.Item.CurrentHull == connectedHull)) { continue; }

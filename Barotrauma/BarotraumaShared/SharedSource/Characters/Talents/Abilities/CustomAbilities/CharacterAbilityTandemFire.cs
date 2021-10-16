@@ -31,7 +31,7 @@ namespace Barotrauma.Abilities
                 }
             }
 
-            if (closestCharacter.SelectedConstruction == null || !Character.SelectedConstruction.HasTag(tag)) { return; }
+            if (closestCharacter.SelectedConstruction == null || !closestCharacter.SelectedConstruction.HasTag(tag)) { return; }
 
             if (closestDistance < squaredMaxDistance)
             {

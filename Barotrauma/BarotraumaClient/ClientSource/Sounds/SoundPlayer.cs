@@ -884,7 +884,7 @@ namespace Barotrauma
                 // Switch the type ambience if nothing playing atm or the currently playing clip is not suitable anymore
                 else if (targetMusic[typeAmbienceTrackIndex] == null || currentMusic[typeAmbienceTrackIndex] == null || !currentMusic[typeAmbienceTrackIndex].IsPlaying() || suitableTypeAmbiences.None(m => m.File == currentMusic[typeAmbienceTrackIndex].Filename))
                 {
-                    targetMusic[mainTrackIndex] = suitableMusic.GetRandom();
+                    targetMusic[typeAmbienceTrackIndex] = suitableTypeAmbiences.GetRandom();
                 }
 
                 //get the appropriate intensity layers for current situation

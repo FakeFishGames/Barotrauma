@@ -47,6 +47,7 @@
         OnReduceAffliction,
         OnAddDamageAffliction,
         OnSelfRagdoll,
+        OnRagdoll,
         OnRoundEnd,
         OnAnyMissionCompleted,
         OnAllMissionsCompleted,

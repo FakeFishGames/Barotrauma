@@ -1677,10 +1677,25 @@ namespace Barotrauma
                         return;
                     }
 
+                    bool relativeStrength = false;
+                    if (args.Length > 4)
+                    {
+                        bool.TryParse(args[4], out relativeStrength);
+                    }
+
                     Character targetCharacter = (args.Length <= 2) ? client.Character : FindMatchingCharacter(args.Skip(2).ToArray());
                     if (targetCharacter != null)
                     {
-                        targetCharacter.CharacterHealth.ApplyAffliction(targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
+                        Limb targetLimb = targetCharacter.AnimController.MainLimb;
+                        if (args.Length > 3)
+                        {
+                            targetLimb = targetCharacter.AnimController.Limbs.FirstOrDefault(l => l.type.ToString().Equals(args[3], StringComparison.OrdinalIgnoreCase));
+                        }
+                        if (relativeStrength)
+                        {
+                            afflictionStrength *= targetCharacter.MaxVitality / afflictionPrefab.MaxStrength;
+                        }
+                        targetCharacter.CharacterHealth.ApplyAffliction(targetLimb ?? targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
                     }
                 }
             );
@@ -2171,6 +2186,7 @@ namespace Barotrauma
                     if (client == null)
                     {
                         GameMain.Server.SendConsoleMessage("Client \"" + args[0] + "\" not found.", senderClient);
+                        return;
                     }
 
                     var character = FindMatchingCharacter(args.Skip(1).ToArray(), false);

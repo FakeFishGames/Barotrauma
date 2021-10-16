@@ -11,6 +11,7 @@ namespace Barotrauma.Abilities
         protected readonly List<StatusEffect> statusEffects;
 
         private readonly bool nearbyCharactersAppliesToSelf;
+        private readonly bool nearbyCharactersAppliesToAllies;
         private readonly bool applyToSelected;
 
         readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
@@ -20,6 +21,7 @@ namespace Barotrauma.Abilities
             statusEffects = CharacterAbilityGroup.ParseStatusEffects(CharacterTalent, abilityElement.GetChildElement("statuseffects"));
             applyToSelected = abilityElement.GetAttributeBool("applytoselected", false);
             nearbyCharactersAppliesToSelf = abilityElement.GetAttributeBool("nearbycharactersappliestoself", true);
+            nearbyCharactersAppliesToAllies = abilityElement.GetAttributeBool("nearbycharactersappliestoallies", true);
         }
 
         protected void ApplyEffectSpecific(Character targetCharacter)
@@ -40,6 +42,10 @@ namespace Barotrauma.Abilities
                     {
                         targets.RemoveAll(c => c == Character);
                     }
+                    if (!nearbyCharactersAppliesToAllies)
+                    {
+                        targets.RemoveAll(c => c is Character otherCharacter && HumanAIController.IsFriendly(otherCharacter, Character));
+                    }
                     statusEffect.SetUser(Character);
                     statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, targetCharacter, targets);
                 }
@@ -57,16 +63,19 @@ namespace Barotrauma.Abilities
         }
         protected override void ApplyEffect()
         {
-            ApplyEffectSpecific(Character);
-        }
-
-        protected override void ApplyEffect(AbilityObject abilityObject)
-        {
             if (applyToSelected && Character.SelectedCharacter is Character selectedCharacter)
             {
                 ApplyEffectSpecific(selectedCharacter);
             }
-            else if ((abilityObject as IAbilityCharacter)?.Character is Character targetCharacter)
+            else
+            {
+                ApplyEffectSpecific(Character);
+            }
+        }
+
+        protected override void ApplyEffect(AbilityObject abilityObject)
+        {
+            if ((abilityObject as IAbilityCharacter)?.Character is Character targetCharacter)
             {
                 ApplyEffectSpecific(targetCharacter);
             }

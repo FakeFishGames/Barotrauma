@@ -363,7 +363,7 @@ namespace Barotrauma
 #if CLIENT
             foreach (Character character in crewCharacters)
             {
-                character.Info.GiveExperience(experienceGain, isMissionExperience: true);
+                character.Info?.GiveExperience(experienceGain, isMissionExperience: true);
             }
 #else
             foreach (Barotrauma.Networking.Client c in GameMain.Server.ConnectedClients)

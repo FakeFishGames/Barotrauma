@@ -1,4 +1,39 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1500.8.0
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- More improvements and fixes to the alien ruins and the new fractal guardians.
+- Improvements to character animations and sprites.
+- Made ruin scan/clear missions available in outposts.
+- Talent adjustments and fixes.
+- Adjustments to outpost distribution: natural formations greatly reduced in the 1st zone, cities slightly reduced in the 1st zone, outposts (including specialized ones) increased in the 3rd and 4th zone.
+- Made magnesium a little more common in stores and wrecks.
+- Temporarily disabled magnesium exploding in water to prevent issues with talents related to it.
+- Added an additonal ambience track for the ruins.
+- New sounds for alien ruins and the guardians.
+- Portable pumps turn off automatically when not attached to a wall.
+
+Fixes:
+- Fixed outpost events always unlocking the same escort mission.
+- Fixed server occasionally failing to end the round and spamming the clients with XP notifications. Happened when the server was trying to give experience for the completed missions and there were clients in the server whose character had been removed (unstable only).
+- Fixed shotgun shells not having a fabrication recipe (unstable only).
+- Fixed thermal goggles being sold in outposts (unstable only).
+- Fixes to ruin waypoint generation (unstable only).
+- Fixes to pathfinding outside ruins (unstable only).
+- Fixed oxygen generator output constantly decreasing due to the changes in the previous build (unstable only).
+- Fixed long item names being unreadable on the fabricator UI.
+- The hints about flooded rooms and ballast flora aren't shown in ruins, wrecks or enemy subs.
+- Fixed "setclientcharacter" command crashing the server if the specified character is not found.
+- Fixed autofilling subs with supplies sometimes causing high-quality items to appear on the floor near containers (unstable only).
+- Fixed guardian spears being fabricatable (unstable only).
+- Fixed "stowaway" event triggering an event cooldown, preventing monsters from spawning at the beginning of the round.
+- Fixed clients (excluding the host) always considering friendly fire to be disabled, leading to minor cosmetic desyncs when a player applies afflictions on another one (i.e. there was a brief delay before the afflictions update client-side).
+- Fixed inability to apply buffs on the crew when friendly fire is disabled.
+- Fixed ItemContainers only applying the StatusEffects from the first matching Containable, even if there's multiple. Prevented the artifact-specific effects of artifact holder from executing.
+- Fixed "giveaffliction" command's limbtype argument not working in multiplayer.
+
+---------------------------------------------------------------------------------------------------------
 v0.1500.7.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -7,7 +42,7 @@ Additions and changes:
 - Added a colored border to high-quality items' inventory slots.
 - Changed the look of the skill/xp notifications to accommodate the larger numbers of notifications you can get from talents and skillbooks.
 - Added a fabricator and deconstructor to Azimuth and slightly lowered its maximum speed.
-- Increased Azimuth's battery out relay max power-
+- Increased Azimuth's battery out relay max power.
 - Field Medic now only triggers on missions.
 - Reduced gravity sphere's force to make it possible to escape it with a diving suit on.
 - Diving suit and human ragdoll damagemodifier changes: the suits now offer less protection, but humans have a bit more natural protection towards physical damage types.

@@ -167,6 +167,9 @@ namespace Barotrauma
             private set { size = value; }
         }
 
+        [Serialize("", true)]
+        public string DamageSound { get; private set; }
+
         public Vector2 ScaledSize => size * Scale;
 
         protected Vector2 textureScale = Vector2.One;

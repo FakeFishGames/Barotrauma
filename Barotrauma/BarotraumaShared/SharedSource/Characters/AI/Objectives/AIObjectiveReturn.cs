@@ -9,6 +9,7 @@ namespace Barotrauma
         public override string Identifier { get; set; } = "return";
         private AIObjectiveGoTo moveInsideObjective, moveInCaveObjective, moveOutsideObjective;
         private bool usingEscapeBehavior;
+        private bool isSteeringThroughGap;
         public Submarine ReturnTarget { get; }
 
         public AIObjectiveReturn(Character character, Character orderGiver, AIObjectiveManager objectiveManager, float priorityModifier = 1.0f) : base(character, objectiveManager, priorityModifier)
@@ -57,7 +58,7 @@ namespace Barotrauma
                 return;
             }
             bool shouldUseEscapeBehavior = false;
-            if (character.CurrentHull != null)
+            if (character.CurrentHull != null || isSteeringThroughGap)
             {
                 if (character.Submarine == null || !character.Submarine.IsConnectedTo(ReturnTarget))
                 {
@@ -67,8 +68,8 @@ namespace Barotrauma
                     {
                         HumanAIController.ResetEscape();
                     }
-                    HumanAIController.Escape(deltaTime);
-                    if (HumanAIController.EscapeTarget == null || HumanAIController.IsCurrentPathUnreachable)
+                    isSteeringThroughGap = HumanAIController.Escape(deltaTime);
+                    if (!isSteeringThroughGap && (HumanAIController.EscapeTarget == null || HumanAIController.IsCurrentPathUnreachable))
                     {
                         Abandon = true;
                     }
@@ -92,7 +93,10 @@ namespace Barotrauma
                             RemoveSubObjective(ref moveInCaveObjective);
                             RemoveSubObjective(ref moveOutsideObjective);
                             TryAddSubObjective(ref moveInsideObjective,
-                                constructor: () => new AIObjectiveGoTo(targetHull, character, objectiveManager),
+                                constructor: () => new AIObjectiveGoTo(targetHull, character, objectiveManager)
+                                {
+                                    AllowGoingOutside = true
+                                },
                                 onCompleted: () => RemoveSubObjective(ref moveInsideObjective),
                                 onAbandon: () => Abandon = true);
                         }
@@ -110,7 +114,7 @@ namespace Barotrauma
                     IsCompleted = true;
                 }
             }
-            else if (moveInCaveObjective == null && moveOutsideObjective == null)
+            else if (!isSteeringThroughGap && moveInCaveObjective == null && moveOutsideObjective == null)
             {
                 if (HumanAIController.IsInsideCave)
                 {
@@ -134,7 +138,8 @@ namespace Barotrauma
                         TryAddSubObjective(ref moveInCaveObjective,
                             constructor: () => new AIObjectiveGoTo(closestOutsideWaypoint, character, objectiveManager)
                             {
-                                endNodeFilter = n => n.Waypoint == closestOutsideWaypoint
+                                endNodeFilter = n => n.Waypoint == closestOutsideWaypoint,
+                                AllowGoingOutside = true
                             },
                             onCompleted: () => RemoveSubObjective(ref moveInCaveObjective),
                             onAbandon: () => Abandon = true);
@@ -170,7 +175,10 @@ namespace Barotrauma
                         RemoveSubObjective(ref moveInsideObjective);
                         RemoveSubObjective(ref moveInCaveObjective);
                         TryAddSubObjective(ref moveOutsideObjective,
-                            constructor: () => new AIObjectiveGoTo(targetHull, character, objectiveManager),
+                            constructor: () => new AIObjectiveGoTo(targetHull, character, objectiveManager)
+                            {
+                                AllowGoingOutside = true
+                            },
                             onCompleted: () => RemoveSubObjective(ref moveOutsideObjective),
                             onAbandon: () => Abandon = true);
                     }
@@ -221,6 +229,7 @@ namespace Barotrauma
             moveInCaveObjective = null;
             moveOutsideObjective = null;
             usingEscapeBehavior = false;
+            isSteeringThroughGap = false;
             HumanAIController.ResetEscape();
         }
 

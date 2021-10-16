@@ -6,6 +6,7 @@ namespace Barotrauma.Abilities
     {
         private readonly string statIdentifier;
         public override bool AppliesEffectOnIntervalUpdate => true;
+        public override bool AllowClientSimulation => true;
 
         public CharacterAbilityResetPermanentStat(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {

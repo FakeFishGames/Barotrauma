@@ -602,7 +602,7 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("giveaffliction", "giveaffliction [affliction name] [affliction strength] [character name] [limb type]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
+            commands.Add(new Command("giveaffliction", "giveaffliction [affliction name] [affliction strength] [character name] [limb type] [use relative strength]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
             {
                 if (args.Length < 2) { return; }
 
@@ -622,14 +622,12 @@ namespace Barotrauma
                 }
 
                 bool relativeStrength = false;
-                if (args.Length > 2)
+                if (args.Length > 4)
                 {
-                    bool.TryParse(args[2], out relativeStrength);
+                    bool.TryParse(args[4], out relativeStrength);
                 }
 
-                Character targetCharacter = (relativeStrength || args.Length <= 2) ? Character.Controlled : FindMatchingCharacter(new string[] { args[2] });
-
-
+                Character targetCharacter = args.Length <= 2 ? Character.Controlled : FindMatchingCharacter(new string[] { args[2] });
                 if (targetCharacter != null)
                 {
                     Limb targetLimb = targetCharacter.AnimController.MainLimb;
@@ -1889,9 +1887,9 @@ namespace Barotrauma
                 if (!IsCommandPermitted(splitCommand[0].ToLowerInvariant(), GameMain.Client))
                 {
 #if DEBUG
-                    AddWarning("You're not permitted to use the command \"{matchingCommand.Name}\". Executing the command anyway because this is a debug build.");
+                    AddWarning($"You're not permitted to use the command \"{splitCommand[0].ToLowerInvariant()}\". Executing the command anyway because this is a debug build.");
 #else
-                    ThrowError("You're not permitted to use the command \"" + splitCommand[0].ToLowerInvariant() + "\"!");
+                    ThrowError($"You're not permitted to use the command \"{splitCommand[0].ToLowerInvariant()}\"!");
                     return;
 #endif
                 }

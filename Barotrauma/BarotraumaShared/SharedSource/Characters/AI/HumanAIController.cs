@@ -1364,10 +1364,7 @@ namespace Barotrauma
             ObjectiveManager.WaitTimer = waitDuration;
         }
 
-        public override void Escape(float deltaTime)
-        {
-            UpdateEscape(deltaTime, canAttackDoors: false);
-        }
+        public override bool Escape(float deltaTime) => UpdateEscape(deltaTime, canAttackDoors: false);
 
         private void CheckCrouching(float deltaTime)
         {

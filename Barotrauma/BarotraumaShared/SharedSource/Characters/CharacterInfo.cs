@@ -216,6 +216,17 @@ namespace Barotrauma
 
         public HashSet<string> UnlockedTalents { get; private set; } = new HashSet<string>();
 
+        /// <summary>
+        /// Endocrine boosters can unlock talents outside the user's talent tree. This method is used to cull them from the selection
+        /// </summary>
+        public IEnumerable<string> GetUnlockedTalentsInTree()
+        {
+            if (!TalentTree.JobTalentTrees.TryGetValue(Job.Prefab.Identifier, out TalentTree talentTree)) { return Enumerable.Empty<string>(); }
+
+            return UnlockedTalents.Where(t => talentTree.TalentIsInTree(t));
+        }
+
+
         public int AdditionalTalentPoints { get; set; }
 
         private Sprite _headSprite;
@@ -1220,7 +1231,7 @@ namespace Barotrauma
             var experienceGainMultiplier = new AbilityValue(1f);
             if (isMissionExperience)
             {
-                Character.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplier);
+                Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplier);
             }
             experienceGainMultiplier.Value += Character.GetStatValue(StatTypes.ExperienceGainMultiplier);
 
@@ -1252,7 +1263,7 @@ namespace Barotrauma
         public int GetAvailableTalentPoints()
         {
             // hashset always has at least 1 
-            return Math.Max(GetTotalTalentPoints() - UnlockedTalents.Count, 0);
+            return Math.Max(GetTotalTalentPoints() - GetUnlockedTalentsInTree().Count(), 0);
         }
 
         public float GetProgressTowardsNextLevel()
@@ -1296,6 +1307,8 @@ namespace Barotrauma
         }
 
         partial void OnExperienceChanged(int prevAmount, int newAmount);
+
+        partial void OnPermanentStatChanged(StatTypes statType);
 
         public void Rename(string newName)
         {
@@ -1362,7 +1375,7 @@ namespace Barotrauma
             Job.Save(charElement);
 
             XElement savedStatElement = new XElement("savedstatvalues");
-            foreach (var statValuePair in savedStatValues)
+            foreach (var statValuePair in SavedStatValues)
             {
                 foreach (var savedStat in statValuePair.Value)
                 {
@@ -1708,26 +1721,42 @@ namespace Barotrauma
         }
 
         // This could maybe be a LookUp instead?
-        private readonly Dictionary<StatTypes, List<SavedStatValue>> savedStatValues = new Dictionary<StatTypes, List<SavedStatValue>>();
+        public readonly Dictionary<StatTypes, List<SavedStatValue>> SavedStatValues = new Dictionary<StatTypes, List<SavedStatValue>>();
 
-        public void ResetSavedStatValues()
+        public void ClearSavedStatValues()
         {
-            foreach (var savedStatValue in savedStatValues.SelectMany(s => s.Value))
+            foreach (StatTypes statType in SavedStatValues.Keys)
             {
-                if (savedStatValue.RemoveOnDeath)
-                {
-                    savedStatValue.StatValue = 0f;
-                }
+                OnPermanentStatChanged(statType);
             }
+            SavedStatValues.Clear();
         }
+
+        public void ClearSavedStatValues(StatTypes statType)
+        {
+            SavedStatValues.Remove(statType);
+            OnPermanentStatChanged(statType);
+        }
+
         public void ResetSavedStatValue(string statIdentifier)
         {
-            savedStatValues.SelectMany(s => s.Value).Where(s => s.StatIdentifier == statIdentifier).ForEach(v => v.StatValue = 0f);
+            foreach (StatTypes statType in SavedStatValues.Keys)
+            {
+                bool changed = false;
+                foreach (SavedStatValue savedStatValue in SavedStatValues[statType])
+                {
+                    if (savedStatValue.StatIdentifier != statIdentifier) { continue; }
+                    if (MathUtils.NearlyEqual(savedStatValue.StatValue, 0.0f)) { continue; }
+                    savedStatValue.StatValue = 0.0f;
+                    changed = true;
+                }
+                if (changed) { OnPermanentStatChanged(statType); }
+            }
         }
 
         public float GetSavedStatValue(StatTypes statType)
         {
-            if (savedStatValues.TryGetValue(statType, out var statValues))
+            if (SavedStatValues.TryGetValue(statType, out var statValues))
             {
                 return statValues.Sum(v => v.StatValue);
             }
@@ -1738,7 +1767,7 @@ namespace Barotrauma
         }
         public float GetSavedStatValue(StatTypes statType, string statIdentifier)
         {
-            if (savedStatValues.TryGetValue(statType, out var statValues))
+            if (SavedStatValues.TryGetValue(statType, out var statValues))
             {
                 return statValues.Where(s => s.StatIdentifier.Equals(statIdentifier, StringComparison.OrdinalIgnoreCase)).Sum(v => v.StatValue);
             }
@@ -1750,19 +1779,24 @@ namespace Barotrauma
 
         public void ChangeSavedStatValue(StatTypes statType, float value, string statIdentifier, bool removeOnDeath, bool removeAfterRound = false, float maxValue = float.MaxValue, bool setValue = false)
         {
-            if (!savedStatValues.ContainsKey(statType))
+            if (!SavedStatValues.ContainsKey(statType))
             {
-                savedStatValues.Add(statType, new List<SavedStatValue>());
+                SavedStatValues.Add(statType, new List<SavedStatValue>());
             }
 
-            if (savedStatValues[statType].FirstOrDefault(s => s.StatIdentifier == statIdentifier) is SavedStatValue savedStat)
+            bool changed = false;
+            if (SavedStatValues[statType].FirstOrDefault(s => s.StatIdentifier == statIdentifier) is SavedStatValue savedStat)
             {
+                float prevValue = savedStat.StatValue;
                 savedStat.StatValue = setValue ? value : MathHelper.Min(savedStat.StatValue + value, maxValue);
+                changed = !MathUtils.NearlyEqual(savedStat.StatValue, prevValue);
             }
             else
             {
-                savedStatValues[statType].Add(new SavedStatValue(statIdentifier, MathHelper.Min(value, maxValue), removeOnDeath, removeAfterRound));
+                SavedStatValues[statType].Add(new SavedStatValue(statIdentifier, MathHelper.Min(value, maxValue), removeOnDeath, removeAfterRound));
+                changed = true;
             }
+            if (changed) { OnPermanentStatChanged(statType); }
         }
     }
 

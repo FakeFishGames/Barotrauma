@@ -15,7 +15,7 @@ namespace Barotrauma.Abilities
         private readonly bool setValue;
 
         //private readonly float maximumValue;
-
+        public override bool AllowClientSimulation => true;
         public override bool AppliesEffectOnIntervalUpdate => true;
 
         public CharacterAbilityGivePermanentStat(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)

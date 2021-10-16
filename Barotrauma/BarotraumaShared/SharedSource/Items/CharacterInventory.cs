@@ -141,10 +141,10 @@ namespace Barotrauma
                 (SlotTypes[i] == InvSlotType.Any || slots[i].ItemCount < 1);
         }
 
-        public override bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition)
+        public override bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition, int? quality = null)
         {
             return 
-                base.CanBePutInSlot(itemPrefab, i, condition) &&
+                base.CanBePutInSlot(itemPrefab, i, condition, quality) &&
                 (SlotTypes[i] == InvSlotType.Any || slots[i].ItemCount < 1);
         }
 

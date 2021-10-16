@@ -291,13 +291,16 @@ namespace Barotrauma.Items.Components
             int index = Inventory.FindIndex(containedItem);
             if (index >= 0 && index < slotRestrictions.Length)
             {
-                RelatedItem ri = slotRestrictions[index].ContainableItems?.Find(ci => ci.MatchesItem(containedItem));
-                if (ri != null)
+                if (slotRestrictions[index].ContainableItems != null)
                 {
                     activeContainedItems.RemoveAll(i => i.Item == containedItem);
-                    foreach (StatusEffect effect in ri.statusEffects)
+                    foreach (var containableItem in slotRestrictions[index].ContainableItems)
                     {
-                        activeContainedItems.Add(new ActiveContainedItem(containedItem, effect, ri.ExcludeBroken));
+                        if (!containableItem.MatchesItem(containedItem)) { continue; }
+                        foreach (StatusEffect effect in containableItem.statusEffects)
+                        {
+                            activeContainedItems.Add(new ActiveContainedItem(containedItem, effect, containableItem.ExcludeBroken));
+                        }
                     }
                 }
             }            

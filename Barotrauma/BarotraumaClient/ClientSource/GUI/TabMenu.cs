@@ -139,7 +139,7 @@ namespace Barotrauma
             GameSession.UpdateTalentNotificationIndicator(talentPointNotification);
             if (Character.Controlled is { } controlled && talentResetButton != null && talentApplyButton != null)
             {
-                int talentCount = selectedTalents.Count - controlled.Info.UnlockedTalents.Count;
+                int talentCount = selectedTalents.Count - controlled.Info.GetUnlockedTalentsInTree().Count();
                 talentResetButton.Enabled = talentApplyButton.Enabled = talentCount > 0;
                 if (talentApplyButton.Enabled && talentApplyButton.FlashTimer <= 0.0f)
                 {
@@ -1254,7 +1254,7 @@ namespace Barotrauma
                 return;
             }
 
-            selectedTalents = controlledCharacter.Info.UnlockedTalents.ToList();
+            selectedTalents = controlledCharacter.Info.GetUnlockedTalentsInTree().ToList();
 
             GUILayoutGroup talentFrameLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), talentFrameMain.RectTransform, anchor: Anchor.Center), childAnchor: Anchor.TopCenter)
             {
@@ -1541,7 +1541,7 @@ namespace Barotrauma
 
             string pointsLeft = controlledCharacter.Info.GetAvailableTalentPoints().ToString();
 
-            int talentCount = selectedTalents.Count - controlledCharacter.Info.UnlockedTalents.Count;
+            int talentCount = selectedTalents.Count - controlledCharacter.Info.GetUnlockedTalentsInTree().Count();
 
             if (talentCount > 0)
             {
@@ -1612,7 +1612,7 @@ namespace Barotrauma
         private bool ResetTalentSelection(GUIButton guiButton, object userData)
         {
             Character controlledCharacter = Character.Controlled;
-            selectedTalents = controlledCharacter.Info.UnlockedTalents.ToList();
+            selectedTalents = controlledCharacter.Info.GetUnlockedTalentsInTree().ToList();
             UpdateTalentButtons();
             return true;
         }

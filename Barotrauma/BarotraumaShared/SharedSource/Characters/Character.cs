@@ -665,6 +665,7 @@ namespace Barotrauma
         public float MaxVitality => CharacterHealth.MaxVitality;
         public float MaxHealth => MaxVitality;
         public AIState AIState => AIController is EnemyAIController enemyAI ? enemyAI.State : AIState.Idle;
+        public bool IsLatched => AIController is EnemyAIController enemyAI && enemyAI.LatchOntoAI != null && enemyAI.LatchOntoAI.IsAttached;
 
         public float Bloodloss
         {
@@ -2751,7 +2752,8 @@ namespace Barotrauma
             }
             else if (this != Controlled)
             {
-                IsRagdolled = IsKeyDown(InputType.Ragdoll);
+                wasRagdolled = IsRagdolled;
+                IsRagdolled = selfRagdolled = IsKeyDown(InputType.Ragdoll);
             }
             //Keep us ragdolled if we were forced or we're too speedy to unragdoll
             else if (allowRagdoll && (!IsRagdolled || !tooFastToUnragdoll))
@@ -2765,13 +2767,18 @@ namespace Barotrauma
                 {
                     wasRagdolled = IsRagdolled;
                     IsRagdolled = selfRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
-                    if (wasRagdolled != IsRagdolled) { ragdollingLockTimer = 0.25f; }
+                    if (wasRagdolled != IsRagdolled) { ragdollingLockTimer = 0.5f; }
                 }
             }
 
-            if (!wasRagdolled && IsRagdolled && selfRagdolled)
+            if (!wasRagdolled && IsRagdolled)
             {
-                CheckTalents(AbilityEffectType.OnSelfRagdoll);
+                if (selfRagdolled)
+                {
+                    CheckTalents(AbilityEffectType.OnSelfRagdoll);
+                }
+                // currently does not work when you are stunned, like it should
+                CheckTalents(AbilityEffectType.OnRagdoll);
             }
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
@@ -3535,11 +3542,6 @@ namespace Barotrauma
 
             if (Removed) { return new AttackResult(); }
 
-            if (attacker != null && attacker != this && GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowFriendlyFire)
-            {
-                if (attacker.TeamID == TeamID) { return new AttackResult(); }
-            }
-
             float closestDistance = 0.0f;
             foreach (Limb limb in AnimController.Limbs)
             {
@@ -3602,7 +3604,11 @@ namespace Barotrauma
 
             if (attacker != null && attacker != this && GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowFriendlyFire)
             {
-                if (attacker.TeamID == TeamID) { return new AttackResult(); }
+                if (attacker.TeamID == TeamID) 
+                {
+                    afflictions = afflictions.Where(a => !a.Prefab.IsBuff);
+                    if (!afflictions.Any()) { return new AttackResult(); }                   
+                }
             }
 
 #if CLIENT
@@ -4385,14 +4391,14 @@ namespace Barotrauma
             info.UnlockedTalents.Add(talentPrefab.Identifier);
             if (characterTalents.Any(t => t.Prefab == talentPrefab)) { return false; }
 
+#if SERVER
+            GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.UpdateTalents });
+#endif
             CharacterTalent characterTalent = new CharacterTalent(talentPrefab, this);
             characterTalent.ActivateTalent(addingFirstTime);
             characterTalents.Add(characterTalent);
             characterTalent.AddedThisRound = addingFirstTime;
 
-#if SERVER
-            GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.UpdateTalents });
-#endif
             if (addingFirstTime)
             {
                 OnTalentGiven(talentPrefab.Identifier);

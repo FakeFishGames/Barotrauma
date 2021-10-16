@@ -269,7 +269,7 @@ namespace Barotrauma
                         {
                             var waypoint = CurrentPath.Nodes[i];
                             float directDistance = Vector2.DistanceSquared(character.WorldPosition, waypoint.WorldPosition);
-                            if (directDistance > (pathDistance * pathDistance) || Submarine.PickBody(host.SimPosition, waypoint.SimPosition, collisionCategory: Physics.CollisionLevel) != null)
+                            if (directDistance > (pathDistance * pathDistance) || Submarine.PickBody(host.SimPosition, waypoint.SimPosition, collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) != null)
                             {
                                 pathDistance -= CurrentPath.GetLength(startIndex: i - 1, endIndex: i);
                                 continue;
