@@ -52,8 +52,24 @@ namespace Barotrauma.Items.Components
 
         public override bool ShouldDrawHUD(Character character)
         {
-            if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) return false;
-            return item.ConditionPercentage < RepairThreshold || character.IsTraitor && item.ConditionPercentage > MinSabotageCondition || (CurrentFixer == character && (!item.IsFullCondition || (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition))) || IsTinkerable(character);
+            if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) { return false; }
+            if (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition) { return true; }
+
+            float maxRepairConditionMultiplier = GetMaxRepairConditionMultiplier(character);
+            if (item.Condition / maxRepairConditionMultiplier < RepairThreshold) { return true; }
+
+            if (CurrentFixer == character)
+            {
+                float condition = item.Condition / item.MaxRepairConditionMultiplier;
+                float maxCondition = item.MaxCondition / item.MaxRepairConditionMultiplier;
+                if (condition < maxCondition * maxRepairConditionMultiplier)
+                {
+                    return true;
+                }
+            }
+            if (IsTinkerable(character)) { return true; }
+
+            return false;
         }
 
         partial void InitProjSpecific(XElement element)
@@ -344,6 +360,7 @@ namespace Barotrauma.Items.Components
             ushort currentFixerID = msg.ReadUInt16();
             currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
             CurrentFixer = currentFixerID != 0 ? Entity.FindEntityByID(currentFixerID) as Character : null;
+            item.MaxRepairConditionMultiplier = GetMaxRepairConditionMultiplier(CurrentFixer);
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)

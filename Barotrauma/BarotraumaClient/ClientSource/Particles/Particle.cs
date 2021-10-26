@@ -378,6 +378,7 @@ namespace Barotrauma.Particles
                     handleCollision(gapFound, collisionNormal);
                 }
 
+                collisionNormal = Vector2.Zero;
                 if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < hullRect.X)
                 {
                     if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }

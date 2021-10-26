@@ -88,6 +88,28 @@ namespace Barotrauma
                             targetHull = d.Item.CurrentHull;
                             break;
                         }
+                        if (targetHull != null && !targetHull.IsTaggedAirlock())
+                        {
+                            // Target the closest airlock
+                            float closestDist = 0;
+                            Hull airlock = null;
+                            foreach (Hull hull in Hull.hullList)
+                            {
+                                if (hull.Submarine != targetHull.Submarine) { continue; }
+                                if (!hull.IsTaggedAirlock()) { continue; }
+                                float dist = Vector2.DistanceSquared(targetHull.Position, hull.Position);
+                                if (airlock == null || closestDist <= 0 || dist < closestDist)
+                                {
+                                    airlock = hull;
+                                    closestDist = dist;
+                                }
+                                
+                            }
+                            if (airlock != null)
+                            {
+                                targetHull = airlock;
+                            }
+                        }
                         if (targetHull != null)
                         {
                             RemoveSubObjective(ref moveInCaveObjective);
@@ -95,7 +117,8 @@ namespace Barotrauma
                             TryAddSubObjective(ref moveInsideObjective,
                                 constructor: () => new AIObjectiveGoTo(targetHull, character, objectiveManager)
                                 {
-                                    AllowGoingOutside = true
+                                    AllowGoingOutside = true,
+                                    endNodeFilter = n => n.Waypoint.Submarine == targetHull.Submarine
                                 },
                                 onCompleted: () => RemoveSubObjective(ref moveInsideObjective),
                                 onAbandon: () => Abandon = true);

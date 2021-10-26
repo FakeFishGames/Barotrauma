@@ -6,6 +6,7 @@ namespace Barotrauma
     {
         public override void ClientReadInitial(IReadMessage msg)
         {
+            base.ClientReadInitial(msg);
             byte monsterCount = msg.ReadByte();
             for (int i = 0; i < monsterCount; i++)
             {

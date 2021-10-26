@@ -11,7 +11,7 @@ namespace Barotrauma.Networking
         /// <summary>
         /// How much skills drop towards the job's default skill levels when respawning midround in the campaign
         /// </summary>
-        const float SkillReductionOnCampaignMidroundRespawn = 0.5f;
+        const float SkillReductionOnCampaignMidroundRespawn = 0.75f;
 
         private DateTime despawnTime;
 

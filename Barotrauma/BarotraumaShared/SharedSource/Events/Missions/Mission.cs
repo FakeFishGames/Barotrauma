@@ -347,7 +347,7 @@ namespace Barotrauma
             if (!(GameMain.GameSession.GameMode is CampaignMode campaign)) { return; }
             int reward = GetReward(Submarine.MainSub);
 
-            float baseExperienceGain = reward * 0.1f;
+            float baseExperienceGain = reward * 0.09f;
 
             float difficultyMultiplier = 1 + level.Difficulty / 100f;
             baseExperienceGain *= difficultyMultiplier;

@@ -4579,9 +4579,9 @@ namespace Barotrauma
 
         private readonly Dictionary<string, float> abilityResistances = new Dictionary<string, float>();
 
-        public float GetAbilityResistance(string resistanceId)
+        public float GetAbilityResistance(AfflictionPrefab affliction)
         {
-            return abilityResistances.TryGetValue(resistanceId, out float value) ? value : 1f;
+            return abilityResistances.TryGetValue(affliction.Identifier, out float value) ? value : abilityResistances.TryGetValue(affliction.AfflictionType, out float typeValue) ? typeValue : 1f;
         }
 
         public void ChangeAbilityResistance(string resistanceId, float value)

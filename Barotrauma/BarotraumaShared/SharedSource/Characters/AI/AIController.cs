@@ -426,30 +426,35 @@ namespace Barotrauma
             }
             if (EscapeTarget != null)
             {
+                var door = EscapeTarget.ConnectedDoor;
+                bool isClosedDoor = door != null && !door.IsOpen;
                 Vector2 diff = EscapeTarget.WorldPosition - Character.WorldPosition;
                 float sqrDist = diff.LengthSquared();
-                if (Character.CurrentHull == null || sqrDist < MathUtils.Pow2(50) || pathSteering == null || IsCurrentPathUnreachable || IsCurrentPathFinished)
+                bool isClose = sqrDist < MathUtils.Pow2(100);
+                if (Character.CurrentHull == null || isClose && !isClosedDoor || pathSteering == null || IsCurrentPathUnreachable || IsCurrentPathFinished)
                 {
                     // Very close to the target, outside, or at the end of the path -> try to steer through the gap
                     SteeringManager.Reset();
                     pathSteering?.ResetPath();
-                    if (sqrDist < MathUtils.Pow2(50))
-                    {
-                        // Very close -> just keep steering forward
-                        var forward = VectorExtensions.Forward(Character.AnimController.Collider.Rotation + MathHelper.PiOver2);
-                        SteeringManager.SteeringManual(deltaTime, forward);
-                    }
-                    else if (Character.CurrentHull == null)
+                    Vector2 dir = Vector2.Normalize(diff);
+                    if (Character.CurrentHull == null || isClose)
                     {
                         // Outside -> steer away from the target
-                        SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(-diff));
+                        if (EscapeTarget.FlowTargetHull != null)
+                        {
+                            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(EscapeTarget.WorldPosition - EscapeTarget.FlowTargetHull.WorldPosition));
+                        }
+                        else
+                        {
+                            SteeringManager.SteeringManual(deltaTime, -dir);
+                        }
                     }
                     else
                     {
                         // Still inside -> steer towards the target
-                        SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(diff));
+                        SteeringManager.SteeringManual(deltaTime, dir);
                     }
-                    return sqrDist < MathUtils.Pow2(200);
+                    return sqrDist < MathUtils.Pow2(250);
                 }
                 else if (pathSteering != null)
                 {

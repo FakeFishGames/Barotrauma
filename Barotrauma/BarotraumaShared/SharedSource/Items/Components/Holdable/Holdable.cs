@@ -781,7 +781,7 @@ namespace Barotrauma.Items.Components
                 if (!aim)
                 {
                     var rope = GetRope();
-                    if (rope != null && rope.SnapWhenNotAimed)
+                    if (rope != null && rope.SnapWhenNotAimed && rope.Item.ParentInventory == null)
                     {
                         rope.Snap();
                     }

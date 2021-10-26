@@ -1287,9 +1287,11 @@ namespace Barotrauma
             GUITextBlock traitBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), traitString, font: GUI.SmallFont);
             traitBlock.RectTransform.NonScaledSize = traitSize.Pad(traitBlock.Padding).ToPoint();
 
+            GUIFrame endocrineFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.35f), nameLayout.RectTransform, Anchor.BottomCenter), style: null);
+
             if (!(GameMain.NetworkMember is null))
             {
-                GUIButton newCharacterBox = new GUIButton(new RectTransform(Vector2.One, nameLayout.RectTransform, Anchor.BottomCenter), text: GameMain.NetLobbyScreen.CampaignCharacterDiscarded ? TextManager.Get("settings") : TextManager.Get("createnew"))
+                GUIButton newCharacterBox = new GUIButton(new RectTransform(new Vector2(0.675f, 1f), endocrineFrame.RectTransform, Anchor.TopLeft), text: GameMain.NetLobbyScreen.CampaignCharacterDiscarded ? TextManager.Get("settings") : TextManager.Get("createnew"))
                 {
                     IgnoreLayoutGroups = true
                 };
@@ -1334,6 +1336,16 @@ namespace Barotrauma
                         }
                     };
                 }
+            }
+
+            IEnumerable<TalentPrefab> endocrineTalents = info.GetEndocrineTalents().Select(e => TalentPrefab.TalentPrefabs.Find(c => c.Identifier.Equals(e, StringComparison.OrdinalIgnoreCase)));
+
+            if (endocrineTalents.Count() > 0)
+            {
+                GUIImage endocrineIcon = new GUIImage(new RectTransform(new Vector2(0.275f, 1f), endocrineFrame.RectTransform, anchor: Anchor.TopRight, scaleBasis: ScaleBasis.Normal), style: "EndocrineReminderIcon")
+                {
+                    ToolTip = $"{TextManager.Get("afflictionname.endocrineboost")}\n\n{string.Join(", ", endocrineTalents.Select(e => e.DisplayName))}"
+                };
             }
 
             GUILayoutGroup skillLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 1f), talentInfoLayoutGroup.RectTransform)) { Stretch = true };

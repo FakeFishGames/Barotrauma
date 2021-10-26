@@ -95,6 +95,10 @@ namespace Barotrauma.Items.Components
                     }
                 }
                 snapped = value;
+                if (!snapped)
+                {
+                    snapTimer = 0;
+                }
             }
         }
 
@@ -113,6 +117,7 @@ namespace Barotrauma.Items.Components
             System.Diagnostics.Debug.Assert(target != null);
             this.source = source;
             this.target = target;
+            Snapped = false;
             ApplyStatusEffects(ActionType.OnUse, 1.0f, worldPosition: item.WorldPosition);
             IsActive = true;
         }
@@ -148,6 +153,7 @@ namespace Barotrauma.Items.Components
 #endif
             var projectile = target.GetComponent<Projectile>();
             if (projectile == null) { return; }
+
             if (SnapOnCollision)
             {
                 raycastTimer += deltaTime;

@@ -84,6 +84,7 @@ namespace Barotrauma.Items.Components
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
             if (target == null || target.Removed) { return; }
+            if (target.ParentInventory != null) { return; }
 
             Vector2 startPos = GetSourcePos();
             startPos.Y = -startPos.Y;

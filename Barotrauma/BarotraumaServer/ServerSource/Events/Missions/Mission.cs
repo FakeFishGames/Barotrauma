@@ -16,7 +16,10 @@ namespace Barotrauma
             GameServer.Log(TextManager.Get("MissionInfo") + ": " + header + " - " + message, ServerLog.MessageType.ServerMessage);
         }
 
-        public abstract void ServerWriteInitial(IWriteMessage msg, Client c);
+        public virtual void ServerWriteInitial(IWriteMessage msg, Client c)
+        {
+            msg.Write((ushort)State);
+        }
 
         public virtual void ServerWrite(IWriteMessage msg)
         {

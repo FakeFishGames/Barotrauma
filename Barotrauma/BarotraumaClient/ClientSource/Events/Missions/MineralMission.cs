@@ -12,6 +12,7 @@ namespace Barotrauma
     {
         public override void ClientReadInitial(IReadMessage msg)
         {
+            base.ClientReadInitial(msg);
             byte caveCount = msg.ReadByte();
             for (int i = 0; i < caveCount; i++)
             {

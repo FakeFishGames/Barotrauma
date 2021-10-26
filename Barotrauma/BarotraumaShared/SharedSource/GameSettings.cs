@@ -942,6 +942,7 @@ namespace Barotrauma
             }
 
             doc.Root.Add(
+                new XAttribute("gameversion", GameMain.Version.ToString()),
                 new XAttribute("language", TextManager.Language),
                 new XAttribute("masterserverurl", MasterServerUrl),
                 new XAttribute("autocheckupdates", AutoCheckUpdates),

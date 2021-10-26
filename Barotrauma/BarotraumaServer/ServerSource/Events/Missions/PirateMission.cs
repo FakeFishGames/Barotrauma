@@ -9,6 +9,8 @@ namespace Barotrauma
     {
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
+            base.ServerWriteInitial(msg, c);
+
             // duplicate code from escortmission, should possibly be combined, though additional loot items might be added so maybe not
             if (characters.Count == 0)
             {

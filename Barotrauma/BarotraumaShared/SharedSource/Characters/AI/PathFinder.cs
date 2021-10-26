@@ -198,7 +198,7 @@ namespace Barotrauma
                 }
                 float xDiff = Math.Abs(start.X - node.TempPosition.X);
                 float yDiff = Math.Abs(start.Y - node.TempPosition.Y);
-                if (InsideSubmarine)
+                if (InsideSubmarine && !(node.Waypoint.Submarine?.Info?.IsRuin ?? false))
                 {
                     //higher cost for vertical movement when inside the sub
                     if (yDiff > 1.0f && node.Waypoint.Ladders == null && node.Waypoint.Stairs == null)
@@ -214,6 +214,13 @@ namespace Barotrauma
 
                 //much higher cost to waypoints that are outside
                 if (node.Waypoint.CurrentHull == null && ApplyPenaltyToOutsideNodes) { node.TempDistance *= 10.0f; }
+
+                //optimization:
+                //node extremely far, don't try to use it as a start node
+                if (node.TempDistance > 800.0f)
+                {
+                    continue;
+                }
 
                 //prefer nodes that are closer to the end position
                 node.TempDistance += (Math.Abs(end.X - node.TempPosition.X) + Math.Abs(end.Y - node.TempPosition.Y)) / 100.0f;
@@ -248,19 +255,17 @@ namespace Barotrauma
             PathNode startNode = null;
             foreach (PathNode node in sortedNodes)
             {
-                if (startNode == null || node.TempDistance < startNode.TempDistance)
+                if (nodeFilter != null && !nodeFilter(node)) { continue; }
+                if (startNodeFilter != null && !startNodeFilter(node)) { continue; }
+                // Always check the visibility for the start node
+                if (!IsWaypointVisible(node, start)) { continue; }
+                if (node.IsBlocked()) { continue; }
+                if (node.Waypoint.ConnectedGap != null)
                 {
-                    if (nodeFilter != null && !nodeFilter(node)) { continue; }
-                    if (startNodeFilter != null && !startNodeFilter(node)) { continue; }
-                    // Always check the visibility for the start node
-                    if (!IsWaypointVisible(node, start)) { continue; }
-                    if (node.IsBlocked()) { continue; }
-                    if (node.Waypoint.ConnectedGap != null)
-                    {
-                        if (!CanFitThroughGap(node.Waypoint.ConnectedGap, minGapSize)) { continue; }
-                    }
-                    startNode = node;
+                    if (!CanFitThroughGap(node.Waypoint.ConnectedGap, minGapSize)) { continue; }
                 }
+                startNode = node;
+                break;                
             }
 
             if (startNode == null)
@@ -301,19 +306,17 @@ namespace Barotrauma
             PathNode endNode = null;
             foreach (PathNode node in sortedNodes)
             {
-                if (endNode == null || node.TempDistance < endNode.TempDistance)
+                if (nodeFilter != null && !nodeFilter(node)) { continue; }
+                if (endNodeFilter != null && !endNodeFilter(node)) { continue; }
+                // Only check the visibility for the end node when allowed (fix leaks)
+                if (!IsWaypointVisible(node, end, checkVisibility: checkVisibility)) { continue; }
+                if (node.IsBlocked()) { continue; }
+                if (node.Waypoint.ConnectedGap != null)
                 {
-                    if (nodeFilter != null && !nodeFilter(node)) { continue; }
-                    if (endNodeFilter != null && !endNodeFilter(node)) { continue; }
-                    // Only check the visibility for the end node when allowed (fix leaks)
-                    if (!IsWaypointVisible(node, end, checkVisibility: checkVisibility)) { continue; }
-                    if (node.IsBlocked()) { continue; }
-                    if (node.Waypoint.ConnectedGap != null)
-                    {
-                        if (!CanFitThroughGap(node.Waypoint.ConnectedGap, minGapSize)) { continue; }
-                    }
-                    endNode = node;
+                    if (!CanFitThroughGap(node.Waypoint.ConnectedGap, minGapSize)) { continue; }
                 }
+                endNode = node;
+                break;
             }
 
             if (endNode == null)

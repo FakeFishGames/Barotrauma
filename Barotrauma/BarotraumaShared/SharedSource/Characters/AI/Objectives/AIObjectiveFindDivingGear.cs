@@ -39,6 +39,10 @@ namespace Barotrauma
                 return;
             }
             targetItem = character.Inventory.FindItemByTag(gearTag, true);
+            if (targetItem == null && gearTag == LIGHT_DIVING_GEAR)
+            {
+                targetItem = character.Inventory.FindItemByTag(HEAVY_DIVING_GEAR, true);
+            }
             if (targetItem == null || !character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.Head | InvSlotType.InnerClothes) && targetItem.ContainedItems.Any(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > 0))
             {
                 TryAddSubObjective(ref getDivingGear, () =>
@@ -74,10 +78,7 @@ namespace Barotrauma
             }
             else
             {
-                // Seek oxygen that has at least 10% condition left, if we are inside a friendly sub.
-                // The margin helps us to survive, because we might need some oxygen before we can find more oxygen.
-                // When we are venturing outside of our sub, let's just suppose that we have enough oxygen with us and optimize it so that we don't keep switching off half used tanks.
-                float min = character.Submarine != Submarine.MainSub ? 0.01f : MIN_OXYGEN;
+                float min = GetMinOxygen(character);
                 if (targetItem.OwnInventory != null && targetItem.OwnInventory.AllItems.None(it => it != null && it.HasTag(OXYGEN_SOURCE) && it.Condition > min))
                 {
                     TryAddSubObjective(ref getOxygen, () =>
@@ -159,6 +160,21 @@ namespace Barotrauma
             getDivingGear = null;
             getOxygen = null;
             targetItem = null;
+        }
+
+        public static float GetMinOxygen(Character character)
+        {
+            // Seek oxygen that has at least 10% condition left, if we are inside a friendly sub.
+            // The margin helps us to survive, because we might need some oxygen before we can find more oxygen.
+            // When we are venturing outside of our sub, let's just suppose that we have enough oxygen with us and optimize it so that we don't keep switching off half used tanks.
+            float min = 0.01f;
+            float minOxygen = character.IsInFriendlySub ? MIN_OXYGEN : min;
+            if (minOxygen > min && character.Inventory.AllItems.Any(i => i.HasTag("oxygensource") && i.ConditionPercentage >= minOxygen))
+            {
+                // There's a valid oxygen tank in the inventory -> no need to swap the tank too early.
+                minOxygen = min;
+            }
+            return minOxygen;
         }
     }
 }

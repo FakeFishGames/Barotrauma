@@ -198,7 +198,11 @@ namespace Barotrauma.Items.Components
                     Vector2 barrelPos = TransformedBarrelPos + item.body.SimPosition;
                     float rotation = (Item.body.Dir == 1.0f) ? Item.body.Rotation : Item.body.Rotation - MathHelper.Pi;
                     float spread = GetSpread(character) * Rand.Range(-0.5f, 0.5f);
-                    LastProjectile?.Item.GetComponent<Rope>()?.Snap();
+                    var lastProjectile = LastProjectile;
+                    if (lastProjectile != projectile)
+                    {
+                        lastProjectile?.Item.GetComponent<Rope>()?.Snap();
+                    }
                     float damageMultiplier = 1f + item.GetQualityModifier(Quality.StatType.AttackMultiplier);
                     projectile.Shoot(character, character.AnimController.AimSourceSimPos, barrelPos, rotation + spread, ignoredBodies: limbBodies.ToList(), createNetworkEvent: false, damageMultiplier);
                     projectile.Item.GetComponent<Rope>()?.Attach(Item, projectile.Item);

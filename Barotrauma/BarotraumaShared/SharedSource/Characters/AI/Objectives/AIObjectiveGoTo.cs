@@ -260,7 +260,7 @@ namespace Barotrauma
                         }
                     }
                     bool needsEquipment = false;
-                    float minOxygen = character.Submarine == null ? 0 : AIObjectiveFindDivingGear.MIN_OXYGEN;
+                    float minOxygen = AIObjectiveFindDivingGear.GetMinOxygen(character);
                     if (needsDivingSuit)
                     {
                         needsEquipment = !HumanAIController.HasDivingSuit(character, minOxygen);
@@ -374,7 +374,7 @@ namespace Barotrauma
                     if (checkScooterTimer <= 0)
                     {
                         useScooter = false;
-                        checkScooterTimer = checkScooterTime;
+                        checkScooterTimer = checkScooterTime * Rand.Range(0.75f, 1.25f);
                         string scooterTag = "scooter";
                         string batteryTag = "mobilebattery";
                         Item scooter = null;
@@ -525,9 +525,22 @@ namespace Barotrauma
                 {
                     character.CursorPosition -= character.Submarine.Position;
                 }
-                Vector2 dir = Vector2.Normalize(character.CursorPosition - character.Position);
-                if (!MathUtils.IsValid(dir)) { dir = Vector2.UnitY; }
-                SteeringManager.SteeringManual(1.0f, dir);
+                Vector2 diff = character.CursorPosition - character.Position;
+                Vector2 dir = Vector2.Normalize(diff);
+                float sqrDist = diff.LengthSquared();
+                if (sqrDist > MathUtils.Pow2(CloseEnough * 1.5f))
+                {
+                    SteeringManager.SteeringManual(1.0f, dir);
+                }
+                else
+                {
+                    float dot = Vector2.Dot(dir, VectorExtensions.Forward(character.AnimController.Collider.Rotation + MathHelper.PiOver2));
+                    bool isFacing = dot > 0.9f;
+                    if (!isFacing && sqrDist > MathUtils.Pow2(CloseEnough))
+                    {
+                        SteeringManager.SteeringManual(1.0f, dir);
+                    }
+                }
                 character.SetInput(InputType.Aim, false, true);
                 character.SetInput(InputType.Shoot, false, true);
             }
@@ -535,7 +548,7 @@ namespace Barotrauma
 
         private bool useScooter;
         private float checkScooterTimer;
-        private readonly float checkScooterTime = 0.2f;
+        private readonly float checkScooterTime = 0.5f;
 
         public Hull GetTargetHull() => GetTargetHull(Target);
 

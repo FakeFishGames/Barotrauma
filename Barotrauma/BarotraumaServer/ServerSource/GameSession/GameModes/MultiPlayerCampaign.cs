@@ -214,7 +214,7 @@ namespace Barotrauma
                     c.Character = null;
                 }
 
-                if (c.HasSpawned && c.CharacterInfo != null && c.CharacterInfo.CauseOfDeath != null && c.CharacterInfo.CauseOfDeath?.Type != CauseOfDeathType.Disconnected)
+                if (c.HasSpawned && c.CharacterInfo != null && c.CharacterInfo.CauseOfDeath != null && c.CharacterInfo.CauseOfDeath.Type != CauseOfDeathType.Disconnected)
                 {
                     //the client has opted to spawn this round with Reaper's Tax
                     if (c.WaitForNextRoundRespawn.HasValue && !c.WaitForNextRoundRespawn.Value)
@@ -227,7 +227,7 @@ namespace Barotrauma
                 }
                 var characterInfo = c.Character?.Info ?? c.CharacterInfo;
                 if (characterInfo == null) { continue; }
-                if (characterInfo.CauseOfDeath?.Type != CauseOfDeathType.Disconnected)
+                if (c.CharacterInfo.CauseOfDeath != null && characterInfo.CauseOfDeath.Type != CauseOfDeathType.Disconnected)
                 {
                     RespawnManager.ReduceCharacterSkills(characterInfo);
                 }

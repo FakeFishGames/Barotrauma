@@ -102,6 +102,9 @@ namespace Barotrauma
             State = msg.ReadInt16();
         }
 
-        public abstract void ClientReadInitial(IReadMessage msg);
+        public virtual void ClientReadInitial(IReadMessage msg)
+        {
+            state = msg.ReadInt16();
+        }
     }
 }

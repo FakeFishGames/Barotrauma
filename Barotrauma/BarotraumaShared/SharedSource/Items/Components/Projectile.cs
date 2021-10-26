@@ -614,10 +614,17 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            //target very far from the item -> update the item's transform to make sure it's inside the same sub as the target (or outside)
+            if (Math.Abs(stickJoint.JointTranslation) > 100.0f)
+            {
+                item.UpdateTransform();
+            }
+
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
                 if (StickTargetRemoved() ||
-                    (!StickPermanently && (stickJoint.JointTranslation < stickJoint.LowerLimit * 0.9f || stickJoint.JointTranslation > stickJoint.UpperLimit * 0.9f)))
+                    (!StickPermanently && (stickJoint.JointTranslation < stickJoint.LowerLimit * 0.9f || stickJoint.JointTranslation > stickJoint.UpperLimit * 0.9f)) ||
+                    Math.Abs(stickJoint.JointTranslation) > 100.0f) //failsafe unstick if the target is still extremely far
                 {
                     Unstick();
 #if SERVER

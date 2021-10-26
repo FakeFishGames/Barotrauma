@@ -7,6 +7,7 @@ namespace Barotrauma
     {
         public override void ClientReadInitial(IReadMessage msg)
         {
+            base.ClientReadInitial(msg);
             bool usedExistingItem = msg.ReadBoolean();
             if (usedExistingItem)
             {

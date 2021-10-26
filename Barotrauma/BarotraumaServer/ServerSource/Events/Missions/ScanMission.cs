@@ -6,6 +6,7 @@ namespace Barotrauma
     {
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
+            base.ServerWriteInitial(msg, c);
             msg.Write((ushort)startingItems.Count);
             foreach (var item in startingItems)
             {

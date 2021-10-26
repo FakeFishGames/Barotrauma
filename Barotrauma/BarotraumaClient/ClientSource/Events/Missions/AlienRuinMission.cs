@@ -6,6 +6,7 @@ namespace Barotrauma
     {
         public override void ClientReadInitial(IReadMessage msg)
         {
+            base.ClientReadInitial(msg);
             existingTargets.Clear();
             spawnedTargets.Clear();
             allTargets.Clear();

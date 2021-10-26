@@ -406,15 +406,7 @@ namespace Barotrauma.Items.Components
             fixDuration /= 1 + CurrentFixer.GetStatValue(StatTypes.RepairSpeed) + currentRepairItem?.Prefab.AddedRepairSpeedMultiplier ?? 0f;
             fixDuration /= 1 + item.GetQualityModifier(Quality.StatType.RepairSpeed);
 
-            // kind of rough to keep this in update, but seems most robust
-            if (requiredSkills.Any(s => s != null && s.Identifier.Equals("mechanical", StringComparison.OrdinalIgnoreCase)))
-            {
-                item.MaxRepairConditionMultiplier = 1 + CurrentFixer.GetStatValue(StatTypes.MaxRepairConditionMultiplierMechanical);
-            }
-            if (requiredSkills.Any(s => s != null && s.Identifier.Equals("electrical", StringComparison.OrdinalIgnoreCase)))
-            {
-                item.MaxRepairConditionMultiplier = 1 + CurrentFixer.GetStatValue(StatTypes.MaxRepairConditionMultiplierElectrical);
-            }
+            item.MaxRepairConditionMultiplier = GetMaxRepairConditionMultiplier(CurrentFixer);
 
             if (currentFixerAction == FixActions.Repair)
             {
@@ -487,6 +479,21 @@ namespace Barotrauma.Items.Components
             {
                 throw new NotImplementedException(currentFixerAction.ToString());
             }
+        }
+
+        private float GetMaxRepairConditionMultiplier(Character character)
+        {
+            if (character == null) { return 1.0f; }
+            // kind of rough to keep this in update, but seems most robust
+            if (requiredSkills.Any(s => s != null && s.Identifier.Equals("mechanical", StringComparison.OrdinalIgnoreCase)))
+            {
+                return 1 + character.GetStatValue(StatTypes.MaxRepairConditionMultiplierMechanical);
+            }
+            if (requiredSkills.Any(s => s != null && s.Identifier.Equals("electrical", StringComparison.OrdinalIgnoreCase)))
+            {
+                return 1 + character.GetStatValue(StatTypes.MaxRepairConditionMultiplierElectrical);
+            }
+            return 1.0f;
         }
 
         private bool IsTinkerable(Character character)

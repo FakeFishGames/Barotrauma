@@ -158,7 +158,7 @@ namespace Barotrauma.Items.Components
             if (!CanBeCombinedWith(otherGeneticMaterial)) { return false; }
 
             float conditionIncrease = Rand.Range(ConditionIncreaseOnCombineMin, ConditionIncreaseOnCombineMax);
-            conditionIncrease *= 1.0f + user.GetStatValue(StatTypes.GeneticMaterialRefineBonus);
+            conditionIncrease += user.GetStatValue(StatTypes.GeneticMaterialRefineBonus);
             if (item.Prefab == otherGeneticMaterial.item.Prefab)
             {
                 item.Condition = Math.Max(item.Condition, otherGeneticMaterial.item.Condition) + conditionIncrease;

@@ -226,6 +226,15 @@ namespace Barotrauma
             return UnlockedTalents.Where(t => talentTree.TalentIsInTree(t));
         }
 
+        /// <summary>
+        /// Endocrine boosters can unlock talents outside the user's talent tree. This method is used to specifically get them
+        /// </summary>
+        public IEnumerable<string> GetEndocrineTalents()
+        {
+            if (!TalentTree.JobTalentTrees.TryGetValue(Job.Prefab.Identifier, out TalentTree talentTree)) { return Enumerable.Empty<string>(); }
+
+            return UnlockedTalents.Where(t => !talentTree.TalentIsInTree(t));
+        }
 
         public int AdditionalTalentPoints { get; set; }
 
@@ -1233,10 +1242,9 @@ namespace Barotrauma
             {
                 Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplier);
             }
-            experienceGainMultiplier.Value += Character.GetStatValue(StatTypes.ExperienceGainMultiplier);
+            experienceGainMultiplier.Value += Character?.GetStatValue(StatTypes.ExperienceGainMultiplier) ?? 0;
 
             amount = (int)(amount * experienceGainMultiplier.Value);
-
             if (amount < 0) { return; }
 
             ExperiencePoints += amount;
@@ -1252,8 +1260,8 @@ namespace Barotrauma
             OnExperienceChanged(prevAmount, ExperiencePoints);
         }
 
-        const int BaseExperienceRequired = 50;
-        const int AddedExperienceRequiredPerLevel = 450;
+        const int BaseExperienceRequired = -50;
+        const int AddedExperienceRequiredPerLevel = 550;
 
         public int GetTotalTalentPoints()
         {

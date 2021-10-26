@@ -173,7 +173,7 @@ namespace Barotrauma
             }
         }
 
-        private void LoadKeyBinds(XElement element)
+        private void LoadKeyBinds(XElement element, Version gameVersion)
         {
             foreach (XAttribute attribute in element.Attributes())
             {
@@ -183,7 +183,6 @@ namespace Barotrauma
                     keyMapping[(int)InputType.TakeHalfFromInventorySlot] = new KeyOrMouse(Keys.LeftShift);
                     keyMapping[(int)InputType.TakeOneFromInventorySlot] = new KeyOrMouse(Keys.LeftControl);
                 }
-
                 if (!Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType)) { continue; }
 
                 if (int.TryParse(attribute.Value.ToString(), out int mouseButtonInt))
@@ -198,6 +197,13 @@ namespace Barotrauma
                 {
                     keyMapping[(int)inputType] = new KeyOrMouse(key);
                 }
+            }
+            //v0.15 added creature attacks that can be used with a character capable of speaking (with mudraptor or spineling genes),
+            //which causes the previous attack keybind R to conflict with the radio keybind
+            // -> automatically change it to F
+            if (gameVersion < new Version(0, 15, 0, 0))
+            {
+                keyMapping[(int)InputType.Attack] = new KeyOrMouse(Keys.F);
             }
         }
 
@@ -223,10 +229,12 @@ namespace Barotrauma
 
         private void LoadControls(XDocument doc)
         {
+            var gameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
+
             XElement keyMapping = doc.Root.Element("keymapping");
             if (keyMapping != null)
             {
-                LoadKeyBinds(keyMapping);
+                LoadKeyBinds(keyMapping, gameVersion);
             }
 
             XElement inventoryKeyMapping = doc.Root.Element("inventorykeymapping");

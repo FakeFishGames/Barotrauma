@@ -1323,7 +1323,7 @@ namespace Barotrauma
                 }
 
                 Submarine = parentInventory.Owner.Submarine;
-                if (body != null) body.Submarine = Submarine;
+                if (body != null) { body.Submarine = Submarine; }
 
                 return CurrentHull;
             }
@@ -1733,10 +1733,18 @@ namespace Barotrauma
         public void UpdateTransform()
         {
             if (body == null) { return; }
-
             Submarine prevSub = Submarine;
 
-            FindHull();
+            var projectile = GetComponent<Projectile>();
+            if (projectile?.StickTarget?.UserData is Limb limb)
+            {
+                Submarine = body.Submarine = limb.character?.Submarine;
+                currentHull = limb.character?.CurrentHull;
+            }
+            else
+            {
+                FindHull();
+            }
 
             if (Submarine == null && prevSub != null)
             {
@@ -1813,6 +1821,12 @@ namespace Barotrauma
         private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
             if (transformDirty) { return false; }
+
+            var projectile = GetComponent<Projectile>();
+            if (projectile?.IgnoredBodies != null)
+            {
+                if (projectile.IgnoredBodies.Contains(f2.Body)) { return false; }
+            }
 
             contact.GetWorldManifold(out Vector2 normal, out _);
             if (contact.FixtureA.Body == f1.Body) { normal = -normal; }

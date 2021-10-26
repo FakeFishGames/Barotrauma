@@ -1103,7 +1103,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime, Camera cam)
         {
-            if (!character.Enabled || Frozen || Invalid) { return; }
+            if (!character.Enabled || character.Removed || Frozen || Invalid || Collider == null || Collider.Removed) { return; }
 
             while (impactQueue.Count > 0)
             {

@@ -1964,11 +1964,11 @@ namespace Barotrauma
                 Vector2 entranceDir = Vector2.Zero;
                 if (g.IsHorizontal)
                 {
-                    entranceDir = Vector2.UnitX * Math.Sign(g.WorldPosition.X - g.linkedTo[0].WorldPosition.X);
+                    entranceDir = Vector2.UnitX * 2 * Math.Sign(g.WorldPosition.X - g.linkedTo[0].WorldPosition.X);
                 }
                 else
                 {
-                    entranceDir = Vector2.UnitY * Math.Sign(g.WorldPosition.Y - g.linkedTo[0].WorldPosition.Y);
+                    entranceDir = Vector2.UnitY * 2 * Math.Sign(g.WorldPosition.Y - g.linkedTo[0].WorldPosition.Y);
                 }
                 var entranceWayPoint = new WayPoint(g.WorldPosition + entranceDir * 64.0f, SpawnType.Path, null)
                 {

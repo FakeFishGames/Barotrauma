@@ -494,15 +494,12 @@ namespace Barotrauma.Items.Components
             {
                 float prevFireTimer = fireTimer;
                 fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.MaxCondition);
-
-
 #if SERVER
                 if (fireTimer > Math.Min(5.0f, FireDelay / 2) && blameOnBroken?.Character?.SelectedConstruction == item)
                 {
-                    GameMain.Server.KarmaManager.OnReactorOverHeating(blameOnBroken.Character, deltaTime);
+                    GameMain.Server.KarmaManager.OnReactorOverHeating(item, blameOnBroken.Character, deltaTime);
                 }
 #endif
-
                 if (fireTimer >= FireDelay && prevFireTimer < fireDelay)
                 {
                     new FireSource(item.WorldPosition);
@@ -591,7 +588,7 @@ namespace Barotrauma.Items.Components
             GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
             if (GameMain.Server != null)
             {
-                GameMain.Server.KarmaManager.OnReactorMeltdown(blameOnBroken?.Character);
+                GameMain.Server.KarmaManager.OnReactorMeltdown(item, blameOnBroken?.Character);
             }
 #endif
         }

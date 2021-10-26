@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
@@ -200,10 +201,14 @@ namespace Barotrauma
                     currentTarget = target;
                     Vector2 currentPos = host.SimPosition;
                     pathFinder.InsideSubmarine = character.Submarine != null && !character.Submarine.Info.IsRuin;
-                    pathFinder.ApplyPenaltyToOutsideNodes = character.Submarine != null && character.PressureProtection <= 0;
+                    pathFinder.ApplyPenaltyToOutsideNodes = character.Submarine !=  null && character.PressureProtection <= 0;
                     var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", minGapSize, startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility);
                     bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null || character.Submarine != null && findPathTimer < -1 && Math.Abs(character.AnimController.TargetMovement.X) <= 0;
-                    if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
+                    if (newPath.Unreachable || newPath.Nodes.None())
+                    {
+                        useNewPath = false;
+                    }
+                    else if (!useNewPath && currentPath != null && currentPath.CurrentNode != null)
                     {
                         // Check if the new path is the same as the old, in which case we just ignore it and continue using the old path (or the progress would reset).
                         if (IsIdenticalPath())
@@ -215,7 +220,7 @@ namespace Barotrauma
                             // Use the new path if it has significantly lower cost (don't change the path if it has marginally smaller cost. This reduces navigating backwards due to new path that is calculated from the node just behind us).
                             float t = (float)currentPath.CurrentIndex / (currentPath.Nodes.Count - 1);
                             useNewPath = newPath.Cost < currentPath.Cost * MathHelper.Lerp(0.95f, 0, t);
-                            if (!useNewPath)
+                            if (!useNewPath && character.Submarine != null)
                             {
                                 // It's possible that the current path was calculated from a start point that is no longer valid.
                                 // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
@@ -557,10 +562,14 @@ namespace Barotrauma
                     {
                         //the node we're heading towards is the last one in the path, and at a door
                         //the door needs to be open for the character to reach the node
-                        if (currentWaypoint.ConnectedDoor.LinkedGap != null && currentWaypoint.ConnectedDoor.LinkedGap.IsRoomToRoom)
+                        if (currentWaypoint.ConnectedDoor.LinkedGap != null)
                         {
-                            shouldBeOpen = true;
-                            door = currentWaypoint.ConnectedDoor;
+                            // Keep the airlock doors closed, but not in ruins/wrecks
+                            if (currentWaypoint.ConnectedDoor.LinkedGap.IsRoomToRoom || currentWaypoint.Submarine?.Info.IsRuin != null || currentWaypoint.Submarine?.Info.IsWreck != null)
+                            {
+                                shouldBeOpen = true;
+                                door = currentWaypoint.ConnectedDoor;
+                            }
                         }
                     }
                     else

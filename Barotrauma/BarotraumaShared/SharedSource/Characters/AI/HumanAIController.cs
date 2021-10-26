@@ -250,7 +250,7 @@ namespace Barotrauma
                         {
                             rayEnd += SelectedAiTarget.Entity.Submarine.SimPosition;
                         }
-                        UseIndoorSteeringOutside = Submarine.PickBody(SimPosition, rayEnd, collisionCategory: Physics.CollisionLevel) != null;
+                        UseIndoorSteeringOutside = Submarine.PickBody(SimPosition, rayEnd, collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) != null;
                     }
                 }
                 else
@@ -340,7 +340,7 @@ namespace Barotrauma
                 IsInsideCave = Character.CurrentHull == null && Level.Loaded?.Caves.FirstOrDefault(c => c.Area.Contains(Character.WorldPosition)) is Level.Cave;
             }
 
-            if (UseIndoorSteeringOutside || IsInsideCave || Character.Submarine != null || hasValidPath && IsCloseEnoughToTarget(maxSteeringBuffer) || IsCloseEnoughToTarget(steeringBuffer))
+            if (UseIndoorSteeringOutside || IsInsideCave || Character.CurrentHull?.Submarine != null || hasValidPath && IsCloseEnoughToTarget(maxSteeringBuffer) || IsCloseEnoughToTarget(steeringBuffer))
             {
                 if (steeringManager != insideSteering)
                 {

@@ -458,7 +458,7 @@ namespace Barotrauma
             {
                 resistance += afflictions[i].GetResistance(affliction);
             }
-            return 1 - ((1 - resistance) * Character.GetAbilityResistance(affliction.Identifier));
+            return 1 - ((1 - resistance) * Character.GetAbilityResistance(affliction));
         }
 
         public float GetStatValue(StatTypes statType)

@@ -147,14 +147,14 @@ namespace Barotrauma.Items.Components
         private GUIFrame submarineContainer;
 
         private GUIFrame hullInfoFrame;
-        private GUIScissorComponent scissorComponent;
-        private GUIComponent miniMapContainer;
+        private GUIScissorComponent? scissorComponent;
+        private GUIComponent? miniMapContainer;
         private GUIComponent miniMapFrame;
         private GUIComponent electricalFrame;
         private GUILayoutGroup reportFrame;
         private GUILayoutGroup searchBarFrame;
         private GUITextBox searchBar;
-        private GUIComponent searchAutoComplete;
+        private GUIComponent? searchAutoComplete;
 
         private ItemPrefab? searchedPrefab;
 
@@ -184,7 +184,7 @@ namespace Barotrauma.Items.Components
         private ImmutableDictionary<MiniMapGUIComponent, GUIComponent> electricalChildren;
         private ImmutableDictionary<MiniMapGUIComponent, GUIComponent> doorChildren;
 
-        private ImmutableHashSet<ItemPrefab> itemsFoundOnSub;
+        private ImmutableHashSet<ItemPrefab>? itemsFoundOnSub;
 
         private ImmutableHashSet<Vector2>? MiniMapBlips;
         private float blipState;
@@ -416,7 +416,7 @@ namespace Barotrauma.Items.Components
             hullInfoFrame.AddToGUIUpdateList(order: order + 1);
             if (currentMode == MiniMapMode.ItemFinder && searchBar.Selected)
             {
-                searchAutoComplete.AddToGUIUpdateList(order: order + 1);
+                searchAutoComplete?.AddToGUIUpdateList(order: order + 1);
             }
         }
 
@@ -686,7 +686,7 @@ namespace Barotrauma.Items.Components
 
         private void ControlSearchTooltip(GUITextBox sender, Keys key)
         {
-            if (!searchAutoComplete.Visible) { return; }
+            if (searchAutoComplete is null || !searchAutoComplete.Visible) { return; }
             GUIListBox listBox = searchAutoComplete.GetChild<GUIListBox>();
             if (listBox is null) { return; }
 
@@ -705,15 +705,17 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private bool UpdateSearchTooltip(GUITextBox box, string text)
+        private bool UpdateSearchTooltip(GUITextBox box, string? text)
         {
+            if (text is null || itemsFoundOnSub is null || searchAutoComplete is null) { return false; }
+
             MiniMapBlips = null;
             searchedPrefab = null;
             searchAutoComplete.Visible = true;
             SetAutoCompletePosition(searchAutoComplete, box);
 
-            GUIListBox listBox = searchAutoComplete.GetChild<GUIListBox>();
-            if (listBox is null) { return false; }
+            GUIListBox? listBox = searchAutoComplete.GetChild<GUIListBox>();
+            if (listBox?.Content is null) { return false; }
 
             bool first = true;
 
@@ -722,9 +724,9 @@ namespace Barotrauma.Items.Components
             foreach (GUIComponent component in listBox.Content.Children)
             {
                 component.Visible = false;
-                if (component.UserData is ItemPrefab prefab && itemsFoundOnSub.Contains(prefab))
+                if (component.UserData is ItemPrefab { Name: { } prefabName} prefab && itemsFoundOnSub.Contains(prefab))
                 {
-                    component.Visible = prefab.Name.ToLower().Contains(text.ToLower());
+                    component.Visible = prefabName.ToLower().Contains(text.ToLower());
 
                     if (component.Visible && first)
                     {
@@ -828,6 +830,7 @@ namespace Barotrauma.Items.Components
 
             MiniMapBlips = positions.ToImmutableHashSet();
 
+            if (searchAutoComplete is null) { return; }
             searchAutoComplete.Visible = false;
         }
 
@@ -1021,7 +1024,7 @@ namespace Barotrauma.Items.Components
 
                 if (Voltage < MinVoltage || !miniMapGuiComponent.RectComponent.Visible) { continue; }
 
-                int durability = (int)(it.Condition / it.MaxCondition * 100f);
+                int durability = (int)(it.Condition / (it.MaxCondition / it.MaxRepairConditionMultiplier) * 100f);
                 Color color = ToolBox.GradientLerp(durability / 100f, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green, GUI.Style.Green);
 
                 if (GUI.MouseOn == component)
@@ -1188,7 +1191,7 @@ namespace Barotrauma.Items.Components
         {
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.End();
-            if (submarinePreview is { } texture)
+            if (submarinePreview is { } texture && miniMapContainer is { } mapContainer)
             {
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, blendState: BlendState.NonPremultiplied, effect: GameMain.GameScreen.BlueprintEffect, rasterizerState: GameMain.ScissorTestEnable);
                 spriteBatch.GraphicsDevice.ScissorRectangle = submarineContainer.Rect;
@@ -1200,7 +1203,7 @@ namespace Barotrauma.Items.Components
 
                 Vector2 origin = new Vector2(texture.Width / 2f, texture.Height / 2f);
                 float scale = currentMode == MiniMapMode.HullStatus ? 1.0f : Zoom;
-                spriteBatch.Draw(texture, miniMapContainer.Center, null, blueprintBlue, 0f, origin, scale, SpriteEffects.None, 0f);
+                spriteBatch.Draw(texture, mapContainer.Center, null, blueprintBlue, 0f, origin, scale, SpriteEffects.None, 0f);
 
                 spriteBatch.End();
             }

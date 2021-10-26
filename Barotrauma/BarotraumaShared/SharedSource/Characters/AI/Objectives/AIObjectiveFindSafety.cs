@@ -55,8 +55,8 @@ namespace Barotrauma
             {
                 if (HumanAIController.NeedsDivingGear(character.CurrentHull, out bool needsSuit) && 
                     (needsSuit ? 
-                    !HumanAIController.HasDivingSuit(character, conditionPercentage: AIObjectiveFindDivingGear.MIN_OXYGEN) : 
-                    !HumanAIController.HasDivingGear(character, conditionPercentage: AIObjectiveFindDivingGear.MIN_OXYGEN)))
+                    !HumanAIController.HasDivingSuit(character, conditionPercentage: AIObjectiveFindDivingGear.GetMinOxygen(character)) : 
+                    !HumanAIController.HasDivingGear(character, conditionPercentage: AIObjectiveFindDivingGear.GetMinOxygen(character))))
                 {
                     Priority = 100;
                 }
@@ -131,11 +131,11 @@ namespace Barotrauma
                 bool needsEquipment = false;
                 if (needsDivingSuit)
                 {
-                    needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.MIN_OXYGEN);
+                    needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.GetMinOxygen(character));
                 }
                 else if (needsDivingGear)
                 {
-                    needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.MIN_OXYGEN);
+                    needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.GetMinOxygen(character));
                 }
                 if (needsEquipment)
                 {

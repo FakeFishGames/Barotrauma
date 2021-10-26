@@ -177,6 +177,10 @@ namespace Barotrauma.Items.Components
         partial void LaunchProjSpecific()
         {
             recoilTimer = RetractionTime;
+            if (user != null)
+            {
+                recoilTimer /= 1 + user.GetStatValue(StatTypes.TurretAttackSpeed);
+            }
             PlaySound(ActionType.OnUse);
             Vector2 particlePos = GetRelativeFiringPosition(UseFiringOffsetForMuzzleFlash);
             foreach (ParticleEmitter emitter in particleEmitters)

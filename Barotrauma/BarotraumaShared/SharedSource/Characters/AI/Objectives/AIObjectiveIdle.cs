@@ -282,7 +282,7 @@ namespace Barotrauma
                     }
                 }
                 newTargetTimer -= deltaTime;
-                if (!character.IsClimbing && IsSteeringFinished())
+                if (!character.IsClimbing && (PathSteering == null || PathSteering.CurrentPath == null || IsSteeringFinished()))
                 {
                     Wander(deltaTime);
                 }
@@ -393,9 +393,10 @@ namespace Barotrauma
             hullWeights.Clear();
             foreach (var hull in Hull.hullList)
             {
+                if (character.Submarine == null) { break; }
                 if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
                 if (hull.Submarine == null) { continue; }
-                if (character.Submarine == null) { break; }
+                if (hull.Submarine.Info.IsRuin || hull.Submarine.Info.IsWreck) { continue; }
                 if (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted)
                 {
                     if (hull.Submarine.TeamID != character.TeamID)

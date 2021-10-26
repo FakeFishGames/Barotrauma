@@ -6,6 +6,8 @@ namespace Barotrauma
     {
         public override void ClientReadInitial(IReadMessage msg)
         {
+            base.ClientReadInitial(msg);
+
             byte characterCount = msg.ReadByte();
 
             for (int i = 0; i < characterCount; i++)

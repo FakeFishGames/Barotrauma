@@ -1113,7 +1113,7 @@ namespace Barotrauma
                 }
                 if (wearableItemComponent.AllowedSlots.Contains(InvSlotType.Bag))
                 {
-                    depth -= depthStep * 2;
+                    depth -= depthStep * 4;
                 }
                 wearableColor = wearableItemComponent.Item.GetSpriteColor();
             }

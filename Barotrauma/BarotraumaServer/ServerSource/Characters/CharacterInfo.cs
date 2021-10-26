@@ -26,6 +26,7 @@ namespace Barotrauma
 
         partial void OnExperienceChanged(int prevAmount, int newAmount)
         {
+            if (Character == null || Character.Removed) { return; }
             if (prevAmount != newAmount)
             {
                 GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateExperience });
