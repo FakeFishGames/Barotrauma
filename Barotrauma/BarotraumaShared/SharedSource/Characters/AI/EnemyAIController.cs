@@ -2343,7 +2343,7 @@ namespace Barotrauma
             }
             if (steeringManager is IndoorsSteeringManager pathSteering)
             {
-                if (!pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
+                if (!pathSteering.IsPathDirty && pathSteering.CurrentPath != null && pathSteering.CurrentPath.Unreachable)
                 {
                     // Can't reach
                     State = AIState.Idle;

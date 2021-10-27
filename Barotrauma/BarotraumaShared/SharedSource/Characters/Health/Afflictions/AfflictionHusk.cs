@@ -151,6 +151,7 @@ namespace Barotrauma
 
         private void DeactivateHusk()
         {
+            if (character?.AnimController == null || character.Removed) { return; }
             if (Prefab is AfflictionPrefabHusk { NeedsAir: false })
             {
                 character.NeedsAir = character.Params.MainElement.GetAttributeBool("needsair", false);
@@ -218,9 +219,12 @@ namespace Barotrauma
             XElement infoElement = character.Info?.Save(parentElement);
             CharacterInfo huskCharacterInfo = infoElement == null ? null : new CharacterInfo(infoElement);
 
-            var bodyTint = GetBodyTint();
-            huskCharacterInfo.SkinColor =
-                    Color.Lerp(huskCharacterInfo.SkinColor, bodyTint.Opaque(), bodyTint.A / 255.0f);
+            if (huskCharacterInfo != null)
+            {
+                var bodyTint = GetBodyTint();
+                huskCharacterInfo.SkinColor =
+                        Color.Lerp(huskCharacterInfo.SkinColor, bodyTint.Opaque(), bodyTint.A / 255.0f);
+            }
 
             var husk = Character.Create(huskedSpeciesName, character.WorldPosition, ToolBox.RandomSeed(8), huskCharacterInfo, isRemotePlayer: false, hasAi: true);
             if (husk.Info != null)

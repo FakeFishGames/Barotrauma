@@ -1261,7 +1261,7 @@ namespace Barotrauma
         }
 
         const int BaseExperienceRequired = -50;
-        const int AddedExperienceRequiredPerLevel = 550;
+        const int AddedExperienceRequiredPerLevel = 500;
 
         public int GetTotalTalentPoints()
         {

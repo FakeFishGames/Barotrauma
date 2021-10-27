@@ -184,6 +184,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach ((Character character, Node node) in charactersInRange)
                 {
+                    if (character == null || character.Removed) { continue; }
                     character.ApplyAttack(null, node.WorldPosition, attack, 1.0f);
                 }
             }

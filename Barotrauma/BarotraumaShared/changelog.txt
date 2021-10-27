@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------------
+v0.15.12.0
+---------------------------------------------------------------------------------------------------------
+
+- Slightly increased the amount of experience given by missions.
+- Fixed crashing when a monster gets huskified.
+- Fixed crashing when a client tries to deactivate the husk infection of a character that's been removed.
+- Fixed crashing in EnemyAIController.UpdateFollow.
+- Fixed console errors when an electrical discharge coil damages a monster that gets instakilled and disappears on death (e.g. swarm feeder).
+
+---------------------------------------------------------------------------------------------------------
 v0.15.11.0
 ---------------------------------------------------------------------------------------------------------
 
