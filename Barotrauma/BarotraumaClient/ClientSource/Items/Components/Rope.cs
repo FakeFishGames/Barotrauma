@@ -31,6 +31,9 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize("0.5,0.5)", false)]
+        public Vector2 Origin { get; set; } = new Vector2(0.5f, 0.5f);
+
         public Vector2 DrawSize
         {
             get 
@@ -57,7 +60,6 @@ namespace Barotrauma.Items.Components
                 sourcePos = sourceLimb.body.DrawPosition;
             }
             return sourcePos;
-
         }
 
         partial void InitProjSpecific(XElement element)
@@ -81,13 +83,15 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
-            if (target == null) { return; }
+            if (target == null || target.Removed) { return; }
+            if (target.ParentInventory != null) { return; }
 
             Vector2 startPos = GetSourcePos();
             startPos.Y = -startPos.Y;
             if (source is Item sourceItem)
             {
-                var turret = sourceItem?.GetComponent<Turret>();
+                var turret = sourceItem.GetComponent<Turret>();
+                var weapon = sourceItem.GetComponent<RangedWeapon>();
                 if (turret != null)
                 {
                     startPos = new Vector2(sourceItem.WorldRect.X + turret.TransformedBarrelPos.X, -(sourceItem.WorldRect.Y - turret.TransformedBarrelPos.Y));
@@ -96,8 +100,21 @@ namespace Barotrauma.Items.Components
                         startPos += new Vector2((float)Math.Cos(turret.Rotation), (float)Math.Sin(turret.Rotation)) * turret.BarrelSprite.size.Y * turret.BarrelSprite.RelativeOrigin.Y * item.Scale * 0.9f;
                     }
                 }
+                else if (weapon != null)
+                {
+                    Vector2 barrelPos = FarseerPhysics.ConvertUnits.ToDisplayUnits(weapon.TransformedBarrelPos);
+                    barrelPos.Y = -barrelPos.Y;
+                    startPos += barrelPos;
+                }
             }
-            Vector2 endPos = new Vector2(target.DrawPosition.X, -target.DrawPosition.Y);
+            Vector2 endPos = new Vector2(target.DrawPosition.X, target.DrawPosition.Y);
+            Vector2 flippedPos = target.Sprite.size * target.Scale * (Origin - new Vector2(0.5f));
+            if (target.body.Dir < 0.0f)
+            {
+                flippedPos.X = -flippedPos.X;
+            }
+            endPos += Vector2.Transform(flippedPos, Matrix.CreateRotationZ(target.body.Rotation));
+            endPos.Y = -endPos.Y;
 
             if (Snapped)
             {

@@ -1,6 +1,4 @@
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -42,7 +40,7 @@ namespace Barotrauma
             var targets = ParentEvent.GetTargets(TargetTag).Where(e => e is Character).Select(e => e as Character);
             foreach (var target in targets)
             {
-                target.Info?.IncreaseSkillLevel(Skill?.ToLowerInvariant(), Amount, target.Position + Vector2.UnitY * 150.0f);
+                target.Info?.IncreaseSkillLevel(Skill?.ToLowerInvariant(), Amount);
             }
             isFinished = true;
         }

@@ -161,8 +161,8 @@ namespace Barotrauma
                             for (int i = 0; i < container.Inventory.Capacity; i++)
                             {
                                 if (container.Inventory.GetItemAt(i) != null) { continue; }
-                                if (MapEntityPrefab.List.GetRandom(e => e is ItemPrefab i && container.CanBeContained(i) && 
-                                        Config.ForbiddenAmmunition.None(id => id.Equals(i.Identifier, StringComparison.OrdinalIgnoreCase)), Rand.RandSync.Server) is ItemPrefab ammoPrefab)
+                                if (MapEntityPrefab.List.GetRandom(e => e is ItemPrefab ip && container.CanBeContained(ip, i) && 
+                                        Config.ForbiddenAmmunition.None(id => id.Equals(ip.Identifier, StringComparison.OrdinalIgnoreCase)), Rand.RandSync.Server) is ItemPrefab ammoPrefab)
                                 {
                                     Item ammo = new Item(ammoPrefab, container.Item.WorldPosition, Wreck);
                                     if (!container.Inventory.TryPutItem(ammo, i, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: false))

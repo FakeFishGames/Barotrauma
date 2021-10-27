@@ -77,7 +77,7 @@ namespace Barotrauma
 
                 locationType = location.GetLocationType();
             }
-            
+
             //load the infos of the outpost module files
             List<SubmarineInfo> outpostModules = new List<SubmarineInfo>();
             foreach (ContentFile outpostModuleFile in outpostModuleFiles)
@@ -85,6 +85,19 @@ namespace Barotrauma
                 var subInfo = new SubmarineInfo(outpostModuleFile.Path);
                 if (subInfo.OutpostModuleInfo != null)
                 {
+                    if (generationParams is RuinGeneration.RuinGenerationParams)
+                    {
+                        //if the module doesn't have the ruin flag or any other flag used in the generation params, don't use it in ruins
+                        if (!subInfo.OutpostModuleInfo.ModuleFlags.Contains("ruin") &&
+                            !generationParams.ModuleCounts.Any(m => subInfo.OutpostModuleInfo.ModuleFlags.Contains(m.Key)))
+                        {
+                            continue;
+                        }
+                    }
+                    else if (subInfo.OutpostModuleInfo.ModuleFlags.Contains("ruin"))
+                    {
+                        continue;
+                    }
                     outpostModules.Add(subInfo);
                 }
             }
@@ -162,7 +175,7 @@ namespace Barotrauma
 
                 selectedModules.Add(new PlacedModule(initialModule, null, OutpostModuleInfo.GapPosition.None));
                 selectedModules.Last().FulfilledModuleTypes.Add(initialModuleFlag);
-                AppendToModule(selectedModules.Last(), outpostModules.ToList(), pendingModuleFlags, selectedModules, locationType);
+                AppendToModule(selectedModules.Last(), outpostModules.ToList(), pendingModuleFlags, selectedModules, locationType, allowExtendBelowInitialModule: generationParams is RuinGeneration.RuinGenerationParams);
                 if (pendingModuleFlags.Any(flag => !flag.Equals("none", StringComparison.OrdinalIgnoreCase)))
                 {
                     remainingTries--;
@@ -233,17 +246,23 @@ namespace Barotrauma
                     var selectedModule = selectedModules[i];
                     sub.Info.GameVersion = selectedModule.Info.GameVersion;
                     var moduleEntities = MapEntity.LoadAll(sub, selectedModule.Info.SubmarineElement, selectedModule.Info.FilePath, idOffset);
-                    idOffset = moduleEntities.Max(e => e.ID);
+                    
                     MapEntity.InitializeLoadedLinks(moduleEntities);
 
-                    foreach (MapEntity entity in moduleEntities)
+                    foreach (MapEntity entity in moduleEntities.ToList())
                     {
                         entity.OriginalModuleIndex = i;
                         if (!(entity is Item item)) { continue; }
-                        item.GetComponent<Door>()?.RefreshLinkedGap();
+                        var door = item.GetComponent<Door>();
+                        if (door != null)
+                        {
+                            door.RefreshLinkedGap();
+                            if (!moduleEntities.Contains(door.LinkedGap)) { moduleEntities.Add(door.LinkedGap); }
+                        }
                         item.GetComponent<ConnectionPanel>()?.InitializeLinks();
                         item.GetComponent<ItemContainer>()?.OnMapLoaded();
                     }
+                    idOffset = moduleEntities.Max(e => e.ID);
 
                     var wallEntities = moduleEntities.Where(e => e is Structure).Cast<Structure>();
                     var hullEntities = moduleEntities.Where(e => e is Hull).Cast<Hull>();
@@ -345,11 +364,33 @@ namespace Barotrauma
                         Submarine.RepositionEntities(module.Offset + sub.HiddenSubPosition, entities[module]);
                     }
                     Gap.UpdateHulls();
-                    allEntities.AddRange(GenerateHallways(sub, locationType, selectedModules, outpostModules, entities));
+                    allEntities.AddRange(GenerateHallways(sub, locationType, selectedModules, outpostModules, entities, generationParams is RuinGeneration.RuinGenerationParams));
                     LinkOxygenGenerators(allEntities);
-                    LockUnusedDoors(selectedModules, entities);
+                    if (generationParams.LockUnusedDoors)
+                    {
+                        LockUnusedDoors(selectedModules, entities, generationParams.RemoveUnusedGaps);
+                    }
                     AlignLadders(selectedModules, entities);
                     PowerUpOutpost(entities.SelectMany(e => e.Value));
+                    if (generationParams.MaxWaterPercentage > 0.0f)
+                    {
+                        foreach (var entity in allEntities)
+                        {
+                            if (entity is Hull hull)
+                            {
+                                float diff = generationParams.MaxWaterPercentage - generationParams.MinWaterPercentage;
+                                if (diff < 0.01f)
+                                {
+                                    // Overfill the hulls to get rid of air pockets in the vertical hallways. Airpockets make it impossible to swim up the hallways.
+                                    hull.WaterVolume = hull.Volume * 2;
+                                }
+                                else
+                                {
+                                    hull.WaterVolume = hull.Volume * Rand.Range(generationParams.MinWaterPercentage, generationParams.MaxWaterPercentage, Rand.RandSync.Server) * 0.01f;
+                                }
+                            }
+                        }
+                    }
                 }
 
                 return allEntities;
@@ -414,7 +455,8 @@ namespace Barotrauma
             List<string> pendingModuleFlags,
             List<PlacedModule> selectedModules, 
             LocationType locationType,
-            bool retry = true)
+            bool retry = true,
+            bool allowExtendBelowInitialModule = false)
         {
             if (pendingModuleFlags.Count == 0) { return true; }
 
@@ -422,8 +464,11 @@ namespace Barotrauma
             foreach (OutpostModuleInfo.GapPosition gapPosition in GapPositions().Randomize(Rand.RandSync.Server))
             {
                 if (currentModule.UsedGapPositions.HasFlag(gapPosition)) { continue; }
-                //don't continue downwards if it'd extend below the airlock
-                if (gapPosition == OutpostModuleInfo.GapPosition.Bottom && currentModule.Offset.Y <= 1) { continue; }
+                if (!allowExtendBelowInitialModule)
+                {
+                    //don't continue downwards if it'd extend below the airlock
+                    if (gapPosition == OutpostModuleInfo.GapPosition.Bottom && currentModule.Offset.Y <= 1) { continue; }
+                }
                 if (currentModule.Info.OutpostModuleInfo.GapPositions.HasFlag(gapPosition))
                 {
                     var newModule = AppendModule(currentModule, GetOpposingGapPosition(gapPosition), availableModules, pendingModuleFlags, selectedModules, locationType);
@@ -438,7 +483,7 @@ namespace Barotrauma
                 //try to append to some other module first
                 foreach (PlacedModule otherModule in selectedModules)
                 {
-                   if (AppendToModule(otherModule, availableModules, pendingModuleFlags, selectedModules, locationType, retry: false))
+                   if (AppendToModule(otherModule, availableModules, pendingModuleFlags, selectedModules, locationType, retry: false, allowExtendBelowInitialModule: allowExtendBelowInitialModule))
                     {
                         return true;
                     }
@@ -454,7 +499,7 @@ namespace Barotrauma
                     //retry
                     currentModule = AppendModule(currentModule.PreviousModule, currentModule.ThisGapPosition, availableModules, pendingModuleFlags, selectedModules, locationType);
                     if (currentModule == null) { break; }
-                    if (AppendToModule(currentModule, availableModules, pendingModuleFlags, selectedModules, locationType, retry: false))
+                    if (AppendToModule(currentModule, availableModules, pendingModuleFlags, selectedModules, locationType, retry: false, allowExtendBelowInitialModule: allowExtendBelowInitialModule))
                     {
                         return true;
                     }
@@ -676,6 +721,10 @@ namespace Barotrauma
             else
             {
                 availableModules = modules.Where(m => m.OutpostModuleInfo.ModuleFlags.Contains(moduleFlag));
+                if (moduleFlag != "hallwayhorizontal" && moduleFlag != "hallwayvertical")
+                {
+                    availableModules = availableModules.Where(m => !m.OutpostModuleInfo.ModuleFlags.Contains("hallwayhorizontal") && !m.OutpostModuleInfo.ModuleFlags.Contains("hallwayvertical"));
+                }
             }
 
             if (availableModules.Count() == 0) { return null; }
@@ -840,7 +889,7 @@ namespace Barotrauma
             return from.AllowAttachToModules.Any(s => to.ModuleFlags.Contains(s));
         }
 
-        private static List<MapEntity> GenerateHallways(Submarine sub, LocationType locationType, IEnumerable<PlacedModule> placedModules, IEnumerable<SubmarineInfo> availableModules, Dictionary<PlacedModule, List<MapEntity>> allEntities)
+        private static List<MapEntity> GenerateHallways(Submarine sub, LocationType locationType, IEnumerable<PlacedModule> placedModules, IEnumerable<SubmarineInfo> availableModules, Dictionary<PlacedModule, List<MapEntity>> allEntities, bool isRuin)
         {
             //if a hallway is shorter than this, one of the doors at the ends of the hallway is removed
             const float MinTwoDoorHallwayLength = 32.0f;
@@ -1193,14 +1242,13 @@ namespace Barotrauma
             }
         }
 
-        private static void LockUnusedDoors(IEnumerable<PlacedModule> placedModules, Dictionary<PlacedModule, List<MapEntity>> entities)
+        private static void LockUnusedDoors(IEnumerable<PlacedModule> placedModules, Dictionary<PlacedModule, List<MapEntity>> entities, bool removeUnusedGaps)
         {
             foreach (PlacedModule module in placedModules)
             {
                 foreach (MapEntity me in entities[module])
                 {
-                    var gap = me as Gap;
-                    if (gap == null) { continue; }
+                    if (!(me is Gap gap)) { continue; }
                     var door = gap.ConnectedDoor;
                     if (door != null && !door.UseBetweenOutpostModules) { continue; }
                     if (placedModules.Any(m => m.PreviousGap == gap || m.ThisGap == gap)) 
@@ -1247,11 +1295,11 @@ namespace Barotrauma
                             if (connectionPanel != null) { connectionPanel.Locked = true; }
                         }
                     }
-                    else
+                    else if (removeUnusedGaps)
                     {
                         gap.Remove();
                         WayPoint.WayPointList.Where(wp => wp.ConnectedGap == gap).ForEachMod(wp => wp.Remove());
-                    }                    
+                    }
                 }
                 entities[module].RemoveAll(e => e.Removed);
             }

@@ -173,6 +173,12 @@ namespace Barotrauma
                             if (matchingSub != null) { availableSubs.Add(matchingSub); }
                         }
                         break;
+                    case "savedexperiencepoints":
+                        foreach (XElement savedExp in subElement.Elements())
+                        {
+                            savedExperiencePoints.Add(new SavedExperiencePoints(savedExp));
+                        }
+                        break;
 #endif
                 }
             }

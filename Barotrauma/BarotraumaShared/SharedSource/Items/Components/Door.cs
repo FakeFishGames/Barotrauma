@@ -67,7 +67,7 @@ namespace Barotrauma.Items.Components
 
         private bool isBroken;
 
-        public bool CanBeTraversed => (IsOpen || IsBroken) && !IsJammed && !IsStuck;
+        public bool CanBeTraversed => (IsOpen || IsBroken) && !IsJammed && !IsStuck && !Impassable;
         
         public bool IsBroken
         {

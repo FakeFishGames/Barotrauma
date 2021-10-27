@@ -12,6 +12,7 @@ using System.Text;
 
 namespace Barotrauma
 {
+    [Obsolete("Use named tuples instead.")]
     public class Pair<T1, T2>
     {
         public T1 First { get; set; }
@@ -21,20 +22,6 @@ namespace Barotrauma
         {
             First  = first;
             Second = second;
-        }
-    }
-
-    public class Triplet<T1, T2, T3>
-    {
-        public T1 First { get; set; }
-        public T2 Second { get; set; }
-        public T3 Third { get; set; }
-
-        public Triplet(T1 first, T2 second, T3 third)
-        {
-            First = first;
-            Second = second;
-            Third = third;
         }
     }
 
@@ -555,15 +542,6 @@ namespace Barotrauma
             return hex.ToString();
         }
 
-        public static string ConvertAbsoluteToRelativePath(string path)
-        {
-            string[] splitted = path.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
-            string currentFolder = Environment.CurrentDirectory.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }).Last();
-            // Filter out the current folder -> result is "Content/blaahblaah" or "Mods/blaahblaah" etc.
-            IEnumerable<string> filtered = splitted.SkipWhile(part => part != currentFolder).Skip(1);
-            return string.Join("/", filtered);
-        }
-
         public static string EscapeCharacters(string str)
         {
             return str.Replace("\\", "\\\\").Replace("\"", "\\\"");
@@ -640,11 +618,27 @@ namespace Barotrauma
             Process.Start(startInfo);
         }
 
+        /// <summary>
+        /// Cleans up a path by replacing backslashes with forward slashes, and
+        /// optionally corrects the casing of the path. Recommended when serializing
+        /// paths to a human-readable file to force case correction on all platforms.
+        /// Also useful when working with paths to files that currently don't exist,
+        /// i.e. case cannot be corrected.
+        /// </summary>
+        /// <param name="path">Path to clean up</param>
+        /// <param name="correctFilenameCase">Should the case be corrected to match the filesystem?</param>
+        /// <param name="directory">Directories that the path should be found in, not returned.</param>
+        /// <returns>Path with corrected slashes, and corrected case if requested.</returns>
         public static string CleanUpPathCrossPlatform(this string path, bool correctFilenameCase = true, string directory = "")
         {
             if (string.IsNullOrEmpty(path)) { return ""; }
 
-            path = path.Replace('\\', '/');
+            path = path
+                .Replace('\\', '/');
+            if (path.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+            {
+                path = path.Substring("file:".Length);
+            }
             while (path.IndexOf("//") >= 0)
             {
                 path = path.Replace("//", "/");
@@ -659,21 +653,24 @@ namespace Barotrauma
             return path;
         }
 
+        /// <summary>
+        /// Cleans up a path by replacing backslashes with forward slashes, and
+        /// corrects the casing of the path on non-Windows platforms. Recommended
+        /// when loading a path from a file, to make sure that it is found on all
+        /// platforms when attempting to open it.
+        /// </summary>
+        /// <param name="path">Path to clean up</param>
+        /// <returns>Path with corrected slashes, and corrected case if required by the platform.</returns>
         public static string CleanUpPath(this string path)
         {
-            if (string.IsNullOrEmpty(path)) { return ""; }
-
-            path = path.Replace('\\', '/');
-            while (path.IndexOf("//") >= 0)
-            {
-                path = path.Replace("//", "/");
-            }
-#if LINUX || OSX
-            //required on *nix platforms to load in mods made on Windows
-            string correctedPath = CorrectFilenameCase(path, out _);
-            if (!string.IsNullOrEmpty(correctedPath)) { path = correctedPath; }
+            return path.CleanUpPathCrossPlatform(
+                correctFilenameCase:
+#if WINDOWS
+                    false
+#else
+                    true
 #endif
-            return path;
+                );
         }
 
         public static float GetEasing(TransitionMode easing, float t)

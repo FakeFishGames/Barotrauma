@@ -25,6 +25,8 @@ namespace Barotrauma
         public Effect PostProcessEffect { get; private set; }
         public Effect GradientEffect { get; private set; }
         public Effect GrainEffect { get; private set; }
+        public Effect ThresholdTintEffect { get; private set; }
+        public Effect BlueprintEffect { get; set; }
 
         public GameScreen(GraphicsDevice graphics, ContentManager content)
         {
@@ -37,19 +39,20 @@ namespace Barotrauma
                 CreateRenderTargets(graphics);
             };
 
+            Effect LoadEffect(string path)
+                => content.Load<Effect>(path
 #if LINUX || OSX
-            //var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
-            damageEffect = content.Load<Effect>("Effects/damageshader_opengl");
-            PostProcessEffect = content.Load<Effect>("Effects/postprocess_opengl");
-            GradientEffect = content.Load<Effect>("Effects/gradientshader_opengl");
-            GrainEffect = content.Load<Effect>("Effects/grainshader_opengl");
-#else
-            //var blurEffect = content.Load<Effect>("Effects/blurshader");
-            damageEffect = content.Load<Effect>("Effects/damageshader");
-            PostProcessEffect = content.Load<Effect>("Effects/postprocess");
-            GradientEffect = content.Load<Effect>("Effects/gradientshader");
-            GrainEffect = content.Load<Effect>("Effects/grainshader");
+                        +"_opengl"
 #endif
+                );
+
+            //var blurEffect = LoadEffect("Effects/blurshader");
+            damageEffect = LoadEffect("Effects/damageshader");
+            PostProcessEffect = LoadEffect("Effects/postprocess");
+            GradientEffect = LoadEffect("Effects/gradientshader");
+            GrainEffect = LoadEffect("Effects/grainshader");
+            ThresholdTintEffect = LoadEffect("Effects/thresholdtint");
+            BlueprintEffect = LoadEffect("Effects/blueprintshader");
 
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
             damageEffect.Parameters["xStencil"].SetValue(damageStencil);
@@ -89,8 +92,7 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.GameSession != null) GameMain.GameSession.AddToGUIUpdateList();
-
+            GameMain.GameSession?.AddToGUIUpdateList();
             Character.AddAllToGUIUpdateList();
         }
         
@@ -136,7 +138,7 @@ namespace Barotrauma
                 for (int i = 0; i < Submarine.MainSubs.Length; i++)
                 {
                     if (Submarine.MainSubs[i] == null) continue;
-                    if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) continue;
+                    if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) { continue; }
 
                     Vector2 position = Submarine.MainSubs[i].SubBody != null ? Submarine.MainSubs[i].WorldPosition : Submarine.MainSubs[i].HiddenSubPosition;
 
@@ -145,6 +147,14 @@ namespace Barotrauma
                         spriteBatch, position, cam, 
                         Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height), 
                         GUI.SubmarineIcon, indicatorColor); 
+                }
+            }
+
+            if (!GUI.DisableHUD)
+            {
+                foreach (Character c in Character.CharacterList)
+                {
+                    c.DrawGUIMessages(spriteBatch, cam);
                 }
             }
 

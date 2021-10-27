@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -25,7 +27,7 @@ namespace Barotrauma
                     state = value;
                     TryTriggerEvents(state);
 #if SERVER
-                    GameMain.Server?.UpdateMissionState(this, state);
+                    GameMain.Server?.UpdateMissionState(this);
 #endif
                     ShowMessage(State);
                 }
@@ -343,19 +345,57 @@ namespace Barotrauma
         public void GiveReward()
         {
             if (!(GameMain.GameSession.GameMode is CampaignMode campaign)) { return; }
-            campaign.Money += GetReward(Submarine.MainSub);
+            int reward = GetReward(Submarine.MainSub);
+
+            float baseExperienceGain = reward * 0.09f;
+
+            float difficultyMultiplier = 1 + level.Difficulty / 100f;
+            baseExperienceGain *= difficultyMultiplier;
+
+            IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters();
+
+            // use multipliers here so that we can easily add them together without introducing multiplicative XP stacking
+            var experienceGainMultiplier = new AbilityValue(1f);
+            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnAllyGainMissionExperience, experienceGainMultiplier));
+            crewCharacters.ForEach(c => experienceGainMultiplier.Value += c.GetStatValue(StatTypes.MissionExperienceGainMultiplier));
+
+            int experienceGain = (int)(baseExperienceGain * experienceGainMultiplier.Value);
+#if CLIENT
+            foreach (Character character in crewCharacters)
+            {
+                character.Info?.GiveExperience(experienceGain, isMissionExperience: true);
+            }
+#else
+            foreach (Barotrauma.Networking.Client c in GameMain.Server.ConnectedClients)
+            {
+                //give the experience to the stored characterinfo if the client isn't currently controlling a character
+                (c.Character?.Info ?? c.CharacterInfo)?.GiveExperience(experienceGain, isMissionExperience: true);
+            }
+#endif
+
+            // apply money gains afterwards to prevent them from affecting XP gains
+            var moneyGainMission = new AbilityValueMission(1f, this);
+            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnGainMissionMoney, moneyGainMission));
+            crewCharacters.ForEach(c => moneyGainMission.Value += c.GetStatValue(StatTypes.MissionMoneyGainMultiplier));
+
+            campaign.Money += (int)(reward * moneyGainMission.Value);
+
+            foreach (Character character in crewCharacters)
+            {
+                character.Info.MissionsCompletedSinceDeath++;
+            }
 
             foreach (KeyValuePair<string, float> reputationReward in ReputationRewards)
             {
                 if (reputationReward.Key.Equals("location", StringComparison.OrdinalIgnoreCase))
                 {
-                    Locations[0].Reputation.Value += reputationReward.Value;
-                    Locations[1].Reputation.Value += reputationReward.Value;
+                    Locations[0].Reputation.AddReputation(reputationReward.Value);
+                    Locations[1].Reputation.AddReputation(reputationReward.Value);
                 }
                 else
                 {
                     Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier.Equals(reputationReward.Key, StringComparison.OrdinalIgnoreCase));
-                    if (faction != null) { faction.Reputation.Value += reputationReward.Value; }
+                    if (faction != null) { faction.Reputation.AddReputation(reputationReward.Value); }
                 }
             }
 
@@ -442,6 +482,56 @@ namespace Barotrauma
             characterItems.Add(spawnedCharacter, spawnedCharacter.Inventory.FindAllItems(recursive: true));
 
             return spawnedCharacter;
+        }
+
+        protected ItemPrefab FindItemPrefab(XElement element)
+        {
+            ItemPrefab itemPrefab;
+            if (element.Attribute("name") != null)
+            {
+                DebugConsole.ThrowError($"Error in mission \"{Name}\" - use item identifiers instead of names to configure the items");
+                string itemName = element.GetAttributeString("name", "");
+                itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": item prefab \"{itemName}\" not found");
+                }
+            }
+            else
+            {
+                string itemIdentifier = element.GetAttributeString("identifier", "");
+                itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": item prefab \"{itemIdentifier}\" not found");
+                }
+            }
+            return itemPrefab;
+        }
+
+        protected Vector2? GetCargoSpawnPosition(ItemPrefab itemPrefab, out Submarine cargoRoomSub)
+        {
+            cargoRoomSub = null;
+
+            WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub, useSyncedRand: true);
+            if (cargoSpawnPos == null)
+            {
+                DebugConsole.ThrowError($"Couldn't spawn items for mission \"{Name}\": no waypoints marked as Cargo were found");
+                return null;
+            }
+
+            var cargoRoom = cargoSpawnPos.CurrentHull;
+            if (cargoRoom == null)
+            {
+                DebugConsole.ThrowError($"Couldn't spawn items for mission \"{Name}\": waypoints marked as Cargo must be placed inside a room");
+                return null;
+            }
+
+            cargoRoomSub = cargoRoom.Submarine;
+
+            return new Vector2(
+                cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, Rand.RandSync.Server),
+                cargoRoom.Rect.Y - cargoRoom.Rect.Height + itemPrefab.Size.Y / 2);
         }
     }
 }

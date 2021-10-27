@@ -64,7 +64,10 @@ namespace Barotrauma.Networking
                     string orderOption = orderMessageInfo.OrderOption;
                     orderOption ??= orderMessageInfo.OrderOptionIndex.HasValue && orderMessageInfo.OrderOptionIndex >= 0 && orderMessageInfo.OrderOptionIndex < orderPrefab.Options.Length ?
                         orderPrefab.Options[orderMessageInfo.OrderOptionIndex.Value] : "";
-                    txt = orderPrefab.GetChatMessage(orderMessageInfo.TargetCharacter?.Name, senderCharacter?.CurrentHull?.DisplayName, givingOrderToSelf: orderMessageInfo.TargetCharacter == senderCharacter, orderOption: orderOption);
+                    txt = orderPrefab.GetChatMessage(orderMessageInfo.TargetCharacter?.Name, senderCharacter?.CurrentHull?.DisplayName,
+                        givingOrderToSelf: orderMessageInfo.TargetCharacter == senderCharacter,
+                        orderOption: orderOption,
+                        priority: orderMessageInfo.Priority);
 
                     if (GameMain.Client.GameStarted && Screen.Selected == GameMain.GameScreen)
                     {

@@ -115,8 +115,9 @@ namespace Barotrauma
             return MathHelper.Clamp(Math.Min(Math.Min(scale.X, scale.Y), GUI.SlicedSpriteScale), minBorderScale, maxBorderScale);
         }
 
-        public void Draw(SpriteBatch spriteBatch, Rectangle rect, Color color, SpriteEffects spriteEffects = SpriteEffects.None)
+        public void Draw(SpriteBatch spriteBatch, Rectangle rect, Color color, SpriteEffects spriteEffects = SpriteEffects.None, Vector2? uvOffset = null)
         {
+            uvOffset ??= Vector2.Zero;
             if (Sprite.Texture == null)
             {
                 GUI.DrawRectangle(spriteBatch, rect, Color.Magenta);
@@ -157,7 +158,7 @@ namespace Barotrauma
             else if (Tile)
             {
                 Vector2 startPos = new Vector2(rect.X, rect.Y);
-                Sprite.DrawTiled(spriteBatch, startPos, new Vector2(rect.Width, rect.Height), color);
+                Sprite.DrawTiled(spriteBatch, startPos, new Vector2(rect.Width, rect.Height), color, startOffset: uvOffset);
             }
             else
             {

@@ -8,6 +8,8 @@ namespace Barotrauma
     {
         partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull)
         {
+            if (GameMain.Client?.MidRoundSyncing ?? false) { return; }
+
             if (shockwave)
             {
                 GameMain.ParticleManager.CreateParticle("shockwave", worldPosition,

@@ -231,7 +231,7 @@ namespace Barotrauma
             }
             System.Diagnostics.Debug.Assert(StartLocation != null, "Start location not assigned after level generation.");
 
-            CurrentLocation.Discovered = true;
+            CurrentLocation.Discover(true);
             CurrentLocation.CreateStore();
 
             InitProjectSpecific();
@@ -472,23 +472,32 @@ namespace Barotrauma
 
             foreach (LocationConnection connection in Connections)
             {
-                connection.Difficulty = MathHelper.Clamp((connection.CenterPos.X / Width * 100) + Rand.Range(-10.0f, 0.0f, Rand.RandSync.Server), 1.2f, 100.0f);
+                float difficulty = GetLevelDifficulty(connection.CenterPos.X / Width);
+                connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-10.0f, 0.0f, Rand.RandSync.Server), 1.2f, 100.0f);
             }
 
             AssignBiomes();
             CreateEndLocation();
-
+            
             foreach (Location location in Locations)
             {
                 location.LevelData = new LevelData(location)
                 {
-                    Difficulty = MathHelper.Clamp(location.MapPosition.X / Width * 100, 0.0f, 100.0f)
+                    Difficulty = MathHelper.Clamp(GetLevelDifficulty(location.MapPosition.X / Width), 0.0f, 100.0f)
                 };
                 location.UnlockInitialMissions();
             }
             foreach (LocationConnection connection in Connections) 
             { 
                 connection.LevelData = new LevelData(connection);
+            }
+
+            float GetLevelDifficulty(float areaDifficulty)
+            {
+                const float CurveModifier = 1.5f;
+                const float DifficultyMultiplier = 1.14f;
+                const float BaseDifficulty = -3f;
+                return (float)(1 - Math.Pow(1 - areaDifficulty, CurveModifier)) * DifficultyMultiplier * 100f + BaseDifficulty;
             }
         }
 
@@ -671,7 +680,7 @@ namespace Barotrauma
             SelectedConnection.Passed = true;
 
             CurrentLocation = SelectedLocation;
-            CurrentLocation.Discovered = true;
+            CurrentLocation.Discover();
             SelectedLocation = null;
 
             CurrentLocation.CreateStore();
@@ -702,7 +711,7 @@ namespace Barotrauma
 
             Location prevLocation = CurrentLocation;
             CurrentLocation = Locations[index];
-            CurrentLocation.Discovered = true;
+            CurrentLocation.Discover();
 
             if (prevLocation != CurrentLocation)
             {
@@ -1055,7 +1064,10 @@ namespace Barotrauma
                             }
                         }
                         location.LoadLocationTypeChange(subElement);
-                        location.Discovered = subElement.GetAttributeBool("discovered", false);
+                        if (subElement.GetAttributeBool("discovered", false))
+                        {
+                            location.Discover(checkTalents: false);
+                        }
                         if (location.Discovered)
                         {
 #if CLIENT

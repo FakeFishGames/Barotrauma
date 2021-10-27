@@ -23,9 +23,12 @@ namespace Barotrauma.Networking
         /// </summary>
         public int? WallSectionIndex { get; set; }
 
+        /// <summary>
+        /// Same as calling <see cref="OrderChatMessage.OrderChatMessage(Order, string, int, string, ISpatialEntity, Character, Character)"/>, but the text parameter is set using <see cref="Order.GetChatMessage(string, string, bool, string)"/>
+        /// </summary>
         public OrderChatMessage(Order order, string orderOption, int priority, ISpatialEntity targetEntity, Character targetCharacter, Character sender)
             : this(order, orderOption, priority,
-                   order?.GetChatMessage(targetCharacter?.Name, sender?.CurrentHull?.DisplayName, givingOrderToSelf: targetCharacter == sender, orderOption: orderOption),
+                   order?.GetChatMessage(targetCharacter?.Name, sender?.CurrentHull?.DisplayName, givingOrderToSelf: targetCharacter == sender, orderOption: orderOption, priority: priority),
                    targetEntity, targetCharacter, sender)
         {
 

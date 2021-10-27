@@ -1,5 +1,4 @@
-﻿using Barotrauma.Sounds;
-using Barotrauma.Particles;
+﻿using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
 using System.Xml.Linq;
 

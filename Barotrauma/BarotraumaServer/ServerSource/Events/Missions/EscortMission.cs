@@ -9,6 +9,8 @@ namespace Barotrauma
     {
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
+            base.ServerWriteInitial(msg, c);
+
             if (characters.Count == 0)
             {
                 throw new InvalidOperationException("Server attempted to write escort mission data when no characters had been spawned.");

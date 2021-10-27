@@ -92,7 +92,7 @@ namespace Barotrauma
                 case VoteType.Mode:
                     string modeIdentifier = inc.ReadString();
                     GameModePreset mode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
-                    if (!mode.Votable) { break; }
+                    if (mode == null || !mode.Votable) { break; }
                     sender.SetVote(voteType, mode);
                     break;
                 case VoteType.EndRound:

@@ -57,7 +57,10 @@ namespace Barotrauma
 
         public void SteeringManual(float deltaTime, Vector2 velocity)
         {
-            steering += velocity;
+            if (MathUtils.IsValid(velocity))
+            {
+                steering += velocity;
+            }
         }
 
         public void Reset()

@@ -119,15 +119,23 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedInteger(0, 0, 3);
+                        msg.WriteRangedInteger(0, 0, 4);
                         Inventory.ClientWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Treatment:
-                        msg.WriteRangedInteger(1, 0, 3);
+                        msg.WriteRangedInteger(1, 0, 4);
                         msg.Write(AnimController.Anim == AnimController.Animation.CPR);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(2, 0, 3);
+                        msg.WriteRangedInteger(2, 0, 4);
+                        break;
+                    case NetEntityEvent.Type.UpdateTalents:
+                        msg.WriteRangedInteger(3, 0, 4);
+                        msg.Write((ushort)characterTalents.Count);
+                        foreach (var unlockedTalent in characterTalents)
+                        {
+                            msg.Write(unlockedTalent.Prefab.UIntIdentifier);
+                        }
                         break;
                 }
             }
@@ -258,7 +266,7 @@ namespace Barotrauma
                     if (readStatus)
                     {
                         ReadStatus(msg);
-                        (AIController as EnemyAIController)?.PetBehavior?.ClientRead(msg);
+                        AIController?.ClientRead(msg);
                     }
 
                     msg.ReadPadBits();
@@ -291,7 +299,7 @@ namespace Barotrauma
 
                     break;
                 case ServerNetObject.ENTITY_EVENT:
-                    int eventType = msg.ReadRangedInteger(0, 9);
+                    int eventType = msg.ReadRangedInteger(0, 13);
                     switch (eventType)
                     {
                         case 0: //NetEntityEvent.Type.InventoryState
@@ -350,7 +358,7 @@ namespace Barotrauma
                             {
                                 string skillIdentifier = msg.ReadString();
                                 float skillLevel = msg.ReadSingle();
-                                info?.SetSkillLevel(skillIdentifier, skillLevel, Position + Vector2.UnitY * 150.0f);
+                                info?.SetSkillLevel(skillIdentifier, skillLevel);
                             }
                             break;
                         case 4: // NetEntityEvent.Type.SetAttackTarget
@@ -382,11 +390,12 @@ namespace Barotrauma
                                 }
                                 targetLimb = targetCharacter.AnimController.Limbs[targetLimbIndex];
                             }
-                            if (attackLimb?.attack != null)
+                            if (attackLimb?.attack != null && Controlled != this)
                             {
                                 if (eventType == 4)
                                 {
                                     SetAttackTarget(attackLimb, targetEntity, targetSimPos);
+                                    PlaySound(CharacterSound.SoundType.Attack, maxInterval: 3);
                                 }
                                 else
                                 {
@@ -450,6 +459,36 @@ namespace Barotrauma
                                 }
                             }
                             break;
+                        case 10: //NetEntityEvent.Type.UpdateExperience
+                            int experienceAmount = msg.ReadInt32();
+                            info?.SetExperience(experienceAmount);
+                            break;
+                        case 11: //NetEntityEvent.Type.UpdateTalents:
+                            ushort talentCount = msg.ReadUInt16();
+                            for (int i = 0; i < talentCount; i++)
+                            {
+                                bool addedThisRound = msg.ReadBoolean();
+                                UInt32 talentIdentifier = msg.ReadUInt32();
+                                GiveTalent(talentIdentifier, addedThisRound);
+                            }
+                            break;
+                        case 12: //NetEntityEvent.Type.UpdateMoney:
+                            int moneyAmount = msg.ReadInt32();
+                            SetMoney(moneyAmount);
+                            break;
+                        case 13: //NetEntityEvent.Type.UpdatePermanentStats:
+                            byte savedStatValueCount = msg.ReadByte();
+                            StatTypes statType = (StatTypes)msg.ReadByte();                       
+                            info?.ClearSavedStatValues(statType);                        
+                            for (int i = 0; i < savedStatValueCount; i++)
+                            {
+                                string statIdentifier = msg.ReadString();
+                                float statValue = msg.ReadSingle();
+                                bool removeOnDeath = msg.ReadBoolean();
+                                info?.ChangeSavedStatValue(statType, statValue, statIdentifier, removeOnDeath, setValue: true);
+                            }
+                            break;
+
                     }
                     msg.ReadPadBits();
                     break;

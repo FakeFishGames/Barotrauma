@@ -282,12 +282,21 @@ namespace Barotrauma
             msg.Write(body == null ? (byte)0 : (byte)body.BodyType);
             msg.Write(SpawnedInOutpost);
             msg.Write(AllowStealing);
+            msg.WriteRangedInteger(Quality, 0, Items.Components.Quality.MaxQuality);
 
             byte teamID = 0;
             foreach (WifiComponent wifiComponent in GetComponents<WifiComponent>())
             {
                 teamID = (byte)wifiComponent.TeamID;
                 break;
+            }
+            if (teamID == 0)
+            {
+                foreach (IdCard idCard in GetComponents<IdCard>())
+                {
+                    teamID = (byte)idCard.TeamID;
+                    break;
+                }
             }
 
             msg.Write(teamID);

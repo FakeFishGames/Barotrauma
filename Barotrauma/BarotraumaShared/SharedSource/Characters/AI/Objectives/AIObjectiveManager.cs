@@ -163,7 +163,7 @@ namespace Barotrauma
                 CoroutineManager.StopCoroutines(coroutine);
                 DelayedObjectives.Remove(objective);
             }
-            coroutine = CoroutineManager.InvokeAfter(() =>
+            coroutine = CoroutineManager.Invoke(() =>
             {
                 //round ended before the coroutine finished
 #if CLIENT
@@ -233,11 +233,7 @@ namespace Barotrauma
                 if (orderObjective == null) { return; }
 #if DEBUG
                 // Note: don't automatically remove orders here. Removing orders needs to be done via dismissing.
-                if (orderObjective.IsCompleted)
-                {
-                    DebugConsole.NewMessage($"{character.Name}: ORDER {orderObjective.DebugTag} IS COMPLETED. CURRENTLY ALL ORDERS SHOULD BE LOOPING.", Color.Red);
-                }
-                else if (!orderObjective.CanBeCompleted)
+                if (!orderObjective.CanBeCompleted)
                 {
                     DebugConsole.NewMessage($"{character.Name}: ORDER {orderObjective.DebugTag}, CANNOT BE COMPLETED.", Color.Red);
                 }
@@ -281,9 +277,9 @@ namespace Barotrauma
             ForcedOrder?.CalculatePriority();
             AIObjective orderWithHighestPriority = null;
             float highestPriority = 0;
-            foreach (var currentOrder in CurrentOrders)
+            for (int i = CurrentOrders.Count - 1; i >= 0; i--)
             {
-                var orderObjective = currentOrder.Objective;
+                var orderObjective = CurrentOrders[i].Objective;
                 if (orderObjective == null) { continue; }
                 orderObjective.CalculatePriority();
                 if (orderWithHighestPriority == null || orderObjective.Priority > highestPriority)
@@ -467,6 +463,11 @@ namespace Barotrauma
                         AllowGoingOutside = character.Submarine == null || (order.TargetSpatialEntity != null && character.Submarine != order.TargetSpatialEntity.Submarine)
                     };
                     break;
+                case "return":
+                    newObjective = new AIObjectiveReturn(character, orderGiver, this, priorityModifier: priorityModifier);
+                    newObjective.Abandoned += () => DismissSelf(order, option);
+                    newObjective.Completed += () => DismissSelf(order, option);
+                    break;
                 case "fixleaks":
                     newObjective = new AIObjectiveFixLeaks(character, this, priorityModifier: priorityModifier, prioritizedHull: order.TargetEntity as Hull);
                     break;
@@ -586,6 +587,27 @@ namespace Barotrauma
             return newObjective;
         }
 
+        private void DismissSelf(Order order, string option)
+        {
+            var currentOrder = CurrentOrders.FirstOrDefault(oi => oi.MatchesOrder(order, option));
+            if (currentOrder.Order == null)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("Tried to self-dismiss an order, but no matching current order was found");
+#endif
+                return;
+            }
+#if CLIENT
+            if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
+            {
+                GameMain.GameSession?.CrewManager?.SetCharacterOrder(character, Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(currentOrder), currentOrder.ManualPriority, character);
+            }
+#else
+            GameMain.Server?.SendOrderChatMessage(new OrderChatMessage(Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(currentOrder), currentOrder.ManualPriority, currentOrder.Order?.TargetSpatialEntity, character, character));
+#endif
+        }
+
+
         private bool IsAllowedToWait()
         {
             if (!character.IsOnPlayerTeam) { return false; }
@@ -606,6 +628,8 @@ namespace Barotrauma
         public bool IsActiveObjective<T>() where T : AIObjective => GetActiveObjective() is T;
 
         public AIObjective GetActiveObjective() => CurrentObjective?.GetActiveObjective();
+        public T GetOrder<T>() where T : AIObjective => CurrentOrders.FirstOrDefault(o => o.Objective is T).Objective as T;
+
         /// <summary>
         /// Returns the last active objective of the specific type.
         /// </summary>
