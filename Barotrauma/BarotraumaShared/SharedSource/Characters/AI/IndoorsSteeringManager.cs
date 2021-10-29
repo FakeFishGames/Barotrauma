@@ -309,13 +309,15 @@ namespace Barotrauma
             }
             if (currentPath.Finished)
             {
-                Vector2 pos2 = host.SimPosition;
-                if (character != null && character.Submarine == null &&
-                    CurrentPath.Nodes.Count > 0 && CurrentPath.Nodes.Last().Submarine != null)
+                var lastNode = currentPath.Nodes.LastOrDefault();
+                if (lastNode == null)
                 {
-                    pos2 -= CurrentPath.Nodes.Last().Submarine.SimPosition;
+                    return Vector2.Zero;
                 }
-                return currentTarget - pos2;
+                else
+                {
+                    return ConvertUnits.ToSimUnits(lastNode.WorldPosition - host.WorldPosition);
+                }
             }
             bool doorsChecked = false;
             if (!character.LockHands && buttonPressCooldown <= 0.0f)
@@ -323,29 +325,7 @@ namespace Barotrauma
                 CheckDoorsInPath();
                 doorsChecked = true;
             }       
-            Vector2 pos = host.SimPosition;
-            if (character != null && CurrentPath.CurrentNode != null)
-            {
-                var nodeSub = CurrentPath.CurrentNode.Submarine;
-                if (nodeSub != null)
-                {
-                    if (character.Submarine == null)
-                    {
-                        // Going inside
-                        pos -= ConvertUnits.ToSimUnits(nodeSub.Position);
-                    }
-                    else if (character.Submarine != nodeSub)
-                    {
-                        // Different subs
-                        pos -= ConvertUnits.ToSimUnits(nodeSub.Position - character.Submarine.Position);
-                    }
-                }
-                else if (character.Submarine != null)
-                {
-                    // Going outside
-                    pos += ConvertUnits.ToSimUnits(character.Submarine.Position);
-                }
-            }
+            Vector2 pos = host.WorldPosition;
             bool isDiving = character.AnimController.InWater && character.AnimController.HeadInWater;
             // Only humanoids can climb ladders
             bool canClimb = character.AnimController is HumanoidAnimController && !character.LockHands;
@@ -384,7 +364,7 @@ namespace Barotrauma
             }
             if (character.IsClimbing && useLadders)
             {
-                Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
+                Vector2 diff = currentPath.CurrentNode.WorldPosition - pos;
                 bool nextLadderSameAsCurrent = IsNextLadderSameAsCurrent;
                 if (nextLadderSameAsCurrent)
                 {
@@ -397,7 +377,7 @@ namespace Barotrauma
                     float heightFromFloor = character.AnimController.GetColliderBottom().Y - character.AnimController.FloorY;
                     if (heightFromFloor <= 0.0f)
                     {
-                        diff.Y = Math.Max(diff.Y, 1.0f);
+                        diff.Y = Math.Max(diff.Y, 100);
                     }
                     // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
                     bool isAboveFloor = heightFromFloor > -0.1f;
@@ -430,7 +410,7 @@ namespace Barotrauma
                         NextNode(!doorsChecked);
                     }
                 }
-                return diff;
+                return ConvertUnits.ToSimUnits(diff);
             }
             else if (character.AnimController.InWater)
             {
@@ -481,7 +461,7 @@ namespace Barotrauma
             {
                 return Vector2.Zero;
             }
-            return currentPath.CurrentNode.SimPosition - pos;
+            return ConvertUnits.ToSimUnits(currentPath.CurrentNode.WorldPosition - pos);
         }
 
         private void NextNode(bool checkDoors)

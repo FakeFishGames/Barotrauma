@@ -866,6 +866,8 @@ namespace Barotrauma
                 return true;
             }
 
+            CloseItem();
+
             backedUpSubInfo = new SubmarineInfo(Submarine.MainSub);
 
             GameMain.GameScreen.Select();
@@ -1327,6 +1329,8 @@ namespace Barotrauma
         public override void Deselect()
         {
             base.Deselect();
+
+            CloseItem();
 
             autoSaveLabel?.Parent?.RemoveChild(autoSaveLabel);
             autoSaveLabel = null;
@@ -3057,9 +3061,24 @@ namespace Barotrauma
                     new ContextMenuOption("SubEditor.PasteAssembly",  isEnabled: true,  () => PasteAssembly()),
                     new ContextMenuOption("Editor.SelectSame", isEnabled: targets.Count > 0, onSelected: delegate
                     {
+                        bool doorGapSelected = targets.Any(t => t is Gap gap && gap.ConnectedDoor != null);
                         foreach (MapEntity match in MapEntity.mapEntityList.Where(e => e.prefab != null && targets.Any(t => t.prefab?.Identifier == e.prefab.Identifier) && !MapEntity.SelectedList.Contains(e)))
                         {
                             if (MapEntity.SelectedList.Contains(match)) { continue; }
+                            if (match is Gap gap)
+                            {
+                                //don't add non-door gaps if we've selected a door gap (and vice versa)
+                                if ((gap.ConnectedDoor == null) == doorGapSelected) { continue; }
+                            }
+                            else if (match is Item item)
+                            {
+                                //add door gaps too if we're selecting doors
+                                var door = item.GetComponent<Door>();
+                                if (door?.LinkedGap != null && !MapEntity.SelectedList.Contains(door.LinkedGap))
+                                {
+                                    MapEntity.SelectedList.Add(door.LinkedGap);
+                                }
+                            }
                             MapEntity.SelectedList.Add(match);
                         }
                     }),
@@ -4169,6 +4188,11 @@ namespace Barotrauma
                 saveAssemblyFrame = null;
                 CreateUI();
                 UpdateEntityList();
+            }
+
+            if (OpenedItem != null && OpenedItem.Removed)
+            {
+                OpenedItem = null;
             }
 
             if (WiringMode && dummyCharacter != null)

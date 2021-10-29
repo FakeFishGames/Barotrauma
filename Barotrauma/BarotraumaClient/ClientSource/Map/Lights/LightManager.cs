@@ -529,7 +529,7 @@ namespace Barotrauma.Lights
                 graphics.Clear(Color.Black);
                 Vector2 diff = lookAtPosition - ViewTarget.WorldPosition;
                 diff.Y = -diff.Y;
-                if (diff.LengthSquared() > 30.0f) { losOffset = diff; }
+                if (diff.LengthSquared() > 20.0f * 20.0f) { losOffset = diff; }
                 float rotation = MathUtils.VectorToAngle(losOffset);
 
                 Vector2 scale = new Vector2(

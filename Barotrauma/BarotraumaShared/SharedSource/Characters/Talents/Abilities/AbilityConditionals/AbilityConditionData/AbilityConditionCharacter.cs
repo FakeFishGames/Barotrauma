@@ -14,8 +14,9 @@ namespace Barotrauma.Abilities
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
-            if ((abilityObject as IAbilityCharacter)?.Character is Character character)
+            if (abilityObject is IAbilityCharacter abilityCharacter)
             {
+                if (!(abilityCharacter.Character is Character character)) { return false; }
                 if (!IsViableTarget(targetTypes, character)) { return false; }
 
                 return true;

@@ -300,6 +300,8 @@ namespace Barotrauma.Items.Components
             {
                 requiresRecipeText.RectTransform.RepositionChildInHierarchy(itemList.Content.RectTransform.GetChildIndex(firstRequiresRecipe.RectTransform));
             }
+
+            HideEmptyItemListCategories();
         }
 
         private void DrawInputOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
@@ -479,6 +481,13 @@ namespace Barotrauma.Items.Components
                 child.Visible = recipe.DisplayName.ToLower().Contains(filter);
             }
 
+            HideEmptyItemListCategories();
+
+            return true;
+        }
+
+        private void HideEmptyItemListCategories()
+        {
             //go through the elements backwards, and disable the labels ("insufficient skills to fabricate", "recipe required...") if there's no items below them
             bool recipeVisible = false;
             foreach (GUIComponent child in itemList.Content.Children.Reverse())
@@ -490,14 +499,12 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    recipeVisible = child.Visible;
+                    recipeVisible |= child.Visible;
                 }
             }
 
             itemList.UpdateScrollBarSize();
             itemList.BarScroll = 0.0f;
-
-            return true;
         }
 
         public bool ClearFilter()

@@ -960,7 +960,7 @@ namespace Barotrauma
                             targetMusic[i] = null;
                             break;
                         }
-                        musicChannel[i] = currentMusic[i].Play(0.0f, i == noiseLoopIndex ? "" : "music");
+                        musicChannel[i] = currentMusic[i].Play(0.0f, i == noiseLoopIndex ? "default" : "music");
                         if (targetMusic[i].ContinueFromPreviousTime)
                         {
                             musicChannel[i].StreamSeekPos = targetMusic[i].PreviousTime;
@@ -974,7 +974,7 @@ namespace Barotrauma
                     if (musicChannel[i] == null || !musicChannel[i].IsPlaying)
                     {
                         musicChannel[i]?.Dispose();
-                        musicChannel[i] = currentMusic[i].Play(0.0f, i == noiseLoopIndex ? "" : "music");
+                        musicChannel[i] = currentMusic[i].Play(0.0f, i == noiseLoopIndex ? "default" : "music");
                         musicChannel[i].Looping = true;
                     }
                     float targetGain = targetMusic[i].Volume;

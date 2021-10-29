@@ -37,12 +37,7 @@ namespace Barotrauma.Abilities
                 attackData.DamageMultiplier += addedDamageMultiplier;
                 attackData.AddedPenetration += addedPenetration;
 
-                if (implode)
-                {
-                    // might have issues, as the method used to be private and only used for pressure death
-                    attackData.Character?.Implode();
-                }
-
+                attackData.ShouldImplode = implode;
             }
             else
             {

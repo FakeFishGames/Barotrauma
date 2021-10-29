@@ -213,9 +213,8 @@ namespace Barotrauma
                 };
                 PhysicsBody.FarseerBody.OnCollision += PhysicsBody_OnCollision;
                 PhysicsBody.FarseerBody.OnSeparation += PhysicsBody_OnSeparation;
-                PhysicsBody.FarseerBody.SetIsSensor(true);
+                PhysicsBody.FarseerBody.SetIsSensor(element.GetAttributeBool("sensor", true));
                 PhysicsBody.FarseerBody.BodyType = BodyType.Static;
-                PhysicsBody.FarseerBody.BodyType = BodyType.Kinematic;
 
                 ColliderRadius = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.radius, PhysicsBody.width / 2.0f), PhysicsBody.height / 2.0f));
 
@@ -532,10 +531,9 @@ namespace Barotrauma
                 }
             }
 
-            if (triggerOnce)
+            if (triggerOnce && triggeredOnce)
             {
-                if (triggeredOnce) { return; }
-                if (triggerers.Count > 0) { triggeredOnce = true; }
+                return;
             }
 
             foreach (Entity triggerer in triggerers)
@@ -576,6 +574,12 @@ namespace Barotrauma
                 {
                     GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, cameraShake);
                 }
+            }
+
+            if (triggerOnce && triggerers.Count > 0)
+            {
+                PhysicsBody.Enabled = false;
+                triggeredOnce = true;                
             }
         }
 

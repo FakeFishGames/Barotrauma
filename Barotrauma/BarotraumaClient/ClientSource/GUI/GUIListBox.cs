@@ -770,8 +770,13 @@ namespace Barotrauma
                     BarScroll += speed * Math.Sign(diff) / TotalSize;
                 } 
             }
-            
-            if (PlayerInput.ScrollWheelSpeed != 0 && AllowMouseWheelScroll && (FindScrollableParentListBox(GUI.MouseOn) == this || GUI.IsMouseOn(ScrollBar)))
+
+            bool IsMouseOn() =>
+                FindScrollableParentListBox(GUI.MouseOn) == this ||
+                GUI.IsMouseOn(ScrollBar) ||
+                (CanInteractWhenUnfocusable && Content.Rect.Contains(PlayerInput.MousePosition));
+
+            if (PlayerInput.ScrollWheelSpeed != 0 && AllowMouseWheelScroll && IsMouseOn())
             {
                 if (SmoothScroll)
                 {

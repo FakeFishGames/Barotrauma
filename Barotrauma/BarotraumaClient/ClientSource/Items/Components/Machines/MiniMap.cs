@@ -36,7 +36,7 @@ namespace Barotrauma.Items.Components
 
     internal readonly struct MiniMapSprite
     {
-        public readonly Sprite Sprite;
+        public readonly Sprite? Sprite;
         public readonly Color Color;
 
         public MiniMapSprite(JobPrefab prefab)
@@ -1302,6 +1302,8 @@ namespace Barotrauma.Items.Components
             int i = 0;
             foreach (MiniMapSprite info in cardsToDraw)
             {
+                if (info.Sprite is null) { continue; }
+
                 float spriteSize = info.Sprite.size.X * (parentWidth / info.Sprite.size.X) + padding;
                 if (totalWidth + spriteSize > frame.Rect.Width) { break; }
 
@@ -1318,7 +1320,8 @@ namespace Barotrauma.Items.Components
 
             foreach (MiniMapSprite info in cardsToDraw)
             {
-                Sprite sprite = info.Sprite;
+                Sprite? sprite = info.Sprite;
+                if (sprite is null) { continue; }
                 float scale = parentWidth / sprite.size.X;
                 float spriteSize = sprite.size.X * scale;
                 float posX = adjustedCenterX + offset;

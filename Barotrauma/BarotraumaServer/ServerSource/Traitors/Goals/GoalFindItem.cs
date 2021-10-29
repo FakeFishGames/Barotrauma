@@ -185,7 +185,7 @@ namespace Barotrauma
                     {
                         existingItems.Add(item);
                     }
-                    Entity.Spawner.AddToSpawnQueue(targetPrefab, targetContainer.OwnInventory, null, item =>
+                    Entity.Spawner.AddToSpawnQueue(targetPrefab, targetContainer.OwnInventory, onSpawned: item =>
                     {
                         item.AddTag("traitormissionitem");
                     });

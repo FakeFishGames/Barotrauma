@@ -80,6 +80,8 @@ namespace Barotrauma.Items.Components
                 if ((picker.PickingItem == null || picker.PickingItem == item) && PickingTime <= float.MaxValue)
                 {
 #if SERVER
+                    // Set active picker before creating the server event to make sure it's set correctly
+                    activePicker = picker;
                     item.CreateServerEvent(this);
 #endif
                     pickingCoroutine = CoroutineManager.StartCoroutine(WaitForPick(picker, abilityPickingTime.Value));

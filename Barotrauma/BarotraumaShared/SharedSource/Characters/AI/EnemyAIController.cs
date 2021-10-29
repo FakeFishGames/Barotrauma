@@ -3659,14 +3659,14 @@ namespace Barotrauma
             {
                 if (SelectedAiTarget == null) { return; }
                 Vector2 escapeDir = Vector2.Normalize(WorldPosition - SelectedAiTarget.WorldPosition);
+                if (!MathUtils.IsValid(escapeDir))
+                {
+                    escapeDir = Vector2.UnitY;
+                }
                 if (Character.CurrentHull != null && !Character.AnimController.InWater)
                 {
                     // Inside
                     escapeDir = new Vector2(Math.Sign(escapeDir.X), 0);
-                }
-                if (!MathUtils.IsValid(escapeDir))
-                {
-                    escapeDir = Vector2.UnitY;
                 }
                 SteeringManager.Reset();
                 SteeringManager.SteeringManual(deltaTime, escapeDir);

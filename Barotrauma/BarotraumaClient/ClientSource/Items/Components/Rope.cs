@@ -88,7 +88,7 @@ namespace Barotrauma.Items.Components
 
             Vector2 startPos = GetSourcePos();
             startPos.Y = -startPos.Y;
-            if (source is Item sourceItem)
+            if (source is Item sourceItem && !sourceItem.Removed)
             {
                 var turret = sourceItem.GetComponent<Turret>();
                 var weapon = sourceItem.GetComponent<RangedWeapon>();

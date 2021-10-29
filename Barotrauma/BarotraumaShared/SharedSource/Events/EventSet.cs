@@ -112,13 +112,13 @@ namespace Barotrauma
                     }
                     return prefab;
                 }
-                
+
                 this.Prefabs = prefabIdentifiers
                     .Select(tryFindPrefab)
                     .Where(p => p != null)
                     .ToImmutableArray();
-                this.Commonness = commonness ?? this.Prefabs.Select(p => p.Commonness).Max();
-                this.Probability = probability ?? this.Prefabs.Select(p => p.Probability).Max();
+                this.Commonness = commonness ?? this.Prefabs.Select(p => p.Commonness).MaxOrNull() ?? 0.0f;
+                this.Probability = probability ?? this.Prefabs.Select(p => p.Probability).MaxOrNull() ?? 0.0f;
             }
 
             public SubEventPrefab(EventPrefab prefab, float commonness, float probability)

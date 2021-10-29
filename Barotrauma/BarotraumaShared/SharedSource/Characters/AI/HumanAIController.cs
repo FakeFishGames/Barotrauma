@@ -250,7 +250,15 @@ namespace Barotrauma
                         {
                             rayEnd += SelectedAiTarget.Entity.Submarine.SimPosition;
                         }
-                        UseIndoorSteeringOutside = Submarine.PickBody(SimPosition, rayEnd, collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) != null;
+                        IEnumerable<FarseerPhysics.Dynamics.Body> ignoredBodies = null;
+                        if (SelectedAiTarget.Entity is ISpatialEntity spatialTarget)
+                        {
+                            Submarine targetSub = spatialTarget.Submarine;
+                            if (targetSub != null)
+                            {
+                                ignoredBodies = targetSub.PhysicsBody.FarseerBody.ToEnumerable();
+                            }
+                        }
                     }
                 }
                 else
@@ -340,14 +348,21 @@ namespace Barotrauma
                 IsInsideCave = Character.CurrentHull == null && Level.Loaded?.Caves.FirstOrDefault(c => c.Area.Contains(Character.WorldPosition)) is Level.Cave;
             }
 
-            if (UseIndoorSteeringOutside || IsInsideCave || Character.CurrentHull?.Submarine != null || hasValidPath && IsCloseEnoughToTarget(maxSteeringBuffer) || IsCloseEnoughToTarget(steeringBuffer))
+            if (UseIndoorSteeringOutside || IsInsideCave || Character.CurrentHull?.Submarine != null || hasValidPath || IsCloseEnoughToTarget(steeringBuffer))
             {
                 if (steeringManager != insideSteering)
                 {
                     insideSteering.Reset();
                     steeringManager = insideSteering;
                 }
-                steeringBuffer += steeringBufferIncreaseSpeed * deltaTime;
+                if (IsCloseEnoughToTarget(maxSteeringBuffer))
+                {
+                    steeringBuffer += steeringBufferIncreaseSpeed * deltaTime;
+                }
+                else
+                {
+                    steeringBuffer = minSteeringBuffer;
+                }
             }
             else
             {
