@@ -2678,10 +2678,13 @@ namespace Barotrauma.Networking
             string[] randos = {
             "endworm",
             "legacyendworm",
+            "molochblack",
             "moloch_m",
             "moloch",
             "legacymoloch",
             "watcher",
+            "legacyfractalguardian",
+            "legacyfractalguardian2",
             "charybdisold", "charybdisold",
             "legacycharybdis", "legacycharybdis",
             "hammerhead_m", "hammerhead_m", "hammerhead_m", "hammerhead_m", "hammerhead_m",
@@ -2718,6 +2721,8 @@ namespace Barotrauma.Networking
             "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad",
             "peanut", "peanut", "peanut", "peanut", "peanut", "peanut", "peanut", "peanut", "peanut", "peanut", "peanut",
             "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn",
+            "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder",
+            "mudraptor_passive", "mudraptor_passive", "mudraptor_passive", "mudraptor_passive", "mudraptor_passive", "mudraptor_passive",
             };
             string[] crawler = {
             "bonethresher",
@@ -2728,6 +2733,7 @@ namespace Barotrauma.Networking
             string[] mudraptor = {
             "mudraptor",
             "mudraptor_unarmored", "mudraptor_unarmored", "mudraptor_unarmored", "mudraptor_unarmored",
+            "mudraptor_passive", "mudraptor_passive", "mudraptor_passive", "mudraptor_passive", "mudraptor_passive", "mudraptor_passive",
             "mudraptor_hatchling", "mudraptor_hatchling", "mudraptor_hatchling", "mudraptor_hatchling", "mudraptor_hatchling", "mudraptor_hatchling", "mudraptor_hatchling", "mudraptor_hatchling", "mudraptor_hatchling", "mudraptor_hatchling",
             };
             string[] mantis = {
@@ -2742,14 +2748,17 @@ namespace Barotrauma.Networking
             };
             string[] husk = {
             "carrier",
+            "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder",
             "humanhusk", "humanhusk", "humanhusk", "humanhusk","humanhusk", "humanhusk", "humanhusk", "humanhusk", "humanhusk", "humanhusk", "humanhusk", "humanhusk","humanhusk", "humanhusk", "humanhusk", "humanhusk",
             "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk",
             "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk",
             };
             string[] small = {
             "molochbaby",
-            "fractalguardian", "fractalguardian",
-            "fractalguardian2", "fractalguardian2",
+            "legacyfractalguardian",
+            "legacyfractalguardian2",
+            "fractalguardian", "fractalguardian", "fractalguardian",
+            "fractalguardian2", "fractalguardian2", "fractalguardian2",
             "swarmcrawler", "swarmcrawler", "swarmcrawler",
             "crawlerhusk", "crawlerhusk", "crawlerhusk",
             "crawler", "crawler", "crawler", "crawler", "crawler",
@@ -2769,6 +2778,8 @@ namespace Barotrauma.Networking
             "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad",
             "peanut", "peanut", "peanut", "peanut", "peanut",
             "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn",
+            "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder",
+            "mudraptor_passive", "mudraptor_passive", "mudraptor_passive", "mudraptor_passive", "mudraptor_passive", "mudraptor_passive",
             };
             string[] aggressive = {
             "hammerhead_m",
