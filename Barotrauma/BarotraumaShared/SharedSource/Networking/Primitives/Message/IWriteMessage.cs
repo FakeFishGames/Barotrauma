@@ -15,6 +15,8 @@ namespace Barotrauma.Networking
         void Write(UInt64 val);
         void Write(Single val);
         void Write(Double val);
+        void WriteColorR8G8B8(Microsoft.Xna.Framework.Color val);
+        void WriteColorR8G8B8A8(Microsoft.Xna.Framework.Color val);
         void WriteVariableUInt32(UInt32 val);
         void Write(string val);
         void WriteRangedInteger(int val, int min, int max);

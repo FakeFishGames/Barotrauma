@@ -58,12 +58,7 @@ namespace Barotrauma
             return handle;
         }
 
-        public static CoroutineHandle Invoke(Action action)
-        {
-            return StartCoroutine(DoInvokeAfter(action, 0.0f));
-        }
-
-        public static CoroutineHandle InvokeAfter(Action action, float delay)
+        public static CoroutineHandle Invoke(Action action, float delay = 0f)
         {
             return StartCoroutine(DoInvokeAfter(action, delay));
         }

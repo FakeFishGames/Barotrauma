@@ -133,15 +133,15 @@ namespace Barotrauma.Items.Components
 
         public bool IsConnectedTo(Item item)
         {
-            if (connections[0] != null && connections[0].Item == item) return true;
-            return (connections[1] != null && connections[1].Item == item);
+            if (connections[0] != null && connections[0].Item == item) { return true; }
+            return connections[1] != null && connections[1].Item == item;
         }
 
         public void RemoveConnection(Item item)
         {
             for (int i = 0; i < 2; i++)
             {
-                if (connections[i] == null || connections[i].Item != item) continue;
+                if (connections[i] == null || connections[i].Item != item) { continue; }
 
                 foreach (Wire wire in connections[i].Wires)
                 {

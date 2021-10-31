@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions; 
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -28,6 +29,7 @@ namespace Barotrauma
 
             public bool SpawnIfInventoryFull = true;
             public bool IgnoreLimbSlots = false;
+            public InvSlotType Slot = InvSlotType.None;
 
             private readonly Action<Item> onSpawned;
 
@@ -73,7 +75,8 @@ namespace Barotrauma
                     {
                         Condition = Condition
                     };
-                    if (!Inventory.Owner.Removed && !Inventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots))
+                    var slot = Slot != InvSlotType.None ? Slot.ToEnumerable() : spawnedItem.AllowedSlots;
+                    if (!Inventory.Owner.Removed && !Inventory.TryPutItem(spawnedItem, null, slot))
                     {
                         if (IgnoreLimbSlots)
                         {
@@ -264,7 +267,7 @@ namespace Barotrauma
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub, onSpawned, condition));
         }
 
-        public void AddToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory, float? condition = null, Action<Item> onSpawned = null, bool spawnIfInventoryFull = true, bool ignoreLimbSlots = false)
+        public void AddToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory, float? condition = null, Action<Item> onSpawned = null, bool spawnIfInventoryFull = true, bool ignoreLimbSlots = false, InvSlotType slot = InvSlotType.None)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (itemPrefab == null)
@@ -277,7 +280,8 @@ namespace Barotrauma
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory, onSpawned, condition) 
             { 
                 SpawnIfInventoryFull = spawnIfInventoryFull, 
-                IgnoreLimbSlots = ignoreLimbSlots 
+                IgnoreLimbSlots = ignoreLimbSlots,
+                Slot = slot
             });
         }
 

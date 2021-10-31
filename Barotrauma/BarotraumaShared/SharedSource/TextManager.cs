@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Barotrauma.Extensions;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -441,6 +442,60 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("TextManager.GetFormatted:FormatException", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return text;
             }
+        }
+
+        /// <summary>
+        /// Constructs a string from XML in a way that allows replacing one or more variables with hard-coded or localized values. Usage example in the method's comments.
+        /// </summary>
+        public static void ConstructDescription(ref string Description, XElement descriptionElement)
+        {
+            /*
+            <Description tag="talentdescription.simultaneousskillgain">
+                <Replace tag="[skillname1]" value="skillname.helm"/>
+                <Replace tag="[skillname2]" value="skillname.weapons"/>
+                <Replace tag="[somevalue]" value="45.3"/>
+            </Description>
+            */
+
+            if (descriptionElement.GetAttributeBool("linebreak", false))
+            {
+                Description += "\n";
+                return;
+            }
+
+            string descriptionTag = descriptionElement.GetAttributeString("tag", string.Empty);
+            string extraDescriptionLine = Get(descriptionTag);
+            if (string.IsNullOrEmpty(extraDescriptionLine)) { return; }
+            foreach (XElement replaceElement in descriptionElement.Elements())
+            {
+                if (replaceElement.Name.ToString().ToLowerInvariant() != "replace") { continue; }
+
+                string tag = replaceElement.GetAttributeString("tag", string.Empty);
+                string[] replacementValues = replaceElement.GetAttributeStringArray("value", new string[0]);
+                string replacementValue = string.Empty;
+                for (int i = 0; i < replacementValues.Length; i++)
+                {
+#if DEBUG
+                    if (!int.TryParse(replacementValues[i], out int _) && !float.TryParse(replacementValues[i], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float __) && !ContainsTag(replacementValues[i]))
+                    {
+                        DebugConsole.AddWarning($"Couldn't find the tag \"{replacementValues[i]}\" in text files for description \"{descriptionTag}\". Is the tag correct?");
+                    }
+#endif
+                    replacementValue += Get(replacementValues[i], returnNull: true) ?? replacementValues[i];
+                    if (i < replacementValues.Length - 1)
+                    {
+                        replacementValue += ", ";
+                    }
+                }
+                if (replaceElement.Attribute("color") != null)
+                {
+                    string colorStr = replaceElement.GetAttributeString("color", "255,255,255,255");
+                    replacementValue = $"‖color:{colorStr}‖{replacementValue}‖color:end‖";
+                }
+                extraDescriptionLine = extraDescriptionLine.Replace(tag, replacementValue);
+            }
+            if (!string.IsNullOrEmpty(Description)) { Description += "\n"; }
+            Description += extraDescriptionLine;
         }
 
         public static string FormatServerMessage(string textId)

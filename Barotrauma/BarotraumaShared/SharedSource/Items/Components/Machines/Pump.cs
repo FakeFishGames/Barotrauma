@@ -70,6 +70,8 @@ namespace Barotrauma.Items.Components
         public bool HasPower => IsActive && Voltage >= MinVoltage;
         public bool IsAutoControlled => pumpSpeedLockTimer > 0.0f || isActiveLockTimer > 0.0f;
 
+        private const float TinkeringSpeedIncrease = 1.5f;
+
         public Pump(Item item, XElement element)
             : base(item, element)
         {
@@ -105,11 +107,19 @@ namespace Barotrauma.Items.Components
             float powerFactor = Math.Min(currPowerConsumption <= 0.0f || MinVoltage <= 0.0f ? 1.0f : Voltage, 1.0f);
 
             currFlow = flowPercentage / 100.0f * maxFlow * powerFactor;
+
+            if (item.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering)
+            {
+                currFlow *= 1f + repairable.TinkeringStrength * TinkeringSpeedIncrease;
+            }
+
             //less effective when in a bad condition
             currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / item.MaxCondition);
 
             item.CurrentHull.WaterVolume += currFlow;
             if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 0.5f; }
+
+            Voltage -= deltaTime;
         }
 
         public void InfectBallast(string identifier, bool allowMultiplePerShip = false)

@@ -217,10 +217,6 @@ namespace Barotrauma
             if (item.Prefab.Identifier == "idcard" || item.Prefab.Identifier == "idcardwreck")
             {
                 item.AddTag("name:" + character.Name);
-                if (Level.Loaded != null)
-                {
-                    item.ReplaceTag("wreck_id", Level.Loaded.GetWreckIDTag("wreck_id", submarine));
-                }
                 var job = character.Info?.Job;
                 if (job != null)
                 {
@@ -229,6 +225,10 @@ namespace Barotrauma
 
                 IdCard idCardComponent = item.GetComponent<IdCard>();
                 idCardComponent?.Initialize(character.Info);
+                if (submarine != null && (submarine.Info.IsWreck || submarine.Info.IsOutpost))
+                {
+                    idCardComponent.SubmarineSpecificID = submarine.SubmarineSpecificIDTag;
+                }
 
                 var idCardTags = itemElement.GetAttributeStringArray("tags", new string[0]);
                 foreach (string tag in idCardTags)

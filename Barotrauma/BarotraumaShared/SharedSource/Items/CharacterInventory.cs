@@ -9,7 +9,7 @@ namespace Barotrauma
     [Flags]
     public enum InvSlotType
     {
-        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128, Bag = 256
+        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128, Bag = 256, HealthInterface = 512
     };
 
     partial class CharacterInventory : Inventory
@@ -87,7 +87,9 @@ namespace Barotrauma
                     continue;
                 }
 
-                Entity.Spawner?.AddToSpawnQueue(itemPrefab, this, ignoreLimbSlots: subElement.GetAttributeBool("forcetoslot", false));
+                string slotString = subElement.GetAttributeString("slot", "None");
+                InvSlotType slot = Enum.TryParse(slotString, ignoreCase: true, out InvSlotType s) ? s : InvSlotType.None;
+                Entity.Spawner?.AddToSpawnQueue(itemPrefab, this, ignoreLimbSlots: subElement.GetAttributeBool("forcetoslot", false), slot: slot);
             }
         }
 
@@ -139,10 +141,10 @@ namespace Barotrauma
                 (SlotTypes[i] == InvSlotType.Any || slots[i].ItemCount < 1);
         }
 
-        public override bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition)
+        public override bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition, int? quality = null)
         {
             return 
-                base.CanBePutInSlot(itemPrefab, i, condition) &&
+                base.CanBePutInSlot(itemPrefab, i, condition, quality) &&
                 (SlotTypes[i] == InvSlotType.Any || slots[i].ItemCount < 1);
         }
 
@@ -291,11 +293,25 @@ namespace Barotrauma
                 {
                     currentSlot = i;
                     if (allowedSlots.Any(a => a.HasFlag(SlotTypes[i])))
-                        inSuitableSlot = true;
+                    {
+                        if ((SlotTypes[i] == InvSlotType.RightHand || SlotTypes[i] == InvSlotType.LeftHand) && !allowedSlots.Contains(SlotTypes[i]))
+                        {
+                            //allowed slot = InvSlotType.RightHand | InvSlotType.LeftHand
+                            // -> make sure the item is in both hand slots
+                            inSuitableSlot = IsInLimbSlot(item, InvSlotType.RightHand) && IsInLimbSlot(item, InvSlotType.LeftHand);
+                        }
+                        else
+                        {
+                            inSuitableSlot = true;
+                        }
+                    }
                     else if (!allowedSlots.Any(a => a.HasFlag(SlotTypes[i])))
+                    {
                         inWrongSlot = true;
+                    }
                 }
             }
+
             //all good
             if (inSuitableSlot && !inWrongSlot) { return true; }
 

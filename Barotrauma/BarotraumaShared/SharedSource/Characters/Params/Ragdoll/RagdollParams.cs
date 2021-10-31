@@ -34,7 +34,10 @@ namespace Barotrauma
         [Serialize("", true, description: "Default path for the limb sprite textures. Used only if the limb specific path for the limb is not defined"), Editable]
         public string Texture { get; set; }
 
-        [Serialize(0.0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'. Used mainly for animations and widgets."), Editable(-360, 360)]
+        [Serialize("1.0,1.0,1.0,1.0", true), Editable()]
+        public Color Color { get; set; }
+
+        [Serialize(0.0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'."), Editable(-360, 360)]
         public float SpritesheetOrientation { get; set; }
 
         public bool IsSpritesheetOrientationHorizontal
@@ -556,7 +559,7 @@ namespace Barotrauma
                 }
             }
 
-            public override string GenerateName() => $"Limb {ID}";
+            public override string GenerateName() => Type != LimbType.None ? $"{Type} ({ID})" : $"Limb {ID}";
 
             public SpriteParams GetSprite() => deformSpriteParams ?? normalSpriteParams;
 
@@ -569,12 +572,14 @@ namespace Barotrauma
             /// <summary>
             /// The orientation of the sprite as drawn on the sprite sheet (in radians).
             /// </summary>
-            public float GetSpriteOrientation() => MathHelper.ToRadians(float.IsNaN(SpriteOrientation) ? Ragdoll.SpritesheetOrientation : SpriteOrientation);
+            public float GetSpriteOrientation() => MathHelper.ToRadians(GetSpriteOrientationInDegrees());
+
+            public float GetSpriteOrientationInDegrees() => float.IsNaN(SpriteOrientation) ? Ragdoll.SpritesheetOrientation : SpriteOrientation;
 
             [Serialize("", true), Editable]
             public string Notes { get; set; }
 
-            [Serialize(1f, true), Editable]
+            [Serialize(1f, true), Editable(DecimalCount = 2)]
             public float Scale { get; set; }
 
             [Serialize(true, true, description: "Does the limb flip when the character flips?"), Editable()]
@@ -589,8 +594,11 @@ namespace Barotrauma
             [Serialize(false, true, description: "Disable drawing for this limb."), Editable()]
             public bool Hide { get; set; }
 
-            [Serialize(float.NaN, true, description: "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings. Used mainly for animations and widgets."), Editable(-360, 360, ValueStep = 90, DecimalCount = 0)]
+            [Serialize(float.NaN, true, description: "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings."), Editable(-360, 360, ValueStep = 90, DecimalCount = 0)]
             public float SpriteOrientation { get; set; }
+
+            [Serialize(LimbType.None, true, description: "If set, the limb sprite will use the same sprite depth as the specified limb. Generally only useful for limbs that get added on the ragdoll on the fly (e.g. extra limbs added via gene splicing).")]
+            public LimbType InheritLimbDepth { get; set; }
 
             [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
             public float SteerForce { get; set; }
@@ -673,6 +681,9 @@ namespace Barotrauma
 
             [Serialize(50f, true), Editable]
             public float BlinkForce { get; set; }
+
+            [Serialize(false, true), Editable]
+            public bool OnlyBlinkInWater { get; set; }
 
             [Serialize(TransitionMode.Linear, true), Editable]
             public TransitionMode BlinkTransitionIn { get; private set; }
@@ -888,6 +899,9 @@ namespace Barotrauma
 
             [Serialize("", true), Editable()]
             public string Texture { get; set; }
+
+            [Serialize(false, true), Editable()]
+            public bool IgnoreTint { get; set; }
 
             [Serialize("1.0,1.0,1.0,1.0", true), Editable()]
             public Color Color { get; set; }

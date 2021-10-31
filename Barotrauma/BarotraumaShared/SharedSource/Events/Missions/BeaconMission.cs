@@ -91,7 +91,7 @@ namespace Barotrauma
                 int amount = Rand.Range(monsterCountRange.X, monsterCountRange.Y + 1);
                 for (int i = 0; i < amount; i++)
                 {
-                    CoroutineManager.InvokeAfter(() =>
+                    CoroutineManager.Invoke(() =>
                     {
                         //round ended before the coroutine finished
                         if (GameMain.GameSession == null || Level.Loaded == null) { return; }

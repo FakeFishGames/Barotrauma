@@ -31,7 +31,7 @@
     Down="S"
     Left="A"
     Right="D"
-    Attack="R"
+    Attack="F"
     Run="LeftShift"
     Crouch="LeftControl"
     InfoTab="Tab"

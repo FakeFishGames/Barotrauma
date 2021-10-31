@@ -23,6 +23,8 @@ namespace Barotrauma
         private bool selectMultiple;
 
         public bool Dropped { get; set; }
+        
+        public bool AllowNonText { get; set; }
 
         public object SelectedItemData
         {
@@ -318,9 +320,9 @@ namespace Barotrauma
                 if (textBlock == null)
                 {
                     textBlock = component.GetChild<GUITextBlock>();
-                    if (textBlock == null) return false;
+                    if (textBlock is null && !AllowNonText) { return false; }
                 }
-                button.Text = textBlock.Text;
+                button.Text = textBlock?.Text ?? "";
             }
             Dropped = false;
             // TODO: OnSelected can be called multiple times and when it shouldn't be called -> turn into an event so that nobody else can call it.

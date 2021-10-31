@@ -88,11 +88,6 @@ namespace Barotrauma.Items.Components
             return character == Character.Controlled && character == user && character.SelectedConstruction == item;
         }
         
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame?.AddToGUIUpdateList();
-        }
-
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             if (character != Character.Controlled || character != user || character.SelectedConstruction != item) { return; }

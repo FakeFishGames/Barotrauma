@@ -126,12 +126,12 @@ namespace Barotrauma
                             item = suitableItems.FirstOrDefault(it => Vector2.DistanceSquared(it.WorldPosition, position) < 1000.0f);
                             break;
                         case Level.PositionType.Ruin:
-                            item = suitableItems.FirstOrDefault(it => it.ParentRuin != null && it.ParentRuin.Area.Contains(position));
-                            break;
                         case Level.PositionType.Wreck:
                             foreach (Item it in suitableItems)
                             {
-                                if (it.Submarine == null || it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
+                                if (it.Submarine?.Info == null) { continue; }
+                                if (spawnPositionType == Level.PositionType.Ruin && it.Submarine.Info.Type != SubmarineType.Ruin) { continue; }
+                                if (spawnPositionType == Level.PositionType.Wreck && it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
                                 Rectangle worldBorders = it.Submarine.Borders;
                                 worldBorders.Location += it.Submarine.WorldPosition.ToPoint();
                                 if (Submarine.RectContains(worldBorders, it.WorldPosition))
@@ -178,10 +178,10 @@ namespace Barotrauma
                         {
                             case Level.PositionType.Cave:
                             case Level.PositionType.MainPath:
-                                if (it.Submarine != null || it.ParentRuin != null) { continue; }
+                                if (it.Submarine != null) { continue; }
                                 break;
                             case Level.PositionType.Ruin:
-                                if (it.ParentRuin == null) { continue; }
+                                if (it.Submarine?.Info == null || !it.Submarine.Info.IsRuin) { continue; }
                                 break;
                             case Level.PositionType.Wreck:
                                 if (it.Submarine == null || it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
@@ -247,8 +247,8 @@ namespace Barotrauma
 
         public override void End()
         {
-            var root = item.GetRootContainer() ?? item;
-            if (root.CurrentHull?.Submarine == null || (!root.CurrentHull.Submarine.AtEndExit && !root.CurrentHull.Submarine.AtStartExit) || item.Removed) 
+            var root = item?.GetRootContainer() ?? item;
+            if (root?.CurrentHull?.Submarine == null || (!root.CurrentHull.Submarine.AtEndExit && !root.CurrentHull.Submarine.AtStartExit) || item.Removed) 
             { 
                 return; 
             }

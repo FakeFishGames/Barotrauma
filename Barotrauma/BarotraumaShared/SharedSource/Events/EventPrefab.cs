@@ -40,7 +40,7 @@ namespace Barotrauma
             BiomeIdentifier = ConfigElement.GetAttributeString("biome", string.Empty);
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
             Probability = Math.Clamp(element.GetAttributeFloat(1.0f, "probability", "spawnprobability"), 0, 1);
-            TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
+            TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", EventType != typeof(ScriptedEvent));
 
             UnlockPathEvent = element.GetAttributeBool("unlockpathevent", false);
             UnlockPathTooltip = element.GetAttributeString("unlockpathtooltip", "lockedpathtooltip");

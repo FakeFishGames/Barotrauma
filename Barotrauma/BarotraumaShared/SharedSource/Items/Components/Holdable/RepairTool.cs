@@ -523,7 +523,20 @@ namespace Barotrauma.Items.Components
 
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new ISerializableEntity[] { targetStructure });
                 FixStructureProjSpecific(user, deltaTime, targetStructure, sectionIndex);
-                targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess, user);
+
+                float structureFixAmount = StructureFixAmount;
+                if (structureFixAmount >= 0f)
+                {
+                    structureFixAmount *= 1 + user.GetStatValue(StatTypes.RepairToolStructureRepairMultiplier);
+                    structureFixAmount *= 1 + item.GetQualityModifier(Quality.StatType.RepairToolStructureRepairMultiplier);
+                }
+                else
+                {
+                    structureFixAmount *= 1 + user.GetStatValue(StatTypes.RepairToolStructureDamageMultiplier);
+                    structureFixAmount *= 1 + item.GetQualityModifier(Quality.StatType.RepairToolStructureDamageMultiplier);
+                }
+
+                targetStructure.AddDamage(sectionIndex, -structureFixAmount * degreeOfSuccess, user);
 
                 //if the next section is small enough, apply the effect to it as well
                 //(to make it easier to fix a small "left-over" section)
@@ -535,7 +548,7 @@ namespace Barotrauma.Items.Components
                         (nextSectionLength > 0 && nextSectionLength < Structure.WallSectionSize * 0.3f))
                     {
                         //targetStructure.HighLightSection(sectionIndex + i);
-                        targetStructure.AddDamage(sectionIndex + i, -StructureFixAmount * degreeOfSuccess);
+                        targetStructure.AddDamage(sectionIndex + i, -structureFixAmount * degreeOfSuccess);
                     }
                 }
                 return true;
@@ -606,7 +619,8 @@ namespace Barotrauma.Items.Components
                     levelResource.requiredItems.Any() &&
                     levelResource.HasRequiredItems(user, addMessage: false))
                 {
-                    levelResource.DeattachTimer += deltaTime;
+                    float addedDetachTime = deltaTime * (1f + user.GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * (1f + item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier));
+                    levelResource.DeattachTimer += addedDetachTime;
 #if CLIENT
                     Character.Controlled?.UpdateHUDProgressBar(
                         this,
@@ -698,7 +712,7 @@ namespace Barotrauma.Items.Components
                     humanAnim.Crouching = true;
                 }
             }
-            if (dist > reach * 0.8f || dist > reach * 0.5f && character.AnimController.Limbs.Any(l => l.inWater))
+            if (dist > reach * 0.8f || dist > reach * 0.5f && character.AnimController.Limbs.Any(l => l.InWater))
             {
                 // Steer closer
                 if (character.AIController.SteeringManager is IndoorsSteeringManager indoorSteering)

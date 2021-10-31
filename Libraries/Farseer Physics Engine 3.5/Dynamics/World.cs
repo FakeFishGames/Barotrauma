@@ -999,7 +999,7 @@ namespace FarseerPhysics.Dynamics
             if (body == null)
                 throw new ArgumentNullException("body");
             if (body.World != this)
-                throw new ArgumentException("You are removing a body that is not in the simulation.", "body");
+                throw new ArgumentException($"You are removing a body that is not in the simulation (userdata: {body.UserData?.ToString() ?? "null"}).", "body");
 
 #if USE_AWAKE_BODY_SET
             Debug.Assert(!AwakeBodySet.Contains(body));
@@ -1034,6 +1034,7 @@ namespace FarseerPhysics.Dynamics
             body.DestroyProxies();
             for (int i = 0; i < body.FixtureList.Count; i++)
             {
+                body.FixtureList[i].UserData = null;
                 if (FixtureRemoved != null)
                     FixtureRemoved(this, body, body.FixtureList[i]);
             }

@@ -110,14 +110,14 @@ namespace Barotrauma
                 foreach (StatusEffect statusEffect in successEffects)
                 {
                     float duration = statusEffect.Duration;
-                    onSuccessAfflictions.AddRange(statusEffect.ReduceAffliction.Select(pair => Tuple.Create(GetAfflictionName(pair.First), -pair.Second, duration)));
+                    onSuccessAfflictions.AddRange(statusEffect.ReduceAffliction.Select(pair => Tuple.Create(GetAfflictionName(pair.affliction), -pair.amount, duration)));
                     onSuccessAfflictions.AddRange(statusEffect.Afflictions.Select(affliction => Tuple.Create(affliction.Prefab.Name, affliction.NonClampedStrength, duration)));
                 }
 
                 foreach (StatusEffect statusEffect in failureEffects)
                 {
                     float duration = statusEffect.Duration;
-                    onFailureAfflictions.AddRange(statusEffect.ReduceAffliction.Select(pair => Tuple.Create(GetAfflictionName(pair.First), -pair.Second, duration)));
+                    onFailureAfflictions.AddRange(statusEffect.ReduceAffliction.Select(pair => Tuple.Create(GetAfflictionName(pair.affliction), -pair.amount, duration)));
                     onFailureAfflictions.AddRange(statusEffect.Afflictions.Select(affliction => Tuple.Create(affliction.Prefab.Name, affliction.NonClampedStrength, duration)));
                 }
             }

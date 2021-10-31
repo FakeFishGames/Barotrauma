@@ -11,7 +11,7 @@ namespace Microsoft.Xna.Framework.Graphics
     /// This class handles the queueing of batch items into the GPU by creating the triangle tesselations
     /// that are used to draw the sprite textures. This class supports int.MaxValue number of sprites to be
     /// batched and will process them into short.MaxValue groups (strided by 6 for the number of vertices
-    /// sent to the GPU). 
+    /// sent to the GPU).
     /// </summary>
 	internal class SpriteBatcher
     {
@@ -68,7 +68,7 @@ namespace Microsoft.Xna.Framework.Graphics
         }
 
         /// <summary>
-        /// Reuse a previously allocated SpriteBatchItem from the item pool. 
+        /// Reuse a previously allocated SpriteBatchItem from the item pool.
         /// if there is none available grow the pool and initialize new items.
         /// </summary>
         /// <returns></returns>
@@ -143,12 +143,8 @@ namespace Microsoft.Xna.Framework.Graphics
         /// overflow the 16 bit array indices for vertices.
         /// </summary>
         /// <param name="sortMode">The type of depth sorting desired for the rendering.</param>
-        /// <param name="effect">The custom effect to apply to the drawn geometry</param>
-        public unsafe void DrawBatch(SpriteSortMode sortMode, Effect effect)
+        public unsafe void DrawBatch(SpriteSortMode sortMode, EffectPass defaultSpritePass)
         {
-            if (effect != null && effect.IsDisposed)
-                throw new ObjectDisposedException("effect");
-
             // nothing to do
             if (_batchItemCount == 0)
                 return;
@@ -180,6 +176,7 @@ namespace Microsoft.Xna.Framework.Graphics
                 var startIndex = 0;
                 var index = 0;
                 Texture2D tex = null;
+                SpriteBatch.EffectWithParams effect = default;
 
                 int numBatchesToProcess = batchCount;
                 if (numBatchesToProcess > MaxBatchSize)
@@ -196,12 +193,24 @@ namespace Microsoft.Xna.Framework.Graphics
                     {
                         SpriteBatchItem item = _batchItemList[batchIndex];
                         // if the texture changed, we need to flush and bind the new texture
-                        var shouldFlush = !ReferenceEquals(item.Texture, tex);
+                        var shouldFlush =
+                            !ReferenceEquals(item.Texture, tex)
+                            || !ReferenceEquals(item.Effect.Effect, effect.Effect)
+                            || !ReferenceEquals(item.Effect.Params, effect.Params);
                         if (shouldFlush)
                         {
-                            FlushVertexArray(startIndex, index, effect, tex);
+                            FlushVertexArray(startIndex, index, effect.Effect, tex);
 
                             tex = item.Texture;
+                            effect = item.Effect;
+                            if (effect.Effect is null || effect.Params is null)
+                            {
+                                defaultSpritePass.Apply();
+                            }
+                            else
+                            {
+                                effect.Apply();
+                            }
                             startIndex = index = 0;
                             vertexArrayPtr = vertexArrayFixedPtr;
                             _device.Textures[0] = tex;
@@ -215,15 +224,16 @@ namespace Microsoft.Xna.Framework.Graphics
 
                         // Release the texture.
                         item.Texture = null;
+                        item.Effect = default;
                     }
                 }
                 // flush the remaining vertexArray data
-                FlushVertexArray(startIndex, index, effect, tex);
+                FlushVertexArray(startIndex, index, effect.Effect, tex);
                 // Update our batch count to continue the process of culling down
                 // large batches
                 batchCount -= numBatchesToProcess;
             }
-            // return items to the pool.  
+            // return items to the pool.
             _batchItemCount = 0;
         }
 

@@ -12,6 +12,7 @@ namespace Barotrauma
     {
         public override void ClientReadInitial(IReadMessage msg)
         {
+            base.ClientReadInitial(msg);
             byte caveCount = msg.ReadByte();
             for (int i = 0; i < caveCount; i++)
             {
@@ -29,7 +30,7 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < ResourceClusters.Count; i++)
+            for (int i = 0; i < resourceClusters.Count; i++)
             {
                 var amount = msg.ReadByte();
                 var rotation = msg.ReadSingle();
@@ -41,20 +42,20 @@ namespace Barotrauma
                         h.AttachToWall();
                         item.Rotation = rotation;
                     }
-                    if (SpawnedResources.TryGetValue(item.Prefab.Identifier, out var resources))
+                    if (spawnedResources.TryGetValue(item.Prefab.Identifier, out var resources))
                     {
                         resources.Add(item);
                     }
                     else
                     {
-                        SpawnedResources.Add(item.Prefab.Identifier, new List<Item>() { item });
+                        spawnedResources.Add(item.Prefab.Identifier, new List<Item>() { item });
                     }
                 }
             }
 
             CalculateMissionClusterPositions();
 
-            for(int i = 0; i < ResourceClusters.Count; i++)
+            for(int i = 0; i < resourceClusters.Count; i++)
             {
                 var identifier = msg.ReadString();
                 var count = msg.ReadByte();
@@ -66,7 +67,7 @@ namespace Barotrauma
                     if (!(entity is Item item)) { continue; }
                     resources[j] = item;
                 }
-                RelevantLevelResources.Add(identifier, resources);
+                relevantLevelResources.Add(identifier, resources);
             }
         }
     }

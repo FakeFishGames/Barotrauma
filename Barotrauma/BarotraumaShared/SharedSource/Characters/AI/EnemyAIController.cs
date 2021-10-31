@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -10,7 +11,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    public enum AIState { Idle, Attack, Escape, Eat, Flee, Avoid, Aggressive, PassiveAggressive, Protect, Observe, Freeze, Follow }
+    public enum AIState { Idle, Attack, Escape, Eat, Flee, Avoid, Aggressive, PassiveAggressive, Protect, Observe, Freeze, Follow, FleeTo, Patrol }
 
     public enum AttackPattern { Straight, Sweep, Circle }
 
@@ -37,6 +38,12 @@ namespace Barotrauma
                 PreviousState = _state;
                 OnStateChanged(_state, value);
                 _state = value;
+                if (_state == AIState.Attack)
+                {
+#if CLIENT
+                    Character.PlaySound(CharacterSound.SoundType.Attack, maxInterval: 3);
+#endif
+                }
             }
         }
 
@@ -50,8 +57,8 @@ namespace Barotrauma
         private readonly float updateTargetsInterval = 1;
         private readonly float updateMemoriesInverval = 1;
         private readonly float attackLimbResetInterval = 2;
-
-        private readonly float avoidLookAheadDistance;
+        // Min priority for the memorized targets. The actual value fades gradually, unless kept fresh by selecting the target.
+        private const float minPriority = 10;
 
         private IndoorsSteeringManager PathSteering => insideSteering as IndoorsSteeringManager;
         private SteeringManager outsideSteering, insideSteering;
@@ -82,6 +89,10 @@ namespace Barotrauma
                 {
                     _previousAttackingLimb = _attackingLimb;
                 }
+                if (_attackingLimb != null && value != _attackingLimb && _attackingLimb.attack.CoolDownTimer > 0)
+                {
+                    SetAimTimer();
+                }
                 _attackingLimb = value;
                 attackVector = null;
                 Reverse = _attackingLimb != null && _attackingLimb.attack.Reverse;
@@ -104,20 +115,21 @@ namespace Barotrauma
                 lastAttackUpdateTime = Timing.TotalTime; 
             }
         }
-        
+
+        public AITargetMemory SelectedTargetMemory => selectedTargetMemory;
         private AITargetMemory selectedTargetMemory;
         private float targetValue;
         private CharacterParams.TargetParams selectedTargetingParams;
                 
         private Dictionary<AITarget, AITargetMemory> targetMemories;
         
-        private readonly float colliderWidth;
-        private readonly float colliderLength;
         private readonly int requiredHoleCount;
         private bool canAttackWalls;
+        public bool CanAttackDoors => canAttackDoors;
         private bool canAttackDoors;
         private bool canAttackCharacters;
 
+        public float PriorityFearIncrement => priorityFearIncreasement;
         private readonly float priorityFearIncreasement = 2;
         private readonly float memoryFadeTime = 0.5f;
 
@@ -135,6 +147,8 @@ namespace Barotrauma
         private float aggressionIntensity;
         private CirclePhase CirclePhase;
         private float currentAttackIntensity;
+
+        private CoroutineHandle disableTailCoroutine;
 
         private readonly IEnumerable<Body> myBodies;
 
@@ -167,7 +181,7 @@ namespace Barotrauma
             get
             {
                 //can't enter a submarine when attached to something
-                return Character.AnimController.CanEnterSubmarine && (LatchOntoAI == null || !LatchOntoAI.IsAttached);
+                return Character.AnimController.CanEnterSubmarine && (LatchOntoAI == null || !LatchOntoAI.IsAttachedToSub);
             }
         }
 
@@ -178,7 +192,7 @@ namespace Barotrauma
                 //can't flip when attached to something, when eating, or reversing or in a (relatively) small room
                 return !Reverse &&
                     (State != AIState.Eat || Character.SelectedCharacter == null) &&
-                    (LatchOntoAI == null || !LatchOntoAI.IsAttached) && 
+                    (LatchOntoAI == null || !LatchOntoAI.IsAttachedToSub) && 
                     (Character.CurrentHull == null || !Character.AnimController.InWater || Math.Min(Character.CurrentHull.Size.X, Character.CurrentHull.Size.Y) > ConvertUnits.ToDisplayUnits(Math.Max(colliderLength, colliderWidth)));
             }
         }
@@ -286,16 +300,12 @@ namespace Barotrauma
 
             ReevaluateAttacks();
             outsideSteering = new SteeringManager(this);
-            insideSteering = new IndoorsSteeringManager(this, Character.IsHumanoid, canAttackDoors);
+            insideSteering = new IndoorsSteeringManager(this, Character.Params.AI.CanOpenDoors, canAttackDoors);
             steeringManager = outsideSteering;
             State = AIState.Idle;
 
-            var size = Character.AnimController.Collider.GetSize();
-            colliderWidth = size.X;
-            colliderLength = size.Y;
             requiredHoleCount = (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderWidth) / Structure.WallSectionSize);
 
-            avoidLookAheadDistance = Math.Max(Math.Max(colliderWidth, colliderLength) * 3, 1.5f);
             myBodies = Character.AnimController.Limbs.Select(l => l.body.FarseerBody);
         }
 
@@ -394,18 +404,27 @@ namespace Barotrauma
         public void SelectTarget(AITarget target, float priority)
         {
             SelectedAiTarget = target;
-            selectedTargetMemory = GetTargetMemory(target, true);
+            selectedTargetMemory = GetTargetMemory(target, addIfNotFound: true);
             selectedTargetMemory.Priority = priority;
             ignoredTargets.Remove(target);
         }
 
         private float movementMargin;
 
+        private void ReleaseDragTargets()
+        {
+            if (Character.Inventory != null)
+            {
+                Character.HeldItems.ForEach(i => i.GetComponent<Holdable>()?.GetRope()?.Snap());
+            }
+        }
+
         public override void Update(float deltaTime)
         {
             if (DisableEnemyAI) { return; }
             base.Update(deltaTime);
             UpdateTriggers(deltaTime);
+            Character.ClearInputs();
 
             bool ignorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f && (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
             if (steeringManager == insideSteering)
@@ -431,10 +450,10 @@ namespace Barotrauma
             if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater &&
                 (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer || Character.Controlled == Character))
             {
-                if (SelectedAiTarget?.Entity != null || escapeTarget != null)
+                if (SelectedAiTarget?.Entity != null || EscapeTarget != null)
                 {
-                    Entity t = SelectedAiTarget?.Entity ?? escapeTarget;
-                    float referencePos = Vector2.DistanceSquared(Character.WorldPosition, t.WorldPosition) > 100 * 100 && HasValidPath(true) ? PathSteering.CurrentPath.CurrentNode.WorldPosition.X : t.WorldPosition.X;
+                    Entity t = SelectedAiTarget?.Entity ?? EscapeTarget;
+                    float referencePos = Vector2.DistanceSquared(Character.WorldPosition, t.WorldPosition) > 100 * 100 && HasValidPath(requireNonDirty: true) ? PathSteering.CurrentPath.CurrentNode.WorldPosition.X : t.WorldPosition.X;
                     Character.AnimController.TargetDir = Character.WorldPosition.X < referencePos ? Direction.Right : Direction.Left;
                 }
                 else
@@ -442,10 +461,9 @@ namespace Barotrauma
                     Character.AnimController.TargetDir = Character.AnimController.movement.X > 0.0f ? Direction.Right : Direction.Left;
                 }
             }
-
             if (isStateChanged)
             {
-                if (State == AIState.Idle)
+                if (State == AIState.Idle || State == AIState.Patrol)
                 {
                     stateResetTimer -= deltaTime;
                     if (stateResetTimer <= 0)
@@ -505,7 +523,9 @@ namespace Barotrauma
                         selectedTargetingParams = targetingParams;
                         State = targetingParams.State;
                     }
-                    if (SelectedAiTarget?.Entity != null && !IsLatchedOnSub && State == AIState.Attack || State == AIState.Aggressive || State == AIState.PassiveAggressive)
+                    if (SelectedAiTarget?.Entity != null && 
+                        (LatchOntoAI == null || !LatchOntoAI.IsAttached || wallTarget != null) && 
+                        (State == AIState.Attack || State == AIState.Aggressive || State == AIState.PassiveAggressive))
                     {
                         UpdateWallTarget(requiredHoleCount);
                     }
@@ -538,7 +558,7 @@ namespace Barotrauma
             }
             else
             {
-                if (Character.Submarine != null)
+                if (Character.Submarine != null && Character.Params.UsePathFinding)
                 {
                     if (steeringManager != insideSteering)
                     {
@@ -566,6 +586,9 @@ namespace Barotrauma
                 case AIState.Idle:
                     UpdateIdle(deltaTime);
                     break;
+                case AIState.Patrol:
+                    UpdatePatrol(deltaTime);
+                    break;
                 case AIState.Attack:
                     run = !IsCoolDownRunning || AttackingLimb != null && AttackingLimb.attack.FullSpeedAfterAttack;
                     UpdateAttack(deltaTime);
@@ -576,7 +599,7 @@ namespace Barotrauma
                 case AIState.Escape:
                 case AIState.Flee:
                     run = true;
-                    UpdateEscape(deltaTime);
+                    Escape(deltaTime);
                     break;
                 case AIState.Avoid:
                 case AIState.PassiveAggressive:
@@ -593,7 +616,7 @@ namespace Barotrauma
                         run = true;
                         if (State == AIState.Avoid)
                         {
-                            UpdateEscape(deltaTime);
+                            Escape(deltaTime);
                         }
                         else
                         {
@@ -628,6 +651,7 @@ namespace Barotrauma
                     break;
                 case AIState.Protect:
                 case AIState.Follow:
+                case AIState.FleeTo:
                     if (SelectedAiTarget == null || SelectedAiTarget.Entity == null || SelectedAiTarget.Entity.Removed)
                     {
                         State = AIState.Idle;
@@ -641,9 +665,9 @@ namespace Barotrauma
                             {
                                 Character c = a.Character;
                                 if (c.IsDead || c.Removed) { return false; }
-                                if (!IsFriendly(Character, c)) { return true; }
+                                if (!Character.IsFriendly(c)) { return true; }
                                 // Only apply the threshold to friendly characters
-                                return a.Damage >= selectedTargetingParams.DamageThreshold;
+                                return a.Damage >= selectedTargetingParams.Threshold;
                             }
                             Character attacker = targetCharacter.LastAttackers.LastOrDefault(IsValid)?.Character;
                             if (attacker != null)
@@ -656,17 +680,75 @@ namespace Barotrauma
                         }
                     }
                     float sqrDist = Vector2.DistanceSquared(WorldPosition, SelectedAiTarget.WorldPosition);
-                    float reactDist = selectedTargetingParams != null && selectedTargetingParams.ReactDistance > 0 ? selectedTargetingParams.ReactDistance : GetPerceivingRange(SelectedAiTarget);
-                    if (sqrDist > Math.Pow(reactDist + movementMargin, 2))
+                    float reactDist = GetPerceivingRange(SelectedAiTarget);
+                    Vector2 offset = Vector2.Zero;
+                    if (selectedTargetingParams != null)
                     {
-                        movementMargin = reactDist;
+                        if (selectedTargetingParams.ReactDistance > 0)
+                        {
+                            reactDist = selectedTargetingParams.ReactDistance;
+                        }
+                        offset = selectedTargetingParams.Offset;
+                    }
+                    if (offset != Vector2.Zero)
+                    {
+                        reactDist += offset.Length();
+                    }
+                    if (sqrDist > MathUtils.Pow2(reactDist + movementMargin))
+                    {
+                        movementMargin = State == AIState.FleeTo ? 0 : reactDist;
                         run = true;
                         UpdateFollow(deltaTime);
                     }
                     else
                     {
                         movementMargin = MathHelper.Clamp(movementMargin -= deltaTime, 0, reactDist);
-                        UpdateIdle(deltaTime);
+                        if (State == AIState.FleeTo)
+                        {
+                            SteeringManager.Reset();
+                            Character.AnimController.TargetMovement = Vector2.Zero;
+                            if (Character.AnimController.InWater)
+                            {
+                                float force = Character.AnimController.Collider.Mass / 10;
+                                Character.AnimController.Collider.MoveToPos(SelectedAiTarget.Entity.SimPosition + ConvertUnits.ToSimUnits(offset), force);
+                                if (SelectedAiTarget.Entity is Item item)
+                                {
+                                    float rotation = item.Rotation;
+                                    Character.AnimController.Collider.SmoothRotate(rotation, Character.AnimController.SwimFastParams.SteerTorque);
+                                    var mainLimb = Character.AnimController.MainLimb;
+                                    if (mainLimb.type == LimbType.Head)
+                                    {
+                                        mainLimb.body.SmoothRotate(rotation, Character.AnimController.SwimFastParams.HeadTorque);
+                                    }
+                                    else
+                                    {
+                                        mainLimb.body.SmoothRotate(rotation, Character.AnimController.SwimFastParams.TorsoTorque);
+                                    }
+                                }
+                                if (disableTailCoroutine == null && SelectedAiTarget.Entity is Item i && i.HasTag("guardianshelter"))
+                                {
+                                    if (!CoroutineManager.IsCoroutineRunning(disableTailCoroutine))
+                                    {
+                                        disableTailCoroutine = CoroutineManager.Invoke(() => 
+                                        {
+                                            if (Character != null && !Character.Removed)
+                                            {
+                                                Character.AnimController.HideAndDisable(LimbType.Tail, ignoreCollisions: false);
+                                            }
+                                        }, 1f);
+                                    }    
+                                }
+                                Character.AnimController.ApplyPose(
+                                    new Vector2(0, -1),
+                                    new Vector2(0, -1),
+                                    new Vector2(0, -1),
+                                    new Vector2(0, -1), footMoveForce: 1);
+                            }
+                        }
+                        else
+                        {
+                            UpdateIdle(deltaTime);
+                        }
                     }
                     break;
                 case AIState.Observe:
@@ -759,6 +841,10 @@ namespace Barotrauma
 
         private void UpdateIdle(float deltaTime, bool followLastTarget = true)
         {
+            if (AIParams.PatrolFlooded || AIParams.PatrolDry)
+            {
+                State = AIState.Patrol;
+            }
             var pathSteering = SteeringManager as IndoorsSteeringManager;
             if (pathSteering == null)
             {
@@ -816,138 +902,129 @@ namespace Barotrauma
             }
         }
 
-        #endregion
+        private readonly List<Hull> targetHulls = new List<Hull>();
+        private readonly List<float> hullWeights = new List<float>();
 
-        #region Escape
-        private readonly float escapeTargetSeekInterval = 2;
-        private float escapeTimer;
-        private Gap escapeTarget;
-        private bool allGapsSearched;
-        private readonly HashSet<Gap> unreachableGaps = new HashSet<Gap>();
-        private void UpdateEscape(float deltaTime)
+        private Hull patrolTarget;
+        private float newPatrolTargetTimer;
+        private float patrolTimerMargin;
+        private readonly float newPatrolTargetIntervalMin = 5;
+        private readonly float newPatrolTargetIntervalMax = 30;
+        private bool searchingNewHull;
+
+        private void UpdatePatrol(float deltaTime, bool followLastTarget = true)
         {
-            if (SelectedAiTarget != null && (SelectedAiTarget.Entity == null || SelectedAiTarget.Entity.Removed))
+            if (SteeringManager is IndoorsSteeringManager pathSteering)
             {
-                State = AIState.Idle;
-                return;
-            }
-            else if (selectedTargetMemory != null && SelectedAiTarget?.Entity is Character)
-            {
-                selectedTargetMemory.Priority += deltaTime * priorityFearIncreasement;
-            }
-            IndoorsSteeringManager pathSteering = SteeringManager as IndoorsSteeringManager;
-            bool hasValidPath = pathSteering?.CurrentPath != null && !pathSteering.IsPathDirty && !pathSteering.CurrentPath.Unreachable;
-            if (allGapsSearched)
-            {
-                escapeTimer -= deltaTime;
-                if (escapeTimer <= 0)
+                if (patrolTarget == null || IsCurrentPathUnreachable || IsCurrentPathFinished)
                 {
-                    allGapsSearched = false;
+                    newPatrolTargetTimer = Math.Min(newPatrolTargetTimer, newPatrolTargetIntervalMin);
                 }
-            }
-            if (Character.CurrentHull != null && pathSteering != null)
-            {
-                // Seek exit if inside
-                if (!allGapsSearched)
+                if (newPatrolTargetTimer > 0)
                 {
-                    float closestDistance = 0;
-                    foreach (Gap gap in Gap.GapList)
+                    newPatrolTargetTimer -= deltaTime;
+                }
+                else
+                {
+                    if (!searchingNewHull)
                     {
-                        if (gap == null || gap.Removed) { continue; }
-                        if (escapeTarget == gap) { continue; }
-                        if (unreachableGaps.Contains(gap)) { continue; }
-                        if (gap.Submarine != Character.Submarine) { continue; }
-                        if (gap.IsRoomToRoom) { continue; }
-                        float multiplier = 1;
-                        var door = gap.ConnectedDoor;
-                        if (door != null)
+                        searchingNewHull = true;
+                        FindTargetHulls();
+                    }
+                    else if (targetHulls.Any())
+                    {
+                        patrolTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
+                        var path = PathSteering.PathFinder.FindPath(Character.SimPosition, patrolTarget.SimPosition, Character.Submarine, minGapSize: minGapSize * 1.5f, nodeFilter: n => PatrolNodeFilter(n));
+                        if (path.Unreachable)
                         {
-                            if (!door.CanBeTraversed)
-                            {
-                                if (!door.HasAccess(Character))
-                                {
-                                    if (!canAttackDoors) { continue; }
-                                    // Treat doors that don't have access to like they were farther, because it will take time to break them.
-                                    multiplier = 5;
-                                }
-                            }
+                            //can't go to this room, remove it from the list and try another room
+                            int index = targetHulls.IndexOf(patrolTarget);
+                            targetHulls.RemoveAt(index);
+                            hullWeights.RemoveAt(index);
+                            PathSteering.Reset();
+                            patrolTarget = null;
+                            patrolTimerMargin += 0.5f;
+                            patrolTimerMargin = Math.Min(patrolTimerMargin, newPatrolTargetIntervalMin);
+                            newPatrolTargetTimer = Math.Min(newPatrolTargetIntervalMin, patrolTimerMargin);
                         }
                         else
                         {
-                            if (gap.Open < 1) { continue; }
-                            bool canGetThrough = ConvertUnits.ToDisplayUnits(colliderWidth) < gap.Size;
-                            if (!canGetThrough) { continue; }
-                        }
-                        if (gap.FlowTargetHull == Character.CurrentHull)
-                        {
-                            // If the gap is in the same room, it's close enough.
-                            escapeTarget = gap;
-                            break;
-                        }
-                        float distance = Vector2.DistanceSquared(Character.WorldPosition, gap.WorldPosition) * multiplier;
-                        if (escapeTarget == null || distance < closestDistance)
-                        {
-                            escapeTarget = gap;
-                            closestDistance = distance;
+                            PathSteering.SetPath(path);
+                            patrolTimerMargin = 0;
+                            newPatrolTargetTimer = newPatrolTargetIntervalMax * Rand.Range(0.5f, 1.5f);
+                            searchingNewHull = false;
                         }
                     }
-                    allGapsSearched = true;
-                    escapeTimer = escapeTargetSeekInterval;
-                }
-                else if (escapeTarget != null && escapeTarget.FlowTargetHull != Character.CurrentHull)
-                {
-                    if (pathSteering.CurrentPath != null && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
+                    else
                     {
-                        unreachableGaps.Add(escapeTarget);
-                        escapeTarget = null;
-                        allGapsSearched = false;
+                        // Couldn't find a valid hull
+                        newPatrolTargetTimer = newPatrolTargetIntervalMax;
+                        searchingNewHull = false;
                     }
                 }
-            }
-            if (escapeTarget != null && Character.CurrentHull != null && Vector2.DistanceSquared(Character.SimPosition, escapeTarget.SimPosition) > 0.5f)
-            {
-                if (hasValidPath && pathSteering.CurrentPath.Finished)
+                if (patrolTarget != null && pathSteering.CurrentPath != null && !pathSteering.CurrentPath.Finished && !pathSteering.CurrentPath.Unreachable)
                 {
-                    // Steer manually towards the gap
-                    SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(escapeTarget.WorldPosition - Character.WorldPosition));
-                }
-                else if (SelectedAiTarget?.Entity is Character targetCharacter && targetCharacter.CurrentHull == Character.CurrentHull)
-                {
-                    // Steer away from the target if in the same room
-                    Vector2 escapeDir = Vector2.Normalize(SelectedAiTarget != null ? WorldPosition - SelectedAiTarget.WorldPosition : Character.AnimController.TargetMovement);
-                    if (!MathUtils.IsValid(escapeDir)) { escapeDir = Vector2.UnitY; }
-                    SteeringManager.SteeringManual(deltaTime, escapeDir);
+                    PathSteering.SteeringSeek(Character.GetRelativeSimPosition(patrolTarget), weight: 1, minGapWidth: minGapSize * 1.5f, nodeFilter: n => PatrolNodeFilter(n));
                     return;
                 }
-                else if (pathSteering != null)
+            }
+
+            bool PatrolNodeFilter(PathNode n) =>
+                AIParams.PatrolFlooded && (Character.CurrentHull == null || n.Waypoint.CurrentHull == null || n.Waypoint.CurrentHull.WaterPercentage >= 80) ||
+                AIParams.PatrolDry && Character.CurrentHull != null && n.Waypoint.CurrentHull != null && n.Waypoint.CurrentHull.WaterPercentage <= 50;
+
+            UpdateIdle(deltaTime, followLastTarget);
+        }
+
+        private void FindTargetHulls()
+        {
+            if (Character.Submarine == null) { return; }
+            if (Character.CurrentHull == null) { return; }
+            targetHulls.Clear();
+            hullWeights.Clear();
+            float hullMinSize = ConvertUnits.ToDisplayUnits(Math.Max(colliderLength, colliderWidth) * 2);
+            bool checkWaterLevel = !AIParams.PatrolFlooded || !AIParams.PatrolDry;
+            foreach (var hull in Hull.hullList)
+            {
+                if (hull.Submarine == null) { continue; }
+                if (hull.Submarine.TeamID != Character.Submarine.TeamID) { continue; }
+                if (!Character.Submarine.IsConnectedTo(hull.Submarine)) { continue; }
+                if (hull.RectWidth < hullMinSize || hull.RectHeight < hullMinSize) { continue; }
+                if (checkWaterLevel)
                 {
-                    if (hasValidPath && canAttackDoors)
+                    if (AIParams.PatrolDry)
                     {
-                        var door = pathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? pathSteering.CurrentPath.NextNode?.ConnectedDoor;
-                        if (door != null && !door.CanBeTraversed && !door.HasAccess(Character))
-                        {
-                            if (SelectedAiTarget != door.Item.AiTarget || State != AIState.Attack)
-                            {
-                                SelectTarget(door.Item.AiTarget, selectedTargetMemory.Priority);
-                                State = AIState.Attack;
-                                return;
-                            }
-                        }
+                        if (hull.WaterPercentage > 50) { continue; }
+                    }
+                    if (AIParams.PatrolFlooded)
+                    {
+                        if (hull.WaterPercentage < 80) { continue; }
                     }
                 }
-                SteeringManager.SteeringSeek(escapeTarget.SimPosition, 10);
-            }
-            else
-            {
-                escapeTarget = null;
-                allGapsSearched = false;
-                Vector2 escapeDir = Vector2.Normalize(SelectedAiTarget != null ? WorldPosition - SelectedAiTarget.WorldPosition : Character.AnimController.TargetMovement);
-                if (!MathUtils.IsValid(escapeDir)) escapeDir = Vector2.UnitY;
-                SteeringManager.SteeringManual(deltaTime, escapeDir);
-                if (Character.CurrentHull == null)
+                if (AIParams.PatrolDry && hull.WaterPercentage < 80)
                 {
-                    SteeringManager.SteeringWander();
-                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
+                    if (Math.Abs(Character.CurrentHull.WorldPosition.Y - hull.WorldPosition.Y) > Character.CurrentHull.CeilingHeight / 2)
+                    {
+                        // Ignore dry hulls that are on a different level
+                        continue;
+                    }
+                }
+                if (!targetHulls.Contains(hull))
+                {
+                    targetHulls.Add(hull);
+                    float weight = hull.Size.Combine();
+                    float dist = Vector2.Distance(Character.WorldPosition, hull.WorldPosition);
+                    float optimal = 1000;
+                    float max = 3000;
+                    // Prefer rooms that are far but not too far.
+                    float distanceFactor = dist > optimal ? MathHelper.Lerp(1, 0, MathUtils.InverseLerp(optimal, max, dist)) : MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, optimal, dist));
+                    float waterFactor = 1;
+                    if (checkWaterLevel)
+                    {
+                        waterFactor = AIParams.PatrolDry ? MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 100, hull.WaterPercentage)) : MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, 100, hull.WaterPercentage));
+                    }
+                    weight *= distanceFactor * waterFactor;
+                    hullWeights.Add(weight);
                 }
             }
         }
@@ -976,7 +1053,7 @@ namespace Barotrauma
                 Character owner = GetOwner(item);
                 if (owner != null)
                 {
-                    if (IsFriendly(Character, owner))
+                    if (Character.IsFriendly(owner))
                     {
                         ResetAITarget();
                         State = AIState.Idle;
@@ -1210,7 +1287,7 @@ namespace Barotrauma
 
             if (canAttack)
             {
-                if (AttackingLimb == null || _previousAiTarget != SelectedAiTarget)
+                if (AttackingLimb == null || !IsValidAttack(AttackingLimb, Character.GetAttackContexts(), SelectedAiTarget?.Entity as IDamageable))
                 {
                     AttackingLimb = GetAttackLimb(attackWorldPos);
                 }
@@ -1337,7 +1414,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                canAttack = Character.CharacterList.All(c => c == Character || !IsFriendly(Character, c) || IsFarEnough(c));
+                                canAttack = Character.CharacterList.All(c => c == Character || !Character.IsFriendly(c) || IsFarEnough(c));
                             }
                             if (canAttack)
                             {
@@ -1356,7 +1433,7 @@ namespace Barotrauma
                                         {
                                             hitTarget = limb.character;
                                         }
-                                        if (hitTarget != null && !hitTarget.IsDead && IsFriendly(Character, hitTarget))
+                                        if (hitTarget != null && !hitTarget.IsDead && Character.IsFriendly(hitTarget))
                                         {
                                             return true;
                                         }
@@ -1394,6 +1471,8 @@ namespace Barotrauma
                 State = AIState.Idle;
                 return;
             }
+
+            var pathSteering = SteeringManager as IndoorsSteeringManager;
             
             if (AttackingLimb != null && AttackingLimb.attack.Retreat)
             {
@@ -1408,7 +1487,7 @@ namespace Barotrauma
                     Vector2 offset = Character.SimPosition - steeringLimb.SimPosition;
                     steerPos += offset;
                 }
-                if (SteeringManager is IndoorsSteeringManager pathSteering)
+                if (pathSteering != null)
                 {
                     if (pathSteering.CurrentPath != null)
                     {
@@ -1430,244 +1509,298 @@ namespace Barotrauma
                                 }
                             }
                         }
-                        // Steer towards the target if in the same room and swimming
-                        if (Character.CurrentHull != null && ((Character.AnimController.InWater || pursue || !Character.AnimController.CanWalk) &&
-                            (targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))))
+                        // When pursuing, we don't want to pursue too close
+                        float max = 300;
+                        float margin = AttackingLimb != null ? Math.Min(AttackingLimb.attack.Range * 0.9f, max) : max;
+                        if (!canAttack || distance > margin)
                         {
-                            Vector2 myPos = Character.AnimController.SimplePhysicsEnabled ? Character.SimPosition : steeringLimb.SimPosition;
-                            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(steerPos - myPos));
+                            // Steer towards the target if in the same room and swimming
+                            // Ruins have walls/pillars inside hulls and therefore we should navigate around them using the path steering.
+                            if (Character.CurrentHull != null && 
+                                Character.Submarine != null && !Character.Submarine.Info.IsRuin &&
+                                (Character.AnimController.InWater || pursue || !Character.AnimController.CanWalk) &&
+                                targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
+                            {
+                                Vector2 myPos = Character.AnimController.SimplePhysicsEnabled ? Character.SimPosition : steeringLimb.SimPosition;
+                                SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(steerPos - myPos));
+                            }
+                            else
+                            {
+                                pathSteering.SteeringSeek(steerPos, weight: 2,
+                                    minGapWidth: minGapSize,
+                                    startNodeFilter: n => (n.Waypoint.CurrentHull == null) == (Character.CurrentHull == null), 
+                                    checkVisiblity: true);
+
+                                if (!pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
+                                {
+                                    State = AIState.Idle;
+                                    IgnoreTarget(SelectedAiTarget);
+                                    ResetAITarget();
+                                    return;
+                                }
+                            }
                         }
                         else
                         {
-                            pathSteering.SteeringSeek(steerPos, 2, startNodeFilter: n => (n.Waypoint.CurrentHull == null) == (Character.CurrentHull == null), checkVisiblity: true);
-                            if (!pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
+                            if (AttackingLimb.attack.Ranged)
                             {
-                                State = AIState.Idle;
-                                IgnoreTarget(SelectedAiTarget);
-                                ResetAITarget();
-                                return;
+                                float dir = Character.AnimController.Dir;
+                                if (dir > 0 && attackWorldPos.X > AttackingLimb.WorldPosition.X + margin || dir < 0 && attackWorldPos.X < AttackingLimb.WorldPosition.X - margin)
+                                {
+                                    SteeringManager.Reset();
+                                }
+                                else
+                                {
+                                    // Too close
+                                    UpdateFallBack(attackWorldPos, deltaTime, followThrough: false);
+                                }
+                            }
+                            else
+                            {
+                                // Close enough
+                                SteeringManager.Reset();
                             }
                         }
                     }
                     else
                     {
-                        SteeringManager.SteeringSeek(steerPos, 5);
+                        pathSteering.SteeringSeek(steerPos, weight: 5, minGapWidth: minGapSize);
                     }
                 }
                 else
                 {
-                    switch (selectedTargetingParams.AttackPattern)
+                    // Sweeping and circling doesn't work well inside
+                    if (Character.CurrentHull == null)
                     {
-                        case AttackPattern.Sweep:
-                            if (selectedTargetingParams.SweepDistance > 0)
-                            {
-                                if (distance <= 0)
+                        switch (selectedTargetingParams.AttackPattern)
+                        {
+                            case AttackPattern.Sweep:
+                                if (selectedTargetingParams.SweepDistance > 0)
                                 {
-                                    distance = (attackWorldPos - WorldPosition).Length();
-                                }
-                                float amplitude = MathHelper.Lerp(0, selectedTargetingParams.SweepStrength, MathUtils.InverseLerp(selectedTargetingParams.SweepDistance, 0, distance));
-                                if (amplitude > 0)
-                                {
-                                    sweepTimer += deltaTime * selectedTargetingParams.SweepSpeed;
-                                    float sin = (float)Math.Sin(sweepTimer) * amplitude;
-                                    steerPos = MathUtils.RotatePointAroundTarget(attackSimPos, SimPosition, sin);
-                                }
-                                else
-                                {
-                                    sweepTimer = Rand.Range(-1000, 1000) * selectedTargetingParams.SweepSpeed;
-                                }
-                            }
-                            break;
-                        case AttackPattern.Circle:
-                            if (IsCoolDownRunning) { break; }
-                            if (IsAttackRunning && CirclePhase != CirclePhase.Strike) { break; }
-                            if (selectedTargetingParams == null) { break; }
-                            var targetSub = SelectedAiTarget.Entity?.Submarine;
-                            if (targetSub == null) { break; }
-                            float subSize = Math.Max(targetSub.Borders.Width, targetSub.Borders.Height) / 2;
-                            float sqrDistToSub = Vector2.DistanceSquared(WorldPosition, targetSub.WorldPosition);
-                            switch (CirclePhase)
-                            {
-                                case CirclePhase.Start:
-                                    currentAttackIntensity = MathUtils.InverseLerp(AIParams.StartAggression, AIParams.MaxAggression, aggressionIntensity * Rand.Range(0.9f, 1.1f));
-                                    inverseDir = false;
-                                    circleDir = GetDirFromHeadingInRadius();
-                                    circleRotation = 0;
-                                    strikeTimer = 0;
-                                    blockCheckTimer = 0;
-                                    breakCircling = false;
-                                    float minRotationSpeed = 0.01f * selectedTargetingParams.CircleRotationSpeed;
-                                    float maxRotationSpeed = 0.5f * selectedTargetingParams.CircleRotationSpeed;
-                                    float minFallBackDistance = selectedTargetingParams.CircleStartDistance * 0.5f;
-                                    float maxFallBackDistance = selectedTargetingParams.CircleStartDistance;
-                                    // The lower the rotation speed, the slower the progression. Also the distance to the target stays longer.
-                                    // So basically if the value is higher, the creature will strike the sub more quickly and with more precision.
-                                    circleRotationSpeed = MathHelper.Lerp(minRotationSpeed, maxRotationSpeed, currentAttackIntensity * Rand.Range(0.9f, 1.1f));
-                                    circleFallbackDistance = MathHelper.Lerp(maxFallBackDistance, minFallBackDistance, currentAttackIntensity * Rand.Range(0.9f, 1.1f));
-                                    circleOffset = Rand.Vector(MathHelper.Lerp(selectedTargetingParams.CircleMaxRandomOffset, 0, currentAttackIntensity * Rand.Range(0.9f, 1.1f)));
-                                    canAttack = false;
-                                    aggressionIntensity = Math.Clamp(aggressionIntensity, AIParams.StartAggression, AIParams.MaxAggression);
-                                    if (targetSub.Borders.Width < 1000)
+                                    if (distance <= 0)
                                     {
-                                        breakCircling = true;
-                                        CirclePhase = CirclePhase.CloseIn;
+                                        distance = (attackWorldPos - WorldPosition).Length();
                                     }
-                                    else if (sqrDistToSub > MathUtils.Pow2(subSize + selectedTargetingParams.CircleStartDistance))
+                                    float amplitude = MathHelper.Lerp(0, selectedTargetingParams.SweepStrength, MathUtils.InverseLerp(selectedTargetingParams.SweepDistance, 0, distance));
+                                    if (amplitude > 0)
                                     {
-                                        CirclePhase = CirclePhase.CloseIn;
-                                    }
-                                    else if (sqrDistToSub < MathUtils.Pow2(subSize + circleFallbackDistance))
-                                    {
-                                        CirclePhase = CirclePhase.FallBack;
+                                        sweepTimer += deltaTime * selectedTargetingParams.SweepSpeed;
+                                        float sin = (float)Math.Sin(sweepTimer) * amplitude;
+                                        steerPos = MathUtils.RotatePointAroundTarget(attackSimPos, SimPosition, sin);
                                     }
                                     else
                                     {
-                                        CirclePhase = CirclePhase.Advance;
+                                        sweepTimer = Rand.Range(-1000, 1000) * selectedTargetingParams.SweepSpeed;
                                     }
-                                    break;
-                                case CirclePhase.CloseIn:
-                                    if (AttackingLimb != null && distance > 0 && distance < AttackingLimb.attack.Range * GetStrikeDistanceMultiplier(targetSub.Velocity))
-                                    {
-                                        strikeTimer = AttackingLimb.attack.CoolDown;
-                                        CirclePhase = CirclePhase.Strike;
-                                    }
-                                    else if (!breakCircling && sqrDistToSub <= MathUtils.Pow2(subSize + selectedTargetingParams.CircleStartDistance / 2) && targetSub.Velocity.LengthSquared() <= MathUtils.Pow2(GetTargetMaxSpeed()))
-                                    {
-                                        CirclePhase = CirclePhase.Advance;
-                                    }
-                                    canAttack = false;
-                                    break;
-                                case CirclePhase.FallBack:
-                                    bool isBlocked = !UpdateFallBack(attackWorldPos, deltaTime, followThrough: false, checkBlocking: true);
-                                    if (isBlocked || sqrDistToSub > MathUtils.Pow2(subSize + circleFallbackDistance))
-                                    {
-                                        CirclePhase = CirclePhase.Advance;
+                                }
+                                break;
+                            case AttackPattern.Circle:
+                                if (IsCoolDownRunning) { break; }
+                                if (IsAttackRunning && CirclePhase != CirclePhase.Strike) { break; }
+                                if (selectedTargetingParams == null) { break; }
+                                var targetSub = SelectedAiTarget.Entity?.Submarine;
+                                if (targetSub == null) { break; }
+                                float subSize = Math.Max(targetSub.Borders.Width, targetSub.Borders.Height) / 2;
+                                float sqrDistToSub = Vector2.DistanceSquared(WorldPosition, targetSub.WorldPosition);
+                                switch (CirclePhase)
+                                {
+                                    case CirclePhase.Start:
+                                        currentAttackIntensity = MathUtils.InverseLerp(AIParams.StartAggression, AIParams.MaxAggression, aggressionIntensity * Rand.Range(0.9f, 1.1f));
+                                        inverseDir = false;
+                                        circleDir = GetDirFromHeadingInRadius();
+                                        circleRotation = 0;
+                                        strikeTimer = 0;
+                                        blockCheckTimer = 0;
+                                        breakCircling = false;
+                                        float minRotationSpeed = 0.01f * selectedTargetingParams.CircleRotationSpeed;
+                                        float maxRotationSpeed = 0.5f * selectedTargetingParams.CircleRotationSpeed;
+                                        float minFallBackDistance = selectedTargetingParams.CircleStartDistance * 0.5f;
+                                        float maxFallBackDistance = selectedTargetingParams.CircleStartDistance;
+                                        // The lower the rotation speed, the slower the progression. Also the distance to the target stays longer.
+                                        // So basically if the value is higher, the creature will strike the sub more quickly and with more precision.
+                                        circleRotationSpeed = MathHelper.Lerp(minRotationSpeed, maxRotationSpeed, currentAttackIntensity * Rand.Range(0.9f, 1.1f));
+                                        circleFallbackDistance = MathHelper.Lerp(maxFallBackDistance, minFallBackDistance, currentAttackIntensity * Rand.Range(0.9f, 1.1f));
+                                        circleOffset = Rand.Vector(MathHelper.Lerp(selectedTargetingParams.CircleMaxRandomOffset, 0, currentAttackIntensity * Rand.Range(0.9f, 1.1f)));
+                                        canAttack = false;
+                                        aggressionIntensity = Math.Clamp(aggressionIntensity, AIParams.StartAggression, AIParams.MaxAggression);
+                                        if (targetSub.Borders.Width < 1000)
+                                        {
+                                            breakCircling = true;
+                                            CirclePhase = CirclePhase.CloseIn;
+                                        }
+                                        else if (sqrDistToSub > MathUtils.Pow2(subSize + selectedTargetingParams.CircleStartDistance))
+                                        {
+                                            CirclePhase = CirclePhase.CloseIn;
+                                        }
+                                        else if (sqrDistToSub < MathUtils.Pow2(subSize + circleFallbackDistance))
+                                        {
+                                            CirclePhase = CirclePhase.FallBack;
+                                        }
+                                        else
+                                        {
+                                            CirclePhase = CirclePhase.Advance;
+                                        }
                                         break;
-                                    }
-                                    return;
-                                case CirclePhase.Advance:
-                                    Vector2 subSpeed = targetSub.Velocity;
-                                    float requiredDistMultiplier = 1;
-                                    // If the target sub is moving fast, just steer towards the target until close enough to strike
-                                    if (breakCircling || subSpeed.LengthSquared() > MathUtils.Pow2(GetTargetMaxSpeed()) || sqrDistToSub > MathUtils.Pow2(subSize + selectedTargetingParams.CircleStartDistance * 1.2f))
-                                    {
-                                        CirclePhase = CirclePhase.CloseIn;
-                                    }
-                                    else
-                                    {
-                                        circleRotation += deltaTime * circleRotationSpeed * circleDir;
-                                        if (circleRotation < -360)
+                                    case CirclePhase.CloseIn:
+                                        if (AttackingLimb != null && distance > 0 && distance < AttackingLimb.attack.Range * GetStrikeDistanceMultiplier(targetSub.Velocity))
                                         {
-                                            circleRotation += 360;
+                                            strikeTimer = AttackingLimb.attack.CoolDown;
+                                            CirclePhase = CirclePhase.Strike;
                                         }
-                                        else if (circleRotation > 360)
+                                        else if (!breakCircling && sqrDistToSub <= MathUtils.Pow2(subSize + selectedTargetingParams.CircleStartDistance / 2) && targetSub.Velocity.LengthSquared() <= MathUtils.Pow2(GetTargetMaxSpeed()))
                                         {
-                                            circleRotation -= 360;
+                                            CirclePhase = CirclePhase.Advance;
                                         }
-                                        Vector2 targetPos = attackSimPos + circleOffset;
-                                        if (Vector2.DistanceSquared(SimPosition, targetPos) < 100)
+                                        canAttack = false;
+                                        break;
+                                    case CirclePhase.FallBack:
+                                        bool isBlocked = !UpdateFallBack(attackWorldPos, deltaTime, followThrough: false, checkBlocking: true);
+                                        if (isBlocked || sqrDistToSub > MathUtils.Pow2(subSize + circleFallbackDistance))
                                         {
-                                            // Too close to the target point
-                                            // When the offset position is outside of the sub it happens that the creature sometimes reaches the target point, 
-                                            // which makes it continue circling around the point (as supposed)
-                                            // But when there is some offset and the offset is too near, this is not what we want.
-                                            if (AttackingLimb != null && sqrDistToSub < MathUtils.Pow2(subSize + circleFallbackDistance))
-                                            {
-                                                CirclePhase = CirclePhase.Strike;
-                                                strikeTimer = AttackingLimb.attack.CoolDown;
-                                            }
-                                            else
-                                            {
-                                                CirclePhase = CirclePhase.Start;
-                                            }
+                                            CirclePhase = CirclePhase.Advance;
                                             break;
                                         }
-                                        steerPos = MathUtils.RotatePointAroundTarget(SimPosition, targetPos, circleRotation);
-                                        requiredDistMultiplier = GetStrikeDistanceMultiplier(subSpeed);
-                                        if (IsBlocked(deltaTime, steerPos))
+                                        return;
+                                    case CirclePhase.Advance:
+                                        Vector2 subSpeed = targetSub.Velocity;
+                                        float requiredDistMultiplier = 1;
+                                        // If the target sub is moving fast, just steer towards the target until close enough to strike
+                                        if (breakCircling || subSpeed.LengthSquared() > MathUtils.Pow2(GetTargetMaxSpeed()) || sqrDistToSub > MathUtils.Pow2(subSize + selectedTargetingParams.CircleStartDistance * 1.2f))
                                         {
-                                            if (!inverseDir)
+                                            CirclePhase = CirclePhase.CloseIn;
+                                        }
+                                        else
+                                        {
+                                            circleRotation += deltaTime * circleRotationSpeed * circleDir;
+                                            if (circleRotation < -360)
                                             {
-                                                // First try changing the direction
-                                                circleDir = -circleDir;
-                                                inverseDir = true;
+                                                circleRotation += 360;
                                             }
-                                            else if (circleRotationSpeed < 1)
+                                            else if (circleRotation > 360)
                                             {
-                                                // Then try increasing the rotation speed to change the movement curve
-                                                circleRotationSpeed *= 1.1f;
+                                                circleRotation -= 360;
                                             }
-                                            else if (circleOffset.LengthSquared() > 0.1f)
+                                            Vector2 targetPos = attackSimPos + circleOffset;
+                                            if (Vector2.DistanceSquared(SimPosition, targetPos) < 100)
                                             {
-                                                // Then try removing the offset
-                                                circleOffset = Vector2.Zero;
+                                                // Too close to the target point
+                                                // When the offset position is outside of the sub it happens that the creature sometimes reaches the target point, 
+                                                // which makes it continue circling around the point (as supposed)
+                                                // But when there is some offset and the offset is too near, this is not what we want.
+                                                if (AttackingLimb != null && sqrDistToSub < MathUtils.Pow2(subSize + circleFallbackDistance))
+                                                {
+                                                    CirclePhase = CirclePhase.Strike;
+                                                    strikeTimer = AttackingLimb.attack.CoolDown;
+                                                }
+                                                else
+                                                {
+                                                    CirclePhase = CirclePhase.Start;
+                                                }
+                                                break;
                                             }
-                                            else
+                                            steerPos = MathUtils.RotatePointAroundTarget(SimPosition, targetPos, circleRotation);
+                                            requiredDistMultiplier = GetStrikeDistanceMultiplier(subSpeed);
+                                            if (IsBlocked(deltaTime, steerPos))
                                             {
-                                                // If we still fail, just steer towards the target
-                                                breakCircling = true;
+                                                if (!inverseDir)
+                                                {
+                                                    // First try changing the direction
+                                                    circleDir = -circleDir;
+                                                    inverseDir = true;
+                                                }
+                                                else if (circleRotationSpeed < 1)
+                                                {
+                                                    // Then try increasing the rotation speed to change the movement curve
+                                                    circleRotationSpeed *= 1.1f;
+                                                }
+                                                else if (circleOffset.LengthSquared() > 0.1f)
+                                                {
+                                                    // Then try removing the offset
+                                                    circleOffset = Vector2.Zero;
+                                                }
+                                                else
+                                                {
+                                                    // If we still fail, just steer towards the target
+                                                    breakCircling = true;
+                                                }
                                             }
                                         }
-                                    }
-                                    if (AttackingLimb != null && distance > 0 && distance < AttackingLimb.attack.Range * requiredDistMultiplier && IsFacing(margin: MathHelper.Lerp(0.5f, 0.9f, currentAttackIntensity)))
-                                    {
-                                        strikeTimer = AttackingLimb.attack.CoolDown;
-                                        CirclePhase = CirclePhase.Strike;
-                                    }
-                                    canAttack = false;
-                                    break;
-                                case CirclePhase.Strike:
-                                    strikeTimer -= deltaTime;
-                                    // just continue the movement forward to make it possible to evade the attack
-                                    steerPos = SimPosition + Steering;
-                                    if (strikeTimer <= 0)
-                                    {
-                                        CirclePhase = CirclePhase.Start;
-                                        aggressionIntensity += AIParams.AggressionCumulation;
-                                    }
-                                    break;
-                            }
-                            break;
-
-                            bool IsFacing(float margin)
-                            {
-                                float offset = steeringLimb.Params.GetSpriteOrientation() - MathHelper.PiOver2;
-                                Vector2 forward = VectorExtensions.Forward(steeringLimb.body.TransformedRotation - offset * Character.AnimController.Dir);
-                                return Vector2.Dot(Vector2.Normalize(attackWorldPos - WorldPosition), forward) > margin;
-                            }
-
-                            float GetStrikeDistanceMultiplier(Vector2 subSpeed)
-                            {
-                                float requiredDistMultiplier = 2;
-                                bool isHeading = Steering != null && Vector2.Dot(Vector2.Normalize(attackWorldPos - WorldPosition), Vector2.Normalize(Steering)) > 0.9f;
-                                if (isHeading)
-                                {
-                                    requiredDistMultiplier = selectedTargetingParams.CircleStrikeDistanceMultiplier;
-                                    float subSpeedHorizontal = Math.Abs(subSpeed.X);
-                                    if (subSpeedHorizontal > 1)
-                                    {
-                                        // Reduce the required distance if the target is moving.
-                                        requiredDistMultiplier -= MathHelper.Lerp(0, Math.Max(selectedTargetingParams.CircleStrikeDistanceMultiplier - 1, 1), Math.Clamp(subSpeedHorizontal / 10, 0, 1));
-                                        if (requiredDistMultiplier < 2)
+                                        if (AttackingLimb != null && distance > 0 && distance < AttackingLimb.attack.Range * requiredDistMultiplier && IsFacing(margin: MathHelper.Lerp(0.5f, 0.9f, currentAttackIntensity)))
                                         {
-                                            requiredDistMultiplier = 2;
+                                            strikeTimer = AttackingLimb.attack.CoolDown;
+                                            CirclePhase = CirclePhase.Strike;
                                         }
-                                    }
+                                        canAttack = false;
+                                        break;
+                                    case CirclePhase.Strike:
+                                        strikeTimer -= deltaTime;
+                                        // just continue the movement forward to make it possible to evade the attack
+                                        steerPos = SimPosition + Steering;
+                                        if (strikeTimer <= 0)
+                                        {
+                                            CirclePhase = CirclePhase.Start;
+                                            aggressionIntensity += AIParams.AggressionCumulation;
+                                        }
+                                        break;
                                 }
-                                return requiredDistMultiplier;
-                            }
+                                break;
 
-                            float GetDirFromHeadingInRadius()
-                            {
-                                Vector2 heading = VectorExtensions.Forward(Character.AnimController.Collider.Rotation);
-                                float angle = MathUtils.VectorToAngle(heading);
-                                return angle > MathHelper.Pi || angle < -MathHelper.Pi ? -1 : 1;
-                            }
+                                bool IsFacing(float margin)
+                                {
+                                    float offset = steeringLimb.Params.GetSpriteOrientation() - MathHelper.PiOver2;
+                                    Vector2 forward = VectorExtensions.Forward(steeringLimb.body.TransformedRotation - offset * Character.AnimController.Dir);
+                                    return Vector2.Dot(Vector2.Normalize(attackWorldPos - WorldPosition), forward) > margin;
+                                }
 
-                            float GetTargetMaxSpeed() => Character.ApplyTemporarySpeedLimits(Character.AnimController.CurrentSwimParams.MovementSpeed * 0.3f);
+                                float GetStrikeDistanceMultiplier(Vector2 subSpeed)
+                                {
+                                    float requiredDistMultiplier = 2;
+                                    bool isHeading = Steering != null && Vector2.Dot(Vector2.Normalize(attackWorldPos - WorldPosition), Vector2.Normalize(Steering)) > 0.9f;
+                                    if (isHeading)
+                                    {
+                                        requiredDistMultiplier = selectedTargetingParams.CircleStrikeDistanceMultiplier;
+                                        float subSpeedHorizontal = Math.Abs(subSpeed.X);
+                                        if (subSpeedHorizontal > 1)
+                                        {
+                                            // Reduce the required distance if the target is moving.
+                                            requiredDistMultiplier -= MathHelper.Lerp(0, Math.Max(selectedTargetingParams.CircleStrikeDistanceMultiplier - 1, 1), Math.Clamp(subSpeedHorizontal / 10, 0, 1));
+                                            if (requiredDistMultiplier < 2)
+                                            {
+                                                requiredDistMultiplier = 2;
+                                            }
+                                        }
+                                    }
+                                    return requiredDistMultiplier;
+                                }
+
+                                float GetDirFromHeadingInRadius()
+                                {
+                                    Vector2 heading = VectorExtensions.Forward(Character.AnimController.Collider.Rotation);
+                                    float angle = MathUtils.VectorToAngle(heading);
+                                    return angle > MathHelper.Pi || angle < -MathHelper.Pi ? -1 : 1;
+                                }
+
+                                float GetTargetMaxSpeed() => Character.ApplyTemporarySpeedLimits(Character.AnimController.CurrentSwimParams.MovementSpeed * 0.3f);
+                        }
                     }
-                    SteeringManager.SteeringSeek(steerPos, 10);
-                    if (SelectedAiTarget?.Entity is Character c && c.Submarine == null || distance == 0 || distance > ConvertUnits.ToDisplayUnits(avoidLookAheadDistance * 2))
+
+                    if (!canAttack || distance > Math.Min(AttackingLimb.attack.Range * 0.9f, 100))
+                    {
+                        if (pathSteering != null)
+                        {
+                            pathSteering.SteeringSeek(steerPos, weight: 10, minGapWidth: minGapSize);
+                        }
+                        else
+                        {
+                            SteeringManager.SteeringSeek(steerPos, 10);
+                        }
+                    }
+                    else if (AttackingLimb.attack.Ranged)
+                    {
+                        // Too close
+                        UpdateFallBack(attackWorldPos, deltaTime, followThrough: false);
+                    }
+                    if (Character.CurrentHull == null && (SelectedAiTarget?.Entity is Character c && c.Submarine == null || distance == 0 || distance > ConvertUnits.ToDisplayUnits(avoidLookAheadDistance * 2)))
                     {
                         SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 30);
                     }
@@ -1686,12 +1819,39 @@ namespace Barotrauma
             }
         }
 
+        private bool IsValidAttack(Limb attackingLimb, IEnumerable<AttackContext> currentContexts, IDamageable target)
+        {
+            if (attackingLimb == null) { return false; }
+            if (target == null) { return false; }
+            var attack = attackingLimb.attack;
+            if (attack == null) { return false; }
+            if (attack.CoolDownTimer > 0) { return false; }
+            if (!attack.IsValidContext(currentContexts)) { return false; }
+            if (!attack.IsValidTarget(target)) { return false; }
+            if (target is ISerializableEntity se && target is Character)
+            {
+                if (attack.Conditionals.Any(c => !c.Matches(se))) { return false; }
+            }
+            if (attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(Character))) { return false; }
+            if (attack.Ranged)
+            {
+                // Check that is approximately facing the target
+                Vector2 attackLimbPos = Character.AnimController.SimplePhysicsEnabled ? Character.WorldPosition : attackingLimb.WorldPosition;
+                Vector2 toTarget = attackWorldPos - attackLimbPos;
+                float offset = attackingLimb.Params.GetSpriteOrientation() - MathHelper.PiOver2;
+                Vector2 forward = VectorExtensions.Forward(attackingLimb.body.TransformedRotation - offset * Character.AnimController.Dir);
+                float angle = VectorExtensions.Angle(forward, toTarget);
+                if (angle > MathHelper.ToRadians(attack.RequiredAngle)) { return false; }
+            }
+            return true;
+        }
+
         private readonly List<Limb> attackLimbs = new List<Limb>();
         private readonly List<float> weights = new List<float>();
         private Limb GetAttackLimb(Vector2 attackWorldPos, Limb ignoredLimb = null)
         {
             var currentContexts = Character.GetAttackContexts();
-            Entity target = wallTarget != null ? wallTarget.Structure : SelectedAiTarget?.Entity;
+            IDamageable target = wallTarget != null ? wallTarget.Structure : SelectedAiTarget?.Entity as IDamageable;
             if (target == null) { return null; }
             Limb selectedLimb = null;
             float currentPriority = -1;
@@ -1699,28 +1859,7 @@ namespace Barotrauma
             {
                 if (limb == ignoredLimb) { continue; }
                 if (limb.IsSevered || limb.IsStuck) { continue; }
-                if (limb.Disabled) { continue; }
-                var attack = limb.attack;
-                if (attack == null) { continue; }
-                if (attack.CoolDownTimer > 0) { continue; }
-                if (!attack.IsValidContext(currentContexts)) { continue; }
-                if (!attack.IsValidTarget(target as IDamageable)) { continue; }
-                if (target is ISerializableEntity se && target is Character)
-                {
-                    if (attack.Conditionals.Any(c => !c.Matches(se))) { continue; }
-                }
-                if (attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(Character))) { continue; }
-                if (attack.Ranged)
-                {
-                    // Check that is approximately facing the target
-                    Vector2 attackLimbPos = Character.AnimController.SimplePhysicsEnabled ? Character.WorldPosition : limb.WorldPosition;
-                    Vector2 toTarget = attackWorldPos - attackLimbPos;
-                    float offset = limb.Params.GetSpriteOrientation() - MathHelper.PiOver2;
-                    Vector2 forward = VectorExtensions.Forward(limb.body.TransformedRotation - offset * Character.AnimController.Dir);
-                    float angle = VectorExtensions.Angle(forward, toTarget);
-                    if (angle > MathHelper.ToRadians(attack.RequiredAngle)) { continue; }
-                }
-
+                if (!IsValidAttack(limb, currentContexts, target)) { continue; }
                 if (AIParams.RandomAttack)
                 {
                     attackLimbs.Add(limb);
@@ -1764,7 +1903,11 @@ namespace Barotrauma
             Character.AnimController.ReleaseStuckLimbs();
             LatchOntoAI?.DeattachFromBody(reset: true, cooldown: 1);
             if (attacker == null || attacker.AiTarget == null || attacker.Removed || attacker.IsDead) { return; }
-            bool isFriendly = IsFriendly(Character, attacker);
+            if (Character.Params.CanInteract && attackResult.Damage > 10)
+            {
+                ReleaseDragTargets();
+            }
+            bool isFriendly = Character.IsFriendly(attacker);
             if (wasLatched)
             {
                 State = AIState.Escape;
@@ -1775,7 +1918,6 @@ namespace Barotrauma
                 }
                 return;
             }
-
             if (State == AIState.Flee)
             {
                 if (!isFriendly)
@@ -1840,7 +1982,7 @@ namespace Barotrauma
                 }
             }
 
-            AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget, true);
+            AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget, addIfNotFound: true);
             targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * AIParams.AggressionHurt;
 
             // Only allow to react once. Otherwise would attack the target with only a fraction of a cooldown
@@ -1878,58 +2020,184 @@ namespace Barotrauma
             }
         }
 
+        private Item GetEquippedItem(Limb limb)
+        {
+            InvSlotType GetInvSlotForLimb()
+            {
+                return limb.type switch
+                {
+                    LimbType.RightHand => InvSlotType.RightHand,
+                    LimbType.LeftHand => InvSlotType.LeftHand,
+                    LimbType.Head => InvSlotType.Head,
+                    _ => InvSlotType.None,
+                };
+            }
+            var slot = GetInvSlotForLimb();
+            if (slot != InvSlotType.None)
+            {
+                return Character.Inventory.GetItemInLimbSlot(slot);
+            }
+            return null;
+        }
+
         // 10 dmg, 100 health -> 0.1
         private float GetRelativeDamage(float dmg, float vitality) => dmg / Math.Max(vitality, 1.0f);
 
         private bool UpdateLimbAttack(float deltaTime, Limb attackingLimb, Vector2 attackSimPos, float distance = -1, Limb targetLimb = null)
         {
             if (SelectedAiTarget?.Entity == null) { return false; }
-
-            ActiveAttack = attackingLimb?.attack;
-
+            if (attackingLimb?.attack == null) { return false; }
+            ActiveAttack = attackingLimb.attack;
             if (wallTarget != null)
             {
                 // If the selected target is not the wall target, make the wall target the selected target.
                 var aiTarget = wallTarget.Structure.AiTarget;
                 if (aiTarget != null && SelectedAiTarget != aiTarget)
                 {
-                    SelectTarget(aiTarget, GetTargetMemory(SelectedAiTarget, true).Priority);
+                    SelectTarget(aiTarget, GetTargetMemory(SelectedAiTarget, addIfNotFound: true).Priority);
                     State = AIState.Attack;
                 }
             }
             IDamageable damageTarget = wallTarget != null ? wallTarget.Structure : SelectedAiTarget.Entity as IDamageable;
             if (damageTarget != null)
             {
+                if (Character.Params.CanInteract && Character.Inventory != null)
+                {
+                    // Use equipped items (weapons)
+                    Item item = GetEquippedItem(attackingLimb);
+                    if (item != null)
+                    {
+                        if (item.RequireAimToUse)
+                        {
+                            if (!Aim(deltaTime, damageTarget as ISpatialEntity, item))
+                            {
+                                // Valid target, but can't shoot -> return true so that it will not be ignored.
+                                return true;
+                            }
+                        }
+                        Character.SetInput(item.IsShootable ? InputType.Shoot : InputType.Use, false, true);
+                        item.Use(deltaTime, Character);
+                    }
+                }
                 //simulate attack input to get the character to attack client-side
                 Character.SetInput(InputType.Attack, true, true);
-#if SERVER
-                GameMain.NetworkMember.CreateEntityEvent(Character, new object[]
+                if (!ActiveAttack.IsRunning)
                 {
-                    Networking.NetEntityEvent.Type.SetAttackTarget,
-                    attackingLimb,
-                    (damageTarget as Entity)?.ID ?? Entity.NullEntityID,
-                    damageTarget is Character character && targetLimb != null ? Array.IndexOf(character.AnimController.Limbs, targetLimb) : 0,
-                    SimPosition.X,
-                    SimPosition.Y
-                });
+#if SERVER
+                    GameMain.NetworkMember.CreateEntityEvent(Character, new object[]
+                    {
+                        Networking.NetEntityEvent.Type.SetAttackTarget,
+                        attackingLimb,
+                        (damageTarget as Entity)?.ID ?? Entity.NullEntityID,
+                        damageTarget is Character character && targetLimb != null ? Array.IndexOf(character.AnimController.Limbs, targetLimb) : 0,
+                        SimPosition.X,
+                        SimPosition.Y
+                    });
+#else
+                    Character.PlaySound(CharacterSound.SoundType.Attack, maxInterval: 3);
 #endif
+                }
+
                 if (attackingLimb.UpdateAttack(deltaTime, attackSimPos, damageTarget, out AttackResult attackResult, distance, targetLimb))
                 {
-                    if (damageTarget.Health > 0 && attackResult.Damage > 0)
+                    if (attackingLimb.attack.CoolDownTimer > 0)
                     {
+                        SetAimTimer();
                         // Managed to hit a living/non-destroyed target. Increase the priority more if the target is low in health -> dies easily/soon
-                        selectedTargetMemory.Priority += GetRelativeDamage(attackResult.Damage, damageTarget.Health) * AIParams.AggressionGreed;
+                        float greed = AIParams.AggressionGreed;
+                        if (!(damageTarget is Character))
+                        {
+                            // Halve the greed for attacking non-characters.
+                            greed /= 2;
+                        }
+                        selectedTargetMemory.Priority += GetRelativeDamage(attackResult.Damage, damageTarget.Health) * greed;
                     }
-                    else
+                    if (LatchOntoAI != null && SelectedAiTarget.Entity is Character targetCharacter)
                     {
-                        selectedTargetMemory.Priority -= Math.Max(selectedTargetMemory.Priority / 2, 1);
-                        return selectedTargetMemory.Priority > 1;
+                        LatchOntoAI.SetAttachTarget(targetCharacter);
+                    }
+                    if (!attackingLimb.attack.Ranged)
+                    {
+                        if (damageTarget.Health > 0 && attackResult.Damage > 0)
+                        {
+                            // Managed to hit a living/non-destroyed target. Increase the priority more if the target is low in health -> dies easily/soon
+                            float greed = AIParams.AggressionGreed;
+                            if (!(damageTarget is Character))
+                            {
+                                // Halve the greed for attacking non-characters.
+                                greed /= 2;
+                            }
+                            selectedTargetMemory.Priority += GetRelativeDamage(attackResult.Damage, damageTarget.Health) * greed;
+                        }
+                        else
+                        {
+                            selectedTargetMemory.Priority -= Math.Max(selectedTargetMemory.Priority / 2, 1);
+                            return selectedTargetMemory.Priority > 1;
+                        }
                     }
                 }
                 return true;
             }
             return false;
         }
+
+        private float aimTimer;
+        private float visibilityCheckTimer;
+        private bool canSeeTarget;
+        private bool Aim(float deltaTime, ISpatialEntity target, Item weapon)
+        {
+            if (target == null || weapon == null) { return false; }
+            Character.CursorPosition = target.WorldPosition;
+            if (Character.Submarine != null)
+            {
+                Character.CursorPosition -= Character.Submarine.Position;
+            }
+            visibilityCheckTimer -= deltaTime;
+            if (visibilityCheckTimer <= 0.0f)
+            {
+                canSeeTarget = Character.CanSeeTarget(target);
+                visibilityCheckTimer = 0.2f;
+            }
+            if (!canSeeTarget)
+            {
+                SetAimTimer();
+                return false;
+            }
+            Character.SetInput(InputType.Aim, false, true);
+            if (aimTimer > 0)
+            {
+                aimTimer -= deltaTime;
+                return false;
+            }
+            Vector2 toTarget = target.WorldPosition - weapon.WorldPosition;
+            float angle = VectorExtensions.Angle(VectorExtensions.Forward(weapon.body.TransformedRotation), toTarget);
+            float distanceFactor = MathHelper.Lerp(1.0f, 0.1f, MathUtils.InverseLerp(100, 1000, toTarget.Length()));
+            float margin = MathHelper.PiOver4 * distanceFactor;
+            if (angle < margin)
+            {
+                var collisionCategories = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel;
+                var pickedBody = Submarine.PickBody(weapon.SimPosition, target.SimPosition, myBodies, collisionCategories, allowInsideFixture: true);
+                if (pickedBody != null)
+                {
+                    Character t = null;
+                    if (pickedBody.UserData is Character c)
+                    {
+                        t = c;
+                    }
+                    else if (pickedBody.UserData is Limb limb)
+                    {
+                        t = limb.character;
+                    }
+                    if (t != null && (t == target || !Character.IsFriendly(t)))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private void SetAimTimer(float timer = 1.5f) => aimTimer = timer * Rand.Range(0.75f, 1.25f);
 
         private readonly float blockCheckInterval = 0.1f;
         private float blockCheckTimer;
@@ -2052,40 +2320,39 @@ namespace Barotrauma
                 State = AIState.Idle;
                 return;
             }
-            if (Character.CurrentHull != null && PathSteering != null)
+            if (Character.CurrentHull != null && steeringManager == insideSteering)
             {
-                // Inside
-                Character targetCharacter = SelectedAiTarget.Entity as Character;
+                // Inside, but not inside ruins
                 if ((Character.AnimController.InWater || !Character.AnimController.CanWalk) &&
-                    (targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull) || Character.CanSeeTarget(SelectedAiTarget.Entity)))
+                    Character.Submarine != null && !Character.Submarine.Info.IsRuin &&
+                    SelectedAiTarget.Entity is Character c && VisibleHulls.Contains(c.CurrentHull))
                 {
                     // Steer towards the target if in the same room and swimming
-                    Vector2 dir = Vector2.Normalize(SelectedAiTarget.Entity.WorldPosition - Character.WorldPosition);
-                    if (MathUtils.IsValid(dir))
-                    {
-                        SteeringManager.SteeringManual(deltaTime, dir);
-                    }
+                    SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SelectedAiTarget.Entity.WorldPosition - Character.WorldPosition));
                 }
                 else
                 {
                     // Use path finding
-                    SteeringManager.SteeringSeek(Character.GetRelativeSimPosition(SelectedAiTarget.Entity), 2);
-                    if (!PathSteering.IsPathDirty && PathSteering.CurrentPath.Unreachable)
-                    {
-                        // Can't reach
-                        State = AIState.Idle;
-                        return;
-                    }
+                    PathSteering.SteeringSeek(Character.GetRelativeSimPosition(SelectedAiTarget.Entity), weight: 2, minGapWidth: minGapSize);
                 }
             }
             else
             {
                 // Outside
                 SteeringManager.SteeringSeek(Character.GetRelativeSimPosition(SelectedAiTarget.Entity), 5);
-                if (Character.AnimController.InWater)
+            }
+            if (steeringManager is IndoorsSteeringManager pathSteering)
+            {
+                if (!pathSteering.IsPathDirty && pathSteering.CurrentPath != null && pathSteering.CurrentPath.Unreachable)
                 {
-                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
+                    // Can't reach
+                    State = AIState.Idle;
+                    IgnoreTarget(SelectedAiTarget);
                 }
+            }
+            else if (Character.AnimController.InWater)
+            {
+                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
             }
         }
 
@@ -2105,7 +2372,7 @@ namespace Barotrauma
 
             foreach (AITarget aiTarget in AITarget.List)
             {
-                if (!aiTarget.Enabled) { continue; }
+                if (aiTarget.InDetectable) { continue; }
                 if (aiTarget.Entity == null) { continue; }
                 if (ignoredTargets.Contains(aiTarget)) { continue; }
                 if (Level.Loaded != null && aiTarget.WorldPosition.Y > Level.Loaded.Size.Y)
@@ -2125,6 +2392,9 @@ namespace Barotrauma
                 string targetingTag = null;
                 if (targetCharacter != null)
                 {
+                    // ignore if target is tagged to be explicitly ignored (Feign Death)
+                    if (targetCharacter.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI)) { continue; }
+
                     if (targetCharacter.IsDead)
                     {
                         targetingTag = "dead";
@@ -2139,7 +2409,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (IsFriendly(Character, targetCharacter))
+                        if (Character.IsFriendly(targetCharacter))
                         {
                             continue;
                         }
@@ -2186,10 +2456,12 @@ namespace Barotrauma
                 }
                 else
                 {
-                    // Ignore all structures, items, and hulls inside wrecks and beacons
+                    // Ignore all structures, items, and hulls inside these subs.
                     if (aiTarget.Entity.Submarine != null) 
                     { 
-                        if (aiTarget.Entity.Submarine.Info.IsWreck || aiTarget.Entity.Submarine.Info.IsBeacon || UnattackableSubmarines.Contains(aiTarget.Entity.Submarine))
+                        if (aiTarget.Entity.Submarine.Info.IsWreck ||  
+                            aiTarget.Entity.Submarine.Info.IsBeacon || 
+                            UnattackableSubmarines.Contains(aiTarget.Entity.Submarine))
                         {
                             continue;
                         }
@@ -2200,6 +2472,7 @@ namespace Barotrauma
                         if (character.CurrentHull != null) { continue; }
                         // Ignore ruins
                         if (hull.Submarine == null) { continue; }
+                        if (hull.Submarine.Info.IsRuin) { continue; }
                     }
 
                     Door door = null;
@@ -2212,14 +2485,6 @@ namespace Barotrauma
                             if (door != null && (!canAttackDoors && !AIParams.CanOpenDoors) || !canAttackWalls)
                             {
                                 // Can't reach
-                                continue;
-                            }
-                        }
-                        if (door == null)
-                        {
-                            // Ignore items inside ruins, unless we are in the same hull. We can't target the ruin walls. 
-                            if (item.Submarine == null && item.CurrentHull != Character.CurrentHull)
-                            {
                                 continue;
                             }
                         }
@@ -2240,6 +2505,11 @@ namespace Barotrauma
                             else if (targetingFromOutsideToInside)
                             {
                                 targetingTag = "room";
+                                if (item.Submarine?.Info.IsRuin != null)
+                                {
+                                    // Ignore ruin items when the creature is outside.
+                                    continue;
+                                }
                             }
                         }
                         else if (targetingTag == "nasonov")
@@ -2266,6 +2536,7 @@ namespace Barotrauma
                         }
                         if (s.IsPlatform) { continue; }
                         if (s.Submarine == null) { continue; }
+                        if (s.Submarine.Info.IsRuin) { continue; }
                         bool isCharacterInside = character.CurrentHull != null;
                         bool isInnerWall = s.prefab.Tags.Contains("inner");
                         if (isInnerWall && !isCharacterInside)
@@ -2425,11 +2696,24 @@ namespace Barotrauma
                         continue;
                     }
                 }
-                if (aiTarget.Entity is Item targetItem && targetParams.IgnoreContained && targetItem.ParentInventory != null) { continue; }
+                if (aiTarget.Entity is Item targetItem)
+                {
+                    if (targetParams.IgnoreContained && targetItem.ParentInventory != null) { continue; }
+                    if (targetParams.State == AIState.FleeTo)
+                    {
+                        float target = targetParams.Threshold;
+                        if (targetParams.ThresholdMin > 0 && targetParams.ThresholdMax > 0)
+                        {
+                            target = selectedTargetingParams == targetParams ? targetParams.ThresholdMax : targetParams.ThresholdMin;
+                        }
+                        if (character.HealthPercentage > target)
+                        {
+                             continue;
+                        }
+                    }
+                }
                 valueModifier *= targetParams.Priority;
-
                 if (valueModifier == 0.0f) { continue; }
-
                 if (targetingTag != "decoy")
                 {
                     if (SwarmBehavior != null && SwarmBehavior.Members.Any())
@@ -2449,7 +2733,7 @@ namespace Barotrauma
                         {
                             if (otherCharacter == character) { continue; }
                             if (otherCharacter.AIController?.SelectedAiTarget != aiTarget) { continue; }
-                            if (!IsFriendly(character, otherCharacter)) { continue; }
+                            if (!character.IsFriendly(otherCharacter)) { continue; }
                             valueModifier /= 2;
                         }
                     }
@@ -2463,17 +2747,30 @@ namespace Barotrauma
                 {
                     dist *= 0.9f;
                 }
-                if (!CanPerceive(aiTarget, dist)) { continue; }
+
+                if (!CanPerceive(aiTarget, dist, checkVisibility: SelectedAiTarget != aiTarget))
+                {
+                    continue;
+                }
+
+                if (SelectedAiTarget == aiTarget)
+                {
+                    // Stick to the current target
+                    valueModifier *= 1.1f;
+                }
 
                 //if the target is very close, the distance doesn't make much difference 
                 // -> just ignore the distance and attack whatever has the highest priority
                 dist = Math.Max(dist, 100.0f);
-
-                AITargetMemory targetMemory = GetTargetMemory(aiTarget, true);
-                if (Character.CurrentHull != null && Math.Abs(toTarget.Y) > Character.CurrentHull.Size.Y)
+                AITargetMemory targetMemory = GetTargetMemory(aiTarget, addIfNotFound: true);
+                if (Character.Submarine != null && !Character.Submarine.Info.IsRuin && Character.CurrentHull != null)
                 {
-                    // Inside the sub, treat objects that are up or down, as they were farther away.
-                    dist *= 3;
+                    float diff = Math.Abs(toTarget.Y) - Character.CurrentHull.Size.Y;
+                    if (diff > 0)
+                    {
+                        // Inside the sub, treat objects that are up or down, as they were farther away.
+                        dist *= MathHelper.Clamp(diff / 100, 2, 3);
+                    }
                 }
 
                 if (targetParams.AttackPattern == AttackPattern.Circle)
@@ -2491,6 +2788,12 @@ namespace Barotrauma
                             dist *= 5;
                         }
                     }
+                }
+
+                if (targetCharacter != null && Character.CurrentHull != null && Character.CurrentHull == targetCharacter.CurrentHull)
+                {
+                    // In the same room with the target character
+                    dist /= 2;
                 }
 
                 // Don't target characters that are outside of the allowed zone, unless chasing or escaping.
@@ -2527,7 +2830,7 @@ namespace Barotrauma
                         // Don't target items that we own. 
                         // This is a rare case, and almost entirely related to Humanhusks, so let's check it last to reduce unnecessary checks (although the check shouldn't be expensive)
                         if (owner == character) { continue; }
-                        if (owner != null && (IsFriendly(Character, owner) || owner.AiTarget != null && ignoredTargets.Contains(owner.AiTarget)))
+                        if (owner != null && (Character.IsFriendly(owner) || owner.AiTarget != null && ignoredTargets.Contains(owner.AiTarget)))
                         {
                             continue;
                         }
@@ -2599,7 +2902,7 @@ namespace Barotrauma
                         wall = wallTarget?.Structure;
                     }
                     // The target is not a wall or it's not the same as we are attached to -> release
-                    bool releaseTarget = wall == null || (!wall.Bodies.Contains(LatchOntoAI.AttachJoints[0].BodyB) && wall.Submarine?.PhysicsBody?.FarseerBody != LatchOntoAI.AttachJoints[0].BodyB);
+                    bool releaseTarget = wall?.Bodies == null || (!wall.Bodies.Contains(LatchOntoAI.AttachJoints[0].BodyB) && wall.Submarine?.PhysicsBody?.FarseerBody != LatchOntoAI.AttachJoints[0].BodyB);
                     if (!releaseTarget)
                     {
                         for (int i = 0; i < wall.Sections.Length; i++)
@@ -2645,6 +2948,7 @@ namespace Barotrauma
             wallTarget = null;
             if (SelectedAiTarget == null) { return; }
             if (SelectedAiTarget.Entity == null) { return; }
+            if (!canAttackWalls) { return; }
             if (HasValidPath(requireNonDirty: true)) { return; }
             wallHits.Clear();
             Structure wall = null;
@@ -2847,9 +3151,14 @@ namespace Barotrauma
             {
                 if (addIfNotFound)
                 {
-                    memory = new AITargetMemory(target, 10);
+                    memory = new AITargetMemory(target, minPriority);
                     targetMemories.Add(target, memory);
                 }
+            }
+            if (addIfNotFound)
+            {
+                // Keep the memory alive.
+                memory.Priority = Math.Max(memory.Priority, minPriority);
             }
             return memory;
         }
@@ -2862,7 +3171,7 @@ namespace Barotrauma
                 {
                     _selectedAiTarget = null;
                 }
-                else if (CanPerceive(_selectedAiTarget))
+                else if (CanPerceive(_selectedAiTarget, checkVisibility: false))
                 {
                     var memory = GetTargetMemory(_selectedAiTarget, false);
                     if (memory != null)
@@ -3000,7 +3309,7 @@ namespace Barotrauma
         private void ResetParams(CharacterParams.TargetParams targetParams)
         {
             targetParams?.Reset();
-            if (selectedTargetingParams == targetParams || State == AIState.Idle)
+            if (selectedTargetingParams == targetParams || State == AIState.Idle || State == AIState.Patrol)
             {
                 ResetAITarget();
                 State = AIState.Idle;
@@ -3014,7 +3323,7 @@ namespace Barotrauma
             {
                 if (!onlyExisting && !tempParams.ContainsKey(tag))
                 {
-                    if (AIParams.TryAddNewTarget(tag, state, priority ?? 100, out targetParams))
+                    if (AIParams.TryAddNewTarget(tag, state, priority ?? minPriority, out targetParams))
                     {
                         tempParams.Add(tag, targetParams);
                     }
@@ -3051,6 +3360,7 @@ namespace Barotrauma
             ChangeParams(target.SpeciesName, state, priority);
             if (target.IsHuman)
             {
+                priority = GetTargetParams("human")?.Priority;
                 // Target also items, because if we are blind and the target doesn't move, we can only perceive the target when it uses items
                 if (state == AIState.Attack || state == AIState.Escape)
                 {
@@ -3061,20 +3371,19 @@ namespace Barotrauma
                 {
                     // If the target is shooting from the submarine, we might not perceive it because it doesn't move.
                     // --> Target the submarine too.
-                    if (target.Submarine != null && (canAttackDoors || canAttackWalls))
+                    if (target.Submarine != null && Character.Submarine == null && (canAttackDoors || canAttackWalls))
                     {
-                        ChangeParams("room", state, priority);
+                        ChangeParams("room", state, priority * 0.1f);
                         if (canAttackWalls)
                         {
-                            ChangeParams("wall", state, priority);
+                            ChangeParams("wall", state, priority * 0.1f);
                         }
                         if (canAttackDoors)
                         {
-                            ChangeParams("door", state, priority);
+                            ChangeParams("door", state, priority * 0.1f);
                         }
                     }
                     ChangeParams("provocative", state, priority, onlyExisting: true);
-                    ChangeParams("light", state, priority, onlyExisting: true);
                 }
             }
         }
@@ -3100,12 +3409,16 @@ namespace Barotrauma
         protected override void OnStateChanged(AIState from, AIState to)
         {
             LatchOntoAI?.DeattachFromBody(reset: true);
+            if (disableTailCoroutine != null)
+            {
+                CoroutineManager.StopCoroutines(disableTailCoroutine);
+                Character.AnimController.RestoreTemporarilyDisabled();
+                disableTailCoroutine = null;
+            }
             Character.AnimController.ReleaseStuckLimbs();
-            escapeTarget = null;
             AttackingLimb = null;
             movementMargin = 0;
-            allGapsSearched = false;
-            unreachableGaps.Clear();
+            ResetEscape();
             if (isStateChanged && to == AIState.Idle && from != to)
             {
                 SetStateResetTimer();
@@ -3117,11 +3430,16 @@ namespace Barotrauma
 
         private float GetPerceivingRange(AITarget target) => Math.Max(target.SightRange * Sight, target.SoundRange * Hearing);
 
-        private bool CanPerceive(AITarget target, float dist = -1, float distSquared = -1)
+        private bool CanPerceive(AITarget target, float dist = -1, float distSquared = -1, bool checkVisibility = false)
         {
+            bool insideSightRange;
+            bool insideSoundRange;
+            checkVisibility = checkVisibility && Character.Submarine != null && target.Entity.Submarine == Character.Submarine;
             if (dist > 0)
             {
-                return dist <= target.SightRange * Sight || dist <= target.SoundRange * Hearing;
+                insideSightRange = IsInRange(dist, target.SightRange, Sight);
+                if (!checkVisibility && insideSightRange) { return true; }
+                insideSoundRange = IsInRange(dist, target.SoundRange, Hearing);
             }
             else
             {
@@ -3129,8 +3447,42 @@ namespace Barotrauma
                 {
                     distSquared = Vector2.DistanceSquared(Character.WorldPosition, target.WorldPosition);
                 }
-                return distSquared <= MathUtils.Pow(target.SightRange * Sight, 2) || distSquared <= MathUtils.Pow(target.SoundRange * Hearing, 2);
+                insideSightRange = IsInRangeSqr(distSquared, target.SightRange, Sight);
+                if (!checkVisibility && insideSightRange) { return true; }
+                insideSoundRange = IsInRangeSqr(distSquared, target.SoundRange, Hearing);
             }
+            if (!checkVisibility)
+            {
+                return insideSightRange || insideSoundRange;
+            }
+            else
+            {
+                if (!insideSightRange && !insideSoundRange) { return false; }
+                // Inside the same submarine -> check whether the target is behind a wall
+                if (target.Entity is Character c && VisibleHulls.Contains(c.CurrentHull) || target.Entity is Item i && VisibleHulls.Contains(i.CurrentHull))
+                {
+                    return insideSightRange || insideSoundRange;
+                }
+                else
+                {
+                    // No line of sight to the target -> Ignore sight and use only half of the sound range
+                    if (dist > 0)
+                    {
+                        return IsInRange(dist, target.SoundRange, Hearing / 2);
+                    }
+                    else
+                    {
+                        if (distSquared < 0)
+                        {
+                            distSquared = Vector2.DistanceSquared(Character.WorldPosition, target.WorldPosition);
+                        }
+                        return IsInRangeSqr(distSquared, target.SoundRange, Hearing / 2);
+                    }
+                }
+            }
+
+            bool IsInRange(float dist, float range, float perception) => dist <= range * perception;
+            bool IsInRangeSqr(float distSquared, float range, float perception) => distSquared <= MathUtils.Pow2(range * perception);
         }
 
         public void ReevaluateAttacks()
@@ -3255,6 +3607,72 @@ namespace Barotrauma
 
         public bool CanPassThroughHole(Structure wall, int sectionIndex) => CanPassThroughHole(wall, sectionIndex, requiredHoleCount);
 
+        public override bool Escape(float deltaTime)
+        {
+            if (SelectedAiTarget != null && (SelectedAiTarget.Entity == null || SelectedAiTarget.Entity.Removed))
+            {
+                State = AIState.Idle;
+                return false;
+            }
+            else if (SelectedTargetMemory is AITargetMemory targetMemory && SelectedAiTarget?.Entity is Character)
+            {
+                targetMemory.Priority += deltaTime * PriorityFearIncrement;
+            }
+            bool isSteeringThroughGap = UpdateEscape(deltaTime, canAttackDoors);
+            if (!isSteeringThroughGap)
+            {
+                if (SelectedAiTarget?.Entity is Character targetCharacter && targetCharacter.CurrentHull == Character.CurrentHull)
+                {
+                    SteerAwayFromTheEnemy();
+                }
+                else if (canAttackDoors && HasValidPath(requireNonDirty: true, requireUnfinished: true))
+                {
+                    var door = PathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? PathSteering.CurrentPath.NextNode?.ConnectedDoor;
+                    if (door != null && !door.CanBeTraversed && !door.HasAccess(Character))
+                    {
+                        if (SelectedAiTarget != door.Item.AiTarget || State != AIState.Attack)
+                        {
+                            SelectTarget(door.Item.AiTarget, SelectedTargetMemory.Priority);
+                            State = AIState.Attack;
+                        }
+                    }
+                }
+            }
+            if (EscapeTarget == null)
+            {
+                if (SelectedAiTarget?.Entity is Character)
+                {
+                    SteerAwayFromTheEnemy();
+                }
+                else
+                {
+                    SteeringManager.SteeringWander();
+                    if (Character.CurrentHull == null)
+                    {
+                        SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
+                    }
+                }
+            }
+            return isSteeringThroughGap;
+
+            void SteerAwayFromTheEnemy()
+            {
+                if (SelectedAiTarget == null) { return; }
+                Vector2 escapeDir = Vector2.Normalize(WorldPosition - SelectedAiTarget.WorldPosition);
+                if (Character.CurrentHull != null && !Character.AnimController.InWater)
+                {
+                    // Inside
+                    escapeDir = new Vector2(Math.Sign(escapeDir.X), 0);
+                }
+                if (!MathUtils.IsValid(escapeDir))
+                {
+                    escapeDir = Vector2.UnitY;
+                }
+                SteeringManager.Reset();
+                SteeringManager.SteeringManual(deltaTime, escapeDir);
+            }
+        }
+
         private readonly List<Limb> targetLimbs = new List<Limb>();
         public Limb GetTargetLimb(Limb attackLimb, Character target, LimbType targetLimbType = LimbType.None)
         {
@@ -3306,7 +3724,17 @@ namespace Barotrauma
             return null;
         }
 
-        public static bool IsFriendly(Character me, Character other) => other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group);
+        public override void ServerWrite(IWriteMessage msg)
+        {
+            msg.Write((byte)State);
+            PetBehavior?.ServerWrite(msg);
+        }
+
+        public override void ClientRead(IReadMessage msg)
+        {
+            State = (AIState)msg.ReadByte();
+            PetBehavior?.ClientRead(msg);
+        }
     }
 
     //the "memory" of the Character 
