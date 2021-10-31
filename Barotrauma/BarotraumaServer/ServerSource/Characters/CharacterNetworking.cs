@@ -703,7 +703,7 @@ namespace Barotrauma
                 if (msg.LengthBytes + tempBuffer.LengthBytes >= 255 && restrictMessageSize)
                 { 
                     msg.Write(false);
-                    DebugConsole.ThrowError($"Error when writing character spawn data: status data caused the length of the message to exceed 255 bytes ({msg.LengthBytes} + {tempBuffer.LengthBytes})");
+                    //DebugConsole.ThrowError($"Error when writing character spawn data: status data caused the length of the message to exceed 255 bytes ({msg.LengthBytes} + {tempBuffer.LengthBytes})");
                 }
                 else
                 {

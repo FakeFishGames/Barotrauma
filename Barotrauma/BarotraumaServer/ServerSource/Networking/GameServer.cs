@@ -1758,7 +1758,7 @@ namespace Barotrauma.Networking
                     break;
                 }
 
-                //outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+                outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
                 //if (outmsg.LengthBytes > MsgConstants.MTU)
                 //{
