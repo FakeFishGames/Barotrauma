@@ -9,6 +9,7 @@ using System.Threading;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework.Input;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 #if DEBUG
 using System.IO;
 #else
@@ -2973,13 +2974,25 @@ namespace Barotrauma
 
             allEntityList.Visible = true;
             categorizedEntityList.Visible = false;
-            filter = filter.ToLower();
+
+            Regex r;
+            try
+            {
+                r = new Regex(filter);
+            }
+            catch (ArgumentException)
+            {
+                r = null;
+            }
+
             foreach (GUIComponent child in allEntityList.Content.Children)
             {
+                bool shouldShow = r?.IsMatch(((MapEntityPrefab)child.UserData).Name) ?? false;
                 child.Visible =
                     (!selectedCategory.HasValue || ((MapEntityPrefab)child.UserData).Category.HasFlag(selectedCategory)) &&
-                    ((MapEntityPrefab)child.UserData).Name.ToLower().Contains(filter);
+                    shouldShow;
             }
+
             allEntityList.UpdateScrollBarSize();
             allEntityList.BarScroll = 0.0f;
         }
