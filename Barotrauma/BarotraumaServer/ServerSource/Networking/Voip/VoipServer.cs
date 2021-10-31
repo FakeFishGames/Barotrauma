@@ -86,7 +86,7 @@ namespace Barotrauma.Networking
             if (!senderSpectating && recipientSpectating) { return true; }
 
             //sender can't speak
-            if (sender.Character != null && sender.Character.SpeechImpediment >= 100.0f) { return false; }
+            //if (sender.Character != null && sender.Character.SpeechImpediment >= 100.0f) { return false; }
 
             //check if the message can be sent via radio
             if (!sender.VoipQueue.ForceLocal &&

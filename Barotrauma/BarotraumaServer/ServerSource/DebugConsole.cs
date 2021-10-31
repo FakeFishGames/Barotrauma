@@ -1592,24 +1592,76 @@ namespace Barotrauma
                 "teleportsub",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    if (Submarine.MainSub == null || Level.Loaded == null) return;
+
+                    int team = Convert.ToInt32(args[0]);
+                    int subnum = Convert.ToInt32(args[1]);
+                    Submarine sub = Submarine.MainSub;
+                    List<Submarine> shut = Submarine.Loaded.Where(s => s.Info.HasTag(SubmarineTag.Shuttle)).ToList();
+                    List<Submarine> other = Submarine.Loaded.ToList();
+                    other.AddRange(shut);
+
+                    if (Submarine.MainSubs[1] != null)
+                    {
+                        Submarine coal = Submarine.MainSubs[0];
+                        Submarine sep = Submarine.MainSubs[1];
+                        int shutcount = shut.Count();
+                        List<Submarine> coalshut = shut.GetRange(0, shutcount / 2);
+                        List<Submarine> sepshut = shut.GetRange(shutcount / 2, shutcount / 2);
+
+                        if (team == 1)
+                        {
+                            if (subnum == 1) { sub = coal; }
+                            else
+                            {
+                                sub = coalshut[subnum - 2];
+                                if (sub.DockedTo.Any()) { sub = null; }
+                            }
+                        }
+                        else if (team == 2)
+                        {
+                            if (subnum == 1) { sub = sep; }
+                            else
+                            {
+                                sub = sepshut[subnum - 2];
+                                if (sub.DockedTo.Any()) { sub = null; }
+                            }
+                        }
+                        else
+                        { sub = other[subnum - 1]; }
+                    }
+                    else
+                    {
+                        if (team == 1)
+                        {
+                            if (subnum == 1) { sub = Submarine.MainSub; }
+                            else
+                            {
+                                sub = shut[subnum - 2];
+                                if (sub.DockedTo.Any()) { sub = null; }
+                            }
+                        }
+                        else
+                        { sub = other[subnum - 1]; }
+                    }
+
+                    if (sub == null || Level.Loaded == null) return;
                     if (Level.Loaded.Type == LevelData.LevelType.Outpost)
                     {
                         GameMain.Server.SendConsoleMessage("The teleportsub command is unavailable in outpost levels!", client);
                         return;
                     }
 
-                    if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
+                    if (args.Length == 2 || args[2].Equals("cursor", StringComparison.OrdinalIgnoreCase))
                     {
-                        Submarine.MainSub.SetPosition(cursorWorldPos);
+                        sub.SetPosition(cursorWorldPos);
                     }
-                    else if (args[0].Equals("start", StringComparison.OrdinalIgnoreCase))
+                    else if (args[2].Equals("start", StringComparison.OrdinalIgnoreCase))
                     {
-                        Submarine.MainSub.SetPosition(Level.Loaded.StartPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
+                        sub.SetPosition(Level.Loaded.StartPosition - Vector2.UnitY * sub.Borders.Height);
                     }
-                    else
+                    else if (args[2].Equals("end", StringComparison.OrdinalIgnoreCase))
                     {
-                        Submarine.MainSub.SetPosition(Level.Loaded.EndPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
+                        sub.SetPosition(Level.Loaded.EndPosition - Vector2.UnitY * sub.Borders.Height);
                     }
                 }
             );

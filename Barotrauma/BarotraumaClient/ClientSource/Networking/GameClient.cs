@@ -2409,10 +2409,10 @@ namespace Barotrauma.Networking
             }
             outmsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
 
-            if (outmsg.LengthBytes > MsgConstants.MTU)
-            {
-                DebugConsole.ThrowError($"Maximum packet size exceeded ({outmsg.LengthBytes} > {MsgConstants.MTU})");
-            }
+            //if (outmsg.LengthBytes > MsgConstants.MTU)
+            //{
+            //    DebugConsole.ThrowError($"Maximum packet size exceeded ({outmsg.LengthBytes} > {MsgConstants.MTU})");
+            //}
 
             clientPeer.Send(outmsg, DeliveryMethod.Unreliable);
         }
@@ -2460,10 +2460,10 @@ namespace Barotrauma.Networking
 
             outmsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
 
-            if (outmsg.LengthBytes > MsgConstants.MTU)
-            {
-                DebugConsole.ThrowError($"Maximum packet size exceeded ({outmsg.LengthBytes} > {MsgConstants.MTU})");
-            }
+            //if (outmsg.LengthBytes > MsgConstants.MTU)
+            //{
+            //    DebugConsole.ThrowError($"Maximum packet size exceeded ({outmsg.LengthBytes} > {MsgConstants.MTU})");
+            //}
 
             clientPeer.Send(outmsg, DeliveryMethod.Unreliable);
         }
