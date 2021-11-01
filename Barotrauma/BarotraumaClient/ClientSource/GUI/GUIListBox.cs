@@ -256,6 +256,15 @@ namespace Barotrauma
         /// </summary>
         public bool CanInteractWhenUnfocusable { get; set; } = false;
 
+        public override Rectangle MouseRect
+        {
+            get
+            {
+                if (!CanBeFocused && !CanInteractWhenUnfocusable) { return Rectangle.Empty; }
+                return ClampMouseRectToParent ? ClampRect(Rect) : Rect;
+            }
+        }
+
         /// <param name="isScrollBarOnDefaultSide">For horizontal listbox, default side is on the bottom. For vertical, it's on the right.</param>
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "", bool isScrollBarOnDefaultSide = true, bool useMouseDownToSelect = false) : base(style, rectT)
         {
