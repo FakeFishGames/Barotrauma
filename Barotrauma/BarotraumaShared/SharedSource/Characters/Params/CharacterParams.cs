@@ -466,6 +466,9 @@ namespace Barotrauma
             [Serialize(false, true), Editable]
             public bool StunImmunity { get; set; }
 
+            [Serialize(false, true, description: "Can afflictions affect the face/body tint of the character."), Editable]
+            public bool ApplyAfflictionColors { get; private set; }
+
             // TODO: limbhealths, sprite?
 
             public HealthParams(XElement element, CharacterParams character) : base(element, character) { }

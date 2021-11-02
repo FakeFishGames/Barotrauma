@@ -1,6 +1,7 @@
 ﻿#region Using Statements
 
 using System;
+using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
 using System.Text;
@@ -132,8 +133,11 @@ namespace Barotrauma
                     {
                         XElement newElement = new XElement(doc.Root.Name);
                         newElement.Add(doc.Root.Attributes());
-                        newElement.Add(doc.Root.Elements().Where(e => !e.Name.LocalName.Equals("contentpackage", StringComparison.InvariantCultureIgnoreCase)));
-                        newElement.Add(baseDoc.Root.Elements().Where(e => e.Name.LocalName.Equals("contentpackage", StringComparison.InvariantCultureIgnoreCase)));
+                        string[] contentPackageTags = { "contentpackage", "contentpackages" };
+                        bool elementNameMatches(XElement element)
+                            => contentPackageTags.Any(t => element.Name.LocalName.Equals(t, StringComparison.InvariantCultureIgnoreCase));
+                        newElement.Add(doc.Root.Elements().Where(e => !elementNameMatches(e)));
+                        newElement.Add(baseDoc.Root.Elements().Where(e => elementNameMatches(e)));
                         XDocument newDoc = new XDocument(newElement);
                         newDoc.Save(GameSettings.PlayerSavePath);
                         sb.AppendLine("To prevent further startup errors, installed mods will be disabled the next time you launch the game.");

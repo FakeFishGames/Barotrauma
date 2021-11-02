@@ -104,6 +104,7 @@ namespace Barotrauma
             !pathSteering.CurrentPath.Unreachable &&
             (!requireNonDirty || !pathSteering.IsPathDirty);
 
+        public bool IsCurrentPathNullOrUnreachable => IsCurrentPathUnreachable || steeringManager is IndoorsSteeringManager pathSteering && pathSteering.CurrentPath == null;
         public bool IsCurrentPathUnreachable => steeringManager is IndoorsSteeringManager pathSteering && !pathSteering.IsPathDirty && pathSteering.CurrentPath != null && pathSteering.CurrentPath.Unreachable;
         public bool IsCurrentPathFinished => steeringManager is IndoorsSteeringManager pathSteering && !pathSteering.IsPathDirty && pathSteering.CurrentPath != null && pathSteering.CurrentPath.Finished;
 
@@ -431,7 +432,7 @@ namespace Barotrauma
                 Vector2 diff = EscapeTarget.WorldPosition - Character.WorldPosition;
                 float sqrDist = diff.LengthSquared();
                 bool isClose = sqrDist < MathUtils.Pow2(100);
-                if (Character.CurrentHull == null || isClose && !isClosedDoor || pathSteering == null || IsCurrentPathUnreachable || IsCurrentPathFinished)
+                if (Character.CurrentHull == null || isClose && !isClosedDoor || pathSteering == null || IsCurrentPathNullOrUnreachable || IsCurrentPathFinished)
                 {
                     // Very close to the target, outside, or at the end of the path -> try to steer through the gap
                     SteeringManager.Reset();

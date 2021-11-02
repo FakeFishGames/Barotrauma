@@ -36,7 +36,7 @@ namespace Barotrauma
         /// </summary>
         public bool ExcludeBroken { get; private set; }
 
-        private bool allowVariants = true;
+        public bool AllowVariants { get; private set; } = true;
 
         public RelationType Type
         {
@@ -84,13 +84,13 @@ namespace Barotrauma
         {
             if (item == null) { return false; }
             if (excludedIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) { return false; }
-            return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id) || (allowVariants && item.Prefab.VariantOf?.Identifier == id));
+            return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id) || (AllowVariants && item.Prefab.VariantOf?.Identifier == id));
         }
         public bool MatchesItem(ItemPrefab itemPrefab)
         {
             if (itemPrefab == null) { return false; }
             if (excludedIdentifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id))) { return false; }
-            return Identifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id) || (allowVariants && itemPrefab.VariantOf?.Identifier == id));
+            return Identifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id) || (AllowVariants && itemPrefab.VariantOf?.Identifier == id));
         }
 
         public RelatedItem(string[] identifiers, string[] excludedIdentifiers)
@@ -171,7 +171,7 @@ namespace Barotrauma
                 new XAttribute("ignoreineditor", IgnoreInEditor),
                 new XAttribute("excludebroken", ExcludeBroken),
                 new XAttribute("targetslot", TargetSlot),
-                new XAttribute("allowvariants", allowVariants));
+                new XAttribute("allowvariants", AllowVariants));
 
             if (excludedIdentifiers.Length > 0)
             {
@@ -235,7 +235,7 @@ namespace Barotrauma
             RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers)
             {
                 ExcludeBroken = element.GetAttributeBool("excludebroken", true),
-                allowVariants = element.GetAttributeBool("allowvariants", true)
+                AllowVariants = element.GetAttributeBool("allowvariants", true)
             };
             string typeStr = element.GetAttributeString("type", "");
             if (string.IsNullOrEmpty(typeStr))

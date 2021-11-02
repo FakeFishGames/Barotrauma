@@ -9,6 +9,7 @@ namespace Barotrauma.Abilities
         private readonly float statPerLevel;
         private readonly int maxLevel;
         private float lastValue = 0f;
+        public override bool AllowClientSimulation => true;
 
         public CharacterAbilityModifyStatToLevel(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {

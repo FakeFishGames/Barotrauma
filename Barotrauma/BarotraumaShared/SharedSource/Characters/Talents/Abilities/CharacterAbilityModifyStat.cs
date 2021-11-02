@@ -7,6 +7,7 @@ namespace Barotrauma.Abilities
         private readonly StatTypes statType;
         private readonly float value;
         bool lastState;
+        public override bool AllowClientSimulation => true;
 
         public CharacterAbilityModifyStat(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {

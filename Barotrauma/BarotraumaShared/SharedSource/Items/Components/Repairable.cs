@@ -547,6 +547,11 @@ namespace Barotrauma.Items.Components
                     //power transfer items (junction boxes, relays) don't deteriorate if they're no carrying any power
                     if (Math.Abs(pt.CurrPowerConsumption) > 0.1f) { return true; }
                 }
+                else if (ic is PowerContainer pc)
+                {
+                    //batteries don't deteriorate if they're not charging/discharging
+                    if (Math.Abs(pc.CurrPowerConsumption) > 0.1f || Math.Abs(pc.CurrPowerOutput) > 0.1f) { return true; }
+                }
                 else if (ic is Engine engine)
                 {
                     //engines don't deteriorate if they're not running
@@ -555,7 +560,7 @@ namespace Barotrauma.Items.Components
                 else if (ic is Pump pump)
                 {
                     //pumps don't deteriorate if they're not running
-                    if (Math.Abs(pump.FlowPercentage) > 1.0f && pump.IsActive) { return true; }
+                    if (Math.Abs(pump.FlowPercentage) > 1.0f && pump.IsActive && pump.HasPower) { return true; }
                 }
                 else if (ic is Reactor reactor)
                 {

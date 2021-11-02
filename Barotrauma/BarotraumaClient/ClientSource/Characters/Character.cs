@@ -332,7 +332,7 @@ namespace Barotrauma
                 {
                     cam.OffsetAmount = targetOffsetAmount = 0.0f;
                     cursorPosition =
-                        SelectedConstruction.Position +
+                        Position +
                         PlayerInput.MouseSpeed.ClampLength(10.0f); //apply a little bit of movement to the cursor pos to prevent AFK kicking
                 }
                 else if (!GameMain.Config.EnableMouseLook)
@@ -1096,6 +1096,7 @@ namespace Barotrauma
         private SoundChannel soundChannel;
         public void PlaySound(CharacterSound.SoundType soundType, float soundIntervalFactor = 1.0f, float maxInterval = 0)
         {
+            if (Removed) { return; }
             if (sounds == null || sounds.Count == 0) { return; }
             if (soundChannel != null && soundChannel.IsPlaying) { return; }
             if (GameMain.SoundManager?.Disabled ?? true) { return; }

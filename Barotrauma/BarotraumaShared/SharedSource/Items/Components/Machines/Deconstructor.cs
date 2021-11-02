@@ -202,7 +202,7 @@ namespace Barotrauma.Items.Components
             {
                 float percentageHealth = targetItem.Condition / targetItem.MaxCondition;
 
-                if (percentageHealth <= deconstructProduct.MinCondition || percentageHealth > deconstructProduct.MaxCondition) { return; }
+                if (percentageHealth < deconstructProduct.MinCondition || percentageHealth > deconstructProduct.MaxCondition) { return; }
 
                 if (!(MapEntityPrefab.Find(null, deconstructProduct.ItemIdentifier) is ItemPrefab itemPrefab))
                 {

@@ -516,6 +516,9 @@ namespace Barotrauma
             }
         }
 
+        private readonly static List<SlotReference> hideSubInventories = new List<SlotReference>();
+        private readonly static List<SlotReference> tempHighlightedSubInventorySlots = new List<SlotReference>();
+
         public override void Update(float deltaTime, Camera cam, bool isSubInventory = false)
         {
             if (!AccessibleWhenAlive && !character.IsDead)
@@ -579,15 +582,17 @@ namespace Barotrauma
                     }
                 }
             }
-            
-            List<SlotReference> hideSubInventories = new List<SlotReference>();
+
+            hideSubInventories.Clear();
             //remove highlighted subinventory slots that can no longer be accessed
             highlightedSubInventorySlots.RemoveWhere(s => 
                 s.ParentInventory == this &&
                 ((s.SlotIndex < 0 || s.SlotIndex >= slots.Length || slots[s.SlotIndex] == null) || (Character.Controlled != null && !Character.Controlled.CanAccessInventory(s.Inventory))));
             //remove highlighted subinventory slots that refer to items no longer in this inventory
             highlightedSubInventorySlots.RemoveWhere(s => s.Item != null && s.ParentInventory == this && s.Item.ParentInventory != this);
-            foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
+            tempHighlightedSubInventorySlots.Clear();
+            tempHighlightedSubInventorySlots.AddRange(highlightedSubInventorySlots);
+            foreach (var highlightedSubInventorySlot in tempHighlightedSubInventorySlots)
             {
                 if (highlightedSubInventorySlot.ParentInventory == this)
                 {

@@ -171,5 +171,21 @@ namespace Barotrauma.Extensions
             }
             return false;
         }
+
+        /// <summary>
+        /// Returns the maximum element in a given enumerable, or null if there
+        /// aren't any elements in the input.
+        /// </summary>
+        /// <param name="enumerable">Input collection</param>
+        /// <returns>Maximum element or null</returns>
+        public static T? MaxOrNull<T>(this IEnumerable<T> enumerable) where T : struct, IComparable<T>
+        {
+            T? retVal = null;
+            foreach (T v in enumerable)
+            {
+                if (!retVal.HasValue || v.CompareTo(retVal.Value) > 0) { retVal = v; }
+            }
+            return retVal;
+        }
     }
 }

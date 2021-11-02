@@ -127,6 +127,8 @@ namespace Barotrauma.Items.Components
             if (source == null || target == null || target.Removed ||
                 (source is Entity sourceEntity && sourceEntity.Removed))
             {
+                source = null;
+                target = null;
                 IsActive = false;
                 return;
             }

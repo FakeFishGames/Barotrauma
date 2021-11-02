@@ -540,7 +540,7 @@ namespace Barotrauma
                 }
             }*/
 
-            bool mouseOn = interactRect.Contains(PlayerInput.MousePosition) && !Locked && !mouseOnGUI && !slot.Disabled;
+            bool mouseOn = interactRect.Contains(PlayerInput.MousePosition) && !Locked && !mouseOnGUI && !slot.Disabled && IsMouseOnInventory;
 
             // Delete item from container in sub editor
             if (SubEditorScreen.IsSubEditor() && PlayerInput.IsCtrlDown())
@@ -863,6 +863,8 @@ namespace Barotrauma
             {
                 return false;
             }
+            if (GameSession.IsTabMenuOpen) { return false; }
+            if (CrewManager.IsCommandInterfaceOpen) { return false; }
 
             if (Character.Controlled == null) { return false; }
 
@@ -1313,6 +1315,10 @@ namespace Barotrauma
 
         private static bool CanSelectSlot(SlotReference selectedSlot)
         {
+            if (!IsMouseOnInventory)
+            {
+                return false;
+            }
             if (!selectedSlot.Slot.MouseOn())
             {
                 return false;
@@ -1335,7 +1341,8 @@ namespace Barotrauma
                 if ((parentItem?.GetRootInventoryOwner() is Character ownerCharacter) &&
                     ownerCharacter == Character.Controlled &&
                     CharacterHealth.OpenHealthWindow?.Character != ownerCharacter &&
-                    ownerCharacter.Inventory.IsInLimbSlot(parentItem, InvSlotType.HealthInterface))
+                    ownerCharacter.Inventory.IsInLimbSlot(parentItem, InvSlotType.HealthInterface) &&
+                    Screen.Selected != GameMain.SubEditorScreen)
                 {
                     highlightedSubInventorySlots.RemoveWhere(s => s.Item == parentItem);
                     return false;

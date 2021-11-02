@@ -202,13 +202,11 @@ namespace Barotrauma
 
         public void SavePlayers()
         {
-            List<CharacterCampaignData> prevCharacterData = new List<CharacterCampaignData>(characterData);
-            //client character has spawned this round -> remove old data (and replace with an up-to-date one if the client still has a character)
-            characterData.RemoveAll(cd => cd.HasSpawned);
-
             //refresh the character data of clients who are still in the server
             foreach (Client c in GameMain.Server.ConnectedClients)
             {
+                //ignore if the character is controlling a monster
+                //(we'll just use the previously saved campaign data if there's any)
                 if (c.Character != null && c.Character.Info == null)
                 {
                     c.Character = null;
@@ -225,25 +223,30 @@ namespace Barotrauma
                         continue;
                     }
                 }
-                var characterInfo = c.Character?.Info ?? c.CharacterInfo;
+                //use the info of the character the client is currently controlling
+                // or the previously saved info if not (e.g. if the client has been spectating or died)
+                var characterInfo = c.Character?.Info ?? characterData.Find(d => d.MatchesClient(c))?.CharacterInfo;
                 if (characterInfo == null) { continue; }
-                if (c.CharacterInfo.CauseOfDeath != null && characterInfo.CauseOfDeath.Type != CauseOfDeathType.Disconnected)
+                //reduce skills if the character has died
+                if (characterInfo.CauseOfDeath != null && characterInfo.CauseOfDeath.Type != CauseOfDeathType.Disconnected)
                 {
                     RespawnManager.ReduceCharacterSkills(characterInfo);
                 }
                 c.CharacterInfo = characterInfo;
                 characterData.RemoveAll(cd => cd.MatchesClient(c));
-                characterData.Add(new CharacterCampaignData(c));
+                characterData.Add(new CharacterCampaignData(c));                
             }
 
             //refresh the character data of clients who aren't in the server anymore
+            List<CharacterCampaignData> prevCharacterData = new List<CharacterCampaignData>(characterData);
             foreach (CharacterCampaignData data in prevCharacterData)
             {
-                if (data.HasSpawned && !characterData.Any(cd => cd.IsDuplicate(data)))
+                if (data.HasSpawned && !GameMain.Server.ConnectedClients.Any(c => data.MatchesClient(c)))
                 {
                     var character = Character.CharacterList.Find(c => c.Info == data.CharacterInfo && !c.IsHusk);
                     if (character != null && (!character.IsDead || character.CauseOfDeath?.Type == CauseOfDeathType.Disconnected))
                     {
+                        characterData.RemoveAll(cd => cd.IsDuplicate(data));
                         data.Refresh(character);
                         characterData.Add(data);
                     }
@@ -345,7 +348,6 @@ namespace Barotrauma
                 {
                     SubmarineInfo previousSub = GameMain.GameSession.SubmarineInfo;
                     GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
-                    PendingSubmarineSwitch = null;
 
                     for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
                     {
@@ -358,6 +360,7 @@ namespace Barotrauma
                 }
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                PendingSubmarineSwitch = null;
             }
             else
             {

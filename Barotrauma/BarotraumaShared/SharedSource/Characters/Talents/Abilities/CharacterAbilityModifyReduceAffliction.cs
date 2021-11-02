@@ -6,6 +6,7 @@ namespace Barotrauma.Abilities
     class CharacterAbilityModifyReduceAffliction : CharacterAbility
     {
         float addedAmountMultiplier;
+        public override bool AllowClientSimulation => true;
 
         public CharacterAbilityModifyReduceAffliction(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {

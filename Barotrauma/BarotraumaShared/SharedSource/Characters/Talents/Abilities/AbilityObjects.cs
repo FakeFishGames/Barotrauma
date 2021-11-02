@@ -136,6 +136,7 @@ namespace Barotrauma.Abilities
         public float DamageMultiplier { get; set; } = 1f;
         public float AddedPenetration { get; set; } = 0f;
         public List<Affliction> Afflictions { get; set; }
+        public bool ShouldImplode { get; set; } = false;
         public Attack SourceAttack { get; }
         public Character Character { get; set; }
         public Character Attacker { get; set; }

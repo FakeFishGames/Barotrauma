@@ -8,6 +8,7 @@ namespace Barotrauma.Abilities
         private readonly StatTypes statType;
         private readonly float maxValue;
         private float lastValue = 0f;
+        public override bool AllowClientSimulation => true;
 
         public CharacterAbilityModifyStatToFlooding(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
