@@ -452,10 +452,16 @@ namespace Barotrauma
                                 ushort itemID = msg.ReadUInt16();
                                 if (!(Entity.FindEntityByID(itemID) is Item item)) { continue; }
                                 item.AllowStealing = true;
-                                var wifiComponent = item.GetComponent<Items.Components.WifiComponent>();
+                                var wifiComponent = item.GetComponent<WifiComponent>();
                                 if (wifiComponent != null)
                                 {
                                     wifiComponent.TeamID = teamID;
+                                }
+                                var idCard = item.GetComponent<IdCard>();
+                                if (idCard != null)
+                                {
+                                    idCard.TeamID = teamID;
+                                    idCard.SubmarineSpecificID = 0;
                                 }
                             }
                             break;

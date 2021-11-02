@@ -7,6 +7,7 @@ namespace Barotrauma.Abilities
         private readonly string resistanceId;
         private readonly float resistance;
         bool lastState;
+        public override bool AllowClientSimulation => true;
 
         // should probably be split to different classes
         public CharacterAbilityModifyResistance(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)

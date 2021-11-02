@@ -19,11 +19,10 @@ namespace Barotrauma.Abilities
             moneyPerMission = abilityElement.GetAttributeInt("moneypermission", 0);
         }
 
-        protected override void ApplyEffect()
+        protected override void ApplyEffect(AbilityObject abilityObject)
         {
             if (Character?.Info is CharacterInfo info)
             {
-
                 Character.GiveMoney(moneyPerMission * info.MissionsCompletedSinceDeath);
             }
         }

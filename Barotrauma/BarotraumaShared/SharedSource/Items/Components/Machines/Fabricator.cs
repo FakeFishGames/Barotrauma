@@ -347,22 +347,20 @@ namespace Barotrauma.Items.Components
                     float outCondition = fabricatedItem.OutCondition;
                     if (i < amountFittingContainer)
                     {
-                        Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * outCondition,
+                        Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * outCondition, quality,
                             onSpawned: (Item spawnedItem) =>
                             {
                                 onItemSpawned(spawnedItem, tempUser);
-                                spawnedItem.Quality = quality;
                                 //reset the condition in case the max condition is higher than the prefab's due to e.g. quality modifiers
                                 spawnedItem.Condition = spawnedItem.MaxCondition * outCondition;
                             });
                     }
                     else
                     {
-                        Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * outCondition,
+                        Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * outCondition, quality,
                             onSpawned: (Item spawnedItem) =>
                             {
                                 onItemSpawned(spawnedItem, tempUser);
-                                spawnedItem.Quality = quality;
                                 //reset the condition in case the max condition is higher than the prefab's due to e.g. quality modifiers
                                 spawnedItem.Condition = spawnedItem.MaxCondition * outCondition;
                             });

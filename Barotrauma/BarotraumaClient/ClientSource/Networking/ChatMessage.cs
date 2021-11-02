@@ -64,7 +64,18 @@ namespace Barotrauma.Networking
                     string orderOption = orderMessageInfo.OrderOption;
                     orderOption ??= orderMessageInfo.OrderOptionIndex.HasValue && orderMessageInfo.OrderOptionIndex >= 0 && orderMessageInfo.OrderOptionIndex < orderPrefab.Options.Length ?
                         orderPrefab.Options[orderMessageInfo.OrderOptionIndex.Value] : "";
-                    txt = orderPrefab.GetChatMessage(orderMessageInfo.TargetCharacter?.Name, senderCharacter?.CurrentHull?.DisplayName,
+                    string targetRoom;
+
+                    if (orderMessageInfo.TargetEntity is Hull targetHull)
+                    {
+                        targetRoom = targetHull.DisplayName;
+                    }
+                    else
+                    {
+                        targetRoom = senderCharacter?.CurrentHull?.DisplayName;
+                    }
+
+                    txt = orderPrefab.GetChatMessage(orderMessageInfo.TargetCharacter?.Name, targetRoom,
                         givingOrderToSelf: orderMessageInfo.TargetCharacter == senderCharacter,
                         orderOption: orderOption,
                         priority: orderMessageInfo.Priority);

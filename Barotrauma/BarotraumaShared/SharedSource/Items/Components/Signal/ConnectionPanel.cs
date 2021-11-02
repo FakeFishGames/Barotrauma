@@ -225,10 +225,23 @@ namespace Barotrauma.Items.Components
             //no electrocution in sub editor
             if (Screen.Selected == GameMain.SubEditorScreen) { return true; }
 
-            var powered = item.GetComponent<Powered>();
-            if (powered != null)
+            var reactor = item.GetComponent<Reactor>();
+            if (reactor != null)
             {
-                //unpowered panels can be rewired without a risk of electrical shock
+                //reactors that arent generating power atm can be rewired without the risk of electrical shock
+                if (MathUtils.NearlyEqual(reactor.CurrPowerConsumption, 0.0f)) { return true; }
+            }
+            var powerContainer = item.GetComponent<PowerContainer>();
+            if (powerContainer != null)
+            {
+                //empty batteries/supercapacitors can be rewired without the risk of electrical shock
+                //non-empty ones always have a chance of zapping the user
+                if (powerContainer.Charge <= 0.0f) { return true; }
+            }
+            var powered = item.GetComponent<Powered>();
+            if (powered != null && powerContainer == null)
+            {
+                //unpowered panels can be rewired without the risk of electrical shock
                 if (powered.Voltage < 0.1f) { return true; }
             }
 

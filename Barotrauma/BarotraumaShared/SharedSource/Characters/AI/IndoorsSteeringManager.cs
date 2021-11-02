@@ -201,9 +201,9 @@ namespace Barotrauma
                     currentTarget = target;
                     Vector2 currentPos = host.SimPosition;
                     pathFinder.InsideSubmarine = character.Submarine != null && !character.Submarine.Info.IsRuin;
-                    pathFinder.ApplyPenaltyToOutsideNodes = character.Submarine !=  null && character.PressureProtection <= 0;
+                    pathFinder.ApplyPenaltyToOutsideNodes = character.Submarine != null && character.PressureProtection <= 0;
                     var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", minGapSize, startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility);
-                    bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null || character.Submarine != null && findPathTimer < -1 && Math.Abs(character.AnimController.TargetMovement.X) <= 0;
+                    bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null || character.Submarine != null && findPathTimer < -1 && Math.Abs(character.AnimController.TargetMovement.Combine()) <= 0;
                     if (newPath.Unreachable || newPath.Nodes.None())
                     {
                         useNewPath = false;
@@ -220,10 +220,12 @@ namespace Barotrauma
                             // Use the new path if it has significantly lower cost (don't change the path if it has marginally smaller cost. This reduces navigating backwards due to new path that is calculated from the node just behind us).
                             float t = (float)currentPath.CurrentIndex / (currentPath.Nodes.Count - 1);
                             useNewPath = newPath.Cost < currentPath.Cost * MathHelper.Lerp(0.95f, 0, t);
-                            if (!useNewPath && character.Submarine != null)
+                            if (!useNewPath && character.Submarine != null && !character.IsClimbing)
                             {
                                 // It's possible that the current path was calculated from a start point that is no longer valid.
                                 // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
+                                // This is a special case for cases e.g. where the character falls and thus needs a new path.
+                                // Don't do this outside or when climbing ladders, because both cause issues.
                                 useNewPath = Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 3, 2);
                             }
                         }
@@ -310,8 +312,7 @@ namespace Barotrauma
             if (currentPath.Finished)
             {
                 Vector2 pos2 = host.SimPosition;
-                if (character != null && character.Submarine == null &&
-                    CurrentPath.Nodes.Count > 0 && CurrentPath.Nodes.Last().Submarine != null)
+                if (character != null && character.Submarine == null && CurrentPath.Nodes.Count > 0 && CurrentPath.Nodes.Last().Submarine != null)
                 {
                     pos2 -= CurrentPath.Nodes.Last().Submarine.SimPosition;
                 }
@@ -323,29 +324,7 @@ namespace Barotrauma
                 CheckDoorsInPath();
                 doorsChecked = true;
             }       
-            Vector2 pos = host.SimPosition;
-            if (character != null && CurrentPath.CurrentNode != null)
-            {
-                var nodeSub = CurrentPath.CurrentNode.Submarine;
-                if (nodeSub != null)
-                {
-                    if (character.Submarine == null)
-                    {
-                        // Going inside
-                        pos -= ConvertUnits.ToSimUnits(nodeSub.Position);
-                    }
-                    else if (character.Submarine != nodeSub)
-                    {
-                        // Different subs
-                        pos -= ConvertUnits.ToSimUnits(nodeSub.Position - character.Submarine.Position);
-                    }
-                }
-                else if (character.Submarine != null)
-                {
-                    // Going outside
-                    pos += ConvertUnits.ToSimUnits(character.Submarine.Position);
-                }
-            }
+            Vector2 pos = host.WorldPosition;
             bool isDiving = character.AnimController.InWater && character.AnimController.HeadInWater;
             // Only humanoids can climb ladders
             bool canClimb = character.AnimController is HumanoidAnimController && !character.LockHands;
@@ -384,7 +363,7 @@ namespace Barotrauma
             }
             if (character.IsClimbing && useLadders)
             {
-                Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
+                Vector2 diff = currentPath.CurrentNode.WorldPosition - pos;
                 bool nextLadderSameAsCurrent = IsNextLadderSameAsCurrent;
                 if (nextLadderSameAsCurrent)
                 {
@@ -397,7 +376,7 @@ namespace Barotrauma
                     float heightFromFloor = character.AnimController.GetColliderBottom().Y - character.AnimController.FloorY;
                     if (heightFromFloor <= 0.0f)
                     {
-                        diff.Y = Math.Max(diff.Y, 1.0f);
+                        diff.Y = Math.Max(diff.Y, 100);
                     }
                     // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
                     bool isAboveFloor = heightFromFloor > -0.1f;
@@ -430,7 +409,7 @@ namespace Barotrauma
                         NextNode(!doorsChecked);
                     }
                 }
-                return diff;
+                return ConvertUnits.ToSimUnits(diff);
             }
             else if (character.AnimController.InWater)
             {
@@ -481,7 +460,7 @@ namespace Barotrauma
             {
                 return Vector2.Zero;
             }
-            return currentPath.CurrentNode.SimPosition - pos;
+            return ConvertUnits.ToSimUnits(currentPath.CurrentNode.WorldPosition - pos);
         }
 
         private void NextNode(bool checkDoors)

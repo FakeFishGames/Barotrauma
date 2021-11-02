@@ -408,7 +408,7 @@ namespace Barotrauma
             }
             bool isCompleted = 
                 AIObjectiveRescueAll.GetVitalityFactor(targetCharacter) >= AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager, character, targetCharacter) ||
-                targetCharacter.CharacterHealth.GetAllAfflictions().All(a => a.Strength <= a.Prefab.TreatmentThreshold);
+                targetCharacter.CharacterHealth.GetAllAfflictions().All(a => a.Prefab.IsBuff || a.Strength <= a.Prefab.TreatmentThreshold);
 
             if (isCompleted && targetCharacter != character && character.IsOnPlayerTeam)
             {                

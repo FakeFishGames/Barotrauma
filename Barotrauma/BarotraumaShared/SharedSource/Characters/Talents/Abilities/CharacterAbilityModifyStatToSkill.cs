@@ -10,6 +10,7 @@ namespace Barotrauma.Abilities
         private readonly string skillIdentifier;
         private readonly bool useAll;
         private float lastValue = 0f;
+        public override bool AllowClientSimulation => true;
 
         public CharacterAbilityModifyStatToSkill(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {

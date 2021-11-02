@@ -24,7 +24,7 @@ namespace Barotrauma
 
         public Func<float> priorityGetter;
 
-        public bool followControlledCharacter;
+        public bool isFollowOrderObjective;
         public bool mimic;
         public bool SpeakIfFails { get; set; } = true;
         public bool UsePathingOutside { get; set; } = true;
@@ -165,17 +165,10 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (followControlledCharacter)
+            if (Target == null)
             {
-                if (Character.Controlled != null && HumanAIController.IsFriendly(Character.Controlled))
-                {
-                    Target = Character.Controlled;
-                }
-                if (Target == null)
-                {
-                    Abandon = true;
-                    return;
-                }
+                Abandon = true;
+                return;
             }
             if (Target == character || character.SelectedBy != null && HumanAIController.IsFriendly(character.SelectedBy))
             {
@@ -205,7 +198,7 @@ namespace Barotrauma
                 }
             }
             Hull targetHull = GetTargetHull();
-            if (!followControlledCharacter)
+            if (!isFollowOrderObjective)
             {
                 // Abandon if going through unsafe paths. Note ignores unsafe nodes when following an order or when the objective is set to ignore unsafe hulls.
                 bool containsUnsafeNodes = character.IsDismissed && !HumanAIController.ObjectiveManager.CurrentObjective.IgnoreUnsafeHulls
@@ -223,7 +216,7 @@ namespace Barotrauma
             {
                 Abandon = true;
             }
-            else if (HumanAIController.IsCurrentPathUnreachable)
+            else if (HumanAIController.IsCurrentPathNullOrUnreachable)
             {
                 waitUntilPathUnreachable -= deltaTime;
                 SteeringManager.Reset();
@@ -317,8 +310,8 @@ namespace Barotrauma
                 Character targetCharacter = Target as Character;
                 if (character.AnimController.InWater)
                 {
-                    if (character.CurrentHull == null || 
-                        followControlledCharacter && 
+                    if (character.CurrentHull == null ||
+                        isFollowOrderObjective && 
                         targetCharacter != null && (targetCharacter.CurrentHull == null) != (character.CurrentHull == null) &&
                         Vector2.DistanceSquared(character.WorldPosition, Target.WorldPosition) < maxGapDistance * maxGapDistance)
                     {
@@ -361,7 +354,7 @@ namespace Barotrauma
                     }
                     if (TargetGap != null)
                     {
-                        if (TargetGap.FlowTargetHull != null && HumanAIController.SteerThroughGap(TargetGap, followControlledCharacter ? Target.WorldPosition : TargetGap.FlowTargetHull.WorldPosition, deltaTime))
+                        if (TargetGap.FlowTargetHull != null && HumanAIController.SteerThroughGap(TargetGap, isFollowOrderObjective ? Target.WorldPosition : TargetGap.FlowTargetHull.WorldPosition, deltaTime))
                         {
                             SteeringManager.SteeringAvoid(deltaTime, avoidLookAheadDistance, weight: 1);
                             return;
@@ -595,7 +588,7 @@ namespace Barotrauma
             {
                 if (gap.Open < 1) { continue; }
                 if (gap.Submarine == null) { continue; }
-                if (!followControlledCharacter)
+                if (!isFollowOrderObjective)
                 {
                     if (gap.FlowTargetHull == null) { continue; }
                     if (gap.Submarine != Target.Submarine) { continue; }

@@ -543,6 +543,7 @@ namespace Barotrauma
         partial void OnCollisionProjSpecific(float impact)
         {
             if (impact > 1.0f &&
+                Container == null &&
                 !string.IsNullOrEmpty(Prefab.ImpactSoundTag) &&
                 Timing.TotalTime > LastImpactSoundTime + ImpactSoundInterval)
             {

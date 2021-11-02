@@ -844,6 +844,8 @@ namespace Barotrauma
             FaceTint = DefaultFaceTint;
             BodyTint = Color.TransparentBlack;
 
+            if (!(Character?.Params?.Health.ApplyAfflictionColors ?? false)) { return; }
+
             for (int i = 0; i < limbHealths.Count; i++)
             {
                 for (int j = limbHealths[i].Afflictions.Count - 1; j >= 0; j--)
