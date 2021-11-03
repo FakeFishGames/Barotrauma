@@ -2722,7 +2722,7 @@ namespace Barotrauma.Networking
             "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad", "psilotoad",
             "peanut", "peanut", "peanut", "peanut", "peanut", "peanut", "peanut", "peanut", "peanut", "peanut", "peanut",
             "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn",
-            "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder",
+            "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder",
             "mudraptor_passive", "mudraptor_passive", "mudraptor_passive", "mudraptor_passive", "mudraptor_passive", "mudraptor_passive",
             };
             string[] crawler = {
@@ -2747,12 +2747,15 @@ namespace Barotrauma.Networking
             "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn",
             "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn", "hammerheadspawn",
             };
+            string[] swarmfeeder = {
+            "swarmfeeder"
+            };
             string[] husk = {
             "carrier",
-            "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder",
             "humanhusk", "humanhusk", "humanhusk", "humanhusk","humanhusk", "humanhusk", "humanhusk", "humanhusk", "humanhusk", "humanhusk", "humanhusk", "humanhusk","humanhusk", "humanhusk", "humanhusk", "humanhusk",
             "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk", "husk",
             "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk", "legacyhusk",
+            "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder", "swarmfeeder",
             };
             string[] small = {
             "molochbaby",
@@ -2828,7 +2831,7 @@ namespace Barotrauma.Networking
             };
 
             string[][] monsters = {
-                hope, randos, crawler, mudraptor, mantis, hammerheadspawn, husk, small,
+                hope, randos, crawler, mudraptor, mantis, hammerheadspawn, swarmfeeder, husk, small,
                 aggressive, thresher, baby, spineling, cell, 
                 //survivator, soma, deadspace,
                 // improved, extended, xanhusk, xancreature, xeno,
@@ -2836,7 +2839,7 @@ namespace Barotrauma.Networking
 
             string[] monsternames = {
                 "hopes and dreams of a lost generation", "random monsters", "crawlers", "mudraptors", "mantids",
-                "hammerhead spawn", "husk", "small monsters", "aggressive monsters", "threshers", "baby monsters", "spinelings", "cells",
+                "hammerhead spawn", "swarmfeeders", "husk", "small monsters", "aggressive monsters", "threshers", "baby monsters", "spinelings", "cells",
                 //"Survivator fish", "SOMA monsters", "Deadspace monsters",
                 // "Improved husk", "Extended monsters", "XAN husk", "XAN creatures","Xenomorphs", 
             };
