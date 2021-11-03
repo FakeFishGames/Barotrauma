@@ -1,4 +1,69 @@
 ---------------------------------------------------------------------------------------------------------
+v0.15.13.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Remove spawnpoint-based job assignment logic. Previously, the number of job-specific spawnpoints in the sub affected how many players the server would try to assign to a given job, which would often lead to players not getting the job they wanted to.
+- Made the captain job optional (i.e. if no-one has captain in their preferences, no-one gets forced to play as one).
+- Improvements to the Korean localization.
+- Added rewards to side objective missions (hunting grounds, beacon).
+- Reduce Pyromaniac's burning damage increase from 40% to 25%.
+
+Fixes:
+- Fixed clients' characters getting reset in the multiplayer campaign if they're spectating at the end of the round.
+- Fixed crashing when an event set fails to load any of its sub events. Caused certain mods to crash the game at 42% in the loading screen.
+- Fixed crashing on startup when using mods that remove the small icons from job prefabs.
+- Fixed bots being unable to find their way to the submarine if the switch to the "find safety" state outside the sub.
+- Fixed bots often being unable to find a way to leaks they're trying to weld.
+- Fixed crashing when a monster was just about to turn to a husk when the round ends.
+- Fixed opened item disappearing when switching to the test mode from the sub editor.
+- Fixed Artie Dolittle's ID card not working in the player's sub after he's hired.
+- Fixed category labels (sufficient skills to fabricate, requires recipe, etc) disappearing from the fabricator's item list when searching.
+- Fixed prisoner's uniform using a wrong texture file.
+- Fixed inability to edit pulse laser's power consumption in the sub editor.
+- Fixed an exploit in Pressure Stabilizer crafting recipe.
+- Fixed an exploit in Fixfoam Grenade deconstruction recipe.
+- Fixed crashing when selecting a gene splicer and hovering over its inventory slot in the sub editor.
+- Fixed bots being unable to use hardened and dementonite tools.
+- Fixed a typo in Tinkering cooldown reduction description.
+- Fixed inactive reactors electrocuting low-skill characters when rewired.
+- Fixed ignore orders carrying over when switching subs, causing them to target random items in the new sub.
+- Fixed dementonite knives being sold in stores.
+- Fixed contained items' impact sounds being played when the item they're inside hits the floor.
+- Fixed True Potential instant kills not properly giving kill credit (achievements, other talents).
+- Fixed Gene Harvester incorrectly checking the owner of the talent's submarine rather than the killer's.
+- Fixed certain talents not appearing to have an effect client-side, causing e.g. the high-pressure effects to appear when swimming outside with the Water Prankster talent. 
+- Fix Scavenger's buff duration multiplier.
+- Fixed Insurance Policy not triggering properly.
+- Fixed issues with input going through interfaces drawn over inventory slots.
+- Fixed bots trying to treat talent afflictions.
+- Fixed player-controlled creature attacks sometimes not hitting characters when they should.
+- Fixed "x in command room" spam when dragging and dropping orders in multiplayer.
+- Fixed pirate missions not being considered completed if any of the pirates have been removed (e.g. eaten or despawned).
+- Fixed high-quality items not stacking in the fabricator's output slot.
+- Fixed ice shards' colliders taying active after the shard has shattered.
+- Fixed bots following the controlled character instead of the order giver in singleplayer.
+- Fixed purchased medals spawning on the floor.
+- Fixed vision obstruction effect "flickering" when moving the cursor around when an item UI is open.
+- Fixed some pumps in Dugong having 0 power consumption.
+- Fixed pumps deteriorating when they don't have power.
+- Fixed batteries/supercapacitors deteriorating when not charging/discharging.
+- Fixed afflictions applying face/body tints on monsters.
+- Fixed "select matching items" selecting all gaps if you've selected both a door and its gap in the sub editor.
+- Fixed door gaps not being selected if you use "select matching items" on a door in the sub editor.
+- Fixed biome ambience loop volume not being affected by the sound volume setting.
+- Fixed players wearing a PUCS not using up hull oxygen when no tank is equipped.
+- Fixed bots getting stuck on long outpost ladders.
+- Restored the sounds for legacy fractal guardians. Fixes console errors when they are spawned/viewed in the editor.
+- Fixed Reactor PDA showing hidden and non-interactable reactors.
+- Fixed welding tool scale being forced to 0.5.
+- Fix crew list content being repositioned when selected character was hovered.
+
+Modding:
+- Made deconstruction recipes' mincondition accept items whose condition equals to the mincondition, not just items whose condition is higher.
+- Fixed color values being used incorrectly in explosion flashes.
+
+---------------------------------------------------------------------------------------------------------
 v0.15.12.0
 ---------------------------------------------------------------------------------------------------------
 

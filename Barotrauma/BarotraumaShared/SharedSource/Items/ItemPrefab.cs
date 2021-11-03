@@ -13,7 +13,7 @@ namespace Barotrauma
     struct DeconstructItem
     {
         public readonly string ItemIdentifier;
-        //minCondition does <= check, meaning that below or equeal to min condition will be skipped.
+        //minCondition does <= check, meaning that below or equal to min condition will be skipped.
         public readonly float MinCondition;
         //maxCondition does > check, meaning that above this max the deconstruct item will be skipped.
         public readonly float MaxCondition;
@@ -50,7 +50,6 @@ namespace Barotrauma
             ActivateButtonText = element.GetAttributeString("activatebuttontext", string.Empty);
             InfoText = element.GetAttributeString("infotext", string.Empty);
             InfoTextOnOtherItemMissing = element.GetAttributeString("infotextonotheritemmissing", string.Empty);
-
         }
     }
 

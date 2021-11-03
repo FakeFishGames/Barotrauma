@@ -8,6 +8,7 @@ namespace Barotrauma.Abilities
         private float maxValue;
         private string afflictionIdentifier;
         private float lastValue = 0f;
+        public override bool AllowClientSimulation => true;
 
         public CharacterAbilityPsychoClown(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {

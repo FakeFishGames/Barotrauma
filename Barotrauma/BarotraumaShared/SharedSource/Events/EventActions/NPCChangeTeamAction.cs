@@ -45,6 +45,20 @@ namespace Barotrauma
                         {
                             wifiComponent.TeamID = TeamTag;
                         }
+                        var idCard = item.GetComponent<Items.Components.IdCard>();
+                        if (idCard != null)
+                        {
+                            idCard.TeamID = TeamTag;
+                            idCard.SubmarineSpecificID = 0;
+                        }
+                    }
+
+                    WayPoint subWaypoint = 
+                        WayPoint.WayPointList.Find(wp => wp.Submarine == Submarine.MainSub && wp.SpawnType == SpawnType.Human && wp.AssignedJob == npc.Info.Job?.Prefab) ??
+                        WayPoint.WayPointList.Find(wp => wp.Submarine == Submarine.MainSub && wp.SpawnType == SpawnType.Human);
+                    if (subWaypoint != null)
+                    {
+                        npc.GiveIdCardTags(subWaypoint, createNetworkEvent: true);
                     }
 #if SERVER
                     GameMain.NetworkMember.CreateEntityEvent(npc, new object[] { NetEntityEvent.Type.AddToCrew, TeamTag, npc.Inventory.AllItems.Select(it => it.ID).ToArray() });

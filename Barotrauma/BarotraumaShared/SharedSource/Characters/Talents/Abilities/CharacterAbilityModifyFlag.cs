@@ -8,6 +8,7 @@ namespace Barotrauma.Abilities
         private readonly AbilityFlags abilityFlag;
 
         private bool lastState;
+        public override bool AllowClientSimulation => true;
 
         public CharacterAbilityModifyFlag(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {

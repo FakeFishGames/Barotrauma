@@ -75,6 +75,7 @@ namespace Barotrauma.Items.Components
             float closestDist = float.PositiveInfinity;
             foreach (Item targetItem in Item.ItemList)
             {
+                if (targetItem.NonInteractable || targetItem.NonPlayerTeamInteractable || targetItem.HiddenInGame) { continue; }
                 if (OnlyInOwnSub)
                 {
                     if (targetItem.Submarine != item.Submarine) { continue; }

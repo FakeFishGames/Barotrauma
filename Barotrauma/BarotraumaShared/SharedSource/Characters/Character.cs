@@ -1367,7 +1367,7 @@ namespace Barotrauma
             info.Job.GiveJobItems(this, spawnPoint);
         }
 
-        public void GiveIdCardTags(WayPoint spawnPoint)
+        public void GiveIdCardTags(WayPoint spawnPoint, bool createNetworkEvent = false)
         {
             if (info?.Job == null || spawnPoint == null) { return; }
 
@@ -1377,6 +1377,10 @@ namespace Barotrauma
                 foreach (string s in spawnPoint.IdCardTags)
                 {
                     item.AddTag(s);
+                }
+                if (createNetworkEvent && (GameMain.NetworkMember?.IsServer ?? false))
+                {
+                    GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ChangeProperty, item.SerializableProperties["tags"] });
                 }
             }
         }
@@ -1756,6 +1760,7 @@ namespace Barotrauma
                 }
                 else if (IsPlayer)
                 {
+                    float dist = -1;
                     Vector2 attackPos = SimPosition + ConvertUnits.ToSimUnits(cursorPosition - Position);
                     List<Body> ignoredBodies = AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
                     ignoredBodies.Add(AnimController.Collider.FarseerBody);
@@ -1787,13 +1792,13 @@ namespace Barotrauma
                         }
                         else
                         {
-                            if (body.UserData is IDamageable)
+                            if (body.UserData is IDamageable damageable)
                             {
-                                attackTarget = (IDamageable)body.UserData;
+                                attackTarget = damageable;
                             }
-                            else if (body.UserData is Limb)
+                            else if (body.UserData is Limb limb)
                             {
-                                attackTarget = ((Limb)body.UserData).character;
+                                attackTarget = limb.character;
                             }
                         }
                     }
@@ -1822,7 +1827,20 @@ namespace Barotrauma
                     var attackLimb = sortedLimbs.FirstOrDefault();
                     if (attackLimb != null)
                     {
-                        attackLimb.UpdateAttack(deltaTime, attackPos, attackTarget, out AttackResult attackResult);
+                        if (attackTarget is Character targetCharacter)
+                        {
+                            dist = ConvertUnits.ToDisplayUnits(Vector2.Distance(Submarine.LastPickedPosition, attackLimb.SimPosition));
+                            foreach (Limb limb in targetCharacter.AnimController.Limbs)
+                            {
+                                if (limb.IsSevered || limb.Removed) { continue; }
+                                float tempDist = ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackLimb.SimPosition));
+                                if (tempDist < dist)
+                                {
+                                    dist = tempDist;
+                                }
+                            }
+                        }
+                        attackLimb.UpdateAttack(deltaTime, attackPos, attackTarget, out AttackResult attackResult, dist);
                         if (!attackLimb.attack.IsRunning)
                         {
                             attackCoolDown = 1.0f;
@@ -3438,7 +3456,7 @@ namespace Barotrauma
 
             var attackResult = targetLimb == null ?
                 AddDamage(worldPosition, attackAfflictions, attack.Stun, playSound, attackImpulse, out limbHit, attacker, attack.DamageMultiplier * attackData.DamageMultiplier) :
-                DamageLimb(worldPosition, targetLimb, attackAfflictions, attack.Stun, playSound, attackImpulse, attacker, attack.DamageMultiplier * attackData.DamageMultiplier, penetration: penetration + attackData.AddedPenetration);
+                DamageLimb(worldPosition, targetLimb, attackAfflictions, attack.Stun, playSound, attackImpulse, attacker, attack.DamageMultiplier * attackData.DamageMultiplier, penetration: penetration + attackData.AddedPenetration, shouldImplode: attackData.ShouldImplode);
 
             if (attacker != null)
             {
@@ -3558,12 +3576,12 @@ namespace Barotrauma
 
         public void RecordKill(Character target)
         {
-            var abilityCharacter = new AbilityCharacter(target);
+            var abilityCharacterKill = new AbilityCharacterKill(target, this);
             foreach (Character attackerCrewmember in GetFriendlyCrew(this))
             {
-                attackerCrewmember.CheckTalents(AbilityEffectType.OnCrewKillCharacter, abilityCharacter);
+                attackerCrewmember.CheckTalents(AbilityEffectType.OnCrewKillCharacter, abilityCharacterKill);
             }
-            CheckTalents(AbilityEffectType.OnKillCharacter, abilityCharacter);
+            CheckTalents(AbilityEffectType.OnKillCharacter, abilityCharacterKill);
 
             if (!IsOnPlayerTeam) { return; }
             if (GameMain.Config.KilledCreatures.Any(name => name.Equals(target.SpeciesName, StringComparison.OrdinalIgnoreCase))) { return; }
@@ -3579,7 +3597,7 @@ namespace Barotrauma
             GameMain.Config.RecentlyEncounteredCreatures.Add(other.SpeciesName);
         }
 
-        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null, float damageMultiplier = 1, bool allowStacking = true, float penetration = 0f)
+        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null, float damageMultiplier = 1, bool allowStacking = true, float penetration = 0f, bool shouldImplode = false)
         {
             if (Removed) { return new AttackResult(); }
 
@@ -3638,6 +3656,12 @@ namespace Barotrauma
             float prevVitality = CharacterHealth.Vitality;
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound, damageMultiplier: damageMultiplier, penetration: penetration, attacker: attacker);
             CharacterHealth.ApplyDamage(hitLimb, attackResult, allowStacking);
+            if (shouldImplode)
+            {
+                // Only used by assistant's True Potential talent. Has to run here in order to properly give kill credit when it activates.
+                Implode();
+            }
+
             if (attacker != this)
             {
                 OnAttacked?.Invoke(attacker, attackResult);
@@ -3786,7 +3810,7 @@ namespace Barotrauma
             }
         }
 
-        public void Implode(bool isNetworkMessage = false)
+        private void Implode(bool isNetworkMessage = false)
         {
             if (CharacterHealth.Unkillable || GodMode || IsDead) { return; }
 
@@ -4626,4 +4650,16 @@ namespace Barotrauma
             AggressiveBehavior = aggressiveBehavior;
         }
     }
+
+    class AbilityCharacterKill : AbilityObject, IAbilityCharacter
+    {
+        public AbilityCharacterKill(Character character, Character killer)
+        {
+            Character = character;
+            Killer = killer;
+        }
+        public Character Character { get; set; }
+        public Character Killer { get; set; }
+    }
+
 }

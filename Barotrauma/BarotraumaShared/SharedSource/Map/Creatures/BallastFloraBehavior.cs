@@ -510,14 +510,14 @@ namespace Barotrauma.MapCreatures.Behavior
                         List<BallastFloraBranch> list = branches[hull];
                         if (!list.Any(HasAcidEmitter))
                         {
-                            BallastFloraBranch randomBranh = branches[hull].GetRandom();
-                            randomBranh.SpawningItem = true;
+                            BallastFloraBranch randomBranch = branches[hull].GetRandom();
+                            randomBranch.SpawningItem = true;
                     
                             ItemPrefab prefab = ItemPrefab.Find(null, AttackItemPrefab);
-                            Entity.Spawner?.AddToSpawnQueue(prefab, Parent.Position + Offset + randomBranh.Position, Parent.Submarine, null, item =>
+                            Entity.Spawner?.AddToSpawnQueue(prefab, Parent.Position + Offset + randomBranch.Position, Parent.Submarine, onSpawned: item =>
                             {
-                                randomBranh.AttackItem = item;
-                                randomBranh.SpawningItem = false;
+                                randomBranch.AttackItem = item;
+                                randomBranch.SpawningItem = false;
                             });
                         }
 

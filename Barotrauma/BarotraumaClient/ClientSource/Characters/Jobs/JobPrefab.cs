@@ -83,7 +83,13 @@ namespace Barotrauma
 
             var equipIdentifiers = Element.GetChildElements("ItemSet").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
 
-            var outfitPrefabs = ItemPrefab.Prefabs.Where(itemPrefab => equipIdentifiers.Contains(itemPrefab.Identifier)).ToList();
+            List<ItemPrefab> outfitPrefabs = new List<ItemPrefab>();
+            foreach (var equipIdentifier in equipIdentifiers)
+            {
+                var itemPrefab = ItemPrefab.Prefabs.Find(ip => ip.Identifier == equipIdentifier);
+                if (itemPrefab != null) { outfitPrefabs.Add(itemPrefab); }
+            }
+
             if (!outfitPrefabs.Any()) { return null; }
 
             for (int i = 0; i < outfitPrefabs.Count; i++)

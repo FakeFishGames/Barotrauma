@@ -45,6 +45,10 @@ namespace Barotrauma
         /// </summary>
         public bool AllowStealing { get; set; }
         public bool TakeWholeStack { get; set; }
+        /// <summary>
+        /// Are variants of the specified item allowed
+        /// </summary>
+        public bool AllowVariants { get; set; }
         public bool Equip { get; set; }
         public bool Wear { get; set; }
 
@@ -265,7 +269,7 @@ namespace Barotrauma
             }
 
             float priority = Math.Clamp(objectiveManager.GetCurrentPriority(), 10, 100);
-            bool checkPath = priority >= AIObjectiveManager.LowestOrderPriority && (objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>() || objectiveManager.CurrentOrder is AIObjectiveGoTo gotoOrder && gotoOrder.followControlledCharacter);
+            bool checkPath = priority >= AIObjectiveManager.LowestOrderPriority && (objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>() || objectiveManager.CurrentOrder is AIObjectiveGoTo gotoOrder && gotoOrder.isFollowOrderObjective);
             bool hasCalledPathFinder = false;
             int itemsPerFrame = (int)priority;
             for (int i = 0; i < itemsPerFrame && currSearchIndex < Item.ItemList.Count - 1; i++)
@@ -408,7 +412,7 @@ namespace Barotrauma
             if (ignoredItems.Contains(item)) { return false; };
             if (item.Condition < TargetCondition) { return false; }
             if (ItemFilter != null && !ItemFilter(item)) { return false; }
-            return identifiersOrTags.Any(id => id == item.Prefab.Identifier || item.HasTag(id));
+            return identifiersOrTags.Any(id => id == item.Prefab.Identifier || item.HasTag(id) || (AllowVariants && item.Prefab.VariantOf?.Identifier == id));
         }
 
         public override void Reset()

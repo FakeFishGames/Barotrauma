@@ -390,7 +390,7 @@ namespace Barotrauma
 
         private bool DeadOrCaptured(Character character)
         {
-            return character != null && !character.Removed && (character.IsDead || (character.LockHands && character.Submarine == Submarine.MainSub));
+            return character == null || character.Removed || character.IsDead || (character.LockHands && character.Submarine == Submarine.MainSub);
         }
 
         public override void End()

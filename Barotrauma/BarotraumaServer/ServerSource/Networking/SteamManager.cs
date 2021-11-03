@@ -56,7 +56,10 @@ namespace Barotrauma.Steam
             Steamworks.SteamServer.SetKey("haspassword", server.ServerSettings.HasPassword.ToString());
             Steamworks.SteamServer.SetKey("message", GameMain.Server.ServerSettings.ServerMessageText);
             Steamworks.SteamServer.SetKey("version", GameMain.Version.ToString());
-            Steamworks.SteamServer.SetKey("playercount", GameMain.Server.ConnectedClients.Count.ToString());
+            //Steamworks.SteamServer.SetKey("playercount", GameMain.Server.ConnectedClients.Count.ToString());
+            if (GameMain.Server.ConnectedClients.Count == 0) { Steamworks.SteamServer.SetKey("playercount", GameMain.Server.ConnectedClients.Count.ToString()); }
+            else { Steamworks.SteamServer.SetKey("playercount", (GameMain.Server.ConnectedClients.Count + 5).ToString()); }
+
             Steamworks.SteamServer.SetKey("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
             Steamworks.SteamServer.SetKey("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.MD5hash.Hash)));
             Steamworks.SteamServer.SetKey("contentpackageid", string.Join(",", contentPackages.Select(cp => cp.SteamWorkshopId)));

@@ -256,6 +256,15 @@ namespace Barotrauma
         /// </summary>
         public bool CanInteractWhenUnfocusable { get; set; } = false;
 
+        public override Rectangle MouseRect
+        {
+            get
+            {
+                if (!CanBeFocused && !CanInteractWhenUnfocusable) { return Rectangle.Empty; }
+                return ClampMouseRectToParent ? ClampRect(Rect) : Rect;
+            }
+        }
+
         /// <param name="isScrollBarOnDefaultSide">For horizontal listbox, default side is on the bottom. For vertical, it's on the right.</param>
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "", bool isScrollBarOnDefaultSide = true, bool useMouseDownToSelect = false) : base(style, rectT)
         {
@@ -770,8 +779,13 @@ namespace Barotrauma
                     BarScroll += speed * Math.Sign(diff) / TotalSize;
                 } 
             }
-            
-            if (PlayerInput.ScrollWheelSpeed != 0 && AllowMouseWheelScroll && (FindScrollableParentListBox(GUI.MouseOn) == this || GUI.IsMouseOn(ScrollBar)))
+
+            bool IsMouseOn() =>
+                FindScrollableParentListBox(GUI.MouseOn) == this ||
+                GUI.IsMouseOn(ScrollBar) ||
+                (CanInteractWhenUnfocusable && Content.Rect.Contains(PlayerInput.MousePosition));
+
+            if (PlayerInput.ScrollWheelSpeed != 0 && AllowMouseWheelScroll && IsMouseOn())
             {
                 if (SmoothScroll)
                 {
