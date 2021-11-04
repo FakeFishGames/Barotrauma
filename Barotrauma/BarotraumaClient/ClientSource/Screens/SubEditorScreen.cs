@@ -2978,7 +2978,7 @@ namespace Barotrauma
             Regex r;
             try
             {
-                r = new Regex(filter);
+                r = new Regex(filter, RegexOptions.IgnoreCase);
             }
             catch (ArgumentException)
             {
