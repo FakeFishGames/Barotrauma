@@ -2974,7 +2974,6 @@ namespace Barotrauma
 
             allEntityList.Visible = true;
             categorizedEntityList.Visible = false;
-
             filter = filter.ToLower();
 
             Regex r;
