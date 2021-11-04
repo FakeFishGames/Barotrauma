@@ -141,7 +141,7 @@ namespace Barotrauma.Items.Components
                     LevelTrigger.ApplyAttacks(attacks, item.WorldPosition, deltaTime);
                 }
 
-                if (Force < 0.01f)
+                if (Math.Abs(Force) < 0.01f)
                 {
                     // Just ignore very minimal forces
                     continue;
