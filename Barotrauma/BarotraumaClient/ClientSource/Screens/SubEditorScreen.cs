@@ -2975,6 +2975,8 @@ namespace Barotrauma
             allEntityList.Visible = true;
             categorizedEntityList.Visible = false;
 
+            filter = filter.ToLower();
+
             Regex r;
             try
             {
@@ -2987,7 +2989,8 @@ namespace Barotrauma
 
             foreach (GUIComponent child in allEntityList.Content.Children)
             {
-                bool shouldShow = r?.IsMatch(((MapEntityPrefab)child.UserData).Name) ?? false;
+                string entityName = ((MapEntityPrefab)child.UserData).Name;
+                bool shouldShow = r?.IsMatch(entityName) ?? entityName.ToLower().Contains(filter);
                 child.Visible =
                     (!selectedCategory.HasValue || ((MapEntityPrefab)child.UserData).Category.HasFlag(selectedCategory)) &&
                     shouldShow;
