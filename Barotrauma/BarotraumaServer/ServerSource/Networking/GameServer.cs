@@ -2905,7 +2905,7 @@ namespace Barotrauma.Networking
                         Vector2 monsterSpawn = new Vector2();
                         Vector2 raya = new Vector2();
                         Vector2 rayb = new Vector2();
-                        Vector2 gopos = Vector2.Zero;
+                        Vector2 goPos = Vector2.Zero;
 
                         int monsterIndex = rnd.Next(totalSub);
                         Submarine monsterSub = subs[monsterIndex];
@@ -2944,12 +2944,12 @@ namespace Barotrauma.Networking
                             {
                                 goto START;
                             }
-                            gopos = monsterSpawn;
+                            goPos = monsterSpawn;
                         }
                         else
                         {
                             index1 = 0;
-                            gopos = monsterSub.WorldPosition;
+                            goPos = monsterSub.WorldPosition;
                         }
 
                         string dist = (Vector2.Distance(monsterSpawn, monsterSub.WorldPosition) / 100).ToString("0.00");
@@ -2970,7 +2970,7 @@ namespace Barotrauma.Networking
                             else
                             {
                                 int index2 = rnd.Next(monsters[index1].Length);
-                                GameMain.Server.SetClientCharacter(readyMonster, SpawnCreature(monsters[index1][index2], gopos));
+                                GameMain.Server.SetClientCharacter(readyMonster, SpawnCreature(monsters[index1][index2], goPos));
                                 SendDirectChatMessage("You hear something " + dist + " meters away to the " + dir + " direction!",
                                 readyMonster, ChatMessageType.MessageBox);
                                 names = names + readyMonster.Name + ", ";
@@ -3928,8 +3928,35 @@ namespace Barotrauma.Networking
                             "Press F to attack as monster by default. If you're lost, type suicide; to respawn. Type findcoal; or findsep; to find the enemy sub!", ChatMessageType.Error);
                         }
                         break;
-
-
+                    case "spawnpet":
+                        if (senderClient.HasPermission(ClientPermissions.Ban))
+                        {
+                            string[] pet = {
+                            "balloon",
+                            "orangeboy",
+                            "psilotoad",
+                            "peanut",
+                            };
+                            Client readyPet = connectedClients.Find(c => (c.Character?.IsDead ?? true) && c.InGame);
+                            if (readyPet != null)
+                            {
+                                Vector2 goPos = Submarine.MainSub.WorldPosition;
+                                if (Submarine.MainSubs[1] != null)
+                                {
+                                    int indexSub = rnd.Next(2);
+                                    goPos = Submarine.MainSubs[indexSub].WorldPosition;
+                                }
+                                int indexPet = rnd.Next(pet.Length);
+                                GameMain.Server.SetClientCharacter(readyPet, SpawnCreature(pet[indexPet], goPos));
+                                goto DONE;
+                            }
+                            SendDirectChatMessage("No players to turn into pets!", senderClient, ChatMessageType.MessageBox);
+                            break;
+                        DONE:
+                            SendDirectChatMessage("Added a pet!", senderClient, ChatMessageType.MessageBox);
+                            break;
+                        }
+                        break;
 
 
 
