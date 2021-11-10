@@ -89,11 +89,11 @@ namespace Barotrauma
             return (skill == null) ? 0.0f : skill.Level;
         }
 
-        public void IncreaseSkillLevel(string skillIdentifier, float increase)
+        public void IncreaseSkillLevel(string skillIdentifier, float increase, bool increasePastMax)
         {
             if (skills.TryGetValue(skillIdentifier, out Skill skill))
             {
-                skill.Level += increase;
+                skill.IncreaseSkill(increase, increasePastMax);
             }
             else
             {

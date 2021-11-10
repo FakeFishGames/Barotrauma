@@ -141,6 +141,7 @@ namespace Barotrauma
         public Entity TargetEntity;
         public ItemComponent TargetItemComponent;
         public readonly bool UseController;
+        public readonly string[] ControllerTags;
         public Controller ConnectedController;
 
         public Character OrderGiver;
@@ -309,6 +310,7 @@ namespace Barotrauma
             color = orderElement.GetAttributeColor("color");
             FadeOutTime = orderElement.GetAttributeFloat("fadeouttime", 0.0f);
             UseController = orderElement.GetAttributeBool("usecontroller", false);
+            ControllerTags = orderElement.GetAttributeStringArray("controllertags", new string[0]);
             TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
             AppropriateJobs = orderElement.GetAttributeStringArray("appropriatejobs", new string[0]);
             Options = orderElement.GetAttributeStringArray("options", new string[0]);
@@ -380,6 +382,7 @@ namespace Barotrauma
             SymbolSprite          = prefab.SymbolSprite;
             Color                 = prefab.Color;
             UseController         = prefab.UseController;
+            ControllerTags        = prefab.ControllerTags;
             TargetAllCharacters   = prefab.TargetAllCharacters;
             AppropriateJobs       = prefab.AppropriateJobs;
             FadeOutTime           = prefab.FadeOutTime;
@@ -399,7 +402,7 @@ namespace Barotrauma
             {
                 if (UseController)
                 {
-                    ConnectedController = targetItem.Item?.FindController();
+                    ConnectedController = targetItem.Item?.FindController(tags: ControllerTags);
                     if (ConnectedController == null)
                     {
                         DebugConsole.AddWarning("AI: Tried to use a controller for operating an item, but couldn't find any.");
@@ -450,19 +453,37 @@ namespace Barotrauma
             return false;
         }
 
-        public string GetChatMessage(string targetCharacterName, string targetRoomName, bool givingOrderToSelf, string orderOption = "")
+        public string GetChatMessage(string targetCharacterName, string targetRoomName, bool givingOrderToSelf, string orderOption = "", int? priority = null)
         {
-            orderOption ??= "";
-
-            string messageTag = (givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf." : "OrderDialog.") + Identifier;
-            if (Identifier != "dismissed" && !string.IsNullOrEmpty(orderOption)) { messageTag += "." + orderOption; }
-
-            if (targetCharacterName == null) { targetCharacterName = ""; }
-            if (targetRoomName == null) { targetRoomName = ""; }
-            string msg = TextManager.GetWithVariables(messageTag, new string[2] { "[name]", "[roomname]" }, new string[2] { targetCharacterName, targetRoomName }, new bool[2] { false, true }, true);
-            if (msg == null) { return ""; }
-
-            return msg;
+            priority ??= CharacterInfo.HighestManualOrderPriority;
+            // If the order has a lesser priority, it means we are rearranging character orders
+            if (!TargetAllCharacters && priority != CharacterInfo.HighestManualOrderPriority && Identifier != "dismissed")
+            {
+                return TextManager.GetWithVariable("rearrangedorders", "[name]", targetCharacterName ?? string.Empty, returnNull: true) ?? string.Empty;
+            }
+            string messageTag = $"{(givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf" : "OrderDialog")}";
+            messageTag += $".{Identifier}";
+            if (!string.IsNullOrEmpty(orderOption))
+            {
+                if (Identifier != "dismissed")
+                {
+                    messageTag += $".{orderOption}";
+                }
+                else
+                {
+                    string[] splitOption = orderOption.Split('.');
+                    if (splitOption.Length > 0)
+                    {
+                        messageTag += $".{splitOption[0]}";
+                    }
+                }
+            }
+            string msg = TextManager.GetWithVariables(messageTag,
+                new string[2] { "[name]", "[roomname]" },
+                new string[2] { targetCharacterName ?? string.Empty, targetRoomName ?? string.Empty },
+                formatCapitals: new bool[2] { false, true },
+                returnNull: true);
+            return msg ?? string.Empty;
         }
 
         /// <summary>
@@ -505,7 +526,7 @@ namespace Barotrauma
                     if (item.NonInteractable) { continue; }
                     if (ItemComponentType != null && item.Components.None(c => c.GetType() == ItemComponentType)) { continue; }
                     Controller controller = null;
-                    if (UseController && !item.TryFindController(out controller)) { continue; }
+                    if (UseController && !item.TryFindController(out controller, tags: ControllerTags)) { continue; }
                     if (interactableFor != null && (!item.IsInteractable(interactableFor) || (UseController && !controller.Item.IsInteractable(interactableFor)))) { continue; }
                     matchingItems.Add(item);
                 }

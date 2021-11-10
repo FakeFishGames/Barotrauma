@@ -39,6 +39,10 @@ namespace Barotrauma
                 return;
             }
             targetItem = character.Inventory.FindItemByTag(gearTag, true);
+            if (targetItem == null && gearTag == LIGHT_DIVING_GEAR)
+            {
+                targetItem = character.Inventory.FindItemByTag(HEAVY_DIVING_GEAR, true);
+            }
             if (targetItem == null || !character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.Head | InvSlotType.InnerClothes) && targetItem.ContainedItems.Any(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > 0))
             {
                 TryAddSubObjective(ref getDivingGear, () =>
@@ -57,23 +61,37 @@ namespace Barotrauma
                     };
                 }, 
                 onAbandon: () => Abandon = true,
-                onCompleted: () => RemoveSubObjective(ref getDivingGear));
+                onCompleted: () =>
+                {
+                    RemoveSubObjective(ref getDivingGear);
+                    if (gearTag == HEAVY_DIVING_GEAR && HumanAIController.HasItem(character, LIGHT_DIVING_GEAR, out IEnumerable<Item> masks, requireEquipped: true))
+                    {
+                        foreach (Item mask in masks)
+                        {
+                            if (mask != targetItem)
+                            {
+                                character.Inventory.TryPutItem(mask, character, CharacterInventory.anySlot);
+                            }
+                        }
+                    }
+                });
             }
             else
             {
-                // Seek oxygen that has at least 10% condition left, if we are inside a friendly sub.
-                // The margin helps us to survive, because we might need some oxygen before we can find more oxygen.
-                // When we are venturing outside of our sub, let's just suppose that we have enough oxygen with us and optimize it so that we don't keep switching off half used tanks.
-                float min = character.Submarine != Submarine.MainSub ? 0.01f : MIN_OXYGEN;
+                float min = GetMinOxygen(character);
                 if (targetItem.OwnInventory != null && targetItem.OwnInventory.AllItems.None(it => it != null && it.HasTag(OXYGEN_SOURCE) && it.Condition > min))
                 {
                     TryAddSubObjective(ref getOxygen, () =>
                     {
                         if (character.IsOnPlayerTeam)
                         {
-                            if (HumanAIController.HasItem(character, "oxygensource", out _, conditionPercentage: min))
+                            if (HumanAIController.HasItem(character, OXYGEN_SOURCE, out _, conditionPercentage: min))
                             {
                                 character.Speak(TextManager.Get("dialogswappingoxygentank"), null, 0, "swappingoxygentank", 30.0f);
+                                if (character.Inventory.FindAllItems(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > min).Count == 1)
+                                {
+                                    character.Speak(TextManager.Get("dialoglastoxygentank"), null, 0.0f, "dialoglastoxygentank", 30.0f);
+                                }
                             }
                             else
                             {
@@ -105,7 +123,7 @@ namespace Barotrauma
                         onAbandon: () =>
                         {
                             Abandon = true;
-                            if (remainingTanks > 0 && !HumanAIController.HasItem(character, "oxygensource", out _, conditionPercentage: 0.01f))
+                            if (remainingTanks > 0 && !HumanAIController.HasItem(character, OXYGEN_SOURCE, out _, conditionPercentage: 0.01f))
                             {
                                 character.Speak(TextManager.Get("dialogcantfindtoxygen"), null, 0, "cantfindoxygen", 30.0f);
                             }
@@ -121,7 +139,7 @@ namespace Barotrauma
                     int ReportOxygenTankCount()
                     {
                         if (character.Submarine != Submarine.MainSub) { return 1; }
-                        int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag("oxygensource") && i.Condition > 1);
+                        int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > 1);
                         if (remainingOxygenTanks == 0)
                         {
                             character.Speak(TextManager.Get("DialogOutOfOxygenTanks"), null, 0.0f, "outofoxygentanks", 30.0f);
@@ -136,23 +154,27 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Returns false only when no inventory can be found from the item.
-        /// </summary>
-        public static bool EjectEmptyTanks(Character actor, Item target, out IEnumerable<Item> containedItems)
-        {
-            containedItems = target.OwnInventory?.AllItems;
-            if (containedItems == null) { return false; }
-            AIController.UnequipEmptyItems(actor, target);
-            return true;
-        }
-
         public override void Reset()
         {
             base.Reset();
             getDivingGear = null;
             getOxygen = null;
             targetItem = null;
+        }
+
+        public static float GetMinOxygen(Character character)
+        {
+            // Seek oxygen that has at least 10% condition left, if we are inside a friendly sub.
+            // The margin helps us to survive, because we might need some oxygen before we can find more oxygen.
+            // When we are venturing outside of our sub, let's just suppose that we have enough oxygen with us and optimize it so that we don't keep switching off half used tanks.
+            float min = 0.01f;
+            float minOxygen = character.IsInFriendlySub ? MIN_OXYGEN : min;
+            if (minOxygen > min && character.Inventory.AllItems.Any(i => i.HasTag("oxygensource") && i.ConditionPercentage >= minOxygen))
+            {
+                // There's a valid oxygen tank in the inventory -> no need to swap the tank too early.
+                minOxygen = min;
+            }
+            return minOxygen;
         }
     }
 }

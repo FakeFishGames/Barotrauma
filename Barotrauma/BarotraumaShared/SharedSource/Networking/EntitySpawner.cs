@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions; 
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -25,34 +26,39 @@ namespace Barotrauma
             public readonly Inventory Inventory;
             public readonly Submarine Submarine;
             public readonly float Condition;
+            public readonly int Quality;
 
             public bool SpawnIfInventoryFull = true;
             public bool IgnoreLimbSlots = false;
+            public InvSlotType Slot = InvSlotType.None;
 
             private readonly Action<Item> onSpawned;
 
-            public ItemSpawnInfo(ItemPrefab prefab, Vector2 worldPosition, Action<Item> onSpawned, float? condition = null)
+            public ItemSpawnInfo(ItemPrefab prefab, Vector2 worldPosition, Action<Item> onSpawned, float? condition = null, int? quality = null)
             {
                 Prefab = prefab ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
                 Position = worldPosition;
                 Condition = condition ?? prefab.Health;
+                Quality = quality ?? 0;
                 this.onSpawned = onSpawned;
             }
 
-            public ItemSpawnInfo(ItemPrefab prefab, Vector2 position, Submarine sub, Action<Item> onSpawned, float? condition = null)
+            public ItemSpawnInfo(ItemPrefab prefab, Vector2 position, Submarine sub, Action<Item> onSpawned, float? condition = null, int? quality = null)
             {
                 Prefab = prefab ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
                 Position = position;
                 Submarine = sub;
                 Condition = condition ?? prefab.Health;
+                Quality = quality ?? 0;
                 this.onSpawned = onSpawned;
             }
             
-            public ItemSpawnInfo(ItemPrefab prefab, Inventory inventory, Action<Item> onSpawned, float? condition = null)
+            public ItemSpawnInfo(ItemPrefab prefab, Inventory inventory, Action<Item> onSpawned, float? condition = null, int? quality = null)
             {
                 Prefab = prefab ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
                 Inventory = inventory;
                 Condition = condition ?? prefab.Health;
+                Quality = quality ?? 0;
                 this.onSpawned = onSpawned;
             }
 
@@ -71,9 +77,11 @@ namespace Barotrauma
                     }
                     spawnedItem = new Item(Prefab, Vector2.Zero, null)
                     {
-                        Condition = Condition
+                        Condition = Condition,
+                        Quality = Quality
                     };
-                    if (!Inventory.Owner.Removed && !Inventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots))
+                    var slot = Slot != InvSlotType.None ? Slot.ToEnumerable() : spawnedItem.AllowedSlots;
+                    if (!Inventory.Owner.Removed && !Inventory.TryPutItem(spawnedItem, null, slot))
                     {
                         if (IgnoreLimbSlots)
                         {
@@ -91,7 +99,11 @@ namespace Barotrauma
                 }
                 else
                 {
-                    spawnedItem = new Item(Prefab, Position, Submarine);
+                    spawnedItem = new Item(Prefab, Position, Submarine)
+                    {
+                        Condition = Condition,
+                        Quality = Quality
+                    };
                 }
                 return spawnedItem;
             }
@@ -238,7 +250,7 @@ namespace Barotrauma
             return "EntitySpawner";
         }
 
-        public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 worldPosition, float? condition = null, Action<Item> onSpawned = null)
+        public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 worldPosition, float? condition = null, int? quality = null, Action<Item> onSpawned = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (itemPrefab == null)
@@ -248,10 +260,10 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue1:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
-            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, worldPosition, onSpawned, condition));
+            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, worldPosition, onSpawned, condition, quality));
         }
 
-        public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 position, Submarine sub, float? condition = null, Action<Item> onSpawned = null)
+        public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 position, Submarine sub, float? condition = null, int? quality = null, Action<Item> onSpawned = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (itemPrefab == null)
@@ -261,10 +273,10 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue2:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
-            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub, onSpawned, condition));
+            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub, onSpawned, condition, quality));
         }
 
-        public void AddToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory, float? condition = null, Action<Item> onSpawned = null, bool spawnIfInventoryFull = true, bool ignoreLimbSlots = false)
+        public void AddToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory, float? condition = null, int? quality = null, Action<Item> onSpawned = null, bool spawnIfInventoryFull = true, bool ignoreLimbSlots = false, InvSlotType slot = InvSlotType.None)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (itemPrefab == null)
@@ -274,10 +286,11 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue3:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
-            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory, onSpawned, condition) 
+            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory, onSpawned, condition, quality) 
             { 
                 SpawnIfInventoryFull = spawnIfInventoryFull, 
-                IgnoreLimbSlots = ignoreLimbSlots 
+                IgnoreLimbSlots = ignoreLimbSlots,
+                Slot = slot
             });
         }
 
@@ -390,10 +403,6 @@ namespace Barotrauma
                     if (createNetworkEvents) 
                     { 
                         CreateNetworkEventProjSpecific(spawnedEntity, false); 
-                    }
-                    if (spawnedEntity is Item item)
-                    {
-                        item.Condition = ((ItemSpawnInfo)entitySpawnInfo).Condition;
                     }
                     entitySpawnInfo.OnSpawned(spawnedEntity);
                 }

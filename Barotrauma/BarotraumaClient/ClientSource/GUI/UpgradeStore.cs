@@ -1045,10 +1045,10 @@ namespace Barotrauma
         public static GUIFrame CreateUpgradeFrame(UpgradePrefab prefab, UpgradeCategory category, CampaignMode campaign, RectTransform rectTransform, bool addBuyButton = true)
         {
             int price = prefab.Price.GetBuyprice(campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation);
-            return CreateUpgradeEntry(rectTransform, prefab.Sprite, prefab.Name, prefab.Description, price, new CategoryData(category, prefab), addBuyButton);
+            return CreateUpgradeEntry(rectTransform, prefab.Sprite, prefab.Name, prefab.Description, price, new CategoryData(category, prefab), addBuyButton, upgradePrefab: prefab, currentLevel: campaign.UpgradeManager.GetUpgradeLevel(prefab, category));
         }
 
-        public static GUIFrame CreateUpgradeEntry(RectTransform parent, Sprite sprite, string title, string body, int price, object? userData, bool addBuyButton = true, bool addProgressBar = true, string buttonStyle = "UpgradeBuyButton")
+        public static GUIFrame CreateUpgradeEntry(RectTransform parent, Sprite sprite, string title, string body, int price, object? userData, bool addBuyButton = true, bool addProgressBar = true, string buttonStyle = "UpgradeBuyButton", UpgradePrefab upgradePrefab = null, int currentLevel = 0)
         {
             float progressBarHeight = 0.25f;
 
@@ -1089,7 +1089,7 @@ namespace Barotrauma
                 //negative price = refund
                 if (price < 0) { formattedPrice = "+" + formattedPrice; }
                 buyButtonLayout = new GUILayoutGroup(rectT(0.2f, 1, prefabLayout), childAnchor: Anchor.TopCenter) { UserData = "buybutton" };
-                var priceText = new GUITextBlock(rectT(1, 0.4f, buyButtonLayout), formattedPrice, textAlignment: Alignment.Center);
+                var priceText = new GUITextBlock(rectT(1, 0.2f, buyButtonLayout), formattedPrice, textAlignment: Alignment.Center);
                 if (price < 0)
                 {
                     priceText.TextColor = GUI.Style.Green;
@@ -1099,6 +1099,11 @@ namespace Barotrauma
                     priceText.Text = string.Empty;
                 }
                 new GUIButton(rectT(0.7f, 0.5f, buyButtonLayout), string.Empty, style: buttonStyle) { Enabled = false };
+                if (upgradePrefab != null)
+                {
+                    var increaseText = new GUITextBlock(rectT(1, 0.2f, buyButtonLayout), "", textAlignment: Alignment.Center);
+                    UpdateUpgradePercentageText(increaseText, upgradePrefab, currentLevel);
+                }
             }
 
             description.CalculateHeightFromText();
@@ -1125,6 +1130,19 @@ namespace Barotrauma
             buyButtonLayout?.Recalculate();
 
             return prefabFrame;
+        }
+
+        private static void UpdateUpgradePercentageText(GUITextBlock text, UpgradePrefab upgradePrefab, int currentLevel)
+        {
+            float nextIncrease = upgradePrefab.IncreaseOnTooltip * (Math.Min(currentLevel + 1, upgradePrefab.MaxLevel));
+            if (nextIncrease != 0f)
+            {
+                text.Text = $"{Math.Round(nextIncrease, 1)} %";
+                if (currentLevel == upgradePrefab.MaxLevel)
+                {
+                    text.TextColor = Color.Gray;
+                }
+            }
         }
 
         private void CreateUpgradeEntry(UpgradePrefab prefab, UpgradeCategory category, GUIComponent parent, List<Item>? itemsOnSubmarine)
@@ -1541,7 +1559,9 @@ namespace Barotrauma
 
             if (prefabFrame.FindChild("buybutton", true) is { } buttonParent)
             {
-                GUITextBlock priceLabel = buttonParent.GetChild<GUITextBlock>();
+                List<GUITextBlock> textBlocks = buttonParent.GetAllChildren<GUITextBlock>().ToList();
+
+                GUITextBlock priceLabel = textBlocks[0];
                 int price = prefab.Price.GetBuyprice(campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation);
 
                 if (priceLabel != null && !WaitForServerUpdate)
@@ -1561,6 +1581,11 @@ namespace Barotrauma
                     {
                         button.Enabled = false;
                     }
+                }
+                GUITextBlock increaseLabel = textBlocks[1];
+                if (increaseLabel != null && !WaitForServerUpdate)
+                {
+                    UpdateUpgradePercentageText(increaseLabel, prefab, currentLevel);
                 }
             }
         }

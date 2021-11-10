@@ -71,7 +71,7 @@ namespace Barotrauma.Items.Components
             var chargeText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), textArea.RectTransform, Anchor.CenterRight), 
                 "", textColor: GUI.Style.TextColor, font: GUI.Font, textAlignment: Alignment.CenterRight)
             {
-                TextGetter = () => $"{(int)charge}/{(int)capacity} {kWmin} ({((int)MathUtils.Percentage(charge, capacity)).ToString()} %)"
+                TextGetter = () => $"{(int)Math.Round(charge)}/{(int)capacity} {kWmin} ({(int)Math.Round(MathUtils.Percentage(charge, capacity))} %)"
             };
             if (chargeText.TextSize.X > chargeText.Rect.Width) { chargeText.Font = GUI.SmallFont; }
 

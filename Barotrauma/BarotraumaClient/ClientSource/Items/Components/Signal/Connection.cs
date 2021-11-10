@@ -54,6 +54,11 @@ namespace Barotrauma.Items.Components
                     if (wireComponent != null)
                     {
                         equippedWire = wireComponent;
+                        var connectedEnd = equippedWire.OtherConnection(null);
+                        if (connectedEnd?.Item.Submarine != null && panel.Item.Submarine != connectedEnd.Item.Submarine)
+                        {
+                            equippedWire = null;
+                        }
                     }
                 }
             }

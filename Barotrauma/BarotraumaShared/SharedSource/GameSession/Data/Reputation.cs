@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -31,13 +32,32 @@ namespace Barotrauma
         public float Value
         {
             get => Math.Min(MaxReputation, Metadata.GetFloat(metaDataIdentifier, InitialReputation));
-            set
+            private set
             {
                 if (MathUtils.NearlyEqual(Value, value)) { return; }
                 Metadata.SetValue(metaDataIdentifier, Math.Clamp(value, MinReputation, MaxReputation));
                 OnReputationValueChanged?.Invoke();
                 OnAnyReputationValueChanged?.Invoke();
             }
+        }
+
+        public void SetReputation(float newReputation)
+        {
+            Value = newReputation;
+        }
+
+        public void AddReputation(float reputationChange)
+        {
+            if (reputationChange > 0f)
+            {
+                float reputationGainMultiplier = 1f;
+                foreach (Character character in GameSession.GetSessionCrewCharacters())
+                {
+                    reputationGainMultiplier += character.GetStatValue(StatTypes.ReputationGainMultiplier);
+                }
+                reputationChange *= reputationGainMultiplier;
+            }
+            Value += reputationChange;
         }
 
         public Action OnReputationValueChanged;

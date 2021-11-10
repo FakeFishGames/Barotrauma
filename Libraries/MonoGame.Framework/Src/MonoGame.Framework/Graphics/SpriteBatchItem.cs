@@ -9,6 +9,7 @@ namespace Microsoft.Xna.Framework.Graphics
     internal class SpriteBatchItem : IComparable<SpriteBatchItem>
 	{
 		public Texture2D Texture;
+        public SpriteBatch.EffectWithParams Effect;
         public float SortKey;
 
         public VertexPositionColorTexture vertexTL;
@@ -20,7 +21,7 @@ namespace Microsoft.Xna.Framework.Graphics
 			vertexTL = new VertexPositionColorTexture();
             vertexTR = new VertexPositionColorTexture();
             vertexBL = new VertexPositionColorTexture();
-            vertexBR = new VertexPositionColorTexture();            
+            vertexBR = new VertexPositionColorTexture();
 		}
 
 		public void Set ( float x, float y, float dx, float dy, float w, float h, float sin, float cos, Color color, Vector2 texCoordTL, Vector2 texCoordBR, float depth )

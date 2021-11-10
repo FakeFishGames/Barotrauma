@@ -19,13 +19,13 @@ namespace Barotrauma.Items.Components
                 GameServer.Log(GameServer.CharacterLogName(c.Character) + " entered \"" + newOutputValue + "\" on " + item.Name,
                     ServerLog.MessageType.ItemInteraction);
                 OutputValue = newOutputValue;
-                ShowOnDisplay(newOutputValue);
+                ShowOnDisplay(newOutputValue, addToHistory: true);
                 item.SendSignal(newOutputValue, "signal_out");
                 item.CreateServerEvent(this);
             }
         }
 
-        partial void ShowOnDisplay(string input, bool addToHistory = true)
+        partial void ShowOnDisplay(string input, bool addToHistory)
         {
             if (addToHistory)
             {

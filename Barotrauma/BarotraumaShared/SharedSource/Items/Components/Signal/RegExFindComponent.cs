@@ -80,19 +80,21 @@ namespace Barotrauma.Items.Components
         public RegExFindComponent(Item item, XElement element)
             : base(item, element)
         {
+            nonContinuousOutputSent = true;
             IsActive = true;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (string.IsNullOrWhiteSpace(expression) || regex == null) return;
+            if (string.IsNullOrWhiteSpace(expression) || regex == null) { return; }
+            if (!ContinuousOutput && nonContinuousOutputSent) { return; }
 
             if (receivedSignal != previousReceivedSignal && receivedSignal != null)
             {
                 try
                 {
                     Match match = regex.Match(receivedSignal);
-                    previousResult =  match.Success;
+                    previousResult = match.Success;
                     previousGroups = UseCaptureGroup && previousResult ? match.Groups : null;
                     previousReceivedSignal = receivedSignal;
 
@@ -133,7 +135,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(signalOut, "signal_out"); }
             }
-            else if (!nonContinuousOutputSent)
+            else
             {
                 if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(signalOut, "signal_out"); }
                 nonContinuousOutputSent = true;

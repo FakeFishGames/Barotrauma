@@ -418,14 +418,14 @@ namespace Barotrauma
                             ShowQuestionPrompt("The automatic hull generation may not work correctly if your submarine uses curved walls. Do you want to continue? Y/N",
                                 (option2) =>
                                 {
-                                    if (option2.ToLower() == "y") { GameMain.SubEditorScreen.AutoHull(); }
+                                    if (option2.ToLowerInvariant() == "y") { GameMain.SubEditorScreen.AutoHull(); }
                                 });
                         });
                 }
                 else
                 {
                     ShowQuestionPrompt("The automatic hull generation may not work correctly if your submarine uses curved walls. Do you want to continue? Y/N",
-                        (option) => { if (option.ToLower() == "y") GameMain.SubEditorScreen.AutoHull(); });
+                        (option) => { if (option.ToLowerInvariant() == "y") GameMain.SubEditorScreen.AutoHull(); });
                 }
             }));
 
@@ -476,6 +476,7 @@ namespace Barotrauma
                 if (Screen.Selected == GameMain.SubEditorScreen)
                 {
                     NewMessage("WARNING: Switching directly from the submarine editor to the game view may cause bugs and crashes. Use with caution.", Color.Orange);
+                    Entity.Spawner ??= new EntitySpawner();
                 }
                 GameMain.GameScreen.Select();
             }));
@@ -488,6 +489,8 @@ namespace Barotrauma
                     Submarine.MainSub = Submarine.Load(subInfo, true);
                 }
                 GameMain.SubEditorScreen.Select(enableAutoSave: Screen.Selected != GameMain.GameScreen);
+                Entity.Spawner?.Remove();
+                Entity.Spawner = null;
             }, isCheat: true));
 
             commands.Add(new Command("editparticles|particleeditor", "editparticles/particleeditor: Switch to the Particle Editor to edit particle effects.", (string[] args) =>
@@ -608,7 +611,7 @@ namespace Barotrauma
                 ShowQuestionPrompt($"Some keybinds may render the game unusable, are you sure you want to make these keybinds persistent? ({Keybinds.Count} keybind(s) assigned) Y/N",
                     (option2) =>
                     {
-                        if (option2.ToLower() != "y")
+                        if (option2.ToLowerInvariant() != "y")
                         {
                             NewMessage("Aborted.", GUI.Style.Red);
                             return;
@@ -689,9 +692,18 @@ namespace Barotrauma
             AssignRelayToServer("setskill", true);
             AssignRelayToServer("readycheck", true);
 
+            AssignRelayToServer("givetalent", true);
+            AssignRelayToServer("unlocktalents", true);
+            AssignRelayToServer("giveexperience", true);
+
             AssignOnExecute("control", (string[] args) =>
             {
-                if (args.Length < 1) return;
+                if (args.Length < 1) { return; }
+                if (GameMain.NetworkMember != null)
+                {
+                    GameMain.Client?.SendConsoleCommand("control " + string.Join(' ', args[0]));
+                    return;
+                }
                 var character = FindMatchingCharacter(args, true);
                 if (character != null)
                 {
@@ -1096,9 +1108,35 @@ namespace Barotrauma
 
             commands.Add(new Command("load|loadsub", "load [submarine name]: Load a submarine.", (string[] args) =>
             {
-                if (args.Length == 0) return;
-                SubmarineInfo subInfo = new SubmarineInfo(string.Join(" ", args));
+                if (args.Length == 0) { return; }
+
+                if (GameMain.GameSession != null)
+                {
+                    ThrowError("The loadsub command cannot be used when a round is running. You should probably be using spawnsub instead.");
+                    return;
+                }
+
+                string name = string.Join(" ", args);
+                SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => name.Equals(s.Name, StringComparison.OrdinalIgnoreCase));
+                if (subInfo == null)
+                {
+                    string path = Path.Combine(SubmarineInfo.SavePath, name);
+                    if (!File.Exists(path))
+                    {
+                        ThrowError($"Could not find a submarine with the name \"{name}\" or in the path {path}.");
+                        return;
+                    }
+                    subInfo = new SubmarineInfo(path);
+                }
+
                 Submarine.Load(subInfo, true);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    SubmarineInfo.SavedSubmarines.Select(s => s.Name).ToArray()
+                };
             }));
 
             commands.Add(new Command("cleansub", "", (string[] args) =>
@@ -1317,11 +1355,13 @@ namespace Barotrauma
                             continue;
                         }
 
+                        float avgOutCondition = (deconstructItem.OutConditionMin + deconstructItem.OutConditionMax) / 2;
+
                         int? deconstructProductPrice = targetItem.GetMinPrice();
                         if (deconstructProductPrice.HasValue)
                         {
                             if (!deconstructProductCost.HasValue) { deconstructProductCost = 0; }
-                            deconstructProductCost += (int)(deconstructProductPrice * deconstructItem.OutCondition);
+                            deconstructProductCost += (int)(deconstructProductPrice * avgOutCondition);
                         }
 
                         if (fabricationRecipe != null)
@@ -1331,9 +1371,9 @@ namespace Barotrauma
                             {
                                 NewMessage("Deconstructing \"" + itemPrefab.Name + "\" produces \"" + deconstructItem.ItemIdentifier + "\", which isn't required in the fabrication recipe of the item.", Color.Red);
                             }
-                            else if (ingredient.UseCondition && ingredient.MinCondition < deconstructItem.OutCondition)
+                            else if (ingredient.UseCondition && ingredient.MinCondition < avgOutCondition)
                             {
-                                NewMessage($"Deconstructing \"{itemPrefab.Name}\" produces more \"{deconstructItem.ItemIdentifier}\", than what's required to fabricate the item (required: {targetItem.Name} {(int)(ingredient.MinCondition * 100)}%, output: {deconstructItem.ItemIdentifier} {(int)(deconstructItem.OutCondition * 100)}%)", Color.Red);
+                                NewMessage($"Deconstructing \"{itemPrefab.Name}\" produces more \"{deconstructItem.ItemIdentifier}\", than what's required to fabricate the item (required: {targetItem.Name} {(int)(ingredient.MinCondition * 100)}%, output: {deconstructItem.ItemIdentifier} {(int)(avgOutCondition * 100)}%)", Color.Red);
                             }
                         }
                     }
@@ -1692,13 +1732,14 @@ namespace Barotrauma
                     //check missing mission texts
                     foreach (var missionPrefab in MissionPrefab.List)
                     {
-                        string nameIdentifier = "missionname." + missionPrefab.Identifier;
+                        string missionId = (missionPrefab.ConfigElement.Attribute("textidentifier") == null ? missionPrefab.Identifier : missionPrefab.ConfigElement.GetAttributeString("textidentifier", string.Empty));
+                        string nameIdentifier = "missionname." + missionId;
                         if (!tags[language].Contains(nameIdentifier))
                         {
                             if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
                             missingTags[nameIdentifier].Add(language);
                         }
-                        string descriptionIdentifier = "missiondescription." + missionPrefab.Identifier;
+                        string descriptionIdentifier = "missiondescription." + missionId;
                         if (!tags[language].Contains(descriptionIdentifier))
                         {
                             if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }
@@ -1708,6 +1749,7 @@ namespace Barotrauma
 
                     foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
                     {
+                        if (sub.Type != SubmarineType.Player) { continue; }
                         string nameIdentifier = "submarine.name." + sub.Name.ToLowerInvariant();
                         if (!tags[language].Contains(nameIdentifier))
                         {
@@ -1724,18 +1766,50 @@ namespace Barotrauma
 
                     foreach (AfflictionPrefab affliction in AfflictionPrefab.List)
                     {
-                        string nameIdentifier = "afflictionname." + affliction.Identifier;
+                        if (affliction.ShowIconThreshold > affliction.MaxStrength && 
+                            affliction.ShowIconToOthersThreshold > affliction.MaxStrength && 
+                            affliction.ShowInHealthScannerThreshold > affliction.MaxStrength)
+                        {
+                            //hidden affliction, no need for localization
+                            continue;
+                        }
+
+                        string afflictionId = affliction.TranslationOverride ?? affliction.Identifier;
+                        string nameIdentifier = "afflictionname." + afflictionId;
                         if (!tags[language].Contains(nameIdentifier))
                         {
                             if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
                             missingTags[nameIdentifier].Add(language);
                         }
 
-                        string descriptionIdentifier = "afflictiondescription." + affliction.Identifier;
+                        string descriptionIdentifier = "afflictiondescription." + afflictionId;
                         if (!tags[language].Contains(descriptionIdentifier))
                         {
                             if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }
                             missingTags[descriptionIdentifier].Add(language);
+                        }
+                    }
+
+                    foreach (var talentTree in TalentTree.JobTalentTrees)
+                    {
+                        foreach (var talentSubTree in talentTree.Value.TalentSubTrees)
+                        {
+                            string nameIdentifier = "talenttree." + talentSubTree.Identifier;
+                            if (!tags[language].Contains(nameIdentifier))
+                            {
+                                if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
+                                missingTags[nameIdentifier].Add(language);
+                            }
+                        }
+                    }
+
+                    foreach (var talent in TalentPrefab.TalentPrefabs)
+                    {
+                        string nameIdentifier = "talentname." + talent.Identifier;
+                        if (!tags[language].Contains(nameIdentifier))
+                        {
+                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
+                            missingTags[nameIdentifier].Add(language);
                         }
                     }
 

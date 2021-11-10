@@ -22,7 +22,9 @@ namespace Barotrauma
         Escort = 0x100,
         Pirate = 0x200,
         GoTo = 0x400,
-        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat | AbandonedOutpost | Escort | Pirate | GoTo
+        ScanAlienRuins = 0x800,
+        ClearAlienRuins = 0x1000,
+        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat | AbandonedOutpost | Escort | Pirate | GoTo | ScanAlienRuins | ClearAlienRuins
     }
 
     partial class MissionPrefab
@@ -40,7 +42,9 @@ namespace Barotrauma
             { MissionType.AbandonedOutpost, typeof(AbandonedOutpostMission) },
             { MissionType.Escort, typeof(EscortMission) },
             { MissionType.Pirate, typeof(PirateMission) },
-            { MissionType.GoTo, typeof(GoToMission) }
+            { MissionType.GoTo, typeof(GoToMission) },
+            { MissionType.ScanAlienRuins, typeof(ScanMission) },
+            { MissionType.ClearAlienRuins, typeof(AlienRuinMission) }
         };
         public static readonly Dictionary<MissionType, Type> PvPMissionClasses = new Dictionary<MissionType, Type>()
         {
@@ -373,6 +377,11 @@ namespace Barotrauma
             {
                 var connection = from.Connections.Find(c => c.Locations.Contains(from) && c.Locations.Contains(to));
                 if (connection?.LevelData == null || !connection.LevelData.HasBeaconStation || connection.LevelData.IsBeaconActive) { return false; }
+            }
+            else if (Type == MissionType.ScanAlienRuins || Type == MissionType.ClearAlienRuins)
+            {
+                var connection = from.Connections.Find(c => c.Locations.Contains(from) && c.Locations.Contains(to));
+                if (connection?.LevelData == null || connection.LevelData.GenerationParams.RuinCount < 1) { return false; }
             }
 
             return false;

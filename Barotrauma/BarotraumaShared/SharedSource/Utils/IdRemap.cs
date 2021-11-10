@@ -12,7 +12,7 @@ namespace Barotrauma
 
         private int maxId;
 
-        private readonly List<Point> srcRanges;
+        private readonly List<Range<int>> srcRanges;
         private readonly int destOffset;
 
         public IdRemap(XElement parentElement, int offset)
@@ -20,13 +20,13 @@ namespace Barotrauma
             destOffset = offset;
             if (parentElement != null && parentElement.HasElements)
             {
-                srcRanges = new List<Point>();
+                srcRanges = new List<Range<int>>();
                 foreach (XElement subElement in parentElement.Elements())
                 {
                     int id = subElement.GetAttributeInt("ID", -1);
                     if (id > 0) { InsertId(id); }
                 }
-                maxId = GetOffsetId(srcRanges.Last().Y) + 1;
+                maxId = GetOffsetId(srcRanges.Last().End) + 1;
             }
             else
             {
@@ -44,38 +44,38 @@ namespace Barotrauma
         {
             for (int i = 0; i < srcRanges.Count; i++)
             {
-                if (srcRanges[i].X > id)
+                if (srcRanges[i].Start > id)
                 {
-                    if (srcRanges[i].X == (id + 1))
+                    if (srcRanges[i].Start == (id + 1))
                     {
-                        srcRanges[i] = new Point(id, srcRanges[i].Y);
-                        if (i > 0 && srcRanges[i].X == srcRanges[i - 1].Y)
+                        srcRanges[i] = new Range<int>(id, srcRanges[i].End);
+                        if (i > 0 && srcRanges[i].Start == srcRanges[i - 1].End)
                         {
-                            srcRanges[i - 1] = new Point(srcRanges[i - 1].X, srcRanges[i].Y);
+                            srcRanges[i - 1] = new Range<int>(srcRanges[i - 1].Start, srcRanges[i].End);
                             srcRanges.RemoveAt(i);
                         }
                     }
                     else
                     {
-                        srcRanges.Insert(i, new Point(id, id));
+                        srcRanges.Insert(i, new Range<int>(id, id));
                     }
                     return;
                 }
-                else if (srcRanges[i].Y < id)
+                else if (srcRanges[i].End < id)
                 {
-                    if (srcRanges[i].Y == (id - 1))
+                    if (srcRanges[i].End == (id - 1))
                     {
-                        srcRanges[i] = new Point(srcRanges[i].X, id);
-                        if (i < (srcRanges.Count - 1) && srcRanges[i].Y == srcRanges[i + 1].X)
+                        srcRanges[i] = new Range<int>(srcRanges[i].Start, id);
+                        if (i < (srcRanges.Count - 1) && srcRanges[i].End == srcRanges[i + 1].Start)
                         {
-                            srcRanges[i] = new Point(srcRanges[i].X, srcRanges[i + 1].Y);
+                            srcRanges[i] = new Range<int>(srcRanges[i].Start, srcRanges[i + 1].End);
                             srcRanges.RemoveAt(i + 1);
                         }
                         return;
                     }
                 }
             }
-            srcRanges.Add(new Point(id, id));
+            srcRanges.Add(new Range<int>(id, id));
         }
 
         public ushort GetOffsetId(XElement element)
@@ -92,11 +92,11 @@ namespace Barotrauma
             int currOffset = destOffset;
             for (int i = 0; i < srcRanges.Count; i++)
             {
-                if (id >= srcRanges[i].X && id <= srcRanges[i].Y)
+                if (id >= srcRanges[i].Start && id <= srcRanges[i].End)
                 {
-                    return (ushort)(id - srcRanges[i].X + 1 + currOffset);
+                    return (ushort)(id - srcRanges[i].Start + 1 + currOffset);
                 }
-                currOffset += srcRanges[i].Y - srcRanges[i].X + 1;
+                currOffset += srcRanges[i].End - srcRanges[i].Start + 1;
             }
             return 0;
         }

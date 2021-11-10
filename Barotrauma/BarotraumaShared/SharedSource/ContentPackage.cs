@@ -51,7 +51,9 @@ namespace Barotrauma
         WreckAIConfig,
         UpgradeModules,
         MapCreature,
-        EnemySubmarine
+        EnemySubmarine,
+        Talents,
+        TalentTrees,
     }
 
     public class ContentPackage
@@ -103,7 +105,8 @@ namespace Barotrauma
             ContentType.Corpses,
             ContentType.UpgradeModules,
             ContentType.MapCreature,
-            ContentType.EnemySubmarine
+            ContentType.EnemySubmarine,
+            ContentType.Talents,
         };
 
         //at least one file of each these types is required in core content packages
@@ -135,7 +138,8 @@ namespace Barotrauma
             ContentType.Orders,
             ContentType.Corpses,
             ContentType.UpgradeModules,
-            ContentType.EnemySubmarine
+            ContentType.EnemySubmarine,
+            ContentType.Talents,
         };
 
         public static IEnumerable<ContentType> CorePackageRequiredFiles
