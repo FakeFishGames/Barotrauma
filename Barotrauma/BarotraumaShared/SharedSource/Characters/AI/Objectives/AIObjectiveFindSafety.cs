@@ -46,20 +46,25 @@ namespace Barotrauma
             }
             if (character.CurrentHull == null)
             {
-                Priority = (objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() || objectiveManager.HasActiveObjective<AIObjectiveCombat>()) && HumanAIController.HasDivingSuit(character) ? 0 : 100;
+                Priority = (objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() ||
+                    objectiveManager.IsCurrentOrder<AIObjectiveReturn>() ||
+                    objectiveManager.Objectives.Any(o => o.Priority > 0 && o is AIObjectiveCombat))
+                    && HumanAIController.HasDivingSuit(character) ? 0 : 100;
             }
             else
             {
                 if (HumanAIController.NeedsDivingGear(character.CurrentHull, out bool needsSuit) && 
                     (needsSuit ? 
-                    !HumanAIController.HasDivingSuit(character, conditionPercentage: AIObjectiveFindDivingGear.MIN_OXYGEN) : 
-                    !HumanAIController.HasDivingMask(character, conditionPercentage: AIObjectiveFindDivingGear.MIN_OXYGEN)))
+                    !HumanAIController.HasDivingSuit(character, conditionPercentage: AIObjectiveFindDivingGear.GetMinOxygen(character)) : 
+                    !HumanAIController.HasDivingGear(character, conditionPercentage: AIObjectiveFindDivingGear.GetMinOxygen(character))))
                 {
                     Priority = 100;
                 }
-                else if (objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() && character.Submarine != null && !HumanAIController.IsOnFriendlyTeam(character.TeamID, character.Submarine.TeamID))
+                else if ((objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() || objectiveManager.IsCurrentOrder<AIObjectiveReturn>()) &&
+                         character.Submarine != null && !HumanAIController.IsOnFriendlyTeam(character.TeamID, character.Submarine.TeamID))
                 {
-                    // Ordered to follow/hold position inside a hostile sub -> ignore find safety unless we need to find a diving gear
+                    // Ordered to follow, hold position, or return back to main sub inside a hostile sub
+                    // -> ignore find safety unless we need to find a diving gear
                     Priority = 0;
                 }
                 Priority = MathHelper.Clamp(Priority, 0, 100);
@@ -126,11 +131,11 @@ namespace Barotrauma
                 bool needsEquipment = false;
                 if (needsDivingSuit)
                 {
-                    needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.MIN_OXYGEN);
+                    needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.GetMinOxygen(character));
                 }
                 else if (needsDivingGear)
                 {
-                    needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.MIN_OXYGEN);
+                    needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.GetMinOxygen(character));
                 }
                 if (needsEquipment)
                 {
@@ -298,17 +303,21 @@ namespace Barotrauma
 
             Hull bestHull = null;
             float bestValue = 0;
+            bool bestIsAirlock = false;
             foreach (Hull hull in Hull.hullList.OrderByDescending(h => EstimateHullSuitability(h)))
             {
                 if (hull.Submarine == null) { continue; }
+                // Ruins are mazes filled with water. There's no safe hulls and we don't want to use the resources on it.
+                if (hull.Submarine.Info.IsRuin) { continue; }
                 if (!allowChangingTheSubmarine && hull.Submarine != character.Submarine) { continue; }
                 if (hull.Rect.Height < ConvertUnits.ToDisplayUnits(character.AnimController.ColliderHeightFromFloor) * 2) { continue; }
                 if (ignoredHulls != null && ignoredHulls.Contains(hull)) { continue; }
                 if (HumanAIController.UnreachableHulls.Contains(hull)) { continue; }
                 float hullSafety = 0;
-                if (character.CurrentHull != null && character.Submarine != null)
+                bool hullIsAirlock = false;
+                bool isCharacterInside = character.CurrentHull != null && character.Submarine != null;
+                if (isCharacterInside)
                 {
-                    // Inside
                     if (!character.Submarine.IsConnectedTo(hull.Submarine)) { continue; }
                     hullSafety = HumanAIController.GetHullSafety(hull, hull.GetConnectedHulls(true, 1), character);
                     float yDist = Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y);
@@ -325,7 +334,7 @@ namespace Barotrauma
                         continue;
                     }
                     // Don't allow to go outside if not already outside.
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition, nodeFilter: node => node.Waypoint.CurrentHull != null);
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition, character.Submarine, nodeFilter: node => node.Waypoint.CurrentHull != null);
                     if (path.Unreachable)
                     {
                         HumanAIController.UnreachableHulls.Add(hull);
@@ -343,24 +352,16 @@ namespace Barotrauma
                 }
                 else
                 {
-                    // Outside
-                    if (hull.RoomName != null && hull.RoomName.Contains("airlock", StringComparison.OrdinalIgnoreCase))
+                    // TODO: could also target gaps that get us inside?
+                    if (hull.IsTaggedAirlock())
+                    {
+                        hullSafety = 100;
+                        hullIsAirlock = true;
+                    }
+                    else if(!bestIsAirlock && hull.LeadsOutside(character))
                     {
                         hullSafety = 100;
                     }
-                    else
-                    {
-                        // TODO: could also target gaps that get us inside?
-                        foreach (Item item in Item.ItemList)
-                        {
-                            if (item.CurrentHull != hull && item.HasTag("airlock"))
-                            {
-                                hullSafety = 100;
-                                break;
-                            }
-                        }
-                    }
-                    // TODO: could we get a closest door to the outside and target the flowing hull if no airlock is found?
                     // Huge preference for closer targets
                     float distance = Vector2.DistanceSquared(character.WorldPosition, hull.WorldPosition);
                     float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, MathUtils.Pow(100000, 2), distance));
@@ -372,10 +373,11 @@ namespace Barotrauma
                         hullSafety /= 10;
                     }
                 }
-                if (hullSafety > bestValue)
+                if (hullSafety > bestValue || (!isCharacterInside && hullIsAirlock && !bestIsAirlock))
                 {
                     bestHull = hull;
                     bestValue = hullSafety;
+                    bestIsAirlock = hullIsAirlock;
                 }
             }
             return bestHull;

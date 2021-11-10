@@ -36,21 +36,21 @@ namespace Barotrauma.MapCreatures.Behavior
             msg.Write(Offset.X);
             msg.Write(Offset.Y);
         }
-        
+
         public void ServerWriteBranchGrowth(IWriteMessage msg, BallastFloraBranch branch, int parentId = -1)
         {
             var (x, y) = branch.Position;
             msg.Write(parentId);
             msg.Write((int)branch.ID);
-            msg.WriteRangedInteger((byte) branch.Type, 0b0000, 0b1111);
-            msg.WriteRangedInteger((byte) branch.Sides, 0b0000, 0b1111);
+            msg.WriteRangedInteger((byte)branch.Type, 0b0000, 0b1111);
+            msg.WriteRangedInteger((byte)branch.Sides, 0b0000, 0b1111);
             msg.WriteRangedInteger(branch.FlowerConfig.Serialize(), 0, 0xFFF);
             msg.WriteRangedInteger(branch.LeafConfig.Serialize(), 0, 0xFFF);
-            msg.Write((ushort) branch.MaxHealth);
-            msg.Write((int) (x / VineTile.Size));
-            msg.Write((int) (y / VineTile.Size));
+            msg.Write((ushort)branch.MaxHealth);
+            msg.Write((int)(x / VineTile.Size));
+            msg.Write((int)(y / VineTile.Size));
         }
-        
+
         public void ServerWriteBranchDamage(IWriteMessage msg, BallastFloraBranch branch, float damage)
         {
             msg.Write((int)branch.ID);

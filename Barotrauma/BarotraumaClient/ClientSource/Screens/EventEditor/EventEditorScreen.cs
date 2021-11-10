@@ -119,6 +119,7 @@ namespace Barotrauma
             addValueDropdown.AddItem(nameof(LimbType), typeof(LimbType));
             addValueDropdown.AddItem(nameof(ReputationAction.ReputationType), typeof(ReputationAction.ReputationType));
             addValueDropdown.AddItem(nameof(SpawnAction.SpawnLocationType), typeof(SpawnAction.SpawnLocationType));
+            addValueDropdown.AddItem(nameof(CharacterTeamType), typeof(CharacterTeamType));
 
             loadButton.OnClicked += (button, o) => Load(loadDropdown.SelectedData as EventPrefab);
             addActionButton.OnClicked += (button, o) => AddAction(addActionDropdown.SelectedData as Type);
@@ -540,7 +541,7 @@ namespace Barotrauma
 
         private XElement? ExportXML()
         {
-            XElement mainElement = new XElement("ScriptedEvent", new XAttribute("identifier", projectName.RemoveWhitespace().ToLower()));
+            XElement mainElement = new XElement("ScriptedEvent", new XAttribute("identifier", projectName.RemoveWhitespace().ToLowerInvariant()));
             EditorNode? startNode = null;
             foreach (EditorNode eventNode in nodeList.Where(node => node is EventNode || node is SpecialNode))
             {

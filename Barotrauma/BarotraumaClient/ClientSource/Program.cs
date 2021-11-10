@@ -1,6 +1,7 @@
 ﻿#region Using Statements
 
 using System;
+using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
 using System.Text;
@@ -54,9 +55,11 @@ namespace Barotrauma
             executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             Directory.SetCurrentDirectory(executableDir);
             SteamManager.Initialize();
+            EnableNvOptimus();
             Game = new GameMain(args);
             Game.Run();
             Game.Dispose();
+            FreeNvOptimus();
 
             CrossThread.ProcessTasks();
         }
@@ -130,8 +133,11 @@ namespace Barotrauma
                     {
                         XElement newElement = new XElement(doc.Root.Name);
                         newElement.Add(doc.Root.Attributes());
-                        newElement.Add(doc.Root.Elements().Where(e => !e.Name.LocalName.Equals("contentpackage", StringComparison.InvariantCultureIgnoreCase)));
-                        newElement.Add(baseDoc.Root.Elements().Where(e => e.Name.LocalName.Equals("contentpackage", StringComparison.InvariantCultureIgnoreCase)));
+                        string[] contentPackageTags = { "contentpackage", "contentpackages" };
+                        bool elementNameMatches(XElement element)
+                            => contentPackageTags.Any(t => element.Name.LocalName.Equals(t, StringComparison.InvariantCultureIgnoreCase));
+                        newElement.Add(doc.Root.Elements().Where(e => !elementNameMatches(e)));
+                        newElement.Add(baseDoc.Root.Elements().Where(e => elementNameMatches(e)));
                         XDocument newDoc = new XDocument(newElement);
                         newDoc.Save(GameSettings.PlayerSavePath);
                         sb.AppendLine("To prevent further startup errors, installed mods will be disabled the next time you launch the game.");
@@ -263,6 +269,27 @@ namespace Barotrauma
                     " if you'd like to help fix this bug, you may post it on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/", filePath);
             }
         }
+
+        private static IntPtr nvApi64Dll = IntPtr.Zero;
+        private static void EnableNvOptimus()
+        {
+#if WINDOWS && X64
+            // We force load nvapi64.dll so nvidia gives us the dedicated GPU on optimus laptops.
+            // This is not a method for getting optimus that is documented by nvidia, but it works, so...
+            if (NativeLibrary.TryLoad("nvapi64.dll", out nvApi64Dll))
+            {
+                DebugConsole.Log("Loaded nvapi64.dll successfully");
+            }
+#endif
+        }
+
+        private static void FreeNvOptimus()
+        {
+            #warning TODO: determine if we can do this safely
+            //NativeLibrary.Free(nvApi64Dll);
+        }
+        
     }
 #endif
+    
         }

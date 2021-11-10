@@ -550,6 +550,13 @@ namespace Barotrauma.Networking
                     okButton.OnClicked += msgBox.Close;
                     var cancelButton = msgBox.Buttons[1];
                     cancelButton.OnClicked += msgBox.Close;
+                    passwordBox.OnEnterPressed += (GUITextBox textBox, string text) =>
+                    {
+                        msgBox.Close();
+                        clientPeer?.SendPassword(passwordBox.Text);
+                        requiresPw = false;
+                        return true;
+                    };
 
                     okButton.OnClicked += (GUIButton button, object obj) =>
                     {
@@ -565,6 +572,8 @@ namespace Barotrauma.Networking
                         GameMain.ServerListScreen.Select();
                         return true;
                     };
+                    yield return CoroutineStatus.Running;
+                    passwordBox.Select();
 
                     while (GUIMessageBox.MessageBoxes.Contains(msgBox))
                     {
@@ -1456,6 +1465,7 @@ namespace Barotrauma.Networking
             bool respawnAllowed = inc.ReadBoolean();
             serverSettings.AllowDisguises = inc.ReadBoolean();
             serverSettings.AllowRewiring = inc.ReadBoolean();
+            serverSettings.AllowFriendlyFire = inc.ReadBoolean();
             serverSettings.LockAllDefaultWires = inc.ReadBoolean();
             serverSettings.AllowRagdollButton = inc.ReadBoolean();
             GameMain.NetLobbyScreen.UsingShuttle = inc.ReadBoolean();
@@ -2746,6 +2756,9 @@ namespace Barotrauma.Networking
             msg.Write((byte)characterInfo.BeardIndex);
             msg.Write((byte)characterInfo.MoustacheIndex);
             msg.Write((byte)characterInfo.FaceAttachmentIndex);
+            msg.WriteColorR8G8B8(characterInfo.SkinColor);
+            msg.WriteColorR8G8B8(characterInfo.HairColor);
+            msg.WriteColorR8G8B8(characterInfo.FacialHairColor);
 
             var jobPreferences = GameMain.NetLobbyScreen.JobPreferences;
             int count = Math.Min(jobPreferences.Count, 3);

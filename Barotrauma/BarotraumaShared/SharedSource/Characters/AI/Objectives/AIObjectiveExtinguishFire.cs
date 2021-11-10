@@ -53,9 +53,13 @@ namespace Barotrauma
                     distanceFactor = 1;
                 }
                 float severity = AIObjectiveExtinguishFires.GetFireSeverity(targetHull);
-                if (severity > 0.5f && !isOrder)
+                if (severity > 0.75f && !isOrder && 
+                    targetHull.RoomName != null &&
+                    !targetHull.RoomName.Contains("reactor", StringComparison.OrdinalIgnoreCase) && 
+                    !targetHull.RoomName.Contains("engine", StringComparison.OrdinalIgnoreCase) && 
+                    !targetHull.RoomName.Contains("command", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Ignore severe fires unless ordered. (Let the fire drain all the oxygen instead).
+                    // Ignore severe fires to prevent casualities unless ordered to extinguish.
                     Priority = 0;
                     Abandon = true;
                 }

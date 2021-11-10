@@ -22,6 +22,7 @@ namespace Barotrauma
 
         private GUIListBox missionList;
         private readonly List<GUITickBox> missionTickBoxes = new List<GUITickBox>();
+        private readonly List<GUITextBlock> missionRewardTexts = new List<GUITextBlock>();
 
         private bool hasMaxMissions;
 
@@ -368,6 +369,7 @@ namespace Barotrauma
         public void SelectLocation(Location location, LocationConnection connection)
         {
             missionTickBoxes.Clear();
+            missionRewardTexts.Clear();
             locationInfoPanel.ClearChildren();
             //don't select the map panel if we're looking at some other tab
             if (selectedTab == CampaignMode.InteractionType.Map)
@@ -524,6 +526,12 @@ namespace Barotrauma
                                 Campaign.Map.CurrentLocation.DeselectMission(mission);
                             }
 
+                            foreach (GUITextBlock rewardText in missionRewardTexts)
+                            {
+                                Mission otherMission = rewardText.UserData as Mission;
+                                rewardText.SetRichText(otherMission.GetMissionRewardText(Submarine.MainSub));
+                            }
+
                             UpdateMaxMissions(connection.OtherLocation(currentDisplayLocation));
 
                             if ((Campaign is MultiPlayerCampaign multiPlayerCampaign) && !multiPlayerCampaign.SuppressStateSending &&
@@ -567,7 +575,11 @@ namespace Barotrauma
                         //spacing
                         new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform) { MinSize = new Point(0, GUI.IntScale(10)) }, style: null);
 
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission.GetMissionRewardText(Submarine.MainSub), wrap: true, parseRichText: true);
+                        var rewardText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission.GetMissionRewardText(Submarine.MainSub), wrap: true, parseRichText: true)
+                        {
+                            UserData = mission
+                        };
+                        missionRewardTexts.Add(rewardText);
 
                         string reputationText = mission.GetReputationRewardText(mission.Locations[0]);
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), reputationText, wrap: true, parseRichText: true);
@@ -616,7 +628,7 @@ namespace Barotrauma
             {
                 TextGetter = () =>
                 {
-                    return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{Campaign.NumberOfMissionsAtLocation(destination)}/{Campaign.Settings.MaxMissionCount}");
+                    return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{Campaign.NumberOfMissionsAtLocation(destination)}/{Campaign.Settings.TotalMaxMissionCount}");
                 }
             };
 
@@ -723,7 +735,7 @@ namespace Barotrauma
 
         private void UpdateMaxMissions(Location location)
         {
-            hasMaxMissions = Campaign.NumberOfMissionsAtLocation(location) >= Campaign.Settings.MaxMissionCount;
+            hasMaxMissions = Campaign.NumberOfMissionsAtLocation(location) >= Campaign.Settings.TotalMaxMissionCount;
         }
     }
 }

@@ -34,6 +34,9 @@ namespace Barotrauma
         [Serialize(false, true), Editable(ReadOnly = true)]
         public bool HasInfo { get; private set; }
 
+        [Serialize(false, true, description: "Can the creature interact with items?"), Editable]
+        public bool CanInteract { get; private set; }
+
         [Serialize(false, true), Editable]
         public bool Husk { get; private set; }
 
@@ -70,14 +73,23 @@ namespace Barotrauma
         [Serialize(1f, true), Editable]
         public float BleedParticleMultiplier { get; private set; }
 
+        [Serialize(true, true, description: "Can the creature eat bodies? Used by player controlled creatures to allow them to eat. Currently applicable only to non-humanoids. To allow an AI controller to eat, just add an ai target with the state \"eat\""), Editable]
+        public bool CanEat { get; set; }
+
         [Serialize(10f, true, description: "How effectively/easily the character eats other characters. Affects the forces, the amount of particles, and the time required before the target is eaten away"), Editable(MinValueFloat = 1, MaxValueFloat = 1000, ValueStep = 1)]
         public float EatingSpeed { get; set; }
+
+        [Serialize(true, true), Editable]
+        public bool UsePathFinding { get; set; }
 
         [Serialize(1f, true, "Decreases the intensive path finding call frequency. Set to a lower value for insignificant creatures to improve performance."), Editable(minValue: 0f, maxValue: 1f)]
         public float PathFinderPriority { get; set; }
 
         [Serialize(false, true), Editable]
         public bool HideInSonar { get; set; }
+
+        [Serialize(false, true), Editable]
+        public bool HideInThermalGoggles { get; set; }
 
         [Serialize(0f, true), Editable]
         public float SonarDisruption { get; set; }
@@ -87,6 +99,9 @@ namespace Barotrauma
 
         [Serialize(25000f, true, "If the character is farther than this (in pixels) from the sub and the players, it will be disabled. The halved value is used for triggering simple physics where the ragdoll is disabled and only the main collider is updated."), Editable(MinValueFloat = 10000f, MaxValueFloat = 100000f)]
         public float DisableDistance { get; set; }
+
+        [Serialize(10f, true, "How frequent the recurring idle and attack sounds are?"), Editable(MinValueFloat = 1f, MaxValueFloat = 100f)]
+        public float SoundInterval { get; set; }
 
         public readonly string File;
 
@@ -448,6 +463,12 @@ namespace Barotrauma
             [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
             public float HealthRegenerationWhenEating { get; private set; }
 
+            [Serialize(false, true), Editable]
+            public bool StunImmunity { get; set; }
+
+            [Serialize(false, true, description: "Can afflictions affect the face/body tint of the character."), Editable]
+            public bool ApplyAfflictionColors { get; private set; }
+
             // TODO: limbhealths, sprite?
 
             public HealthParams(XElement element, CharacterParams character) : base(element, character) { }
@@ -547,14 +568,23 @@ namespace Barotrauma
             [Serialize(false, true, description: "If enabled, the character chooses randomly from the available attacks. The priority is used as a weight for weighted random."), Editable]
             public bool RandomAttack { get; private set; }
 
-            [Serialize(false, true, description:"Does the creature know how to open doors (still requires a proper ID card). Only applies on humanoids. Humans can always open doors (They don't use this AI definition)."), Editable]
+            [Serialize(false, true, description:"Does the creature know how to open doors (still requires a proper ID card). Humans can always open doors (They don't use this AI definition)."), Editable]
             public bool CanOpenDoors { get; private set; }
+
+            [Serialize(false, true, description: "Does the creature close the doors behind it. Humans don't use this AI definition."), Editable]
+            public bool KeepDoorsClosed { get; private set; }
 
             [Serialize(true, true, "Is the creature allowed to navigate from and into the depths of the abyss? When enabled, the creatures will try to avoid the depths."), Editable]
             public bool AvoidAbyss { get; set; }
 
             [Serialize(false, true, "Does the creature try to keep in the abyss? Has effect only when AvoidAbyss is false."), Editable]
             public bool StayInAbyss { get; set; }
+
+            [Serialize(false, true, "Does the creature patrol the flooded hulls while idling inside a friendly submarine?"), Editable]
+            public bool PatrolFlooded { get; set; }
+
+            [Serialize(false, true, "Does the creature patrol the dry hulls while idling inside a friendly submarine?"), Editable]
+            public bool PatrolDry { get; set; }
 
             [Serialize(0f, true, description: ""), Editable]
             public float StartAggression { get; private set; }
@@ -703,8 +733,17 @@ namespace Barotrauma
             [Serialize(false, true), Editable]
             public bool IgnoreIncapacitated { get; set; }
 
-            [Serialize(0f, true, description: "How much damage the protected target should take from an attacker before the creature starts defending it."), Editable]
-            public float DamageThreshold { get; private set; }
+            [Serialize(0f, true, description: "A generic threshold. For example, how much damage the protected target should take from an attacker before the creature starts defending it."), Editable]
+            public float Threshold { get; private set; }
+
+            [Serialize(-1f, true, description: "A generic min threshold. Not used if set to negative."), Editable]
+            public float ThresholdMin { get; private set; }
+
+            [Serialize(-1f, true, description: "A generic max threshold. Not used if set to negative."), Editable]
+            public float ThresholdMax { get; private set; }
+
+            [Serialize("0.0, 0.0", true), Editable]
+            public Vector2 Offset { get; private set; }
 
             [Serialize(10f, true, description: "How much damage should the character take from an attacker with an affliction AI target before it stops using that tag to deal with the attacker? E.g stop idling if the attacker deals any damage to you and attack."), Editable]
             public float MinDamageToIgnoreAfflictionTag { get; private set; }

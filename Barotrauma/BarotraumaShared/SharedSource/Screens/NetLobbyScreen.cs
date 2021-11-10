@@ -73,19 +73,7 @@ namespace Barotrauma
 
         public int GetMaxMissionCount()
         {
-#if CLIENT
-            // this seems rather silly, but it matches the radiation enabled check structurally. is this right?
-            if (maxMissionCountText != null && Int32.TryParse(maxMissionCountText.Text, out int result))
-            {
-                return result;
-            }
-            else
-            {
-                return 0;
-            }
-#elif SERVER
-            return GameMain.Server.ServerSettings.MaxMissionCount;
-#endif
+            return GameMain.NetworkMember?.ServerSettings?.MaxMissionCount ?? 0;
         }
 
         public void ToggleTraitorsEnabled(int dir)

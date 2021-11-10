@@ -23,7 +23,7 @@ namespace Barotrauma
         HideInMenus = 2
     }
 
-    public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation, EnemySubmarine }
+    public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation, EnemySubmarine, Ruin }
     public enum SubmarineClass { Undefined, Scout, Attack, Transport, DeepDiver }
 
     partial class SubmarineInfo : IDisposable
@@ -96,9 +96,11 @@ namespace Barotrauma
         public OutpostModuleInfo OutpostModuleInfo { get; set; }
 
         public bool IsOutpost => Type == SubmarineType.Outpost || Type == SubmarineType.OutpostModule;
+
         public bool IsWreck => Type == SubmarineType.Wreck;
         public bool IsBeacon => Type == SubmarineType.BeaconStation;
         public bool IsPlayer => Type == SubmarineType.Player;
+        public bool IsRuin => Type == SubmarineType.Ruin;
 
         public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && SubmarineClass != SubmarineClass.Undefined;
         public bool IsCampaignCompatibleIgnoreClass => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus);
@@ -404,6 +406,8 @@ namespace Barotrauma
             {
                 var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine)
                     .Concat(vanilla.GetFilesOfType(ContentType.Wreck))
+                    .Concat(vanilla.GetFilesOfType(ContentType.BeaconStation))
+                    .Concat(vanilla.GetFilesOfType(ContentType.EnemySubmarine))
                     .Concat(vanilla.GetFilesOfType(ContentType.Outpost))
                     .Concat(vanilla.GetFilesOfType(ContentType.OutpostModule));
                 string pathToCompare = FilePath.Replace(@"\", @"/").ToLowerInvariant();
@@ -741,7 +745,10 @@ namespace Barotrauma
                 try
                 {
                     stream.Position = 0;
-                    doc = XDocument.Load(stream); //ToolBox.TryLoadXml(file);
+                    using (var reader = XMLExtensions.CreateReader(stream))
+                    {
+                        doc = XDocument.Load(reader);
+                    }
                     stream.Close();
                     stream.Dispose();
                 }
@@ -758,9 +765,10 @@ namespace Barotrauma
                 try
                 {
                     ToolBox.IsProperFilenameCase(file);
-                    doc = XDocument.Load(file, LoadOptions.SetBaseUri);
+                    using var stream = File.Open(file, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                    using var reader = XMLExtensions.CreateReader(stream);
+                    doc = XDocument.Load(reader);
                 }
-
                 catch (Exception e)
                 {
                     exception = e;

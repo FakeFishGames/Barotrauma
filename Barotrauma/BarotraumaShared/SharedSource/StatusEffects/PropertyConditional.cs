@@ -60,6 +60,8 @@ namespace Barotrauma
         // Only used by conditionals targeting an item. By default, containers check the parent item. This allows you to check the grandparent instead.
         public readonly bool TargetGrandParent;
 
+        public readonly bool TargetContainedItem;
+
         // Remove this after refactoring
         public static bool IsValid(XAttribute attribute)
         {
@@ -112,6 +114,7 @@ namespace Barotrauma
             TargetContainer = attribute.Parent.GetAttributeBool("targetcontainer", false);
             TargetSelf = attribute.Parent.GetAttributeBool("targetself", false);
             TargetGrandParent = attribute.Parent.GetAttributeBool("targetgrandparent", false);
+            TargetContainedItem = attribute.Parent.GetAttributeBool("targetcontaineditem", false);
 
             if (!Enum.TryParse(AttributeName, true, out Type))
             {
@@ -171,6 +174,22 @@ namespace Barotrauma
 
         public bool Matches(ISerializableEntity target)
         {          
+            if (TargetContainedItem)
+            {
+                if (target is Item item)
+                {
+                    return item.ContainedItems.Any(it => Matches(it));
+                }
+                else if (target is Items.Components.ItemComponent ic)
+                {
+                    return ic.Item.ContainedItems.Any(it => Matches(it));
+                }
+                else if (target is Character character)
+                {
+                    return character.Inventory != null && character.Inventory.AllItems.Any(it => Matches(it));
+                }
+            }
+
             switch (Type)
             {
                 case ConditionType.PropertyValue:

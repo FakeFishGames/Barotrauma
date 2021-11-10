@@ -127,6 +127,13 @@ namespace Barotrauma
                 ID.ToString(),
                 new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 30),
                 color);
+            if (Tunnel?.Type != null)
+            {
+                GUI.SmallFont.DrawString(spriteBatch,
+                Tunnel.Type.ToString(),
+                new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 45),
+                color);
+            }
         }
 
         public override bool IsMouseOn(Vector2 position)
@@ -149,7 +156,7 @@ namespace Barotrauma
             }
         }
 
-        public override void UpdateEditing(Camera cam)
+        public override void UpdateEditing(Camera cam, float deltaTime)
         {
             if (editingHUD == null || editingHUD.UserData != this)
             {
@@ -164,10 +171,7 @@ namespace Barotrauma
                 {
                     foreach (MapEntity e in mapEntityList)
                     {
-                        if (e.GetType() != typeof(WayPoint)) continue;
-                        if (e == this) continue;
-
-                        if (!Submarine.RectContains(e.Rect, position)) continue;
+                        if (!(e is WayPoint) || e == this || !e.IsHighlighted) { continue; }
 
                         if (linkedTo.Contains(e))
                         {

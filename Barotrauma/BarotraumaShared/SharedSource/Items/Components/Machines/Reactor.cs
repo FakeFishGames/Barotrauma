@@ -234,7 +234,10 @@ namespace Barotrauma.Items.Components
 
             //use a smoothed "correct output" instead of the actual correct output based on the load
             //so the player doesn't have to keep adjusting the rate impossibly fast when the load fluctuates heavily
-            correctTurbineOutput += MathHelper.Clamp((load / MaxPowerOutput * 100.0f) - correctTurbineOutput, -10.0f, 10.0f) * deltaTime;
+            if (!MathUtils.NearlyEqual(MaxPowerOutput, 0.0f))
+            {
+                correctTurbineOutput += MathHelper.Clamp((load / MaxPowerOutput * 100.0f) - correctTurbineOutput, -10.0f, 10.0f) * deltaTime;
+            }
 
             //calculate tolerances of the meters based on the skills of the user
             //more skilled characters have larger "sweet spots", making it easier to keep the power output at a suitable level
@@ -320,7 +323,7 @@ namespace Barotrauma.Items.Components
                 //reset the fission rate, turbine output and
                 //temperature to optimal levels to prevent fires
                 //at the start of the round
-                correctTurbineOutput = currentLoad / MaxPowerOutput * 100.0f;
+                correctTurbineOutput = MathUtils.NearlyEqual(MaxPowerOutput, 0.0f) ? 0.0f : currentLoad / MaxPowerOutput * 100.0f;
                 tolerance = MathHelper.Lerp(2.5f, 10.0f, degreeOfSuccess);
                 optimalTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
                 tolerance = MathHelper.Lerp(5.0f, 20.0f, degreeOfSuccess);
@@ -364,23 +367,19 @@ namespace Barotrauma.Items.Components
                         item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
                     }
                 }
-
-                if (item.CurrentHull != null)
-                {
-                    var aiTarget = item.CurrentHull.AiTarget;
-                    if (aiTarget != null && MaxPowerOutput > 0)
-                    {
-                        float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
-                        float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
-                        aiTarget.SoundRange = Math.Max(aiTarget.SoundRange, noise);
-                    }
-                }
-
                 if (item.AiTarget != null && MaxPowerOutput > 0)
                 {
                     var aiTarget = item.AiTarget;
                     float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
                     aiTarget.SoundRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
+                    if (item.CurrentHull != null)
+                    {
+                        var hullAITarget = item.CurrentHull.AiTarget;
+                        if (hullAITarget != null)
+                        {
+                            hullAITarget.SoundRange = Math.Max(hullAITarget.SoundRange, aiTarget.SoundRange);
+                        }
+                    }
                 }
             }
 
@@ -495,15 +494,12 @@ namespace Barotrauma.Items.Components
             {
                 float prevFireTimer = fireTimer;
                 fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.MaxCondition);
-
-
 #if SERVER
                 if (fireTimer > Math.Min(5.0f, FireDelay / 2) && blameOnBroken?.Character?.SelectedConstruction == item)
                 {
-                    GameMain.Server.KarmaManager.OnReactorOverHeating(blameOnBroken.Character, deltaTime);
+                    GameMain.Server.KarmaManager.OnReactorOverHeating(item, blameOnBroken.Character, deltaTime);
                 }
 #endif
-
                 if (fireTimer >= FireDelay && prevFireTimer < fireDelay)
                 {
                     new FireSource(item.WorldPosition);
@@ -592,7 +588,7 @@ namespace Barotrauma.Items.Components
             GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
             if (GameMain.Server != null)
             {
-                GameMain.Server.KarmaManager.OnReactorMeltdown(blameOnBroken?.Character);
+                GameMain.Server.KarmaManager.OnReactorMeltdown(item, blameOnBroken?.Character);
             }
 #endif
         }

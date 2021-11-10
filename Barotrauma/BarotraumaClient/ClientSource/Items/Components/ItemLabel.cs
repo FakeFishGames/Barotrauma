@@ -21,6 +21,10 @@ namespace Barotrauma.Items.Components
 
         private float[] charWidths;
 
+        private float prevScale;
+        private Rectangle prevRect;
+        private StringBuilder sb;
+
         private Vector4 padding;
 
         [Serialize("0,0,0,0", true, description: "The amount of padding around the text in pixels (left,top,right,bottom).")]
@@ -49,7 +53,8 @@ namespace Barotrauma.Items.Components
                 }
 
                 text = value;
-                SetDisplayText(value);
+                SetDisplayText(value); 
+                UpdateScrollingText();
             }
         }
 
@@ -205,9 +210,16 @@ namespace Barotrauma.Items.Components
             if (!needsScrolling) { return; }
 
             scrollAmount -= deltaTime * ScrollSpeed;
+            UpdateScrollingText();
+        }
+
+        private void UpdateScrollingText()
+        {
+            if (!scrollable || !needsScrolling) { return; }
 
             float currLength = 0;
-            StringBuilder sb = new StringBuilder();
+            sb ??= new StringBuilder();
+            sb.Clear();
             float textAreaWidth = textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z;
             for (int i = scrollIndex; i < scrollingText.Length; i++)
             {
@@ -246,10 +258,7 @@ namespace Barotrauma.Items.Components
             prevScale = item.Scale;
             prevRect = item.Rect;
         }
-
-        private float prevScale;
-        private Rectangle prevRect;
-
+        
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             if (editing)
@@ -266,15 +275,6 @@ namespace Barotrauma.Items.Components
             var drawPos = new Vector2(
                 item.DrawPosition.X - item.Rect.Width / 2.0f,
                 -(item.DrawPosition.Y + item.Rect.Height / 2.0f));
-
-            Rectangle worldRect = item.WorldRect;
-            if (worldRect.X > Screen.Selected.Cam.WorldView.Right ||
-                worldRect.Right < Screen.Selected.Cam.WorldView.X ||
-                worldRect.Y < Screen.Selected.Cam.WorldView.Y - Screen.Selected.Cam.WorldView.Height ||
-                worldRect.Y - worldRect.Height > Screen.Selected.Cam.WorldView.Y)
-            {
-                return;
-            }
 
             textBlock.TextDepth = item.SpriteDepth - 0.0001f;
             textBlock.TextOffset = drawPos - textBlock.Rect.Location.ToVector2() + (editing ? Vector2.Zero : new Vector2(scrollAmount + scrollPadding, 0.0f));

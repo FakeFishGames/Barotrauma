@@ -29,6 +29,8 @@ namespace Barotrauma
 
         public bool IsRunning { get; private set; }
 
+        public bool RoundEnding { get; private set; }
+
         public Level Level { get; private set; }
         public LevelData LevelData { get; private set; }
 
@@ -368,8 +370,8 @@ namespace Barotrauma
 
             foreach (Mission mission in GameMode.Missions)
             {
-                // setting difficulty for missions that may involve difficulty-related submarine creation
-                mission.SetDifficulty(levelData?.Difficulty ?? 0f);
+                // setting level for missions that may involve difficulty-related submarine creation
+                mission.SetLevel(levelData);
             }
 
             if (Submarine.MainSubs[1] == null)
@@ -450,9 +452,11 @@ namespace Barotrauma
             StatusEffect.StopAll();
 
 #if CLIENT
+#if !DEBUG
             GameMain.LightManager.LosEnabled = GameMain.Client == null || GameMain.Client.CharacterInfo != null;
+#endif
             if (GameMain.LightManager.LosEnabled) { GameMain.LightManager.LosAlpha = 1f; }
-            if (GameMain.Client == null) GameMain.LightManager.LosMode = GameMain.Config.LosMode;
+            if (GameMain.Client == null) { GameMain.LightManager.LosMode = GameMain.Config.LosMode; }
 #endif
             LevelData = level?.LevelData;
             Level = level;
@@ -654,43 +658,89 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime);
 
+        public static IEnumerable<Character> GetSessionCrewCharacters()
+        {
+#if SERVER
+            return GameMain.Server.ConnectedClients.Select(c => c.Character).Where(c => c?.Info != null && !c.IsDead);
+#else
+            if (GameMain.GameSession == null) { return Enumerable.Empty<Character>(); }
+            return GameMain.GameSession.CrewManager.GetCharacters().Where(c => c?.Info != null && !c.IsDead);
+#endif        
+        }
+
         public void EndRound(string endMessage, List<TraitorMissionResult> traitorResults = null, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
         {
-            foreach (Mission mission in missions)
+            RoundEnding = true;
+
+            try
             {
-                mission.End();
-            }
+                IEnumerable<Character> crewCharacters = GetSessionCrewCharacters();
+
+                foreach (Mission mission in missions)
+                {
+                    mission.End();
+                }
+
+                foreach (Character character in crewCharacters)
+                {
+                    character.CheckTalents(AbilityEffectType.OnRoundEnd);
+                }
+
+                if (missions.Any())
+                {
+                    if (missions.Any(m => m.Completed))
+                    {
+                        foreach (Character character in crewCharacters)
+                        {
+                            character.CheckTalents(AbilityEffectType.OnAnyMissionCompleted);
+                        }
+                    }
+
+                    if (missions.All(m => m.Completed))
+                    {
+                        foreach (Character character in crewCharacters)
+                        {
+                            character.CheckTalents(AbilityEffectType.OnAllMissionsCompleted);
+                        }
+                    }
+                }
+
 #if CLIENT
-            if (GUI.PauseMenuOpen)
-            {
-                GUI.TogglePauseMenu();
-            }
-            GUI.PreventPauseMenuToggle = true;
+                if (GUI.PauseMenuOpen)
+                {
+                    GUI.TogglePauseMenu();
+                }
+                GUI.PreventPauseMenuToggle = true;
 
-            if (!(GameMode is TestGameMode) && Screen.Selected == GameMain.GameScreen && RoundSummary != null)
-            {
-                GUI.ClearMessages();
-                GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData is RoundSummary);
-                GUIFrame summaryFrame = RoundSummary.CreateSummaryFrame(this, endMessage, traitorResults, transitionType);
-                GUIMessageBox.MessageBoxes.Add(summaryFrame);
-                RoundSummary.ContinueButton.OnClicked = (_, __) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
-            }
+                if (!(GameMode is TestGameMode) && Screen.Selected == GameMain.GameScreen && RoundSummary != null)
+                {
+                    GUI.ClearMessages();
+                    GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData is RoundSummary);
+                    GUIFrame summaryFrame = RoundSummary.CreateSummaryFrame(this, endMessage, traitorResults, transitionType);
+                    GUIMessageBox.MessageBoxes.Add(summaryFrame);
+                    RoundSummary.ContinueButton.OnClicked = (_, __) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
+                }
 
-            if (GameMain.NetLobbyScreen != null) GameMain.NetLobbyScreen.OnRoundEnded();
-            TabMenu.OnRoundEnded();
-            GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction" || ReadyCheck.IsReadyCheck(mb));
+                if (GameMain.NetLobbyScreen != null) { GameMain.NetLobbyScreen.OnRoundEnded(); }
+                TabMenu.OnRoundEnded();
+                GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction" || ReadyCheck.IsReadyCheck(mb));
 #endif
-            SteamAchievementManager.OnRoundEnded(this);
+                SteamAchievementManager.OnRoundEnded(this);
 
-            GameMode?.End(transitionType);
-            EventManager?.EndRound();
-            StatusEffect.StopAll();
-            missions.Clear();
-            IsRunning = false;
+                GameMode?.End(transitionType);
+                EventManager?.EndRound();
+                StatusEffect.StopAll();
+                missions.Clear();
+                IsRunning = false;
 
 #if CLIENT
-            HintManager.OnRoundEnded();
+                HintManager.OnRoundEnded();
 #endif
+            }
+            finally
+            {
+                RoundEnding = false;
+            }
         }
 
         public void KillCharacter(Character character)

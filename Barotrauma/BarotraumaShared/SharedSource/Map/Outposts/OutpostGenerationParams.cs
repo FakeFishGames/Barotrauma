@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         public static List<OutpostGenerationParams> Params { get; private set; }
 
-        public string Name { get; private set; }
+        public virtual string Name { get; private set; }
 
         public string Identifier { get; private set; }
 
@@ -67,6 +67,34 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize(true, isSaveable: true), Editable]
+        public bool LockUnusedDoors
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, isSaveable: true), Editable]
+        public bool RemoveUnusedGaps
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.0f, isSaveable: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
+        public float MinWaterPercentage
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.0f, isSaveable: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
+        public float MaxWaterPercentage
+        {
+            get;
+            set;
+        }
+
         [Serialize("", isSaveable: true), Editable]
         public string ReplaceInRadiation { get; set; }
 
@@ -81,12 +109,14 @@ namespace Barotrauma
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
 
-        private OutpostGenerationParams(XElement element, string filePath)
+        protected OutpostGenerationParams(XElement element, string filePath)
         {
             Identifier = element.GetAttributeString("identifier", "");
             Name = element.GetAttributeString("name", Identifier);
             allowedLocationTypes = element.GetAttributeStringArray("allowedlocationtypes", Array.Empty<string>()).ToList();
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+
+            if (element == null) { return; }
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())

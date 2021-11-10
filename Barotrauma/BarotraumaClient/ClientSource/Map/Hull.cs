@@ -101,7 +101,7 @@ namespace Barotrauma
             return editingHUD;
         }
 
-        public override void UpdateEditing(Camera cam)
+        public override void UpdateEditing(Camera cam, float deltaTime)
         {
             if (editingHUD == null || editingHUD.UserData as Hull != this)
             {
@@ -676,7 +676,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            remoteBackgroundSections.Add(new BackgroundSection(new Rectangle(0, 0, 1, 1), i, colorStrength, color, 0));
+                            remoteBackgroundSections.Add(new BackgroundSection(new Rectangle(0, 0, 1, 1), (ushort)i, colorStrength, color, 0));
                         }
                     }
                     paintAmount = BackgroundSections.Sum(s => s.ColorStrength);

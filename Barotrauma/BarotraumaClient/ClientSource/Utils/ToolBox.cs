@@ -1,9 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace Barotrauma
 {
@@ -53,6 +54,225 @@ namespace Barotrauma
             }
 
             return isInside;
+        }
+
+        public static Vector2 GetPolygonBoundingBoxSize(List<Vector2> verticess)
+        {
+            float minX = verticess[0].X;
+            float maxX = verticess[0].X;
+            float minY = verticess[0].Y;
+            float maxY = verticess[0].Y;
+
+            foreach (var (vertX, vertY) in verticess)
+            {
+                minX = Math.Min(vertX, minX);
+                maxX = Math.Max(vertX, maxX);
+                minY = Math.Min(vertY, minY);
+                maxY = Math.Max(vertY, maxY);
+            }
+
+            return new Vector2(maxX - minX, maxY - minY);
+        }
+
+        public static List<Vector2> ScalePolygon(List<Vector2> vertices, Vector2 scale)
+        {
+            List<Vector2> newVertices = new List<Vector2>();
+
+            Vector2 center = GetPolygonCentroid(vertices);
+
+            foreach (Vector2 vert in vertices)
+            {
+                Vector2 centerVector = vert - center;
+                Vector2 centerVectorScale = centerVector * scale;
+                Vector2 scaledVector = centerVectorScale + center;
+                newVertices.Add(scaledVector);
+            }
+
+            return newVertices;
+        }
+
+        public static Vector2 GetPolygonCentroid(List<Vector2> poly)
+        {
+            float accumulatedArea = 0.0f;
+            float centerX = 0.0f;
+            float centerY = 0.0f;
+
+            for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++)
+            {
+                float temp = poly[i].X * poly[j].Y - poly[j].X * poly[i].Y;
+                accumulatedArea += temp;
+                centerX += (poly[i].X + poly[j].X) * temp;
+                centerY += (poly[i].Y + poly[j].Y) * temp;
+            }
+
+            if (Math.Abs(accumulatedArea) < 1E-7f) { return Vector2.Zero; }  // Avoid division by zero
+
+            accumulatedArea *= 3f;
+            return new Vector2(centerX / accumulatedArea, centerY / accumulatedArea);
+        }
+
+        public static List<Vector2> SnapVertices(List<Vector2> points, int treshold = 1)
+        {
+            Stack<Vector2> toCheck = new Stack<Vector2>();
+            List<Vector2> newPoints = new List<Vector2>();
+
+            foreach (Vector2 point in points)
+            {
+                toCheck.Push(point);
+            }
+
+            while (toCheck.TryPop(out Vector2 point))
+            {
+                Vector2 newPoint = new Vector2(point.X, point.Y);
+                foreach (Vector2 otherPoint in toCheck.Concat(newPoints))
+                {
+                    float diffX = Math.Abs(newPoint.X - otherPoint.X), 
+                          diffY = Math.Abs(newPoint.Y - otherPoint.Y);
+
+                    if (diffX <= treshold)
+                    {
+                        newPoint.X = Math.Max(newPoint.X, otherPoint.X);
+                    }
+
+                    if (diffY <= treshold)
+                    {
+                        newPoint.Y = Math.Max(newPoint.Y, otherPoint.Y);
+                    }
+                }
+                newPoints.Add(newPoint);
+            }
+            
+            return newPoints;
+        }
+
+        public static ImmutableArray<RectangleF> SnapRectangles(IEnumerable<RectangleF> rects, int treshold = 1)
+        {
+            List<RectangleF> list = new List<RectangleF>();
+
+            List<Vector2> points = new List<Vector2>();
+
+            foreach (RectangleF rect in rects)
+            {
+                points.Add(new Vector2(rect.Left, rect.Top));
+                points.Add(new Vector2(rect.Right, rect.Top));
+                points.Add(new Vector2(rect.Right, rect.Bottom));
+                points.Add(new Vector2(rect.Left, rect.Bottom));
+            }
+
+            points = SnapVertices(points, treshold);
+
+            for (int i = 0; i < points.Count; i += 4)
+            {
+                Vector2 topLeft = points[i];
+                Vector2 bottomRight = points[i + 2];
+
+                list.Add(new RectangleF(topLeft, bottomRight - topLeft));
+            }
+
+            return list.ToImmutableArray();
+        }
+
+        public static List<List<Vector2>> CombineRectanglesIntoShape(IEnumerable<RectangleF> rectangles)
+        {
+            List<Vector2> points =
+                (from point in rectangles.SelectMany(RectangleToPoints)
+                 group point by point
+                 into g
+                 where g.Count() % 2 == 1
+                 select g.Key)
+                .ToList();
+
+            List<Vector2> sortedY = points.OrderBy(p => p.Y).ThenByDescending(p => p.X).ToList();
+            List<Vector2> sortedX = points.OrderBy(p => p.X).ThenByDescending(p => p.Y).ToList();
+
+            Dictionary<Vector2, Vector2> edgesH = new Dictionary<Vector2, Vector2>();
+            Dictionary<Vector2, Vector2> edgesV = new Dictionary<Vector2, Vector2>();
+
+            int i = 0;
+            while (i < points.Count)
+            {
+                float currY = sortedY[i].Y;
+
+                while (i < points.Count && Math.Abs(sortedY[i].Y - currY) < 0.01f)
+                {
+                    edgesH[sortedY[i]] = sortedY[i + 1];
+                    edgesH[sortedY[i + 1]] = sortedY[i];
+                    i += 2;
+                }
+
+            }
+
+            i = 0;
+
+            while (i < points.Count)
+            {
+                float currX = sortedX[i].X;
+                while (i < points.Count && Math.Abs(sortedX[i].X - currX) < 0.01f)
+                {
+                    edgesV[sortedX[i]] = sortedX[i + 1];
+                    edgesV[sortedX[i + 1]] = sortedX[i];
+                    i += 2;
+                }
+            }
+
+            List<List<Vector2>> polygons = new List<List<Vector2>>();
+
+            while (edgesH.Any())
+            {
+                var (key, _) = edgesH.First();
+                List<(Vector2 Point, int Direction)> polygon = new List<(Vector2 Point, int Direction)> { (key, 0) };
+                edgesH.Remove(key);
+
+                while (true)
+                {
+                    var (curr, direction) = polygon[^1];
+
+                    if (direction == 0)
+                    {
+                        Vector2 nextVertex = edgesV[curr];
+                        edgesV.Remove(curr);
+                        polygon.Add((nextVertex, 1));
+                    }
+                    else
+                    {
+                        Vector2 nextVertex = edgesH[curr];
+                        edgesH.Remove(curr);
+                        polygon.Add((nextVertex, 0));
+                    }
+
+                    if (polygon[^1] == polygon[0])
+                    {
+                        polygon.Remove(polygon[^1]);
+                        break;
+                    }
+                }
+
+                List<Vector2> poly = polygon.Select(t => t.Point).ToList();
+
+                foreach (Vector2 vertex in poly)
+                {
+                    if (edgesH.ContainsKey(vertex))
+                    {
+                        edgesH.Remove(vertex);
+                    }
+
+                    if (edgesV.ContainsKey(vertex))
+                    {
+                        edgesV.Remove(vertex);
+                    }
+                }
+
+                polygons.Add(poly);
+            }
+
+            return polygons;
+
+            static IEnumerable<Vector2> RectangleToPoints(RectangleF rect)
+            {
+                (float x1, float y1, float x2, float y2) = (rect.Left, rect.Top, rect.Right, rect.Bottom);
+                Vector2[] pts = { new Vector2(x1, y1), new Vector2(x2, y1), new Vector2(x2, y2), new Vector2(x1, y2) };
+                return pts;
+            }
         }
         
         // Convert an RGB value into an HLS value.

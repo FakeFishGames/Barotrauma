@@ -74,8 +74,6 @@ namespace Barotrauma.Items.Components
         [Serialize(100f, true, "How much fertilizer can the planter hold.")]
         public float FertilizerCapacity { get; set; }
 
-        public string LastAction { get; set; } = "";
-
         public Growable?[] GrowableSeeds = new Growable?[0];
 
         private readonly List<RelatedItem> SuitableFertilizer = new List<RelatedItem>();
@@ -119,7 +117,7 @@ namespace Barotrauma.Items.Components
             GrowableSeeds = new Growable[container.Capacity];
         }
 
-        public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
+        public override bool HasRequiredItems(Character character, bool addMessage, string? msg = null)
         {
             if (container?.Inventory == null) { return false; }
 
@@ -137,9 +135,16 @@ namespace Barotrauma.Items.Components
                 return true;
             }
 
-            Msg = MsgHarvest;
+            if (GrowableSeeds.Any(s => s != null))
+            {
+                Msg = MsgHarvest;
+                ParseMsg();
+                return true;
+            }
+
+            Msg = string.Empty;
             ParseMsg();
-            return true;
+            return false;
         }
 
         public override bool Pick(Character character)
@@ -163,9 +168,16 @@ namespace Barotrauma.Items.Components
             switch (plantItem.Type)
             {
                 case PlantItemType.Seed:
-                    LastAction = "PlantSeed";
                     ApplyStatusEffects(ActionType.OnPicked, 1.0f, character);
-                    return container.Inventory.TryPutItem(plantItem.Item, character, new List<InvSlotType> { InvSlotType.Any });
+                    if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+                    {
+                        return container.Inventory.TryPutItem(plantItem.Item, character);
+                    }
+                    else
+                    {
+                        //let the server handle moving the item
+                        return false;
+                    }
                 case PlantItemType.Fertilizer when plantItem.Item != null:
                     float canAdd = FertilizerCapacity - Fertilizer;
                     float maxAvailable = plantItem.Item.Condition;
@@ -175,7 +187,6 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                     character.UpdateHUDProgressBar(this, Item.DrawPosition, Fertilizer / FertilizerCapacity, Color.SaddleBrown, Color.SaddleBrown, "entityname.fertilizer");
 #endif
-                    LastAction = "ApplyFertilizer";
                     ApplyStatusEffects(ActionType.OnPicked, 1.0f, character);
                     return false;
             }
@@ -203,7 +214,6 @@ namespace Barotrauma.Items.Components
                     container?.Inventory.RemoveItem(seed.Item);
                     Entity.Spawner?.AddToRemoveQueue(seed.Item);
                     GrowableSeeds[i] = null;
-                    LastAction = "Harvest";
                     ApplyStatusEffects(ActionType.OnPicked, 1.0f, character);
                     return true;
                 }

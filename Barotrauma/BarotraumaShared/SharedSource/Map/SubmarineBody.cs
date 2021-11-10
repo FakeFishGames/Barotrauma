@@ -452,7 +452,7 @@ namespace Barotrauma
 
         public void ApplyForce(Vector2 force)
         {
-            Body.ApplyForce(force, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            Body.ApplyForce(force);
         }
 
         public void SetPosition(Vector2 position)
@@ -569,8 +569,7 @@ namespace Barotrauma
             }
 
             var gaps = newHull?.ConnectedGaps ?? Gap.GapList.Where(g => g.Submarine == submarine);
-            targetPos = character.WorldPosition;
-            Gap adjacentGap = Gap.FindAdjacent(gaps, targetPos, 500.0f);
+            Gap adjacentGap = Gap.FindAdjacent(gaps, ConvertUnits.ToDisplayUnits(points[0]), 200.0f);
             if (adjacentGap == null) { return true; }
 
             if (newHull != null)
@@ -671,17 +670,20 @@ namespace Barotrauma
 
                 Body.LinearVelocity -= velChange;
 
-                float damageAmount = contactDot * Body.Mass / limb.character.Mass;
-                limb.character.LastDamageSource = submarine;
-                limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(collision.ImpactPos), limb, 
-                    AfflictionPrefab.ImpactDamage.Instantiate(damageAmount).ToEnumerable(), 0.0f, true, 0.0f);
-
-                if (limb.character.IsDead)
+                if (contactDot > 0.1f)
                 {
-                    foreach (LimbJoint limbJoint in limb.character.AnimController.LimbJoints)
+                    float damageAmount = contactDot * Body.Mass / limb.character.Mass;
+                    limb.character.LastDamageSource = submarine;
+                    limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(collision.ImpactPos), limb, 
+                        AfflictionPrefab.ImpactDamage.Instantiate(damageAmount).ToEnumerable(), 0.0f, true, 0.0f);
+
+                    if (limb.character.IsDead)
                     {
-                        if (limbJoint.IsSevered || (limbJoint.LimbA != limb && limbJoint.LimbB != limb)) continue;
-                        limb.character.AnimController.SeverLimbJoint(limbJoint);
+                        foreach (LimbJoint limbJoint in limb.character.AnimController.LimbJoints)
+                        {
+                            if (limbJoint.IsSevered || (limbJoint.LimbA != limb && limbJoint.LimbB != limb)) continue;
+                            limb.character.AnimController.SeverLimbJoint(limbJoint);
+                        }
                     }
                 }
             }

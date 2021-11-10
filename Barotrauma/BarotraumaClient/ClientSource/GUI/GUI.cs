@@ -130,6 +130,7 @@ namespace Barotrauma
         public static GUIStyle Style;
 
         private static Texture2D t;
+        public static Texture2D WhiteTexture => t;
         private static Sprite[] MouseCursorSprites => Style.CursorSprite;
 
         private static bool debugDrawSounds, debugDrawEvents, debugDrawMetadata;
@@ -163,6 +164,7 @@ namespace Barotrauma
         public static ScalableFont SubHeadingFont => Style?.SubHeadingFont;
         public static ScalableFont DigitalFont => Style?.DigitalFont;
         public static ScalableFont HotkeyFont => Style?.HotkeyFont;
+        public static ScalableFont MonospacedFont => Style?.MonospacedFont;
 
         public static ScalableFont CJKFont { get; private set; }
 
@@ -306,7 +308,7 @@ namespace Barotrauma
             });
             
             SubmarineIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(452, 385, 182, 81), new Vector2(0.5f, 0.5f));
-            arrow = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(392, 393, 49, 45), new Vector2(0.5f, 0.5f));
+            arrow = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(393, 393, 49, 45), new Vector2(0.5f, 0.5f));
             SpeechBubbleIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(385, 449, 66, 60), new Vector2(0.5f, 0.5f));
             BrokenIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(898, 386, 123, 123), new Vector2(0.5f, 0.5f));
         }
@@ -672,6 +674,12 @@ namespace Barotrauma
                     spriteBatch.End();
                     spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerStateClamp, rasterizerState: GameMain.ScissorTestEnable);
 
+                    if (GameMain.GameSession?.CrewManager is { DraggedOrder: { SymbolSprite: { } orderSprite, Color: var color }, DragOrder: true })
+                    {
+                        float spriteSize = Math.Max(orderSprite.size.X, orderSprite.size.Y);
+                        orderSprite.Draw(spriteBatch, PlayerInput.LatestMousePosition, color, orderSprite.size / 2f, scale: 32f / spriteSize * Scale);
+                    }
+
                     var sprite = MouseCursorSprites[(int)MouseCursor] ?? MouseCursorSprites[(int)CursorState.Default];
                     sprite.Draw(spriteBatch, PlayerInput.LatestMousePosition, Color.White, sprite.Origin, 0f, Scale / 1.5f);
 
@@ -855,11 +863,10 @@ namespace Barotrauma
                     int index = 0;
                     if (updateList.Count > 0)
                     {
-                        index = updateList.Count - 1;
-                        while (updateList[index].UpdateOrder > item.UpdateOrder)
+                        index = updateList.Count;
+                        while (index > 0 && updateList[index-1].UpdateOrder > item.UpdateOrder)
                         {
                             index--;
-                            if (index == 0) { break; }
                         }
                     }
                     if (!updateListSet.Contains(item))
@@ -927,13 +934,14 @@ namespace Barotrauma
                 GUIComponent prevMouseOn = MouseOn;
                 MouseOn = null;
                 int inventoryIndex = -1;
-            
-                if (Inventory.IsMouseOnInventory())
+
+                Inventory.RefreshMouseOnInventory();
+                if (Inventory.IsMouseOnInventory)
                 {
                     inventoryIndex = updateList.IndexOf(CharacterHUD.HUDFrame);
                 }
 
-                if (!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked())
+                if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || (prevMouseOn == null && !PlayerInput.SecondaryMouseButtonHeld()))
                 {
                     for (var i = updateList.Count - 1; i > inventoryIndex; i--)
                     {
@@ -941,10 +949,9 @@ namespace Barotrauma
                         if (!c.CanBeFocused) { continue; }
                         if (c.MouseRect.Contains(PlayerInput.MousePosition))
                         {
-                            if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || c == prevMouseOn)
+                            if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || c == prevMouseOn || prevMouseOn == null)
                             {
                                 MouseOn = c;
-                                var sakdjfnsjkd = c.MouseRect;
                             }
                             break;
                         }
@@ -958,7 +965,6 @@ namespace Barotrauma
                 MouseCursor = UpdateMouseCursorState(MouseOn);
                 return MouseOn;
             }
-            
         }
         
         private static CursorState UpdateMouseCursorState(GUIComponent c)
@@ -1005,12 +1011,6 @@ namespace Barotrauma
                         // Sub editor drag and highlight
                         case SubEditorScreen editor:
                         {
-                            // Portrait area
-                            if (editor.WiringMode && HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition))
-                            {
-                                return CursorState.Hand;
-                            }
-                        
                             foreach (var mapEntity in MapEntity.mapEntityList)
                             {
                                 if (MapEntity.StartMovingPos != Vector2.Zero)
@@ -1056,23 +1056,26 @@ namespace Barotrauma
                     {
                         if (listBox.DraggedElement != null) { return CursorState.Dragging; }
                         if (listBox.CanDragElements) { return CursorState.Move; }
-                    
-                        var hoverParent = c;
-                        while (true)
+
+                        if (listBox.HoverCursor != CursorState.Default)
                         {
-                            if (hoverParent == parent || hoverParent == null) { break; }
-                            if (hoverParent.State == GUIComponent.ComponentState.Hover) { return CursorState.Hand; }
-                            hoverParent = hoverParent.Parent;
+                            var hoverParent = c;
+                            while (true)
+                            {
+                                if (hoverParent == parent || hoverParent == null) { break; }
+                                if (hoverParent.State == GUIComponent.ComponentState.Hover) { return CursorState.Hand; }
+                                hoverParent = hoverParent.Parent;
+                            }
                         }
                     }
-                
+
                     if (parent != null && parent.CanBeFocused)
                     {
                         if (!parent.Rect.Equals(monitorRect)) { return parent.HoverCursor; }
                     }
                 }
-            
-                if (Inventory.IsMouseOnInventory()) { return Inventory.GetInventoryMouseCursor(); }
+
+                if (Inventory.IsMouseOnInventory) { return Inventory.GetInventoryMouseCursor(); }
 
                 var character = Character.Controlled;
                 // ReSharper disable once InvertIf
@@ -1349,7 +1352,7 @@ namespace Barotrauma
 
         /// <param name="createOffset">Should the indicator move based on the camera position?</param>
         /// <param name="overrideAlpha">Override the distance-based alpha value with the specified alpha value</param>
-        public static void DrawIndicator(SpriteBatch spriteBatch, in Vector2 worldPosition, Camera cam, in Vector2 visibleRange, Sprite sprite, in Color color,
+        public static void DrawIndicator(SpriteBatch spriteBatch, in Vector2 worldPosition, Camera cam, in Range<float> visibleRange, Sprite sprite, in Color color,
             bool createOffset = true, float scaleMultiplier = 1.0f, float? overrideAlpha = null)
         {
             Vector2 diff = worldPosition - cam.WorldViewCenter;
@@ -1357,9 +1360,9 @@ namespace Barotrauma
 
             float symbolScale = Math.Min(64.0f / sprite.size.X, 1.0f) * scaleMultiplier * Scale;
 
-            if (overrideAlpha.HasValue || (dist > visibleRange.X && dist < visibleRange.Y))
+            if (overrideAlpha.HasValue || (dist > visibleRange.Start && dist < visibleRange.End))
             {
-                float alpha = overrideAlpha ?? MathUtils.Min((dist - visibleRange.X) / 100.0f, 1.0f - ((dist - visibleRange.Y + 100f) / 100.0f), 1.0f);
+                float alpha = overrideAlpha ?? MathUtils.Min((dist - visibleRange.Start) / 100.0f, 1.0f - ((dist - visibleRange.End + 100f) / 100.0f), 1.0f);
                 Vector2 targetScreenPos = cam.WorldToScreen(worldPosition);
 
                 if (!createOffset)
@@ -1423,7 +1426,7 @@ namespace Barotrauma
         public static void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPosition, Camera cam, float hideDist, Sprite sprite, Color color,
             bool createOffset = true, float scaleMultiplier = 1.0f, float? overrideAlpha = null)
         {
-            DrawIndicator(spriteBatch, worldPosition, cam, new Vector2(hideDist, float.PositiveInfinity), sprite, color, createOffset, scaleMultiplier, overrideAlpha);
+            DrawIndicator(spriteBatch, worldPosition, cam, new Range<float>(hideDist, float.PositiveInfinity), sprite, color, createOffset, scaleMultiplier, overrideAlpha);
         }
 
         public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, float width = 1)
@@ -1524,6 +1527,11 @@ namespace Barotrauma
                 sb.Draw(t, new Vector2(rect.X + thickness, rect.Bottom - thickness), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(rect.Width - thickness, thickness), SpriteEffects.None, depth);
                 sb.Draw(t, new Vector2(rect.Right - thickness, rect.Y + thickness), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(thickness, rect.Height - thickness * 2f), SpriteEffects.None, depth);
             }
+        }
+
+        public static void DrawFilledRectangle(SpriteBatch sb, RectangleF rect, Color clr, float depth = 0.0f)
+        {
+            DrawFilledRectangle(sb, rect.Location, rect.Size, clr, depth);
         }
 
         public static void DrawFilledRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, float depth = 0.0f)
@@ -2439,14 +2447,43 @@ namespace Barotrauma
         {
             if (messages.Any(msg => msg.Text == message)) { return; }
             messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), font ?? LargeFont));
-            if (playSound) SoundPlayer.PlayUISound(GUISoundType.UIMessage);
+            if (playSound) { SoundPlayer.PlayUISound(GUISoundType.UIMessage); }
         }
 
         public static void AddMessage(string message, Color color, Vector2 pos, Vector2 velocity, float lifeTime = 3.0f, bool playSound = true, GUISoundType soundType = GUISoundType.UIMessage, int subId = -1)
         {
             Submarine sub = Submarine.Loaded.FirstOrDefault(s => s.ID == subId);
-            messages.Add(new GUIMessage(message, color, pos, velocity, lifeTime, Alignment.Center, LargeFont, sub: sub));
-            if (playSound) SoundPlayer.PlayUISound(soundType);
+
+            var newMessage = new GUIMessage(message, color, pos, velocity, lifeTime, Alignment.Center, Font, sub: sub);
+            if (playSound) { SoundPlayer.PlayUISound(soundType); }
+            bool overlapFound = true;
+            int tries = 0;
+            while (overlapFound)
+            {
+                overlapFound = false;
+                foreach (var otherMessage in messages)
+                {
+                    float xDiff = otherMessage.Pos.X - newMessage.Pos.X;
+                    if (Math.Abs(xDiff) > (newMessage.Size.X + otherMessage.Size.X) / 2) { continue; }
+                    float yDiff = otherMessage.Pos.Y - newMessage.Pos.Y;
+                    if (Math.Abs(yDiff) > (newMessage.Size.Y + otherMessage.Size.Y) / 2) { continue; }
+                    Vector2 moveDir = -(new Vector2(xDiff, yDiff) + Rand.Vector(1.0f));
+                    if (moveDir.LengthSquared() > 0.0001f)
+                    {
+                        moveDir = Vector2.Normalize(moveDir);
+                    }
+                    else
+                    {
+                        moveDir = Rand.Vector(1.0f);
+                    }
+                    moveDir.Y = -Math.Abs(moveDir.Y);
+                    newMessage.Pos -= Vector2.UnitY * 10;
+                }
+                tries++;
+                if (tries > 20) { break; }
+            }
+
+            messages.Add(newMessage);
         }
 
         public static void ClearMessages()

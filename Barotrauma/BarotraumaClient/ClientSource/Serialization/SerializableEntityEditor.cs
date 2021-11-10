@@ -10,10 +10,10 @@ namespace Barotrauma
 {
     class SerializableEntityEditor : GUIComponent
     {
-        private int elementHeight;
-        private GUILayoutGroup layoutGroup;
-        private float inputFieldWidth = 0.5f;
-        private float largeInputFieldWidth = 0.8f;
+        private readonly int elementHeight;
+        private readonly GUILayoutGroup layoutGroup;
+        private readonly float inputFieldWidth = 0.5f;
+        private readonly float largeInputFieldWidth = 0.8f;
 #if DEBUG
         public static List<string> MissingLocalizations = new List<string>();
 #endif
@@ -22,6 +22,8 @@ namespace Barotrauma
         public static bool PropertyChangesActive;
         public static DateTime NextCommandPush;
         public static Tuple<SerializableProperty, PropertyCommand> CommandBuffer;
+
+        private Action refresh;
 
         public int ContentHeight
         {
@@ -269,6 +271,21 @@ namespace Barotrauma
                     }
                 }
             }
+            else if (newValue is string[] a)
+            {
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    if (i >= a.Length) { break; }
+                    if (fields[i] is GUITextBox textBox)
+                    {
+                        textBox.Text = a[i];
+                        if (flash)
+                        {
+                            textBox.Flash(GUI.Style.Green);
+                        }
+                    }
+                }
+            }
         }
 
         public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "", int elementHeight = 24, ScalableFont titleFont = null)
@@ -310,6 +327,11 @@ namespace Barotrauma
             component.RectTransform.RepositionChildInHierarchy(Math.Min(childIndex, layoutGroup.CountChildren - 1));
             layoutGroup.Recalculate();
             Recalculate();
+        }
+
+        public void RefreshValues()
+        {
+            refresh?.Invoke();
         }
 
         public void Recalculate() => RectTransform.Resize(new Point(RectTransform.NonScaledSize.X, ContentHeight));
@@ -416,6 +438,10 @@ namespace Barotrauma
             {
                 propertyField = CreateRectangleField(entity, property, r, displayName, toolTip);
             }
+            else if(value is string[] a)
+            {
+                propertyField = CreateStringArrayField(entity, property, a, displayName, toolTip);
+            }
             return propertyField;
         }
 
@@ -459,6 +485,10 @@ namespace Barotrauma
                         return true;
                     }
                 };
+                refresh += () =>
+                {
+                    propertyTickBox.Selected = (bool)property.GetValue(entity);
+                };
                 if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { propertyTickBox }); }
                 return propertyTickBox;
             }
@@ -480,7 +510,7 @@ namespace Barotrauma
                     ToolTip = toolTip,
                     Font = GUI.SmallFont
                 };
-                field = numberInput as GUIComponent;
+                field = numberInput;
             }
             else
             {
@@ -499,7 +529,11 @@ namespace Barotrauma
                         TrySendNetworkUpdate(entity, property);
                     }
                 };
-                field = numberInput as GUIComponent;
+                refresh += () =>
+                {
+                    if (!numberInput.TextBox.Selected) { numberInput.IntValue = (int)property.GetValue(entity); }                   
+                };
+                field = numberInput;
             }
             if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { field }); }
             return frame;
@@ -538,6 +572,10 @@ namespace Barotrauma
                     TrySendNetworkUpdate(entity, property);
                 }
             };
+            refresh += () =>
+            {
+                if (!numberInput.TextBox.Selected) { numberInput.FloatValue = (float)property.GetValue(entity); }
+            };
             if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { numberInput }); }
             return frame;
         }
@@ -566,6 +604,10 @@ namespace Barotrauma
                     TrySendNetworkUpdate(entity, property);
                 }
                 return true;
+            };
+            refresh += () =>
+            {
+                if (!enumDropDown.Dropped) { enumDropDown.SelectItem(property.GetValue(entity)); }
             };
             if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { enumDropDown }); }
             return frame;
@@ -635,6 +677,10 @@ namespace Barotrauma
             
             propertyBox.OnDeselected += (textBox, keys) => OnApply(textBox);
             propertyBox.OnEnterPressed += (box, text) => OnApply(box);
+            refresh += () =>
+            {
+                if (!propertyBox.Selected) { propertyBox.Text = (string)property.GetValue(entity); }
+            };
 
             bool OnApply(GUITextBox textBox)
             {
@@ -730,6 +776,15 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
+            refresh += () =>
+            {
+                if (!fields.Any(f => ((GUINumberInput)f).TextBox.Selected)) 
+                { 
+                    Point value = (Point)property.GetValue(entity);
+                    ((GUINumberInput)fields[0]).IntValue = value.X;
+                    ((GUINumberInput)fields[1]).IntValue = value.Y;
+                }
+            };
             frame.RectTransform.MinSize = new Point(0, frame.RectTransform.Children.Max(c => c.MinSize.Y));
             if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
             return frame;
@@ -791,6 +846,15 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
+            refresh += () =>
+            {
+                if (!fields.Any(f => ((GUINumberInput)f).TextBox.Selected))
+                {
+                    Vector2 value = (Vector2)property.GetValue(entity);
+                    ((GUINumberInput)fields[0]).FloatValue = value.X;
+                    ((GUINumberInput)fields[1]).FloatValue = value.Y;
+                }
+            };
             frame.RectTransform.MinSize = new Point(0, frame.RectTransform.Children.Max(c => c.MinSize.Y));
             if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
             return frame;
@@ -857,6 +921,16 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
+            refresh += () =>
+            {
+                if (!fields.Any(f => ((GUINumberInput)f).TextBox.Selected))
+                {
+                    Vector3 value = (Vector3)property.GetValue(entity);
+                    ((GUINumberInput)fields[0]).FloatValue = value.X;
+                    ((GUINumberInput)fields[1]).FloatValue = value.Y;
+                    ((GUINumberInput)fields[2]).FloatValue = value.Z;
+                }
+            };
             frame.RectTransform.MinSize = new Point(0, frame.RectTransform.Children.Max(c => c.MinSize.Y));
             if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
             return frame;
@@ -927,6 +1001,17 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
+            refresh += () =>
+            {
+                if (!fields.Any(f => ((GUINumberInput)f).TextBox.Selected))
+                {
+                    Vector4 value = (Vector4)property.GetValue(entity);
+                    ((GUINumberInput)fields[0]).FloatValue = value.X;
+                    ((GUINumberInput)fields[1]).FloatValue = value.Y;
+                    ((GUINumberInput)fields[2]).FloatValue = value.Z;
+                    ((GUINumberInput)fields[3]).FloatValue = value.W;
+                }
+            };
             frame.RectTransform.MinSize = new Point(0, frame.RectTransform.Children.Max(c => c.MinSize.Y));
             if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
             return frame;
@@ -993,13 +1078,13 @@ namespace Barotrauma
                 {
                     Color newVal = (Color)property.GetValue(entity);
                     if (comp == 0)
-                        newVal.R = (byte)(numInput.IntValue);
+                        newVal.R = (byte)numInput.IntValue;
                     else if (comp == 1)
-                        newVal.G = (byte)(numInput.IntValue);
+                        newVal.G = (byte)numInput.IntValue;
                     else if (comp == 2)
-                        newVal.B = (byte)(numInput.IntValue);
+                        newVal.B = (byte)numInput.IntValue;
                     else
-                        newVal.A = (byte)(numInput.IntValue);
+                        newVal.A = (byte)numInput.IntValue;
 
                     if (SetPropertyValue(property, entity, newVal))
                     {
@@ -1010,6 +1095,17 @@ namespace Barotrauma
                 colorBox.Color = colorBox.HoverColor = colorBox.PressedColor = colorBox.SelectedTextColor = (Color)property.GetValue(entity);
                 fields[i] = numberInput;
             }
+            refresh += () =>
+            {
+                if (!fields.Any(f => ((GUINumberInput)f).TextBox.Selected))
+                {
+                    Color value = (Color)property.GetValue(entity);
+                    ((GUINumberInput)fields[0]).IntValue = value.R;
+                    ((GUINumberInput)fields[1]).IntValue = value.G;
+                    ((GUINumberInput)fields[2]).IntValue = value.B;
+                    ((GUINumberInput)fields[3]).IntValue = value.A;
+                }
+            };
             frame.RectTransform.MinSize = new Point(0, frame.RectTransform.Children.Max(c => c.MinSize.Y));
             if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
             return frame;
@@ -1072,6 +1168,86 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
+            refresh += () =>
+            {
+                if (!fields.Any(f => ((GUINumberInput)f).TextBox.Selected))
+                {
+                    Rectangle value = (Rectangle)property.GetValue(entity);
+                    ((GUINumberInput)fields[0]).IntValue = value.X;
+                    ((GUINumberInput)fields[1]).IntValue = value.Y;
+                    ((GUINumberInput)fields[2]).IntValue = value.Width;
+                    ((GUINumberInput)fields[3]).IntValue = value.Height;
+                }
+            };
+            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
+            return frame;
+        }
+
+        public GUIComponent CreateStringArrayField(ISerializableEntity entity, SerializableProperty property, string[] value, string displayName, string toolTip)
+        {
+            int elementCount = (value.Length + 1);
+            var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementCount * elementHeight), layoutGroup.RectTransform, isFixedSize: true), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f / elementCount), frame.RectTransform), displayName, font: GUI.SmallFont)
+            {
+                ToolTip = toolTip
+            };
+            var editableAttribute = property.GetAttribute<Editable>();
+            var fields = new GUIComponent[value.Length];
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, (float)(elementCount - 1) / elementCount), frame.RectTransform, anchor: Anchor.BottomLeft))
+            {
+                RelativeSpacing = 0.01f
+            };
+            elementCount -= 1;
+
+            for (int i = 0; i < value.Length; i++)
+            {
+                var element = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f / elementCount), inputArea.RectTransform) { MinSize = new Point(50, 0), MaxSize = new Point((int)(0.9f * inputArea.Rect.Width), 50) }, style: null);
+                var elementLayoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, element.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+                // Set the label to be (i + 1) so it's easier to understand for non-programmers
+                string componentLabel = (i + 1).ToString();
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), elementLayoutGroup.RectTransform) { MaxSize = new Point(25, elementLayoutGroup.Rect.Height) }, componentLabel, font: GUI.SmallFont, textAlignment: Alignment.Center);
+                GUITextBox textBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1), elementLayoutGroup.RectTransform), text: value[i]) { Font = GUI.SmallFont };
+                int comp = i;
+                textBox.OnEnterPressed += (textBox, text) => OnApply(textBox);
+                textBox.OnDeselected += (textBox, keys) => OnApply(textBox);
+                fields[i] = textBox;
+
+                bool OnApply(GUITextBox textBox)
+                {
+                    // Reserve the semicolon for serializing the value
+                    bool containsForbiddenCharacters = textBox.Text.Contains(';');
+                    string[] newValue = (string[])property.GetValue(entity);
+                    if (!containsForbiddenCharacters)
+                    {
+                        newValue[comp] = textBox.Text;
+                        if (SetPropertyValue(property, entity, newValue))
+                        {
+                            TrySendNetworkUpdate(entity, property);
+                            textBox.Flash(color: GUI.Style.Green, flashDuration: 1f);
+                        }
+                    }
+                    else
+                    {
+                        textBox.Text = newValue[comp];
+                        textBox.Flash(color: GUI.Style.Red, flashDuration: 1f);
+                    }
+                    return true;
+                }
+            }
+
+            refresh += () =>
+            {
+                if (fields.None(f => ((GUITextBox)f).Selected))
+                {
+                    string[] value = (string[])property.GetValue(entity);
+                    for (int i = 0; i < fields.Length; i++)
+                    {
+                        ((GUITextBox)fields[i]).Text = value[i];
+                    }
+                }
+            };
+
+            frame.RectTransform.MinSize =  new Point(0, frame.RectTransform.Children.Sum(c => c.MinSize.Y));
             if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
             return frame;
         }

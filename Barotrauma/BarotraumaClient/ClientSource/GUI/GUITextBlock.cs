@@ -259,7 +259,11 @@ namespace Barotrauma
 
         public StrikethroughSettings Strikethrough = null;
 
-        public readonly List<RichTextData> RichTextData = null;
+        public List<RichTextData> RichTextData
+        {
+            get;
+            private set;
+        }
 
         public bool HasColorHighlight => RichTextData != null;
 
@@ -333,6 +337,12 @@ namespace Barotrauma
         {
             if (wrappedText == null) { return; }
             RectTransform.Resize(new Point(RectTransform.Rect.Width, (int)Font.MeasureString(wrappedText, removeExtraSpacing).Y + padding));
+        }
+
+        public void SetRichText(string richText)
+        {
+            RichTextData = Barotrauma.RichTextData.GetRichTextData(richText, out string sanitizedText);
+            Text = sanitizedText;
         }
         
         public override void ApplyStyle(GUIComponentStyle componentStyle)
@@ -485,7 +495,7 @@ namespace Barotrauma
                     for (int j = 0; j <= line.Length; j++)
                     {
                         Vector2 lineTextSize = Font.MeasureString(line.Substring(0, j)) * textScale;
-                        Vector2 indexPos = new Vector2(lineTextSize.X + Padding.X, totalTextHeight + Padding.Y - halfHeight);
+                        Vector2 indexPos = new Vector2(lineTextSize.X, totalTextHeight - halfHeight) + TextPos - Origin * textScale;
                         //DebugConsole.NewMessage($"index: {index}, pos: {indexPos}", Color.AliceBlue);
                         positions.Add(new Tuple<Vector2, int>(indexPos, index + j));
                     }
@@ -498,7 +508,7 @@ namespace Barotrauma
                 for (int i = 0; i <= Text.Length; i++)
                 {
                     Vector2 textSize = Font.MeasureString(textDrawn.Substring(0, i)) * textScale;
-                    Vector2 indexPos = new Vector2(textSize.X + Padding.X, textSize.Y + Padding.Y - halfHeight) + TextPos - Origin * textScale;
+                    Vector2 indexPos = new Vector2(textSize.X, textSize.Y - halfHeight) + TextPos - Origin * textScale;
                     //DebugConsole.NewMessage($"index: {i}, pos: {indexPos}", Color.WhiteSmoke);
                     positions.Add(new Tuple<Vector2, int>(indexPos, i));
                 }

@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     partial class ItemInventory : Inventory
     {
-        private ItemContainer container;
+        private readonly ItemContainer container;
         public ItemContainer Container
         {
             get { return container; }
@@ -21,7 +21,7 @@ namespace Barotrauma
             this.container = container;
         }
 
-        public override int FindAllowedSlot(Item item)
+        public override int FindAllowedSlot(Item item, bool ignoreCondition = false)
         {
             if (ItemOwnsSelf(item)) { return -1; }
 
@@ -32,38 +32,38 @@ namespace Barotrauma
             //try to stack first
             for (int i = 0; i < capacity; i++)
             {
-                if (slots[i].Any() && CanBePut(item, i)) { return i; }
+                if (slots[i].Any() && CanBePutInSlot(item, i, ignoreCondition)) { return i; }
             }
 
             for (int i = 0; i < capacity; i++)
             {
-                if (CanBePut(item, i)) { return i; }
+                if (CanBePutInSlot(item, i, ignoreCondition)) { return i; }
             }
 
             return -1;
         }
 
-        public override bool CanBePut(Item item, int i)
+        public override bool CanBePutInSlot(Item item, int i, bool ignoreCondition = false)
         {
             if (ItemOwnsSelf(item)) { return false; }
             if (i < 0 || i >= slots.Length) { return false; }
-            if (!container.CanBeContained(item)) { return false; }
-            return item != null && slots[i].CanBePut(item) && slots[i].ItemCount < container.MaxStackSize;
+            if (!container.CanBeContained(item, i)) { return false; }
+            return item != null && slots[i].CanBePut(item, ignoreCondition) && slots[i].ItemCount < container.GetMaxStackSize(i);
         }
 
-        public override bool CanBePut(ItemPrefab itemPrefab, int i)
+        public override bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition, int? quality = null)
         {
             if (i < 0 || i >= slots.Length) { return false; }
-            if (!container.CanBeContained(itemPrefab)) { return false; }
-            return itemPrefab != null && slots[i].CanBePut(itemPrefab) && slots[i].ItemCount < container.MaxStackSize;
+            if (!container.CanBeContained(itemPrefab, i)) { return false; }
+            return itemPrefab != null && slots[i].CanBePut(itemPrefab, condition, quality) && slots[i].ItemCount < container.GetMaxStackSize(i);
         }
 
-        public override int HowManyCanBePut(ItemPrefab itemPrefab, int i)
+        public override int HowManyCanBePut(ItemPrefab itemPrefab, int i, float? condition)
         {
             if (itemPrefab == null) { return 0; }
             if (i < 0 || i >= slots.Length) { return 0; }
-            if (!container.CanBeContained(itemPrefab)) { return 0; }
-            return slots[i].HowManyCanBePut(itemPrefab, maxStackSize: Math.Min(itemPrefab.MaxStackSize, container.MaxStackSize));
+            if (!container.CanBeContained(itemPrefab, i)) { return 0; }
+            return slots[i].HowManyCanBePut(itemPrefab, maxStackSize: Math.Min(itemPrefab.MaxStackSize, container.GetMaxStackSize(i)), condition);
         }
 
         public override bool IsFull(bool takeStacksIntoAccount = false)
@@ -74,7 +74,7 @@ namespace Barotrauma
                 {
                     if (!slots[i].Any()) { return false; }
                     var item = slots[i].FirstOrDefault();
-                    if (slots[i].ItemCount < Math.Min(item.Prefab.MaxStackSize, container.MaxStackSize)) { return false; }
+                    if (slots[i].ItemCount < Math.Min(item.Prefab.MaxStackSize, container.GetMaxStackSize(i))) { return false; }
                 }
             }
             else
@@ -88,9 +88,9 @@ namespace Barotrauma
             return true;
         }
 
-        public override bool TryPutItem(Item item, Character user, IEnumerable<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, Character user, IEnumerable<InvSlotType> allowedSlots = null, bool createNetworkEvent = true, bool ignoreCondition = false)
         {
-            bool wasPut = base.TryPutItem(item, user, allowedSlots, createNetworkEvent);
+            bool wasPut = base.TryPutItem(item, user, allowedSlots, createNetworkEvent, ignoreCondition);
 
             if (wasPut)
             {
@@ -108,9 +108,9 @@ namespace Barotrauma
             return wasPut;
         }
 
-        public override bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true, bool ignoreCondition = false)
         {
-            bool wasPut = base.TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent);
+            bool wasPut = base.TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent, ignoreCondition);
             if (wasPut && item.ParentInventory == this)
             {
                 foreach (Character c in Character.CharacterList)

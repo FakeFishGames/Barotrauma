@@ -108,6 +108,7 @@ namespace Barotrauma
 
                     void ReportWeldingFuelTankCount()
                     {
+                        if (character.Submarine != Submarine.MainSub) { return; }
                         int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag("weldingfuel") && i.Condition > 1);
                         if (remainingOxygenTanks == 0)
                         {
@@ -131,7 +132,7 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            Vector2 toLeak = Leak.WorldPosition - character.WorldPosition;
+            Vector2 toLeak = Leak.WorldPosition - character.AnimController.AimSourceWorldPos;
             // TODO: use the collider size/reach?
             if (!character.AnimController.InWater && Math.Abs(toLeak.X) < 100 && toLeak.Y < 0.0f && toLeak.Y > -150)
             {
@@ -157,6 +158,7 @@ namespace Barotrauma
             {
                 TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(Leak, character, objectiveManager)
                 {
+                    UseDistanceRelativeToAimSourcePos = true,
                     CloseEnough = reach,
                     DialogueIdentifier = Leak.FlowTargetHull != null ? "dialogcannotreachleak" : null,
                     TargetName = Leak.FlowTargetHull?.DisplayName,
@@ -165,7 +167,7 @@ namespace Barotrauma
                 onAbandon: () =>
                 {
                     if (CheckObjectiveSpecific()) { IsCompleted = true; }
-                    else if ((Leak.WorldPosition - character.WorldPosition).LengthSquared() > MathUtils.Pow(reach * 2, 2))
+                    else if ((Leak.WorldPosition - character.AnimController.AimSourceWorldPos).LengthSquared() > MathUtils.Pow(reach * 2, 2))
                     {
                         // Too far
                         Abandon = true;

@@ -44,11 +44,11 @@ namespace Barotrauma.Networking
 
     class ServerEntityEventManager : NetEntityEventManager
     {
-        private List<ServerEntityEvent> events;
+        private readonly List<ServerEntityEvent> events;
 
         //list of unique events (i.e. !IsDuplicate) created during the round
         //used for syncing clients who join mid-round
-        private List<ServerEntityEvent> uniqueEvents;
+        private readonly List<ServerEntityEvent> uniqueEvents;
 
         private UInt16 lastSentToAll;
         private UInt16 lastSentToAnyone;
@@ -90,11 +90,11 @@ namespace Barotrauma.Networking
             }
         }
 
-        private List<BufferedEvent> bufferedEvents;
+        private readonly List<BufferedEvent> bufferedEvents;
 
         private UInt16 ID;
 
-        private GameServer server;
+        private readonly GameServer server;
 
         private double lastEventCountHighWarning;
         

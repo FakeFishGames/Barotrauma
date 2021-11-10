@@ -109,6 +109,7 @@ namespace Barotrauma
         private float wetTimer;
         private float dripParticleTimer;
         private float deadTimer;
+        private Color? randomColor;
 
         /// <summary>
         /// Note that different limbs can share the same deformations.
@@ -120,6 +121,15 @@ namespace Barotrauma
         public List<SpriteDeformation> ActiveDeformations { get; set; } = new List<SpriteDeformation>();
 
         public Sprite Sprite { get; protected set; }
+        public Sprite TintMask { get; protected set; }
+        
+        public Sprite HuskMask { get; protected set; }
+        public float TintHighlightThreshold { get; protected set; }
+        public float TintHighlightMultiplier { get; protected set; }
+        
+        private SpriteBatch.EffectWithParams tintEffectParams;
+        private SpriteBatch.EffectWithParams huskSpriteParams;
+        
 
         protected DeformableSprite _deformSprite;
 
@@ -156,6 +166,12 @@ namespace Barotrauma
                 }
             }
         }
+
+        public Sprite GetActiveSprite(bool excludeConditionalSprites = true)
+            => excludeConditionalSprites ? (_deformSprite != null ? _deformSprite.Sprite : Sprite) 
+            : ActiveSprite;
+
+        public float DefaultSpriteDepth { get; private set; }
 
         public WearableSprite HuskSprite { get; private set; }
         public WearableSprite HerpesSprite { get; private set; }
@@ -273,6 +289,7 @@ namespace Barotrauma
                 DecorativeSpriteGroups[groupID].Add(decorativeSprite);
                 spriteAnimState.Add(decorativeSprite, new SpriteState());
             }
+            TintMask = null;
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -299,14 +316,41 @@ namespace Barotrauma
                         Deformations.AddRange(deformations);
                         NonConditionalDeformations.AddRange(deformations);
                         break;
+                    case "randomcolor":
+                        randomColor = subElement.GetAttributeColorArray("colors", null)?.GetRandom();
+                        if (randomColor.HasValue)
+                        {
+                            Params.GetSprite().Color = randomColor.Value;
+                        }
+                        break;
                     case "lightsource":
                         LightSource = new LightSource(subElement, GetConditionalTarget())
                         {
                             ParentBody = body,
                             SpriteScale = Vector2.One * Scale * TextureScale
                         };
+                        if (randomColor.HasValue)
+                        {
+                            LightSource.Color = new Color(randomColor.Value.R, randomColor.Value.G, randomColor.Value.B, LightSource.Color.A);
+                        }
                         InitialLightSourceColor = LightSource.Color;
                         InitialLightSpriteAlpha = LightSource.OverrideLightSpriteAlpha;
+                        break;
+                    case "tintmask":
+                        string tintMaskPath = subElement.GetAttributeString("texture", "");
+                        if (!string.IsNullOrWhiteSpace(tintMaskPath))
+                        {
+                            TintMask = new Sprite(subElement, file: GetSpritePath(tintMaskPath));
+                            TintHighlightThreshold = subElement.GetAttributeFloat("highlightthreshold", 0.6f);
+                            TintHighlightMultiplier = subElement.GetAttributeFloat("highlightmultiplier", 0.8f);
+                        }
+                        break;
+                    case "huskmask":
+                        string huskMaskPath = subElement.GetAttributeString("texture", "");
+                        if (!string.IsNullOrWhiteSpace(huskMaskPath))
+                        {
+                            HuskMask = new Sprite(subElement, file: GetSpritePath(huskMaskPath));
+                        }
                         break;
                 }
 
@@ -357,6 +401,7 @@ namespace Barotrauma
                     return deformations;
                 }
             }
+            DefaultSpriteDepth = GetActiveSprite()?.Depth ?? 0.0f;
             LightSource?.CheckConditionals();
         }
 
@@ -449,20 +494,20 @@ namespace Barotrauma
         /// <summary>
         /// Get the full path of a limb sprite, taking into account tags, gender and head id
         /// </summary>
-        private string GetSpritePath(string texturePath)
+        public static string GetSpritePath(string texturePath, CharacterInfo characterInfo)
         {
             string spritePath = texturePath;
             string spritePathWithTags = spritePath;
-            if (character.Info != null && character.IsHumanoid)
+            if (characterInfo != null)
             {
-                spritePath = spritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "female" : "male");
-                spritePath = spritePath.Replace("[RACE]", character.Info.Race.ToString().ToLowerInvariant());
-                spritePath = spritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
+                spritePath = spritePath.Replace("[GENDER]", (characterInfo.Gender == Gender.Female) ? "female" : "male");
+                spritePath = spritePath.Replace("[RACE]", characterInfo.Race.ToString().ToLowerInvariant());
+                spritePath = spritePath.Replace("[HEADID]", characterInfo.HeadSpriteId.ToString());
 
-                if (character.Info.HeadSprite != null && character.Info.SpriteTags.Any())
+                if (characterInfo.HeadSprite != null && characterInfo.SpriteTags.Any())
                 {
                     string tags = "";
-                    character.Info.SpriteTags.ForEach(tag => tags += "[" + tag + "]");
+                    characterInfo.SpriteTags.ForEach(tag => tags += "[" + tag + "]");
 
                     spritePathWithTags = Path.Combine(
                         Path.GetDirectoryName(spritePath),
@@ -470,6 +515,13 @@ namespace Barotrauma
                 }
             }
             return File.Exists(spritePathWithTags) ? spritePathWithTags : spritePath;
+        }
+
+
+        private string GetSpritePath(string texturePath)
+        {
+            if (!character.IsHumanoid) { return texturePath; }
+            return GetSpritePath(texturePath, character?.Info);
         }
 
         partial void LoadParamsProjSpecific()
@@ -538,8 +590,8 @@ namespace Barotrauma
             {
                 foreach (ParticleEmitter emitter in character.DamageEmitters)
                 {
-                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
-                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
+                    if (InWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
+                    if (!InWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
                     ParticlePrefab overrideParticle = null;
                     foreach (DamageModifier damageModifier in result.AppliedDamageModifiers)
                     {
@@ -560,8 +612,8 @@ namespace Barotrauma
 
                 foreach (ParticleEmitter emitter in character.BloodEmitters)
                 {
-                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
-                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
+                    if (InWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
+                    if (!InWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
                     emitter.Emit(1.0f, WorldPosition, character.CurrentHull, sizeMultiplier: bloodParticleSize, amountMultiplier: bloodParticleAmount);
                 }
             }   
@@ -585,7 +637,7 @@ namespace Barotrauma
                 }
             }
 
-            if (inWater)
+            if (InWater)
             {
                 wetTimer = 1.0f;
             }
@@ -632,19 +684,38 @@ namespace Barotrauma
             RefreshDeformations();
         }
 
-        public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null)
+        public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null, bool disableDeformations = false)
         {
             float brightness = 1.0f - (burnOverLayStrength / 100.0f) * 0.5f;
             var spriteParams = Params.GetSprite();
             if (spriteParams == null) { return; }
 
-            Color color = new Color(spriteParams.Color.R / 255f * brightness, spriteParams.Color.G / 255f * brightness, spriteParams.Color.B / 255f * brightness, spriteParams.Color.A / 255f);
+            Color clr = spriteParams.Color;
+            if (!spriteParams.IgnoreTint)
+            {
+                clr = clr.Multiply(ragdoll.RagdollParams.Color);
+                if (character.Info != null)
+                {
+                    clr = clr.Multiply(character.Info.SkinColor);
+                }
+                if (character.CharacterHealth.FaceTint.A > 0 && type == LimbType.Head)
+                {
+                    clr = Color.Lerp(clr, character.CharacterHealth.FaceTint.Opaque(), character.CharacterHealth.FaceTint.A / 255.0f);
+                }
+                if (character.CharacterHealth.BodyTint.A > 0)
+                {
+                    clr = Color.Lerp(clr, character.CharacterHealth.BodyTint.Opaque(), character.CharacterHealth.BodyTint.A / 255.0f);
+                }
+            }
+            Color color = new Color((byte)(clr.R * brightness), (byte)(clr.G * brightness), (byte)(clr.B * brightness), clr.A);
+            Color blankColor = new Color(brightness, brightness, brightness, 1);
             if (deadTimer > 0)
             {
                 color = Color.Lerp(color, spriteParams.DeadColor, MathUtils.InverseLerp(0, spriteParams.DeadColorTime, deadTimer));
             }
 
             color = overrideColor ?? color;
+            blankColor = overrideColor ?? blankColor;
 
             if (isSevered)
             {
@@ -667,6 +738,8 @@ namespace Barotrauma
                 OtherWearables.Any(w => w.HideLimb) || 
                 wearingItems.Any(w => w != null && w.HideLimb);
 
+            bool drawHuskSprite = HuskSprite != null && !wearableTypesToHide.Contains(WearableType.Husk);
+
             var activeSprite = ActiveSprite;
             if (type == LimbType.Head)
             {
@@ -674,11 +747,12 @@ namespace Barotrauma
             }
             
             body.UpdateDrawPosition();
+            float depthStep = 0.000001f;
 
             if (!hideLimb)
             {
                 var deformSprite = DeformSprite;
-                if (deformSprite != null)
+                if (deformSprite != null && !disableDeformations)
                 {
                     if (ActiveDeformations.Any())
                     {
@@ -698,7 +772,33 @@ namespace Barotrauma
                 }
                 else
                 {
+                    bool useTintMask = TintMask != null && spriteBatch.GetCurrentEffect() is null;
+                    if (useTintMask)
+                    {
+                        tintEffectParams.Effect ??= GameMain.GameScreen.ThresholdTintEffect;
+                        tintEffectParams.Params ??= new Dictionary<string, object>();
+                        var parameters = tintEffectParams.Params;
+                        parameters["xBaseTexture"] = Sprite.Texture;
+                        parameters["xTintMaskTexture"] = TintMask.Texture;
+                        if (drawHuskSprite && HuskMask != null)
+                        {
+                            parameters["xCutoffTexture"] = HuskMask.Texture;
+                            parameters["baseToCutoffSizeRatio"] = (float)Sprite.Texture.Width / (float)HuskMask.Texture.Width;
+                        }
+                        else
+                        {
+                            parameters["xCutoffTexture"] = GUI.WhiteTexture;
+                            parameters["baseToCutoffSizeRatio"] = 1.0f;
+                        }
+                        parameters["highlightThreshold"] = TintHighlightThreshold;
+                        parameters["highlightMultiplier"] = TintHighlightMultiplier;
+                        spriteBatch.SwapEffect(tintEffectParams);
+                    }
                     body.Draw(spriteBatch, activeSprite, color, null, Scale * TextureScale, Params.MirrorHorizontally, Params.MirrorVertically);
+                    if (useTintMask)
+                    {
+                        spriteBatch.SwapEffect(null);
+                    }
                 }
                 // Handle non-exlusive, i.e. additional conditional sprites
                 foreach (var conditionalSprite in ConditionalSprites)
@@ -722,7 +822,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        body.Draw(spriteBatch, conditionalSprite.Sprite, color, null, Scale * TextureScale, Params.MirrorHorizontally, Params.MirrorVertically);
+                        body.Draw(spriteBatch, conditionalSprite.Sprite, color, depth: activeSprite.Depth - (depthStep * 50), Scale * TextureScale, Params.MirrorHorizontally, Params.MirrorVertically);
                     }
                 }
             }
@@ -737,7 +837,7 @@ namespace Barotrauma
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                     color * Math.Min(damageOverlayStrength, 1.0f), activeSprite.Origin,
                     -body.DrawRotation,
-                    Scale, spriteEffect, activeSprite.Depth - 0.0000015f);
+                    Scale, spriteEffect, activeSprite.Depth - (depthStep * 90));
             }
             foreach (var decorativeSprite in DecorativeSprites)
             {
@@ -755,9 +855,8 @@ namespace Barotrauma
                 Vector2 transformedOffset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
                 decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), c,
                     -body.Rotation + rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, spriteEffect,
-                    depth: decorativeSprite.Sprite.Depth);
+                    depth: activeSprite.Depth - (depthStep * 100));
             }
-            float depthStep = 0.000001f;
             float step = depthStep;
             WearableSprite onlyDrawable = wearingItems.Find(w => w.HideOtherWearables);
             if (Params.MirrorHorizontally)
@@ -770,23 +869,44 @@ namespace Barotrauma
             }
             if (onlyDrawable == null)
             {
-                if (HerpesSprite != null && !wearableTypesToHide.Contains(WearableType.Herpes))
+                if (HerpesSprite != null && !wearableTypesToHide.Contains(WearableType.Herpes) && herpesStrength > 0)
                 {
-                    DrawWearable(HerpesSprite, depthStep, spriteBatch, color * Math.Min(herpesStrength / 10.0f, 1.0f), spriteEffect);
+                    float alpha = Math.Min(herpesStrength * 2 / 100.0f, 1.0f);
+                    DrawWearable(HerpesSprite, depthStep, spriteBatch, blankColor, alpha: alpha, spriteEffect);
+                    depthStep += step;
+                }
+                if (drawHuskSprite)
+                {
+                    bool useTintEffect = HuskMask != null && spriteBatch.GetCurrentEffect() is null;
+                    if (useTintEffect)
+                    {
+                        huskSpriteParams.Effect ??= GameMain.GameScreen.ThresholdTintEffect;
+                        huskSpriteParams.Params ??= new Dictionary<string, object>();
+                        var parameters = huskSpriteParams.Params;
+                        parameters["xCutoffTexture"] = GUI.WhiteTexture;
+                        parameters["baseToCutoffSizeRatio"] = 1.0f;
+                        spriteBatch.SwapEffect(huskSpriteParams);
+                    }
+                    DrawWearable(HuskSprite, depthStep, spriteBatch, color, alpha: color.A / 255f, spriteEffect);
+                    if (useTintEffect)
+                    {
+                        spriteBatch.SwapEffect(null);
+                    }
                     depthStep += step;
                 }
                 foreach (WearableSprite wearable in OtherWearables)
                 {
+                    if (wearable.Type == WearableType.Husk) { continue; }
                     if (wearableTypesToHide.Contains(wearable.Type)) { continue; }
-                    DrawWearable(wearable, depthStep, spriteBatch, color, spriteEffect);
+                    DrawWearable(wearable, depthStep, spriteBatch, blankColor, alpha: color.A / 255f, spriteEffect);
                     //if there are multiple sprites on this limb, make the successive ones be drawn in front
                     depthStep += step;
                 }
             }
             foreach (WearableSprite wearable in WearingItems)
             {
-                if (onlyDrawable != null && onlyDrawable != wearable) continue;
-                DrawWearable(wearable, depthStep, spriteBatch, color, spriteEffect);
+                if (onlyDrawable != null && onlyDrawable != wearable && wearable.CanBeHiddenByOtherWearables) { continue; }
+                DrawWearable(wearable, depthStep, spriteBatch, blankColor, alpha: color.A / 255f, spriteEffect);
                 //if there are multiple sprites on this limb, make the successive ones be drawn in front
                 depthStep += step;
             }
@@ -936,7 +1056,7 @@ namespace Barotrauma
             }
         }
 
-        private void DrawWearable(WearableSprite wearable, float depthStep, SpriteBatch spriteBatch, Color color, SpriteEffects spriteEffect)
+        private void DrawWearable(WearableSprite wearable, float depthStep, SpriteBatch spriteBatch, Color color, float alpha, SpriteEffects spriteEffect)
         {
             var sprite = ActiveSprite;
             if (wearable.InheritSourceRect)
@@ -955,7 +1075,7 @@ namespace Barotrauma
                 }
             }
 
-            Vector2 origin = wearable.Sprite.Origin;
+            Vector2 origin;
             if (wearable.InheritOrigin)
             {
                 origin = sprite.Origin;
@@ -986,24 +1106,49 @@ namespace Barotrauma
             Color wearableColor = Color.White;
             if (wearableItemComponent != null)
             {
-                // Draw outer cloths on top of inner cloths.
+                // Draw outer clothes on top of inner clothes.
                 if (wearableItemComponent.AllowedSlots.Contains(InvSlotType.OuterClothes))
                 {
                     depth -= depthStep;
                 }
                 if (wearableItemComponent.AllowedSlots.Contains(InvSlotType.Bag))
                 {
-                    depth -= depthStep * 2;
+                    depth -= depthStep * 4;
                 }
                 wearableColor = wearableItemComponent.Item.GetSpriteColor();
             }
-            float textureScale = wearable.InheritTextureScale ? TextureScale : wearable.Scale;
-
-            wearable.Sprite.Draw(spriteBatch,
-                new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                new Color((color.R * wearableColor.R) / (255.0f * 255.0f), (color.G * wearableColor.G) / (255.0f * 255.0f), (color.B * wearableColor.B) / (255.0f * 255.0f)) * ((color.A * wearableColor.A) / (255.0f * 255.0f)),
-                origin, -body.DrawRotation,
-                Scale * textureScale, spriteEffect, depth);
+            else if (character.Info != null)
+            {
+                if (wearable.Type == WearableType.Hair)
+                {
+                    wearableColor = character.Info.HairColor;
+                }
+                else if (wearable.Type == WearableType.Beard || wearable.Type == WearableType.Moustache)
+                {
+                    wearableColor = character.Info.FacialHairColor;
+                }
+            }
+            float scale = wearable.Scale;
+            if (wearable.InheritScale)
+            {
+                if (!wearable.IgnoreTextureScale)
+                {
+                    scale *= TextureScale;
+                }
+                if (!wearable.IgnoreLimbScale)
+                {
+                    scale *= Params.Scale;
+                }
+                if (!wearable.IgnoreRagdollScale)
+                {
+                    scale *= ragdoll.RagdollParams.LimbScale;
+                }
+            }
+            float rotation = -body.DrawRotation - wearable.Rotation * Dir;
+            float finalAlpha = alpha * wearableColor.A;
+            Color finalColor = color.Multiply(wearableColor);
+            finalColor = new Color(finalColor.R, finalColor.G, finalColor.B, (byte)finalAlpha);
+            wearable.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X, -body.DrawPosition.Y), finalColor, origin, rotation, scale, spriteEffect, depth);
         }
 
         private WearableSprite GetWearableSprite(WearableType type, bool random = false)
@@ -1054,6 +1199,9 @@ namespace Barotrauma
 
             HerpesSprite?.Sprite.Remove();
             HerpesSprite = null;
+
+            TintMask?.Remove();
+            TintMask = null;
         }
     }
 }

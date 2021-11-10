@@ -234,8 +234,6 @@ namespace Barotrauma
                             new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
                             null, 1.0f, "foundwoundedtarget" + targetCharacter.Name, 60.0f);
                     }
-
-                    character.SelectCharacter(targetCharacter);
                 }
                 GiveTreatment(deltaTime);
             }
@@ -268,6 +266,8 @@ namespace Barotrauma
             }
             treatmentTimer = TreatmentDelay;
 
+            float cprSuitability = targetCharacter.Oxygen < 0.0f ? -targetCharacter.Oxygen * 100.0f : 0.0f;
+
             //find which treatments are the most suitable to treat the character's current condition
             targetCharacter.CharacterHealth.GetSuitableTreatments(currentTreatmentSuitabilities, normalize: false);
 
@@ -282,6 +282,7 @@ namespace Barotrauma
                     {
                         Item matchingItem = character.Inventory.FindItemByIdentifier(treatmentSuitability.Key, true);
                         if (matchingItem == null) { continue; }
+                        if (targetCharacter != character) { character.SelectCharacter(targetCharacter); }
                         ApplyTreatment(affliction, matchingItem);
                         //wait a bit longer after applying a treatment to wait for potential side-effects to manifest
                         treatmentTimer = TreatmentDelay * 4;
@@ -292,7 +293,6 @@ namespace Barotrauma
             // Find treatments outside of own inventory only if inside the own sub.
             if (character.Submarine != null && character.Submarine.TeamID == character.TeamID)
             {
-                float cprSuitability = targetCharacter.Oxygen < 0.0f ? -targetCharacter.Oxygen * 100.0f : 0.0f;
                 //didn't have any suitable treatments available, try to find some medical items
                 if (currentTreatmentSuitabilities.Any(s => s.Value > cprSuitability))
                 {
@@ -312,7 +312,7 @@ namespace Barotrauma
                             }
                         }
                     }
-                    if (itemNameList.Count > 0)
+                    if (itemNameList.Any())
                     {
                         string itemListStr = "";
                         if (itemNameList.Count == 1)
@@ -329,7 +329,6 @@ namespace Barotrauma
                                 new string[2] { targetCharacter.Name, itemListStr }, new bool[2] { false, true }),
                                 null, 2.0f, "listrequiredtreatments" + targetCharacter.Name, 60.0f);
                         }
-                        character.DeselectCharacter();
                         RemoveSubObjective(ref getItemObjective);
                         TryAddSubObjective(ref getItemObjective,
                             constructor: () => new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC),
@@ -343,11 +342,31 @@ namespace Barotrauma
                                 }
                             });
                     }
+                    else if (cprSuitability <= 0)
+                    {
+                        character.Speak(TextManager.GetWithVariable("dialogcannottreatpatient", "[name]", targetCharacter.DisplayName, formatCapitals: false), identifier: "cannottreatpatient", minDurationBetweenSimilar: 20.0f);
+                        Abandon = true;
+                    }
                 }
+            }
+            else if (!targetCharacter.IsUnconscious)
+            {
+                //no suitable treatments found, not inside our own sub (= can't search for more treatments), the target isn't unconscious (= can't give CPR)
+                character.Speak(TextManager.GetWithVariable("dialogcannottreatpatient", "[name]", targetCharacter.DisplayName, formatCapitals: false), identifier: "cannottreatpatient", minDurationBetweenSimilar: 20.0f);
+                Abandon = true;
+                return;
             }
             if (character != targetCharacter)
             {
-                character.AnimController.Anim = AnimController.Animation.CPR;
+                if (cprSuitability > 0.0f)
+                {
+                    character.SelectCharacter(targetCharacter);
+                    character.AnimController.Anim = AnimController.Animation.CPR;
+                }
+                else
+                {
+                    character.DeselectCharacter();
+                }
             }
         }
 
@@ -389,7 +408,7 @@ namespace Barotrauma
             }
             bool isCompleted = 
                 AIObjectiveRescueAll.GetVitalityFactor(targetCharacter) >= AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager, character, targetCharacter) ||
-                targetCharacter.CharacterHealth.GetAllAfflictions().All(a => a.Strength < a.Prefab.TreatmentThreshold);
+                targetCharacter.CharacterHealth.GetAllAfflictions().All(a => a.Prefab.IsBuff || a.Strength <= a.Prefab.TreatmentThreshold);
 
             if (isCompleted && targetCharacter != character && character.IsOnPlayerTeam)
             {                

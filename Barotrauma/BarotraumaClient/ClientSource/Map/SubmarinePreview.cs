@@ -53,8 +53,8 @@ namespace Barotrauma
             }
         }
 
-        private Dictionary<string,HullCollection> hullCollections;
-        private List<Door> doors;
+        private readonly Dictionary<string, HullCollection> hullCollections;
+        private readonly List<Door> doors;
 
 
         private static SubmarinePreview instance = null;
@@ -104,7 +104,7 @@ namespace Barotrauma
                 (spriteBatch, component) => {
                     camera.UpdateTransform(interpolate: true, updateListener: false);
                     Rectangle drawRect = new Rectangle(component.Rect.X + 1, component.Rect.Y + 1, component.Rect.Width - 2, component.Rect.Height - 2);
-                    RenderSubmarine(spriteBatch, drawRect);
+                    RenderSubmarine(spriteBatch, drawRect, component);
                 },
                 (deltaTime, component) => {
                     bool isMouseOnComponent = GUI.MouseOn == component;
@@ -120,6 +120,10 @@ namespace Barotrauma
                     if (titleText != null && specsContainer != null)
                     {
                         specsContainer.Visible = GUI.IsMouseOn(titleText);
+                    }
+                    if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
+                    {
+                        Dispose();
                     }
                 });
 
@@ -225,6 +229,7 @@ namespace Barotrauma
 
             foreach (var subElement in submarineInfo.SubmarineElement.Elements())
             {
+                if (subElement.GetAttributeBool("hiddeningame", false)) { continue; }
                 switch (subElement.Name.LocalName.ToLowerInvariant())
                 {
                     case "item":
@@ -240,8 +245,7 @@ namespace Barotrauma
                         string identifier = subElement.GetAttributeString("roomname", "").ToLowerInvariant();
                         if (!string.IsNullOrEmpty(identifier))
                         {
-                            HullCollection hullCollection = null;
-                            if (!hullCollections.TryGetValue(identifier, out hullCollection))
+                            if (!hullCollections.TryGetValue(identifier, out HullCollection hullCollection))
                             {
                                 hullCollection = new HullCollection(identifier);
                                 hullCollections.Add(identifier, hullCollection);
@@ -476,12 +480,14 @@ namespace Barotrauma
                             }
                         }
 
-                        var transformedBarrelPos = MathUtils.RotatePointAroundTarget(
-                            subElement.GetAttributeVector2("barrelpos", Vector2.Zero) * scale,
-                            new Vector2(rect.Width / 2, rect.Height / 2),
+                        Vector2 barrelPos = subElement.GetAttributeVector2("barrelpos", Vector2.Zero);
+                        Vector2 relativeBarrelPos = barrelPos * prefab.Scale - new Vector2(rect.Width / 2, rect.Height / 2);
+                        var transformedBarrelPos = MathUtils.RotatePoint(
+                            relativeBarrelPos,                            
                             MathHelper.ToRadians(rotation));
 
-                        Vector2 drawPos = new Vector2(rect.X + transformedBarrelPos.X, rect.Y - transformedBarrelPos.Y);
+                        float relativeScale = scale / prefab.Scale;
+                        Vector2 drawPos = new Vector2(rect.X + rect.Width * relativeScale / 2 + transformedBarrelPos.X * relativeScale, rect.Y - rect.Height * relativeScale / 2 - transformedBarrelPos.Y * relativeScale);
                         drawPos.Y = -drawPos.Y;
 
                         railSprite?.Draw(spriteRecorder,
@@ -491,7 +497,7 @@ namespace Barotrauma
                             SpriteEffects.None, depth + (railSprite.Depth - prefab.sprite.Depth));
 
                         barrelSprite?.Draw(spriteRecorder,
-                            drawPos - new Vector2((float)Math.Cos(MathHelper.ToRadians(rotation)), (float)Math.Sin(MathHelper.ToRadians(rotation))) * scale,
+                            drawPos,
                             color,
                             rotation + MathHelper.PiOver2, scale,
                             SpriteEffects.None, depth + (barrelSprite.Depth - prefab.sprite.Depth));
@@ -564,7 +570,7 @@ namespace Barotrauma
             }
         }
 
-        private void RenderSubmarine(SpriteBatch spriteBatch, Rectangle scissorRectangle)
+        private void RenderSubmarine(SpriteBatch spriteBatch, Rectangle scissorRectangle, GUIComponent component)
         {
             if (spriteRecorder == null) { return; }
 
@@ -594,6 +600,8 @@ namespace Barotrauma
 
             var prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
             GameMain.Instance.GraphicsDevice.ScissorRectangle = scissorRectangle;
+            var prevRasterizerState = GameMain.Instance.GraphicsDevice.RasterizerState;
+            GameMain.Instance.GraphicsDevice.RasterizerState = GameMain.ScissorTestEnable;
 
             spriteRecorder.Render(camera);
 
@@ -605,11 +613,13 @@ namespace Barotrauma
             foreach (var hullCollection in hullCollections.Values)
             {
                 bool mouseOver = false;
-
-                foreach (var rect in hullCollection.Rects)
+                if (GUI.MouseOn == null || GUI.MouseOn == component)
                 {
-                    mouseOver = rect.Contains(mousePos);
-                    if (mouseOver) { break; }
+                    foreach (var rect in hullCollection.Rects)
+                    {
+                        mouseOver = rect.Contains(mousePos);
+                        if (mouseOver) { break; }
+                    }
                 }
 
                 foreach (var rect in hullCollection.Rects)
@@ -635,6 +645,7 @@ namespace Barotrauma
             spriteBatch.End();
 
             GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            GameMain.Instance.GraphicsDevice.RasterizerState = prevRasterizerState;
             spriteBatch.Begin(SpriteSortMode.Deferred);
         }
 

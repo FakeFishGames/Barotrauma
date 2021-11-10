@@ -177,6 +177,10 @@ namespace Barotrauma.Items.Components
         partial void LaunchProjSpecific()
         {
             recoilTimer = RetractionTime;
+            if (user != null)
+            {
+                recoilTimer /= 1 + user.GetStatValue(StatTypes.TurretAttackSpeed);
+            }
             PlaySound(ActionType.OnUse);
             Vector2 particlePos = GetRelativeFiringPosition(UseFiringOffsetForMuzzleFlash);
             foreach (ParticleEmitter emitter in particleEmitters)
@@ -300,6 +304,21 @@ namespace Barotrauma.Items.Components
                     flashLowPower = false;
                     flashNoAmmo = false;
                     flashLoaderBroken = false;
+                }
+            }
+        }
+
+        public override void UpdateEditing(float deltaTime)
+        {
+            if (Screen.Selected == GameMain.SubEditorScreen && item.IsSelected)
+            {
+                if (widgets.ContainsKey("maxrotation"))
+                {
+                    widgets["maxrotation"].Update(deltaTime);
+                }
+                if (widgets.ContainsKey("minrotation"))
+                {
+                    widgets["minrotation"].Update(deltaTime);
                 }
             }
         }
@@ -469,7 +488,6 @@ namespace Barotrauma.Items.Components
                 {
                     widget.tooltip = "Min: " + (int)MathHelper.ToDegrees(minRotation);
                     widget.DrawPos = GetDrawPos() + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * coneRadius / Screen.Selected.Cam.Zoom * GUI.Scale;
-                    widget.Update(deltaTime);
                 };
             });
 
@@ -520,18 +538,18 @@ namespace Barotrauma.Items.Components
             minRotationWidget.Draw(spriteBatch, (float)Timing.Step);
             maxRotationWidget.Draw(spriteBatch, (float)Timing.Step);
 
-            Vector2 GetDrawPos()
-            {
-                Vector2 drawPos = new Vector2(item.Rect.X + transformedBarrelPos.X, item.Rect.Y - transformedBarrelPos.Y);
-                if (item.Submarine != null) { drawPos += item.Submarine.DrawPosition; }
-                drawPos.Y = -drawPos.Y;
-                return drawPos;
-            }
-
             void UpdateBarrel()
             {
                 rotation = (minRotation + maxRotation) / 2;
             }
+        }
+
+        public Vector2 GetDrawPos()
+        {
+            Vector2 drawPos = new Vector2(item.Rect.X + transformedBarrelPos.X, item.Rect.Y - transformedBarrelPos.Y);
+            if (item.Submarine != null) { drawPos += item.Submarine.DrawPosition; }
+            drawPos.Y = -drawPos.Y;
+            return drawPos;
         }
 
         private Widget GetWidget(string id, SpriteBatch spriteBatch, int size = 5, float thickness = 1f, Action<Widget> initMethod = null)

@@ -78,6 +78,7 @@ namespace Barotrauma
                 List<Item> suitableItems = new List<Item>();
                 foreach (Item item in Item.ItemList)
                 {
+                    if (item.HiddenInGame || item.NonInteractable || item.NonPlayerTeamInteractable) { continue; }
                     if (item.Submarine == null || traitors.All(traitor => item.Submarine.TeamID != traitor.Character.TeamID))
                     {
                         continue;
@@ -184,7 +185,10 @@ namespace Barotrauma
                     {
                         existingItems.Add(item);
                     }
-                    Entity.Spawner.AddToSpawnQueue(targetPrefab, targetContainer.OwnInventory);
+                    Entity.Spawner.AddToSpawnQueue(targetPrefab, targetContainer.OwnInventory, onSpawned: item =>
+                    {
+                        item.AddTag("traitormissionitem");
+                    });
                     target = null;
                 }
                 else if (allowExisting)

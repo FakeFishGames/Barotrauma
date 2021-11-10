@@ -55,14 +55,47 @@ namespace Barotrauma
             var texture = GetTexture(spriteBatch);
 
             for (var i = 0; i < points.Count - 1; i++)
-                DrawPolygonEdge(spriteBatch, texture, points[i] + offset, points[i + 1] + offset, color, thickness);
+                DrawPolygonEdge(spriteBatch, points[i] + offset, points[i + 1] + offset, color, thickness);
 
-            DrawPolygonEdge(spriteBatch, texture, points[points.Count - 1] + offset, points[0] + offset, color,
+            DrawPolygonEdge(spriteBatch, points[points.Count - 1] + offset, points[0] + offset, color,
                 thickness);
         }
+        
+        /// <summary>
+        ///     Draws a closed polygon from an array of points
+        /// </summary>
+        public static void DrawPolygonInner(this SpriteBatch spriteBatch, Vector2 offset, IReadOnlyList<Vector2> points, Color color, float thickness = 1f)
+        {
+            if (points.Count == 0) { return; }
 
-        private static void DrawPolygonEdge(SpriteBatch spriteBatch, Texture2D texture, Vector2 point1, Vector2 point2,
-            Color color, float thickness)
+            if (points.Count == 1)
+            {
+                DrawPoint(spriteBatch, points[0], color, (int)thickness);
+                return;
+            }
+
+            for (var i = 0; i < points.Count - 1; i++)
+            {
+                Vector2 point1 = points[i] + offset, 
+                        point2 = points[i + 1] + offset;
+
+                DrawPolygonEdgeInner(spriteBatch, point1, point2, color, thickness);
+            }
+
+            DrawPolygonEdgeInner(spriteBatch, points[^1] + offset, points[0] + offset, color, thickness);
+        }
+
+        private static void DrawPolygonEdgeInner(SpriteBatch spriteBatch, Vector2 point1, Vector2 point2, Color color, float thickness)
+        {
+            var length = Vector2.Distance(point1, point2) + thickness;
+            var angle = (float)Math.Atan2(point2.Y - point1.Y, point2.X - point1.X);
+            var scale = new Vector2(length, thickness);
+            Vector2 middle = new Vector2((point1.X + point2.X) / 2f, (point1.Y + point2.Y) / 2f);
+            Texture2D tex = GetTexture(spriteBatch);
+            spriteBatch.Draw(GetTexture(spriteBatch), middle, null, color, angle, new Vector2(tex.Width / 2f, tex.Height / 2f), scale, SpriteEffects.None, 0);
+        }
+
+        private static void DrawPolygonEdge(SpriteBatch spriteBatch, Vector2 point1, Vector2 point2, Color color, float thickness)
         {
             var length = Vector2.Distance(point1, point2);
             var angle = (float)Math.Atan2(point2.Y - point1.Y, point2.X - point1.X);

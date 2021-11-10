@@ -122,7 +122,7 @@ namespace Barotrauma
                                 {
                                     npcOrItem = npc;
                                     npc.CampaignInteractionType = CampaignMode.InteractionType.Examine;
-                                    npc.RequireConsciousnessForCustomInteract = false;
+                                    npc.RequireConsciousnessForCustomInteract = DisableIfTargetIncapacitated;
 #if CLIENT
                                     npc.SetCustomInteract(
                                         (speaker, player) => { if (e1 == speaker) { Trigger(speaker, player); } else { Trigger(player, speaker); } },
@@ -142,7 +142,7 @@ namespace Barotrauma
                                 npcOrItem = item;
                                 item.CampaignInteractionType = CampaignMode.InteractionType.Examine;
                                 if (player.SelectedConstruction == item ||
-                                    player.Inventory.Contains(item) ||
+                                    player.Inventory != null && player.Inventory.Contains(item) ||
                                     (player.FocusedItem == item && player.IsKeyHit(InputType.Use)))
                                 {
                                     Trigger(e1, e2);

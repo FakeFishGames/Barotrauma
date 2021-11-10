@@ -63,7 +63,7 @@ namespace Barotrauma
             allItems = Wreck.GetItems(false);
             thalamusItems = allItems.FindAll(i => IsThalamus(i.prefab));
             hulls.AddRange(Wreck.GetHulls(false));
-            var potentialBrainHulls = new Dictionary<Hull, float>();
+            var potentialBrainHulls = new List<(Hull hull, float weight)>();
             brain = new Item(brainPrefab, Vector2.Zero, Wreck);
             thalamusItems.Add(brain);
             Point minSize = brain.Rect.Size.Multiply(brain.Scale);
@@ -100,10 +100,10 @@ namespace Barotrauma
                 }
                 if (weight > 0)
                 {
-                    potentialBrainHulls.TryAdd(hull, weight);
+                    potentialBrainHulls.Add((hull, weight));
                 }
             }
-            Hull brainHull = ToolBox.SelectWeightedRandom(potentialBrainHulls.Keys.ToList(), potentialBrainHulls.Values.ToList(), Rand.RandSync.Server);
+            Hull brainHull = ToolBox.SelectWeightedRandom(potentialBrainHulls.Select(pbh => pbh.hull).ToList(), potentialBrainHulls.Select(pbh => pbh.weight).ToList(), Rand.RandSync.Server);
             var thalamusStructurePrefabs = StructurePrefab.Prefabs.Where(p => IsThalamus(p));
             if (brainHull == null)
             {
@@ -161,8 +161,8 @@ namespace Barotrauma
                             for (int i = 0; i < container.Inventory.Capacity; i++)
                             {
                                 if (container.Inventory.GetItemAt(i) != null) { continue; }
-                                if (MapEntityPrefab.List.GetRandom(e => e is ItemPrefab i && container.CanBeContained(i) && 
-                                        Config.ForbiddenAmmunition.None(id => id.Equals(i.Identifier, StringComparison.OrdinalIgnoreCase)), Rand.RandSync.Server) is ItemPrefab ammoPrefab)
+                                if (MapEntityPrefab.List.GetRandom(e => e is ItemPrefab ip && container.CanBeContained(ip, i) && 
+                                        Config.ForbiddenAmmunition.None(id => id.Equals(ip.Identifier, StringComparison.OrdinalIgnoreCase)), Rand.RandSync.Server) is ItemPrefab ammoPrefab)
                                 {
                                     Item ammo = new Item(ammoPrefab, container.Item.WorldPosition, Wreck);
                                     if (!container.Inventory.TryPutItem(ammo, i, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: false))
@@ -187,8 +187,11 @@ namespace Barotrauma
                     if (!spawnOrgans.Contains(item))
                     {
                         spawnOrgans.Add(item);
-                        // Try to flood the hull so that the spawner won't die.
-                        item.CurrentHull.WaterVolume = item.CurrentHull.Volume;
+                        if (item.CurrentHull != null)
+                        {
+                            // Try to flood the hull so that the spawner won't die.
+                            item.CurrentHull.WaterVolume = item.CurrentHull.Volume;
+                        }
                     }
                 }
             }

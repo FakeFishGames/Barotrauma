@@ -89,7 +89,7 @@ namespace Barotrauma.Networking
         private static int ReadIncomingMsgs()
         {
             Task<int> readTask = readStream?.ReadAsync(tempBytes, 0, tempBytes.Length, readCancellationToken.Token);
-            TimeSpan ts = TimeSpan.FromMilliseconds(100);
+            TimeSpan timeOut = TimeSpan.FromMilliseconds(100);
             for (int i = 0; i < 150; i++)
             {
                 if (shutDown)
@@ -99,7 +99,7 @@ namespace Barotrauma.Networking
                     return -1;
                 }
 
-                if ((readTask?.IsCompleted ?? true) || (readTask?.Wait(ts) ?? true))
+                if ((readTask?.IsCompleted ?? true) || (readTask?.Wait(timeOut) ?? true))
                 {
                     break;
                 }

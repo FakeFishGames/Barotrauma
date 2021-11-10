@@ -888,6 +888,7 @@ namespace Barotrauma.Items.Components
             maintainPosOriginIndicator?.Remove();
             steeringIndicator?.Remove();
             enterOutpostPrompt?.Close();
+            pathFinder = null;
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
