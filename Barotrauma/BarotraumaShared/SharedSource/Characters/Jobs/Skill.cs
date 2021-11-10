@@ -7,11 +7,18 @@ namespace Barotrauma
         private float level;
 
         public string Identifier { get; }
+
+        public const float MaximumSkill = 100.0f;
         
         public float Level
         {
             get { return level; }
-            set { level = MathHelper.Clamp(value, 0.0f, 100.0f); }
+            set { level = value; }
+        }
+
+        public void IncreaseSkill(float value, bool increasePastMax)
+        {
+            level = MathHelper.Clamp(level + value, 0.0f, increasePastMax ? float.MaxValue : MaximumSkill);
         }
 
         private Sprite icon;

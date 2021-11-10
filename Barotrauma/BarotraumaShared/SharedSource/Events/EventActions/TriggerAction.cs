@@ -122,7 +122,7 @@ namespace Barotrauma
                                 {
                                     npcOrItem = npc;
                                     npc.CampaignInteractionType = CampaignMode.InteractionType.Examine;
-                                    npc.RequireConsciousnessForCustomInteract = false;
+                                    npc.RequireConsciousnessForCustomInteract = DisableIfTargetIncapacitated;
 #if CLIENT
                                     npc.SetCustomInteract(
                                         (speaker, player) => { if (e1 == speaker) { Trigger(speaker, player); } else { Trigger(player, speaker); } },

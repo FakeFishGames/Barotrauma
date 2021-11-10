@@ -30,55 +30,44 @@ namespace Barotrauma
 
         private bool idFreed;
 
-        public virtual bool Removed
-        {
-            get;
-            private set;
-        }
+        public virtual bool Removed { get; private set; }
 
-        public bool IdFreed
-        {
-            get { return idFreed; }
-        }
+        public bool IdFreed => idFreed;
 
         public readonly ushort ID;
 
-        public virtual Vector2 SimPosition
+        public virtual Vector2 SimPosition => Vector2.Zero;
+
+        public virtual Vector2 Position => Vector2.Zero;
+
+        public virtual Vector2 WorldPosition => Submarine == null ? Position : Submarine.Position + Position;
+
+        public virtual Vector2 DrawPosition => Submarine == null ? Position : Submarine.DrawPosition + Position;
+
+        public Submarine Submarine { get; set; }
+
+        public AITarget AiTarget => aiTarget;
+
+        public bool InDetectable
         {
-            get { return Vector2.Zero; }
-        }
-        
-        public virtual Vector2 Position
-        {
-            get { return Vector2.Zero; }
+            get
+            {
+                if (aiTarget != null)
+                {
+                    return aiTarget.InDetectable;
+                }
+                return false;
+            }
+            set
+            {
+                if (aiTarget != null)
+                {
+                    aiTarget.InDetectable = value;
+                }
+            }
         }
 
-        public virtual Vector2 WorldPosition
-        {
-            get { return Submarine == null ? Position : Submarine.Position + Position; }
-        }
-
-        public virtual Vector2 DrawPosition
-        {
-            get { return Submarine == null ? Position : Submarine.DrawPosition + Position; }
-        }
-
-        public Submarine Submarine
-        {
-            get;
-            set;
-        }
-
-        public AITarget AiTarget
-        {
-            get { return aiTarget; }
-        }
-
-        public double SpawnTime
-        {
-            get { return spawnTime;  }
-        }
-
+        public double SpawnTime => spawnTime;
         private readonly double spawnTime;
 
         public Entity(Submarine submarine, ushort id)
@@ -88,7 +77,7 @@ namespace Barotrauma
 
             if (id != NullEntityID && dictionary.ContainsKey(id))
             {
-                throw new Exception($"ID {id} is taken by {dictionary[id].ToString()}");
+                throw new Exception($"ID {id} is taken by {dictionary[id]}");
             }
 
             //give a unique ID

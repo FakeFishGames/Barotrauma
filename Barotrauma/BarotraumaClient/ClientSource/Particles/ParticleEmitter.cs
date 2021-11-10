@@ -138,6 +138,8 @@ namespace Barotrauma.Particles
 
         public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, Tuple<Vector2, Vector2> tracerPoints = null)
         {
+            if (GameMain.Client?.MidRoundSyncing ?? false) { return; }
+
             if (initialDelay < Prefab.Properties.InitialDelay)
             {
                 initialDelay += deltaTime;

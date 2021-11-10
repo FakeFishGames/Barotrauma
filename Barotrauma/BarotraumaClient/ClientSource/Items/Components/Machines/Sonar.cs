@@ -134,6 +134,14 @@ namespace Barotrauma.Items.Components
 
         private static string caveLabel;
 
+
+        [Serialize(false, false)]
+        public bool RightLayout
+        {
+            get;
+            set;
+        }
+
         private bool AllowUsingMineralScanner =>
             HasMineralScanner && !isConnectedToSteering;
 
@@ -316,7 +324,7 @@ namespace Barotrauma.Items.Components
                 "", warningColor, GUI.LargeFont, Alignment.Center);
 
             // Setup layout for nav terminal
-            if (isConnectedToSteering)
+            if (isConnectedToSteering || RightLayout)
             {
                 controlContainer.RectTransform.RelativeOffset = controlBoxOffset;
                 controlContainer.RectTransform.SetPosition(Anchor.TopRight);
@@ -446,13 +454,8 @@ namespace Barotrauma.Items.Components
                     zoomSlider.BarScroll += PlayerInput.ScrollWheelSpeed / 1000.0f;
                     zoomSlider.OnMoved(zoomSlider, zoomSlider.BarScroll);
                 }
-
-                if (PlayerInput.KeyHit(InputType.Run))
-                {
-                    SonarModeSwitch.OnClicked(SonarModeSwitch, null);
-                }
             }
-
+            
             float distort = 1.0f - item.Condition / item.MaxCondition;
             for (int i = sonarBlips.Count - 1; i >= 0; i--)
             {
@@ -885,7 +888,7 @@ namespace Barotrauma.Items.Components
 
             foreach (AITarget aiTarget in AITarget.List)
             {
-                if (!aiTarget.Enabled) { continue; }
+                if (aiTarget.InDetectable) { continue; }
                 if (string.IsNullOrEmpty(aiTarget.SonarLabel) || aiTarget.SoundRange <= 0.0f) { continue; }
 
                 if (Vector2.DistanceSquared(aiTarget.WorldPosition, transducerCenter) < aiTarget.SoundRange * aiTarget.SoundRange)
@@ -1239,7 +1242,7 @@ namespace Barotrauma.Items.Components
                 foreach (AITarget aiTarget in AITarget.List)
                 {
                     float disruption = aiTarget.Entity is Character c ? c.Params.SonarDisruption : aiTarget.SonarDisruption;
-                    if (disruption <= 0.0f || !aiTarget.Enabled) { continue; }
+                    if (disruption <= 0.0f || aiTarget.InDetectable) { continue; }
                     float distSqr = Vector2.DistanceSquared(aiTarget.WorldPosition, pingSource);
                     if (distSqr > worldPingRadiusSqr) { continue; }
                     float disruptionDist = (float)Math.Sqrt(distSqr);
@@ -1362,28 +1365,6 @@ namespace Barotrauma.Items.Components
                             pingRadius, prevPingRadius,
                             350.0f, 3.0f * (Math.Abs(facingDot) + 1.0f), range, pingStrength, passive,
                             blipType : cell.IsDestructible ? BlipType.Destructible : BlipType.Default);
-                    }
-                }
-
-                foreach (RuinGeneration.Ruin ruin in Level.Loaded.Ruins)
-                {
-                    if (!MathUtils.CircleIntersectsRectangle(pingSource, range, ruin.Area)) continue;
-
-                    foreach (var ruinShape in ruin.RuinShapes)
-                    {
-                        foreach (RuinGeneration.Line wall in ruinShape.Walls)
-                        {
-                            float cellDot = Vector2.Dot(
-                                Vector2.Normalize(ruinShape.Center - pingSource),
-                                Vector2.Normalize((wall.A + wall.B) / 2.0f - ruinShape.Center));
-                            if (cellDot > 0) continue;
-
-                            CreateBlipsForLine(
-                                wall.A, wall.B,
-                                pingSource, transducerPos,
-                                pingRadius, prevPingRadius,
-                                100.0f, 1000.0f, range, pingStrength, passive);
-                        }
                     }
                 }
             }
@@ -1634,7 +1615,7 @@ namespace Barotrauma.Items.Components
 
             void CalculateDistance()
             {
-                pathFinder ??= new PathFinder(WayPoint.WayPointList, indoorsSteering: false);
+                pathFinder ??= new PathFinder(WayPoint.WayPointList, false);
                 var path = pathFinder.FindPath(ConvertUnits.ToSimUnits(transducerPosition), ConvertUnits.ToSimUnits(worldPosition));
                 if (!path.Unreachable)
                 {

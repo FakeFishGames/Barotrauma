@@ -66,18 +66,18 @@ namespace Barotrauma.Items.Components
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 if (limb.WearingItems.Find(w => w.WearableComponent.Item == item) == null) { continue; }
-                limb.body.ApplyForce(propulsion, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                limb.body.ApplyForce(propulsion);
             }
 
-            character.AnimController.Collider.ApplyForce(propulsion, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            character.AnimController.Collider.ApplyForce(propulsion);
 
             if (character.Inventory.IsInLimbSlot(item, InvSlotType.RightHand))
             {
-                character.AnimController.GetLimb(LimbType.RightHand)?.body.ApplyForce(propulsion, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                character.AnimController.GetLimb(LimbType.RightHand)?.body.ApplyForce(propulsion);
             }
             if (character.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand))
             {
-                character.AnimController.GetLimb(LimbType.LeftHand)?.body.ApplyForce(propulsion, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                character.AnimController.GetLimb(LimbType.LeftHand)?.body.ApplyForce(propulsion);
             }
 
 #if CLIENT

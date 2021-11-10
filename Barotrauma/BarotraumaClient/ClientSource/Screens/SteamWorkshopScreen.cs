@@ -1604,7 +1604,7 @@ namespace Barotrauma
                 if (string.IsNullOrEmpty(file) || !File.Exists(file)) { continue; }
 
                 string modFolder = Path.GetDirectoryName(itemContentPackage.Path);                
-                string filePathRelativeToModFolder = UpdaterUtil.GetRelativePath(file, Path.Combine(Environment.CurrentDirectory, modFolder));
+                string filePathRelativeToModFolder = Path.GetRelativePath(Path.Combine(Environment.CurrentDirectory, modFolder), file);
 
                 //file is not inside the mod folder, we need to move it
                 if (filePathRelativeToModFolder.StartsWith("..") || 

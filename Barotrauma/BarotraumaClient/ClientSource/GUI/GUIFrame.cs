@@ -5,8 +5,8 @@ using System.Linq;
 namespace Barotrauma
 {
     public class GUIFrame : GUIComponent
-    {      
-        public int OutlineThickness { get; set; }
+    {
+        public float OutlineThickness { get; set; }
 
         public GUIFrame(RectTransform rectT, string style = "", Color? color = null) : base(style, rectT)
         {
@@ -28,7 +28,7 @@ namespace Barotrauma
 
             if (OutlineColor != Color.Transparent)
             {
-                GUI.DrawRectangle(spriteBatch, Rect, OutlineColor * (OutlineColor.A/255.0f), false, thickness: OutlineThickness);
+                GUI.DrawRectangle(spriteBatch, Rect, OutlineColor, false, thickness: OutlineThickness);
             }
         }
     }

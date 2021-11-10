@@ -49,7 +49,7 @@ namespace Barotrauma
                 Reactor reactor = item.GetComponent<Reactor>();
                 if (reactor != null) { roundData.Reactors.Add(reactor); }
             }
-            pathFinder = new PathFinder(WayPoint.WayPointList, indoorsSteering: false);
+            pathFinder = new PathFinder(WayPoint.WayPointList, false);
             cachedDistances.Clear();
         }
 
@@ -192,7 +192,7 @@ namespace Barotrauma
 
                 static CachedDistance CalculateNewCachedDistance(Character c)
                 {
-                    pathFinder ??= new PathFinder(WayPoint.WayPointList, indoorsSteering: false);
+                    pathFinder ??= new PathFinder(WayPoint.WayPointList, false);
                     var path = pathFinder.FindPath(ConvertUnits.ToSimUnits(c.WorldPosition), ConvertUnits.ToSimUnits(Submarine.MainSub.WorldPosition));
                     if (path.Unreachable) { return null; }
                     return new CachedDistance(c.WorldPosition, Submarine.MainSub.WorldPosition, path.TotalLength, Timing.TotalTime + Rand.Range(1.0f, 5.0f));
@@ -455,6 +455,8 @@ namespace Barotrauma
                     UnlockAchievement(character, character.Info.Job.Prefab.Identifier + "round");
                 }
             }
+
+            pathFinder = null;
         }
 
         private static void UnlockAchievement(Character recipient, string identifier)

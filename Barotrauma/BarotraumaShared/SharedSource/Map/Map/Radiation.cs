@@ -149,7 +149,7 @@ namespace Barotrauma
         public XElement Save()
         {
             XElement element = new XElement(nameof(Radiation));
-            SerializableProperty.SerializeProperties(this, element);
+            SerializableProperty.SerializeProperties(this, element, saveIfDefault: true);
             return element;
         }
     }

@@ -8,6 +8,11 @@ namespace Barotrauma.Networking
 {
     partial class RespawnManager : Entity, IServerSerializable
     {
+        /// <summary>
+        /// How much skills drop towards the job's default skill levels when respawning midround in the campaign
+        /// </summary>
+        const float SkillReductionOnCampaignMidroundRespawn = 0.75f;
+
         private DateTime despawnTime;
 
         private float shuttleEmptyTimer;
@@ -284,6 +289,8 @@ namespace Barotrauma.Networking
         
         partial void RespawnCharactersProjSpecific(Vector2? shuttlePos)
         {
+            respawnedCharacters.Clear();
+
             var respawnSub = RespawnShuttle ?? Submarine.MainSub;
 
             MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
@@ -300,7 +307,7 @@ namespace Barotrauma.Networking
                 if (matchingData != null && !matchingData.HasSpawned)
                 {
                     c.CharacterInfo = matchingData.CharacterInfo;
-                }                
+                }
 
                 //all characters are in Team 1 in game modes/missions with only one team.
                 //if at some point we add a game mode with multiple teams where respawning is possible, this needs to be reworked
@@ -355,8 +362,28 @@ namespace Barotrauma.Networking
 
                 characterInfos[i].ClearCurrentOrders();
 
-                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, isRemotePlayer: !bot, hasAi: bot);
+                bool forceSpawnInMainSub = false;
+                if (!bot && campaign != null)
+                {
+                    var matchingData = campaign?.GetClientCharacterData(clients[i]);
+                    if (matchingData != null)
+                    {
+                        if (!matchingData.HasSpawned)
+                        {
+                            forceSpawnInMainSub = true;
+                        }
+                        else
+                        {
+                            ReduceCharacterSkills(characterInfos[i]);
+                        }
+                    }
+                }
+
+                var character = Character.Create(characterInfos[i], (forceSpawnInMainSub ? mainSubSpawnPoints[i] : shuttleSpawnPoints[i]).WorldPosition, characterInfos[i].Name, isRemotePlayer: !bot, hasAi: bot);
                 character.TeamID = CharacterTeamType.Team1;
+                character.LoadTalents();
+
+                respawnedCharacters.Add(character);
 
                 if (bot)
                 {
@@ -364,6 +391,12 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
+                    if (GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign && character.Info != null)
+                    {
+                        character.Info.SetExperience(Math.Max(character.Info.ExperiencePoints, mpCampaign.GetSavedExperiencePoints(clients[i])));
+                        mpCampaign.ClearSavedExperiencePoints(clients[i]);
+                    }
+
                     //tell the respawning client they're no longer a traitor
                     if (GameMain.Server.TraitorManager?.Traitors != null && clients[i].Character != null)
                     {
@@ -457,6 +490,17 @@ namespace Barotrauma.Networking
                 {
                     CoroutineManager.StartCoroutine(character.ReplaceWithMonsterJob(clients[i], clients[i].AssignedJob.First.JobCharacterSpecies));
                 }
+            }
+        }
+
+        public static void ReduceCharacterSkills(CharacterInfo characterInfo)
+        {
+            if (characterInfo?.Job == null) { return; }
+            foreach (Skill skill in characterInfo.Job.Skills)
+            {
+                var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Prefab == s);
+                if (skillPrefab == null) { continue; }
+                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.X, SkillReductionOnCampaignMidroundRespawn);
             }
         }
 

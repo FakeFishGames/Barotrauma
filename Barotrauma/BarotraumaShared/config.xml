@@ -21,7 +21,10 @@
     losmode="Transparent"
     hudscale="1"
     inventoryscale="1" />
-  <contentpackage path="Data/ContentPackages/Vanilla 0.9.xml" />
+  <contentpackages>
+    <core
+      name="Vanilla 0.9" />
+  </contentpackages>
   <player name=""/>
   <keymapping
     Select="PrimaryMouse"
@@ -31,7 +34,7 @@
     Down="S"
     Left="A"
     Right="D"
-    Attack="R"
+    Attack="F"
     Run="LeftShift"
     Crouch="LeftControl"
     InfoTab="Tab"

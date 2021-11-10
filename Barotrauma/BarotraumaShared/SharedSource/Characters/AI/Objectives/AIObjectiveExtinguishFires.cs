@@ -25,7 +25,7 @@ namespace Barotrauma
         /// <summary>
         /// 0-1 based on the horizontal size of all of the fires in the hull.
         /// </summary>
-        public static float GetFireSeverity(Hull hull) => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, Math.Min(hull.Rect.Width, 1000), hull.FireSources.Sum(fs => fs.Size.X)));
+        public static float GetFireSeverity(Hull hull) => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, 500, hull.FireSources.Sum(fs => fs.Size.X)));
 
         protected override IEnumerable<Hull> GetList() => Hull.hullList;
 

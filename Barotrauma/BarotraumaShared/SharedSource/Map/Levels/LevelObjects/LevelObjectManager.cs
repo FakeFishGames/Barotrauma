@@ -84,25 +84,42 @@ namespace Barotrauma
             objectGrid = new List<LevelObject>[
                 level.Size.X / GridSize,
                 (level.Size.Y - level.BottomPos) / GridSize];
-            
+
             List<SpawnPosition> availableSpawnPositions = new List<SpawnPosition>();
             var levelCells = level.GetAllCells();
-            availableSpawnPositions.AddRange(GetAvailableSpawnPositions(levelCells, LevelObjectPrefab.SpawnPosType.Wall));            
+            availableSpawnPositions.AddRange(GetAvailableSpawnPositions(levelCells, LevelObjectPrefab.SpawnPosType.Wall));
             availableSpawnPositions.AddRange(GetAvailableSpawnPositions(level.SeaFloor.Cells, LevelObjectPrefab.SpawnPosType.SeaFloor));
-            
-            foreach (RuinGeneration.Ruin ruin in level.Ruins)
+
+            foreach (Structure structure in Structure.WallList)
             {
-                foreach (var ruinShape in ruin.RuinShapes)
+                if (!structure.HasBody || structure.HiddenInGame) { continue; }
+                if (level.Ruins.Any(r => r.Submarine == structure.Submarine))
                 {
-                    foreach (var wall in ruinShape.Walls)
+                    if (structure.IsHorizontal)
                     {
+                        bool topHull = Hull.FindHull(structure.WorldPosition + Vector2.UnitY * 64) != null;
+                        bool bottomHull = Hull.FindHull(structure.WorldPosition - Vector2.UnitY * 64) != null;
+                        if (topHull && bottomHull ) { continue; }
+
                         availableSpawnPositions.Add(new SpawnPosition(
-                            new GraphEdge(wall.A, wall.B),
-                            (wall.A + wall.B) / 2.0f - ruinShape.Center,
+                            new GraphEdge(new Vector2(structure.WorldRect.X, structure.WorldPosition.Y), new Vector2(structure.WorldRect.Right, structure.WorldPosition.Y)),
+                            bottomHull ? Vector2.UnitY : -Vector2.UnitY,
                             LevelObjectPrefab.SpawnPosType.RuinWall,
-                            ruinShape.GetLineAlignment(wall)));
+                            bottomHull ? Alignment.Bottom : Alignment.Top));
                     }
-                }            
+                    else
+                    {
+                        bool rightHull = Hull.FindHull(structure.WorldPosition + Vector2.UnitX * 64) != null;
+                        bool leftHull = Hull.FindHull(structure.WorldPosition - Vector2.UnitX * 64) != null;
+                        if (rightHull && leftHull) { continue; }
+
+                        availableSpawnPositions.Add(new SpawnPosition(
+                            new GraphEdge(new Vector2(structure.WorldPosition.X, structure.WorldRect.Y), new Vector2(structure.WorldPosition.X, structure.WorldRect.Y - structure.WorldRect.Height)),
+                            leftHull ? Vector2.UnitX : -Vector2.UnitX,
+                            LevelObjectPrefab.SpawnPosType.RuinWall,
+                            leftHull ? Alignment.Left : Alignment.Right));
+                    }
+                }
             }
 
             foreach (var posOfInterest in level.PositionsOfInterest)

@@ -6,6 +6,7 @@ namespace Barotrauma
     {
         public override void ClientReadInitial(IReadMessage msg)
         {
+            base.ClientReadInitial(msg);
             // duplicate code from escortmission, should possibly be combined, though additional loot items might be added so maybe not
             byte characterCount = msg.ReadByte();
 

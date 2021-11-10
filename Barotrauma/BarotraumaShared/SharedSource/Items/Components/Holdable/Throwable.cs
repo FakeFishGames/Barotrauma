@@ -123,18 +123,18 @@ namespace Barotrauma.Items.Components
                 if (aim)
                 {
                     throwPos = MathUtils.WrapAnglePi(System.Math.Min(throwPos + deltaTime * 5.0f, MathHelper.PiOver2));
-                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, false, throwPos);
+                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, aim: false, throwPos);
                 }
                 else
                 {
                     throwPos = 0;
-                    ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, false, holdAngle);
+                    ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, aim: false, holdAngle);
                 }
             }
             else
             {
                 throwPos = MathUtils.WrapAnglePi(throwPos - deltaTime * 15.0f);
-                ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, false, throwPos);
+                ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, aim: false, throwPos);
 
                 if (throwPos < 0)
                 {
@@ -169,8 +169,8 @@ namespace Barotrauma.Items.Components
                     item.body.FarseerBody.IsBullet = true;
                     midAir = true;
 
-                    ac.GetLimb(LimbType.Head).body.ApplyLinearImpulse(throwVector * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
-                    ac.GetLimb(LimbType.Torso).body.ApplyLinearImpulse(throwVector * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    ac.GetLimb(LimbType.Head)?.body.ApplyLinearImpulse(throwVector * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    ac.GetLimb(LimbType.Torso)?.body.ApplyLinearImpulse(throwVector * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
                     Limb rightHand = ac.GetLimb(LimbType.RightHand);
                     item.body.AngularVelocity = rightHand.body.AngularVelocity;

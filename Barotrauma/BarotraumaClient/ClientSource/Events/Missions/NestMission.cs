@@ -8,6 +8,7 @@ namespace Barotrauma
     {
         public override void ClientReadInitial(IReadMessage msg)
         {
+            base.ClientReadInitial(msg);
             byte selectedCaveIndex = msg.ReadByte();
             nestPosition = new Vector2(
                 msg.ReadSingle(),

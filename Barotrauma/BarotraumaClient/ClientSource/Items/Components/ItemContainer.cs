@@ -19,6 +19,8 @@ namespace Barotrauma.Items.Components
         /// </summary>
         private float[] containedSpriteDepths;
 
+        private Sprite[] slotIcons;
+
         public Sprite InventoryTopSprite
         {
             get { return inventoryTopSprite; }
@@ -58,6 +60,9 @@ namespace Barotrauma.Items.Components
         [Serialize(null, false)]
         public string ContainedStateIndicatorStyle { get; set; }
 
+        [Serialize(-1, false, description: "Can be used to make the contained state indicator display the condition of the item in a specific slot even when the container's capacity is more than 1.")]
+        public int ContainedStateIndicatorSlot { get; set; }
+
         [Serialize(true, false, description: "Should an indicator displaying the state of the contained items be displayed on this item's inventory slot. "+
             "If this item can only contain one item, the indicator will display the condition of the contained item, otherwise it will indicate how full the item is.")]
         public bool ShowContainedStateIndicator { get; set; }
@@ -85,6 +90,7 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
+            slotIcons = new Sprite[capacity];
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -103,6 +109,17 @@ namespace Barotrauma.Items.Components
                         break;
                     case "containedstateindicatorempty":
                         ContainedStateIndicatorEmpty = new Sprite(subElement);
+                        break;
+                    case "sloticon":
+                        int index = subElement.GetAttributeInt("slotindex", -1);
+                        Sprite icon = new Sprite(subElement);
+                        for (int i = 0; i < capacity; i++)
+                        {
+                            if (i == index || index == -1)
+                            {
+                                slotIcons[i] = icon;
+                            }
+                        }
                         break;
                 }
             }
@@ -197,12 +214,18 @@ namespace Barotrauma.Items.Components
             if (UILabel == string.Empty) { return string.Empty; }
             if (UILabel != null)
             {
-                return TextManager.Get("UILabel." + UILabel);
+                return TextManager.Get("UILabel." + UILabel, returnNull: true) ?? TextManager.Get(UILabel);
             }
             else
             {
                 return item?.Name;
             }            
+        }
+
+        public Sprite GetSlotIcon(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= slotIcons.Length) { return null; }
+            return slotIcons[slotIndex];
         }
 
         public bool KeepOpenWhenEquippedBy(Character character)
@@ -266,7 +289,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
+                Matrix transform = Matrix.CreateRotationZ(item.body.DrawRotation);
                 if (item.body.Dir == -1.0f)
                 {
                     transformedItemPos.X = -transformedItemPos.X;
@@ -277,7 +300,7 @@ namespace Barotrauma.Items.Components
                 transformedItemPos = Vector2.Transform(transformedItemPos, transform);
                 transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
                 transformedItemIntervalHorizontal = Vector2.Transform(transformedItemIntervalHorizontal, transform);
-                transformedItemPos += item.DrawPosition;
+                transformedItemPos += item.body.DrawPosition;
             }
 
             Vector2 currentItemPos = transformedItemPos;
@@ -319,7 +342,7 @@ namespace Barotrauma.Items.Components
                     new Vector2(currentItemPos.X, -currentItemPos.Y),
                     isWiringMode ? containedItem.GetSpriteColor() * 0.15f : containedItem.GetSpriteColor(),
                     origin,
-                    -(containedItem.body == null ? 0.0f : containedItem.body.DrawRotation + MathHelper.ToRadians(-item.Rotation)),
+                    -(containedItem.body == null ? 0.0f : containedItem.body.DrawRotation ),
                     containedItem.Scale,
                     spriteEffects,
                     depth: containedSpriteDepth);

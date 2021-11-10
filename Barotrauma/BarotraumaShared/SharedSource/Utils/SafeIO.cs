@@ -23,17 +23,19 @@ namespace Barotrauma.IO
         {
             path = System.IO.Path.GetFullPath(path).CleanUpPath();
 
-            string extension = System.IO.Path.GetExtension(path).Replace(" ", "");
-            if (unwritableExtensions.Any(e => e.Equals(extension, StringComparison.OrdinalIgnoreCase)))
+            if (!isDirectory)
             {
-                return false;
-            }
-
-            if (!path.StartsWith(System.IO.Path.GetFullPath("Mods/").CleanUpPath(), StringComparison.OrdinalIgnoreCase)
-                && (extension.Equals(".dll", StringComparison.OrdinalIgnoreCase)
-                    || extension.Equals(".exe", StringComparison.OrdinalIgnoreCase)))
-            {
-                return false;
+                string extension = System.IO.Path.GetExtension(path).Replace(" ", "");
+                if (unwritableExtensions.Any(e => e.Equals(extension, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return false;
+                }
+                if (!path.StartsWith(System.IO.Path.GetFullPath("Mods/").CleanUpPath(), StringComparison.OrdinalIgnoreCase)
+                    && (extension.Equals(".dll", StringComparison.OrdinalIgnoreCase)
+                        || extension.Equals(".exe", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return false;
+                }
             }
             
             foreach (string unwritableDir in unwritableDirs)
@@ -158,6 +160,11 @@ namespace Barotrauma.IO
             return System.IO.Path.GetPathRoot(path);
         }
 
+        public static string GetRelativePath(string relativeTo, string path)
+        {
+            return System.IO.Path.GetRelativePath(relativeTo, path);
+        }
+
         public static string GetDirectoryName(string path)
         {
             return System.IO.Path.GetDirectoryName(path);
@@ -246,6 +253,7 @@ namespace Barotrauma.IO
             if (!Validation.CanWrite(path, true))
             {
                 DebugConsole.ThrowError($"Cannot create directory \"{path}\": modifying the contents of this folder/using this extension is not allowed.");
+                Validation.CanWrite(path, true);
                 return null;
             }
             return System.IO.Directory.CreateDirectory(path);
@@ -310,7 +318,11 @@ namespace Barotrauma.IO
             return System.IO.File.GetLastWriteTime(path);
         }
 
-        public static FileStream Open(string path, System.IO.FileMode mode, System.IO.FileAccess access = System.IO.FileAccess.ReadWrite)
+        public static FileStream Open(
+            string path,
+            System.IO.FileMode mode,
+            System.IO.FileAccess access = System.IO.FileAccess.ReadWrite,
+            System.IO.FileShare? share = null)
         {
             switch (mode)
             {
@@ -326,10 +338,12 @@ namespace Barotrauma.IO
                     }
                     break;
             }
-            return new FileStream(path, System.IO.File.Open(path, mode,
+            access =
                 !Validation.CanWrite(path, false) ?
                 System.IO.FileAccess.Read :
-                access));
+                access;
+            var shareVal = share ?? (access == System.IO.FileAccess.Read ? System.IO.FileShare.Read : System.IO.FileShare.None);
+            return new FileStream(path, System.IO.File.Open(path, mode, access, shareVal));
         }
 
         public static FileStream OpenRead(string path)
