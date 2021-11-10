@@ -222,6 +222,9 @@ namespace Barotrauma
             [Serialize("", false)]
             public string DialogFlag { get; private set; }
 
+            [Serialize("", false)]
+            public string AITargetingTag { get; private set; }
+
             [Serialize("0,0,0,0", false)]
             public Color MinFaceTint { get; private set; }
 
