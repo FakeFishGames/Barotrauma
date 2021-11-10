@@ -131,7 +131,7 @@ namespace Barotrauma
                             {
                                 if (it.Submarine?.Info == null) { continue; }
                                 if (spawnPositionType == Level.PositionType.Ruin && it.Submarine.Info.Type != SubmarineType.Ruin) { continue; }
-                                if (spawnPositionType == Level.PositionType.Wreck && it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
+                                if (spawnPositionType == Level.PositionType.Wreck && (it.Submarine.Info.Type != SubmarineType.Wreck) || (Prefab.RequiredWreckType != null && it.Submarine.Info.DisplayName != Prefab.RequiredWreckType)) { continue; }
                                 Rectangle worldBorders = it.Submarine.Borders;
                                 worldBorders.Location += it.Submarine.WorldPosition.ToPoint();
                                 if (Submarine.RectContains(worldBorders, it.WorldPosition))
@@ -184,7 +184,7 @@ namespace Barotrauma
                                 if (it.Submarine?.Info == null || !it.Submarine.Info.IsRuin) { continue; }
                                 break;
                             case Level.PositionType.Wreck:
-                                if (it.Submarine == null || it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
+                                if (it.Submarine == null || it.Submarine.Info.Type != SubmarineType.Wreck || ((Prefab.RequiredWreckType != null) && (it.Submarine.Info.DisplayName != Prefab.RequiredWreckType))) { continue; }
                                 break;
                         }
                         var itemContainer = it.GetComponent<ItemContainer>();
