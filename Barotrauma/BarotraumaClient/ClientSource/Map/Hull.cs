@@ -676,7 +676,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            remoteBackgroundSections.Add(new BackgroundSection(new Rectangle(0, 0, 1, 1), i, colorStrength, color, 0));
+                            remoteBackgroundSections.Add(new BackgroundSection(new Rectangle(0, 0, 1, 1), (ushort)i, colorStrength, color, 0));
                         }
                     }
                     paintAmount = BackgroundSections.Sum(s => s.ColorStrength);

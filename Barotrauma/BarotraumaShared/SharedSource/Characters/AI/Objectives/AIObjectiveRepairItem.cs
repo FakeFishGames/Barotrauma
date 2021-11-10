@@ -107,7 +107,10 @@ namespace Barotrauma
                     {
                         foreach (RelatedItem requiredItem in kvp.Value)
                         {
-                            var getItemObjective = new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, true);
+                            var getItemObjective = new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, true)
+                            {
+                                AllowVariants = requiredItem.AllowVariants
+                            };
                             if (objectiveManager.IsCurrentOrder<AIObjectiveRepairItems>())
                             {
                                 if (character.IsOnPlayerTeam)

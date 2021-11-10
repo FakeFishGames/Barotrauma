@@ -1207,7 +1207,7 @@ namespace Barotrauma.Steam
             foreach (string file in allPackageFiles)
             {
                 if (file == metaDataFilePath) { continue; }
-                string relativePath = UpdaterUtil.GetRelativePath(file, item.Directory);
+                string relativePath = Path.GetRelativePath(item.Directory, file);
                 string fullPath = Path.GetFullPath(relativePath);
                 if (contentPackage.Files.Any(f => { string fp = Path.GetFullPath(f.Path); return fp == fullPath; })) { continue; }
                 nonContentFiles.Add(relativePath);

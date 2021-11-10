@@ -8,14 +8,17 @@ namespace Barotrauma
 {
     static class AutoItemPlacer
     {
-        private static readonly List<Item> spawnedItems = new List<Item>();
-
         public static bool OutputDebugInfo = false;
+
+        /// <summary>
+        /// If we are spawning in an area where difficulty should not be a factor, assume difficulty is at the exact "middle"
+        /// </summary>
+        public const float DefaultDifficultyModifier = 0f;
 
         public static void PlaceIfNeeded()
         {
             if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) { return; }
-            
+
             for (int i = 0; i < Submarine.MainSubs.Length; i++)
             {
                 if (Submarine.MainSubs[i] == null || Submarine.MainSubs[i].Info.InitialSuppliesSpawned) { continue; }
@@ -24,14 +27,18 @@ namespace Barotrauma
                 Place(subs);
                 subs.ForEach(s => s.Info.InitialSuppliesSpawned = true);
             }
-            
+
+            float difficultyModifier = GetLevelDifficultyModifier();
             foreach (var sub in Submarine.Loaded)
             {
-                if (sub.Info.Type == SubmarineType.Wreck || 
-                    sub.Info.Type == SubmarineType.BeaconStation)
+                if (sub.Info.Type == SubmarineType.Player || 
+                    sub.Info.Type == SubmarineType.Outpost || 
+                    sub.Info.Type == SubmarineType.OutpostModule ||
+                    sub.Info.Type == SubmarineType.EnemySubmarine)
                 {
-                    Place(sub.ToEnumerable());
+                    continue;
                 }
+                Place(sub.ToEnumerable(), difficultyModifier: difficultyModifier);
             }
 
             if (Level.Loaded?.StartOutpost != null && Level.Loaded.Type == LevelData.LevelType.Outpost)
@@ -41,7 +48,23 @@ namespace Barotrauma
             }
         }
 
-        private static void Place(IEnumerable<Submarine> subs)
+        private const float MaxDifficultyModifier = 0.2f;
+
+        /// <summary>
+        /// Spawn probability of loot is modified by difficulty, -20% less loot at 0% difficulty and +20% loot at 100% difficulty.
+        /// </summary>
+        private static float GetLevelDifficultyModifier()
+        {
+            return Math.Clamp(Level.Loaded?.Difficulty is float difficulty ? (difficulty / 100f) * (MaxDifficultyModifier * 2) - MaxDifficultyModifier : DefaultDifficultyModifier, -MaxDifficultyModifier, MaxDifficultyModifier);
+        }
+
+        public static void RegenerateLoot(Submarine sub, ItemContainer regeneratedContainer)
+        {
+            // Level difficulty currently doesn't affect regenerated loot for the sake of simplicity
+            Place(sub.ToEnumerable(), regeneratedContainer: regeneratedContainer);
+        }
+
+        private static void Place(IEnumerable<Submarine> subs, ItemContainer regeneratedContainer = null, float difficultyModifier = DefaultDifficultyModifier)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
@@ -49,19 +72,29 @@ namespace Barotrauma
                 return;
             }
 
+            List<Item> spawnedItems = new List<Item>(100);
+
             int itemCountApprox = MapEntityPrefab.List.Count() / 3;
             var containers = new List<ItemContainer>(70 + 30 * subs.Count());
             var prefabsWithContainer = new List<ItemPrefab>(itemCountApprox / 3);
             var prefabsWithoutContainer = new List<ItemPrefab>(itemCountApprox);
             var removals = new List<ItemPrefab>();
 
-            foreach (Item item in Item.ItemList)
+            // generate loot only for a specific container if defined
+            if (regeneratedContainer != null)
             {
-                if (!subs.Contains(item.Submarine)) { continue; }
-                if (item.GetRootInventoryOwner() is Character) { continue; }
-                containers.AddRange(item.GetComponents<ItemContainer>());
+                containers.Add(regeneratedContainer);
             }
-            containers.Shuffle(Rand.RandSync.Server);
+            else
+            {
+                foreach (Item item in Item.ItemList)
+                {
+                    if (!subs.Contains(item.Submarine)) { continue; }
+                    if (item.GetRootInventoryOwner() is Character) { continue; }
+                    containers.AddRange(item.GetComponents<ItemContainer>());
+                }
+                containers.Shuffle(Rand.RandSync.Server);
+            }
 
             foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
             {
@@ -77,7 +110,6 @@ namespace Barotrauma
                 }
             }
 
-            spawnedItems.Clear();
             var validContainers = new Dictionary<ItemContainer, PreferredContainer>();
             prefabsWithContainer.Shuffle(Rand.RandSync.Server);
             // Spawn items that have an ItemContainer component first so we can fill them up with items if needed (oxygen tanks inside the spawned diving masks, etc)
@@ -152,8 +184,10 @@ namespace Barotrauma
                     }
                     foreach (var validContainer in validContainers)
                     {
-                        if (SpawnItem(itemPrefab, containers, validContainer))
+                        var newItems = SpawnItem(itemPrefab, containers, validContainer, difficultyModifier);
+                        if (newItems.Any())
                         {
+                            spawnedItems.AddRange(newItems);
                             success = true;
                         }
                     }
@@ -184,14 +218,22 @@ namespace Barotrauma
             return validContainers;
         }
 
-        private static bool SpawnItem(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer)
+        private static readonly (int quality, float commonness)[] qualityCommonnesses = new (int quality, float commonness)[Quality.MaxQuality + 1]
         {
-            bool success = false;
-            if (Rand.Value(Rand.RandSync.Server) > validContainer.Value.SpawnProbability) { return false; }
+            (0, 0.85f),
+            (1, 0.125f),
+            (2, 0.0225f),
+            (3, 0.0025f),
+        };
+
+        private static List<Item> SpawnItem(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer, float difficultyModifier)
+        {
+            List<Item> spawnedItems = new List<Item>();
+            if (Rand.Value(Rand.RandSync.Server) > validContainer.Value.SpawnProbability * (1f + difficultyModifier)) { return spawnedItems; }
             // Don't add dangerously reactive materials in thalamus wrecks 
             if (validContainer.Key.Item.Submarine.WreckAI != null && itemPrefab.Tags.Contains("explodesinwater"))
             {
-                return false;
+                return spawnedItems;
             }
             int amount = Rand.Range(validContainer.Value.MinAmount, validContainer.Value.MaxAmount + 1, Rand.RandSync.Server);
             for (int i = 0; i < amount; i++)
@@ -201,11 +243,20 @@ namespace Barotrauma
                     containers.Remove(validContainer.Key);
                     break;
                 }
-                if (!validContainer.Key.Inventory.CanBePut(itemPrefab)) { break; }
+
+                var existingItem = validContainer.Key.Inventory.AllItems.FirstOrDefault(it => it.prefab == itemPrefab);
+                int quality = 
+                    existingItem?.Quality ??
+                    ToolBox.SelectWeightedRandom(
+                        qualityCommonnesses.Select(q => q.quality).ToList(),
+                        qualityCommonnesses.Select(q => q.commonness).ToList(),
+                        Rand.RandSync.Server);
+                if (!validContainer.Key.Inventory.CanBePut(itemPrefab, quality: quality)) { break; }
                 var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine)
                 {
                     SpawnedInOutpost = validContainer.Key.Item.SpawnedInOutpost,
                     AllowStealing = validContainer.Key.Item.AllowStealing,
+                    Quality = quality,
                     OriginalModuleIndex = validContainer.Key.Item.OriginalModuleIndex,
                     OriginalContainerIndex = 
                         Item.ItemList.Where(it => it.Submarine == validContainer.Key.Item.Submarine && it.OriginalModuleIndex == validContainer.Key.Item.OriginalModuleIndex).ToList().IndexOf(validContainer.Key.Item)
@@ -217,9 +268,8 @@ namespace Barotrauma
                 spawnedItems.Add(item);
                 validContainer.Key.Inventory.TryPutItem(item, null, createNetworkEvent: false);
                 containers.AddRange(item.GetComponents<ItemContainer>());
-                success = true;
             }
-            return success;
+            return spawnedItems;
         }
     }
 }

@@ -8,7 +8,8 @@ namespace Barotrauma
     public enum HitDetection
     {
         Distance,
-        Contact
+        Contact,
+        None
     }
 
     public enum AttackContext
@@ -271,6 +272,9 @@ namespace Barotrauma
                 statusEffect.SetUser(user);
             }
         }
+
+        // used for talents/ability conditions
+        public Item SourceItem { get; }
         
         public List<Affliction> GetMultipliedAfflictions(float multiplier)
         {
@@ -320,6 +324,10 @@ namespace Barotrauma
             Penetration = Penetration;
         }
 
+        public Attack(XElement element, string parentDebugName, Item sourceItem) : this(element, parentDebugName)
+        {
+            SourceItem = sourceItem;
+        }
         public Attack(XElement element, string parentDebugName)
         {
             Deserialize(element);
@@ -445,7 +453,7 @@ namespace Barotrauma
 
             DamageParticles(deltaTime, worldPosition);
             
-            var attackResult = target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
+            var attackResult = target?.AddDamage(attacker, worldPosition, this, deltaTime, playSound) ?? new AttackResult();
             var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
             if (targetCharacter != null && targetCharacter.IsDead)
             {

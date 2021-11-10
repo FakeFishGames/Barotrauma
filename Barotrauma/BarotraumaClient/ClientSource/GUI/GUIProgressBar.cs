@@ -79,14 +79,14 @@ namespace Barotrauma
                 new Rectangle(
                     sliderArea.X + (int)sliceBorderSizes.X,
                     sliderArea.Y,
-                    (int)((sliderArea.Width - sliceBorderSizes.X - sliceBorderSizes.Z) * fillAmount),
+                    (int)Math.Round((sliderArea.Width - sliceBorderSizes.X - sliceBorderSizes.Z) * fillAmount),
                     sliderArea.Height)
                 :
                 new Rectangle(
                     sliderArea.X,
-                    (int)(sliderArea.Bottom - (sliderArea.Height - sliceBorderSizes.Y - sliceBorderSizes.W) * fillAmount - sliceBorderSizes.W),
+                    (int)Math.Round(sliderArea.Bottom - (sliderArea.Height - sliceBorderSizes.Y - sliceBorderSizes.W) * fillAmount - sliceBorderSizes.W),
                     sliderArea.Width,
-                    (int)((sliderArea.Height - sliceBorderSizes.Y - sliceBorderSizes.W) * fillAmount));
+                    (int)Math.Round((sliderArea.Height - sliceBorderSizes.Y - sliceBorderSizes.W) * fillAmount));
 
             sliderRect.Width = Math.Max(sliderRect.Width, 1);
             sliderRect.Height = Math.Max(sliderRect.Height, 1);

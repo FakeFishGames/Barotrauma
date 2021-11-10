@@ -38,6 +38,7 @@ namespace Barotrauma
         public readonly string File;
         public readonly string Type;
         public readonly bool DuckVolume;
+        public readonly float Volume;
 
         public readonly Vector2 IntensityRange;
 
@@ -53,6 +54,7 @@ namespace Barotrauma
             this.Type = element.GetAttributeString("type", "").ToLowerInvariant();
             this.IntensityRange = element.GetAttributeVector2("intensityrange", new Vector2(0.0f, 100.0f));
             this.DuckVolume = element.GetAttributeBool("duckvolume", false);
+            this.Volume = element.GetAttributeFloat("volume", 1.0f);
             this.ContinueFromPreviousTime = element.GetAttributeBool("continuefromprevioustime", false);
             this.MuteIntensityMusic = element.GetAttributeBool("muteintensitymusic", false);
             this.Element = element;
@@ -819,6 +821,8 @@ namespace Barotrauma
                 }                
             }
 
+            int noiseLoopIndex = 1;
+
             updateMusicTimer -= deltaTime;
             if (updateMusicTimer <= 0.0f)
             {
@@ -829,7 +833,6 @@ namespace Barotrauma
                     GameMain.GameSession.EventManager.CurrentIntensity * 100.0f : 0.0f;
 
                 IEnumerable<BackgroundMusic> suitableMusic = GetSuitableMusicClips(currentMusicType, currentIntensity);
-
                 int mainTrackIndex = 0;
                 if (suitableMusic.Count() == 0)
                 {
@@ -855,14 +858,12 @@ namespace Barotrauma
                     }
                 }
 
-                int noiseLoopIndex = 1;
                 if (Level.Loaded?.Type == LevelData.LevelType.LocationConnection)
                 {
                     // Find background noise loop for the current biome
                     IEnumerable<BackgroundMusic> suitableNoiseLoops = Screen.Selected == GameMain.GameScreen ?
                         GetSuitableMusicClips(Level.Loaded.LevelData?.Biome?.Identifier, currentIntensity) :
                         Enumerable.Empty<BackgroundMusic>();
-
                     if (suitableNoiseLoops.Count() == 0)
                     {
                         targetMusic[noiseLoopIndex] = null;
@@ -878,12 +879,23 @@ namespace Barotrauma
                     targetMusic[noiseLoopIndex] = null;
                 }
 
+                IEnumerable<BackgroundMusic> suitableTypeAmbiences = GetSuitableMusicClips($"{currentMusicType}ambience", currentIntensity);
+                int typeAmbienceTrackIndex = 2;
+                if (suitableTypeAmbiences.None())
+                {
+                    targetMusic[typeAmbienceTrackIndex] = null;
+                }
+                // Switch the type ambience if nothing playing atm or the currently playing clip is not suitable anymore
+                else if (targetMusic[typeAmbienceTrackIndex] == null || currentMusic[typeAmbienceTrackIndex] == null || !currentMusic[typeAmbienceTrackIndex].IsPlaying() || suitableTypeAmbiences.None(m => m.File == currentMusic[typeAmbienceTrackIndex].Filename))
+                {
+                    targetMusic[typeAmbienceTrackIndex] = suitableTypeAmbiences.GetRandom();
+                }
+
                 //get the appropriate intensity layers for current situation
                 IEnumerable<BackgroundMusic> suitableIntensityMusic = Screen.Selected == GameMain.GameScreen ?
                     GetSuitableMusicClips("intensity", currentIntensity) :
                     Enumerable.Empty<BackgroundMusic>();
-
-                int intensityTrackStartIndex = 2;
+                int intensityTrackStartIndex = 3;
                 for (int i = intensityTrackStartIndex; i < MaxMusicChannels; i++)
                 {
                     //disable targetmusics that aren't suitable anymore
@@ -892,7 +904,6 @@ namespace Barotrauma
                         targetMusic[i] = null;
                     }
                 }
-                    
                 foreach (BackgroundMusic intensityMusic in suitableIntensityMusic)
                 {
                     //if the current maintrack is meant to mute all intensity music, loop through all the intensity channels and set them to null, then continue
@@ -939,7 +950,7 @@ namespace Barotrauma
                     {
                         //mute the channel
                         musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 0.0f, MusicLerpSpeed * deltaTime);
-                        if (musicChannel[i].Gain < 0.01f) DisposeMusicChannel(i);                        
+                        if (musicChannel[i].Gain < 0.01f) { DisposeMusicChannel(i); }                     
                     }
                 }
                 //something should be playing, but the targetMusic is invalid
@@ -954,7 +965,7 @@ namespace Barotrauma
                     if (musicChannel[i] != null && musicChannel[i].IsPlaying)
                     {
                         musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 0.0f, MusicLerpSpeed * deltaTime);
-                        if (musicChannel[i].Gain < 0.01f) DisposeMusicChannel(i);                        
+                        if (musicChannel[i].Gain < 0.01f) { DisposeMusicChannel(i); }                   
                     }
                     //channel free now, start playing the correct clip
                     if (currentMusic[i] == null || (musicChannel[i] == null || !musicChannel[i].IsPlaying))
@@ -971,7 +982,7 @@ namespace Barotrauma
                             targetMusic[i] = null;
                             break;
                         }
-                        musicChannel[i] = currentMusic[i].Play(0.0f, "music");
+                        musicChannel[i] = currentMusic[i].Play(0.0f, i == noiseLoopIndex ? "default" : "music");
                         if (targetMusic[i].ContinueFromPreviousTime)
                         {
                             musicChannel[i].StreamSeekPos = targetMusic[i].PreviousTime;
@@ -985,13 +996,13 @@ namespace Barotrauma
                     if (musicChannel[i] == null || !musicChannel[i].IsPlaying)
                     {
                         musicChannel[i]?.Dispose();
-                        musicChannel[i] = currentMusic[i].Play(0.0f, "music");
+                        musicChannel[i] = currentMusic[i].Play(0.0f, i == noiseLoopIndex ? "default" : "music");
                         musicChannel[i].Looping = true;
                     }
-                    float targetGain = 1.0f;
+                    float targetGain = targetMusic[i].Volume;
                     if (targetMusic[i].DuckVolume)
                     {
-                        targetGain = (float)Math.Sqrt(1.0f / activeTrackCount);
+                        targetGain *= (float)Math.Sqrt(1.0f / activeTrackCount);
                     }
                     musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, targetGain, MusicLerpSpeed * deltaTime);
                 }
@@ -1031,7 +1042,8 @@ namespace Barotrauma
                 Screen.Selected == GameMain.SpriteEditorScreen ||
                 Screen.Selected == GameMain.SubEditorScreen ||
                 Screen.Selected == GameMain.EventEditorScreen ||
-                (Screen.Selected == GameMain.GameScreen && GameMain.GameSession?.GameMode is TestGameMode))
+                (Screen.Selected == GameMain.GameScreen && GameMain.GameSession?.GameMode is TestGameMode) ||
+                Screen.Selected == GameMain.NetLobbyScreen)
             {
                 return "editor";
             }

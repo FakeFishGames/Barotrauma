@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -13,6 +14,10 @@ namespace Barotrauma
         {
             get { return shownMessages; }
         }
+
+        public bool DisplayTargetHudIcons => Prefab.DisplayTargetHudIcons;
+
+        public virtual IEnumerable<Entity> HudIconTargets => Enumerable.Empty<Entity>();
 
         public Color GetDifficultyColor()
         {
@@ -92,11 +97,14 @@ namespace Barotrauma
             };
         }
 
-        public void ClientRead(IReadMessage msg)
+        public virtual void ClientRead(IReadMessage msg)
         {
             State = msg.ReadInt16();
         }
 
-        public abstract void ClientReadInitial(IReadMessage msg);
+        public virtual void ClientReadInitial(IReadMessage msg)
+        {
+            state = msg.ReadInt16();
+        }
     }
 }

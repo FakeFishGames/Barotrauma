@@ -306,7 +306,7 @@ namespace Barotrauma
                 case 0:
 
                     if (items.All(it => it.Removed || it.Condition <= 0.0f) &&
-                        requireKill.All(c => c.Removed || c.IsDead) &&
+                        requireKill.All(c => c.Removed || c.IsDead || (c.LockHands && c.Submarine == Submarine.MainSub)) &&
                         requireRescue.All(c => c.Submarine?.Info.Type == SubmarineType.Player))
                     {
                         State = 1;

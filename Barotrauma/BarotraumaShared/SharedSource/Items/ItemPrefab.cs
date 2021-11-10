@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -12,24 +13,43 @@ namespace Barotrauma
     struct DeconstructItem
     {
         public readonly string ItemIdentifier;
-        //minCondition does <= check, meaning that below or equeal to min condition will be skipped.
+        //minCondition does <= check, meaning that below or equal to min condition will be skipped.
         public readonly float MinCondition;
         //maxCondition does > check, meaning that above this max the deconstruct item will be skipped.
         public readonly float MaxCondition;
         //Condition of item on creation
-        public readonly float OutCondition;
+        public readonly float OutConditionMin, OutConditionMax;
         //should the condition of the deconstructed item be copied to the output items
         public readonly bool CopyCondition;
+        //tag/identifier of the deconstructor(s) that can be used to deconstruct the item into this
+        public readonly string[] RequiredDeconstructor;
+        //tag/identifier of other item(s) that that need to be present in the deconstructor to deconstruct the item into this
+        public readonly string[] RequiredOtherItem;
+        //text to display on the deconstructor's activate button when this output is available
+        public readonly string ActivateButtonText;
+        public readonly string InfoText;
+        public readonly string InfoTextOnOtherItemMissing;
+
         public float Commonness { get; }
 
-        public DeconstructItem(XElement element)
+        public DeconstructItem(XElement element, string parentDebugName)
         {
             ItemIdentifier = element.GetAttributeString("identifier", "notfound");
             MinCondition = element.GetAttributeFloat("mincondition", -0.1f);
             MaxCondition = element.GetAttributeFloat("maxcondition", 1.0f);
-            OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
+            OutConditionMin = element.GetAttributeFloat("outconditionmin", element.GetAttributeFloat("outcondition", 1.0f));
+            OutConditionMax = element.GetAttributeFloat("outconditionmax", element.GetAttributeFloat("outcondition", 1.0f));
             CopyCondition = element.GetAttributeBool("copycondition", false);
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
+            if (element.Attribute("copycondition") != null && element.Attribute("outcondition") != null)
+            {
+                DebugConsole.AddWarning($"Invalid deconstruction output in \"{parentDebugName}\": the output item \"{ItemIdentifier}\" has the out condition set, but is also set to copy the condition of the deconstructed item. Ignoring the out condition.");
+            }
+            RequiredDeconstructor = element.GetAttributeStringArray("requireddeconstructor", new string[0]);
+            RequiredOtherItem = element.GetAttributeStringArray("requiredotheritem", new string[0]);
+            ActivateButtonText = element.GetAttributeString("activatebuttontext", string.Empty);
+            InfoText = element.GetAttributeString("infotext", string.Empty);
+            InfoTextOnOtherItemMissing = element.GetAttributeString("infotextonotheritemmissing", string.Empty);
         }
     }
 
@@ -67,8 +87,10 @@ namespace Barotrauma
         public readonly List<RequiredItem> RequiredItems;
         public readonly string[] SuitableFabricatorIdentifiers;
         public readonly float RequiredTime;
+        public readonly bool RequiresRecipe;
         public readonly float OutCondition; //Percentage-based from 0 to 1
         public readonly List<Skill> RequiredSkills;
+
         public int Amount { get; }
 
         public FabricationRecipe(XElement element, ItemPrefab itemPrefab)
@@ -83,6 +105,7 @@ namespace Barotrauma
             RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
             OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
             RequiredItems = new List<RequiredItem>();
+            RequiresRecipe = element.GetAttributeBool("requiresrecipe", false);
             Amount = element.GetAttributeInt("amount", 1);
 
             foreach (XElement subElement in element.Elements())
@@ -281,7 +304,7 @@ namespace Barotrauma
         /// </summary>
         public List<Rectangle> Triggers;
 
-        private List<XElement> fabricationRecipeElements = new List<XElement>();
+        private readonly List<XElement> fabricationRecipeElements = new List<XElement>();
 
         private readonly Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
 
@@ -289,6 +312,8 @@ namespace Barotrauma
         /// Is this prefab overriding a prefab in another content package
         /// </summary>
         public bool IsOverride;
+
+        public readonly ItemPrefab VariantOf;
 
         public XElement ConfigElement
         {
@@ -345,6 +370,9 @@ namespace Barotrauma
 
         [Serialize(false, false, description: "Hides the condition bar displayed at the bottom of the inventory slot the item is in.")]
         public bool HideConditionBar { get; set; }
+
+        [Serialize(false, false, description: "Hides the condition displayed in the item's tooltip.")]
+        public bool HideConditionInTooltip { get; set; }
 
         //if true and the item has trigger areas defined, characters need to be within the trigger to interact with the item
         //if false, trigger areas define areas that can be used to highlight the item
@@ -508,6 +536,20 @@ namespace Barotrauma
 
         [Serialize(false, false)]
         public bool UseContainedInventoryIconColor
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(0.0f, false)]
+        public float AddedRepairSpeedMultiplier
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
+        public bool CannotRepairFail
         {
             get;
             private set;
@@ -732,6 +774,21 @@ namespace Barotrauma
             name = originalName;
             identifier = element.GetAttributeString("identifier", "");
 
+            string variantOf = element.GetAttributeString("variantof", "");
+            if (!string.IsNullOrEmpty(variantOf))
+            {
+                ItemPrefab basePrefab = Find(null, variantOf);
+                if (basePrefab == null)
+                {
+                    DebugConsole.ThrowError($"Failed to load the item variant \"{identifier}\" - could not find the base prefab \"{variantOf}\"");
+                }
+                else
+                {
+                    VariantOf = basePrefab;
+                    ConfigElement = element = CreateVariantXML(element, basePrefab);
+                }
+            }
+
             string categoryStr = element.GetAttributeString("category", "Misc");
             if (!Enum.TryParse(categoryStr, true, out MapEntityCategory category))
             {
@@ -786,6 +843,8 @@ namespace Barotrauma
                     name = TextManager.GetWithVariable("wreckeditemformat", "[name]", name);
                 }
             }
+
+            name = GeneticMaterial.TryCreateName(this, element);
 
             if (string.IsNullOrEmpty(name))
             {
@@ -863,7 +922,8 @@ namespace Barotrauma
                         CanSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
                         sprite = new Sprite(subElement, spriteFolder, lazyLoad: true);
-                        if (subElement.Attribute("sourcerect") == null)
+                        if (subElement.Attribute("sourcerect") == null &&
+                            subElement.Attribute("sheetindex") == null)
                         {
                             DebugConsole.ThrowError("Warning - sprite sourcerect not configured for item \"" + Name + "\"!");
                         }
@@ -1031,7 +1091,7 @@ namespace Barotrauma
                                 DebugConsole.ThrowError("Error in item config \"" + Name + "\" - use item identifiers instead of names to configure the deconstruct items.");
                                 continue;
                             }
-                            DeconstructItems.Add(new DeconstructItem(deconstructItem));
+                            DeconstructItems.Add(new DeconstructItem(deconstructItem, identifier));
                         }
                         RandomDeconstructionOutputAmount = Math.Min(RandomDeconstructionOutputAmount, DeconstructItems.Count);
                         break;
@@ -1044,7 +1104,7 @@ namespace Barotrauma
                         var preferredContainer = new PreferredContainer(subElement);
                         if (preferredContainer.Primary.Count == 0 && preferredContainer.Secondary.Count == 0)
                         {
-                            DebugConsole.ThrowError($"Error in item prefab {Name}: preferred container has no preferences defined ({subElement.ToString()}).");
+                            DebugConsole.ThrowError($"Error in item prefab {Name}: preferred container has no preferences defined ({subElement}).");
                         }
                         else
                         {
@@ -1095,11 +1155,8 @@ namespace Barotrauma
                         {
                             DebugConsole.ThrowError("Error in item prefab \"" + Name + "\" - suitable treatments should be defined using item identifiers, not item names.");
                         }
-
-                        string treatmentIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
-
+                        string treatmentIdentifier = (subElement.GetAttributeString("identifier", null) ?? subElement.GetAttributeString("type", string.Empty)).ToLowerInvariant();
                         float suitability = subElement.GetAttributeFloat("suitability", 0.0f);
-
                         treatmentSuitability.Add(treatmentIdentifier, suitability);
                         break;
                 }
@@ -1111,6 +1168,8 @@ namespace Barotrauma
             {
                 DefaultPrice ??= new PriceInfo(GetMinPrice() ?? 0, false);
             }
+
+            HideConditionInTooltip = element.GetAttributeBool("hideconditionintooltip", HideConditionBar);
 
             //backwards compatibility
             if (categoryStr.Equals("Thalamus", StringComparison.OrdinalIgnoreCase))
@@ -1313,5 +1372,99 @@ namespace Barotrauma
 
         public static bool IsContainerPreferred(IEnumerable<string> preferences, ItemContainer c) => preferences.Any(id => c.Item.Prefab.Identifier == id || c.Item.HasTag(id));
         public static bool IsContainerPreferred(IEnumerable<string> preferences, IEnumerable<string> ids) => ids.Any(id => preferences.Contains(id));
+
+        private XElement CreateVariantXML(XElement variantElement, ItemPrefab basePrefab)
+        {
+            XElement newElement = new XElement(variantElement.Name);
+            newElement.Add(basePrefab.ConfigElement.Attributes());
+            newElement.Add(basePrefab.ConfigElement.Elements());
+
+            ReplaceElement(newElement, variantElement);
+
+            void ReplaceElement(XElement element, XElement replacement)
+            {
+                List<XElement> elementsToRemove = new List<XElement>();
+                foreach (XAttribute attribute in replacement.Attributes())
+                {
+                    ReplaceAttribute(element, attribute);
+                }
+                foreach (XElement replacementSubElement in replacement.Elements())
+                {
+                    int index = replacement.Elements().ToList().FindAll(e => e.Name.ToString().Equals(replacementSubElement.Name.ToString(), StringComparison.OrdinalIgnoreCase)).IndexOf(replacementSubElement);
+                    System.Diagnostics.Debug.Assert(index > -1);
+
+                    int i = 0;
+                    bool matchingElementFound = false;
+                    foreach (XElement subElement in element.Elements())
+                    {
+                        if (!subElement.Name.ToString().Equals(replacementSubElement.Name.ToString(), StringComparison.OrdinalIgnoreCase)) { continue; }
+                        if (i == index)
+                        {
+                            if (!replacementSubElement.HasAttributes && !replacementSubElement.HasElements)
+                            {
+                                //if the replacement is empty (no attributes or child elements)
+                                //remove the element from the variant
+                                elementsToRemove.Add(subElement);
+                            }
+                            else
+                            {
+                                ReplaceElement(subElement, replacementSubElement);
+                            }
+                            matchingElementFound = true;
+                            break;
+                        }
+                        i++;
+                    }
+                    if (!matchingElementFound)
+                    {
+                        element.Add(replacementSubElement);
+                    }
+                }
+                elementsToRemove.ForEach(e => e.Remove());
+            }
+
+            void ReplaceAttribute(XElement element, XAttribute newAttribute)
+            {
+                XAttribute existingAttribute = element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals(newAttribute.Name.ToString(), StringComparison.OrdinalIgnoreCase));
+                if (existingAttribute == null)
+                {
+                    element.Add(newAttribute);
+                    return;
+                }
+                float.TryParse(existingAttribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out float value);
+                if (newAttribute.Value.StartsWith('*'))
+                {
+                    string multiplierStr = newAttribute.Value.Substring(1, newAttribute.Value.Length - 1);
+                    float.TryParse(multiplierStr, NumberStyles.Any, CultureInfo.InvariantCulture, out float multiplier);
+                    if (multiplierStr.Contains('.') || existingAttribute.Value.Contains('.'))
+                    {
+                        existingAttribute.Value = (value * multiplier).ToString("G", CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        existingAttribute.Value = ((int)(value * multiplier)).ToString();
+                    }
+                }
+                else if (newAttribute.Value.StartsWith('+'))
+                {
+                    string additionStr = newAttribute.Value.Substring(1, newAttribute.Value.Length - 1);
+                    float.TryParse(additionStr, NumberStyles.Any, CultureInfo.InvariantCulture, out float addition);
+                    if (additionStr.Contains('.') || existingAttribute.Value.Contains('.'))
+                    {
+                        existingAttribute.Value = (value + addition).ToString("G", CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        existingAttribute.Value = ((int)(value + addition)).ToString();
+                    }
+                }
+                else
+                {
+                    existingAttribute.Value = newAttribute.Value;
+                }
+            }
+
+            return newElement;
+        }
     }
 }

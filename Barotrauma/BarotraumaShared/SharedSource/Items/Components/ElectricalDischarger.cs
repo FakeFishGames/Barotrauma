@@ -184,6 +184,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach ((Character character, Node node) in charactersInRange)
                 {
+                    if (character == null || character.Removed) { continue; }
                     character.ApplyAttack(null, node.WorldPosition, attack, 1.0f);
                 }
             }
@@ -472,6 +473,21 @@ namespace Barotrauma.Items.Components
 
                 nodes.Add(new Node(currPos + (diff / dist) * x + normal * normalOffset, parentNodeIndex));
                 parentNodeIndex = nodes.Count - 1;
+            }
+        }
+
+        public override void ReceiveSignal(Signal signal, Connection connection)
+        {
+            switch (connection.Name)
+            {
+                case "activate":
+                case "use":
+                case "trigger_in":
+                    if (signal.value != "0")
+                    {
+                        item.Use(1.0f, null);
+                    }
+                    break;
             }
         }
 

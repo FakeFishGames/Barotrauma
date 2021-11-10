@@ -40,7 +40,7 @@ namespace Barotrauma
 
         private readonly GUIFrame[] menuTabs;
 
-        private CampaignSetupUI campaignSetupUI;
+        private SinglePlayerCampaignSetupUI campaignSetupUI;
 
         private GUITextBox serverNameBox, /*portBox, queryPortBox,*/ passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, wrongPasswordBanBox, karmaBox;
@@ -435,7 +435,7 @@ namespace Barotrauma
             menuTabs[(int)Tab.Settings] = new GUIFrame(new RectTransform(new Vector2(relativeSize.X, 0.8f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing },
                 style: null);
 
-            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
+            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize * new Vector2(1.0f, 1.15f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
             menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
 
             CreateCampaignSetupUI();
@@ -594,6 +594,8 @@ namespace Barotrauma
                         GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.NewGame); });
                         return true;
                     }
+                    campaignSetupUI.RandomizeCrew();
+                    campaignSetupUI.SetPage(0);
                     campaignSetupUI.CreateDefaultSaveName();
                     campaignSetupUI.RandomizeSeed();
                     campaignSetupUI.UpdateSubList(SubmarineInfo.SavedSubmarines);
@@ -985,24 +987,32 @@ namespace Barotrauma
             if (selectedTab < Tab.Empty && menuTabs[(int)selectedTab] != null)
             {
                 menuTabs[(int)selectedTab].AddToGUIUpdateList();
+                switch (selectedTab)
+                {
+                    case Tab.NewGame:
+                        campaignSetupUI.CharacterMenus?.ForEach(m => m.AddToGUIUpdateList());
+                        break;
+                }
             }
         }
 
         public override void Update(double deltaTime)
         {
-#if !DEBUG
-#if USE_STEAM
+#if !DEBUG && USE_STEAM
             if (GameMain.Config.UseSteamMatchmaking)
             {
                 hostServerButton.Enabled =  Steam.SteamManager.IsInitialized;
             }
             steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
-#endif
-#else
-#if USE_STEAM
+#elif USE_STEAM
             steamWorkshopButton.Enabled = true;
 #endif
-#endif
+            switch (selectedTab)
+            {
+                case Tab.NewGame:
+                    campaignSetupUI.Update();
+                    break;
+            }
         }
 
         public void DrawBackground(GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -1119,6 +1129,11 @@ namespace Barotrauma
             selectedSub = new SubmarineInfo(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"));
             
             GameMain.GameSession = new GameSession(selectedSub, saveName, GameModePreset.SinglePlayerCampaign, settings, mapSeed);
+            GameMain.GameSession.CrewManager.CharacterInfos.Clear();
+            foreach (var characterInfo in campaignSetupUI.CharacterMenus.Select(m => m.CharacterInfo))
+            {
+                GameMain.GameSession.CrewManager.AddCharacterInfo(characterInfo);
+            }
             ((SinglePlayerCampaign)GameMain.GameSession.GameMode).LoadNewLevel();
         }
 
@@ -1146,7 +1161,7 @@ namespace Barotrauma
             menuTabs[(int)Tab.NewGame].ClearChildren();
             menuTabs[(int)Tab.LoadGame].ClearChildren();
 
-            var innerNewGame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.NewGame].RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.025f) })
+            var innerNewGame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.NewGame].RectTransform, Anchor.Center))
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
@@ -1154,30 +1169,14 @@ namespace Barotrauma
             var newGameContent = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.95f), innerNewGame.RectTransform, Anchor.Center),
                 style: "InnerFrame");
 
-            var paddedNewGame = new GUIFrame(new RectTransform(new Vector2(0.95f), newGameContent.RectTransform, Anchor.Center), style: null);
             var paddedLoadGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.LoadGame].RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 10) },
                 style: null);
 
-            campaignSetupUI = new CampaignSetupUI(false, paddedNewGame, paddedLoadGame, SubmarineInfo.SavedSubmarines)
+            campaignSetupUI = new SinglePlayerCampaignSetupUI(newGameContent, paddedLoadGame, SubmarineInfo.SavedSubmarines)
             {
                 LoadGame = LoadGame,
                 StartNewGame = StartGame
             };
-
-            var startButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), innerNewGame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.BottomRight)
-            {
-                RelativeSpacing = 0.05f
-            };
-            campaignSetupUI.StartButton.RectTransform.Parent = startButtonContainer.RectTransform;
-            campaignSetupUI.StartButton.RectTransform.MinSize = new Point(
-                (int)(campaignSetupUI.StartButton.TextBlock.TextSize.X * 1.5f),
-                campaignSetupUI.StartButton.RectTransform.MinSize.Y);
-            startButtonContainer.RectTransform.MinSize = new Point(0, campaignSetupUI.StartButton.RectTransform.MinSize.Y);
-            if (campaignSetupUI.CampaignCustomizeButton != null)
-            {
-                campaignSetupUI.CampaignCustomizeButton.RectTransform.Parent = startButtonContainer.RectTransform;
-            }
-            campaignSetupUI.InitialMoneyText.RectTransform.Parent = startButtonContainer.RectTransform;
         }
 
         private void CreateHostServerFields()

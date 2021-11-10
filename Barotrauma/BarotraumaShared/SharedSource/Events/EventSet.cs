@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
@@ -48,10 +49,10 @@ namespace Barotrauma
             List<EventPrefab> eventPrefabs = new List<EventPrefab>(PrefabList);
             foreach (var eventSet in List)
             {
-                eventPrefabs.AddRange(eventSet.EventPrefabs.Select(ep => ep.prefab));
+                eventPrefabs.AddRange(eventSet.EventPrefabs.SelectMany(ep => ep.Prefabs));
                 foreach (var childSet in eventSet.ChildSets)
                 {
-                    eventPrefabs.AddRange(childSet.EventPrefabs.Select(ep => ep.prefab));
+                    eventPrefabs.AddRange(childSet.EventPrefabs.SelectMany(ep => ep.Prefabs));
                 }
             }
             return eventPrefabs;
@@ -98,7 +99,48 @@ namespace Barotrauma
 
         public readonly Dictionary<string, float> Commonness;
 
-        public readonly List<(EventPrefab prefab, float commonness, float probability)> EventPrefabs;
+        public struct SubEventPrefab
+        {
+            public SubEventPrefab(string debugIdentifier, string[] prefabIdentifiers, float? commonness, float? probability)
+            {
+                EventPrefab tryFindPrefab(string id)
+                {
+                    var prefab = PrefabList.Find(p => p.Identifier.Equals(id, StringComparison.OrdinalIgnoreCase));
+                    if (prefab is null)
+                    {
+                        DebugConsole.ThrowError($"Error in event set \"{debugIdentifier}\" - could not find the event prefab \"{id}\".");
+                    }
+                    return prefab;
+                }
+
+                this.Prefabs = prefabIdentifiers
+                    .Select(tryFindPrefab)
+                    .Where(p => p != null)
+                    .ToImmutableArray();
+                this.Commonness = commonness ?? this.Prefabs.Select(p => p.Commonness).MaxOrNull() ?? 0.0f;
+                this.Probability = probability ?? this.Prefabs.Select(p => p.Probability).MaxOrNull() ?? 0.0f;
+            }
+
+            public SubEventPrefab(EventPrefab prefab, float commonness, float probability)
+            {
+                Prefabs = prefab.ToEnumerable().ToImmutableArray();
+                Commonness = commonness;
+                Probability = probability;
+            }
+
+            public readonly ImmutableArray<EventPrefab> Prefabs;
+            public readonly float Commonness;
+            public readonly float Probability;
+
+            public void Deconstruct(out IEnumerable<EventPrefab> prefabs, out float commonness, out float probability)
+            {
+                prefabs = Prefabs;
+                commonness = Commonness;
+                probability = Probability;
+            }
+        }
+        
+        public readonly List<SubEventPrefab> EventPrefabs;
 
         public readonly List<EventSet> ChildSets;
 
@@ -112,7 +154,7 @@ namespace Barotrauma
         {
             DebugIdentifier = element.GetAttributeString("identifier", null) ?? debugIdentifier;
             Commonness = new Dictionary<string, float>();
-            EventPrefabs =  new List<(EventPrefab prefab, float commonness, float probability)>();
+            EventPrefabs =  new List<SubEventPrefab>();
             ChildSets = new List<EventSet>();
 
             BiomeIdentifier = element.GetAttributeString("biome", string.Empty);
@@ -178,23 +220,20 @@ namespace Barotrauma
                         //an element with just an identifier = reference to an event prefab
                         if (!subElement.HasElements && subElement.Attributes().First().Name.ToString().Equals("identifier", StringComparison.OrdinalIgnoreCase))
                         {
-                            string identifier = subElement.GetAttributeString("identifier", "");
-                            var prefab = PrefabList.Find(p => p.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
-                            if (prefab == null)
-                            {
-                                DebugConsole.ThrowError($"Error in event set \"{debugIdentifier}\" - could not find the event prefab \"{identifier}\".");
-                            }
-                            else
-                            {
-                                float commonness = subElement.GetAttributeFloat("commonness", prefab.Commonness);
-                                float probability = subElement.GetAttributeFloat("probability", prefab.Probability);
-                                EventPrefabs.Add((prefab, commonness, probability));
-                            }
+                            string[] identifiers = subElement.GetAttributeStringArray("identifier", Array.Empty<string>());
+                        
+                            float commonness = subElement.GetAttributeFloat("commonness", -1f);
+                            float probability = subElement.GetAttributeFloat("probability", -1f);
+                            EventPrefabs.Add(new SubEventPrefab(
+                                debugIdentifier,
+                                identifiers,
+                                commonness>=0f ? commonness : (float?)null,
+                                probability>=0f ? probability : (float?)null));
                         }
                         else
                         {
                             var prefab = new EventPrefab(subElement);
-                            EventPrefabs.Add((prefab, prefab.Commonness, prefab.Probability));
+                            EventPrefabs.Add(new SubEventPrefab(prefab, prefab.Commonness, prefab.Probability));
                         }
                         break;
                 }
@@ -346,13 +385,13 @@ namespace Barotrauma
             {
                 if (thisSet.ChooseRandom)
                 {
-                    var unusedEvents = new List<(EventPrefab prefab, float commonness, float probability)>(thisSet.EventPrefabs);
+                    var unusedEvents = thisSet.EventPrefabs.ToList();
                     for (int i = 0; i < thisSet.EventCount; i++)
                     {
-                        var eventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => e.commonness).ToList(), Rand.RandSync.Unsynced);
-                        if (eventPrefab.prefab != null)
+                        var eventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => e.Commonness).ToList(), Rand.RandSync.Unsynced);
+                        if (eventPrefab.Prefabs.Any(p => p != null))
                         {
-                            AddEvent(stats, eventPrefab.prefab);
+                            AddEvents(stats, eventPrefab.Prefabs);
                             unusedEvents.Remove(eventPrefab);
                         }
                     }
@@ -361,7 +400,7 @@ namespace Barotrauma
                 {
                     foreach (var eventPrefab in thisSet.EventPrefabs)
                     {
-                        AddEvent(stats, eventPrefab.prefab);
+                        AddEvents(stats, eventPrefab.Prefabs);
                     }
                 }
                 foreach (var childSet in thisSet.ChildSets)
@@ -370,6 +409,9 @@ namespace Barotrauma
                 }
             }
 
+            static void AddEvents(EventDebugStats stats, IEnumerable<EventPrefab> eventPrefabs)
+                => eventPrefabs.ForEach(p => AddEvent(stats, p));
+            
             static void AddEvent(EventDebugStats stats, EventPrefab eventPrefab)
             {
                 if (eventPrefab.EventType == typeof(MonsterEvent))

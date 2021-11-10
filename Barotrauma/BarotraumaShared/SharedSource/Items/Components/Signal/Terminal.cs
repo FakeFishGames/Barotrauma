@@ -41,9 +41,12 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (string.IsNullOrEmpty(value)) { return; }
-                ShowOnDisplay(value);
+                ShowOnDisplay(value, addToHistory: true);
             }
         }
+
+        [Editable, Serialize(false, true, description: "The terminal will use a monospace font if this box is ticked.", alwaysUseInstanceValues: true)]
+        public bool UseMonospaceFont { get; set; }
 
         private string OutputValue { get; set; }
 
@@ -56,7 +59,7 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element);
 
-        partial void ShowOnDisplay(string input, bool addToHistory = true);
+        partial void ShowOnDisplay(string input, bool addToHistory);
 
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
@@ -67,14 +70,14 @@ namespace Barotrauma.Items.Components
             }
 
             string inputSignal = signal.value.Replace("\\n", "\n");
-            ShowOnDisplay(inputSignal);
+            ShowOnDisplay(inputSignal, addToHistory: true);
         }
 
         public override void OnItemLoaded()
         {
             bool isSubEditor = false;
 #if CLIENT
-            isSubEditor = Screen.Selected != GameMain.SubEditorScreen || GameMain.GameSession?.GameMode is TestGameMode;
+            isSubEditor = Screen.Selected == GameMain.SubEditorScreen || GameMain.GameSession?.GameMode is TestGameMode;
 #endif
 
             base.OnItemLoaded();
@@ -107,7 +110,7 @@ namespace Barotrauma.Items.Components
             {
                 string msg = componentElement.GetAttributeString("msg" + i, null);
                 if (msg == null) { break; }
-                ShowOnDisplay(msg);
+                ShowOnDisplay(msg, addToHistory: true);
             }
         }
     }

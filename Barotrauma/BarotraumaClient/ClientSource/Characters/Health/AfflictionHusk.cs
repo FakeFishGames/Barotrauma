@@ -1,10 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using Barotrauma.IO;
-using System.Linq;
-using System.Xml.Linq;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     partial class AfflictionHusk : Affliction
     {

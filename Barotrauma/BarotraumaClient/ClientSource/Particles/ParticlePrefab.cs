@@ -180,16 +180,13 @@ namespace Barotrauma.Particles
         [Editable, Serialize("1.0,1.0", false, description: "The maximum initial size of the particle.")]
         public Vector2 StartSizeMax { get; private set; }
 
-        [Editable]
-        [Serialize("0.0,0.0", false, description: "How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.")]
+        [Editable, Serialize("0.0,0.0", false, description: "How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.")]
         public Vector2 SizeChangeMin { get; private set; }
 
-        [Editable]
-        [Serialize("0.0,0.0", false, description: "How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.")]
+        [Editable, Serialize("0.0,0.0", false, description: "How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.")]
         public Vector2 SizeChangeMax { get; private set; }
 
-        [Editable]
-        [Serialize(0.0f, false, description: "How many seconds it takes for the particle to grow to it's initial size.")]
+        [Editable, Serialize(0.0f, false, description: "How many seconds it takes for the particle to grow to it's initial size.")]
         public float GrowTime { get; private set; }
 
         //rendering -----------------------------------------
@@ -214,6 +211,9 @@ namespace Barotrauma.Particles
 
         [Editable, Serialize(ParticleBlendState.AlphaBlend, false, description: "The type of blending to use when rendering the particle.")]
         public ParticleBlendState BlendState { get; private set; }
+
+        [Editable, Serialize(0, false, description: "Particles with a higher priority can replace lower-priority ones if the maximum number of active particles has been reached.")]
+        public int Priority { get; private set; }
 
         //animation -----------------------------------------
 

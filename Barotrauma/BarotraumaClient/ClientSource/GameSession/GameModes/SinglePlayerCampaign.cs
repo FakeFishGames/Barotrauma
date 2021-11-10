@@ -463,7 +463,6 @@ namespace Barotrauma
                 {
                     SubmarineInfo previousSub = GameMain.GameSession.SubmarineInfo;
                     GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
-                    PendingSubmarineSwitch = null;
 
                     for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
                     {
@@ -476,6 +475,7 @@ namespace Barotrauma
                 }
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                PendingSubmarineSwitch = null;
             }
             else
             {

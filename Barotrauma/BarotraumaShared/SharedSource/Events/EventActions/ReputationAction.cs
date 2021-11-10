@@ -50,7 +50,7 @@ namespace Barotrauma
                         Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier.Equals(Identifier, StringComparison.OrdinalIgnoreCase));
                         if (faction != null)
                         {
-                            faction.Reputation.Value += Increase;
+                            faction.Reputation.AddReputation(Increase);
                         }
                         else
                         {
@@ -64,14 +64,14 @@ namespace Barotrauma
                         Location location = campaign.Map.CurrentLocation;
                         if (location != null)
                         {
-                            location.Reputation.Value += Increase;
+                            location.Reputation.AddReputation(Increase);
                             IEnumerable<Location> locations = location.Connections.SelectMany(c => c.Locations).Distinct().Where(l => l != null && l != location);
                             foreach (Location connectedLocation in locations)
                             {
                                 Debug.Assert(connectedLocation.Reputation != null, "connectedLocation.Reputation != null");
                                 if (connectedLocation.Reputation != null)
                                 {
-                                    connectedLocation.Reputation.Value += (Increase / 4);
+                                    connectedLocation.Reputation.AddReputation(Increase / 4);
                                 }
                             }
                         }

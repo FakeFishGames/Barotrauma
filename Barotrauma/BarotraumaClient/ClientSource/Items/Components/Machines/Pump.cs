@@ -142,6 +142,7 @@ namespace Barotrauma.Items.Components
         
         partial void UpdateProjSpecific(float deltaTime)
         {
+            float rotationRad = MathHelper.ToRadians(item.Rotation);
             if (FlowPercentage < 0.0f)
             {
                 foreach (var (position, emitter) in pumpOutEmitters)
@@ -149,12 +150,13 @@ namespace Barotrauma.Items.Components
                     if (item.CurrentHull != null && item.CurrentHull.Surface < item.Rect.Location.Y + position.Y) { continue; }
 
                     //only emit "pump out" particles when underwater
-                    Vector2 relativeParticlePos = (item.WorldRect.Location.ToVector2() + position * item.Scale) - item.WorldPosition; 
-                    float angle = 0.0f;
+                    Vector2 relativeParticlePos = (item.WorldRect.Location.ToVector2() + position * item.Scale) - item.WorldPosition;
+                    relativeParticlePos = MathUtils.RotatePoint(relativeParticlePos, item.FlippedX ? rotationRad : -rotationRad);
+                    float angle = -rotationRad;
                     if (item.FlippedX)
                     {
                         relativeParticlePos.X = -relativeParticlePos.X;
-                        angle = MathHelper.Pi;
+                        angle += MathHelper.Pi;
                     }
                     if (item.FlippedY)
                     {
@@ -170,11 +172,12 @@ namespace Barotrauma.Items.Components
                 foreach (var (position, emitter) in pumpInEmitters)
                 {
                     Vector2 relativeParticlePos = (item.WorldRect.Location.ToVector2() + position * item.Scale) - item.WorldPosition;
-                    float angle = 0.0f;
+                    relativeParticlePos = MathUtils.RotatePoint(relativeParticlePos, item.FlippedX ? rotationRad : -rotationRad);
+                    float angle = -rotationRad;
                     if (item.FlippedX)
                     {
                         relativeParticlePos.X = -relativeParticlePos.X;
-                        angle = MathHelper.Pi;
+                        angle += MathHelper.Pi;
                     }
                     if (item.FlippedY)
                     {

@@ -13,16 +13,5 @@ namespace Barotrauma
         {
             State = 1;
         }
-
-#if CLIENT
-        public override void ClientReadInitial(IReadMessage msg)
-        {
-        }
-#elif SERVER
-
-        public override void ServerWriteInitial(IWriteMessage msg, Client c)
-        {
-        }
-#endif
     }
 }

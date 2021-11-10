@@ -265,7 +265,7 @@ namespace Barotrauma
                 if (!currentDisplayLocation.Discovered)
                 {
                     RemoveFogOfWar(currentDisplayLocation);
-                    currentDisplayLocation.Discovered = true;
+                    currentDisplayLocation.Discover();
                     if (currentDisplayLocation.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
                     {
                         furthestDiscoveredLocation = currentDisplayLocation;
@@ -426,7 +426,7 @@ namespace Barotrauma
                         Level.Loaded.DebugSetStartLocation(CurrentLocation);
                         Level.Loaded.DebugSetEndLocation(null);
 
-                        CurrentLocation.Discovered = true;
+                        CurrentLocation.Discover();
                         OnLocationChanged?.Invoke(prevLocation, CurrentLocation);
                         SelectLocation(-1);
                         if (GameMain.Client == null)

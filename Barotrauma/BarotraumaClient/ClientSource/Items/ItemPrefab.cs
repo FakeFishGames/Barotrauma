@@ -77,6 +77,13 @@ namespace Barotrauma
             protected set;
         }
 
+        [Serialize(true, false)]
+        public bool ShowInStatusMonitor
+        {
+            get;
+            private set;
+        }
+
 
         [Serialize("", false)]
         public string ImpactSoundTag { get; private set; }
@@ -84,13 +91,13 @@ namespace Barotrauma
         public override void UpdatePlacing(Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
-            
+
             if (PlayerInput.SecondaryMouseButtonClicked())
             {
                 selected = null;
                 return;
             }
-            
+
             var potentialContainer = MapEntity.GetPotentialContainer(position);
 
             if (!ResizeHorizontal && !ResizeVertical)
@@ -155,7 +162,7 @@ namespace Barotrauma
             {
                 potentialContainer.IsHighlighted = true;
             }
-            
+
 
             //if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed) selected = null;
 

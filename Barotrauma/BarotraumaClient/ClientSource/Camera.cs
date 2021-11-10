@@ -338,15 +338,18 @@ namespace Barotrauma
                     previousOffset = offset;
                 }
 
-                //how much to zoom out (zoom completely out when offset is 1000)
-                float zoomOutAmount = GetZoomAmount(offset);
-                //scaled zoom amount
-                float scaledZoom = MathHelper.Lerp(DefaultZoom, MinZoom, zoomOutAmount) * globalZoomScale;
-                //zoom in further if zoomOutAmount is low and resolution is lower than reference
-                float newZoom = scaledZoom * (MathHelper.Lerp(0.3f * (1f - Math.Min(globalZoomScale, 1f)), 0f,
-                    (GameMain.Config == null || GameMain.Config.EnableMouseLook) ? (float)Math.Sqrt(offsetUnscaledLen) : 0.3f) + 1f);
+                if (allowZoom)
+                {
+                    //how much to zoom out (zoom completely out when offset is 1000)
+                    float zoomOutAmount = GetZoomAmount(offset);
+                    //scaled zoom amount
+                    float scaledZoom = MathHelper.Lerp(DefaultZoom, MinZoom, zoomOutAmount) * globalZoomScale;
+                    //zoom in further if zoomOutAmount is low and resolution is lower than reference
+                    float newZoom = scaledZoom * (MathHelper.Lerp(0.3f * (1f - Math.Min(globalZoomScale, 1f)), 0f,
+                        (GameMain.Config == null || GameMain.Config.EnableMouseLook) ? (float)Math.Sqrt(offsetUnscaledLen) : 0.3f) + 1f);
 
-                Zoom += (newZoom - zoom) / ZoomSmoothness;
+                    Zoom += (newZoom - zoom) / ZoomSmoothness;
+                }
 
                 //force targetzoom to the current zoom value, so the camera stays at the same zoom when switching to freecam
                 targetZoom = Zoom;

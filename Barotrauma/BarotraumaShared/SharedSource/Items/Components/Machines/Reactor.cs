@@ -367,23 +367,19 @@ namespace Barotrauma.Items.Components
                         item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
                     }
                 }
-
-                if (item.CurrentHull != null)
-                {
-                    var aiTarget = item.CurrentHull.AiTarget;
-                    if (aiTarget != null && MaxPowerOutput > 0)
-                    {
-                        float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
-                        float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
-                        aiTarget.SoundRange = Math.Max(aiTarget.SoundRange, noise);
-                    }
-                }
-
                 if (item.AiTarget != null && MaxPowerOutput > 0)
                 {
                     var aiTarget = item.AiTarget;
                     float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
                     aiTarget.SoundRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
+                    if (item.CurrentHull != null)
+                    {
+                        var hullAITarget = item.CurrentHull.AiTarget;
+                        if (hullAITarget != null)
+                        {
+                            hullAITarget.SoundRange = Math.Max(hullAITarget.SoundRange, aiTarget.SoundRange);
+                        }
+                    }
                 }
             }
 
@@ -498,15 +494,12 @@ namespace Barotrauma.Items.Components
             {
                 float prevFireTimer = fireTimer;
                 fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.MaxCondition);
-
-
 #if SERVER
                 if (fireTimer > Math.Min(5.0f, FireDelay / 2) && blameOnBroken?.Character?.SelectedConstruction == item)
                 {
-                    GameMain.Server.KarmaManager.OnReactorOverHeating(blameOnBroken.Character, deltaTime);
+                    GameMain.Server.KarmaManager.OnReactorOverHeating(item, blameOnBroken.Character, deltaTime);
                 }
 #endif
-
                 if (fireTimer >= FireDelay && prevFireTimer < fireDelay)
                 {
                     new FireSource(item.WorldPosition);
@@ -595,7 +588,7 @@ namespace Barotrauma.Items.Components
             GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
             if (GameMain.Server != null)
             {
-                GameMain.Server.KarmaManager.OnReactorMeltdown(blameOnBroken?.Character);
+                GameMain.Server.KarmaManager.OnReactorMeltdown(item, blameOnBroken?.Character);
             }
 #endif
         }
