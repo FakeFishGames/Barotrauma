@@ -2873,12 +2873,12 @@ namespace Barotrauma
             GUIButton jobButton = null;
 
             var availableJobs = JobPrefab.Prefabs.Where(jobPrefab =>
-                    jobPrefab.MaxNumber > 0 && JobList.Content.Children.All(c => !(c.UserData is Pair<JobPrefab, int> prefab) || prefab.First != jobPrefab)
+                    jobPrefab.MaxNumber > 0 && jobPrefab.AvailableTo != JobPrefab.Availability.Npc && JobList.Content.Children.All(c => !(c.UserData is Pair<JobPrefab, int> prefab) || prefab.First != jobPrefab)
             ).Select(j => new Pair<JobPrefab, int>(j, 0));
 
             availableJobs = availableJobs.Concat(
                 JobPrefab.Prefabs.Where(jobPrefab =>
-                    jobPrefab.MaxNumber > 0 && JobList.Content.Children.Any(c => (c.UserData is Pair<JobPrefab, int> prefab) && prefab.First == jobPrefab)
+                    jobPrefab.MaxNumber > 0 && jobPrefab.AvailableTo != JobPrefab.Availability.Npc && JobList.Content.Children.Any(c => (c.UserData is Pair<JobPrefab, int> prefab) && prefab.First == jobPrefab)
             ).Select(j => JobList.Content.FindChild(c => (c.UserData is Pair<JobPrefab, int> prefab) && prefab.First == j).UserData as Pair<JobPrefab, int>));
 
             availableJobs = availableJobs.ToList();
