@@ -88,6 +88,7 @@ namespace Microsoft.Xna.Framework {
 
 		#region Events
 
+        public event EventHandler<FileDropEventArgs> FileDropped;
 		public event EventHandler<EventArgs> ClientSizeChanged;
 		public event EventHandler<EventArgs> OrientationChanged;
 		public event EventHandler<EventArgs> ScreenDeviceNameChanged;
@@ -131,7 +132,7 @@ namespace Microsoft.Xna.Framework {
 		protected void OnDeactivated ()
 		{
 		}
-         
+
 		protected void OnOrientationChanged ()
 		{
             EventHelpers.Raise(this, OrientationChanged, EventArgs.Empty);
@@ -153,7 +154,12 @@ namespace Microsoft.Xna.Framework {
 		}
 #endif
 
-		protected internal abstract void SetSupportedOrientations (DisplayOrientation orientations);
+        protected internal abstract void SetSupportedOrientations (DisplayOrientation orientations);
 		protected abstract void SetTitle (string title);
+
+        protected void OnFileDropped(FileDropEventArgs e)
+        {
+            EventHelpers.Raise(this, FileDropped, e);
+        }
     }
 }

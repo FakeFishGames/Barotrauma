@@ -8,9 +8,18 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
+        private CoroutineHandle logPropertyChangeCoroutine;
+
+        public Inventory PreviousParentInventory;
+
         public override Sprite Sprite
         {
             get { return prefab?.sprite; }
+        }
+
+        partial void AssignCampaignInteractionTypeProjSpecific(CampaignMode.InteractionType interactionType)
+        {
+            GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
         }
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
@@ -85,6 +94,9 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.Status:
                     msg.Write(condition);
+                    break;
+                case NetEntityEvent.Type.AssignCampaignInteraction:
+                    msg.Write((byte)CampaignInteractionType);
                     break;
                 case NetEntityEvent.Type.Treatment:
                     {
@@ -270,12 +282,21 @@ namespace Barotrauma
             msg.Write(body == null ? (byte)0 : (byte)body.BodyType);
             msg.Write(SpawnedInOutpost);
             msg.Write(AllowStealing);
+            msg.WriteRangedInteger(Quality, 0, Items.Components.Quality.MaxQuality);
 
             byte teamID = 0;
             foreach (WifiComponent wifiComponent in GetComponents<WifiComponent>())
             {
                 teamID = (byte)wifiComponent.TeamID;
                 break;
+            }
+            if (teamID == 0)
+            {
+                foreach (IdCard idCard in GetComponents<IdCard>())
+                {
+                    teamID = (byte)idCard.TeamID;
+                    break;
+                }
             }
 
             msg.Write(teamID);

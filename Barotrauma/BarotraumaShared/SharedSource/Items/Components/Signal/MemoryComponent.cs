@@ -6,6 +6,17 @@ namespace Barotrauma.Items.Components
 {
     partial class MemoryComponent : ItemComponent, IServerSerializable
     {
+        private int maxValueLength;
+        [Editable, Serialize(200, false, description: "The maximum length of the stored value. Warning: Large values can lead to large memory usage or networking issues.")]
+        public int MaxValueLength
+        {
+            get { return maxValueLength; }
+            set
+            {
+                maxValueLength = Math.Max(value, 0);
+            }
+        }
+
         private string value;
 
         [InGameEditable, Serialize("", true, description: "The currently stored signal the item outputs.", alwaysUseInstanceValues: true)]
@@ -20,17 +31,6 @@ namespace Barotrauma.Items.Components
                 {
                     this.value = this.value.Substring(0, MaxValueLength);
                 }
-            }
-        }
-
-        private int maxValueLength;
-        [Editable, Serialize(200, false, description: "The maximum length of the stored value. Warning: Large values can lead to large memory usage or networking issues.")]
-        public int MaxValueLength
-        {
-            get { return maxValueLength; }
-            set
-            {
-                maxValueLength = Math.Max(value, 0);
             }
         }
 

@@ -14,8 +14,8 @@ namespace Barotrauma
     partial class BackgroundSection
     {
         public Rectangle Rect;
-        public int Index;
-        public int RowIndex;
+        public ushort Index;
+        public ushort RowIndex;
 
         private Vector4 colorVector4;
         private Color color;
@@ -39,7 +39,7 @@ namespace Barotrauma
             }
         }
 
-        public BackgroundSection(Rectangle rect, int index, int rowIndex)
+        public BackgroundSection(Rectangle rect, ushort index, ushort rowIndex)
         {
             Rect = rect;
             Index = index;
@@ -53,7 +53,7 @@ namespace Barotrauma
             Color = DirtColor = Color.Lerp(new Color(10, 10, 10, 100), new Color(54, 57, 28, 200), Noise.X);
         }
 
-        public BackgroundSection(Rectangle rect, int index, float colorStrength, Color color, int rowIndex)
+        public BackgroundSection(Rectangle rect, ushort index, float colorStrength, Color color, ushort rowIndex)
         {
             System.Diagnostics.Debug.Assert(rect.Width > 0 && rect.Height > 0);
 
@@ -189,6 +189,10 @@ namespace Barotrauma
                 if (roomName == value) { return; }
                 roomName = value;
                 DisplayName = TextManager.Get(roomName, returnNull: true) ?? roomName;
+                if (!IsWetRoom && ForceAsWetRoom)
+                {
+                    IsWetRoom = true;
+                }
             }
         }
 
@@ -329,6 +333,42 @@ namespace Barotrauma
             }
         }
 
+        private bool ForceAsWetRoom => 
+            roomName != null && (
+            roomName.Contains("ballast", StringComparison.OrdinalIgnoreCase) || 
+            roomName.Contains("bilge", StringComparison.OrdinalIgnoreCase) || 
+            roomName.Contains("airlock", StringComparison.OrdinalIgnoreCase));
+
+        private bool isWetRoom;
+        [Editable, Serialize(false, true, description: "It's normal for this hull to be filled with water. If the room name contains 'ballast', 'bilge', or 'airlock', you can't disable this setting.")]
+        public bool IsWetRoom
+        {
+            get { return isWetRoom; }
+            set
+            {
+                isWetRoom = value;
+                if (ForceAsWetRoom)
+                {
+                    isWetRoom = true;
+                }
+            }
+        }
+
+        private bool avoidStaying;
+        [Editable, Serialize(false, true, description: "Bots avoid staying here, but they are still allowed to access the room when needed and go through it. Forced true for wet rooms.")]
+        public bool AvoidStaying
+        {
+            get { return avoidStaying || IsWetRoom; }
+            set
+            {
+                avoidStaying = value;
+                if (IsWetRoom)
+                {
+                    avoidStaying = true;
+                }
+            }
+        }
+
         public float WaterPercentage => MathUtils.Percentage(WaterVolume, Volume);
 
         public float OxygenPercentage
@@ -431,9 +471,8 @@ namespace Barotrauma
             {
                 aiTarget = new AITarget(this)
                 {
-                    MinSightRange = 2000,
+                    MinSightRange = 1000,
                     MaxSightRange = 5000,
-                    MaxSoundRange = 5000,
                     SoundRange = 0
                 };
             }
@@ -485,7 +524,13 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            return new Hull(MapEntityPrefab.Find(null, "hull"), rect, Submarine);
+            var clone = new Hull(MapEntityPrefab.Find(null, "hull"), rect, Submarine);
+            foreach (KeyValuePair<string, SerializableProperty> property in SerializableProperties)
+            {
+                if (!property.Value.Attributes.OfType<Editable>().Any()) { continue; }
+                clone.SerializableProperties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
+            }
+            return clone;
         }
 
         public static EntityGrid GenerateEntityGrid(Rectangle worldRect)
@@ -501,7 +546,7 @@ namespace Barotrauma
             EntityGrids.Add(newGrid);            
             foreach (Hull hull in hullList)
             {
-                if (hull.Submarine == submarine) newGrid.InsertEntity(hull);
+                if (hull.Submarine == submarine && !hull.IdFreed) { newGrid.InsertEntity(hull); }
             }
             return newGrid;
         }
@@ -534,6 +579,9 @@ namespace Barotrauma
             Pressure = rect.Y - rect.Height + waterVolume / rect.Width;
             
             BallastFlora?.OnMapLoaded();
+#if CLIENT
+            lastAmbientLightEditTime = 0.0;
+#endif
         }
 
         public void AddToGrid(Submarine submarine)
@@ -625,6 +673,9 @@ namespace Barotrauma
                 Gap.UpdateHulls();
             }
 
+            BackgroundSections?.Clear();
+            submergedSections?.Clear();
+
             List<FireSource> fireSourcesToRemove = new List<FireSource>(FireSources);
             foreach (FireSource fireSource in fireSourcesToRemove)
             {
@@ -643,6 +694,11 @@ namespace Barotrauma
 
         public void AddFireSource(FireSource fireSource)
         {
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+            {
+                //clients aren't allowed to create fire sources in hulls whose IDs have been freed (dynamic hulls between docking ports), because they can't be synced
+                if (IdFreed) { return; }
+            }
             if (fireSource is DummyFireSource dummyFire)
             {
                 FakeFireSources.Add(dummyFire);
@@ -705,19 +761,22 @@ namespace Barotrauma
 
             Oxygen -= OxygenDeteriorationSpeed * deltaTime;
 
-            if ((Character.Controlled?.CharacterHealth?.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
+            if (FakeFireSources.Count > 0)
             {
-                for (int i = FakeFireSources.Count - 1; i >= 0; i--)
+                if ((Character.Controlled?.CharacterHealth?.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
                 {
-                    if (FakeFireSources[i].CausedByPsychosis)
+                    for (int i = FakeFireSources.Count - 1; i >= 0; i--)
                     {
-                        FakeFireSources[i].Remove();
+                        if (FakeFireSources[i].CausedByPsychosis)
+                        {
+                            FakeFireSources[i].Remove();
+                        }
                     }
                 }
+                FireSource.UpdateAll(FakeFireSources, deltaTime);
             }
 
             FireSource.UpdateAll(FireSources, deltaTime);
-            FireSource.UpdateAll(FakeFireSources, deltaTime);
 
             foreach (Decal decal in decals)
             {
@@ -727,7 +786,7 @@ namespace Barotrauma
 
             if (aiTarget != null)
             {
-                aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;
+                aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : MathHelper.Lerp(aiTarget.MinSightRange, aiTarget.MaxSightRange, Submarine.Velocity.Length() / 10);
                 aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
          
@@ -875,7 +934,7 @@ namespace Barotrauma
             foreach (var gap in ConnectedGaps.Where(gap => gap.Open > 0))
             {
                 var distance = MathHelper.Max(Vector2.DistanceSquared(item.Position, gap.Position) / 1000, 1f);
-                item.body.ApplyForce((gap.LerpedFlowForce / distance) * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                item.body.ApplyForce((gap.LerpedFlowForce / distance) * deltaTime);
             }
         }
 
@@ -1184,6 +1243,44 @@ namespace Barotrauma
             return "RoomName.Sub" + roomPos.ToString();
         }
 
+        /// <summary>
+        /// Is this hull or any of the items inside it tagged as "airlock"?
+        /// </summary>
+        public bool IsTaggedAirlock()
+        {
+            if (RoomName != null && RoomName.Contains("airlock", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            else
+            {
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.CurrentHull != this && item.HasTag("airlock"))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Does this hull have any doors leading outside?
+        /// </summary>
+        /// <param name="character">Used to check if this character has access to the door leading outside</param>
+        public bool LeadsOutside(Character character)
+        {
+            foreach (var gap in ConnectedGaps)
+            {
+                if (gap.ConnectedDoor == null) { continue; }
+                if (gap.IsRoomToRoom) { continue; }
+                if (!gap.ConnectedDoor.CanBeTraversed && (character == null || !gap.ConnectedDoor.HasAccess(character))) { continue; }
+                return true;
+            }
+            return false;
+        }
+
 #region BackgroundSections
         private void CreateBackgroundSections()
         {
@@ -1203,9 +1300,9 @@ namespace Barotrauma
             {
                 for (int x = 0; x < xBackgroundMax; x++)
                 {
-                    int index = BackgroundSections.Count;
+                    ushort index = (ushort)BackgroundSections.Count;
                     int sector = (int)Math.Floor(index / (float)sectorWidth - xSectors * y) + y / sectorHeight * (int)Math.Ceiling(xSectors);
-                    BackgroundSections.Add(new BackgroundSection(new Rectangle(x * sectionWidth, y * -sectionHeight, sectionWidth, sectionHeight), index, y));
+                    BackgroundSections.Add(new BackgroundSection(new Rectangle(x * sectionWidth, y * -sectionHeight, sectionWidth, sectionHeight), index, (ushort)y));
                 }
             }
 

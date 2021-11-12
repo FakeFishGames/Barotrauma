@@ -176,6 +176,20 @@ namespace Barotrauma
             private set;
         }
 
+        [Editable, Serialize(true, true, description: "Can the object be placed near the start of the level.")]
+        public bool AllowAtStart
+        {
+            get;
+            private set;
+        }
+
+        [Editable, Serialize(true, true, description: "Can the object be placed near the end of the level.")]
+        public bool AllowAtEnd
+        {
+            get;
+            private set;
+        }
+
         [Serialize(0.0f, true, description: "Minimum length of a graph edge the object can spawn on."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         /// <summary>
         /// Minimum length of a graph edge the object can spawn on.
@@ -245,6 +259,27 @@ namespace Barotrauma
 
         [Serialize(0.0f, true, description: "How much the object disrupts submarine's sonar."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float SonarDisruption
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, true, description: "Can the object take damage from weapons/attacks that damage level walls."), Editable]
+        public bool TakeLevelWallDamage
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, true), Editable]
+        public bool HideWhenBroken
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(100.0f, true), Editable]
+        public float Health
         {
             get;
             private set;

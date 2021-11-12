@@ -162,6 +162,9 @@ namespace Barotrauma.Networking
 
                 RadiationEnabled = incMsg.ReadBoolean();
 
+                int maxMissionCount = MaxMissionCount + incMsg.ReadByte() - 1;
+                MaxMissionCount = MathHelper.Clamp(maxMissionCount, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit);
+
                 changed |= true;
             }
 
@@ -262,7 +265,7 @@ namespace Barotrauma.Networking
                     "192-255",
                     "384-591",
                     "1024-1279",
-                    "19968-40959","13312-19903","131072-15043983","15043985-173791","173824-178207","178208-183983","63744-64255","194560-195103" //CJK
+                    "19968-21327","21329-40959","13312-19903","131072-173791","173824-178207","178208-183983","63744-64255","194560-195103" //CJK
                 };
 
             string[] allowedClientNameCharsStr = doc.Root.GetAttributeStringArray("AllowedClientNameChars", defaultAllowedClientNameChars);
@@ -306,7 +309,8 @@ namespace Barotrauma.Networking
             {
                 if (Enum.TryParse(missionTypeName, out MissionType missionType))
                 {
-                    if (missionType == Barotrauma.MissionType.None) continue;
+                    if (missionType == Barotrauma.MissionType.None) { continue; }
+                    if (MissionPrefab.HiddenMissionClasses.Contains(missionType)) { continue; }
                     AllowedRandomMissionTypes.Add(missionType);
                 }
             }
@@ -323,6 +327,7 @@ namespace Barotrauma.Networking
 
             GameMain.NetLobbyScreen.SetBotSpawnMode(BotSpawnMode);
             GameMain.NetLobbyScreen.SetBotCount(BotCount);
+            GameMain.NetLobbyScreen.SetMaxMissionCount(MaxMissionCount);
 
             List<string> monsterNames = CharacterPrefab.Prefabs.Select(p => p.Identifier).ToList();
             MonsterEnabled = new Dictionary<string, bool>();

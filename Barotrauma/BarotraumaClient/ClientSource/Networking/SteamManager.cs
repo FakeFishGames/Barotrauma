@@ -1,4 +1,5 @@
-﻿using Barotrauma.IO;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Barotrauma.Networking;
 using RestSharp;
 using System;
@@ -921,10 +922,6 @@ namespace Barotrauma.Steam
                 return null;
             }
 
-#if DEBUG
-            item = item?.WithPrivateVisibility();
-#endif
-
             contentPackage.GameVersion = GameMain.Version;
             contentPackage.Save(contentPackage.Path);
 
@@ -969,6 +966,9 @@ namespace Barotrauma.Steam
             }
             else
             {
+                //nuke the existing steamworks cache for the item we just published
+                ForceRedownload(task.Result.FileId);
+
                 workshopPublishStatus.Success = true;
                 workshopPublishStatus.Result = task.Result;
                 DebugConsole.NewMessage("Published workshop item " + item?.Title + " successfully.", Microsoft.Xna.Framework.Color.LightGreen);
@@ -987,40 +987,60 @@ namespace Barotrauma.Steam
         }
 
         /// <summary>
+        /// Forces a Workshop item to redownload.
+        /// </summary>
+        public static void ForceRedownload(Steamworks.Data.PublishedFileId itemId, Action onDownloadFinished = null)
+        {
+            Steamworks.Ugc.Item itemToNuke = new Steamworks.Ugc.Item(itemId);
+            string directory = itemToNuke.Directory;
+            if (Directory.Exists(directory))
+            {
+                try
+                {
+                    Directory.Delete(directory, true);
+                }
+                catch (Exception e) { DebugConsole.ThrowError("Failed to delete Workshop item cache", e); }
+            }
+            DebugConsole.NewMessage($"{itemToNuke.Download(onDownloadFinished, highPriority: true)}");
+        }
+
+        /// <summary>
         /// Installs a workshop item by moving it to the game folder.
         /// </summary>
-        public static bool InstallWorkshopItem(Steamworks.Ugc.Item? item, out string errorMsg, bool enableContentPackage = false, bool suppressInstallNotif = false)
+        public static bool InstallWorkshopItem(Steamworks.Ugc.Item? itemOrNull, out string errorMsg, bool enableContentPackage = false, bool suppressInstallNotif = false, Action<ContentPackage> onInstall = null)
         {
-            if (!(item?.IsInstalled ?? false))
+            errorMsg = "Item is null";
+            if (!itemOrNull.TryGetValue(out Steamworks.Ugc.Item item)) { return false; }
+            if (!item.IsInstalled)
             {
-                errorMsg = TextManager.GetWithVariable("WorkshopErrorInstallRequiredToEnable", "[itemname]", item?.Title ?? "[NULL]");
+                errorMsg = TextManager.GetWithVariable("WorkshopErrorInstallRequiredToEnable", "[itemname]", item.Title);
                 DebugConsole.NewMessage(errorMsg, Color.Red);
                 return false;
             }
 
-            string metaDataFilePath = Path.Combine(item?.Directory, MetadataFileName);
+            string metaDataFilePath = Path.Combine(item.Directory, MetadataFileName);
 
             if (!File.Exists(metaDataFilePath))
             {
-                errorMsg = TextManager.GetWithVariable("WorkshopErrorInstallRequiredToEnable", "[itemname]", item?.Title);
+                errorMsg = TextManager.GetWithVariable("WorkshopErrorInstallRequiredToEnable", "[itemname]", item.Title);
                 DebugConsole.ThrowError(errorMsg);
                 return false;
             }
 
             ContentPackage contentPackage = new ContentPackage(metaDataFilePath)
             {
-                SteamWorkshopId = item?.Id ?? 0
+                SteamWorkshopId = item.Id
             };
             string newContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
 
             List<ContentPackage> existingPackages = ContentPackage.AllPackages.Where(cp => cp.Path.CleanUpPath() == newContentPackagePath.CleanUpPath()).ToList();
             if (existingPackages.Any())
             {
-                if (item?.Owner.Id != Steamworks.SteamClient.SteamId)
+                if (item.Owner.Id != Steamworks.SteamClient.SteamId)
                 {
                     errorMsg = TextManager.GetWithVariables("WorkshopErrorSamePathInstalled",
                         new string[] { "[itemname]", "[itempath]" },
-                        new string[] { item?.Title, Path.GetDirectoryName(newContentPackagePath) });
+                        new string[] { item.Title, Path.GetDirectoryName(newContentPackagePath) });
                     return false;
                 }
                 else
@@ -1041,12 +1061,12 @@ namespace Barotrauma.Steam
 
             lock (modCopiesInProgress)
             {
-                if (modCopiesInProgress.ContainsKey(item.Value.Id))
+                if (modCopiesInProgress.ContainsKey(item.Id))
                 {
                     errorMsg = ""; return true;
                 }
                 newTask = CopyWorkShopItemAsync(item, contentPackage, newContentPackagePath, metaDataFilePath);
-                modCopiesInProgress.Add(item.Value.Id, newTask);
+                modCopiesInProgress.Add(item.Id, newTask);
             }
             
             TaskPool.Add("CopyWorkShopItemAsync",
@@ -1058,14 +1078,14 @@ namespace Barotrauma.Steam
                     {
                         if (task.IsFaulted || task.IsCanceled)
                         {
-                            DebugConsole.ThrowError($"Failed to copy \"{item?.Title}\"", task.Exception);
+                            DebugConsole.ThrowError($"Failed to copy \"{item.Title}\"", task.Exception);
                             GameMain.SteamWorkshopScreen?.SetReinstallButtonStatus(item, true, GUI.Style.Red);
                             return;
                         }
                         string errorMsg = ((Task<string>)task).Result;
                         if (!string.IsNullOrWhiteSpace(errorMsg))
                         {
-                            DebugConsole.ThrowError($"Failed to copy \"{item?.Title}\": {errorMsg}");
+                            DebugConsole.ThrowError($"Failed to copy \"{item.Title}\": {errorMsg}");
                             GameMain.SteamWorkshopScreen?.SetReinstallButtonStatus(item, true, GUI.Style.Red);
                             return;
                         }
@@ -1074,8 +1094,8 @@ namespace Barotrauma.Steam
 
                         var newPackage = new ContentPackage(cp.Path, newContentPackagePath)
                         {
-                            SteamWorkshopId = item?.Id ?? 0,
-                            InstallTime = item?.Updated > item?.Created ? item?.Updated : item?.Created
+                            SteamWorkshopId = item.Id,
+                            InstallTime = item.Updated > item.Created ? item.Updated : item.Created
                         };
 
                         foreach (ContentFile contentFile in newPackage.Files)
@@ -1123,8 +1143,9 @@ namespace Barotrauma.Steam
 
                         GameMain.Config.SuppressModFolderWatcher = false;
 
-                        GameMain.SteamWorkshopScreen?.SetReinstallButtonStatus(item, true, GUI.Style.Green);
+                        onInstall?.Invoke(newPackage);
 
+                        GameMain.SteamWorkshopScreen?.SetReinstallButtonStatus(item, true, GUI.Style.Green);
                     }
                     catch
                     {
@@ -1132,7 +1153,7 @@ namespace Barotrauma.Steam
                     }
                     finally
                     {
-                        modCopiesInProgress.Remove(item.Value.Id);
+                        modCopiesInProgress.Remove(item.Id);
                     }
                 });
             
@@ -1144,9 +1165,27 @@ namespace Barotrauma.Steam
         /// Asynchronously copies a Workshop item into the Mods folder.
         /// </summary>
         /// <returns>Returns an empty string on success, otherwise returns an error message.</returns>
-        private async static Task<string> CopyWorkShopItemAsync(Steamworks.Ugc.Item? item, ContentPackage contentPackage, string newContentPackagePath, string metaDataFilePath)
+        private async static Task<string> CopyWorkShopItemAsync(Steamworks.Ugc.Item? itemOrNull, ContentPackage contentPackage, string newContentPackagePath, string metaDataFilePath)
         {
             await Task.Yield();
+            if (!itemOrNull.TryGetValue(out Steamworks.Ugc.Item item)) { return "Item is null"; }
+
+            if (item.NeedsUpdate)
+            {
+                item.Download(highPriority: true);
+                await Task.Delay(1000);
+            }
+            while (item.NeedsUpdate && !item.IsDownloading && !item.IsDownloadPending && !item.IsInstalled)
+            {
+                if (!item.IsDownloading && !item.IsDownloadPending)
+                {
+                    if (!item.Download())
+                    {
+                        return TextManager.GetWithVariable("WorkshopErrorEnableFailed", "[itemname]", item.Title);
+                    }
+                }
+                await Task.Delay(1000);
+            }
 
             string targetPath = Path.GetDirectoryName(GetWorkshopItemContentPackagePath(contentPackage));
             string copyingPath = Path.Combine(targetPath, CopyIndicatorFileName);
@@ -1157,18 +1196,18 @@ namespace Barotrauma.Steam
                 Directory.CreateDirectory(targetPath);
                 File.WriteAllText(copyingPath, "TEMPORARY FILE");
 
-                SaveUtil.CopyFolder(item?.Directory, targetPath, copySubDirs: true, overwriteExisting: false);
+                SaveUtil.CopyFolder(item.Directory, targetPath, copySubDirs: true, overwriteExisting: false);
 
                 File.Delete(copyingPath);
                 return "";
             }
 
-            var allPackageFiles = Directory.GetFiles(item?.Directory, "*", System.IO.SearchOption.AllDirectories);
+            var allPackageFiles = Directory.GetFiles(item.Directory, "*", System.IO.SearchOption.AllDirectories);
             List<string> nonContentFiles = new List<string>();
             foreach (string file in allPackageFiles)
             {
                 if (file == metaDataFilePath) { continue; }
-                string relativePath = UpdaterUtil.GetRelativePath(file, item?.Directory);
+                string relativePath = Path.GetRelativePath(item.Directory, file);
                 string fullPath = Path.GetFullPath(relativePath);
                 if (contentPackage.Files.Any(f => { string fp = Path.GetFullPath(f.Path); return fp == fullPath; })) { continue; }
                 nonContentFiles.Add(relativePath);
@@ -1198,14 +1237,14 @@ namespace Barotrauma.Steam
 
             foreach (ContentFile contentFile in contentPackage.Files)
             {
-                contentFile.Path = contentFile.Path.CleanUpPathCrossPlatform(correctFilenameCase: true, item?.Directory);
-                string sourceFile = Path.Combine(item?.Directory, contentFile.Path);
+                contentFile.Path = contentFile.Path.CleanUpPathCrossPlatform(correctFilenameCase: true, item.Directory);
+                string sourceFile = Path.Combine(item.Directory, contentFile.Path);
                 if (!File.Exists(sourceFile))
                 {
                     string[] splitPath = contentFile.Path.Split('/');
                     if (splitPath.Length >= 2 && splitPath[0] == "Mods")
                     {
-                        sourceFile = Path.Combine(item?.Directory, string.Join("/", splitPath.Skip(2)));
+                        sourceFile = Path.Combine(item.Directory, string.Join("/", splitPath.Skip(2)));
                     }
                 }
 
@@ -1225,7 +1264,7 @@ namespace Barotrauma.Steam
                     //if the external file doesn't exist, we cannot enable the package
                     else if (!File.Exists(contentFile.Path))
                     {
-                        errorMsg = TextManager.GetWithVariable("WorkshopErrorEnableFailed", "[itemname]", item?.Title) + " " + TextManager.GetWithVariable("WorkshopFileNotFound", "[path]", "\"" + contentFile.Path + "\"");
+                        errorMsg = TextManager.GetWithVariable("WorkshopErrorEnableFailed", "[itemname]", item.Title) + " " + TextManager.GetWithVariable("WorkshopFileNotFound", "[path]", "\"" + contentFile.Path + "\"");
                         return errorMsg;
                     }
                     continue;
@@ -1240,7 +1279,7 @@ namespace Barotrauma.Steam
                     else
                     {
                         //file not present in either the mod or the game folder -> cannot enable the package
-                        errorMsg = TextManager.GetWithVariable("WorkshopErrorEnableFailed", "[itemname]", item?.Title) + " " + TextManager.GetWithVariable("WorkshopFileNotFound", "[path]", "\"" + contentFile.Path + "\"");
+                        errorMsg = TextManager.GetWithVariable("WorkshopErrorEnableFailed", "[itemname]", item.Title) + " " + TextManager.GetWithVariable("WorkshopFileNotFound", "[path]", "\"" + contentFile.Path + "\"");
                         return errorMsg;
                     }
                 }
@@ -1252,7 +1291,7 @@ namespace Barotrauma.Steam
 
             foreach (string nonContentFile in nonContentFiles)
             {
-                string sourceFile = Path.Combine(item?.Directory, nonContentFile);
+                string sourceFile = Path.Combine(item.Directory, nonContentFile);
                 if (!File.Exists(sourceFile)) { continue; }
                 string destinationPath = CorrectContentFilePath(nonContentFile, ContentType.None, contentPackage, false);
                 Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
@@ -1351,43 +1390,50 @@ namespace Barotrauma.Steam
             string metaDataPath = Path.Combine(item?.Directory, MetadataFileName);
             if (!File.Exists(metaDataPath))
             {
-                throw new System.IO.FileNotFoundException("Metadata file for the Workshop item \"" + item?.Title + "\" not found. The file may be corrupted.");
+                DebugConsole.ThrowError("Metadata file for the Workshop item \"" + item?.Title + "\" not found. The file may be corrupted.", appendStackTrace: true);
+                return null;
             }
 
             ContentPackage contentPackage = new ContentPackage(metaDataPath);
             return contentPackage.IsCompatible();
         }
 
-        public static bool CheckWorkshopItemInstalled(Steamworks.Ugc.Item? item)
+        public static bool CheckWorkshopItemInstalled(Steamworks.Ugc.Item? itemOrNull)
         {
-            if (!(item?.IsInstalled ?? false)) { return false; }
+            if (!itemOrNull.TryGetValue(out Steamworks.Ugc.Item item)) { return false; }
+            if (!item.IsInstalled) { return false; }
 
             lock (modCopiesInProgress)
             {
-                if (modCopiesInProgress.ContainsKey(item.Value.Id))
+                if (modCopiesInProgress.ContainsKey(item.Id))
                 {
                     return true;
                 }
             }
 
-            if (!Directory.Exists(item?.Directory))
+            if (item.NeedsUpdate && !item.IsDownloading && !item.IsDownloadPending)
             {
-                DebugConsole.ThrowError("Workshop item \"" + item?.Title + "\" has been installed but the install directory cannot be found. Attempting to redownload...");
-                item?.Download();
-                return false;                
+                item.Download();
+                return false;
+            }
+            if (!Directory.Exists(item.Directory))
+            {
+                DebugConsole.ThrowError("Workshop item \"" + item.Title + "\" has been installed but the install directory cannot be found. Attempting to redownload...");
+                item.Download();
+                return false;
             }
 
             string metaDataPath = "";
             try
             {
-                metaDataPath = Path.Combine(item?.Directory, MetadataFileName);
+                metaDataPath = Path.Combine(item.Directory, MetadataFileName);
             }
             catch (ArgumentException)
             {
-                string errorMessage = "Metadata file for the Workshop item \"" + item?.Title +
-                    "\" not found. Could not combine path (" + (item?.Directory ?? "directory name empty") + ").";
+                string errorMessage = "Metadata file for the Workshop item \"" + item.Title +
+                    "\" not found. Could not combine path (" + (item.Directory ?? "directory name empty") + ").";
                 DebugConsole.ThrowError(errorMessage);
-                GameAnalyticsManager.AddErrorEventOnce("SteamManager.CheckWorkshopItemInstalled:PathCombineException" + item?.Title,
+                GameAnalyticsManager.AddErrorEventOnce("SteamManager.CheckWorkshopItemInstalled:PathCombineException" + item.Title,
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
                     errorMessage);
                 return false;
@@ -1395,13 +1441,13 @@ namespace Barotrauma.Steam
 
             if (!File.Exists(metaDataPath))
             {
-                DebugConsole.ThrowError("Metadata file for the Workshop item \"" + item?.Title + "\" not found. The file may be corrupted.");
+                DebugConsole.ThrowError("Metadata file for the Workshop item \"" + item.Title + "\" not found. The file may be corrupted.");
                 return false;
             }
 
             ContentPackage contentPackage = new ContentPackage(metaDataPath)
             {
-                SteamWorkshopId = item?.Id ?? 0
+                SteamWorkshopId = item.Id
             };
             //make sure the contentpackage file is present 
             if (!File.Exists(GetWorkshopItemContentPackagePath(contentPackage)) ||
@@ -1414,20 +1460,21 @@ namespace Barotrauma.Steam
             return true;
         }
 
-        public static bool CheckWorkshopItemUpToDate(Steamworks.Ugc.Item? item)
+        public static bool CheckWorkshopItemUpToDate(Steamworks.Ugc.Item? itemOrNull)
         {
-            if (!(item?.IsInstalled ?? false)) return false;
+            if (!itemOrNull.TryGetValue(out Steamworks.Ugc.Item item)) { return false; }
+            if (!item.IsInstalled || item.NeedsUpdate || item.IsDownloading || item.IsDownloadPending) { return false; }
 
-            string metaDataPath = Path.Combine(item?.Directory, MetadataFileName);
+            string metaDataPath = Path.Combine(item.Directory, MetadataFileName);
             if (!File.Exists(metaDataPath))
             {
-                DebugConsole.ThrowError("Metadata file for the Workshop item \"" + item?.Title + "\" not found. The file may be corrupted.");
+                DebugConsole.ThrowError("Metadata file for the Workshop item \"" + item.Title + "\" not found. The file may be corrupted.");
                 return false;
             }
 
             ContentPackage steamPackage = new ContentPackage(metaDataPath)
             {
-                SteamWorkshopId = item?.Id ?? 0
+                SteamWorkshopId = item.Id
             };
             ContentPackage myPackage = ContentPackage.AllPackages.FirstOrDefault(cp => cp.SteamWorkshopId == steamPackage.SteamWorkshopId);
 
@@ -1435,7 +1482,7 @@ namespace Barotrauma.Steam
             {
                 return false;
             }
-            DateTime latestTime = item.Value.Updated > item.Value.Created ? item.Value.Updated : item.Value.Created;
+            DateTime latestTime = item.Updated > item.Created ? item.Updated : item.Created;
             bool upToDate = latestTime <= myPackage.InstallTime.Value;
             return upToDate;
         }

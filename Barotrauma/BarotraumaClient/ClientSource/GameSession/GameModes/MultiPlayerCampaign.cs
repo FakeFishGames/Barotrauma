@@ -60,7 +60,7 @@ namespace Barotrauma
             var newCampaignContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), campaignContainer.RectTransform, Anchor.Center), style: null);
             var loadCampaignContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), campaignContainer.RectTransform, Anchor.Center), style: null);
 
-            GameMain.NetLobbyScreen.CampaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer, null, saveFiles);
+            GameMain.NetLobbyScreen.CampaignSetupUI = new MultiPlayerCampaignSetupUI(newCampaignContainer, loadCampaignContainer, null, saveFiles);
 
             var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("NewCampaign"), style: "GUITabButton")
@@ -211,10 +211,7 @@ namespace Barotrauma
             {
                 Character.Controlled = null;
 
-                if (prevControlled != null)
-                {
-                    prevControlled.ClearInputs();
-                }
+                prevControlled?.ClearInputs();
 
                 overlayColor = Color.LightGray;
                 overlaySprite = Map.CurrentLocation.Type.GetPortrait(Map.CurrentLocation.PortraitId);
@@ -326,7 +323,6 @@ namespace Barotrauma
             Level prevLevel = Level.Loaded;
 
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
-            GUI.SetSavingIndicatorState(success);
             crewDead = false;
 
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
@@ -484,6 +480,8 @@ namespace Barotrauma
             {
                 IsFirstRound = false;
                 CoroutineManager.StartCoroutine(DoLevelTransition(), "LevelTransition");
+                bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
+                GUI.SetSavingIndicatorState(success && (Level.IsLoadedOutpost || transitionType != TransitionType.None));
             }
         }
 
@@ -534,7 +532,13 @@ namespace Barotrauma
 
             msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
             msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
-            msg.Write(map.SelectedMissionIndex == -1 ? byte.MaxValue : (byte)map.SelectedMissionIndex);
+
+            var selectedMissionIndices = map.GetSelectedMissionIndices();
+            msg.Write((byte)selectedMissionIndices.Count());
+            foreach (int selectedMissionIndex in selectedMissionIndices)
+            {
+                msg.Write((byte)selectedMissionIndex);
+            }
             msg.Write(PurchasedHullRepairs);
             msg.Write(PurchasedItemRepairs);
             msg.Write(PurchasedLostShuttles);
@@ -569,6 +573,13 @@ namespace Barotrauma
                 msg.Write(category.Identifier);
                 msg.Write((byte)level);
             }
+
+            msg.Write((ushort)UpgradeManager.PurchasedItemSwaps.Count);
+            foreach (var itemSwap in UpgradeManager.PurchasedItemSwaps)
+            {
+                msg.Write(itemSwap.ItemToRemove.ID);
+                msg.Write(itemSwap.ItemToInstall?.Identifier ?? string.Empty);
+            }
         }
 
         //static because we may need to instantiate the campaign if it hasn't been done yet
@@ -581,8 +592,15 @@ namespace Barotrauma
             string mapSeed      = msg.ReadString();
             UInt16 currentLocIndex      = msg.ReadUInt16();
             UInt16 selectedLocIndex     = msg.ReadUInt16();
-            byte selectedMissionIndex   = msg.ReadByte();
-            bool allowDebugTeleport     = msg.ReadBoolean();
+
+            byte selectedMissionCount = msg.ReadByte();
+            List<int> selectedMissionIndices = new List<int>();
+            for (int i = 0; i < selectedMissionCount; i++)
+            {
+                selectedMissionIndices.Add(msg.ReadByte());
+            }
+
+            bool allowDebugTeleport = msg.ReadBoolean();
             float? reputation = null;
             if (msg.ReadBoolean()) { reputation = msg.ReadSingle(); }
             
@@ -657,6 +675,21 @@ namespace Barotrauma
                 pendingUpgrades.Add(new PurchasedUpgrade(prefab, category, upgradeLevel));
             }
 
+            ushort purchasedItemSwapCount = msg.ReadUInt16();
+            List<PurchasedItemSwap> purchasedItemSwaps = new List<PurchasedItemSwap>();
+            for (int i = 0; i < purchasedItemSwapCount; i++)
+            {
+                UInt16 itemToRemoveID = msg.ReadUInt16();
+                Item itemToRemove = Entity.FindEntityByID(itemToRemoveID) as Item;
+
+                string itemToInstallIdentifier = msg.ReadString();
+                ItemPrefab itemToInstall = string.IsNullOrEmpty(itemToInstallIdentifier) ? null : ItemPrefab.Find(string.Empty, itemToInstallIdentifier);
+
+                if (itemToRemove == null) { continue; }
+
+                purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
+            }
+
             bool hasCharacterData = msg.ReadBoolean();
             CharacterInfo myCharacterInfo = null;
             if (hasCharacterData)
@@ -694,7 +727,7 @@ namespace Barotrauma
 
                     campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                     campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
-                    campaign.Map.SelectMission(selectedMissionIndex);
+                    campaign.Map.SelectMission(selectedMissionIndices);
                     campaign.Map.AllowDebugTeleport = allowDebugTeleport;
                     campaign.CargoManager.SetItemsInBuyCrate(buyCrateItems);
                     campaign.CargoManager.SetPurchasedItems(purchasedItems);
@@ -703,12 +736,32 @@ namespace Barotrauma
                     campaign.UpgradeManager.SetPendingUpgrades(pendingUpgrades);
                     campaign.UpgradeManager.PurchasedUpgrades.Clear();
 
+                    campaign.UpgradeManager.PurchasedUpgrades.Clear();
+                    foreach (var purchasedItemSwap in purchasedItemSwaps)
+                    {
+                        if (purchasedItemSwap.ItemToInstall == null)
+                        {
+                            campaign.UpgradeManager.CancelItemSwap(purchasedItemSwap.ItemToRemove, force: true);
+                        }
+                        else
+                        {
+                            campaign.UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, force: true);
+                        }
+                    }
+                    foreach (Item item in Item.ItemList)
+                    {
+                        if (item.PendingItemSwap != null && !purchasedItemSwaps.Any(it => it.ItemToRemove == item))
+                        {
+                            item.PendingItemSwap = null;
+                        }
+                    }
+
                     foreach (var (identifier, rep) in factionReps)
                     {
                        Faction faction = campaign.Factions.FirstOrDefault(f => f.Prefab.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
                        if (faction?.Reputation != null)
                        {
-                           faction.Reputation.Value = rep;
+                           faction.Reputation.SetReputation(rep);
                        }
                        else
                        {
@@ -718,7 +771,7 @@ namespace Barotrauma
 
                     if (reputation.HasValue)
                     {
-                        campaign.Map.CurrentLocation.Reputation.Value = reputation.Value;
+                        campaign.Map.CurrentLocation.Reputation.SetReputation(reputation.Value);
                         campaign?.CampaignUI?.UpgradeStore?.RefreshAll();
                     }
 

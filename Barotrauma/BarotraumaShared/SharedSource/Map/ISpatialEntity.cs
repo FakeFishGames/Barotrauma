@@ -12,7 +12,7 @@ namespace Barotrauma
 
     interface IIgnorable : ISpatialEntity
     {
-        bool IgnoreByAI { get; }
+        bool IgnoreByAI(Character character);
         bool OrderedToBeIgnored { get; set; }
     }
 }

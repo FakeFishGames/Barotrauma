@@ -524,7 +524,7 @@ namespace Barotrauma
         private static void CheckIfDivingGearOutOfOxygen()
         {
             if (!CanDisplayHints()) { return; }
-            var divingGear = Character.Controlled.GetEquippedItem("diving");
+            var divingGear = Character.Controlled.GetEquippedItem("diving", InvSlotType.OuterClothes);
             if (divingGear?.OwnInventory == null) { return; }
             if (divingGear.GetContainedItemConditionPercentage() > 0.0f) { return; }
             DisplayHint("ondivinggearoutofoxygen", onUpdate: () =>
@@ -544,7 +544,7 @@ namespace Barotrauma
             if (Character.Controlled.CurrentHull == null) { return; }
             if (HumanAIController.IsBallastFloraNoticeable(Character.Controlled, Character.Controlled.CurrentHull))
             {
-                if (DisplayHint("onballastflorainfected")) { return; }
+                if (IsOnFriendlySub() && DisplayHint("onballastflorainfected")) { return; }
             }
             foreach (var gap in Character.Controlled.CurrentHull.ConnectedGaps)
             {
@@ -552,7 +552,7 @@ namespace Barotrauma
                 if (Vector2.DistanceSquared(Character.Controlled.WorldPosition, gap.ConnectedDoor.Item.WorldPosition) > 400 * 400) { continue; }
                 if (!gap.IsRoomToRoom)
                 {
-                    if (!(Character.Controlled.GetEquippedItem("deepdiving") is Item)) { continue; }
+                    if (!IsWearingDivingSuit()) { continue; }
                     if (Character.Controlled.IsProtectedFromPressure()) { continue; }
                     if (DisplayHint("divingsuitwarning", extendTextTag: false)) { return; }
                     continue;
@@ -561,10 +561,16 @@ namespace Barotrauma
                 {
                     if (me == Character.Controlled.CurrentHull) { continue; }
                     if (!(me is Hull adjacentHull)) { continue; }
+                    if (!IsOnFriendlySub()) { continue; }
+                    if (IsWearingDivingSuit()) { continue; }
                     if (adjacentHull.LethalPressure > 5.0f && DisplayHint("onadjacenthull.highpressure")) { return; }
                     if (adjacentHull.WaterPercentage > 75 && !BallastHulls.Contains(adjacentHull) && DisplayHint("onadjacenthull.highwaterpercentage")) { return; }
                 }
+
+                static bool IsWearingDivingSuit() => Character.Controlled.GetEquippedItem("deepdiving", InvSlotType.OuterClothes) is Item;
             }
+
+            static bool IsOnFriendlySub() => Character.Controlled.Submarine is Submarine sub && (sub.TeamID == Character.Controlled.TeamID || sub.TeamID == CharacterTeamType.FriendlyNPC);
         }
 
         private static void CheckReminders()

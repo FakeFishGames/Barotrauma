@@ -55,23 +55,23 @@ namespace Barotrauma
             GUI.DrawLine(spriteBatch, pos + Vector2.UnitX * 50.0f, pos - Vector2.UnitX * 50.0f, color * alpha, 0.0f, 5);
         }
 
-        public override void UpdateEditing(Camera cam)
+        public override void UpdateEditing(Camera cam, float deltaTime)
         {
             if (editingHUD == null || editingHUD.UserData as LinkedSubmarine != this)
             {
                 editingHUD = CreateEditingHUD();
             }
 
-            editingHUD.UpdateManually((float)Timing.Step);
+            editingHUD.UpdateManually(deltaTime);
 
-            if (!PlayerInput.PrimaryMouseButtonClicked() || !PlayerInput.KeyDown(Keys.Space)) return;
+            if (!PlayerInput.PrimaryMouseButtonClicked() || !PlayerInput.KeyDown(Keys.Space)) { return; }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
 
             foreach (MapEntity entity in mapEntityList)
             {
-                if (entity == this || !entity.IsHighlighted || !(entity is Item) || !entity.IsMouseOn(position)) continue;
-                if (((Item)entity).GetComponent<DockingPort>() == null) continue;
+                if (entity == this || !entity.IsHighlighted || !(entity is Item) || !entity.IsMouseOn(position)) { continue; }
+                if (((Item)entity).GetComponent<DockingPort>() == null) { continue; }
                 if (linkedTo.Contains(entity))
                 {
                     linkedTo.Remove(entity);

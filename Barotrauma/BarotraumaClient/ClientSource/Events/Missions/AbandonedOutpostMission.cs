@@ -22,6 +22,14 @@ namespace Barotrauma
 
         public override void ClientReadInitial(IReadMessage msg)
         {
+            base.ClientReadInitial(msg);
+            ushort targetItemCount = msg.ReadUInt16();
+            for (int i = 0; i < targetItemCount; i++)
+            {
+                var item = Item.ReadSpawnData(msg);
+                items.Add(item);
+            }
+
             byte characterCount = msg.ReadByte();
 
             for (int i = 0; i < characterCount; i++)

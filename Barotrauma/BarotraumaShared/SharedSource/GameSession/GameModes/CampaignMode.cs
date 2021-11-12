@@ -1,12 +1,11 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Networking;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -18,24 +17,52 @@ namespace Barotrauma
         public static CampaignSettings Unsure = Empty;
         public bool RadiationEnabled { get; set; }
 
+        public int TotalMaxMissionCount => MaxMissionCount + GetAddedMissionCount();
+
+        private int maxMissionCount;
+        public int MaxMissionCount
+        {
+            get { return maxMissionCount; }
+            set { maxMissionCount = MathHelper.Clamp(value, MinMissionCountLimit, MaxMissionCountLimit); }
+        }
+
+        public const int DefaultMaxMissionCount = 2;
+        public const int MaxMissionCountLimit = 10;
+        public const int MinMissionCountLimit = 1;
+
         public CampaignSettings(IReadMessage inc)
         {
+            maxMissionCount = DefaultMaxMissionCount;
             RadiationEnabled = inc.ReadBoolean();
+            MaxMissionCount = inc.ReadInt32();
         }
-        
+
         public CampaignSettings(XElement element)
         {
-            RadiationEnabled = element.GetAttributeBool(nameof(RadiationEnabled).ToLower(), true);
+            maxMissionCount = DefaultMaxMissionCount;
+            RadiationEnabled = element.GetAttributeBool(nameof(RadiationEnabled).ToLowerInvariant(), true);
+            MaxMissionCount = element.GetAttributeInt(nameof(MaxMissionCount).ToLowerInvariant(), DefaultMaxMissionCount);
         }
 
         public void Serialize(IWriteMessage msg)
         {
             msg.Write(RadiationEnabled);
+            msg.Write(MaxMissionCount);
+        }
+
+        public int GetAddedMissionCount()
+        {
+            int count = 0;
+            foreach (Character character in GameSession.GetSessionCrewCharacters())
+            {
+                count += (int)character.GetStatValue(StatTypes.ExtraMissionCount);
+            }
+            return count;
         }
 
         public XElement Save()
         {
-            return new XElement(nameof(CampaignSettings), new XAttribute(nameof(RadiationEnabled).ToLower(), RadiationEnabled));
+            return new XElement(nameof(CampaignSettings), new XAttribute(nameof(RadiationEnabled).ToLowerInvariant(), RadiationEnabled), new XAttribute(nameof(MaxMissionCount).ToLowerInvariant(), MaxMissionCount));
         }
     }
 
@@ -49,9 +76,9 @@ namespace Barotrauma
         //duration of the camera transition at the end of a round
         protected const float EndTransitionDuration = 5.0f;
         //there can be no events before this time has passed during the 1st campaign round
-        const float FirstRoundEventDelay = 30.0f;
+        const float FirstRoundEventDelay = 0.0f;
 
-        public enum InteractionType { None, Talk, Map, Crew, Store, Repair, Upgrade, PurchaseSub }
+        public enum InteractionType { None, Talk, Examine, Map, Crew, Store, Repair, Upgrade, PurchaseSub }
 
         public readonly CargoManager CargoManager;
         public UpgradeManager UpgradeManager;
@@ -113,12 +140,15 @@ namespace Barotrauma
         {
             get
             {
-                if (Map.CurrentLocation?.SelectedMission != null)
+                if (Map.CurrentLocation != null)
                 {
-                    if (Map.CurrentLocation.SelectedMission.Locations[0] == Map.CurrentLocation.SelectedMission.Locations[1] ||
-                        Map.CurrentLocation.SelectedMission.Locations.Contains(Map.SelectedLocation))
+                    foreach (Mission mission in map.CurrentLocation.SelectedMissions)
                     {
-                        yield return Map.CurrentLocation.SelectedMission;
+                        if (mission.Locations[0] == mission.Locations[1] ||
+                            mission.Locations.Contains(Map.SelectedLocation))
+                        {
+                            yield return mission;
+                        }
                     }
                 }
                 foreach (Mission mission in extraMissions)
@@ -169,7 +199,7 @@ namespace Barotrauma
             return Submarine.Loaded.FindAll(sub =>
                 sub != leavingSub &&
                 !leavingSub.DockedTo.Contains(sub) &&
-                sub.Info.Type == SubmarineType.Player &&
+                sub.Info.Type == SubmarineType.Player && sub.TeamID == CharacterTeamType.Team1 && // pirate subs are currently tagged as player subs as well
                 sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle &&
                 (sub.AtEndExit != leavingSub.AtEndExit || sub.AtStartExit != leavingSub.AtStartExit));
         }
@@ -215,6 +245,8 @@ namespace Barotrauma
             PurchasedLostShuttles = false;
             var connectedSubs = Submarine.MainSub.GetConnectedSubs();
             wasDocked = Level.Loaded.StartOutpost != null && connectedSubs.Contains(Level.Loaded.StartOutpost);
+
+            ResetTalentData();
         }
 
         public void InitCampaignData()
@@ -240,23 +272,24 @@ namespace Barotrauma
             if (levelData.Type == LevelData.LevelType.Outpost)
             {
                 //if there's an available mission that takes place in the outpost, select it
-                var availableMissionsInLocation = currentLocation.AvailableMissions.Where(m => m.Locations[0] == currentLocation && m.Locations[1] == currentLocation);
-                if (availableMissionsInLocation.Any())
+                foreach (var availableMission in currentLocation.AvailableMissions)
                 {
-                    currentLocation.SelectedMission = availableMissionsInLocation.FirstOrDefault();
-                }
-                else
-                {
-                    currentLocation.SelectedMission = null;
+                    if (availableMission.Locations[0] == currentLocation && availableMission.Locations[1] == currentLocation)
+                    {
+                        currentLocation.SelectMission(availableMission);
+                    }
                 }
             }
             else
             {
-                //if we had selected a mission that takes place in the outpost, deselect it when leaving the outpost
-                if (currentLocation.SelectedMission?.Locations[0] == currentLocation &&
-                    currentLocation.SelectedMission?.Locations[1] == currentLocation)
+                foreach (Mission mission in currentLocation.SelectedMissions.ToList())
                 {
-                    currentLocation.SelectedMission = null;
+                    //if we had selected a mission that takes place in the outpost, deselect it when leaving the outpost
+                    if (mission.Locations[0] == currentLocation &&
+                        mission.Locations[1] == currentLocation)
+                    {
+                        currentLocation.DeselectMission(mission);
+                    }
                 }
 
                 if (levelData.HasBeaconStation && !levelData.IsBeaconActive)
@@ -265,10 +298,10 @@ namespace Barotrauma
                     if (beaconMissionPrefabs.Any())
                     {
                         Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
-                        var beaconMissionPrefab = beaconMissionPrefabs.GetRandom(rand);
+                        var beaconMissionPrefab = ToolBox.SelectWeightedRandom(beaconMissionPrefabs, beaconMissionPrefabs.Select(p => (float)p.Commonness).ToList(), rand);
                         if (!Missions.Any(m => m.Prefab.Type == beaconMissionPrefab.Type))
                         {
-                            extraMissions.Add(beaconMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
+                            extraMissions.Add(beaconMissionPrefab.Instantiate(Map.SelectedConnection.Locations, Submarine.MainSub));
                         }
                     }
                 }
@@ -282,10 +315,10 @@ namespace Barotrauma
                     else
                     {
                         Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
-                        var huntingGroundsMissionPrefab = huntingGroundsMissionPrefabs.GetRandom(rand);
+                        var huntingGroundsMissionPrefab = ToolBox.SelectWeightedRandom(huntingGroundsMissionPrefabs, huntingGroundsMissionPrefabs.Select(p => (float)Math.Max(p.Commonness, 0.1f)).ToList(), rand);
                         if (!Missions.Any(m => m.Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase))))
                         {
-                            extraMissions.Add(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
+                            extraMissions.Add(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations, Submarine.MainSub));
                         }
                     }
                 }
@@ -490,7 +523,7 @@ namespace Barotrauma
                     if (Level.Loaded.StartOutpost.DockedTo.Any())
                     {
                         var dockedSub = Level.Loaded.StartOutpost.DockedTo.FirstOrDefault();
-                        if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) { return null; }
+                        if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle || dockedSub.TeamID != leavingPlayers.FirstOrDefault()?.TeamID) { return null; }
                         return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
                     }
 
@@ -510,6 +543,7 @@ namespace Barotrauma
                 if (Level.Loaded.EndOutpost == null)
                 {
                     Submarine closestSub = Submarine.FindClosest(Level.Loaded.EndExitPosition, ignoreOutposts: true, ignoreRespawnShuttle: true, teamType: leavingPlayers.FirstOrDefault()?.TeamID);
+                    if (closestSub == null) { return null; }
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
                 else
@@ -518,7 +552,7 @@ namespace Barotrauma
                     if (Level.Loaded.EndOutpost.DockedTo.Any())
                     {
                         var dockedSub = Level.Loaded.EndOutpost.DockedTo.FirstOrDefault();
-                        if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) { return null; }
+                        if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle || dockedSub.TeamID != leavingPlayers.FirstOrDefault()?.TeamID) { return null; }
                         return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
                     }
 
@@ -534,13 +568,16 @@ namespace Barotrauma
         public override void End(CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
         {
             List<Item> takenItems = new List<Item>();
-            foreach (Item item in Item.ItemList)
+            if (Level.Loaded?.Type == LevelData.LevelType.Outpost)
             {
-                if (!item.SpawnedInOutpost || item.OriginalModuleIndex < 0) { continue; }
-                var owner = item.GetRootInventoryOwner();
-                if ((!(owner?.Submarine?.Info?.IsOutpost ?? false)) || (owner is Character character && character.TeamID == CharacterTeamType.Team1) || item.Submarine == null || !item.Submarine.Info.IsOutpost)
+                foreach (Item item in Item.ItemList)
                 {
-                    takenItems.Add(item);
+                    if (!item.SpawnedInOutpost || item.OriginalModuleIndex < 0) { continue; }
+                    var owner = item.GetRootInventoryOwner();
+                    if ((!(owner?.Submarine?.Info?.IsOutpost ?? false)) || (owner is Character character && character.TeamID == CharacterTeamType.Team1) || item.Submarine == null || !item.Submarine.Info.IsOutpost)
+                    {
+                        takenItems.Add(item);
+                    }
                 }
             }
             if (map != null && CargoManager != null)
@@ -554,12 +591,14 @@ namespace Barotrauma
             {
                 CargoManager.ClearItemsInBuyCrate();
                 CargoManager.ClearItemsInSellCrate();
+                CargoManager.ClearItemsInSellFromSubCrate();
             }
             else
             {
                 if (GameMain.NetworkMember.IsServer)
                 {
                     CargoManager?.ClearItemsInBuyCrate();
+                    // TODO: CargoManager?.ClearItemsInSellFromSubCrate();
                 }
                 else if (GameMain.NetworkMember.IsClient)
                 {
@@ -585,7 +624,7 @@ namespace Barotrauma
                 if (c.IsDead) 
                 {
                     CrewManager.RemoveCharacterInfo(c.Info);
-                    c.DespawnNow();
+                    c.DespawnNow(createNetworkEvents: false);
                 }
             }
 
@@ -595,7 +634,6 @@ namespace Barotrauma
                 {
                     CrewManager.RemoveCharacterInfo(ci);
                 }
-                ci?.ClearCurrentOrders();
             }
 
             foreach (DockingPort port in DockingPort.List)
@@ -613,6 +651,13 @@ namespace Barotrauma
 
         public void EndCampaign()
         {
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.IsOnPlayerTeam)
+                {
+                    c.CharacterHealth.RemoveAllAfflictions();
+                }
+            }
             foreach (LocationConnection connection in Map.Connections)
             {
                 connection.Difficulty = MathHelper.Lerp(connection.Difficulty, 100.0f, 0.25f);
@@ -622,14 +667,7 @@ namespace Barotrauma
             }
             foreach (Location location in Map.Locations)
             {
-                if (location.Type != location.OriginalType)
-                {
-                    location.ChangeType(location.OriginalType);
-                    location.PendingLocationTypeChange = null;
-                }
-                location.CreateStore(force: true);
-                location.ClearMissions();
-                location.Discovered = false;
+                location.Reset();
             }
             Map.SetLocation(Map.Locations.IndexOf(Map.StartLocation));
             Map.SelectLocation(-1);
@@ -679,7 +717,7 @@ namespace Barotrauma
             if (npc == null || interactor == null) { yield return CoroutineStatus.Failure; }
 
             HumanAIController humanAI = npc.AIController as HumanAIController;
-            if (humanAI == null) { yield return CoroutineStatus.Failure; }
+            if (humanAI == null) { yield return CoroutineStatus.Success; }
 
             var waitOrder = Order.PrefabList.Find(o => o.Identifier.Equals("wait", StringComparison.OrdinalIgnoreCase));
             humanAI.SetForcedOrder(waitOrder, string.Empty, null);
@@ -698,8 +736,10 @@ namespace Barotrauma
 #if CLIENT
             ShowCampaignUI = false;
 #endif
-
-            humanAI.ClearForcedOrder();
+            if (!npc.Removed)
+            {
+                humanAI.ClearForcedOrder();
+            }
             yield return CoroutineStatus.Success;
         }
 
@@ -708,13 +748,16 @@ namespace Barotrauma
         public void AssignNPCMenuInteraction(Character character, InteractionType interactionType)
         {
             character.CampaignInteractionType = interactionType;
-            if (interactionType == InteractionType.None) 
+            character.DisableHealthWindow =
+                interactionType != InteractionType.None &&
+                interactionType != InteractionType.Examine &&
+                interactionType != InteractionType.Talk;
+
+            if (interactionType == InteractionType.None)
             {
                 character.SetCustomInteract(null, null);
-                return; 
+                return;
             }
-            character.CharacterHealth.UseHealthWindow = false;
-            //character.CanInventoryBeAccessed = false;
             character.SetCustomInteract(
                 NPCInteract,
 #if CLIENT
@@ -819,7 +862,7 @@ namespace Barotrauma
             Location location = Map?.CurrentLocation;
             if (location != null)
             {
-                location.Reputation.Value -= attackResult.Damage * Reputation.ReputationLossPerNPCDamage;
+                location.Reputation.AddReputation(-attackResult.Damage * Reputation.ReputationLossPerNPCDamage);
             }
         }
 
@@ -844,11 +887,14 @@ namespace Barotrauma
                     DebugConsole.NewMessage("     " + i + ". " + destination.Name, Color.White);
                 }
             }
-            
-            if (map.CurrentLocation?.SelectedMission != null)
+
+            if (map.CurrentLocation != null)
             {
-                DebugConsole.NewMessage("   Selected mission: " + map.CurrentLocation.SelectedMission.Name, Color.White);
-                DebugConsole.NewMessage("\n" + map.CurrentLocation.SelectedMission.Description, Color.White);
+                foreach (Mission mission in map.CurrentLocation.SelectedMissions)
+                {
+                    DebugConsole.NewMessage("   Selected mission: " + mission.Name, Color.White);
+                    DebugConsole.NewMessage("\n" + mission.Description, Color.White);
+                }
             }
         }
 
@@ -858,5 +904,34 @@ namespace Barotrauma
             map?.Remove();
             map = null;
         }
+
+        public int NumberOfMissionsAtLocation(Location location)
+        {
+            return Map.CurrentLocation.SelectedMissions.Count(m => m.Locations.Contains(location));
+        }
+
+        public void CheckTooManyMissions(Location currentLocation, Client sender)
+        {
+            foreach (Location location in currentLocation.Connections.Select(c => c.OtherLocation(currentLocation)))
+            {
+                if (NumberOfMissionsAtLocation(location) > Settings.TotalMaxMissionCount)
+                {
+                    DebugConsole.AddWarning($"Client {sender.Name} had too many missions selected for location {location.Name}! Count was {NumberOfMissionsAtLocation(location)}. Deselecting extra missions.");
+                    foreach (Mission mission in currentLocation.SelectedMissions.Where(m => m.Locations[1] == location).Skip(Settings.TotalMaxMissionCount).ToList())
+                    {
+                        currentLocation.DeselectMission(mission);
+                    }
+                }
+            }
+        }
+
+        // Talent relevant data, only stored for the duration of the mission
+        private void ResetTalentData()
+        {
+            CrewHasDied = false;
+        }
+
+        public bool CrewHasDied { get; set; }
+
     }
 }

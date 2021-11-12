@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -23,7 +24,7 @@ namespace Barotrauma.Items.Components
         private int signalQueueSize;
         private int delayTicks;
 
-        private Queue<DelayedSignal> signalQueue;
+        private readonly Queue<DelayedSignal> signalQueue;
 
         private DelayedSignal prevQueuedSignal;
         
@@ -37,7 +38,7 @@ namespace Barotrauma.Items.Components
                 if (value == delay) { return; }
                 delay = value;
                 delayTicks = (int)(delay / Timing.Step);
-                signalQueueSize = delayTicks * 2;
+                signalQueueSize = Math.Max(delayTicks, 1) * 2;
             }
         }
 
@@ -74,7 +75,14 @@ namespace Barotrauma.Items.Components
                 var signalOut = signalQueue.Peek();
                 signalOut.SendDuration -= 1;
                 item.SendSignal(new Signal(signalOut.Signal.value, strength: signalOut.Signal.strength), "signal_out");
-                if (signalOut.SendDuration <= 0) { signalQueue.Dequeue(); } else { break; }
+                if (signalOut.SendDuration <= 0) 
+                { 
+                    signalQueue.Dequeue(); 
+                } 
+                else 
+                { 
+                    break; 
+                }
             }
         }
 

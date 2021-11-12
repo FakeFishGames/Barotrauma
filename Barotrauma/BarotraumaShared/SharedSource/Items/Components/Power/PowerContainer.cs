@@ -133,6 +133,12 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam) 
         {
+            if (item.Connections == null) 
+            {
+                IsActive = false;
+                return; 
+            }
+
             isRunning = true;
             float chargeRatio = charge / capacity;
             float gridPower = 0.0f;
@@ -173,7 +179,13 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                currPowerConsumption = MathHelper.Lerp(currPowerConsumption, rechargeSpeed, 0.05f);
+                float missingCharge = capacity - charge;
+                float targetRechargeSpeed = rechargeSpeed;
+                if (missingCharge < 1.0f)
+                {
+                    targetRechargeSpeed *= missingCharge;
+                }
+                currPowerConsumption = MathHelper.Lerp(currPowerConsumption, targetRechargeSpeed, 0.05f);
                 Charge += currPowerConsumption * Math.Min(Voltage, 1.0f) / 3600.0f;
             }                       
 

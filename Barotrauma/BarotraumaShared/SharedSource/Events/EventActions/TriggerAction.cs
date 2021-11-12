@@ -1,3 +1,4 @@
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Linq;
 using System.Xml.Linq;
@@ -30,6 +31,9 @@ namespace Barotrauma
         [Serialize(true, true, description: "If true, dead/unconscious characters cannot trigger the action.")]
         public bool DisableIfTargetIncapacitated { get; set; }
 
+        [Serialize(false, true, description: "If true, one target must interact with the other to trigger the action.")]
+        public bool WaitForInteraction { get; set; }
+
         private float distance;
         
         public TriggerAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) 
@@ -44,11 +48,14 @@ namespace Barotrauma
         }
         public override void Reset()
         {
+            ResetTargetIcons();
             isRunning = false;
             isFinished = false;
         }
 
         public bool isRunning = false;
+
+        private Either<Character, Item> npcOrItem = null;
 
         public override void Update(float deltaTime)
         {
@@ -81,18 +88,102 @@ namespace Barotrauma
                     if (DisableInCombat && IsInCombat(e2)) { continue; }
                     if (DisableIfTargetIncapacitated && e2 is Character character2 && (character2.IsDead || character2.IsIncapacitated)) { continue; }
 
-                    Vector2 pos1 = e1.WorldPosition;
-                    Vector2 pos2 = e2.WorldPosition;
-                    distance = Vector2.Distance(pos1, pos2);
-                    if (((e1 is MapEntity m1) && Submarine.RectContains(m1.WorldRect, pos2)) ||
-                        ((e2 is MapEntity m2) && Submarine.RectContains(m2.WorldRect, pos1)) ||
-                        Vector2.DistanceSquared(pos1, pos2) < Radius * Radius)
+                    if (WaitForInteraction)
                     {
-                        Trigger(e1, e2);
-                        return;
+                        Character player = null;
+                        Character npc = null;
+                        Item item = null;
+                        npcOrItem?.TryGet(out npc);
+                        npcOrItem?.TryGet(out item);
+                        if (e1 is Character char1)
+                        {
+                            if (char1.IsBot) { npc ??= char1; }
+                            else { player = char1; }
+                        }
+                        else
+                        {
+                            item ??= e1 as Item;
+                        }
+                        if (e2 is Character char2)
+                        {
+                            if (char2.IsBot) { npc ??= char2; }
+                            else { player = char2; }
+                        }
+                        else
+                        {
+                            item ??= e2 as Item;
+                        }
+
+                        if (player != null)
+                        {
+                            if (npc != null)
+                            {
+                                if (npc.CampaignInteractionType != CampaignMode.InteractionType.Examine)
+                                {
+                                    npcOrItem = npc;
+                                    npc.CampaignInteractionType = CampaignMode.InteractionType.Examine;
+                                    npc.RequireConsciousnessForCustomInteract = DisableIfTargetIncapacitated;
+#if CLIENT
+                                    npc.SetCustomInteract(
+                                        (speaker, player) => { if (e1 == speaker) { Trigger(speaker, player); } else { Trigger(player, speaker); } },
+                                        TextManager.GetWithVariable("CampaignInteraction.Examine", "[key]", GameMain.Config.KeyBindText(InputType.Use)));
+#else
+                                    npc.SetCustomInteract(
+                                        (speaker, player) => { if (e1 == speaker) { Trigger(speaker, player); } else { Trigger(player, speaker); } }, 
+                                        TextManager.Get("CampaignInteraction.Talk"));
+                                    GameMain.NetworkMember.CreateEntityEvent(npc, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
+#endif
+                                }
+
+                                return;
+                            }
+                            else if (item != null)
+                            {
+                                npcOrItem = item;
+                                item.CampaignInteractionType = CampaignMode.InteractionType.Examine;
+                                if (player.SelectedConstruction == item ||
+                                    player.Inventory != null && player.Inventory.Contains(item) ||
+                                    (player.FocusedItem == item && player.IsKeyHit(InputType.Use)))
+                                {
+                                    Trigger(e1, e2);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Vector2 pos1 = e1.WorldPosition;
+                        Vector2 pos2 = e2.WorldPosition;
+                        distance = Vector2.Distance(pos1, pos2);
+                        if (((e1 is MapEntity m1) && Submarine.RectContains(m1.WorldRect, pos2)) ||
+                            ((e2 is MapEntity m2) && Submarine.RectContains(m2.WorldRect, pos1)) ||
+                            Vector2.DistanceSquared(pos1, pos2) < Radius * Radius)
+                        {
+                            Trigger(e1, e2);
+                            return;
+                        }
                     }
                 }
             }            
+        }
+
+        private void ResetTargetIcons()
+        {
+            if (npcOrItem == null) { return; }
+            if (npcOrItem.TryGet(out Character npc))
+            {
+                npc.CampaignInteractionType = CampaignMode.InteractionType.None;
+                npc.SetCustomInteract(null, null);
+                npc.RequireConsciousnessForCustomInteract = true;
+#if SERVER
+                GameMain.NetworkMember.CreateEntityEvent(npc, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
+#endif
+            }
+            else if (npcOrItem.TryGet(out Item item))
+            {
+                item.CampaignInteractionType = CampaignMode.InteractionType.None;
+            }
         }
 
         private bool IsCloseEnoughToHull(Entity e, out Hull hull)
@@ -157,6 +248,7 @@ namespace Barotrauma
 
         private void Trigger(Entity entity1, Entity entity2)
         {
+            ResetTargetIcons();
             if (!string.IsNullOrEmpty(ApplyToTarget1))
             {
                 ParentEvent.AddTarget(ApplyToTarget1, entity1);
@@ -174,7 +266,14 @@ namespace Barotrauma
         {
             if (string.IsNullOrEmpty(TargetModuleType))
             {
-                return $"{ToolBox.GetDebugSymbol(isFinished, isRunning)} {nameof(TriggerAction)} -> (Distance: {((int)distance).ColorizeObject()}, Radius: {Radius.ColorizeObject()}, TargetTags: {Target1Tag.ColorizeObject()}, {Target2Tag.ColorizeObject()})";
+                return
+                    $"{ToolBox.GetDebugSymbol(isFinished, isRunning)} {nameof(TriggerAction)} -> (" +
+                    (WaitForInteraction ?
+                        $"Selected non-player target: {(npcOrItem?.ToString() ?? "<null>").ColorizeObject()}, " :
+                        $"Distance: {((int)distance).ColorizeObject()}, ") +
+                    $"Radius: {Radius.ColorizeObject()}, " +
+                    $"TargetTags: {Target1Tag.ColorizeObject()}, " +
+                    $"{Target2Tag.ColorizeObject()})";
             }
             else
             {

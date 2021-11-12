@@ -1,7 +1,10 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
+using Barotrauma.Networking;
+using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.Items.Components;
 using System.Linq;
 
 namespace Barotrauma
@@ -73,6 +76,8 @@ namespace Barotrauma
             get { return true; }
         }
 
+        public virtual bool IsMentallyUnstable => false;
+
         private IEnumerable<Hull> visibleHulls;
         private float hullVisibilityTimer;
         const float hullVisibilityInterval = 0.5f;
@@ -92,14 +97,32 @@ namespace Barotrauma
             }
         }
 
-        protected bool HasValidPath(bool requireNonDirty = false) => 
-            steeringManager is IndoorsSteeringManager pathSteering && pathSteering.CurrentPath != null && !pathSteering.CurrentPath.Finished && !pathSteering.CurrentPath.Unreachable && (!requireNonDirty || !pathSteering.IsPathDirty);
+        public bool HasValidPath(bool requireNonDirty = false, bool requireUnfinished = true) => 
+            steeringManager is IndoorsSteeringManager pathSteering &&
+            pathSteering.CurrentPath != null &&
+            (!requireUnfinished || !pathSteering.CurrentPath.Finished) &&
+            !pathSteering.CurrentPath.Unreachable &&
+            (!requireNonDirty || !pathSteering.IsPathDirty);
+
+        public bool IsCurrentPathNullOrUnreachable => IsCurrentPathUnreachable || steeringManager is IndoorsSteeringManager pathSteering && pathSteering.CurrentPath == null;
+        public bool IsCurrentPathUnreachable => steeringManager is IndoorsSteeringManager pathSteering && !pathSteering.IsPathDirty && pathSteering.CurrentPath != null && pathSteering.CurrentPath.Unreachable;
+        public bool IsCurrentPathFinished => steeringManager is IndoorsSteeringManager pathSteering && !pathSteering.IsPathDirty && pathSteering.CurrentPath != null && pathSteering.CurrentPath.Finished;
+
+        protected readonly float colliderWidth;
+        protected readonly float minGapSize;
+        protected readonly float colliderLength;
+        protected readonly float avoidLookAheadDistance;
 
         public AIController (Character c)
         {
             Character = c;
             hullVisibilityTimer = Rand.Range(0f, hullVisibilityTimer);
             Enabled = true;
+            var size = Character.AnimController.Collider.GetSize();
+            colliderWidth = size.X;
+            colliderLength = size.Y;
+            avoidLookAheadDistance = Math.Max(Math.Max(colliderWidth, colliderLength) * 3, 1.5f);
+            minGapSize = ConvertUnits.ToDisplayUnits(Math.Min(colliderWidth, colliderLength));
         }
 
         public virtual void OnAttacked(Character attacker, AttackResult attackResult) { }
@@ -215,10 +238,26 @@ namespace Barotrauma
         }
 
         private readonly HashSet<Item> unequippedItems = new HashSet<Item>();
-        public bool TakeItem(Item item, Inventory targetInventory, bool equip, bool dropOtherIfCannotMove = true, bool allowSwapping = false, bool storeUnequipped = false)
+        public bool TakeItem(Item item, CharacterInventory targetInventory, bool equip, bool wear = false, bool dropOtherIfCannotMove = true, bool allowSwapping = false, bool storeUnequipped = false)
         {
             var pickable = item.GetComponent<Pickable>();
             if (pickable == null) { return false; }
+            if (wear)
+            {
+                var wearable = item.GetComponent<Wearable>();
+                if (wearable != null)
+                {
+                    pickable = wearable;
+                }
+            }
+            else
+            {
+                var holdable = item.GetComponent<Holdable>();
+                if (holdable != null)
+                {
+                    pickable = holdable;
+                }
+            }
             if (item.ParentInventory is ItemInventory itemInventory)
             {
                 if (!itemInventory.Container.HasRequiredItems(Character, addMessage: false)) { return false; }
@@ -282,9 +321,9 @@ namespace Barotrauma
                     if (containedItem == null) { continue; }
                     if (predicate == null || predicate(containedItem))
                     {
-                        if (character.Submarine != Submarine.MainSub && avoidDroppingInSea)
+                        if (avoidDroppingInSea && !character.IsInFriendlySub)
                         {
-                            // If we are outside of main sub, try to put the item in the inventory instead dropping it in the sea.
+                            // If we are not inside a friendly sub (= same team), try to put the item in the inventory instead dropping it.
                             if (character.Inventory.TryPutItem(containedItem, character, CharacterInventory.anySlot))
                             {
                                 continue;
@@ -302,13 +341,154 @@ namespace Barotrauma
             {
                 if (item != null && !item.Removed && Character.HasItem(item))
                 {
-                    TakeItem(item, Character.Inventory, equip: true, dropOtherIfCannotMove: true, allowSwapping: true, storeUnequipped: false);
+                    TakeItem(item, Character.Inventory, equip: true, wear: true, dropOtherIfCannotMove: true, allowSwapping: true, storeUnequipped: false);
                 }
             }
             unequippedItems.Clear();
         }
 
+        #region Escape
+        public abstract bool Escape(float deltaTime);
+
+        public Gap EscapeTarget { get; private set; }
+
+        private readonly float escapeTargetSeekInterval = 2;
+        private float escapeTimer;
+        protected bool allGapsSearched;
+        protected readonly HashSet<Gap> unreachableGaps = new HashSet<Gap>();
+        protected bool UpdateEscape(float deltaTime, bool canAttackDoors)
+        {
+            IndoorsSteeringManager pathSteering = SteeringManager as IndoorsSteeringManager;
+            if (allGapsSearched)
+            {
+                escapeTimer -= deltaTime;
+                if (escapeTimer <= 0)
+                {
+                    allGapsSearched = false;
+                }
+            }
+            if (Character.CurrentHull != null && pathSteering != null)
+            {
+                // Seek exit if inside
+                if (!allGapsSearched)
+                {
+                    float closestDistance = 0;
+                    foreach (Gap gap in Gap.GapList)
+                    {
+                        if (gap == null || gap.Removed) { continue; }
+                        if (EscapeTarget == gap) { continue; }
+                        if (unreachableGaps.Contains(gap)) { continue; }
+                        if (gap.Submarine != Character.Submarine) { continue; }
+                        if (gap.IsRoomToRoom) { continue; }
+                        float multiplier = 1;
+                        var door = gap.ConnectedDoor;
+                        if (door != null)
+                        {
+                            if (!door.CanBeTraversed)
+                            {
+                                if (!door.HasAccess(Character))
+                                {
+                                    if (!canAttackDoors) { continue; }
+                                    // Treat doors that don't have access to like they were farther, because it will take time to break them.
+                                    multiplier = 5;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (gap.Open < 1) { continue; }
+                            if (gap.Size < minGapSize) { continue; }
+                        }
+                        if (gap.FlowTargetHull == Character.CurrentHull)
+                        {
+                            // If the gap is in the same room, it's close enough.
+                            EscapeTarget = gap;
+                            break;
+                        }
+                        float distance = Vector2.DistanceSquared(Character.WorldPosition, gap.WorldPosition) * multiplier;
+                        if (EscapeTarget == null || distance < closestDistance)
+                        {
+                            EscapeTarget = gap;
+                            closestDistance = distance;
+                        }
+                    }
+                    allGapsSearched = true;
+                    escapeTimer = escapeTargetSeekInterval;
+                }
+                else if (EscapeTarget != null && EscapeTarget.FlowTargetHull != Character.CurrentHull)
+                {
+                    if (IsCurrentPathUnreachable)
+                    {
+                        unreachableGaps.Add(EscapeTarget);
+                        EscapeTarget = null;
+                        allGapsSearched = false;
+                    }
+                }
+            }
+            if (EscapeTarget != null)
+            {
+                var door = EscapeTarget.ConnectedDoor;
+                bool isClosedDoor = door != null && !door.IsOpen;
+                Vector2 diff = EscapeTarget.WorldPosition - Character.WorldPosition;
+                float sqrDist = diff.LengthSquared();
+                bool isClose = sqrDist < MathUtils.Pow2(100);
+                if (Character.CurrentHull == null || isClose && !isClosedDoor || pathSteering == null || IsCurrentPathNullOrUnreachable || IsCurrentPathFinished)
+                {
+                    // Very close to the target, outside, or at the end of the path -> try to steer through the gap
+                    SteeringManager.Reset();
+                    pathSteering?.ResetPath();
+                    Vector2 dir = Vector2.Normalize(diff);
+                    if (Character.CurrentHull == null || isClose)
+                    {
+                        // Outside -> steer away from the target
+                        if (EscapeTarget.FlowTargetHull != null)
+                        {
+                            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(EscapeTarget.WorldPosition - EscapeTarget.FlowTargetHull.WorldPosition));
+                        }
+                        else
+                        {
+                            SteeringManager.SteeringManual(deltaTime, -dir);
+                        }
+                    }
+                    else
+                    {
+                        // Still inside -> steer towards the target
+                        SteeringManager.SteeringManual(deltaTime, dir);
+                    }
+                    return sqrDist < MathUtils.Pow2(250);
+                }
+                else if (pathSteering != null)
+                {
+                    pathSteering.SteeringSeek(EscapeTarget.SimPosition, weight: 1, minGapSize);
+                }
+                else
+                {
+                    SteeringManager.SteeringSeek(EscapeTarget.SimPosition, 10);
+                }
+            }
+            else
+            {
+                // Can't find the target
+                EscapeTarget = null;
+                allGapsSearched = false;
+                unreachableGaps.Clear();
+            }
+            return false;
+        }
+
+        public void ResetEscape()
+        {
+            EscapeTarget = null;
+            allGapsSearched = false;
+            unreachableGaps.Clear();
+        }
+
+        #endregion
+
         protected virtual void OnStateChanged(AIState from, AIState to) { }
         protected virtual void OnTargetChanged(AITarget previousTarget, AITarget newTarget) { }
+
+        public virtual void ClientRead(IReadMessage msg) { }
+        public virtual void ServerWrite(IWriteMessage msg) { }
     }
 }

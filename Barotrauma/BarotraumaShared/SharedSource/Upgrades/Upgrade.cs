@@ -46,6 +46,8 @@ namespace Barotrauma
             {
                 var value = (float) OriginalValue;
 
+                if (level == 0) { return value; }
+
                 if (Multiplier[^1] != '%')
                 {
                     float multiplier = ParseValue();
@@ -145,7 +147,7 @@ namespace Barotrauma
         /// <returns></returns>
         private static float ApplyPercentage(float value, float amount, int times)
         {
-            return times <= 0 ? value : ApplyPercentage(value + (value * amount / 100), amount, --times);
+            return (1f + (amount / 100f * times)) * value;
         }
 
         public static PropertyReference[] ParseAttributes(IEnumerable<XAttribute> attributes, Upgrade upgrade)

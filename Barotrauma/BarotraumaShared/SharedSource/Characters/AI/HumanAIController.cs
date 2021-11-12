@@ -20,6 +20,11 @@ namespace Barotrauma
         private float reactTimer;
         private float unreachableClearTimer;
         private bool shouldCrouch;
+        public bool IsInsideCave { get; private set; }
+        /// <summary>
+        /// Resets each frame
+        /// </summary>
+        public bool AutoFaceMovement = true;
 
         const float reactionTime = 0.3f;
         const float crouchRaycastInterval = 1;
@@ -49,7 +54,7 @@ namespace Barotrauma
         private readonly float steeringBufferIncreaseSpeed = 100;
         private float steeringBuffer;
 
-        private readonly float obstacleRaycastInterval = 1;
+        private readonly float obstacleRaycastIntervalShort = 1, obstacleRaycastIntervalLong = 5;
         private float obstacleRaycastTimer;
 
         private readonly float enemyCheckInterval = 0.2f;
@@ -82,6 +87,8 @@ namespace Barotrauma
         private readonly Dictionary<Character, AttackResult> previousAttackResults = new Dictionary<Character, AttackResult>();
 
         private readonly SteeringManager outsideSteering, insideSteering;
+
+        public bool UseIndoorSteeringOutside { get; set; } = false;
 
         public IndoorsSteeringManager PathSteering => insideSteering as IndoorsSteeringManager;
         public HumanoidAnimController AnimController => Character.AnimController as HumanoidAnimController;
@@ -119,6 +126,33 @@ namespace Barotrauma
                 timer = Math.Max(timer - deltaTime, 0);
                 return IsStale;
             }
+        }
+
+        public MentalStateManager MentalStateManager { get; private set; }
+
+        public void InitMentalStateManager()
+        {
+            if (MentalStateManager == null)
+            {
+                MentalStateManager = new MentalStateManager(Character, this);
+            }
+            MentalStateManager.Active = true;
+        }
+
+        public override bool IsMentallyUnstable => 
+            MentalStateManager == null ? false :
+            MentalStateManager.CurrentMentalType != MentalStateManager.MentalType.Normal && 
+            MentalStateManager.CurrentMentalType != MentalStateManager.MentalType.Confused;
+
+        public ShipCommandManager ShipCommandManager { get; private set; }
+
+        public void InitShipCommandManager()
+        {
+            if (ShipCommandManager == null)
+            {
+                ShipCommandManager = new ShipCommandManager(Character);
+            }
+            ShipCommandManager.Active = true;
         }
 
         public HumanAIController(Character c) : base(c)
@@ -177,36 +211,93 @@ namespace Barotrauma
                 IgnoredItems.Clear();
             }
 
-            bool IsCloseEnoughToTargetSub(float threshold) => SelectedAiTarget?.Entity?.Submarine is Submarine sub && sub != null && Vector2.DistanceSquared(Character.WorldPosition, sub.WorldPosition) < MathUtils.Pow(Math.Max(sub.Borders.Size.X, sub.Borders.Size.Y) / 2 + threshold, 2);
+            bool IsCloseEnoughToTarget(float threshold, bool useTargetSub = true)
+            {
+                Entity target = SelectedAiTarget?.Entity;
+                if (target == null)
+                {
+                    return false;
+                }
+                if (useTargetSub)
+                {
+                    if (target.Submarine is Submarine sub)
+                    {
+                        target = sub;
+                        threshold += Math.Max(sub.Borders.Size.X, sub.Borders.Size.Y) / 2;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                return Vector2.DistanceSquared(Character.WorldPosition, target.WorldPosition) < MathUtils.Pow(threshold, 2);
+            }
+
             bool hasValidPath = HasValidPath();
 
             if (Character.Submarine == null)
             {
-                if (hasValidPath)
+                // When the character is outside, far enough from the target, and the direct route is blocked,
+                // use the indoor steering with the main and side path waypoints to help avoid getting stuck in level walls
+                if (SelectedAiTarget?.Entity != null && !IsCloseEnoughToTarget(2000, useTargetSub: false))
                 {
                     obstacleRaycastTimer -= deltaTime;
                     if (obstacleRaycastTimer <= 0)
                     {
-                        obstacleRaycastTimer = obstacleRaycastInterval;
-                        // Swimming outside and using the path finder -> check that the path is not blocked with anything (the path finder doesn't know about other subs).
-                        foreach (var connectedSub in Submarine.MainSub.GetConnectedSubs())
+                        obstacleRaycastTimer = obstacleRaycastIntervalLong;
+                        Vector2 rayEnd = SelectedAiTarget.Entity.SimPosition;
+                        if (SelectedAiTarget.Entity.Submarine != null)
                         {
-                            if (connectedSub == Submarine.MainSub) { continue; }
-                            Vector2 rayStart = SimPosition - connectedSub.SimPosition;
-                            Vector2 dir = PathSteering.CurrentPath.CurrentNode.WorldPosition - WorldPosition;
-                            Vector2 rayEnd = rayStart + dir.ClampLength(Character.AnimController.Collider.GetLocalFront().Length() * 5);
-                            if (Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true) != null)
+                            rayEnd += SelectedAiTarget.Entity.Submarine.SimPosition;
+                        }
+                        IEnumerable<FarseerPhysics.Dynamics.Body> ignoredBodies = null;
+                        if (SelectedAiTarget.Entity is ISpatialEntity spatialTarget)
+                        {
+                            Submarine targetSub = spatialTarget.Submarine;
+                            if (targetSub != null)
                             {
-                                PathSteering.CurrentPath.Unreachable = true;
-                                break;
+                                ignoredBodies = targetSub.PhysicsBody.FarseerBody.ToEnumerable();
+                            }
+                        }
+                        var obstacle = Submarine.PickBody(SimPosition, rayEnd, ignoredBodies, collisionCategory: Physics.CollisionLevel | Physics.CollisionWall);
+                        UseIndoorSteeringOutside = obstacle != null;
+                    }
+                }
+                else
+                {
+                    UseIndoorSteeringOutside = false;
+                    if (hasValidPath)
+                    {
+                        obstacleRaycastTimer -= deltaTime;
+                        if (obstacleRaycastTimer <= 0)
+                        {
+                            obstacleRaycastTimer = obstacleRaycastIntervalShort;
+                            // Swimming outside and using the path finder -> check that the path is not blocked with anything (the path finder doesn't know about other subs).
+                            foreach (var connectedSub in Submarine.MainSub.GetConnectedSubs())
+                            {
+                                if (connectedSub == Submarine.MainSub) { continue; }
+                                Vector2 rayStart = SimPosition - connectedSub.SimPosition;
+                                Vector2 dir = PathSteering.CurrentPath.CurrentNode.WorldPosition - WorldPosition;
+                                Vector2 rayEnd = rayStart + dir.ClampLength(Character.AnimController.Collider.GetLocalFront().Length() * 5);
+                                if (Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true) != null)
+                                {
+                                    PathSteering.CurrentPath.Unreachable = true;
+                                    break;
+                                }
                             }
                         }
                     }
                 }
             }
-            if (Character.Submarine == null || !IsOnFriendlyTeam(Character.TeamID, Character.Submarine.TeamID))
+            else
+            {
+                UseIndoorSteeringOutside = false;
+            }
+            
+            if (Character.Submarine == null || !IsOnFriendlyTeam(Character.TeamID, Character.Submarine.TeamID) && !Character.IsEscorted)
             {
                 // Spot enemies while staying outside or inside an enemy ship.
+                // does not apply for escorted characters, such as prisoners or terrorists who have their own behavior
                 enemycheckTimer -= deltaTime;
                 if (enemycheckTimer < 0)
                 {
@@ -241,22 +332,47 @@ namespace Barotrauma
                     }
                 }
             }
-            if (Character.Submarine != null || hasValidPath && IsCloseEnoughToTargetSub(maxSteeringBuffer) || IsCloseEnoughToTargetSub(steeringBuffer))
+
+            // Check whether the character is inside a cave
+            if (IsInsideCave)
+            {
+                // If the character was inside a cave, require them to move a bit further from the area to set the field back to false
+                // This is to avoid any twitchy behavior with the steering managers
+                IsInsideCave = Character.CurrentHull == null && Level.Loaded?.Caves.FirstOrDefault(c =>
+                {
+                    var area = c.Area;
+                    area.Inflate(new Vector2(100));
+                    return area.Contains(Character.WorldPosition);
+                }) is Level.Cave;
+            }
+            else
+            {
+                IsInsideCave = Character.CurrentHull == null && Level.Loaded?.Caves.FirstOrDefault(c => c.Area.Contains(Character.WorldPosition)) is Level.Cave;
+            }
+
+            if (UseIndoorSteeringOutside || IsInsideCave || Character.CurrentHull?.Submarine != null || hasValidPath || IsCloseEnoughToTarget(steeringBuffer))
             {
                 if (steeringManager != insideSteering)
                 {
                     insideSteering.Reset();
+                    steeringManager = insideSteering;
                 }
-                steeringManager = insideSteering;
-                steeringBuffer += steeringBufferIncreaseSpeed * deltaTime;
+                if (IsCloseEnoughToTarget(maxSteeringBuffer))
+                {
+                    steeringBuffer += steeringBufferIncreaseSpeed * deltaTime;
+                }
+                else
+                {
+                    steeringBuffer = minSteeringBuffer;
+                }
             }
             else
             {
                 if (steeringManager != outsideSteering)
                 {
                     outsideSteering.Reset();
+                    steeringManager = outsideSteering;
                 }
-                steeringManager = outsideSteering;
                 steeringBuffer = minSteeringBuffer;
             }
             steeringBuffer = Math.Clamp(steeringBuffer, minSteeringBuffer, maxSteeringBuffer);
@@ -287,6 +403,8 @@ namespace Barotrauma
             }
             else
             {
+                Character.UpdateTeam();
+
                 if (Character.CurrentHull != null)
                 {
                     if (Character.IsOnPlayerTeam)
@@ -301,7 +419,7 @@ namespace Barotrauma
                 }
                 if (Character.SpeechImpediment < 100.0f)
                 {
-                    if (Character.Submarine != null && Character.Submarine.TeamID == Character.TeamID && !Character.Submarine.Info.IsWreck)
+                    if (Character.Submarine != null && (Character.Submarine.TeamID == Character.TeamID || Character.IsEscorted) && !Character.Submarine.Info.IsWreck)
                     {
                         ReportProblems();
                     }
@@ -314,7 +432,7 @@ namespace Barotrauma
             if (objectiveManager.CurrentObjective == null) { return; }
 
             objectiveManager.DoCurrentObjective(deltaTime);
-            bool run = objectiveManager.CurrentObjective.ForceRun || objectiveManager.GetCurrentPriority() > AIObjectiveManager.RunPriority;
+            bool run = objectiveManager.CurrentObjective.ForceRun || !objectiveManager.CurrentObjective.ForceWalk && objectiveManager.GetCurrentPriority() > AIObjectiveManager.RunPriority;
             if (ObjectiveManager.CurrentObjective is AIObjectiveGoTo goTo && goTo.Target != null)
             {
                 if (Character.CurrentHull == null)
@@ -385,7 +503,7 @@ namespace Barotrauma
                         Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
                     }
                 }
-                else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
+                else if (AutoFaceMovement && Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
                 {
                     newDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
                 }
@@ -395,6 +513,10 @@ namespace Barotrauma
                     flipTimer = FlipInterval;
                 }
             }
+            AutoFaceMovement = true;
+
+            MentalStateManager?.Update(deltaTime);
+            ShipCommandManager?.Update(deltaTime);
         }
 
         private void UnequipUnnecessaryItems()
@@ -438,23 +560,23 @@ namespace Barotrauma
                 bool needsGear = NeedsDivingGear(Character.CurrentHull, out _);
                 if (!needsGear || oxygenLow)
                 {
-                    bool shouldKeepTheGearOn = 
+                    bool isCurrentObjectiveFindSafety = ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>();
+                    bool shouldKeepTheGearOn =
+                        isCurrentObjectiveFindSafety ||
                         Character.AnimController.InWater ||
                         Character.AnimController.HeadInWater ||
-                        Character.CurrentHull == null ||
-                        Character.Submarine.TeamID != Character.TeamID ||
-                        ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>() ||
-                        ObjectiveManager.CurrentOrder is AIObjectiveGoTo goTo && goTo.Target == Character ||   // wait order
-                        ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn);
-                    if (oxygenLow && Character.CurrentHull.Oxygen > 0)
+                        Character.Submarine == null ||
+                        (Character.Submarine.TeamID != Character.TeamID && !Character.IsEscorted) ||
+                        ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn) ||
+                        Character.CurrentHull.OxygenPercentage < HULL_LOW_OXYGEN_PERCENTAGE + 10;
+                    bool IsOrderedToWait() => Character.IsOnPlayerTeam && ObjectiveManager.CurrentOrder is AIObjectiveGoTo goTo && goTo.Target == Character;
+                    bool removeDivingSuit = !shouldKeepTheGearOn && !IsOrderedToWait();
+                    if (oxygenLow && Character.CurrentHull.Oxygen > 0 && (!isCurrentObjectiveFindSafety || Character.OxygenAvailable < 1))
                     {
                         shouldKeepTheGearOn = false;
+                        // Remove the suit before we pass out
+                        removeDivingSuit = true;
                     }
-                    else if (Character.CurrentHull.OxygenPercentage < HULL_LOW_OXYGEN_PERCENTAGE + 10)
-                    {
-                        shouldKeepTheGearOn = true;
-                    }
-                    bool removeDivingSuit = !shouldKeepTheGearOn;
                     bool takeMaskOff = !shouldKeepTheGearOn;
                     if (!shouldKeepTheGearOn && !oxygenLow)
                     {
@@ -505,7 +627,7 @@ namespace Barotrauma
                         var divingSuit = Character.Inventory.FindItemByTag(AIObjectiveFindDivingGear.HEAVY_DIVING_GEAR);
                         if (divingSuit != null)
                         {
-                            if (oxygenLow || ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
+                            if (oxygenLow || Character.Submarine?.TeamID != Character.TeamID || ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
                             {
                                 divingSuit.Drop(Character);
                                 HandleRelocation(divingSuit);
@@ -550,7 +672,7 @@ namespace Barotrauma
                             {
                                 if (!mask.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(mask, Character, new List<InvSlotType>() { InvSlotType.Any }))
                                 {
-                                    if (ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
+                                    if (Character.Submarine?.TeamID != Character.TeamID || ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
                                     {
                                         mask.Drop(Character);
                                         HandleRelocation(mask);
@@ -603,7 +725,7 @@ namespace Barotrauma
                     Item item = Character.Inventory.GetItemInLimbSlot(hand);
                     if (item == null) { continue; }
 
-                    if (!item.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(item, Character, new List<InvSlotType>() { InvSlotType.Any }))
+                    if (!item.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(item, Character, new List<InvSlotType>() { InvSlotType.Any }) && Character.Submarine?.TeamID == Character.TeamID )
                     {
                         findItemState = FindItemState.OtherItem;
                         if (FindSuitableContainer(item, out Item targetContainer))
@@ -705,9 +827,10 @@ namespace Barotrauma
             suitableContainer = null;
             if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: ignoredItems, positionalReference: containableItem, customPriorityFunction: i =>
             {
-                if (i.IsThisOrAnyContainerIgnoredByAI()) { return 0; }
+                if (i.IsThisOrAnyContainerIgnoredByAI(character)) { return 0; }
                 var container = i.GetComponent<ItemContainer>();
                 if (container == null) { return 0; }
+                if (!container.HasAccess(character)) { return 0; }
                 if (!container.Inventory.CanBePut(containableItem)) { return 0; }
                 if (container.ShouldBeContained(containableItem, out bool isRestrictionsDefined))
                 {
@@ -743,6 +866,7 @@ namespace Barotrauma
         {
             Order newOrder = null;
             Hull targetHull = null;
+            bool speak = true;
             if (Character.CurrentHull != null)
             {
                 bool isFighting = ObjectiveManager.HasActiveObjective<AIObjectiveCombat>();
@@ -759,6 +883,21 @@ namespace Barotrauma
                                 var orderPrefab = Order.GetPrefab("reportintruders");
                                 newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                                 targetHull = hull;
+                                if (target.IsEscorted)
+                                {
+                                    if (!Character.IsPrisoner && target.IsPrisoner)
+                                    {
+                                        string msg = TextManager.GetWithVariables("orderdialog.prisonerescaped", new string[] { "[roomname]" }, new string[] { targetHull.DisplayName }, new bool[] { false, true }, true);
+                                        Character.Speak(msg, ChatMessageType.Order);
+                                        speak = false;
+                                    }
+                                    else if (!IsMentallyUnstable && target.AIController.IsMentallyUnstable)
+                                    {
+                                        string msg = TextManager.GetWithVariables("orderdialog.mentalcase", new string[] { "[roomname]" }, new string[] { targetHull.DisplayName }, new bool[] { false, true }, true);
+                                        Character.Speak(msg, ChatMessageType.Order);
+                                        speak = false;
+                                    }
+                                }
                             }
                         }
                     }
@@ -771,7 +910,7 @@ namespace Barotrauma
                             targetHull = hull;
                         }
                     }
-                    if (IsBallastFloraNoticeable(Character, hull))
+                    if (IsBallastFloraNoticeable(Character, hull) && newOrder == null)
                     {
                         var orderPrefab = Order.GetPrefab("reportballastflora");
                         newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
@@ -824,20 +963,24 @@ namespace Barotrauma
                     }
                 }
             }
-            if (newOrder != null)
+            if (newOrder != null && speak)
             {
-                if (Character.TeamID == CharacterTeamType.FriendlyNPC)
+                // for now, escorted characters use the report system to get targets but do not speak. escort-character specific dialogue could be implemented
+                if (!Character.IsEscorted)
                 {
-                    Character.Speak(newOrder.GetChatMessage("", targetHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Default, 
-                        identifier: newOrder.Prefab.Identifier + (targetHull?.DisplayName ?? "null"), 
-                        minDurationBetweenSimilar: 60.0f);
-                }
-                else if (Character.IsOnPlayerTeam && GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
-                {
-                    Character.Speak(newOrder.GetChatMessage("", targetHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
+                    if (Character.TeamID == CharacterTeamType.FriendlyNPC)
+                    {
+                        Character.Speak(newOrder.GetChatMessage("", targetHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Default,
+                            identifier: newOrder.Prefab.Identifier + (targetHull?.DisplayName ?? "null"),
+                            minDurationBetweenSimilar: 60.0f);
+                    }
+                    else if (Character.IsOnPlayerTeam && GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
+                    {
+                        Character.Speak(newOrder.GetChatMessage("", targetHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
 #if SERVER
-                    GameMain.Server.SendOrderChatMessage(new OrderChatMessage(newOrder, "", CharacterInfo.HighestManualOrderPriority, targetHull, null, Character));
+                        GameMain.Server.SendOrderChatMessage(new OrderChatMessage(newOrder, "", CharacterInfo.HighestManualOrderPriority, targetHull, null, Character));
 #endif
+                    }
                 }
             }
         }
@@ -857,10 +1000,10 @@ namespace Barotrauma
             return false;
         }
 
-        public static void ReportProblem(Character reporter, Order order)
+        public static void ReportProblem(Character reporter, Order order, Hull targetHull = null)
         {
             if (reporter == null || order == null) { return; }
-            var visibleHulls = new List<Hull>(reporter.GetVisibleHulls());
+            var visibleHulls = targetHull is null ? new List<Hull>(reporter.GetVisibleHulls()) : new List<Hull> { targetHull };
             foreach (var hull in visibleHulls)
             {
                 PropagateHullSafety(reporter, hull);
@@ -907,16 +1050,19 @@ namespace Barotrauma
             }
             if (previousAttackResults.ContainsKey(attacker))
             {
-                foreach (Affliction newAffliction in attackResult.Afflictions)
+                if (attackResult.Afflictions != null)
                 {
-                    var matchingAffliction = previousAttackResults[attacker].Afflictions.Find(a => a.Prefab == newAffliction.Prefab && a.Source == newAffliction.Source);
-                    if (matchingAffliction == null)
+                    foreach (Affliction newAffliction in attackResult.Afflictions)
                     {
-                        previousAttackResults[attacker].Afflictions.Add(newAffliction);
-                    }
-                    else
-                    {
-                        matchingAffliction.Strength += newAffliction.Strength;
+                        var matchingAffliction = previousAttackResults[attacker].Afflictions.Find(a => a.Prefab == newAffliction.Prefab && a.Source == newAffliction.Source);
+                        if (matchingAffliction == null)
+                        {
+                            previousAttackResults[attacker].Afflictions.Add(newAffliction);
+                        }
+                        else
+                        {
+                            matchingAffliction.Strength += newAffliction.Strength;
+                        }
                     }
                 }
                 previousAttackResults[attacker] = new AttackResult(previousAttackResults[attacker].Afflictions, previousAttackResults[attacker].HitLimb);
@@ -933,9 +1079,12 @@ namespace Barotrauma
             float realDamage = attackResult.Damage;
             // including poisons etc
             float totalDamage = realDamage;
-            foreach (Affliction affliction in attackResult.Afflictions)
+            if (attackResult.Afflictions != null)
             {
-                totalDamage -= affliction.Prefab.KarmaChangeOnApplied * affliction.Strength;
+                foreach (Affliction affliction in attackResult.Afflictions)
+                {
+                    totalDamage -= affliction.Prefab.KarmaChangeOnApplied * affliction.Strength;
+                }
             }
             if (totalDamage <= 0.01f) { return; }
             if (Character.IsBot)
@@ -977,11 +1126,11 @@ namespace Barotrauma
                     return;
                 }
                 float cumulativeDamage = GetDamageDoneByAttacker(attacker);
-                if (!Character.IsSecurity && attacker.IsBot && Character.CombatAction == null)
+                bool isAccidental = attacker.IsBot && !IsMentallyUnstable && !attacker.AIController.IsMentallyUnstable && Character.CombatAction == null;
+                if (isAccidental)
                 {
-                    if (cumulativeDamage > 1)
+                    if (!Character.IsSecurity && cumulativeDamage > 1)
                     {
-                        // Don't retaliate on damage done by friendly NPC, because we know it's accidental
                         AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, attacker);
                     }
                 }
@@ -989,7 +1138,7 @@ namespace Barotrauma
                 {
                     (GameMain.GameSession?.GameMode as CampaignMode)?.OutpostNPCAttacked(Character, attacker, attackResult);
                     // Inform other NPCs
-                    if (cumulativeDamage > 1)
+                    if (cumulativeDamage > 1 || totalDamage >= 10)
                     {
                         InformOtherNPCs(cumulativeDamage);
                     }
@@ -1039,8 +1188,11 @@ namespace Barotrauma
             }
             else
             {
-                // Non-friendly
-                InformOtherNPCs(GetDamageDoneByAttacker(attacker));
+                if (Character.Submarine != null && Character.Submarine.GetConnectedSubs().Contains(attacker.Submarine))
+                {
+                    // Non-friendly
+                    InformOtherNPCs(GetDamageDoneByAttacker(attacker));
+                }
                 if (Character.IsBot)
                 {
                     AddCombatObjective(DetermineCombatMode(Character, cumulativeDamage: realDamage), attacker);
@@ -1051,7 +1203,7 @@ namespace Barotrauma
             {
                 foreach (Character otherCharacter in Character.CharacterList)
                 {
-                    if (otherCharacter == Character || otherCharacter.IsDead || otherCharacter.IsUnconscious || otherCharacter.Removed) { continue; }
+                    if (otherCharacter == Character || otherCharacter.IsUnconscious || otherCharacter.Removed) { continue; }
                     if (otherCharacter.Submarine != Character.Submarine) { continue; }
                     if (otherCharacter.Submarine != attacker.Submarine) { continue; }
                     if (otherCharacter.Info?.Job == null || otherCharacter.IsInstigator) { continue; }
@@ -1070,12 +1222,27 @@ namespace Barotrauma
             {
                 if (!IsFriendly(attacker))
                 {
-                    return c.AIController is HumanAIController humanAI && 
+                    if (Character.Submarine == null)
+                    {
+                        // Outside -> don't react.
+                        return AIObjectiveCombat.CombatMode.None;
+                    }
+                    if (!Character.Submarine.GetConnectedSubs().Contains(attacker.Submarine))
+                    {
+                        // Attacked from an unconnected submarine.
+                        return Character.SelectedConstruction?.GetComponent<Turret>() != null ? AIObjectiveCombat.CombatMode.None : AIObjectiveCombat.CombatMode.Retreat;
+                    }
+                    return c.AIController is HumanAIController humanAI &&
                         (humanAI.ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || humanAI.ObjectiveManager.Objectives.Any(o => o is AIObjectiveFightIntruders)) 
                         ? AIObjectiveCombat.CombatMode.Offensive : AIObjectiveCombat.CombatMode.Defensive;
                 }
                 else
                 {
+                    if (Character.Submarine == null || !Character.Submarine.GetConnectedSubs().Contains(attacker.Submarine))
+                    {
+                        // Outside or attacked from an unconnected submarine -> don't react.
+                        return AIObjectiveCombat.CombatMode.None;
+                    }
                     // If there are any enemies around, just ignore the friendly fire
                     if (Character.CharacterList.Any(ch => ch.Submarine == Character.Submarine && !ch.Removed && !ch.IsDead && !ch.IsIncapacitated && !IsFriendly(ch) && VisibleHulls.Contains(ch.CurrentHull)))
                     {
@@ -1090,7 +1257,7 @@ namespace Barotrauma
                         // The guards don't react when the player attacks instigators.
                         return c.IsSecurity ? AIObjectiveCombat.CombatMode.None : (Character.CombatAction != null ? Character.CombatAction.WitnessReaction : AIObjectiveCombat.CombatMode.Retreat);
                     }
-                    else if (attacker.TeamID == CharacterTeamType.FriendlyNPC)
+                    else if (attacker.TeamID == CharacterTeamType.FriendlyNPC && !(attacker.AIController.IsMentallyUnstable || attacker.AIController.IsMentallyUnstable))
                     {
                         if (c.IsSecurity)
                         {
@@ -1108,7 +1275,7 @@ namespace Barotrauma
                             // Already targeting the attacker -> treat as a more serious threat.
                             cumulativeDamage *= 2;
                         }
-                        if (attackResult.Afflictions.Any(a => a is AfflictionHusk))
+                        if (attackResult.Afflictions != null && attackResult.Afflictions.Any(a => a is AfflictionHusk))
                         {
                             cumulativeDamage = 100;
                         }
@@ -1132,7 +1299,7 @@ namespace Barotrauma
             }
         }
 
-        private void AddCombatObjective(AIObjectiveCombat.CombatMode mode, Character target, float delay = 0, Func<bool> abortCondition = null, Action onAbort = null, Action onCompleted = null, bool allowHoldFire = false)
+        public void AddCombatObjective(AIObjectiveCombat.CombatMode mode, Character target, float delay = 0, Func<AIObjective, bool> abortCondition = null, Action onAbort = null, Action onCompleted = null, bool allowHoldFire = false)
         {
             if (mode == AIObjectiveCombat.CombatMode.None) { return; }
             if (Character.IsDead || Character.IsIncapacitated || Character.Removed) { return; }
@@ -1164,11 +1331,8 @@ namespace Barotrauma
             {
                 var objective = new AIObjectiveCombat(Character, target, mode, objectiveManager)
                 {
-                    HoldPosition = 
-                        Character.Info?.Job?.Prefab.Identifier == "watchman" || 
-                        Character.CurrentHull == null ||
-                        Character.IsOnPlayerTeam && !target.IsPlayer && ObjectiveManager.GetActiveObjective<AIObjectiveGoTo>()?.Target is Character followTarget && followTarget.IsPlayer,
-                    abortCondition = abortCondition,
+                    HoldPosition = Character.Info?.Job?.Prefab.Identifier == "watchman",
+                    AbortCondition = abortCondition,
                     allowHoldFire = allowHoldFire,
                 };
                 if (onAbort != null)
@@ -1190,7 +1354,7 @@ namespace Barotrauma
 
         public void SetForcedOrder(Order order, string option, Character orderGiver)
         {
-            var objective = ObjectiveManager.CreateObjective(order, option, orderGiver, false);
+            var objective = ObjectiveManager.CreateObjective(order, option, orderGiver);
             ObjectiveManager.SetForcedOrder(objective);
         }
 
@@ -1216,6 +1380,8 @@ namespace Barotrauma
             }
             ObjectiveManager.WaitTimer = waitDuration;
         }
+
+        public override bool Escape(float deltaTime) => UpdateEscape(deltaTime, canAttackDoors: false);
 
         private void CheckCrouching(float deltaTime)
         {
@@ -1273,12 +1439,15 @@ namespace Barotrauma
         /// <summary>
         /// Check whether the character has a diving suit in usable condition plus some oxygen.
         /// </summary>
-        public static bool HasDivingSuit(Character character, float conditionPercentage = 0) => HasItem(character, AIObjectiveFindDivingGear.HEAVY_DIVING_GEAR, out _, AIObjectiveFindDivingGear.OXYGEN_SOURCE, conditionPercentage, requireEquipped: true);
+        public static bool HasDivingSuit(Character character, float conditionPercentage = 0) 
+            => HasItem(character, AIObjectiveFindDivingGear.HEAVY_DIVING_GEAR, out _, AIObjectiveFindDivingGear.OXYGEN_SOURCE, conditionPercentage, requireEquipped: true,
+                predicate: (Item item) => character.HasEquippedItem(item, InvSlotType.OuterClothes));
 
         /// <summary>
         /// Check whether the character has a diving mask in usable condition plus some oxygen.
         /// </summary>
-        public static bool HasDivingMask(Character character, float conditionPercentage = 0) => HasItem(character, AIObjectiveFindDivingGear.LIGHT_DIVING_GEAR, out _, AIObjectiveFindDivingGear.OXYGEN_SOURCE, conditionPercentage, requireEquipped: true);
+        public static bool HasDivingMask(Character character, float conditionPercentage = 0) 
+            => HasItem(character, AIObjectiveFindDivingGear.LIGHT_DIVING_GEAR, out _, AIObjectiveFindDivingGear.OXYGEN_SOURCE, conditionPercentage, requireEquipped: true);
 
         private static List<Item> matchingItems = new List<Item>();
 
@@ -1336,7 +1505,7 @@ namespace Barotrauma
                 if (GameMain.GameSession?.Campaign?.Map?.CurrentLocation != null)
                 {
                     var reputationLoss = damageAmount * Reputation.ReputationLossPerWallDamage;
-                    GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation.Value -= reputationLoss;
+                    GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation.AddReputation(-reputationLoss);
                 }
 
                 if (accumulatedDamage <= WarningThreshold) { return; }
@@ -1401,7 +1570,9 @@ namespace Barotrauma
             Character thief = character;
             bool someoneSpoke = false;
 
-            if (item.SpawnedInOutpost && !item.AllowStealing && thief.TeamID != CharacterTeamType.FriendlyNPC && !item.HasTag("handlocker"))
+            bool stolenItemsInside = item.OwnInventory?.FindAllItems(it => it.SpawnedInOutpost && !it.AllowStealing, recursive: true).Any() ?? false;
+
+            if ((item.SpawnedInOutpost && !item.AllowStealing || stolenItemsInside) && thief.TeamID != CharacterTeamType.FriendlyNPC && !item.HasTag("handlocker"))
             {
                 foreach (Character otherCharacter in Character.CharacterList)
                 {
@@ -1429,7 +1600,7 @@ namespace Barotrauma
                             var reputationLoss = MathHelper.Clamp(
                                 (item.Prefab.GetMinPrice() ?? 0) * Reputation.ReputationLossPerStolenItemPrice, 
                                 Reputation.MinReputationLossPerStolenItem, Reputation.MaxReputationLossPerStolenItem);
-                            GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation.Value -= reputationLoss;
+                            GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation.AddReputation(-reputationLoss);
                         }
                         item.StolenDuringRound = true;
                         otherCharacter.Speak(TextManager.Get("dialogstealwarning"), null, Rand.Range(0.5f, 1.0f), "thief", 10.0f);
@@ -1464,7 +1635,7 @@ namespace Barotrauma
                 if (!humanAI.Character.IsSecurity) { return false; }
                 if (humanAI.ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>()) { return false; }
                 humanAI.AddCombatObjective(AIObjectiveCombat.CombatMode.Arrest, thief, delay: GetReactionTime(),
-                    abortCondition: () => thief.Inventory.FindItem(it => it != null && it.StolenDuringRound, true) == null,
+                    abortCondition: obj => thief.Inventory.FindItem(it => it != null && it.StolenDuringRound, true) == null,
                     onAbort: () =>
                     {
                         if (item != null && !item.Removed && humanAI != null && !humanAI.ObjectiveManager.IsCurrentObjective<AIObjectiveGetItem>())
@@ -1845,24 +2016,58 @@ namespace Barotrauma
 
         private static bool FilterCrewMember(Character self, Character other) => other != null && !other.IsDead && !other.Removed && other.AIController is HumanAIController humanAi && humanAi.IsFriendly(self);
 
-        public static bool IsItemOperatedByAnother(Character character, ItemComponent target, out Character operatingCharacter)
+        public static bool IsItemTargetedBySomeone(ItemComponent target, CharacterTeamType team, out Character operatingCharacter)
         {
             operatingCharacter = null;
-            if (character == null) { return false; }
-            if (target?.Item == null) { return false; }
-            bool isOrder = IsOrderedToOperateThis(character.AIController);
-            foreach (var c in Character.CharacterList)
+            float highestPriority = -1.0f;
+            float highestPriorityModifier = -1.0f;
+            foreach (Character c in Character.CharacterList)
             {
-                if (c == character) { continue; }
-                if (c.IsDead || c.IsIncapacitated) { continue; }
-                if (!IsFriendly(character, c, onlySameTeam: true)) { continue; }
-                operatingCharacter = c;
+                if (c.Removed) { continue; }
+                if (c.TeamID != team) { continue; }
+                if (c.IsIncapacitated) { continue; }
+                if (c.SelectedConstruction == target.Item)
+                {
+                    operatingCharacter = c;
+                    return true;
+                }
+                if (c.AIController is HumanAIController humanAI)
+                {
+                    foreach (var objective in humanAI.ObjectiveManager.Objectives)
+                    {
+                        if (!(objective is AIObjectiveOperateItem operateObjective)) { continue; }
+                        if (operateObjective.Component.Item != target.Item) { continue; }
+                        if (operateObjective.Priority < highestPriority) { continue; }
+                        if (operateObjective.PriorityModifier < highestPriorityModifier) { continue; }
+                        operatingCharacter = c;
+                        highestPriority = operateObjective.Priority;
+                        highestPriorityModifier = operateObjective.PriorityModifier;
+                    }
+                }
+            }
+            return operatingCharacter != null;
+        }
+
+        // There's some duplicate logic in the two methods below, but making them use the same code would require some changes in the target classes so that we could use exactly the same checks.
+        // And even then there would be some differences that could end up being confusing (like the exception for steering).
+        public bool IsItemOperatedByAnother(ItemComponent target, out Character other)
+        {
+            other = null;
+            if (target?.Item == null) { return false; }
+            bool isOrder = IsOrderedToOperateThis(Character.AIController);
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c == Character) { continue; }
+                if (c.Removed) { continue; }
+                if (c.TeamID != Character.TeamID) { continue; }
+                if (c.IsIncapacitated) { continue; }
                 if (c.IsPlayer)
                 {
                     if (c.SelectedConstruction == target.Item)
                     {
                         // If the other character is player, don't try to operate
-                        return true;
+                        other = c;
+                        break;
                     }
                 }
                 else if (c.AIController is HumanAIController operatingAI)
@@ -1876,7 +2081,8 @@ namespace Barotrauma
                     if (!isOrder && isTargetOrdered)
                     {
                         // If the other bot is ordered to operate the item, let him do it, unless we are ordered too
-                        return true;
+                        other = c;
+                        break;
                     }
                     else
                     {
@@ -1887,7 +2093,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            if (!isTargetOrdered && operatingAI.ObjectiveManager.CurrentOrder == operatingAI.ObjectiveManager.CurrentObjective)
+                            if (!isTargetOrdered && operatingAI.ObjectiveManager.CurrentOrder != operatingAI.ObjectiveManager.CurrentObjective)
                             {
                                 // The other bot is ordered to do something else
                                 continue;
@@ -1895,21 +2101,81 @@ namespace Barotrauma
                             if (target is Steering)
                             {
                                 // Steering is hard-coded -> cannot use the required skills collection defined in the xml
-                                if (character.GetSkillLevel("helm") <= c.GetSkillLevel("helm"))
+                                if (Character.GetSkillLevel("helm") <= c.GetSkillLevel("helm"))
                                 {
-                                    return true;
+                                    other = c;
+                                    break;
                                 }
                             }
-                            else if (target.DegreeOfSuccess(character) <= target.DegreeOfSuccess(c))
+                            else if (target.DegreeOfSuccess(Character) <= target.DegreeOfSuccess(c))
                             {
-                                return true;
+                                other = c;
+                                break;
                             }
                         }
                     }
                 }
             }
+            return other != null;
+            bool IsOrderedToOperateThis(AIController ai) => ai is HumanAIController humanAI && humanAI.ObjectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder.Component.Item == target.Item;
+        }
+
+        public bool IsItemRepairedByAnother(Item target, out Character other)
+        {
+            other = null;
+            if (Character == null) { return false; }
+            if (target == null) { return false; }
+            bool isOrder = IsOrderedToRepairThis(Character.AIController as HumanAIController);
+            foreach (var c in Character.CharacterList)
+            {
+                if (c == Character) { continue; }
+                if (c.TeamID != Character.TeamID) { continue; }
+                if (c.IsIncapacitated) { continue; }
+                other = c;
+                if (c.IsPlayer)
+                {
+                    if (target.Repairables.Any(r => r.CurrentFixer == c))
+                    {
+                        // If the other character is player, don't try to repair
+                        return true;
+                    }
+                }
+                else if (c.AIController is HumanAIController operatingAI)
+                {
+                    var repairItemsObjective = operatingAI.ObjectiveManager.GetObjective<AIObjectiveRepairItems>();
+                    if (repairItemsObjective == null) { continue; }
+                    if (!(repairItemsObjective.SubObjectives.FirstOrDefault(o => o is AIObjectiveRepairItem) is AIObjectiveRepairItem activeObjective) || activeObjective.Item != target)
+                    {
+                        // Not targeting the same item.
+                        continue;
+                    }
+                    bool isTargetOrdered = IsOrderedToRepairThis(operatingAI);
+                    if (!isOrder && isTargetOrdered)
+                    {
+                        // If the other bot is ordered to repair the item, let him do it, unless we are ordered too
+                        return true;
+                    }
+                    else
+                    {
+                        if (isOrder && !isTargetOrdered)
+                        {
+                            // We are ordered and the target is not -> allow to repair
+                            continue;
+                        }
+                        else
+                        {
+                            if (!isTargetOrdered && operatingAI.ObjectiveManager.CurrentOrder != operatingAI.ObjectiveManager.CurrentObjective)
+                            {
+                                // The other bot is ordered to do something else
+                                continue;
+                            }
+                            return target.Repairables.Max(r => r.DegreeOfSuccess(Character)) <= target.Repairables.Max(r => r.DegreeOfSuccess(c));
+                        }
+                    }
+                }
+            }
             return false;
-            bool IsOrderedToOperateThis(AIController ai) => ai is HumanAIController humanAI && humanAI.ObjectiveManager.CurrentOrder is AIObjectiveOperateItem operateObjective && operateObjective.Component.Item == target.Item;
+            bool IsOrderedToRepairThis(HumanAIController ai) => ai.ObjectiveManager.CurrentOrder is AIObjectiveRepairItems repairOrder && repairOrder.PrioritizedItem == target;
         }
 
         #region Wrappers
@@ -1918,7 +2184,6 @@ namespace Barotrauma
         public bool IsTrueForAnyCrewMember(Func<HumanAIController, bool> predicate) => IsTrueForAnyCrewMember(Character, predicate);
         public bool IsTrueForAllCrewMembers(Func<HumanAIController, bool> predicate) => IsTrueForAllCrewMembers(Character, predicate);
         public int CountCrew(Func<HumanAIController, bool> predicate = null, bool onlyActive = true, bool onlyBots = false) => CountCrew(Character, predicate, onlyActive, onlyBots);
-        public bool IsItemOperatedByAnother(ItemComponent target, out Character operatingCharacter) => IsItemOperatedByAnother(Character, target, out operatingCharacter);
         #endregion
     }
 }

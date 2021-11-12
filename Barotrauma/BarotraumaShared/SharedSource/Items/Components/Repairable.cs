@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Repairable : ItemComponent, IServerSerializable, IClientSerializable
     {
-        private string header;
+        private readonly string header;
 
         private float deteriorationTimer;
         private float deteriorateAlwaysResetTimer;
@@ -85,10 +85,10 @@ namespace Barotrauma.Items.Components
         }
 
         private float skillRequirementMultiplier;
-        
+
         [Serialize(1.0f, true)]
-        public float SkillRequirementMultiplier 
-        { 
+        public float SkillRequirementMultiplier
+        {
             get { return skillRequirementMultiplier; }
             set
             {
@@ -100,8 +100,10 @@ namespace Barotrauma.Items.Components
                     RecreateGUI();
                 }
 #endif
-            } 
+            }
         }
+
+        public bool IsTinkering { get; private set; } = false;
 
         public float RepairIconThreshold
         {
@@ -109,12 +111,19 @@ namespace Barotrauma.Items.Components
         }
 
         public Character CurrentFixer { get; private set; }
+        private Item currentRepairItem;
+
+        private float tinkeringDuration;
+        private float tinkeringStrength;
+
+        public float TinkeringStrength => tinkeringStrength;
 
         public enum FixActions : int
         {
             None = 0,
             Repair = 1,
-            Sabotage = 2
+            Sabotage = 2,
+            Tinker = 3,
         }
 
         private FixActions currentFixerAction = FixActions.None;
@@ -131,15 +140,15 @@ namespace Barotrauma.Items.Components
             canBeSelected = true;
 
             this.item = item;
-            header = 
+            header =
                 TextManager.Get(element.GetAttributeString("header", ""), returnNull: true) ??
                 TextManager.Get(item.Prefab.ConfigElement.GetAttributeString("header", ""), returnNull: true) ??
                 element.GetAttributeString("name", "");
 
             //backwards compatibility
-            var repairThresholdAttribute = 
+            var repairThresholdAttribute =
                 element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals("showrepairuithreshold", StringComparison.OrdinalIgnoreCase)) ??
-                element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals("airepairth44reshold", StringComparison.OrdinalIgnoreCase));
+                element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals("airepairthreshold", StringComparison.OrdinalIgnoreCase));
             if (repairThresholdAttribute != null)
             {
                 if (float.TryParse(repairThresholdAttribute.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float repairThreshold))
@@ -161,11 +170,13 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// Check if the character manages to succesfully repair the item
         /// </summary>
-        public bool CheckCharacterSuccess(Character character)
+        public bool CheckCharacterSuccess(Character character, Item bestRepairItem)
         {
             if (character == null) { return false; }
 
             if (statusEffectLists == null || statusEffectLists.None(s => s.Key == ActionType.OnFailure)) { return true; }
+
+            if (bestRepairItem != null && bestRepairItem.Prefab.CannotRepairFail) { return true; }
 
             // unpowered (electrical) items can be repaired without a risk of electrical shock
             if (requiredSkills.Any(s => s != null && s.Identifier.Equals("electrical", StringComparison.OrdinalIgnoreCase)) &&
@@ -174,6 +185,10 @@ namespace Barotrauma.Items.Components
             if (Rand.Range(0.0f, 0.5f) < RepairDegreeOfSuccess(character, requiredSkills)) { return true; }
 
             ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
+            if (bestRepairItem != null && bestRepairItem.GetComponent<Holdable>() is Holdable h)
+            {
+                h.ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
+            }
             return false;
         }
 
@@ -191,7 +206,7 @@ namespace Barotrauma.Items.Components
 
             return ((average + 100.0f) / 2.0f) / 100.0f;
         }
-        
+
         public bool StartRepairing(Character character, FixActions action)
         {
             if (character == null || character.IsDead || action == FixActions.None)
@@ -201,13 +216,19 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+                Item bestRepairItem = GetBestRepairItem(character);
 #if SERVER
                 if (CurrentFixer != character || currentFixerAction != action)
                 {
-                    if (!CheckCharacterSuccess(character))
+                    if (!CheckCharacterSuccess(character, bestRepairItem))
                     {
                         GameServer.Log($"{GameServer.CharacterLogName(character)} failed to {(action == FixActions.Sabotage ? "sabotage" : "repair")} {item.Name}", ServerLog.MessageType.ItemInteraction);
                         GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, character.ID });
+                        if (bestRepairItem != null && bestRepairItem.GetComponent<Holdable>() is Holdable h)
+                        {
+                            GameMain.Server?.CreateEntityEvent(bestRepairItem, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, h, character.ID });
+                        }
+
                         return false;
                     }
 
@@ -215,11 +236,32 @@ namespace Barotrauma.Items.Components
                     item.CreateServerEvent(this);
                 }
 #else
-                if (GameMain.Client == null && (CurrentFixer != character || currentFixerAction != action) && !CheckCharacterSuccess(character)) { return false; }
+                if (GameMain.Client == null && (CurrentFixer != character || currentFixerAction != action) && !CheckCharacterSuccess(character, bestRepairItem)) { return false; }
 #endif
                 CurrentFixer = character;
+                currentRepairItem = bestRepairItem;
                 CurrentFixerAction = action;
+                if (action == FixActions.Tinker)
+                {
+                    tinkeringStrength = 1f + CurrentFixer.GetStatValue(StatTypes.TinkeringStrength);
+
+                    if (character.HasAbilityFlag(AbilityFlags.CanTinkerFabricatorsAndDeconstructors) && item.GetComponent<Deconstructor>() != null || item.GetComponent<Fabricator>() != null)
+                    {
+                        // fabricators and deconstructors can be tinkered indefinitely (more or less)
+                        tinkeringDuration = float.MaxValue;
+                    }
+                    else
+                    {
+                        tinkeringDuration = CurrentFixer.GetStatValue(StatTypes.TinkeringDuration);
+                    }
+                }
                 return true;
+
+                static Item GetBestRepairItem(Character character)
+                {
+                    return character.HeldItems.OrderByDescending(i => i.Prefab.AddedRepairSpeedMultiplier).FirstOrDefault();
+                }
+
             }
         }
 
@@ -233,12 +275,24 @@ namespace Barotrauma.Items.Components
                     item.CreateServerEvent(this);
                 }
 #endif
+                if (currentRepairItem != null)
+                {
+                    foreach (var ic in currentRepairItem.GetComponents<ItemComponent>())
+                    {
+                        ic.ApplyStatusEffects(ActionType.OnSuccess, 1.0f, character);
+                    }
+                }
+                if (CurrentFixerAction == FixActions.Tinker)
+                {
+                    CurrentFixer.CheckTalents(AbilityEffectType.OnStopTinkering);
+                }
                 CurrentFixer.AnimController.Anim = AnimController.Animation.None;
                 CurrentFixer = null;
+                currentRepairItem = null;
                 currentFixerAction = FixActions.None;
 #if CLIENT
                 repairSoundChannel?.FadeOutAndDispose();
-                repairSoundChannel = null;                
+                repairSoundChannel = null;
 #endif
                 return true;
             }
@@ -266,7 +320,10 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateProjSpecific(deltaTime);
-            
+            IsTinkering = false;
+
+            item.SendSignal($"{(int) item.ConditionPercentage}", "condition_out");
+
             if (CurrentFixer == null)
             {
                 if (deteriorateAlwaysResetTimer > 0.0f)
@@ -314,6 +371,25 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            if (currentFixerAction == FixActions.Tinker)
+            {
+                tinkeringDuration -= deltaTime;
+                // not great to interject it here, should be less reliant on returning
+
+                float conditionDecrease = deltaTime * (CurrentFixer.GetStatValue(StatTypes.TinkeringDamage) / item.Prefab.Health) * 100f;
+                item.Condition -= conditionDecrease;
+
+                if (!CanTinker(CurrentFixer) || tinkeringDuration <= 0f)
+                {
+                    StopRepairing(CurrentFixer);
+                }
+                else
+                {
+                    IsTinkering = true;
+                }
+                return;
+            }
+
             float successFactor = requiredSkills.Count == 0 ? 1.0f : RepairDegreeOfSuccess(CurrentFixer, requiredSkills);
 
             //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
@@ -327,6 +403,11 @@ namespace Barotrauma.Items.Components
             }
 
             float fixDuration = MathHelper.Lerp(FixDurationLowSkill, FixDurationHighSkill, successFactor);
+            fixDuration /= 1 + CurrentFixer.GetStatValue(StatTypes.RepairSpeed) + currentRepairItem?.Prefab.AddedRepairSpeedMultiplier ?? 0f;
+            fixDuration /= 1 + item.GetQualityModifier(Quality.StatType.RepairSpeed);
+
+            item.MaxRepairConditionMultiplier = GetMaxRepairConditionMultiplier(CurrentFixer);
+
             if (currentFixerAction == FixActions.Repair)
             {
                 if (fixDuration <= 0.0f)
@@ -335,7 +416,8 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    float conditionIncrease = deltaTime / (fixDuration / item.MaxCondition);
+                    // scale with prefab's health instead of real health to ensure repair speed remains static with upgrades
+                    float conditionIncrease = deltaTime / (fixDuration / item.Prefab.Health);
                     item.Condition += conditionIncrease;
 #if SERVER
                     GameMain.Server.KarmaManager.OnItemRepaired(CurrentFixer, this, conditionIncrease);
@@ -349,14 +431,14 @@ namespace Barotrauma.Items.Components
                         foreach (Skill skill in requiredSkills)
                         {
                             float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
-                            CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
-                                SkillSettings.Current.SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f),
-                                CurrentFixer.Position + Vector2.UnitY * 100.0f);
+                            CurrentFixer.Info?.IncreaseSkillLevel(skill.Identifier,
+                                SkillSettings.Current.SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f));
                         }
                         SteamAchievementManager.OnItemRepaired(item, CurrentFixer);
+                        CurrentFixer.CheckTalents(AbilityEffectType.OnRepairComplete);
                     }
                     deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
-                    wasBroken = false;                    
+                    wasBroken = false;
                     StopRepairing(CurrentFixer);
                 }
             }
@@ -368,7 +450,8 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    float conditionDecrease = deltaTime / (fixDuration / item.MaxCondition);
+                    // scale with prefab's health instead of real health to ensure sabotage speed remains static with (any) upgrades
+                    float conditionDecrease = deltaTime / (fixDuration / item.Prefab.Health);
                     item.Condition -= conditionDecrease;
                 }
 
@@ -379,9 +462,8 @@ namespace Barotrauma.Items.Components
                         foreach (Skill skill in requiredSkills)
                         {
                             float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
-                            CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
-                                SkillSettings.Current.SkillIncreasePerSabotage / Math.Max(characterSkillLevel, 1.0f),
-                                CurrentFixer.Position + Vector2.UnitY * 100.0f);
+                            CurrentFixer.Info?.IncreaseSkillLevel(skill.Identifier,
+                                SkillSettings.Current.SkillIncreasePerSabotage / Math.Max(characterSkillLevel, 1.0f));
                         }
 
                         deteriorationTimer = 0.0f;
@@ -397,6 +479,45 @@ namespace Barotrauma.Items.Components
             {
                 throw new NotImplementedException(currentFixerAction.ToString());
             }
+        }
+
+        private float GetMaxRepairConditionMultiplier(Character character)
+        {
+            if (character == null) { return 1.0f; }
+            // kind of rough to keep this in update, but seems most robust
+            if (requiredSkills.Any(s => s != null && s.Identifier.Equals("mechanical", StringComparison.OrdinalIgnoreCase)))
+            {
+                return 1 + character.GetStatValue(StatTypes.MaxRepairConditionMultiplierMechanical);
+            }
+            if (requiredSkills.Any(s => s != null && s.Identifier.Equals("electrical", StringComparison.OrdinalIgnoreCase)))
+            {
+                return 1 + character.GetStatValue(StatTypes.MaxRepairConditionMultiplierElectrical);
+            }
+            return 1.0f;
+        }
+
+        private bool IsTinkerable(Character character)
+        {
+            if (!character.HasAbilityFlag(AbilityFlags.CanTinker)) { return false; }
+            if (item.GetComponent<Engine>() != null) { return true; }
+            if (item.GetComponent<Pump>() != null) { return true; }
+            if (item.HasTag("turretammosource")) { return true; }
+            if (!character.HasAbilityFlag(AbilityFlags.CanTinkerFabricatorsAndDeconstructors)) { return false; }
+            if (item.GetComponent<Fabricator>() != null) { return true; }
+            if (item.GetComponent<Deconstructor>() != null) { return true; }
+            return false;
+        }
+
+        private Affliction GetTinkerExhaustion(Character character)
+        {
+            return character.CharacterHealth.GetAffliction("tinkerexhaustion");
+        }
+
+        private bool CanTinker(Character character)
+        {
+            if (!IsTinkerable(character)) { return false; }
+            if (GetTinkerExhaustion(character) is Affliction tinkerExhaustion && tinkerExhaustion.Strength <= tinkerExhaustion.Prefab.MaxStrength) { return false; }
+            return true;
         }
 
         partial void UpdateProjSpecific(float deltaTime);
@@ -423,8 +544,13 @@ namespace Barotrauma.Items.Components
                 }
                 else if (ic is PowerTransfer pt)
                 {
-                    //power transfer items (junction boxes, relays) don't deteriorate if they're no carrying any power 
+                    //power transfer items (junction boxes, relays) don't deteriorate if they're no carrying any power
                     if (Math.Abs(pt.CurrPowerConsumption) > 0.1f) { return true; }
+                }
+                else if (ic is PowerContainer pc)
+                {
+                    //batteries don't deteriorate if they're not charging/discharging
+                    if (Math.Abs(pc.CurrPowerConsumption) > 0.1f || Math.Abs(pc.CurrPowerOutput) > 0.1f) { return true; }
                 }
                 else if (ic is Engine engine)
                 {
@@ -434,7 +560,7 @@ namespace Barotrauma.Items.Components
                 else if (ic is Pump pump)
                 {
                     //pumps don't deteriorate if they're not running
-                    if (Math.Abs(pump.FlowPercentage) > 1.0f && pump.IsActive) { return true; }
+                    if (Math.Abs(pump.FlowPercentage) > 1.0f && pump.IsActive && pump.HasPower) { return true; }
                 }
                 else if (ic is Reactor reactor)
                 {
@@ -484,7 +610,7 @@ namespace Barotrauma.Items.Components
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
             //do nothing
-            //Repairables should always stay active, so we don't want to use the default behavior 
+            //Repairables should always stay active, so we don't want to use the default behavior
             //where set_active/set_state signals can disable the component
         }
     }

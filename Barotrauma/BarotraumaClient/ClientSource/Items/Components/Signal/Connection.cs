@@ -23,6 +23,10 @@ namespace Barotrauma.Items.Components
 
         public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Character character)
         {
+            if (DraggingConnected?.Item.Removed ?? false)
+            {
+                DraggingConnected = null;
+            }
             Rectangle panelRect = panel.GuiFrame.Rect;
             int x = panelRect.X, y = panelRect.Y;
             int width = panelRect.Width, height = panelRect.Height;
@@ -40,7 +44,7 @@ namespace Barotrauma.Items.Components
             Wire equippedWire = null;
             
             bool allowRewiring = GameMain.NetworkMember?.ServerSettings == null || GameMain.NetworkMember.ServerSettings.AllowRewiring || panel.AlwaysAllowRewiring;
-            if (allowRewiring && (!panel.Locked || Screen.Selected == GameMain.SubEditorScreen))
+            if (allowRewiring && (!panel.Locked && !panel.TemporarilyLocked || Screen.Selected == GameMain.SubEditorScreen))
             {
                 //if the Character using the panel has a wire item equipped
                 //and the wire hasn't been connected yet, draw it on the panel
@@ -50,6 +54,11 @@ namespace Barotrauma.Items.Components
                     if (wireComponent != null)
                     {
                         equippedWire = wireComponent;
+                        var connectedEnd = equippedWire.OtherConnection(null);
+                        if (connectedEnd?.Item.Submarine != null && panel.Item.Submarine != connectedEnd.Item.Submarine)
+                        {
+                            equippedWire = null;
+                        }
                     }
                 }
             }
@@ -365,7 +374,7 @@ namespace Barotrauma.Items.Components
                     ConnectionPanel.HighlightedWire = wire;
 
                     bool allowRewiring = GameMain.NetworkMember?.ServerSettings == null || GameMain.NetworkMember.ServerSettings.AllowRewiring || panel.AlwaysAllowRewiring;
-                    if (allowRewiring && (!wire.Locked && !panel.Locked || Screen.Selected == GameMain.SubEditorScreen))
+                    if (allowRewiring && (!wire.Locked && !panel.Locked && !panel.TemporarilyLocked || Screen.Selected == GameMain.SubEditorScreen))
                     {
                         //start dragging the wire
                         if (PlayerInput.PrimaryMouseButtonHeld()) { DraggingConnected = wire; }

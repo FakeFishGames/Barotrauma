@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class AIObjectiveFixLeak : AIObjective
     {
-        public override string DebugTag => "fix leak";
+        public override string Identifier { get; set; } = "fix leak";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         public override bool AllowInAnySub => true;
@@ -29,19 +29,22 @@ namespace Barotrauma
             this.isPriority = isPriority;
         }
 
-        protected override bool Check() => Leak.Open <= 0 || Leak.Removed;
+        protected override bool CheckObjectiveSpecific() => Leak.Open <= 0 || Leak.Removed;
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             if (!IsAllowed)
             {
                 Priority = 0;
                 Abandon = true;
             }
-            else if (HumanAIController.IsTrueForAnyCrewMember(other => other != HumanAIController && other.Character.IsBot && other.ObjectiveManager.GetActiveObjective<AIObjectiveFixLeak>()?.Leak == Leak))
+            else if (HumanAIController.IsTrueForAnyCrewMember(
+                other => other != HumanAIController && 
+                other.Character.IsBot &&
+                other.ObjectiveManager.GetActiveObjective<AIObjectiveFixLeaks>() is AIObjectiveFixLeaks fixLeaks &&
+                fixLeaks.SubObjectives.Any(so => so is AIObjectiveFixLeak fixObjective && fixObjective.Leak == Leak)))
             {
                 Priority = 0;
-                Abandon = true;
             }
             else
             {
@@ -86,24 +89,26 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                HumanAIController.UnequipContainedItems(weldingTool, it => !it.HasTag("weldingfuel"));
-                HumanAIController.UnequipEmptyItems(weldingTool);
                 if (weldingTool.OwnInventory != null && weldingTool.OwnInventory.AllItems.None(i => i.HasTag("weldingfuel") && i.Condition > 0.0f))
                 {
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC),
-                        onAbandon: () =>
-                        {
-                            Abandon = true;
-                            ReportWeldingFuelTankCount();
-                        },
-                        onCompleted: () => 
-                        {
-                            RemoveSubObjective(ref refuelObjective);
-                            ReportWeldingFuelTankCount();
-                        });
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                    {
+                        RemoveExisting = true
+                    },
+                    onAbandon: () =>
+                    {
+                        Abandon = true;
+                        ReportWeldingFuelTankCount();
+                    },
+                    onCompleted: () => 
+                    {
+                        RemoveSubObjective(ref refuelObjective);
+                        ReportWeldingFuelTankCount();
+                    });
 
                     void ReportWeldingFuelTankCount()
                     {
+                        if (character.Submarine != Submarine.MainSub) { return; }
                         int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag("weldingfuel") && i.Condition > 1);
                         if (remainingOxygenTanks == 0)
                         {
@@ -127,7 +132,7 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            Vector2 toLeak = Leak.WorldPosition - character.WorldPosition;
+            Vector2 toLeak = Leak.WorldPosition - character.AnimController.AimSourceWorldPos;
             // TODO: use the collider size/reach?
             if (!character.AnimController.InWater && Math.Abs(toLeak.X) < 100 && toLeak.Y < 0.0f && toLeak.Y > -150)
             {
@@ -141,7 +146,7 @@ namespace Barotrauma
                     onAbandon: () => Abandon = true,
                     onCompleted: () =>
                     {
-                        if (Check()) { IsCompleted = true; }
+                        if (CheckObjectiveSpecific()) { IsCompleted = true; }
                         else
                         {
                             // Failed to operate. Probably too far.
@@ -153,6 +158,7 @@ namespace Barotrauma
             {
                 TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(Leak, character, objectiveManager)
                 {
+                    UseDistanceRelativeToAimSourcePos = true,
                     CloseEnough = reach,
                     DialogueIdentifier = Leak.FlowTargetHull != null ? "dialogcannotreachleak" : null,
                     TargetName = Leak.FlowTargetHull?.DisplayName,
@@ -160,8 +166,8 @@ namespace Barotrauma
                 },
                 onAbandon: () =>
                 {
-                    if (Check()) { IsCompleted = true; }
-                    else if ((Leak.WorldPosition - character.WorldPosition).LengthSquared() > MathUtils.Pow(reach * 2, 2))
+                    if (CheckObjectiveSpecific()) { IsCompleted = true; }
+                    else if ((Leak.WorldPosition - character.AnimController.AimSourceWorldPos).LengthSquared() > MathUtils.Pow(reach * 2, 2))
                     {
                         // Too far
                         Abandon = true;
@@ -191,7 +197,7 @@ namespace Barotrauma
             // This is an approximation, because we don't know the exact reach until the pose is taken.
             // And even then the actual range depends on the direction we are aiming to.
             // Found out that without any multiplier the value (209) is often too short.
-            return repairTool.Range + armLength * 1.2f;
+            return repairTool.Range + armLength * 1.3f;
         }
     }
 }

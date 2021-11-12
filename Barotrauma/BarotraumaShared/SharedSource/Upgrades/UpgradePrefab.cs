@@ -46,7 +46,7 @@ namespace Barotrauma
             int price = BasePrice;
             for (int i = 1; i <= level; i++)
             {
-                price += (int)(price * MathHelper.Lerp( IncreaseLow, IncreaseHigh, i / (float)Prefab.MaxLevel) / 100);
+                price += (int)(price * MathHelper.Lerp(IncreaseLow, IncreaseHigh, i / (float)Prefab.MaxLevel) / 100);
             }
             return location?.GetAdjustedMechanicalCost(price) ?? price;
         }
@@ -68,7 +68,13 @@ namespace Barotrauma
             Name = element.GetAttributeString("name", string.Empty);
             IsWallUpgrade = element.GetAttributeBool("wallupgrade", false);
 
-            if (string.IsNullOrWhiteSpace(Name))
+            string nameIdentifier = element.GetAttributeString("nameidentifier", "");
+
+            if (!string.IsNullOrWhiteSpace(nameIdentifier))
+            {
+                Name = TextManager.Get($"{nameIdentifier}", returnNull: true) ?? string.Empty;
+            }
+            else if (string.IsNullOrWhiteSpace(Name))
             {
                 Name = TextManager.Get($"UpgradeCategory.{Identifier}", true) ?? string.Empty;
             }
@@ -131,6 +137,8 @@ namespace Barotrauma
 
         public string Description { get; }
 
+        public float IncreaseOnTooltip { get; }
+
         public string Identifier { get; }
 
         public string FilePath { get; }
@@ -172,7 +180,13 @@ namespace Barotrauma
 
             var targetProperties = new Dictionary<string, string[]>();
 
-            if (string.IsNullOrWhiteSpace(Name))
+            string nameIdentifier = element.GetAttributeString("nameidentifier", "");
+
+            if (!string.IsNullOrWhiteSpace(nameIdentifier))
+            {
+                Name = TextManager.Get($"UpgradeName.{nameIdentifier}", returnNull: true) ?? string.Empty;
+            }
+            else if (string.IsNullOrWhiteSpace(Name))
             {
                 Name = TextManager.Get($"UpgradeName.{Identifier}", returnNull: true) ?? string.Empty;
             }
@@ -181,6 +195,8 @@ namespace Barotrauma
             {
                 Description = TextManager.Get($"UpgradeDescription.{Identifier}", returnNull: true) ?? string.Empty;
             }
+
+            IncreaseOnTooltip = element.GetAttributeFloat("increaseontooltip", 0f);
 
             DebugConsole.Log("    " + Name);
 
@@ -249,7 +265,7 @@ namespace Barotrauma
 
         public bool IsDisallowed(Item item)
         {
-            return item.disallowedUpgrades.Contains(Identifier);
+            return item.disallowedUpgrades.Contains(Identifier) || UpgradeCategories.Any(c => item.disallowedUpgrades.Contains(c.Identifier));
         }
 
         public static UpgradePrefab? Find(string identifier)

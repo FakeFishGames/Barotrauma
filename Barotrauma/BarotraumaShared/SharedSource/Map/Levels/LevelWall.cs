@@ -75,6 +75,10 @@ namespace Barotrauma
             }
             Cells = new List<VoronoiCell>() { wallCell };
             Body = CaveGenerator.GeneratePolygons(Cells, level, out triangles);
+            if (triangles.Count == 0)
+            {
+                throw new ArgumentException("Failed to generate a wall (not enough triangles). Original vertices: " + string.Join(", ", originalVertices.Select(v => v.ToString())));
+            }
 #if CLIENT
             GenerateVertices();
 #endif

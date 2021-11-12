@@ -23,7 +23,7 @@ namespace Barotrauma
         HideInMenus = 2
     }
 
-    public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation }
+    public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation, EnemySubmarine, Ruin }
     public enum SubmarineClass { Undefined, Scout, Attack, Transport, DeepDiver }
 
     partial class SubmarineInfo : IDisposable
@@ -96,9 +96,11 @@ namespace Barotrauma
         public OutpostModuleInfo OutpostModuleInfo { get; set; }
 
         public bool IsOutpost => Type == SubmarineType.Outpost || Type == SubmarineType.OutpostModule;
+
         public bool IsWreck => Type == SubmarineType.Wreck;
         public bool IsBeacon => Type == SubmarineType.BeaconStation;
         public bool IsPlayer => Type == SubmarineType.Player;
+        public bool IsRuin => Type == SubmarineType.Ruin;
 
         public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && SubmarineClass != SubmarineClass.Undefined;
         public bool IsCampaignCompatibleIgnoreClass => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus);
@@ -128,6 +130,12 @@ namespace Barotrauma
         }
 
         public Vector2 Dimensions
+        {
+            get;
+            private set;
+        }
+
+        public int CargoCapacity
         {
             get;
             private set;
@@ -261,6 +269,7 @@ namespace Barotrauma
             SubmarineClass = original.SubmarineClass;
             hash = !string.IsNullOrEmpty(original.FilePath) ? original.MD5Hash : null;
             Dimensions = original.Dimensions;
+            CargoCapacity = original.CargoCapacity;
             FilePath = original.FilePath;
             RequiredContentPackages = new HashSet<string>(original.RequiredContentPackages);
             IsFileCorrupted = original.IsFileCorrupted;
@@ -323,6 +332,7 @@ namespace Barotrauma
                 Tags = tags;
             }
             Dimensions = SubmarineElement.GetAttributeVector2("dimensions", Vector2.Zero);
+            CargoCapacity = SubmarineElement.GetAttributeInt("cargocapacity", -1);
             RecommendedCrewSizeMin = SubmarineElement.GetAttributeInt("recommendedcrewsizemin", 0);
             RecommendedCrewSizeMax = SubmarineElement.GetAttributeInt("recommendedcrewsizemax", 0);
             RecommendedCrewExperience = SubmarineElement.GetAttributeString("recommendedcrewexperience", "Unknown");
@@ -396,6 +406,8 @@ namespace Barotrauma
             {
                 var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine)
                     .Concat(vanilla.GetFilesOfType(ContentType.Wreck))
+                    .Concat(vanilla.GetFilesOfType(ContentType.BeaconStation))
+                    .Concat(vanilla.GetFilesOfType(ContentType.EnemySubmarine))
                     .Concat(vanilla.GetFilesOfType(ContentType.Outpost))
                     .Concat(vanilla.GetFilesOfType(ContentType.OutpostModule));
                 string pathToCompare = FilePath.Replace(@"\", @"/").ToLowerInvariant();
@@ -511,10 +523,14 @@ namespace Barotrauma
         //saving/loading ----------------------------------------------------
         public bool SaveAs(string filePath, System.IO.MemoryStream previewImage = null)
         {
-            var newElement = new XElement(SubmarineElement.Name,
-                SubmarineElement.Attributes().Where(a => !string.Equals(a.Name.LocalName, "previewimage", StringComparison.InvariantCultureIgnoreCase) &&
-                                                         !string.Equals(a.Name.LocalName, "name", StringComparison.InvariantCultureIgnoreCase)),
+            var newElement = new XElement(
+                SubmarineElement.Name, 
+                SubmarineElement.Attributes()
+                    .Where(a => 
+                        !string.Equals(a.Name.LocalName, "previewimage", StringComparison.InvariantCultureIgnoreCase) &&
+                        !string.Equals(a.Name.LocalName, "name", StringComparison.InvariantCultureIgnoreCase)), 
                 SubmarineElement.Elements());
+
             if (Type == SubmarineType.OutpostModule)
             {
                 OutpostModuleInfo.Save(newElement);
@@ -523,7 +539,6 @@ namespace Barotrauma
             XDocument doc = new XDocument(newElement);
 
             doc.Root.Add(new XAttribute("name", Name));
-
             if (previewImage != null)
             {
                 doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
@@ -574,7 +589,7 @@ namespace Barotrauma
             var contentPackageSubs = ContentPackage.GetFilesOfType(
                 GameMain.Config.AllEnabledPackages, 
                 ContentType.Submarine, ContentType.Outpost, ContentType.OutpostModule,
-                ContentType.Wreck, ContentType.BeaconStation);
+                ContentType.Wreck, ContentType.BeaconStation, ContentType.EnemySubmarine);
 
             for (int i = savedSubmarines.Count - 1; i >= 0; i--)
             {
@@ -680,8 +695,6 @@ namespace Barotrauma
             }
         }
 
-        static readonly string TempFolder = Path.Combine("Submarine", "Temp");
-
         public static XDocument OpenFile(string file)
         {
             return OpenFile(file, out _);
@@ -711,7 +724,7 @@ namespace Barotrauma
 
             if (extension == ".sub")
             {
-                System.IO.Stream stream = null;
+                System.IO.Stream stream;
                 try
                 {
                     stream = SaveUtil.DecompressFiletoStream(file);
@@ -732,7 +745,10 @@ namespace Barotrauma
                 try
                 {
                     stream.Position = 0;
-                    doc = XDocument.Load(stream); //ToolBox.TryLoadXml(file);
+                    using (var reader = XMLExtensions.CreateReader(stream))
+                    {
+                        doc = XDocument.Load(reader);
+                    }
                     stream.Close();
                     stream.Dispose();
                 }
@@ -749,9 +765,10 @@ namespace Barotrauma
                 try
                 {
                     ToolBox.IsProperFilenameCase(file);
-                    doc = XDocument.Load(file, LoadOptions.SetBaseUri);
+                    using var stream = File.Open(file, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                    using var reader = XMLExtensions.CreateReader(stream);
+                    doc = XDocument.Load(reader);
                 }
-
                 catch (Exception e)
                 {
                     exception = e;

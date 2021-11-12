@@ -15,7 +15,8 @@ namespace Barotrauma
             Outpost,
             MainPath,
             Ruin,
-            Wreck
+            Wreck,
+            BeaconStation
         }
 
         [Serialize("", true, description: "Species name of the character to spawn.")]
@@ -102,31 +103,36 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (spawned) { return; }
-            
+
             if (!string.IsNullOrEmpty(NPCSetIdentifier) && !string.IsNullOrEmpty(NPCIdentifier))
             {
                 HumanPrefab humanPrefab = NPCSet.Get(NPCSetIdentifier, NPCIdentifier);
-                ISpatialEntity spawnPos = GetSpawnPos();
-                Entity.Spawner.AddToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos?.WorldPosition ?? Vector2.Zero, 100.0f), onSpawn: newCharacter =>
+                if (humanPrefab != null)
                 {
-                    newCharacter.TeamID = CharacterTeamType.FriendlyNPC;
-                    newCharacter.EnableDespawn = false;
-                    humanPrefab.GiveItems(newCharacter, newCharacter.Submarine);
-                    if (LootingIsStealing)
+                    ISpatialEntity spawnPos = GetSpawnPos();
+                    Entity.Spawner.AddToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos?.WorldPosition ?? Vector2.Zero, 100.0f), humanPrefab.GetCharacterInfo(), onSpawn: newCharacter =>
                     {
-                        foreach (Item item in newCharacter.Inventory.AllItems)
+                        if (newCharacter == null) { return; }
+                        newCharacter.Prefab = humanPrefab;
+                        newCharacter.TeamID = CharacterTeamType.FriendlyNPC;
+                        newCharacter.EnableDespawn = false;
+                        humanPrefab.GiveItems(newCharacter, newCharacter.Submarine);
+                        if (LootingIsStealing)
                         {
-                            item.SpawnedInOutpost = true;
-                            item.AllowStealing = false;
+                            foreach (Item item in newCharacter.Inventory.AllItems)
+                            {
+                                item.SpawnedInOutpost = true;
+                                item.AllowStealing = false;
+                            }
                         }
-                    }
-                    humanPrefab.InitializeCharacter(newCharacter, spawnPos);
-                    if (!string.IsNullOrEmpty(TargetTag) && newCharacter != null)
-                    {
-                        ParentEvent.AddTarget(TargetTag, newCharacter);
-                    }
-                    spawnedEntity = newCharacter;
-                });
+                        humanPrefab.InitializeCharacter(newCharacter, spawnPos);
+                        if (!string.IsNullOrEmpty(TargetTag) && newCharacter != null)
+                        {
+                            ParentEvent.AddTarget(TargetTag, newCharacter);
+                        }
+                        spawnedEntity = newCharacter;
+                    });
+                }
             }
             else if (!string.IsNullOrEmpty(SpeciesName))
             {
@@ -196,8 +202,7 @@ namespace Barotrauma
                 }
             }
 
-            spawned = true;
-            
+            spawned = true;            
         }
 
         public static Vector2 OffsetSpawnPos(Vector2 pos, float offsetAmount)
@@ -221,10 +226,11 @@ namespace Barotrauma
                 List<Item> potentialItems = SpawnLocation switch
                 {
                     SpawnLocationType.MainSub => Item.ItemList.FindAll(it => it.Submarine == Submarine.MainSub),
-                    SpawnLocationType.MainPath => Item.ItemList.FindAll(it => it.Submarine == null && it.ParentRuin == null),
-                    SpawnLocationType.Outpost => Item.ItemList.FindAll(it => it.Submarine != null && it.Submarine.Info.IsOutpost),
-                    SpawnLocationType.Wreck => Item.ItemList.FindAll(it => it.Submarine != null && it.Submarine.Info.IsWreck),
-                    SpawnLocationType.Ruin => Item.ItemList.FindAll(it => it.ParentRuin != null),
+                    SpawnLocationType.MainPath => Item.ItemList.FindAll(it => it.Submarine == null),
+                    SpawnLocationType.Outpost => Item.ItemList.FindAll(it => it.Submarine?.Info != null && it.Submarine.Info.IsOutpost),
+                    SpawnLocationType.Wreck => Item.ItemList.FindAll(it => it.Submarine?.Info != null && it.Submarine.Info.IsWreck),
+                    SpawnLocationType.Ruin => Item.ItemList.FindAll(it => it.Submarine?.Info != null && it.Submarine.Info.IsRuin),
+                    SpawnLocationType.BeaconStation => Item.ItemList.FindAll(it => it.Submarine?.Info != null && it.Submarine.Info.IsBeacon),
                     _ => throw new NotImplementedException()
                 };
 
@@ -246,19 +252,19 @@ namespace Barotrauma
             List<WayPoint> potentialSpawnPoints = spawnLocation switch
             {
                 SpawnLocationType.MainSub => WayPoint.WayPointList.FindAll(wp => wp.Submarine == Submarine.MainSub && wp.CurrentHull != null),
-                SpawnLocationType.MainPath => WayPoint.WayPointList.FindAll(wp => wp.Submarine == null && wp.ParentRuin == null),
-                SpawnLocationType.Outpost => WayPoint.WayPointList.FindAll(wp => wp.Submarine != null && wp.CurrentHull != null && wp.Submarine.Info.IsOutpost),
-                SpawnLocationType.Wreck => WayPoint.WayPointList.FindAll(wp => wp.Submarine != null && wp.Submarine.Info.IsWreck),
-                SpawnLocationType.Ruin => WayPoint.WayPointList.FindAll(wp => wp.ParentRuin != null),
+                SpawnLocationType.MainPath => WayPoint.WayPointList.FindAll(wp => wp.Submarine == null),
+                SpawnLocationType.Outpost => WayPoint.WayPointList.FindAll(wp => wp.Submarine?.Info != null && wp.CurrentHull != null && wp.Submarine.Info.IsOutpost),
+                SpawnLocationType.Wreck => WayPoint.WayPointList.FindAll(wp => wp.Submarine?.Info != null && wp.Submarine.Info.IsWreck),
+                SpawnLocationType.Ruin => WayPoint.WayPointList.FindAll(wp => wp.Submarine?.Info != null && wp.Submarine.Info.IsRuin),
+                SpawnLocationType.BeaconStation => WayPoint.WayPointList.FindAll(wp => wp.Submarine?.Info != null && wp.Submarine.Info.IsBeacon),
                 _ => throw new NotImplementedException()
             };
 
             potentialSpawnPoints = potentialSpawnPoints.FindAll(wp => wp.ConnectedDoor == null && wp.Ladders == null && !wp.isObstructed);
 
-            var airlockSpawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags?.Contains("airlock") ?? false).ToList();
             if (moduleFlags != null && moduleFlags.Any())
             {
-                List<WayPoint> spawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags?.Any(moduleFlags.Contains) ?? false).ToList();
+                List<WayPoint> spawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags.Any(moduleFlags.Contains) ?? false).ToList();
                 if (spawnPoints.Any())
                 {
                     potentialSpawnPoints = spawnPoints;
@@ -267,8 +273,10 @@ namespace Barotrauma
 
             if (spawnpointTags != null && spawnpointTags.Any())
             {
-                var spawnPoints = potentialSpawnPoints.Where(wp => spawnpointTags.Any(tag => wp.Tags.Contains(tag)))
-                                                                 .Where(wp => wp.ConnectedDoor == null && !wp.isObstructed);
+                var spawnPoints = potentialSpawnPoints
+                    .Where(wp => spawnpointTags.Any(tag => wp.Tags.Contains(tag)))
+                    .Where(wp => wp.ConnectedDoor == null && !wp.isObstructed);
+
                 if (spawnPoints.Any())
                 {
                     potentialSpawnPoints = spawnPoints.ToList();
@@ -293,6 +301,7 @@ namespace Barotrauma
             }
 
             //don't spawn in an airlock module if there are other options
+            var airlockSpawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags.Contains("airlock") ?? false);
             if (airlockSpawnPoints.Count() < validSpawnPoints.Count())
             {
                 validSpawnPoints = validSpawnPoints.Except(airlockSpawnPoints);

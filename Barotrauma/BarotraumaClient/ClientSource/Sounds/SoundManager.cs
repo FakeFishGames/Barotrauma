@@ -167,10 +167,10 @@ namespace Barotrauma.Sounds
             public CategoryModifier(int gainMultiplierIndex, float gain, bool muffle)
             {
                 Muffle = muffle;
-                GainMultipliers = new float[gainMultiplierIndex+1];
-                for (int i=0;i<GainMultipliers.Length;i++)
+                GainMultipliers = new float[gainMultiplierIndex + 1];
+                for (int i = 0; i < GainMultipliers.Length; i++)
                 {
-                    if (i==gainMultiplierIndex)
+                    if (i == gainMultiplierIndex)
                     {
                         GainMultipliers[i] = gain;
                     }
@@ -183,11 +183,11 @@ namespace Barotrauma.Sounds
 
             public void SetGainMultiplier(int index, float gain)
             {
-                if (GainMultipliers.Length < index+1)
+                if (GainMultipliers.Length < index + 1)
                 {
                     int oldLength = GainMultipliers.Length;
                     Array.Resize(ref GainMultipliers, index + 1);
-                    for (int i=oldLength;i<GainMultipliers.Length;i++)
+                    for (int i = oldLength; i < GainMultipliers.Length; i++)
                     {
                         GainMultipliers[i] = 1.0f;
                     }

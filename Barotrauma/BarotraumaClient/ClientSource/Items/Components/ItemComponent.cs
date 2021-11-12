@@ -167,6 +167,13 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        [Serialize(0, false)]
+        public int HudLayer
+        {
+            get;
+            private set;
+        }
+
         private bool useAlternativeLayout;
         public bool UseAlternativeLayout
         {
@@ -239,6 +246,7 @@ namespace Barotrauma.Items.Components
         public void PlaySound(ActionType type, Character user = null)
         {
             if (!hasSoundsOfType[(int)type]) { return; }
+            if (GameMain.Client?.MidRoundSyncing ?? false) { return; }
 
             if (loopingSound != null)
             {
@@ -422,7 +430,7 @@ namespace Barotrauma.Items.Components
             }
             foreach (ItemComponent component in item.Components)
             {
-                if (component.name.ToLower() == LinkUIToComponent.ToLower())
+                if (component.name.Equals(LinkUIToComponent, StringComparison.OrdinalIgnoreCase))
                 {
                     linkToUIComponent = component;
                 }
@@ -436,12 +444,14 @@ namespace Barotrauma.Items.Components
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }
 
-        public virtual void AddToGUIUpdateList()
+        public virtual void AddToGUIUpdateList(int order = 0)
         {
-            GuiFrame?.AddToGUIUpdateList();
+            GuiFrame?.AddToGUIUpdateList(order: order);
         }
 
         public virtual void UpdateHUD(Character character, float deltaTime, Camera cam) { }
+
+        public virtual void UpdateEditing(float deltaTime) { }
 
         public virtual void CreateEditingHUD(SerializableEntityEditor editor)
         {
@@ -611,5 +621,6 @@ namespace Barotrauma.Items.Components
             }
             OnResolutionChanged();
         }
+        public virtual void AddTooltipInfo(ref string name, ref string description) { }
     }
 }

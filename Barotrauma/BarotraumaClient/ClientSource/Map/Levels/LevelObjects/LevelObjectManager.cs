@@ -20,6 +20,8 @@ namespace Barotrauma
         const int MaxVisibleObjects = 500;
 
         private Rectangle currentGridIndices;
+
+        public bool ForceRefreshVisibleObjects;
         
         partial void UpdateProjSpecific(float deltaTime)
         {
@@ -60,6 +62,8 @@ namespace Barotrauma
                     if (objectGrid[x, y] == null) { continue; }
                     foreach (LevelObject obj in objectGrid[x, y])
                     {
+                        if (obj.Prefab.HideWhenBroken && obj.Health <= 0.0f) { continue; }
+
                         if (zoom < 0.05f)
                         {
                             //hide if the sprite is very small when zoomed this far out
@@ -154,9 +158,10 @@ namespace Barotrauma
             indices.Height = Math.Min(indices.Height, objectGrid.GetLength(1) - 1);
 
             float z = 0.0f;
-            if (currentGridIndices != indices && Timing.TotalTime > NextRefreshTime)
+            if (ForceRefreshVisibleObjects || (currentGridIndices != indices && Timing.TotalTime > NextRefreshTime))
             {
                 RefreshVisibleObjects(indices, cam.Zoom);
+                ForceRefreshVisibleObjects = false;
                 if (cam.Zoom < 0.1f)
                 {
                     //when zoomed very far out, refresh a little less often

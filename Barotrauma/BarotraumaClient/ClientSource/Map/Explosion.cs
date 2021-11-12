@@ -8,6 +8,8 @@ namespace Barotrauma
     {
         partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull)
         {
+            if (GameMain.Client?.MidRoundSyncing ?? false) { return; }
+
             if (shockwave)
             {
                 GameMain.ParticleManager.CreateParticle("shockwave", worldPosition,
@@ -71,15 +73,15 @@ namespace Barotrauma
                 if (sparks)
                 {
                     GameMain.ParticleManager.CreateParticle("spark", worldPosition,
-                        Rand.Vector(Rand.Range(500.0f, 800.0f)), 0.0f, hull);
+                        Rand.Vector(Rand.Range(1200.0f, 2400.0f)), 0.0f, hull);
                 }
             }
 
             if (flash)
             {
-                float displayRange = flashRange.HasValue ? flashRange.Value : Attack.Range;
+                float displayRange = flashRange ?? Attack.Range;
                 if (displayRange < 0.1f) { return; }
-                var light = new LightSource(worldPosition, displayRange, Color.LightYellow, null);
+                var light = new LightSource(worldPosition, displayRange, flashColor, null);
                 CoroutineManager.StartCoroutine(DimLight(light));
             }
         }
@@ -96,12 +98,10 @@ namespace Barotrauma
         private IEnumerable<object> DimLight(LightSource light)
         {
             float currBrightness = 1.0f;
-            float startRange = light.Range;
-
             while (light.Color.A > 0.0f && flashDuration > 0.0f)
             {
-                light.Color = new Color(light.Color.R, light.Color.G, light.Color.B, currBrightness);
-                currBrightness -= (1.0f / flashDuration) * CoroutineManager.DeltaTime;
+                light.Color = new Color(light.Color.R, light.Color.G, light.Color.B, (byte)(currBrightness * 255));
+                currBrightness -= 1.0f / flashDuration * CoroutineManager.DeltaTime;
 
                 yield return CoroutineStatus.Running;
             }

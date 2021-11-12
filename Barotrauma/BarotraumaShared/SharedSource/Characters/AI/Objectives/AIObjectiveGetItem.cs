@@ -8,11 +8,10 @@ namespace Barotrauma
 {
     class AIObjectiveGetItem : AIObjective
     {
-        public override string DebugTag => "get item";
+        public override string Identifier { get; set; } = "get item";
 
         public override bool AbandonWhenCannotCompleteSubjectives => false;
 
-        private readonly bool equip;
         public HashSet<Item> ignoredItems = new HashSet<Item>();
 
         public Func<Item, float> GetItemPriority;
@@ -45,14 +44,21 @@ namespace Barotrauma
         /// Is the character allowed to take the item from somewhere else than their own sub (e.g. an outpost)
         /// </summary>
         public bool AllowStealing { get; set; }
-
         public bool TakeWholeStack { get; set; }
+        /// <summary>
+        /// Are variants of the specified item allowed
+        /// </summary>
+        public bool AllowVariants { get; set; }
+        public bool Equip { get; set; }
+        public bool Wear { get; set; }
+
+        public InvSlotType? EquipSlotType { get; set; }
 
         public AIObjectiveGetItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, bool equip = true, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
             currSearchIndex = -1;
-            this.equip = equip;
+            Equip = equip;
             originalTarget = targetItem;
             this.targetItem = targetItem;
             moveToTarget = targetItem?.GetRootInventoryOwner();
@@ -65,7 +71,7 @@ namespace Barotrauma
             : base(character, objectiveManager, priorityModifier)
         {
             currSearchIndex = -1;
-            this.equip = equip;
+            Equip = equip;
             this.identifiersOrTags = identifiersOrTags;
             this.spawnItemIfNotFound = spawnItemIfNotFound;
             for (int i = 0; i < identifiersOrTags.Length; i++)
@@ -197,7 +203,7 @@ namespace Barotrauma
 
                 Inventory itemInventory = targetItem.ParentInventory;
                 var slots = itemInventory?.FindIndices(targetItem);
-                if (HumanAIController.TakeItem(targetItem, character.Inventory, equip, storeUnequipped: true))
+                if (HumanAIController.TakeItem(targetItem, character.Inventory, Equip, Wear, storeUnequipped: true))
                 {
                     if (TakeWholeStack && slots != null)
                     {
@@ -227,7 +233,7 @@ namespace Barotrauma
                         return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear, closeEnough: DefaultReach)
                         {
                             // If the root container changes, the item is no longer where it was (taken by someone -> need to find another item)
-                            abortCondition = obj => targetItem == null || targetItem.GetRootInventoryOwner() != moveToTarget,
+                            AbortCondition = obj => targetItem == null || targetItem.GetRootInventoryOwner() != moveToTarget,
                             SpeakIfFails = false
                         };
                     },
@@ -263,7 +269,7 @@ namespace Barotrauma
             }
 
             float priority = Math.Clamp(objectiveManager.GetCurrentPriority(), 10, 100);
-            bool checkPath = priority >= AIObjectiveManager.LowestOrderPriority && (objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>() || objectiveManager.CurrentOrder is AIObjectiveGoTo gotoOrder && gotoOrder.followControlledCharacter);
+            bool checkPath = priority >= AIObjectiveManager.LowestOrderPriority && (objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>() || objectiveManager.CurrentOrder is AIObjectiveGoTo gotoOrder && gotoOrder.isFollowOrderObjective);
             bool hasCalledPathFinder = false;
             int itemsPerFrame = (int)priority;
             for (int i = 0; i < itemsPerFrame && currSearchIndex < Item.ItemList.Count - 1; i++)
@@ -303,6 +309,7 @@ namespace Barotrauma
                 if (rootInventoryOwner is Item ownerItem)
                 {
                     if (!ownerItem.IsInteractable(character)) { continue; }
+                    if (!(ownerItem.GetComponent<ItemContainer>()?.HasRequiredItems(character, addMessage: false) ?? true)) { continue; }
                 }
                 Vector2 itemPos = (rootInventoryOwner ?? item).WorldPosition;
                 float yDist = Math.Abs(character.WorldPosition.Y - itemPos.Y);
@@ -320,7 +327,7 @@ namespace Barotrauma
                     // This is relatively expensive, so let's do this only when it significantly improves the behavior.
                     // Only allow one path find call per frame.
                     hasCalledPathFinder = true;
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, item.SimPosition, errorMsgStr: $"AIObjectiveGetItem {character.DisplayName}", nodeFilter: node => node.Waypoint.CurrentHull != null);
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, item.SimPosition, character.Submarine, errorMsgStr: $"AIObjectiveGetItem {character.DisplayName}", nodeFilter: node => node.Waypoint.CurrentHull != null);
                     if (path.Unreachable) { continue; }
                 }
                 currItemPriority = itemPriority;
@@ -365,19 +372,33 @@ namespace Barotrauma
             }
         }
 
-        protected override bool Check()
+        protected override bool CheckObjectiveSpecific()
         {
             if (IsCompleted) { return true; }
             if (targetItem != null)
             {
-                return character.HasItem(targetItem, equip);
+                if (Equip && EquipSlotType.HasValue)
+                {
+                    return character.HasEquippedItem(targetItem, EquipSlotType.Value);
+                }
+                else
+                {
+                    return character.HasItem(targetItem, Equip);
+                }
             }
             else if (identifiersOrTags != null)
             {
                 var matchingItem = character.Inventory.FindItem(i => CheckItem(i), recursive: true);
                 if (matchingItem != null)
                 {
-                    return !equip || character.HasEquippedItem(matchingItem);
+                    if (Equip && EquipSlotType.HasValue)
+                    {
+                        return character.HasEquippedItem(matchingItem, EquipSlotType.Value);
+                    }
+                    else
+                    {
+                        return !Equip || character.HasEquippedItem(matchingItem);
+                    }
                 }
                 return false;
             }
@@ -387,11 +408,11 @@ namespace Barotrauma
         private bool CheckItem(Item item)
         {
             if (!item.IsInteractable(character)) { return false; }
-            if (item.IsThisOrAnyContainerIgnoredByAI()) { return false; }
+            if (item.IsThisOrAnyContainerIgnoredByAI(character)) { return false; }
             if (ignoredItems.Contains(item)) { return false; };
             if (item.Condition < TargetCondition) { return false; }
             if (ItemFilter != null && !ItemFilter(item)) { return false; }
-            return identifiersOrTags.Any(id => id == item.Prefab.Identifier || item.HasTag(id));
+            return identifiersOrTags.Any(id => id == item.Prefab.Identifier || item.HasTag(id) || (AllowVariants && item.Prefab.VariantOf?.Identifier == id));
         }
 
         public override void Reset()

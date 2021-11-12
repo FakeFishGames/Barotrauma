@@ -518,14 +518,22 @@ namespace Barotrauma
             AdjustKarma(character, karmaIncrease, "Repaired item");
         }
 
-        public void OnReactorOverHeating(Character character, float deltaTime)
+        public void OnReactorOverHeating(Item reactor, Character character, float deltaTime)
         {
-            AdjustKarma(character, -ReactorOverheatKarmaDecrease * deltaTime, "Caused reactor to overheat");
+            if (reactor?.Submarine == null || character == null) { return; }
+            if (reactor.Submarine.TeamID == CharacterTeamType.FriendlyNPC || reactor.Submarine.TeamID == character.TeamID)
+            {
+                AdjustKarma(character, -ReactorOverheatKarmaDecrease * deltaTime, "Caused reactor to overheat");
+            }
         }
 
-        public void OnReactorMeltdown(Character character)
+        public void OnReactorMeltdown(Item reactor, Character character)
         {
-            AdjustKarma(character, -ReactorMeltdownKarmaDecrease, "Caused a reactor meltdown");
+            if (reactor?.Submarine == null || character == null) { return; }
+            if (reactor.Submarine.TeamID == CharacterTeamType.FriendlyNPC || reactor.Submarine.TeamID == character.TeamID)
+            {
+                AdjustKarma(character, -ReactorMeltdownKarmaDecrease, "Caused a reactor meltdown");
+            }
         }
 
         public void OnExtinguishingFire(Character character, float deltaTime)

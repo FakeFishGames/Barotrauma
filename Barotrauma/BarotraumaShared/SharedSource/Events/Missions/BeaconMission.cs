@@ -13,7 +13,7 @@ namespace Barotrauma
         private Point monsterCountRange;
         private readonly string sonarLabel;
 
-        public BeaconMission(MissionPrefab prefab, Location[] locations) : base(prefab, locations)
+        public BeaconMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
             swarmSpawned = false;
 
@@ -53,7 +53,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Update(float deltaTime)
+        protected override void UpdateMissionSpecific(float deltaTime)
         {
             if (IsClient) { return; }
             if (!swarmSpawned && level.CheckBeaconActive())
@@ -91,7 +91,7 @@ namespace Barotrauma
                 int amount = Rand.Range(monsterCountRange.X, monsterCountRange.Y + 1);
                 for (int i = 0; i < amount; i++)
                 {
-                    CoroutineManager.InvokeAfter(() =>
+                    CoroutineManager.Invoke(() =>
                     {
                         //round ended before the coroutine finished
                         if (GameMain.GameSession == null || Level.Loaded == null) { return; }

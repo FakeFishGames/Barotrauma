@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
 
@@ -8,7 +9,7 @@ namespace Barotrauma
 {
     class AIObjectiveRepairItem : AIObjective
     {
-        public override string DebugTag => "repair item";
+        public override string Identifier { get; set; } = "repair item";
 
         public override bool AllowInAnySub => true;
 
@@ -31,9 +32,9 @@ namespace Barotrauma
             this.isPriority = isPriority;
         }
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
-            if (!IsAllowed || Item.IgnoreByAI)
+            if (!IsAllowed || Item.IgnoreByAI(character))
             {
                 Priority = 0;
                 Abandon = true;
@@ -43,11 +44,10 @@ namespace Barotrauma
                 }
                 return Priority;
             }
-            // TODO: priority list?
-            // Ignore items that are being repaired by someone else.
-            if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character))
+            if (HumanAIController.IsItemRepairedByAnother(Item, out _))
             {
                 Priority = 0;
+                IsCompleted = true;
             }
             else
             {
@@ -66,12 +66,25 @@ namespace Barotrauma
                 float devotion = (CumulatedDevotion + selectedBonus) / 100;
                 float reduction = isPriority ? 1 : isSelected ? 2 : 3;
                 float max = AIObjectiveManager.LowestOrderPriority - reduction;
-                Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
+                float highestWeight = -1;
+                foreach (string tag in Item.Prefab.Tags)
+                {
+                    if (JobPrefab.ItemRepairPriorities.TryGetValue(tag, out float weight) && weight > highestWeight)
+                    {
+                        highestWeight = weight;
+                    }
+                }
+                if (highestWeight == -1)
+                {
+                    // Predefined weight not found.
+                    highestWeight = 1;
+                }
+                Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (severity * distanceFactor * highestWeight * PriorityModifier), 0, 1));
             }
             return Priority;
         }
 
-        protected override bool Check()
+        protected override bool CheckObjectiveSpecific()
         {
             IsCompleted = Item.IsFullCondition;
             if (character.IsOnPlayerTeam && IsCompleted && IsRepairing())
@@ -94,7 +107,10 @@ namespace Barotrauma
                     {
                         foreach (RelatedItem requiredItem in kvp.Value)
                         {
-                            var getItemObjective = new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, true);
+                            var getItemObjective = new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, true)
+                            {
+                                AllowVariants = requiredItem.AllowVariants
+                            };
                             if (objectiveManager.IsCurrentOrder<AIObjectiveRepairItems>())
                             {
                                 if (character.IsOnPlayerTeam)
@@ -122,8 +138,6 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                HumanAIController.UnequipContainedItems(repairTool.Item, it => !it.HasTag("weldingfuel"));
-                HumanAIController.UnequipEmptyItems(repairTool.Item);
                 RelatedItem item = null;
                 Item fuel = null;
                 foreach (RelatedItem requiredItem in repairTool.requiredItems[RelatedItem.RelationType.Contained])
@@ -135,9 +149,12 @@ namespace Barotrauma
                 if (fuel == null)
                 {
                     RemoveSubObjective(ref goToObjective);
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
-                        onCompleted: () => RemoveSubObjective(ref refuelObjective),
-                        onAbandon: () => Abandon = true);
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                    {
+                        RemoveExisting = true
+                    },
+                    onCompleted: () => RemoveSubObjective(ref refuelObjective),
+                    onAbandon: () => Abandon = true);
                     return;
                 }
             }
@@ -201,7 +218,9 @@ namespace Barotrauma
                         var objective = new AIObjectiveGoTo(Item, character, objectiveManager)
                         {
                             // Don't stop in ladders, because we can't interact with other items while holding the ladders.
-                            endNodeFilter = node => node.Waypoint.Ladders == null
+                            endNodeFilter = node => node.Waypoint.Ladders == null,
+                            // Allow repairing hatches and airlock doors.
+                            AllowGoingOutside = HumanAIController.ObjectiveManager.IsCurrentOrder<AIObjectiveRepairItems>() && Item.GetComponent<Door>() != null
                         };
                         if (repairTool != null)
                         {

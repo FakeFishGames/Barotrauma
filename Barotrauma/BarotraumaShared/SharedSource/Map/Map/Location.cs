@@ -13,14 +13,14 @@ namespace Barotrauma
         public class TakenItem
         {
             public readonly ushort OriginalID;
-            public readonly ushort OriginalContainerID;
             public readonly ushort ModuleIndex;
             public readonly string Identifier;
+            public readonly int OriginalContainerIndex;
 
-            public TakenItem(string identifier, UInt16 originalID, UInt16 originalContainerID, ushort moduleIndex)
+            public TakenItem(string identifier, UInt16 originalID, int originalContainerIndex, ushort moduleIndex)
             {
                 OriginalID = originalID;
-                OriginalContainerID = originalContainerID;
+                OriginalContainerIndex = originalContainerIndex;
                 ModuleIndex = moduleIndex;
                 Identifier = identifier;
             }
@@ -29,11 +29,7 @@ namespace Barotrauma
             {
                 System.Diagnostics.Debug.Assert(item.OriginalModuleIndex >= 0, "Trying to add a non-outpost item to a location's taken items");
 
-                if (item.OriginalContainerID != Entity.NullEntityID)
-                {
-                    OriginalContainerID = item.OriginalContainerID;
-                }
-
+                OriginalContainerIndex = item.OriginalContainerIndex;
                 OriginalID = item.ID;
                 ModuleIndex = (ushort) item.OriginalModuleIndex;
                 Identifier = item.prefab.Identifier;
@@ -41,14 +37,14 @@ namespace Barotrauma
 
             public bool IsEqual(TakenItem obj)
             {
-                return obj.OriginalID == OriginalID && obj.OriginalContainerID == OriginalContainerID && obj.ModuleIndex == ModuleIndex && obj.Identifier == Identifier;
+                return obj.OriginalID == OriginalID && obj.OriginalContainerIndex == OriginalContainerIndex && obj.ModuleIndex == ModuleIndex && obj.Identifier == Identifier;
             }
 
             public bool Matches(Item item)
             {
-                if (item.OriginalContainerID != Entity.NullEntityID)
+                if (item.OriginalContainerIndex != Entity.NullEntityID)
                 {
-                    return item.OriginalContainerID == OriginalContainerID && item.OriginalModuleIndex == ModuleIndex && item.prefab.Identifier == Identifier;
+                    return item.OriginalContainerIndex == OriginalContainerIndex && item.OriginalModuleIndex == ModuleIndex && item.prefab.Identifier == Identifier;
                 }
                 else
                 {
@@ -64,7 +60,7 @@ namespace Barotrauma
 
         private LocationType addInitialMissionsForType;
 
-        public bool Discovered;
+        public bool Discovered { get; private set; }
 
         public readonly Dictionary<LocationTypeChange.Requirement, int> ProximityTimer = new Dictionary<LocationTypeChange.Requirement, int>();
         public (LocationTypeChange typeChange, int delay, MissionPrefab parentMission)? PendingLocationTypeChange;
@@ -94,7 +90,7 @@ namespace Barotrauma
 
         private const float StoreMaxReputationModifier = 0.1f;
         private const float StoreSellPriceModifier = 0.8f;
-        private const float DailySpecialPriceModifier = 0.9f;
+        private const float DailySpecialPriceModifier = 0.5f;
         private const float RequestGoodPriceModifier = 1.5f;
         public const int StoreInitialBalance = 5000;
         /// <summary>
@@ -181,27 +177,55 @@ namespace Barotrauma
             }
         }
 
-        public Mission SelectedMission
+        private readonly List<Mission> selectedMissions = new List<Mission>();
+        public IEnumerable<Mission> SelectedMissions
         {
-            get;
-            set;
+            get 
+            {
+                selectedMissions.RemoveAll(m => !availableMissions.Contains(m));
+                return selectedMissions; 
+            }
         }
 
-        public int SelectedMissionIndex
+        public void SelectMission(Mission mission)
         {
-            get
+            if (!SelectedMissions.Contains(mission) && mission != null)
             {
-                if (SelectedMission == null) { return -1; }
-                return availableMissions.IndexOf(SelectedMission);
+                selectedMissions.Add(mission);
+                selectedMissions.Sort((m1, m2) => availableMissions.IndexOf(m1).CompareTo(availableMissions.IndexOf(m2)));
             }
-            set
+        }
+
+        public void DeselectMission(Mission mission)
+        {
+            selectedMissions.Remove(mission);
+        }
+
+
+        public List<int> GetSelectedMissionIndices()
+        {
+            List<int> selectedMissionIndices = new List<int>();
+            foreach (Mission mission in SelectedMissions)
             {
-                if (value < 0 || value >= AvailableMissions.Count())
+                if (availableMissions.Contains(mission))
                 {
-                    SelectedMission = null;
-                    return;
+                    selectedMissionIndices.Add(availableMissions.IndexOf(mission));
                 }
-                SelectedMission = availableMissions[value];
+            }
+            return selectedMissionIndices;
+        }
+
+        public void SetSelectedMissionIndices(IEnumerable<int> missionIndices)
+        {
+            selectedMissions.Clear();
+            foreach (int missionIndex in missionIndices)
+            {
+                if (missionIndex < 0 || missionIndex >= availableMissions.Count)
+                {
+                    DebugConsole.ThrowError($"Failed to select a mission in location \"{Name}\". Mission index out of bounds ({missionIndex}, available missions: {availableMissions.Count})");
+                    break;
+                }
+                selectedMissions.Add(availableMissions[missionIndex]);
             }
         }
 
@@ -322,9 +346,9 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"Error in saved location: could not parse taken item id \"{takenItemSplit[1]}\"");
                     continue;
                 }
-                if (!ushort.TryParse(takenItemSplit[2], out ushort containerId))
+                if (!int.TryParse(takenItemSplit[2], out int containerIndex))
                 {
-                    DebugConsole.ThrowError($"Error in saved location: could not parse taken container id \"{takenItemSplit[2]}\"");
+                    DebugConsole.ThrowError($"Error in saved location: could not parse taken container index \"{takenItemSplit[2]}\"");
                     continue;
                 }
                 if (!ushort.TryParse(takenItemSplit[3], out ushort moduleIndex))
@@ -332,7 +356,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"Error in saved location: could not parse taken item module index \"{takenItemSplit[3]}\"");
                     continue;
                 }
-                takenItems.Add(new TakenItem(takenItemSplit[0], id, containerId, moduleIndex));
+                takenItems.Add(new TakenItem(takenItemSplit[0], id, containerIndex, moduleIndex));
             }
 
             killedCharacterIdentifiers = element.GetAttributeIntArray("killedcharacters", new int[0]).ToHashSet();
@@ -415,6 +439,12 @@ namespace Barotrauma
         {
             if (newType == Type) { return; }
 
+            if (newType == null)
+            {
+                DebugConsole.ThrowError($"Failed to change the type of the location \"{Name}\" to null.\n" + Environment.StackTrace.CleanupStackTrace());
+                return;
+            }
+
             DebugConsole.Log("Location " + baseName + " changed it's type from " + Type + " to " + newType);
 
             Type = newType;
@@ -430,6 +460,18 @@ namespace Barotrauma
             }
 
             CreateStore(force: true);
+        }
+
+        public void UnlockInitialMissions()
+        {
+            if (Type.MissionIdentifiers.Any())
+            {
+                UnlockMissionByIdentifier(Type.MissionIdentifiers.GetRandom(Rand.RandSync.Server));
+            }
+            if (Type.MissionTags.Any())
+            {
+                UnlockMissionByTag(Type.MissionTags.GetRandom(Rand.RandSync.Server));
+            }
         }
 
         public void UnlockMission(MissionPrefab missionPrefab, LocationConnection connection)
@@ -533,8 +575,28 @@ namespace Barotrauma
             //prefer connections that haven't been passed through, and connections with fewer available missions
             connection = ToolBox.SelectWeightedRandom(
                 suitableConnections.ToList(),
-                suitableConnections.Select(c => (c.Passed ? 1.0f : 5.0f) / Math.Max(availableMissions.Count(m => m.Locations.Contains(c.OtherLocation(this))), 1.0f)).ToList(),
-                Rand.RandSync.Unsynced);            
+                suitableConnections.Select(c => GetConnectionWeight(this, c)).ToList(),
+                Rand.RandSync.Unsynced);    
+            
+            static float GetConnectionWeight(Location location, LocationConnection c)
+            {
+                float weight = c.Passed ? 1.0f : 5.0f;
+                Location destination = c.OtherLocation(location);
+                if (destination != null)
+                {
+                    if (destination.MapPosition.X > location.MapPosition.X) { weight *= 2.0f; }
+                    int missionCount = location.availableMissions.Count(m => m.Locations.Contains(destination));
+                    if (missionCount > 0) 
+                    { 
+                        weight /= missionCount * 2;
+                    }
+                    if (destination.IsRadiated())
+                    {
+                        weight *= 0.001f;
+                    }
+                }
+                return weight;
+            }
 
             return InstantiateMission(prefab, connection);
         }
@@ -542,14 +604,14 @@ namespace Barotrauma
         private Mission InstantiateMission(MissionPrefab prefab, LocationConnection connection)
         {
             Location destination = connection.OtherLocation(this);
-            var mission = prefab.Instantiate(new Location[] { this, destination });
+            var mission = prefab.Instantiate(new Location[] { this, destination }, Submarine.MainSub);
             mission.AdjustLevelData(connection.LevelData);
             return mission;
         }
 
         private Mission InstantiateMission(MissionPrefab prefab)
         {
-            var mission = prefab.Instantiate(new Location[] { this, this });
+            var mission = prefab.Instantiate(new Location[] { this, this }, Submarine.MainSub);
             mission.AdjustLevelData(LevelData);
             return mission;
         }
@@ -557,6 +619,7 @@ namespace Barotrauma
         public void InstantiateLoadedMissions(Map map)
         {
             availableMissions.Clear();
+            selectedMissions.Clear();
             if (loadedMissions != null && loadedMissions.Any()) 
             { 
                 foreach (LoadedMission loadedMission in loadedMissions)
@@ -570,9 +633,9 @@ namespace Barotrauma
                     {
                         destination = Connections.First().OtherLocation(this);
                     }
-                    var mission = loadedMission.MissionPrefab.Instantiate(new Location[] { this, destination });
+                    var mission = loadedMission.MissionPrefab.Instantiate(new Location[] { this, destination }, Submarine.MainSub);
                     availableMissions.Add(mission);
-                    if (loadedMission.SelectedMission) { SelectedMission = mission; }
+                    if (loadedMission.SelectedMission) { selectedMissions.Add(mission); }
                 }
                 loadedMissions = null;
             }
@@ -596,7 +659,7 @@ namespace Barotrauma
         public void ClearMissions()
         {
             availableMissions.Clear();
-            SelectedMissionIndex = -1;
+            selectedMissions.Clear();
         }
 
         public bool HasOutpost()
@@ -805,6 +868,8 @@ namespace Barotrauma
             // Adjust by random price modifier
             price = ((100 + StorePriceModifier) / 100.0f) * price;
 
+            price *= priceInfo.BuyingPriceMultiplier;
+
             // Adjust by daily special status
             if (considerDailySpecials && DailySpecials.Contains(item))
             {
@@ -941,10 +1006,20 @@ namespace Barotrauma
             stockToRemove.ForEach(i => stock.Remove(i));
             StoreStock = stock;
 
-            if (++StepsSinceSpecialsUpdated >= SpecialsUpdateInterval)
+            int extraSpecialSalesCount = GetExtraSpecialSalesCount();
+
+            if (++StepsSinceSpecialsUpdated >= SpecialsUpdateInterval || 
+                DailySpecials.Count() != DailySpecialsCount + extraSpecialSalesCount)
             {
                 CreateStoreSpecials();
             }
+        }
+
+        private int GetExtraSpecialSalesCount()
+        {
+            var characters = GameSession.GetSessionCrewCharacters();
+            if (!characters.Any()) { return 0; }
+            return characters.Max(c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
         }
 
         private void GenerateRandomPriceModifier()
@@ -970,7 +1045,9 @@ namespace Barotrauma
                 }
                 availableStock.Add(stockItem.ItemPrefab, weight);
             }
-            for (int i = 0; i < DailySpecialsCount; i++)
+
+            int extraSpecialSalesCount = GetExtraSpecialSalesCount();
+            for (int i = 0; i < DailySpecialsCount + extraSpecialSalesCount; i++)
             {
                 if (availableStock.None()) { break; }
                 var item = ToolBox.SelectWeightedRandom(availableStock.Keys.ToList(), availableStock.Values.ToList(), Rand.RandSync.Unsynced);
@@ -1048,6 +1125,30 @@ namespace Barotrauma
             return nextStatus;
         }
 
+        public void Discover(bool checkTalents = true)
+        {
+            if (Discovered) { return; }
+            Discovered = true;
+            if (checkTalents)
+            {
+                GameSession.GetSessionCrewCharacters().ForEach(c => c.CheckTalents(AbilityEffectType.OnLocationDiscovered, new Abilities.AbilityLocation(this)));
+            }
+        }
+
+        public void Reset()
+        {
+            if (Type != OriginalType)
+            {
+                ChangeType(OriginalType);
+                PendingLocationTypeChange = null;
+            }
+            CreateStore(force: true);
+            ClearMissions();
+            LevelData?.EventHistory?.Clear();
+            UnlockInitialMissions();
+            Discovered = false;
+        }
+
         public XElement Save(Map map, XElement parentElement)
         {
             var locationElement = new XElement("location",
@@ -1107,7 +1208,7 @@ namespace Barotrauma
             {
                 locationElement.Add(new XAttribute(
                     "takenitems",
-                    string.Join(',', takenItems.Select(it => it.Identifier + ";" + it.OriginalID + ";" + it.OriginalContainerID + ";" + it.ModuleIndex))));
+                    string.Join(',', takenItems.Select(it => it.Identifier + ";" + it.OriginalID + ";" + it.OriginalContainerIndex + ";" + it.ModuleIndex))));
             }
             if (killedCharacterIdentifiers.Any())
             {
@@ -1164,7 +1265,7 @@ namespace Barotrauma
                     missionsElement.Add(new XElement("mission",
                         new XAttribute("prefabid", mission.Prefab.Identifier),
                         new XAttribute("destinationindex", i),
-                        new XAttribute("selected", mission == SelectedMission)));
+                        new XAttribute("selected", selectedMissions.Contains(mission))));
                 }
                 locationElement.Add(missionsElement);
             }

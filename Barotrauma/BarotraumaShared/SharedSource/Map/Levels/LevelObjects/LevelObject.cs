@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class LevelObject : ISpatialEntity
+    partial class LevelObject : ISpatialEntity, IDamageable, ISerializableEntity
     {
         public readonly LevelObjectPrefab Prefab;
         public Vector3 Position;
@@ -20,6 +20,8 @@ namespace Barotrauma
         public float Rotation;
 
         private int spriteIndex;
+
+        protected bool tookDamage;
 
         public LevelObjectPrefab ActivePrefab;
 
@@ -37,17 +39,27 @@ namespace Barotrauma
 
         public bool NeedsNetworkSyncing
         {
-            get { return Triggers != null && Triggers.Any(t => t.NeedsNetworkSyncing); }
+            get 
+            { 
+                return tookDamage || (Triggers != null && Triggers.Any(t => t.NeedsNetworkSyncing)); 
+            }
             set 
             {
                 if (Triggers == null) { return; }
-                Triggers.ForEach(t => t.NeedsNetworkSyncing = false); 
+                Triggers.ForEach(t => t.NeedsNetworkSyncing = false);
+                tookDamage = false;
             }
         }
 
         public bool NeedsUpdate
         {
             get; private set;
+        }
+
+        public float Health
+        {
+            get;
+            private set;
         }
 
         public Sprite Sprite
@@ -67,6 +79,10 @@ namespace Barotrauma
 
         public Submarine Submarine => null;
 
+        public string Name => Prefab?.Name ?? "LevelObject (null)";
+
+        public Dictionary<string, SerializableProperty> SerializableProperties { get; } = new Dictionary<string, SerializableProperty>();
+
         public Level.Cave ParentCave;
 
         public LevelObject(LevelObjectPrefab prefab, Vector3 position, float scale, float rotation = 0.0f)
@@ -75,6 +91,7 @@ namespace Barotrauma
             Position = position;
             Scale = scale;
             Rotation = rotation;
+            Health = prefab.Health;
 
             spriteIndex = ActivePrefab.Sprites.Any() ? Rand.Int(ActivePrefab.Sprites.Count, Rand.RandSync.Server) : -1;
 
@@ -89,10 +106,13 @@ namespace Barotrauma
 
             if (PhysicsBody != null)
             {
+                PhysicsBody.UserData = this;
                 PhysicsBody.SetTransformIgnoreContacts(PhysicsBody.SimPosition, -Rotation);
                 PhysicsBody.BodyType = BodyType.Static;
                 PhysicsBody.CollisionCategories = Physics.CollisionLevel;
-                PhysicsBody.CollidesWith = Physics.CollisionWall | Physics.CollisionCharacter;
+                PhysicsBody.CollidesWith = Prefab.TakeLevelWallDamage?
+                    Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionProjectile : 
+                    Physics.CollisionWall | Physics.CollisionCharacter;
             }
 
             foreach (XElement triggerElement in prefab.LevelTriggerElements)
@@ -111,6 +131,10 @@ namespace Barotrauma
                 }
 
                 var newTrigger = new LevelTrigger(triggerElement, new Vector2(position.X, position.Y) + triggerPosition, -rotation, scale, prefab.Name);
+                if (newTrigger.PhysicsBody != null)
+                {
+                    newTrigger.PhysicsBody.UserData = this;
+                }
                 int parentTriggerIndex = prefab.LevelTriggerElements.IndexOf(triggerElement.Parent);
                 if (parentTriggerIndex > -1) { newTrigger.ParentTrigger = Triggers[parentTriggerIndex]; }
                 Triggers.Add(newTrigger);
@@ -135,7 +159,54 @@ namespace Barotrauma
         }
         
         partial void InitProjSpecific();
-        
+
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
+        {
+            if (Health <= 0.0f) { return new AttackResult(0.0f); }
+
+            float damage = 0.0f;
+            if (Prefab.TakeLevelWallDamage)
+            {
+                damage += attack.GetLevelWallDamage(deltaTime);
+            }
+            damage = Math.Max(Health, damage);
+            AddDamage(damage, deltaTime, attacker);
+            return new AttackResult(damage);
+        }
+
+        public void AddDamage(float damage, float deltaTime, Entity attacker, bool isNetworkEvent = false)
+        {
+            if (Health <= 0.0f) { return; }
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && !isNetworkEvent)
+            {
+                return;
+            }
+            tookDamage |= !MathUtils.NearlyEqual(damage, 0.0f);
+            Health -= damage;
+            if (Health <= 0.0f)
+            {
+#if CLIENT
+                if (GameMain.GameSession?.Level?.LevelObjectManager != null)
+                {
+                    GameMain.GameSession.Level.LevelObjectManager.ForceRefreshVisibleObjects = true;
+                }
+#endif
+                if (PhysicsBody != null)
+                {
+                    PhysicsBody.Enabled = false;
+                }
+                foreach (LevelTrigger trigger in Triggers)
+                {
+                    trigger.PhysicsBody.Enabled = false;
+                    foreach (StatusEffect effect in trigger.StatusEffects)
+                    {
+                        if (effect.type != ActionType.OnBroken) { continue; }
+                        effect.Apply(effect.type, deltaTime, attacker, this, worldPosition: WorldPosition);
+                    }
+                }
+            }
+        }
+
         public Vector2 LocalToWorld(Vector2 localPosition, float swingState = 0.0f)
         {
             Vector2 emitterPos = localPosition * Scale;
@@ -169,6 +240,10 @@ namespace Barotrauma
         public void ServerWrite(IWriteMessage msg, Client c)
         {
             if (Triggers == null) { return; }
+            if (Prefab.TakeLevelWallDamage)
+            {
+                msg.WriteRangedSingle(MathHelper.Clamp(Health, 0.0f, Prefab.Health), 0.0f, Prefab.Health, 8);
+            }
             for (int j = 0; j < Triggers.Count; j++)
             {
                 if (!Triggers[j].UseNetworkSyncing) { continue; }

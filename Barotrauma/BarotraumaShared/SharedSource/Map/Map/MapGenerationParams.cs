@@ -67,6 +67,8 @@ namespace Barotrauma
         [Serialize(0.1f, true, description: "ConnectionDisplacementMultiplier for the UI indicator lines between locations."), Editable(0.0f, 10.0f, DecimalCount = 2)]
         public float ConnectionIndicatorDisplacementMultiplier { get; set; }
 
+        public int[] GateCount { get; private set; }
+
 #if CLIENT
 
         [Serialize(0.75f, true), Editable(DecimalCount = 2)]
@@ -200,6 +202,16 @@ namespace Barotrauma
         private MapGenerationParams(XElement element)
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+
+            GateCount = element.GetAttributeIntArray("gatecount", null) ?? element.GetAttributeIntArray("GateCount", null);
+            if (GateCount == null)
+            {
+                GateCount = new int[DifficultyZones];
+                for (int i = 0; i < DifficultyZones; i++)
+                {
+                    GateCount[i] = 1;
+                }
+            }
 
             foreach (XElement subElement in element.Elements())
             {

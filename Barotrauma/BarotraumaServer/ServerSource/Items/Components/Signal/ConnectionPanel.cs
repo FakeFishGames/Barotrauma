@@ -41,7 +41,7 @@ namespace Barotrauma.Items.Components
             }
 
             //don't allow rewiring locked panels
-            if (Locked || !GameMain.NetworkMember.ServerSettings.AllowRewiring) { return; }
+            if (Locked || TemporarilyLocked || !GameMain.NetworkMember.ServerSettings.AllowRewiring) { return; }
 
             item.CreateServerEvent(this);
 
@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
                     var panel2 = selectedWire.Connections[1]?.ConnectionPanel;
                     if (panel2 != null && panel2 != this) { panel2.item.CreateServerEvent(panel2); }
 
-                    CoroutineManager.InvokeAfter(() =>
+                    CoroutineManager.Invoke(() =>
                     {
                         item.CreateServerEvent(this);
                         if (panel1 != null && panel1 != this) { panel1.item.CreateServerEvent(panel1); }

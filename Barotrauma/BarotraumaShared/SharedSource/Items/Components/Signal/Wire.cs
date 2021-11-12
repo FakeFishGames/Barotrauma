@@ -71,7 +71,7 @@ namespace Barotrauma.Items.Components
             get
             {
                 if (GameMain.NetworkMember?.ServerSettings != null && !GameMain.NetworkMember.ServerSettings.AllowRewiring) { return false; }
-                return locked || connections.Any(c => c != null && c.ConnectionPanel.Locked);
+                return locked || connections.Any(c => c != null && (c.ConnectionPanel.Locked || c.ConnectionPanel.TemporarilyLocked));
             }
             set { locked = value; }
         }
@@ -133,15 +133,15 @@ namespace Barotrauma.Items.Components
 
         public bool IsConnectedTo(Item item)
         {
-            if (connections[0] != null && connections[0].Item == item) return true;
-            return (connections[1] != null && connections[1].Item == item);
+            if (connections[0] != null && connections[0].Item == item) { return true; }
+            return connections[1] != null && connections[1].Item == item;
         }
 
         public void RemoveConnection(Item item)
         {
             for (int i = 0; i < 2; i++)
             {
-                if (connections[i] == null || connections[i].Item != item) continue;
+                if (connections[i] == null || connections[i].Item != item) { continue; }
 
                 foreach (Wire wire in connections[i].Wires)
                 {
@@ -844,10 +844,11 @@ namespace Barotrauma.Items.Components
             ClearConnections();
             base.RemoveComponentSpecific();
 #if CLIENT
+            if (DraggingWire == this) { draggingWire = null; }
             overrideSprite?.Remove();
             overrideSprite = null;
             wireSprite = null;
 #endif
-        }        
+        }
     }
 }

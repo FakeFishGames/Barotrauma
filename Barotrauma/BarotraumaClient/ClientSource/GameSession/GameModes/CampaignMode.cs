@@ -189,7 +189,7 @@ namespace Barotrauma
                 case TransitionType.None:
                 default:
                     if (Level.Loaded.Type == LevelData.LevelType.Outpost &&
-                        (Character.Controlled?.Submarine?.Info.Type == SubmarineType.Player || (Character.Controlled?.CurrentHull?.OutpostModuleTags?.Contains("airlock") ?? false)))
+                        (Character.Controlled?.Submarine?.Info.Type == SubmarineType.Player || (Character.Controlled?.CurrentHull?.OutpostModuleTags.Contains("airlock") ?? false)))
                     {
                         buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
                         endRoundButton.Visible = !ForceMapUI && !ShowCampaignUI;
@@ -224,12 +224,7 @@ namespace Barotrauma
                 {
                     endRoundButton.ToolTip = buttonText;
                 }
-                if (Character.Controlled?.ViewTarget is Item item)
-                {
-                    Turret turret = item.GetComponent<Turret>();
-                    endRoundButton.RectTransform.ScreenSpaceOffset = turret == null ? Point.Zero : new Point(0, (int)(turret.UIElementHeight * 1.25f));
-                }
-                else if (Character.Controlled?.CharacterHealth?.SuicideButton?.Visible ?? false)
+                if (Character.Controlled?.CharacterHealth?.SuicideButton?.Visible ?? false)
                 {
                     endRoundButton.RectTransform.ScreenSpaceOffset = new Point(0, Character.Controlled.CharacterHealth.SuicideButton.Rect.Height);
                 }
@@ -287,6 +282,7 @@ namespace Barotrauma
             {
                 case InteractionType.None:
                 case InteractionType.Talk:
+                case InteractionType.Examine:
                     return;
                 case InteractionType.Upgrade when !UpgradeManager.CanUpgradeSub():
                     UpgradeManager.CreateUpgradeErrorMessage(TextManager.Get("Dialog.CantUpgrade"), IsSinglePlayer, npc);

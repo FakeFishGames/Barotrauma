@@ -201,15 +201,9 @@ namespace GameAnalyticsSDK.Net.Store
 			}
 			finally
 			{
-				if(command != null)
-				{
-					command.Dispose();
-				}
+				command?.Dispose();
 
-				if(transaction != null)
-				{
-					transaction.Dispose();
-				}
+				transaction?.Dispose();
 			}
 
 			// Return results

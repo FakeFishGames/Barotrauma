@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveCleanupItems : AIObjectiveLoop<Item>
     {
-        public override string DebugTag => "cleanup items";
+        public override string Identifier { get; set; } = "cleanup items";
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => false;
         public override bool ForceOrderPriority => false;
@@ -38,8 +38,8 @@ namespace Barotrauma
                 float prio = objectiveManager.GetOrderPriority(this);
                 if (subObjectives.All(so => so.SubObjectives.None()))
                 {
-                    // If none of the subobjectives have subobjectives, no valid container was found. In this case, let's reduce the priority below the run threshold.
-                    prio = Math.Min(prio, AIObjectiveManager.RunPriority - 1);
+                    // If none of the subobjectives have subobjectives, no valid container was found. Don't allow running.
+                    ForceWalk = true;
                 }
                 return prio;
             }
@@ -80,18 +80,29 @@ namespace Barotrauma
             return true;
         }
 
-        public static bool IsValidContainer(Item item, Character character, bool allowUnloading = true) =>
-            !item.IgnoreByAI && item.IsInteractable(character) && item.HasTag("allowcleanup") && allowUnloading && item.ParentInventory == null && item.OwnInventory != null && item.OwnInventory.AllItems.Any() && IsItemInsideValidSubmarine(item, character);
+        public static bool IsValidContainer(Item container, Character character, bool allowUnloading = true) =>
+            allowUnloading &&
+            !container.IgnoreByAI(character) && 
+            container.IsInteractable(character) && 
+            container.HasTag("allowcleanup") && 
+            container.ParentInventory == null && container.OwnInventory != null && container.OwnInventory.AllItems.Any() && 
+            container.GetComponent<ItemContainer>() is ItemContainer itemContainer && itemContainer.HasAccess(character) &&
+            IsItemInsideValidSubmarine(container, character);
 
         public static bool IsValidTarget(Item item, Character character, bool checkInventory, bool allowUnloading = true)
         {
             if (item == null) { return false; }
-            if (item.IgnoreByAI) { return false; }
+            if (item.IgnoreByAI(character)) { return false; }
             if (!item.IsInteractable(character)) { return false; }
             if (item.SpawnedInOutpost) { return false; }
             if (item.ParentInventory != null)
             {
-                if (item.Container == null || !IsValidContainer(item.Container, character, allowUnloading)) { return false; }
+                if (item.Container == null)
+                {
+                    // In a character inventory
+                    return false;
+                }
+                if (!IsValidContainer(item.Container, character, allowUnloading)) { return false; }
             }
             if (character != null && !IsItemInsideValidSubmarine(item, character)) { return false; }
             var pickable = item.GetComponent<Pickable>();

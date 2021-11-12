@@ -140,6 +140,7 @@ namespace Barotrauma
             {
                 if (value == intValue) { return; }
                 intValue = value;
+                ClampIntValue();
                 UpdateText();
             }
         }

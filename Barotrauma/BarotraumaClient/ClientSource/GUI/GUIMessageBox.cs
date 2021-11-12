@@ -551,7 +551,7 @@ namespace Barotrauma
                     }
                     if (openState >= 2.0f)
                     {
-                        if (Parent != null) { Parent.RemoveChild(this); }
+                        Parent?.RemoveChild(this);
                         if (MessageBoxes.Contains(this)) { MessageBoxes.Remove(this); }
                     }
                 }
@@ -604,7 +604,7 @@ namespace Barotrauma
             }
             else
             {
-                if (Parent != null) { Parent.RemoveChild(this); }
+                Parent?.RemoveChild(this);
                 if (MessageBoxes.Contains(this)) { MessageBoxes.Remove(this); }
             }
 

@@ -507,7 +507,7 @@ namespace Barotrauma.Networking
         }
 
         [Serialize(800, true)]
-        private int LinesPerLogFile
+        public int LinesPerLogFile
         {
             get
             {
@@ -630,6 +630,13 @@ namespace Barotrauma.Networking
 
         [Serialize(false, true)]
         public bool LockAllDefaultWires
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, true)]
+        public bool AllowLinkingWifiToChat
         {
             get;
             set;
@@ -886,6 +893,15 @@ namespace Barotrauma.Networking
             set;
         }
 
+        private int maxMissionCount = CampaignSettings.DefaultMaxMissionCount;
+
+        [Serialize(CampaignSettings.DefaultMaxMissionCount, true)]
+        public int MaxMissionCount 
+        {
+            get { return maxMissionCount; }
+            set { maxMissionCount = MathHelper.Clamp(value, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit); }            
+        }
+
         public void SetPassword(string password)
         {
             if (string.IsNullOrEmpty(password))
@@ -914,7 +930,6 @@ namespace Barotrauma.Networking
         {
             if (!HasPassword) return true;
             byte[] saltedPw = SaltPassword(Encoding.UTF8.GetBytes(password), salt);
-            DebugConsole.NewMessage(ToolBox.ByteArrayToString(input) + " " + ToolBox.ByteArrayToString(saltedPw));
             if (input.Length != saltedPw.Length) return false;
             for (int i = 0; i < input.Length; i++)
             {

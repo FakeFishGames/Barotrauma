@@ -28,7 +28,14 @@ namespace Barotrauma
                         continue;
                     }
                     
-                    convAction.SelectedOption = selectedOption;
+                    if (selectedOption == byte.MaxValue)
+                    {
+                        convAction.IgnoreClient(sender, 3f);
+                    }
+                    else
+                    {
+                        convAction.SelectedOption = selectedOption;
+                    }
                     return;                    
                 }                
             }

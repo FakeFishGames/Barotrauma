@@ -63,8 +63,11 @@ namespace Barotrauma
         public Dictionary<int, List<DecorativeSprite>> DecorativeSpriteGroups = new Dictionary<int, List<DecorativeSprite>>();
         public Sprite InventoryIcon;
         public Sprite MinimapIcon;
+        public Sprite UpgradePreviewSprite;
         public Sprite InfectedSprite;
         public Sprite DamagedInfectedSprite;
+
+        public float UpgradePreviewScale = 1.0f;
 
         //only used to display correct color in the sub editor, item instances have their own property that can be edited on a per-item basis
         [Serialize("1.0,1.0,1.0,1.0", false)]
@@ -74,6 +77,13 @@ namespace Barotrauma
             protected set;
         }
 
+        [Serialize(true, false)]
+        public bool ShowInStatusMonitor
+        {
+            get;
+            private set;
+        }
+
 
         [Serialize("", false)]
         public string ImpactSoundTag { get; private set; }
@@ -81,13 +91,13 @@ namespace Barotrauma
         public override void UpdatePlacing(Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
-            
+
             if (PlayerInput.SecondaryMouseButtonClicked())
             {
                 selected = null;
                 return;
             }
-            
+
             var potentialContainer = MapEntity.GetPotentialContainer(position);
 
             if (!ResizeHorizontal && !ResizeVertical)
@@ -152,7 +162,7 @@ namespace Barotrauma
             {
                 potentialContainer.IsHighlighted = true;
             }
-            
+
 
             //if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed) selected = null;
 

@@ -51,7 +51,7 @@ namespace Barotrauma
         {
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Run] = new KeyOrMouse(Keys.LeftShift);
-            keyMapping[(int)InputType.Attack] = new KeyOrMouse(Keys.R);
+            keyMapping[(int)InputType.Attack] = new KeyOrMouse(Keys.F);
             keyMapping[(int)InputType.Crouch] = new KeyOrMouse(Keys.LeftControl);
             keyMapping[(int)InputType.Grab] = new KeyOrMouse(Keys.G);
             keyMapping[(int)InputType.Health] = new KeyOrMouse(Keys.H);
@@ -173,7 +173,7 @@ namespace Barotrauma
             }
         }
 
-        private void LoadKeyBinds(XElement element)
+        private void LoadKeyBinds(XElement element, Version gameVersion)
         {
             foreach (XAttribute attribute in element.Attributes())
             {
@@ -183,7 +183,6 @@ namespace Barotrauma
                     keyMapping[(int)InputType.TakeHalfFromInventorySlot] = new KeyOrMouse(Keys.LeftShift);
                     keyMapping[(int)InputType.TakeOneFromInventorySlot] = new KeyOrMouse(Keys.LeftControl);
                 }
-
                 if (!Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType)) { continue; }
 
                 if (int.TryParse(attribute.Value.ToString(), out int mouseButtonInt))
@@ -198,6 +197,13 @@ namespace Barotrauma
                 {
                     keyMapping[(int)inputType] = new KeyOrMouse(key);
                 }
+            }
+            //v0.15 added creature attacks that can be used with a character capable of speaking (with mudraptor or spineling genes),
+            //which causes the previous attack keybind R to conflict with the radio keybind
+            // -> automatically change it to F
+            if (gameVersion < new Version(0, 15, 0, 0))
+            {
+                keyMapping[(int)InputType.Attack] = new KeyOrMouse(Keys.F);
             }
         }
 
@@ -223,10 +229,12 @@ namespace Barotrauma
 
         private void LoadControls(XDocument doc)
         {
+            var gameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
+
             XElement keyMapping = doc.Root.Element("keymapping");
             if (keyMapping != null)
             {
-                LoadKeyBinds(keyMapping);
+                LoadKeyBinds(keyMapping, gameVersion);
             }
 
             XElement inventoryKeyMapping = doc.Root.Element("inventorykeymapping");
@@ -1077,8 +1085,8 @@ namespace Barotrauma
                 new RectTransform(new Vector2(0.5f, 1.0f), voiceInputContainerHorizontal.RectTransform),
                 isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice"), font: GUI.SubHeadingFont);
-            var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), voiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.Voice))
+            var voiceKeybindLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice"), font: GUI.SubHeadingFont);
+            var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.3f, 1.0f), voiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.Voice))
             {
                 SelectedColor = Color.Gold * 0.3f,
                 UserData = InputType.Voice
@@ -1089,13 +1097,15 @@ namespace Barotrauma
                 new RectTransform(new Vector2(0.5f, 1.0f), voiceInputContainerHorizontal.RectTransform),
                 isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), localVoiceInputContainer.RectTransform), TextManager.Get("InputType.LocalVoice"), font: GUI.SubHeadingFont);
-            var localVoiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), localVoiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.LocalVoice))
+            var localVoiceKeybindLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), localVoiceInputContainer.RectTransform), TextManager.Get("InputType.LocalVoice"), font: GUI.SubHeadingFont);
+            var localVoiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.3f, 1.0f), localVoiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.LocalVoice))
             {
                 SelectedColor = Color.Gold * 0.3f,
                 UserData = InputType.LocalVoice
             };
             localVoiceKeyBox.OnSelected += KeyBoxSelected;
+
+            voiceKeybindLabel.RectTransform.SizeChanged += () => { GUITextBlock.AutoScaleAndNormalize(voiceKeybindLabel, localVoiceKeybindLabel); };
 
             var cutoffPreventionText = new GUITextBlock(new RectTransform(textBlockScale, voiceChatContent.RectTransform), TextManager.Get("CutoffPrevention"), font: GUI.SubHeadingFont)
             {
@@ -1326,21 +1336,38 @@ namespace Barotrauma
                 }
             };
 
-            GUITickBox disableInGameHintsBox = new GUITickBox(new RectTransform(tickBoxScale, gameplaySettingsGroup.RectTransform),
-                TextManager.Get("DisableInGameHints"))
+            new GUITickBox(new RectTransform(tickBoxScale, gameplaySettingsGroup.RectTransform), TextManager.Get("DisableInGameHints"))
             {
                 Selected = DisableInGameHints,
                 ToolTip = TextManager.Get("DisableInGameHintsToolTip"),
                 OnSelected = (tickBox) =>
                 {
                     DisableInGameHints = tickBox.Selected;
-                    if (!DisableInGameHints && GameMain.Config?.IgnoredHints != null)
-                    {
-                        // Reset the ignored hints when the hints are re-enabled (to-be-replaced by a separate button)
-                        GameMain.Config.IgnoredHints.Clear();
-                    }
                     UnsavedSettings = true;
                     return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform),
+                text: TextManager.Get("ResetInGameHints"),
+                style: "GUIButtonSmall")
+            {
+                OnClicked = (button, userData) =>
+                {
+                    var msgBox = new GUIMessageBox(TextManager.Get("ResetInGameHints"),
+                        TextManager.Get("ResetInGameHintsTooltip"),
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                    {
+                        UserData = "verificationprompt"
+                    };
+                    msgBox.Buttons[0].OnClicked = (button, userData) =>
+                    {
+                        GameMain.Config.IgnoredHints.Clear();
+                        return true;
+                    };
+                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                    msgBox.Buttons[1].OnClicked = msgBox.Close;
+                    return false;
                 }
             };
 
@@ -1498,6 +1525,12 @@ namespace Barotrauma
                 (b) => AutomaticQuickStartEnabled = b,
                 "Automatic quickstart enabled",
                 "Will the game automatically move on to Quickstart when the game is launched");
+
+            addDebugTickBox(
+                TestScreenEnabled,
+                (b) => TestScreenEnabled = b,
+                "Test screen enabled",
+                "Will the game automatically move on to a test screen when the game is launched");
 
             addDebugTickBox(
                 AutomaticCampaignLoadEnabled,
@@ -1812,6 +1845,7 @@ namespace Barotrauma
                     ic.ParseMsg();
                 }
             }
+            CharacterHUD.ShouldRecreateHudTexts = true;
         }
 
         private void ApplySettings()

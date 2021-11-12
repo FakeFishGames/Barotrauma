@@ -67,6 +67,9 @@ namespace Barotrauma.Items.Components
 
         public Character LastAIUser { get; private set; }
 
+        [Serialize(defaultValue: false, isSaveable: true)]
+        public bool LastUserWasPlayer { get; private set; }
+
         private Character lastUser;
         public Character LastUser
         {
@@ -178,8 +181,6 @@ namespace Barotrauma.Items.Components
         [Serialize(0.0f, true)]
         public float AvailableFuel { get; set; }
 
-        public bool LastUserWasPlayer { get; private set; }
-
         public Reactor(Item item, XElement element)
             : base(item, element)
         {         
@@ -233,7 +234,10 @@ namespace Barotrauma.Items.Components
 
             //use a smoothed "correct output" instead of the actual correct output based on the load
             //so the player doesn't have to keep adjusting the rate impossibly fast when the load fluctuates heavily
-            correctTurbineOutput += MathHelper.Clamp((load / MaxPowerOutput * 100.0f) - correctTurbineOutput, -10.0f, 10.0f) * deltaTime;
+            if (!MathUtils.NearlyEqual(MaxPowerOutput, 0.0f))
+            {
+                correctTurbineOutput += MathHelper.Clamp((load / MaxPowerOutput * 100.0f) - correctTurbineOutput, -10.0f, 10.0f) * deltaTime;
+            }
 
             //calculate tolerances of the meters based on the skills of the user
             //more skilled characters have larger "sweet spots", making it easier to keep the power output at a suitable level
@@ -241,7 +245,7 @@ namespace Barotrauma.Items.Components
             optimalTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
             tolerance = MathHelper.Lerp(5.0f, 20.0f, degreeOfSuccess);
             allowedTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
-            
+
             optimalTemperature = Vector2.Lerp(new Vector2(40.0f, 60.0f), new Vector2(30.0f, 70.0f), degreeOfSuccess);
             allowedTemperature = Vector2.Lerp(new Vector2(30.0f, 70.0f), new Vector2(10.0f, 90.0f), degreeOfSuccess);
             
@@ -251,11 +255,13 @@ namespace Barotrauma.Items.Components
             allowedFissionRate.X = Math.Min(allowedFissionRate.X, allowedFissionRate.Y - 10);
 
             float heatAmount = GetGeneratedHeat(fissionRate);
+
             float temperatureDiff = (heatAmount - turbineOutput) - Temperature;
             Temperature += MathHelper.Clamp(Math.Sign(temperatureDiff) * 10.0f * deltaTime, -Math.Abs(temperatureDiff), Math.Abs(temperatureDiff));
             //if (item.InWater && AvailableFuel < 100.0f) Temperature -= 12.0f * deltaTime;
-            
+
             FissionRate = MathHelper.Lerp(fissionRate, Math.Min(targetFissionRate, AvailableFuel), deltaTime);
+
             TurbineOutput = MathHelper.Lerp(turbineOutput, targetTurbineOutput, deltaTime);
 
             float temperatureFactor = Math.Min(temperature / 50.0f, 1.0f);
@@ -311,6 +317,38 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            if (!loadQueue.Any() && PowerOn)
+            {
+                //loadQueue is empty, round must've just started
+                //reset the fission rate, turbine output and
+                //temperature to optimal levels to prevent fires
+                //at the start of the round
+                correctTurbineOutput = MathUtils.NearlyEqual(MaxPowerOutput, 0.0f) ? 0.0f : currentLoad / MaxPowerOutput * 100.0f;
+                tolerance = MathHelper.Lerp(2.5f, 10.0f, degreeOfSuccess);
+                optimalTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
+                tolerance = MathHelper.Lerp(5.0f, 20.0f, degreeOfSuccess);
+                allowedTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
+
+                DebugConsole.Log($"Degree of success: {degreeOfSuccess}");
+                DebugConsole.Log($"Current load: {currentLoad}");
+                DebugConsole.Log($"Max power output: {MaxPowerOutput}");
+                DebugConsole.Log($"Available fuel: {AvailableFuel}");
+
+                float desiredTurbineOutput = MathHelper.Clamp(correctTurbineOutput, 0.0f, 100.0f);
+                DebugConsole.Log($"Turbine output reset: {targetTurbineOutput}, {turbineOutput} -> {desiredTurbineOutput}");
+                targetTurbineOutput = desiredTurbineOutput;
+                turbineOutput = desiredTurbineOutput;
+
+                float desiredTemperature = (optimalTemperature.X + optimalTemperature.Y) / 2.0f;
+                DebugConsole.Log($"Temperature reset: {temperature} -> {desiredTemperature}");
+                temperature = desiredTemperature;
+
+                float desiredFissionRate = GetFissionRateForTargetTemperatureAndTurbineOutput(desiredTemperature, desiredTurbineOutput);
+                DebugConsole.Log($"Fission rate reset: {targetFissionRate}, {fissionRate} -> {desiredFissionRate}");
+                targetFissionRate = desiredFissionRate;
+                fissionRate = desiredFissionRate;
+            }
+
             loadQueue.Enqueue(currentLoad);
             while (loadQueue.Count() > 60.0f)
             {
@@ -329,23 +367,19 @@ namespace Barotrauma.Items.Components
                         item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
                     }
                 }
-
-                if (item.CurrentHull != null)
-                {
-                    var aiTarget = item.CurrentHull.AiTarget;
-                    if (aiTarget != null && MaxPowerOutput > 0)
-                    {
-                        float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
-                        float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
-                        aiTarget.SoundRange = Math.Max(aiTarget.SoundRange, noise);
-                    }
-                }
-
                 if (item.AiTarget != null && MaxPowerOutput > 0)
                 {
                     var aiTarget = item.AiTarget;
                     float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
                     aiTarget.SoundRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
+                    if (item.CurrentHull != null)
+                    {
+                        var hullAITarget = item.CurrentHull.AiTarget;
+                        if (hullAITarget != null)
+                        {
+                            hullAITarget.SoundRange = Math.Max(hullAITarget.SoundRange, aiTarget.SoundRange);
+                        }
+                    }
                 }
             }
 
@@ -388,6 +422,12 @@ namespace Barotrauma.Items.Components
         private float GetGeneratedHeat(float fissionRate)
         {
             return fissionRate * (prevAvailableFuel / 100.0f) * 2.0f;
+        }
+
+        private float GetFissionRateForTargetTemperatureAndTurbineOutput(float temperature, float turbineOutput)
+        {
+            if (MathUtils.NearlyEqual(AvailableFuel, 0f)) { return 0f; }
+            return (temperature + turbineOutput) / (AvailableFuel / 100f) / 2f;
         }
 
         /// <summary>
@@ -454,15 +494,12 @@ namespace Barotrauma.Items.Components
             {
                 float prevFireTimer = fireTimer;
                 fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.MaxCondition);
-
-
 #if SERVER
                 if (fireTimer > Math.Min(5.0f, FireDelay / 2) && blameOnBroken?.Character?.SelectedConstruction == item)
                 {
-                    GameMain.Server.KarmaManager.OnReactorOverHeating(blameOnBroken.Character, deltaTime);
+                    GameMain.Server.KarmaManager.OnReactorOverHeating(item, blameOnBroken.Character, deltaTime);
                 }
 #endif
-
                 if (fireTimer >= FireDelay && prevFireTimer < fireDelay)
                 {
                     new FireSource(item.WorldPosition);
@@ -551,7 +588,7 @@ namespace Barotrauma.Items.Components
             GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
             if (GameMain.Server != null)
             {
-                GameMain.Server.KarmaManager.OnReactorMeltdown(blameOnBroken?.Character);
+                GameMain.Server.KarmaManager.OnReactorMeltdown(item, blameOnBroken?.Character);
             }
 #endif
         }
@@ -564,6 +601,7 @@ namespace Barotrauma.Items.Components
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
+            character.AIController.SteeringManager.Reset();
             bool shutDown = objective.Option.Equals("shutdown", StringComparison.OrdinalIgnoreCase);
 
             IsActive = true;
@@ -598,6 +636,7 @@ namespace Barotrauma.Items.Components
                             void ReportFuelRodCount()
                             {
                                 if (!character.IsOnPlayerTeam) { return; }
+                                if (character.Submarine != Submarine.MainSub) { return; }
                                 int remainingFuelRods = Submarine.MainSub.GetItems(false).Count(i => i.HasTag("reactorfuel") && i.Condition > 1);
                                 if (remainingFuelRods == 0)
                                 {
@@ -614,6 +653,18 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
+                        if (Item.ConditionPercentage <= 0 && AIObjectiveRepairItems.IsValidTarget(Item, character))
+                        {
+                            if (Item.Repairables.Average(r => r.DegreeOfSuccess(character)) > 0.4f)
+                            {
+                                objective.AddSubObjective(new AIObjectiveRepairItem(character, Item, objective.objectiveManager, isPriority: true));
+                                return false;
+                            }
+                            else
+                            {
+                                character.Speak(TextManager.Get("DialogReactorIsBroken"), identifier: "reactorisbroken", minDurationBetweenSimilar: 30.0f);
+                            }
+                        }
                         if (TooMuchFuel())
                         {
                             DropFuel(minCondition: 0.1f, maxCondition: 100);
@@ -728,7 +779,7 @@ namespace Barotrauma.Items.Components
                 case "set_fissionrate":
                     if (PowerOn && float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newFissionRate))
                     {
-                        targetFissionRate = newFissionRate;
+                        targetFissionRate = MathHelper.Clamp(newFissionRate, 0.0f, 100.0f);
                         if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }
 #if CLIENT
                         FissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
@@ -738,7 +789,7 @@ namespace Barotrauma.Items.Components
                 case "set_turbineoutput":
                     if (PowerOn && float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newTurbineOutput))
                     {
-                        targetTurbineOutput = newTurbineOutput;
+                        targetTurbineOutput = MathHelper.Clamp(newTurbineOutput, 0.0f, 100.0f);
                         if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }                       
 #if CLIENT
                         TurbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;

@@ -26,6 +26,8 @@ namespace Barotrauma
         //listbox that shows the files included in the item being created
         private GUIListBox createItemFileList;
 
+        private GUIImage previewIcon;
+
         private System.IO.FileSystemWatcher createItemWatcher;
 
         private readonly List<GUIButton> tabButtons = new List<GUIButton>();
@@ -275,6 +277,24 @@ namespace Barotrauma
             itemEditor = null;
 
             SelectTab(Tab.Mods);
+        }
+
+        public override void OnFileDropped(string filePath, string extension)
+        {
+            switch (extension)
+            {
+                case ".png": // workshop preview
+                case ".jpg":
+                case ".jpeg":
+                    if (previewIcon == null || itemContentPackage == null) { break; }
+
+                    OnPreviewImageSelected(previewIcon, filePath);
+                    break;
+
+                default:
+                    DebugConsole.ThrowError($"Could not drag and drop the file. \"{extension}\" is not a valid file extension! (expected .png, .jpg or .jpeg)");
+                    break;
+            }
         }
 
         private void OnItemInstalled(ulong itemId)
@@ -682,12 +702,23 @@ namespace Barotrauma
                     try
                     {
                         bool reselect = GameMain.Config.AllEnabledPackages.Any(cp => cp.SteamWorkshopId != 0 && cp.SteamWorkshopId == item?.Id);
-                        if (!SteamManager.UninstallWorkshopItem(item, false, out string errorMsg) ||
-                            !SteamManager.InstallWorkshopItem(item, out errorMsg, reselect, true))
+                        if (!SteamManager.UninstallWorkshopItem(item, false, out string errorMsg))
                         {
                             DebugConsole.ThrowError($"Failed to reinstall \"{item?.Title}\": {errorMsg}", null, true);
                             elem.Flash(GUI.Style.Red);
+                            return true;
                         }
+
+                        SteamManager.ForceRedownload(item?.Id ?? 0, () =>
+                        {
+                            if (!SteamManager.InstallWorkshopItem(item, out string errorMsg, reselect, true))
+                            {
+                                DebugConsole.ThrowError($"Failed to reinstall \"{item?.Title}\": {errorMsg}", null, true);
+                                elem.Flash(GUI.Style.Red);
+                            }
+                            RefreshSubscribedItems();
+                        });
+                        RefreshSubscribedItems();
                     }
                     catch (Exception e)
                     {
@@ -696,6 +727,7 @@ namespace Barotrauma
                     }
                     return true;
                 };
+                reinstallBtn.Enabled = !item.Value.IsDownloading && !item.Value.IsDownloadPending;
                 var unsubBtn = new GUIButton(new RectTransform(new Point((int)(32 * GUI.Scale)), rightColumn.RectTransform), "", style: "GUIMinusButton")
                 {
                     ToolTip = TextManager.Get("WorkshopItemUnsubscribe"),
@@ -1057,6 +1089,7 @@ namespace Barotrauma
             itemContentPackage = ContentPackage.CreatePackage(sub.Name, Path.Combine(destinationFolder, SteamManager.MetadataFileName), corePackage: false);
             SteamManager.CreateWorkshopItemStaging(itemContentPackage, out itemEditor);
 
+            bool fileMoved = false;
             string submarineDir = Path.GetDirectoryName(sub.FilePath);
             if (submarineDir != Path.GetDirectoryName(destinationFolder))
             {
@@ -1065,14 +1098,18 @@ namespace Barotrauma
                 {
                     File.Move(sub.FilePath, destinationPath);
                 }
+                fileMoved = true;
                 sub.FilePath = destinationPath;
             }
             
             itemContentPackage.AddFile(sub.FilePath, ContentType.Submarine);
             itemContentPackage.Name = sub.Name;
             itemContentPackage.Save(itemContentPackage.Path);
-            //ContentPackage.List.Add(itemContentPackage);
-            //GameMain.Config.SelectContentPackage(itemContentPackage);
+
+            if (fileMoved)
+            {
+                GameMain.Config.EnableRegularPackage(itemContentPackage);
+            }
 
             itemEditor = itemEditor?.WithTitle(sub.Name).WithTag("Submarine").WithDescription(sub.Description);
 
@@ -1251,7 +1288,7 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topLeftColumn.RectTransform), TextManager.Get("WorkshopItemPreviewImage"), font: GUI.SubHeadingFont);
 
-            var previewIcon = new GUIImage(new RectTransform(new Vector2(1.0f, 0.7f), topLeftColumn.RectTransform), SteamManager.DefaultPreviewImage, scaleToFit: true);
+            previewIcon = new GUIImage(new RectTransform(new Vector2(1.0f, 0.7f), topLeftColumn.RectTransform), SteamManager.DefaultPreviewImage, scaleToFit: true);
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), topLeftColumn.RectTransform), TextManager.Get("WorkshopItemBrowse"), style: "GUIButtonSmall")
             {
                 OnClicked = (btn, userdata) =>
@@ -1567,7 +1604,7 @@ namespace Barotrauma
                 if (string.IsNullOrEmpty(file) || !File.Exists(file)) { continue; }
 
                 string modFolder = Path.GetDirectoryName(itemContentPackage.Path);                
-                string filePathRelativeToModFolder = UpdaterUtil.GetRelativePath(file, Path.Combine(Environment.CurrentDirectory, modFolder));
+                string filePathRelativeToModFolder = Path.GetRelativePath(Path.Combine(Environment.CurrentDirectory, modFolder), file);
 
                 //file is not inside the mod folder, we need to move it
                 if (filePathRelativeToModFolder.StartsWith("..") || 

@@ -191,12 +191,7 @@ namespace Barotrauma
                 GameMain.NetworkMember.ShowNetStats = !GameMain.NetworkMember.ShowNetStats;
             }));
 
-            commands.Add(new Command("createfilelist", "", (string[] args) =>
-            {
-                UpdaterUtil.SaveFileList("filelist.xml");
-            }));
-
-            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", null,
+            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor] [team (0-3)]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", null,
             () =>
             {
                 List<string> characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character).Select(f => f.Path).ToList();
@@ -217,7 +212,7 @@ namespace Barotrauma
                 };
             }, isCheat: true));
 
-            commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
+            commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]] [amount]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
             (string[] args) =>
             {
                 try
@@ -580,7 +575,7 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("dumptofile", "", (string[] args) =>
+            commands.Add(new Command("dumptofile", "findentityids [filename]: Outputs the contents of the debug console into a text file in the game folder. If the filename argument is omitted, \"consoleOutput.txt\" is used as the filename.", (string[] args) =>
             {
                 string filename = "consoleOutput.txt";
                 if (args.Length > 0) { filename = string.Join(" ", args); }
@@ -607,7 +602,7 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("giveaffliction", "giveaffliction [affliction name] [affliction strength] [character name]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
+            commands.Add(new Command("giveaffliction", "giveaffliction [affliction name] [affliction strength] [character name] [limb type] [use relative strength]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
             {
                 if (args.Length < 2) { return; }
 
@@ -627,19 +622,24 @@ namespace Barotrauma
                 }
 
                 bool relativeStrength = false;
-                if (args.Length > 2)
+                if (args.Length > 4)
                 {
-                    bool.TryParse(args[2], out relativeStrength);
+                    bool.TryParse(args[4], out relativeStrength);
                 }
 
-                Character targetCharacter = (relativeStrength || args.Length <= 2) ? Character.Controlled : FindMatchingCharacter(args.Skip(2).ToArray());
+                Character targetCharacter = args.Length <= 2 ? Character.Controlled : FindMatchingCharacter(new string[] { args[2] });
                 if (targetCharacter != null)
                 {
+                    Limb targetLimb = targetCharacter.AnimController.MainLimb;
+                    if (args.Length > 3)
+                    {
+                        targetLimb = targetCharacter.AnimController.Limbs.FirstOrDefault(l => l.type.ToString().Equals(args[3], StringComparison.OrdinalIgnoreCase));
+                    }
                     if (relativeStrength)
                     {
                         afflictionStrength *= targetCharacter.MaxVitality / afflictionPrefab.MaxStrength;
                     }
-                    targetCharacter.CharacterHealth.ApplyAffliction(targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
+                    targetCharacter.CharacterHealth.ApplyAffliction(targetLimb ?? targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
                 }
             },
             () =>
@@ -648,19 +648,25 @@ namespace Barotrauma
                 {
                     AfflictionPrefab.List.Select(a => a.Name).ToArray(),
                     new string[] { "1" },
-                    Character.CharacterList.Select(c => c.Name).ToArray()
+                    Character.CharacterList.Select(c => c.Name).ToArray(),
+                    Enum.GetNames(typeof(LimbType)).ToArray()
                 };
             }, isCheat: true));
 
-            commands.Add(new Command("heal", "heal [character name]: Restore the specified character to full health. If the name parameter is omitted, the controlled character will be healed.", (string[] args) =>
+            commands.Add(new Command("heal", "heal [character name] [all]: Restore the specified character to full health. If the name parameter is omitted, the controlled character will be healed. By default only heals common afflictions such as physical damage and blood loss: use the \"all\" argument to heal everything, including poisonings/addictions/etc.", (string[] args) =>
             {
-                Character healedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
+                bool healAll = args.Length > 1 && args[1].Equals("all", StringComparison.OrdinalIgnoreCase);
+                Character healedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(healAll ? args.Take(args.Length - 1).ToArray() : args);
                 if (healedCharacter != null)
                 {
                     healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
                     healedCharacter.Oxygen = 100.0f;
                     healedCharacter.Bloodloss = 0.0f;
                     healedCharacter.SetStun(0.0f, true);
+                    if (healAll)
+                    {
+                        healedCharacter.CharacterHealth.RemoveAllAfflictions();
+                    }
                 }
             },
             () =>
@@ -801,13 +807,13 @@ namespace Barotrauma
                     {
                         foreach (Skill skill in character.Info.Job.Skills)
                         {
-                            character.Info.SetSkillLevel(skill.Identifier, level, character.WorldPosition);
+                            character.Info.SetSkillLevel(skill.Identifier, level);
                         }
                         NewMessage($"Set all {character.Name}'s skills to {level}", Color.Green);
                     }
                     else
                     {
-                        character.Info.SetSkillLevel(skillIdentifier, level, character.WorldPosition);
+                        character.Info.SetSkillLevel(skillIdentifier, level);
                         NewMessage($"Set {character.Name}'s {skillIdentifier} level to {level}", Color.Green);
                     }
                 }
@@ -828,8 +834,128 @@ namespace Barotrauma
             commands.Add(new Command("water|editwater", "water/editwater: Toggle water editing. Allows adding water into rooms by holding the left mouse button and removing it by holding the right mouse button.", (string[] args) =>
             {
                 Hull.EditWater = !Hull.EditWater;
-                NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);                
+                NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);
             }, isCheat: true));
+
+            commands.Add(new Command("givetalent", "givetalent [talent] [player]: give the talent to the specified character. If the character argument is omitted, the talent is given to the controlled character.", (string[] args) =>
+            {
+                if (args.Length == 0) { return; }
+                var character = args.Length >= 2 ? FindMatchingCharacter(args.Skip(1).ToArray()) : Character.Controlled;
+                if (character != null)
+                {
+                    TalentPrefab talentPrefab = TalentPrefab.TalentPrefabs.Find(c => 
+                        c.Identifier.Equals(args[0], StringComparison.OrdinalIgnoreCase) ||
+                        c.DisplayName.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                    if (talentPrefab == null)
+                    {
+                        ThrowError($"Couldn't find the talent \"{args[0]}\".");
+                        return;
+                    }
+                    character.GiveTalent(talentPrefab);
+                    NewMessage($"Gave talent \"{talentPrefab.DisplayName}\" to \"{character.Name}\".");
+                }
+            },
+            () =>
+            {
+                List<string> talentNames = new List<string>();
+                foreach (TalentPrefab talent in TalentPrefab.TalentPrefabs)
+                {
+                    talentNames.Add(talent.DisplayName);
+                }
+
+                return new string[][]
+                {
+                    talentNames.ToArray(),
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
+            }, isCheat: true));
+
+            commands.Add(new Command("unlocktalents", "unlocktalents [all/[jobname]] [character]: give the specified character all the talents of the specified class", (string[] args) =>
+            {
+                var character = args.Length >= 2 ? FindMatchingCharacter(args.Skip(1).ToArray()) : Character.Controlled;
+                if (character == null) { return; }
+
+                List<TalentTree> talentTrees = new List<TalentTree>();
+                if (args.Length == 0 || args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
+                {
+                    talentTrees.AddRange(TalentTree.JobTalentTrees.Values);
+                }
+                else
+                {
+                    var job = JobPrefab.Prefabs.Find(jp => jp.Name != null && jp.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                    if (job == null)
+                    {
+                        ThrowError($"Failed to find the job \"{args[0]}\".");
+                        return;
+                    }
+                    if (!TalentTree.JobTalentTrees.TryGetValue(job.Identifier, out TalentTree talentTree))
+                    {
+                        ThrowError($"No talents configured for the job \"{args[0]}\".");
+                        return;
+                    }
+                    talentTrees.Add(talentTree);
+                }
+
+                foreach (var talentTree in talentTrees)
+                {
+                    foreach (var subTree in talentTree.TalentSubTrees)
+                    {
+                        foreach (var option in subTree.TalentOptionStages)
+                        {
+                            foreach (var talent in option.Talents)
+                            {
+                                character.GiveTalent(talent);
+                                NewMessage($"Unlocked talent \"{talent.DisplayName}\".");
+                            }
+                        }
+                    }
+                }
+            },
+            () =>
+            {
+                List<string> availableArgs = new List<string>() { "All" };
+                availableArgs.AddRange(JobPrefab.Prefabs.Select(j => j.Name));
+                return new string[][]
+                {
+                    availableArgs.ToArray(),
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
+            }, isCheat: true));
+
+            commands.Add(new Command("giveexperience", "giveexperience [amount] [character]: Give experience to character.", (string[] args) =>
+            {
+                if (args.Length < 1)
+                {
+                    NewMessage($"Missing arguments. Expected at least 1 but got {args.Length} (experience, name)");
+                    return;
+                }
+
+                string experienceString = args[0];
+                var character = FindMatchingCharacter(args.Skip(1).ToArray()) ?? Character.Controlled;
+
+                if (character?.Info == null)
+                {
+                    NewMessage("Character is not valid.");
+                    return;
+                }
+
+                if (int.TryParse(experienceString, NumberStyles.Number, CultureInfo.InvariantCulture, out int experience))
+                {
+                    character.Info.GiveExperience(experience);
+                    NewMessage($"Gave {character.Name} {experience} experience");
+                }
+                else
+                {
+                    NewMessage($"{experienceString} is not a valid value. Expected number.");
+                }
+            }, isCheat: true, getValidArgs: () =>
+            {
+                return new[]
+                {
+                    new string[] { "100" },
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray(),
+                };
+            }));
 
             commands.Add(new Command("fire|editfire", "fire/editfire: Allows putting up fires by left clicking.", (string[] args) =>
             {
@@ -942,7 +1068,7 @@ namespace Barotrauma
                 string subName = GameMain.Config.QuickStartSubmarineName;
                 if (!string.IsNullOrEmpty(subName))
                 {
-                    selectedSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name.ToLower() == subName.ToLower());
+                    selectedSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name.Equals(subName, StringComparison.OrdinalIgnoreCase));
                 }
 
                 int count = 0;
@@ -1008,7 +1134,7 @@ namespace Barotrauma
                     if (args.Length == 0) { return; }
                     if (float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float reputation))
                     {
-                        campaign.Map.CurrentLocation.Reputation.Value = reputation;
+                        campaign.Map.CurrentLocation.Reputation.SetReputation(reputation);
                     }
                     else
                     {
@@ -1035,7 +1161,7 @@ namespace Barotrauma
                     {
                         if (float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out float reputation))
                         {
-                            faction.Reputation.Value = reputation;
+                            faction.Reputation.SetReputation(reputation);
                         }
                         else
                         {
@@ -1363,7 +1489,7 @@ namespace Barotrauma
                 NewMessage((GameMain.GameSession.Map.AllowDebugTeleport ? "Enabled" : "Disabled") + " teleportation on the campaign map.", Color.White);
             }, isCheat: true));
 
-            commands.Add(new Command("money", "", args =>
+            commands.Add(new Command("money", "money [amount]: Gives the specified amount of money to the crew when a campaign is active.", args =>
             {
                 if (args.Length == 0) { return; }
                 if (GameMain.GameSession?.GameMode is CampaignMode campaign)
@@ -1449,6 +1575,20 @@ namespace Barotrauma
                 return new[] { primaries, identifiers };
             }));
 
+            commands.Add(new Command("setdifficulty|forcedifficulty", "difficulty [0-100]. Leave the parameter empty to disable.", (string[] args) =>
+            {
+                if (args.Length == 0)
+                {
+                    Level.ForcedDifficulty = null;
+                    NewMessage($"Forced difficulty level disabled.", Color.Green);
+                }
+                else if (float.TryParse(args[0], out float difficulty))
+                {
+                    Level.ForcedDifficulty = difficulty;
+                    NewMessage($"Set the difficulty level to { Level.ForcedDifficulty }.", Color.Yellow);
+                }
+            }, isCheat: true));
+
             commands.Add(new Command("difficulty|leveldifficulty", "difficulty [0-100]: Change the level difficulty setting in the server lobby.", null));
             
             commands.Add(new Command("autoitemplacerdebug|outfitdebug", "autoitemplacerdebug: Toggle automatic item placer debug info on/off. The automatically placed items are listed in the debug console at the start of a round.", (string[] args) =>
@@ -1469,8 +1609,8 @@ namespace Barotrauma
             {
                 if (args.Length > 0)
                 {
-                    string packageName = string.Join(" ", args).ToLower();
-                    var package = GameMain.Config.AllEnabledPackages.FirstOrDefault(p => p.Name.ToLower() == packageName);
+                    string packageName = string.Join(" ", args);
+                    var package = GameMain.Config.AllEnabledPackages.FirstOrDefault(p => p.Name.Equals(packageName, StringComparison.OrdinalIgnoreCase));
                     if (package == null)
                     {
                         ThrowError("Content package \"" + packageName + "\" not found.");
@@ -1592,7 +1732,7 @@ namespace Barotrauma
             commands.Add(new Command("control", "control [character name]: Start controlling the specified character (client-only).", null, () =>
             {
                 return new string[][] { ListCharacterNames() };
-            }));
+            }, isCheat: true));
             commands.Add(new Command("los", "Toggle the line of sight effect on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("lighting|lights", "Toggle lighting on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("ambientlight", "ambientlight [color]: Change the color of the ambient light in the level.", null, isCheat: true));
@@ -1744,13 +1884,15 @@ namespace Barotrauma
                     }
                     return;
                 }
-#if !DEBUG
                 if (!IsCommandPermitted(splitCommand[0].ToLowerInvariant(), GameMain.Client))
                 {
-                    ThrowError("You're not permitted to use the command \"" + splitCommand[0].ToLowerInvariant() + "\"!");
+#if DEBUG
+                    AddWarning($"You're not permitted to use the command \"{splitCommand[0].ToLowerInvariant()}\". Executing the command anyway because this is a debug build.");
+#else
+                    ThrowError($"You're not permitted to use the command \"{splitCommand[0].ToLowerInvariant()}\"!");
                     return;
-                }
 #endif
+                }
             }
 #endif
 
@@ -1886,6 +2028,18 @@ namespace Barotrauma
             }
 
             if (string.IsNullOrWhiteSpace(args[0])) { return; }
+            CharacterTeamType teamType = Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;
+            if (args.Length > 2)
+            {
+                try
+                {
+                    teamType = (CharacterTeamType)int.Parse(args[2]);
+                }
+                catch
+                {
+                    DebugConsole.ThrowError($"\"{args[2]}\" is not a valid team id.");
+                }
+            }
 
             if (spawnPoint != null) { spawnPosition = spawnPoint.WorldPosition; }
 
@@ -1896,8 +2050,7 @@ namespace Barotrauma
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
                 if (GameMain.GameSession != null)
                 {
-                    //TODO: a way to select which team to spawn to?
-                    spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;                    
+                    spawnedCharacter.TeamID = teamType;
 #if CLIENT
                     GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);          
 #endif
@@ -1941,9 +2094,18 @@ namespace Barotrauma
                 return;
             }
 
+            int amount = 1;
             if (args.Length > 1)
             {
-                switch (args.Last())
+                string spawnLocation = args.Last();
+                if (args.Length > 2)
+                {
+                    spawnLocation = args[^2];
+                    if (!int.TryParse(args[^1], NumberStyles.Any, CultureInfo.InvariantCulture, out amount)) { amount = 1; }
+                    amount = Math.Min(amount, 100);
+                }
+                
+                switch (spawnLocation)
                 {
                     case "cursor":
                         spawnPos = cursorPos;
@@ -1971,37 +2133,40 @@ namespace Barotrauma
                 spawnPos = wp == null ? Vector2.Zero : wp.WorldPosition;
             }
 
-            if (spawnPos != null)
+            for (int i = 0; i < amount; i++)
             {
-                if (Entity.Spawner == null)
+                if (spawnPos != null)
                 {
-                    new Item(itemPrefab, spawnPos.Value, null);
-                }
-                else
-                {
-                    Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnPos.Value);
-                }
-            }
-            else if (spawnInventory != null)
-            {
-                if (Entity.Spawner == null)
-                {
-                    var spawnedItem = new Item(itemPrefab, Vector2.Zero, null);
-                    spawnInventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots);
-                    onItemSpawned(spawnedItem);
-                }
-                else
-                {
-                    Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnInventory, onSpawned: onItemSpawned);
-                }
-
-                static void onItemSpawned(Item item)
-                {
-                    if (item.ParentInventory?.Owner is Character character)
+                    if (Entity.Spawner == null)
                     {
-                        foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+                        new Item(itemPrefab, spawnPos.Value, null);
+                    }
+                    else
+                    {
+                        Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnPos.Value);
+                    }
+                }
+                else if (spawnInventory != null)
+                {
+                    if (Entity.Spawner == null)
+                    {
+                        var spawnedItem = new Item(itemPrefab, Vector2.Zero, null);
+                        spawnInventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots);
+                        onItemSpawned(spawnedItem);
+                    }
+                    else
+                    {
+                        Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnInventory, onSpawned: onItemSpawned);
+                    }
+
+                    static void onItemSpawned(Item item)
+                    {
+                        if (item.ParentInventory?.Owner is Character character)
                         {
-                            wifiComponent.TeamID = character.TeamID;
+                            foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+                            {
+                                wifiComponent.TeamID = character.TeamID;
+                            }
                         }
                     }
                 }

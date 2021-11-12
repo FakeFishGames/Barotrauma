@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class AIObjectiveCleanupItem : AIObjective
     {
-        public override string DebugTag => "cleanup item";
+        public override string Identifier { get; set; } = "cleanup item";
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => false;
 
@@ -26,7 +26,7 @@ namespace Barotrauma
             this.item = item;
         }
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             if (!IsAllowed)
             {
@@ -61,14 +61,14 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (item.IgnoreByAI)
+            if (item.IgnoreByAI(character))
             {
                 Abandon = true;
                 return;
             }
             if (item.ParentInventory != null)
             {
-                if (item.Container != null && !AIObjectiveCleanupItems.IsValidContainer(item.Container, character, allowUnloading: objectiveManager.HasOrders()))
+                if (item.Container != null && !AIObjectiveCleanupItems.IsValidContainer(item.Container, character, allowUnloading: objectiveManager.HasOrder<AIObjectiveCleanupItems>()))
                 {
                     // Target was picked up or moved by someone.
                     Abandon = true;
@@ -82,14 +82,15 @@ namespace Barotrauma
                 itemIndex = 0;
                 if (suitableContainer != null)
                 {
-                    bool equip = item.HasTag(AIObjectiveFindDivingGear.HEAVY_DIVING_GEAR) || (
-                            item.GetComponent<Wearable>() == null &&
-                            item.AllowedSlots.None(s =>
-                                s == InvSlotType.Card ||
-                                s == InvSlotType.Head ||
-                                s == InvSlotType.Headset ||
-                                s == InvSlotType.InnerClothes ||
-                                s == InvSlotType.OuterClothes));
+                    bool equip = item.GetComponent<Holdable>() != null ||
+                        item.AllowedSlots.Any(s => s != InvSlotType.Any) &&
+                        item.AllowedSlots.None(s =>
+                        s == InvSlotType.Card ||
+                        s == InvSlotType.Head ||
+                        s == InvSlotType.Headset ||
+                        s == InvSlotType.InnerClothes ||
+                        s == InvSlotType.OuterClothes);
+
                     TryAddSubObjective(ref decontainObjective, () => new AIObjectiveDecontainItem(character, item, objectiveManager, targetContainer: suitableContainer.GetComponent<ItemContainer>())
                     {
                         Equip = equip,
@@ -131,7 +132,7 @@ namespace Barotrauma
             }
         }
 
-        protected override bool Check() => IsCompleted;
+        protected override bool CheckObjectiveSpecific() => IsCompleted;
 
         public override void Reset()
         {

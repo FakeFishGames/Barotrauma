@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     class AIObjectiveDecontainItem : AIObjective
     {
-        public override string DebugTag => "decontain item";
+        public override string Identifier { get; set; } = "decontain item";
 
         public Func<Item, float> GetItemPriority;
 
@@ -59,17 +59,20 @@ namespace Barotrauma
             this.targetContainer = targetContainer;
         }
 
-        protected override bool Check() => IsCompleted;
+        protected override bool CheckObjectiveSpecific() => IsCompleted;
 
         protected override void Act(float deltaTime)
         {
-            Item itemToDecontain = targetItem ?? sourceContainer.Inventory.FindItem(i => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id) && !i.IgnoreByAI), recursive: false);
+            Item itemToDecontain = 
+                targetItem ?? 
+                sourceContainer.Inventory.FindItem(i => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id) && !i.IgnoreByAI(character)), recursive: false);
+
             if (itemToDecontain == null)
             {
                 Abandon = true;
                 return;
             }
-            if (itemToDecontain.IgnoreByAI)
+            if (itemToDecontain.IgnoreByAI(character))
             {
                 Abandon = true;
                 return;

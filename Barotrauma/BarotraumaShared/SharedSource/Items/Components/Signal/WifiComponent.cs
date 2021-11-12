@@ -22,7 +22,9 @@ namespace Barotrauma.Items.Components
 
         private string prevSignal;
 
-        private int[] channelMemory = new int[ChannelMemorySize];
+        private readonly int[] channelMemory = new int[ChannelMemorySize];
+
+        private Connection signalOutConnection;
 
         [Serialize(CharacterTeamType.None, true, description: "WiFi components can only communicate with components that have the same Team ID.", alwaysUseInstanceValues: true)]
         public CharacterTeamType TeamID { get; set; }
@@ -58,7 +60,8 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Editable, Serialize(false, false, description: "If enabled, any signals received from another chat-linked wifi component are displayed " +
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.AllowLinkingWifiToChat)]
+        [Serialize(false, false, description: "If enabled, any signals received from another chat-linked wifi component are displayed " +
             "as chat messages in the chatbox of the player holding the item.", alwaysUseInstanceValues: true)]
         public bool LinkToChat
         {
@@ -92,6 +95,10 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            if (item.Connections != null)
+            {
+                signalOutConnection = item.Connections.Find(c => c.Name == "signal_out");
+            }
             if (channelMemory.All(m => m == 0))
             {
                 for (int i = 0; i < channelMemory.Length; i++)
@@ -154,6 +161,10 @@ namespace Barotrauma.Items.Components
 
         public void TransmitSignal(Signal signal, bool sentFromChat)
         {
+            if (sentFromChat)
+            {
+                item.LastSentSignalRecipients.Clear();
+            }
             var senderComponent = signal.source?.GetComponent<WifiComponent>();
             if (senderComponent != null && !CanReceive(senderComponent)) { return; }
 
@@ -167,10 +178,14 @@ namespace Barotrauma.Items.Components
                 //signal strength diminishes by distance
                 float sentSignalStrength = signal.strength *
                     MathHelper.Clamp(1.0f - (Vector2.Distance(item.WorldPosition, wifiComp.item.WorldPosition) / wifiComp.range), 0.0f, 1.0f);
-                Signal s = new Signal(signal.value, signal.stepsTaken, sender: signal.sender, source: signal.source,
+                Signal s = new Signal(signal.value, signal.stepsTaken + 1, sender: signal.sender, source: signal.source,
                                       power: 0.0f, strength: sentSignalStrength);
-                wifiComp.item.SendSignal(s, "signal_out");
-                
+
+                if (wifiComp.signalOutConnection != null)
+                {
+                    wifiComp.item.SendSignal(s, wifiComp.signalOutConnection);
+                }
+
                 if (signal.source != null)
                 {
                     foreach (Connection receiver in wifiComp.item.LastSentSignalRecipients)

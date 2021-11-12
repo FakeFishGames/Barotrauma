@@ -77,6 +77,7 @@ namespace Barotrauma
 
         private static Vector2 lastPickedPosition;
         private static float lastPickedFraction;
+        private static Fixture lastPickedFixture;
         private static Vector2 lastPickedNormal;
 
         private Vector2 prevPosition;
@@ -97,6 +98,11 @@ namespace Barotrauma
         public static float LastPickedFraction
         {
             get { return lastPickedFraction; }
+        }
+
+        public static Fixture LastPickedFixture
+        {
+            get { return lastPickedFixture; }
         }
 
         public static Vector2 LastPickedNormal
@@ -243,6 +249,17 @@ namespace Barotrauma
             get { return subBody?.HullVertices; }
         }
 
+        private int? submarineSpecificIDTag;
+        public int SubmarineSpecificIDTag
+        {
+            get
+            {
+                submarineSpecificIDTag ??= ToolBox.StringToInt((Level.Loaded?.Seed ?? "") + Info.Name);
+                return submarineSpecificIDTag.Value;
+            }
+        }
+
+
         public bool AtDamageDepth
         {
             get
@@ -276,9 +293,11 @@ namespace Barotrauma
         }
 
         private float ballastFloraTimer;
+        public bool ImmuneToBallastFlora { get; set; }
         public void AttemptBallastFloraInfection(string identifier, float deltaTime, float probability)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (ImmuneToBallastFlora) { return; }
 
             if (ballastFloraTimer < 1f)
             {
@@ -321,54 +340,12 @@ namespace Barotrauma
             DockedTo.ForEach(s => s.ShowSonarMarker = false);
             PhysicsBody.FarseerBody.BodyType = BodyType.Static;
             TeamID = CharacterTeamType.None;
-
-            string defaultTag = Level.Loaded.GetWreckIDTag("wreck_id", this);
-            ReplaceIDCardTagRequirements("wreck_id", defaultTag);
-
-            foreach (Item item in Item.ItemList)
-            {
-                if (item.Submarine != this) { continue; }
-                if (item.prefab.Identifier == "idcardwreck" || item.prefab.Identifier == "idcard")
-                {
-                    foreach (string tag in item.GetTags().ToList())
-                    {
-                        if (tag == "smallitem") { continue; }
-                        string newTag = Level.Loaded.GetWreckIDTag(tag, this);
-                        item.ReplaceTag(tag, newTag);
-                        ReplaceIDCardTagRequirements(tag, newTag);
-                    }
-                }
-            }
-
-            void ReplaceIDCardTagRequirements(string oldTag, string newTag)
-            {
-                foreach (Item item in Item.ItemList)
-                {
-                    if (item.Submarine != this) { continue; }
-                    foreach (ItemComponent ic in item.Components)
-                    {
-                        ReplaceIDCardTagRequirement(ic, RelatedItem.RelationType.Picked, oldTag, newTag);
-                        ReplaceIDCardTagRequirement(ic, RelatedItem.RelationType.Equipped, oldTag, newTag);
-                    }
-                }
-            }
-
-            static void ReplaceIDCardTagRequirement(ItemComponent ic, RelatedItem.RelationType relationType, string oldTag, string newTag)
-            {
-                if (!ic.requiredItems.ContainsKey(relationType)) { return; }
-                foreach (RelatedItem requiredItem in ic.requiredItems[relationType])
-                {
-                    int index = Array.IndexOf(requiredItem.Identifiers, oldTag);
-                    if (index == -1) { continue; }
-                    requiredItem.Identifiers[index] = newTag;
-                }
-            }
         }
 
         public WreckAI WreckAI { get; private set; }
         public bool CreateWreckAI()
         {
-            WreckAI = new WreckAI(this);
+            WreckAI = WreckAI.Create(this);
             return WreckAI != null;
         }
 
@@ -669,6 +646,7 @@ namespace Barotrauma
 
             float closestFraction = 1.0f;
             Vector2 closestNormal = Vector2.Zero;
+            Fixture closestFixture = null;
             Body closestBody = null;
             if (allowInsideFixture)
             {
@@ -682,13 +660,15 @@ namespace Barotrauma
 
                     closestFraction = 0.0f;
                     closestNormal = Vector2.Normalize(rayEnd - rayStart);
-                    if (fixture.Body != null) closestBody = fixture.Body;
+                    closestFixture = fixture;
+                    if (fixture.Body != null) { closestBody = fixture.Body; }
                     return false;
                 }, ref aabb);
                 if (closestFraction <= 0.0f)
                 {
                     lastPickedPosition = rayStart;
                     lastPickedFraction = closestFraction;
+                    lastPickedFixture = closestFixture;
                     lastPickedNormal = closestNormal;
                     return closestBody;
                 }
@@ -702,6 +682,7 @@ namespace Barotrauma
                 {
                     closestFraction = fraction;
                     closestNormal = normal;
+                    closestFixture = fixture;
                     if (fixture.Body != null) closestBody = fixture.Body;
                 }
                 return fraction;
@@ -709,6 +690,7 @@ namespace Barotrauma
 
             lastPickedPosition = rayStart + (rayEnd - rayStart) * closestFraction;
             lastPickedFraction = closestFraction;
+            lastPickedFixture = closestFixture;
             lastPickedNormal = closestNormal;
 
             return closestBody;
@@ -752,6 +734,7 @@ namespace Barotrauma
                     lastPickedPosition = rayStart + (rayEnd - rayStart) * fraction;
                     lastPickedFraction = fraction;
                     lastPickedNormal = normal;
+                    lastPickedFixture = fixture;
                 }
                 //continue
                 return -1;
@@ -772,6 +755,7 @@ namespace Barotrauma
                     lastPickedPosition = rayStart;
                     lastPickedFraction = 0.0f;
                     lastPickedNormal = Vector2.Normalize(rayEnd - rayStart);
+                    lastPickedFixture = fixture;
                     bodies.Add(fixture.Body);
                     bodyDist[fixture.Body] = 0.0f;
                     return false;
@@ -828,6 +812,7 @@ namespace Barotrauma
         {
             Body closestBody = null;
             float closestFraction = 1.0f;
+            Fixture closestFixture = null;
             Vector2 closestNormal = Vector2.Zero;
 
             if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.01f)
@@ -847,6 +832,8 @@ namespace Barotrauma
                 if (ignoreSubs && fixture.Body.UserData is Submarine) { return -1; }
                 if (ignoreBranches && fixture.Body.UserData is VineTile) { return -1; }
                 if (fixture.Body.UserData as string == "ruinroom") { return -1; }
+                //the hulls have solid fixtures in the submarine's world space collider, ignore them
+                if (fixture.UserData is Hull) { return -1; }
                 if (fixture.Body.UserData is Structure structure)
                 {
                     if (structure.IsPlatform || structure.StairDirection != Direction.None) { return -1; }
@@ -861,6 +848,7 @@ namespace Barotrauma
                 {
                     closestBody = fixture.Body;
                     closestFraction = fraction;
+                    closestFixture = fixture;
                     closestNormal = normal;
                 }
                 return closestFraction;
@@ -870,6 +858,7 @@ namespace Barotrauma
 
             lastPickedPosition = rayStart + (rayEnd - rayStart) * closestFraction;
             lastPickedFraction = closestFraction;
+            lastPickedFixture = closestFixture;
             lastPickedNormal = closestNormal;
             return closestBody;
         }
@@ -925,9 +914,11 @@ namespace Barotrauma
                 mapEntity.Move(-HiddenSubPosition);
             }
 
+            var prevBodyType = subBody.Body.BodyType;
             Vector2 pos = new Vector2(subBody.Position.X, subBody.Position.Y);
             subBody.Body.Remove();
             subBody = new SubmarineBody(this);
+            subBody.Body.BodyType = prevBodyType;
             SetPosition(pos, new List<Submarine>(parents.Where(p => p != this)));
 
             if (entityGrid != null)
@@ -944,19 +935,23 @@ namespace Barotrauma
                 mapEntity.Move(HiddenSubPosition);
             }
 
-            foreach (Item item in Item.ItemList)
+            for (int i = 0; i < 2; i++)
             {
-                if (bodyItems.Contains(item))
+                foreach (Item item in Item.ItemList)
                 {
-                    item.Submarine = this;
-                    if (Position == Vector2.Zero) item.Move(-HiddenSubPosition);
+                    //two passes: flip docking ports on the 2nd pass because the doors need to be correctly flipped for the port's orientation to be determined correctly
+                    if ((item.GetComponent<DockingPort>() != null) == (i == 0)) { continue; }
+                    if (bodyItems.Contains(item))
+                    {
+                        item.Submarine = this;
+                        if (Position == Vector2.Zero) { item.Move(-HiddenSubPosition); }
+                    }
+                    else if (item.Submarine != this)
+                    {
+                        continue;
+                    }
+                    item.FlipX(true);
                 }
-                else if (item.Submarine != this)
-                {
-                    continue;
-                }
-
-                item.FlipX(true);
             }
 
             Item.UpdateHulls();
@@ -1068,12 +1063,36 @@ namespace Barotrauma
         public void NeutralizeBallast()
         {
             float neutralBallastLevel = 0.5f;
+            int selectedSteeringValue = 0;
             foreach (Item item in Item.ItemList)
             {
                 if (item.Submarine != this) { continue; }
                 var steering = item.GetComponent<Steering>();
                 if (steering == null) { continue; }
-                neutralBallastLevel = Math.Min(neutralBallastLevel, steering.NeutralBallastLevel);
+
+                //find how many pumps/engines in this sub the steering item is connected to
+                int steeringValue = 1;
+                Connection connectionX = item.GetComponent<ConnectionPanel>()?.Connections.Find(c => c.Name == "velocity_x_out");
+                Connection connectionY = item.GetComponent<ConnectionPanel>()?.Connections.Find(c => c.Name == "velocity_y_out");
+                if (connectionX != null)
+                {
+                    foreach (Engine engine in steering.Item.GetConnectedComponentsRecursive<Engine>(connectionX))
+                    {
+                        if (engine.Item.Submarine == this) { steeringValue++; }
+                    }
+                }
+                if (connectionY != null)
+                {
+                    foreach (Pump pump in steering.Item.GetConnectedComponentsRecursive<Pump>(connectionY))
+                    {
+                        if (pump.Item.Submarine == this) { steeringValue++; }
+                    }
+                }
+                //the nav terminal that's connected to the most engines/pumps in the sub most likely controls the sub (instead of a shuttle or some other system)
+                if (steeringValue > selectedSteeringValue)
+                {
+                    neutralBallastLevel = steering.NeutralBallastLevel;
+                }
             }
 
             HashSet<Hull> ballastHulls = new HashSet<Hull>();
@@ -1128,7 +1147,7 @@ namespace Barotrauma
             prevPosition = position;
         }
 
-        public void SetPosition(Vector2 position, List<Submarine> checkd = null)
+        public void SetPosition(Vector2 position, List<Submarine> checkd = null, bool forceUndockFromStaticSubmarines = true)
         {
             if (!MathUtils.IsValid(position)) { return; }
 
@@ -1142,7 +1161,7 @@ namespace Barotrauma
 
             foreach (Submarine dockedSub in DockedTo)
             {
-                if (dockedSub.PhysicsBody.BodyType == BodyType.Static)
+                if (dockedSub.PhysicsBody.BodyType == BodyType.Static && forceUndockFromStaticSubmarines)
                 {
                     if (ConnectedDockingPorts.TryGetValue(dockedSub, out DockingPort port))
                     {
@@ -1152,7 +1171,7 @@ namespace Barotrauma
                 }
                 Vector2? expectedLocation = CalculateDockOffset(this, dockedSub);
                 if (expectedLocation == null) { continue; }
-                dockedSub.SetPosition(position + expectedLocation.Value, checkd);
+                dockedSub.SetPosition(position + expectedLocation.Value, checkd, forceUndockFromStaticSubmarines);
                 dockedSub.UpdateTransform(interpolate: false);
             }
         }
@@ -1212,6 +1231,26 @@ namespace Barotrauma
         public List<T> GetEntities<T>(bool includingConnectedSubs, List<T> list) where T : MapEntity
         {
             return list.FindAll(e => IsEntityFoundOnThisSub(e, includingConnectedSubs));
+        }
+
+        public List<(ItemContainer container, int freeSlots)> GetCargoContainers()
+        {
+            List<(ItemContainer container, int freeSlots)> containers = new List<(ItemContainer container, int freeSlots)>();
+            var connectedSubs = GetConnectedSubs();
+            foreach (Item item in Item.ItemList.ToList())
+            {
+                if (!connectedSubs.Contains(item.Submarine)) { continue; }
+                if (!item.HasTag("cargocontainer")) { continue; }
+                var itemContainer = item.GetComponent<ItemContainer>();
+                if (itemContainer == null) { continue; }
+                int emptySlots = 0;
+                for (int i = 0; i < itemContainer.Inventory.Capacity; i++)
+                {
+                    if (itemContainer.Inventory.GetItemAt(i) == null) { emptySlots++; }
+                }
+                containers.Add((itemContainer, emptySlots));
+            }
+            return containers;
         }
 
         public IEnumerable<T> GetEntities<T>(bool includingConnectedSubs, IEnumerable<T> list) where T : MapEntity
@@ -1392,6 +1431,11 @@ namespace Barotrauma
                         }
                     }
                 }
+                else if (info.IsRuin)
+                {
+                    ShowSonarMarker = false;
+                    PhysicsBody.FarseerBody.BodyType = BodyType.Static;
+                }
             }
 
             if (entityGrid != null)
@@ -1503,6 +1547,8 @@ namespace Barotrauma
 
             Rectangle dimensions = CalculateDimensions();
             element.Add(new XAttribute("dimensions", XMLExtensions.Vector2ToString(dimensions.Size.ToVector2())));
+            var cargoContainers = GetCargoContainers();
+            element.Add(new XAttribute("cargocapacity", cargoContainers.Sum(c => c.container.Capacity)));
             element.Add(new XAttribute("recommendedcrewsizemin", Info.RecommendedCrewSizeMin));
             element.Add(new XAttribute("recommendedcrewsizemax", Info.RecommendedCrewSizeMax));
             element.Add(new XAttribute("recommendedcrewexperience", Info.RecommendedCrewExperience ?? ""));
@@ -1511,6 +1557,41 @@ namespace Barotrauma
             if (Info.Type == SubmarineType.OutpostModule)
             {
                 Info.OutpostModuleInfo?.Save(element);
+            }
+
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.PendingItemSwap?.SwappableItem?.ConnectedItemsToSwap == null) { continue; }
+                foreach (var (requiredTag, swapTo) in item.PendingItemSwap.SwappableItem.ConnectedItemsToSwap)
+                {
+                    List<Item> itemsToSwap = new List<Item>();
+                    itemsToSwap.AddRange(item.linkedTo.Where(lt => (lt as Item)?.HasTag(requiredTag) ?? false).Cast<Item>());
+                    var connectionPanel = item.GetComponent<ConnectionPanel>();
+                    if (connectionPanel != null)
+                    {
+                        foreach (Connection c in connectionPanel.Connections)
+                        {
+                            foreach (var connectedComponent in item.GetConnectedComponentsRecursive<ItemComponent>(c))
+                            {
+                                if (!itemsToSwap.Contains(connectedComponent.Item) && connectedComponent.Item.HasTag(requiredTag))
+                                {
+                                    itemsToSwap.Add(connectedComponent.Item);
+                                }
+                            }
+                        }
+                    }
+                    ItemPrefab itemPrefab = ItemPrefab.Find("", swapTo);
+                    if (itemPrefab == null) 
+                    {
+                        DebugConsole.ThrowError($"Failed to swap an item connected to \"{item.Name}\" into \"{swapTo}\".");
+                        continue;
+                    }
+                    foreach (Item itemToSwap in itemsToSwap)
+                    {
+                        itemToSwap.PurchasedNewSwap = item.PurchasedNewSwap;
+                        if (itemPrefab != itemToSwap.Prefab) { itemToSwap.PendingItemSwap = itemPrefab; }                       
+                    }
+                }
             }
 
             foreach (MapEntity e in MapEntity.mapEntityList.OrderBy(e => e.ID))
@@ -1613,7 +1694,10 @@ namespace Barotrauma
 
             PhysicsBody.RemoveAll();
 
-            GameMain.World.Clear();
+            GameMain.World?.Clear();
+            GameMain.World = null;
+
+            GC.Collect();
 
             Unloading = false;
         }
@@ -1624,6 +1708,9 @@ namespace Barotrauma
 
             subBody?.Remove();
             subBody = null;
+
+            outdoorNodes?.Clear();
+            outdoorNodes = null;
 
             if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
             {
@@ -1638,8 +1725,8 @@ namespace Barotrauma
 
             visibleEntities = null;
 
-            if (MainSub == this) MainSub = null;
-            if (MainSubs[1] == this) MainSubs[1] = null;
+            if (MainSub == this) { MainSub = null; }
+            if (MainSubs[1] == this) { MainSubs[1] = null; }
 
             ConnectedDockingPorts?.Clear();
 

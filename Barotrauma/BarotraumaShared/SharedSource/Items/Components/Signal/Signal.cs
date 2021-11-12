@@ -19,5 +19,22 @@ namespace Barotrauma.Items.Components
             this.power = power;
             this.strength = strength;
         }
+
+        internal Signal WithStepsTaken(int stepsTaken)
+        {
+            Signal retVal = this;
+            retVal.stepsTaken = stepsTaken;
+            return retVal;
+        }
+
+        public static bool operator ==(Signal a, Signal b) =>
+            a.value == b.value &&
+            a.stepsTaken == b.stepsTaken &&
+            a.sender == b.sender &&
+            a.source == b.source &&
+            MathUtils.NearlyEqual(a.power, b.power) &&
+            MathUtils.NearlyEqual(a.strength, b.strength);
+
+        public static bool operator !=(Signal a, Signal b) => !(a == b);
     }
 }

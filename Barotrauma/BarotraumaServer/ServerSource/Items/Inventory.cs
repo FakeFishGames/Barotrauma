@@ -70,18 +70,20 @@ namespace Barotrauma
                     {
                         Item droppedItem = item;
                         Entity prevOwner = Owner;
+                        Inventory previousInventory = droppedItem.ParentInventory;
                         droppedItem.Drop(null);
+                        droppedItem.PreviousParentInventory = previousInventory;
 
-                        var previousInventory = prevOwner switch
+                        var previousCharacterInventory = prevOwner switch
                         {
-                            Item itemInventory => (itemInventory.FindParentInventory(inventory => inventory is CharacterInventory) as CharacterInventory),
+                            Item itemInventory => itemInventory.FindParentInventory(inventory => inventory is CharacterInventory) as CharacterInventory,
                             Character character => character.Inventory,
                             _ => null
                         };
 
-                        if (previousInventory != null && previousInventory != c.Character?.Inventory)
+                        if (previousCharacterInventory != null && previousCharacterInventory != c.Character?.Inventory)
                         {
-                            GameMain.Server?.KarmaManager.OnItemTakenFromPlayer(previousInventory, c, droppedItem);
+                            GameMain.Server?.KarmaManager.OnItemTakenFromPlayer(previousCharacterInventory, c, droppedItem);
                         }
                         
                         if (droppedItem.body != null && prevOwner != null)
@@ -109,7 +111,8 @@ namespace Barotrauma
                         var holdable = item.GetComponent<Holdable>();
                         if (holdable != null && !holdable.CanBeDeattached()) { continue; }
 
-                        if (!prevItems.Contains(item) && !item.CanClientAccess(c))
+                        if (!prevItems.Contains(item) && !item.CanClientAccess(c) && 
+                            (c.Character == null || item.PreviousParentInventory == null || !c.Character.CanAccessInventory(item.PreviousParentInventory)))
                         {
     #if DEBUG || UNSTABLE
                             DebugConsole.NewMessage($"Client {c.Name} failed to pick up item \"{item}\" (parent inventory: {(item.ParentInventory?.Owner.ToString() ?? "null")}). No access.", Color.Yellow);

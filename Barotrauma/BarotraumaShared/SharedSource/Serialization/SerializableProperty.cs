@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -32,7 +33,7 @@ namespace Barotrauma
         public string FallBackTextTag;
 
         /// <summary>
-        /// Currently implemented only for int fields. TODO: implement the remaining types (SerializableEntityEditor)
+        /// Currently implemented only for int and bool fields. TODO: implement the remaining types (SerializableEntityEditor)
         /// </summary>
         public bool ReadOnly;
 
@@ -58,6 +59,44 @@ namespace Barotrauma
     [AttributeUsage(AttributeTargets.Property)]
     class InGameEditable : Editable
     {
+    }
+
+    [AttributeUsage(AttributeTargets.Property)]
+    class ConditionallyEditable : Editable
+    {
+        public ConditionallyEditable(ConditionType conditionType)
+        {
+            this.conditionType = conditionType;
+        }
+
+        private readonly ConditionType conditionType;
+
+        public enum ConditionType
+        {
+            //These need to exist at compile time, so it is a little awkward
+            //I would love to see a better way to do this
+            AllowLinkingWifiToChat,
+            IsSwappableItem,
+            AllowRotating
+        }
+
+        public bool IsEditable(ISerializableEntity entity)
+        {
+            switch (conditionType)
+            {
+                case ConditionType.AllowLinkingWifiToChat:
+                    return GameMain.NetworkMember?.ServerSettings?.AllowLinkingWifiToChat ?? true;
+                case ConditionType.IsSwappableItem:
+                    {
+                        return entity is Item item && item.Prefab.SwappableItem != null && Screen.Selected == GameMain.SubEditorScreen;
+                    }
+                case ConditionType.AllowRotating:
+                    {
+                        return entity is Item item && item.body == null && item.Prefab.AllowRotatingInEditor && Screen.Selected == GameMain.SubEditorScreen;
+                    }
+            }
+            return false;
+        }
     }
 
 
@@ -107,6 +146,7 @@ namespace Barotrauma
             { typeof(Vector4), "vector4" },
             { typeof(Rectangle), "rectangle" },
             { typeof(Color), "color" },
+            { typeof(string[]), "stringarray" }
         };
 
         private static readonly Dictionary<Type, Dictionary<string, SerializableProperty>> cachedProperties = 
@@ -234,6 +274,9 @@ namespace Barotrauma
                     case "rectangle":
                         PropertyInfo.SetValue(parentObject, XMLExtensions.ParseRect(value, true));
                         break;
+                    case "stringarray":
+                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray(value));
+                        break;
                 }
             }
 
@@ -306,6 +349,9 @@ namespace Barotrauma
                             case "rectangle":
                                 PropertyInfo.SetValue(parentObject, XMLExtensions.ParseRect((string)value, false));
                                 return true;
+                            case "stringarray":
+                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray((string)value));
+                                break;
                             default:
                                 DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString());
                                 DebugConsole.ThrowError("(Cannot convert a string to a " + PropertyType.ToString() + ")");
@@ -618,7 +664,7 @@ namespace Barotrauma
             return dictionary;
         }
 
-        public static void SerializeProperties(ISerializableEntity obj, XElement element, bool saveIfDefault = false)
+        public static void SerializeProperties(ISerializableEntity obj, XElement element, bool saveIfDefault = false, bool ignoreEditable = false)
         {
             var saveProperties = GetProperties<Serialize>(obj);
             foreach (var property in saveProperties)
@@ -635,7 +681,7 @@ namespace Barotrauma
                     foreach (var attribute in property.Attributes.OfType<Serialize>())
                     {
                         if ((attribute.isSaveable && !attribute.defaultValue.Equals(value)) ||
-                            property.Attributes.OfType<Editable>().Any())
+                            (!ignoreEditable && property.Attributes.OfType<Editable>().Any()))
                         {
                             save = true;
                             break;
@@ -683,6 +729,10 @@ namespace Barotrauma
                             break;
                         case "rectangle":
                             stringValue = XMLExtensions.RectToString((Rectangle)value);
+                            break;
+                        case "stringarray":
+                            string[] stringArray = (string[])value;
+                            stringValue =  stringArray != null ? string.Join(';', stringArray) : "";
                             break;
                         default:
                             stringValue = value.ToString();
@@ -737,6 +787,10 @@ namespace Barotrauma
                     if (entity.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))
                     {
                         FixValue(property, entity, attribute);
+                        if (property.Name == nameof(ItemComponent.Msg) && entity is ItemComponent component)
+                        {
+                            component.ParseMsg();
+                        }
                     }
                     else if (entity is Item item1)
                     {
@@ -745,12 +799,16 @@ namespace Barotrauma
                             if (component.SerializableProperties.TryGetValue(attributeName, out SerializableProperty componentProperty))
                             {
                                 FixValue(componentProperty, component, attribute);
+                                if (componentProperty.Name == nameof(ItemComponent.Msg))
+                                {
+                                    ((ItemComponent)component).ParseMsg();
+                                }
                             }
                         }
                     }
                 }
 
-                void FixValue(SerializableProperty property, object parentObject, XAttribute attribute)
+                static void FixValue(SerializableProperty property, object parentObject, XAttribute attribute)
                 {
                     if (attribute.Value.Length > 0 && attribute.Value[0] == '*')
                     {
@@ -771,6 +829,29 @@ namespace Barotrauma
                         else if (property.PropertyType == typeof(Point))
                         {
                             property.TrySetValue(parentObject, ((Point)property.GetValue(parentObject)).Multiply(multiplier));
+                        }
+                    }
+                    else if (attribute.Value.Length > 0 && attribute.Value[0] == '+')
+                    {
+                        if (property.PropertyType == typeof(int))
+                        {
+                            float.TryParse(attribute.Value.Substring(1), NumberStyles.Float, CultureInfo.InvariantCulture, out float addition);
+                            property.TrySetValue(parentObject, (int)(((int)property.GetValue(parentObject)) + addition));
+                        }
+                        else if (property.PropertyType == typeof(float))
+                        {
+                            float.TryParse(attribute.Value.Substring(1), NumberStyles.Float, CultureInfo.InvariantCulture, out float addition);
+                            property.TrySetValue(parentObject, (float)property.GetValue(parentObject) + addition);
+                        }
+                        else if (property.PropertyType == typeof(Vector2))
+                        {
+                            var addition = XMLExtensions.ParseVector2(attribute.Value.Substring(1));
+                            property.TrySetValue(parentObject, (Vector2)property.GetValue(parentObject) + addition);
+                        }
+                        else if (property.PropertyType == typeof(Point))
+                        {
+                            var addition = XMLExtensions.ParsePoint(attribute.Value.Substring(1));
+                            property.TrySetValue(parentObject, ((Point)property.GetValue(parentObject)) + addition);
                         }
                     }
                     else

@@ -33,7 +33,7 @@ namespace Barotrauma
         public GUIFrame Content { get; private set; }
         public GUIScrollBar ScrollBar { get; private set; }
 
-        private Dictionary<GUIComponent, bool> childVisible = new Dictionary<GUIComponent, bool>();
+        private readonly Dictionary<GUIComponent, bool> childVisible = new Dictionary<GUIComponent, bool>();
   
         private int totalSize;
         private bool childrenNeedsRecalculation;
@@ -59,9 +59,7 @@ namespace Barotrauma
 
         private bool useGridLayout;
 
-        private float targetScroll;
-
-        private GUIComponent pendingScroll;
+        private GUIComponent scrollToElement;
 
         public bool AllowMouseWheelScroll { get; set; } = true;
 
@@ -226,7 +224,7 @@ namespace Barotrauma
             {
                 if (value == false && canDragElements && draggedElement != null)
                 {
-                    draggedElement = null;
+                    DraggedElement = null;
                 }
                 canDragElements = value;
             }
@@ -235,12 +233,37 @@ namespace Barotrauma
         private GUIComponent draggedElement;
         private Rectangle draggedReferenceRectangle;
         private Point draggedReferenceOffset;
+        public bool HasDraggedElementIndexChanged { get; private set; }
 
-        public GUIComponent DraggedElement => draggedElement;
+        public GUIComponent DraggedElement
+        {
+            get
+            {
+                return draggedElement;
+            }
+            set
+            {
+                if (value == draggedElement) { return; }
+                draggedElement = value;
+                HasDraggedElementIndexChanged = false;
+            }
+        }
         
-        private bool scheduledScroll = false;
-
         private readonly bool isHorizontal;
+
+        /// <summary>
+        /// Setting this to true and CanBeFocused to false allows the list background to be unfocusable while the elements can still be interacted with.
+        /// </summary>
+        public bool CanInteractWhenUnfocusable { get; set; } = false;
+
+        public override Rectangle MouseRect
+        {
+            get
+            {
+                if (!CanBeFocused && !CanInteractWhenUnfocusable) { return Rectangle.Empty; }
+                return ClampMouseRectToParent ? ClampRect(Rect) : Rect;
+            }
+        }
 
         /// <param name="isScrollBarOnDefaultSide">For horizontal listbox, default side is on the bottom. For vertical, it's on the right.</param>
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "", bool isScrollBarOnDefaultSide = true, bool useMouseDownToSelect = false) : base(style, rectT)
@@ -429,7 +452,14 @@ namespace Barotrauma
             int index = children.IndexOf(component);
             if (index < 0) { return; }
 
-            targetScroll = MathHelper.Clamp(MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, (children.Count - 0.9f), index)), ScrollBar.MinValue, ScrollBar.MaxValue);
+            if (!Content.Children.Contains(component) || !component.Visible)
+            {
+                scrollToElement = null;
+            }
+            else
+            {
+                scrollToElement = component;
+            }
         }
 
         public void ScrollToEnd(float duration)
@@ -469,7 +499,7 @@ namespace Barotrauma
                 if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
                     OnRearranged?.Invoke(this, draggedElement.UserData);
-                    draggedElement = null;
+                    DraggedElement = null;
                     RepositionChildren();
                 }
                 else
@@ -515,6 +545,7 @@ namespace Barotrauma
                     if (currIndex != index)
                     {
                         draggedElement.RectTransform.RepositionChildInHierarchy(currIndex);
+                        HasDraggedElementIndexChanged = true;
                     }
 
                     return;
@@ -533,7 +564,7 @@ namespace Barotrauma
                 }
             }
             
-            if (SelectTop && Content.Children.Any() && pendingScroll == null)
+            if (SelectTop && Content.Children.Any() && scrollToElement == null)
             {
                 GUIComponent component = Content.Children.FirstOrDefault(c => (c.Rect.Y - Content.Rect.Y) / (float)c.Rect.Height > -0.1f);
 
@@ -553,7 +584,7 @@ namespace Barotrauma
                 if (child == null || !child.Visible) { continue; }
 
                 // selecting
-                if (Enabled && CanBeFocused && child.CanBeFocused && child.Rect.Contains(PlayerInput.MousePosition) && GUI.IsMouseOn(child))
+                if (Enabled && (CanBeFocused || CanInteractWhenUnfocusable) && child.CanBeFocused && child.Rect.Contains(PlayerInput.MousePosition) && GUI.IsMouseOn(child))
                 {
                     child.State = ComponentState.Hover;
 
@@ -563,7 +594,6 @@ namespace Barotrauma
                     {
                         if (SelectTop)
                         {
-                            pendingScroll = child;
                             ScrollToElement(child);
                             Select(i, autoScroll: false, takeKeyBoardFocus: true);
                         }
@@ -575,7 +605,7 @@ namespace Barotrauma
 
                     if (CanDragElements && PlayerInput.PrimaryMouseButtonDown() && GUI.MouseOn == child)
                     {
-                        draggedElement = child;
+                        DraggedElement = child;
                         draggedReferenceRectangle = child.Rect;
                         draggedReferenceOffset = child.RectTransform.AbsoluteOffset;
                     }
@@ -606,7 +636,7 @@ namespace Barotrauma
                 {
                     if (child == Content || child == ScrollBar || child == ContentBackground) { continue; }
                     child.AddToGUIUpdateList(ignoreChildren, order);
-                }       
+                }
             }
             
             foreach (GUIComponent child in Content.Children)
@@ -635,7 +665,7 @@ namespace Barotrauma
                 OnAddedToGUIUpdateList?.Invoke(this);
                 return;
             }
-            
+
             int lastVisible = 0;
             for (int i = 0; i < Content.CountChildren; i++)
             {
@@ -679,6 +709,8 @@ namespace Barotrauma
             }
         }
 
+        public void ForceUpdate() => Update((float)Timing.Step);
+        
         protected override void Update(float deltaTime)
         {
             if (!Visible) { return; }
@@ -728,25 +760,33 @@ namespace Barotrauma
                     }
                 }
             }
-            
-            if (SmoothScroll)
+
+            if (scrollToElement != null)
             {
-                if (targetScroll > -1)
+                if (!scrollToElement.Visible || !Content.Children.Contains(scrollToElement))
                 {
-                    float distance = Math.Abs(targetScroll - BarScroll);
-                    float speed = Math.Max(distance * BarSize, 0.1f);
-                    BarScroll = (1.0f - speed) * BarScroll + speed * targetScroll;
-                    if (MathUtils.NearlyEqual(BarScroll, targetScroll) || GUIScrollBar.DraggingBar != null)
-                    {
-                        targetScroll = -1;
-                        pendingScroll = null;
-                    }
+                    scrollToElement = null;
                 }
+                else
+                {
+                    float diff = isHorizontal ? scrollToElement.Rect.X - Content.Rect.X : scrollToElement.Rect.Y - Content.Rect.Y;
+                    float speed = MathHelper.Clamp(Math.Abs(diff) * 0.1f, 5.0f, 100.0f);
+                    if (Math.Abs(diff) < speed || GUIScrollBar.DraggingBar != null)
+                    {
+                        speed = Math.Abs(diff);
+                        scrollToElement = null;
+                    }
+                    BarScroll += speed * Math.Sign(diff) / TotalSize;
+                } 
             }
 
-            if ((GUI.IsMouseOn(this) || GUI.IsMouseOn(ScrollBar)) && AllowMouseWheelScroll && PlayerInput.ScrollWheelSpeed != 0)
+            bool IsMouseOn() =>
+                FindScrollableParentListBox(GUI.MouseOn) == this ||
+                GUI.IsMouseOn(ScrollBar) ||
+                (CanInteractWhenUnfocusable && Content.Rect.Contains(PlayerInput.MousePosition));
+
+            if (PlayerInput.ScrollWheelSpeed != 0 && AllowMouseWheelScroll && IsMouseOn())
             {
-                float speed = PlayerInput.ScrollWheelSpeed / 500.0f * BarSize;
                 if (SmoothScroll)
                 {
                     if (ClampScrollToElements)
@@ -762,20 +802,12 @@ namespace Barotrauma
                             SelectNext(takeKeyBoardFocus: true);
                         }
                     }
-                    else
-                    {
-                        pendingScroll = null;
-                        if (targetScroll < 0) { targetScroll = BarScroll; }
-                        targetScroll -= speed;
-                        targetScroll = Math.Clamp(targetScroll, ScrollBar.MinValue, ScrollBar.MaxValue);
-                    }
                 }
                 else
                 {
                     ScrollBar.BarScroll -= (PlayerInput.ScrollWheelSpeed / 500.0f) * BarSize;
                 }
             }
-            
 
             ScrollBar.Enabled = ScrollBarEnabled && BarSize < 1.0f;
             if (AutoHideScrollBar)
@@ -786,6 +818,13 @@ namespace Barotrauma
             {
                 UpdateDimensions();
             }
+        }
+        
+        private static GUIListBox FindScrollableParentListBox(GUIComponent target)
+        {
+            if (target is GUIListBox listBox && listBox.ScrollBarEnabled && listBox.BarSize < 1.0f) { return listBox; }
+            if (target?.Parent == null) { return null; }
+            return FindScrollableParentListBox(target.Parent);
         }
 
         public void SelectNext(bool force = false, bool autoScroll = true, bool takeKeyBoardFocus = false)
@@ -799,7 +838,6 @@ namespace Barotrauma
                     Select(index, force, !SmoothScroll && autoScroll, takeKeyBoardFocus: takeKeyBoardFocus);
                     if (SmoothScroll)
                     {
-                        pendingScroll = child;
                         ScrollToElement(child);
                     }
                     break;
@@ -819,7 +857,6 @@ namespace Barotrauma
                     Select(index, force, !SmoothScroll && autoScroll, takeKeyBoardFocus: takeKeyBoardFocus);
                     if (SmoothScroll)
                     {
-                        pendingScroll = child;
                         ScrollToElement(child);
                     }
                     break;
@@ -986,7 +1023,7 @@ namespace Barotrauma
             if (child == null) { return; }
             child.RectTransform.Parent = null;
             if (selected.Contains(child)) { selected.Remove(child); }
-            if (draggedElement == child) { draggedElement = null; }
+            if (draggedElement == child) { DraggedElement = null; }
             UpdateScrollBarSize();
         }
 
@@ -1003,7 +1040,6 @@ namespace Barotrauma
             ContentBackground.DrawManually(spriteBatch, alsoChildren: false);
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-            RasterizerState prevRasterizerState = spriteBatch.GraphicsDevice.RasterizerState;
             if (HideChildrenOutsideFrame)
             {                    
                 spriteBatch.End();
@@ -1031,7 +1067,7 @@ namespace Barotrauma
             {
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
-                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: prevRasterizerState);
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
             if (ScrollBarVisible)

@@ -102,6 +102,12 @@ namespace Barotrauma.Items.Components
             get { return limbPositions.Count > 0; }
         }
 
+        public bool UserInCorrectPosition
+        {
+            get;
+            private set;
+        }
+
         public bool AllowAiming
         {
             get;
@@ -149,10 +155,12 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam) 
         {
             this.cam = cam;
+            UserInCorrectPosition = false;
 
             if (IsToggle)
             {
                 item.SendSignal(State ? "1" : "0", "signal_out");
+                item.SendSignal(State ? "1" : "0", "trigger_out");
             }
 
             if (user == null 
@@ -188,6 +196,7 @@ namespace Barotrauma.Items.Components
                     else
                     {
                         user.AnimController.TargetMovement = Vector2.Zero;
+                        UserInCorrectPosition = true;
                     }
                 }
                 else
@@ -196,7 +205,7 @@ namespace Barotrauma.Items.Components
                     if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && user != Character.Controlled)
                     {
                         if (Math.Abs(diff.X) > 20.0f)
-                        {                       
+                        {
                             //wait for the character to walk to the correct position
                             return;
                         }
@@ -217,7 +226,8 @@ namespace Barotrauma.Items.Components
                             return;
                         }
                     }
-                    user.AnimController.TargetMovement = Vector2.Zero;                    
+                    user.AnimController.TargetMovement = Vector2.Zero;
+                    UserInCorrectPosition = true;
                 }
             }
 
@@ -263,6 +273,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private double lastUsed;
+
         public override bool Use(float deltaTime, Character activator = null)
         {
             if (activator != user)
@@ -277,7 +289,22 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            item.SendSignal(new Signal("1", sender: user), "trigger_out");
+            if (IsToggle && (activator == null || lastUsed < Timing.TotalTime - 0.1))
+            {
+                if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+                {
+                    State = !State;
+#if SERVER
+                    item.CreateServerEvent(this);
+#endif
+                }
+            }
+            else
+            {
+                item.SendSignal(new Signal("1", sender: user), "trigger_out");
+            }
+
+            lastUsed = Timing.TotalTime;
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);
             
@@ -347,7 +374,7 @@ namespace Barotrauma.Items.Components
 
             for (int i = item.LastSentSignalRecipients.Count - 1; i >= 0; i--)
             {
-                if (item.LastSentSignalRecipients[i].Item.Condition <= 0.0f) { continue; }
+                if (item.LastSentSignalRecipients[i].Item.Condition <= 0.0f || item.LastSentSignalRecipients[i].IsPower) { continue; }
                 if (item.LastSentSignalRecipients[i].Item.Prefab.FocusOnSelected)
                 {
                     return item.LastSentSignalRecipients[i].Item;

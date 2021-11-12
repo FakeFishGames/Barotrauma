@@ -29,8 +29,12 @@ namespace Barotrauma
 
         public bool IsRunning { get; private set; }
 
+        public bool RoundEnding { get; private set; }
+
         public Level Level { get; private set; }
         public LevelData LevelData { get; private set; }
+
+        public bool MirrorLevel { get; private set; }
 
         public Map Map
         {
@@ -160,6 +164,18 @@ namespace Barotrauma
 
         private GameMode InstantiateGameMode(GameModePreset gameModePreset, string seed, SubmarineInfo selectedSub, CampaignSettings settings, IEnumerable<MissionPrefab> missionPrefabs = null, MissionType missionType = MissionType.None)
         {
+            if (gameModePreset.GameModeType == typeof(CoOpMode) || gameModePreset.GameModeType == typeof(PvPMode))
+            {
+                //don't allow hidden mission types (e.g. GoTo) in single mission modes
+                var missionTypes = (MissionType[])Enum.GetValues(typeof(MissionType));
+                for (int i = 0; i < missionTypes.Length; i++)
+                {
+                    if (MissionPrefab.HiddenMissionClasses.Contains(missionTypes[i]))
+                    {
+                        missionType &= ~missionTypes[i];
+                    }
+                }
+            }
             if (gameModePreset.GameModeType == typeof(CoOpMode))
             {
                 return missionPrefabs != null ?
@@ -318,6 +334,7 @@ namespace Barotrauma
 
         public void StartRound(LevelData levelData, bool mirrorLevel = false, SubmarineInfo startOutpost = null, SubmarineInfo endOutpost = null)
         {
+            MirrorLevel = mirrorLevel;
             if (SubmarineInfo == null)
             {
                 DebugConsole.ThrowError("Couldn't start game session, submarine not selected.");
@@ -350,9 +367,20 @@ namespace Barotrauma
                     }
                 }
             }
-            if (GameMode is PvPMode && Submarine.MainSubs[1] == null)
+
+            foreach (Mission mission in GameMode.Missions)
             {
-                Submarine.MainSubs[1] = new Submarine(SubmarineInfo, true);
+                // setting level for missions that may involve difficulty-related submarine creation
+                mission.SetLevel(levelData);
+            }
+
+            if (Submarine.MainSubs[1] == null)
+            {
+                var enemySubmarineInfo = GameMode is PvPMode ? SubmarineInfo : GameMode.Missions.FirstOrDefault(m => m.EnemySubmarineInfo != null)?.EnemySubmarineInfo;
+                if (enemySubmarineInfo != null)
+                {
+                    Submarine.MainSubs[1] = new Submarine(enemySubmarineInfo, true);
+                }
             }
 
             if (GameMain.NetworkMember?.ServerSettings?.LockAllDefaultWires ?? false)
@@ -424,9 +452,11 @@ namespace Barotrauma
             StatusEffect.StopAll();
 
 #if CLIENT
+#if !DEBUG
             GameMain.LightManager.LosEnabled = GameMain.Client == null || GameMain.Client.CharacterInfo != null;
+#endif
             if (GameMain.LightManager.LosEnabled) { GameMain.LightManager.LosAlpha = 1f; }
-            if (GameMain.Client == null) GameMain.LightManager.LosMode = GameMain.Config.LosMode;
+            if (GameMain.Client == null) { GameMain.LightManager.LosMode = GameMain.Config.LosMode; }
 #endif
             LevelData = level?.LevelData;
             Level = level;
@@ -523,7 +553,10 @@ namespace Barotrauma
                     if (port.IsHorizontal || port.Docked) { continue; }
                     if (port.Item.Submarine == level.StartOutpost)
                     {
-                        outPostPort = port;
+                        if (port.DockingTarget == null)
+                        {
+                            outPostPort = port;
+                        }
                         continue;
                     }
                     if (port.Item.Submarine != Submarine) { continue; }
@@ -583,6 +616,7 @@ namespace Barotrauma
                 if (ls.Sub == null || ls.Submarine != Submarine) { continue; }
                 if (!ls.LoadSub || ls.Sub.DockedTo.Contains(Submarine)) { continue; }
                 if (Submarine.Info.LeftBehindDockingPortIDs.Contains(ls.OriginalLinkedToID)) { continue; }
+                if (ls.Sub.Info.SubmarineElement.Attribute("location") != null) { continue; }
                 ls.Sub.SetPosition(ls.Sub.WorldPosition + (Submarine.WorldPosition - originalSubPos));
             }
         }
@@ -610,45 +644,103 @@ namespace Barotrauma
             return missions.IndexOf(mission);
         }
 
+        public void EnforceMissionOrder(List<string> missionIdentifiers)
+        {
+            List<Mission> sortedMissions = new List<Mission>();
+            foreach (string missionId in missionIdentifiers)
+            {
+                var matchingMission = missions.Find(m => m.Prefab.Identifier == missionId);
+                sortedMissions.Add(matchingMission);
+                missions.Remove(matchingMission);
+            }
+            missions.AddRange(sortedMissions);
+        }
+
         partial void UpdateProjSpecific(float deltaTime);
+
+        public static IEnumerable<Character> GetSessionCrewCharacters()
+        {
+#if SERVER
+            return GameMain.Server.ConnectedClients.Select(c => c.Character).Where(c => c?.Info != null && !c.IsDead);
+#else
+            if (GameMain.GameSession == null) { return Enumerable.Empty<Character>(); }
+            return GameMain.GameSession.CrewManager.GetCharacters().Where(c => c?.Info != null && !c.IsDead);
+#endif        
+        }
 
         public void EndRound(string endMessage, List<TraitorMissionResult> traitorResults = null, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
         {
-            foreach (Mission mission in missions)
+            RoundEnding = true;
+
+            try
             {
-                mission.End();
-            }
+                IEnumerable<Character> crewCharacters = GetSessionCrewCharacters();
+
+                foreach (Mission mission in missions)
+                {
+                    mission.End();
+                }
+
+                foreach (Character character in crewCharacters)
+                {
+                    character.CheckTalents(AbilityEffectType.OnRoundEnd);
+                }
+
+                if (missions.Any())
+                {
+                    if (missions.Any(m => m.Completed))
+                    {
+                        foreach (Character character in crewCharacters)
+                        {
+                            character.CheckTalents(AbilityEffectType.OnAnyMissionCompleted);
+                        }
+                    }
+
+                    if (missions.All(m => m.Completed))
+                    {
+                        foreach (Character character in crewCharacters)
+                        {
+                            character.CheckTalents(AbilityEffectType.OnAllMissionsCompleted);
+                        }
+                    }
+                }
+
 #if CLIENT
-            if (GUI.PauseMenuOpen)
-            {
-                GUI.TogglePauseMenu();
-            }
-            GUI.PreventPauseMenuToggle = true;
+                if (GUI.PauseMenuOpen)
+                {
+                    GUI.TogglePauseMenu();
+                }
+                GUI.PreventPauseMenuToggle = true;
 
-            if (!(GameMode is TestGameMode) && Screen.Selected == GameMain.GameScreen && RoundSummary != null)
-            {
-                GUI.ClearMessages();
-                GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData is RoundSummary);
-                GUIFrame summaryFrame = RoundSummary.CreateSummaryFrame(this, endMessage, traitorResults, transitionType);
-                GUIMessageBox.MessageBoxes.Add(summaryFrame);
-                RoundSummary.ContinueButton.OnClicked = (_, __) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
-            }
+                if (!(GameMode is TestGameMode) && Screen.Selected == GameMain.GameScreen && RoundSummary != null)
+                {
+                    GUI.ClearMessages();
+                    GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData is RoundSummary);
+                    GUIFrame summaryFrame = RoundSummary.CreateSummaryFrame(this, endMessage, traitorResults, transitionType);
+                    GUIMessageBox.MessageBoxes.Add(summaryFrame);
+                    RoundSummary.ContinueButton.OnClicked = (_, __) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
+                }
 
-            if (GameMain.NetLobbyScreen != null) GameMain.NetLobbyScreen.OnRoundEnded();
-            TabMenu.OnRoundEnded();
-            GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction" || ReadyCheck.IsReadyCheck(mb));
+                if (GameMain.NetLobbyScreen != null) { GameMain.NetLobbyScreen.OnRoundEnded(); }
+                TabMenu.OnRoundEnded();
+                GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction" || ReadyCheck.IsReadyCheck(mb));
 #endif
-            SteamAchievementManager.OnRoundEnded(this);
+                SteamAchievementManager.OnRoundEnded(this);
 
-            GameMode?.End(transitionType);
-            EventManager?.EndRound();
-            StatusEffect.StopAll();
-            missions.Clear();
-            IsRunning = false;
+                GameMode?.End(transitionType);
+                EventManager?.EndRound();
+                StatusEffect.StopAll();
+                missions.Clear();
+                IsRunning = false;
 
 #if CLIENT
-            HintManager.OnRoundEnded();
+                HintManager.OnRoundEnded();
 #endif
+            }
+            finally
+            {
+                RoundEnding = false;
+            }
         }
 
         public void KillCharacter(Character character)
@@ -743,7 +835,8 @@ namespace Barotrauma
 
             doc.Root.Add(new XAttribute("savetime", ToolBox.Epoch.NowLocal));
             doc.Root.Add(new XAttribute("version", GameMain.Version));
-            doc.Root.Add(new XAttribute("submarine", SubmarineInfo == null ? "" : SubmarineInfo.Name));
+            var submarineInfo = Campaign?.PendingSubmarineSwitch ?? SubmarineInfo;
+            doc.Root.Add(new XAttribute("submarine", submarineInfo == null ? "" : submarineInfo.Name));
             if (OwnedSubmarines != null)
             {
                 List<string> ownedSubmarineNames = new List<string>();

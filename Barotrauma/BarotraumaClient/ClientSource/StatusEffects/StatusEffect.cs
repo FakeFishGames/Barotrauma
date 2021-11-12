@@ -55,8 +55,6 @@ namespace Barotrauma
 
         partial void ApplyProjSpecific(float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Hull hull, Vector2 worldPosition, bool playSound)
         {
-            if (entity == null) { return; }
-
             if (playSound)
             {
                 PlaySound(entity, hull, worldPosition);
@@ -66,7 +64,7 @@ namespace Barotrauma
             {
                 float angle = 0.0f;
                 float particleRotation = 0.0f;
-                if (emitter.Prefab.CopyEntityAngle)
+                if (emitter.Prefab.Properties.CopyEntityAngle)
                 {
                     Limb targetLimb = null;
                     if (entity is Item item && item.body != null)

@@ -33,10 +33,7 @@ namespace Barotrauma.Items.Components
 
             base.Update(deltaTime, cam);
 
-            if (selectionUI != null)
-            {
-                selectionUI.Update();
-            }
+            selectionUI?.Update();
         }
     }
 }

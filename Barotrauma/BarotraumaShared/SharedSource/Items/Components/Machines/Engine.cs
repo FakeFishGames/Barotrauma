@@ -73,6 +73,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private const float TinkeringForceIncrease = 1.5f;
+
         public Engine(Item item, XElement element)
             : base(item, element)
         {
@@ -113,31 +115,35 @@ namespace Barotrauma.Items.Components
             Force = MathHelper.Lerp(force, (Voltage < MinVoltage) ? 0.0f : targetForce, 0.1f);
             if (Math.Abs(Force) > 1.0f)
             {
+                float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, 1.0f);
+                float currForce = force * voltageFactor;
+                float condition = item.Condition / item.MaxCondition;
+                // Broken engine makes more noise.
+                float noise = Math.Abs(currForce) * MathHelper.Lerp(1.5f, 1f, condition);
+                UpdateAITargets(noise);
                 //arbitrary multiplier that was added to changes in submarine mass without having to readjust all engines
                 float forceMultiplier = 0.1f;
                 if (User != null)
                 {
                     forceMultiplier *= MathHelper.Lerp(0.5f, 2.0f, (float)Math.Sqrt(User.GetSkillLevel("helm") / 100));
                 }
+                currForce *= maxForce * forceMultiplier;
+                if (item.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering)
+                {
+                    currForce *= 1f + repairable.TinkeringStrength * TinkeringForceIncrease;
+                }
 
-                float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, 1.0f);
-                Vector2 currForce = new Vector2(force * maxForce * forceMultiplier * voltageFactor, 0.0f);
                 //less effective when in a bad condition
-                currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / item.MaxCondition);
+                currForce *= MathHelper.Lerp(0.5f, 2.0f, condition);
                 if (item.Submarine.FlippedX) { currForce *= -1; }
-                item.Submarine.ApplyForce(currForce);
+                Vector2 forceVector = new Vector2(currForce, 0);
+                item.Submarine.ApplyForce(forceVector);
                 UpdatePropellerDamage(deltaTime);
-                float maxChangeSpeed = 0.5f;
-                float modifier = 2;
-                float noise = MathUtils.NearlyEqual(0.0f, maxForce) ? 0.0f : currForce.Length() * forceMultiplier * modifier / maxForce;
-                float min = Math.Max(1 - maxChangeSpeed, 0);
-                float max = 1 + maxChangeSpeed;
-                UpdateAITargets(Math.Clamp(noise, min, max), deltaTime);
 #if CLIENT
                 particleTimer -= deltaTime;
                 if (particleTimer <= 0.0f)
                 {
-                    Vector2 particleVel = -currForce.ClampLength(5000.0f) / 5.0f;
+                    Vector2 particleVel = -forceVector.ClampLength(5000.0f) / 5.0f;
                     GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition + PropellerPos * item.Scale,
                         particleVel * Rand.Range(0.9f, 1.1f),
                         0.0f, item.CurrentHull);
@@ -147,14 +153,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void UpdateAITargets(float increaseSpeed, float deltaTime)
+        private void UpdateAITargets(float noise)
         {
             if (item.AiTarget != null)
             {
-                item.AiTarget.IncreaseSoundRange(deltaTime, increaseSpeed);
+                item.AiTarget.SoundRange = MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, noise / 100);
                 if (item.CurrentHull != null && item.CurrentHull.AiTarget != null)
                 {
-                    // It's possible that some othe item increases the hull's soundrange more than the engine.
+                    // It's possible that some other item increases the hull's soundrange more than the engine.
                     item.CurrentHull.AiTarget.SoundRange = Math.Max(item.CurrentHull.AiTarget.SoundRange, item.AiTarget.SoundRange);
                 }
             }
@@ -172,14 +178,23 @@ namespace Barotrauma.Items.Components
 
             float scaledDamageRange = propellerDamage.DamageRange * item.Scale;
 
-            Vector2 propellerWorldPos = item.WorldPosition + PropellerPos * item.Scale;
+            Vector2 propellerWorldPos = item.WorldPosition + PropellerPos * item.Scale; 
+            float broadRange = Math.Max(scaledDamageRange * 2, 500);
             foreach (Character character in Character.CharacterList)
             {
                 if (!character.Enabled || character.Removed) { continue; }
-                float distSqr = Vector2.DistanceSquared(character.WorldPosition, propellerWorldPos);
-                if (distSqr > scaledDamageRange * scaledDamageRange) { continue; }
-                character.LastDamageSource = item;
-                propellerDamage.DoDamage(null, character, propellerWorldPos, 1.0f, true);
+                if (Math.Abs(character.WorldPosition.X - propellerWorldPos.X) > broadRange) { continue; }
+                if (Math.Abs(character.WorldPosition.Y - propellerWorldPos.Y) > broadRange) { continue; }
+
+                foreach (Limb limb in character.AnimController.Limbs)
+                {
+                    if (limb.IsSevered || !limb.body.Enabled) { continue; }
+                    float distSqr = Vector2.DistanceSquared(limb.WorldPosition, propellerWorldPos);
+                    if (distSqr > scaledDamageRange * scaledDamageRange) { continue; }
+                    character.LastDamageSource = item;
+                    propellerDamage.DoDamage(null, character, propellerWorldPos, 1.0f, true);
+                    break;
+                }
             }
         }
 

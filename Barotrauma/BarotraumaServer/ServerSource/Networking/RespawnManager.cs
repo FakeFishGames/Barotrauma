@@ -8,7 +8,17 @@ namespace Barotrauma.Networking
 {
     partial class RespawnManager : Entity, IServerSerializable
     {
+        /// <summary>
+        /// How much skills drop towards the job's default skill levels when respawning midround in the campaign
+        /// </summary>
+        const float SkillReductionOnCampaignMidroundRespawn = 0.75f;
+
         private DateTime despawnTime;
+
+        private float shuttleEmptyTimer;
+
+        private int pendingRespawnCount, requiredRespawnCount;
+        private int prevPendingRespawnCount, prevRequiredRespawnCount;
 
         private IEnumerable<Client> GetClientsToRespawn()
         {
@@ -95,10 +105,19 @@ namespace Barotrauma.Networking
                 RespawnShuttle.Velocity = Vector2.Zero;
             }
 
-            int clientsToRespawn = GetClientsToRespawn().Count();
+            pendingRespawnCount = GetClientsToRespawn().Count();
+            requiredRespawnCount = (int)Math.Max((float)GameMain.Server.ConnectedClients.Count * GameMain.Server.ServerSettings.MinRespawnRatio, 1.0f);
+            if (pendingRespawnCount != prevPendingRespawnCount || 
+                requiredRespawnCount != prevRequiredRespawnCount)
+            {
+                prevPendingRespawnCount = pendingRespawnCount;
+                prevRequiredRespawnCount = requiredRespawnCount;
+                GameMain.Server.CreateEntityEvent(this);
+            }
+
             if (RespawnCountdownStarted)
             {
-                if (clientsToRespawn == 0)
+                if (pendingRespawnCount == 0)
                 {
                     RespawnCountdownStarted = false;
                     GameMain.Server.CreateEntityEvent(this);
@@ -106,7 +125,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                bool shouldStartCountdown = ShouldStartRespawnCountdown(clientsToRespawn);       
+                bool shouldStartCountdown = ShouldStartRespawnCountdown(pendingRespawnCount);       
                 if (shouldStartCountdown)
                 {
                     RespawnCountdownStarted = true;
@@ -167,8 +186,14 @@ namespace Barotrauma.Networking
             }
         }
 
-        partial void UpdateReturningProjSpecific()
+        partial void UpdateReturningProjSpecific(float deltaTime)
         {
+            //speed up despawning if there's no-one inside the shuttle
+            if (despawnTime > DateTime.Now + new TimeSpan(0, 0, seconds: 30) && CheckShuttleEmpty(deltaTime))
+            {
+                despawnTime = DateTime.Now + new TimeSpan(0, 0, seconds: 30);
+            }
+
             foreach (Door door in shuttleDoors)
             {
                 if (door.IsOpen) door.TrySetState(false, false, true);
@@ -205,6 +230,7 @@ namespace Barotrauma.Networking
                 GameMain.Server.CreateEntityEvent(this);
 
                 RespawnCountdownStarted = false;
+                ReturnCountdownStarted = false;
             }
         }
 
@@ -213,7 +239,7 @@ namespace Barotrauma.Networking
             if (!ReturnCountdownStarted)
             {
                 //if there are no living chracters inside, transporting can be stopped immediately
-                if (!Character.CharacterList.Any(c => c.Submarine == RespawnShuttle && !c.IsDead))
+                if (CheckShuttleEmpty(deltaTime))
                 {
                     ReturnTime = DateTime.Now;
                     ReturnCountdownStarted = true;
@@ -231,6 +257,10 @@ namespace Barotrauma.Networking
                     GameMain.Server.CreateEntityEvent(this);
                 }
             }
+            else if (CheckShuttleEmpty(deltaTime))
+            {
+                ReturnTime = DateTime.Now;
+            }
 
             if (DateTime.Now > ReturnTime)
             {
@@ -244,8 +274,23 @@ namespace Barotrauma.Networking
             }
         }
 
+        private bool CheckShuttleEmpty(float deltaTime)
+        {
+            if (!Character.CharacterList.Any(c => c.Submarine == RespawnShuttle && !c.IsDead))
+            {
+                shuttleEmptyTimer += deltaTime;
+            }
+            else
+            {
+                shuttleEmptyTimer = 0.0f;
+            }
+            return shuttleEmptyTimer > 1.0f;
+        }
+        
         partial void RespawnCharactersProjSpecific(Vector2? shuttlePos)
         {
+            respawnedCharacters.Clear();
+
             var respawnSub = RespawnShuttle ?? Submarine.MainSub;
 
             MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
@@ -262,7 +307,7 @@ namespace Barotrauma.Networking
                 if (matchingData != null && !matchingData.HasSpawned)
                 {
                     c.CharacterInfo = matchingData.CharacterInfo;
-                }                
+                }
 
                 //all characters are in Team 1 in game modes/missions with only one team.
                 //if at some point we add a game mode with multiple teams where respawning is possible, this needs to be reworked
@@ -317,8 +362,28 @@ namespace Barotrauma.Networking
 
                 characterInfos[i].ClearCurrentOrders();
 
-                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, isRemotePlayer: !bot, hasAi: bot);
+                bool forceSpawnInMainSub = false;
+                if (!bot && campaign != null)
+                {
+                    var matchingData = campaign?.GetClientCharacterData(clients[i]);
+                    if (matchingData != null)
+                    {
+                        if (!matchingData.HasSpawned)
+                        {
+                            forceSpawnInMainSub = true;
+                        }
+                        else
+                        {
+                            ReduceCharacterSkills(characterInfos[i]);
+                        }
+                    }
+                }
+
+                var character = Character.Create(characterInfos[i], (forceSpawnInMainSub ? mainSubSpawnPoints[i] : shuttleSpawnPoints[i]).WorldPosition, characterInfos[i].Name, isRemotePlayer: !bot, hasAi: bot);
                 character.TeamID = CharacterTeamType.Team1;
+                character.LoadTalents();
+
+                respawnedCharacters.Add(character);
 
                 if (bot)
                 {
@@ -326,6 +391,12 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
+                    if (GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign && character.Info != null)
+                    {
+                        character.Info.SetExperience(Math.Max(character.Info.ExperiencePoints, mpCampaign.GetSavedExperiencePoints(clients[i])));
+                        mpCampaign.ClearSavedExperiencePoints(clients[i]);
+                    }
+
                     //tell the respawning client they're no longer a traitor
                     if (GameMain.Server.TraitorManager?.Traitors != null && clients[i].Character != null)
                     {
@@ -373,11 +444,7 @@ namespace Barotrauma.Networking
                 var characterData = campaign?.GetClientCharacterData(clients[i]);
                 if (characterData != null && Level.Loaded?.Type != LevelData.LevelType.Outpost && characterData.HasSpawned)
                 {
-                    var respawnPenaltyAffliction = AfflictionPrefab.List.FirstOrDefault(a => a.AfflictionType.Equals("respawnpenalty", StringComparison.OrdinalIgnoreCase));
-                    if (respawnPenaltyAffliction != null)
-                    {
-                        character.CharacterHealth.ApplyAffliction(targetLimb: null, respawnPenaltyAffliction.Instantiate(10.0f));
-                    }
+                    GiveRespawnPenaltyAffliction(character);
                 }
 
                 if (characterData == null || characterData.HasSpawned)
@@ -392,8 +459,15 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    characterData.SpawnInventoryItems(character, character.Inventory);
-                    characterData.ApplyHealthData(character.Info, character);
+                    if (characterData.HasItemData)
+                    {
+                        characterData.SpawnInventoryItems(character, character.Inventory);
+                    }
+                    else
+                    {
+                        character.GiveJobItems(mainSubSpawnPoints[i]);
+                    }
+                    characterData.ApplyHealthData(character);
                     character.GiveIdCardTags(mainSubSpawnPoints[i]);
                     characterData.HasSpawned = true;
                 }
@@ -414,6 +488,17 @@ namespace Barotrauma.Networking
             }
         }
 
+        public static void ReduceCharacterSkills(CharacterInfo characterInfo)
+        {
+            if (characterInfo?.Job == null) { return; }
+            foreach (Skill skill in characterInfo.Job.Skills)
+            {
+                var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Prefab == s);
+                if (skillPrefab == null) { continue; }
+                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.X, SkillReductionOnCampaignMidroundRespawn);
+            }
+        }
+
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.WriteRangedInteger((int)CurrentState, 0, Enum.GetNames(typeof(State)).Length);
@@ -426,6 +511,8 @@ namespace Barotrauma.Networking
                     msg.Write((float)(ReturnTime - DateTime.Now).TotalSeconds);
                     break;
                 case State.Waiting:
+                    msg.Write((ushort)pendingRespawnCount);
+                    msg.Write((ushort)requiredRespawnCount);
                     msg.Write(RespawnCountdownStarted);
                     msg.Write((float)(RespawnTime - DateTime.Now).TotalSeconds);
                     break;

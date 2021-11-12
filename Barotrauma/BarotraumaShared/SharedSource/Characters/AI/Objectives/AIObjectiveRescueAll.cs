@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     class AIObjectiveRescueAll : AIObjectiveLoop<Character>
     {
-        public override string DebugTag => "rescue all";
+        public override string Identifier { get; set; } = "rescue all";
         public override bool ForceRun => true;
         public override bool InverseTargetEvaluation => true;
         public override bool AllowOutsideSubmarine => true;
@@ -83,7 +83,7 @@ namespace Barotrauma
             if (character.AIController is HumanAIController humanAI)
             {
                 if (GetVitalityFactor(target) >= GetVitalityThreshold(humanAI.ObjectiveManager, character, target) ||
-                    target.CharacterHealth.GetAllAfflictions().All(a => a.Strength < a.Prefab.TreatmentThreshold)) 
+                    target.CharacterHealth.GetAllAfflictions().All(a => a.Prefab.IsBuff || a.Strength <= a.Prefab.TreatmentThreshold)) 
                 {
                     return false; 
                 }

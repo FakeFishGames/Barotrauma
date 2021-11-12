@@ -138,6 +138,14 @@ namespace Barotrauma
             return targetsToReturn;
         }
 
+        public void RemoveTag(string tag)
+        {
+            if (string.IsNullOrWhiteSpace(tag)) { return; }
+            if (Targets.ContainsKey(tag)) { Targets.Remove(tag); }
+            if (cachedTargets.ContainsKey(tag)) { cachedTargets.Remove(tag); }
+            if (targetPredicates.ContainsKey(tag)) { targetPredicates.Remove(tag);  }
+        }
+
         public override void Update(float deltaTime)
         {
             int botCount = 0;

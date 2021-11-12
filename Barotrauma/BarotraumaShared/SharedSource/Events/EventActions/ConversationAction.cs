@@ -179,7 +179,7 @@ namespace Barotrauma
         {
             if (speaker == null) { return; }
             speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
-            speaker.ActiveConversation = this;
+            speaker.ActiveConversation = null;
             speaker.SetCustomInteract(null, null);
 #if SERVER
             GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
@@ -213,7 +213,14 @@ namespace Barotrauma
                 if (dialogOpened)
                 {
 #if CLIENT
-                    Character.DisableControls = true;
+                    if (GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "ConversationAction"))
+                    {
+                        Character.DisableControls = true;
+                    }
+                    else
+                    {
+                        Reset();
+                    }
 #endif
                     if (ShouldInterrupt())
                     {
@@ -240,7 +247,7 @@ namespace Barotrauma
                     {
                         TryStartConversation(speaker);
                     }
-                    else
+                    else if (speaker.ActiveConversation != this)
                     {
                         speaker.CampaignInteractionType = CampaignMode.InteractionType.Talk;
                         speaker.ActiveConversation = this;
@@ -303,9 +310,15 @@ namespace Barotrauma
 
         private bool IsValidTarget(Entity e)
         {
-            return 
-                e is Character character && !character.Removed && !character.IsDead && !character.IsIncapacitated &&
+            bool isValid = e is Character character && !character.Removed && !character.IsDead && !character.IsIncapacitated &&
                 (e == Character.Controlled || character.IsRemotePlayer);
+#if SERVER
+            UpdateIgnoredClients();
+            isValid &= !ignoredClients.Keys.Any(c => c.Character == e);
+#elif CLIENT
+            isValid &= (e != Character.Controlled || !GUI.InputBlockingMenuOpen);
+#endif
+            return isValid;
         }
 
         private void TryStartConversation(Character speaker, Character targetCharacter = null)
@@ -348,10 +361,18 @@ namespace Barotrauma
             {
                 ParentEvent.AddTarget(InvokerTag, targetCharacter);
             }
-            
+
             ShowDialog(speaker, targetCharacter);
 
             dialogOpened = true;
+            if (speaker != null)
+            {
+                speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
+                speaker.SetCustomInteract(null, null);
+#if SERVER
+                GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
+#endif
+            }
         }
 
         partial void ShowDialog(Character speaker, Character targetCharacter);

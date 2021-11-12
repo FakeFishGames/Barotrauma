@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     class AIObjectiveContainItem: AIObjective
     {
-        public override string DebugTag => "contain item";
+        public override string Identifier { get; set; } = "contain item";
 
         public Func<Item, float> GetItemPriority;
 
@@ -61,10 +61,10 @@ namespace Barotrauma
             this.container = container;
         }
 
-        protected override bool Check()
+        protected override bool CheckObjectiveSpecific()
         {
             if (IsCompleted) { return true; }
-            if (container == null || (container.Item != null && container.Item.IsThisOrAnyContainerIgnoredByAI()))
+            if (container == null || (container.Item != null && container.Item.IsThisOrAnyContainerIgnoredByAI(character)))
             {
                 Abandon = true;
                 return false;
@@ -87,11 +87,11 @@ namespace Barotrauma
             }
         }
 
-        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage >= ConditionLevel && !i.IsThisOrAnyContainerIgnoredByAI();
+        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage >= ConditionLevel && !i.IsThisOrAnyContainerIgnoredByAI(character);
 
         protected override void Act(float deltaTime)
         {
-            if (container == null || (container.Item != null && container.Item.IsThisOrAnyContainerIgnoredByAI()))
+            if (container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI(character))
             {
                 Abandon = true;
                 return;
@@ -133,7 +133,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (ItemToContain.ParentInventory == character.Inventory && character.Submarine == Submarine.MainSub)
+                        if (ItemToContain.ParentInventory == character.Inventory && character.IsInFriendlySub)
                         {
                             ItemToContain.Drop(character);
                         }
@@ -146,7 +146,10 @@ namespace Barotrauma
                     {
                         DialogueIdentifier = "dialogcannotreachtarget",
                         TargetName = container.Item.Name,
-                        abortCondition = obj => !ItemToContain.IsOwnedBy(character),
+                        AbortCondition = obj =>
+                            container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI(character) ||
+                            ItemToContain == null || ItemToContain.Removed ||
+                            !ItemToContain.IsOwnedBy(character) || container.Item.GetRootInventoryOwner() is Character c && c != character,
                         SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>()
                     },
                     onAbandon: () => Abandon = true,
@@ -170,7 +173,8 @@ namespace Barotrauma
                             ignoredItems = containedItems,
                             AllowToFindDivingGear = AllowToFindDivingGear,
                             AllowDangerousPressure = AllowDangerousPressure,
-                            TargetCondition = ConditionLevel
+                            TargetCondition = ConditionLevel,
+                            ItemFilter = (Item potentialItem) => RemoveEmpty ? container.CanBeContained(potentialItem) : container.Inventory.CanBePut(potentialItem)
                         }, onAbandon: () =>
                         {
                             Abandon = true;

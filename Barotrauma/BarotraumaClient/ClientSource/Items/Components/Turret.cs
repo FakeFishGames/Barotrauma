@@ -34,7 +34,9 @@ namespace Barotrauma.Items.Components
 
         private RoundSound startMoveSound, endMoveSound, moveSound;
 
-        private SoundChannel moveSoundChannel;
+        private RoundSound chargeSound;
+
+        private SoundChannel moveSoundChannel, chargeSoundChannel;
         private Vector2 oldRotation = Vector2.Zero;
 
         private Vector2 crosshairPos, crosshairPointerPos;
@@ -43,11 +45,16 @@ namespace Barotrauma.Items.Components
         private float prevAngle;
         
         private bool flashLowPower;
-        private bool flashNoAmmo;
+        private bool flashNoAmmo, flashLoaderBroken;
         private float flashTimer;
-        private float flashLength = 1;
+        private readonly float flashLength = 1;
+
+        private const float MaxCircle = 360f;
+        private const float HalfCircle = 180f;
+        private const float QuarterCircle = 90f;
 
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
+        private readonly List<ParticleEmitter> particleEmitterCharges = new List<ParticleEmitter>();
 
         [Editable, Serialize("0,0,0,0", true, description: "Optional screen tint color when the item is being operated (R,G,B,A).")]
         public Color HudTint
@@ -76,6 +83,21 @@ namespace Barotrauma.Items.Components
             get;
             private set;
         }
+
+        [Serialize(0.0f, false, description: "The distance in which the spinning barrels rotate. Only used if spinning barrels are created.")]
+        public float SpinningBarrelDistance
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false, description: "Use firing offset for muzzleflash? This field shouldn't be needed but I'm using it for prototyping")]
+        public bool UseFiringOffsetForMuzzleFlash
+        {
+            get;
+            private set;
+        }
+
 
         public Vector2 DrawSize
         {
@@ -124,8 +146,14 @@ namespace Barotrauma.Items.Components
                     case "movesound":
                         moveSound = Submarine.LoadRoundSound(subElement, false);
                         break;
+                    case "chargesound":
+                        chargeSound = Submarine.LoadRoundSound(subElement, false);
+                        break;
                     case "particleemitter":
                         particleEmitters.Add(new ParticleEmitter(subElement));
+                        break;
+                    case "particleemittercharge":
+                        particleEmitterCharges.Add(new ParticleEmitter(subElement));
                         break;
                 }
             }
@@ -149,8 +177,12 @@ namespace Barotrauma.Items.Components
         partial void LaunchProjSpecific()
         {
             recoilTimer = RetractionTime;
+            if (user != null)
+            {
+                recoilTimer /= 1 + user.GetStatValue(StatTypes.TurretAttackSpeed);
+            }
             PlaySound(ActionType.OnUse);
-            Vector2 particlePos = new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y);
+            Vector2 particlePos = GetRelativeFiringPosition(UseFiringOffsetForMuzzleFlash);
             foreach (ParticleEmitter emitter in particleEmitters)
             {
                 emitter.Emit(1.0f, particlePos, hullGuess: null, angle: -rotation, particleRotation: rotation);
@@ -215,12 +247,55 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            float chargeRatio = currentChargeTime / MaxChargeTime;
+            currentBarrelSpin = (currentBarrelSpin + MaxCircle * chargeRatio * deltaTime * 3f) % MaxCircle;
+
+            switch (currentChargingState)
+            {
+                case ChargingState.WindingUp:
+                    Vector2 particlePos = GetRelativeFiringPosition();
+                    float sizeMultiplier = Math.Clamp(chargeRatio, 0.1f, 1f);
+                    foreach (ParticleEmitter emitter in particleEmitterCharges)
+                    {
+                        // color is currently not connected to ammo type, should be updated when ammo is changed
+                        emitter.Emit(deltaTime, particlePos, hullGuess: null, angle: -rotation, particleRotation: rotation, sizeMultiplier: sizeMultiplier, colorMultiplier: emitter.Prefab.Properties.ColorMultiplier);
+                    }
+
+                    if (chargeSoundChannel == null || !chargeSoundChannel.IsPlaying)
+                    {
+                        if (chargeSound != null)
+                        {
+                            chargeSoundChannel = SoundPlayer.PlaySound(chargeSound.Sound, item.WorldPosition, chargeSound.Volume, chargeSound.Range, ignoreMuffling: chargeSound.IgnoreMuffling);
+                            if (chargeSoundChannel != null) chargeSoundChannel.Looping = true;
+                        }
+                    }
+                    else if (chargeSoundChannel != null)
+                    {
+                        chargeSoundChannel.FrequencyMultiplier = MathHelper.Lerp(0.5f, 1.5f, chargeRatio);
+                    }
+                    break;
+                default:
+                    if (chargeSoundChannel != null)
+                    {
+                        if (chargeSoundChannel.IsPlaying)
+                        {
+                            chargeSoundChannel.FadeOutAndDispose();
+                            chargeSoundChannel.Looping = false;
+                        }
+                        else
+                        {
+                            chargeSoundChannel = null;
+                        }
+                    }
+                    break;
+            }
+
             if (moveSoundChannel != null && moveSoundChannel.IsPlaying)
             {
                 moveSoundChannel.Gain = MathHelper.Clamp(Math.Abs(angularVelocity), 0.5f, 1.0f);
             }
 
-            if (flashLowPower || flashNoAmmo)
+            if (flashLowPower || flashNoAmmo || flashLoaderBroken)
             {
                 flashTimer += deltaTime;
                 if (flashTimer >= flashLength)
@@ -228,6 +303,22 @@ namespace Barotrauma.Items.Components
                     flashTimer = 0;
                     flashLowPower = false;
                     flashNoAmmo = false;
+                    flashLoaderBroken = false;
+                }
+            }
+        }
+
+        public override void UpdateEditing(float deltaTime)
+        {
+            if (Screen.Selected == GameMain.SubEditorScreen && item.IsSelected)
+            {
+                if (widgets.ContainsKey("maxrotation"))
+                {
+                    widgets["maxrotation"].Update(deltaTime);
+                }
+                if (widgets.ContainsKey("minrotation"))
+                {
+                    widgets["minrotation"].Update(deltaTime);
                 }
             }
         }
@@ -288,6 +379,42 @@ namespace Barotrauma.Items.Components
                 item.SpriteColor,
                 rotation + MathHelper.PiOver2, item.Scale,
                 SpriteEffects.None, item.SpriteDepth + (barrelSprite.Depth - item.Sprite.Depth));
+
+            float chargeRatio = currentChargeTime / MaxChargeTime;
+
+            foreach ((Sprite chargeSprite, Vector2 position) in chargeSprites)
+            {
+                chargeSprite?.Draw(spriteBatch,
+                    drawPos - MathUtils.RotatePoint(new Vector2(position.X * chargeRatio, position.Y * chargeRatio) * item.Scale, rotation + MathHelper.PiOver2),
+                    item.SpriteColor,
+                    rotation + MathHelper.PiOver2, item.Scale,
+                    SpriteEffects.None, item.SpriteDepth + (chargeSprite.Depth - item.Sprite.Depth));
+            }
+
+            int spinningBarrelCount = spinningBarrelSprites.Count;
+
+            for (int i = 0; i < spinningBarrelCount; i++)
+            {
+                // this block is messy since I was debugging it with a bunch of values, should be cleaned up / optimized if prototype is accepted
+                Sprite spinningBarrel = spinningBarrelSprites[i];
+                float barrelCirclePosition = (MaxCircle * i / spinningBarrelCount + currentBarrelSpin) % MaxCircle;
+
+                float newDepth = item.SpriteDepth + (spinningBarrel.Depth - item.Sprite.Depth) + (barrelCirclePosition > HalfCircle ? 0.0f : 0.001f);
+
+                float barrelColorPosition = (barrelCirclePosition + QuarterCircle) % MaxCircle;
+                float colorOffset = Math.Abs(barrelColorPosition - HalfCircle) / HalfCircle;
+                Color newColorModifier = Color.Lerp(Color.Black, Color.Gray, colorOffset);
+
+                float barrelHalfCirclePosition = Math.Abs(barrelCirclePosition - HalfCircle);
+                float barrelPositionModifier = MathUtils.SmoothStep(barrelHalfCirclePosition / HalfCircle);
+                float newPositionOffset = barrelPositionModifier * SpinningBarrelDistance;
+
+                spinningBarrel.Draw(spriteBatch,
+                    drawPos - MathUtils.RotatePoint(new Vector2(newPositionOffset, 0f) * item.Scale, rotation + MathHelper.PiOver2),
+                    Color.Lerp(item.SpriteColor, newColorModifier, 0.8f),
+                    rotation + MathHelper.PiOver2, item.Scale,
+                    SpriteEffects.None, newDepth);
+            }
 
             if (!editing || GUI.DisableHUD || !item.IsSelected) { return; }
 
@@ -361,7 +488,6 @@ namespace Barotrauma.Items.Components
                 {
                     widget.tooltip = "Min: " + (int)MathHelper.ToDegrees(minRotation);
                     widget.DrawPos = GetDrawPos() + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * coneRadius / Screen.Selected.Cam.Zoom * GUI.Scale;
-                    widget.Update(deltaTime);
                 };
             });
 
@@ -412,18 +538,18 @@ namespace Barotrauma.Items.Components
             minRotationWidget.Draw(spriteBatch, (float)Timing.Step);
             maxRotationWidget.Draw(spriteBatch, (float)Timing.Step);
 
-            Vector2 GetDrawPos()
-            {
-                Vector2 drawPos = new Vector2(item.Rect.X + transformedBarrelPos.X, item.Rect.Y - transformedBarrelPos.Y);
-                if (item.Submarine != null) { drawPos += item.Submarine.DrawPosition; }
-                drawPos.Y = -drawPos.Y;
-                return drawPos;
-            }
-
             void UpdateBarrel()
             {
                 rotation = (minRotation + maxRotation) / 2;
             }
+        }
+
+        public Vector2 GetDrawPos()
+        {
+            Vector2 drawPos = new Vector2(item.Rect.X + transformedBarrelPos.X, item.Rect.Y - transformedBarrelPos.Y);
+            if (item.Submarine != null) { drawPos += item.Submarine.DrawPosition; }
+            drawPos.Y = -drawPos.Y;
+            return drawPos;
         }
 
         private Widget GetWidget(string id, SpriteBatch spriteBatch, int size = 5, float thickness = 1f, Action<Widget> initMethod = null)
@@ -552,13 +678,19 @@ namespace Barotrauma.Items.Components
                         new VisualSlot(new Rectangle(invSlotPos + new Point((i % slotsPerRow) * (slotSize.X + spacing.X), (int)Math.Floor(i / (float)slotsPerRow) * (slotSize.Y + spacing.Y)), slotSize)),
                         availableAmmo[i], -1, true);
                 }
+                Rectangle rect = new Rectangle(invSlotPos.X, invSlotPos.Y, totalWidth, slotSize.Y);
+                float inflate = MathHelper.Lerp(3, 8, (float)Math.Abs(Math.Sin(flashTimer * 5)));
+                rect.Inflate(inflate, inflate);
+                Color color = GUI.Style.Red * Math.Max(0.5f, (float)Math.Sin(flashTimer * 12));
                 if (flashNoAmmo)
                 {
-                    Rectangle rect = new Rectangle(invSlotPos.X, invSlotPos.Y, totalWidth, slotSize.Y);
-                    float inflate = MathHelper.Lerp(3, 8, (float)Math.Abs(1 * Math.Sin(flashTimer * 5)));
-                    rect.Inflate(inflate, inflate);
-                    Color color = GUI.Style.Red * MathHelper.Max(0.5f, (float)Math.Sin(flashTimer * 12));
                     GUI.DrawRectangle(spriteBatch, rect, color, thickness: 3);
+                }
+                else if (flashLoaderBroken)
+                {
+                    GUI.DrawRectangle(spriteBatch, rect, color, thickness: 3);
+                    GUI.BrokenIcon.Draw(spriteBatch, rect.Center.ToVector2(), color, scale: rect.Height / GUI.BrokenIcon.size.Y);
+                    GUIComponent.DrawToolTip(spriteBatch, TextManager.Get("turretloaderbroken"), new Rectangle(invSlotPos.X + totalWidth + GUI.IntScale(10), invSlotPos.Y + slotSize.Y / 2 - GUI.IntScale(9), 0, 0));
                 }
             }
 

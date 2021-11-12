@@ -167,6 +167,9 @@ namespace Barotrauma
             private set { size = value; }
         }
 
+        [Serialize("", true)]
+        public string DamageSound { get; private set; }
+
         public Vector2 ScaledSize => size * Scale;
 
         protected Vector2 textureScale = Vector2.One;
@@ -250,17 +253,21 @@ namespace Barotrauma
             var parentType = element.Parent?.GetAttributeString("prefabtype", "") ?? string.Empty;
             
             string nameIdentifier = element.GetAttributeString("nameidentifier", "");
+
+            //only used if the item doesn't have a name/description defined in the currently selected language
+            string fallbackNameIdentifier = element.GetAttributeString("fallbacknameidentifier", "");
+
             string descriptionIdentifier = element.GetAttributeString("descriptionidentifier", "");
 
             if (string.IsNullOrEmpty(sp.originalName))
             {
                 if (string.IsNullOrEmpty(nameIdentifier))
                 {
-                    sp.name = TextManager.Get("EntityName." + sp.identifier, true) ?? string.Empty;
+                    sp.name = TextManager.Get("EntityName." + sp.identifier, true, "EntityName." + fallbackNameIdentifier) ?? string.Empty;
                 }
                 else
                 {
-                    sp.name = TextManager.Get("EntityName." + nameIdentifier, true) ?? string.Empty;
+                    sp.name = TextManager.Get("EntityName." + nameIdentifier, true, "EntityName." + fallbackNameIdentifier) ?? string.Empty;
                 }
             }
             
@@ -287,7 +294,8 @@ namespace Barotrauma
                 {
                     case "sprite":
                         sp.sprite = new Sprite(subElement, lazyLoad: true);
-                        if (subElement.Attribute("sourcerect") == null)
+                        if (subElement.Attribute("sourcerect") == null &&
+                            subElement.Attribute("sheetindex") == null)
                         {
                             DebugConsole.ThrowError("Warning - sprite sourcerect not configured for structure \"" + sp.name + "\"!");
                         }

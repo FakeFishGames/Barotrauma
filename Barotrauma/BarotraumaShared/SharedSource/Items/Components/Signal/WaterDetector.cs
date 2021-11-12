@@ -12,6 +12,17 @@ namespace Barotrauma.Items.Components
         private bool isInWater;
         private float stateSwitchDelay;
 
+        private int maxOutputLength;
+        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
+        public int MaxOutputLength
+        {
+            get { return maxOutputLength; }
+            set
+            {
+                maxOutputLength = Math.Max(value, 0);
+            }
+        }
+
         private string output;
         [InGameEditable, Serialize("1", true, description: "The signal the item sends out when it's underwater.", alwaysUseInstanceValues: true)]
         public string Output
@@ -44,17 +55,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private int maxOutputLength;
-        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
-        public int MaxOutputLength
-        {
-            get { return maxOutputLength; }
-            set
-            {
-                maxOutputLength = Math.Max(value, 0);
-            }
-        }
-
         public WaterDetector(Item item, XElement element)
             : base(item, element)
         {
@@ -77,11 +77,10 @@ namespace Barotrauma.Items.Components
                     //item in water -> we definitely want to send the True output
                     isInWater = true;
                 }
-                else if (item.CurrentHull != null)
+                else if (item.CurrentHull != null && item.CurrentHull.WaterPercentage > 0.0f)
                 {
-                    //item in not water -> check if there's water anywhere within the rect of the item
-                    if (item.CurrentHull.Surface > item.CurrentHull.Rect.Y - item.CurrentHull.Rect.Height + 1 &&
-                        item.CurrentHull.Surface > item.Rect.Y - item.Rect.Height)
+                    //(center of the) item in not water -> check if the water surface is below the bottom of the item's rect
+                    if (item.CurrentHull.Surface > item.Rect.Y - item.Rect.Height)
                     {
                         isInWater = true;
                     }
@@ -101,9 +100,11 @@ namespace Barotrauma.Items.Components
 
             if (item.CurrentHull != null)
             {
-                int waterPercentage = MathHelper.Clamp((int)Math.Round(item.CurrentHull.WaterPercentage), 0, 100);
+                int waterPercentage = MathHelper.Clamp((int)Math.Ceiling(item.CurrentHull.WaterPercentage), 0, 100);
                 item.SendSignal(waterPercentage.ToString(), "water_%");
             }
+            string highPressureOut = (item.CurrentHull == null || item.CurrentHull.LethalPressure > 5.0f) ? "1" : "0";
+            item.SendSignal(highPressureOut, "high_pressure");
         }
     }
 }

@@ -15,6 +15,17 @@ namespace Barotrauma.Items.Components
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
 
+        private int maxOutputLength;
+        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
+        public int MaxOutputLength
+        {
+            get { return maxOutputLength; }
+            set
+            {
+                maxOutputLength = Math.Max(value, 0);
+            }
+        }
+
         [InGameEditable, Serialize("1", true, description: "The signal sent when the condition is met.", alwaysUseInstanceValues: true)]
         public string Output
         {
@@ -42,17 +53,6 @@ namespace Barotrauma.Items.Components
                 {
                     falseOutput = falseOutput.Substring(0, MaxOutputLength);
                 }
-            }
-        }
-
-        private int maxOutputLength;
-        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
-        public int MaxOutputLength
-        {
-            get { return maxOutputLength; }
-            set
-            {
-                maxOutputLength = Math.Max(value, 0);
             }
         }
 

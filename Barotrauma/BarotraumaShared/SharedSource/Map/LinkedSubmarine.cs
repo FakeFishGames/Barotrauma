@@ -252,6 +252,10 @@ namespace Barotrauma
             Vector2 worldPos = saveElement.GetAttributeVector2("worldpos", Vector2.Zero);
             if (worldPos != Vector2.Zero)
             {
+                if (GameMain.GameSession != null && GameMain.GameSession.MirrorLevel)
+                {                    
+                    worldPos.X = GameMain.GameSession.LevelData.Size.X - worldPos.X;
+                }
                 sub.SetPosition(worldPos);
             }
             else
@@ -350,7 +354,7 @@ namespace Barotrauma
                 }
             }
 
-            sub.SetPosition(sub.WorldPosition - Submarine.WorldPosition);
+            sub.SetPosition(sub.WorldPosition - Submarine.WorldPosition, forceUndockFromStaticSubmarines: false);
             sub.Submarine = Submarine;
         }
 
@@ -417,7 +421,12 @@ namespace Barotrauma
                 if (leaveBehind)
                 {
                     saveElement.SetAttributeValue("location", Level.Loaded.Seed);
-                    saveElement.SetAttributeValue("worldpos", XMLExtensions.Vector2ToString(sub.SubBody.Position));
+                    Vector2 position = sub.SubBody.Position;
+                    if (Level.Loaded.Mirrored)
+                    {
+                        position.X = Level.Loaded.Size.X - position.X;
+                    }
+                    saveElement.SetAttributeValue("worldpos", XMLExtensions.Vector2ToString(position));
                 }
                 else
                 {

@@ -1,12 +1,21 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 
 namespace Barotrauma.Networking
 {
     partial class RespawnManager
     {
         private DateTime lastShuttleLeavingWarningTime;
+
+        public int PendingRespawnCount
+
+        {
+            get; private set;
+        }
+
+        public int RequiredRespawnCount
+        {
+            get; private set;
+        }
 
         partial void UpdateTransportingProjSpecific(float deltaTime)
         {
@@ -41,6 +50,8 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case State.Waiting:
+                    PendingRespawnCount = msg.ReadUInt16();
+                    RequiredRespawnCount = msg.ReadUInt16();
                     RespawnCountdownStarted = msg.ReadBoolean();
                     ResetShuttle();
                     float newRespawnTime = msg.ReadSingle();

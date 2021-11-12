@@ -67,7 +67,7 @@ namespace Barotrauma.Items.Components
 
         private bool isBroken;
 
-        public bool CanBeTraversed => (IsOpen || IsBroken) && !IsJammed && !IsStuck;
+        public bool CanBeTraversed => (IsOpen || IsBroken) && !IsJammed && !IsStuck && !Impassable;
         
         public bool IsBroken
         {
@@ -259,6 +259,10 @@ namespace Barotrauma.Items.Components
             Body.SetTransformIgnoreContacts(
                 ConvertUnits.ToSimUnits(new Vector2(doorRect.Center.X, doorRect.Y - doorRect.Height / 2)),
                 0.0f);
+            if (isBroken)
+            {
+                DisableBody();
+            }
         }
 
         public override void Move(Vector2 amount)
@@ -659,7 +663,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                return Item.GetConnectedComponents<Controller>(true).Any(b => b.HasAccess(character));
+                return base.HasAccess(character) && Item.GetConnectedComponents<Controller>(true).Any(b => b.HasAccess(character));
             }
         }
 

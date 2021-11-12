@@ -317,7 +317,7 @@ namespace Barotrauma.Networking
                     }
                     if (!successSend)
                     {
-                        DebugConsole.ThrowError("Failed to send message to remote peer! (" + p2pData.Length.ToString() + " bytes)");
+                        DebugConsole.AddWarning("Failed to send message to remote peer! (" + p2pData.Length.ToString() + " bytes)");
                     }
                 }
             }

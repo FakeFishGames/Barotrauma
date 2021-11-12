@@ -17,47 +17,62 @@ namespace Barotrauma
         private readonly Dictionary<StoreTab, GUIListBox> tabLists = new Dictionary<StoreTab, GUIListBox>();
         private readonly Dictionary<StoreTab, SortingMethod> tabSortingMethods = new Dictionary<StoreTab, SortingMethod>();
         private readonly List<PurchasedItem> itemsToSell = new List<PurchasedItem>();
+        private readonly List<PurchasedItem> itemsToSellFromSub = new List<PurchasedItem>();
 
         private StoreTab activeTab = StoreTab.Buy;
         private MapEntityCategory? selectedItemCategory;
         private bool suppressBuySell;
-        private int buyTotal, sellTotal;
+        private int buyTotal, sellTotal, sellFromSubTotal;
 
         private GUITextBlock merchantBalanceBlock;
         private GUITextBlock currentSellValueBlock, newSellValueBlock;
         private GUIImage sellValueChangeArrow;
         private GUIDropDown sortingDropDown;
         private GUITextBox searchBox;
-        private GUIListBox storeBuyList, storeSellList;
+        private GUIListBox storeBuyList, storeSellList, storeSellFromSubList;
         /// <summary>
         /// Can be null when there are no deals at the current location
         /// </summary>
-        private GUILayoutGroup storeDailySpecialsGroup, storeRequestedGoodGroup;
+        private GUILayoutGroup storeDailySpecialsGroup, storeRequestedGoodGroup, storeRequestedSubGoodGroup;
         private Color storeSpecialColor;
 
-        private GUIListBox shoppingCrateBuyList, shoppingCrateSellList;
-        private GUITextBlock shoppingCrateTotal;
+        private GUIListBox shoppingCrateBuyList, shoppingCrateSellList, shoppingCrateSellFromSubList;
+        private GUITextBlock relevantBalanceName, shoppingCrateTotal;
         private GUIButton clearAllButton, confirmButton;
 
-        private bool needsRefresh, needsBuyingRefresh, needsSellingRefresh, needsItemsToSellRefresh;
+        private bool needsRefresh, needsBuyingRefresh, needsSellingRefresh, needsItemsToSellRefresh, needsSellingFromSubRefresh, needsItemsToSellFromSubRefresh;
 
         private Point resolutionWhenCreated;
         private bool hadPermissions;
 
-        private Dictionary<ItemPrefab, int> OwnedItems { get; } = new Dictionary<ItemPrefab, int>(); 
+        private Dictionary<ItemPrefab, int> OwnedItems { get; } = new Dictionary<ItemPrefab, int>();
 
         private CargoManager CargoManager => campaignUI.Campaign.CargoManager;
         private Location CurrentLocation => campaignUI.Campaign.Map?.CurrentLocation;
         private int PlayerMoney => campaignUI.Campaign.Money;
         private bool HasPermissions => campaignUI.Campaign.AllowedToManageCampaign();
-        private bool IsBuying => activeTab != StoreTab.Sell;
-        private bool IsSelling => activeTab == StoreTab.Sell;
-        private GUIListBox ActiveShoppingCrateList => IsBuying ? shoppingCrateBuyList : shoppingCrateSellList;
+        private bool IsBuying => activeTab switch
+        {
+            StoreTab.Buy => true,
+            StoreTab.Sell => false,
+            StoreTab.SellFromSub => false,
+            _ => throw new NotImplementedException()
+        };
+        private GUIListBox ActiveShoppingCrateList => activeTab switch
+        {
+            StoreTab.Buy => shoppingCrateBuyList,
+            StoreTab.Sell => shoppingCrateSellList,
+            StoreTab.SellFromSub => shoppingCrateSellFromSubList,
+            _ => throw new NotImplementedException()
+        };
 
-        private enum StoreTab
+        private bool IsTabUnavailable(StoreTab tab) => !tabLists.ContainsKey(tab);
+
+        public enum StoreTab
         {
             Buy,
-            Sell
+            Sell,
+            SellFromSub
         }
 
         private enum SortingMethod
@@ -73,11 +88,8 @@ namespace Barotrauma
         {
             this.campaignUI = campaignUI;
             this.parentComponent = parentComponent;
-
             hadPermissions = HasPermissions;
-
             CreateUI();
-
             campaignUI.Campaign.Map.OnLocationChanged += UpdateLocation;
             if (CurrentLocation?.Reputation != null)
             {
@@ -89,8 +101,10 @@ namespace Barotrauma
             campaignUI.Campaign.CargoManager.OnSoldItemsChanged += () =>
             {
                 needsItemsToSellRefresh = true;
+                needsItemsToSellFromSubRefresh = true;
                 needsRefresh = true;
             };
+            campaignUI.Campaign.CargoManager.OnItemsInSellFromSubCrateChanged += () => { needsSellingFromSubRefresh = true; };
         }
 
         public void Refresh(bool updateOwned = true)
@@ -99,6 +113,7 @@ namespace Barotrauma
             if (updateOwned) { UpdateOwnedItems(); }
             RefreshBuying(updateOwned: false);
             RefreshSelling(updateOwned: false);
+            RefreshSellingFromSub(updateOwned: false);
             needsRefresh = false;
         }
 
@@ -122,6 +137,20 @@ namespace Barotrauma
             storeSellList.Enabled = hasPermissions;
             shoppingCrateSellList.Enabled = hasPermissions;
             needsSellingRefresh = false;
+        }
+
+        private void RefreshSellingFromSub(bool updateOwned = true, bool updateItemsToSellFromSub = true)
+        {
+            if (IsTabUnavailable(StoreTab.SellFromSub)) { return; }
+            if (updateOwned) { UpdateOwnedItems(); }
+            if (updateItemsToSellFromSub) RefreshItemsToSellFromSub();
+            RefreshShoppingCrateSellFromSubList();
+            RefreshStoreSellFromSubList();
+            // TODO: Separate permissions from regular campaign permissions
+            var hasPermissions = HasPermissions;
+            storeSellFromSubList.Enabled = hasPermissions;
+            shoppingCrateSellFromSubList.Enabled = hasPermissions;
+            needsSellingFromSubRefresh = false;
         }
 
         private void CreateUI()
@@ -192,16 +221,8 @@ namespace Barotrauma
                 TextScale = 1.1f,
                 TextGetter = () =>
                 {
-                    if (CurrentLocation != null)
-                    {
-                        merchantBalanceBlock.TextColor = CurrentLocation.BalanceColor;
-                        return GetCurrencyFormatted(CurrentLocation.StoreCurrentBalance);
-                    }
-                    else
-                    {
-                        merchantBalanceBlock.TextColor = Color.Red;
-                        return GetCurrencyFormatted(0);
-                    }
+                    merchantBalanceBlock.TextColor = CurrentLocation?.BalanceColor ?? Color.Red;
+                    return GetMerchantBalanceText();
                 } 
             };
 
@@ -236,9 +257,13 @@ namespace Barotrauma
                 {
                     if (CurrentLocation != null)
                     {
-                        int balanceAfterTransaction = IsBuying ?
-                            CurrentLocation.StoreCurrentBalance + buyTotal :
-                            CurrentLocation.StoreCurrentBalance - sellTotal;
+                        int balanceAfterTransaction = activeTab switch
+                        {
+                            StoreTab.Buy => CurrentLocation.StoreCurrentBalance + buyTotal,
+                            StoreTab.Sell => CurrentLocation.StoreCurrentBalance - sellTotal,
+                            StoreTab.SellFromSub => CurrentLocation.StoreCurrentBalance - sellFromSubTotal,
+                            _ => throw new NotImplementedException(),
+                        };
                         if (balanceAfterTransaction != CurrentLocation.StoreCurrentBalance)
                         {
                             var newStatus = Location.GetStoreBalanceStatus(balanceAfterTransaction);
@@ -300,8 +325,14 @@ namespace Barotrauma
             tabSortingMethods.Clear();
             foreach (StoreTab tab in tabs)
             {
+                if (tab == StoreTab.SellFromSub && GameMain.IsMultiplayer) { continue; }
+                string text = tab switch
+                {
+                    StoreTab.SellFromSub => TextManager.Get("submarine"),
+                    _ => TextManager.Get("campaignstoretab." + tab)
+                };
                 var tabButton = new GUIButton(new RectTransform(new Vector2(1.0f / (tabs.Length + 1), 1.0f), modeButtonContainer.RectTransform),
-                    text: TextManager.Get("campaignstoretab." + tab), style: "GUITabButton")
+                    text: text, style: "GUITabButton")
                 {
                     UserData = tab,
                     OnClicked = (button, userData) =>
@@ -335,28 +366,37 @@ namespace Barotrauma
             //don't show categories with no buyable items
             itemCategories.RemoveAll(c => !ItemPrefab.Prefabs.Any(ep => ep.Category.HasFlag(c) && ep.CanBeBought));
             itemCategoryButtons.Clear();
+            var categoryButton = new GUIButton(new RectTransform(new Point(categoryButtonContainer.Rect.Width, categoryButtonContainer.Rect.Width), categoryButtonContainer.RectTransform), style: "CategoryButton.All")
+            {
+                ToolTip = TextManager.Get("MapEntityCategory.All"),
+                OnClicked = OnClickedCategoryButton
+            };
+            itemCategoryButtons.Add(categoryButton);
             foreach (MapEntityCategory category in itemCategories)
             {
-                var categoryButton = new GUIButton(new RectTransform(new Point(categoryButtonContainer.Rect.Width, categoryButtonContainer.Rect.Width), categoryButtonContainer.RectTransform),
+                categoryButton = new GUIButton(new RectTransform(new Point(categoryButtonContainer.Rect.Width, categoryButtonContainer.Rect.Width), categoryButtonContainer.RectTransform),
                     style: "CategoryButton." + category)
                 {
                     ToolTip = TextManager.Get("MapEntityCategory." + category),
                     UserData = category,
-                    OnClicked = (btn, userdata) =>
-                    {
-                        MapEntityCategory? newCategory = !btn.Selected ? (MapEntityCategory?)userdata : null;
-                        if (newCategory.HasValue) { searchBox.Text = ""; }
-                        if (newCategory != selectedItemCategory) { tabLists[activeTab].ScrollBar.BarScroll = 0f; }
-                        FilterStoreItems(newCategory, searchBox.Text);
-                        return true;
-                    }
+                    OnClicked = OnClickedCategoryButton
                 };
                 itemCategoryButtons.Add(categoryButton);
-                categoryButton.RectTransform.SizeChanged += () =>
+            }
+            bool OnClickedCategoryButton(GUIButton button, object userData)
+            {
+                MapEntityCategory? newCategory = !button.Selected ? (MapEntityCategory?)userData : null;
+                if (newCategory.HasValue) { searchBox.Text = ""; }
+                if (newCategory != selectedItemCategory) { tabLists[activeTab].ScrollBar.BarScroll = 0f; }
+                FilterStoreItems(newCategory, searchBox.Text);
+                return true;
+            }
+            foreach (var btn in itemCategoryButtons)
+            {
+                btn.RectTransform.SizeChanged += () =>
                 {
-                    var sprite = categoryButton.Frame.sprites[GUIComponent.ComponentState.None].First();
-                    categoryButton.RectTransform.NonScaledSize =
-                        new Point(categoryButton.Rect.Width, (int)(categoryButton.Rect.Width * ((float)sprite.Sprite.SourceRect.Height / sprite.Sprite.SourceRect.Width)));
+                    var sprite = btn.Frame.sprites[GUIComponent.ComponentState.None].First();
+                    btn.RectTransform.NonScaledSize = new Point(btn.Rect.Width, (int)(btn.Rect.Width * ((float)sprite.Sprite.SourceRect.Height / sprite.Sprite.SourceRect.Width)));
                 };
             }
 
@@ -416,6 +456,17 @@ namespace Barotrauma
             storeRequestedGoodGroup = CreateDealsGroup(storeSellList);
             tabLists.Add(StoreTab.Sell, storeSellList);
 
+            if (GameMain.IsSingleplayer)
+            {
+                storeSellFromSubList = new GUIListBox(new RectTransform(Vector2.One, storeItemListContainer.RectTransform))
+                {
+                    AutoHideScrollBar = false,
+                    Visible = false
+                };
+                storeRequestedSubGoodGroup = CreateDealsGroup(storeSellFromSubList);
+                tabLists.Add(StoreTab.SellFromSub, storeSellFromSubList);
+            }
+
             // Shopping Crate ------------------------------------------------------------------------------------------------------------------------------------------
 
             var shoppingCrateContent = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 1.0f), campaignUI.GetTabContainer(CampaignMode.InteractionType.Store).RectTransform, anchor: Anchor.TopRight)
@@ -452,11 +503,11 @@ namespace Barotrauma
                 ForceUpperCase = true
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), playerBalanceContainer.RectTransform),
-                "", font: GUI.SubHeadingFont, textAlignment: Alignment.TopRight)
+                "", textColor: Color.White, font: GUI.SubHeadingFont, textAlignment: Alignment.TopRight)
             {
                 AutoScaleVertical = true,
                 TextScale = 1.1f,
-                TextGetter = () => GetCurrencyFormatted(PlayerMoney)
+                TextGetter = GetPlayerBalanceText
             };
 
             // Divider ------------------------------------------------
@@ -472,9 +523,28 @@ namespace Barotrauma
                 RelativeSpacing = 0.015f,
                 Stretch = true
             };
-            var shoppingCrateListContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.85f), shoppingCrateInventoryContainer.RectTransform), style: null);
+            var shoppingCrateListContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.8f), shoppingCrateInventoryContainer.RectTransform), style: null);
             shoppingCrateBuyList = new GUIListBox(new RectTransform(Vector2.One, shoppingCrateListContainer.RectTransform)) { Visible = false };
             shoppingCrateSellList = new GUIListBox(new RectTransform(Vector2.One, shoppingCrateListContainer.RectTransform)) { Visible = false };
+            if (GameMain.IsSingleplayer)
+            {
+                shoppingCrateSellFromSubList = new GUIListBox(new RectTransform(Vector2.One, shoppingCrateListContainer.RectTransform)) { Visible = false };
+            }
+
+            var relevantBalanceContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), shoppingCrateInventoryContainer.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+            relevantBalanceName = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), relevantBalanceContainer.RectTransform), "", font: GUI.Font)
+            {
+                CanBeFocused = false
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), relevantBalanceContainer.RectTransform), "", textColor: Color.White, font: GUI.SubHeadingFont, textAlignment: Alignment.Right)
+            {
+                CanBeFocused = false,
+                TextScale = 1.1f,
+                TextGetter = () => IsBuying ? GetPlayerBalanceText() : GetMerchantBalanceText()
+            };
 
             var totalContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), shoppingCrateInventoryContainer.RectTransform), isHorizontal: true)
             {
@@ -504,7 +574,13 @@ namespace Barotrauma
                 OnClicked = (button, userData) =>
                 {
                     if (!HasPermissions) { return false; }
-                    var itemsToRemove = new List<PurchasedItem>(IsBuying ? CargoManager.ItemsInBuyCrate : CargoManager.ItemsInSellCrate);
+                    var itemsToRemove = activeTab switch
+                    {
+                        StoreTab.Buy => new List<PurchasedItem>(CargoManager.ItemsInBuyCrate),
+                        StoreTab.Sell => new List<PurchasedItem>(CargoManager.ItemsInSellCrate),
+                        StoreTab.SellFromSub => new List<PurchasedItem>(CargoManager.ItemsInSellFromSubCrate),
+                        _ => throw new NotImplementedException(),
+                    };
                     itemsToRemove.ForEach(i => ClearFromShoppingCrate(i));
                     return true;
                 }
@@ -515,10 +591,14 @@ namespace Barotrauma
             resolutionWhenCreated = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
-        private GUILayoutGroup CreateDealsGroup(GUIListBox parentList)
+        private string GetMerchantBalanceText() => GetCurrencyFormatted(CurrentLocation?.StoreCurrentBalance ?? 0);
+
+        private string GetPlayerBalanceText() => GetCurrencyFormatted(PlayerMoney);
+
+        private GUILayoutGroup CreateDealsGroup(GUIListBox parentList, int elementCount = 4)
         {
             var elementHeight = (int)(GUI.yScale * 80);
-            var frame = new GUIFrame(new RectTransform(new Point(parentList.Content.Rect.Width, 4 * elementHeight + 3), parent: parentList.Content.RectTransform), style: null);
+            var frame = new GUIFrame(new RectTransform(new Point(parentList.Content.Rect.Width, elementCount * elementHeight + 3), parent: parentList.Content.RectTransform), style: null);
             frame.UserData = "deals";
             var dealsGroup = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform, anchor: Anchor.Center), childAnchor: Anchor.TopCenter);
             var dealsHeader = new GUILayoutGroup(new RectTransform(new Point((int)(0.95f * parentList.Content.Rect.Width), elementHeight), parent: dealsGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
@@ -543,52 +623,83 @@ namespace Barotrauma
             {
                 prevLocation.Reputation.OnReputationValueChanged = null;
             }
-
-            foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
+            if (ItemPrefab.Prefabs.Any(p => p.CanBeBoughtAtLocation(CurrentLocation, out PriceInfo _)))
             {
-                if (itemPrefab.CanBeBoughtAtLocation(CurrentLocation, out PriceInfo _))
+                selectedItemCategory = null;
+                searchBox.Text = "";
+                ChangeStoreTab(StoreTab.Buy);
+                if (newLocation?.Reputation != null)
                 {
-                    ChangeStoreTab(StoreTab.Buy);
-                    if (newLocation?.Reputation != null)
-                    {
-                        newLocation.Reputation.OnReputationValueChanged += () => { needsRefresh = true; };
-                    }
-                    return;
+                    newLocation.Reputation.OnReputationValueChanged += () => { needsRefresh = true; };
                 }
             }
         }
 
         private void ChangeStoreTab(StoreTab tab)
         {
+            if (IsTabUnavailable(tab)) { return; }
             activeTab = tab;
             foreach (GUIButton tabButton in storeTabButtons)
             {
                 tabButton.Selected = (StoreTab)tabButton.UserData == activeTab;
             }
             sortingDropDown.SelectItem(tabSortingMethods[tab]);
+            relevantBalanceName.Text = IsBuying ? TextManager.Get("campaignstore.balance") : TextManager.Get("campaignstore.storebalance");
             SetShoppingCrateTotalText();
             SetClearAllButtonStatus();
             SetConfirmButtonBehavior();
             SetConfirmButtonStatus();
             FilterStoreItems();
-            if (tab == StoreTab.Buy)
+            switch (tab)
             {
-                storeSellList.Visible = false;
-                storeBuyList.Visible = true;
-                shoppingCrateSellList.Visible = false;
-                shoppingCrateBuyList.Visible = true;
-            }
-            else if (tab == StoreTab.Sell)
-            {
-                storeBuyList.Visible = false;
-                storeSellList.Visible = true;
-                shoppingCrateBuyList.Visible = false;
-                shoppingCrateSellList.Visible = true;
+                case StoreTab.Buy:
+                    storeSellList.Visible = false;
+                    if (storeSellFromSubList != null)
+                    {
+                        storeSellFromSubList.Visible = false;
+                    }
+                    storeBuyList.Visible = true;
+                    shoppingCrateSellList.Visible = false;
+                    if (shoppingCrateSellFromSubList != null)
+                    {
+                        shoppingCrateSellFromSubList.Visible = false;
+                    }
+                    shoppingCrateBuyList.Visible = true;
+                    break;
+                case StoreTab.Sell:
+                    storeBuyList.Visible = false;
+                    if (storeSellFromSubList != null)
+                    {
+                        storeSellFromSubList.Visible = false;
+                    }
+                    storeSellList.Visible = true;
+                    shoppingCrateBuyList.Visible = false;
+                    if (shoppingCrateSellFromSubList != null)
+                    {
+                        shoppingCrateSellFromSubList.Visible = false;
+                    }
+                    shoppingCrateSellList.Visible = true;
+                    break;
+                case StoreTab.SellFromSub:
+                    storeBuyList.Visible = false;
+                    storeSellList.Visible = false;
+                    if (storeSellFromSubList != null)
+                    {
+                        storeSellFromSubList.Visible = true;
+                    }
+                    shoppingCrateBuyList.Visible = false;
+                    shoppingCrateSellList.Visible = false;
+                    if (shoppingCrateSellFromSubList != null)
+                    {
+                        shoppingCrateSellFromSubList.Visible = true;
+                    }
+                    break;
             }
         }
 
         private void FilterStoreItems(MapEntityCategory? category, string filter)
         {
+            if (IsTabUnavailable(activeTab)) { return; }
             selectedItemCategory = category;
             var list = tabLists[activeTab];
             filter = filter?.ToLower();
@@ -603,7 +714,7 @@ namespace Barotrauma
             }
             foreach (GUIButton btn in itemCategoryButtons)
             {
-                btn.Selected = category.HasValue && (MapEntityCategory)btn.UserData == selectedItemCategory;
+                btn.Selected = (MapEntityCategory?)btn.UserData == selectedItemCategory;
             }
             list.UpdateScrollBarSize();
         }
@@ -615,6 +726,8 @@ namespace Barotrauma
             FilterStoreItems(category, searchBox.Text);
         }
 
+        int prevDailySpecialCount;
+
         private void RefreshStoreBuyList()
         {
             float prevBuyListScroll = storeBuyList.BarScroll;
@@ -623,11 +736,14 @@ namespace Barotrauma
             bool hasPermissions = HasPermissions;
             HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
 
-            if ((storeDailySpecialsGroup != null) != CurrentLocation.DailySpecials.Any())
+            int dailySpecialCount = CurrentLocation?.DailySpecials.Count() ?? 3;
+
+            if ((storeDailySpecialsGroup != null) != CurrentLocation.DailySpecials.Any() || dailySpecialCount != prevDailySpecialCount)
             {
-                if (storeDailySpecialsGroup == null)
+                if (storeDailySpecialsGroup == null || dailySpecialCount != prevDailySpecialCount)
                 {
-                    storeDailySpecialsGroup = CreateDealsGroup(storeBuyList);
+                    storeBuyList.RemoveChild(storeDailySpecialsGroup?.Parent);
+                    storeDailySpecialsGroup = CreateDealsGroup(storeBuyList, 1 + dailySpecialCount);
                     storeDailySpecialsGroup.Parent.SetAsFirstChild();
                 }
                 else
@@ -636,6 +752,7 @@ namespace Barotrauma
                     storeDailySpecialsGroup = null;
                 }
                 storeBuyList.RecalculateChildren();
+                prevDailySpecialCount = dailySpecialCount;
             }
 
             foreach (PurchasedItem item in CurrentLocation.StoreStock)
@@ -668,7 +785,7 @@ namespace Barotrauma
                     if (itemFrame == null)
                     {
                         var parentComponent = isDailySpecial ? storeDailySpecialsGroup : storeBuyList as GUIComponent;
-                        itemFrame = CreateItemFrame(new PurchasedItem(itemPrefab, quantity), priceInfo, parentComponent, forceDisable: !hasPermissions);
+                        itemFrame = CreateItemFrame(new PurchasedItem(itemPrefab, quantity), parentComponent, StoreTab.Buy, forceDisable: !hasPermissions);
                     }
                     else
                     {
@@ -688,7 +805,7 @@ namespace Barotrauma
                 removedItemFrames.AddRange(storeDailySpecialsGroup.Children.Where(c => c.UserData is PurchasedItem).Except(existingItemFrames).ToList());
             }
             removedItemFrames.ForEach(f => f.RectTransform.Parent = null);
-            if (IsBuying) { FilterStoreItems(); }
+            if (activeTab == StoreTab.Buy) { FilterStoreItems(); }
             SortItems(StoreTab.Buy);
 
             storeBuyList.BarScroll = prevBuyListScroll;
@@ -743,7 +860,7 @@ namespace Barotrauma
                 if (itemFrame == null)
                 {
                     var parentComponent = isRequestedGood ? storeRequestedGoodGroup : storeSellList as GUIComponent;
-                    itemFrame = CreateItemFrame(new PurchasedItem(itemPrefab, itemQuantity), priceInfo, parentComponent, forceDisable: !hasPermissions);
+                    itemFrame = CreateItemFrame(new PurchasedItem(itemPrefab, itemQuantity), parentComponent, StoreTab.Sell, forceDisable: !hasPermissions);
                 }
                 else
                 {
@@ -766,11 +883,89 @@ namespace Barotrauma
                 removedItemFrames.AddRange(storeRequestedGoodGroup.Children.Where(c => c.UserData is PurchasedItem).Except(existingItemFrames).ToList());
             }
             removedItemFrames.ForEach(f => f.RectTransform.Parent = null);
-            if (IsSelling) { FilterStoreItems(); }
+            if (activeTab == StoreTab.Sell) { FilterStoreItems(); }
             SortItems(StoreTab.Sell);
 
             storeSellList.BarScroll = prevSellListScroll;
             shoppingCrateSellList.BarScroll = prevShoppingCrateScroll;
+        }
+
+        private void RefreshStoreSellFromSubList()
+        {
+            float prevSellListScroll = storeSellFromSubList.BarScroll;
+            float prevShoppingCrateScroll = shoppingCrateSellFromSubList.BarScroll;
+            bool hasPermissions = HasPermissions;
+            HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
+
+            if ((storeRequestedSubGoodGroup != null) != CurrentLocation.RequestedGoods.Any())
+            {
+                if (storeRequestedSubGoodGroup == null)
+                {
+                    storeRequestedSubGoodGroup = CreateDealsGroup(storeSellList);
+                    storeRequestedSubGoodGroup.Parent.SetAsFirstChild();
+                }
+                else
+                {
+                    storeSellFromSubList.RemoveChild(storeRequestedSubGoodGroup.Parent);
+                    storeRequestedSubGoodGroup = null;
+                }
+                storeSellFromSubList.RecalculateChildren();
+            }
+
+            foreach (PurchasedItem item in itemsToSellFromSub)
+            {
+                CreateOrUpdateItemFrame(item.ItemPrefab, item.Quantity);
+            }
+
+            foreach (var requestedGood in CurrentLocation.RequestedGoods)
+            {
+                if (itemsToSellFromSub.Any(pi => pi.ItemPrefab == requestedGood)) { continue; }
+                CreateOrUpdateItemFrame(requestedGood, 0);
+            }
+
+            void CreateOrUpdateItemFrame(ItemPrefab itemPrefab, int itemQuantity)
+            {
+                PriceInfo priceInfo = itemPrefab.GetPriceInfo(CurrentLocation);
+                if (priceInfo == null) { return; }
+                var isRequestedGood = CurrentLocation.RequestedGoods.Contains(itemPrefab);
+                var itemFrame = isRequestedGood ?
+                    storeRequestedSubGoodGroup.FindChild(c => c.UserData is PurchasedItem pi && pi.ItemPrefab == itemPrefab) :
+                    storeSellFromSubList.Content.FindChild(c => c.UserData is PurchasedItem pi && pi.ItemPrefab == itemPrefab);
+                if (CargoManager.ItemsInSellFromSubCrate.Find(i => i.ItemPrefab == itemPrefab) is PurchasedItem itemInSellFromSubCrate)
+                {
+                    itemQuantity = Math.Max(itemQuantity - itemInSellFromSubCrate.Quantity, 0);
+                }
+                if (itemFrame == null)
+                {
+                    var parentComponent = isRequestedGood ? storeRequestedSubGoodGroup : storeSellFromSubList as GUIComponent;
+                    itemFrame = CreateItemFrame(new PurchasedItem(itemPrefab, itemQuantity), parentComponent, StoreTab.SellFromSub, forceDisable: !hasPermissions);
+                }
+                else
+                {
+                    (itemFrame.UserData as PurchasedItem).Quantity = itemQuantity;
+                    SetQuantityLabelText(StoreTab.SellFromSub, itemFrame);
+                    SetOwnedLabelText(itemFrame);
+                    SetPriceGetters(itemFrame, false);
+                }
+                SetItemFrameStatus(itemFrame, hasPermissions && itemQuantity > 0);
+                if (itemQuantity < 1 && !isRequestedGood)
+                {
+                    itemFrame.Visible = false;
+                }
+                existingItemFrames.Add(itemFrame);
+            }
+
+            var removedItemFrames = storeSellFromSubList.Content.Children.Where(c => c.UserData is PurchasedItem).Except(existingItemFrames).ToList();
+            if (storeRequestedSubGoodGroup != null)
+            {
+                removedItemFrames.AddRange(storeRequestedSubGoodGroup.Children.Where(c => c.UserData is PurchasedItem).Except(existingItemFrames).ToList());
+            }
+            removedItemFrames.ForEach(f => f.RectTransform.Parent = null);
+            if (activeTab == StoreTab.SellFromSub) { FilterStoreItems(); }
+            SortItems(StoreTab.SellFromSub);
+
+            storeSellFromSubList.BarScroll = prevSellListScroll;
+            shoppingCrateSellFromSubList.BarScroll = prevShoppingCrateScroll;
         }
 
         private void SetPriceGetters(GUIComponent itemFrame, bool buying)
@@ -834,7 +1029,38 @@ namespace Barotrauma
             needsItemsToSellRefresh = false;
         }
 
-        private void RefreshShoppingCrateList(List<PurchasedItem> items, GUIListBox listBox)
+        public void RefreshItemsToSellFromSub()
+        {
+            itemsToSellFromSub.Clear();
+            var subItems = CargoManager.GetSellableItemsFromSub();
+            foreach (Item subItem in subItems)
+            {
+                if (itemsToSellFromSub.FirstOrDefault(i => i.ItemPrefab == subItem.Prefab) is PurchasedItem item)
+                {
+                    item.Quantity += 1;
+                }
+                else if (subItem.Prefab.GetPriceInfo(CurrentLocation) != null)
+                {
+                    itemsToSellFromSub.Add(new PurchasedItem(subItem.Prefab, 1));
+                }
+            }
+
+            // Remove items from sell crate if they aren't on the sub anymore
+            var itemsInCrate = new List<PurchasedItem>(CargoManager.ItemsInSellFromSubCrate);
+            foreach (PurchasedItem crateItem in itemsInCrate)
+            {
+                var subItem = itemsToSellFromSub.Find(i => i.ItemPrefab == crateItem.ItemPrefab);
+                var subItemQuantity = subItem != null ? subItem.Quantity : 0;
+                if (crateItem.Quantity > subItemQuantity)
+                {
+                    CargoManager.ModifyItemQuantityInSellFromSubCrate(crateItem.ItemPrefab, subItemQuantity - crateItem.Quantity);
+                }
+            }
+            sellableItemsFromSubUpdateTimer = 0.0f;
+            needsItemsToSellFromSubRefresh = false;
+        }
+
+        private void RefreshShoppingCrateList(List<PurchasedItem> items, GUIListBox listBox, StoreTab tab)
         {
             bool hasPermissions = HasPermissions;
             HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
@@ -848,7 +1074,7 @@ namespace Barotrauma
                 GUINumberInput numInput = null;
                 if (itemFrame == null)
                 {
-                    itemFrame = CreateItemFrame(item, priceInfo, listBox, forceDisable: !hasPermissions);
+                    itemFrame = CreateItemFrame(item, listBox, tab, forceDisable: !hasPermissions);
                     numInput = itemFrame.FindChild(c => c is GUINumberInput, recursive: true) as GUINumberInput;
                 }
                 else
@@ -859,6 +1085,7 @@ namespace Barotrauma
                     {
                         numInput.UserData = item;
                         numInput.Enabled = hasPermissions;
+                        numInput.MaxValueInt = GetMaxAvailable(item.ItemPrefab, tab);
                     }
                     SetOwnedLabelText(itemFrame);
                     SetItemFrameStatus(itemFrame, hasPermissions);
@@ -873,7 +1100,7 @@ namespace Barotrauma
                 }
                 suppressBuySell = false;
 
-                var price = listBox == shoppingCrateBuyList ?
+                var price = tab == StoreTab.Buy ?
                     CurrentLocation.GetAdjustedItemBuyPrice(item.ItemPrefab, priceInfo: priceInfo) :
                     CurrentLocation.GetAdjustedItemSellPrice(item.ItemPrefab, priceInfo: priceInfo);
                 totalPrice += item.Quantity * price;
@@ -883,24 +1110,32 @@ namespace Barotrauma
             removedItemFrames.ForEach(f => listBox.Content.RemoveChild(f));
 
             SortItems(listBox, SortingMethod.CategoryAsc);
-            listBox.UpdateScrollBarSize();       
-            if (listBox == shoppingCrateBuyList)
+            listBox.UpdateScrollBarSize();
+            switch (tab)
             {
-                buyTotal = totalPrice;
-                if (IsBuying) { SetShoppingCrateTotalText(); }
+                case StoreTab.Buy:
+                    buyTotal = totalPrice;
+                    break;
+                case StoreTab.Sell:
+                    sellTotal = totalPrice;
+                    break;
+                case StoreTab.SellFromSub:
+                    sellFromSubTotal = totalPrice;
+                    break;
             }
-            else
+            if (activeTab == tab)
             {
-                sellTotal = totalPrice;
-                if(IsSelling) { SetShoppingCrateTotalText(); }
+                SetShoppingCrateTotalText();
             }
             SetClearAllButtonStatus();
             SetConfirmButtonStatus();
         }
 
-        private void RefreshShoppingCrateBuyList() => RefreshShoppingCrateList(CargoManager.ItemsInBuyCrate, shoppingCrateBuyList);
+        private void RefreshShoppingCrateBuyList() => RefreshShoppingCrateList(CargoManager.ItemsInBuyCrate, shoppingCrateBuyList, StoreTab.Buy);
 
-        private void RefreshShoppingCrateSellList() => RefreshShoppingCrateList(CargoManager.ItemsInSellCrate, shoppingCrateSellList);
+        private void RefreshShoppingCrateSellList() => RefreshShoppingCrateList(CargoManager.ItemsInSellCrate, shoppingCrateSellList, StoreTab.Sell);
+
+        private void RefreshShoppingCrateSellFromSubList() => RefreshShoppingCrateList(CargoManager.ItemsInSellFromSubCrate, shoppingCrateSellFromSubList, StoreTab.SellFromSub);
 
         private void SortItems(GUIListBox list, SortingMethod sortingMethod)
         {
@@ -919,7 +1154,9 @@ namespace Barotrauma
                 {
                     if (x.GUIComponent.UserData is PurchasedItem itemX && y.GUIComponent.UserData is PurchasedItem itemY)
                     {
-                        var sortResult = itemX.ItemPrefab.Name.CompareTo(itemY.ItemPrefab.Name);
+                        int sortResult = itemX.ItemPrefab.Name != itemY.ItemPrefab.Name ?
+                            itemX.ItemPrefab.Name.CompareTo(itemY.ItemPrefab.Name) :
+                            itemX.ItemPrefab.Identifier.CompareTo(itemY.ItemPrefab.Identifier);
                         if (sortingMethod == SortingMethod.AlphabeticalDesc) { sortResult *= -1; }
                         return sortResult;
                     }
@@ -932,7 +1169,7 @@ namespace Barotrauma
             else if (sortingMethod == SortingMethod.PriceAsc || sortingMethod == SortingMethod.PriceDesc)
             {
                 SortItems(list, SortingMethod.AlphabeticalAsc);
-                if (list == storeSellList || list == shoppingCrateSellList)
+                if (list != storeBuyList && list != shoppingCrateBuyList)
                 {
                     list.Content.RectTransform.SortChildren(CompareBySellPrice);
                     if (GetSpecialsGroup() is GUILayoutGroup specialsGroup)
@@ -1014,6 +1251,10 @@ namespace Barotrauma
                 {
                     return storeRequestedGoodGroup;
                 }
+                else if (list == storeSellFromSubList)
+                {
+                    return storeRequestedSubGoodGroup;
+                }
                 else
                 {
                     return null;
@@ -1045,15 +1286,20 @@ namespace Barotrauma
 
         private void SortItems(StoreTab tab, SortingMethod sortingMethod)
         {
+            if (IsTabUnavailable(tab)) { return; }
             tabSortingMethods[tab] = sortingMethod;
             SortItems(tabLists[tab], sortingMethod);
         }
 
-        private void SortItems(StoreTab tab) => SortItems(tab, tabSortingMethods[tab]);
+        private void SortItems(StoreTab tab)
+        {
+            if (IsTabUnavailable(tab)) { return; }
+            SortItems(tab, tabSortingMethods[tab]);
+        }
 
         private void SortActiveTabItems(SortingMethod sortingMethod) => SortItems(activeTab, sortingMethod);
 
-        private GUIComponent CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIComponent parentComponent, bool forceDisable = false)
+        private GUIComponent CreateItemFrame(PurchasedItem pi, GUIComponent parentComponent, StoreTab containingTab, bool forceDisable = false)
         {
             var tooltip = pi.ItemPrefab.Name;
             if (!string.IsNullOrWhiteSpace(pi.ItemPrefab.Description))
@@ -1114,8 +1360,8 @@ namespace Barotrauma
                 CanBeFocused = false,
                 Stretch = true
             };
-            var isSellingRelatedList = parentComponent == storeSellList || parentComponent == storeRequestedGoodGroup || parentComponent == shoppingCrateSellList;
-            var locationHasDealOnItem = isSellingRelatedList ?
+            bool isSellingRelatedList = containingTab != StoreTab.Buy;
+            bool locationHasDealOnItem = isSellingRelatedList ?
                 CurrentLocation.RequestedGoods.Contains(pi.ItemPrefab) : CurrentLocation.DailySpecials.Contains(pi.ItemPrefab);
             GUITextBlock nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), nameAndQuantityGroup.RectTransform),
                 pi.ItemPrefab.Name, font: GUI.SubHeadingFont, textAlignment: Alignment.BottomLeft)
@@ -1140,14 +1386,15 @@ namespace Barotrauma
                 };
                 dealIcon.SetAsFirstChild();
             }
-            var isParentOnLeftSideOfInterface = parentComponent == storeBuyList || parentComponent == storeDailySpecialsGroup ||
-                parentComponent == storeSellList || parentComponent == storeRequestedGoodGroup;
+            bool isParentOnLeftSideOfInterface = parentComponent == storeBuyList || parentComponent == storeDailySpecialsGroup ||
+                parentComponent == storeSellList || parentComponent == storeRequestedGoodGroup ||
+                parentComponent == storeSellFromSubList || parentComponent == storeRequestedSubGoodGroup;
             GUILayoutGroup shoppingCrateAmountGroup = null;
             GUINumberInput amountInput = null;
             if (isParentOnLeftSideOfInterface)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), nameAndQuantityGroup.RectTransform),
-                    CreateQuantityLabelText(isSellingRelatedList ? StoreTab.Sell : StoreTab.Buy, pi.Quantity), font: GUI.Font, textAlignment: Alignment.BottomLeft)
+                    CreateQuantityLabelText(containingTab, pi.Quantity), font: GUI.Font, textAlignment: Alignment.BottomLeft)
                 {
                     CanBeFocused = false,
                     Shadow = locationHasDealOnItem,
@@ -1156,7 +1403,7 @@ namespace Barotrauma
                     UserData = "quantitylabel"
                 };
             }
-            else if (!isParentOnLeftSideOfInterface)
+            else
             {
                 var relativePadding = nameBlock.Padding.X / nameBlock.Rect.Width;
                 shoppingCrateAmountGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - relativePadding, 0.6f), nameAndQuantityGroup.RectTransform) { RelativeOffset = new Vector2(relativePadding, 0) },
@@ -1167,7 +1414,7 @@ namespace Barotrauma
                 amountInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), shoppingCrateAmountGroup.RectTransform), GUINumberInput.NumberType.Int)
                 {
                     MinValueInt = 0,
-                    MaxValueInt = GetMaxAvailable(pi.ItemPrefab, isSellingRelatedList ? StoreTab.Sell : StoreTab.Buy),
+                    MaxValueInt = GetMaxAvailable(pi.ItemPrefab, containingTab),
                     UserData = pi,
                     IntValue = pi.Quantity
                 };
@@ -1394,7 +1641,7 @@ namespace Barotrauma
             }
         }
 
-        private string CreateQuantityLabelText(StoreTab mode, int quantity) => mode == StoreTab.Sell ?
+        private string CreateQuantityLabelText(StoreTab mode, int quantity) => mode != StoreTab.Buy ?
             TextManager.GetWithVariable("campaignstore.quantity", "[amount]", quantity.ToString()) :
             TextManager.GetWithVariable("campaignstore.instock", "[amount]", quantity.ToString());
 
@@ -1417,10 +1664,16 @@ namespace Barotrauma
 
         private int GetMaxAvailable(ItemPrefab itemPrefab, StoreTab mode)
         {
-            var list = mode == StoreTab.Sell ? itemsToSell : CurrentLocation.StoreStock;
+            var list = mode switch
+            {
+                StoreTab.Buy => CurrentLocation.StoreStock,
+                StoreTab.Sell => itemsToSell,
+                StoreTab.SellFromSub => itemsToSellFromSub,
+                _ => throw new NotImplementedException()
+            };
             if (list.Find(i => i.ItemPrefab == itemPrefab) is PurchasedItem item)
             {
-                if (mode != StoreTab.Sell)
+                if (mode == StoreTab.Buy)
                 {
                     var purchasedItem = CargoManager.PurchasedItems.Find(i => i.ItemPrefab == item.ItemPrefab);
                     if (purchasedItem != null) { return Math.Max(item.Quantity - purchasedItem.Quantity, 0); }
@@ -1469,11 +1722,37 @@ namespace Barotrauma
             return false;
         }
 
-        private bool AddToShoppingCrate(PurchasedItem item, int quantity = 1) => IsBuying ?
-            ModifyBuyQuantity(item, quantity) : ModifySellQuantity(item, quantity);
+        private bool ModifySellFromSubQuantity(PurchasedItem item, int quantity)
+        {
+            if (item == null || item.ItemPrefab == null) { return false; }
+            if (!HasPermissions) { return false; }
+            if (quantity > 0)
+            {
+                // Make sure there's enough available to sell
+                var itemToSell = CargoManager.ItemsInSellFromSubCrate.Find(i => i.ItemPrefab == item.ItemPrefab);
+                var totalQuantityToSell = itemToSell != null ? itemToSell.Quantity + quantity : quantity;
+                if (totalQuantityToSell > GetMaxAvailable(item.ItemPrefab, StoreTab.SellFromSub)) { return false; }
+            }
+            CargoManager.ModifyItemQuantityInSellFromSubCrate(item.ItemPrefab, quantity);
+            // TODO: GameMain.Client?.SendCampaignState();
+            return false;
+        }
 
-        private bool ClearFromShoppingCrate(PurchasedItem item) => IsBuying ?
-            ModifyBuyQuantity(item, -item.Quantity) : ModifySellQuantity(item, -item.Quantity);
+        private bool AddToShoppingCrate(PurchasedItem item, int quantity = 1) => activeTab switch
+        {
+            StoreTab.Buy => ModifyBuyQuantity(item, quantity),
+            StoreTab.Sell => ModifySellQuantity(item, quantity),
+            StoreTab.SellFromSub => ModifySellFromSubQuantity(item, quantity),
+            _ => throw new NotImplementedException(),
+        };
+
+        private bool ClearFromShoppingCrate(PurchasedItem item) => activeTab switch
+        {
+            StoreTab.Buy => ModifyBuyQuantity(item, -item.Quantity),
+            StoreTab.Sell => ModifySellQuantity(item, -item.Quantity),
+            StoreTab.SellFromSub => ModifySellFromSubQuantity(item, -item.Quantity),
+            _ => throw new NotImplementedException(),
+        };
 
         private bool BuyItems()
         {
@@ -1510,18 +1789,17 @@ namespace Barotrauma
         private bool SellItems()
         {
             if (!HasPermissions) { return false; }
-
-            var itemsToSell = new List<PurchasedItem>(CargoManager.ItemsInSellCrate);
+            var itemsToSell = activeTab switch
+            {
+                StoreTab.Sell => new List<PurchasedItem>(CargoManager.ItemsInSellCrate),
+                StoreTab.SellFromSub => new List<PurchasedItem>(CargoManager.ItemsInSellFromSubCrate),
+                _ => throw new NotImplementedException()
+            };
             var itemsToRemove = new List<PurchasedItem>();
             var totalValue = 0;
             foreach (PurchasedItem item in itemsToSell)
             {
-                if (item?.ItemPrefab == null)
-                {
-                    itemsToRemove.Add(item);
-                    continue;
-                }
-                if (item.ItemPrefab.GetPriceInfo(CurrentLocation) is PriceInfo priceInfo)
+                if (item?.ItemPrefab?.GetPriceInfo(CurrentLocation) is PriceInfo priceInfo)
                 {
                     totalValue += item.Quantity * CurrentLocation.GetAdjustedItemSellPrice(item.ItemPrefab, priceInfo: priceInfo);
                 }
@@ -1531,12 +1809,13 @@ namespace Barotrauma
                 }
             }
             itemsToRemove.ForEach(i => itemsToSell.Remove(i));
-
             if (itemsToSell.None() || totalValue > CurrentLocation.StoreCurrentBalance) { return false; }
-
-            CargoManager.SellItems(itemsToSell);
-            GameMain.Client?.SendCampaignState();
-
+            CargoManager.SellItems(itemsToSell, activeTab);
+            if (activeTab == StoreTab.Sell)
+            {
+                // TODO: Implement selling sub items in multiplayer
+                GameMain.Client?.SendCampaignState();
+            }
             return false;
         }
 
@@ -1549,8 +1828,14 @@ namespace Barotrauma
             }
             else
             {
-                shoppingCrateTotal.Text = GetCurrencyFormatted(sellTotal);
-                shoppingCrateTotal.TextColor = CurrentLocation != null && sellTotal > CurrentLocation.StoreCurrentBalance ? Color.Red : Color.White;
+                int total = activeTab switch
+                {
+                    StoreTab.Sell => sellTotal,
+                    StoreTab.SellFromSub => sellFromSubTotal,
+                    _ => throw new NotImplementedException(),
+                };
+                shoppingCrateTotal.Text = GetCurrencyFormatted(total);
+                shoppingCrateTotal.TextColor = CurrentLocation != null && total > CurrentLocation.StoreCurrentBalance ? Color.Red : Color.White;
             }
         }
 
@@ -1580,13 +1865,19 @@ namespace Barotrauma
 
         private void SetConfirmButtonStatus() => confirmButton.Enabled =
             HasPermissions && ActiveShoppingCrateList.Content.RectTransform.Children.Any() &&
-            ((IsBuying && buyTotal <= PlayerMoney) || (IsSelling && CurrentLocation != null && sellTotal <= CurrentLocation.StoreCurrentBalance));
+            activeTab switch
+            {
+                StoreTab.Buy => buyTotal <= PlayerMoney,
+                StoreTab.Sell => CurrentLocation != null && sellTotal <= CurrentLocation.StoreCurrentBalance,
+                StoreTab.SellFromSub => CurrentLocation != null && sellFromSubTotal <= CurrentLocation.StoreCurrentBalance,
+                _ => throw new NotImplementedException(),
+            };
 
         private void SetClearAllButtonStatus() => clearAllButton.Enabled =
             HasPermissions && ActiveShoppingCrateList.Content.RectTransform.Children.Any();
 
-        private float ownedItemsUpdateTimer = 0.0f;
-        private readonly float ownedItemsUpdateInterval = 1.5f;
+        private float ownedItemsUpdateTimer = 0.0f, sellableItemsFromSubUpdateTimer = 0.0f;
+        private readonly float timerUpdateInterval = 1.5f;
 
         public void Update(float deltaTime)
         {
@@ -1598,7 +1889,7 @@ namespace Barotrauma
             {
                 // Update the owned items at short intervals and check if the interface should be refreshed
                 ownedItemsUpdateTimer += deltaTime;
-                if (ownedItemsUpdateTimer >= ownedItemsUpdateInterval)
+                if (ownedItemsUpdateTimer >= timerUpdateInterval)
                 {
                     var prevOwnedItems = new Dictionary<ItemPrefab, int>(OwnedItems);
                     UpdateOwnedItems();
@@ -1612,12 +1903,21 @@ namespace Barotrauma
                         needsRefresh = true;
                     }
                 }
+                // Update the sellable sub items at short intervals and check if the interface should be refreshed
+                sellableItemsFromSubUpdateTimer += deltaTime;
+                if (sellableItemsFromSubUpdateTimer >= timerUpdateInterval)
+                {
+                    needsItemsToSellFromSubRefresh = true;
+                    needsRefresh = true;
+                }
             }
 
             if (needsItemsToSellRefresh) { RefreshItemsToSell(); }
+            if (needsItemsToSellFromSubRefresh) { RefreshItemsToSellFromSub(); }
             if (needsRefresh || hadPermissions != HasPermissions) { Refresh(updateOwned: ownedItemsUpdateTimer > 0.0f); }
             if (needsBuyingRefresh) { RefreshBuying(); }
             if (needsSellingRefresh) { RefreshSelling(); }
+            if (needsSellingFromSubRefresh) { RefreshSellingFromSub(updateItemsToSellFromSub: sellableItemsFromSubUpdateTimer > 0.0f); }
         }
     }
 }

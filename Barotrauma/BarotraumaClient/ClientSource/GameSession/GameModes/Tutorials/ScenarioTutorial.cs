@@ -177,7 +177,7 @@ namespace Barotrauma.Tutorials
                 }
             }
 
-            return WayPoint.GetRandom(spawnPointType, charInfo.Job, spawnSub);
+            return WayPoint.GetRandom(spawnPointType, charInfo.Job?.Prefab, spawnSub);
         }
 
         protected bool HasOrder(Character character, string identifier, string option = null)

@@ -286,7 +286,7 @@ namespace Microsoft.Xna.Framework
             // to not try and set the window position because it will be wrong.
             if ((Sdl.Patch > 4 || !AllowUserResizing) && !_wasMoved)
                 Sdl.Window.SetPosition(Handle, centerX, centerY);
-            
+
             Sdl.Window.Show(Handle);
             Sdl.Window.Raise(Handle);
 
@@ -331,6 +331,11 @@ namespace Microsoft.Xna.Framework
         public void CallTextInput(char c, Keys key = Keys.None)
         {
             OnTextInput(this, new TextInputEventArgs(c, key));
+        }
+
+        public void DropFile(string filePath)
+        {
+            OnFileDropped(new FileDropEventArgs(filePath));
         }
 
         protected internal override void SetSupportedOrientations(DisplayOrientation orientations)

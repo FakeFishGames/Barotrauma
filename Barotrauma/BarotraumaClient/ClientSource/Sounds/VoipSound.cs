@@ -1,5 +1,6 @@
 ﻿using Barotrauma.IO;
 using Barotrauma.Networking;
+using Concentus.Structs;
 using Microsoft.Xna.Framework;
 using OpenAL;
 using System;
@@ -29,6 +30,8 @@ namespace Barotrauma.Sounds
         private int bufferID = 0;
         
         private SoundChannel soundChannel;
+
+        private OpusDecoder decoder;
 
         public bool UseRadioFilter;
         public bool UseMuffleFilter;
@@ -65,7 +68,7 @@ namespace Barotrauma.Sounds
 
         public VoipSound(string name, SoundManager owner, VoipQueue q) : base(owner, $"VoIP ({name})", true, true, getFullPath: false)
         {
-            VoipConfig.SetupEncoding();
+            decoder = VoipConfig.CreateDecoder();
 
             ALFormat = Al.FormatMono16;
             SampleRate = VoipConfig.FREQUENCY;
@@ -152,7 +155,7 @@ namespace Barotrauma.Sounds
             {
                 if (compressedSize > 0)
                 {
-                    VoipConfig.Decoder.Decode(compressedBuffer, 0, compressedSize, buffer, 0, VoipConfig.BUFFER_SIZE);
+                    decoder.Decode(compressedBuffer, 0, compressedSize, buffer, 0, VoipConfig.BUFFER_SIZE);
                     bufferID++;
                     return VoipConfig.BUFFER_SIZE;
                 }

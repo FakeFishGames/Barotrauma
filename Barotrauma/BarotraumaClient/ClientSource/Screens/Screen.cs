@@ -66,6 +66,8 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
+        public virtual void OnFileDropped(string filePath, string extension) { }
+
         public virtual void Release()
         {
             frame.RectTransform.Parent = null;

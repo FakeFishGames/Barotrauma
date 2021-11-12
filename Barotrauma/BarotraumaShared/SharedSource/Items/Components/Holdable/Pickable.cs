@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -73,12 +74,17 @@ namespace Barotrauma.Items.Components
 
             if (PickingTime > 0.0f)
             {
+                var abilityPickingTime = new AbilityValueItem(PickingTime, item.Prefab);
+                picker.CheckTalents(AbilityEffectType.OnItemPicked, abilityPickingTime);
+
                 if ((picker.PickingItem == null || picker.PickingItem == item) && PickingTime <= float.MaxValue)
                 {
 #if SERVER
+                    // Set active picker before creating the server event to make sure it's set correctly
+                    activePicker = picker;
                     item.CreateServerEvent(this);
 #endif
-                    pickingCoroutine = CoroutineManager.StartCoroutine(WaitForPick(picker, PickingTime));
+                    pickingCoroutine = CoroutineManager.StartCoroutine(WaitForPick(picker, abilityPickingTime.Value));
                 }
                 return false;
             }
@@ -90,6 +96,24 @@ namespace Barotrauma.Items.Components
 
         public virtual bool OnPicked(Character picker)
         {
+            //if the item has multiple Pickable components (e.g. Holdable and Wearable, check that we don't equip it in hands when the item is worn or vice versa)
+            if (item.GetComponents<Pickable>().Count() > 0)
+            {
+                bool alreadyEquipped = false;
+                for (int i = 0; i < picker.Inventory.Capacity; i++)
+                {
+                    if (picker.Inventory.GetItemsAt(i).Contains(item))
+                    {
+                        if (picker.Inventory.SlotTypes[i] != InvSlotType.Any &&
+                            !allowedSlots.Any(a => a.HasFlag(picker.Inventory.SlotTypes[i])))
+                        {
+                            alreadyEquipped = true;
+                            break;
+                        }
+                    }
+                }
+                if (alreadyEquipped) { return false; }
+            }
             if (picker.Inventory.TryPutItemWithAutoEquipCheck(item, picker, allowedSlots))
             {
                 if (!picker.HeldItems.Contains(item) && item.body != null) { item.body.Enabled = false; }

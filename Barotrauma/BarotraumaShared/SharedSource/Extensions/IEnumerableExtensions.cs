@@ -86,10 +86,11 @@ namespace Barotrauma.Extensions
 
         /// <summary>
         /// Executes an action that modifies the collection on each element (such as removing items from the list).
-        /// Creates a temporary list.
+        /// Creates a temporary list, unless the collection is empty.
         /// </summary>
         public static void ForEachMod<T>(this IEnumerable<T> source, Action<T> action)
         {
+            if (source.None()) { return; }
             var temp = new List<T>(source);
             temp.ForEach(action);
         }
@@ -152,6 +153,39 @@ namespace Barotrauma.Extensions
         public static void AddIfNotNull<T>(this IList<T> source, T value)
         {
             if (value != null) { source.Add(value); }
+        }
+
+        /// <summary>
+        /// Returns whether a given collection has at least a certain amount
+        /// of elements for which the predicate returns true.
+        /// </summary>
+        /// <param name="source">Input collection</param>
+        /// <param name="amount">How many elements to match before stopping</param>
+        /// <param name="predicate">Predicate used to evaluate the elements</param>
+        public static bool AtLeast<T>(this IEnumerable<T> source, int amount, Predicate<T> predicate)
+        {
+            foreach (T elem in source)
+            {
+                if (predicate(elem)) { amount--; }
+                if (amount <= 0) { return true; }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Returns the maximum element in a given enumerable, or null if there
+        /// aren't any elements in the input.
+        /// </summary>
+        /// <param name="enumerable">Input collection</param>
+        /// <returns>Maximum element or null</returns>
+        public static T? MaxOrNull<T>(this IEnumerable<T> enumerable) where T : struct, IComparable<T>
+        {
+            T? retVal = null;
+            foreach (T v in enumerable)
+            {
+                if (!retVal.HasValue || v.CompareTo(retVal.Value) > 0) { retVal = v; }
+            }
+            return retVal;
         }
     }
 }

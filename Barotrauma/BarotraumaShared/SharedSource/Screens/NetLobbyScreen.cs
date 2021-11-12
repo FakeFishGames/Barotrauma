@@ -53,7 +53,29 @@ namespace Barotrauma
             return GameMain.Server.ServerSettings.RadiationEnabled;
 #endif
         }
-        
+
+        public void SetMaxMissionCount(int maxMissionCount)
+        {
+#if SERVER
+            if (GameMain.Server != null)
+            {
+                if (maxMissionCount < CampaignSettings.MinMissionCountLimit) maxMissionCount = CampaignSettings.MaxMissionCountLimit;
+                if (maxMissionCount > CampaignSettings.MaxMissionCountLimit) maxMissionCount = CampaignSettings.MinMissionCountLimit;
+
+                GameMain.Server.ServerSettings.MaxMissionCount = maxMissionCount;
+                lastUpdateID++;
+            }
+#endif
+#if CLIENT
+            (maxMissionCountText as GUITextBlock).Text = maxMissionCount.ToString();
+#endif
+        }
+
+        public int GetMaxMissionCount()
+        {
+            return GameMain.NetworkMember?.ServerSettings?.MaxMissionCount ?? 0;
+        }
+
         public void ToggleTraitorsEnabled(int dir)
         {
 #if SERVER

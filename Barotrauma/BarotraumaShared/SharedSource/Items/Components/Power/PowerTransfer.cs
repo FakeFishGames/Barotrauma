@@ -15,6 +15,9 @@ namespace Barotrauma.Items.Components
         //a list of connections a given connection is connected to, either directly or via other power transfer components
         private readonly Dictionary<Connection, HashSet<Connection>> connectedRecipients = new Dictionary<Connection, HashSet<Connection>>();
 
+        private float overloadCooldownTimer;
+        private const float OverloadCooldown = 5.0f;
+
         protected float powerLoad;
 
         protected bool isBroken;
@@ -173,12 +176,19 @@ namespace Barotrauma.Items.Components
             Overload = -currPowerConsumption > Math.Max(powerLoad, 200.0f) * maxOverVoltage;
             if (Overload && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
             {
+                if (overloadCooldownTimer > 0.0f)
+                {
+                    overloadCooldownTimer -= deltaTime;
+                    return;
+                }
+
                 //damage the item if voltage is too high (except if running as a client)
                 float prevCondition = item.Condition;
                 item.Condition -= deltaTime * 10.0f;
 
                 if (item.Condition <= 0.0f && prevCondition > 0.0f)
                 {
+                    overloadCooldownTimer = OverloadCooldown;
 #if CLIENT
                     SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: item.CurrentHull);
                     Vector2 baseVel = Rand.Vector(300.0f);
@@ -359,7 +369,7 @@ namespace Barotrauma.Items.Components
                     {
                         //other junction boxes don't need to receive the signal in the pass-through signal connections
                         //because we relay it straight to the connected items without going through the whole chain of junction boxes
-                        if (ic is PowerTransfer && !(ic is RelayComponent) && connection.Name.Contains("signal")) { continue; }
+                        if (ic is PowerTransfer && !(ic is RelayComponent)) { continue; }
                         ic.ReceiveSignal(signal, recipient);
                     }
 
@@ -369,6 +379,13 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+            connectedRecipients?.Clear();
+            connectionDirty?.Clear();
         }
     }
 }

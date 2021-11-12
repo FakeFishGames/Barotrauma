@@ -149,12 +149,14 @@ namespace Barotrauma
                     case "metadata":
                         CampaignMetadata = new CampaignMetadata(this, subElement);
                         break;
+                    case "upgrademanager":
                     case "pendingupgrades":
                         UpgradeManager = new UpgradeManager(this, subElement, isSingleplayer: false);
                         break;
                     case "bots" when GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer:
                         CrewManager.HasBots = subElement.GetAttributeBool("hasbots", false);
                         CrewManager.AddCharacterElements(subElement);
+                        CrewManager.ActiveOrdersElement = subElement.GetChildElement("activeorders");
                         break;
                     case "cargo":
                         CargoManager?.LoadPurchasedItems(subElement);
@@ -169,6 +171,12 @@ namespace Barotrauma
                             string subName = availableSub.GetAttributeString("name", "");
                             SubmarineInfo matchingSub = sourceList.Find(s => s.Name == subName);
                             if (matchingSub != null) { availableSubs.Add(matchingSub); }
+                        }
+                        break;
+                    case "savedexperiencepoints":
+                        foreach (XElement savedExp in subElement.Elements())
+                        {
+                            savedExperiencePoints.Add(new SavedExperiencePoints(savedExp));
                         }
                         break;
 #endif

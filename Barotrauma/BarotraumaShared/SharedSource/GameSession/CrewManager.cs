@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +30,8 @@ namespace Barotrauma
         public bool IsSinglePlayer { get; private set; }
 
         public ReadyCheck ActiveReadyCheck;
+
+        public XElement ActiveOrdersElement { get; set; }
 
         public CrewManager(bool isSinglePlayer)
         {
@@ -111,6 +114,9 @@ namespace Barotrauma
                         case "health":
                             characterInfo.HealthData = subElement;
                             break;
+                        case "orders":
+                            characterInfo.OrderData = subElement;
+                            break;
                     }
                 }
             }
@@ -189,7 +195,7 @@ namespace Barotrauma
                 spawnWaypoints = WayPoint.WayPointList.FindAll(wp => 
                     wp.SpawnType == SpawnType.Human &&
                     wp.Submarine == Level.Loaded.StartOutpost && 
-                    wp.CurrentHull?.OutpostModuleTags != null && 
+                    wp.CurrentHull != null &&
                     wp.CurrentHull.OutpostModuleTags.Contains("airlock"));
                 while (spawnWaypoints.Count > characterInfos.Count)
                 {
@@ -229,10 +235,17 @@ namespace Barotrauma
                     }
                     if (character.Info.HealthData != null)
                     {
-                        character.Info.ApplyHealthData(character, character.Info.HealthData);
+                        CharacterInfo.ApplyHealthData(character, character.Info.HealthData);
                     }
+
+                    character.LoadTalents();
+
                     character.GiveIdCardTags(spawnWaypoints[i]);
                     character.Info.StartItemsGiven = true;
+                    if (character.Info.OrderData != null)
+                    {
+                        character.Info.ApplyOrderData();
+                    }
                 }
                 
                 AddCharacter(character);
@@ -263,6 +276,14 @@ namespace Barotrauma
         public void FireCharacter(CharacterInfo characterInfo)
         {
             RemoveCharacterInfo(characterInfo);
+        }
+
+        public void ClearCurrentOrders()
+        {
+            foreach (var characterInfo in characterInfos)
+            {
+                characterInfo?.ClearCurrentOrders();
+            }
         }
 
         public void Update(float deltaTime)
@@ -392,6 +413,93 @@ namespace Barotrauma
 
 #endregion
 
+        public static Character GetCharacterForQuickAssignment(Order order, Character controlledCharacter, IEnumerable<Character> characters, bool includeSelf = false)
+        {
+            bool isControlledCharacterNull = controlledCharacter == null;
+#if !DEBUG
+            if (isControlledCharacterNull) { return null; }
+#endif
+            if (order.Category == OrderCategory.Operate && HumanAIController.IsItemTargetedBySomeone(order.TargetItemComponent, controlledCharacter != null ? controlledCharacter.TeamID : CharacterTeamType.Team1, out Character operatingCharacter) &&
+                (isControlledCharacterNull || operatingCharacter.CanHearCharacter(controlledCharacter)))
+            {
+                return operatingCharacter;
+            }
+            return GetCharactersSortedForOrder(order, characters, controlledCharacter, includeSelf).FirstOrDefault(c => isControlledCharacterNull || c.CanHearCharacter(controlledCharacter)) ?? controlledCharacter;
+        }
+
+        public static IEnumerable<Character> GetCharactersSortedForOrder(Order order, IEnumerable<Character> characters, Character controlledCharacter, bool includeSelf, IEnumerable<Character> extraCharacters = null)
+        {
+            var filteredCharacters = characters.Where(c => controlledCharacter == null || ((includeSelf || c != controlledCharacter) && c.TeamID == controlledCharacter.TeamID));
+            if (extraCharacters != null)
+            {
+                filteredCharacters = filteredCharacters.Union(extraCharacters);
+            }
+            return filteredCharacters
+                    // 1. Prioritize those who are on the same submarine than the controlled character
+                    .OrderByDescending(c => Character.Controlled == null || c.Submarine == Character.Controlled.Submarine)
+                    // 2. Prioritize those who have been given the same maintenance or operate order as now issued
+                    .ThenByDescending(c => c.CurrentOrders.Any(o =>
+                        o.Order != null && o.Order.Identifier == order.Identifier &&
+                        (order.Category == OrderCategory.Maintenance || order.Category == OrderCategory.Operate)))
+                    // 3. Prioritize those with the appropriate job for the order
+                    .ThenByDescending(c => order.HasAppropriateJob(c))
+                    // 4. Prioritize bots over player controlled characters
+                    .ThenByDescending(c => c.IsBot)
+                    // 5. Use the priority value of the current objective
+                    .ThenBy(c => c.AIController is HumanAIController humanAI ? humanAI.ObjectiveManager.CurrentObjective?.Priority : 0)
+                    // 6. Prioritize those with the best skill for the order
+                    .ThenByDescending(c => c.GetSkillLevel(order.AppropriateSkill));
+        }
+
         partial void UpdateProjectSpecific(float deltaTime);
+
+        private void SaveActiveOrders(XElement parentElement)
+        {
+            ActiveOrdersElement = new XElement("activeorders");
+            // Only save orders with no fade out time (e.g. ignore orders)
+            var ordersToSave = new List<OrderInfo>();
+            foreach (var activeOrder in ActiveOrders)
+            {
+                var order = activeOrder?.First;
+                if (order == null || activeOrder.Second.HasValue) { continue; }
+                ordersToSave.Add(new OrderInfo(order, null, CharacterInfo.HighestManualOrderPriority));
+            }
+            CharacterInfo.SaveOrders(ActiveOrdersElement, ordersToSave.ToArray());
+            parentElement?.Add(ActiveOrdersElement);
+        }
+
+        public void LoadActiveOrders()
+        {
+            if (ActiveOrdersElement == null) { return; }
+            foreach (var orderInfo in CharacterInfo.LoadOrders(ActiveOrdersElement))
+            {
+                IIgnorable ignoreTarget = null;
+                if (orderInfo.Order.IsIgnoreOrder)
+                {
+                    switch (orderInfo.Order.TargetType)
+                    {
+                        case Order.OrderTargetType.Entity:
+                            ignoreTarget = orderInfo.Order.TargetEntity as IIgnorable;
+                            break;
+                        case Order.OrderTargetType.WallSection when orderInfo.Order.TargetEntity is Structure s && orderInfo.Order.WallSectionIndex.HasValue:
+                            ignoreTarget = s.GetSection(orderInfo.Order.WallSectionIndex.Value) as IIgnorable;
+                            break;
+                        default:
+                            DebugConsole.ThrowError("Error loading an ignore order - can't find a proper ignore target");
+                            continue;
+                    }
+                }
+                if (orderInfo.Order.TargetEntity == null || (orderInfo.Order.IsIgnoreOrder && ignoreTarget == null))
+                {
+                    // The order target doesn't exist anymore, just discard the loaded order
+                    continue;
+                }
+                if (ignoreTarget != null)
+                {
+                    ignoreTarget.OrderedToBeIgnored = true;
+                }
+                AddOrder(orderInfo.Order, null);
+            }
+        }
     }
 }

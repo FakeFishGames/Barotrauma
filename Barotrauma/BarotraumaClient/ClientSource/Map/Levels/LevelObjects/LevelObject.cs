@@ -160,17 +160,6 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            if (ParticleEmitters != null)
-            {
-                for (int i = 0; i < ParticleEmitters.Length; i++)
-                {
-                    if (ParticleEmitterTriggers[i] != null && !ParticleEmitterTriggers[i].IsTriggered) continue;
-                    Vector2 emitterPos = LocalToWorld(Prefab.EmitterPositions[i]);
-                    ParticleEmitters[i].Emit(deltaTime, emitterPos, hullGuess: null,
-                        angle: ParticleEmitters[i].Prefab.CopyEntityAngle ? Rotation : 0.0f);
-                }
-            }
-
             CurrentRotation = Rotation;
             if (ActivePrefab.SwingFrequency > 0.0f)
             {
@@ -212,6 +201,17 @@ namespace Barotrauma
             if (spriteDeformations.Count > 0)
             {
                 UpdateDeformations(deltaTime);
+            }
+
+            if (ParticleEmitters != null)
+            {
+                for (int i = 0; i < ParticleEmitters.Length; i++)
+                {
+                    if (ParticleEmitterTriggers[i] != null && !ParticleEmitterTriggers[i].IsTriggered) { continue; }
+                    Vector2 emitterPos = LocalToWorld(Prefab.EmitterPositions[i]);
+                    ParticleEmitters[i].Emit(deltaTime, emitterPos, hullGuess: null,
+                        angle: ParticleEmitters[i].Prefab.Properties.CopyEntityAngle ? -CurrentRotation + MathHelper.Pi : 0.0f);
+                }
             }
 
             for (int i = 0; i < Sounds.Length; i++)
@@ -293,6 +293,12 @@ namespace Barotrauma
         public void ClientRead(IReadMessage msg)
         {
             if (Triggers == null) { return; }
+
+            if (Prefab.TakeLevelWallDamage)
+            {
+                float newHealth = msg.ReadRangedSingle(0.0f, Prefab.Health, 8);
+                AddDamage(Health - newHealth, 1.0f, null, isNetworkEvent: true);
+            }
             for (int i = 0; i < Triggers.Count; i++)
             {
                 if (!Triggers[i].UseNetworkSyncing) { continue; }

@@ -9,14 +9,14 @@ namespace Barotrauma.Sounds
 {
     public class SoundBuffers : IDisposable
     {
-        private static HashSet<uint> bufferPool = new HashSet<uint>();
+        private static readonly HashSet<uint> bufferPool = new HashSet<uint>();
 #if OSX
         public const int MaxBuffers = 400; //TODO: check that this value works for macOS
 #else
         public const int MaxBuffers = 32000;
 #endif
         public static int BuffersGenerated { get; private set; } = 0;
-        private Sound sound;
+        private readonly Sound sound;
 
         public uint AlBuffer { get; private set; } = 0;
         public uint AlMuffledBuffer { get; private set; } = 0;
@@ -24,55 +24,73 @@ namespace Barotrauma.Sounds
         public SoundBuffers(Sound sound) { this.sound = sound; }
         public void Dispose()
         {
-            if (AlBuffer != 0) { bufferPool.Add(AlBuffer); }
-            if (AlMuffledBuffer != 0) { bufferPool.Add(AlMuffledBuffer); }
+            if (AlBuffer != 0)
+            {
+                lock (bufferPool)
+                {
+                    bufferPool.Add(AlBuffer);
+                }
+            }
+            if (AlMuffledBuffer != 0)
+            {
+                lock (bufferPool)
+                {
+                    bufferPool.Add(AlMuffledBuffer);
+                }
+            }
             AlBuffer = 0;
             AlMuffledBuffer = 0;
         }
 
         public static void ClearPool()
         {
-            bufferPool.ForEach(b => Al.DeleteBuffer(b));
-            bufferPool.Clear();
+            lock (bufferPool)
+            {
+                bufferPool.ForEach(b => Al.DeleteBuffer(b));
+                bufferPool.Clear();
+            }
             BuffersGenerated = 0;
         }
 
         public bool RequestAlBuffers()
         {
             if (AlBuffer != 0) { return false; }
-            int alError = 0;
-            while (bufferPool.Count < 2 && BuffersGenerated < MaxBuffers)
+            int alError;
+            lock (bufferPool)
             {
-                Al.GenBuffer(out uint newBuffer);
-                alError = Al.GetError();
-                if (alError != Al.NoError)
+                while (bufferPool.Count < 2 && BuffersGenerated < MaxBuffers)
                 {
-                    DebugConsole.AddWarning($"Error when generating sound buffer: {Al.GetErrorString(alError)}. {BuffersGenerated} buffer(s) were generated. No more sound buffers will be generated.");
-                    BuffersGenerated = MaxBuffers;
-                }
-                else if (!Al.IsBuffer(newBuffer))
-                {
-                    DebugConsole.AddWarning($"Error when generating sound buffer: result is not a valid buffer. {BuffersGenerated} buffer(s) were generated. No more sound buffers will be generated.");
-                    BuffersGenerated = MaxBuffers;
-                }
-                else
-                {
-                    bufferPool.Add(newBuffer);
-                    BuffersGenerated++;
-                    if (BuffersGenerated >= MaxBuffers)
+                    Al.GenBuffer(out uint newBuffer);
+                    alError = Al.GetError();
+                    if (alError != Al.NoError)
                     {
-                        DebugConsole.AddWarning($"{BuffersGenerated} buffer(s) were generated. No more sound buffers will be generated.");
+                        DebugConsole.AddWarning($"Error when generating sound buffer: {Al.GetErrorString(alError)}. {BuffersGenerated} buffer(s) were generated. No more sound buffers will be generated.");
+                        BuffersGenerated = MaxBuffers;
+                    }
+                    else if (!Al.IsBuffer(newBuffer))
+                    {
+                        DebugConsole.AddWarning($"Error when generating sound buffer: result is not a valid buffer. {BuffersGenerated} buffer(s) were generated. No more sound buffers will be generated.");
+                        BuffersGenerated = MaxBuffers;
+                    }
+                    else
+                    {
+                        bufferPool.Add(newBuffer);
+                        BuffersGenerated++;
+                        if (BuffersGenerated >= MaxBuffers)
+                        {
+                            DebugConsole.AddWarning($"{BuffersGenerated} buffer(s) were generated. No more sound buffers will be generated.");
+                        }
                     }
                 }
-            }
 
-            if (bufferPool.Count >= 2)
-            {
-                AlBuffer = bufferPool.First();
-                bufferPool.Remove(AlBuffer);
-                AlMuffledBuffer = bufferPool.First();
-                bufferPool.Remove(AlMuffledBuffer);
-                return true;
+                if (bufferPool.Count >= 2)
+                {
+                    AlBuffer = bufferPool.First();
+                    bufferPool.Remove(AlBuffer);
+                    AlMuffledBuffer = bufferPool.First();
+                    bufferPool.Remove(AlMuffledBuffer);
+                    return true;
+                }
             }
 
             //can't generate any more OpenAL buffers! we'll have to steal a buffer from someone...
@@ -111,7 +129,6 @@ namespace Barotrauma.Sounds
                 {
                     throw new Exception(sound.Filename + " has an invalid muffled buffer!");
                 }
-
 
                 return true;
             }

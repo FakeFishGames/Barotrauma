@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveExtinguishFire : AIObjective
     {
-        public override string DebugTag => "extinguish fire";
+        public override string Identifier { get; set; } = "extinguish fire";
         public override bool ForceRun => true;
         public override bool ConcurrentObjectives => true;
         public override bool KeepDivingGearOn => true;
@@ -27,7 +27,7 @@ namespace Barotrauma
             this.targetHull = targetHull;
         }
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             if (!IsAllowed)
             {
@@ -53,9 +53,13 @@ namespace Barotrauma
                     distanceFactor = 1;
                 }
                 float severity = AIObjectiveExtinguishFires.GetFireSeverity(targetHull);
-                if (severity > 0.5f && !isOrder)
+                if (severity > 0.75f && !isOrder && 
+                    targetHull.RoomName != null &&
+                    !targetHull.RoomName.Contains("reactor", StringComparison.OrdinalIgnoreCase) && 
+                    !targetHull.RoomName.Contains("engine", StringComparison.OrdinalIgnoreCase) && 
+                    !targetHull.RoomName.Contains("command", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Ignore severe fires unless ordered. (Let the fire drain all the oxygen instead).
+                    // Ignore severe fires to prevent casualities unless ordered to extinguish.
                     Priority = 0;
                     Abandon = true;
                 }
@@ -68,7 +72,7 @@ namespace Barotrauma
             return Priority;
         }
 
-        protected override bool Check() => targetHull.FireSources.None();
+        protected override bool CheckObjectiveSpecific() => targetHull.FireSources.None();
 
         private float sinTime;
         protected override void Act(float deltaTime)

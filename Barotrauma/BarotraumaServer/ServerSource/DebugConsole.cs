@@ -1187,6 +1187,7 @@ namespace Barotrauma
                 NewMessage("*****************", Color.Lime);
                 GameServer.Log("Console command \"restart\" executed: closing the server...", ServerLog.MessageType.ServerMessage);
                 GameMain.Instance.CloseServer();
+                GameMain.Instance.TryStartChildServerRelay();
                 GameMain.Instance.StartServer();
             }));
 
@@ -1584,6 +1585,10 @@ namespace Barotrauma
                     tpCharacter.Submarine = null;
                     tpCharacter.AnimController.SetPosition(ConvertUnits.ToSimUnits(cursorWorldPos));
                     tpCharacter.AnimController.FindHull(cursorWorldPos, true);
+                    if (tpCharacter.AIController?.SteeringManager is IndoorsSteeringManager pathSteering)
+                    {
+                        pathSteering.ResetPath();
+                    }
                 }
             );
 
@@ -1676,10 +1681,25 @@ namespace Barotrauma
                         return;
                     }
 
+                    bool relativeStrength = false;
+                    if (args.Length > 4)
+                    {
+                        bool.TryParse(args[4], out relativeStrength);
+                    }
+
                     Character targetCharacter = (args.Length <= 2) ? client.Character : FindMatchingCharacter(args.Skip(2).ToArray());
                     if (targetCharacter != null)
                     {
-                        targetCharacter.CharacterHealth.ApplyAffliction(targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
+                        Limb targetLimb = targetCharacter.AnimController.MainLimb;
+                        if (args.Length > 3)
+                        {
+                            targetLimb = targetCharacter.AnimController.Limbs.FirstOrDefault(l => l.type.ToString().Equals(args[3], StringComparison.OrdinalIgnoreCase));
+                        }
+                        if (relativeStrength)
+                        {
+                            afflictionStrength *= targetCharacter.MaxVitality / afflictionPrefab.MaxStrength;
+                        }
+                        targetCharacter.CharacterHealth.ApplyAffliction(targetLimb ?? targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
                     }
                 }
             );
@@ -1688,13 +1708,18 @@ namespace Barotrauma
                 "heal",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    Character healedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args);
+                    bool healAll = args.Length > 1 && args[1].Equals("all", StringComparison.OrdinalIgnoreCase);
+                    Character healedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(healAll ? args.Take(args.Length - 1).ToArray() : args);
                     if (healedCharacter != null)
                     {
                         healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
                         healedCharacter.Oxygen = 100.0f;
                         healedCharacter.Bloodloss = 0.0f;
                         healedCharacter.SetStun(0.0f, true);
+                        if (healAll)
+                        {
+                            healedCharacter.CharacterHealth.RemoveAllAfflictions();
+                        }
                     }
                 }
             );
@@ -1711,11 +1736,81 @@ namespace Barotrauma
                     {
                         foreach (Client c in GameMain.Server.ConnectedClients)
                         {
-                            if (c.Character != revivedCharacter) continue;
+                            if (c.Character != revivedCharacter) { continue; }
 
-                //clients stop controlling the character when it dies, force control back
-                GameMain.Server.SetClientCharacter(c, revivedCharacter);
+                            //clients stop controlling the character when it dies, force control back
+                            GameMain.Server.SetClientCharacter(c, revivedCharacter);
                             break;
+                        }
+                    }
+                }
+            );
+
+            AssignOnClientRequestExecute(
+                "givetalent",
+                (Client client, Vector2 cursorWorldPos, string[] args) =>
+                {
+                    if (args.Length == 0) { return; }
+                    Character targetCharacter = (args.Length >= 2) ? FindMatchingCharacter(args.Skip(1).ToArray(), false) : client.Character;
+
+                    if (targetCharacter == null) { return; }
+
+                    TalentPrefab talentPrefab = TalentPrefab.TalentPrefabs.Find(c =>
+                        c.Identifier.Equals(args[0], StringComparison.OrdinalIgnoreCase) ||
+                        c.DisplayName.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                    if (talentPrefab == null)
+                    {
+                        GameMain.Server.SendConsoleMessage("Couldn't find the talent \"" + args[0] + "\".", client);
+                        return;
+                    }
+                    targetCharacter.GiveTalent(talentPrefab);
+                    NewMessage($"Talent \"{talentPrefab.DisplayName}\" given to \"{targetCharacter.Name}\" by \"{client.Name}\".");
+                    GameMain.Server.SendConsoleMessage($"Gave talent \"{talentPrefab.DisplayName}\" to \"{targetCharacter.Name}\".", client);
+                }
+            );
+
+            AssignOnClientRequestExecute(
+                "unlocktalents",
+                (Client client, Vector2 cursorWorldPos, string[] args) =>
+                {
+                    var targetCharacter = args.Length >= 2 ? FindMatchingCharacter(args.Skip(1).ToArray()) : Character.Controlled;
+                    if (targetCharacter == null) { return; }
+
+                    List<TalentTree> talentTrees = new List<TalentTree>();
+                    if (args.Length == 0 || args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
+                    {
+                        talentTrees.AddRange(TalentTree.JobTalentTrees.Values);
+                    }
+                    else
+                    {
+                        var job = JobPrefab.Prefabs.Find(jp => jp.Name != null && jp.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                        if (job == null)
+                        {
+                            GameMain.Server.SendConsoleMessage($"Failed to find the job \"{args[0]}\".", client);
+                            return;
+                        }
+                        if (!TalentTree.JobTalentTrees.TryGetValue(job.Identifier, out TalentTree talentTree))
+                        {
+                            GameMain.Server.SendConsoleMessage($"No talents configured for the job \"{args[0]}\".", client);
+                            return;
+                        }
+                        talentTrees.Add(talentTree);
+                    }
+
+                    foreach (var talentTree in talentTrees)
+                    {
+                        foreach (var subTree in talentTree.TalentSubTrees)
+                        {
+                            foreach (var option in subTree.TalentOptionStages)
+                            {
+                                foreach (var talent in option.Talents)
+                                {
+                                    targetCharacter.GiveTalent(talent);
+                                    NewMessage($"Talent \"{talent.DisplayName}\" given to \"{targetCharacter.Name}\" by \"{client.Name}\".");
+                                    GameMain.Server.SendConsoleMessage($"Gave talent \"{talent.DisplayName}\" to \"{targetCharacter.Name}\".", client);
+                                    NewMessage($"Unlocked talent \"{talent.DisplayName}\".");
+                                }
+                            }
                         }
                     }
                 }
@@ -1771,7 +1866,7 @@ namespace Barotrauma
                 "control",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    if (args.Length < 1) return;
+                    if (args.Length < 1) { return; }
                     var character = FindMatchingCharacter(args, ignoreRemotePlayers: true, allowedRemotePlayer: client);
                     if (character != null)
                     {
@@ -2095,6 +2190,7 @@ namespace Barotrauma
                     if (client == null)
                     {
                         GameMain.Server.SendConsoleMessage("Client \"" + args[0] + "\" not found.", senderClient);
+                        return;
                     }
 
                     var character = FindMatchingCharacter(args.Skip(1).ToArray(), false);
@@ -2185,13 +2281,13 @@ namespace Barotrauma
                         {
                             foreach (Skill skill in character.Info.Job.Skills)
                             {
-                                character.Info.SetSkillLevel(skill.Identifier, level, character.WorldPosition);
+                                character.Info.SetSkillLevel(skill.Identifier, level);
                             }
                             GameMain.Server.SendConsoleMessage($"Set all {character.Name}'s skills to {level}", senderClient);
                         }
                         else
                         {
-                            character.Info.SetSkillLevel(skillIdentifier, level, character.WorldPosition);
+                            character.Info.SetSkillLevel(skillIdentifier, level);
                             GameMain.Server.SendConsoleMessage($"Set {character.Name}'s {skillIdentifier} level to {level}", senderClient);
                         }
 

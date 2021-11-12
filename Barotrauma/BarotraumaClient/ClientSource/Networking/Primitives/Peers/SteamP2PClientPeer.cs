@@ -288,7 +288,7 @@ namespace Barotrauma.Networking
             heartbeatTimer = 5.0;
 
 #if DEBUG
-            CoroutineManager.InvokeAfter(() =>
+            CoroutineManager.Invoke(() =>
             {
                 if (GameMain.Client == null) { return; }
                 if (Rand.Range(0.0f, 1.0f) < GameMain.Client.SimulatedLoss && sendType != Steamworks.P2PSend.Reliable) { return; }
@@ -319,7 +319,7 @@ namespace Barotrauma.Networking
                 }
                 if (!successSend)
                 {
-                    DebugConsole.ThrowError("Failed to send message to remote peer! (" + length.ToString() + " bytes)");
+                    DebugConsole.AddWarning("Failed to send message to remote peer! (" + length.ToString() + " bytes)");
                 }
             }
         }

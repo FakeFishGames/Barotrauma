@@ -15,6 +15,7 @@ using Barotrauma.Extensions;
 using Barotrauma.Steam;
 using System.Threading.Tasks;
 using Barotrauma.MapCreatures.Behavior;
+using static Barotrauma.FabricationRecipe;
 
 namespace Barotrauma
 {
@@ -240,6 +241,7 @@ namespace Barotrauma
                 case "toggleupperhud":
                 case "togglecharacternames":
                 case "fpscounter":
+                case "showperf":
                 case "dumptofile":
                 case "findentityids":
                 case "setfreecamspeed":
@@ -416,14 +418,14 @@ namespace Barotrauma
                             ShowQuestionPrompt("The automatic hull generation may not work correctly if your submarine uses curved walls. Do you want to continue? Y/N",
                                 (option2) =>
                                 {
-                                    if (option2.ToLower() == "y") { GameMain.SubEditorScreen.AutoHull(); }
+                                    if (option2.ToLowerInvariant() == "y") { GameMain.SubEditorScreen.AutoHull(); }
                                 });
                         });
                 }
                 else
                 {
                     ShowQuestionPrompt("The automatic hull generation may not work correctly if your submarine uses curved walls. Do you want to continue? Y/N",
-                        (option) => { if (option.ToLower() == "y") GameMain.SubEditorScreen.AutoHull(); });
+                        (option) => { if (option.ToLowerInvariant() == "y") GameMain.SubEditorScreen.AutoHull(); });
                 }
             }));
 
@@ -474,6 +476,7 @@ namespace Barotrauma
                 if (Screen.Selected == GameMain.SubEditorScreen)
                 {
                     NewMessage("WARNING: Switching directly from the submarine editor to the game view may cause bugs and crashes. Use with caution.", Color.Orange);
+                    Entity.Spawner ??= new EntitySpawner();
                 }
                 GameMain.GameScreen.Select();
             }));
@@ -486,6 +489,8 @@ namespace Barotrauma
                     Submarine.MainSub = Submarine.Load(subInfo, true);
                 }
                 GameMain.SubEditorScreen.Select(enableAutoSave: Screen.Selected != GameMain.GameScreen);
+                Entity.Spawner?.Remove();
+                Entity.Spawner = null;
             }, isCheat: true));
 
             commands.Add(new Command("editparticles|particleeditor", "editparticles/particleeditor: Switch to the Particle Editor to edit particle effects.", (string[] args) =>
@@ -606,7 +611,7 @@ namespace Barotrauma
                 ShowQuestionPrompt($"Some keybinds may render the game unusable, are you sure you want to make these keybinds persistent? ({Keybinds.Count} keybind(s) assigned) Y/N",
                     (option2) =>
                     {
-                        if (option2.ToLower() != "y")
+                        if (option2.ToLowerInvariant() != "y")
                         {
                             NewMessage("Aborted.", GUI.Style.Red);
                             return;
@@ -639,6 +644,8 @@ namespace Barotrauma
             commands.Add(new Command("wikiimage_sub", "Save an image of the main submarine with a transparent background.", (string[] args) =>
             {
                 if (Submarine.MainSub == null) { return; }
+                MapEntity.SelectedList.Clear();
+                MapEntity.mapEntityList.ForEach(me => me.IsHighlighted = false);
                 WikiImage.Create(Submarine.MainSub);
             }));
 
@@ -685,9 +692,18 @@ namespace Barotrauma
             AssignRelayToServer("setskill", true);
             AssignRelayToServer("readycheck", true);
 
+            AssignRelayToServer("givetalent", true);
+            AssignRelayToServer("unlocktalents", true);
+            AssignRelayToServer("giveexperience", true);
+
             AssignOnExecute("control", (string[] args) =>
             {
-                if (args.Length < 1) return;
+                if (args.Length < 1) { return; }
+                if (GameMain.NetworkMember != null)
+                {
+                    GameMain.Client?.SendConsoleCommand("control " + string.Join(' ', args[0]));
+                    return;
+                }
                 var character = FindMatchingCharacter(args, true);
                 if (character != null)
                 {
@@ -1092,9 +1108,35 @@ namespace Barotrauma
 
             commands.Add(new Command("load|loadsub", "load [submarine name]: Load a submarine.", (string[] args) =>
             {
-                if (args.Length == 0) return;
-                SubmarineInfo subInfo = new SubmarineInfo(string.Join(" ", args));
+                if (args.Length == 0) { return; }
+
+                if (GameMain.GameSession != null)
+                {
+                    ThrowError("The loadsub command cannot be used when a round is running. You should probably be using spawnsub instead.");
+                    return;
+                }
+
+                string name = string.Join(" ", args);
+                SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => name.Equals(s.Name, StringComparison.OrdinalIgnoreCase));
+                if (subInfo == null)
+                {
+                    string path = Path.Combine(SubmarineInfo.SavePath, name);
+                    if (!File.Exists(path))
+                    {
+                        ThrowError($"Could not find a submarine with the name \"{name}\" or in the path {path}.");
+                        return;
+                    }
+                    subInfo = new SubmarineInfo(path);
+                }
+
                 Submarine.Load(subInfo, true);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    SubmarineInfo.SavedSubmarines.Select(s => s.Name).ToArray()
+                };
             }));
 
             commands.Add(new Command("cleansub", "", (string[] args) =>
@@ -1313,11 +1355,13 @@ namespace Barotrauma
                             continue;
                         }
 
+                        float avgOutCondition = (deconstructItem.OutConditionMin + deconstructItem.OutConditionMax) / 2;
+
                         int? deconstructProductPrice = targetItem.GetMinPrice();
                         if (deconstructProductPrice.HasValue)
                         {
                             if (!deconstructProductCost.HasValue) { deconstructProductCost = 0; }
-                            deconstructProductCost += (int)(deconstructProductPrice * deconstructItem.OutCondition);
+                            deconstructProductCost += (int)(deconstructProductPrice * avgOutCondition);
                         }
 
                         if (fabricationRecipe != null)
@@ -1327,9 +1371,9 @@ namespace Barotrauma
                             {
                                 NewMessage("Deconstructing \"" + itemPrefab.Name + "\" produces \"" + deconstructItem.ItemIdentifier + "\", which isn't required in the fabrication recipe of the item.", Color.Red);
                             }
-                            else if (ingredient.UseCondition && ingredient.MinCondition < deconstructItem.OutCondition)
+                            else if (ingredient.UseCondition && ingredient.MinCondition < avgOutCondition)
                             {
-                                NewMessage($"Deconstructing \"{itemPrefab.Name}\" produces more \"{deconstructItem.ItemIdentifier}\", than what's required to fabricate the item (required: {targetItem.Name} {(int)(ingredient.MinCondition * 100)}%, output: {deconstructItem.ItemIdentifier} {(int)(deconstructItem.OutCondition * 100)}%)", Color.Red);
+                                NewMessage($"Deconstructing \"{itemPrefab.Name}\" produces more \"{deconstructItem.ItemIdentifier}\", than what's required to fabricate the item (required: {targetItem.Name} {(int)(ingredient.MinCondition * 100)}%, output: {deconstructItem.ItemIdentifier} {(int)(avgOutCondition * 100)}%)", Color.Red);
                             }
                         }
                     }
@@ -1365,6 +1409,241 @@ namespace Barotrauma
                         }
                     }
                 }
+            }, isCheat: false));
+
+            commands.Add(new Command("analyzeitem", "analyzeitem: Analyzes one item for exploits.", (string[] args) =>
+            {
+                if (args.Length < 1) return;
+
+                List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
+                foreach (ItemPrefab iPrefab in ItemPrefab.Prefabs)
+                {
+                    fabricableItems.AddRange(iPrefab.FabricationRecipes);
+                }
+
+                string itemNameOrId = args[0].ToLowerInvariant();
+
+                ItemPrefab itemPrefab =
+                    (MapEntityPrefab.Find(itemNameOrId, identifier: null, showErrorMessages: false) ??
+                    MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+
+                if (itemPrefab == null)
+                {
+                    NewMessage("Item not found for analyzing.");
+                    return;
+                }
+                NewMessage("Analyzing item " + itemPrefab.Name + " with base cost " + itemPrefab.DefaultPrice.Price);
+
+                var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == itemPrefab);
+                // omega nesting incoming
+                if (fabricationRecipe != null)
+                {
+                    foreach (KeyValuePair<string, PriceInfo> itemLocationPrice in itemPrefab.GetSellPricesOver(0))
+                    {
+                        NewMessage("    If bought at " + itemLocationPrice.Key + " it costs " + itemLocationPrice.Value.Price);
+                        int totalPrice = 0;
+                        int? totalBestPrice = 0;
+                        foreach (var ingredient in fabricationRecipe.RequiredItems)
+                        {
+                            foreach (ItemPrefab ingredientItemPrefab in ingredient.ItemPrefabs)
+                            {
+                                NewMessage("        Its ingredient " + ingredientItemPrefab.Name + " has base cost " + ingredientItemPrefab.DefaultPrice.Price);
+                                totalPrice += ingredientItemPrefab.DefaultPrice.Price;
+                                totalBestPrice += ingredientItemPrefab.GetMinPrice();
+                                int basePrice = ingredientItemPrefab.DefaultPrice.Price;
+                                foreach (KeyValuePair<string, PriceInfo> ingredientItemLocationPrice in ingredientItemPrefab.GetBuyPricesUnder())
+                                {
+                                    if (basePrice > ingredientItemLocationPrice.Value.Price)
+                                    {
+                                        NewMessage("            Location " + ingredientItemLocationPrice.Key + " sells ingredient " + ingredientItemPrefab.Name + " for cheaper, " + ingredientItemLocationPrice.Value.Price, Color.Yellow);
+                                    }
+                                    else
+                                    {
+                                        NewMessage("            Location " + ingredientItemLocationPrice.Key + " sells ingredient " + ingredientItemPrefab.Name + " for more, " + ingredientItemLocationPrice.Value.Price, Color.Teal);
+                                    }
+                                }
+                            }
+                        }
+                        int costDifference = itemPrefab.DefaultPrice.Price - totalPrice;
+                        NewMessage("    Constructing the item from store-bought items provides " + costDifference + " profit with default values.");
+
+                        if (totalBestPrice.HasValue)
+                        {
+                            int? bestDifference = itemLocationPrice.Value.Price - totalBestPrice;
+                            NewMessage("    Constructing the item from store-bought items provides " + bestDifference + " profit with best-case scenario values.");
+                        }
+                    }
+                }
+            },
+            () =>
+            {
+                return new string[][] { ItemPrefab.Prefabs.SelectMany(p => p.Aliases).Concat(ItemPrefab.Prefabs.Select(p => p.Identifier)).ToArray() };
+            }, isCheat: false));
+
+            commands.Add(new Command("checkcraftingexploits", "checkcraftingexploits: Finds outright item exploits created by buying store-bought ingredients and constructing them into sellable items.", (string[] args) =>
+            {
+                List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
+                foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
+                {
+                    fabricableItems.AddRange(itemPrefab.FabricationRecipes);
+                }
+                List<Tuple<string, int>> costDifferences = new List<Tuple<string, int>>();
+
+                int maximumAllowedCost = 5;
+
+                if (args.Length > 0)
+                {
+                    Int32.TryParse(args[0], out maximumAllowedCost);
+                }
+                foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
+                {
+                    int? defaultCost = itemPrefab.DefaultPrice?.Price;
+                    int? fabricationCostStore = null;
+
+                    var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == itemPrefab);
+                    if (fabricationRecipe == null)
+                    {
+                        continue;
+                    }
+
+                    bool canBeBought = true;
+
+                    foreach (var ingredient in fabricationRecipe.RequiredItems)
+                    {
+                        int? ingredientPrice = ingredient.ItemPrefabs.Where(p => p.CanBeBought).Min(ip => ip.DefaultPrice?.Price);
+                        if (ingredientPrice.HasValue)
+                        {
+                            if (!fabricationCostStore.HasValue) { fabricationCostStore = 0; }
+                            float useAmount = ingredient.UseCondition ? ingredient.MinCondition : 1.0f;
+                            fabricationCostStore += (int)(ingredientPrice.Value * ingredient.Amount * useAmount);
+                        }
+                        else
+                        {
+                            canBeBought = false;
+                        }
+                    }
+                    if (fabricationCostStore.HasValue && defaultCost.HasValue && canBeBought)
+                    {
+                        int costDifference = defaultCost.Value - fabricationCostStore.Value;
+                        if (costDifference > maximumAllowedCost || costDifference < 0f)
+                        {
+                            float ratio = (float)fabricationCostStore.Value / defaultCost.Value;
+                            string message = "Fabricating \"" + itemPrefab.Name + "\" costs " + (int)(ratio * 100) + "% of the price of the item, or " + costDifference + " more. Item price: " + defaultCost.Value + ", ingredient prices: " + fabricationCostStore.Value;
+                            costDifferences.Add(new Tuple<string, int>(message, costDifference));
+                        }
+                    }
+                }
+
+                costDifferences.Sort((x, y) => x.Item2.CompareTo(y.Item2));
+
+                foreach (Tuple<string, int> costDifference in costDifferences)
+                {
+                    Color color = Color.Yellow;
+                    NewMessage(costDifference.Item1, color);
+                }
+            }, isCheat: false));
+
+            commands.Add(new Command("adjustprice", "adjustprice: Recursively prints out expected price adjustments for items derived from this item.", (string[] args) =>
+            {
+                List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
+                foreach (ItemPrefab iP in ItemPrefab.Prefabs)
+                {
+                    fabricableItems.AddRange(iP.FabricationRecipes);
+                }
+                if (args.Length < 2)
+                {
+                    NewMessage("Item or value not defined.");
+                    return;
+                }
+                string itemNameOrId = args[0].ToLowerInvariant();
+
+                ItemPrefab materialPrefab =
+                    (MapEntityPrefab.Find(itemNameOrId, identifier: null, showErrorMessages: false) ??
+                    MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+
+                if (materialPrefab == null)
+                {
+                    NewMessage("Item not found for price adjustment.");
+                    return;
+                }
+
+                AdjustItemTypes adjustItemType = AdjustItemTypes.NoAdjustment;
+                if (args.Length > 2)
+                {
+                    switch (args[2].ToLowerInvariant())
+                    {
+                        case "add":
+                            adjustItemType = AdjustItemTypes.Additive;
+                            break;
+                        case "mult":
+                            adjustItemType = AdjustItemTypes.Multiplicative;
+                            break;
+                    }
+                }
+
+                if (Int32.TryParse(args[1].ToLowerInvariant(), out int newPrice))
+                {
+                    Dictionary<ItemPrefab, int> newPrices = new Dictionary<ItemPrefab, int>();
+                    PrintItemCosts(newPrices, materialPrefab, fabricableItems, newPrice, true, adjustItemType: adjustItemType);
+                    PrintItemCosts(newPrices, materialPrefab, fabricableItems, newPrice, false, adjustItemType: adjustItemType);
+                }
+
+            }, isCheat: false));
+
+            commands.Add(new Command("deconstructvalue", "deconstructvalue: Views and compares deconstructed component prices for this item.", (string[] args) =>
+            {
+                List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
+                foreach (ItemPrefab iP in ItemPrefab.Prefabs)
+                {
+                    fabricableItems.AddRange(iP.FabricationRecipes);
+                }
+                if (args.Length < 1)
+                {
+                    NewMessage("Item not defined.");
+                    return;
+                }
+                string itemNameOrId = args[0].ToLowerInvariant();
+
+                ItemPrefab parentItem =
+                    (MapEntityPrefab.Find(itemNameOrId, identifier: null, showErrorMessages: false) ??
+                    MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+
+                if (parentItem == null)
+                {
+                    NewMessage("Item not found for price adjustment.");
+                    return;
+                }
+
+                var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == parentItem);
+                int totalValue = 0;
+                NewMessage(parentItem.Name + " has the price " + parentItem.DefaultPrice.Price);
+                if (fabricationRecipe != null)
+                {
+                    NewMessage("    It constructs from:");
+
+                    foreach (RequiredItem requiredItem in fabricationRecipe.RequiredItems)
+                    {
+                        foreach (ItemPrefab itemPrefab in requiredItem.ItemPrefabs)
+                        {
+                            NewMessage("        " + itemPrefab.Name + " has the price " + itemPrefab.DefaultPrice.Price);
+                            totalValue += itemPrefab.DefaultPrice.Price;
+                        }
+                    }
+                    NewMessage("Its total value was: " + totalValue);
+                    totalValue = 0;
+                }
+                NewMessage("    The item deconstructs into:");
+                foreach (DeconstructItem deconstructItem in parentItem.DeconstructItems)
+                {
+                    ItemPrefab itemPrefab =
+                        (MapEntityPrefab.Find(deconstructItem.ItemIdentifier, identifier: null, showErrorMessages: false) ??
+                        MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+
+                    NewMessage("       " + itemPrefab.Name + " has the price " + itemPrefab.DefaultPrice.Price);
+                    totalValue += itemPrefab.DefaultPrice.Price;
+                }
+                NewMessage("Its deconstruct value was: " + totalValue);
+
             }, isCheat: false));
 
             commands.Add(new Command("setentityproperties", "setentityproperties [property name] [value]: Sets the value of some property on all selected items/structures in the sub editor.", (string[] args) =>
@@ -1453,13 +1732,14 @@ namespace Barotrauma
                     //check missing mission texts
                     foreach (var missionPrefab in MissionPrefab.List)
                     {
-                        string nameIdentifier = "missionname." + missionPrefab.Identifier;
+                        string missionId = (missionPrefab.ConfigElement.Attribute("textidentifier") == null ? missionPrefab.Identifier : missionPrefab.ConfigElement.GetAttributeString("textidentifier", string.Empty));
+                        string nameIdentifier = "missionname." + missionId;
                         if (!tags[language].Contains(nameIdentifier))
                         {
                             if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
                             missingTags[nameIdentifier].Add(language);
                         }
-                        string descriptionIdentifier = "missiondescription." + missionPrefab.Identifier;
+                        string descriptionIdentifier = "missiondescription." + missionId;
                         if (!tags[language].Contains(descriptionIdentifier))
                         {
                             if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }
@@ -1469,6 +1749,7 @@ namespace Barotrauma
 
                     foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
                     {
+                        if (sub.Type != SubmarineType.Player) { continue; }
                         string nameIdentifier = "submarine.name." + sub.Name.ToLowerInvariant();
                         if (!tags[language].Contains(nameIdentifier))
                         {
@@ -1485,18 +1766,50 @@ namespace Barotrauma
 
                     foreach (AfflictionPrefab affliction in AfflictionPrefab.List)
                     {
-                        string nameIdentifier = "afflictionname." + affliction.Identifier;
+                        if (affliction.ShowIconThreshold > affliction.MaxStrength && 
+                            affliction.ShowIconToOthersThreshold > affliction.MaxStrength && 
+                            affliction.ShowInHealthScannerThreshold > affliction.MaxStrength)
+                        {
+                            //hidden affliction, no need for localization
+                            continue;
+                        }
+
+                        string afflictionId = affliction.TranslationOverride ?? affliction.Identifier;
+                        string nameIdentifier = "afflictionname." + afflictionId;
                         if (!tags[language].Contains(nameIdentifier))
                         {
                             if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
                             missingTags[nameIdentifier].Add(language);
                         }
 
-                        string descriptionIdentifier = "afflictiondescription." + affliction.Identifier;
+                        string descriptionIdentifier = "afflictiondescription." + afflictionId;
                         if (!tags[language].Contains(descriptionIdentifier))
                         {
                             if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }
                             missingTags[descriptionIdentifier].Add(language);
+                        }
+                    }
+
+                    foreach (var talentTree in TalentTree.JobTalentTrees)
+                    {
+                        foreach (var talentSubTree in talentTree.Value.TalentSubTrees)
+                        {
+                            string nameIdentifier = "talenttree." + talentSubTree.Identifier;
+                            if (!tags[language].Contains(nameIdentifier))
+                            {
+                                if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
+                                missingTags[nameIdentifier].Add(language);
+                            }
+                        }
+                    }
+
+                    foreach (var talent in TalentPrefab.TalentPrefabs)
+                    {
+                        string nameIdentifier = "talentname." + talent.Identifier;
+                        if (!tags[language].Contains(nameIdentifier))
+                        {
+                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
+                            missingTags[nameIdentifier].Add(language);
                         }
                     }
 
@@ -2933,6 +3246,156 @@ namespace Barotrauma
                 default:
                     ThrowError("The first argument must be either 'name' or 'id'");
                     return false;
+            }
+        }
+
+
+        private enum AdjustItemTypes
+        {
+            NoAdjustment,
+            Additive,
+            Multiplicative
+        }
+
+        private static void PrintItemCosts(Dictionary<ItemPrefab, int> newPrices, ItemPrefab materialPrefab, List<FabricationRecipe> fabricableItems, int newPrice, bool adjustDown, string depth = "", AdjustItemTypes adjustItemType = AdjustItemTypes.NoAdjustment)
+        {
+            if (newPrice < 1)
+            {
+                NewMessage(depth + materialPrefab.Name + " cannot be adjusted to this price, because it would become less than 1.");
+                return;
+            }
+
+            depth += "   ";
+
+            if (newPrice > 0)
+            {
+                newPrices.TryAdd(materialPrefab, newPrice);
+            }
+
+            int componentCost = 0;
+            int newComponentCost = 0;
+
+            var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == materialPrefab);
+
+            if (fabricationRecipe != null)
+            {
+                foreach (RequiredItem requiredItem in fabricationRecipe.RequiredItems)
+                {
+                    foreach (ItemPrefab itemPrefab in requiredItem.ItemPrefabs)
+                    {
+                        GetAdjustedPrice(itemPrefab, ref componentCost, ref newComponentCost, newPrices);
+                    }
+                }
+            }
+            string componentCostMultiplier = "";
+            if (componentCost > 0)
+            {
+                componentCostMultiplier = $" (Relative difference to component cost {GetComponentCostDifference(materialPrefab.DefaultPrice.Price, componentCost)} => {GetComponentCostDifference(newPrice, newComponentCost)}, or flat profit {(int)(materialPrefab.DefaultPrice.Price - (int)componentCost)} => {newPrice - newComponentCost})";
+            }
+            string priceAdjustment = "";
+            if (newPrice != materialPrefab.DefaultPrice.Price)
+            {
+                priceAdjustment = ", Suggested price adjustment is " + materialPrefab.DefaultPrice.Price + " => " + newPrice;
+            }
+            NewMessage(depth + materialPrefab.Name + "(" + materialPrefab.DefaultPrice.Price + ") " + priceAdjustment + componentCostMultiplier);
+
+            if (adjustDown)
+            {
+                if (componentCost > 0)
+                {
+                    double newPriceMult = (double)newPrice / (double)(materialPrefab.DefaultPrice.Price);
+                    int newPriceDiff = componentCost + newPrice - materialPrefab.DefaultPrice.Price;
+
+                    switch (adjustItemType)
+                    {
+                        case AdjustItemTypes.Additive:
+                            NewMessage(depth + materialPrefab.Name + "'s components should be adjusted " + componentCost + " => " + newPriceDiff);
+                            break;
+                        case AdjustItemTypes.Multiplicative:
+                            NewMessage(depth + materialPrefab.Name + "'s components should be adjusted " + componentCost + " => " + Math.Round(newPriceMult * componentCost));
+                            break;
+                    }
+
+                    if (fabricationRecipe != null)
+                    {
+                        foreach (RequiredItem requiredItem in fabricationRecipe.RequiredItems)
+                        {
+                            foreach (ItemPrefab itemPrefab in requiredItem.ItemPrefabs)
+                            {
+                                if (itemPrefab.DefaultPrice != null)
+                                {
+                                    switch (adjustItemType)
+                                    {
+                                        case AdjustItemTypes.NoAdjustment:
+                                            PrintItemCosts(newPrices, itemPrefab, fabricableItems, itemPrefab.DefaultPrice.Price, adjustDown, depth, adjustItemType);
+                                            break;
+                                        case AdjustItemTypes.Additive:
+                                            PrintItemCosts(newPrices, itemPrefab, fabricableItems, itemPrefab.DefaultPrice.Price + (int)((newPrice - materialPrefab.DefaultPrice.Price) / (double)fabricationRecipe.RequiredItems.Count), adjustDown, depth, adjustItemType);
+                                            break;
+                                        case AdjustItemTypes.Multiplicative:
+                                            PrintItemCosts(newPrices, itemPrefab, fabricableItems, (int)(itemPrefab.DefaultPrice.Price * newPriceMult), adjustDown, depth, adjustItemType);
+                                            break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                var fabricationRecipes = fabricableItems.Where(f => f.RequiredItems.Any(x => x.ItemPrefabs.Contains(materialPrefab)));
+
+                foreach (FabricationRecipe fabricationRecipeParent in fabricationRecipes)
+                {
+                    if (fabricationRecipeParent.TargetItem.DefaultPrice != null)
+                    {
+                        int targetComponentCost = 0;
+                        int newTargetComponentCost = 0;
+
+                        foreach (RequiredItem requiredItem in fabricationRecipeParent.RequiredItems)
+                        {
+                            foreach (ItemPrefab itemPrefab in requiredItem.ItemPrefabs)
+                            {
+                                GetAdjustedPrice(itemPrefab, ref targetComponentCost, ref newTargetComponentCost, newPrices);
+                            }
+                        }
+                        switch (adjustItemType)
+                        {
+                            case AdjustItemTypes.NoAdjustment:
+                                PrintItemCosts(newPrices, fabricationRecipeParent.TargetItem, fabricableItems, fabricationRecipeParent.TargetItem.DefaultPrice.Price, adjustDown, depth, adjustItemType);
+                                break;
+                            case AdjustItemTypes.Additive:
+                                PrintItemCosts(newPrices, fabricationRecipeParent.TargetItem, fabricableItems, fabricationRecipeParent.TargetItem.DefaultPrice.Price + newPrice - materialPrefab.DefaultPrice.Price, adjustDown, depth, adjustItemType);
+                                break;
+                            case AdjustItemTypes.Multiplicative:
+                                double maintainedMultiplier = GetComponentCostDifference(fabricationRecipeParent.TargetItem.DefaultPrice.Price, targetComponentCost);
+                                PrintItemCosts(newPrices, fabricationRecipeParent.TargetItem, fabricableItems, (int)(newTargetComponentCost * maintainedMultiplier), adjustDown, depth, adjustItemType);
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static double GetComponentCostDifference(int itemCost, int componentCost)
+        {
+            return Math.Round((double)(itemCost / (double)componentCost), 2);
+        }
+
+        private static void GetAdjustedPrice(ItemPrefab itemPrefab, ref int componentCost, ref int newComponentCost, Dictionary<ItemPrefab, int> newPrices)
+        {
+            if (newPrices.TryGetValue(itemPrefab, out int newPrice))
+            {
+                newComponentCost += newPrice;
+            }
+            else if (itemPrefab.DefaultPrice != null)
+            {
+                newComponentCost += itemPrefab.DefaultPrice.Price;
+            }
+            if (itemPrefab.DefaultPrice != null)
+            {
+                componentCost += itemPrefab.DefaultPrice.Price;
             }
         }
     }

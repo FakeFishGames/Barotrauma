@@ -24,7 +24,8 @@ namespace Barotrauma
         private GUIFrame menu;
 
         private GUIListBox serverList;
-        private GUIFrame serverPreview;
+        private GUIFrame serverPreviewContainer;
+        private GUIListBox serverPreview;
 
         private GUIButton joinButton;
         private ServerInfo selectedServer;
@@ -38,10 +39,32 @@ namespace Barotrauma
         private GUIListBox friendsDropdown;
 
         //Workshop downloads
+        public struct PendingWorkshopDownload
+        {
+            public readonly string ExpectedHash;
+            public readonly ulong Id;
+            public readonly Steamworks.Ugc.Item? Item;
+            
+            public PendingWorkshopDownload(string expectedHash, Steamworks.Ugc.Item item)
+            {
+                ExpectedHash = expectedHash;
+                Item = item;
+                Id = item.Id;
+            }
+
+            public PendingWorkshopDownload(string expectedHash, ulong id)
+            {
+                ExpectedHash = expectedHash;
+                Item = null;
+                Id = id;
+            }
+        }
+
         private GUIFrame workshopDownloadsFrame = null;
         private Steamworks.Ugc.Item? currentlyDownloadingWorkshopItem = null;
-        private Dictionary<ulong, Steamworks.Ugc.Item?> pendingWorkshopDownloads = null;
-        private string autoConnectName; private string autoConnectEndpoint;
+        private Dictionary<ulong, PendingWorkshopDownload> pendingWorkshopDownloads = null;
+        private string autoConnectName;
+        private string autoConnectEndpoint;
 
         private enum TernaryOption
         {
@@ -318,11 +341,11 @@ namespace Barotrauma
             void RecalculateHolder()
             {
                 float listContainerSubtract = filtersHolder.Visible ? sidebarWidth : 0.0f;
-                listContainerSubtract += serverPreview.Visible ? sidebarWidth : 0.0f;
+                listContainerSubtract += serverPreviewContainer.Visible ? sidebarWidth : 0.0f;
 
                 float toggleButtonsSubtract = 1.1f * filterToggle.Rect.Width / serverListHolder.Rect.Width;
                 listContainerSubtract += filterToggle.Visible ? toggleButtonsSubtract : 0.0f;
-                listContainerSubtract += serverPreviewToggleButton.Visible ? toggleButtonsSubtract : 0.0f;
+                listContainerSubtract += serverPreviewContainer.Visible ? toggleButtonsSubtract : 0.0f;
 
                 serverListContainer.RectTransform.RelativeSize = new Vector2(1.0f - listContainerSubtract, 1.0f);
                 serverListHolder.Recalculate();
@@ -545,17 +568,17 @@ namespace Barotrauma
                     {
                         joinButton.Enabled = true;
                         selectedServer = serverInfo;
-                        if (!serverPreview.Visible)
+                        if (!serverPreviewContainer.Visible)
                         {
-                            serverPreview.RectTransform.RelativeSize = new Vector2(sidebarWidth, 1.0f);
+                            serverPreviewContainer.RectTransform.RelativeSize = new Vector2(sidebarWidth, 1.0f);
                             serverPreviewToggleButton.Visible = true;
                             serverPreviewToggleButton.IgnoreLayoutGroups = false;
-                            serverPreview.Visible = true;
-                            serverPreview.IgnoreLayoutGroups = false;
+                            serverPreviewContainer.Visible = true;
+                            serverPreviewContainer.IgnoreLayoutGroups = false;
                             RecalculateHolder();
                         }
-                        serverInfo.CreatePreviewWindow(serverPreview);
-                        btn.Children.ForEach(c => c.SpriteEffects = serverPreview.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
+                        serverInfo.CreatePreviewWindow(serverPreview.Content);
+                        btn.Children.ForEach(c => c.SpriteEffects = serverPreviewContainer.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
                     }
                     return true;
                 }
@@ -570,23 +593,27 @@ namespace Barotrauma
                 Visible = false,
                 OnClicked = (btn, userdata) =>
                 {
-                    serverPreview.RectTransform.RelativeSize = new Vector2(0.2f, 1.0f);
-                    serverPreview.Visible = !serverPreview.Visible;
-                    serverPreview.IgnoreLayoutGroups = !serverPreview.Visible;
+                    serverPreviewContainer.RectTransform.RelativeSize = new Vector2(0.2f, 1.0f);
+                    serverPreviewContainer.Visible = !serverPreviewContainer.Visible;
+                    serverPreviewContainer.IgnoreLayoutGroups = !serverPreviewContainer.Visible;
 
                     RecalculateHolder();
 
-                    btn.Children.ForEach(c => c.SpriteEffects = serverPreview.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
+                    btn.Children.ForEach(c => c.SpriteEffects = serverPreviewContainer.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
                     return true;
                 }
             };
 
-            serverPreview = new GUIFrame(new RectTransform(new Vector2(sidebarWidth, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
+            serverPreviewContainer = new GUIFrame(new RectTransform(new Vector2(sidebarWidth, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
             {
                 Color = new Color(12, 14, 15, 255) * 0.5f,
                 OutlineColor = Color.Black,
                 IgnoreLayoutGroups = true,
                 Visible = false
+            };
+            serverPreview = new GUIListBox(new RectTransform(Vector2.One, serverPreviewContainer.RectTransform, Anchor.Center))
+            {
+                Padding = Vector4.One * 10 * GUI.Scale
             };
 
             // Spacing
@@ -1037,25 +1064,44 @@ namespace Barotrauma
                 }
             }
 
-            if (currentlyDownloadingWorkshopItem?.IsInstalled ?? true)
+            if (currentlyDownloadingWorkshopItem == null)
             {
                 if (pendingWorkshopDownloads?.Any() ?? false)
                 {
-                    Steamworks.Ugc.Item? item = pendingWorkshopDownloads.Values.FirstOrDefault(it => it != null);
+                    Steamworks.Ugc.Item? item = pendingWorkshopDownloads.Values.FirstOrDefault(it => it.Item != null).Item;
                     if (item != null)
                     {
                         ulong itemId = item.Value.Id;
                         currentlyDownloadingWorkshopItem = item;
-                        SteamManager.SubscribeToWorkshopItem(itemId, () =>
+                        SteamManager.ForceRedownload(item.Value.Id, () =>
                         {
+                            if (!(item?.IsSubscribed ?? false))
+                            {
+                                TaskPool.Add("SubscribeToServerMod", item?.Subscribe(), (t) => { });
+                            }
+                            PendingWorkshopDownload clearedDownload = pendingWorkshopDownloads[itemId];
                             pendingWorkshopDownloads.Remove(itemId);
+                            currentlyDownloadingWorkshopItem = null;
+
+                            void onInstall(ContentPackage resultingPackage)
+                            {
+                                if (!resultingPackage.MD5hash.Hash.Equals(clearedDownload.ExpectedHash))
+                                {
+                                    workshopDownloadsFrame?.FindChild((c) => c.UserData is ulong l && l == itemId, true)?.Flash(GUI.Style.Red);
+                                    CancelWorkshopDownloads();
+                                    GameMain.Client?.Disconnect();
+                                    GameMain.Client = null;
+                                    new GUIMessageBox(
+                                        TextManager.Get("ConnectionLost"),
+                                        TextManager.GetWithVariable("DisconnectMessage.MismatchedWorkshopMod", "[incompatiblecontentpackage]", $"\"{resultingPackage.Name}\" (hash {resultingPackage.MD5hash.ShortHash})"));
+                                }
+                            }
 
                             if (SteamManager.CheckWorkshopItemInstalled(item))
                             {
                                 SteamManager.UninstallWorkshopItem(item, false, out _);
                             }
-
-                            if (SteamManager.InstallWorkshopItem(item, out string errorMsg, enableContentPackage: false, suppressInstallNotif: true))
+                            if (SteamManager.InstallWorkshopItem(item, out string errorMsg, enableContentPackage: false, suppressInstallNotif: true, onInstall: onInstall))
                             {
                                 workshopDownloadsFrame?.FindChild((c) => c.UserData is ulong l && l == itemId, true)?.Flash(GUI.Style.Green);
                             }
@@ -1656,7 +1702,7 @@ namespace Barotrauma
             UpdateFriendsList();
 
             serverList.ClearChildren();
-            serverPreview.ClearChildren();
+            serverPreview.Content.ClearChildren();
             joinButton.Enabled = false;
             selectedServer = null;
 
@@ -2127,45 +2173,46 @@ namespace Barotrauma
             masterServerResponded = true;
         }
 
-        public void DownloadWorkshopItems(IEnumerable<ulong> ids, string serverName, string endPointString)
+        public void DownloadWorkshopItems(IEnumerable<PendingWorkshopDownload> downloads, string serverName, string endPointString)
         {
             if (workshopDownloadsFrame != null) { return; }
-            int rowCount = ids.Count() + 2;
+            int rowCount = downloads.Count() + 2;
 
             autoConnectName = serverName; autoConnectEndpoint = endPointString;
 
             workshopDownloadsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), null, Color.Black * 0.5f);
-            pendingWorkshopDownloads = new Dictionary<ulong, Steamworks.Ugc.Item?>();
+            currentlyDownloadingWorkshopItem = null;
+            pendingWorkshopDownloads = new Dictionary<ulong, PendingWorkshopDownload>();
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f + 0.03f * rowCount), workshopDownloadsFrame.RectTransform, Anchor.Center, Pivot.Center));
             var innerLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, (float)rowCount / (float)(rowCount + 3)), innerFrame.RectTransform, Anchor.Center, Pivot.Center));
 
-            foreach (ulong id in ids)
+            foreach (PendingWorkshopDownload entry in downloads)
             {
-                pendingWorkshopDownloads.Add(id, null);
+                pendingWorkshopDownloads.Add(entry.Id, entry);
 
                 var itemLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f / rowCount), innerLayout.RectTransform), true, Anchor.CenterLeft)
                 {
-                    UserData = id
+                    UserData = entry.Id
                 };
-                TaskPool.Add("RetrieveWorkshopItemData", Steamworks.SteamUGC.QueryFileAsync(id), (t) =>
+                TaskPool.Add("RetrieveWorkshopItemData", Steamworks.SteamUGC.QueryFileAsync(entry.Id), (t) =>
                 {
                     if (t.IsFaulted)
                     {
-                        TaskPool.PrintTaskExceptions(t, $"Failed to retrieve Workshop item info (ID {id})");
+                        TaskPool.PrintTaskExceptions(t, $"Failed to retrieve Workshop item info (ID {entry.Id})");
                         return;
                     }
                     Steamworks.Ugc.Item? item = ((Task<Steamworks.Ugc.Item?>)t).Result;
 
                     if (!item.HasValue)
                     {
-                        DebugConsole.ThrowError($"Failed to find a Steam Workshop item with the ID {id}.");
+                        DebugConsole.ThrowError($"Failed to find a Steam Workshop item with the ID {entry.Id}.");
                         return;
                     }
 
-                    if (pendingWorkshopDownloads.ContainsKey(id))
+                    if (pendingWorkshopDownloads.ContainsKey(entry.Id))
                     {
-                        pendingWorkshopDownloads[id] = item;
+                        pendingWorkshopDownloads[entry.Id] = new PendingWorkshopDownload(entry.ExpectedHash, item.Value);
 
                         new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.67f), itemLayout.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), item.Value.Title);
 
@@ -2191,13 +2238,19 @@ namespace Barotrauma
             {
                 OnClicked = (btn, obj) =>
                 {
-                    autoConnectEndpoint = null;
-                    autoConnectName = null;
-                    pendingWorkshopDownloads.Clear();
-                    workshopDownloadsFrame = null;
+                    CancelWorkshopDownloads();
                     return true;
                 }
             };
+        }
+
+        public void CancelWorkshopDownloads()
+        {
+            autoConnectEndpoint = null;
+            autoConnectName = null;
+            pendingWorkshopDownloads.Clear();
+            currentlyDownloadingWorkshopItem = null;
+            workshopDownloadsFrame = null;
         }
 
         private bool JoinServer(string endpoint, string serverName)

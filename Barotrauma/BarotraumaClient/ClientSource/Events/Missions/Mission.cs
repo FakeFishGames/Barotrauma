@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -14,6 +15,10 @@ namespace Barotrauma
             get { return shownMessages; }
         }
 
+        public bool DisplayTargetHudIcons => Prefab.DisplayTargetHudIcons;
+
+        public virtual IEnumerable<Entity> HudIconTargets => Enumerable.Empty<Entity>();
+
         public Color GetDifficultyColor()
         {
             int v = Difficulty ?? MissionPrefab.MinDifficulty;
@@ -21,9 +26,9 @@ namespace Barotrauma
             return ToolBox.GradientLerp(t, GUI.Style.Green, GUI.Style.Orange, GUI.Style.Red);
         }
 
-        public string GetMissionRewardText()
+        public virtual string GetMissionRewardText(Submarine sub)
         {
-            string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", Reward));
+            string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", GetReward(sub)));
             return TextManager.GetWithVariable("missionreward", "[reward]", $"‖color:gui.orange‖{rewardText}‖end‖");
         }
 
@@ -92,11 +97,14 @@ namespace Barotrauma
             };
         }
 
-        public void ClientRead(IReadMessage msg)
+        public virtual void ClientRead(IReadMessage msg)
         {
             State = msg.ReadInt16();
         }
 
-        public abstract void ClientReadInitial(IReadMessage msg);
+        public virtual void ClientReadInitial(IReadMessage msg)
+        {
+            state = msg.ReadInt16();
+        }
     }
 }

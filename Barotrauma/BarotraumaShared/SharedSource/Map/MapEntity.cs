@@ -48,8 +48,7 @@ namespace Barotrauma
             }
         }
 
-        //observable collection because some entities may need to be notified when the collection is modified
-        public readonly ObservableCollection<MapEntity> linkedTo = new ObservableCollection<MapEntity>();
+        public readonly List<MapEntity> linkedTo = new List<MapEntity>();
 
         protected bool flippedX, flippedY;
         public bool FlippedX { get { return flippedX; } }
@@ -225,12 +224,6 @@ namespace Barotrauma
             }
         }
 
-        public RuinGeneration.Ruin ParentRuin
-        {
-            get;
-            set;
-        }
-
         [Serialize(true, true)]
         public bool RemoveIfLinkedOutpostDoorInUse
         {
@@ -243,7 +236,7 @@ namespace Barotrauma
         /// </summary>
         public int OriginalModuleIndex = -1;
 
-        public UInt16 OriginalContainerID;
+        public int OriginalContainerIndex = -1;
 
         public virtual string Name
         {
@@ -280,7 +273,7 @@ namespace Barotrauma
         public void ResolveLinks(IdRemap childRemap)
         {
             if (unresolvedLinkedToID == null) { return; }
-            for (int i=0;i<unresolvedLinkedToID.Count;i++)
+            for (int i = 0; i < unresolvedLinkedToID.Count; i++)
             {
                 int srcId = unresolvedLinkedToID[i];
                 int targetId = childRemap.GetOffsetId(srcId);
@@ -416,14 +409,13 @@ namespace Barotrauma
             //connect clone wires to the clone items and refresh links between doors and gaps
             for (int i = 0; i < clones.Count; i++)
             {
-                var cloneItem = clones[i] as Item;
-                if (cloneItem == null) { continue; }
+                if (!(clones[i] is Item cloneItem)) { continue; }
 
                 var door = cloneItem.GetComponent<Door>();
-                if (door != null) { door.RefreshLinkedGap(); }
+                door?.RefreshLinkedGap();
 
                 var cloneWire = cloneItem.GetComponent<Wire>();
-                if (cloneWire == null) continue;
+                if (cloneWire == null) { continue; }
 
                 var originalWire = ((Item)entitiesToClone[i]).GetComponent<Wire>();
 
@@ -431,10 +423,23 @@ namespace Barotrauma
 
                 for (int n = 0; n < 2; n++)
                 {
-                    if (originalWire.Connections[n] == null) { continue; }
+                    if (originalWire.Connections[n] == null)
+                    {
+                        var disconnectedFrom = entitiesToClone.Find(e => e is Item item && (item.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(originalWire) ?? false));
+                        if (disconnectedFrom == null) { continue; }
+
+                        int disconnectedFromIndex = entitiesToClone.IndexOf(disconnectedFrom);
+                        var disconnectedFromClone = (clones[disconnectedFromIndex] as Item)?.GetComponent<ConnectionPanel>();
+                        if (disconnectedFromClone == null) { continue; }
+
+                        disconnectedFromClone.DisconnectedWires.Add(cloneWire);
+                        if (cloneWire.Item.body != null) { cloneWire.Item.body.Enabled = false; }
+                        cloneWire.IsActive = false;
+                        continue; 
+                    }
 
                     var connectedItem = originalWire.Connections[n].Item;
-                    if (connectedItem == null) continue;
+                    if (connectedItem == null) { continue; }
 
                     //index of the item the wire is connected to
                     int itemIndex = entitiesToClone.IndexOf(connectedItem);
@@ -509,13 +514,17 @@ namespace Barotrauma
             mapEntityList.Remove(this);
 
 #if CLIENT
-            if (selectedList.Contains(this))
+            if (SelectedList.Contains(this))
             {
-                selectedList = selectedList.FindAll(e => e != this);
+                SelectedList = SelectedList.Where(e => e != this).ToHashSet();
             }
 #endif
 
-            if (aiTarget != null) aiTarget.Remove();
+            if (aiTarget != null)
+            {
+                aiTarget.Remove();
+                aiTarget = null;
+            }
 
             if (linkedTo != null)
             {
@@ -649,7 +658,10 @@ namespace Barotrauma
                     else
                     {
                         object newEntity = loadMethod.Invoke(t, new object[] { element, submarine, idRemap });
-                        if (newEntity != null) entities.Add((MapEntity)newEntity);
+                        if (newEntity != null)
+                        {
+                            entities.Add((MapEntity)newEntity);
+                        }
                     }
                 }
                 catch (TargetInvocationException e)

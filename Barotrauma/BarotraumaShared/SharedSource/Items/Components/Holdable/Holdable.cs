@@ -33,7 +33,7 @@ namespace Barotrauma.Items.Components
 
         private bool attachable, attached, attachedByDefault;
         private Voronoi2.VoronoiCell attachTargetCell;
-        private readonly PhysicsBody body;
+        private PhysicsBody body;
         public PhysicsBody Pusher
         {
             get;
@@ -79,6 +79,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, false, description: "Use the hand rotation instead of torso rotation for the item hold angle. Enable this if you want the item just to follow with the arm when not aiming instead of forcing the arm to a hold pose.")]
+        public bool UseHandRotationForHoldAngle
+        {
+            get;
+            set;
+        }
+
         [Serialize(false, false, description: "Can the item be attached to walls.")]
         public bool Attachable
         {
@@ -88,6 +95,13 @@ namespace Barotrauma.Items.Components
 
         [Serialize(true, false, description: "Can the item be reattached to walls after it has been deattached (only valid if Attachable is set to true).")]
         public bool Reattachable
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, false, description: "Can the item only be attached in limited amount? Uses permanent stat values to check for legibility.")]
+        public bool LimitedAttachable
         {
             get;
             set;
@@ -154,7 +168,8 @@ namespace Barotrauma.Items.Components
                     BodyType = BodyType.Dynamic,
                     CollidesWith = Physics.CollisionCharacter,
                     CollisionCategories = Physics.CollisionItemBlocking,
-                    Enabled = false
+                    Enabled = false,
+                    UserData = "Holdable.Pusher"
                 };
                 Pusher.FarseerBody.OnCollision += OnPusherCollision;
                 Pusher.FarseerBody.FixedRotation = false;
@@ -205,7 +220,6 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-
             characterUsable = element.GetAttributeBool("characterusable", true);
         }
 
@@ -247,6 +261,7 @@ namespace Barotrauma.Items.Components
 
         private void Drop(bool dropConnectedWires, Character dropper)
         {
+            GetRope()?.Snap();
             if (dropConnectedWires)
             {
                 DropConnectedWires(dropper);
@@ -319,12 +334,38 @@ namespace Barotrauma.Items.Components
 
         public override void Equip(Character character)
         {
+            //if the item has multiple Pickable components (e.g. Holdable and Wearable, check that we don't equip it in hands when the item is worn or vice versa)
+            if (item.GetComponents<Pickable>().Count() > 0)
+            {
+                bool inSuitableSlot = false;
+                for (int i = 0; i < character.Inventory.Capacity; i++)
+                {
+                    if (character.Inventory.GetItemsAt(i).Contains(item))
+                    {
+                        if (character.Inventory.SlotTypes[i] != InvSlotType.Any && 
+                            allowedSlots.Any(a => a.HasFlag(character.Inventory.SlotTypes[i])))
+                        {
+                            inSuitableSlot = true;
+                            break;
+                        }
+                    }
+                }
+                if (!inSuitableSlot) { return; }
+            }
+
             picker = character;
 
             if (item.Removed)
             {
                 DebugConsole.ThrowError($"Attempted to equip a removed item ({item.Name})\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
+            }
+
+            var wearable = item.GetComponent<Wearable>();
+            if (wearable != null)
+            {
+                //cannot hold and wear an item at the same time
+                wearable.Unequip(character);
             }
 
             if (character != null) { item.Submarine = character.Submarine; }
@@ -414,7 +455,7 @@ namespace Barotrauma.Items.Components
 
             if (item.CurrentHull == null)
             {
-                return attachTargetCell != null && Structure.GetAttachTarget(item.WorldPosition) != null;
+                return attachTargetCell != null || Structure.GetAttachTarget(item.WorldPosition) != null;
             }
             else
             {
@@ -532,6 +573,15 @@ namespace Barotrauma.Items.Components
             PickKey = InputType.Select;
         }
 
+        public override void ParseMsg()
+        {
+            base.ParseMsg();
+            if (Attachable)
+            {
+                prevMsg = DisplayMsg;
+            }
+        }
+
         public override bool Use(float deltaTime, Character character = null)
         {
             if (!attachable || item.body == null) { return character == null || (character.IsKeyDown(InputType.Aim) && characterUsable); }
@@ -540,6 +590,28 @@ namespace Barotrauma.Items.Components
                 if (!characterUsable && !attachable) { return false; }
                 if (!character.IsKeyDown(InputType.Aim)) { return false; }
                 if (!CanBeAttached(character)) { return false; }
+
+                if (LimitedAttachable)
+                {
+                    if (character?.Info == null) 
+                    {
+                        DebugConsole.AddWarning("Character without CharacterInfo attempting to attach a limited attachable item!");
+                        return false; 
+                    }
+                    Vector2 attachPos = GetAttachPosition(character, useWorldCoordinates: true);
+                    Structure attachTarget = Structure.GetAttachTarget(attachPos);
+
+                    int maxAttachableCount = (int)character.Info.GetSavedStatValue(StatTypes.MaxAttachableCount, item.Prefab.Identifier);
+                    int currentlyAttachedCount = Item.ItemList.Count(
+                        i => i.Submarine == attachTarget?.Submarine && i.GetComponent<Holdable>() is Holdable holdable && holdable.Attached && i.Prefab.Identifier == item.prefab.Identifier);
+                    if (currentlyAttachedCount >= maxAttachableCount) 
+                    {
+#if CLIENT
+                        GUI.AddMessage($"{TextManager.Get("itemmsgtotalnumberlimited")} ({currentlyAttachedCount}/{maxAttachableCount})", Color.Red);
+#endif
+                        return false; 
+                    }
+                }
 
                 if (GameMain.NetworkMember != null)
                 {
@@ -570,10 +642,13 @@ namespace Barotrauma.Items.Components
                     item.Drop(character);
                     item.SetTransform(ConvertUnits.ToSimUnits(GetAttachPosition(character)), 0.0f, findNewHull: false);
                 }
+                AttachToWall();
             }
+            return true;
+        }
 
-            AttachToWall();           
-
+        public override bool SecondaryUse(float deltaTime, Character character = null)
+        {
             return true;
         }
 
@@ -635,6 +710,20 @@ namespace Barotrauma.Items.Components
             Update(deltaTime, cam);
         }
 
+        public Rope GetRope()
+        {
+            var rangedWeapon = Item.GetComponent<RangedWeapon>();
+            if (rangedWeapon != null)
+            {
+                var lastProjectile = rangedWeapon.LastProjectile;
+                if (lastProjectile != null)
+                {
+                    return lastProjectile.Item.GetComponent<Rope>();
+                }
+            }
+            return null;
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             if (attachTargetCell != null)
@@ -689,9 +778,18 @@ namespace Barotrauma.Items.Components
                 scaledHandlePos[1] = handlePos[1] * item.Scale;
                 bool aim = picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero && picker.CanAim;
                 picker.AnimController.HoldItem(deltaTime, item, scaledHandlePos, holdPos + swing, aimPos + swing, aim, holdAngle);
+                if (!aim)
+                {
+                    var rope = GetRope();
+                    if (rope != null && rope.SnapWhenNotAimed && rope.Item.ParentInventory == null)
+                    {
+                        rope.Snap();
+                    }
+                }
             }
             else
             {
+                GetRope()?.Snap();
                 Limb equipLimb = null;
                 if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Headset) || picker.Inventory.IsInLimbSlot(item, InvSlotType.Head))
                 {
@@ -754,7 +852,19 @@ namespace Barotrauma.Items.Components
                 DeattachFromWall();
             }
         }
-        
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+            attachTargetCell = null;
+            if (Pusher != null)
+            {
+                Pusher.Remove();
+                Pusher = null;
+            }
+            body = null; 
+        }
+
         public override XElement Save(XElement parentElement)
         {
             if (!attachable)

@@ -16,10 +16,17 @@ namespace Barotrauma.Networking
             Control,
             UpdateSkills,
             Combine,
+            SetAttackTarget,
             ExecuteAttack,
             Upgrade,
             AssignCampaignInteraction,
-            ObjectiveManagerOrderState,
+            TeamChange,
+            ObjectiveManagerState,
+            AddToCrew,
+            UpdateExperience,
+            UpdateTalents,
+            UpdateMoney,
+            UpdatePermanentStats,
         }
 
         public readonly Entity Entity;

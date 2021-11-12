@@ -21,7 +21,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Update(float deltaTime)
+        protected override void UpdateMissionSpecific(float deltaTime)
         {
             if (!initialized)
             {
@@ -82,11 +82,6 @@ namespace Barotrauma
                     GameMain.Server.EndGame();
                 }
             }
-        }
-
-        public override void ServerWriteInitial(IWriteMessage msg, Client c)
-        {
-            //do nothing
         }
     }
 }

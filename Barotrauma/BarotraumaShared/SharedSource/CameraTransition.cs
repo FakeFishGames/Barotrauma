@@ -66,7 +66,7 @@ namespace Barotrauma
 
         private IEnumerable<object> Update(ISpatialEntity targetEntity, Camera cam)
         {
-            if (targetEntity == null) { yield return CoroutineStatus.Success; }
+            if (targetEntity == null || (targetEntity is Entity e && e.Removed)) { yield return CoroutineStatus.Success; }
 
             prevControlled = Character.Controlled;
             if (RemoveControlFromCharacter)

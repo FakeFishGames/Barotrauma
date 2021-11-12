@@ -8,7 +8,7 @@ namespace Barotrauma
     {
         public readonly XElement ConfigElement;    
         public readonly Type EventType;
-        public readonly float SpawnProbability;
+        public readonly float Probability;
         public readonly bool TriggerEventCooldown;
         public float Commonness;
         public string Identifier;
@@ -39,8 +39,8 @@ namespace Barotrauma
             Identifier = ConfigElement.GetAttributeString("identifier", string.Empty);
             BiomeIdentifier = ConfigElement.GetAttributeString("biome", string.Empty);
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
-            SpawnProbability = Math.Clamp(element.GetAttributeFloat("spawnprobability", 1.0f), 0, 1);
-            TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
+            Probability = Math.Clamp(element.GetAttributeFloat(1.0f, "probability", "spawnprobability"), 0, 1);
+            TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", EventType != typeof(ScriptedEvent));
 
             UnlockPathEvent = element.GetAttributeBool("unlockpathevent", false);
             UnlockPathTooltip = element.GetAttributeString("unlockpathtooltip", "lockedpathtooltip");

@@ -1,8 +1,7 @@
-﻿using System;
+﻿using Barotrauma.Networking;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -26,7 +25,6 @@ namespace Barotrauma
         /// <summary>
         /// Saves bots in multiplayer
         /// </summary>
-        /// <param name="root"></param>
         public void SaveMultiplayer(XElement root)
         {
             XElement saveElement = new XElement("bots", new XAttribute("hasbots", HasBots));
@@ -40,8 +38,30 @@ namespace Barotrauma
                 XElement characterElement = info.Save(saveElement);
                 if (info.InventoryData != null) { characterElement.Add(info.InventoryData); }
                 if (info.HealthData != null) { characterElement.Add(info.HealthData); }
+                if (info.OrderData != null) { characterElement.Add(info.OrderData); }
             }
+            SaveActiveOrders(saveElement);
             root.Add(saveElement);
+        }
+
+        public void ServerWriteActiveOrders(IWriteMessage msg)
+        {
+            ushort count = (ushort)ActiveOrders.Count(o => o.First != null && !o.Second.HasValue);
+            msg.Write(count);
+            if (count > 0)
+            {
+                foreach (var activeOrder in ActiveOrders)
+                {
+                    if (!(activeOrder?.First is Order order) || activeOrder.Second.HasValue) { continue; }
+                    OrderChatMessage.WriteOrder(msg, order, null, order.TargetSpatialEntity, null, 0, order.WallSectionIndex);
+                    bool hasOrderGiver = order.OrderGiver != null;
+                    msg.Write(hasOrderGiver);
+                    if (hasOrderGiver)
+                    {
+                        msg.Write(order.OrderGiver.ID);
+                    }
+                }
+            }
         }
     }
 }
