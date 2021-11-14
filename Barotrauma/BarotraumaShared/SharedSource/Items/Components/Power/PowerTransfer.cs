@@ -172,6 +172,9 @@ namespace Barotrauma.Items.Components
             //if the item can't be fixed, don't allow it to break
             if (!item.Repairables.Any() || !CanBeOverloaded) { return; }
 
+            item.SendSignal(((int)-CurrPowerConsumption).ToString(), "power_value_out");
+            item.SendSignal(((int)powerLoad).ToString(), "load_value_out");
+
             float maxOverVoltage = Math.Max(OverloadVoltage, 1.0f);
             Overload = -currPowerConsumption > Math.Max(powerLoad, 200.0f) * maxOverVoltage;
             if (Overload && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
