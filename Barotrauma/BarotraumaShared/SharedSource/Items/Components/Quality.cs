@@ -26,6 +26,10 @@ namespace Barotrauma.Items.Components
             RepairToolStructureRepairMultiplier,
             RepairToolStructureDamageMultiplier,
             RepairToolDeattachTimeMultiplier,
+            StoppingPowerMultiplier,
+            StrikingPowerMultiplier,
+            StrikingSpeedMultiplier,
+            FiringRateMultiplier,
             // unused as of now
             AttackMultiplier,
             AttackSpeedMultiplier,
@@ -33,7 +37,6 @@ namespace Barotrauma.Items.Components
             RangedSpreadReduction,
             ChargeSpeedMultiplier,
             MovementSpeedMultiplier,
-            // generic stats to be used for various needs, declared just in case (localization)
             EffectivenessMultiplier,
             PowerOutputMultiplier,
             ConsumptionReductionMultiplier,

@@ -133,12 +133,14 @@ namespace Barotrauma.Networking
 
         public static bool IsValidName(string name, ServerSettings serverSettings)
         {
+            if (string.IsNullOrWhiteSpace(name)) { return false; }
+            
             char[] disallowedChars = new char[] { ';', ',', '<', '>', '/', '\\', '[', ']', '"', '?' };
-            if (name.Any(c => disallowedChars.Contains(c))) return false;
+            if (name.Any(c => disallowedChars.Contains(c))) { return false; }
 
             foreach (char character in name)
             {
-                if (!serverSettings.AllowedClientNameChars.Any(charRange => (int)character >= charRange.First && (int)character <= charRange.Second)) return false;
+                if (!serverSettings.AllowedClientNameChars.Any(charRange => (int)character >= charRange.First && (int)character <= charRange.Second)) { return false; }
             }
 
             return true;

@@ -94,7 +94,7 @@ namespace Barotrauma
             if (item == null) { return false; }
             if (item.IgnoreByAI(character)) { return false; }
             if (!item.IsInteractable(character)) { return false; }
-            if (item.SpawnedInOutpost) { return false; }
+            if ((item.SpawnedInCurrentOutpost && !item.AllowStealing) == character.IsOnPlayerTeam) { return false; }
             if (item.ParentInventory != null)
             {
                 if (item.Container == null)

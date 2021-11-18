@@ -271,7 +271,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> WaitForCampaignSetup()
+        private IEnumerable<CoroutineStatus> WaitForCampaignSetup()
         {
             GUI.SetCursorWaiting();
             string headerText = TextManager.Get("CampaignStartingPleaseWait");

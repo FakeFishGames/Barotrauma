@@ -183,6 +183,7 @@ namespace Barotrauma.Items.Components
         private ImmutableDictionary<MapEntity, MiniMapGUIComponent> electricalMapComponents;
         private ImmutableDictionary<MiniMapGUIComponent, GUIComponent> electricalChildren;
         private ImmutableDictionary<MiniMapGUIComponent, GUIComponent> doorChildren;
+        private ImmutableDictionary<MiniMapGUIComponent, GUIComponent> weaponChildren;
 
         private ImmutableHashSet<ItemPrefab>? itemsFoundOnSub;
 
@@ -366,8 +367,8 @@ namespace Barotrauma.Items.Components
 
             hullInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.13f), GUI.Canvas, minSize: new Point(250, 150)), style: "GUIToolTip")
             {
-                CanBeFocused = false
-
+                CanBeFocused = false,
+                Visible = false
             };
 
             var hullInfoContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), hullInfoFrame.RectTransform, Anchor.Center))
@@ -431,7 +432,7 @@ namespace Barotrauma.Items.Components
             scissorComponent = new GUIScissorComponent(new RectTransform(Vector2.One, submarineContainer.RectTransform, Anchor.Center));
             miniMapContainer = new GUIFrame(new RectTransform(Vector2.One, scissorComponent.Content.RectTransform, Anchor.Center), style: null) { CanBeFocused = false };
 
-            ImmutableHashSet<Item> hullPointsOfInterest = Item.ItemList.Where(it => it.Submarine == item.Submarine && !it.HiddenInGame && !it.NonInteractable && it.Prefab.ShowInStatusMonitor && it.GetComponent<Door>() != null).ToImmutableHashSet();
+            ImmutableHashSet<Item> hullPointsOfInterest = Item.ItemList.Where(it => it.Submarine == item.Submarine && !it.HiddenInGame && !it.NonInteractable && it.Prefab.ShowInStatusMonitor && (it.GetComponent<Door>() != null || it.GetComponent<Turret>() != null)).ToImmutableHashSet();
             miniMapFrame = CreateMiniMap(item.Submarine, submarineContainer, MiniMapSettings.Default, hullPointsOfInterest, out hullStatusComponents);
 
             IEnumerable<Item> electrialPointsOfInterest = Item.ItemList.Where(it => it.Submarine == item.Submarine && !it.HiddenInGame && !it.NonInteractable && it.GetComponent<Repairable>() != null);
@@ -460,29 +461,63 @@ namespace Barotrauma.Items.Components
             electricalChildren = electricChildren.ToImmutableDictionary();
 
             Dictionary<MiniMapGUIComponent, GUIComponent> doorChilds = new Dictionary<MiniMapGUIComponent, GUIComponent>();
+            Dictionary<MiniMapGUIComponent, GUIComponent> weaponChilds = new Dictionary<MiniMapGUIComponent, GUIComponent>();
 
             foreach (var (entity, component) in hullStatusComponents)
             {
                 if (!hullPointsOfInterest.Contains(entity)) { continue; }
 
-                const int minSize = 8;
+                if (!(entity is Item it)) { continue; }
                 const int borderMaxSize = 2;
 
-                Point size = component.BorderComponent.Rect.Size;
-
-                size.X = Math.Max(size.X, minSize);
-                size.Y = Math.Max(size.Y, minSize);
-                float width = Math.Min(borderMaxSize, Math.Min(size.X, size.Y) / 8f);
-
-                GUIFrame frame = new GUIFrame(new RectTransform(size, component.RectComponent.RectTransform, anchor: Anchor.Center), style: "ScanLines", color: DoorIndicatorColor)
+                if (it.GetComponent<Door>() is { })
                 {
-                    OutlineColor = GUI.Style.Green,
-                    OutlineThickness = width
-                };
-                doorChilds.Add(component, frame);
+                    const int minSize = 8;
+
+                    Point size = component.BorderComponent.Rect.Size;
+
+                    size.X = Math.Max(size.X, minSize);
+                    size.Y = Math.Max(size.Y, minSize);
+                    float width = Math.Min(borderMaxSize, Math.Min(size.X, size.Y) / 8f);
+
+                    GUIFrame frame = new GUIFrame(new RectTransform(size, component.RectComponent.RectTransform, anchor: Anchor.Center), style: "ScanLines", color: DoorIndicatorColor)
+                    {
+                        OutlineColor = DoorIndicatorColor,
+                        OutlineThickness = width
+                    };
+                    doorChilds.Add(component, frame);
+                } 
+                else if (it.GetComponent<Turret>() is { } turret)
+                {
+                    int parentWidth = (int) (submarineContainer.Rect.Width / 16f);
+                    GUICustomComponent frame = new GUICustomComponent(new RectTransform(new Point(parentWidth, parentWidth), component.RectComponent.RectTransform, anchor: Anchor.Center), (batch, customComponent) =>
+                    {
+                        Vector2 center = customComponent.Center;
+                        float rotation = turret.Rotation;
+
+                        if (!hasPower)
+                        {
+                            float minRotation = MathHelper.ToRadians(Math.Min(turret.RotationLimits.X, turret.RotationLimits.Y)),
+                                  maxRotation = MathHelper.ToRadians(Math.Max(turret.RotationLimits.X, turret.RotationLimits.Y));
+
+                            rotation = (minRotation + maxRotation) / 2;
+                        }
+
+                        if (turret.WeaponIndicatorSprite is { } weaponSprite)
+                        {
+                            Vector2 origin = weaponSprite.Origin;
+                            float scale = parentWidth / Math.Max(weaponSprite.size.X, weaponSprite.size.Y);
+                            Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? GUI.Style.Red : GUI.Style.Green;
+                            weaponSprite.Draw(batch, center, color, origin, rotation, scale, it.SpriteEffects);
+                        }
+                    });
+
+                    weaponChilds.Add(component, frame);
+                }
             }
 
             doorChildren = doorChilds.ToImmutableDictionary();
+            weaponChildren = weaponChilds.ToImmutableDictionary();
 
             Rectangle parentRect = miniMapFrame.Rect;
 
@@ -655,7 +690,7 @@ namespace Barotrauma.Items.Components
                         worldBorders.Location += item.Submarine.WorldPosition.ToPoint();
                         foreach (Gap gap in Gap.GapList)
                         {
-                            if (gap.IsRoomToRoom || gap.Submarine != item.Submarine || gap.ConnectedDoor != null) { continue; }
+                            if (gap.IsRoomToRoom || gap.Submarine != item.Submarine || gap.ConnectedDoor != null || gap.HiddenInGame) { continue; }
                             RectangleF entityRect = ScaleRectToUI(gap, miniMapFrame.Rect, worldBorders);
 
                             Vector2 scale = new Vector2(entityRect.Size.X / spriteSize.X, entityRect.Size.Y / spriteSize.Y) * 2.0f;
@@ -668,13 +703,33 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                if (currentMode == MiniMapMode.HullStatus)
+                if (currentMode == MiniMapMode.HullStatus && hullStatusComponents != null)
                 {
                     foreach (var (entity, component) in hullStatusComponents)
                     {
                         if (!(entity is Hull hull)) { continue; }
                         if (!hullDatas.TryGetValue(hull, out HullData? hullData) || hullData is null) { continue; }
                         DrawHullCards(spriteBatch, hull, hullData, component.RectComponent);
+
+                        if (item.CurrentHull is { } currentHull && currentHull == hull)
+                        {
+                            Sprite pingCircle = GUI.Style.YouAreHereCircle.Sprite;
+                            if (pingCircle is null) { continue; }
+
+                            Vector2 charPos = item.WorldPosition;
+                            Vector2 hullPos = hull.WorldRect.Location.ToVector2(),
+                                    hullSize = hull.WorldRect.Size.ToVector2();
+                            Vector2 relativePos = (charPos - hullPos) / hullSize * component.RectComponent.Rect.Size.ToVector2();
+                            relativePos.Y = -relativePos.Y;
+
+                            float parentWidth = submarineContainer.Rect.Width / 64f;
+                            float spriteSize = pingCircle.size.X * (parentWidth / pingCircle.size.X);
+
+                            Vector2 drawPos = component.RectComponent.Rect.Location.ToVector2() + relativePos;
+                            drawPos -= new Vector2(spriteSize, spriteSize) / 2f;
+
+                            pingCircle.Draw(spriteBatch, drawPos, GUI.Style.Red * 0.8f, Vector2.Zero, 0f, parentWidth / pingCircle.size.X);
+                        }
                     }
                 }
 
@@ -944,7 +999,7 @@ namespace Barotrauma.Items.Components
                 if (ShowHullIntegrity)
                 {
                     float amount = 1f + hullData.LinkedHulls.Count;
-                    gapOpenSum = hull.ConnectedGaps.Concat(hullData.LinkedHulls.SelectMany(h => h.ConnectedGaps)).Where(g => !g.IsRoomToRoom).Sum(g => g.Open) / amount;
+                    gapOpenSum = hull.ConnectedGaps.Concat(hullData.LinkedHulls.SelectMany(h => h.ConnectedGaps)).Where(g => !g.IsRoomToRoom && !g.HiddenInGame).Sum(g => g.Open) / amount;
                     borderColor = Color.Lerp(neutralColor, GUI.Style.Red, Math.Min(gapOpenSum, 1.0f));
                 }
 
@@ -1039,10 +1094,9 @@ namespace Barotrauma.Items.Components
                     }
                     else if (it.GetComponent<PowerTransfer>() is { } powerTransfer)
                     {
-                        int current = (int) -powerTransfer.CurrPowerConsumption,
-                            load = (int) powerTransfer.PowerLoad;
+                        int current = (int)-powerTransfer.CurrPowerConsumption, load = (int)powerTransfer.PowerLoad;
 
-                        line1 = TextManager.GetWithVariable("statusmonitor.junctioncurrent.tooltip", "[amount]", current.ToString());
+                        line1 = TextManager.GetWithVariable("statusmonitor.junctionpower.tooltip", "[amount]", current.ToString(), fallBackTag: "statusmonitor.junctioncurrent.tooltip");
                         line2 = TextManager.GetWithVariable("statusmonitor.junctionload.tooltip", "[amount]", load.ToString());
                     }
 
@@ -1086,38 +1140,41 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                bool hullsVisible = currentMode == MiniMapMode.HullStatus;
+                bool hullsVisible = currentMode == MiniMapMode.HullStatus && item.Submarine != null;
 
-                foreach (var (entity, component) in hullStatusComponents)
+                if (hullStatusComponents != null)
                 {
-                    if (!(entity is Hull hull)) { continue; }
-                    if (!hullDatas.TryGetValue(hull, out HullData? hullData) || hullData is null) { continue; }
-
-                    if (hullData.Distort) { continue; }
-
-                    GUIComponent hullFrame = component.RectComponent;
-
-                    if (hullsVisible && hullData.HullWaterAmount is { } waterAmount)
+                    foreach (var (entity, component) in hullStatusComponents)
                     {
-                        if (hullFrame.Rect.Height * waterAmount > 3.0f)
+                        if (!(entity is Hull hull)) { continue; }
+                        if (!hullDatas.TryGetValue(hull, out HullData? hullData) || hullData is null) { continue; }
+
+                        if (hullData.Distort) { continue; }
+
+                        GUIComponent hullFrame = component.RectComponent;
+
+                        if (hullsVisible && hullData.HullWaterAmount is { } waterAmount)
                         {
-                            RectangleF waterRect = new RectangleF(hullFrame.Rect.X, hullFrame.Rect.Y + hullFrame.Rect.Height * (1.0f - waterAmount), hullFrame.Rect.Width, hullFrame.Rect.Height * waterAmount);
-
-                            const float width = 1f;
-
-                            GUI.DrawFilledRectangle(spriteBatch, waterRect, HullWaterColor);
-
-                            if (!MathUtils.NearlyEqual(waterAmount, 1.0f))
+                            if (hullFrame.Rect.Height * waterAmount > 3.0f)
                             {
-                                Vector2 offset = new Vector2(0, width);
-                                GUI.DrawLine(spriteBatch, waterRect.Location + offset, new Vector2(waterRect.Right, waterRect.Y) + offset, HullWaterLineColor, width: width);
+                                RectangleF waterRect = new RectangleF(hullFrame.Rect.X, hullFrame.Rect.Y + hullFrame.Rect.Height * (1.0f - waterAmount), hullFrame.Rect.Width, hullFrame.Rect.Height * waterAmount);
+
+                                const float width = 1f;
+
+                                GUI.DrawFilledRectangle(spriteBatch, waterRect, HullWaterColor);
+
+                                if (!MathUtils.NearlyEqual(waterAmount, 1.0f))
+                                {
+                                    Vector2 offset = new Vector2(0, width);
+                                    GUI.DrawLine(spriteBatch, waterRect.Location + offset, new Vector2(waterRect.Right, waterRect.Y) + offset, HullWaterLineColor, width: width);
+                                }
                             }
                         }
-                    }
 
-                    if (hullsVisible && hullData.HullOxygenAmount is { } oxygenAmount)
-                    {
-                        GUI.DrawRectangle(spriteBatch, hullFrame.Rect, Color.Lerp(GUI.Style.Red * 0.5f, GUI.Style.Green * 0.3f, oxygenAmount / 100.0f), true);
+                        if (hullsVisible && hullData.HullOxygenAmount is { } oxygenAmount)
+                        {
+                            GUI.DrawRectangle(spriteBatch, hullFrame.Rect, Color.Lerp(GUI.Style.Red * 0.5f, GUI.Style.Green * 0.3f, oxygenAmount / 100.0f), true);
+                        }
                     }
                 }
             }
@@ -1221,7 +1278,7 @@ namespace Barotrauma.Items.Components
             Vector2 spriteScale = new Vector2(entityRect.Size.X / sprite.size.X, entityRect.Size.Y / sprite.size.Y);
             Vector2 origin = new Vector2(sprite.Origin.X * spriteScale.X, sprite.Origin.Y * spriteScale.Y);
 
-            if (item.GetComponent<Turret>() is { } turret)
+            if (!item.Prefab.ShowInStatusMonitor && item.GetComponent<Turret>() is { } turret)
             {
                 Vector2 drawPos = turret.GetDrawPos();
                 drawPos.Y = -drawPos.Y;

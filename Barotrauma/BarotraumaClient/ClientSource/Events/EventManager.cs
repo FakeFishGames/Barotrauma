@@ -14,13 +14,16 @@ namespace Barotrauma
     {
         private Graph intensityGraph;
         private Graph targetIntensityGraph;
-        private float intensityGraphUpdateInterval;
+        private Graph monsterStrengthGraph;
+        private const float intensityGraphUpdateInterval = 10;
         private float lastIntensityUpdate;
 
         private Vector2 pinnedPosition = new Vector2(256, 128);
         private bool isDragging;
 
         public Event? PinnedEvent { get; set; }
+
+        private bool isGraphSelected;
 
         public void DebugDraw(SpriteBatch spriteBatch)
         {
@@ -42,17 +45,25 @@ namespace Barotrauma
                 DrawEventTargetTags(spriteBatch, scriptedEvent);
             }
 
+            float theoreticalMaxMonsterStrength = 10000;
+            float relativeMaxMonsterStrength = theoreticalMaxMonsterStrength * GameMain.GameSession.LevelData.Difficulty / 100;
+            float absoluteMonsterStrength = monsterStrength / theoreticalMaxMonsterStrength;
+            float relativeMonsterStrength = monsterStrength / relativeMaxMonsterStrength;
             GUI.DrawString(spriteBatch, new Vector2(10, y), "EventManager", Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
             GUI.DrawString(spriteBatch, new Vector2(15, y + 20), "Event cooldown: " + (int)Math.Max(eventCoolDown, 0), Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
             GUI.DrawString(spriteBatch, new Vector2(15, y + 35), "Current intensity: " + (int)Math.Round(currentIntensity * 100), Color.Lerp(Color.White, GUI.Style.Red, currentIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
             GUI.DrawString(spriteBatch, new Vector2(15, y + 50), "Target intensity: " + (int)Math.Round(targetIntensity * 100), Color.Lerp(Color.White, GUI.Style.Red, targetIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
 
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 65), "AvgHealth: " + (int)Math.Round(avgCrewHealth * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgCrewHealth), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 80), "AvgHullIntegrity: " + (int)Math.Round(avgHullIntegrity * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgHullIntegrity), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 95), "FloodingAmount: " + (int)Math.Round(floodingAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, floodingAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 110), "FireAmount: " + (int)Math.Round(fireAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, fireAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 125), "EnemyDanger: " + (int)Math.Round(enemyDanger * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, enemyDanger), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 140), "MonsterTotalStrength: " + (int)Math.Round(monsterTotalStrength), Color.Lerp(GUI.Style.Green, GUI.Style.Red, monsterTotalStrength / 5000f), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 65), "Crew health: " + (int)Math.Round(avgCrewHealth * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgCrewHealth), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 80), "Hull integrity: " + (int)Math.Round(avgHullIntegrity * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgHullIntegrity), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 95), "Flooding amount: " + (int)Math.Round(floodingAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, floodingAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 110), "Fire amount: " + (int)Math.Round(fireAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, fireAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 125), "Enemy danger: " + (int)Math.Round(enemyDanger * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, enemyDanger), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 140), "Current monster strength (total): " + (int)Math.Round(monsterStrength), Color.Lerp(GUI.Style.Green, GUI.Style.Red, relativeMonsterStrength), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 155), "Main events: " + (int)Math.Round(CumulativeMonsterStrengthMain), Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 170), "Ruin events: " + (int)Math.Round(CumulativeMonsterStrengthRuins), Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 185), "Wreck events: " + (int)Math.Round(CumulativeMonsterStrengthWrecks), Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 200), "Cave events: " + (int)Math.Round(CumulativeMonsterStrengthCaves), Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
 
 #if DEBUG
             if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt) &&
@@ -64,29 +75,103 @@ namespace Barotrauma
 
             if (intensityGraph == null)
             {
-                intensityGraph = new Graph();
-                targetIntensityGraph = new Graph();
+                int graphDensity = 360; // 60 min
+                intensityGraph = new Graph(graphDensity);
+                targetIntensityGraph = new Graph(graphDensity);
+                monsterStrengthGraph = new Graph(graphDensity);
             }
 
-            intensityGraphUpdateInterval = 5.0f;
             if (Timing.TotalTime > lastIntensityUpdate + intensityGraphUpdateInterval)
             {
                 intensityGraph.Update(currentIntensity);
                 targetIntensityGraph.Update(targetIntensity);
-                lastIntensityUpdate = (float) Timing.TotalTime;
+                monsterStrengthGraph.Update(relativeMonsterStrength);
+                lastIntensityUpdate = (float)Timing.TotalTime;
             }
 
-            Rectangle graphRect = new Rectangle(15, y + 165, 150, 50);
+            Rectangle graphRect = new Rectangle(15, y + 240, (int)(200 * GUI.xScale), (int)(100 * GUI.yScale));
+            bool isGraphHovered = graphRect.Contains(PlayerInput.MousePosition);
+            bool leftMousePressed = PlayerInput.PrimaryMouseButtonDown() || PlayerInput.PrimaryMouseButtonHeld();
+            bool rightMousePressed = PlayerInput.SecondaryMouseButtonHeld() || PlayerInput.SecondaryMouseButtonDown();
+            if (!isGraphSelected && isGraphHovered && leftMousePressed)
+            {
+                isGraphSelected = true;
+            }
+            if (isGraphSelected && rightMousePressed)
+            {
+                isGraphSelected = false;
+            }
+            Color intensityColor = Color.Lerp(Color.White, GUI.Style.Red, currentIntensity);
+            if (isGraphHovered || isGraphSelected)
+            {
+                graphRect.Size = new Point(GameMain.GraphicsWidth - 30, (int)(GameMain.GraphicsHeight * 0.35f));
+                intensityColor = Color.Red;
+                GUI.DrawRectangle(spriteBatch, graphRect, Color.Black * 0.95f, isFilled: true);
+            }
+            else
+            {
+                GUI.DrawRectangle(spriteBatch, graphRect, Color.Black * 0.6f, isFilled: true);
+            }
+            intensityGraph.Draw(spriteBatch, graphRect, maxValue: 1.0f, xOffset: 0, intensityColor, (sBatch, value, order, pos) =>
+            {
+                if (isGraphHovered || isGraphSelected)
+                {
+                    Vector2 bottomPoint = new Vector2(pos.X, graphRect.Bottom);
+                    float height = 3 * GUI.yScale;
+                    if (order % 6 == 0)
+                    {
+                        height *= 3;
+                        string text = (order / 6).ToString();
+                        var font = GUI.SmallFont;
+                        Vector2 textSize = font.MeasureString(text);
+                        Vector2 textPos = new Vector2(bottomPoint.X - textSize.X / 2, bottomPoint.Y + height * 1.5f);
+                        GUI.DrawString(sBatch, textPos, text, Color.White, font: font);
+                    }
+                    GUI.DrawLine(sBatch, bottomPoint, bottomPoint + Vector2.UnitY * height, Color.White, width: Math.Max(GUI.Scale, 1));
+                    DrawTimeStamps(sBatch, Color.Red, pos, order);
+                }
+            });
+            targetIntensityGraph.Draw(spriteBatch, graphRect, maxValue: 1.0f, xOffset: 0, intensityColor * 0.5f);
+            if (isGraphHovered || isGraphSelected)
+            {
+                float? maxValue = 1;
+                Color color = Color.White;
+                if (relativeMonsterStrength > 1)
+                {
+                    maxValue = null;
+                    color = Color.Yellow;
+                }
+                monsterStrengthGraph.Draw(spriteBatch, graphRect, maxValue, color: color, doForEachValue: (sBatch, value, order, pos) => DrawTimeStamps(sBatch, color, pos, order));
+            }
 
-            GUI.DrawRectangle(spriteBatch, graphRect, Color.Black * 0.5f, true);
-            intensityGraph.Draw(spriteBatch, graphRect, 1.0f, 0.0f, Color.Lerp(Color.White, GUI.Style.Red, currentIntensity));
-            targetIntensityGraph.Draw(spriteBatch, graphRect, 1.0f, 0.0f, Color.Lerp(Color.White, GUI.Style.Red, targetIntensity) * 0.5f);
+            void DrawTimeStamps(SpriteBatch sBatch, Color color, Vector2 pos, int order)
+            {
+                if (isGraphHovered || isGraphSelected)
+                {
+                    foreach (var timeStamp in timeStamps)
+                    {
+                        int t = (int)Math.Abs(Math.Round((timeStamp.Time - lastIntensityUpdate) / intensityGraphUpdateInterval));
+                        if (t == order)
+                        {
+                            float size = 6;
+                            Vector2 p = new Vector2(pos.X - size / 2, pos.Y - size / 2);
+                            ShapeExtensions.DrawPoint(sBatch, p, color, size);
+                            break;
+                        }
+                    }
+                }
+            }
 
             GUI.DrawLine(spriteBatch,
                 new Vector2(graphRect.Right, graphRect.Y + graphRect.Height * (1.0f - eventThreshold)),
-                new Vector2(graphRect.Right + 5, graphRect.Y + graphRect.Height * (1.0f - eventThreshold)), Color.Orange, 0, 1);
+                new Vector2(graphRect.Right + 5, graphRect.Y + graphRect.Height * (1.0f - eventThreshold)), Color.Orange, width: 3);
 
-            y = graphRect.Bottom + 20;
+            int yStep = (int)(20 * GUI.yScale);
+            y = graphRect.Bottom + yStep;
+            if (isGraphHovered || isGraphSelected)
+            {
+                y += yStep;
+            }
             int x = graphRect.X;
             if (isCrewAway && crewAwayDuration < settings.FreezeDurationWhenCrewAway)
             {
@@ -143,7 +228,7 @@ namespace Barotrauma
                 if (CurrentIntensity < eventSet.MinIntensity || CurrentIntensity > eventSet.MaxIntensity)
                 {
                     GUI.DrawString(spriteBatch, new Vector2(x, y),
-                        "    intensity between " + ((int) eventSet.MinIntensity) + " and " + ((int) eventSet.MaxIntensity),
+                        "    intensity between " + eventSet.MinIntensity.FormatDoubleDecimal() + " and " + eventSet.MaxIntensity.FormatDoubleDecimal(),
                         Color.Orange * 0.8f, null, 0, GUI.SmallFont);
                     y += 12;
                 }
@@ -159,13 +244,13 @@ namespace Barotrauma
 
                 if (y > GameMain.GraphicsHeight * 0.9f)
                 {
-                    y = graphRect.Bottom + 35;
-                    x += 250;
+                    y = graphRect.Bottom + yStep * 2;
+                    x += 300;
                 }
             }
 
             GUI.DrawString(spriteBatch, new Vector2(x, y), "Current events: ", Color.White * 0.9f, null, 0, GUI.SmallFont);
-            y += 15;
+            y += yStep;
 
             foreach (Event ev in activeEvents.Where(ev => !ev.IsFinished || PlayerInput.IsShiftDown()))
             {
@@ -182,17 +267,15 @@ namespace Barotrauma
                 {
                     GUI.MouseCursor = CursorState.Hand;
                     GUI.DrawRectangle(spriteBatch, outlineRect, Color.White);
-
                     if (ev != PinnedEvent)
                     {
                         DrawEvent(spriteBatch, ev, rect);
                     }
-                    else if (PlayerInput.SecondaryMouseButtonHeld() || PlayerInput.SecondaryMouseButtonDown())
+                    else if (rightMousePressed)
                     {
                         PinnedEvent = null;
                     }
-
-                    if (PlayerInput.PrimaryMouseButtonHeld() || PlayerInput.PrimaryMouseButtonDown())
+                    if (leftMousePressed)
                     {
                         PinnedEvent = ev;
                     }
@@ -201,8 +284,8 @@ namespace Barotrauma
                 y += 18;
                 if (y > GameMain.GraphicsHeight * 0.9f)
                 {
-                    y = graphRect.Bottom + 35;
-                    x += 250;
+                    y = graphRect.Bottom + yStep * 2;
+                    x += 300;
                 }
             }
         }
@@ -352,9 +435,11 @@ namespace Barotrauma
             return DrawInfoRectangle(spriteBatch, scriptedEvent, text, parentRect, positions);
         }
 
+        private readonly List<DebugLine> debugPositions = new List<DebugLine>();
+
         private Rectangle DrawArtifactEvent(SpriteBatch spriteBatch, ArtifactEvent artifactEvent, Rectangle? parentRect = null)
         {
-            List<DebugLine> positions = new List<DebugLine>();
+            debugPositions.Clear();
 
             string text = $"Finished: {artifactEvent.IsFinished.ColorizeObject()}\n" +
                           $"Item: {artifactEvent.Item.ColorizeObject()}\n" +
@@ -364,15 +449,15 @@ namespace Barotrauma
             if (artifactEvent.Item != null && !artifactEvent.Item.Removed)
             {
                 Vector2 pos = artifactEvent.Item.WorldPosition;
-                positions.Add(new DebugLine(pos, Color.White));
+                debugPositions.Add(new DebugLine(pos, Color.White));
             }
 
-            return DrawInfoRectangle(spriteBatch, artifactEvent, text, parentRect, positions);
+            return DrawInfoRectangle(spriteBatch, artifactEvent, text, parentRect, debugPositions);
         }
 
         private Rectangle DrawMonsterEvent(SpriteBatch spriteBatch, MonsterEvent monsterEvent, Rectangle? parentRect = null)
         {
-            List<DebugLine> positions = new List<DebugLine>();
+            debugPositions.Clear();
 
             string text = $"Finished: {monsterEvent.IsFinished.ColorizeObject()}\n" +
                           $"Amount: {monsterEvent.MinAmount.ColorizeObject()} - {monsterEvent.MaxAmount.ColorizeObject()}\n" +
@@ -383,7 +468,7 @@ namespace Barotrauma
             {
                 Vector2 pos = monsterEvent.SpawnPos.Value;
                 text += $"Distance from submarine: {Vector2.Distance(pos, Submarine.MainSub.WorldPosition).ColorizeObject()}\n";
-                positions.Add(new DebugLine(pos, Color.White));
+                debugPositions.Add(new DebugLine(pos, Color.White));
             }
 
             if (monsterEvent.Monsters != null)
@@ -394,11 +479,10 @@ namespace Barotrauma
                 {
                     text += $"    {monster.ColorizeObject()} -> (Dead: {monster.IsDead.ColorizeObject()}, Health: {monster.HealthPercentage.ColorizeObject()}%, AIState: {(monster.AIController is EnemyAIController enemyAI ? enemyAI.State : AIState.Idle ).ColorizeObject()})\n";
                     if (monster.Removed) { continue; }
-                    positions.Add(new DebugLine(monster.WorldPosition, Color.Red));
+                    debugPositions.Add(new DebugLine(monster.WorldPosition, Color.Red));
                 }
             }
-
-            return DrawInfoRectangle(spriteBatch, monsterEvent, text, parentRect, positions);
+            return DrawInfoRectangle(spriteBatch, monsterEvent, text, parentRect, debugPositions);
         }
 
         private Rectangle DrawInfoRectangle(SpriteBatch spriteBatch, Event @event, string text, Rectangle? parentRect = null, List<DebugLine>? drawPoints = null)

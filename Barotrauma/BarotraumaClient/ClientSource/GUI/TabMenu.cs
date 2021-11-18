@@ -1541,13 +1541,41 @@ namespace Barotrauma
             GUITextBlock.AutoScaleAndNormalize(skillNames);
         }
 
+        private bool HasUnlockedAllTalents(Character controlledCharacter)
+        {
+            if (TalentTree.JobTalentTrees.TryGetValue(controlledCharacter.Info.Job.Prefab.Identifier, out TalentTree talentTree))
+            {
+                foreach (TalentSubTree talentSubTree in talentTree.TalentSubTrees)
+                {
+                    foreach (TalentOption talentOption in talentSubTree.TalentOptionStages)
+                    {
+                        if (talentOption.Talents.None(t => controlledCharacter.HasTalent(t.Identifier)))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
         private void UpdateTalentButtons()
         {
             Character controlledCharacter = Character.Controlled;
+            if (controlledCharacter?.Info == null) { return; }
 
-            experienceText.Text = $"{controlledCharacter.Info.ExperiencePoints - controlledCharacter.Info.GetExperienceRequiredForCurrentLevel()} / {controlledCharacter.Info.GetExperienceRequiredToLevelUp() - controlledCharacter.Info.GetExperienceRequiredForCurrentLevel()}";
-            experienceBar.BarSize = controlledCharacter.Info.GetProgressTowardsNextLevel();
-            //experienceBar.ToolTip = $"{controlledCharacter.Info.ExperiencePoints - controlledCharacter.Info.GetExperienceRequiredForCurrentLevel()} / {controlledCharacter.Info.GetExperienceRequiredToLevelUp() - controlledCharacter.Info.GetExperienceRequiredForCurrentLevel()}";
+            bool unlockedAllTalents = HasUnlockedAllTalents(controlledCharacter);
+
+            if (unlockedAllTalents)
+            {
+                experienceText.Text = string.Empty;
+                experienceBar.BarSize = 1f;
+            }
+            else
+            {
+                experienceText.Text = $"{controlledCharacter.Info.ExperiencePoints - controlledCharacter.Info.GetExperienceRequiredForCurrentLevel()} / {controlledCharacter.Info.GetExperienceRequiredToLevelUp() - controlledCharacter.Info.GetExperienceRequiredForCurrentLevel()}";
+                experienceBar.BarSize = controlledCharacter.Info.GetProgressTowardsNextLevel();
+            }
 
             selectedTalents = TalentTree.CheckTalentSelection(controlledCharacter, selectedTalents);
 
@@ -1555,7 +1583,11 @@ namespace Barotrauma
 
             int talentCount = selectedTalents.Count - controlledCharacter.Info.GetUnlockedTalentsInTree().Count();
 
-            if (talentCount > 0)
+            if (unlockedAllTalents)
+            {
+                talentPointText.SetRichText($"‖color:{XMLExtensions.ToStringHex(Color.Gray)}‖{TextManager.Get("talentmenu.alltalentsunlocked")}‖color:end‖");
+            }
+            else if (talentCount > 0)
             {
                 string pointsUsed = $"‖color:{XMLExtensions.ColorToString(GUI.Style.Red)}‖{-talentCount}‖color:end‖";
                 string localizedString = TextManager.GetWithVariables("talentmenu.points.spending", new []{ "[amount]", "[used]" }, new []{ pointsLeft, pointsUsed});

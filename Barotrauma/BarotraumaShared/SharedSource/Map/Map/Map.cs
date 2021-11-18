@@ -472,8 +472,11 @@ namespace Barotrauma
 
             foreach (LocationConnection connection in Connections)
             {
-                float difficulty = GetLevelDifficulty(connection.CenterPos.X / Width);
-                connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-10.0f, 0.0f, Rand.RandSync.Server), 1.2f, 100.0f);
+                //float difficulty = GetLevelDifficulty(connection.CenterPos.X / Width);
+                //connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-10.0f, 0.0f, Rand.RandSync.Server), 1.2f, 100.0f);
+                float difficulty = connection.CenterPos.X / Width * 100;
+                float random = difficulty > 10 ? 5 : 0;
+                connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-random, random, Rand.RandSync.Server), 1.0f, 100.0f);
             }
 
             AssignBiomes();

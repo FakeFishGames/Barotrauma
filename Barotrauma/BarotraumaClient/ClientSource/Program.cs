@@ -255,7 +255,7 @@ namespace Barotrauma
 
             File.WriteAllText(filePath, crashReport);
 
-            if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
+            if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging) { DebugConsole.SaveLogs(); }
 
             if (GameSettings.SendUserStatistics)
             {

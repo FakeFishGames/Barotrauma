@@ -494,7 +494,7 @@ namespace Barotrauma
             GUIFrame.Parent.Visible = visible;
         }
 
-        private IEnumerable<object> UpdateMessageAnimation(GUIComponent message, float animDuration)
+        private IEnumerable<CoroutineStatus> UpdateMessageAnimation(GUIComponent message, float animDuration)
         {
             float timer = 0.0f;
             while (timer < animDuration)

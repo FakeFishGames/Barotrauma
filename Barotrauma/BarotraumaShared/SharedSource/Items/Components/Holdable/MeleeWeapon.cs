@@ -110,7 +110,9 @@ namespace Barotrauma.Items.Components
             if (Item.RequireAimToUse && hitPos < MathHelper.PiOver4) { return false; }
 
             ActivateNearbySleepingCharacters();
-            reloadTimer = reload / (1 + character.GetStatValue(StatTypes.MeleeAttackSpeed));
+            reloadTimer = reload;
+            reloadTimer /= (1f + character.GetStatValue(StatTypes.MeleeAttackSpeed));
+            reloadTimer /= (1f + item.GetQualityModifier(Quality.StatType.StrikingSpeedMultiplier));
 
             item.body.FarseerBody.CollisionCategories = Physics.CollisionProjectile;
             item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall;
@@ -385,7 +387,7 @@ namespace Barotrauma.Items.Components
             {
                 Attack.SetUser(User);
                 Attack.DamageMultiplier = 1 + User.GetStatValue(StatTypes.MeleeAttackMultiplier);
-                Attack.DamageMultiplier *= 1.0f + item.GetQualityModifier(Quality.StatType.AttackMultiplier);
+                Attack.DamageMultiplier *= 1.0f + item.GetQualityModifier(Quality.StatType.StrikingPowerMultiplier);
 
                 if (targetLimb != null)
                 {

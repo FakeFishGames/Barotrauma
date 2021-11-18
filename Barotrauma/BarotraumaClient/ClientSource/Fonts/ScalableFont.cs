@@ -51,16 +51,30 @@ namespace Barotrauma
             }
         }
 
+        public float LineHeight => baseHeight * 1.8f;
+
         private uint[] charRanges;
         private int texDims;
         private uint baseChar;
 
-        private struct GlyphData
+        private readonly struct GlyphData
         {
-            public int texIndex;
-            public Vector2 drawOffset;
-            public float advance;
-            public Rectangle texCoords;
+            public readonly int TexIndex;
+            public readonly Vector2 DrawOffset;
+            public readonly float Advance;
+            public readonly Rectangle TexCoords;
+
+            public GlyphData(
+                int texIndex = default,
+                Vector2 drawOffset = default,
+                float advance = default,
+                Rectangle texCoords = default)
+            {
+                TexIndex = texIndex;
+                DrawOffset = drawOffset;
+                Advance = advance;
+                TexCoords = texCoords;
+            }
         }
 
         public ScalableFont(XElement element, GraphicsDevice gd = null)
@@ -167,9 +181,10 @@ namespace Barotrauma
                             if (face.Glyph.Metrics.HorizontalAdvance > 0)
                             {
                                 //glyph is empty, but char still applies advance
-                                GlyphData blankData = new GlyphData();
-                                blankData.advance = (float)face.Glyph.Metrics.HorizontalAdvance;
-                                blankData.texIndex = -1; //indicates no texture because the glyph is empty
+                                GlyphData blankData = new GlyphData(
+                                    advance: (float)face.Glyph.Metrics.HorizontalAdvance,
+                                    texIndex: -1); //indicates no texture because the glyph is empty
+                                
                                 texCoords.Add(j, blankData);
                             }
                             continue;
@@ -211,13 +226,12 @@ namespace Barotrauma
                             }
                         }
 
-                        GlyphData newData = new GlyphData
-                        {
-                            advance = (float)face.Glyph.Metrics.HorizontalAdvance,
-                            texIndex = texIndex,
-                            texCoords = new Rectangle((int)currentCoords.X, (int)currentCoords.Y, glyphWidth, glyphHeight),
-                            drawOffset = new Vector2(face.Glyph.BitmapLeft, baseHeight * 14 / 10 - face.Glyph.BitmapTop)
-                        };
+                        GlyphData newData = new GlyphData(
+                            advance: (float)face.Glyph.Metrics.HorizontalAdvance,
+                            texIndex: texIndex,
+                            texCoords: new Rectangle((int)currentCoords.X, (int)currentCoords.Y, glyphWidth, glyphHeight),
+                            drawOffset: new Vector2(face.Glyph.BitmapLeft, baseHeight * 14 / 10 - face.Glyph.BitmapTop)
+                        );
                         texCoords.Add(j, newData);
 
                         for (int y = 0; y < glyphHeight; y++)
@@ -278,9 +292,9 @@ namespace Barotrauma
                     if (face.Glyph.Metrics.HorizontalAdvance > 0)
                     {
                         //glyph is empty, but char still applies advance
-                        GlyphData blankData = new GlyphData();
-                        blankData.advance = (float)face.Glyph.Metrics.HorizontalAdvance;
-                        blankData.texIndex = -1; //indicates no texture because the glyph is empty
+                        GlyphData blankData = new GlyphData(
+                            advance: (float)face.Glyph.Metrics.HorizontalAdvance,
+                            texIndex: -1); //indicates no texture because the glyph is empty
                         texCoords.Add(character, blankData);
                     }
                     return;
@@ -316,19 +330,18 @@ namespace Barotrauma
                     currentDynamicPixelBuffer = null;
                 }
 
-                GlyphData newData = new GlyphData
-                {
-                    advance = (float)horizontalAdvance,
-                    texIndex = textures.Count - 1,
-                    texCoords = new Rectangle((int)currentDynamicAtlasCoords.X, (int)currentDynamicAtlasCoords.Y, glyphWidth, glyphHeight),
-                    drawOffset = drawOffset
-                };
+                GlyphData newData = new GlyphData(
+                    advance: (float)horizontalAdvance,
+                    texIndex: textures.Count - 1,
+                    texCoords: new Rectangle((int)currentDynamicAtlasCoords.X, (int)currentDynamicAtlasCoords.Y, glyphWidth, glyphHeight),
+                    drawOffset: drawOffset
+                );
                 texCoords.Add(character, newData);
 
                 if (currentDynamicPixelBuffer == null)
                 {
                     currentDynamicPixelBuffer = new uint[texDims * texDims];
-                    textures[newData.texIndex].GetData<uint>(currentDynamicPixelBuffer, 0, texDims * texDims);
+                    textures[newData.TexIndex].GetData<uint>(currentDynamicPixelBuffer, 0, texDims * texDims);
                 }
             
                 for (int y = 0; y < glyphHeight; y++)
@@ -339,10 +352,23 @@ namespace Barotrauma
                         currentDynamicPixelBuffer[((int)currentDynamicAtlasCoords.X + x) + ((int)currentDynamicAtlasCoords.Y + y) * texDims] = (uint)(byteColor << 24 | 0x00ffffff);
                     }
                 }
-                textures[newData.texIndex].SetData<uint>(currentDynamicPixelBuffer);
+                textures[newData.TexIndex].SetData<uint>(currentDynamicPixelBuffer);
 
                 currentDynamicAtlasCoords.X += glyphWidth + 2;
             }
+        }
+
+        private GlyphData GetGlyphData(uint charIndex)
+        {
+            const uint DEFAULT_INDEX = 0x25A1; //U+25A1 = white square
+            
+            if (texCoords.TryGetValue(charIndex, out GlyphData gd) ||
+                texCoords.TryGetValue(DEFAULT_INDEX, out gd))
+            {
+                return gd;
+            }
+
+            return new GlyphData(texIndex: -1);
         }
 
         public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth)
@@ -358,8 +384,8 @@ namespace Barotrauma
                 {
                     lineNum++;
                     currentPos = position;
-                    currentPos.X -= baseHeight * 1.8f * lineNum * advanceUnit.Y * scale.Y;
-                    currentPos.Y += baseHeight * 1.8f * lineNum * advanceUnit.X * scale.Y;
+                    currentPos.X -= LineHeight * lineNum * advanceUnit.Y * scale.Y;
+                    currentPos.Y += LineHeight * lineNum * advanceUnit.X * scale.Y;
                     continue;
                 }
 
@@ -369,19 +395,17 @@ namespace Barotrauma
                     DynamicRenderAtlas(graphicsDevice, charIndex);
                 }
 
-                if (texCoords.TryGetValue(charIndex, out GlyphData gd) || texCoords.TryGetValue(9633, out gd)) //9633 = white square
+                GlyphData gd = GetGlyphData(charIndex);
+                if (gd.TexIndex >= 0)
                 {
-                    if (gd.texIndex >= 0)
-                    {
-                        Texture2D tex = textures[gd.texIndex];
-                        Vector2 drawOffset;
-                        drawOffset.X = gd.drawOffset.X * advanceUnit.X * scale.X - gd.drawOffset.Y * advanceUnit.Y * scale.Y;
-                        drawOffset.Y = gd.drawOffset.X * advanceUnit.Y * scale.Y + gd.drawOffset.Y * advanceUnit.X * scale.X;
+                    Texture2D tex = textures[gd.TexIndex];
+                    Vector2 drawOffset;
+                    drawOffset.X = gd.DrawOffset.X * advanceUnit.X * scale.X - gd.DrawOffset.Y * advanceUnit.Y * scale.Y;
+                    drawOffset.Y = gd.DrawOffset.X * advanceUnit.Y * scale.Y + gd.DrawOffset.Y * advanceUnit.X * scale.X;
 
-                        sb.Draw(tex, currentPos + drawOffset, gd.texCoords, color, rotation, origin, scale, se, layerDepth);
-                    }
-                    currentPos += gd.advance * advanceUnit * scale.X;
+                    sb.Draw(tex, currentPos + drawOffset, gd.TexCoords, color, rotation, origin, scale, se, layerDepth);
                 }
+                currentPos += gd.Advance * advanceUnit * scale.X;
             }
         }
 
@@ -400,7 +424,7 @@ namespace Barotrauma
                 if (text[i] == '\n')
                 {
                     currentPos.X = position.X;
-                    currentPos.Y += baseHeight * 1.8f;
+                    currentPos.Y += LineHeight;
                     continue;
                 }
 
@@ -410,15 +434,13 @@ namespace Barotrauma
                     DynamicRenderAtlas(graphicsDevice, charIndex);
                 }
 
-                if (texCoords.TryGetValue(charIndex, out GlyphData gd) || texCoords.TryGetValue(9633, out gd)) //9633 = white square
+                GlyphData gd = GetGlyphData(charIndex);
+                if (gd.TexIndex >= 0)
                 {
-                    if (gd.texIndex >= 0)
-                    {
-                        Texture2D tex = textures[gd.texIndex];
-                        sb.Draw(tex, currentPos + gd.drawOffset, gd.texCoords, color);
-                    }
-                    currentPos.X += gd.advance;
+                    Texture2D tex = textures[gd.TexIndex];
+                    sb.Draw(tex, currentPos + gd.DrawOffset, gd.TexCoords, color);
                 }
+                currentPos.X += gd.Advance;
             }
         }
 
@@ -444,8 +466,8 @@ namespace Barotrauma
                 {
                     lineNum++;
                     currentPos = position;
-                    currentPos.X -= baseHeight * 1.8f * lineNum * advanceUnit.Y * scale.Y;
-                    currentPos.Y += baseHeight * 1.8f * lineNum * advanceUnit.X * scale.Y;
+                    currentPos.X -= LineHeight * lineNum * advanceUnit.Y * scale.Y;
+                    currentPos.Y += LineHeight * lineNum * advanceUnit.X * scale.Y;
                     continue;
                 }
 
@@ -476,22 +498,116 @@ namespace Barotrauma
                     currentTextColor = color;
                 }
 
-                if (texCoords.TryGetValue(charIndex, out GlyphData gd) || texCoords.TryGetValue(9633, out gd)) //9633 = white square
+                GlyphData gd = GetGlyphData(charIndex);
+                if (gd.TexIndex >= 0)
                 {
-                    if (gd.texIndex >= 0)
-                    {
-                        Texture2D tex = textures[gd.texIndex];
-                        Vector2 drawOffset;
-                        drawOffset.X = gd.drawOffset.X * advanceUnit.X * scale.X - gd.drawOffset.Y * advanceUnit.Y * scale.Y;
-                        drawOffset.Y = gd.drawOffset.X * advanceUnit.Y * scale.Y + gd.drawOffset.Y * advanceUnit.X * scale.X;
+                    Texture2D tex = textures[gd.TexIndex];
+                    Vector2 drawOffset;
+                    drawOffset.X = gd.DrawOffset.X * advanceUnit.X * scale.X - gd.DrawOffset.Y * advanceUnit.Y * scale.Y;
+                    drawOffset.Y = gd.DrawOffset.X * advanceUnit.Y * scale.Y + gd.DrawOffset.Y * advanceUnit.X * scale.X;
 
-                        sb.Draw(tex, currentPos + drawOffset, gd.texCoords, currentTextColor, rotation, origin, scale, se, layerDepth);
-                    }
-                    currentPos += gd.advance * advanceUnit * scale.X;
+                    sb.Draw(tex, currentPos + drawOffset, gd.TexCoords, currentTextColor, rotation, origin, scale, se, layerDepth);
                 }
+                currentPos += gd.Advance * advanceUnit * scale.X;
             }
         }
 
+        public string WrapText(string text, float width)
+            => WrapText(text, width, requestCharPos: 0, out _, returnAllCharPositions: false, out _);
+
+        public string WrapText(string text, float width, int requestCharPos, out Vector2 requestedCharPos)
+            => WrapText(text, width, requestCharPos, out requestedCharPos, returnAllCharPositions: false, out _);
+        
+        public string WrapText(string text, float width, out Vector2[] allCharPositions)
+            => WrapText(text, width, requestCharPos: 0, out _, returnAllCharPositions: true, out allCharPositions);
+        
+        /// <summary>
+        /// Wraps a string of text to fit within a given width.
+        /// Optionally returns the caret position of a certain character,
+        /// or all of them.
+        /// </summary>
+        private string WrapText(string text,
+            float width,
+            int requestCharPos,
+            out Vector2 requestedCharPos,
+            bool returnAllCharPositions,
+            out Vector2[] allCharPositions)
+        {
+            int currLineStart = 0;
+            Vector2 currentPos = Vector2.Zero;
+            Vector2 foundCharPos = Vector2.Zero;
+            int? lastBreakerIndex = null;
+            string result = "";
+            var allCharPos = returnAllCharPositions ? new Vector2[text.Length+1] : null;
+            for (int i = 0; i < text.Length; i++)
+            {
+                //Records the caret position of the current character
+                void recordCurrentPos()
+                {
+                    if (i == requestCharPos) { foundCharPos = currentPos; }
+
+                    if (allCharPos != null) { allCharPos[i] = currentPos; }
+                }
+                recordCurrentPos();
+    
+                //Appends a newline to the result and resets the caret position's X value
+                void nextLine()
+                {
+                    result += text[currLineStart..i].Remove("\n") + "\n";
+                    lastBreakerIndex = null;
+                    currentPos.X = 0.0f;
+                    currentPos.Y += LineHeight;
+                    currLineStart = i;
+                }
+
+                //If a newline is found in the source, split immediately
+                if (text[i] == '\n')
+                {
+                    nextLine();
+                    continue;
+                }
+
+                //Otherwise, advance based on the width of the current character
+                GlyphData gd = GetGlyphData(text[i]);
+                float advance = gd.Advance;
+                if (currentPos.X + advance >= width)
+                {
+                    //Advancing based on the last character
+                    //would put us past the max width!
+                    if (i > 0 && char.IsWhiteSpace(text[i]) && !char.IsWhiteSpace(text[i - 1]))
+                    {
+                        //Whitespace immediately after a visible
+                        //character can be shrunk down to fit
+                        advance = width - currentPos.X;
+                    }
+                    else
+                    {
+                        if (lastBreakerIndex.HasValue)
+                        {
+                            //A breaker (whitespace or CJK) was found earlier
+                            //in this line, so let's break the line there
+                            i = lastBreakerIndex.Value + 1;
+                        }
+
+                        nextLine();
+                        recordCurrentPos(); //must re-record current caret position since we are on a new line now
+                    }
+                }
+                currentPos.X += advance;
+
+                if (char.IsWhiteSpace(text[i]) || TextManager.IsCJK($"{text[i]}"))
+                {
+                    lastBreakerIndex = i;
+                }
+            }
+            if (requestCharPos >= text.Length) { foundCharPos = currentPos; }
+            if (allCharPos != null) { allCharPos[text.Length] = currentPos; }
+            allCharPositions = allCharPos;
+            result += text[currLineStart..].Remove("\n");
+            requestedCharPos = foundCharPos;
+            return result;
+        }
+        
         public Vector2 MeasureString(string text, bool removeExtraSpacing = false)
         {
             if (text == null)
@@ -504,7 +620,7 @@ namespace Barotrauma
 
             if (!removeExtraSpacing)
             {
-                retVal.Y = baseHeight * 1.8f;
+                retVal.Y = LineHeight;
             }
             else
             {
@@ -516,7 +632,7 @@ namespace Barotrauma
                 if (text[i] == '\n')
                 {
                     currentLineX = 0.0f;
-                    retVal.Y += baseHeight * 1.8f;
+                    retVal.Y += LineHeight;
                     continue;
                 }
                 uint charIndex = text[i];
@@ -524,10 +640,9 @@ namespace Barotrauma
                 {
                     DynamicRenderAtlas(graphicsDevice, charIndex);
                 }
-                if (texCoords.TryGetValue(charIndex, out GlyphData gd))
-                {
-                    currentLineX += gd.advance;
-                }
+
+                GlyphData gd = GetGlyphData(charIndex);
+                currentLineX += gd.Advance;
                 retVal.X = Math.Max(retVal.X, currentLineX);
             }
             return retVal;
@@ -536,15 +651,14 @@ namespace Barotrauma
         public Vector2 MeasureChar(char c)
         {
             Vector2 retVal = Vector2.Zero;
-            retVal.Y = baseHeight * 1.8f;
+            retVal.Y = LineHeight;
             if (DynamicLoading && !texCoords.ContainsKey(c))
             {
                 DynamicRenderAtlas(graphicsDevice, c);
             }
-            if (texCoords.TryGetValue(c, out GlyphData gd))
-            {
-                retVal.X = gd.advance;
-            }
+
+            GlyphData gd = GetGlyphData(c);
+            retVal.X = gd.Advance;
             return retVal;
         }
 

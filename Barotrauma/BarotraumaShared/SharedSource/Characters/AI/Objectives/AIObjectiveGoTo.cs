@@ -27,6 +27,7 @@ namespace Barotrauma
         public bool isFollowOrderObjective;
         public bool mimic;
         public bool SpeakIfFails { get; set; } = true;
+        public bool DebugLogWhenFails { get; set; } = true;
         public bool UsePathingOutside { get; set; } = true;
 
         public float extraDistanceWhileSwimming;
@@ -61,6 +62,9 @@ namespace Barotrauma
             }
         }
 
+        // TODO: Currently we never check the visibility (to the end node), which is actually unintentional.
+        // I don't think it has caused any issues so far, so let's keep defaulting to false for now, because the less we do raycasts the better.
+        // However, if there are cases where the bots attempt to go through walls (select the end node that is behind an obstacle), we should set this true.
         public bool CheckVisibility { get; set; }
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }
@@ -77,7 +81,7 @@ namespace Barotrauma
         public override bool AllowOutsideSubmarine => AllowGoingOutside;
         public override bool AllowInAnySub => true;
 
-        public string DialogueIdentifier { get; set; }
+        public string DialogueIdentifier { get; set; } = "dialogcannotreachtarget";
         public string TargetName { get; set; }
 
         public ISpatialEntity Target { get; private set; }
@@ -149,7 +153,10 @@ namespace Barotrauma
         private void SpeakCannotReach()
         {
 #if DEBUG
-            DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target}", Color.Yellow);
+            if (DebugLogWhenFails)
+            {
+                DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target}", Color.Yellow);
+            }
 #endif
             if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder == objectiveManager.CurrentObjective && DialogueIdentifier != null && SpeakIfFails)
             {
@@ -170,16 +177,11 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            if (Target == character || character.SelectedBy != null && HumanAIController.IsFriendly(character.SelectedBy))
+            if (cannotFollow || Target == character || character.SelectedBy != null && HumanAIController.IsFriendly(character.SelectedBy))
             {
                 // Wait
                 character.AIController.SteeringManager.Reset();
                 return;
-            }
-            if (cannotFollow)
-            {
-                // Wait
-                character.AIController.SteeringManager.Reset();
             }
             if (!character.IsClimbing)
             {
@@ -211,26 +213,33 @@ namespace Barotrauma
             }
             bool insideSteering = SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.IsPathDirty;
             bool isInside = character.CurrentHull != null;
-            bool targetIsOutside = (Target != null && targetHull == null) || (insideSteering && PathSteering.CurrentPath.HasOutdoorsNodes);
-            if (isInside && targetIsOutside && !AllowGoingOutside)
+            bool hasOutdoorNodes = insideSteering && PathSteering.CurrentPath.HasOutdoorsNodes;
+            if (isInside && hasOutdoorNodes && !AllowGoingOutside)
             {
                 Abandon = true;
             }
-            else if (HumanAIController.IsCurrentPathNullOrUnreachable)
+            else if (HumanAIController.SteeringManager == PathSteering)
             {
                 waitUntilPathUnreachable -= deltaTime;
-                SteeringManager.Reset();
-                if (waitUntilPathUnreachable < 0)
+                if (HumanAIController.IsCurrentPathNullOrUnreachable)
+                {
+                    SteeringManager.Reset();
+                    if (waitUntilPathUnreachable < 0)
+                    {
+                        waitUntilPathUnreachable = pathWaitingTime;
+                        if (repeat)
+                        {
+                            SpeakCannotReach();
+                        }
+                        else
+                        {
+                            Abandon = true;
+                        }
+                    }
+                }
+                else if (HumanAIController.HasValidPath(requireNonDirty: true, requireUnfinished: false))
                 {
                     waitUntilPathUnreachable = pathWaitingTime;
-                    if (repeat)
-                    {
-                        SpeakCannotReach();
-                    }
-                    else
-                    {
-                        Abandon = true;
-                    }
                 }
             }
             if (!Abandon)
@@ -238,16 +247,16 @@ namespace Barotrauma
                 if (getDivingGearIfNeeded && !character.LockHands)
                 {
                     Character followTarget = Target as Character;
-                    bool needsDivingSuit = !isInside || targetIsOutside;
-                    bool needsDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit);
+                    bool needsDivingSuit = (!isInside || hasOutdoorNodes) && character.NeedsAir && !character.HasAbilityFlag(AbilityFlags.ImmuneToPressure);
+                    bool needsDivingGear = (needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit)) && character.NeedsAir;
                     if (mimic)
                     {
-                        if (HumanAIController.HasDivingSuit(followTarget))
+                        if (HumanAIController.HasDivingSuit(followTarget) && character.NeedsAir)
                         {
                             needsDivingGear = true;
                             needsDivingSuit = true;
                         }
-                        else if (HumanAIController.HasDivingMask(followTarget))
+                        else if (HumanAIController.HasDivingMask(followTarget) && character.NeedsAir)
                         {
                             needsDivingGear = true;
                         }

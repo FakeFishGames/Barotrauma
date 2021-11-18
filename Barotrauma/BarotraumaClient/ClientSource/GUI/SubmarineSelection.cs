@@ -471,7 +471,7 @@ namespace Barotrauma
         }
 
         // Initial submarine selection needs a slight wait to allow the layoutgroups to place content properly
-        private IEnumerable<object> SelectOwnSubmarineWithDelay(SubmarineInfo info, SubmarineDisplayContent display)
+        private IEnumerable<CoroutineStatus> SelectOwnSubmarineWithDelay(SubmarineInfo info, SubmarineDisplayContent display)
         {
             yield return new WaitForSeconds(0.05f);
             SelectSubmarine(info, display.background.Rect);

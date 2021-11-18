@@ -213,7 +213,6 @@ namespace Barotrauma
                 {
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50)
                     {
-                        DialogueIdentifier = "dialogcannotreachtarget",
                         TargetName = target.Item.Name,
                         endNodeFilter = node => node.Waypoint.Ladders == null
                     },

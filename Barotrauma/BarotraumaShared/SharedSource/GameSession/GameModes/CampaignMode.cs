@@ -393,7 +393,7 @@ namespace Barotrauma
         /// </summary>
         protected abstract void LoadInitialLevel();
 
-        protected abstract IEnumerable<object> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null);
+        protected abstract IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null);
 
         /// <summary>
         /// Which type of transition between levels is currently possible (if any)
@@ -572,7 +572,7 @@ namespace Barotrauma
             {
                 foreach (Item item in Item.ItemList)
                 {
-                    if (!item.SpawnedInOutpost || item.OriginalModuleIndex < 0) { continue; }
+                    if (!item.SpawnedInCurrentOutpost || item.OriginalModuleIndex < 0) { continue; }
                     var owner = item.GetRootInventoryOwner();
                     if ((!(owner?.Submarine?.Info?.IsOutpost ?? false)) || (owner is Character character && character.TeamID == CharacterTeamType.Team1) || item.Submarine == null || !item.Submarine.Info.IsOutpost)
                     {
@@ -712,7 +712,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> DoCharacterWait(Character npc, Character interactor)
+        private IEnumerable<CoroutineStatus> DoCharacterWait(Character npc, Character interactor)
         {
             if (npc == null || interactor == null) { yield return CoroutineStatus.Failure; }
 
@@ -907,7 +907,7 @@ namespace Barotrauma
 
         public int NumberOfMissionsAtLocation(Location location)
         {
-            return Map.CurrentLocation.SelectedMissions.Count(m => m.Locations.Contains(location));
+            return Map?.CurrentLocation?.SelectedMissions?.Count(m => m.Locations.Contains(location)) ?? 0;
         }
 
         public void CheckTooManyMissions(Location currentLocation, Client sender)

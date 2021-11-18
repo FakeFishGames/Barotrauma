@@ -113,22 +113,7 @@ namespace Barotrauma.Networking
 
         public void CreateEvent(IServerSerializable entity, object[] extraData = null)
         {
-            if (entity == null || !(entity is Entity))
-            {
-                DebugConsole.ThrowError("Can't create an entity event for " + entity + "!");
-                return;
-            }
-
-            if (((Entity)entity).Removed && !(entity is Level))
-            {
-                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the entity has been removed.\n"+Environment.StackTrace.CleanupStackTrace());
-                return;
-            }
-            if (((Entity)entity).IdFreed)
-            {
-                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the ID of the entity has been freed.\n"+Environment.StackTrace.CleanupStackTrace());
-                return;
-            }
+            if (!ValidateEntity(entity)) { return; }
 
             var newEvent = new ServerEntityEvent(entity, (UInt16)(ID + 1));
             if (extraData != null) newEvent.SetData(extraData);

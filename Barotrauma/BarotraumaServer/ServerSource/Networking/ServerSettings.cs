@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Networking
 {
@@ -54,6 +55,8 @@ namespace Barotrauma.Networking
             outMsg.WriteRangedInteger(TickRate, 1, 60);
 
             WriteExtraCargo(outMsg);
+
+            WriteHiddenSubs(outMsg);
 
             Voting.ServerWrite(outMsg);
 
@@ -127,6 +130,12 @@ namespace Barotrauma.Networking
                 changed |= Whitelist.ServerAdminRead(incMsg, c);
             }
 
+            if (flags.HasFlag(NetFlags.HiddenSubs))
+            {
+                ReadHiddenSubs(incMsg);
+                changed |= true;
+            }
+            
             if (flags.HasFlag(NetFlags.Misc))
             {
                 int orBits = incMsg.ReadRangedInteger(0, (int)Barotrauma.MissionType.All) & (int)Barotrauma.MissionType.All;
@@ -205,6 +214,8 @@ namespace Barotrauma.Networking
 
             doc.Root.SetAttributeValue("ServerMessage", ServerMessageText);
 
+            doc.Root.SetAttributeValue("HiddenSubs", string.Join(",", HiddenSubs));
+            
             doc.Root.SetAttributeValue("AllowedRandomMissionTypes", string.Join(",", AllowedRandomMissionTypes));
             doc.Root.SetAttributeValue("AllowedClientNameChars", string.Join(",", AllowedClientNameChars.Select(c => c.First + "-" + c.Second)));
 
@@ -243,6 +254,11 @@ namespace Barotrauma.Networking
 
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
 
+            if (string.IsNullOrEmpty(doc.Root.GetAttributeString("losmode", "")))
+            {
+                LosMode = GameMain.Config.LosMode;
+            }
+
             AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
                         
             Voting.AllowSubVoting = SubSelectionMode == SelectionMode.Vote;            
@@ -252,6 +268,8 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.SetLevelDifficulty(selectedLevelDifficulty);
             
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
+
+            HiddenSubs.UnionWith(doc.Root.GetAttributeStringArray("HiddenSubs", Array.Empty<string>()));
 
             string[] defaultAllowedClientNameChars = 
                 new string[] {
@@ -337,6 +355,18 @@ namespace Barotrauma.Networking
             }
         }
 
+        public void SelectNonHiddenSubmarine()
+        {
+            if (HiddenSubs.Contains(GameMain.NetLobbyScreen.SelectedSub.Name))
+            {
+                var candidates = GameMain.NetLobbyScreen.GetSubList().Where(s => !HiddenSubs.Contains(s.Name)).ToArray();
+                if (candidates.Any())
+                {
+                    GameMain.NetLobbyScreen.SelectedSub = candidates.GetRandom(Rand.RandSync.Unsynced);
+                }
+            }
+        }
+        
         public void LoadClientPermissions()
         {
             ClientPermissions.Clear();

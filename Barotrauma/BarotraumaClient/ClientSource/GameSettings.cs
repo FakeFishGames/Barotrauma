@@ -480,7 +480,7 @@ namespace Barotrauma
                         "\n" + string.Join("\n", contentPackage.ErrorMessages);
                 }
             }
-            contentPackageList.CanDragElements = CanHotswapPackages(false);
+            contentPackageList.CurrentDragMode = CanHotswapPackages(false) ? GUIListBox.DragMode.DragWithinBox : GUIListBox.DragMode.NoDragging;
             contentPackageList.CanBeFocused = CanHotswapPackages(false);
             contentPackageList.OnRearranged = OnContentPackagesRearranged;
 
@@ -1767,7 +1767,7 @@ namespace Barotrauma
             return true;
         }
 
-        private IEnumerable<object> WaitForKeyPress(GUITextBox keyBox, KeyOrMouse[] keyArray)
+        private IEnumerable<CoroutineStatus> WaitForKeyPress(GUITextBox keyBox, KeyOrMouse[] keyArray)
         {
             yield return CoroutineStatus.Running;
 

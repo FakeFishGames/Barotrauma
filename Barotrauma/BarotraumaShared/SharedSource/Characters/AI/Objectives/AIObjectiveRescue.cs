@@ -319,9 +319,32 @@ namespace Barotrauma
                         {
                             itemListStr = itemNameList[0];
                         }
+                        else if (itemNameList.Count == 2)
+                        {
+                            //[treatment1] or [treatment2]
+                            itemListStr = TextManager.GetWithVariables(
+                                "DialogRequiredTreatmentOptionsLast",
+                                new string[] { "[treatment1]", "[treatment2]" },
+                                new string[] { itemNameList[0], itemNameList[1] });
+                        }
                         else
                         {
-                            itemListStr = string.Join(" or ", string.Join(", ", itemNameList.Take(itemNameList.Count - 1)), itemNameList.Last());
+                            //[treatment1], [treatment2], [treatment3] ... or [treatmentx]
+                            itemListStr = TextManager.GetWithVariables(
+                                "DialogRequiredTreatmentOptionsFirst",
+                                new string[] { "[treatment1]", "[treatment2]" },
+                                new string[] { itemNameList[0], itemNameList[1] });
+                            for (int i = 2; i < itemNameList.Count - 1; i++)
+                            {
+                                itemListStr = TextManager.GetWithVariables(
+                                  "DialogRequiredTreatmentOptionsFirst",
+                                  new string[] { "[treatment1]", "[treatment2]" },
+                                  new string[] { itemListStr, itemNameList[i] });
+                            }
+                            itemListStr = TextManager.GetWithVariables(
+                                "DialogRequiredTreatmentOptionsLast",
+                                new string[] { "[treatment1]", "[treatment2]" },
+                                new string[] { itemListStr, itemNameList.Last() });
                         }
                         if (targetCharacter != character && character.IsOnPlayerTeam)
                         {

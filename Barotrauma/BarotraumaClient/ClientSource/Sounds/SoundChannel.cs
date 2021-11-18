@@ -221,7 +221,7 @@ namespace Barotrauma.Sounds
             {
                 if (!MathUtils.IsValid(value)) { return; }
 
-                gain = Math.Clamp(value, 0.0f, 1.0f);
+                gain = Math.Max(value, 0.0f);
 
                 if (ALSourceIndex < 0) { return; }
 
@@ -525,6 +525,8 @@ namespace Barotrauma.Sounds
                             throw new Exception("Failed to bind buffer to source (" + ALSourceIndex.ToString() + ":" + sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex) + "," + alBuffer.ToString() + "): " + debugName + ", " + Al.GetErrorString(alError));
                         }
 
+                        SetProperties();
+
                         Al.SourcePlay(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex));
                         alError = Al.GetError();
                         if (alError != Al.NoError)
@@ -570,16 +572,9 @@ namespace Barotrauma.Sounds
                             }
                         }
                         Sound.Owner.InitStreamThread();
+                        SetProperties();
                     }
                 }
-
-                this.Position = position;
-                this.Gain = gain;
-                this.FrequencyMultiplier = freqMult;
-                this.Looping = false;
-                this.Near = near;
-                this.Far = far;
-                this.Category = category;
 #if !DEBUG
             }
             catch
@@ -593,6 +588,17 @@ namespace Barotrauma.Sounds
 #if !DEBUG
             }
 #endif
+
+            void SetProperties()
+            {
+                this.Position = position;
+                this.Gain = gain;
+                this.FrequencyMultiplier = freqMult;
+                this.Looping = false;
+                this.Near = near;
+                this.Far = far;
+                this.Category = category;
+            }
 
             Sound.Owner.Update();
         }

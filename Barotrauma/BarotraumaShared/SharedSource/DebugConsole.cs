@@ -109,7 +109,7 @@ namespace Barotrauma
         public static bool CheatsEnabled;
 
         private static readonly List<ColoredText> unsavedMessages = new List<ColoredText>();
-        private static readonly int messagesPerFile = 5000;
+        private static readonly int messagesPerFile = 800;
         public const string SavePath = "ConsoleLogs";
 
         private static void AssignOnExecute(string names, Action<string[]> onExecute)
@@ -878,7 +878,7 @@ namespace Barotrauma
                 List<TalentTree> talentTrees = new List<TalentTree>();
                 if (args.Length == 0 || args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
                 {
-                    talentTrees.AddRange(TalentTree.JobTalentTrees.Values);
+                    talentTrees.AddRange(TalentTree.JobTalentTrees);
                 }
                 else
                 {
@@ -1062,7 +1062,7 @@ namespace Barotrauma
             },
             null));
 
-            IEnumerable<object> TestLevels()
+            IEnumerable<CoroutineStatus> TestLevels()
             {
                 SubmarineInfo selectedSub = null;
                 string subName = GameMain.Config.QuickStartSubmarineName;
@@ -1409,6 +1409,29 @@ namespace Barotrauma
                     sub.WreckAI?.Kill();
                 }
             }, null, isCheat: true));
+
+            commands.Add(new Command("despawnnow", "despawnnow [character]: Immediately despawns the specified dead character. If the character argument is omitted, all dead characters are despawned.", (string[] args) =>
+            {
+                if (args.Length == 0)
+                {
+                    foreach (Character c in Character.CharacterList.Where(c => c.IsDead).ToList())
+                    {
+                        c.DespawnNow();
+                    }
+                }
+                else
+                {
+                    Character character = FindMatchingCharacter(args);
+                    character?.DespawnNow();
+                }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Where(c => c.IsDead).Select(c => c.Name).Distinct().ToArray()
+                };
+            }, isCheat: true));
 
             commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] [character name]: Gives the client control of the specified character.", null,
             () =>
@@ -1832,7 +1855,7 @@ namespace Barotrauma
 #if CLIENT
                 activeQuestionText = null;
 #endif
-                NewMessage(command, Color.White, true);
+                NewCommand(command);
                 //reset the variable before invoking the delegate because the method may need to activate another question
                 var temp = activeQuestionCallback;
                 activeQuestionCallback = null;
@@ -1857,7 +1880,7 @@ namespace Barotrauma
 
             if (!firstCommand.Equals("admin", StringComparison.OrdinalIgnoreCase))
             {
-                NewMessage(command, Color.White, true);
+                NewCommand(command);
             }
 
 #if CLIENT
@@ -2173,15 +2196,37 @@ namespace Barotrauma
             }
         }
 
-        public static void NewMessage(string msg, bool isCommand = false)
+        public static void ShowError(string msg, Color? color = null)
         {
+            color ??= Color.Red;
+            NewMessage(msg, color.Value, isCommand: false, isError: true);
+        }
+
+        public static void NewCommand(string command, Color? color = null)
+        {
+            color ??= Color.White;
+            NewMessage(command, color.Value, isCommand: true, isError: false);
+        }
+
+        public static void NewMessage(string msg, Color? color = null, bool debugOnly = false)
+        {
+            color ??= Color.White;
+            if (debugOnly)
+            {
+#if DEBUG
+                NewMessage(msg, color.Value, isCommand: false, isError: false);
+#endif
+            }
+            else
+            {
+                NewMessage(msg, color.Value, isCommand: false, isError: false);
+            }
 #if DEBUG
             Console.WriteLine(msg);
 #endif
-            NewMessage(msg, Color.White, isCommand);
         }
 
-        public static void NewMessage(string msg, Color color, bool isCommand = false, bool isError = false)
+        private static void NewMessage(string msg, Color color, bool isCommand, bool isError)
         {
             if (string.IsNullOrEmpty(msg)) { return; }
             
@@ -2271,7 +2316,10 @@ namespace Barotrauma
 
         public static void Log(string message)
         {
-            if (GameSettings.VerboseLogging) NewMessage(message, Color.Gray);
+            if (GameSettings.VerboseLogging)
+            {
+                NewMessage(message, Color.Gray);
+            }
         }
 
         public static void ThrowError(string error, Exception e = null, bool createMessageBox = false, bool appendStackTrace = false)
@@ -2309,7 +2357,7 @@ namespace Barotrauma
             }
 #endif
 
-            NewMessage(error, Color.Red, isError: true);
+            ShowError(error);
         }
         
         public static void AddWarning(string warning)
@@ -2319,7 +2367,7 @@ namespace Barotrauma
         }
 
 #if CLIENT
-        private static IEnumerable<object> CreateMessageBox(string errorMsg)
+        private static IEnumerable<CoroutineStatus> CreateMessageBox(string errorMsg)
         {
             while (GUI.Style == null)
             {

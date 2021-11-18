@@ -79,6 +79,7 @@ namespace Barotrauma
         {
             if (target == null || target.IsDead || target.Removed) { return false; }
             if (target.IsInstigator) { return false; }
+            if (target.IsPet) { return false; }
             if (!HumanAIController.IsFriendly(character, target, onlySameTeam: true)) { return false; }
             if (character.AIController is HumanAIController humanAI)
             {

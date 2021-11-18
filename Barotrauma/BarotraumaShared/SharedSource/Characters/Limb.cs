@@ -430,8 +430,15 @@ namespace Barotrauma
 
         public float Dir
         {
-            get { return ((dir == Direction.Left) ? -1.0f : 1.0f); }
-            set { dir = (value == -1.0f) ? Direction.Left : Direction.Right; }
+            get { return (dir == Direction.Left) ? -1.0f : 1.0f; }
+            set 
+            { 
+                dir = (value == -1.0f) ? Direction.Left : Direction.Right; 
+                if (body != null)
+                {
+                    body.Dir = Dir;
+                }
+            }
         }
 
         public int RefJointIndex => Params.RefJoint;

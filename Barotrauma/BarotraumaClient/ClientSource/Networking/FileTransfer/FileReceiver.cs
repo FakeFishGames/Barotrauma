@@ -160,7 +160,7 @@ namespace Barotrauma.Networking
         public TransferInDelegate OnTransferFailed;
 
         private readonly List<FileTransferIn> activeTransfers;
-        private readonly List<Pair<int, double>> finishedTransfers;
+        private readonly List<(int transferId, double finishedTime)> finishedTransfers;
 
         private readonly Dictionary<FileTransferType, string> downloadFolders = new Dictionary<FileTransferType, string>()
         {
@@ -176,7 +176,7 @@ namespace Barotrauma.Networking
         public FileReceiver()
         {
             activeTransfers = new List<FileTransferIn>();
-            finishedTransfers = new List<Pair<int, double>>();
+            finishedTransfers = new List<(int transferId, double finishedTime)>();
         }
         
         public void ReadMessage(IReadMessage inc)
@@ -193,8 +193,8 @@ namespace Barotrauma.Networking
                 case (byte)FileTransferMessageType.Initiate:
                     {
                         byte transferId = inc.ReadByte();
-                        var existingTransfer = activeTransfers.Find(t => t.ID == transferId);
-                        finishedTransfers.RemoveAll(t => t.First  == transferId);
+                        var existingTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.EndPointString) && t.ID == transferId);
+                        finishedTransfers.RemoveAll(t => t.transferId  == transferId);
                         byte fileType = inc.ReadByte();
                         //ushort chunkLen = inc.ReadUInt16();
                         int fileSize = inc.ReadInt32();
@@ -211,7 +211,7 @@ namespace Barotrauma.Networking
                             }
                             else //resend acknowledgement packet
                             {
-                                GameMain.Client.UpdateFileTransfer(transferId, 0);
+                                GameMain.Client.UpdateFileTransfer(transferId, existingTransfer.Received);
                             }
                             return;
                         }
@@ -316,14 +316,14 @@ namespace Barotrauma.Networking
                     {
                         byte transferId = inc.ReadByte();
 
-                        var activeTransfer = activeTransfers.Find(t => t.Connection == inc.Sender && t.ID == transferId);
+                        var activeTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.EndPointString) && t.ID == transferId);
                         if (activeTransfer == null)
                         {
                             //it's possible for the server to send some extra data
                             //before it acknowledges that the download is finished,
                             //so let's suppress the error message in that case
-                            finishedTransfers.RemoveAll(t => t.Second + 5.0 < Timing.TotalTime);
-                            if (!finishedTransfers.Any(t => t.First == transferId))
+                            finishedTransfers.RemoveAll(t => t.finishedTime + 5.0 < Timing.TotalTime);
+                            if (!finishedTransfers.Any(t => t.transferId == transferId))
                             {
                                 GameMain.Client.CancelFileTransfer(transferId);
                                 DebugConsole.ThrowError("File transfer error: received data without a transfer initiation message");
@@ -373,7 +373,7 @@ namespace Barotrauma.Networking
 
                             if (ValidateReceivedData(activeTransfer, out string errorMessage))
                             {
-                                finishedTransfers.Add(new Pair<int, double>(transferId, Timing.TotalTime));
+                                finishedTransfers.Add((transferId, Timing.TotalTime));
                                 StopTransfer(activeTransfer);
                                 Md5Hash.RemoveFromCache(activeTransfer.FilePath);
                                 OnFinished(activeTransfer);
@@ -391,7 +391,7 @@ namespace Barotrauma.Networking
                 case (byte)FileTransferMessageType.Cancel:
                     {
                         byte transferId = inc.ReadByte();
-                        var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.Sender && t.ID == transferId);
+                        var matchingTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.EndPointString) && t.ID == transferId);
                         if (matchingTransfer != null)
                         {
                             new GUIMessageBox("File transfer cancelled", "The server has cancelled the transfer of the file \"" + matchingTransfer.FileName + "\".");
@@ -528,7 +528,7 @@ namespace Barotrauma.Networking
                 transfer.Status = FileTransferStatus.Canceled;
             }
 
-            if (activeTransfers.Contains(transfer)) activeTransfers.Remove(transfer);
+            if (activeTransfers.Contains(transfer)) { activeTransfers.Remove(transfer); }
             transfer.Dispose();
 
             if (deleteFile && File.Exists(transfer.FilePath))

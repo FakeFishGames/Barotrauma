@@ -294,10 +294,6 @@ namespace Barotrauma
             }
         }
 
-        private bool IsLoaded(ItemComponent weapon, bool checkContainedItems = true) => 
-            weapon.HasRequiredContainedItems(character, addMessage: false) &&
-            (!checkContainedItems || weapon.Item.OwnInventory == null || weapon.Item.OwnInventory.AllItems.Any(i => i.Condition > 0));
-
         private bool TryArm()
         {
             if (character.LockHands || Enemy == null)
@@ -325,7 +321,7 @@ namespace Barotrauma
                         Weapon = null;
                         continue;
                     }
-                    if (IsLoaded(WeaponComponent, checkContainedItems: true))
+                    if (WeaponComponent.IsLoaded(character))
                     {
                         // All good, the weapon is loaded
                         break;
@@ -380,6 +376,7 @@ namespace Barotrauma
                         constructor: () => new AIObjectiveGetItem(character, "weapon", objectiveManager, equip: true, checkInventory: false)
                         {
                             AllowStealing = HumanAIController.IsMentallyUnstable,
+                            EvaluateCombatPriority = false,  // Use a custom formula instead
                             GetItemPriority = i =>
                             {
                                 if (Weapon != null && (i == Weapon || i.Prefab.Identifier == Weapon.Prefab.Identifier)) { return 0; }
@@ -433,7 +430,7 @@ namespace Barotrauma
                     // Not in the inventory anymore or cannot find the weapon component
                     return false;
                 }
-                if (!IsLoaded(WeaponComponent))
+                if (!WeaponComponent.IsLoaded(character))
                 {
                     // Try reloading (and seek ammo)
                     if (!Reload(seekAmmo))
@@ -475,7 +472,7 @@ namespace Barotrauma
             foreach (var weapon in weaponList)
             {
                 float priority = weapon.CombatPriority;
-                if (!IsLoaded(weapon))
+                if (!weapon.IsLoaded(character))
                 {
                     if (weapon is RangedWeapon && enemyIsClose)
                     {
@@ -564,31 +561,6 @@ namespace Barotrauma
             }
             return weaponComponent.Item;
 
-            static Attack GetAttackDefinition(ItemComponent weapon)
-            {
-                Attack attack = null;
-                if (weapon is MeleeWeapon meleeWeapon)
-                {
-                    attack = meleeWeapon.Attack;
-                }
-                else if (weapon is RangedWeapon rangedWeapon)
-                {
-                    attack = rangedWeapon.FindProjectile(triggerOnUseOnContainers: false)?.Attack;
-                }
-                return attack;
-            }
-
-            static float GetLethalDamage(ItemComponent weapon)
-            {
-                float lethalDmg = 0;
-                Attack attack = GetAttackDefinition(weapon);
-                if (attack != null)
-                {
-                    lethalDmg = attack.GetTotalDamage();
-                }
-                return lethalDmg;
-            }
-
             float ApproximateStunDamage(ItemComponent weapon, Attack attack)
             {
                 // Try to reduce the priority using the actual damage values and status effects.
@@ -626,6 +598,31 @@ namespace Barotrauma
                 return containers.None() || containers.Any(container =>
                     (container as ItemContainer)?.Inventory.AllItems.Any(i => i != null && i.HasTag(mobileBatteryTag) && i.Condition > 0.0f) ?? false);
             }
+        }
+
+        public static float GetLethalDamage(ItemComponent weapon)
+        {
+            float lethalDmg = 0;
+            Attack attack = GetAttackDefinition(weapon);
+            if (attack != null)
+            {
+                lethalDmg = attack.GetTotalDamage();
+            }
+            return lethalDmg;
+        }
+
+        private static Attack GetAttackDefinition(ItemComponent weapon)
+        {
+            Attack attack = null;
+            if (weapon is MeleeWeapon meleeWeapon)
+            {
+                attack = meleeWeapon.Attack;
+            }
+            else if (weapon is RangedWeapon rangedWeapon)
+            {
+                attack = rangedWeapon.FindProjectile(triggerOnUseOnContainers: false)?.Attack;
+            }
+            return attack;
         }
 
         private HashSet<ItemComponent> FindWeaponsFromInventory()
@@ -788,7 +785,6 @@ namespace Barotrauma
                 {
                     UsePathingOutside = false,
                     IgnoreIfTargetDead = true,
-                    DialogueIdentifier = "dialogcannotreachtarget",
                     TargetName = Enemy.DisplayName,
                     AlwaysUseEuclideanDistance = false
                 },
@@ -812,7 +808,7 @@ namespace Barotrauma
                         ItemPrefab prefab = ItemPrefab.Find(null, "handcuffs");
                         if (prefab != null)
                         {
-                            Entity.Spawner.AddToSpawnQueue(prefab, character.Inventory, onSpawned: (Item i) => i.SpawnedInOutpost = true);
+                            Entity.Spawner.AddToSpawnQueue(prefab, character.Inventory, onSpawned: (Item i) => i.SpawnedInCurrentOutpost = true);
                         }
                     }
                     RemoveFollowTarget();

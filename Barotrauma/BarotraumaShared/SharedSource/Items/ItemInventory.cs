@@ -103,6 +103,9 @@ namespace Barotrauma
 
                 container.IsActive = true;
                 container.OnItemContained(item);
+#if SERVER
+                GameMain.Server?.KarmaManager?.OnItemContained(item, container.Item, user);
+#endif
             }
 
             return wasPut;
@@ -122,6 +125,9 @@ namespace Barotrauma
 
                 container.IsActive = true;
                 container.OnItemContained(item);
+#if SERVER
+                GameMain.Server?.KarmaManager?.OnItemContained(item, container.Item, user);
+#endif
             }
 
             return wasPut;

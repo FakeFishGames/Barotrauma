@@ -108,6 +108,10 @@ namespace Barotrauma.Networking
 
         private readonly ServerPeer peer;
 
+#if DEBUG
+        public float StallPacketsTime { get; set; }
+#endif
+
         public List<FileTransferOut> ActiveTransfers
         {
             get { return activeTransfers; }
@@ -264,6 +268,9 @@ namespace Barotrauma.Networking
                 }
 
                 peer.Send(message, transfer.Connection, DeliveryMethod.Unreliable);
+#if DEBUG
+                transfer.WaitTimer = Math.Max(transfer.WaitTimer, StallPacketsTime);
+#endif
             }
 
             catch (Exception e)

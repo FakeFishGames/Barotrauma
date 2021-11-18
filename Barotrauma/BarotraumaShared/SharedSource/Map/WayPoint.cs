@@ -194,7 +194,7 @@ namespace Barotrauma
             float minDist = 100.0f;
             float heightFromFloor = 110.0f;
             float hullMinHeight = 100;
-            var removals = new List<WayPoint>();
+            var removals = new HashSet<WayPoint>();
             foreach (Hull hull in Hull.hullList)
             {
                 if (isFlooded)
@@ -492,17 +492,18 @@ namespace Barotrauma
                 {
                     outsideWaypoints.RemoveAll(w => w.Item1 == wp);
                 }
+                removals.ForEach(wp => wp.Remove());
                 for (int i = 0; i < outsideWaypoints.Count; i++)
                 {
                     WayPoint current = outsideWaypoints[i].Item1;
-                    if (current.linkedTo.Count > 1) { continue; }
+                    if (current.linkedTo.Count(l => !removals.Contains(l)) > 1) { continue; }
                     WayPoint next = null;
                     int maxConnections = 2;
                     float tooFar = outSideWaypointInterval * 5;
                     for (int j = 0; j < maxConnections; j++)
                     {
                         if (current.linkedTo.Count >= maxConnections) { break; }
-                        tooFar /= current.linkedTo.Count;
+                        tooFar /= current.linkedTo.Count(l => !removals.Contains(l));
                         next = current.FindClosestOutside(outsideWaypoints, tolerance: tooFar, filter: wp => wp.Item1 != next && wp.Item1.linkedTo.None(e => current.linkedTo.Contains(e)) && wp.Item1.linkedTo.Count < 2 && wp.Item2 < i);
                         if (next != null)
                         {
@@ -511,18 +512,19 @@ namespace Barotrauma
                     }
                 }
             }
-            foreach (Structure wall in Structure.WallList)
+            foreach (MapEntity mapEntity in mapEntityList.ToList())
             {
-                if (wall.StairDirection == Direction.None) { continue; }
+                if (!(mapEntity is Structure structure)) { continue; }
+                if (structure.StairDirection == Direction.None) { continue; }
                 WayPoint[] stairPoints = new WayPoint[3];
 
                 stairPoints[0] = new WayPoint(
-                    new Vector2(wall.Rect.X - 32.0f,
-                        wall.Rect.Y - (wall.StairDirection == Direction.Left ? 80 : wall.Rect.Height) + heightFromFloor), SpawnType.Path, submarine);
+                    new Vector2(structure.Rect.X - 32.0f,
+                        structure.Rect.Y - (structure.StairDirection == Direction.Left ? 80 : structure.Rect.Height) + heightFromFloor), SpawnType.Path, submarine);
 
                 stairPoints[1] = new WayPoint(
-                    new Vector2(wall.Rect.Right + 32.0f,
-                        wall.Rect.Y - (wall.StairDirection == Direction.Left ? wall.Rect.Height : 80) + heightFromFloor), SpawnType.Path, submarine);
+                    new Vector2(structure.Rect.Right + 32.0f,
+                        structure.Rect.Y - (structure.StairDirection == Direction.Left ? structure.Rect.Height : 80) + heightFromFloor), SpawnType.Path, submarine);
 
                 for (int i = 0; i < 2; i++)
                 {
@@ -869,10 +871,10 @@ namespace Barotrauma
             }
         }
 
-        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, JobPrefab assignedJob = null, Submarine sub = null, bool useSyncedRand = false, string spawnPointTag = null)
+        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, JobPrefab assignedJob = null, Submarine sub = null, bool useSyncedRand = false, string spawnPointTag = null, bool ignoreSubmarine = false)
         {
             return WayPointList.GetRandom(wp =>
-                wp.Submarine == sub && 
+                (ignoreSubmarine || wp.Submarine == sub) && 
                 wp.spawnType == spawnType &&
                 (string.IsNullOrEmpty(spawnPointTag) || wp.Tags.Any(t => t.Equals(spawnPointTag, StringComparison.OrdinalIgnoreCase))) &&
                 (assignedJob == null || (assignedJob != null && wp.AssignedJob == assignedJob)), 

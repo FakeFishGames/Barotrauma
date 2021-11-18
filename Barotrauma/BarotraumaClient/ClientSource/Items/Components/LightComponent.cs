@@ -14,6 +14,8 @@ namespace Barotrauma.Items.Components
         private CoroutineHandle resetPredictionCoroutine;
         private float resetPredictionTimer;
 
+        private float currentBrightness;
+
         public Vector2 DrawSize
         {
             get { return new Vector2(Light.Range * 2, Light.Range * 2); }
@@ -31,9 +33,37 @@ namespace Barotrauma.Items.Components
         {
             if (Light == null) { return; }
             Light.Enabled = enabled;
+            currentBrightness = brightness;
             if (enabled)
             {
                 Light.Color = LightColor.Multiply(brightness);
+            }
+        }
+
+        partial void SetLightSourceTransform()
+        {
+            if (ParentBody != null)
+            {
+                Light.Position = ParentBody.Position;
+            }
+            else if (turret != null)
+            {
+                Light.Position = new Vector2(item.Rect.X + turret.TransformedBarrelPos.X, item.Rect.Y - turret.TransformedBarrelPos.Y);
+            }
+            else
+            {
+                Light.Position = item.Position;
+            }
+            PhysicsBody body = ParentBody ?? item.body;
+            if (body != null)
+            {
+                Light.Rotation = body.Dir > 0.0f ? body.DrawRotation : body.DrawRotation - MathHelper.Pi;
+                Light.LightSpriteEffect = (body.Dir > 0.0f) ? SpriteEffects.None : SpriteEffects.FlipVertically;
+            }
+            else
+            {
+                Light.Rotation = -Rotation - MathHelper.ToRadians(item.Rotation);
+                Light.LightSpriteEffect = item.SpriteEffects;
             }
         }
 
@@ -71,7 +101,7 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// Reset client-side prediction of the light's state to the last known state sent by the server after resetPredictionTimer runs out
         /// </summary>
-        private IEnumerable<object> ResetPredictionAfterDelay()
+        private IEnumerable<CoroutineStatus> ResetPredictionAfterDelay()
         {
             while (resetPredictionTimer > 0.0f)
             {

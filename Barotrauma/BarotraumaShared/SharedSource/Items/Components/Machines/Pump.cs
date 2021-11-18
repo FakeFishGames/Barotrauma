@@ -190,28 +190,38 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             if (GameMain.Client != null) { return false; }
 #endif
-
-            if (objective.Option.Equals("stoppumping", StringComparison.OrdinalIgnoreCase))
+            switch (objective.Option.ToLowerInvariant())
             {
+                case "pumpout":
 #if SERVER
-                if (objective.Override || FlowPercentage > 0.0f)
-                {
-                    item.CreateServerEvent(this);
-                }
+                    if (objective.Override || !IsActive || FlowPercentage > -100.0f)
+                    {
+                        item.CreateServerEvent(this);
+                    }
 #endif
-                IsActive = false;
-                FlowPercentage = 0.0f;
-            }
-            else
-            {
+                    IsActive = true;
+                    FlowPercentage = -100.0f;
+                    break;
+                case "pumpin":
 #if SERVER
-                if (objective.Override || !IsActive || FlowPercentage > -100.0f)
-                {
-                    item.CreateServerEvent(this);
-                }
+                    if (objective.Override || !IsActive || FlowPercentage < 100.0f)
+                    {
+                        item.CreateServerEvent(this);
+                    }
 #endif
-                IsActive = true;
-                FlowPercentage = -100.0f;
+                    IsActive = true;
+                    FlowPercentage = 100.0f;
+                    break;
+                case "stoppumping":
+#if SERVER
+                    if (objective.Override || FlowPercentage > 0.0f)
+                    {
+                        item.CreateServerEvent(this);
+                    }
+#endif
+                    IsActive = false;
+                    FlowPercentage = 0.0f;
+                    break;
             }
             return true;
         }

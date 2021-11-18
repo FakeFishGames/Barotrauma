@@ -125,7 +125,17 @@ namespace Barotrauma.Items.Components
             if (sender.TeamID != TeamID && !AllowCrossTeamCommunication)
             {
                 return false;
-            }            
+            }
+
+            //if the component is not linked to chat and has nothing connected to the output, sending a signal to it does nothing
+            // = no point in receiving
+            if (!LinkToChat)
+            {
+                if (signalOutConnection == null || !signalOutConnection.Wires.Any(w => w != null))
+                {
+                    return false;
+                }
+            }
 
             if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) { return false; }
 

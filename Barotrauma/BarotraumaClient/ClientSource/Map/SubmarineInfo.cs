@@ -202,6 +202,7 @@ namespace Barotrauma
                 }
             }
             GUITextBlock.AutoScaleAndNormalize(parent.Content.GetAllChildren<GUITextBlock>().Where(c => c != submarineNameText && c != descBlock));
+            parent.ForceLayoutRecalculation();
         }
     }
 }

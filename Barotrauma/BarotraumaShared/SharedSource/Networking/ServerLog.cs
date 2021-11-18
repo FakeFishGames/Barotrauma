@@ -42,6 +42,7 @@ namespace Barotrauma.Networking
             ServerMessage,
             ConsoleUsage,
             Karma,
+            Talent,
             Error,
         }
 
@@ -56,6 +57,7 @@ namespace Barotrauma.Networking
             { MessageType.ServerMessage, new Color(157, 225, 160) },
             { MessageType.ConsoleUsage, new Color(0, 162, 232) },
             { MessageType.Karma, new Color(75, 88, 255) },
+            { MessageType.Talent, new Color(125, 125, 255) },
             { MessageType.Error, Color.Red },
         };
 
@@ -70,6 +72,7 @@ namespace Barotrauma.Networking
             { MessageType.ServerMessage, "ServerMessage" },
             { MessageType.ConsoleUsage, "ConsoleUsage" },
             { MessageType.Karma, "Karma" },
+            { MessageType.Talent, "Talent" },
             { MessageType.Error, "Error" }
         };
 

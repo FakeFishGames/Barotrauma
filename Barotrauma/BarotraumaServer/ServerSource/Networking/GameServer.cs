@@ -75,6 +75,11 @@ namespace Barotrauma.Networking
         private readonly ServerEntityEventManager entityEventManager;
 
         private FileSender fileSender;
+
+        public FileSender FileSender
+        {
+            get { return fileSender; }
+        }
 #if DEBUG
         public void PrintSenderTransters()
         {
@@ -139,7 +144,7 @@ namespace Barotrauma.Networking
             CoroutineManager.StartCoroutine(StartServer(isPublic));
         }
 
-        private IEnumerable<object> StartServer(bool isPublic)
+        private IEnumerable<CoroutineStatus> StartServer(bool isPublic)
         {
             bool error = false;
             try
@@ -391,7 +396,7 @@ namespace Barotrauma.Networking
                     character.KillDisconnectedTimer += deltaTime;
                     character.SetStun(1.0f);
 
-                    Client owner = connectedClients.Find(c => c.EndpointMatches(character.OwnerClientEndPoint));
+                    Client owner = connectedClients.Find(c => (c.Character == null || c.Character == character) && c.EndpointMatches(character.OwnerClientEndPoint));
 
                     if ((OwnerConnection == null || owner?.Connection != OwnerConnection) && character.KillDisconnectedTimer > serverSettings.KillDisconnectedTime)
                     {
@@ -486,7 +491,7 @@ namespace Barotrauma.Networking
                 else if (isCrewDead && (GameMain.GameSession?.GameMode is CampaignMode))
                 {
 #if !DEBUG
-                    endRoundDelay = 1.0f;
+                    endRoundDelay = 2.0f;
                     endRoundTimer += deltaTime;
 #endif
                 }
@@ -517,7 +522,7 @@ namespace Barotrauma.Networking
                     {
                         Log("Ending round (no living players left)", ServerLog.MessageType.ServerMessage);
                     }
-                    EndGame();
+                    EndGame(wasSaved: false);
                     return;
                 }
             }
@@ -896,7 +901,7 @@ namespace Barotrauma.Networking
             if (c.Connection == OwnerConnection)
             {
                 SendDirectChatMessage(errorStr, c, ChatMessageType.MessageBox);
-                EndGame();
+                EndGame(wasSaved: false);
             }
             else
             {
@@ -989,8 +994,11 @@ namespace Barotrauma.Networking
 
         public override void CreateEntityEvent(INetSerializable entity, object[] extraData = null)
         {
-            if (!(entity is IServerSerializable)) throw new InvalidCastException("entity is not IServerSerializable");
-            entityEventManager.CreateEvent(entity as IServerSerializable, extraData);
+            if (!(entity is IServerSerializable serverSerializable))
+            {
+                throw new InvalidCastException($"Entity is not {nameof(IServerSerializable)}");
+            }
+            entityEventManager.CreateEvent(serverSerializable, extraData);
         }
 
         private byte GetNewClientID()
@@ -1129,6 +1137,8 @@ namespace Barotrauma.Networking
                                 lastRecvEntityEventID = (UInt16)(c.FirstNewEventID - 1);
                                 c.LastRecvEntityEventID = lastRecvEntityEventID;
                                 DebugConsole.Log("Finished midround syncing " + c.Name + " - switching from ID " + prevID + " to " + c.LastRecvEntityEventID);
+                                //notify the client of the state of the respawn manager (so they show the respawn prompt if needed)
+                                if (respawnManager != null) { CreateEntityEvent(respawnManager); }
                             }
                             else
                             {
@@ -1315,18 +1325,23 @@ namespace Barotrauma.Networking
                     break;
                 case ClientPermissions.ManageRound:
                     bool end = inc.ReadBoolean();
+                    bool save = inc.ReadBoolean();
                     if (end)
                     {
                         if (gameStarted)
                         {
                             Log("Client \"" + GameServer.ClientLogName(sender) + "\" ended the round.", ServerLog.MessageType.ServerMessage);
-                            if (mpCampaign != null && Level.IsLoadedOutpost)
+                            if (mpCampaign != null && Level.IsLoadedOutpost && save)
                             {
                                 mpCampaign.SavePlayers();
-                                GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-                                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                                GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);                              
+                                SaveUtil.SaveGame(GameMain.GameSession.SavePath);                                
                             }
-                            EndGame();
+                            else
+                            {
+                                save = false;
+                            }
+                            EndGame(wasSaved: save);
                         }
                     }
                     else
@@ -2005,9 +2020,9 @@ namespace Barotrauma.Networking
             if (initiatedStartGame || gameStarted) { return false; }
 
             Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
-            SubmarineInfo selectedSub = null;
             SubmarineInfo selectedShuttle = GameMain.NetLobbyScreen.SelectedShuttle;
 
+            SubmarineInfo selectedSub;
             if (serverSettings.Voting.AllowSubVoting)
             {
                 selectedSub = serverSettings.Voting.HighestVoted<SubmarineInfo>(VoteType.Sub, connectedClients);
@@ -2037,7 +2052,7 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        private IEnumerable<object> InitiateStartGame(SubmarineInfo selectedSub, SubmarineInfo selectedShuttle, GameModePreset selectedMode)
+        private IEnumerable<CoroutineStatus> InitiateStartGame(SubmarineInfo selectedSub, SubmarineInfo selectedShuttle, GameModePreset selectedMode)
         {
             initiatedStartGame = true;
 
@@ -2079,7 +2094,6 @@ namespace Barotrauma.Networking
                     while (fileSender.ActiveTransfers.Count > 0 && waitForTransfersTimer > 0.0f)
                     {
                         waitForTransfersTimer -= CoroutineManager.UnscaledDeltaTime;
-
                         yield return CoroutineStatus.Running;
                     }
                 }
@@ -2090,7 +2104,7 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Success;
         }
 
-        private IEnumerable<object> StartGame(SubmarineInfo selectedSub, SubmarineInfo selectedShuttle, GameModePreset selectedMode, CampaignSettings settings)
+        private IEnumerable<CoroutineStatus> StartGame(SubmarineInfo selectedSub, SubmarineInfo selectedShuttle, GameModePreset selectedMode, CampaignSettings settings)
         {
             entityEventManager.Clear();
 
@@ -2474,7 +2488,7 @@ namespace Barotrauma.Networking
             msg.Write(serverSettings.LockAllDefaultWires);
             msg.Write(serverSettings.AllowRagdollButton);
             msg.Write(serverSettings.UseRespawnShuttle);
-            msg.Write((byte)GameMain.Config.LosMode);
+            msg.Write((byte)serverSettings.LosMode);
             msg.Write(includesFinalize); msg.WritePadBits();
 
             serverSettings.WriteMonsterEnabled(msg);
@@ -2498,6 +2512,7 @@ namespace Barotrauma.Networking
                 int nextLocationIndex = campaign.Map.Locations.FindIndex(l => l.LevelData == campaign.NextLevel);
                 int nextConnectionIndex = campaign.Map.Connections.FindIndex(c => c.LevelData == campaign.NextLevel);
                 msg.Write(campaign.CampaignID);
+                msg.Write(campaign.LastSaveID);
                 msg.Write(nextLocationIndex);
                 msg.Write(nextConnectionIndex);
                 msg.Write(campaign.Map.SelectedLocationIndex);
@@ -2549,7 +2564,7 @@ namespace Barotrauma.Networking
             GameMain.GameSession.CrewManager?.ServerWriteActiveOrders(msg);
         }
 
-        public void EndGame(CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
+        public void EndGame(CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None, bool wasSaved = false)
         {
             if (!gameStarted)
             {
@@ -2610,6 +2625,7 @@ namespace Barotrauma.Networking
                 IWriteMessage msg = new WriteOnlyMessage();
                 msg.Write((byte)ServerPacketHeader.ENDGAME);
                 msg.Write((byte)transitionType);
+                msg.Write(wasSaved);
                 msg.Write(endMessage);
                 msg.Write((byte)missions.Count);
                 foreach (Mission mission in missions)
@@ -3247,7 +3263,7 @@ namespace Barotrauma.Networking
                 ((float)EndVoteCount / (float)EndVoteMax) >= serverSettings.EndVoteRequiredRatio)
             {
                 Log("Ending round by votes (" + EndVoteCount + "/" + (EndVoteMax - EndVoteCount) + ")", ServerLog.MessageType.ServerMessage);
-                EndGame();
+                EndGame(wasSaved: false);
             }
         }
 
@@ -3329,7 +3345,7 @@ namespace Barotrauma.Networking
             serverSettings.SaveClientPermissions();
         }
 
-        private IEnumerable<object> SendClientPermissionsAfterClientListSynced(Client recipient, Client client)
+        private IEnumerable<CoroutineStatus> SendClientPermissionsAfterClientListSynced(Client recipient, Client client)
         {
             DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
             while (recipient.LastRecvClientListUpdate < LastClientListUpdateID)

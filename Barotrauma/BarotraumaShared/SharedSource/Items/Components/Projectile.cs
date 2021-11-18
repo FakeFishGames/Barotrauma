@@ -61,6 +61,8 @@ namespace Barotrauma.Items.Components
 
         public List<Body> IgnoredBodies;
 
+        private Character stickTargetCharacter;
+
         private Character _user;
         public Character User
         {
@@ -614,8 +616,8 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            //target very far from the item -> update the item's transform to make sure it's inside the same sub as the target (or outside)
-            if (Math.Abs(stickJoint.JointTranslation) > 100.0f)
+            // Update the item's transform to make sure it's inside the same sub as the target (or outside)
+            if (StickTarget?.UserData is Limb target && target.Submarine != item.Submarine || Math.Abs(stickJoint.JointTranslation) > 100.0f)
             {
                 item.UpdateTransform();
             }
@@ -866,7 +868,7 @@ namespace Barotrauma.Items.Components
                         (DoesStick ||
                         (StickToCharacters && (target.Body.UserData is Limb || target.Body.UserData is Character)) ||
                         (StickToStructures && target.Body.UserData is Structure) ||
-                        (StickToItems && target.Body.UserData is Item)))                
+                        (StickToItems && target.Body.UserData is Item)))
             {
                 Vector2 dir = new Vector2(
                     (float)Math.Cos(item.body.Rotation),
@@ -965,9 +967,14 @@ namespace Barotrauma.Items.Components
             GameMain.World.Add(stickJoint);
 
             IsActive = true;
+            if (targetBody.UserData is Limb limb)
+            {
+                stickTargetCharacter = limb.character;
+                stickTargetCharacter.AttachedProjectiles.Add(this);
+            }
         }
 
-        private void Unstick()
+        public void Unstick()
         {
             StickTarget = null;
             if (stickJoint != null)
@@ -979,25 +986,21 @@ namespace Barotrauma.Items.Components
                 stickJoint = null;
             }
             if (!item.body.FarseerBody.IsBullet) { IsActive = false; }
+            item.GetComponent<Rope>()?.Snap();
+            if (stickTargetCharacter != null)
+            {
+                stickTargetCharacter.AttachedProjectiles.Remove(this);
+                stickTargetCharacter = null;
+            }
         }
 
         protected override void RemoveComponentSpecific()
         {
             base.RemoveComponentSpecific();
-            if (stickJoint != null)
+            if (IsStuckToTarget || stickJoint != null || stickTargetCharacter != null)
             {
-                try
-                {
-                    GameMain.World.Remove(stickJoint);
-                }
-                catch
-                {
-                    //the body that the projectile was stuck to has been removed
-                }
-
-                stickJoint = null;
+                Unstick();
             }
-
         }
         partial void LaunchProjSpecific(Vector2 startLocation, Vector2 endLocation);
     }

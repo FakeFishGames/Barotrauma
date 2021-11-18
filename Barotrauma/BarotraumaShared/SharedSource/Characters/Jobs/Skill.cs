@@ -34,14 +34,14 @@ namespace Barotrauma
             }
         }
 
-        internal SkillPrefab Prefab { get; private set; }
+        public readonly float PriceMultiplier = 1.0f;
 
         public Skill(SkillPrefab prefab)
         {
-            this.Prefab = prefab;
             Identifier = prefab.Identifier;
-            level = Rand.Range(prefab.LevelRange.X, prefab.LevelRange.Y, Rand.RandSync.Server);
+            level = Rand.Range(prefab.LevelRange.Start, prefab.LevelRange.End, Rand.RandSync.Server);
             icon = GetIcon();
+            PriceMultiplier = prefab.PriceMultiplier;
         }
 
         public Skill(string identifier, float level)

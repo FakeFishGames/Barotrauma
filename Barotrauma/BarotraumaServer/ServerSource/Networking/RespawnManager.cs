@@ -49,6 +49,29 @@ namespace Barotrauma.Networking
             }
         }
 
+        private bool IsRespawnPromptPendingForClient(Client c)
+        {
+            if (!UseRespawnPrompt || !(GameMain.GameSession.GameMode is MultiPlayerCampaign campaign)) { return false; }
+
+            if (!c.InGame) { return false; }
+            if (c.SpectateOnly && (GameMain.Server.ServerSettings.AllowSpectating || GameMain.Server.OwnerConnection == c.Connection)) { return false; }
+            if (c.Character != null && !c.Character.IsDead) { return false; }
+
+            var matchingData = campaign.GetClientCharacterData(c);
+            if (matchingData != null && matchingData.HasSpawned)
+            {
+                if (Character.CharacterList.Any(c => c.Info == matchingData.CharacterInfo && !c.IsDead))
+                {
+                    return false;
+                }
+                else if (!c.WaitForNextRoundRespawn.HasValue)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private List<CharacterInfo> GetBotsToRespawn()
         {
             if (GameMain.Server.ServerSettings.BotSpawnMode == BotSpawnMode.Normal)
@@ -304,7 +327,7 @@ namespace Barotrauma.Networking
                 c.WaitForNextRoundRespawn = null;
 
                 var matchingData = campaign?.GetClientCharacterData(c);
-                if (matchingData != null && !matchingData.HasSpawned)
+                if (matchingData != null)
                 {
                     c.CharacterInfo = matchingData.CharacterInfo;
                 }
@@ -493,9 +516,9 @@ namespace Barotrauma.Networking
             if (characterInfo?.Job == null) { return; }
             foreach (Skill skill in characterInfo.Job.Skills)
             {
-                var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Prefab == s);
+                var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Identifier.Equals(s.Identifier, StringComparison.OrdinalIgnoreCase));
                 if (skillPrefab == null) { continue; }
-                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.X, SkillReductionOnCampaignMidroundRespawn);
+                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.Start, SkillReductionOnCampaignMidroundRespawn);
             }
         }
 
@@ -511,9 +534,14 @@ namespace Barotrauma.Networking
                     msg.Write((float)(ReturnTime - DateTime.Now).TotalSeconds);
                     break;
                 case State.Waiting:
+                    MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
+                    var matchingData = campaign?.GetClientCharacterData(c);
+                    bool forceSpawnInMainSub = matchingData != null && !matchingData.HasSpawned;
                     msg.Write((ushort)pendingRespawnCount);
                     msg.Write((ushort)requiredRespawnCount);
+                    msg.Write(IsRespawnPromptPendingForClient(c));
                     msg.Write(RespawnCountdownStarted);
+                    msg.Write(forceSpawnInMainSub);
                     msg.Write((float)(RespawnTime - DateTime.Now).TotalSeconds);
                     break;
                 case State.Returning:

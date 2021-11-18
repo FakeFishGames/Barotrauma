@@ -78,7 +78,7 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(ShowMessageBoxAfterRoundSummary(header, message));
         }
 
-        private IEnumerable<object> ShowMessageBoxAfterRoundSummary(string header, string message)
+        private IEnumerable<CoroutineStatus> ShowMessageBoxAfterRoundSummary(string header, string message)
         {
             while (GUIMessageBox.VisibleBox?.UserData is RoundSummary)
             {

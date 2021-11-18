@@ -306,9 +306,13 @@ namespace Barotrauma.Items.Components
                             forceDir.X = Math.Clamp(forceDir.X, -0.1f, 0.1f);
                         }
                     }
-                    float force = LerpForces ? MathHelper.Lerp(0, TargetPullForce, MathUtils.InverseLerp(0, MaxLength / 3, distance)) : TargetPullForce;
+                    float force = LerpForces ? MathHelper.Lerp(0, TargetPullForce, MathUtils.InverseLerp(0, MaxLength / 3, distance - 50)) : TargetPullForce;
                     targetBody?.ApplyForce(-forceDir * force);
-                    targetCharacter?.AnimController.Collider.ApplyForce(-forceDir * force * 3);
+                    var targetRagdoll = targetCharacter?.AnimController;
+                    if (targetRagdoll != null && (targetRagdoll.InWater || targetRagdoll.OnGround))
+                    {
+                        targetRagdoll.Collider.ApplyForce(-forceDir * force * 3);
+                    }
                 }
             }
         }

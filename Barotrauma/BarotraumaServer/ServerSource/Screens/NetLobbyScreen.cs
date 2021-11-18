@@ -271,6 +271,8 @@ namespace Barotrauma
                 var allowedGameModes = Array.FindAll(GameModes, m => !m.IsSinglePlayer && m != GameModePreset.MultiPlayerCampaign);
                 SelectedModeIdentifier = allowedGameModes[Rand.Range(0, allowedGameModes.Length)].Identifier;
             }
+
+            GameMain.Server.ServerSettings.SelectNonHiddenSubmarine();
         }
     }
 }

@@ -35,7 +35,7 @@ namespace Barotrauma.Items.Components
 
             new GUIFrame(new RectTransform(new Vector2(0.9f, 0.01f), layoutGroup.RectTransform), style: "HorizontalLine");
 
-            inputBox = new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: Color.LimeGreen)
+            inputBox = new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: TextColor)
             {
                 MaxTextLength = MaxMessageLength,
                 OverflowClip = true,
@@ -63,15 +63,15 @@ namespace Barotrauma.Items.Components
             }
 
             OutputValue = input;
-            ShowOnDisplay(input, addToHistory: true);
+            ShowOnDisplay(input, addToHistory: true, TextColor);
             item.SendSignal(input, "signal_out");
         }
 
-        partial void ShowOnDisplay(string input, bool addToHistory)
+        partial void ShowOnDisplay(string input, bool addToHistory, Color color)
         {
             if (addToHistory)
             {
-                messageHistory.Add(input);
+                messageHistory.Add(new TerminalMessage(input, color));
                 while (messageHistory.Count > MaxMessages)
                 {
                     messageHistory.RemoveAt(0);
@@ -85,7 +85,7 @@ namespace Barotrauma.Items.Components
             GUITextBlock newBlock = new GUITextBlock(
                     new RectTransform(new Vector2(1, 0), historyBox.Content.RectTransform, anchor: Anchor.TopCenter),
                     "> " + input,
-                    textColor: Color.LimeGreen, wrap: true, font: UseMonospaceFont ? GUI.MonospacedFont : GUI.GlobalFont)
+                    textColor: color, wrap: true, font: UseMonospaceFont ? GUI.MonospacedFont : GUI.GlobalFont)
             {
                 CanBeFocused = false
             };

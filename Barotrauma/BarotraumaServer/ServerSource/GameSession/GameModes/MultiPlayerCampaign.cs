@@ -264,7 +264,7 @@ namespace Barotrauma
                 if (c.Inventory == null) { continue; }
                 if (Level.Loaded.Type == LevelData.LevelType.Outpost && c.Submarine != Level.Loaded.StartOutpost)
                 {
-                    Map.CurrentLocation.RegisterTakenItems(c.Inventory.AllItems.Where(it => it.SpawnedInOutpost && it.OriginalModuleIndex > 0));
+                    Map.CurrentLocation.RegisterTakenItems(c.Inventory.AllItems.Where(it => it.SpawnedInCurrentOutpost && it.OriginalModuleIndex > 0));
                 }
 
                 if (c.Info != null && c.IsBot)
@@ -281,7 +281,7 @@ namespace Barotrauma
             }
         }
 
-        protected override IEnumerable<object> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults)
+        protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults)
         {
             lastUpdateID++;
 
@@ -365,7 +365,7 @@ namespace Barotrauma
             else
             {
                 PendingSubmarineSwitch = null;
-                GameMain.Server.EndGame(TransitionType.None);
+                GameMain.Server.EndGame(TransitionType.None, wasSaved: false);
                 LoadCampaign(GameMain.GameSession.SavePath);
                 LastSaveID++;
                 LastUpdateID++;
@@ -376,7 +376,7 @@ namespace Barotrauma
 
             //--------------------------------------
 
-            GameMain.Server.EndGame(transitionType);
+            GameMain.Server.EndGame(transitionType, wasSaved: true);
 
             ForceMapUI = false;
 

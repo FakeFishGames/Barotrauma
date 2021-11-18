@@ -9,7 +9,7 @@ namespace Barotrauma
     {
         private readonly JobPrefab prefab;
 
-        private Dictionary<string, Skill> skills;
+        private readonly Dictionary<string, Skill> skills;
 
         public string Name
         {

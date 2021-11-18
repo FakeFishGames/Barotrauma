@@ -27,7 +27,6 @@ namespace Barotrauma.Networking
                 {
                     WriteEvent(tempEventBuffer, e, recipient);
                 }
-
                 catch (Exception exception)
                 {
                     DebugConsole.ThrowError("Failed to write an event for the entity \"" + e.Entity + "\"", exception);
@@ -55,7 +54,7 @@ namespace Barotrauma.Networking
                 tempBuffer.WriteVariableUInt32((uint)tempEventBuffer.LengthBytes);
                 tempBuffer.Write(tempEventBuffer.Buffer, 0, tempEventBuffer.LengthBytes);
                 tempBuffer.WritePadBits();
-                sentEvents.Add(e);                
+                sentEvents.Add(e);
 
                 eventCount++;
             }
@@ -66,6 +65,32 @@ namespace Barotrauma.Networking
                 msg.Write((byte)eventCount);
                 msg.Write(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
             }
+        }
+
+        protected static bool ValidateEntity(INetSerializable entity)
+        {
+            void error(string reason)
+                => DebugConsole.ThrowError($"Can't create an entity event for {entity} - {reason}.\n{Environment.StackTrace.CleanupStackTrace()}");
+
+            if (entity is Entity { Removed: var removed, IdFreed: var idFreed })
+            {
+                if (removed)
+                {
+                    error("the entity has been removed");
+                    return false;
+                }
+                if (idFreed)
+                {
+                    error("the ID of the entity has been freed");
+                    return false;
+                }
+            }
+            else
+            {
+                error($"input is not of type {nameof(Entity)}");
+                return false;
+            }
+            return true;
         }
 
         protected abstract void WriteEvent(IWriteMessage buffer, NetEntityEvent entityEvent, Client recipient = null);

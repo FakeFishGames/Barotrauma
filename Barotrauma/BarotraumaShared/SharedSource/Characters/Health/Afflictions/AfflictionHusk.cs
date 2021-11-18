@@ -174,7 +174,8 @@ namespace Barotrauma
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (Strength < TransformThresholdOnDeath || character.Removed) 
+            if (Strength < TransformThresholdOnDeath || character.Removed || 
+                character.CharacterHealth.GetAllAfflictions().Any(a => a.GetActiveEffect()?.BlockTransformation.Contains(Prefab.Identifier) ?? false)) 
             {
                 UnsubscribeFromDeathEvent();
                 return; 
@@ -193,7 +194,7 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(CreateAIHusk());
         }
 
-        private IEnumerable<object> CreateAIHusk()
+        private IEnumerable<CoroutineStatus> CreateAIHusk()
         {
             //character already in remove queue (being removed by something else, for example a modded affliction that uses AfflictionHusk as the base)
             // -> don't spawn the AI husk

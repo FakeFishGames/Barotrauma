@@ -304,7 +304,7 @@ namespace Barotrauma
 
         float subscribePollAdditionalWait = 0.0f;
 
-        private IEnumerable<object> PollSubscribedItems()
+        private IEnumerable<CoroutineStatus> PollSubscribedItems()
         {
             if (!SteamManager.IsInitialized) { yield return CoroutineStatus.Success; }
 
@@ -364,7 +364,7 @@ namespace Barotrauma
             }
         }
 
-        public IEnumerable<object> RefreshDownloadState()
+        public IEnumerable<CoroutineStatus> RefreshDownloadState()
         {
             bool isDownloading = true;
             while (true)
@@ -831,7 +831,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> WaitForItemPreviewDownloaded(Steamworks.Ugc.Item? item, GUIListBox listBox, string previewImagePath)
+        private IEnumerable<CoroutineStatus> WaitForItemPreviewDownloaded(Steamworks.Ugc.Item? item, GUIListBox listBox, string previewImagePath)
         {
             while (true)
             {
@@ -1835,7 +1835,7 @@ namespace Barotrauma
 
         }
 
-        private IEnumerable<object> WaitForPublish(SteamManager.WorkshopPublishStatus workshopPublishStatus)
+        private IEnumerable<CoroutineStatus> WaitForPublish(SteamManager.WorkshopPublishStatus workshopPublishStatus)
         {
             var item = workshopPublishStatus.Item;
             var coroutine = workshopPublishStatus.Coroutine;

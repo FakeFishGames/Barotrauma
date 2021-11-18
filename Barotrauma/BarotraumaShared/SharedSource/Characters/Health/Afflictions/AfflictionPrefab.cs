@@ -234,6 +234,11 @@ namespace Barotrauma
             [Serialize("0,0,0,0", false)]
             public Color MaxBodyTint { get; private set; }
 
+            /// <summary>
+            /// Prevents AfflictionHusks with the specified identifier(s) from transforming the character into an AI-controlled character
+            /// </summary>
+            public string[] BlockTransformation { get; private set; }
+
             public readonly Dictionary<StatTypes, (float minValue, float maxValue)> AfflictionStatValues = new Dictionary<StatTypes, (float minValue, float maxValue)>();
             public readonly HashSet<AbilityFlags> AfflictionAbilityFlags = new HashSet<AbilityFlags>();
 
@@ -245,6 +250,7 @@ namespace Barotrauma
                 SerializableProperty.DeserializeProperties(this, element);
 
                 resistanceFor = element.GetAttributeStringArray("resistancefor", new string[0], convertToLowerInvariant: true);
+                BlockTransformation = element.GetAttributeStringArray("blocktransformation", new string[0], convertToLowerInvariant: true);
 
                 foreach (XElement subElement in element.Elements())
                 {

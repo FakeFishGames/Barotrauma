@@ -460,7 +460,7 @@ namespace Barotrauma.Networking
         private bool wrongPassword;
 
         // Before main looping starts, we loop here and wait for approval message
-        private IEnumerable<object> WaitForStartingInfo()
+        private IEnumerable<CoroutineStatus> WaitForStartingInfo()
         {
             GUI.SetCursorWaiting();
             requiresPw = false;
@@ -861,8 +861,8 @@ namespace Barotrauma.Networking
                     if (roundInitStatus == RoundInitStatus.WaitingForStartGameFinalize)
                     {
                         //waiting for a save file
-                        if (campaign != null &&
-                            campaign.PendingSaveID > campaign.LastSaveID &&
+                        if (campaign != null && 
+                            NetIdUtils.IdMoreRecent(campaign.PendingSaveID, campaign.LastSaveID) &&
                             fileReceiver.ActiveTransfers.Any(t => t.FileType == FileTransferType.CampaignSave))
                         {
                             return;
@@ -872,6 +872,7 @@ namespace Barotrauma.Networking
                     break;
                 case ServerPacketHeader.ENDGAME:
                     CampaignMode.TransitionType transitionType = (CampaignMode.TransitionType)inc.ReadByte();
+                    bool save = inc.ReadBoolean();
                     string endMessage = string.Empty;
 
                     endMessage = inc.ReadString();
@@ -905,6 +906,7 @@ namespace Barotrauma.Networking
 
                     roundInitStatus = RoundInitStatus.Interrupted;
                     CoroutineManager.StartCoroutine(EndGame(endMessage, traitorResults, transitionType), "EndGame");
+                    GUI.SetSavingIndicatorState(save);
                     break;
                 case ServerPacketHeader.CAMPAIGN_SETUP_INFO:
                     UInt16 saveCount = inc.ReadUInt16();
@@ -1236,7 +1238,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private IEnumerable<object> WaitInServerQueue()
+        private IEnumerable<CoroutineStatus> WaitInServerQueue()
         {
             waitInServerQueueBox = new GUIMessageBox(
                     TextManager.Get("ServerQueuePleaseWait"),
@@ -1424,7 +1426,7 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.RefreshEnabledElements();
         }
 
-        private IEnumerable<object> StartGame(IReadMessage inc)
+        private IEnumerable<CoroutineStatus> StartGame(IReadMessage inc)
         {
             Character?.Remove();
             Character = null;
@@ -1562,29 +1564,45 @@ namespace Barotrauma.Networking
                 if (GameMain.GameSession?.CrewManager != null) { GameMain.GameSession.CrewManager.Reset(); }
 
                 byte campaignID = inc.ReadByte();
+                UInt16 campaignSaveID = inc.ReadUInt16();
                 int nextLocationIndex = inc.ReadInt32();
                 int nextConnectionIndex = inc.ReadInt32();
                 int selectedLocationIndex = inc.ReadInt32();
                 bool mirrorLevel = inc.ReadBoolean();
 
-
                 if (campaign.CampaignID != campaignID)
                 {
-                    string errorMsg = "Failed to start campaign round (campaign ID does not match).";
                     gameStarted = true;
-                    DebugConsole.ThrowError(errorMsg);
+                    DebugConsole.ThrowError("Failed to start campaign round (campaign ID does not match).");
                     GameMain.NetLobbyScreen.Select();
                     roundInitStatus = RoundInitStatus.Interrupted;
                     yield return CoroutineStatus.Failure;
                 }
                 else if (campaign.Map == null)
                 {
-                    string errorMsg = "Failed to start campaign round (campaign map not loaded yet).";
                     gameStarted = true;
-                    DebugConsole.ThrowError(errorMsg);
+                    DebugConsole.ThrowError("Failed to start campaign round (campaign map not loaded yet).");
                     GameMain.NetLobbyScreen.Select();
                     roundInitStatus = RoundInitStatus.Interrupted;
                     yield return CoroutineStatus.Failure;
+                }
+
+                if (NetIdUtils.IdMoreRecent(campaignSaveID, campaign.PendingSaveID))
+                {
+                    campaign.PendingSaveID = campaignSaveID;
+                    DateTime saveFileTimeOut = DateTime.Now + new TimeSpan(0,0,60);
+                    while (NetIdUtils.IdMoreRecent(campaignSaveID, campaign.LastSaveID))
+                    {
+                        if (DateTime.Now > saveFileTimeOut)
+                        {
+                            gameStarted = true;
+                            DebugConsole.ThrowError("Failed to start campaign round (timed out while waiting for the up-to-date save file).");
+                            GameMain.NetLobbyScreen.Select();
+                            roundInitStatus = RoundInitStatus.Interrupted;
+                            yield return CoroutineStatus.Failure;
+                        }
+                        yield return new WaitForSeconds(0.1f); 
+                    }
                 }
 
                 campaign.Map.SelectLocation(selectedLocationIndex);
@@ -1665,10 +1683,6 @@ namespace Barotrauma.Networking
                     }
 
                     if (roundInitStatus != RoundInitStatus.WaitingForStartGameFinalize) { break; }
-
-                    clientPeer.Update((float)Timing.Step);
-
-                    if (roundInitStatus != RoundInitStatus.WaitingForStartGameFinalize) { break; }
                 }
                 catch (Exception e)
                 {
@@ -1744,7 +1758,7 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Success;
         }
 
-        public IEnumerable<object> EndGame(string endMessage, List<TraitorMissionResult> traitorResults = null, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
+        public IEnumerable<CoroutineStatus> EndGame(string endMessage, List<TraitorMissionResult> traitorResults = null, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
         {
             //round starting up, wait for it to finish
             DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 60);
@@ -1854,8 +1868,7 @@ namespace Barotrauma.Networking
                         GameMain.GameSession.OwnedSubmarines = new List<SubmarineInfo>();
                         for (int i = 0; i < ownedIndexes.Length; i++)
                         {
-                            int index;
-                            if (int.TryParse(ownedIndexes[i], out index))
+                            if (int.TryParse(ownedIndexes[i], out int index))
                             {
                                 SubmarineInfo sub = GameMain.Client.ServerSubmarines[index];
                                 if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, "owned"))
@@ -2670,8 +2683,11 @@ namespace Barotrauma.Networking
 
         public override void CreateEntityEvent(INetSerializable entity, object[] extraData)
         {
-            if (!(entity is IClientSerializable)) throw new InvalidCastException("Entity is not IClientSerializable");
-            entityEventManager.CreateEvent(entity as IClientSerializable, extraData);
+            if (!(entity is IClientSerializable clientSerializable))
+            {
+                throw new InvalidCastException($"Entity is not {nameof(IClientSerializable)}");
+            }
+            entityEventManager.CreateEvent(clientSerializable, extraData);
         }
 
         public bool HasPermission(ClientPermissions permission)
@@ -3013,12 +3029,13 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Tell the server to end the round (permission required)
         /// </summary>
-        public void RequestRoundEnd()
+        public void RequestRoundEnd(bool save)
         {
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
             msg.Write((UInt16)ClientPermissions.ManageRound);
             msg.Write(true); //indicates round end
+            msg.Write(save);
 
             clientPeer.Send(msg, DeliveryMethod.Reliable);
         }
@@ -3321,7 +3338,9 @@ namespace Barotrauma.Networking
                     if (respawnManager.RespawnCountdownStarted)
                     {
                         float timeLeft = (float)(respawnManager.RespawnTime - DateTime.Now).TotalSeconds;
-                        respawnText = TextManager.GetWithVariable(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn", "[time]", ToolBox.SecondsToReadableTime(timeLeft));
+                        respawnText = TextManager.GetWithVariable(
+                            respawnManager.UsingShuttle && !respawnManager.ForceSpawnInMainSub ? 
+                            "RespawnShuttleDispatching" : "RespawningIn", "[time]", ToolBox.SecondsToReadableTime(timeLeft));
                     }
                     else if (respawnManager.PendingRespawnCount > 0)
                     {
@@ -3437,7 +3456,7 @@ namespace Barotrauma.Networking
             }
 
             // Need a delayed selection due to the inputbox being deselected when a left click occurs outside of it
-            IEnumerable<object> selectCoroutine()
+            IEnumerable<CoroutineStatus> selectCoroutine()
             {
                 yield return new WaitForSeconds(0.01f, true);
                 chatBox.InputBox.Select(chatBox.InputBox.Text.Length);

@@ -149,7 +149,8 @@ namespace Barotrauma.Items.Components
         {
             float degreeOfFailure = 1.0f - DegreeOfSuccess(user);
             degreeOfFailure *= degreeOfFailure;
-            return MathHelper.ToRadians(MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure));
+            float spread = MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure) / (1f + user.GetStatValue(StatTypes.RangedSpreadReduction));
+            return MathHelper.ToRadians(spread);
         }
 
         private readonly List<Body> limbBodies = new List<Body>();
@@ -203,7 +204,7 @@ namespace Barotrauma.Items.Components
                     {
                         lastProjectile?.Item.GetComponent<Rope>()?.Snap();
                     }
-                    float damageMultiplier = 1f + item.GetQualityModifier(Quality.StatType.AttackMultiplier);
+                    float damageMultiplier = 1f + item.GetQualityModifier(Quality.StatType.StoppingPowerMultiplier);
                     projectile.Shoot(character, character.AnimController.AimSourceSimPos, barrelPos, rotation + spread, ignoredBodies: limbBodies.ToList(), createNetworkEvent: false, damageMultiplier);
                     projectile.Item.GetComponent<Rope>()?.Attach(Item, projectile.Item);
                     if (i == 0)

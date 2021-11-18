@@ -802,13 +802,13 @@ namespace Barotrauma
 
                 if (otherIsEquipped)
                 {
-                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent));
-                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent));
+                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent, ignoreCondition: true));
+                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent, ignoreCondition: true));
                 }
                 else
                 {
-                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent));
-                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent));
+                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent, ignoreCondition: true));
+                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent, ignoreCondition: true));
                 }
 
 #if CLIENT                

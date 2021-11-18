@@ -188,11 +188,14 @@ namespace Barotrauma.Particles
             var particlePrefab = overrideParticle ?? Prefab.ParticlePrefab;
             if (particlePrefab == null) { return; }
 
-            angle += Rand.Range(Prefab.Properties.AngleMinRad, Prefab.Properties.AngleMaxRad);
-
-            Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
-            Vector2 velocity = dir * Rand.Range(Prefab.Properties.VelocityMin, Prefab.Properties.VelocityMax) * velocityMultiplier;
-            position += dir * Rand.Range(Prefab.Properties.DistanceMin, Prefab.Properties.DistanceMax);
+            Vector2 velocity = Vector2.Zero;
+            if (!MathUtils.NearlyEqual(Prefab.Properties.VelocityMax * velocityMultiplier, 0.0f) || !MathUtils.NearlyEqual(Prefab.Properties.DistanceMax, 0.0f))
+            {
+                angle += Rand.Range(Prefab.Properties.AngleMinRad, Prefab.Properties.AngleMaxRad);
+                Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
+                velocity = dir * Rand.Range(Prefab.Properties.VelocityMin, Prefab.Properties.VelocityMax) * velocityMultiplier;
+                position += dir * Rand.Range(Prefab.Properties.DistanceMin, Prefab.Properties.DistanceMax);
+            }
 
             var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, particleRotation, hullGuess, Prefab.DrawOnTop, tracerPoints: tracerPoints);
 

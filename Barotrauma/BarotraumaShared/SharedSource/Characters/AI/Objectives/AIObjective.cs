@@ -93,13 +93,6 @@ namespace Barotrauma
                 _abandon = value;
                 if (_abandon)
                 {
-#if DEBUG
-                    if (HumanAIController.debugai && objectiveManager.IsOrder(this) && !objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() && !objectiveManager.IsCurrentOrder<AIObjectiveReturn>())
-                    {
-                        // TODO: dismiss
-                        throw new Exception("Order abandoned!");
-                    }
-#endif
                     OnAbandon();
                 }
             }
@@ -247,7 +240,7 @@ namespace Barotrauma
             }
         }
 
-        protected bool IsAllowed
+        public bool IsAllowed
         {
             get 
             {
@@ -271,7 +264,7 @@ namespace Barotrauma
             if (!IsAllowed)
             {
                 Priority = 0;
-                Abandon = !isOrder;
+                Abandon = true;
                 return Priority;
             }
             if (isOrder)

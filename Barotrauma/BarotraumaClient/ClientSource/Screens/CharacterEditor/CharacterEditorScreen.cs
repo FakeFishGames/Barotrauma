@@ -1802,8 +1802,10 @@ namespace Barotrauma.CharacterEditor
                     {
                         case AnimationType.Walk:
                         case AnimationType.Run:
-                        case AnimationType.Crouch:
                             if (!ragdollParams.CanWalk) { continue; }
+                            break;
+                        case AnimationType.Crouch:
+                            if (!ragdollParams.CanWalk || !isHumanoid) { continue; }
                             break;
                         case AnimationType.SwimSlow:
                         case AnimationType.SwimFast:
@@ -2690,7 +2692,15 @@ namespace Barotrauma.CharacterEditor
             characterDropDown.SelectItem(currentCharacterConfig);
             characterDropDown.OnSelected = (component, data) =>
             {
-                SpawnCharacter((string)data);
+                string configFile = (string)data;
+                try
+                {
+                    SpawnCharacter(configFile);
+                }
+                catch (Exception e)
+                {
+                    HandleSpawnException(configFile, e);
+                }
                 return true;
             };
             if (currentCharacterConfig == CharacterPrefab.HumanConfigFile)
@@ -2719,19 +2729,48 @@ namespace Barotrauma.CharacterEditor
             prevCharacterButton.TextBlock.AutoScaleHorizontal = true;
             prevCharacterButton.OnClicked += (b, obj) =>
             {
-                SpawnCharacter(GetPreviousConfigFile());
+                string configFile = GetPreviousConfigFile();
+                try
+                {
+                    SpawnCharacter(configFile);
+                }
+                catch (Exception e)
+                {
+                    HandleSpawnException(configFile, e);
+                }
                 return true;
             };
             var nextCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), charButtons.RectTransform, Anchor.TopRight), GetCharacterEditorTranslation("NextCharacter"));
             prevCharacterButton.TextBlock.AutoScaleHorizontal = true;
             nextCharacterButton.OnClicked += (b, obj) =>
             {
-                SpawnCharacter(GetNextConfigFile());
+                string configFile = GetNextConfigFile();
+                try
+                {
+                    SpawnCharacter(configFile);
+                }
+                catch (Exception e)
+                {
+                    HandleSpawnException(configFile, e);
+                }
                 return true;
             };
             charButtons.RectTransform.MinSize = new Point(0, prevCharacterButton.RectTransform.MinSize.Y);
             characterPanelToggle = new ToggleButton(new RectTransform(new Vector2(0.08f, 1), characterSelectionPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
             characterSelectionPanel.RectTransform.MinSize = new Point(0, (int)(content.RectTransform.Children.Sum(c => c.MinSize.Y) * 1.2f));
+
+            void HandleSpawnException(string configFile, Exception e)
+            {
+                if (configFile != CharacterPrefab.HumanConfigFile)
+                {
+                    DebugConsole.ThrowError($"Failed to spawn the character \"{configFile}\".", e);
+                    SpawnCharacter(CharacterPrefab.HumanConfigFile);
+                }
+                else
+                {
+                    throw new Exception($"Failed to spawn the character \"{configFile}\".", innerException: e);
+                }
+            }
         }
 
         private void CreateFileEditPanel()

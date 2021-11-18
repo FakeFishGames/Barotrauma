@@ -31,5 +31,10 @@ namespace Barotrauma.Abilities
             }
         }
 
+        protected override void ApplyEffect(AbilityObject abilityObject)
+        {
+            ApplyEffect();
+        }
+
     }
 }

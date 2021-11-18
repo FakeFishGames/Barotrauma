@@ -1176,7 +1176,7 @@ namespace Barotrauma
             int salary = 0;
             foreach (Skill skill in Job.Skills)
             {
-                salary += (int)(skill.Level * skill.Prefab.PriceMultiplier);
+                salary += (int)(skill.Level * skill.PriceMultiplier);
             }
 
             return (int)(salary * Job.Prefab.PriceMultiplier);
@@ -1274,19 +1274,18 @@ namespace Barotrauma
             return Math.Max(GetTotalTalentPoints() - GetUnlockedTalentsInTree().Count(), 0);
         }
 
-        public float GetProgressTowardsNextLevel()
+        public int GetProgressTowardsNextLevel()
         {
-            float progress = (ExperiencePoints - GetExperienceRequiredForCurrentLevel()) / (GetExperienceRequiredToLevelUp() - GetExperienceRequiredForCurrentLevel());
-            return progress;
+            return (ExperiencePoints - GetExperienceRequiredForCurrentLevel()) / (GetExperienceRequiredToLevelUp() - GetExperienceRequiredForCurrentLevel());
         }
 
-        public float GetExperienceRequiredForCurrentLevel()
+        public int GetExperienceRequiredForCurrentLevel()
         {
             GetCurrentLevel(out int experienceRequired);
             return experienceRequired;
         }
 
-        public float GetExperienceRequiredToLevelUp()
+        public int GetExperienceRequiredToLevelUp()
         {
             int level = GetCurrentLevel(out int experienceRequired);
             return experienceRequired + ExperienceRequiredPerLevel(level);

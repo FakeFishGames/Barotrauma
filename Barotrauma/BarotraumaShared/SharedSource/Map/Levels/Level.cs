@@ -202,10 +202,10 @@ namespace Barotrauma
             get { return startPosition.ToVector2(); }
         }
 
-        private Vector2 startExitPosition;
+        private Point startExitPosition;
         public Vector2 StartExitPosition
         {
-            get { return startExitPosition; }
+            get { return startExitPosition.ToVector2(); }
         }
 
         public Point Size
@@ -218,10 +218,10 @@ namespace Barotrauma
             get { return endPosition.ToVector2(); }
         }
 
-        private Vector2 endExitPosition;
+        private Point endExitPosition;
         public Vector2 EndExitPosition
         {
-            get { return endExitPosition; }
+            get { return endExitPosition.ToVector2(); }
         }
 
         public int BottomPos
@@ -366,9 +366,6 @@ namespace Barotrauma
         {
             this.LevelData = levelData;
             borders = new Rectangle(Point.Zero, levelData.Size);
-
-            //remove from entity dictionary
-            //base.Remove();
         }
 
         public static Level Generate(LevelData levelData, bool mirror, SubmarineInfo startOutpost = null, SubmarineInfo endOutpost = null)
@@ -462,12 +459,12 @@ namespace Barotrauma
             startPosition = new Point(
                (int)MathHelper.Lerp(minMainPathWidth, borders.Width - minMainPathWidth, GenerationParams.StartPosition.X),
                (int)MathHelper.Lerp(borders.Bottom - Math.Max(minMainPathWidth, ExitDistance * 1.5f), borders.Y + minMainPathWidth, GenerationParams.StartPosition.Y));
-            startExitPosition = new Vector2(startPosition.X, borders.Bottom);
+            startExitPosition = new Point(startPosition.X, borders.Bottom);
 
             endPosition = new Point(
                (int)MathHelper.Lerp(minMainPathWidth, borders.Width - minMainPathWidth, GenerationParams.EndPosition.X),
                (int)MathHelper.Lerp(borders.Bottom - Math.Max(minMainPathWidth, ExitDistance * 1.5f), borders.Y + minMainPathWidth, GenerationParams.EndPosition.Y));
-            endExitPosition = new Vector2(endPosition.X, borders.Bottom);
+            endExitPosition = new Point(endPosition.X, borders.Bottom);
 
             EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.Server));
 
@@ -486,25 +483,25 @@ namespace Barotrauma
             {
                 startPath = new Tunnel(
                     TunnelType.SidePath,
-                    new List<Point>() { startExitPosition.ToPoint(), startPosition }, 
+                    new List<Point>() { startExitPosition, startPosition }, 
                     minWidth / 2, parentTunnel: mainPath);
                 Tunnels.Add(startPath);
             }
             else
             {
-                startExitPosition = StartPosition;
+                startExitPosition = startPosition;
             }
             if (GenerationParams.EndPosition.Y < 0.5f && (Mirrored ? !HasStartOutpost() : !HasEndOutpost()))
             {
                 endPath = new Tunnel(
                     TunnelType.SidePath,
-                    new List<Point>() { endPosition, endExitPosition.ToPoint() },
+                    new List<Point>() { endPosition, endExitPosition },
                     minWidth / 2, parentTunnel: mainPath);
                 Tunnels.Add(endPath);
             }
             else
             {
-                endExitPosition = EndPosition;
+                endExitPosition = endPosition;
             }
 
             if (GenerationParams.CreateHoleNextToEnd)
@@ -513,14 +510,14 @@ namespace Barotrauma
                 {
                     endHole = new Tunnel(
                         TunnelType.SidePath,
-                        new List<Point>() { startPosition, startExitPosition.ToPoint(), new Point(0, Size.Y) },
+                        new List<Point>() { startPosition, startExitPosition, new Point(0, Size.Y) },
                         minWidth / 2, parentTunnel: mainPath);
                 }
                 else
                 {
                     endHole = new Tunnel(
                         TunnelType.SidePath,
-                        new List<Point>() { endPosition, endExitPosition.ToPoint(), Size },
+                        new List<Point>() { endPosition, endExitPosition, Size },
                         minWidth / 2, parentTunnel: mainPath);
                 }
                 Tunnels.Add(endHole);
@@ -799,8 +796,12 @@ namespace Barotrauma
             for (int i = 0; i < GenerationParams.RuinCount; i++)
             {
                 Point ruinSize = new Point(5000);
-                ruinPositions.Add(FindPosAwayFromMainPath((Math.Max(ruinSize.X, ruinSize.Y) + mainPath.MinWidth) * 1.2f, asCloseAsPossible: true,
-                    limits: new Rectangle(new Point(ruinSize.X / 2, ruinSize.Y / 2), Size - ruinSize)));
+                int limitLeft = Math.Max(startPosition.X, ruinSize.X / 2);
+                int limitRight = Math.Min(endPosition.X, Size.X - ruinSize.X / 2);
+                Rectangle limits = new Rectangle(limitLeft, ruinSize.Y, limitRight - limitLeft, Size.Y - ruinSize.Y);
+                Debug.Assert(limits.Width > 0);
+                Debug.Assert(limits.Height > 0);
+                ruinPositions.Add(FindPosAwayFromMainPath((Math.Max(ruinSize.X, ruinSize.Y) + mainPath.MinWidth) * 1.2f, asCloseAsPossible: true, limits: limits));
                 CalculateTunnelDistanceField(ruinPositions);
             }
 
@@ -1004,7 +1005,7 @@ namespace Barotrauma
                 {
                     if (pos.PositionType != PositionType.MainPath && pos.PositionType != PositionType.SidePath) { continue; }
                     if (pos.Position.X < 5000 || pos.Position.X > Size.X - 5000) { continue; }
-                    if (Math.Abs(pos.Position.X - StartPosition.X) < minMainPathWidth * 2 || Math.Abs(pos.Position.X - EndPosition.X) < minMainPathWidth * 2) { continue; }
+                    if (Math.Abs(pos.Position.X - startPosition.X) < minMainPathWidth * 2 || Math.Abs(pos.Position.X - endPosition.X) < minMainPathWidth * 2) { continue; }
                     if (GetTooCloseCells(pos.Position.ToVector2(), minMainPathWidth * 0.7f).Count > 0) { continue; }
                     iceChunkPositions.Add(pos.Position);
                 }
@@ -1187,19 +1188,19 @@ namespace Barotrauma
                 startPosition = endPosition;
                 endPosition = tempP;
 
-                Vector2 tempV = startExitPosition;
+                tempP = startExitPosition;
                 startExitPosition = endExitPosition;
-                endExitPosition = tempV;
+                endExitPosition = tempP;
             }
             if (StartOutpost != null)
             {
-                startExitPosition = StartOutpost.WorldPosition;
-                startPosition = startExitPosition.ToPoint();
+                startExitPosition = StartOutpost.WorldPosition.ToPoint();
+                startPosition = startExitPosition;
             }
             if (EndOutpost != null)
             {
-                endExitPosition = EndOutpost.WorldPosition;
-                endPosition = endExitPosition.ToPoint();
+                endExitPosition = EndOutpost.WorldPosition.ToPoint();
+                endPosition = endExitPosition;
             }
 
             CreateWrecks();
@@ -2321,7 +2322,7 @@ namespace Barotrauma
                     {
                         if (l.Cell == null || l.Edge == null) { return false; }
                         if (resourceInfo.IsIslandSpecifc && !l.Cell.Island) { return false; }
-                        if (!resourceInfo.AllowAtStart && l.EdgeCenter.Y > StartPosition.Y && l.EdgeCenter.X < Size.X * 0.25f) { return false; }
+                        if (!resourceInfo.AllowAtStart && l.EdgeCenter.Y > startPosition.Y && l.EdgeCenter.X < Size.X * 0.25f) { return false; }
                         if (l.EdgeCenter.Y < AbyssArea.Bottom) { return false; }
                         return resourceInfo.ClusterSize <= GetMaxResourcesOnEdge(itemPrefab, l, out _);
 
@@ -2738,10 +2739,26 @@ namespace Barotrauma
             allValidLocations.Sort((x, y) => Vector2.DistanceSquared(poiPos, x.EdgeCenter)
                 .CompareTo(Vector2.DistanceSquared(poiPos, y.EdgeCenter)));
             var maxResourceOverlap = 0.4f;
-            // TODO: Find multiple locations if there's too many resources to fit on a sigle edge
             var selectedLocation = allValidLocations.FirstOrDefault(l =>
                 Vector2.Distance(l.Edge.Point1, l.Edge.Point2) is float edgeLength &&
                 requiredAmount <= (int)Math.Floor(edgeLength / ((1.0f - maxResourceOverlap) * prefab.Size.X)));
+            if (selectedLocation.Edge == null)
+            {
+                //couldn't find a long enough edge, find the largest one
+                float longestEdge = 0.0f;
+                foreach (var validLocation in allValidLocations)
+                {
+                    if (Vector2.Distance(validLocation.Edge.Point1, validLocation.Edge.Point2) is float edgeLength && edgeLength > longestEdge)
+                    {
+                        selectedLocation = validLocation;
+                        longestEdge = edgeLength;
+                    }
+                }
+            }
+            if (selectedLocation.Edge == null)
+            {
+                throw new Exception("Failed to find a suitable level wall edge to place level resources on.");
+            }
             PlaceResources(prefab, requiredAmount, selectedLocation, out placedResources);
             var edgeNormal = selectedLocation.Edge.GetNormal(selectedLocation.Cell);
             rotation = MathHelper.ToDegrees(-MathUtils.VectorToAngle(edgeNormal) + MathHelper.PiOver2);
@@ -3197,12 +3214,12 @@ namespace Barotrauma
 
         public bool IsCloseToStart(Point position, float minDist)
         {
-            return MathUtils.LineSegmentToPointDistanceSquared(StartPosition.ToPoint(), StartExitPosition.ToPoint(), position) < minDist * minDist;
+            return MathUtils.LineSegmentToPointDistanceSquared(startPosition, startExitPosition, position) < minDist * minDist;
         }
 
         public bool IsCloseToEnd(Point position, float minDist)
         {
-            return MathUtils.LineSegmentToPointDistanceSquared(EndPosition.ToPoint(), EndExitPosition.ToPoint(), position) < minDist * minDist;
+            return MathUtils.LineSegmentToPointDistanceSquared(endPosition, endExitPosition, position) < minDist * minDist;
         }
 
         private Submarine SpawnSubOnPath(string subName, ContentFile contentFile, SubmarineType type)
@@ -3214,6 +3231,7 @@ namespace Barotrauma
             var waypoints = WayPoint.WayPointList.Where(wp =>
                 wp.Submarine == null &&
                 wp.SpawnType == SpawnType.Path &&
+                wp.WorldPosition.X < EndExitPosition.X &&
                 !IsCloseToStart(wp.WorldPosition, minDistance) && 
                 !IsCloseToEnd(wp.WorldPosition, minDistance)).ToList();
 
@@ -3971,7 +3989,7 @@ namespace Barotrauma
 
                     var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job, randSync: Rand.RandSync.Server);
                     var corpse = Character.Create(CharacterPrefab.HumanConfigFile, worldPos, ToolBox.RandomSeed(8), characterInfo, hasAi: true, createNetworkEvent: true);
-                    corpse.AnimController.FindHull(worldPos, true);
+                    corpse.AnimController.FindHull(worldPos, setSubmarine: true);
                     corpse.TeamID = CharacterTeamType.None;
                     corpse.EnableDespawn = false;
                     selectedPrefab.GiveItems(corpse, wreck);

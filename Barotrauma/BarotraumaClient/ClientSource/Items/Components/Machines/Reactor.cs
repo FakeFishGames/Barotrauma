@@ -158,7 +158,7 @@ namespace Barotrauma.Items.Components
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), columnLeft.RectTransform), style: "HorizontalLine");
 
             float relativeYMargin = 0.02f;
-            Vector2 relativeTextSize = new Vector2(0.9f, 0.2f);
+            Vector2 relativeTextSize = new Vector2(0.9f, 0.15f);
             Vector2 sliderSize = new Vector2(1.0f, 0.125f);
             Vector2 meterSize = new Vector2(1, 1 - relativeTextSize.Y - relativeYMargin - sliderSize.Y - 0.1f);
 
@@ -198,7 +198,7 @@ namespace Barotrauma.Items.Components
 
             FissionRateScrollBar = new GUIScrollBar(new RectTransform(sliderSize, leftArea.RectTransform, Anchor.TopCenter)
             {
-                RelativeOffset = new Vector2(0, fissionMeter.RectTransform.RelativeOffset.Y + meterSize.Y)
+                RelativeOffset = new Vector2(0, fissionMeter.RectTransform.RelativeOffset.Y + meterSize.Y + relativeYMargin)
             },
                 style: "DeviceSlider", barSize: 0.15f)
             {
@@ -208,7 +208,7 @@ namespace Barotrauma.Items.Components
                 {
                     LastUser = Character.Controlled;
                     unsentChanges = true;
-                    targetFissionRate = scrollAmount * 100.0f;
+                    TargetFissionRate = scrollAmount * 100.0f;
 
                     return false;
                 }
@@ -216,7 +216,7 @@ namespace Barotrauma.Items.Components
 
             TurbineOutputScrollBar = new GUIScrollBar(new RectTransform(sliderSize, rightArea.RectTransform, Anchor.TopCenter)
             {
-                RelativeOffset = new Vector2(0, turbineMeter.RectTransform.RelativeOffset.Y + meterSize.Y)
+                RelativeOffset = new Vector2(0, turbineMeter.RectTransform.RelativeOffset.Y + meterSize.Y + relativeYMargin)
             },
                 style: "DeviceSlider", barSize: 0.15f, isHorizontal: true)
             {
@@ -226,7 +226,7 @@ namespace Barotrauma.Items.Components
                 {
                     LastUser = Character.Controlled;
                     unsentChanges = true;
-                    targetTurbineOutput = scrollAmount * 100.0f;
+                    TargetTurbineOutput = scrollAmount * 100.0f;
 
                     return false;
                 }
@@ -370,7 +370,7 @@ namespace Barotrauma.Items.Components
             };
             string loadStr = TextManager.Get("ReactorLoad");
             string kW = TextManager.Get("kilowatt");
-            loadText.TextGetter += () => $"{loadStr.Replace("[kw]", ((int)load).ToString())} {kW}";
+            loadText.TextGetter += () => $"{loadStr.Replace("[kw]", ((int)Load).ToString())} {kW}";
             
             var graph = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), graphArea.RectTransform), style: "InnerFrameRed");
             new GUICustomComponent(new RectTransform(new Vector2(0.9f, 0.98f), graph.RectTransform, Anchor.Center), DrawGraph, null);
@@ -387,8 +387,8 @@ namespace Barotrauma.Items.Components
         public override void OnItemLoaded()
         {
             base.OnItemLoaded();
-            TurbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
-            FissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
+            TurbineOutputScrollBar.BarScroll = TargetTurbineOutput / 100.0f;
+            FissionRateScrollBar.BarScroll = TargetFissionRate / 100.0f;
             var itemContainer = item.GetComponent<ItemContainer>();
             if (itemContainer != null)
             {
@@ -462,7 +462,7 @@ namespace Barotrauma.Items.Components
             if (graphTimer > updateGraphInterval)
             {
                 UpdateGraph(outputGraph, -currPowerConsumption);
-                UpdateGraph(loadGraph, load);
+                UpdateGraph(loadGraph, Load);
 
                 graphTimer = 0.0f;
             }
@@ -487,7 +487,7 @@ namespace Barotrauma.Items.Components
             float jitter = 0.0f;
             if (FissionRate > allowedFissionRate.Y - 5.0f)
             {
-                float jitterAmount = Math.Min(targetFissionRate - allowedFissionRate.Y, 10.0f);
+                float jitterAmount = Math.Min(TargetFissionRate - allowedFissionRate.Y, 10.0f);
                 float t = graphTimer / updateGraphInterval;
 
                 jitter = (PerlinNoise.GetPerlin(t * 0.5f, t * 0.1f) - 0.5f) * jitterAmount;
@@ -525,12 +525,12 @@ namespace Barotrauma.Items.Components
 
             criticalHeatWarning.Selected = temperature > allowedTemperature.Y && lightOn;
             lowTemperatureWarning.Selected = temperature < allowedTemperature.X && lightOn;
-            criticalOutputWarning.Selected = -currPowerConsumption > load * 1.5f && lightOn;
+            criticalOutputWarning.Selected = -currPowerConsumption > Load * 1.5f && lightOn;
 
             warningButtons["ReactorWarningOverheating"].Selected = temperature > optimalTemperature.Y && lightOn;
-            warningButtons["ReactorWarningHighOutput"].Selected = -currPowerConsumption > load * 1.1f && lightOn;
+            warningButtons["ReactorWarningHighOutput"].Selected = -currPowerConsumption > Load * 1.1f && lightOn;
             warningButtons["ReactorWarningLowTemp"].Selected = temperature < optimalTemperature.X && lightOn;
-            warningButtons["ReactorWarningLowOutput"].Selected = -currPowerConsumption < load * 0.9f && lightOn;
+            warningButtons["ReactorWarningLowOutput"].Selected = -currPowerConsumption < Load * 0.9f && lightOn;
             warningButtons["ReactorWarningFuelOut"].Selected = prevAvailableFuel < fissionRate * 0.01f && lightOn;
             warningButtons["ReactorWarningLowFuel"].Selected = prevAvailableFuel < fissionRate && lightOn;
             warningButtons["ReactorWarningMeltdown"].Selected = meltDownTimer > MeltdownDelay * 0.5f || item.Condition == 0.0f && lightOn;
@@ -571,12 +571,12 @@ namespace Barotrauma.Items.Components
                     unsentChanges = true;
                     if (input.X != 0.0f && GUIScrollBar.DraggingBar != FissionRateScrollBar)
                     {
-                        targetFissionRate = MathHelper.Clamp(targetFissionRate + input.X, 0.0f, 100.0f);
+                        TargetFissionRate = MathHelper.Clamp(TargetFissionRate + input.X, 0.0f, 100.0f);
                         FissionRateScrollBar.BarScroll += input.X / 100.0f;
                     }
                     if (input.Y != 0.0f && GUIScrollBar.DraggingBar != TurbineOutputScrollBar)
                     {
-                        targetTurbineOutput = MathHelper.Clamp(targetTurbineOutput + input.Y, 0.0f, 100.0f);
+                        TargetTurbineOutput = MathHelper.Clamp(TargetTurbineOutput + input.Y, 0.0f, 100.0f);
                         TurbineOutputScrollBar.BarScroll += input.Y / 100.0f;
                     }
                 }
@@ -596,7 +596,7 @@ namespace Barotrauma.Items.Components
                 MathHelper.Clamp((allowedRange.X - range.X) / (range.Y - range.X), 0.0f, 0.95f),
                 MathHelper.Clamp((allowedRange.Y - range.X) / (range.Y - range.X), 0.0f, 1.0f));
 
-            Vector2 sectorRad = new Vector2(-1.57f, 1.57f);
+            Vector2 sectorRad = new Vector2(-1.35f, 1.35f);
 
             Vector2 optimalSectorRad = new Vector2(
                 MathHelper.Lerp(sectorRad.X, sectorRad.Y, optimalRangeNormalized.X),
@@ -606,23 +606,25 @@ namespace Barotrauma.Items.Components
                 MathHelper.Lerp(sectorRad.X, sectorRad.Y, allowedRangeNormalized.X),
                 MathHelper.Lerp(sectorRad.X, sectorRad.Y, allowedRangeNormalized.Y));
 
+            Vector2 pointerPos = pos - new Vector2(0, 30) * scale;
+
             if (optimalRangeNormalized.X == optimalRangeNormalized.Y)
             {
-                sectorSprite.Draw(spriteBatch, pos, GUI.Style.Red, MathHelper.PiOver2, scale);
+                sectorSprite.Draw(spriteBatch, pointerPos, GUI.Style.Red, MathHelper.PiOver2, scale);
             }
             else
             {
                 spriteBatch.End();
                 Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-                spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GameMain.GraphicsWidth, (int)(pos.Y + (meterSprite.size.Y - meterSprite.Origin.Y) * scale) - 3);
+                spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GameMain.GraphicsWidth, (int)(pointerPos.Y + (meterSprite.size.Y - meterSprite.Origin.Y) * scale) - 3);
                 spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
 
                 float scaleMultiplier = 0.95f;
-                sectorSprite.Draw(spriteBatch, pos, optimalRangeColor, MathHelper.PiOver2 + (allowedSectorRad.X + allowedSectorRad.Y) / 2.0f, scale * scaleMultiplier);
-                sectorSprite.Draw(spriteBatch, pos, offRangeColor, optimalSectorRad.X, scale * scaleMultiplier);
-                sectorSprite.Draw(spriteBatch, pos, warningColor, allowedSectorRad.X, scale * scaleMultiplier);
-                sectorSprite.Draw(spriteBatch, pos, offRangeColor, MathHelper.Pi + optimalSectorRad.Y, scale * scaleMultiplier);
-                sectorSprite.Draw(spriteBatch, pos, warningColor, MathHelper.Pi + allowedSectorRad.Y, scale * scaleMultiplier);
+                sectorSprite.Draw(spriteBatch, pointerPos, optimalRangeColor, MathHelper.PiOver2 + (allowedSectorRad.X + allowedSectorRad.Y) / 2.0f, scale * scaleMultiplier);
+                sectorSprite.Draw(spriteBatch, pointerPos, offRangeColor, optimalSectorRad.X, scale * scaleMultiplier);
+                sectorSprite.Draw(spriteBatch, pointerPos, warningColor, allowedSectorRad.X, scale * scaleMultiplier);
+                sectorSprite.Draw(spriteBatch, pointerPos, offRangeColor, MathHelper.Pi + optimalSectorRad.Y, scale * scaleMultiplier);
+                sectorSprite.Draw(spriteBatch, pointerPos, warningColor, MathHelper.Pi + allowedSectorRad.Y, scale * scaleMultiplier);
 
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
@@ -634,7 +636,7 @@ namespace Barotrauma.Items.Components
             float normalizedValue = (value - range.X) / (range.Y - range.X);
             float valueRad = MathHelper.Lerp(sectorRad.X, sectorRad.Y, normalizedValue);
             Vector2 offset = new Vector2(0, 40) * scale;
-            meterPointer.Draw(spriteBatch, pos - offset, valueRad, scale);
+            meterPointer.Draw(spriteBatch, pointerPos, valueRad, scale);
         }
 
         static void UpdateGraph<T>(IList<T> graph, T newValue)
@@ -713,8 +715,8 @@ namespace Barotrauma.Items.Components
         {
             msg.Write(autoTemp);
             msg.Write(PowerOn);
-            msg.WriteRangedSingle(targetFissionRate, 0.0f, 100.0f, 8);
-            msg.WriteRangedSingle(targetTurbineOutput, 0.0f, 100.0f, 8);
+            msg.WriteRangedSingle(TargetFissionRate, 0.0f, 100.0f, 8);
+            msg.WriteRangedSingle(TargetTurbineOutput, 0.0f, 100.0f, 8);
 
             correctionTimer = CorrectionDelay;
         }
@@ -730,17 +732,17 @@ namespace Barotrauma.Items.Components
             AutoTemp = msg.ReadBoolean();
             PowerOn = msg.ReadBoolean();
             Temperature = msg.ReadRangedSingle(0.0f, 100.0f, 8);
-            targetFissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
-            targetTurbineOutput = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            TargetFissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            TargetTurbineOutput = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             degreeOfSuccess = msg.ReadRangedSingle(0.0f, 1.0f, 8);
 
-            if (Math.Abs(FissionRateScrollBar.BarScroll - targetFissionRate / 100.0f) > 0.01f)
+            if (Math.Abs(FissionRateScrollBar.BarScroll - TargetFissionRate / 100.0f) > 0.01f)
             {
-                FissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
+                FissionRateScrollBar.BarScroll = TargetFissionRate / 100.0f;
             }
-            if (Math.Abs(TurbineOutputScrollBar.BarScroll - targetTurbineOutput / 100.0f) > 0.01f)
+            if (Math.Abs(TurbineOutputScrollBar.BarScroll - TargetTurbineOutput / 100.0f) > 0.01f)
             {
-                TurbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
+                TurbineOutputScrollBar.BarScroll = TargetTurbineOutput / 100.0f;
             }
 
             IsActive = true;

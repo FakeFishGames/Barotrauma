@@ -138,6 +138,10 @@ namespace Barotrauma
             public readonly ItemPrefab ItemPrefab;
             public readonly SpawnPositionType SpawnPosition;
             public readonly bool SpawnIfInventoryFull;
+            /// <summary>
+            /// Should the item spawn even if the container can't contain items of this type
+            /// </summary>
+            public readonly bool SpawnIfCantBeContained;
             public readonly float Speed;
             public readonly float Rotation;
             public readonly int Count;
@@ -176,6 +180,7 @@ namespace Barotrauma
                 }
 
                 SpawnIfInventoryFull = element.GetAttributeBool("spawnifinventoryfull", false);
+                SpawnIfCantBeContained = element.GetAttributeBool("spawnifcantbecontained", true);
                 Speed = element.GetAttributeFloat("speed", 0.0f);
 
                 Rotation = element.GetAttributeFloat("rotation", 0.0f);
@@ -332,7 +337,7 @@ namespace Barotrauma
             private set;
         }
 
-        private readonly bool modifyAfflictionsByMaxVitality;
+        private readonly bool multiplyAfflictionsByMaxVitality;
 
         public IEnumerable<CharacterSpawnInfo> SpawnCharacters
         {
@@ -396,7 +401,7 @@ namespace Barotrauma
             ReduceAffliction = new List<(string affliction, float amount)>();
             giveExperiences = new List<int>();
             giveSkills = new List<(string, float)>();
-            modifyAfflictionsByMaxVitality = element.GetAttributeBool("multiplyafflictionsbymaxvitality", false);
+            multiplyAfflictionsByMaxVitality = element.GetAttributeBool("multiplyafflictionsbymaxvitality", false);
 
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
             OnlyInside = element.GetAttributeBool("onlyinside", false);
@@ -891,20 +896,26 @@ namespace Barotrauma
                             {
                                 owner = ownerItem.ParentInventory?.Owner;
                             }
-                            if (owner is Item container && !HasRequiredConditions(container.AllPropertyObjects, pc.ToEnumerable(), targetingContainer: true)) { return false; }
+                            if (owner is Item container)
+                            {
+                                if (pc.Type == PropertyConditional.ConditionType.HasTag)
+                                {
+                                    //if we're checking for tags, just check the Item object, not the ItemComponents
+                                    if (!HasRequiredConditions((container as ISerializableEntity).ToEnumerable(), pc.ToEnumerable(), targetingContainer: true)) { return false; }
+                                }
+                                else
+                                {
+                                    if (!HasRequiredConditions(container.AllPropertyObjects, pc.ToEnumerable(), targetingContainer: true)) { return false; }
+                                }
+                            }
                             if (owner is Character character && !HasRequiredConditions(character.ToEnumerable(), pc.ToEnumerable(), targetingContainer: true)) { return false; }
                         }
                         else
                         {
-                            foreach (ISerializableEntity target in targets)
+                            var validTargets = targets;
+                            if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
                             {
-                                if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
-                                {
-                                    if (!(target is ItemComponent ic) || ic.Name != pc.TargetItemComponentName)
-                                    {
-                                        continue;
-                                    }
-                                }
+                                validTargets = targets.Where(t => t is ItemComponent ic && ic.Name == pc.TargetItemComponentName);
                             }
                             if (targets.None(t => pc.Matches(t))) { return false; }
                         }
@@ -1200,7 +1211,7 @@ namespace Barotrauma
                     if (target is Character character)
                     {
                         if (character.Removed) { continue; }
-                        newAffliction = GetMultipliedAffliction(affliction, entity, character, deltaTime, modifyAfflictionsByMaxVitality);
+                        newAffliction = GetMultipliedAffliction(affliction, entity, character, deltaTime, multiplyAfflictionsByMaxVitality);
                         character.LastDamageSource = entity;
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
@@ -1218,7 +1229,7 @@ namespace Barotrauma
                     {
                         if (limb.IsSevered) { continue; }
                         if (limb.character.Removed || limb.Removed) { continue; }
-                        newAffliction = GetMultipliedAffliction(affliction, entity, limb.character, deltaTime, modifyAfflictionsByMaxVitality);
+                        newAffliction = GetMultipliedAffliction(affliction, entity, limb.character, deltaTime, multiplyAfflictionsByMaxVitality);
                         AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source, allowStacking: !setValue);
                         limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true);
                         RegisterTreatmentResults(entity, limb, affliction, result);
@@ -1489,7 +1500,12 @@ namespace Barotrauma
                                 }
                                 else if (entity is Item item)
                                 {
-                                    inventory = item?.GetComponent<ItemContainer>()?.Inventory;
+                                    var itemContainer = item.GetComponent<ItemContainer>();
+                                    inventory = itemContainer?.Inventory;
+                                    if (!chosenItemSpawnInfo.SpawnIfCantBeContained && !itemContainer.CanBeContained(chosenItemSpawnInfo.ItemPrefab))
+                                    {
+                                        return;
+                                    }
                                 }
                                 if (inventory != null && (inventory.CanBePut(chosenItemSpawnInfo.ItemPrefab) || chosenItemSpawnInfo.SpawnIfInventoryFull))
                                 {
@@ -1518,7 +1534,12 @@ namespace Barotrauma
                                 }
                                 else if (entity is Item item)
                                 {
-                                    thisInventory = item?.GetComponent<ItemContainer>()?.Inventory;
+                                    var itemContainer = item.GetComponent<ItemContainer>();
+                                    thisInventory = itemContainer?.Inventory;
+                                    if (!chosenItemSpawnInfo.SpawnIfCantBeContained && !itemContainer.CanBeContained(chosenItemSpawnInfo.ItemPrefab))
+                                    {
+                                        return;
+                                    }
                                 }
                                 if (thisInventory != null)
                                 {
@@ -1629,14 +1650,14 @@ namespace Barotrauma
                         if (target is Character character)
                         {
                             if (character.Removed) { continue; }
-                            newAffliction = element.Parent.GetMultipliedAffliction(affliction, element.Entity, character, deltaTime, element.Parent.modifyAfflictionsByMaxVitality);
+                            newAffliction = element.Parent.GetMultipliedAffliction(affliction, element.Entity, character, deltaTime, element.Parent.multiplyAfflictionsByMaxVitality);
                             var result = character.AddDamage(character.WorldPosition, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attacker: element.User);
                             element.Parent.RegisterTreatmentResults(element.Entity, result.HitLimb, affliction, result);
                         }
                         else if (target is Limb limb)
                         {
                             if (limb.character.Removed || limb.Removed) { continue; }
-                            newAffliction = element.Parent.GetMultipliedAffliction(affliction, element.Entity, limb.character, deltaTime, element.Parent.modifyAfflictionsByMaxVitality);
+                            newAffliction = element.Parent.GetMultipliedAffliction(affliction, element.Entity, limb.character, deltaTime, element.Parent.multiplyAfflictionsByMaxVitality);
                             var result = limb.character.DamageLimb(limb.WorldPosition, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: element.User);
                             element.Parent.RegisterTreatmentResults(element.Entity, limb, affliction, result);
                         }

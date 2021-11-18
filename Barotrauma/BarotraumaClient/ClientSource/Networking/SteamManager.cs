@@ -935,7 +935,7 @@ namespace Barotrauma.Steam
             return workshopPublishStatus;
         }
 
-        private static IEnumerable<object> PublishItem(WorkshopPublishStatus workshopPublishStatus)
+        private static IEnumerable<CoroutineStatus> PublishItem(WorkshopPublishStatus workshopPublishStatus)
         {
             if (!isInitialized)
             {

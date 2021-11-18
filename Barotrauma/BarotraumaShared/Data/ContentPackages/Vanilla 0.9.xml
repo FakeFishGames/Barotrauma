@@ -78,6 +78,7 @@
   <Character file="Content/Characters/Crawler/Crawler.xml" />
   <Character file="Content/Characters/Crawlerhusk/Crawlerhusk.xml" />
   <Character file="Content/Characters/Endworm/Endworm.xml" />
+  <Character file="Content/Characters/Variants/Doomworm.xml" />
   <Character file="Content/Characters/Fractalguardian/Fractalguardian.xml" />
   <Character file="Content/Characters/Fractalguardian2/Fractalguardian2.xml" />
   <Character file="Content/Characters/Swarmfeeder/Swarmfeeder.xml" />
@@ -204,7 +205,8 @@
   <LevelObjectPrefabs file="Content/Map/Biomes/Common/CommonLevelObjects.xml" />
   <Particles file="Content/Particles/ParticlePrefabs.xml" />
   <Decals file="Content/Particles/DecalPrefabs.xml" />
-  <RandomEvents file="Content/randomevents.xml" />
+  <RandomEvents file="Content/randomevents_lineardifficulty.xml" />
+  <RandomEvents file="Content/randomevents_campaign.xml" />
   <RandomEvents file="Content/OutpostEvents.xml" />
   <EventManagerSettings file="Content/EventManagerSettings.xml" />
   <LocationTypes file="Content/Map/locationTypes.xml" />

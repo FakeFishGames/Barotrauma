@@ -312,7 +312,7 @@ namespace Barotrauma
             return isRadiated;
         }
 
-        public void StartRound(string levelSeed, float? difficulty = null)
+        public void StartRound(string levelSeed, float? difficulty = null, LevelGenerationParams levelGenerationParams = null)
         {
             LevelData randomLevel = null;
             foreach (Mission mission in Missions.Union(GameMode.Missions))
@@ -324,11 +324,11 @@ namespace Barotrauma
                 {
                     LocationType locationType = LocationType.List.FirstOrDefault(lt => missionPrefab.AllowedLocationTypes.Any(m => m.Equals(lt.Identifier, StringComparison.OrdinalIgnoreCase)));
                     CreateDummyLocations(locationType);
-                    randomLevel = LevelData.CreateRandom(levelSeed, difficulty, requireOutpost: true);
+                    randomLevel = LevelData.CreateRandom(levelSeed, difficulty, levelGenerationParams, requireOutpost: true);
                     break;
                 }
             }
-            randomLevel ??= LevelData.CreateRandom(levelSeed, difficulty);
+            randomLevel ??= LevelData.CreateRandom(levelSeed, difficulty, levelGenerationParams);
             StartRound(randomLevel);
         }
 
@@ -350,6 +350,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't start game session, saved submarine is empty. The submarine file may be corrupted.");
                 return;
             }
+
+            Submarine.LockX = Submarine.LockY = false;
 
             LevelData = levelData;
 
@@ -510,10 +512,6 @@ namespace Barotrauma
                 {
                     mpCampaign.UpgradeManager.ApplyUpgrades();
                     mpCampaign.UpgradeManager.SanityCheckUpgrades(Submarine);
-                }
-                if (GameMode is CampaignMode)
-                {
-                    Submarine.WarmStartPower();
                 }
             }
 

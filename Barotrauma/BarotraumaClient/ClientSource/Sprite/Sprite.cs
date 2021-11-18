@@ -84,7 +84,7 @@ namespace Barotrauma
 
             Vector4 sourceVector = Vector4.Zero;
             bool temp2 = false;
-            int maxLoadRetries = 3;
+            int maxLoadRetries = File.Exists(FilePath) ? 3 : 0;
             for (int i = 0; i <= maxLoadRetries; i++)
             {
                 try
@@ -169,7 +169,8 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError($"Sprite \"{file}\" not found! {Environment.StackTrace.CleanupStackTrace()}");
+                DebugConsole.ThrowError($"Sprite \"{file}\" not found!");
+                DebugConsole.Log(Environment.StackTrace.CleanupStackTrace());
             }
 
             return null;

@@ -790,10 +790,7 @@ namespace Barotrauma
                         return false;
                     }
                 };
-                //force update twice because the listbox is insanely janky
-                //TODO: fix all of the UI :)
-                listBox.ForceUpdate();
-                listBox.ForceUpdate();
+                listBox.ForceLayoutRecalculation();
                 foreach (var childLayoutGroup in listBox.Content.GetAllChildren<GUILayoutGroup>())
                 {
                     childLayoutGroup.Recalculate();

@@ -155,23 +155,23 @@ namespace Barotrauma
             msg.Write(allowSubVoting);
             if (allowSubVoting)
             {
-                List<Pair<object, int>> voteList = GetVoteList(VoteType.Sub, GameMain.Server.ConnectedClients);
+                IReadOnlyDictionary<SubmarineInfo, int> voteList = GetVoteCounts<SubmarineInfo>(VoteType.Sub, GameMain.Server.ConnectedClients);
                 msg.Write((byte)voteList.Count);
-                foreach (Pair<object, int> vote in voteList)
+                foreach (KeyValuePair<SubmarineInfo, int> vote in voteList)
                 {
-                    msg.Write((byte)vote.Second);
-                    msg.Write(((SubmarineInfo)vote.First).Name);
+                    msg.Write((byte)vote.Value);
+                    msg.Write(vote.Key.Name);
                 }
             }
             msg.Write(AllowModeVoting);
             if (allowModeVoting)
             {
-                List<Pair<object, int>> voteList = GetVoteList(VoteType.Mode, GameMain.Server.ConnectedClients);
+                IReadOnlyDictionary<GameModePreset, int> voteList = GetVoteCounts<GameModePreset>(VoteType.Mode, GameMain.Server.ConnectedClients);
                 msg.Write((byte)voteList.Count);
-                foreach (Pair<object, int> vote in voteList)
+                foreach (KeyValuePair<GameModePreset, int> vote in voteList)
                 {
-                    msg.Write((byte)vote.Second);
-                    msg.Write(((GameModePreset)vote.First).Identifier);
+                    msg.Write((byte)vote.Value);
+                    msg.Write(vote.Key.Identifier);
                 }
             }
             msg.Write(AllowEndVoting);

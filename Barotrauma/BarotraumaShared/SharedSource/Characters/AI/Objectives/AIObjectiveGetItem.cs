@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,6 +12,7 @@ namespace Barotrauma
         public override string Identifier { get; set; } = "get item";
 
         public override bool AbandonWhenCannotCompleteSubjectives => false;
+        public override bool AllowMultipleInstances => true;
 
         public HashSet<Item> ignoredItems = new HashSet<Item>();
 
@@ -19,7 +21,7 @@ namespace Barotrauma
         public float TargetCondition { get; set; } = 1;
         public bool AllowDangerousPressure { get; set; }
 
-        private readonly string[] identifiersOrTags;
+        private readonly ImmutableArray<string> identifiersOrTags;
 
         //if the item can't be found, spawn it in the character's inventory (used by outpost NPCs)
         private bool spawnItemIfNotFound = false;
@@ -31,6 +33,7 @@ namespace Barotrauma
         public Item TargetItem => targetItem;
         private int currSearchIndex;
         public string[] ignoredContainerIdentifiers;
+        public string[] ignoredIdentifiersOrTags;
         private AIObjectiveGoTo goToObjective;
         private float currItemPriority;
         private readonly bool checkInventory;
@@ -51,6 +54,10 @@ namespace Barotrauma
         public bool AllowVariants { get; set; }
         public bool Equip { get; set; }
         public bool Wear { get; set; }
+        public bool RequireLoaded { get; set; }
+        public bool EvaluateCombatPriority { get; set; }
+        public bool CheckPathForEachItem { get; set; }
+        public bool SpeakIfFails { get; set; }
 
         public InvSlotType? EquipSlotType { get; set; }
 
@@ -67,18 +74,41 @@ namespace Barotrauma
         public AIObjectiveGetItem(Character character, string identifierOrTag, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
             : this(character, new string[] { identifierOrTag }, objectiveManager, equip, checkInventory, priorityModifier, spawnItemIfNotFound) { }
 
-        public AIObjectiveGetItem(Character character, string[] identifiersOrTags, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
+        public AIObjectiveGetItem(Character character, IEnumerable<string> identifiersOrTags, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
             : base(character, objectiveManager, priorityModifier)
         {
             currSearchIndex = -1;
             Equip = equip;
-            this.identifiersOrTags = identifiersOrTags;
             this.spawnItemIfNotFound = spawnItemIfNotFound;
-            for (int i = 0; i < identifiersOrTags.Length; i++)
-            {
-                identifiersOrTags[i] = identifiersOrTags[i].ToLowerInvariant();
-            }
             this.checkInventory = checkInventory;
+            this.identifiersOrTags = ParseGearTags(identifiersOrTags).ToImmutableArray();
+            ignoredIdentifiersOrTags = ParseIgnoredTags(identifiersOrTags).ToArray();
+        }
+
+        public static IEnumerable<string> ParseGearTags(IEnumerable<string> identifiersOrTags)
+        {
+            var tags = new List<string>();
+            foreach (string tag in identifiersOrTags)
+            {
+                if (!tag.Contains('!'))
+                {
+                    tags.Add(tag.ToLowerInvariant());
+                }
+            }
+            return tags;
+        }
+
+        public static IEnumerable<string> ParseIgnoredTags(IEnumerable<string> identifiersOrTags)
+        {
+            var ignoredTags = new List<string>();
+            foreach (string tag in identifiersOrTags)
+            {
+                if (tag.Contains('!'))
+                {
+                    ignoredTags.Add(tag.Remove("!").ToLowerInvariant());
+                }
+            }
+            return ignoredTags;
         }
 
         private bool CheckInventory()
@@ -219,6 +249,13 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (!Equip)
+                    {
+                        // Try equipping and wearing the item
+                        Wear = true;
+                        Equip = true;
+                        return;
+                    }
 #if DEBUG
                     DebugConsole.NewMessage($"{character.Name}: Failed to equip/move the item '{targetItem.Name}' into the character inventory. Aborting.", Color.Red);
 #endif
@@ -243,6 +280,10 @@ namespace Barotrauma
                         {
                             // Try again
                             ignoredItems.Add(targetItem);
+                            if (targetItem != moveToTarget && moveToTarget is Item item)
+                            {
+                                ignoredItems.Add(item);
+                            }
                             ResetInternal();
                         }
                         else
@@ -269,7 +310,15 @@ namespace Barotrauma
             }
 
             float priority = Math.Clamp(objectiveManager.GetCurrentPriority(), 10, 100);
-            bool checkPath = priority >= AIObjectiveManager.LowestOrderPriority && (objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>() || objectiveManager.CurrentOrder is AIObjectiveGoTo gotoOrder && gotoOrder.isFollowOrderObjective);
+            if (!CheckPathForEachItem)
+            {
+                // While following the player, let's ensure that there's a valid path to the target before accepting it.
+                // Otherwise it will take some time for us to find a valid item when there are multiple items that we can't reach and some that we can.
+                // This is relatively expensive, so let's do this only when it significantly improves the behavior.
+                // Only allow one path find call per frame.
+                CheckPathForEachItem = priority >= AIObjectiveManager.LowestOrderPriority && (objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>() || objectiveManager.CurrentOrder is AIObjectiveGoTo gotoOrder && gotoOrder.isFollowOrderObjective);
+            }
+            bool checkPath = CheckPathForEachItem;
             bool hasCalledPathFinder = false;
             int itemsPerFrame = (int)priority;
             for (int i = 0; i < itemsPerFrame && currSearchIndex < Item.ItemList.Count - 1; i++)
@@ -280,14 +329,20 @@ namespace Barotrauma
                 if (itemSub == null) { continue; }
                 Submarine mySub = character.Submarine;
                 if (mySub == null) { continue; }
+                if (!checkInventory)
+                {
+                    // Ignore items in the inventory when defined not to check it.
+                    if (item.IsOwnedBy(character)) { continue; }
+                }
                 if (!AllowStealing)
                 {
-                    if (character.TeamID == CharacterTeamType.FriendlyNPC != item.SpawnedInOutpost) { continue; }
+                    if (character.TeamID == CharacterTeamType.FriendlyNPC != item.SpawnedInCurrentOutpost) { continue; }
                 }
                 if (!CheckItem(item)) { continue; }
                 if (item.Container != null)
                 {
                     if (item.Container.HasTag("donttakeitems")) { continue; }
+                    if (ignoredItems.Contains(item.Container)) { continue; }
                     if (ignoredContainerIdentifiers != null)
                     {
                         if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
@@ -315,17 +370,51 @@ namespace Barotrauma
                 float yDist = Math.Abs(character.WorldPosition.Y - itemPos.Y);
                 yDist = yDist > 100 ? yDist * 5 : 0;
                 float dist = Math.Abs(character.WorldPosition.X - itemPos.X) + yDist;
-                float distanceFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 10000, dist));
+                float minDistFactor = EvaluateCombatPriority ? 0.1f : 0;
+                float distanceFactor = MathHelper.Lerp(1, minDistFactor, MathUtils.InverseLerp(100, 10000, dist));
                 itemPriority *= distanceFactor;
-                itemPriority *= item.Condition / item.MaxCondition;
+                if (EvaluateCombatPriority)
+                {
+                    var mw = item.GetComponent<MeleeWeapon>();
+                    var rw = item.GetComponent<RangedWeapon>();
+                    float combatFactor = 0;
+                    if (mw != null)
+                    {
+                        if (mw.CombatPriority > 0)
+                        {
+                            combatFactor = mw.CombatPriority / 100;
+                        }
+                        else
+                        {
+                            // The combat factor of items with zero combat priority is not allowed to be greater than 0.1f
+                            combatFactor = Math.Min(AIObjectiveCombat.GetLethalDamage(mw) / 1000, 0.1f);
+                        }
+                    }
+                    else if (rw != null)
+                    {
+                        if (rw.CombatPriority > 0)
+                        {
+                            combatFactor = rw.CombatPriority / 100;
+                        }
+                        else
+                        {
+                            combatFactor = Math.Min(AIObjectiveCombat.GetLethalDamage(rw) / 1000, 0.1f);
+                        }
+                    }
+                    else
+                    {
+                        combatFactor = Math.Min(item.Components.Sum(ic => AIObjectiveCombat.GetLethalDamage(ic)) / 1000, 0.1f);
+                    }
+                    itemPriority *= combatFactor;
+                }
+                else
+                {
+                    itemPriority *= item.Condition / item.MaxCondition;
+                }
                 // Ignore if the item has a lower priority than the currently selected one
                 if (itemPriority < currItemPriority) { continue; }
                 if (!hasCalledPathFinder && PathSteering != null && checkPath)
                 {
-                    // While following the player, let's ensure that there's a valid path to the target before accepting it.
-                    // Otherwise it will take some time for us to find a valid item when there are multiple items that we can't reach and some that we can.
-                    // This is relatively expensive, so let's do this only when it significantly improves the behavior.
-                    // Only allow one path find call per frame.
                     hasCalledPathFinder = true;
                     var path = PathSteering.PathFinder.FindPath(character.SimPosition, item.SimPosition, character.Submarine, errorMsgStr: $"AIObjectiveGetItem {character.DisplayName}", nodeFilter: node => node.Waypoint.CurrentHull != null);
                     if (path.Unreachable) { continue; }
@@ -355,7 +444,7 @@ namespace Barotrauma
                                 targetItem = spawnedItem; 
                                 if (character.TeamID == CharacterTeamType.FriendlyNPC && (character.Submarine?.Info.IsOutpost ?? false))
                                 {
-                                    spawnedItem.SpawnedInOutpost = true;
+                                    spawnedItem.SpawnedInCurrentOutpost = true;
                                 }
                             });
                         }
@@ -365,7 +454,6 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.NewMessage($"{character.Name}: Cannot find an item with the following identifier(s) or tag(s): {string.Join(", ", identifiersOrTags)}", Color.Yellow);
 #endif
-                        SpeakCannotFind();
                         Abandon = true;
                     }
                 }
@@ -375,34 +463,19 @@ namespace Barotrauma
         protected override bool CheckObjectiveSpecific()
         {
             if (IsCompleted) { return true; }
-            if (targetItem != null)
+            if (targetItem == null)
             {
-                if (Equip && EquipSlotType.HasValue)
-                {
-                    return character.HasEquippedItem(targetItem, EquipSlotType.Value);
-                }
-                else
-                {
-                    return character.HasItem(targetItem, Equip);
-                }
-            }
-            else if (identifiersOrTags != null)
-            {
-                var matchingItem = character.Inventory.FindItem(i => CheckItem(i), recursive: true);
-                if (matchingItem != null)
-                {
-                    if (Equip && EquipSlotType.HasValue)
-                    {
-                        return character.HasEquippedItem(matchingItem, EquipSlotType.Value);
-                    }
-                    else
-                    {
-                        return !Equip || character.HasEquippedItem(matchingItem);
-                    }
-                }
+                // Not yet ready
                 return false;
             }
-            return false;
+            if (Equip && EquipSlotType.HasValue)
+            {
+                return character.HasEquippedItem(targetItem, EquipSlotType.Value);
+            }
+            else
+            {
+                return character.HasItem(targetItem, Equip);
+            }
         }
 
         private bool CheckItem(Item item)
@@ -410,8 +483,10 @@ namespace Barotrauma
             if (!item.IsInteractable(character)) { return false; }
             if (item.IsThisOrAnyContainerIgnoredByAI(character)) { return false; }
             if (ignoredItems.Contains(item)) { return false; };
+            if (ignoredIdentifiersOrTags != null && ignoredIdentifiersOrTags.Any(id => item.prefab.Identifier == id || item.HasTag(id))) { return false; }
             if (item.Condition < TargetCondition) { return false; }
             if (ItemFilter != null && !ItemFilter(item)) { return false; }
+            if (RequireLoaded && item.Components.Any(i => !i.IsLoaded(character))) { return false; }
             return identifiersOrTags.Any(id => id == item.Prefab.Identifier || item.HasTag(id) || (AllowVariants && item.Prefab.VariantOf?.Identifier == id));
         }
 
@@ -437,35 +512,26 @@ namespace Barotrauma
         protected override void OnAbandon()
         {
             base.OnAbandon();
-            if (moveToTarget == null) { return; }
+            if (moveToTarget != null)
+            {
 #if DEBUG
-            DebugConsole.NewMessage($"{character.Name}: Get item failed to reach {moveToTarget}", Color.Yellow);
+                DebugConsole.NewMessage($"{character.Name}: Get item failed to reach {moveToTarget}", Color.Yellow);
 #endif
+            }
+            if (SpeakIfFails)
+            {
+                SpeakCannotFind();
+            }
         }
 
         private void SpeakCannotFind()
         {
-            // TODO: Use the item name as the variable here.
             if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder == objectiveManager.CurrentObjective)
             {
                 string msg = TextManager.Get("dialogcannotfinditem", true);
                 if (msg != null)
                 {
                     character.Speak(msg, identifier: "dialogcannotfinditem", minDurationBetweenSimilar: 20.0f);
-                }
-            }
-        }
-
-        // TODO: remove?
-        private void SpeakCannotReach()
-        {
-            if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder == objectiveManager.CurrentObjective)
-            {
-                string TargetName = (moveToTarget as MapEntity)?.Name ?? (moveToTarget as Character)?.Name ?? moveToTarget.ToString();
-                string msg = TargetName == null ? TextManager.Get("dialogcannotreachtarget", true) : TextManager.GetWithVariable("dialogcannotreachtarget", "[name]", TargetName, formatCapitals: !(moveToTarget is Character));
-                if (msg != null)
-                {
-                    character.Speak(msg, identifier: "dialogcannotreachtarget", minDurationBetweenSimilar: 20.0f);
                 }
             }
         }

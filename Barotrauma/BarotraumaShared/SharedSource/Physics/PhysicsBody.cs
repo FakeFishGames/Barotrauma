@@ -226,7 +226,14 @@ namespace Barotrauma
         public bool PhysEnabled
         {
             get { return FarseerBody.Enabled; }
-            set { isPhysEnabled = value; if (Enabled) FarseerBody.Enabled = value; }
+            set
+            {
+                isPhysEnabled = value;
+                if (Enabled)
+                {
+                    FarseerBody.Enabled = value;
+                }
+            }
         }
 
         public Vector2 SimPosition

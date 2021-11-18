@@ -369,11 +369,20 @@ namespace Barotrauma
             {
                 ToolTip = TextManager.Get("AddSubToolTip")
             };
+
+            List<(string Name, SubmarineInfo Sub)> subs = new List<(string Name, SubmarineInfo Sub)>();
+
             foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
             {
                 if (sub.Type != SubmarineType.Player) { continue; }
-                linkedSubBox.AddItem(sub.Name, sub);
+                subs.Add((sub.Name, sub));
             }
+
+            foreach (var (name, sub) in subs.OrderBy(tuple => tuple.Name))
+            {
+                linkedSubBox.AddItem(name, sub);
+            }
+
             linkedSubBox.OnSelected += SelectLinkedSub;
             linkedSubBox.OnDropped += (component, obj) =>
             {
@@ -1220,11 +1229,19 @@ namespace Barotrauma
 
             string downloadFolder = Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
             linkedSubBox.ClearChildren();
+
+            List<(string Name, SubmarineInfo Sub)> subs = new List<(string Name, SubmarineInfo Sub)>();
+
             foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
             {
                 if (sub.Type != SubmarineType.Player) { continue; }
                 if (Path.GetDirectoryName(Path.GetFullPath(sub.FilePath)) == downloadFolder) { continue; }
-                linkedSubBox.AddItem(sub.Name, sub);
+                subs.Add((sub.Name, sub));
+            }
+
+            foreach (var (subName, sub) in subs.OrderBy(tuple => tuple.Name))
+            {
+                linkedSubBox.AddItem(subName, sub);
             }
 
             cam.UpdateTransform();
@@ -1294,7 +1311,7 @@ namespace Barotrauma
         /// </summary>
         /// <see cref="AutoSave"/>
         /// <returns></returns>
-        private static IEnumerable<object> AutoSaveCoroutine()
+        private static IEnumerable<CoroutineStatus> AutoSaveCoroutine()
         {
             DateTime target = DateTime.Now.AddMinutes(GameSettings.AutoSaveIntervalSeconds);
             DateTime tempTarget = DateTime.Now;
@@ -1998,14 +2015,21 @@ namespace Barotrauma
             var gapPositionDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1f), gapPositionGroup.RectTransform),
                 text: "", selectMultiple: true);
 
-            Submarine.MainSub.Info?.OutpostModuleInfo?.DetermineGapPositions(Submarine.MainSub);
-            foreach (var gapPos in Enum.GetValues(typeof(OutpostModuleInfo.GapPosition)))
+            var outpostModuleInfo = Submarine.MainSub.Info?.OutpostModuleInfo;
+            if (outpostModuleInfo != null)
             {
-                if ((OutpostModuleInfo.GapPosition)gapPos == OutpostModuleInfo.GapPosition.None) { continue; }
-                gapPositionDropDown.AddItem(TextManager.Capitalize(gapPos.ToString()), gapPos);
-                if (Submarine.MainSub.Info?.OutpostModuleInfo?.GapPositions.HasFlag((OutpostModuleInfo.GapPosition)gapPos) ?? false)
+                if (outpostModuleInfo.GapPositions == OutpostModuleInfo.GapPosition.None)
                 {
-                    gapPositionDropDown.SelectItem(gapPos);
+                    outpostModuleInfo.DetermineGapPositions(Submarine.MainSub);
+                }
+                foreach (var gapPos in Enum.GetValues(typeof(OutpostModuleInfo.GapPosition)))
+                {
+                    if ((OutpostModuleInfo.GapPosition)gapPos == OutpostModuleInfo.GapPosition.None) { continue; }
+                    gapPositionDropDown.AddItem(TextManager.Capitalize(gapPos.ToString()), gapPos);
+                    if (outpostModuleInfo.GapPositions.HasFlag((OutpostModuleInfo.GapPosition)gapPos))
+                    {
+                        gapPositionDropDown.SelectItem(gapPos);
+                    }
                 }
             }
 
@@ -4774,7 +4798,7 @@ namespace Barotrauma
 
             if (dummyCharacter != null)
             {
-                dummyCharacter.AnimController.FindHull(dummyCharacter.CursorWorldPosition, false);
+                dummyCharacter.AnimController.FindHull(dummyCharacter.CursorWorldPosition, setSubmarine: false);
 
                 foreach (Item item in dummyCharacter.Inventory.AllItems)
                 {

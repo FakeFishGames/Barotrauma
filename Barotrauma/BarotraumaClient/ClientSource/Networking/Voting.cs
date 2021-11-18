@@ -66,10 +66,10 @@ namespace Barotrauma
 
                     if (clients == null) { return; }
                     
-                    List<Pair<object, int>> voteList = GetVoteList(voteType, clients);
-                    foreach (Pair<object, int> votable in voteList)
+                    IReadOnlyDictionary<object, int> voteList = GetVoteCounts<object>(voteType, clients);
+                    foreach (KeyValuePair<object, int> votable in voteList)
                     {
-                        SetVoteText(listBox, votable.First, votable.Second);
+                        SetVoteText(listBox, votable.Key, votable.Value);
                     }                    
                     break;
                 case VoteType.StartRound:

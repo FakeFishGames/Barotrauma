@@ -447,28 +447,7 @@ namespace Barotrauma
 
                 if (GameMain.Client != null) { chatMessage += " " + TextManager.Get("DeathChatNotification"); }
 
-                if (GameMain.NetworkMember.RespawnManager?.UseRespawnPrompt ?? false)
-                {
-                    CoroutineManager.Invoke(() =>
-                    {
-                        if (controlled != null || (!(GameMain.GameSession?.IsRunning ?? false))) { return; }
-                        var respawnPrompt = new GUIMessageBox(
-                            TextManager.Get("tutorial.tryagainheader"), TextManager.Get("respawnquestionprompt"),
-                            new string[] { TextManager.Get("respawnquestionpromptrespawn"), TextManager.Get("respawnquestionpromptwait") });
-                        respawnPrompt.Buttons[0].OnClicked += (btn, userdata) =>
-                        {
-                            GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: false);
-                            respawnPrompt.Close();
-                            return true;
-                        };
-                        respawnPrompt.Buttons[1].OnClicked += (btn, userdata) =>
-                        {
-                            GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: true);
-                            respawnPrompt.Close();
-                            return true;
-                        };
-                    }, delay: 5.0f);
-                }
+                GameMain.NetworkMember.RespawnManager?.ShowRespawnPromptIfNeeded();
 
                 GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
                 GameMain.LightManager.LosEnabled = false;

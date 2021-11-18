@@ -130,6 +130,7 @@ namespace Barotrauma
         }
 
         public readonly HashSet<LatchOntoAI> Latchers = new HashSet<LatchOntoAI>();
+        public readonly HashSet<Projectile> AttachedProjectiles = new HashSet<Projectile>();
 
         protected readonly Dictionary<string, ActiveTeamChange> activeTeamChanges = new Dictionary<string, ActiveTeamChange>();
         protected ActiveTeamChange currentTeamChange;
@@ -265,7 +266,7 @@ namespace Barotrauma
         private CharacterPrefab prefab;
 
         public readonly CharacterParams Params;
-        public string SpeciesName => Params.SpeciesName;
+        public string SpeciesName => Params?.SpeciesName ?? "null";
         public string Group => Params.Group;
         public bool IsHumanoid => Params.Humanoid;
         public bool IsHusk => Params.Husk;
@@ -2640,7 +2641,7 @@ namespace Barotrauma
             ApplyStatusEffects(ActionType.Always, deltaTime);
 
             PreviousHull = CurrentHull;
-            CurrentHull = Hull.FindHull(WorldPosition, CurrentHull, true);
+            CurrentHull = Hull.FindHull(WorldPosition, CurrentHull, useWorldCoordinates: true);
 
             speechBubbleTimer = Math.Max(0.0f, speechBubbleTimer - deltaTime);
 
@@ -2710,7 +2711,7 @@ namespace Barotrauma
                         if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                         {
                             Implode();
-                            if (IsDead) { return; }                           
+                            if (IsDead) { return; }
                         }
                     }
                 }
@@ -2719,7 +2720,9 @@ namespace Barotrauma
                     PressureTimer = 0.0f;
                 }
             }
-            else if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) && WorldPosition.Y < CharacterHealth.CrushDepth)
+            else if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) &&
+                PressureProtection < (Level.Loaded?.GetRealWorldDepth(WorldPosition.Y) ?? 1.0f) &&
+                WorldPosition.Y < CharacterHealth.CrushDepth)
             {
                 //implode if below crush depth, and either outside or in a high-pressure hull                
                 if (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f)
@@ -3124,47 +3127,53 @@ namespace Barotrauma
             //set the character order only if the character is close enough to hear the message
             if (!force && orderGiver != null && !CanHearCharacter(orderGiver)) { return; }
 
-            if (order != null && order.OrderGiver != orderGiver)
+            if (order != null)
             {
-                order.OrderGiver = orderGiver;
-            }
-
-            switch (order?.Category)
-            {
-                case OrderCategory.Operate when order?.TargetEntity != null:
-                    // If there's another character operating the same device, make them dismiss themself
-                    foreach (var character in CharacterList)
+                if (order.OrderGiver != orderGiver)
+                {
+                    order.OrderGiver = orderGiver;
+                }
+                if (order.AutoDismiss)
+                {
+                    switch (order.Category)
                     {
-                        if (character == this) { continue; }
-                        if (character.TeamID != TeamID) { continue; }
-                        if (!(character.AIController is HumanAIController)) { continue; }
-                        if (!HumanAIController.IsActive(character)) { continue; }
-                        foreach (var currentOrder in character.CurrentOrders)
-                        {
-                            if (currentOrder.Order == null) { continue; }
-                            if (currentOrder.Order.Category != OrderCategory.Operate) { continue; }
-                            if (currentOrder.Order.Identifier != order.Identifier) { continue; }
-                            if (currentOrder.Order.TargetEntity != order.TargetEntity) { continue; }
-                            character.SetOrder(Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(currentOrder), currentOrder.ManualPriority, character, speak: speak, force: force);
+                        case OrderCategory.Operate when order.TargetEntity != null:
+                            // If there's another character operating the same device, make them dismiss themself
+                            foreach (var character in CharacterList)
+                            {
+                                if (character == this) { continue; }
+                                if (character.TeamID != TeamID) { continue; }
+                                if (!(character.AIController is HumanAIController)) { continue; }
+                                if (!HumanAIController.IsActive(character)) { continue; }
+                                foreach (var currentOrder in character.CurrentOrders)
+                                {
+                                    if (currentOrder.Order == null) { continue; }
+                                    if (currentOrder.Order.Category != OrderCategory.Operate) { continue; }
+                                    if (currentOrder.Order.Identifier != order.Identifier) { continue; }
+                                    if (currentOrder.Order.TargetEntity != order.TargetEntity) { continue; }
+                                    if (!currentOrder.Order.AutoDismiss) { continue; }
+                                    character.SetOrder(Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(currentOrder), currentOrder.ManualPriority, character, speak: speak, force: force);
+                                    break;
+                                }
+                            }
                             break;
-                        }
+                        case OrderCategory.Movement:
+                            // If there character has another movement order, dismiss that order
+                            OrderInfo? orderToReplace = null;
+                            foreach (var currentOrder in CurrentOrders)
+                            {
+                                if (currentOrder.Order == null) { continue; }
+                                if (currentOrder.Order.Category != OrderCategory.Movement) { continue; }
+                                orderToReplace = currentOrder;
+                                break;
+                            }
+                            if (orderToReplace.HasValue && orderToReplace.Value.Order.AutoDismiss)
+                            {
+                                SetOrder(Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(orderToReplace.Value), orderToReplace.Value.ManualPriority, this, speak: speak, force: force);
+                            }
+                            break;
                     }
-                    break;
-                case OrderCategory.Movement:
-                    // If there character has another movement order, dismiss that order
-                    OrderInfo? orderToReplace = null;
-                    foreach (var currentOrder in CurrentOrders)
-                    {
-                        if (currentOrder.Order == null) { continue; }
-                        if (currentOrder.Order.Category != OrderCategory.Movement) { continue; }
-                        orderToReplace = currentOrder;
-                        break;
-                    }
-                    if (orderToReplace.HasValue)
-                    {
-                        SetOrder(Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(orderToReplace.Value), orderToReplace.Value.ManualPriority, this, speak: speak, force: force);
-                    }
-                    break;
+                }
             }
 
             // Prevent adding duplicate orders
@@ -3624,7 +3633,7 @@ namespace Barotrauma
             {
                 if (attacker.TeamID == TeamID) 
                 {
-                    afflictions = afflictions.Where(a => !a.Prefab.IsBuff);
+                    afflictions = afflictions.Where(a => a.Prefab.IsBuff);
                     if (!afflictions.Any()) { return new AttackResult(); }                   
                 }
             }
@@ -3936,6 +3945,7 @@ namespace Barotrauma
             }
 
             SelectedConstruction = null;
+            SelectedCharacter = null;
             
             AnimController.ResetPullJoints();
 
@@ -4063,10 +4073,11 @@ namespace Barotrauma
 
         public void TeleportTo(Vector2 worldPos)
         {
+            CurrentHull = null;
             AnimController.CurrentHull = null;
             Submarine = null;
-            AnimController.SetPosition(ConvertUnits.ToSimUnits(worldPos), false);
-            AnimController.FindHull(worldPos, true);
+            AnimController.SetPosition(ConvertUnits.ToSimUnits(worldPos), lerp: false);
+            AnimController.FindHull(worldPos, setSubmarine: true);
         }
 
         public static void SaveInventory(Inventory inventory, XElement parentElement)

@@ -45,7 +45,8 @@ namespace Barotrauma
             {
                 DebugConsole.AddWarning($"Invalid deconstruction output in \"{parentDebugName}\": the output item \"{ItemIdentifier}\" has the out condition set, but is also set to copy the condition of the deconstructed item. Ignoring the out condition.");
             }
-            RequiredDeconstructor = element.GetAttributeStringArray("requireddeconstructor", new string[0]);
+            RequiredDeconstructor = element.GetAttributeStringArray("requireddeconstructor", 
+                element.Parent?.GetAttributeStringArray("requireddeconstructor", new string[0]) ?? new string[0]);
             RequiredOtherItem = element.GetAttributeStringArray("requiredotheritem", new string[0]);
             ActivateButtonText = element.GetAttributeString("activatebuttontext", string.Empty);
             InfoText = element.GetAttributeString("infotext", string.Empty);
@@ -915,7 +916,7 @@ namespace Barotrauma
                         string spriteFolder = "";
                         if (!subElement.GetAttributeString("texture", "").Contains("/"))
                         {
-                            spriteFolder = Path.GetDirectoryName(filePath);
+                            spriteFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                         }
 
                         CanSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
@@ -972,7 +973,7 @@ namespace Barotrauma
                             string iconFolder = "";
                             if (!subElement.GetAttributeString("texture", "").Contains("/"))
                             {
-                                iconFolder = Path.GetDirectoryName(filePath);
+                                iconFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                             }
                             UpgradePreviewSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
                             UpgradePreviewScale = subElement.GetAttributeFloat("scale", 1.0f);
@@ -983,7 +984,7 @@ namespace Barotrauma
                             string iconFolder = "";
                             if (!subElement.GetAttributeString("texture", "").Contains("/"))
                             {
-                                iconFolder = Path.GetDirectoryName(filePath);
+                                iconFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                             }
                             InventoryIcon = new Sprite(subElement, iconFolder, lazyLoad: true);
                         }
@@ -993,7 +994,7 @@ namespace Barotrauma
                             string iconFolder = "";
                             if (!subElement.GetAttributeString("texture", "").Contains("/"))
                             {
-                                iconFolder = Path.GetDirectoryName(filePath);
+                                iconFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                             }
                             MinimapIcon = new Sprite(subElement, iconFolder, lazyLoad: true);
                         }
@@ -1003,7 +1004,7 @@ namespace Barotrauma
                             string iconFolder = "";
                             if (!subElement.GetAttributeString("texture", "").Contains("/"))
                             {
-                                iconFolder = Path.GetDirectoryName(filePath);
+                                iconFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                             }
 
                             InfectedSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
@@ -1014,7 +1015,7 @@ namespace Barotrauma
                             string iconFolder = "";
                             if (!subElement.GetAttributeString("texture", "").Contains("/"))
                             {
-                                iconFolder = Path.GetDirectoryName(filePath);
+                                iconFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                             }
 
                             DamagedInfectedSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
@@ -1024,7 +1025,7 @@ namespace Barotrauma
                         string brokenSpriteFolder = "";
                         if (!subElement.GetAttributeString("texture", "").Contains("/"))
                         {
-                            brokenSpriteFolder = Path.GetDirectoryName(filePath);
+                            brokenSpriteFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                         }
 
                         var brokenSprite = new BrokenItemSprite(
@@ -1034,7 +1035,7 @@ namespace Barotrauma
                             subElement.GetAttributePoint("offset", Point.Zero));
 
                         int spriteIndex = 0;
-                        for (int i = 0; i < BrokenSprites.Count && BrokenSprites[i].MaxCondition < brokenSprite.MaxCondition; i++)
+                        for (int i = 0; i < BrokenSprites.Count && BrokenSprites[i].MaxConditionPercentage < brokenSprite.MaxConditionPercentage; i++)
                         {
                             spriteIndex = i;
                         }
@@ -1044,7 +1045,7 @@ namespace Barotrauma
                         string decorativeSpriteFolder = "";
                         if (!subElement.GetAttributeString("texture", "").Contains("/"))
                         {
-                            decorativeSpriteFolder = Path.GetDirectoryName(filePath);
+                            decorativeSpriteFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                         }
 
                         int groupID = 0;
@@ -1070,7 +1071,7 @@ namespace Barotrauma
                         string containedSpriteFolder = "";
                         if (!subElement.GetAttributeString("texture", "").Contains("/"))
                         {
-                            containedSpriteFolder = Path.GetDirectoryName(filePath);
+                            containedSpriteFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                         }
                         var containedSprite = new ContainedItemSprite(subElement, containedSpriteFolder, lazyLoad: true);
                         if (containedSprite.Sprite != null)

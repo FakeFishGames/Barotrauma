@@ -371,21 +371,22 @@ namespace Barotrauma
                             if (attackLimbIndex == 255 || Removed) { break; }
                             if (attackLimbIndex >= AnimController.Limbs.Length)
                             {
-                                DebugConsole.ThrowError($"Received invalid SetAttack/ExecuteAttack message. Limb index out of bounds (character: {Name}, limb index: {attackLimbIndex}, limb count: {AnimController.Limbs.Length})");
+                                DebugConsole.ThrowError($"Received invalid {(eventType == 4 ? "SetAttackTarget" : "ExecuteAttack")} message. Limb index out of bounds (character: {Name}, limb index: {attackLimbIndex}, limb count: {AnimController.Limbs.Length})");
                                 break;
                             }
                             Limb attackLimb = AnimController.Limbs[attackLimbIndex];
                             Limb targetLimb = null;
-                            if (!(FindEntityByID(targetEntityID) is IDamageable targetEntity))
+                            IDamageable targetEntity = FindEntityByID(targetEntityID) as IDamageable;
+                            if (targetEntity == null && eventType == 4)
                             {
-                                DebugConsole.ThrowError($"Received invalid SetAttack/ExecuteAttack message. Target entity not found (ID {targetEntityID})");
+                                DebugConsole.ThrowError($"Received invalid SetAttackTarget message. Target entity not found (ID {targetEntityID})");
                                 break;
                             }
                             if (targetEntity is Character targetCharacter)
                             {
                                 if (targetLimbIndex >= targetCharacter.AnimController.Limbs.Length)
                                 {
-                                    DebugConsole.ThrowError($"Received invalid SetAttack/ExecuteAttack message. Target limb index out of bounds (target character: {targetCharacter.Name}, limb index: {targetLimbIndex}, limb count: {targetCharacter.AnimController.Limbs.Length})");
+                                    DebugConsole.ThrowError($"Received invalid {(eventType == 4 ? "SetAttackTarget" : "ExecuteAttack")} message. Target limb index out of bounds (target character: {targetCharacter.Name}, limb index: {targetLimbIndex}, limb count: {targetCharacter.AnimController.Limbs.Length})");
                                     break;
                                 }
                                 targetLimb = targetCharacter.AnimController.Limbs[targetLimbIndex];

@@ -42,11 +42,11 @@ namespace Barotrauma
 #endif
             Console.WriteLine("Barotrauma Dedicated Server " + GameMain.Version +
                 " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")");
-            if(Console.IsOutputRedirected)
+            if (Console.IsOutputRedirected)
             {
                 Console.WriteLine("Output redirection detected; colored text and command input will be disabled.");
             }
-            if(Console.IsInputRedirected)
+            if (Console.IsInputRedirected)
             {
                 Console.WriteLine("Redirected input is detected but is not supported by this application. Input will be ignored.");
             }
@@ -154,9 +154,9 @@ namespace Barotrauma
 
             sb.AppendLine("Last debug messages:");
             DebugConsole.Clear();
-            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i-- )
+            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i--)
             {
-                sb.AppendLine("   "+DebugConsole.Messages[i].Time+" - "+DebugConsole.Messages[i].Text);
+                sb.AppendLine("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
             }
 
             string crashReport = sb.ToString();
@@ -167,7 +167,9 @@ namespace Barotrauma
             }
             Console.Write(crashReport);
 
-            File.WriteAllText(filePath,sb.ToString());
+            File.WriteAllText(filePath, sb.ToString());
+
+            if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging) { DebugConsole.SaveLogs(); }
 
             if (GameSettings.SendUserStatistics)
             {

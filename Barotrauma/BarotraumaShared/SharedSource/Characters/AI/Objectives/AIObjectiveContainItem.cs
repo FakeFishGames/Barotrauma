@@ -144,7 +144,6 @@ namespace Barotrauma
                 {
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager, getDivingGearIfNeeded: AllowToFindDivingGear)
                     {
-                        DialogueIdentifier = "dialogcannotreachtarget",
                         TargetName = container.Item.Name,
                         AbortCondition = obj =>
                             container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI(character) ||

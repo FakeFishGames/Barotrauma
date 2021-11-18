@@ -167,8 +167,8 @@ namespace Barotrauma.Particles
 
             if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) { return null; }
             if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) { return null; }
-            
-            if (particles[particleCount] == null) particles[particleCount] = new Particle();
+
+            if (particles[particleCount] == null) { particles[particleCount] = new Particle(); }
 
             particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess, drawOnTop, collisionIgnoreTimer, tracerPoints: tracerPoints);
 

@@ -107,7 +107,7 @@ namespace Barotrauma
                     {
                         foreach (RelatedItem requiredItem in kvp.Value)
                         {
-                            var getItemObjective = new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, true)
+                            var getItemObjective = new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, equip: true)
                             {
                                 AllowVariants = requiredItem.AllowVariants
                             };
@@ -219,8 +219,7 @@ namespace Barotrauma
                         {
                             // Don't stop in ladders, because we can't interact with other items while holding the ladders.
                             endNodeFilter = node => node.Waypoint.Ladders == null,
-                            // Allow repairing hatches and airlock doors.
-                            AllowGoingOutside = HumanAIController.ObjectiveManager.IsCurrentOrder<AIObjectiveRepairItems>() && Item.GetComponent<Door>() != null
+                            TargetName = Item.Name
                         };
                         if (repairTool != null)
                         {

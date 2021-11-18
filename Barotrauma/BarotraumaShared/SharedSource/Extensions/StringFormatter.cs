@@ -56,7 +56,7 @@ namespace Barotrauma
 
         public static string Format(this float value, int decimalCount)
         {
-            return value.ToString($"F{decimalCount.ToString()}", CultureInfo.InvariantCulture);
+            return value.ToString($"F{decimalCount}", CultureInfo.InvariantCulture);
         }
 
         public static string FormatSingleDecimal(this Vector2 value)

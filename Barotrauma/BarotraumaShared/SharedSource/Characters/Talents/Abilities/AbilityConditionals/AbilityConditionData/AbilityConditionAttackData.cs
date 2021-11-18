@@ -16,10 +16,12 @@ namespace Barotrauma.Abilities
         private readonly string itemIdentifier;
         private readonly string[] tags;
         private readonly WeaponType weapontype;
+        private bool ignoreNonHarmfulAttacks;
         public AbilityConditionAttackData(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
         {
             itemIdentifier = conditionElement.GetAttributeString("itemidentifier", "");
             tags = conditionElement.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true);
+            ignoreNonHarmfulAttacks = conditionElement.GetAttributeBool("ignorenonharmfulattacks", false);
             switch (conditionElement.GetAttributeString("weapontype", ""))
             {
                 case "melee":
@@ -35,8 +37,15 @@ namespace Barotrauma.Abilities
         {
             if (abilityObject is AbilityAttackData attackData)
             {
-                Item item = attackData?.SourceAttack?.SourceItem;
+                if (ignoreNonHarmfulAttacks && attackData.SourceAttack != null)
+                {
+                    if (attackData.SourceAttack.Stun <= 0.0f && (attackData.SourceAttack.Afflictions?.All(a => a.Key.Prefab.IsBuff) ?? true)) 
+                    { 
+                        return false;
+                    }
+                }
 
+                Item item = attackData?.SourceAttack?.SourceItem;
                 if (item == null)
                 {
                     DebugConsole.AddWarning($"Source Item was not found in {this} for talent {characterTalent.DebugIdentifier}!");
@@ -61,10 +70,13 @@ namespace Barotrauma.Abilities
 
                 switch (weapontype)
                 {
+                    // it is possible that an item that has both a melee and a projectile component will return true
+                    // even when not used as a melee/ranged weapon respectively
+                    // attackdata should contain data regarding whether the attack is melee or not
                     case WeaponType.Melee:
                         return item.GetComponent<MeleeWeapon>() != null;
                     case WeaponType.Ranged:
-                        return item.GetComponent<RangedWeapon>() != null;
+                        return item.GetComponent<Projectile>() != null;
                 }
 
                 return true;

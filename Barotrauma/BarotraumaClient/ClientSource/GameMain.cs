@@ -436,7 +436,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> Load(bool isSeparateThread)
+        private IEnumerable<CoroutineStatus> Load(bool isSeparateThread)
         {
             if (GameSettings.VerboseLogging)
             {
@@ -534,9 +534,8 @@ namespace Barotrauma
             Debug.WriteLine("sounds");
 
             int i = 0;
-            foreach (object crObj in SoundPlayer.Init())
+            foreach (CoroutineStatus status in SoundPlayer.Init())
             {
-                CoroutineStatus status = (CoroutineStatus)crObj;
                 if (status == CoroutineStatus.Success) break;
 
                 i++;
@@ -1000,10 +999,10 @@ namespace Barotrauma
                         }
                     }
 
-                    NetworkMember?.Update((float)Timing.Step);
-
                     GUI.Update((float)Timing.Step);
                 }
+
+                NetworkMember?.Update((float)Timing.Step);
 
                 CoroutineManager.Update((float)Timing.Step, Paused ? 0.0f : (float)Timing.Step);
 
@@ -1231,7 +1230,7 @@ namespace Barotrauma
         }
 
         static bool waitForKeyHit = true;
-        public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
+        public CoroutineHandle ShowLoading(IEnumerable<CoroutineStatus> loader, bool waitKeyHit = true)
         {
             waitForKeyHit = waitKeyHit;
             loadingScreenOpen = true;
@@ -1256,7 +1255,7 @@ namespace Barotrauma
             }
 
             if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
-            if (GameSettings.SaveDebugConsoleLogs) { DebugConsole.SaveLogs(); }
+            if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging) { DebugConsole.SaveLogs(); }
 
             base.OnExiting(sender, args);
         }

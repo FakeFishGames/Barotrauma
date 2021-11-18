@@ -438,7 +438,7 @@ namespace Barotrauma
                     for (int i = 0; i < Bodies.Count; i++)
                     {
                         Vector2 pos = FarseerPhysics.ConvertUnits.ToDisplayUnits(Bodies[i].Position);
-                        if (Submarine != null) pos += Submarine.Position;
+                        if (Submarine != null) { pos += Submarine.DrawPosition; }
                         pos.Y = -pos.Y;
                         GUI.DrawRectangle(spriteBatch,
                             pos,

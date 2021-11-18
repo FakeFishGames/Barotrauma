@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma
@@ -21,6 +22,8 @@ namespace Barotrauma
 
         public readonly Map Map;
         public readonly RadiationParams Params;
+
+        private Affliction radiationAffliction;
 
         private float radiationTimer;
 
@@ -93,6 +96,8 @@ namespace Barotrauma
             increasedAmount = lastIncrease = amount;
         }
 
+
+
         public void UpdateRadiation(float deltaTime)
         {
             if (!(GameMain.GameSession?.IsCurrentLocationRadiated() ?? false)) { return; }
@@ -105,6 +110,8 @@ namespace Barotrauma
                 return;
             }
 
+            radiationAffliction ??= new Affliction(AfflictionPrefab.RadiationSickness, Params.RadiationDamageAmount);
+
             radiationTimer = Params.RadiationDamageDelay;
 
             foreach (Character character in Character.CharacterList)
@@ -113,7 +120,11 @@ namespace Barotrauma
 
                 if (IsEntityRadiated(character))
                 {
-                    health.ApplyAffliction(null, new Affliction(AfflictionPrefab.RadiationSickness, Params.RadiationDamageAmount));
+                    foreach (Limb limb in character.AnimController.Limbs)
+                    {
+                        AttackResult attackResult = limb.AddDamage(limb.SimPosition, radiationAffliction.ToEnumerable(), playSound: false);
+                        character.CharacterHealth.ApplyDamage(limb, attackResult);
+                    }
                 }
             }
         }

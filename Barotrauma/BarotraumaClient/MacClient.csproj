@@ -6,7 +6,7 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma</Product>
-    <Version>0.15.13.0</Version>
+    <Version>0.15.15.0</Version>
     <Copyright>Copyright © FakeFish 2018-2020</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>Barotrauma</AssemblyName>
@@ -123,7 +123,7 @@
 
   <ItemGroup>
     <PackageReference Include="NVorbis" Version="0.8.6" />
-    <PackageReference Include="RestSharp" Version="106.6.10" />
+    <PackageReference Include="RestSharp" Version="106.12.0" />
   </ItemGroup>
 
   <!-- Sourced from https://stackoverflow.com/a/45248069 -->

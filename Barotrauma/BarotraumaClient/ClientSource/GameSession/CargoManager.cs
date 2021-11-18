@@ -40,12 +40,13 @@ namespace Barotrauma
 
         private List<SoldEntity> SoldEntities { get; } = new List<SoldEntity>();
 
+        // The bag slot is intentionally left out since we want to be able to sell items from there
+        private readonly List<InvSlotType> equipmentSlots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.Headset, InvSlotType.Card };
+
         public IEnumerable<Item> GetSellableItems(Character character)
         {
             if (character == null) { return new List<Item>(); }
             var confirmedSoldEntities = GetConfirmedSoldEntities();
-            // The bag slot is intentionally left out since we want to be able to sell items from there
-            var equipmentSlots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.Headset, InvSlotType.Card };
             return character.Inventory.FindAllItems(item =>
             {
                 if (!IsItemSellable(item, confirmedSoldEntities)) { return false; }
@@ -73,6 +74,7 @@ namespace Barotrauma
             return Submarine.MainSub.GetItems(true).FindAll(item =>
             {
                 if (!IsItemSellable(item, confirmedSoldEntities)) { return false; }
+                if (item.GetRootInventoryOwner() is Character) { return false; }
                 if (!item.Components.All(c => !(c is Holdable h) || !h.Attachable || !h.Attached)) { return false; }
                 if (!item.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null))) { return false; }
                 if (!ItemAndAllContainersInteractable(item)) { return false; }
@@ -101,7 +103,7 @@ namespace Barotrauma
         private bool IsItemSellable(Item item, IEnumerable<SoldEntity> confirmedSoldEntities)
         {
             if (!item.Prefab.CanBeSold) { return false; }
-            if (item.SpawnedInOutpost) { return false; }
+            if (item.SpawnedInCurrentOutpost) { return false; }
             if (!item.Prefab.AllowSellingWhenBroken && item.ConditionPercentage < 90.0f) { return false; }
             if (confirmedSoldEntities.Any(it => it.Item == item)) { return false; }
             if (item.OwnInventory?.Container is ItemContainer itemContainer)

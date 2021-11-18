@@ -142,7 +142,7 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        private IEnumerable<object> WaitForPick(Character picker, float requiredTime)
+        private IEnumerable<CoroutineStatus> WaitForPick(Character picker, float requiredTime)
         {
             activePicker = picker;
             picker.PickingItem = item;

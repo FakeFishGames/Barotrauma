@@ -531,6 +531,17 @@ namespace Barotrauma
             }
         }
 
+        public virtual void ForceLayoutRecalculation()
+        {
+            //This is very ugly but it gets the job done, it
+            //would be real nice to un-jank this some day
+            ForceUpdate();
+            ForceUpdate();
+            foreach (var child in Children) { child.ForceLayoutRecalculation(); }
+        }
+
+        public void ForceUpdate() => Update((float)Timing.Step);
+
         /// <summary>
         /// Updates all the children manually.
         /// </summary>
@@ -831,7 +842,7 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(SlideToPosition(duration, 0.0f, targetPos));
         }
 
-        private IEnumerable<object> SlideToPosition(float duration, float wait, Vector2 target)
+        private IEnumerable<CoroutineStatus> SlideToPosition(float duration, float wait, Vector2 target)
         {
             float t = 0.0f;
             var (startX, startY) = RectTransform.ScreenSpaceOffset.ToVector2();
@@ -855,7 +866,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        private IEnumerable<object> LerpAlpha(float to, float duration, bool removeAfter, float wait = 0.0f)
+        private IEnumerable<CoroutineStatus> LerpAlpha(float to, float duration, bool removeAfter, float wait = 0.0f)
         {
             State = ComponentState.None;
             float t = 0.0f;
@@ -894,7 +905,7 @@ namespace Barotrauma
             pulsateCoroutine = CoroutineManager.StartCoroutine(DoPulsate(startScale, endScale, duration), "Pulsate" + ToString());
         }
 
-        private IEnumerable<object> DoPulsate(Vector2 startScale, Vector2 endScale, float duration)
+        private IEnumerable<CoroutineStatus> DoPulsate(Vector2 startScale, Vector2 endScale, float duration)
         {
             float t = 0.0f;
             while (t < duration)

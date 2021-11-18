@@ -805,7 +805,27 @@ namespace Barotrauma
                 {
                     var treatmentButton = component.GetChild<GUIButton>();
                     if (!(treatmentButton?.UserData is ItemPrefab itemPrefab)) { continue; }
-                    treatmentButton.Enabled = Character.Controlled.Inventory.AllItems.Any(it => it.prefab == itemPrefab);  
+                    var matchingItem = Character.Controlled.Inventory.FindItem(it => it.prefab == itemPrefab, recursive: true);
+                    treatmentButton.Enabled = matchingItem != null;  
+                    if (treatmentButton.Enabled && treatmentButton.State == GUIComponent.ComponentState.Hover)
+                    {
+                        //highlight the slot the treatment item is in
+                        var rootContainer = matchingItem.GetRootContainer() ?? matchingItem;
+                        var index = Character.Controlled.Inventory.FindIndex(rootContainer);
+                        if (Character.Controlled.Inventory.visualSlots != null && index > -1 && index < Character.Controlled.Inventory.visualSlots.Length &&
+                            Character.Controlled.Inventory.visualSlots[index].HighlightTimer <= 0.0f)
+                        {
+                            Character.Controlled.Inventory.visualSlots[index].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f);
+                        }
+                    }
+                    if (matchingItem != null && !string.IsNullOrEmpty(treatmentButton.ToolTip)) { continue; }
+                    treatmentButton.ToolTip = $"‖color:255,255,255,255‖{itemPrefab.Name}‖color:end‖" + '\n' + itemPrefab.Description;
+                    if (treatmentButton.Enabled)
+                    {
+                        treatmentButton.ToolTip =
+                            $"‖color:gui.green‖[{TextManager.Get(PlayerInput.MouseButtonsSwapped() ? "input.rightmouse" : "input.leftmouse")}] {TextManager.Get("quickuseaction.usetreatment")}‖color:end‖" + '\n'
+                            + treatmentButton.RawToolTip;
+                    }
                     foreach (GUIComponent child in treatmentButton.Children)
                     {
                         child.Enabled = treatmentButton.Enabled;
@@ -1249,7 +1269,7 @@ namespace Barotrauma
             foreach (string treatment in treatmentSuitability.Keys.ToList())
             {
                 //prefer suggestions for items the player has
-                if (Character.Controlled.Inventory.FindItemByIdentifier(treatment) != null)
+                if (Character.Controlled.Inventory.FindItemByIdentifier(treatment, recursive: true) != null)
                 {
                     treatmentSuitability[treatment] *= 10.0f;
                 }
@@ -1288,12 +1308,11 @@ namespace Barotrauma
                 var innerFrame = new GUIButton(new RectTransform(Vector2.One, itemSlot.RectTransform, Anchor.Center, Pivot.Center, scaleBasis: ScaleBasis.Smallest), style: "SubtreeHeader")
                 {
                     UserData = item,
-                    ToolTip = $"‖color:255,255,255,255‖{item.Name}‖color:end‖" + '\n' + item.Description,
                     DisabledColor = Color.White * 0.1f,
                     OnClicked = (btn, userdata) =>
                     {
                         if (!(userdata is ItemPrefab itemPrefab)) { return false; }
-                        var item = Character.Controlled.Inventory.AllItems.FirstOrDefault(it => it.prefab == itemPrefab);
+                        var item = Character.Controlled.Inventory.FindItem(it => it.prefab == itemPrefab, recursive: true);
                         if (item == null) { return false; }
                         Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
                         item.ApplyTreatment(Character.Controlled, Character, targetLimb);
@@ -1445,7 +1464,7 @@ namespace Barotrauma
             var potentialTreatment = Inventory.DraggingItems.FirstOrDefault();
             if (potentialTreatment == null && GUI.MouseOn?.UserData is ItemPrefab itemPrefab)
             {
-                potentialTreatment = Character.Controlled.Inventory.AllItems.FirstOrDefault(it => it.prefab == itemPrefab);
+                potentialTreatment = Character.Controlled.Inventory.FindItem(it => it.prefab == itemPrefab, recursive: true);
             }
             potentialTreatment ??= Inventory.SelectedSlot?.Item;
 

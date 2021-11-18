@@ -95,7 +95,7 @@ namespace Barotrauma
                 MathHelper.Clamp(particlePos.Y, hull.WorldRect.Y - hull.WorldRect.Height, hull.WorldRect.Y));
         }
 
-        private IEnumerable<object> DimLight(LightSource light)
+        private IEnumerable<CoroutineStatus> DimLight(LightSource light)
         {
             float currBrightness = 1.0f;
             while (light.Color.A > 0.0f && flashDuration > 0.0f)

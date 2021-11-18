@@ -730,8 +730,6 @@ namespace Barotrauma
                 }
             }
             
-            body.Dir = Dir;
-
             float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
 
             bool hideLimb = Hide || 

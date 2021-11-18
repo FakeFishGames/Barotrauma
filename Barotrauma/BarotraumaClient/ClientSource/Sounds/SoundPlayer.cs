@@ -147,7 +147,7 @@ namespace Barotrauma
                    MathUtils.NearlyEqual(rangeA, rangeB);
         }
 
-        public static IEnumerable<object> Init()
+        public static IEnumerable<CoroutineStatus> Init()
         {
             OverrideMusicType = null;
 
@@ -826,7 +826,7 @@ namespace Barotrauma
                 //find appropriate music for the current situation
                 string currentMusicType = GetCurrentMusicType();
                 float currentIntensity = GameMain.GameSession?.EventManager != null ?
-                    GameMain.GameSession.EventManager.CurrentIntensity * 100.0f : 0.0f;
+                    GameMain.GameSession.EventManager.MusicIntensity * 100.0f : 0.0f;
 
                 IEnumerable<BackgroundMusic> suitableMusic = GetSuitableMusicClips(currentMusicType, currentIntensity);
                 int mainTrackIndex = 0;

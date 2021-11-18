@@ -175,12 +175,12 @@ namespace Barotrauma
                 }
             }
 
-            float displayCondition = FakeBroken ? 0.0f : condition;
+            float displayCondition = FakeBroken ? 0.0f : ConditionPercentage;
             for (int i = 0; i < Prefab.BrokenSprites.Count;i++)
             {
                 if (Prefab.BrokenSprites[i].FadeIn) { continue; }
-                float minCondition = i > 0 ? Prefab.BrokenSprites[i - i].MaxCondition : 0.0f;
-                if (displayCondition <= minCondition || displayCondition <= Prefab.BrokenSprites[i].MaxCondition)
+                float minCondition = i > 0 ? Prefab.BrokenSprites[i - i].MaxConditionPercentage : 0.0f;
+                if (displayCondition <= minCondition || displayCondition <= Prefab.BrokenSprites[i].MaxConditionPercentage)
                 {
                     activeSprite = Prefab.BrokenSprites[i].Sprite;
                     break;
@@ -284,8 +284,8 @@ namespace Barotrauma
                 {
                     if (Prefab.BrokenSprites[i].FadeIn)
                     {
-                        float min = i > 0 ? Prefab.BrokenSprites[i - i].MaxCondition : 0.0f;
-                        float max = Prefab.BrokenSprites[i].MaxCondition;
+                        float min = i > 0 ? Prefab.BrokenSprites[i - i].MaxConditionPercentage : 0.0f;
+                        float max = Prefab.BrokenSprites[i].MaxConditionPercentage;
                         fadeInBrokenSpriteAlpha = 1.0f - ((displayCondition - min) / (max - min));
                         if (fadeInBrokenSpriteAlpha > 0.0f && fadeInBrokenSpriteAlpha <= 1.0f)
                         {
@@ -293,7 +293,7 @@ namespace Barotrauma
                         }
                         continue;
                     }
-                    if (displayCondition <= Prefab.BrokenSprites[i].MaxCondition)
+                    if (displayCondition <= Prefab.BrokenSprites[i].MaxConditionPercentage)
                     {
                         activeSprite = Prefab.BrokenSprites[i].Sprite;
                         drawOffset = Prefab.BrokenSprites[i].Offset.ToVector2() * Scale;
@@ -1632,7 +1632,7 @@ namespace Barotrauma
             {
                 item = new Item(itemPrefab, pos, sub, id: itemId)
                 {
-                    SpawnedInOutpost = spawnedInOutpost,
+                    SpawnedInCurrentOutpost = spawnedInOutpost,
                     AllowStealing = allowStealing,
                     Quality = quality
                 };

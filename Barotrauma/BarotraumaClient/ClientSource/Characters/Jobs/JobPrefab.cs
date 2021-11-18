@@ -30,7 +30,7 @@ namespace Barotrauma
             foreach (SkillPrefab skill in Skills)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillContainer.RectTransform),
-                    "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + skill.Identifier), (int)skill.LevelRange.X + " - " + (int)skill.LevelRange.Y), 
+                    "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + skill.Identifier), (int)skill.LevelRange.Start + " - " + (int)skill.LevelRange.End), 
                     font: GUI.SmallFont);
             }
 

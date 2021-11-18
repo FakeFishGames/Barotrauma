@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class TalentTree
+    class TalentTree : IPrefab, IDisposable
     {
         public enum TalentTreeStageState
         {
@@ -16,7 +16,7 @@ namespace Barotrauma
             Highlighted
         }
 
-        public static readonly Dictionary<string, TalentTree> JobTalentTrees = new Dictionary<string, TalentTree>();
+        public static readonly PrefabCollection<TalentTree> JobTalentTrees = new PrefabCollection<TalentTree>();
 
         public readonly List<TalentSubTree> TalentSubTrees = new List<TalentSubTree>();
 
@@ -26,13 +26,21 @@ namespace Barotrauma
             private set;
         }
 
+        public string OriginalName => Identifier;
+
+        public string Identifier { get; }
+
+        public string FilePath { get; }
+
+        public ContentPackage ContentPackage { get; set; }
+
         public TalentTree(XElement element, string filePath)
         {
             ConfigElement = element;
+            FilePath = filePath;
+            Identifier = element.GetAttributeString("jobidentifier", "").ToLowerInvariant();
 
-            string jobIdentifier = element.GetAttributeString("jobidentifier", "").ToLowerInvariant();
-
-            if (string.IsNullOrEmpty(jobIdentifier))
+            if (string.IsNullOrEmpty(Identifier))
             {
                 DebugConsole.ThrowError($"No job defined for talent tree in \"{filePath}\"!");
                 return;
@@ -50,19 +58,14 @@ namespace Barotrauma
                 TalentPrefab talentPrefab = TalentPrefab.TalentPrefabs.Find(c => c.Identifier.Equals(talent, StringComparison.OrdinalIgnoreCase));
                 if (talentPrefab == null)
                 {
-                    DebugConsole.AddWarning($"Talent tree for job {jobIdentifier} contains non-existent talent {talent}! Talent tree not added.");
+                    DebugConsole.AddWarning($"Talent tree for job {Identifier} contains non-existent talent {talent}! Talent tree not added.");
                     return;
                 }
                 if (!duplicateSet.Add(talent))
                 {
-                    DebugConsole.ThrowError($"Talent tree for job {jobIdentifier} contains duplicate talent {talent}! Talent tree not added.");
+                    DebugConsole.ThrowError($"Talent tree for job {Identifier} contains duplicate talent {talent}! Talent tree not added.");
                     return;
                 }
-            }
-
-            if (!JobTalentTrees.TryAdd(jobIdentifier, this))
-            {
-                DebugConsole.ThrowError($"Could not add talent tree for job {jobIdentifier}! A talent tree for this job is already likely defined");
             }
         }
 
@@ -78,37 +81,40 @@ namespace Barotrauma
             XDocument doc = XMLExtensions.TryLoadXml(file.Path);
             if (doc == null) { return; }
 
-            var rootElement = doc.Root;
-            switch (rootElement.Name.ToString().ToLowerInvariant())
+            void loadSinglePrefab(XElement element, bool isOverride)
             {
-                case "talenttree":
-                    new TalentTree(rootElement, file.Path);
-                    break;
-                case "talenttrees":
-                    foreach (var element in rootElement.Elements())
-                    {
-                        if (element.IsOverride())
-                        {
-                            var treeElement = element.GetChildElement("talenttree");
-                            if (treeElement != null)
-                            {
-                                new TalentTree(rootElement, file.Path);
-                            }
-                            else
-                            {
-                                DebugConsole.ThrowError($"Cannot find a talent tree element from the children of the override element defined in {file.Path}");
-                            }
-                        }
-                        else
-                        {
-                            new TalentTree(element, file.Path);
-                        }
-                    }
-                    break;
-                default:
-                    DebugConsole.ThrowError($"Invalid XML root element: '{rootElement.Name}' in {file.Path}");
-                    break;
+                JobTalentTrees.Add(new TalentTree(element, file.Path) { ContentPackage = file.ContentPackage }, isOverride);
             }
+
+            void loadMultiplePrefabs(XElement element, bool isOverride)
+            {
+                foreach (var subElement in element.Elements())
+                {
+                    interpretElement(subElement, isOverride);
+                }
+            }
+
+            void interpretElement(XElement subElement, bool isOverride)
+            {
+                if (subElement.IsOverride())
+                {
+                    loadMultiplePrefabs(subElement, true);
+                }
+                else if (subElement.Name.LocalName.Equals("talenttrees", StringComparison.OrdinalIgnoreCase))
+                {
+                    loadMultiplePrefabs(subElement, isOverride);
+                }
+                else if (subElement.Name.LocalName.Equals("talenttree", StringComparison.OrdinalIgnoreCase))
+                {
+                    loadSinglePrefab(subElement, isOverride);
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Invalid XML element for the {nameof(TalentTree)} prefab type: '{subElement.Name}' in {file.Path}");
+                }
+            }
+
+            interpretElement(doc.Root, false);
         }
 
         public static void LoadAll(IEnumerable<ContentFile> files)
@@ -190,6 +196,8 @@ namespace Barotrauma
 
             foreach (var subTree in talentTree.TalentSubTrees)
             {
+                if (subTree.ForceUnlock && subTree.TalentOptionStages.Any(option => option.Talents.Any(t => t.Identifier == talentIdentifier))) { return true; }
+
                 foreach (var talentOptionStage in subTree.TalentOptionStages)
                 {
                     bool hasTalentInThisTier = talentOptionStage.Talents.Any(t => selectedTalents.Contains(t.Identifier));
@@ -220,7 +228,7 @@ namespace Barotrauma
                 canStillUnlock = false;
                 foreach (string talent in selectedTalents)
                 {
-                    if (IsViableTalentForCharacter(controlledCharacter, talent, viableTalents))
+                    if (!viableTalents.Contains(talent) && IsViableTalentForCharacter(controlledCharacter, talent, viableTalents))
                     {
                         viableTalents.Add(talent);
                         canStillUnlock = true;
@@ -229,6 +237,14 @@ namespace Barotrauma
             }
             return viableTalents;
         }
+
+        private bool disposed = false;
+        public void Dispose()
+        {
+            if (disposed) { return; }
+            disposed = true;
+            JobTalentTrees.Remove(this);
+        }
     }
 
     class TalentSubTree
@@ -236,6 +252,8 @@ namespace Barotrauma
         public string Identifier { get; }
 
         public string DisplayName { get; }
+
+        public bool ForceUnlock;
 
         public readonly List<TalentOption> TalentOptionStages = new List<TalentOption>();
 

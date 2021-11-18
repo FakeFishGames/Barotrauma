@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Barotrauma
 {
-    class Entity : ISpatialEntity
+    abstract class Entity : ISpatialEntity
     {
         public const ushort NullEntityID = 0;
         public const ushort EntitySpawnerID = ushort.MaxValue;
@@ -16,8 +16,10 @@ namespace Barotrauma
 
         public const ushort ReservedIDStart = ushort.MaxValue - 3;
 
+        public const ushort MaxEntityCount = ushort.MaxValue - 2; //ushort.MaxValue - 2 because 0 and ushort.MaxValue are reserved values
+
         private static Dictionary<ushort, Entity> dictionary = new Dictionary<ushort, Entity>();
-        public static IEnumerable<Entity> GetEntities()
+        public static IReadOnlyCollection<Entity> GetEntities()
         {
             return dictionary.Values;
         }
@@ -28,11 +30,9 @@ namespace Barotrauma
 
         protected AITarget aiTarget;
 
-        private bool idFreed;
+        public bool Removed { get; private set; }
 
-        public virtual bool Removed { get; private set; }
-
-        public bool IdFreed => idFreed;
+        public bool IdFreed { get; private set; }
 
         public readonly ushort ID;
 
@@ -75,43 +75,65 @@ namespace Barotrauma
             this.Submarine = submarine;
             spawnTime = Timing.TotalTime;
 
-            if (id != NullEntityID && dictionary.ContainsKey(id))
-            {
-                throw new Exception($"ID {id} is taken by {dictionary[id]}");
-            }
-
             //give a unique ID
             ID = DetermineID(id, submarine);
-            
+
+            if (dictionary.ContainsKey(ID))
+            {
+                throw new Exception($"ID {ID} is taken by {dictionary[ID]}");
+            }
+
             dictionary.Add(ID, this);
         }
 
         protected virtual ushort DetermineID(ushort id, Submarine submarine)
         {
-            return id != NullEntityID ?
-                id :
-                FindFreeID(submarine == null ? (ushort)1 : submarine.IdOffset);
+            return id != NullEntityID
+                ? id
+                : FindFreeId(submarine == null ? (ushort)1 : submarine.IdOffset);
         }
 
-        public static ushort FindFreeID(ushort idOffset = 0)
+        private static ushort FindFreeId(ushort idOffset)
         {
-            //ushort.MaxValue - 2 because 0 and ushort.MaxValue are reserved values
-            if (dictionary.Count >= ushort.MaxValue - 2)
+            if (dictionary.Count >= MaxEntityCount)
             {
-                throw new Exception("Maximum amount of entities (" + (ushort.MaxValue - 1) + ") reached!");
+                throw new Exception($"Maximum amount of entities ({MaxEntityCount}) reached!");
             }
 
-            idOffset = Math.Max(idOffset, (ushort)1);
-            bool IDfound;
             ushort id = idOffset;
-            do
+            while (id < ReservedIDStart)
             {
-                id += 1;
-                IDfound = dictionary.ContainsKey(id);
-            } while (IDfound || id == NullEntityID || id > ReservedIDStart);
+                if (!dictionary.ContainsKey(id)) { break; }
+                id++;
+            };
             return id;
         }
         
+        /// <summary>
+        /// Finds a contiguous block of free IDs of at least the given size
+        /// </summary>
+        /// <returns>The first ID in the found block, or zero if none are found</returns>
+        public static int FindFreeIdBlock(int minBlockSize)
+        {
+            int currentBlockSize = 0;
+            for (int i = 1; i < ReservedIDStart; i++)
+            {
+                if (dictionary.ContainsKey((ushort)i))
+                {
+                    currentBlockSize = 0;
+                }
+                else
+                {
+                    currentBlockSize++;
+                    if (currentBlockSize >= minBlockSize)
+                    {
+                        return i - (currentBlockSize-1);
+                    }
+                }
+            }
+            return 0;
+        }
+
         /// <summary>
         /// Find an entity based on the ID
         /// </summary>
@@ -134,11 +156,11 @@ namespace Barotrauma
                 }
                 catch (Exception exception)
                 {
-                    DebugConsole.ThrowError("Error while removing entity \"" + e.ToString() + "\"", exception);
+                    DebugConsole.ThrowError($"Error while removing entity \"{e}\"", exception);
                     GameAnalyticsManager.AddErrorEventOnce(
-                        "Entity.RemoveAll:Exception" + e.ToString(),
+                        $"Entity.RemoveAll:Exception{e}",
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Error while removing entity \"" + e.ToString() + " (" + exception.Message + ")\n" + exception.StackTrace.CleanupStackTrace());
+                        $"Error while removing entity \"{e} ({exception.Message})\n{exception.StackTrace.CleanupStackTrace()}");
                 }
             }
             StringBuilder errorMsg = new StringBuilder();
@@ -167,7 +189,7 @@ namespace Barotrauma
                     }
                     catch (Exception exception)
                     {
-                        DebugConsole.ThrowError("Error while removing item \"" + item.ToString() + "\"", exception);
+                        DebugConsole.ThrowError($"Error while removing item \"{item}\"", exception);
                     }
                 }
                 Item.ItemList.Clear();
@@ -189,7 +211,7 @@ namespace Barotrauma
                     }
                     catch (Exception exception)
                     {
-                        DebugConsole.ThrowError("Error while removing character \"" + character.ToString() + "\"", exception);
+                        DebugConsole.ThrowError($"Error while removing character \"{character}\"", exception);
                     }
                 }
                 Character.CharacterList.Clear();
@@ -214,35 +236,33 @@ namespace Barotrauma
         /// </summary>
         public void FreeID()
         {
-            DebugConsole.Log("Removing entity " + ToString() + " (" + ID + ") from entity dictionary.");
+            if (IdFreed) { return; }
+            DebugConsole.Log($"Removing entity {ToString()} ({ID}) from entity dictionary.");
             if (!dictionary.TryGetValue(ID, out Entity existingEntity))
             {
-                DebugConsole.Log("Entity " + ToString() + " (" + ID + ") not present in entity dictionary.");
+                DebugConsole.ThrowError($"Entity {ToString()} ({ID}) not present in entity dictionary.");
                 GameAnalyticsManager.AddErrorEventOnce(
-                    "Entity.FreeID:EntityNotFound" + ID,
+                    $"Entity.FreeID:EntityNotFound{ID}",
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Entity " + ToString() + " (" + ID + ") not present in entity dictionary.\n" + Environment.StackTrace.CleanupStackTrace());
+                    $"Entity {ToString()} ({ID}) not present in entity dictionary.\n{Environment.StackTrace.CleanupStackTrace()}");
             }
             else if (existingEntity != this)
             {
-                DebugConsole.Log("Entity ID mismatch in entity dictionary. Entity " + existingEntity + " had the ID " + ID + " (expecting " + ToString() + ")");
+                DebugConsole.ThrowError($"Entity ID mismatch in entity dictionary. Entity {existingEntity} had the ID {ID} (expecting {ToString()})");
                 GameAnalyticsManager.AddErrorEventOnce("Entity.FreeID:EntityMismatch" + ID,
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Entity ID mismatch in entity dictionary. Entity " + existingEntity + " had the ID " + ID + " (expecting " + ToString() + ")");
-
-                foreach (var keyValuePair in dictionary.Where(kvp => kvp.Value == this).ToList())
-                {
-                    dictionary.Remove(keyValuePair.Key);
-                }
+                    $"Entity ID mismatch in entity dictionary. Entity {existingEntity} had the ID {ID} (expecting {ToString()})");
             }
-
-            dictionary.Remove(ID);
-            idFreed = true;
+            else
+            {
+                dictionary.Remove(ID);
+            }
+            IdFreed = true;
         }
 
         public virtual void Remove()
         {
-            if (!idFreed) FreeID();
+            FreeID();
             Removed = true;
         }
 
@@ -255,8 +275,8 @@ namespace Barotrauma
             List<string> lines = new List<string>();
             for (int i = 0; i < count; i++)
             {
-                lines.Add(entities[i].ID + ": " + entities[i].ToString());
-                DebugConsole.ThrowError(entities[i].ID + ": " + entities[i].ToString());
+                lines.Add($"{entities[i].ID}: {entities[i]}");
+                DebugConsole.ThrowError($"{entities[i].ID}: {entities[i]}");
             }
 
             if (!string.IsNullOrWhiteSpace(filename))

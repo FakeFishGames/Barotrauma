@@ -170,6 +170,7 @@ namespace Barotrauma
         public bool HasOptions => (IsPrefab ? Options : Prefab.Options).Length > 1;
         public bool IsPrefab { get; private set; }
         public readonly bool MustManuallyAssign;
+        public readonly bool AutoDismiss;
 
         public readonly OrderTarget TargetPosition;
 
@@ -363,6 +364,7 @@ namespace Barotrauma
             MustManuallyAssign = orderElement.GetAttributeBool("mustmanuallyassign", false);
             IsIgnoreOrder = Identifier == "ignorethis" || Identifier == "unignorethis";
             DrawIconWhenContained = orderElement.GetAttributeBool("displayiconwhencontained", false);
+            AutoDismiss = orderElement.GetAttributeBool("autodismiss", Category == OrderCategory.Movement);
         }
 
         /// <summary>

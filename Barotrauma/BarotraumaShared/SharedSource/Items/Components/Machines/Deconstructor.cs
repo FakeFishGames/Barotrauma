@@ -221,7 +221,7 @@ namespace Barotrauma.Items.Components
                         if (targetItem == otherItem) { continue; }
                         if (deconstructProduct.RequiredOtherItem.Any(r => otherItem.HasTag(r) || r.Equals(otherItem.Prefab.Identifier, StringComparison.OrdinalIgnoreCase)))
                         {
-                            user.CheckTalents(AbilityEffectType.OnGeneticMaterialCombinedOrRefined);
+                            user?.CheckTalents(AbilityEffectType.OnGeneticMaterialCombinedOrRefined);
                             foreach (Character character in Character.GetFriendlyCrew(user))
                             {
                                 character.CheckTalents(AbilityEffectType.OnCrewGeneticMaterialCombinedOrRefined);
@@ -264,6 +264,8 @@ namespace Barotrauma.Items.Components
                 {
                     Entity.Spawner.AddToSpawnQueue(itemPrefab, outputContainer.Inventory, condition, onSpawned: (Item spawnedItem) =>
                     {
+                        spawnedItem.StolenDuringRound = targetItem.StolenDuringRound;
+                        spawnedItem.AllowStealing = targetItem.AllowStealing;
                         for (int i = 0; i < outputContainer.Capacity; i++)
                         {
                             var containedItem = outputContainer.Inventory.GetItemAt(i);
@@ -283,7 +285,13 @@ namespace Barotrauma.Items.Components
                 foreach (ItemContainer ic in targetItem.GetComponents<ItemContainer>())
                 {
                     if (ic?.Inventory == null || ic.RemoveContainedItemsOnDeconstruct) { continue; }
-                    ic.Inventory.AllItemsMod.ForEach(containedItem => outputContainer.Inventory.TryPutItem(containedItem, user: null));
+                    foreach (Item containedItem in ic.Inventory.AllItemsMod)
+                    {
+                        if (!outputContainer.Inventory.TryPutItem(containedItem, user: null))
+                        {
+                            containedItem.Drop(dropper: null);
+                        }
+                    }
                 }
                 inputContainer.Inventory.RemoveItem(targetItem);
                 Entity.Spawner.AddToRemoveQueue(targetItem);

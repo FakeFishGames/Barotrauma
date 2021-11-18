@@ -204,11 +204,7 @@ namespace Barotrauma
                     pathFinder.ApplyPenaltyToOutsideNodes = character.Submarine != null && character.PressureProtection <= 0;
                     var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", minGapSize, startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility);
                     bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null || character.Submarine != null && findPathTimer < -1 && Math.Abs(character.AnimController.TargetMovement.Combine()) <= 0;
-                    if (newPath.Unreachable || newPath.Nodes.None())
-                    {
-                        useNewPath = false;
-                    }
-                    else if (!useNewPath && currentPath != null && currentPath.CurrentNode != null)
+                    if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                     {
                         // Check if the new path is the same as the old, in which case we just ignore it and continue using the old path (or the progress would reset).
                         if (IsIdenticalPath())

@@ -679,7 +679,7 @@ namespace Barotrauma
             return true;
         }
 
-        private IEnumerable<object> SelectScreenWithWaitCursor(Screen screen)
+        private IEnumerable<CoroutineStatus> SelectScreenWithWaitCursor(Screen screen)
         {
             GUI.SetCursorWaiting();
             //tiny delay to get the cursor to render
@@ -719,7 +719,7 @@ namespace Barotrauma
         }
 #endregion
 
-        public void QuickStart(bool fixedSeed = false, string sub = null)
+        public void QuickStart(bool fixedSeed = false, string sub = null, float difficulty = 40, LevelGenerationParams levelGenerationParams = null)
         {
             if (fixedSeed)
             {
@@ -751,7 +751,7 @@ namespace Barotrauma
                 GameModePreset.DevSandbox,
                 missionPrefabs: null);
             //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
-            gamesession.StartRound(fixedSeed ? "abcd" : ToolBox.RandomSeed(8), difficulty: 40);
+            gamesession.StartRound(fixedSeed ? "abcd" : ToolBox.RandomSeed(8), difficulty, levelGenerationParams);
             GameMain.GameScreen.Select();
             // TODO: modding support
             string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic", "securityofficer", "medicaldoctor" };
@@ -890,7 +890,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> WaitForSubmarineHashCalculations(GUIMessageBox messageBox)
+        private IEnumerable<CoroutineStatus> WaitForSubmarineHashCalculations(GUIMessageBox messageBox)
         {
             string originalText = messageBox.Text.Text;
             int doneCount = 0;
@@ -1452,7 +1452,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> WairForRemoteContentReceived()
+        private IEnumerable<CoroutineStatus> WairForRemoteContentReceived()
         {
             while (true)
             {

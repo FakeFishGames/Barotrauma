@@ -280,7 +280,7 @@ namespace Barotrauma
             }
 
             msg.Write(body == null ? (byte)0 : (byte)body.BodyType);
-            msg.Write(SpawnedInOutpost);
+            msg.Write(SpawnedInCurrentOutpost);
             msg.Write(AllowStealing);
             msg.WriteRangedInteger(Quality, 0, Items.Components.Quality.MaxQuality);
 

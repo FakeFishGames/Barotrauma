@@ -106,9 +106,9 @@ namespace Barotrauma.Networking
 
         public void CreatePreviewWindow(GUIFrame frame)
         {
-            frame.ClearChildren();
-
             if (frame == null) { return; }
+
+            frame.ClearChildren();
 
             var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform), ServerName, font: GUI.LargeFont)
             {

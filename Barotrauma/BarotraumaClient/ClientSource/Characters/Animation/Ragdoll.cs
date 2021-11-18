@@ -36,7 +36,7 @@ namespace Barotrauma
                     CharacterStateInfo serverPos = character.MemState.Last();
                     if (!character.isSynced)
                     {
-                        SetPosition(serverPos.Position, false);
+                        SetPosition(serverPos.Position, lerp: false);
                         Collider.LinearVelocity = Vector2.Zero;
                         character.MemLocalState.Clear();
                         character.LastNetworkUpdateID = serverPos.ID;
@@ -159,7 +159,7 @@ namespace Barotrauma
 
                 if (!character.isSynced)
                 {
-                    SetPosition(serverPos.Position, false);
+                    SetPosition(serverPos.Position, lerp: false);
                     Collider.LinearVelocity = Vector2.Zero;
                     character.MemLocalState.Clear();
                     character.LastNetworkUpdateID = serverPos.ID;
@@ -581,10 +581,10 @@ namespace Barotrauma
             if (this is HumanoidAnimController humanoid)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(humanoid.RightHandIKPos);
-                if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.Position; }
+                if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.DrawPosition; }
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUI.Style.Green, true);
                 pos = ConvertUnits.ToDisplayUnits(humanoid.LeftHandIKPos);
-                if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.Position; }
+                if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.DrawPosition; }
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUI.Style.Green, true);
 
                 Vector2 aimPos = humanoid.AimSourceWorldPos;

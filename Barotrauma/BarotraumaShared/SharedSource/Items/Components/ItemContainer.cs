@@ -470,7 +470,9 @@ namespace Barotrauma.Items.Components
             if (!AllowDragAndDrop && user != null) { return false; }
             if (!slotRestrictions.Any(s => s.MatchesItem(item))) { return false; }
             if (user != null && !user.CanAccessInventory(Inventory)) { return false; }
-            
+            //genetic materials use special logic for combining, don't allow doing it by placing them inside each other here
+            if (item.GetComponent<GeneticMaterial>() != null) { return false; }
+
             if (Inventory.TryPutItem(item, user))
             {            
                 IsActive = true;

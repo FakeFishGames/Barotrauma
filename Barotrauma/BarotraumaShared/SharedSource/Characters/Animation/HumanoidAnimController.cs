@@ -1048,7 +1048,8 @@ namespace Barotrauma
 
         void UpdateClimbing()
         {
-            if (character.SelectedConstruction == null || character.SelectedConstruction.GetComponent<Ladder>() == null || character.IsIncapacitated)
+            var ladder = character.SelectedConstruction?.GetComponent<Ladder>();
+            if (ladder == null || character.IsIncapacitated)
             {
                 Anim = Animation.None;
                 return;
@@ -1075,22 +1076,29 @@ namespace Barotrauma
             if (leftHand == null || rightHand == null || head == null || torso == null) { return; }
 
             Vector2 ladderSimPos = ConvertUnits.ToSimUnits(
-                character.SelectedConstruction.Rect.X + character.SelectedConstruction.Rect.Width / 2.0f,
-                character.SelectedConstruction.Rect.Y);
+                ladder.Item.Rect.X + ladder.Item.Rect.Width / 2.0f,
+                ladder.Item.Rect.Y);
 
-            Vector2 ladderSimSize = ConvertUnits.ToSimUnits(character.SelectedConstruction.Rect.Size.ToVector2());
+            Vector2 ladderSimSize = ConvertUnits.ToSimUnits(ladder.Item.Rect.Size.ToVector2());
+
+            float lowestLadderSimPos = ladderSimPos.Y - ladderSimPos.Y;
+            var lowestNearbyLadder = GetLowestNearbyLadder(ladder);
+            if (lowestNearbyLadder != null && lowestNearbyLadder != ladder)
+            {
+                ladderSimSize.Y = ConvertUnits.ToSimUnits(ladder.Item.WorldRect.Y - (lowestNearbyLadder.Item.WorldRect.Y - lowestNearbyLadder.Item.Rect.Size.Y));
+            }
 
             float stepHeight = ConvertUnits.ToSimUnits(30.0f);
 
-            if (currentHull == null && character.SelectedConstruction.Submarine != null)
+            if (currentHull == null && ladder.Item.Submarine != null)
             {
-                ladderSimPos += character.SelectedConstruction.Submarine.SimPosition;
+                ladderSimPos += ladder.Item.Submarine.SimPosition;
             }
-            else if (currentHull?.Submarine != null && currentHull.Submarine != character.SelectedConstruction.Submarine && character.SelectedConstruction.Submarine != null)
+            else if (currentHull?.Submarine != null && currentHull.Submarine != ladder.Item.Submarine && ladder.Item.Submarine != null)
             {
-                ladderSimPos += character.SelectedConstruction.Submarine.SimPosition - currentHull.Submarine.SimPosition;
+                ladderSimPos += ladder.Item.Submarine.SimPosition - currentHull.Submarine.SimPosition;
             }
-            else if (currentHull?.Submarine != null && character.SelectedConstruction.Submarine == null)
+            else if (currentHull?.Submarine != null && ladder.Item.Submarine == null)
             {
                 ladderSimPos -= currentHull.Submarine.SimPosition;
             }
@@ -1174,25 +1182,35 @@ namespace Barotrauma
             float movementFactor = (handPos.Y / stepHeight) * (float)Math.PI;
             movementFactor = 0.8f + (float)Math.Abs(Math.Sin(movementFactor));
 
-            Vector2 subSpeed = currentHull != null || character.SelectedConstruction.Submarine == null
-                ? Vector2.Zero : character.SelectedConstruction.Submarine.Velocity;
+            Vector2 subSpeed = currentHull != null || ladder.Item.Submarine == null
+                ? Vector2.Zero : ladder.Item.Submarine.Velocity;
 
             Vector2 climbForce = new Vector2(0.0f, movement.Y + 0.3f) * movementFactor;
+            //reached the top of the ladders -> can't go further up
             if (character.SimPosition.Y > ladderSimPos.Y) { climbForce.Y = Math.Min(0.0f, climbForce.Y); }
+            //reached the bottom -> can't go further down
+            float minHeightFromFloor = ColliderHeightFromFloor / 2 + Collider.height;
+            if (floorFixture != null && 
+                !floorFixture.CollisionCategories.HasFlag(Physics.CollisionStairs) &&
+                !floorFixture.CollisionCategories.HasFlag(Physics.CollisionPlatform) &&
+                character.SimPosition.Y < standOnFloorY + minHeightFromFloor) 
+            { 
+                climbForce.Y = MathHelper.Clamp((standOnFloorY + minHeightFromFloor - character.SimPosition.Y) * 5.0f, climbForce.Y, 1.0f); 
+            }
 
             //apply forces to the collider to move the Character up/down
             Collider.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * Collider.Mass);
             float movementMultiplier = targetMovement.Y < 0 ? 0 : 1;
             head.body.SmoothRotate(MathHelper.PiOver4 * movementMultiplier * Dir, WalkParams.HeadTorque);
             
-            if (!character.SelectedConstruction.Prefab.Triggers.Any())
+            if (!ladder.Item.Prefab.Triggers.Any())
             {
                 character.SelectedConstruction = null;
                 return;
             }
 
-            Rectangle trigger = character.SelectedConstruction.Prefab.Triggers.FirstOrDefault();
-            trigger = character.SelectedConstruction.TransformTrigger(trigger);
+            Rectangle trigger = ladder.Item.Prefab.Triggers.FirstOrDefault();
+            trigger = ladder.Item.TransformTrigger(trigger);
 
             bool isRemote = false;
             bool isClimbing = true;
@@ -1220,6 +1238,19 @@ namespace Barotrauma
                 Anim = Animation.None;
                 character.SelectedConstruction = null;
                 IgnorePlatforms = false;
+            }
+
+            Ladder GetLowestNearbyLadder(Ladder currentLadder, float threshold = 16.0f)
+            {
+                foreach (Ladder ladder in Ladder.List)
+                {
+                    if (ladder == currentLadder || !ladder.Item.IsInteractable(character)) { continue; }
+                    if (Math.Abs(ladder.Item.WorldPosition.X - currentLadder.Item.WorldPosition.X) > threshold) { continue; }
+                    if (ladder.Item.WorldPosition.Y > currentLadder.Item.WorldPosition.Y) { continue; }
+                    if ((currentLadder.Item.WorldRect.Y - currentLadder.Item.Rect.Height) - ladder.Item.WorldRect.Y > threshold) { continue; }
+                    return ladder;
+                }
+                return null;
             }
         }
 
@@ -1576,6 +1607,7 @@ namespace Barotrauma
                             
                         Vector2 shoulderPos = rightShoulder.WorldAnchorA;
                         Vector2 dragDir = inWater ? Vector2.Normalize(targetLimb.SimPosition - shoulderPos) : Vector2.UnitY;
+                        if (!MathUtils.IsValid(dragDir)) { dragDir = Vector2.UnitY; }
 
                         targetAnchor = shoulderPos - dragDir * ConvertUnits.ToSimUnits(upperArmLength + forearmLength);
                         targetForce = 200.0f;

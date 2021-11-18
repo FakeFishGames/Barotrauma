@@ -949,16 +949,17 @@ namespace Barotrauma
                     //player has selected the inventory of another item -> attempt to move the item there
                     return QuickUseAction.PutToContainer;
                 }
-                else if (character.SelectedCharacter != null && 
-                    character.SelectedCharacter.Inventory != null && 
+                else if (character.SelectedCharacter?.Inventory != null && 
                     !character.SelectedCharacter.Inventory.Locked && 
                     allowInventorySwap)
                 {
                     //player has selected the inventory of another character -> attempt to move the item there
                     return QuickUseAction.PutToCharacter;
                 }
-                else if (character.SelectedBy != null && Character.Controlled == character.SelectedBy &&
-                    character.SelectedBy.Inventory != null && !character.SelectedBy.Inventory.Locked && allowInventorySwap)
+                else if (character.SelectedBy?.Inventory != null && 
+                    Character.Controlled == character.SelectedBy &&
+                    !character.SelectedBy.Inventory.Locked && 
+                    allowInventorySwap)
                 {
                     return QuickUseAction.TakeFromCharacter;
                 }

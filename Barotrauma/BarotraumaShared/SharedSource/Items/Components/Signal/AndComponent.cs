@@ -19,6 +19,10 @@ namespace Barotrauma.Items.Components
             get { return timeFrame; }
             set
             {
+                if (value > timeFrame)
+                {
+                    timeSinceReceived[0] = timeSinceReceived[1] = Math.Max(value * 2.0f, 0.1f);
+                }
                 timeFrame = Math.Max(0.0f, value);
             }
         }

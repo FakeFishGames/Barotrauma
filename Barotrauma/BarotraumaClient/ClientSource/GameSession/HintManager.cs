@@ -133,7 +133,7 @@ namespace Barotrauma
             string hintIdentifierBase = "onstartedinteracting";
 
             // onstartedinteracting.brokenitem
-            if (item.Repairables.Any(r => item.ConditionPercentage < r.RepairThreshold))
+            if (item.Repairables.Any(r => r.IsBelowRepairThreshold))
             {
                 if (DisplayHint($"{hintIdentifierBase}.brokenitem")) { return; }
             }
@@ -192,7 +192,7 @@ namespace Barotrauma
             if (!CanDisplayHints(requireGameScreen: false, requireControllingCharacter: false)) { return; }
             CoroutineManager.StartCoroutine(DisplayRoundStartedHints(initRoundHandle), "HintManager.DisplayRoundStartedHints");
 
-            static IEnumerable<object> InitRound()
+            static IEnumerable<CoroutineStatus> InitRound()
             {
                 while (Character.Controlled == null) { yield return CoroutineStatus.Running; }
                 // Get the ballast hulls on round start not to find them again and again later
@@ -211,7 +211,7 @@ namespace Barotrauma
                 yield return CoroutineStatus.Success;
             }
 
-            static IEnumerable<object> DisplayRoundStartedHints(CoroutineHandle initRoundHandle)
+            static IEnumerable<CoroutineStatus> DisplayRoundStartedHints(CoroutineHandle initRoundHandle)
             {
                 while (GameMain.Instance.LoadingScreenOpen || Screen.Selected != GameMain.GameScreen ||
                        CoroutineManager.IsCoroutineRunning(initRoundHandle) ||

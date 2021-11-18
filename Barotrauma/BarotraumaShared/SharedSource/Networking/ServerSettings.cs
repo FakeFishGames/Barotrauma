@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Networking
 {
@@ -48,7 +49,8 @@ namespace Barotrauma.Networking
             Message = 0x2,
             Properties = 0x4,
             Misc = 0x8,
-            LevelSeed = 0x10
+            LevelSeed = 0x10,
+            HiddenSubs = 0x20
         }
 
         public static readonly string PermissionPresetFile = "Data" + Path.DirectorySeparatorChar + "permissionpresets.xml";
@@ -284,6 +286,8 @@ namespace Barotrauma.Networking
 
             ExtraCargo = new Dictionary<ItemPrefab, int>();
 
+            HiddenSubs = new HashSet<string>();
+
             PermissionPreset.LoadAll(PermissionPresetFile);
             InitProjSpecific();
 
@@ -368,6 +372,8 @@ namespace Barotrauma.Networking
         public Dictionary<string, bool> MonsterEnabled { get; private set; }
 
         public Dictionary<ItemPrefab, int> ExtraCargo { get; private set; }
+
+        public HashSet<string> HiddenSubs { get; private set; }
 
         private float selectedLevelDifficulty;
         private string password;
@@ -504,6 +510,13 @@ namespace Barotrauma.Networking
                 playstyleSelection = value;
                 ServerDetailsChanged = true;
             }
+        }
+
+        [Serialize(Barotrauma.LosMode.Opaque, true)]
+        public LosMode LosMode
+        {
+            get;
+            set;
         }
 
         [Serialize(800, true)]
@@ -1021,6 +1034,30 @@ namespace Barotrauma.Networking
             {
                 msg.Write(kvp.Key.Identifier ?? "");
                 msg.Write((byte)kvp.Value);
+            }
+        }
+
+        public void ReadHiddenSubs(IReadMessage msg)
+        {
+            HiddenSubs.Clear();
+            uint count = msg.ReadVariableUInt32();
+            for (int i = 0; i < count; i++)
+            {
+                string submarineName = msg.ReadString();
+                HiddenSubs.Add(submarineName);
+            }
+
+#if SERVER
+            SelectNonHiddenSubmarine();
+#endif
+        }
+
+        public void WriteHiddenSubs(IWriteMessage msg)
+        {
+            msg.WriteVariableUInt32((uint)HiddenSubs.Count);
+            foreach (string submarineName in HiddenSubs)
+            {
+                msg.Write(submarineName);
             }
         }
     }

@@ -153,7 +153,10 @@ namespace Barotrauma
                 (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(npc, CampaignInteractionType);
                 if (positionToStayIn != null && humanAI != null)
                 {
-                    humanAI.ObjectiveManager.SetForcedOrder(new AIObjectiveGoTo(positionToStayIn, npc, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, closeEnough: 200));
+                    humanAI.ObjectiveManager.SetForcedOrder(new AIObjectiveGoTo(positionToStayIn, npc, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, closeEnough: 200)
+                    {
+                        DebugLogWhenFails = false
+                    });
                 }
             }
         }

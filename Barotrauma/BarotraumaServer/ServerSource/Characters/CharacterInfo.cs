@@ -29,6 +29,7 @@ namespace Barotrauma
             if (Character == null || Character.Removed) { return; }
             if (prevAmount != newAmount)
             {
+                GameServer.Log($"{GameServer.CharacterLogName(Character)} has gained {newAmount - prevAmount} experience ({prevAmount} -> {newAmount})", ServerLog.MessageType.Talent);
                 GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateExperience });
             }
         }

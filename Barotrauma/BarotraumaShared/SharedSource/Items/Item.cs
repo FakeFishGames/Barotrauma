@@ -473,7 +473,12 @@ namespace Barotrauma
         public float HealthMultiplier
         {
             get => healthMultiplier;
-            set { healthMultiplier = MathHelper.Clamp(value, 0.0f, float.PositiveInfinity); }
+            set 
+            {
+                float prevConditionPercentage = ConditionPercentage;
+                healthMultiplier = MathHelper.Clamp(value, 0.0f, float.PositiveInfinity);
+                Condition = MaxCondition * prevConditionPercentage / 100.0f;
+            }
         }
 
         private float maxRepairConditionMultiplier = 1.0f;
@@ -564,21 +569,26 @@ namespace Barotrauma
 
         public bool StolenDuringRound;
 
-        private bool spawnedInOutpost;
-        public bool SpawnedInOutpost
+        private bool spawnedInCurrentOutpost;
+        public bool SpawnedInCurrentOutpost
         {
-            get { return spawnedInOutpost; }
+            get { return spawnedInCurrentOutpost; }
             set
             {
-                if (!spawnedInOutpost && value)
+                if (!spawnedInCurrentOutpost && value)
                 {
                     OriginalOutpost = GameMain.GameSession?.StartLocation?.BaseName ?? "";
                 }
-                spawnedInOutpost = value;
+                spawnedInCurrentOutpost = value;
             }
         }
 
-        public bool AllowStealing = true;
+        [Serialize(true, true, alwaysUseInstanceValues: true)]
+        public bool AllowStealing
+        {
+            get;
+            set;
+        }
 
         private string originalOutpost;
         [Serialize("", true, alwaysUseInstanceValues: true)]
@@ -588,9 +598,9 @@ namespace Barotrauma
             set
             {
                 originalOutpost = value;
-                if (!string.IsNullOrEmpty(value) && GameMain.GameSession?.StartLocation?.BaseName == value)
+                if (!string.IsNullOrEmpty(value) && GameMain.GameSession?.LevelData?.Type == LevelData.LevelType.Outpost && GameMain.GameSession?.StartLocation?.BaseName == value)
                 {
-                    spawnedInOutpost = true;
+                    spawnedInCurrentOutpost = true;
                 }
             }
         }
@@ -1736,10 +1746,10 @@ namespace Barotrauma
             Submarine prevSub = Submarine;
 
             var projectile = GetComponent<Projectile>();
-            if (projectile?.StickTarget?.UserData is Limb limb)
+            if (projectile?.StickTarget?.UserData is Limb limb && limb.character != null)
             {
-                Submarine = body.Submarine = limb.character?.Submarine;
-                currentHull = limb.character?.CurrentHull;
+                Submarine = body.Submarine = limb.character.Submarine;
+                currentHull = limb.character.CurrentHull;
             }
             else
             {
@@ -2125,7 +2135,7 @@ namespace Barotrauma
 
         }
 
-        private IEnumerable<object> DelaySignal(Signal signal, Connection connection)
+        private IEnumerable<CoroutineStatus> DelaySignal(Signal signal, Connection connection)
         {
             do
             {

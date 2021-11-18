@@ -33,6 +33,8 @@ namespace Barotrauma
         private float currentIntensity;
         //The exact intensity of the current situation, current intensity is lerped towards this value
         private float targetIntensity;
+        //follows targetIntensity a bit faster than currentIntensity to prevent e.g. combat musing staying on very long after the monsters are dead
+        private float musicIntensity;
 
         //How low the intensity has to be for an event to be triggered. 
         //Gradually increases with time, so additional problems can still appear eventually even if
@@ -50,7 +52,11 @@ namespace Barotrauma
         private float calculateDistanceTraveledTimer;
         private float distanceTraveled;
 
-        private float avgCrewHealth, avgHullIntegrity, floodingAmount, fireAmount, enemyDanger, monsterTotalStrength;
+        private float avgCrewHealth, avgHullIntegrity, floodingAmount, fireAmount, enemyDanger, monsterStrength;
+        public float CumulativeMonsterStrengthMain;
+        public float CumulativeMonsterStrengthRuins;
+        public float CumulativeMonsterStrengthWrecks;
+        public float CumulativeMonsterStrengthCaves;
 
         private float roundDuration;
 
@@ -78,6 +84,10 @@ namespace Barotrauma
         {
             get { return currentIntensity; }
         }
+        public float MusicIntensity
+        {
+            get { return musicIntensity; }
+        }
 
         public List<Event> ActiveEvents
         {
@@ -85,7 +95,22 @@ namespace Barotrauma
         }
         
         public readonly Queue<Event> QueuedEvents = new Queue<Event>();
-        
+
+        private struct TimeStamp
+        {
+            public readonly double Time;
+            public readonly Event Event;
+
+            public TimeStamp(Event e)
+            {
+                Event = e;
+                Time = Timing.TotalTime;
+            }
+        }
+
+        private readonly List<TimeStamp> timeStamps = new List<TimeStamp>();
+        public void AddTimeStamp(Event e) => timeStamps.Add(new TimeStamp(e));
+
         public EventManager()
         {
             isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
@@ -99,6 +124,7 @@ namespace Barotrauma
 
             if (isClient) { return; }
 
+            timeStamps.Clear();
             pendingEventSets.Clear();
             selectedEvents.Clear();
             activeEvents.Clear();
@@ -202,8 +228,12 @@ namespace Barotrauma
             crewAwayResetTimer = 0.0f;
             intensityUpdateTimer = 0.0f;
             CalculateCurrentIntensity(0.0f);
-            currentIntensity = targetIntensity;
+            currentIntensity = musicIntensity = targetIntensity;
             eventCoolDown = 0.0f;
+            CumulativeMonsterStrengthMain = 0;
+            CumulativeMonsterStrengthRuins = 0;
+            CumulativeMonsterStrengthWrecks = 0;
+            CumulativeMonsterStrengthCaves = 0;
         }
         
         private void SelectSettings()
@@ -401,11 +431,7 @@ namespace Barotrauma
         {
             if (level == null) { return; }
             if (level.LevelData.HasHuntingGrounds && eventSet.DisableInHuntingGrounds) { return; }
-#if DEBUG
-            DebugConsole.NewMessage($"Loading event set {eventSet.DebugIdentifier}", Color.LightBlue);
-#else
-            DebugConsole.Log($"Loading event set {eventSet.DebugIdentifier}");
-#endif
+            DebugConsole.NewMessage($"Loading event set {eventSet.DebugIdentifier}", Color.LightBlue, debugOnly: true);
             int applyCount = 1;
             List<Func<Level.InterestingPosition, bool>> spawnPosFilter = new List<Func<Level.InterestingPosition, bool>>();
             if (eventSet.PerRuin)
@@ -413,7 +439,7 @@ namespace Barotrauma
                 applyCount = level.Ruins.Count();
                 foreach (var ruin in level.Ruins)
                 {
-                    spawnPosFilter.Add((Level.InterestingPosition pos) => { return pos.Ruin == ruin; });
+                    spawnPosFilter.Add(pos => pos.Ruin == ruin);
                 }
             }
             else if (eventSet.PerCave)
@@ -421,7 +447,7 @@ namespace Barotrauma
                 applyCount = level.Caves.Count();
                 foreach (var cave in level.Caves)
                 {
-                    spawnPosFilter.Add((Level.InterestingPosition pos) => { return pos.Cave == cave; });
+                    spawnPosFilter.Add(pos => pos.Cave == cave);
                 }
             }
             else if (eventSet.PerWreck)
@@ -430,7 +456,7 @@ namespace Barotrauma
                 applyCount = wrecks.Count();
                 foreach (var wreck in wrecks)
                 {
-                    spawnPosFilter.Add((Level.InterestingPosition pos) => { return pos.Submarine == wreck; });
+                    spawnPosFilter.Add(pos => pos.Submarine == wreck);
                 }
             }
 
@@ -463,11 +489,7 @@ namespace Barotrauma
                                 if (newEvent == null) { continue; }
                                 newEvent.Init(true);
                                 if (i < spawnPosFilter.Count) { newEvent.SpawnPosFilter = spawnPosFilter[i]; }
-#if DEBUG
-                                DebugConsole.NewMessage($"Initialized event {newEvent}");
-#else
-                                DebugConsole.Log($"Initialized event {newEvent}");
-#endif
+                                DebugConsole.NewMessage($"Initialized event {newEvent}", debugOnly: true);
                                 if (!selectedEvents.ContainsKey(eventSet))
                                 {
                                     selectedEvents.Add(eventSet, new List<Event>());
@@ -498,11 +520,7 @@ namespace Barotrauma
                         var newEvent = eventPrefab.CreateInstance();
                         if (newEvent == null) { continue; }
                         newEvent.Init(true);
-#if DEBUG
-                        DebugConsole.NewMessage($"Initialized event {newEvent}");
-#else
-                        DebugConsole.Log($"Initialized event {newEvent}");
-#endif
+                        DebugConsole.NewMessage($"Initialized event {newEvent}", debugOnly: true);
                         if (!selectedEvents.ContainsKey(eventSet))
                         {
                             selectedEvents.Add(eventSet, new List<Event>());
@@ -525,6 +543,7 @@ namespace Barotrauma
 
             var allowedEventSets = 
                 eventSets.Where(es => 
+                    es.IsCampaignSet == GameMain.GameSession?.GameMode is CampaignMode &&
                     level.Difficulty >= es.MinLevelDifficulty && level.Difficulty <= es.MaxLevelDifficulty && 
                     level.LevelData.Type == es.LevelType && 
                     (string.IsNullOrEmpty(es.BiomeIdentifier) || es.BiomeIdentifier.Equals(level.LevelData.Biome.Identifier, StringComparison.OrdinalIgnoreCase)));
@@ -647,6 +666,7 @@ namespace Barotrauma
                 isCrewAway = false;
                 crewAwayDuration = 0.0f;
                 eventThreshold += settings.EventThresholdIncrease * deltaTime;
+                eventThreshold = Math.Min(eventThreshold, 1.0f);
                 eventCoolDown -= deltaTime;
             }
 
@@ -739,7 +759,7 @@ namespace Barotrauma
             // enemy amount --------------------------------------------------------
 
             enemyDanger = 0.0f;
-            monsterTotalStrength = 0;
+            monsterStrength = 0;
             foreach (Character character in Character.CharacterList)
             {
                 if (character.IsIncapacitated || !character.Enabled || character.IsPet || character.Params.CompareGroup("human")) { continue; }
@@ -749,28 +769,9 @@ namespace Barotrauma
                 if (!enemyAI.AIParams.StayInAbyss)
                 {
                     // Ignore abyss monsters because they can stay active for quite great distances. They'll be taken into account when they target the sub.
-                    monsterTotalStrength += enemyAI.CombatStrength;
+                    monsterStrength += enemyAI.CombatStrength;
                 }
 
-                // Example combat strengths:
-                // Hammerheadspawn 1
-                // Moloch Pupa 1
-                // Terminal cell 20
-                // Leucocyte 40
-                // Husk 90
-                // Crawler 100
-                // Unarmored Mudraptor 140
-                // Spineling 150
-                // Tigerthresher 200
-                // Armored Mudraptor 210
-                // Watcher 400
-                // Golden Hammerhead 400
-                // Hammerhead 500
-                // Hammerhead Matriarch 550
-                // Bonethresher 600
-                // Moloch 1250
-                // Black Moloch 1500
-                // Endworm 10000
                 if (character.CurrentHull?.Submarine != null && 
                     (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine)))
                 {
@@ -792,7 +793,7 @@ namespace Barotrauma
             // 5 Mudraptors -> +0.21 (0.42 in total, before they get inside).
             // 3 Hammerheads -> +0.3 (0.6 in total, if they all target the sub).
             // 2 Molochs -> +0.5 (1.0 in total, if both target the sub).
-            enemyDanger += monsterTotalStrength / 5000f;
+            enemyDanger += monsterStrength / 5000f;
             enemyDanger = MathHelper.Clamp(enemyDanger, 0.0f, 1.0f);
 
             // The definitions above aim for that we never spawn more monsters that the player (and the performance) can handle.
@@ -868,11 +869,15 @@ namespace Barotrauma
             {
                 //25 seconds for intensity to go from 0.0 to 1.0
                 currentIntensity = Math.Min(currentIntensity + 0.04f * IntensityUpdateInterval, targetIntensity);
+                //20 seconds for intensity to go from 0.0 to 1.0
+                musicIntensity = Math.Min(musicIntensity + 0.05f * IntensityUpdateInterval, targetIntensity);
             }
             else
             {
                 //400 seconds for intensity to go from 1.0 to 0.0
                 currentIntensity = Math.Max(currentIntensity - 0.0025f * IntensityUpdateInterval, targetIntensity);
+                //20 seconds for intensity to go from 1.0 to 0.0
+                musicIntensity = Math.Max(musicIntensity - 0.05f * IntensityUpdateInterval, targetIntensity);
             }
         }
 

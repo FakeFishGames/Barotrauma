@@ -131,6 +131,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(true, true, description: "Should the sensor trigger when the item itself moves.")]
+        public bool DetectOwnMotion
+        {
+            get;
+            set;
+        }
+
         public MotionSensor(Item item, XElement element)
             : base(item, element)
         {
@@ -168,7 +175,7 @@ namespace Barotrauma.Items.Components
             MotionDetected = false;
             updateTimer = UpdateInterval;
 
-            if (item.body != null && item.body.Enabled)
+            if (item.body != null && item.body.Enabled && DetectOwnMotion)
             {
                 if (Math.Abs(item.body.LinearVelocity.X) > MinimumVelocity || Math.Abs(item.body.LinearVelocity.Y) > MinimumVelocity)
                 {

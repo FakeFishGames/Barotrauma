@@ -323,7 +323,6 @@ namespace Barotrauma
             SortObjectives();
         }
 
-        private CoroutineHandle speakRoutine;
         public void SetOrder(Order order, string option, int priority, Character orderGiver, bool speak)
         {
             if (character.IsDead)
@@ -379,6 +378,7 @@ namespace Barotrauma
             var newCurrentOrder = CreateObjective(order, option, orderGiver);
             if (newCurrentOrder != null)
             {
+                newCurrentOrder.Abandoned += () => DismissSelf(order, option);
                 CurrentOrders.Add(new OrderInfo(order, option, priority, newCurrentOrder));
             }
             if (!HasOrders())
@@ -386,53 +386,12 @@ namespace Barotrauma
                 // Recreate objectives, because some of them may be removed, if impossible to complete (e.g. due to path finding)
                 CreateAutonomousObjectives();
             }
-            else
+            else if (newCurrentOrder != null)
             {
-                // This should be redundant, because all the objectives are reset when they are selected as active.
-                newCurrentOrder?.Reset();
-
                 if (speak && character.IsOnPlayerTeam)
                 {
-                    character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
-                    //if (speakRoutine != null)
-                    //{
-                    //    CoroutineManager.StopCoroutines(speakRoutine);
-                    //}
-                    //speakRoutine = CoroutineManager.InvokeAfter(() =>
-                    //{
-                    //    if (GameMain.GameSession == null || Level.Loaded == null) { return; }
-                    //    if (newCurrentOrder != null && character.SpeechImpediment < 100.0f)
-                    //    {
-                    //        if (newCurrentOrder is AIObjectiveRepairItems repairItems && repairItems.Targets.None())
-                    //        {
-                    //            character.Speak(TextManager.Get("DialogNoRepairTargets"), null, 3.0f, "norepairtargets");
-                    //        }
-                    //        else if (newCurrentOrder is AIObjectiveChargeBatteries chargeBatteries && chargeBatteries.Targets.None())
-                    //        {
-                    //            character.Speak(TextManager.Get("DialogNoBatteries"), null, 3.0f, "nobatteries");
-                    //        }
-                    //        else if (newCurrentOrder is AIObjectiveExtinguishFires extinguishFires && extinguishFires.Targets.None())
-                    //        {
-                    //            character.Speak(TextManager.Get("DialogNoFire"), null, 3.0f, "nofire");
-                    //        }
-                    //        else if (newCurrentOrder is AIObjectiveFixLeaks fixLeaks && fixLeaks.Targets.None())
-                    //        {
-                    //            character.Speak(TextManager.Get("DialogNoLeaks"), null, 3.0f, "noleaks");
-                    //        }
-                    //        else if (newCurrentOrder is AIObjectiveFightIntruders fightIntruders && fightIntruders.Targets.None())
-                    //        {
-                    //            character.Speak(TextManager.Get("DialogNoEnemies"), null, 3.0f, "noenemies");
-                    //        }
-                    //        else if (newCurrentOrder is AIObjectiveRescueAll rescueAll && rescueAll.Targets.None())
-                    //        {
-                    //            character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets");
-                    //        }
-                    //        else if (newCurrentOrder is AIObjectivePumpWater pumpWater && pumpWater.Targets.None())
-                    //        {
-                    //            character.Speak(TextManager.Get("DialogNoPumps"), null, 3.0f, "nopumps");
-                    //        }
-                    //    }
-                    //}, 3);
+                    string msg = newCurrentOrder.IsAllowed ? TextManager.Get("DialogAffirmative") : TextManager.Get("DialogNegative");
+                    character.Speak(msg, delay: 1.0f);
                 }
             }
         }
@@ -465,7 +424,6 @@ namespace Barotrauma
                     break;
                 case "return":
                     newObjective = new AIObjectiveReturn(character, orderGiver, this, priorityModifier: priorityModifier);
-                    newObjective.Abandoned += () => DismissSelf(order, option);
                     newObjective.Completed += () => DismissSelf(order, option);
                     break;
                 case "fixleaks":
@@ -491,12 +449,10 @@ namespace Barotrauma
                         if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
                         newObjective = new AIObjectiveOperateItem(targetPump, character, this, option, false, priorityModifier: priorityModifier)
                         {
-                            IsLoop = true,
+                            IsLoop = false,
                             Override = orderGiver != null && orderGiver.IsCommanding
                         };
-                        // ItemComponent.AIOperate() returns false by default -> We'd have to set IsLoop = false and implement a custom override of AIOperate for the Pump.cs, 
-                        // if we want that the bot just switches the pump on/off and continues doing something else.
-                        // If we want that the bot does the objective and then forgets about it, I think we could do the same plus dismiss when the bot is done.
+                        newObjective.Completed += () => DismissSelf(order, option);
                     }
                     else
                     {
@@ -565,6 +521,26 @@ namespace Barotrauma
                     break;
                 case "escapehandcuffs":
                     newObjective = new AIObjectiveEscapeHandcuffs(character, this, priorityModifier: priorityModifier);
+                    break;
+                case "prepareforexpedition":
+                    newObjective = new AIObjectivePrepare(character, this, order.TargetItems)
+                    {
+                        KeepActiveWhenReady = true,
+                        CheckInventory = true,
+                        Equip = false,
+                        FindAllItems = true
+                    };
+                    break;
+                case "findweapon":
+                    newObjective = new AIObjectivePrepare(character, this, order.TargetItems)
+                    {
+                        KeepActiveWhenReady = false,
+                        CheckInventory = false,
+                        Equip = true,
+                        EvaluateCombatPriority = true,
+                        FindAllItems = false
+                    };
+                    newObjective.Completed += () => DismissSelf(order, option);
                     break;
                 default:
                     if (order.TargetItemComponent == null) { return null; }

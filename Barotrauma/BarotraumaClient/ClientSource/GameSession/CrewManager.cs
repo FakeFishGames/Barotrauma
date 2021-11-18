@@ -100,7 +100,7 @@ namespace Barotrauma
             {
                 AutoHideScrollBar = false,
                 CanBeFocused = false,
-                CanDragElements = true,
+                CurrentDragMode = GUIListBox.DragMode.DragWithinBox,
                 CanInteractWhenUnfocusable = true,
                 OnSelected = (component, userData) => false,
                 SelectMultiple = false,
@@ -359,34 +359,41 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            var jobIconBackground = new GUIImage(
+            // Hide the icon to make more space for the name if the crew list's width is small enough
+            bool isJobIconVisible = crewListEntrySize.X >= 220;
+
+            if (isJobIconVisible)
+            {
+                var jobIconBackground = new GUIImage(
                     new RectTransform(new Vector2(0.8f * iconRelativeWidth, 0.8f), layoutGroup.RectTransform),
                     jobIndicatorBackground,
                     scaleToFit: true)
-            {
-                CanBeFocused = false,
-                UserData = "job"
-            };
-            if (character?.Info?.Job.Prefab?.Icon != null)
-            {
-                new GUIImage(
-                    new RectTransform(Vector2.One, jobIconBackground.RectTransform),
-                    character.Info.Job.Prefab.Icon,
-                    scaleToFit: true)
                 {
                     CanBeFocused = false,
-                    Color = character.Info.Job.Prefab.UIColor,
-                    HoverColor = character.Info.Job.Prefab.UIColor,
-                    PressedColor = character.Info.Job.Prefab.UIColor,
-                    SelectedColor = character.Info.Job.Prefab.UIColor
+                    UserData = "job"
                 };
+                if (character?.Info?.Job.Prefab?.Icon != null)
+                {
+                    new GUIImage(
+                        new RectTransform(Vector2.One, jobIconBackground.RectTransform),
+                        character.Info.Job.Prefab.Icon,
+                        scaleToFit: true)
+                    {
+                        CanBeFocused = false,
+                        Color = character.Info.Job.Prefab.UIColor,
+                        HoverColor = character.Info.Job.Prefab.UIColor,
+                        PressedColor = character.Info.Job.Prefab.UIColor,
+                        SelectedColor = character.Info.Job.Prefab.UIColor
+                    };
+                }
             }
 
+            int iconsVisible = isJobIconVisible ? 5 : 4;
             var nameRelativeWidth = 1.0f
                 // Start padding
                 - paddingRelativeWidth
-                // 5 icons (job, 3 orders, sound)
-                - (5 * 0.8f * iconRelativeWidth)
+                // icons (job, active orders, current task / voip)
+                - (iconsVisible * 0.8f * iconRelativeWidth)
                 // Vertical line
                 - (0.1f * iconRelativeWidth)
                 // Spacing
@@ -425,7 +432,7 @@ namespace Barotrauma
             var currentOrderList = new GUIListBox(new RectTransform(new Vector2(0.0f, 1.0f), parent: orderGroup.RectTransform), isHorizontal: true, style: null)
             {
                 AllowMouseWheelScroll = false,
-                CanDragElements = true,
+                CurrentDragMode = GUIListBox.DragMode.DragWithinBox,
                 HideChildrenOutsideFrame = false,
                 KeepSpaceForScrollBar = false,
                 OnRearranged = OnOrdersRearranged,
@@ -439,7 +446,9 @@ namespace Barotrauma
                 if (component is GUIListBox list)
                 {
                     list.CanBeFocused = CanIssueOrders;
-                    list.CanDragElements = CanIssueOrders && list.Content.CountChildren > 1;
+                    list.CurrentDragMode = CanIssueOrders && list.Content.CountChildren > 1
+                        ? GUIListBox.DragMode.DragWithinBox
+                        : GUIListBox.DragMode.NoDragging;
                 }
             };
 
@@ -507,8 +516,11 @@ namespace Barotrauma
         {
             if (!(characterComponent?.UserData is Character character)) { return; }
             if (character.Info?.Job?.Prefab == null) { return; }
+            string tooltip = TextManager.GetWithVariables("crewlistelementtooltip",
+                new string[] { "[name]", "[job]" },
+                new string[] { character.Name, character.Info.Job.Name });
             string color = XMLExtensions.ColorToString(character.Info.Job.Prefab.UIColor);
-            string tooltip = $"‖color:{color}‖{character.Name} ({character.Info.Job.Name})‖color:end‖";
+            tooltip = $"‖color:{color}‖{tooltip}‖color:end‖";
             var richTextData = RichTextData.GetRichTextData(tooltip, out string sanitizedTooltip);
             characterComponent.ToolTip = sanitizedTooltip;
             characterComponent.TooltipRichTextData = richTextData;
@@ -546,7 +558,7 @@ namespace Barotrauma
             RemoveCharacter(killedCharacter);
         }
 
-        private IEnumerable<object> KillCharacterAnim(GUIComponent component)
+        private IEnumerable<CoroutineStatus> KillCharacterAnim(GUIComponent component)
         {
             List<GUIComponent> components = component.GetAllChildren().ToList();
             components.Add(component);
@@ -1648,7 +1660,7 @@ namespace Barotrauma
                         }
                         if (characterComponent.Visible)
                         {
-                            if (character == Character.Controlled && characterComponent.State != GUIComponent.ComponentState.Selected)
+                            if (character == Character.Controlled && crewList.SelectedComponent != characterComponent)
                             {
                                 crewList.Select(character, force: true);
                             }
@@ -2637,7 +2649,7 @@ namespace Barotrauma
 
                     // If targeting a repairable item with condition below the repair threshold, show the 'repairsystems' order
                     orderIdentifier = "repairsystems";
-                    if (contextualOrders.None(o => o.Identifier.Equals(orderIdentifier)) && itemContext.Repairables.Any(r => itemContext.ConditionPercentage < r.RepairThreshold))
+                    if (contextualOrders.None(o => o.Identifier.Equals(orderIdentifier)) && itemContext.Repairables.Any(r => r.IsBelowRepairThreshold))
                     {
                         if (itemContext.Repairables.Any(r => r != null && r.requiredSkills.Any(s => s != null && s.Identifier.Equals("electrical"))))
                         {
@@ -2758,11 +2770,11 @@ namespace Barotrauma
             if (AIObjectiveCleanupItems.IsValidTarget(item, Character.Controlled, checkInventory: false)) { return true; }
             if (AIObjectiveCleanupItems.IsValidContainer(item, Character.Controlled)) { return true; }
 
-            if (item.Repairables.Any(r => item.ConditionPercentage < r.RepairThreshold)) { return true; }
+            if (item.Repairables.Any(r => r.IsBelowRepairThreshold)) { return true; }
             var operateWeaponsPrefab = Order.GetPrefab("operateweapons");
             return item.Components.Any(c => c is Controller) &&
                 (item.GetConnectedComponents<Turret>().Any(c => c.Item.HasTag(operateWeaponsPrefab.TargetItems)) ||
-                 item.GetConnectedComponents<Turret>(recursive: true).Any(c => c.Item.HasTag(operateWeaponsPrefab.TargetItems))); 
+                 item.GetConnectedComponents<Turret>(recursive: true).Any(c => c.Item.HasTag(operateWeaponsPrefab.TargetItems)));
         }
 
         /// <param name="hotkey">Use a negative value (e.g. -1) if there should be no hotkey associated with the node</param>
@@ -2781,7 +2793,7 @@ namespace Barotrauma
                 disableNode = !CanCharacterBeHeard();
             }
 
-            var mustSetOptionOrTarget = order.HasOptions;
+            bool mustSetOptionOrTarget = order.HasOptions;
             Item orderTargetEntity = null;
             
             // If the order doesn't have options, but must set a target,
@@ -2804,13 +2816,13 @@ namespace Barotrauma
             {
                 if (disableNode || !CanIssueOrders) { return false; }
                 var o = userData as Order;
-                if (o.MustManuallyAssign && characterContext == null)
-                {
-                    CreateAssignmentNodes(node);
-                }
-                else if (mustSetOptionOrTarget)
+                if (mustSetOptionOrTarget)
                 {
                     NavigateForward(button, userData);
+                }
+                else if (o.MustManuallyAssign && characterContext == null)
+                {
+                    CreateAssignmentNodes(node);
                 }
                 else
                 {
@@ -2925,6 +2937,10 @@ namespace Barotrauma
                         {
                             NavigateForward(button, userData);
                         }
+                        else if (o.Item1.MustManuallyAssign && characterContext == null)
+                        {
+                            CreateAssignmentNodes(button);
+                        }
                         else
                         {
                             SetCharacterOrder(characterContext ?? GetCharacterForQuickAssignment(o.Item1), o.Item1, o.Item2, CharacterInfo.HighestManualOrderPriority, Character.Controlled);
@@ -2987,12 +3003,19 @@ namespace Barotrauma
             var node = new GUIButton(new RectTransform(size, parent: parent, anchor: Anchor.Center), style: null)
             {
                 UserData = new Tuple<Order, string>(order, option),
-                OnClicked = (_, userData) =>
+                OnClicked = (button, userData) =>
                 {
                     if (!CanIssueOrders) { return false; }
                     var o = userData as Tuple<Order, string>;
-                    SetCharacterOrder(characterContext ?? GetCharacterForQuickAssignment(o.Item1), o.Item1, o.Item2, CharacterInfo.HighestManualOrderPriority, Character.Controlled);
-                    DisableCommandUI();
+                    if (o.Item1.MustManuallyAssign && characterContext == null)
+                    {
+                        CreateAssignmentNodes(button);
+                    }
+                    else
+                    {
+                        SetCharacterOrder(characterContext ?? GetCharacterForQuickAssignment(o.Item1), o.Item1, o.Item2, CharacterInfo.HighestManualOrderPriority, Character.Controlled);
+                        DisableCommandUI();
+                    }
                     return true;
                 }
             };

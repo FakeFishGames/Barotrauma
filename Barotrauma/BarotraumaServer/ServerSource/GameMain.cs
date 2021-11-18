@@ -417,7 +417,7 @@ namespace Barotrauma
 
             SaveUtil.CleanUnnecessarySaveFiles();
 
-            if (GameSettings.SaveDebugConsoleLogs) { DebugConsole.SaveLogs(); }
+            if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging) { DebugConsole.SaveLogs(); }
             if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
 
             MainThread = null;
@@ -430,7 +430,7 @@ namespace Barotrauma
             stopwatch?.Start();
         }
         
-        public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
+        public CoroutineHandle ShowLoading(IEnumerable<CoroutineStatus> loader, bool waitKeyHit = true)
         {
             return CoroutineManager.StartCoroutine(loader);
         }
