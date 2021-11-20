@@ -2872,8 +2872,8 @@ namespace Barotrauma.Networking
             int counter = 0;
             int timer = 90;
 
-            GameMain.Server.SendChatMessage("Type a command with a semicolon into the chatbox to use it. Available chat commands " +
-                "include: help; suicide; findcoal; findsep; stopspec; startspec;. Try help; to learn more.", ChatMessageType.Error);
+            GameMain.Server.SendChatMessage("Type a command with an exclamation point into the chatbox to use it. Available chat commands " +
+                "include: !suicide, !findcoal, !findsep, !stopspec, !startspec. Try !help to learn more.", ChatMessageType.Error);
 
             List<ulong> oldPlayers = new List<ulong>();
             foreach (Client c in connectedClients) { oldPlayers.Add(c.SteamID); }
@@ -3016,8 +3016,8 @@ namespace Barotrauma.Networking
                     }
                 }
             }
-            GameMain.Server.SendChatMessage("To learn more about chatbox commands, type help; (don't forget the semicolon) in the chatbox. " +
-                "Press F to attack as monster by default. If you're lost, type suicide; to respawn. Type findcoal; or findsep; to find the enemy sub!", ChatMessageType.Error);
+            GameMain.Server.SendChatMessage("To learn more about chatbox commands, type !help (don't forget the exclamation) in the chatbox. " +
+                "Press F to attack as monster by default. If you're lost, type !suicide to respawn. Type !findcoal or !findsep to find the enemy sub.", ChatMessageType.Error);
             CoroutineManager.StopCoroutines("StartMonsters");
             yield return CoroutineStatus.Success;
         }
@@ -3760,41 +3760,42 @@ namespace Barotrauma.Networking
                             }
                             break;
                         case "tip":
-                            GameMain.Server.SendChatMessage("To learn more about chatbox commands, type help; (don't forget the semicolon) in the chatbox. " +
-                                "Press F to attack as monster by default. If you're lost, type suicide; to respawn. Type findcoal; or findsep; to find the enemy sub!", ChatMessageType.Error);
+                            GameMain.Server.SendChatMessage("To learn more about chatbox commands, type !help (don't forget the exclamation) in the chatbox. " +
+                                "Press F to attack as monster by default. If you're lost, type !suicide to respawn. Type !findcoal or !findsep to find the enemy sub.", ChatMessageType.Error);
                             break;
                         case "help":
                             if (senderClient.HasPermission(ClientPermissions.Ban))
                             {
                                 SendDirectChatMessage(
-                                "suicide; -- Kill the player's character. Use if lost or stuck. \n" +
-                                "findcoal; -- Get the direction of the coalition submarine. \n" +
-                                "findsep; -- Get the direction of the separatist submarine. \n" +
-                                "stopspec; -- Leave spectator group and allows becoming a monster \n" +
-                                "startspec; -- Join spectator group and prevents becoming a monster \n" +
-                                "tip; -- Send helpful hints for new players \n" +
-                                "respawn; -- Add any players who are not alive and not in spec team \n" +
-                                "removeop; -- Remove dangerous and unbalanced items \n" +
-                                "removesteroid; -- Remove anabolic steroids \n" +
-                                "removegrief; -- Remove any easily griefable items \n" +
-                                "removeweld; -- Remove welding fuel so rounds don't take forever \n" +
-                                "removefuel; -- Remove all fuel rods to prevent overload \n" +
-                                "removebody; -- Remove any ragdolls to reduce lag \n" +
-                                "removejunk; -- Remove any loose items to reduce lag \n" +
-                                "addzombie; -- Turn a single human corpse into a husk \n" +
-                                "startvoip; -- Allow players to speak \n" +
-                                "stopvoip; -- Prevent any non-admin player from speaking \n" +
-                                "startmonster; -- Begin the monster spawning script \n" +
-                                "stopmonster; -- End the monster spawning script \n", senderClient, ChatMessageType.MessageBox);
+                                "!suicide -- Kills your character. Use if lost or stuck. \n" +
+                                "!findcoal -- Get the direction of the coalition submarine. \n" +
+                                "!findsep -- Get the direction of the separatist submarine. \n" +
+                                "!stopspec -- Leave spectator group and allows becoming a monster or human \n" +
+                                "!startspec -- Join spectator group to ensure only spawning as a monster \n" +
+                                "!tip -- Send helpful hints for new players \n" +
+                                "!respawn -- Add any players who are not alive and not in spec team \n" +
+                                "!removeop -- Remove dangerous and unbalanced items \n" +
+                                "!removesteroid -- Remove anabolic steroids \n" +
+                                "!removegrief -- Remove any easily griefable items \n" +
+                                "!removeweld -- Remove welding fuel so rounds don't take forever \n" +
+                                "!removeoxygen -- Remove oxygen so rounds don't take forever \n" +
+                                "!removefuel -- Remove all fuel rods to prevent overload \n" +
+                                "!removebody -- Remove any ragdolls to reduce lag \n" +
+                                "!removejunk -- Remove any loose items to reduce lag \n" +
+                                "!addzombie -- Turn a single human corpse into a husk \n" +
+                                "!startvoip -- Allow players to speak \n" +
+                                "!stopvoip -- Prevent any non-admin player from speaking \n" +
+                                "!startmonster -- Begin the monster spawning script \n" +
+                                "!stopmonster -- End the monster spawning script", senderClient, ChatMessageType.MessageBox);
                             }
                             else
                             {
                                 SendDirectChatMessage(
-                                "suicide; -- Kill the player's character. Use if lost or stuck. \n" +
-                                "findcoal; -- Get the direction of the coalition submarine. \n" +
-                                "findsep; -- Get the direction of the separatist submarine. \n" +
-                                "stopspec; -- Leave spectator group to possibly spawn as a human \n" +
-                                "startspec; -- Join spectator group to ensure only spawning as a monster", senderClient, ChatMessageType.MessageBox);
+                                "!suicide -- Kills your character. Use if lost or stuck. \n" +
+                                "!findcoal -- Get the direction of the coalition submarine. \n" +
+                                "!findsep -- Get the direction of the separatist submarine. \n" +
+                                "!stopspec -- Leave spectator group and allows becoming a monster or human \n" +
+                                "!startspec -- Join spectator group to ensure only spawning as a monster", senderClient, ChatMessageType.MessageBox);
                             }
                             break;
                         case "respawn":
@@ -4021,8 +4022,8 @@ namespace Barotrauma.Networking
                             if (senderClient.HasPermission(ClientPermissions.Ban))
                             {
                                 CoroutineManager.StopCoroutines("StartMonsters");
-                                GameMain.Server.SendChatMessage("To learn more about chatbox commands, type help; (don't forget the semicolon) in the chatbox. " +
-                                "Press F to attack as monster by default. If you're lost, type suicide; to respawn. Type findcoal; or findsep; to find the enemy sub!", ChatMessageType.Error);
+                                GameMain.Server.SendChatMessage("To learn more about chatbox commands, type !help (don't forget the exclamation) in the chatbox. " +
+                                "Press F to attack as monster by default. If you're lost, type !suicide to respawn. Type !findcoal or !findsep to find the enemy sub.", ChatMessageType.Error);
                             }
                             break;
                         case "spawnpet":
