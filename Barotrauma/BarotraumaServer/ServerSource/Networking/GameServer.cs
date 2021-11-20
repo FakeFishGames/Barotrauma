@@ -2870,6 +2870,7 @@ namespace Barotrauma.Networking
 
             float mapTop = (float)(Submarine.MainSub.WorldPosition.Y + Submarine.MainSub.Borders.Height * 0.5);
             int counter = 0;
+            int timer = 90;
 
             GameMain.Server.SendChatMessage("Type a command with a semicolon into the chatbox to use it. Available chat commands " +
                 "include: help; suicide; findcoal; findsep; stopspec; startspec;. Try help; to learn more.", ChatMessageType.Error);
@@ -2879,11 +2880,14 @@ namespace Barotrauma.Networking
 
             while (gameStarted)
             {
+                
                 yield return new WaitForSeconds(5);
                 counter += 5;
                 string names = "";
 
-                if (new int[] { 30, 60 }.Contains(counter))
+                if (counter == 0) { timer = rnd.Next(3) * 30 + 90; }
+
+                if (counter % 30 == 0)
                 {
                     Client readyPlayer = connectedClients.Find(c => (c.Character?.IsDead ?? true) && !c.SpectateOnly && c.InGame && !oldPlayers.Contains(c.SteamID));
                     while (readyPlayer != null && gameStarted)
@@ -2910,7 +2914,7 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                if (counter == 90)
+                if (counter == timer)
                 {
                     counter = 0;
 
@@ -3082,35 +3086,35 @@ namespace Barotrauma.Networking
 
         private string GetCard(float angle)
         {
-            if (angle > 65 && angle < 115)
+            if (angle >= 65 && angle < 115)
             {
                 return ("North");
             }
-            if (angle > 25 && angle < 65)
+            if (angle >= 25 && angle < 65)
             {
                 return ("Northeast");
             }
-            if ((angle > 335 && angle < 360) || (angle > 0 && angle < 25))
+            if ((angle >= 335 && angle < 360) || (angle >= 0 && angle < 25))
             {
                 return ("East");
             }
-            if (angle > 295 && angle < 335)
+            if (angle >= 295 && angle < 335)
             {
                 return ("Southeast");
             }
-            if (angle > 245 && angle < 295)
+            if (angle >= 245 && angle < 295)
             {
                 return ("South");
             }
-            if (angle > 205 && angle < 245)
+            if (angle >= 205 && angle < 245)
             {
                 return ("Southwest");
             }
-            if (angle > 155 && angle < 205)
+            if (angle >= 155 && angle < 205)
             {
                 return ("West");
             }
-            if (angle > 115 && angle < 150)
+            if (angle >= 115 && angle < 150)
             {
                 return ("Northwest");
             }
@@ -3782,7 +3786,8 @@ namespace Barotrauma.Networking
                         if (senderClient.HasPermission(ClientPermissions.Ban))
                         {
                             string[] banned = { "tonicliquid", "steroids", "hyperzine", "nucleardepthcharge",
-                                "nuclearshell", "fraggrenade", "incendiumgrenade", "coilgunammoboxexplosive" };
+                                "nuclearshell", "fraggrenade", "incendiumgrenade", "coilgunammoboxexplosive",
+                                "ic4block", "c4block", "uex", "compoundn", "volatilecompoundn", "nitroglycerin"};
                             int count = 0;
                             foreach (Item itm in Item.ItemList)
                             {
@@ -3857,7 +3862,7 @@ namespace Barotrauma.Networking
                                     Entity.Spawner.AddToRemoveQueue(itm);
                                 }
                             }
-                            SendDirectChatMessage(count + " welding fuel tanks removed!!!", senderClient, ChatMessageType.MessageBox);
+                            SendDirectChatMessage(count + " oxygen tanks removed!!!", senderClient, ChatMessageType.MessageBox);
                         }
                         break;
                     case "removefuel":
@@ -3913,7 +3918,7 @@ namespace Barotrauma.Networking
                             if (Submarine.MainSubs[1] != null)
                             {
                                 ded = Character.CharacterList.Find(chr => chr.IsHuman && chr.IsDead
-                                && Submarine.MainSubs.Any(s => Vector2.Distance(s.WorldPosition, chr?.WorldPosition ?? Vector2.Zero) < Submarine.MainSub.Borders.Width));
+                                && Submarine.MainSubs.Any(s => Vector2.Distance(s.WorldPosition, chr?.WorldPosition ?? Vector2.Zero) < s.Borders.Width));
                             }
                             else
                             {
@@ -3923,7 +3928,7 @@ namespace Barotrauma.Networking
                             if (ded != null)
                             {
                                 ded.Revive();
-                                Affliction zombie = new Affliction(AfflictionPrefab.List.First(a => a.AfflictionType == "huskinfection"), 100f);
+                                Affliction zombie = new Affliction(AfflictionPrefab.Prefabs["huskinfection"], 100f);
                                 ded.CharacterHealth.ApplyAffliction(ded.AnimController.MainLimb, zombie);
                                 goto DONE;
                             }
