@@ -3652,361 +3652,6 @@ namespace Barotrauma.Networking
                     case "radio":
                         type = ChatMessageType.Radio;
                         break;
-
-
-
-                    case "suicide":
-                        if (!senderClient.Character.IsDead)
-                        {
-                            senderClient.Character.Kill(CauseOfDeathType.Suffocation, null);
-                            GameMain.Server.SendChatMessage(senderClient.Name + " has committed suicide. Shameful display!", ChatMessageType.Error);
-                        }
-                        else
-                        {
-                            SendDirectChatMessage("You're already dead!", senderClient, ChatMessageType.MessageBox);
-                        }
-                        break;
-                    case "findcoal":
-                        string cdist = (Vector2.Distance(senderClient.Character.WorldPosition, Submarine.MainSub.WorldPosition) / 100).ToString("0.00");
-                        string cdir = GetDirection(senderClient.Character.WorldPosition, Submarine.MainSub.WorldPosition);
-                        SendDirectChatMessage("Coalition submarine has been detected " + cdist + " meters to the " + cdir + "!", senderClient, ChatMessageType.MessageBox);
-                        break;
-                    case "findsep":
-                        if (Submarine.MainSubs[1] != null)
-                        {
-                            string sdist = (Vector2.Distance(senderClient.Character.WorldPosition, Submarine.MainSubs[1].WorldPosition) / 100).ToString("0.00");
-                            string sdir = GetDirection(senderClient.Character.WorldPosition, Submarine.MainSubs[1].WorldPosition);
-                            SendDirectChatMessage("Separatist submarine has been detected " + sdist + " meters to the " + sdir + "!", senderClient, ChatMessageType.MessageBox);
-                        }
-                        else
-                        {
-                            SendDirectChatMessage("No separatist submarine exists!", senderClient, ChatMessageType.MessageBox);
-                        }
-                        break;
-                    case "startspec":
-                        if (senderClient.SpectateOnly == false)
-                        {
-                            senderClient.SpectateOnly = true;
-                            SendDirectChatMessage("You've been added to the spectators!", senderClient, ChatMessageType.MessageBox);
-                            GameMain.Server.SendChatMessage(senderClient.Name + " has joined spectators!", ChatMessageType.Error);
-                        }
-                        else
-                        {
-                            SendDirectChatMessage("You're already in spectators!", senderClient, ChatMessageType.MessageBox);
-                        }
-                        break;
-                    case "stopspec":
-                        if (senderClient.SpectateOnly == true)
-                        {
-                            senderClient.SpectateOnly = false;
-                            SendDirectChatMessage("You've been removed from the spectators!", senderClient, ChatMessageType.MessageBox);
-                            GameMain.Server.SendChatMessage(senderClient.Name + " has left spectators!", ChatMessageType.Error);
-                        }
-                        else
-                        {
-                            SendDirectChatMessage("You're already not in spectators!", senderClient, ChatMessageType.MessageBox);
-                        }
-                        break;
-                    case "tip":
-                        GameMain.Server.SendChatMessage("To learn more about chatbox commands, type help; (don't forget the semicolon) in the chatbox. " +
-                            "Press F to attack as monster by default. If you're lost, type suicide; to respawn. Type findcoal; or findsep; to find the enemy sub!", ChatMessageType.Error);
-                        break;
-                    case "help":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            SendDirectChatMessage(
-                            "suicide; -- Kill the player's character. Use if lost or stuck. \n" +
-                            "findcoal; -- Get the direction of the coalition submarine. \n" +
-                            "findsep; -- Get the direction of the separatist submarine. \n" +
-                            "stopspec; -- Leave spectator group and allows becoming a monster \n" +
-                            "startspec; -- Join spectator group and prevents becoming a monster \n" +
-                            "tip; -- Send helpful hints for new players \n" +
-                            "respawn; -- Add any players who are not alive and not in spec team \n" +
-                            "removeop; -- Remove dangerous and unbalanced items \n" +
-                            "removesteroid; -- Remove anabolic steroids \n" +
-                            "removegrief; -- Remove any easily griefable items \n" +
-                            "removeweld; -- Remove welding fuel so rounds don't take forever \n" +
-                            "removefuel; -- Remove all fuel rods to prevent overload \n" +
-                            "removebody; -- Remove any ragdolls to reduce lag \n" +
-                            "removejunk; -- Remove any loose items to reduce lag \n" +
-                            "addzombie; -- Turn a single human corpse into a husk \n" +
-                            "startvoip; -- Allow players to speak \n" +
-                            "stopvoip; -- Prevent any non-admin player from speaking \n" +
-                            "startmonster; -- Begin the monster spawning script \n" +
-                            "stopmonster; -- End the monster spawning script \n", senderClient, ChatMessageType.MessageBox);
-                        }
-                        else
-                        {
-                            SendDirectChatMessage(
-                            "suicide; -- Kill the player's character. Use if lost or stuck. \n" +
-                            "findcoal; -- Get the direction of the coalition submarine. \n" +
-                            "findsep; -- Get the direction of the separatist submarine. \n" +
-                            "stopspec; -- Leave spectator group to possibly spawn as a human \n" +
-                            "startspec; -- Join spectator group to ensure only spawning as a monster", senderClient, ChatMessageType.MessageBox);
-                        }
-                        break;
-                    case "respawn":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            List<Client> deadPlayers = connectedClients.Where(c => (c.Character?.IsDead ?? true) && c.InGame && !c.SpectateOnly).ToList();
-                            Submarine respawnSub = Submarine.MainSub;
-                            CharacterTeamType respawnTeam = Submarine.MainSub.TeamID;
-                            if (deadPlayers.Any())
-                            {
-                                foreach (Client c in deadPlayers)
-                                {
-                                    if (Submarine.MainSubs[1] != null)
-                                    {
-                                        int indexSub = rnd.Next(Submarine.MainSubs.Length);
-                                        respawnSub = Submarine.MainSubs[indexSub];
-                                        respawnTeam = Submarine.MainSubs[indexSub].TeamID;
-                                    }
-                                    WayPoint respawnPoint = WayPoint.GetRandom(SpawnType.Human, null, respawnSub);
-                                    CharacterInfo charInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, name: c.Name, null);
-                                    Character respawnChar = Character.Create(charInfo, respawnPoint.WorldPosition, ToolBox.RandomSeed(8));
-                                    respawnChar.TeamID = respawnTeam;
-                                    respawnChar.GiveJobItems(respawnPoint);
-                                    respawnChar.Info.StartItemsGiven = true;
-                                    GameMain.Server.SetClientCharacter(c, respawnChar);
-                                }
-                                goto DONE;
-                            }
-                            SendDirectChatMessage("No players to respawn!", senderClient, ChatMessageType.MessageBox);
-                            break;
-                        DONE:
-                            SendDirectChatMessage("Finished respawning players!", senderClient, ChatMessageType.MessageBox);
-                            break;
-                        }
-                        else
-                        {
-                            SendDirectChatMessage("Respawning players failed!", senderClient, ChatMessageType.MessageBox);
-                        }
-                        break;
-                    case "removeop":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            string[] banned = { "tonicliquid", "steroids", "hyperzine", "nucleardepthcharge",
-                                "nuclearshell", "fraggrenade", "incendiumgrenade", "coilgunammoboxexplosive",
-                                "ic4block", "c4block", "uex", "compoundn", "volatilecompoundn", "nitroglycerin"};
-                            int count = 0;
-                            foreach (Item itm in Item.ItemList)
-                            {
-                                if (banned.Any(b => b == itm.Prefab.Identifier))
-                                {
-                                    count++;
-                                    Entity.Spawner.AddToRemoveQueue(itm);
-                                }
-                            }
-                            SendDirectChatMessage(count + " banned items removed!!!", senderClient, ChatMessageType.MessageBox);
-                        }
-                        break;
-                    case "removesteroid":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            string[] banned = { "tonicliquid", "steroids", "hyperzine" };
-                            int count = 0;
-                            foreach (Item itm in Item.ItemList)
-                            {
-                                if (banned.Any(b => b == itm.Prefab.Identifier))
-                                {
-                                    count++;
-                                    Entity.Spawner.AddToRemoveQueue(itm);
-                                }
-                            }
-                            SendDirectChatMessage(count + " steroids removed!!!", senderClient, ChatMessageType.MessageBox);
-                        }
-                        break;
-                    case "removegrief":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            string[] banned = { "grenadelauncher", "flamer", "weldingtool", "plasmacutter", "screwdriver",
-                                "ic4block", "c4block", "uex", "compoundn", "volatilecompoundn", "nitroglycerin" };
-                            int count = 0;
-                            foreach (Item itm in Item.ItemList)
-                            {
-                                if (banned.Any(b => b == itm.Prefab.Identifier))
-                                {
-                                    count++;
-                                    Entity.Spawner.AddToRemoveQueue(itm);
-                                }
-                            }
-                            SendDirectChatMessage(count + " griefables removed!!!", senderClient, ChatMessageType.MessageBox);
-                        }
-                        break;
-                    case "removeweld":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            string[] banned = { "weldingfueltank" };
-                            int count = 0;
-                            foreach (Item itm in Item.ItemList)
-                            {
-                                if (banned.Any(b => b == itm.Prefab.Identifier))
-                                {
-                                    count++;
-                                    Entity.Spawner.AddToRemoveQueue(itm);
-                                }
-                            }
-                            SendDirectChatMessage(count + " welding fuel tanks removed!!!", senderClient, ChatMessageType.MessageBox);
-                        }
-                        break;
-                    case "removeoxygen":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            string[] banned = { "oxygentank" };
-                            int count = 0;
-                            foreach (Item itm in Item.ItemList)
-                            {
-                                if (banned.Any(b => b == itm.Prefab.Identifier))
-                                {
-                                    count++;
-                                    Entity.Spawner.AddToRemoveQueue(itm);
-                                }
-                            }
-                            SendDirectChatMessage(count + " oxygen tanks removed!!!", senderClient, ChatMessageType.MessageBox);
-                        }
-                        break;
-                    case "removefuel":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            string[] banned = { "fuelrod", "fulguriumfuelrod", "thoriumfuelrod" };
-                            int count = 0;
-                            foreach (Item itm in Item.ItemList)
-                            {
-                                if (banned.Any(b => b == itm.Prefab.Identifier))
-                                {
-                                    count++;
-                                    Entity.Spawner.AddToRemoveQueue(itm);
-                                }
-                            }
-                            SendDirectChatMessage(count + " fuel rods removed!!!", senderClient, ChatMessageType.MessageBox);
-                        }
-                        break;
-                    case "removebody":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            int count = 0;
-                            foreach (Character chr in Character.CharacterList)
-                            {
-                                if (chr.IsDead == true)
-                                {
-                                    count++;
-                                    Entity.Spawner.AddToRemoveQueue(chr);
-                                }
-                            }
-                            SendDirectChatMessage(count + " bodies removed!!!", senderClient, ChatMessageType.MessageBox);
-                        }
-                        break;
-                    case "removejunk":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            int count = 0;
-                            foreach (Item itm in Item.ItemList)
-                            {
-                                if (itm.PhysicsBodyActive == true && itm.GetRootInventoryOwner() == itm)
-                                {
-                                    count++;
-                                    Entity.Spawner.AddToRemoveQueue(itm);
-                                }
-                            }
-                            SendDirectChatMessage(count + " pieces of loose junk removed!!!", senderClient, ChatMessageType.MessageBox);
-                        }
-                        break;
-                    case "addzombie":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            Character ded;
-                            if (Submarine.MainSubs[1] != null)
-                            {
-                                ded = Character.CharacterList.Find(chr => chr.IsHuman && chr.IsDead
-                                && Submarine.MainSubs.Any(s => Vector2.Distance(s.WorldPosition, chr?.WorldPosition ?? Vector2.Zero) < s.Borders.Width));
-                            }
-                            else
-                            {
-                                ded = Character.CharacterList.Find(chr => chr.IsHuman && chr.IsDead
-                                && Vector2.Distance(Submarine.MainSub.WorldPosition, chr?.WorldPosition ?? Vector2.Zero) < Submarine.MainSub.Borders.Width);
-                            }
-                            if (ded != null)
-                            {
-                                ded.Revive();
-                                Affliction zombie = new Affliction(AfflictionPrefab.Prefabs["huskinfection"], 100f);
-                                ded.CharacterHealth.ApplyAffliction(ded.AnimController.MainLimb, zombie);
-                                goto DONE;
-                            }
-                            SendDirectChatMessage("No bodies to turn into zombies!", senderClient, ChatMessageType.MessageBox);
-                            break;
-                        DONE:
-                            SendDirectChatMessage("Added a zombie!", senderClient, ChatMessageType.MessageBox);
-                            break;
-                        }
-                        break;
-                    case "startvoip":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            foreach (Client client in connectedClients)
-                            {
-                                client.Muted = false;
-                            }
-                            GameMain.Server.SendChatMessage("Starting VOIP", ChatMessageType.Error);
-                        }
-                        break;
-                    case "stopvoip":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            foreach (Client client in connectedClients.Where(c => !c.HasPermission(ClientPermissions.Ban)))
-                            {
-                                client.Muted = true;
-                            }
-                            GameMain.Server.SendChatMessage("Stopping VOIP", ChatMessageType.Error);
-                        }
-                        break;
-                    case "startmonster":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            CoroutineManager.StartCoroutine(StartMonsters(), "StartMonsters");
-                        }
-                        break;
-                    case "stopmonster":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            CoroutineManager.StopCoroutines("StartMonsters");
-                            GameMain.Server.SendChatMessage("To learn more about chatbox commands, type help; (don't forget the semicolon) in the chatbox. " +
-                            "Press F to attack as monster by default. If you're lost, type suicide; to respawn. Type findcoal; or findsep; to find the enemy sub!", ChatMessageType.Error);
-                        }
-                        break;
-                    case "spawnpet":
-                        if (senderClient.HasPermission(ClientPermissions.Ban))
-                        {
-                            string[] pet = {
-                            "balloon",
-                            "orangeboy",
-                            "psilotoad",
-                            "peanut",
-                            };
-                            Client readyPet = connectedClients.Find(c => (c.Character?.IsDead ?? true) && c.InGame);
-                            if (readyPet != null)
-                            {
-                                Vector2 goPos = Submarine.MainSub.WorldPosition;
-                                if (Submarine.MainSubs[1] != null)
-                                {
-                                    int indexSub = rnd.Next(2);
-                                    goPos = Submarine.MainSubs[indexSub].WorldPosition;
-                                }
-                                int indexPet = rnd.Next(pet.Length);
-                                GameMain.Server.SetClientCharacter(readyPet, SpawnCreature(pet[indexPet], goPos));
-                                goto DONE;
-                            }
-                            SendDirectChatMessage("No players to turn into pets!", senderClient, ChatMessageType.MessageBox);
-                            break;
-                        DONE:
-                            SendDirectChatMessage("Added a pet!", senderClient, ChatMessageType.MessageBox);
-                            break;
-                        }
-                        break;
-
-
-
-
-
                     case "d":
                     case "dead":
                         type = ChatMessageType.Dead;
@@ -4053,6 +3698,363 @@ namespace Barotrauma.Networking
                             type = ChatMessageType.Default;
                         }
                         break;
+                }
+
+                if (message[0] == '!')
+                {
+                    string specialcommand = ChatMessage.GetSpecialChatMessageCommand(message, out tempStr);
+                    switch (specialcommand.ToLowerInvariant())
+                    {
+                        case "":
+                            break;
+                        case "suicide":
+                            if (!senderClient.Character.IsDead)
+                            {
+                                senderClient.Character.Kill(CauseOfDeathType.Suffocation, null);
+                                GameMain.Server.SendChatMessage(senderClient.Name + " has committed suicide. Shameful display!", ChatMessageType.Error);
+                            }
+                            else
+                            {
+                                SendDirectChatMessage("You're already dead!", senderClient, ChatMessageType.MessageBox);
+                            }
+                            break;
+                        case "findcoal":
+                            string cdist = (Vector2.Distance(senderClient.Character.WorldPosition, Submarine.MainSub.WorldPosition) / 100).ToString("0.00");
+                            string cdir = GetDirection(senderClient.Character.WorldPosition, Submarine.MainSub.WorldPosition);
+                            SendDirectChatMessage("Coalition submarine has been detected " + cdist + " meters to the " + cdir + "!", senderClient, ChatMessageType.MessageBox);
+                            break;
+                        case "findsep":
+                            if (Submarine.MainSubs[1] != null)
+                            {
+                                string sdist = (Vector2.Distance(senderClient.Character.WorldPosition, Submarine.MainSubs[1].WorldPosition) / 100).ToString("0.00");
+                                string sdir = GetDirection(senderClient.Character.WorldPosition, Submarine.MainSubs[1].WorldPosition);
+                                SendDirectChatMessage("Separatist submarine has been detected " + sdist + " meters to the " + sdir + "!", senderClient, ChatMessageType.MessageBox);
+                            }
+                            else
+                            {
+                                SendDirectChatMessage("No separatist submarine exists!", senderClient, ChatMessageType.MessageBox);
+                            }
+                            break;
+                        case "startspec":
+                            if (senderClient.SpectateOnly == false)
+                            {
+                                senderClient.SpectateOnly = true;
+                                SendDirectChatMessage("You've been added to the spectators!", senderClient, ChatMessageType.MessageBox);
+                                GameMain.Server.SendChatMessage(senderClient.Name + " has joined spectators!", ChatMessageType.Error);
+                            }
+                            else
+                            {
+                                SendDirectChatMessage("You're already in spectators!", senderClient, ChatMessageType.MessageBox);
+                            }
+                            break;
+                        case "stopspec":
+                            if (senderClient.SpectateOnly == true)
+                            {
+                                senderClient.SpectateOnly = false;
+                                SendDirectChatMessage("You've been removed from the spectators!", senderClient, ChatMessageType.MessageBox);
+                                GameMain.Server.SendChatMessage(senderClient.Name + " has left spectators!", ChatMessageType.Error);
+                            }
+                            else
+                            {
+                                SendDirectChatMessage("You're already not in spectators!", senderClient, ChatMessageType.MessageBox);
+                            }
+                            break;
+                        case "tip":
+                            GameMain.Server.SendChatMessage("To learn more about chatbox commands, type help; (don't forget the semicolon) in the chatbox. " +
+                                "Press F to attack as monster by default. If you're lost, type suicide; to respawn. Type findcoal; or findsep; to find the enemy sub!", ChatMessageType.Error);
+                            break;
+                        case "help":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                SendDirectChatMessage(
+                                "suicide; -- Kill the player's character. Use if lost or stuck. \n" +
+                                "findcoal; -- Get the direction of the coalition submarine. \n" +
+                                "findsep; -- Get the direction of the separatist submarine. \n" +
+                                "stopspec; -- Leave spectator group and allows becoming a monster \n" +
+                                "startspec; -- Join spectator group and prevents becoming a monster \n" +
+                                "tip; -- Send helpful hints for new players \n" +
+                                "respawn; -- Add any players who are not alive and not in spec team \n" +
+                                "removeop; -- Remove dangerous and unbalanced items \n" +
+                                "removesteroid; -- Remove anabolic steroids \n" +
+                                "removegrief; -- Remove any easily griefable items \n" +
+                                "removeweld; -- Remove welding fuel so rounds don't take forever \n" +
+                                "removefuel; -- Remove all fuel rods to prevent overload \n" +
+                                "removebody; -- Remove any ragdolls to reduce lag \n" +
+                                "removejunk; -- Remove any loose items to reduce lag \n" +
+                                "addzombie; -- Turn a single human corpse into a husk \n" +
+                                "startvoip; -- Allow players to speak \n" +
+                                "stopvoip; -- Prevent any non-admin player from speaking \n" +
+                                "startmonster; -- Begin the monster spawning script \n" +
+                                "stopmonster; -- End the monster spawning script \n", senderClient, ChatMessageType.MessageBox);
+                            }
+                            else
+                            {
+                                SendDirectChatMessage(
+                                "suicide; -- Kill the player's character. Use if lost or stuck. \n" +
+                                "findcoal; -- Get the direction of the coalition submarine. \n" +
+                                "findsep; -- Get the direction of the separatist submarine. \n" +
+                                "stopspec; -- Leave spectator group to possibly spawn as a human \n" +
+                                "startspec; -- Join spectator group to ensure only spawning as a monster", senderClient, ChatMessageType.MessageBox);
+                            }
+                            break;
+                        case "respawn":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                List<Client> deadPlayers = connectedClients.Where(c => (c.Character?.IsDead ?? true) && c.InGame && !c.SpectateOnly).ToList();
+                                Submarine respawnSub = Submarine.MainSub;
+                                CharacterTeamType respawnTeam = Submarine.MainSub.TeamID;
+                                if (deadPlayers.Any())
+                                {
+                                    foreach (Client c in deadPlayers)
+                                    {
+                                        if (Submarine.MainSubs[1] != null)
+                                        {
+                                            int indexSub = rnd.Next(Submarine.MainSubs.Length);
+                                            respawnSub = Submarine.MainSubs[indexSub];
+                                            respawnTeam = Submarine.MainSubs[indexSub].TeamID;
+                                        }
+                                        WayPoint respawnPoint = WayPoint.GetRandom(SpawnType.Human, null, respawnSub);
+                                        CharacterInfo charInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, name: c.Name, null);
+                                        Character respawnChar = Character.Create(charInfo, respawnPoint.WorldPosition, ToolBox.RandomSeed(8));
+                                        respawnChar.TeamID = respawnTeam;
+                                        respawnChar.GiveJobItems(respawnPoint);
+                                        respawnChar.Info.StartItemsGiven = true;
+                                        GameMain.Server.SetClientCharacter(c, respawnChar);
+                                    }
+                                    goto DONE;
+                                }
+                                SendDirectChatMessage("No players to respawn!", senderClient, ChatMessageType.MessageBox);
+                                break;
+                            DONE:
+                                SendDirectChatMessage("Finished respawning players!", senderClient, ChatMessageType.MessageBox);
+                                break;
+                            }
+                            else
+                            {
+                                SendDirectChatMessage("Respawning players failed!", senderClient, ChatMessageType.MessageBox);
+                            }
+                            break;
+                        case "removeop":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                string[] banned = { "tonicliquid", "steroids", "hyperzine", "nucleardepthcharge",
+                                    "nuclearshell", "fraggrenade", "incendiumgrenade", "coilgunammoboxexplosive",
+                                    "ic4block", "c4block", "uex", "compoundn", "volatilecompoundn", "nitroglycerin"};
+                                int count = 0;
+                                foreach (Item itm in Item.ItemList)
+                                {
+                                    if (banned.Any(b => b == itm.Prefab.Identifier))
+                                    {
+                                        count++;
+                                        Entity.Spawner.AddToRemoveQueue(itm);
+                                    }
+                                }
+                                SendDirectChatMessage(count + " banned items removed!!!", senderClient, ChatMessageType.MessageBox);
+                            }
+                            break;
+                        case "removesteroid":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                string[] banned = { "tonicliquid", "steroids", "hyperzine" };
+                                int count = 0;
+                                foreach (Item itm in Item.ItemList)
+                                {
+                                    if (banned.Any(b => b == itm.Prefab.Identifier))
+                                    {
+                                        count++;
+                                        Entity.Spawner.AddToRemoveQueue(itm);
+                                    }
+                                }
+                                SendDirectChatMessage(count + " steroids removed!!!", senderClient, ChatMessageType.MessageBox);
+                            }
+                            break;
+                        case "removegrief":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                string[] banned = { "grenadelauncher", "flamer", "weldingtool", "plasmacutter", "screwdriver",
+                                    "ic4block", "c4block", "uex", "compoundn", "volatilecompoundn", "nitroglycerin" };
+                                int count = 0;
+                                foreach (Item itm in Item.ItemList)
+                                {
+                                    if (banned.Any(b => b == itm.Prefab.Identifier))
+                                    {
+                                        count++;
+                                        Entity.Spawner.AddToRemoveQueue(itm);
+                                    }
+                                }
+                                SendDirectChatMessage(count + " griefables removed!!!", senderClient, ChatMessageType.MessageBox);
+                            }
+                            break;
+                        case "removeweld":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                string[] banned = { "weldingfueltank" };
+                                int count = 0;
+                                foreach (Item itm in Item.ItemList)
+                                {
+                                    if (banned.Any(b => b == itm.Prefab.Identifier))
+                                    {
+                                        count++;
+                                        Entity.Spawner.AddToRemoveQueue(itm);
+                                    }
+                                }
+                                SendDirectChatMessage(count + " welding fuel tanks removed!!!", senderClient, ChatMessageType.MessageBox);
+                            }
+                            break;
+                        case "removeoxygen":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                string[] banned = { "oxygentank" };
+                                int count = 0;
+                                foreach (Item itm in Item.ItemList)
+                                {
+                                    if (banned.Any(b => b == itm.Prefab.Identifier))
+                                    {
+                                        count++;
+                                        Entity.Spawner.AddToRemoveQueue(itm);
+                                    }
+                                }
+                                SendDirectChatMessage(count + " oxygen tanks removed!!!", senderClient, ChatMessageType.MessageBox);
+                            }
+                            break;
+                        case "removefuel":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                string[] banned = { "fuelrod", "fulguriumfuelrod", "thoriumfuelrod" };
+                                int count = 0;
+                                foreach (Item itm in Item.ItemList)
+                                {
+                                    if (banned.Any(b => b == itm.Prefab.Identifier))
+                                    {
+                                        count++;
+                                        Entity.Spawner.AddToRemoveQueue(itm);
+                                    }
+                                }
+                                SendDirectChatMessage(count + " fuel rods removed!!!", senderClient, ChatMessageType.MessageBox);
+                            }
+                            break;
+                        case "removebody":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                int count = 0;
+                                foreach (Character chr in Character.CharacterList)
+                                {
+                                    if (chr.IsDead == true)
+                                    {
+                                        count++;
+                                        Entity.Spawner.AddToRemoveQueue(chr);
+                                    }
+                                }
+                                SendDirectChatMessage(count + " bodies removed!!!", senderClient, ChatMessageType.MessageBox);
+                            }
+                            break;
+                        case "removejunk":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                int count = 0;
+                                foreach (Item itm in Item.ItemList)
+                                {
+                                    if (itm.PhysicsBodyActive == true && itm.GetRootInventoryOwner() == itm)
+                                    {
+                                        count++;
+                                        Entity.Spawner.AddToRemoveQueue(itm);
+                                    }
+                                }
+                                SendDirectChatMessage(count + " pieces of loose junk removed!!!", senderClient, ChatMessageType.MessageBox);
+                            }
+                            break;
+                        case "addzombie":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                Character ded;
+                                if (Submarine.MainSubs[1] != null)
+                                {
+                                    ded = Character.CharacterList.Find(chr => chr.IsHuman && chr.IsDead
+                                    && Submarine.MainSubs.Any(s => Vector2.Distance(s.WorldPosition, chr?.WorldPosition ?? Vector2.Zero) < s.Borders.Width));
+                                }
+                                else
+                                {
+                                    ded = Character.CharacterList.Find(chr => chr.IsHuman && chr.IsDead
+                                    && Vector2.Distance(Submarine.MainSub.WorldPosition, chr?.WorldPosition ?? Vector2.Zero) < Submarine.MainSub.Borders.Width);
+                                }
+                                if (ded != null)
+                                {
+                                    ded.Revive();
+                                    Affliction zombie = new Affliction(AfflictionPrefab.Prefabs["huskinfection"], 100f);
+                                    ded.CharacterHealth.ApplyAffliction(ded.AnimController.MainLimb, zombie);
+                                    goto DONE;
+                                }
+                                SendDirectChatMessage("No bodies to turn into zombies!", senderClient, ChatMessageType.MessageBox);
+                                break;
+                            DONE:
+                                SendDirectChatMessage("Added a zombie!", senderClient, ChatMessageType.MessageBox);
+                                break;
+                            }
+                            break;
+                        case "startvoip":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                foreach (Client client in connectedClients)
+                                {
+                                    client.Muted = false;
+                                }
+                                GameMain.Server.SendChatMessage("Starting VOIP", ChatMessageType.Error);
+                            }
+                            break;
+                        case "stopvoip":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                foreach (Client client in connectedClients.Where(c => !c.HasPermission(ClientPermissions.Ban)))
+                                {
+                                    client.Muted = true;
+                                }
+                                GameMain.Server.SendChatMessage("Stopping VOIP", ChatMessageType.Error);
+                            }
+                            break;
+                        case "startmonster":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                CoroutineManager.StartCoroutine(StartMonsters(), "StartMonsters");
+                            }
+                            break;
+                        case "stopmonster":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                CoroutineManager.StopCoroutines("StartMonsters");
+                                GameMain.Server.SendChatMessage("To learn more about chatbox commands, type help; (don't forget the semicolon) in the chatbox. " +
+                                "Press F to attack as monster by default. If you're lost, type suicide; to respawn. Type findcoal; or findsep; to find the enemy sub!", ChatMessageType.Error);
+                            }
+                            break;
+                        case "spawnpet":
+                            if (senderClient.HasPermission(ClientPermissions.Ban))
+                            {
+                                string[] pet = {
+                                "balloon",
+                                "orangeboy",
+                                "psilotoad",
+                                "peanut",
+                                };
+                                Client readyPet = connectedClients.Find(c => (c.Character?.IsDead ?? true) && c.InGame);
+                                if (readyPet != null)
+                                {
+                                    Vector2 goPos = Submarine.MainSub.WorldPosition;
+                                    if (Submarine.MainSubs[1] != null)
+                                    {
+                                        int indexSub = rnd.Next(2);
+                                        goPos = Submarine.MainSubs[indexSub].WorldPosition;
+                                    }
+                                    int indexPet = rnd.Next(pet.Length);
+                                    GameMain.Server.SetClientCharacter(readyPet, SpawnCreature(pet[indexPet], goPos));
+                                    goto DONE;
+                                }
+                                SendDirectChatMessage("No players to turn into pets!", senderClient, ChatMessageType.MessageBox);
+                                break;
+                            DONE:
+                                SendDirectChatMessage("Added a pet!", senderClient, ChatMessageType.MessageBox);
+                                break;
+                            }
+                            break;
+                    }
                 }
 
                 message = tempStr;

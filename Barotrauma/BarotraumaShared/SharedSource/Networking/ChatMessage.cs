@@ -148,6 +148,34 @@ namespace Barotrauma.Networking
             return command;
         }
 
+        public static string GetSpecialChatMessageCommand(string message, out string messageWithoutCommand)
+        {
+            messageWithoutCommand = message;
+
+            if (message[0] != '!') return "";
+
+            int separatorIndex = message.IndexOf(" ");
+
+            if (separatorIndex == -1) { separatorIndex = message.Length - 1; }
+
+            string command = "";
+            try
+            {
+                command = message.Substring(1, separatorIndex);
+                command = command.Trim();
+            }
+
+            catch
+            {
+                return command;
+            }
+
+            messageWithoutCommand = message.Substring(separatorIndex + 1, message.Length - separatorIndex - 1).TrimStart();
+
+            return command;
+        }
+
+
         public static float GetGarbleAmount(Entity listener, Entity sender, float range, float obstructionmult = 2.0f)
         {
             if (listener == null || sender == null)
