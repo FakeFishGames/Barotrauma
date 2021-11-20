@@ -3733,7 +3733,7 @@ namespace Barotrauma.Networking
                             "startvoip; -- Allow players to speak \n" +
                             "stopvoip; -- Prevent any non-admin player from speaking \n" +
                             "startmonster; -- Begin the monster spawning script \n" +
-                            "stopmonster; -- End the monster spawning script \n", senderClient, ChatMessageType.Error);
+                            "stopmonster; -- End the monster spawning script \n", senderClient, ChatMessageType.MessageBox);
                         }
                         else
                         {
@@ -3742,7 +3742,7 @@ namespace Barotrauma.Networking
                             "findcoal; -- Get the direction of the coalition submarine. \n" +
                             "findsep; -- Get the direction of the separatist submarine. \n" +
                             "stopspec; -- Leave spectator group to possibly spawn as a human \n" +
-                            "startspec; -- Join spectator group to ensure only spawning as a monster", senderClient, ChatMessageType.Error);
+                            "startspec; -- Join spectator group to ensure only spawning as a monster", senderClient, ChatMessageType.MessageBox);
                         }
                         break;
                     case "respawn":
