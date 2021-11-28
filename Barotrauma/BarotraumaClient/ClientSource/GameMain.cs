@@ -916,6 +916,11 @@ namespace Barotrauma
                         {
                             gameSession.ToggleTabMenu();
                         }
+                        else if (GUIMessageBox.VisibleBox as GUIMessageBox != null &&
+                                 GUIMessageBox.VisibleBox.UserData as string == "bugreporter")
+                        {
+                            ((GUIMessageBox)GUIMessageBox.VisibleBox).Close();
+                        }
                         else if (GUI.PauseMenuOpen)
                         {
                             GUI.TogglePauseMenu();
