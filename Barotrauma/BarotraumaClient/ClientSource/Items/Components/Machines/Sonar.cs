@@ -1623,6 +1623,11 @@ namespace Barotrauma.Items.Components
                     markerDistances.Add(targetIdentifier, cachedDistance);
                     dist = path.TotalLength;
                 }
+                else
+                {
+                    var cachedDistance = new CachedDistance(transducerPosition, worldPosition, linearDist, Timing.TotalTime + Rand.Range(4.0f, 7.0f));
+                    markerDistances.Add(targetIdentifier, cachedDistance);
+                }
             }
 
             Vector2 position = worldPosition - transducerPosition;

@@ -954,6 +954,13 @@ namespace Barotrauma
                     {
                         for (int i = 0; i < cavePathCells.Count; i++)
                         {
+                            var connectingEdge = i > 0 ? cavePathCells[i].Edges.Find(e => e.AdjacentCell(cavePathCells[i]) == cavePathCells[i - 1]) : null;
+                            if (connectingEdge != null)
+                            {
+                                var edgeWayPoint = new WayPoint(connectingEdge.Center, SpawnType.Path, submarine: null);
+                                ConnectWaypoints(prevWp, edgeWayPoint, 500.0f);
+                                prevWp = edgeWayPoint;
+                            }
                             var newWaypoint = new WayPoint(cavePathCells[i].Center, SpawnType.Path, submarine: null);
                             ConnectWaypoints(prevWp, newWaypoint, 500.0f);
                             prevWp = newWaypoint;
@@ -1382,6 +1389,7 @@ namespace Barotrauma
             if (tunnel.Cells.Count == 0) { return; }
 
             List<WayPoint> wayPoints = new List<WayPoint>();
+            WayPoint prevWayPoint = null;
             for (int i = 0; i < tunnel.Cells.Count; i++)
             {
                 tunnel.Cells[i].CellType = CellType.Path;
@@ -1391,10 +1399,58 @@ namespace Barotrauma
                 };
                 wayPoints.Add(newWaypoint);
 
-                if (wayPoints.Count > 1)
+                if (prevWayPoint != null)
                 {
-                    wayPoints[wayPoints.Count - 2].ConnectTo(newWaypoint);
+                    bool solidCellBetween = false;
+                    foreach (GraphEdge edge in tunnel.Cells[i].Edges)
+                    {
+                        if (edge.AdjacentCell(tunnel.Cells[i])?.CellType == CellType.Solid && 
+                            MathUtils.LinesIntersect(newWaypoint.WorldPosition, prevWayPoint.WorldPosition, edge.Point1, edge.Point2))
+                        {
+                            solidCellBetween = true;
+                            break;
+                        }
+                    }
+
+                    if (solidCellBetween)
+                    {
+                        //something between the previous waypoint and this one
+                        // -> find the edge that connects the cells and place a waypoint there, instead of connecting the centers of the cells directly
+                        var edgeBetweenCells = tunnel.Cells[i].Edges.Find(e => e.AdjacentCell(tunnel.Cells[i]) == tunnel.Cells[i - 1]);
+                        if (edgeBetweenCells != null)
+                        {
+                            var edgeWaypoint = new WayPoint(new Rectangle((int)edgeBetweenCells.Center.X, (int)edgeBetweenCells.Center.Y, 10, 10), null)
+                            {
+                                Tunnel = tunnel
+                            };
+                            prevWayPoint.ConnectTo(edgeWaypoint);
+                            prevWayPoint = edgeWaypoint;
+                        }
+                    }
+                    prevWayPoint.ConnectTo(newWaypoint);
+
+                    //look back at the tunnel cells before the previous one, and see if the current cell shares edges with them
+                    //= if we can "skip" from cell #1 to cell #3, create a waypoint between them.
+                    //Fixes there sometimes not being a path past a destructible ice chunk even if there's space to go past it.
+                    for (int j = i - 2; j > 0 && j > i - 5; j--)
+                    {
+                        foreach (GraphEdge edge in tunnel.Cells[i].Edges)
+                        {
+                            if (Vector2.DistanceSquared(edge.Point1, edge.Point2) < 30.0f * 30.0f) { continue; }
+                            if (!edge.IsSolid && edge.AdjacentCell(tunnel.Cells[i]) == tunnel.Cells[j])
+                            {
+                                var edgeWaypoint = new WayPoint(new Rectangle((int)edge.Center.X, (int)edge.Center.Y, 10, 10), null)
+                                {
+                                    Tunnel = tunnel
+                                };
+                                wayPoints[j].ConnectTo(edgeWaypoint);
+                                edgeWaypoint.ConnectTo(newWaypoint);
+                                break;
+                            }
+                        }
+                    }
                 }
+                prevWayPoint = newWaypoint;
             }
 
             tunnel.WayPoints.AddRange(wayPoints);
@@ -1954,6 +2010,8 @@ namespace Barotrauma
                 wayPoints.RemoveAt(i);
             }
 
+            Debug.Assert(wayPoints.Any(), "Couldn't generate waypoints around ruins.");
+
             //connect ruin entrances to the outside waypoints
             foreach (Gap g in Gap.GapList)
             {
@@ -1997,6 +2055,13 @@ namespace Barotrauma
             {
                 for (int i = 0; i < ruin.PathCells.Count; i++)
                 {
+                    var connectingEdge = i > 0 ? ruin.PathCells[i].Edges.Find(e => e.AdjacentCell(ruin.PathCells[i]) == ruin.PathCells[i - 1]) : null;
+                    if (connectingEdge != null)
+                    {
+                        var edgeWayPoint = new WayPoint(connectingEdge.Center, SpawnType.Path, submarine: null);
+                        ConnectWaypoints(prevWp, edgeWayPoint, outSideWaypointInterval);
+                        prevWp = edgeWayPoint;
+                    }
                     var newWaypoint = new WayPoint(ruin.PathCells[i].Center, SpawnType.Path, submarine: null);
                     ConnectWaypoints(prevWp, newWaypoint, outSideWaypointInterval);
                     prevWp = newWaypoint;
@@ -2947,7 +3012,7 @@ namespace Barotrauma
             if (!suitablePositions.Any())
             {
                 string errorMsg = "Could not find a suitable position of interest. (PositionType: " + positionType + ", minDistFromSubs: " + minDistFromSubs + ")\n" + Environment.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("Level.TryGetInterestingPosition:PositionTypeNotFound", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Level.TryGetInterestingPosition:PositionTypeNotFound", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #endif
@@ -2972,7 +3037,7 @@ namespace Barotrauma
             if (!farEnoughPositions.Any())
             {
                 string errorMsg = "Could not find a position of interest far enough from the submarines. (PositionType: " + positionType + ", minDistFromSubs: " + minDistFromSubs + ")\n" + Environment.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("Level.TryGetInterestingPosition:TooCloseToSubs", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Level.TryGetInterestingPosition:TooCloseToSubs", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #endif
@@ -3084,7 +3149,25 @@ namespace Barotrauma
             
             foreach (LevelWall wall in ExtraWalls)
             {
-                if (wall is DestructibleLevelWall destructibleWall && destructibleWall.Destroyed) { continue; }
+                if (wall == SeaFloor)
+                {
+                    if (SeaFloorTopPos < worldPos.Y - searchDepth * GridCellSize) { continue; }
+                }
+                else
+                {
+                    if (wall is DestructibleLevelWall destructibleWall && destructibleWall.Destroyed) { continue; }
+                    bool closeEnough = false;
+                    foreach (VoronoiCell cell in wall.Cells)
+                    {
+                        if (Math.Abs(cell.Center.X - worldPos.X) < (searchDepth + 1) * GridCellSize && 
+                            Math.Abs(cell.Center.Y - worldPos.Y) < (searchDepth + 1) * GridCellSize)
+                        { 
+                            closeEnough = true;
+                            break;
+                        }
+                    }
+                    if (!closeEnough) { continue; }
+                }
                 foreach (VoronoiCell cell in wall.Cells)
                 {
                     tempCells.Add(cell);
@@ -3739,7 +3822,7 @@ namespace Barotrauma
                     subDockingPortOffset = MathHelper.Clamp(subDockingPortOffset, -5000.0f, 5000.0f);
                     string warningMsg = "Docking port very far from the sub's center of mass (submarine: " + Submarine.MainSub.Info.Name + ", dist: " + subDockingPortOffset + "). The level generator may not be able to place the outpost so that docking is possible.";
                     DebugConsole.NewMessage(warningMsg, Color.Orange);
-                    GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:DockingPortVeryFar" + Submarine.MainSub.Info.Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, warningMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:DockingPortVeryFar" + Submarine.MainSub.Info.Name, GameAnalyticsManager.ErrorSeverity.Warning, warningMsg);
                 }
 
                 float outpostDockingPortOffset = subPort == null ? 0.0f : outpostPort.Item.WorldPosition.X - outpost.WorldPosition.X;
@@ -3749,7 +3832,7 @@ namespace Barotrauma
                     outpostDockingPortOffset = MathHelper.Clamp(outpostDockingPortOffset, -5000.0f, 5000.0f);
                     string warningMsg = "Docking port very far from the outpost's center of mass (outpost: " + outpost.Info.Name + ", dist: " + outpostDockingPortOffset + "). The level generator may not be able to place the outpost so that docking is possible.";
                     DebugConsole.NewMessage(warningMsg, Color.Orange);
-                    GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:OutpostDockingPortVeryFar" + outpost.Info.Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, warningMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:OutpostDockingPortVeryFar" + outpost.Info.Name, GameAnalyticsManager.ErrorSeverity.Warning, warningMsg);
                 }
 
                 Vector2 spawnPos = outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition, minSize, subDockingPortOffset - outpostDockingPortOffset, verticalMoveDir: 1);

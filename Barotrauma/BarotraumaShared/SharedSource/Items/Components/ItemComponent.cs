@@ -613,7 +613,7 @@ namespace Barotrauma.Items.Components
             {
                 string errorMsg = "ItemComponent.DegreeOfSuccess failed (character was null).\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return 0.0f;
             }
 
@@ -889,7 +889,7 @@ namespace Barotrauma.Items.Components
             {
                 DebugConsole.ThrowError("Error while loading entity of the type " + t + ".", e.InnerException);
                 GameAnalyticsManager.AddErrorEventOnce("ItemComponent.Load:TargetInvocationException" + item.Name + element.Name,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     "Error while loading entity of the type " + t + " (" + e.InnerException + ")\n" + Environment.StackTrace.CleanupStackTrace());
             }
 
@@ -994,7 +994,7 @@ namespace Barotrauma.Items.Components
             {
                 containObjective = new AIObjectiveContainItem(character, container.ContainableItemIdentifiers.ToArray(), container, currentObjective.objectiveManager, spawnItemIfNotFound: spawnItemIfNotFound)
                 {
-                    targetItemCount = itemCount,
+                    ItemCount = itemCount,
                     Equip = equip,
                     RemoveEmpty = removeEmpty,
                     GetItemPriority = i =>

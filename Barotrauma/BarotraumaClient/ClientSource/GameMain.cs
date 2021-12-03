@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using GameAnalyticsSDK.Net;
 using Barotrauma.IO;
 using System.Threading;
 using Barotrauma.Tutorials;
@@ -384,51 +383,6 @@ namespace Barotrauma
             loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "Load", canLoadInSeparateThread);
         }
 
-        private void InitUserStats()
-        {
-            return;
-
-            if (GameSettings.ShowUserStatisticsPrompt)
-            {
-                if (TextManager.ContainsTag("statisticspromptheader") && TextManager.ContainsTag("statisticsprompttext"))
-                {
-                    var userStatsPrompt = new GUIMessageBox(
-                        TextManager.Get("statisticspromptheader"),
-                        TextManager.Get("statisticsprompttext"),
-                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-                    userStatsPrompt.Buttons[0].OnClicked += (btn, userdata) =>
-                    {
-                        GameSettings.ShowUserStatisticsPrompt = false;
-                        GameSettings.SendUserStatistics = true;
-                        GameAnalyticsManager.Init();
-                        Config.SaveNewPlayerConfig();
-                        return true;
-                    };
-                    userStatsPrompt.Buttons[0].OnClicked += userStatsPrompt.Close;
-                    userStatsPrompt.Buttons[1].OnClicked += (btn, userdata) =>
-                    {
-                        GameSettings.ShowUserStatisticsPrompt = false;
-                        GameSettings.SendUserStatistics = false;
-                        Config.SaveNewPlayerConfig();
-                        return true;
-                    };
-                    userStatsPrompt.Buttons[1].OnClicked += userStatsPrompt.Close;
-                }
-                else
-                {
-                    //user statistics enabled by default if the prompt cannot be shown in the user's language
-                    GameSettings.ShowUserStatisticsPrompt = false;
-                    GameSettings.SendUserStatistics = true;
-                    GameAnalyticsManager.Init();
-                    Config.SaveNewPlayerConfig();
-                }
-            }
-            else if (GameSettings.SendUserStatistics)
-            {
-                GameAnalyticsManager.Init();
-            }
-        }
-
         public class LoadingException : Exception
         {
             public LoadingException(Exception e) : base("Loading was interrupted due to an error.", innerException: e)
@@ -522,14 +476,9 @@ namespace Barotrauma
                 DebugConsole.Log("Selected content packages: " + string.Join(", ", Config.AllEnabledPackages.Select(cp => cp.Name)));
             }
 
-#if DEBUG
-            GameSettings.ShowUserStatisticsPrompt = false;
-            GameSettings.SendUserStatistics = false;
-#endif
+            GameAnalyticsManager.InitIfConsented();
 
-            InitUserStats();
-
-        yield return CoroutineStatus.Running;
+            yield return CoroutineStatus.Running;
 
             Debug.WriteLine("sounds");
 
@@ -841,6 +790,8 @@ namespace Barotrauma
                     }
 #endif
 
+                    NetworkMember?.Update((float)Timing.Step);
+
                     if (!hasLoaded && !CoroutineManager.IsCoroutineRunning(loadingCoroutine))
                     {
                         throw new LoadingException(loadingCoroutine.Exception);
@@ -914,6 +865,11 @@ namespace Barotrauma
                         else if (GameSession.IsTabMenuOpen)
                         {
                             gameSession.ToggleTabMenu();
+                        }
+                        else if (GUIMessageBox.VisibleBox as GUIMessageBox != null &&
+                                 GUIMessageBox.VisibleBox.UserData as string == "bugreporter")
+                        {
+                            ((GUIMessageBox)GUIMessageBox.VisibleBox).Close();
                         }
                         else if (GUI.PauseMenuOpen)
                         {
@@ -999,10 +955,10 @@ namespace Barotrauma
                         }
                     }
 
+                    NetworkMember?.Update((float)Timing.Step);
+
                     GUI.Update((float)Timing.Step);
                 }
-
-                NetworkMember?.Update((float)Timing.Step);
 
                 CoroutineManager.Update((float)Timing.Step, Paused ? 0.0f : (float)Timing.Step);
 
@@ -1123,6 +1079,10 @@ namespace Barotrauma
 
             if (GameSession != null)
             {
+                double roundDuration = Timing.TotalTime - GameSession.RoundStartTime;
+                GameAnalyticsManager.AddProgressionEvent(GameAnalyticsManager.ProgressionStatus.Fail,
+                    GameSession.GameMode?.Name ?? "none",
+                    roundDuration);
                 if (Tutorial.Initialized)
                 {
                     ((TutorialMode)GameSession.GameMode).Tutorial?.Stop();
@@ -1131,6 +1091,7 @@ namespace Barotrauma
             GUIMessageBox.CloseAll();
             MainMenuScreen.Select();
             GameSession = null;
+
         }
 
         public void ShowCampaignDisclaimer(Action onContinue = null)
@@ -1254,7 +1215,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error while cleaning unnecessary save files", e);
             }
 
-            if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
+            if (GameAnalyticsManager.SendUserStatistics) { GameAnalyticsManager.ShutDown(); }
             if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging) { DebugConsole.SaveLogs(); }
 
             base.OnExiting(sender, args);

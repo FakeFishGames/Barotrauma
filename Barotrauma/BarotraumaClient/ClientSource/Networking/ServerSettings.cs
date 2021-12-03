@@ -92,8 +92,9 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminRead(IReadMessage incMsg)
+        public void ClientAdminRead(IReadMessage incMsg, NetFlags requiredFlags)
         {
+            if (!requiredFlags.HasFlag(NetFlags.Properties)) { return; }
             int count = incMsg.ReadUInt16();
             for (int i = 0; i < count; i++)
             {
@@ -128,8 +129,18 @@ namespace Barotrauma.Networking
         {
             cachedServerListInfo = null;
 
-            ServerName = incMsg.ReadString();
-            ServerMessageText = incMsg.ReadString();
+            NetFlags requiredFlags = (NetFlags)incMsg.ReadByte();
+
+            if (requiredFlags.HasFlag(NetFlags.Name))
+            {
+                ServerName = incMsg.ReadString();
+            }
+
+            if (requiredFlags.HasFlag(NetFlags.Message))
+            {
+                ServerMessageText = incMsg.ReadString();
+            }
+            PlayStyle = (PlayStyle)incMsg.ReadByte();
             MaxPlayers = incMsg.ReadByte();
             HasPassword = incMsg.ReadBoolean();
             IsPublic = incMsg.ReadBoolean();
@@ -139,23 +150,23 @@ namespace Barotrauma.Networking
             TickRate = incMsg.ReadRangedInteger(1, 60);
             GameMain.NetworkMember.TickRate = TickRate;
 
-            ReadExtraCargo(incMsg);
-
+            if (requiredFlags.HasFlag(NetFlags.Properties))
+            {
+                ReadExtraCargo(incMsg);
+            }
+            
             ReadHiddenSubs(incMsg);
-
             GameMain.NetLobbyScreen.UpdateSubVisibility();
-
-            Voting.ClientRead(incMsg);
 
             bool isAdmin = incMsg.ReadBoolean();
             incMsg.ReadPadBits();
             if (isAdmin)
             {
-                ClientAdminRead(incMsg);
+                ClientAdminRead(incMsg, requiredFlags);
             }
         }
 
-        public void ClientAdminWrite(NetFlags dataToSend, int? missionTypeOr = null, int? missionTypeAnd = null, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0, bool? radiationEnabled = null, bool? useRespawnShuttle = null, int maxMissionCount = 0)
+        public void ClientAdminWrite(NetFlags dataToSend, int? missionTypeOr = null, int? missionTypeAnd = null, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0, bool? useRespawnShuttle = null)
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
@@ -225,8 +236,6 @@ namespace Barotrauma.Networking
 
                 outMsg.Write(autoRestart != null);
                 outMsg.Write(autoRestart ?? false);
-                outMsg.Write(radiationEnabled ?? RadiationEnabled);
-                outMsg.Write((byte)maxMissionCount + 1);
 
                 outMsg.WritePadBits();
             }
@@ -711,7 +720,6 @@ namespace Barotrauma.Networking
                     RelativeSpacing = 0.05f
                 };
 
-
                 if (ip.InventoryIcon != null || ip.sprite != null)
                 {
                     GUIImage img = new GUIImage(new RectTransform(new Point(itemFrame.Rect.Height), itemFrame.RectTransform),
@@ -734,7 +742,7 @@ namespace Barotrauma.Networking
                     GUINumberInput.NumberType.Int, textAlignment: Alignment.CenterLeft)
                 {
                     MinValueInt = 0,
-                    MaxValueInt = 100,
+                    MaxValueInt = MaxExtraCargoItemsOfType,
                     IntValue = cargoVal
                 };
                 amountInput.OnValueChanged += (numberInput) =>
@@ -742,15 +750,25 @@ namespace Barotrauma.Networking
                     if (ExtraCargo.ContainsKey(ip))
                     {
                         ExtraCargo[ip] = numberInput.IntValue;
-                        if (numberInput.IntValue <= 0) ExtraCargo.Remove(ip);
+                        if (numberInput.IntValue <= 0) { ExtraCargo.Remove(ip); }
                     }
-                    else
+                    else if (ExtraCargo.Keys.Count() < MaxExtraCargoItemTypes)
                     {
                         ExtraCargo.Add(ip, numberInput.IntValue);
                     }
+                    numberInput.IntValue = ExtraCargo.ContainsKey(ip) ? ExtraCargo[ip] : 0;
+                    CoroutineManager.Invoke(() =>
+                    {
+                        foreach (var child in cargoFrame.Content.GetAllChildren())
+                        {
+                            if (child.GetChild<GUINumberInput>() is GUINumberInput otherNumberInput)
+                            {
+                                otherNumberInput.PlusButton.Enabled = ExtraCargo.Keys.Count() < MaxExtraCargoItemTypes && otherNumberInput.IntValue < otherNumberInput.MaxValueInt;
+                            }
+                        }
+                    }, 0.0f);
                 };
             }
-
 
             //--------------------------------------------------------------------------------
             //                              antigriefing
@@ -913,6 +931,7 @@ namespace Barotrauma.Networking
             //--------------------------------------------------------------------------------
 
             Whitelist.CreateWhiteListFrame(settingsTabs[(int)SettingsTab.Whitelist]);
+            Whitelist.localEnabled = Whitelist.Enabled;
         }
 
         private void CreateLabeledSlider(GUIComponent parent, string labelTag, out GUIScrollBar slider, out GUITextBlock label)

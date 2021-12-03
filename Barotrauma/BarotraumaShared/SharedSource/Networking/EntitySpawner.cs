@@ -257,7 +257,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Attempted to add a null item to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue1:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue1:ItemPrefabNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, worldPosition, onSpawned, condition, quality));
@@ -270,7 +270,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Attempted to add a null item to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue2:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue2:ItemPrefabNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub, onSpawned, condition, quality));
@@ -283,7 +283,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Attempted to add a null item to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue3:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue3:ItemPrefabNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory, onSpawned, condition, quality) 
@@ -301,7 +301,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Attempted to add an empty/null species name to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue4:SpeciesNameNullOrEmpty", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue4:SpeciesNameNullOrEmpty", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
             spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, worldPosition, onSpawn));
@@ -314,7 +314,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Attempted to add an empty/null species name to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue5:SpeciesNameNullOrEmpty", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue5:SpeciesNameNullOrEmpty", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
             spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, position, sub, onSpawn));
@@ -327,7 +327,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Attempted to add an empty/null species name to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue4:SpeciesNameNullOrEmpty", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue4:SpeciesNameNullOrEmpty", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
             spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, worldPosition, characterInfo, onSpawn));

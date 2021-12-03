@@ -159,7 +159,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"Error while removing entity \"{e}\"", exception);
                     GameAnalyticsManager.AddErrorEventOnce(
                         $"Entity.RemoveAll:Exception{e}",
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         $"Error while removing entity \"{e} ({exception.Message})\n{exception.StackTrace.CleanupStackTrace()}");
                 }
             }
@@ -223,7 +223,7 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError(errorLine);
                 }
-                GameAnalyticsManager.AddErrorEventOnce("Entity.RemoveAll", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg.ToString());
+                GameAnalyticsManager.AddErrorEventOnce("Entity.RemoveAll", GameAnalyticsManager.ErrorSeverity.Error, errorMsg.ToString());
             }
 
             dictionary.Clear();
@@ -243,14 +243,14 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Entity {ToString()} ({ID}) not present in entity dictionary.");
                 GameAnalyticsManager.AddErrorEventOnce(
                     $"Entity.FreeID:EntityNotFound{ID}",
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     $"Entity {ToString()} ({ID}) not present in entity dictionary.\n{Environment.StackTrace.CleanupStackTrace()}");
             }
             else if (existingEntity != this)
             {
                 DebugConsole.ThrowError($"Entity ID mismatch in entity dictionary. Entity {existingEntity} had the ID {ID} (expecting {ToString()})");
                 GameAnalyticsManager.AddErrorEventOnce("Entity.FreeID:EntityMismatch" + ID,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     $"Entity ID mismatch in entity dictionary. Entity {existingEntity} had the ID {ID} (expecting {ToString()})");
             }
             else

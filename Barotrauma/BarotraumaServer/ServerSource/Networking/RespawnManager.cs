@@ -398,6 +398,7 @@ namespace Barotrauma.Networking
                         else
                         {
                             ReduceCharacterSkills(characterInfos[i]);
+                            characterInfos[i].RemoveSavedStatValuesOnDeath();
                         }
                     }
                 }

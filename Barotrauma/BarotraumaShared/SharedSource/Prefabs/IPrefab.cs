@@ -27,7 +27,7 @@ namespace Barotrauma
                 prefab.UIntIdentifier = ToolBox.StringToUInt32Hash(prefab.Identifier, md5);
 
                 //it's theoretically possible for two different values to generate the same hash, but the probability is astronomically small
-                var collision = prefabs.Find(p => p != prefab && p.UIntIdentifier == prefab.UIntIdentifier);
+                var collision = prefabs.Find(p => p.Identifier != prefab.Identifier && p.UIntIdentifier == prefab.UIntIdentifier);
                 if (collision != null)
                 {
                     DebugConsole.ThrowError($"Hashing collision when generating uint identifiers for {typeof(T).Name}: {prefab.Identifier} has the same identifier as {collision.Identifier} ({prefab.UIntIdentifier})");

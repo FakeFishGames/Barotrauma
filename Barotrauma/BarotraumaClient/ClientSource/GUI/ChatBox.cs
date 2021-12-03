@@ -363,7 +363,7 @@ namespace Barotrauma
                     OnSecondaryClicked = (_, o) =>
                     {
                         if (!(o is Client client)) { return false; }
-                        GameMain.GameSession?.CrewManager?.CreateModerationContextMenu(PlayerInput.MousePosition.ToPoint(), client);
+                        NetLobbyScreen.CreateModerationContextMenu(client);
                         return true;
                     },
                     Text = senderName
@@ -397,6 +397,7 @@ namespace Barotrauma
                     if (GameMain.NetLobbyScreen != null && GameMain.NetworkMember != null)
                     {
                         clickableArea.OnClick = GameMain.NetLobbyScreen.SelectPlayer;
+                        clickableArea.OnSecondaryClick = GameMain.NetLobbyScreen.ShowPlayerContextMenu;
                     }
                     msgText.ClickableAreas.Add(clickableArea);
                 }

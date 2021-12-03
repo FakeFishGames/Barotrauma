@@ -20,6 +20,9 @@ namespace Barotrauma
         private float previousCondition = -1;
         private RepairTool repairTool;
 
+        private const float WaitTimeBeforeRepair = 0.5f;
+        private float waitTimer;
+
         private bool IsRepairing() => IsRepairing(character, Item);
         private readonly bool isPriority;
 
@@ -160,6 +163,9 @@ namespace Barotrauma
             }
             if (!character.IsClimbing && character.CanInteractWith(Item, out _, checkLinked: false))
             {
+                waitTimer += deltaTime;
+                if (waitTimer < WaitTimeBeforeRepair) { return; }
+
                 HumanAIController.FaceTarget(Item);
                 if (repairTool != null)
                 {
@@ -177,7 +183,7 @@ namespace Barotrauma
                         if (character.SelectedConstruction != Item)
                         {
                             if (!Item.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true) &&
-                                !Item.TryInteract(character, ignoreRequiredItems: true, forceActionKey: true))
+                                !Item.TryInteract(character, ignoreRequiredItems: true, forceUseKey: true))
                             {
                                 Abandon = true;
                             }
@@ -209,6 +215,7 @@ namespace Barotrauma
             }
             else
             {
+                waitTimer = 0.0f;
                 RemoveSubObjective(ref refuelObjective);
                 // If cannot reach the item, approach it.
                 TryAddSubObjective(ref goToObjective,

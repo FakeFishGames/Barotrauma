@@ -51,42 +51,6 @@ namespace Barotrauma
 
         private List<SubmarineInfo> campaignSubmarines;       
 
-        public void AddCampaignSubmarine(SubmarineInfo sub)
-        {
-            if (!campaignSubmarines.Contains(sub))
-            {
-                campaignSubmarines.Add(sub);
-            }
-            else
-            {
-                return;
-            }
-
-            lastUpdateID++;
-            if (GameMain.NetworkMember?.ServerSettings != null)
-            {
-                GameMain.NetworkMember.ServerSettings.ServerDetailsChanged = true;
-            }
-        }
-
-        public void RemoveCampaignSubmarine(SubmarineInfo sub)
-        {
-            if (campaignSubmarines.Contains(sub))
-            {
-                campaignSubmarines.Remove(sub);
-            }
-            else
-            {
-                return;
-            }
-
-            lastUpdateID++;
-            if (GameMain.NetworkMember?.ServerSettings != null)
-            {
-                GameMain.NetworkMember.ServerSettings.ServerDetailsChanged = true;
-            }
-        }
-
         public GameModePreset[] GameModes { get; }
 
         private int selectedModeIndex;
@@ -212,10 +176,7 @@ namespace Barotrauma
         }
         
         private List<SubmarineInfo> subs;
-        public List<SubmarineInfo> GetSubList()
-        {
-            return subs;
-        }
+        public IReadOnlyList<SubmarineInfo> GetSubList() => subs;
 
         public string LevelSeed
         {

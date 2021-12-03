@@ -475,12 +475,12 @@ namespace Barotrauma
                     ItemComponent targetItem = null;
                     if (orderPrefab.MustSetTarget)
                     {
-                        targetEntity = orderPrefab.GetMatchingItems(true, interactableFor: Character.Controlled).FirstOrDefault();
+                        targetEntity = orderPrefab.GetMatchingItems(true, interactableFor: Character.Controlled, orderOption: orderInfo.option).FirstOrDefault();
                         if (targetEntity == null) { return; }
                         targetItem = orderPrefab.GetTargetItemComponent(targetEntity);
                     }
                     var order = new Order(orderPrefab, targetEntity as Entity, targetItem, orderGiver: Character.Controlled);
-                    GameMain.GameSession.CrewManager.SetCharacterOrder(Character.Controlled, order, orderInfo.option, CharacterInfo.HighestManualOrderPriority, Character.Controlled);
+                    GameMain.GameSession?.CrewManager?.SetCharacterOrder(Character.Controlled, order, orderInfo.option, CharacterInfo.HighestManualOrderPriority, Character.Controlled);
                 });
         }
 

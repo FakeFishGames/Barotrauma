@@ -649,7 +649,7 @@ namespace Barotrauma.Networking
                 {
                     errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace.CleanupStackTrace();
                 }
-                GameAnalyticsManager.AddErrorEventOnce("GameClient.Update:CheckServerMessagesException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("GameClient.Update:CheckServerMessagesException" + e.TargetSite.ToString(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 DebugConsole.ThrowError("Error while reading a message from server.", e);
                 new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("MessageReadError", new string[2] { "[message]", "[targetsite]" }, new string[2] { e.Message, e.TargetSite.ToString() }));
                 Disconnect();
@@ -779,7 +779,7 @@ namespace Barotrauma.Networking
 #if DEBUG
                         DebugConsole.ThrowError("Error while reading an ingame update message from server.", e);
 #endif
-                        GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadDataMessage:ReadIngameUpdate", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadDataMessage:ReadIngameUpdate", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                         throw;
                     }
                     break;
@@ -791,7 +791,7 @@ namespace Barotrauma.Networking
                         errorMsg += "\n" + Environment.StackTrace.CleanupStackTrace();
                         GameAnalyticsManager.AddErrorEventOnce(
                             "GameClient.ReadDataMessage:VoipClientNull",
-                            GameMain.Client == null ? GameAnalyticsSDK.Net.EGAErrorSeverity.Error : GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                            GameMain.Client == null ? GameAnalyticsManager.ErrorSeverity.Error : GameAnalyticsManager.ErrorSeverity.Warning,
                             errorMsg);
                         return;
                     }
@@ -989,7 +989,7 @@ namespace Barotrauma.Networking
             {
                 string errorMsg = "Submarine equality check failed. The submarine loaded at your end doesn't match the one loaded by the server." +
                     " There may have been an error in receiving the up-to-date submarine file from the server.";
-                GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:SubsDontMatch" + Level.Loaded.Seed, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:SubsDontMatch" + Level.Loaded.Seed, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 throw new Exception(errorMsg);
             }
 
@@ -1010,7 +1010,7 @@ namespace Barotrauma.Networking
                 if (!GameMain.GameSession.Missions.Select(m => m.Prefab.Identifier).OrderBy(id => id).SequenceEqual(serverMissionIdentifiers.OrderBy(id => id)))
                 {
                     string errorMsg = $"Mission equality check failed. The mission selected at your end doesn't match the one loaded by the server (server: {string.Join(", ", serverMissionIdentifiers)}, client: {string.Join(", ", GameMain.GameSession.Missions.Select(m => m.Prefab.Identifier))})";
-                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:MissionsDontMatch" + Level.Loaded.Seed, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:MissionsDontMatch" + Level.Loaded.Seed, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     throw new Exception(errorMsg);
                 }
                 GameMain.GameSession.EnforceMissionOrder(serverMissionIdentifiers);
@@ -1031,7 +1031,7 @@ namespace Barotrauma.Networking
                     ", seed: " + Level.Loaded.Seed +
                     ", sub: " + Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash.ShortHash + ")" +
                     ", mirrored: " + Level.Loaded.Mirrored + ").";
-                GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:LevelsDontMatch" + Level.Loaded.Seed, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:LevelsDontMatch" + Level.Loaded.Seed, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 throw new Exception(errorMsg);
             }
             else
@@ -1047,7 +1047,7 @@ namespace Barotrauma.Networking
                             ", seed: " + Level.Loaded.Seed +
                             ", sub: " + Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash.ShortHash + ")" +
                             ", mirrored: " + Level.Loaded.Mirrored + ").";
-                        GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:LevelsDontMatch" + Level.Loaded.Seed, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:LevelsDontMatch" + Level.Loaded.Seed, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                         throw new Exception(errorMsg);
                     }
                 }
@@ -1117,8 +1117,8 @@ namespace Barotrauma.Networking
             {
                 GameAnalyticsManager.AddErrorEventOnce(
                 "GameClient.HandleDisconnectMessage",
-                GameAnalyticsSDK.Net.EGAErrorSeverity.Debug,
-                "Client received a disconnect message. Reason: " + disconnectReason.ToString() + ", message: " + disconnectMsg);
+                GameAnalyticsManager.ErrorSeverity.Debug,
+                "Client received a disconnect message. Reason: " + disconnectReason.ToString());
             }
 
             if (disconnectReason == DisconnectReason.ServerFull)
@@ -1532,7 +1532,7 @@ namespace Barotrauma.Networking
                     gameStarted = true;
                     GameMain.NetLobbyScreen.Select();
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectSub" + subName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectSub" + subName, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     roundInitStatus = RoundInitStatus.Interrupted;
                     yield return CoroutineStatus.Failure;
                 }
@@ -1544,7 +1544,7 @@ namespace Barotrauma.Networking
                     GameMain.NetLobbyScreen.Select();
                     string errorMsg = "Failed to select shuttle \"" + shuttleName + "\" (hash: " + shuttleHash + ").";
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectShuttle" + shuttleName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectShuttle" + shuttleName, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     roundInitStatus = RoundInitStatus.Interrupted;
                     yield return CoroutineStatus.Failure;
                 }
@@ -2116,9 +2116,6 @@ namespace Barotrauma.Networking
                             bool autoRestartEnabled = inc.ReadBoolean();
                             float autoRestartTimer = autoRestartEnabled ? inc.ReadSingle() : 0.0f;
 
-                            bool radiationEnabled = inc.ReadBoolean();
-                            byte maxMissionCount = inc.ReadByte();
-
                             //ignore the message if we already a more up-to-date one
                             //or if we're still waiting for the initial update
                             if (NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID) &&
@@ -2168,22 +2165,15 @@ namespace Barotrauma.Networking
                                         if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, "campaign"))
                                         {
                                             GameMain.NetLobbyScreen.CampaignSubmarines.Add(sub);
-                                        }                                        
-                                    }
-
-                                    if (HasPermission(ClientPermissions.ManageCampaign) && !gameStarted && GameMain.NetLobbyScreen?.CampaignSetupUI != null)
-                                    {
-                                        GameMain.NetLobbyScreen.CampaignSetupUI.RefreshMultiplayerCampaignSubUI(GameMain.NetLobbyScreen.CampaignSubmarines);
+                                        }
                                     }
                                 }
 
                                 GameMain.NetLobbyScreen.SetAllowSpectating(allowSpectating);
                                 GameMain.NetLobbyScreen.LevelSeed = levelSeed;
                                 GameMain.NetLobbyScreen.SetLevelDifficulty(levelDifficulty);
-                                GameMain.NetLobbyScreen.SetRadiationEnabled(radiationEnabled);
                                 GameMain.NetLobbyScreen.SetBotSpawnMode(botSpawnMode);
                                 GameMain.NetLobbyScreen.SetBotCount(botCount);
-                                GameMain.NetLobbyScreen.SetMaxMissionCount(maxMissionCount);
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
 
                                 serverSettings.VoiceChatEnabled = voiceChatEnabled;
@@ -2355,7 +2345,7 @@ namespace Barotrauma.Networking
                 {
                     errorLines.Add("[" + DebugConsole.Messages[i].Time + "] " + DebugConsole.Messages[i].Text);
                 }
-                GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadInGameUpdate", GameAnalyticsSDK.Net.EGAErrorSeverity.Critical, string.Join("\n", errorLines));
+                GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadInGameUpdate", GameAnalyticsManager.ErrorSeverity.Critical, string.Join("\n", errorLines));
 
                 DebugConsole.ThrowError("Writing object data to \"networkerror_data.log\", please send this file to us at http://github.com/Regalis11/Barotrauma/issues");
 
@@ -2591,29 +2581,29 @@ namespace Barotrauma.Networking
                         subElement.ToolTip = newSub.Description;
                     }
 
-                    if (GameMain.NetLobbyScreen.FailedSelectedSub != null &&
-                        GameMain.NetLobbyScreen.FailedSelectedSub.First == newSub.Name &&
-                        GameMain.NetLobbyScreen.FailedSelectedSub.Second == newSub.MD5Hash.Hash)
+                    if (GameMain.NetLobbyScreen.FailedSelectedSub.HasValue &&
+                        GameMain.NetLobbyScreen.FailedSelectedSub.Value.Name == newSub.Name &&
+                        GameMain.NetLobbyScreen.FailedSelectedSub.Value.Hash == newSub.MD5Hash.Hash)
                     {
                         GameMain.NetLobbyScreen.TrySelectSub(newSub.Name, newSub.MD5Hash.Hash, GameMain.NetLobbyScreen.SubList);
                     }
 
-                    if (GameMain.NetLobbyScreen.FailedSelectedShuttle != null &&
-                        GameMain.NetLobbyScreen.FailedSelectedShuttle.First == newSub.Name &&
-                        GameMain.NetLobbyScreen.FailedSelectedShuttle.Second == newSub.MD5Hash.Hash)
+                    if (GameMain.NetLobbyScreen.FailedSelectedShuttle.HasValue &&
+                        GameMain.NetLobbyScreen.FailedSelectedShuttle.Value.Name == newSub.Name &&
+                        GameMain.NetLobbyScreen.FailedSelectedShuttle.Value.Hash == newSub.MD5Hash.Hash)
                     {
                         GameMain.NetLobbyScreen.TrySelectSub(newSub.Name, newSub.MD5Hash.Hash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
                     }
 
-                    Pair<string, string> failedCampaignSub = GameMain.NetLobbyScreen.FailedCampaignSubs.Find(s => s.First == newSub.Name && s.Second == newSub.MD5Hash.Hash);
-                    if (failedCampaignSub != null)
+                    NetLobbyScreen.FailedSubInfo failedCampaignSub = GameMain.NetLobbyScreen.FailedCampaignSubs.Find(s => s.Name == newSub.Name && s.Hash == newSub.MD5Hash.Hash);
+                    if (failedCampaignSub != default)
                     {
                         GameMain.NetLobbyScreen.CampaignSubmarines.Add(newSub);
                         GameMain.NetLobbyScreen.FailedCampaignSubs.Remove(failedCampaignSub);
                     }
 
-                    Pair<string, string> failedOwnedSub = GameMain.NetLobbyScreen.FailedOwnedSubs.Find(s => s.First == newSub.Name && s.Second == newSub.MD5Hash.Hash);
-                    if (failedOwnedSub != null)
+                    NetLobbyScreen.FailedSubInfo failedOwnedSub = GameMain.NetLobbyScreen.FailedOwnedSubs.Find(s => s.Name == newSub.Name && s.Hash == newSub.MD5Hash.Hash);
+                    if (failedOwnedSub != default)
                     {
                         GameMain.NetLobbyScreen.ServerOwnedSubmarines.Add(newSub);
                         GameMain.NetLobbyScreen.FailedOwnedSubs.Remove(failedOwnedSub);
@@ -2946,26 +2936,8 @@ namespace Barotrauma.Networking
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
             msg.Write((UInt16)ClientPermissions.SelectSub);
-            msg.Write(false);
             msg.Write(isShuttle); msg.WritePadBits();
             msg.Write((UInt16)subIndex);
-            msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
-
-            clientPeer.Send(msg, DeliveryMethod.Reliable);
-        }
-
-        /// <summary>
-        /// Tell the server to add / remove a purchasable submarine (permission required)
-        /// </summary>
-        public void RequestCampaignSub(SubmarineInfo sub, bool add)
-        {
-            if (!HasPermission(ClientPermissions.SelectSub) || sub == null) return;
-            IWriteMessage msg = new WriteOnlyMessage();
-            msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((UInt16)ClientPermissions.SelectSub);
-            msg.Write(true);
-            msg.Write(sub.EqualityCheckVal);
-            msg.Write(add);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
             clientPeer.Send(msg, DeliveryMethod.Reliable);

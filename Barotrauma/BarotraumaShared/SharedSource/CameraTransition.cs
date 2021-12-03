@@ -1,8 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
-using NLog.Targets;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {

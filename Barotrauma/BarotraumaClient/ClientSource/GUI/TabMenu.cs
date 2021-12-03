@@ -562,7 +562,7 @@ namespace Barotrauma
 
             frame.OnSecondaryClicked += (component, data) =>
             {
-                GameMain.GameSession?.CrewManager?.CreateModerationContextMenu(PlayerInput.MousePosition.ToPoint(), client);
+                NetLobbyScreen.CreateModerationContextMenu(client);
                 return true;
             };
 
@@ -917,7 +917,8 @@ namespace Barotrauma
                         textBlock.ClickableAreas.Add(new GUITextBlock.ClickableArea()
                         {
                             Data = data,
-                            OnClick = GameMain.NetLobbyScreen.SelectPlayer
+                            OnClick = GameMain.NetLobbyScreen.SelectPlayer,
+                            OnSecondaryClick = GameMain.NetLobbyScreen.ShowPlayerContextMenu
                         });
                     }
                 }
@@ -1486,12 +1487,13 @@ namespace Barotrauma
             experienceBar = new GUIProgressBar(new RectTransform(new Vector2(1f, 1f), experienceBarFrame.RectTransform, Anchor.CenterLeft),
                 barSize: controlledCharacter.Info.GetProgressTowardsNextLevel(), color: GUI.Style.Green)
             {
-                IsHorizontal = true
+                IsHorizontal = true,
             };
 
             experienceText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), experienceBarFrame.RectTransform, anchor: Anchor.Center), "", font: GUI.Font, textAlignment: Alignment.CenterRight)
             {
-                Shadow = true
+                Shadow = true,
+                ToolTip = TextManager.Get("experiencetooltip")
             };
 
             talentPointText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), experienceLayout.RectTransform, anchor: Anchor.Center), "", font: GUI.SubHeadingFont, parseRichText: true, textAlignment: Alignment.CenterRight) { AutoScaleVertical = true };
@@ -1643,6 +1645,7 @@ namespace Barotrauma
                     GameMain.Client.CreateEntityEvent(controlledCharacter, new object[] { NetEntityEvent.Type.UpdateTalents });
                 }
             }
+            selectedTalents = controlledCharacter.Info.GetUnlockedTalentsInTree().ToList();
             UpdateTalentButtons();
         }
 

@@ -11,6 +11,7 @@ namespace Barotrauma
         public override string Identifier { get; set; } = "get items";
         public override string DebugTag => $"{Identifier}";
         public override bool KeepDivingGearOn => true;
+        public override bool AllowMultipleInstances => true;
 
         public bool AllowStealing { get; set; }
         public bool TakeWholeStack { get; set; }
@@ -21,6 +22,7 @@ namespace Barotrauma
         public bool EvaluateCombatPriority { get; set; }
         public bool CheckPathForEachItem { get; set; }
         public bool RequireLoaded { get; set; }
+        public bool RequireAllItems { get; set; }
 
         private readonly ImmutableArray<string> gearTags;
         private readonly string[] ignoredTags;
@@ -47,9 +49,11 @@ namespace Barotrauma
             {
                 foreach (string tag in gearTags)
                 {
+                    if (subObjectives.Any(so => so is AIObjectiveGetItem getItem && getItem.IdentifiersOrTags.Contains(tag))) { continue; }
+                    int count = gearTags.Count(t => t == tag);
                     AIObjectiveGetItem? getItem = null;
-                    TryAddSubObjective(ref getItem, () => 
-                        new AIObjectiveGetItem(character, tag, objectiveManager, Equip, CheckInventory)
+                    TryAddSubObjective(ref getItem, () =>
+                        new AIObjectiveGetItem(character, tag, objectiveManager, Equip, CheckInventory && count <= 1)
                         {
                             AllowVariants = AllowVariants,
                             Wear = Wear,
@@ -57,7 +61,9 @@ namespace Barotrauma
                             AllowStealing = AllowStealing,
                             ignoredIdentifiersOrTags = ignoredTags,
                             CheckPathForEachItem = CheckPathForEachItem,
-                            RequireLoaded = RequireLoaded
+                            RequireLoaded = RequireLoaded,
+                            ItemCount = count,
+                            SpeakIfFails = RequireAllItems
                         },
                         onCompleted: () =>
                         {
@@ -75,6 +81,10 @@ namespace Barotrauma
                                 achievedItems.Remove(item);
                             }
                             RemoveSubObjective(ref getItem);
+                            if (RequireAllItems)
+                            {
+                                Abandon = true;
+                            }
                         });
                 }
                 subObjectivesCreated = true;

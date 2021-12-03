@@ -76,7 +76,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Invalid AITarget sector direction (" + value + ")\n" + Environment.StackTrace.CleanupStackTrace();
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("AITarget.SectorDir:" + entity?.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("AITarget.SectorDir:" + entity?.ToString(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     return;
                 }
                 sectorDir = value;
@@ -125,7 +125,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                     GameAnalyticsManager.AddErrorEventOnce("AITarget.WorldPosition:EntityRemoved",
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed AITarget\n" + Environment.StackTrace.CleanupStackTrace());
                     return Vector2.Zero;
                 }
@@ -144,7 +144,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                     GameAnalyticsManager.AddErrorEventOnce("AITarget.WorldPosition:EntityRemoved",
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed AITarget\n" + Environment.StackTrace.CleanupStackTrace());
                     return Vector2.Zero;
                 }

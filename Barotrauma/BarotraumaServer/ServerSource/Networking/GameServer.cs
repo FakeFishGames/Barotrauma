@@ -600,16 +600,19 @@ namespace Barotrauma.Networking
                 //constantly increase AFK timer if the client is controlling a character (gets reset to zero every time an input is received)
                 if (gameStarted && c.Character != null && !c.Character.IsDead && !c.Character.IsIncapacitated)
                 {
-                    if (c.Connection != OwnerConnection) c.KickAFKTimer += deltaTime;
+                    if (c.Connection != OwnerConnection && c.Permissions != ClientPermissions.All) { c.KickAFKTimer += deltaTime; }
                 }
             }
 
-            IEnumerable<Client> kickAFK = connectedClients.FindAll(c =>
-                c.KickAFKTimer >= serverSettings.KickAFKTime &&
-                (OwnerConnection == null || c.Connection != OwnerConnection));
-            foreach (Client c in kickAFK)
+            if (connectedClients.Any(c => c.KickAFKTimer >= serverSettings.KickAFKTime))
             {
-                KickClient(c, "DisconnectMessage.AFK");
+                IEnumerable<Client> kickAFK = connectedClients.FindAll(c =>
+                    c.KickAFKTimer >= serverSettings.KickAFKTime &&
+                    (OwnerConnection == null || c.Connection != OwnerConnection));
+                foreach (Client c in kickAFK)
+                {
+                    KickClient(c, "DisconnectMessage.AFK");
+                }
             }
 
             serverPeer.Update(deltaTime);
@@ -632,7 +635,7 @@ namespace Barotrauma.Networking
                         {
                             DebugConsole.ThrowError("Failed to write a network message for the client \"" + c.Name + "\"!", e);
 
-                            string errorMsg = "Failed to write a network message for the client \"" + c.Name + "\"! (MidRoundSyncing: " + c.NeedsMidRoundSync + ")\n"
+                            string errorMsg = "Failed to write a network message for a client! (MidRoundSyncing: " + c.NeedsMidRoundSync + ")\n"
                                 + e.Message + "\n" + e.StackTrace.CleanupStackTrace();
                             if (e.InnerException != null)
                             {
@@ -641,7 +644,7 @@ namespace Barotrauma.Networking
 
                             GameAnalyticsManager.AddErrorEventOnce(
                                 "GameServer.Update:ClientWriteFailed" + e.StackTrace.CleanupStackTrace(),
-                                GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                                GameAnalyticsManager.ErrorSeverity.Error,
                                 errorMsg);
                         }
                     }
@@ -791,6 +794,8 @@ namespace Barotrauma.Networking
                             string localSavePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer, saveName);
                             if (connectedClient.HasPermission(ClientPermissions.SelectMode) || connectedClient.HasPermission(ClientPermissions.ManageCampaign))
                             {
+                                ServerSettings.RadiationEnabled = settings.RadiationEnabled;
+                                ServerSettings.MaxMissionCount = settings.MaxMissionCount;
                                 MultiPlayerCampaign.StartNewCampaign(localSavePath, matchingSub.FilePath, seed, settings);
                             }
                         }
@@ -854,6 +859,7 @@ namespace Barotrauma.Networking
         private void HandleClientError(IReadMessage inc, Client c)
         {
             string errorStr = "Unhandled error report";
+            string errorStrNoName = errorStr;
 
             ClientNetError error = (ClientNetError)inc.ReadByte();
             switch (error)
@@ -861,7 +867,7 @@ namespace Barotrauma.Networking
                 case ClientNetError.MISSING_EVENT:
                     UInt16 expectedID = inc.ReadUInt16();
                     UInt16 receivedID = inc.ReadUInt16();
-                    errorStr = "Expecting event id " + expectedID.ToString() + ", received " + receivedID.ToString();
+                    errorStr = errorStrNoName = "Expecting event id " + expectedID.ToString() + ", received " + receivedID.ToString();
                     break;
                 case ClientNetError.MISSING_ENTITY:
                     UInt16 eventID = inc.ReadUInt16();
@@ -869,25 +875,26 @@ namespace Barotrauma.Networking
                     Entity entity = Entity.FindEntityByID(entityID);
                     if (entity == null)
                     {
-                        errorStr = "Received an update for an entity that doesn't exist (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
+                        errorStr = errorStrNoName = "Received an update for an entity that doesn't exist (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
                     }
                     else if (entity is Character character)
                     {
                         errorStr = "Missing character " + character.Name + " (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
+                        errorStrNoName = "Missing character " + character.SpeciesName + "(event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
                     }
                     else if (entity is Item item)
                     {
-                        errorStr = "Missing item " + item.Name + " (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
+                        errorStr = errorStrNoName = "Missing item " + item.Name + " (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
                     }
                     else
                     {
-                        errorStr = "Missing entity " + entity.ToString() + " (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
+                        errorStr = errorStrNoName = "Missing entity " + entity.ToString() + " (event id " + eventID.ToString() + ", entity id " + entityID.ToString() + ").";
                     }
                     break;
             }
 
-            Log(GameServer.ClientLogName(c) + " has reported an error: " + errorStr, ServerLog.MessageType.Error);
-            GameAnalyticsManager.AddErrorEventOnce("GameServer.HandleClientError:" + errorStr, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorStr);
+            Log(ClientLogName(c) + " has reported an error: " + errorStr, ServerLog.MessageType.Error);
+            GameAnalyticsManager.AddErrorEventOnce("GameServer.HandleClientError:" + errorStrNoName, GameAnalyticsManager.ErrorSeverity.Error, errorStr);
 
             try
             {
@@ -1392,49 +1399,23 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case ClientPermissions.SelectSub:
-                    bool isCampaign = inc.ReadBoolean();
-                    if (!isCampaign)
+                    bool isShuttle = inc.ReadBoolean();
+                    inc.ReadPadBits();
+                    UInt16 subIndex = inc.ReadUInt16();
+                    var subList = GameMain.NetLobbyScreen.GetSubList();
+                    if (subIndex >= subList.Count)
                     {
-                        bool isShuttle = inc.ReadBoolean();
-                        inc.ReadPadBits();
-                        UInt16 subIndex = inc.ReadUInt16();
-                        var subList = GameMain.NetLobbyScreen.GetSubList();
-                        if (subIndex >= subList.Count)
-                        {
-                            DebugConsole.NewMessage("Client \"" + GameServer.ClientLogName(sender) + "\" attempted to select a sub, index out of bounds (" + subIndex + ")", Color.Red);
-                        }
-                        else
-                        {
-                            if (isShuttle)
-                            {
-                                GameMain.NetLobbyScreen.SelectedShuttle = subList[subIndex];
-                            }
-                            else
-                            {
-                                GameMain.NetLobbyScreen.SelectedSub = subList[subIndex];
-                            }
-                        }
+                        DebugConsole.NewMessage($"Client \"{ClientLogName(sender)}\" attempted to select a sub, index out of bounds ({subIndex})", Color.Red);
                     }
                     else
                     {
-                        int subEqualityCheckVal = inc.ReadInt32();
-                        bool add = inc.ReadBoolean();
-                        SubmarineInfo sub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.EqualityCheckVal == subEqualityCheckVal);
-
-                        if (sub == null)
+                        if (isShuttle)
                         {
-                            DebugConsole.NewMessage("Client \"" + GameServer.ClientLogName(sender) + "\" attempted to select a sub that does not exist on the server!", Color.Red);
+                            GameMain.NetLobbyScreen.SelectedShuttle = subList[subIndex];
                         }
                         else
                         {
-                            if (add)
-                            {
-                                GameMain.NetLobbyScreen.AddCampaignSubmarine(sub);
-                            }
-                            else
-                            {
-                                GameMain.NetLobbyScreen.RemoveCampaignSubmarine(sub);
-                            }
+                            GameMain.NetLobbyScreen.SelectedSub = subList[subIndex];
                         }
                     }
                     break;
@@ -1751,7 +1732,7 @@ namespace Barotrauma.Networking
                     "  Chat message size: " + chatMessageBytes + " bytes\n" +
                     "  Position update size: " + positionUpdateBytes + " bytes\n\n";
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
             }
 
             serverPeer.Send(outmsg, c.Connection, DeliveryMethod.Unreliable);
@@ -1791,7 +1772,7 @@ namespace Barotrauma.Networking
                     }
 
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame2:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame2:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 }
 
                 serverPeer.Send(outmsg, c.Connection, DeliveryMethod.Unreliable);
@@ -1878,7 +1859,7 @@ namespace Barotrauma.Networking
                 List<int> campaignSubIndices = new List<int>();
                 if (GameMain.NetLobbyScreen.SelectedMode == GameModePreset.MultiPlayerCampaign)
                 {
-                    List<SubmarineInfo> subList = GameMain.NetLobbyScreen.GetSubList();
+                    IReadOnlyList<SubmarineInfo> subList = GameMain.NetLobbyScreen.GetSubList();
                     for (int i = 0; i < subList.Count; i++)
                     {
                         if (GameMain.NetLobbyScreen.CampaignSubmarines.Contains(subList[i]))
@@ -1916,9 +1897,6 @@ namespace Barotrauma.Networking
                 {
                     outmsg.Write(autoRestartTimerRunning ? serverSettings.AutoRestartTimer : 0.0f);
                 }
-
-                outmsg.Write(serverSettings.RadiationEnabled);
-                outmsg.Write((byte)serverSettings.MaxMissionCount);
             }
             else
             {
@@ -1958,8 +1936,31 @@ namespace Barotrauma.Networking
             chatMessageBytes = outmsg.LengthBytes - outmsg.LengthBytes;
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
-
-            if (isInitialUpdate)
+            
+            bool messageTooLarge = outmsg.LengthBytes > MsgConstants.MTU;
+            if (messageTooLarge && !isInitialUpdate)
+            {
+                string warningMsg = "Maximum packet size exceeded, will send using reliable mode (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")\n";
+                warningMsg +=
+                    "  Client list size: " + clientListBytes + " bytes\n" +
+                    "  Chat message size: " + chatMessageBytes + " bytes\n" +
+                    "  Campaign size: " + campaignBytes + " bytes\n" +
+                    "  Settings size: " + settingsBytes + " bytes\n";
+                if (initialUpdateBytes > 0)
+                {
+                    warningMsg +=
+                        "    Initial update size: " + settingsBuf.LengthBytes + " bytes\n";
+                }
+                if (settingsBuf != null)
+                {
+                    warningMsg +=
+                        "    Settings buffer size: " + settingsBuf.LengthBytes + " bytes\n";
+                }
+                if (GameSettings.VerboseLogging) { DebugConsole.AddWarning(warningMsg); }
+                GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:ClientWriteLobby" + outmsg.LengthBytes, GameAnalyticsManager.ErrorSeverity.Warning, warningMsg);
+            }
+            
+            if (isInitialUpdate || messageTooLarge)
             {
                 //the initial update may be very large if the host has a large number
                 //of submarine files, so the message may have to be fragmented
@@ -1975,28 +1976,6 @@ namespace Barotrauma.Networking
             }
             else
             {
-                if (outmsg.LengthBytes > MsgConstants.MTU)
-                {
-                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")\n";
-                    errorMsg +=
-                        "  Client list size: " + clientListBytes + " bytes\n" +
-                        "  Chat message size: " + chatMessageBytes + " bytes\n" +
-                        "  Campaign size: " + campaignBytes + " bytes\n" +
-                        "  Settings size: " + settingsBytes + " bytes\n";
-                    if (initialUpdateBytes > 0)
-                    {
-                        errorMsg +=
-                            "    Initial update size: " + settingsBuf.LengthBytes + " bytes\n";
-                    }
-                    if (settingsBuf != null)
-                    {
-                        errorMsg +=
-                            "    Settings buffer size: " + settingsBuf.LengthBytes + " bytes\n";
-                    }
-                    DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:ClientWriteLobby" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                }
-
                 serverPeer.Send(outmsg, c.Connection, DeliveryMethod.Unreliable);
             }
         }
@@ -2121,7 +2100,7 @@ namespace Barotrauma.Networking
                 startGameCoroutine = null;
                 string errorMsg = "Starting the round failed. Campaign was still active, but the map has been disposed. Try selecting another game mode.";
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("GameServer.StartGame:InvalidCampaignState", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("GameServer.StartGame:InvalidCampaignState", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 if (OwnerConnection != null)
                 {
                     SendDirectChatMessage(errorMsg, connectedClients.Find(c => c.Connection == OwnerConnection), ChatMessageType.Error);
@@ -2163,7 +2142,7 @@ namespace Barotrauma.Networking
                 {
                     string errorMsg = "Failed to start a campaign round (next level not set).";
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("GameServer.StartGame:InvalidCampaignState", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameServer.StartGame:InvalidCampaignState", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     if (OwnerConnection != null)
                     {
                         SendDirectChatMessage(errorMsg, connectedClients.Find(c => c.Connection == OwnerConnection), ChatMessageType.Error);
@@ -2392,6 +2371,9 @@ namespace Barotrauma.Networking
                     spawnedCharacter.TeamID = teamID;
                     spawnedCharacter.GiveJobItems(mainSubWaypoints[i]);
                     spawnedCharacter.GiveIdCardTags(mainSubWaypoints[i]);
+                    spawnedCharacter.Info.InventoryData = new XElement("inventory");
+                    spawnedCharacter.Info.StartItemsGiven = true;
+                    spawnedCharacter.SaveInventory();
                     // talents are only avilable for players in online sessions, but modders or someone else might want to have them loaded anyway
                     spawnedCharacter.LoadTalents();
                 }
@@ -2953,7 +2935,7 @@ namespace Barotrauma.Networking
             {
                 string errorMsg = "Attempted to send a chat message to a null client.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("GameServer.SendDirectChatMessage:ClientNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("GameServer.SendDirectChatMessage:ClientNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -3255,7 +3237,7 @@ namespace Barotrauma.Networking
                 BanClient(c, "ServerMessage.KickedByVoteAutoBan", duration: TimeSpan.FromSeconds(serverSettings.AutoBanTime));
             }
 
-            GameMain.NetLobbyScreen.LastUpdateID++;
+            //GameMain.NetLobbyScreen.LastUpdateID++;
 
             SendVoteStatus(connectedClients);
 

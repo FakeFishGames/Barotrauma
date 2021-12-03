@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using System;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -10,26 +11,25 @@ namespace Barotrauma.Abilities
         {
             Any = 0, 
             Melee = 1, 
-            Ranged = 2
+            Ranged = 2,
+            HandheldRanged = 3,
+            Turret = 4
         };
 
         private readonly string itemIdentifier;
         private readonly string[] tags;
         private readonly WeaponType weapontype;
-        private bool ignoreNonHarmfulAttacks;
+        private readonly bool ignoreNonHarmfulAttacks;
         public AbilityConditionAttackData(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
         {
             itemIdentifier = conditionElement.GetAttributeString("itemidentifier", "");
             tags = conditionElement.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true);
             ignoreNonHarmfulAttacks = conditionElement.GetAttributeBool("ignorenonharmfulattacks", false);
-            switch (conditionElement.GetAttributeString("weapontype", ""))
+
+            string weaponTypeStr = conditionElement.GetAttributeString("weapontype", "Any");
+            if (!Enum.TryParse(weaponTypeStr, ignoreCase: true, out weapontype))
             {
-                case "melee":
-                    weapontype = WeaponType.Melee;
-                    break;
-                case "ranged":
-                    weapontype = WeaponType.Ranged;
-                    break;
+                DebugConsole.ThrowError($"Error in talent \"{characterTalent.DebugIdentifier}\": \"{weaponTypeStr}\" is not a valid weapon type.");
             }
         }
 
@@ -77,6 +77,16 @@ namespace Barotrauma.Abilities
                         return item.GetComponent<MeleeWeapon>() != null;
                     case WeaponType.Ranged:
                         return item.GetComponent<Projectile>() != null;
+                    case WeaponType.HandheldRanged:
+                        {
+                            var projectile = item.GetComponent<Projectile>();
+                            return projectile?.Launcher?.GetComponent<Holdable>() != null;
+                        }
+                    case WeaponType.Turret:
+                        {
+                            var projectile = item.GetComponent<Projectile>();
+                            return projectile?.Launcher?.GetComponent<Turret>() != null;
+                        }
                 }
 
                 return true;

@@ -310,12 +310,6 @@ namespace Barotrauma.Items.Components
 
     internal static class GrowthSideExtension
     {
-        // Enum.HasFlag() sucks
-        public static bool IsBitSet(this TileSide side, TileSide bit)
-        {
-            return ((int) side & (int) bit) != 0;
-        }
-
         // K&R algorithm for counting how many bits are set in a bit field
         public static int Count(this TileSide side)
         {

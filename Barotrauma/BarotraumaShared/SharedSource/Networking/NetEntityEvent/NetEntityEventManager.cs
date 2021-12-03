@@ -31,7 +31,7 @@ namespace Barotrauma.Networking
                 {
                     DebugConsole.ThrowError("Failed to write an event for the entity \"" + e.Entity + "\"", exception);
                     GameAnalyticsManager.AddErrorEventOnce("NetEntityEventManager.Write:WriteFailed" + e.Entity.ToString(),
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "Failed to write an event for the entity \"" + e.Entity + "\"\n" + exception.StackTrace.CleanupStackTrace());
 
                     //write an empty event to avoid messing up IDs

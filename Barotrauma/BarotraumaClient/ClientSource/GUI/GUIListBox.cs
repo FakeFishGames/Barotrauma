@@ -79,6 +79,8 @@ namespace Barotrauma
 
         public bool AllowMouseWheelScroll { get; set; } = true;
 
+        public bool AllowArrowKeyScroll { get; set; } = true;
+
         /// <summary>
         /// Scrolls the list smoothly
         /// </summary>
@@ -1254,10 +1256,16 @@ namespace Barotrauma
             switch (key)
             {
                 case Keys.Down:
-                    SelectNext();
+                    if (!isHorizontal && AllowArrowKeyScroll) { SelectNext(); }
                     break;
                 case Keys.Up:
-                    SelectPrevious();
+                    if (!isHorizontal && AllowArrowKeyScroll) { SelectPrevious(); }
+                    break;
+                case Keys.Left:
+                    if (isHorizontal && AllowArrowKeyScroll) { SelectPrevious(); }
+                    break;
+                case Keys.Right:
+                    if (isHorizontal && AllowArrowKeyScroll) { SelectNext(); }
                     break;
                 case Keys.Enter:
                 case Keys.Space:

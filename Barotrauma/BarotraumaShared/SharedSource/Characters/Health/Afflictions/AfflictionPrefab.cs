@@ -222,6 +222,9 @@ namespace Barotrauma
             [Serialize("", false)]
             public string DialogFlag { get; private set; }
 
+            [Serialize("", false)]
+            public string Tag { get; private set; }
+
             [Serialize("0,0,0,0", false)]
             public Color MinFaceTint { get; private set; }
 
@@ -271,6 +274,9 @@ namespace Barotrauma
                         case "abilityflag":
                             var flagType = CharacterAbilityGroup.ParseFlagType(subElement.GetAttributeString("flagtype", ""), parentDebugName);
                             AfflictionAbilityFlags.Add(flagType);
+                            break;
+                        case "affliction":
+                            DebugConsole.AddWarning($"Error in affliction \"{parentDebugName}\" - additional afflictions caused by the affliction should be configured inside status effects.");
                             break;
                     }
                 }

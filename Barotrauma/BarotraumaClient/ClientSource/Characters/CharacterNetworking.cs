@@ -305,9 +305,9 @@ namespace Barotrauma
                         case 0: //NetEntityEvent.Type.InventoryState
                             if (Inventory == null)
                             {
-                                string errorMsg = "Received an inventory update message for an entity with no inventory (" + Name + ", removed: " + Removed + ")";
-                                DebugConsole.ThrowError(errorMsg);
-                                GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ClientRead:NoInventory" + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                                string errorMsg = "Received an inventory update message for an entity with no inventory ([name], removed: " + Removed + ")";
+                                DebugConsole.ThrowError(errorMsg.Replace("[name]", Name));
+                                GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ClientRead:NoInventory" + ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg.Replace("[name]", SpeciesName));
 
                                 //read anyway to prevent messing up reading the rest of the message
                                 _ = msg.ReadUInt16();
@@ -651,7 +651,7 @@ namespace Barotrauma
                     {
                         string errorMsg = $"Error in CharacterNetworking.ReadStatus: affliction not found ({afflictionName})";
                         causeOfDeathType = CauseOfDeathType.Unknown;
-                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:AfflictionIndexOutOfBounts", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:AfflictionIndexOutOfBounts", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     }
                     else
                     {
@@ -682,7 +682,7 @@ namespace Barotrauma
                 if (severedJointIndex < 0 || severedJointIndex >= AnimController.LimbJoints.Length)
                 {
                     string errorMsg = $"Error in CharacterNetworking.ReadStatus: severed joint index out of bounds (index: {severedJointIndex}, joint count: {AnimController.LimbJoints.Length})";
-                    GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:JointIndexOutOfBounts", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:JointIndexOutOfBounts", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 }
                 else
                 {

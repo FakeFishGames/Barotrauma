@@ -111,7 +111,7 @@ namespace Barotrauma
         public CombatMode Mode { get; private set; }
 
         private bool IsOffensiveOrArrest => initialMode == CombatMode.Offensive || initialMode == CombatMode.Arrest;
-        private bool TargetEliminated => IsEnemyDisabled || (Enemy.IsUnconscious && Enemy.Params.Health.ConstantHealthRegeneration <= 0.0f);
+        private bool TargetEliminated => IsEnemyDisabled || Enemy.IsUnconscious && Enemy.Params.Health.ConstantHealthRegeneration <= 0.0f || Enemy.IsHuman && Enemy.HasEquippedItem("handlocker") && !character.IsInstigator;
         private bool IsEnemyDisabled => Enemy == null || Enemy.Removed || Enemy.IsDead;
 
         private float AimSpeed => HumanAIController.AimSpeed;
@@ -158,7 +158,7 @@ namespace Barotrauma
                     return Priority;
                 }
             }
-            float damageFactor = MathUtils.InverseLerp(0.0f, 5.0f, HumanAIController.GetDamageDoneByAttacker(Enemy) / 100.0f);
+            float damageFactor = MathUtils.InverseLerp(0.0f, 5.0f, character.GetDamageDoneByAttacker(Enemy) / 100.0f);
             Priority = TargetEliminated ? 0 : Math.Min((95 + damageFactor) * PriorityModifier, 100);
             return Priority;
         }
@@ -177,11 +177,12 @@ namespace Barotrauma
                 ignoredWeapons.Clear();
                 ignoreWeaponTimer = ignoredWeaponsClearTime;
             }
-            if (findSafety != null)
+            bool isCurrentObjective = objectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>();
+            if (findSafety != null && isCurrentObjective)
             {
                 findSafety.Priority = 0;
             }
-            if (!AllowCoolDown && !character.IsOnPlayerTeam && !objectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>())
+            if (!AllowCoolDown && !character.IsOnPlayerTeam && !isCurrentObjective)
             {
                 distanceTimer -= deltaTime;
                 if (distanceTimer < 0)
@@ -204,13 +205,18 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+            if (IsEnemyDisabled)
+            {
+                IsCompleted = true;
+                return;
+            }
             if (AllowCoolDown)
             {
                 coolDownTimer -= deltaTime;
             }
             if (seekAmmunitionObjective == null && seekWeaponObjective == null)
             {
-                if (Mode != CombatMode.Retreat && TryArm() && !IsEnemyDisabled)
+                if (Mode != CombatMode.Retreat && TryArm())
                 {
                     OperateWeapon(deltaTime);
                 }
@@ -283,10 +289,12 @@ namespace Barotrauma
                     }
                     else
                     {
+                        AskHelp();
                         Retreat(deltaTime);
                     }
                     break;
                 case CombatMode.Retreat:
+                    AskHelp();
                     Retreat(deltaTime);
                     break;
                 default:
@@ -363,6 +371,7 @@ namespace Barotrauma
                 {
                     if (WeaponComponent == null)
                     {
+                        SpeakNoWeapons();
                         Mode = CombatMode.Retreat;
                     }
                 }
@@ -409,6 +418,7 @@ namespace Barotrauma
                         onCompleted: () => RemoveSubObjective(ref seekWeaponObjective),
                         onAbandon: () =>
                         {
+                            SpeakNoWeapons();
                             RemoveSubObjective(ref seekWeaponObjective);
                             Mode = CombatMode.Retreat;
                         });
@@ -680,6 +690,7 @@ namespace Barotrauma
                 }
                 else
                 {
+                    SpeakNoWeapons();
                     Weapon = null;
                     Mode = CombatMode.Retreat;
                     return false;
@@ -892,7 +903,7 @@ namespace Barotrauma
             TryAddSubObjective(ref seekAmmunitionObjective,
                 constructor: () => new AIObjectiveContainItem(character, ammunitionIdentifiers, Weapon.GetComponent<ItemContainer>(), objectiveManager)
                 {
-                    targetItemCount = Weapon.GetComponent<ItemContainer>().Capacity,
+                    ItemCount = Weapon.GetComponent<ItemContainer>().Capacity,
                     checkInventory = false
                 },
                 onCompleted: () => RemoveSubObjective(ref seekAmmunitionObjective),
@@ -1099,7 +1110,7 @@ namespace Barotrauma
             if (WeaponComponent is RangedWeapon rangedWeapon)
             {
                 // If the weapon is just equipped, we can't shoot just yet.
-                if (rangedWeapon.ReloadTimer <= 0)
+                if (rangedWeapon.ReloadTimer <= 0 && !rangedWeapon.HoldTrigger)
                 {
                     reloadTime = rangedWeapon.Reload;
                 }
@@ -1153,6 +1164,21 @@ namespace Barotrauma
             retreatObjective = null;
             followTargetObjective = null;
             retreatTarget = null;
+        }
+
+        private void SpeakNoWeapons() => Speak("dialogcombatnoweapons", delay: 0, minDuration: 30);
+        private void AskHelp() => Speak("dialogcombatretreating", delay: Rand.Range(0, 1), minDuration: 20);
+
+        private void Speak(string textIdentifier, float delay, float minDuration)
+        {
+            if (character.IsOnPlayerTeam && !character.IsInFriendlySub)
+            {
+                string msg = TextManager.Get(textIdentifier, true);
+                if (msg != null)
+                {
+                    character.Speak(msg, identifier: textIdentifier, delay: delay, minDurationBetweenSimilar: minDuration);
+                }
+            }
         }
 
         //private float CalculateEnemyStrength()

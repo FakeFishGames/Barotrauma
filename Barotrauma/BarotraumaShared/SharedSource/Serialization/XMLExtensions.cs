@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -412,6 +413,15 @@ namespace Barotrauma
             }
 
             return ushortValue;
+        }
+
+        public static T GetAttributeEnum<T>(this XElement element, string name, T defaultValue) where T : struct, Enum
+        {
+            var attr = element?.GetAttribute(name);
+            if (attr == null) { return defaultValue; }
+            return Enum.TryParse(attr.Value, true, out T result) ? result :
+                   int.TryParse(attr.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt) ? Unsafe.As<int, T>(ref resultInt) :
+                   defaultValue;
         }
 
         public static bool GetAttributeBool(this XElement element, string name, bool defaultValue)

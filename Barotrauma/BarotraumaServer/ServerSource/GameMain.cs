@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Steam;
 using FarseerPhysics.Dynamics;
-using GameAnalyticsSDK.Net;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -98,8 +97,9 @@ namespace Barotrauma
 
             Console.WriteLine("Initializing SteamManager");
             SteamManager.Initialize();
-            Console.WriteLine("Initializing GameAnalytics");
-            if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();
+            //TODO: figure out how consent is supposed to work for servers
+            //Console.WriteLine("Initializing GameAnalytics");
+            //GameAnalyticsManager.InitIfConsented();
 
             Console.WriteLine("Initializing GameScreen");
             GameScreen = new GameScreen();
@@ -418,7 +418,7 @@ namespace Barotrauma
             SaveUtil.CleanUnnecessarySaveFiles();
 
             if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging) { DebugConsole.SaveLogs(); }
-            if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
+            if (GameAnalyticsManager.SendUserStatistics) { GameAnalyticsManager.ShutDown(); }
 
             MainThread = null;
         }

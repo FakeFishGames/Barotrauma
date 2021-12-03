@@ -61,6 +61,11 @@ namespace Barotrauma.Items.Components
 
         public List<Body> IgnoredBodies;
 
+        /// <summary>
+        /// The item that launched this projectile (if any)
+        /// </summary>
+        public Item Launcher;
+
         private Character stickTargetCharacter;
 
         private Character _user;
@@ -324,6 +329,7 @@ namespace Barotrauma.Items.Components
                     item.body.SetTransform(item.body.SimPosition, launchAngle);
                     float modifiedLaunchImpulse = LaunchImpulse * (1 + Rand.Range(-ImpulseSpread, ImpulseSpread));
                     DoLaunch(launchDir * modifiedLaunchImpulse * item.body.Mass);
+                    System.Diagnostics.Debug.WriteLine("launch: " + modifiedLaunchImpulse + "   -   " + item.body.LinearVelocity);
                 }
             }
             User = character;
@@ -347,7 +353,7 @@ namespace Barotrauma.Items.Components
             launchPos = item.SimPosition;
 
             item.body.Enabled = true;            
-            item.body.ApplyLinearImpulse(impulse, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.9f);
+            item.body.ApplyLinearImpulse(impulse, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.95f);
             
             item.body.FarseerBody.OnCollision += OnProjectileCollision;
             item.body.FarseerBody.IsBullet = true;
@@ -523,11 +529,13 @@ namespace Barotrauma.Items.Components
 
                 if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return -1; }
                 if (fixture.Body.UserData as string == "ruinroom" || fixture.Body?.UserData is Hull || fixture.UserData is Hull) { return -1; }
-
-                //ignore everything else than characters, sub walls and level walls
-                if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return -1; }
+                if (!(fixture.Body.UserData is Holdable holdable && holdable.CanPush)) 
+                {
+                    //ignore everything else than characters, sub walls and level walls
+                    if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
+                        !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
+                        !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return -1; }
+                }
 
                 //if doing the raycast in a submarine's coordinate space, ignore anything that's not in that sub
                 if (submarine != null)
@@ -566,7 +574,7 @@ namespace Barotrauma.Items.Components
                 hits.Add(new HitscanResult(fixture, point, normal, fraction));
 
                 return 1;
-            }, rayStart, rayEnd, Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel);
+            }, rayStart, rayEnd, Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking);
 
             return hits;
         }
@@ -754,7 +762,7 @@ namespace Barotrauma.Items.Components
                 if (Attack != null) { attackResult = Attack.DoDamageToLimb(User ?? Attacker, limb, item.WorldPosition, 1.0f); }
                 if (limb.character != null) { character = limb.character; }
             }
-            else if (target.Body.UserData is Item targetItem)
+            else if ((target.Body.UserData as Item ?? (target.Body.UserData as ItemComponent)?.Item) is Item targetItem)
             {
                 if (targetItem.Removed) { return false; }
                 if (Attack != null && targetItem.Prefab.DamagedByProjectiles && targetItem.Condition > 0) 

@@ -141,7 +141,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "ItemInventory.CreateServerEvent:EventForUninitializedItem" + container.Item.Name + container.Item.ID,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 

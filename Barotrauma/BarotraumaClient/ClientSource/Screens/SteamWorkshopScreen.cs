@@ -824,9 +824,8 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                string errorMsg = "Failed to save workshop item preview image to \"" + previewImagePath + "\".";
                 GameAnalyticsManager.AddErrorEventOnce("SteamWorkshopScreen.OnItemPreviewDownloaded:WriteAllBytesFailed" + previewImagePath,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + e.Message);
+                    GameAnalyticsManager.ErrorSeverity.Error, "Failed to save workshop item preview image.\n" + e.Message);
                 return;
             }
         }
@@ -1195,7 +1194,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Failed to edit workshop item (content package null)\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("SteamWorkshopScreen.ShowCreateItemFrame:ContentPackageNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("SteamWorkshopScreen.ShowCreateItemFrame:ContentPackageNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 

@@ -276,6 +276,7 @@ namespace Barotrauma
 
             public delegate void OnClickDelegate(GUITextBlock textBlock, ClickableArea area);
             public OnClickDelegate OnClick;
+            public OnClickDelegate OnSecondaryClick;
         }
         public List<ClickableArea> ClickableAreas { get; private set; } = new List<ClickableArea>();
 
@@ -528,7 +529,7 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
 
-            if (ClickableAreas.Any() && (GUI.MouseOn?.IsParentOf(this) ?? true))
+            if (ClickableAreas.Any() && ((GUI.MouseOn?.IsParentOf(this) ?? true) || GUI.MouseOn == this))
             {
                 if (!Rect.Contains(PlayerInput.MousePosition)) { return; }
                 int index = GetCaretIndexFromScreenPos(PlayerInput.MousePosition);
@@ -540,6 +541,10 @@ namespace Barotrauma
                         if (PlayerInput.PrimaryMouseButtonClicked())
                         {
                             clickableArea.OnClick?.Invoke(this, clickableArea);
+                        }
+                        if (PlayerInput.SecondaryMouseButtonClicked())
+                        {
+                            clickableArea.OnSecondaryClick?.Invoke(this, clickableArea);
                         }
                         break;
                     }

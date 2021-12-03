@@ -246,7 +246,8 @@ namespace Barotrauma
                                 continue;
                             }
 
-                            Item containerItem = new Item(containerPrefab, position, wp.Submarine);
+                            Vector2 containerPosition = GetCargoPos(cargoRoom, containerPrefab);
+                            Item containerItem = new Item(containerPrefab, containerPosition, wp.Submarine);
                             itemContainer = containerItem.GetComponent<ItemContainer>();
                             if (itemContainer == null)
                             {

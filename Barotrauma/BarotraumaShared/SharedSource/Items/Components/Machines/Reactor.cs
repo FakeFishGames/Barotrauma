@@ -186,6 +186,13 @@ namespace Barotrauma.Items.Components
         [Serialize(0.0f, true)]
         public float CorrectTurbineOutput { get; set; }
 
+        [Editable, Serialize(true, true)]
+        public bool ExplosionDamagesOtherSubs
+        {
+            get;
+            set;
+        }
+
         public Reactor(Item item, XElement element)
             : base(item, element)
         {         
@@ -544,6 +551,20 @@ namespace Barotrauma.Items.Components
             if (item.Condition <= 0.0f) { return; }
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
+            if (!ExplosionDamagesOtherSubs && (statusEffectLists?.ContainsKey(ActionType.OnBroken) ?? false))
+            {
+                foreach (var statusEffect in statusEffectLists[ActionType.OnBroken])
+                {
+                    foreach (Explosion explosion in statusEffect.Explosions)
+                    {
+                        foreach (Submarine sub in Submarine.Loaded)
+                        {
+                            if (sub != item.Submarine) { explosion.IgnoredSubmarines.Add(sub); }
+                        }
+                    }
+                }
+            }        
+
             item.Condition = 0.0f;
             fireTimer = 0.0f;
             meltDownTimer = 0.0f;
@@ -600,7 +621,7 @@ namespace Barotrauma.Items.Components
                         var container = item.GetComponent<ItemContainer>();
                         if (objective.SubObjectives.None())
                         {
-                            var containObjective = AIContainItems<Reactor>(container, character, objective, itemCount: 1, equip: true, removeEmpty: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC, dropItemOnDeselected: true);
+                            var containObjective = AIContainItems<Reactor>(container, character, objective, itemCount: 1, equip: true, removeEmpty: true, spawnItemIfNotFound: !character.IsOnPlayerTeam, dropItemOnDeselected: true);
                             containObjective.Completed += ReportFuelRodCount;
                             containObjective.Abandoned += ReportFuelRodCount;
                             character.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);

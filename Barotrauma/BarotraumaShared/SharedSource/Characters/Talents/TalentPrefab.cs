@@ -31,7 +31,6 @@ namespace Barotrauma
             ConfigElement = element;
             Identifier = element.GetAttributeString("identifier", "noidentifier");
             DisplayName = TextManager.Get("talentname." + Identifier, returnNull: true) ?? Identifier;
-            this.CalculatePrefabUIntIdentifier(TalentPrefabs);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -103,7 +102,9 @@ namespace Barotrauma
 
             void loadSinglePrefab(XElement element, bool isOverride)
             {
-                TalentPrefabs.Add(new TalentPrefab(element, file.Path) { ContentPackage = file.ContentPackage }, isOverride);
+                var newPrefab = new TalentPrefab(element, file.Path) { ContentPackage = file.ContentPackage };
+                TalentPrefabs.Add(newPrefab, isOverride);
+                newPrefab.CalculatePrefabUIntIdentifier(TalentPrefabs);
             }
 
             void loadMultiplePrefabs(XElement element, bool isOverride)

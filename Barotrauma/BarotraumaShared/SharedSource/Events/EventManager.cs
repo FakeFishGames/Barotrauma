@@ -1,10 +1,9 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Extensions;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
-using NLog;
 
 namespace Barotrauma
 {

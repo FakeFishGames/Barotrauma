@@ -536,7 +536,7 @@ namespace Barotrauma
                 invalidMessage = true;
                 string errorMsg = $"Error while reading a network event for the structure \"{Name} ({ID})\". Section count does not match (server: {sectionCount} client: {Sections.Length})";
                 DebugConsole.NewMessage(errorMsg, Color.Red);
-                GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
             }
 
             for (int i = 0; i < sectionCount; i++)

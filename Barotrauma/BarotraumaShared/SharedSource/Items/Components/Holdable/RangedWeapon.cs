@@ -32,6 +32,13 @@ namespace Barotrauma.Items.Components
             set { reload = Math.Max(value, 0.0f); }
         }
 
+        [Serialize(false, false, description: "Tells the AI to hold the trigger down when it uses this weapon")]
+        public bool HoldTrigger
+        {
+            get;
+            set;
+        }
+
         [Serialize(1, false, description: "How projectiles the weapon launches when fired once.")]
         public int ProjectileCount
         {
@@ -110,9 +117,7 @@ namespace Barotrauma.Items.Components
             if (ReloadTimer < 0.0f)
             {
                 ReloadTimer = 0.0f;
-                // was this an optimization or related to something else? it cannot occur for charge-type weapons
-                //IsActive = false;
-                if (MaxChargeTime == 0.0f)
+                if (MaxChargeTime <= 0f)
                 {
                     IsActive = false;
                     return;
@@ -147,7 +152,7 @@ namespace Barotrauma.Items.Components
 
         private float GetSpread(Character user)
         {
-            float degreeOfFailure = 1.0f - DegreeOfSuccess(user);
+            float degreeOfFailure = MathHelper.Clamp(1.0f - DegreeOfSuccess(user), 0.0f, 1.0f);
             degreeOfFailure *= degreeOfFailure;
             float spread = MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure) / (1f + user.GetStatValue(StatTypes.RangedSpreadReduction));
             return MathHelper.ToRadians(spread);
@@ -204,7 +209,8 @@ namespace Barotrauma.Items.Components
                     {
                         lastProjectile?.Item.GetComponent<Rope>()?.Snap();
                     }
-                    float damageMultiplier = 1f + item.GetQualityModifier(Quality.StatType.StoppingPowerMultiplier);
+                    float damageMultiplier = 1f + item.GetQualityModifier(Quality.StatType.FirepowerMultiplier);
+                    projectile.Launcher = item;
                     projectile.Shoot(character, character.AnimController.AimSourceSimPos, barrelPos, rotation + spread, ignoredBodies: limbBodies.ToList(), createNetworkEvent: false, damageMultiplier);
                     projectile.Item.GetComponent<Rope>()?.Attach(Item, projectile.Item);
                     if (i == 0)

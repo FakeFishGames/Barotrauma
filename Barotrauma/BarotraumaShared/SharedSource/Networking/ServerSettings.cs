@@ -45,6 +45,7 @@ namespace Barotrauma.Networking
         [Flags]
         public enum NetFlags : byte
         {
+            None = 0x0,
             Name = 0x1,
             Message = 0x2,
             Properties = 0x4,
@@ -342,8 +343,14 @@ namespace Barotrauma.Networking
             get { return serverName; }
             set
             {
-                serverName = value;
-                if (serverName.Length > NetConfig.ServerNameMaxLength) { ServerName = ServerName.Substring(0, NetConfig.ServerNameMaxLength); }
+                string val = value;
+                if (val.Length > NetConfig.ServerNameMaxLength) { val = val.Substring(0, NetConfig.ServerNameMaxLength); }
+                if (serverName == val) { return; }
+                serverName = val;
+                ServerDetailsChanged = true;
+#if SERVER
+                UpdateFlag(NetFlags.Name);
+#endif
             }
         }
 
@@ -353,9 +360,14 @@ namespace Barotrauma.Networking
             get { return serverMessageText; }
             set
             {
-                if (serverMessageText == value) { return; }
-                serverMessageText = value;
+                string val = value;
+                if (val.Length > NetConfig.ServerMessageMaxLength) { val = val.Substring(0, NetConfig.ServerMessageMaxLength); }
+                if (serverMessageText == val) { return; }
+                serverMessageText = val;
                 ServerDetailsChanged = true;
+#if SERVER
+                UpdateFlag(NetFlags.Message);
+#endif
             }
         }
 
@@ -371,6 +383,8 @@ namespace Barotrauma.Networking
 
         public Dictionary<string, bool> MonsterEnabled { get; private set; }
 
+        public const int MaxExtraCargoItemsOfType = 10;
+        public const int MaxExtraCargoItemTypes = 20;
         public Dictionary<ItemPrefab, int> ExtraCargo { get; private set; }
 
         public HashSet<string> HiddenSubs { get; private set; }
@@ -1003,16 +1017,17 @@ namespace Barotrauma.Networking
         {
             bool changed = false;
             UInt32 count = msg.ReadUInt32();
-            if (ExtraCargo == null || count != ExtraCargo.Count) changed = true;
+            if (ExtraCargo == null || count != ExtraCargo.Count) { changed = true; }
             Dictionary<ItemPrefab, int> extraCargo = new Dictionary<ItemPrefab, int>();
             for (int i = 0; i < count; i++)
             {
                 string prefabIdentifier = msg.ReadString();
                 byte amount = msg.ReadByte();
 
-                var itemPrefab = MapEntityPrefab.Find(null, prefabIdentifier, showErrorMessages: false) as ItemPrefab;
-                if (itemPrefab != null && amount > 0)
+                if (MapEntityPrefab.Find(null, prefabIdentifier, showErrorMessages: false) is ItemPrefab itemPrefab && amount > 0)
                 {
+                    if (ExtraCargo.Keys.Count() >= MaxExtraCargoItemTypes) { continue; }
+                    if (ExtraCargo.ContainsKey(itemPrefab) && ExtraCargo[itemPrefab] >= MaxExtraCargoItemsOfType) { continue; }
                     if (changed || !ExtraCargo.ContainsKey(itemPrefab) || ExtraCargo[itemPrefab] != amount) { changed = true; }
                     extraCargo.Add(itemPrefab, amount);
                 }
@@ -1039,11 +1054,15 @@ namespace Barotrauma.Networking
 
         public void ReadHiddenSubs(IReadMessage msg)
         {
+            var subList = GameMain.NetLobbyScreen.GetSubList();
+
             HiddenSubs.Clear();
             uint count = msg.ReadVariableUInt32();
             for (int i = 0; i < count; i++)
             {
-                string submarineName = msg.ReadString();
+                int index = msg.ReadUInt16();
+                if (index < 0 || index >= subList.Count) { continue; }
+                string submarineName = subList[index].Name;
                 HiddenSubs.Add(submarineName);
             }
 
@@ -1054,10 +1073,12 @@ namespace Barotrauma.Networking
 
         public void WriteHiddenSubs(IWriteMessage msg)
         {
+            var subList = GameMain.NetLobbyScreen.GetSubList();
+
             msg.WriteVariableUInt32((uint)HiddenSubs.Count);
             foreach (string submarineName in HiddenSubs)
             {
-                msg.Write(submarineName);
+                msg.Write((UInt16)subList.FindIndex(s => s.Name.Equals(submarineName, StringComparison.OrdinalIgnoreCase)));
             }
         }
     }

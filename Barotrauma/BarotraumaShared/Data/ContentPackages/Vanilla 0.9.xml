@@ -135,6 +135,7 @@
   <Submarine file="Submarines/Kastrull.sub" />
   <Submarine file="Submarines/KastrullDrone.sub" />
   <Submarine file="Submarines/Orca.sub" />
+  <Submarine file="Submarines/Orca2.sub" />
   <Submarine file="Submarines/Remora.sub" />
   <Submarine file="Submarines/RemoraDrone.sub" />
   <Submarine file="Submarines/Selkie.sub" />

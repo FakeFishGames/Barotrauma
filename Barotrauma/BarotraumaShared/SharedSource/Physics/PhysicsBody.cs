@@ -546,7 +546,7 @@ namespace Barotrauma
                 if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "PhysicsBody.SetPosition:InvalidPosition" + userData,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
                 return false;
             }
@@ -573,7 +573,7 @@ namespace Barotrauma
                 if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "PhysicsBody.SetPosition:InvalidPosition" + userData,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
                 return false;
             }

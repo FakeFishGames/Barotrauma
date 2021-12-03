@@ -269,7 +269,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Failed to write input to command line (window width: " + Console.WindowWidth + ", window height: " + Console.WindowHeight + ")\n"
                     + e.Message + "\n" + e.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("DebugConsole.RewriteInputToCommandLine", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("DebugConsole.RewriteInputToCommandLine", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
             }
         }
 
@@ -1588,10 +1588,6 @@ namespace Barotrauma
                     if (tpCharacter != null)
                     {
                         tpCharacter.TeleportTo(cursorWorldPos);
-                        if (tpCharacter.AIController?.SteeringManager is IndoorsSteeringManager pathSteering)
-                        {
-                            pathSteering.ResetPath();
-                        }
                     }
                 }
             );

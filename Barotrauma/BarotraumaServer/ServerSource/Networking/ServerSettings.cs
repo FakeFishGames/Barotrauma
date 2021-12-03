@@ -14,6 +14,17 @@ namespace Barotrauma.Networking
         public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.xml";
         public static readonly char SubmarineSeparatorChar = '|';
 
+        public readonly Dictionary<NetFlags, UInt16> LastUpdateIdForFlag = new Dictionary<NetFlags, UInt16>();
+        
+        public void UpdateFlag(NetFlags flag)
+            => LastUpdateIdForFlag[flag] = (UInt16)(GameMain.NetLobbyScreen.LastUpdateID + 1);
+
+        public NetFlags GetRequiredFlags(Client c)
+            => LastUpdateIdForFlag.Keys
+                .Where(k => LastUpdateIdForFlag[k] > c.LastRecvLobbyUpdate)
+                .Concat(NetFlags.None.ToEnumerable()) //prevents InvalidOperationException in Aggregate
+                .Aggregate((f1, f2) => f1 | f2);
+        
         partial void InitProjSpecific()
         {
             LoadSettings();
@@ -37,6 +48,9 @@ namespace Barotrauma.Networking
             //outMsg.WritePadBits();
             //outMsg.Write((UInt16)QueryPort);
 
+            NetFlags requiredFlags = GetRequiredFlags(c);
+            if (!requiredFlags.HasFlag(NetFlags.Properties)) { return; }
+
             WriteNetProperties(outMsg);
             WriteMonsterEnabled(outMsg);
             BanList.ServerAdminWrite(outMsg, c);
@@ -45,8 +59,18 @@ namespace Barotrauma.Networking
 
         public void ServerWrite(IWriteMessage outMsg, Client c)
         {
-            outMsg.Write(ServerName);
-            outMsg.Write(ServerMessageText);
+            NetFlags requiredFlags = GetRequiredFlags(c);
+            outMsg.Write((byte)requiredFlags);
+            if (requiredFlags.HasFlag(NetFlags.Name))
+            {
+                outMsg.Write(ServerName);
+            }
+
+            if (requiredFlags.HasFlag(NetFlags.Message))
+            {
+                outMsg.Write(ServerMessageText);
+            }
+            outMsg.Write((byte)PlayStyle);
             outMsg.Write((byte)MaxPlayers);
             outMsg.Write(HasPassword);
             outMsg.Write(IsPublic);
@@ -54,11 +78,12 @@ namespace Barotrauma.Networking
             outMsg.WritePadBits();
             outMsg.WriteRangedInteger(TickRate, 1, 60);
 
-            WriteExtraCargo(outMsg);
-
+            if (requiredFlags.HasFlag(NetFlags.Properties))
+            {
+                WriteExtraCargo(outMsg);
+            }
+            
             WriteHiddenSubs(outMsg);
-
-            Voting.ServerWrite(outMsg);
 
             if (c.HasPermission(Networking.ClientPermissions.ManageSettings))
             {
@@ -85,20 +110,20 @@ namespace Barotrauma.Networking
             if (flags.HasFlag(NetFlags.Name))
             {
                 string serverName = incMsg.ReadString();
-                if (ServerName != serverName) changed = true;
+                if (ServerName != serverName) { changed = true; }
                 ServerName = serverName;
             }
             
             if (flags.HasFlag(NetFlags.Message))
             {
                 string serverMessageText = incMsg.ReadString();
-                if (ServerMessageText != serverMessageText) changed = true;
+                if (ServerMessageText != serverMessageText) { changed = true; }
                 ServerMessageText = serverMessageText;
             }
                         
             if (flags.HasFlag(NetFlags.Properties))
             {
-                changed |= ReadExtraCargo(incMsg);
+                bool propertiesChanged = ReadExtraCargo(incMsg);
 
                 UInt32 count = incMsg.ReadUInt32();
 
@@ -114,7 +139,7 @@ namespace Barotrauma.Networking
                         {
                             GameServer.Log(GameServer.ClientLogName(c) + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(), ServerLog.MessageType.ServerMessage);
                         }
-                        changed = true;
+                        propertiesChanged = true;
                     }
                     else
                     {
@@ -124,10 +149,13 @@ namespace Barotrauma.Networking
                 }
 
                 bool changedMonsterSettings = incMsg.ReadBoolean(); incMsg.ReadPadBits();
-                changed |= changedMonsterSettings;
-                if (changedMonsterSettings) ReadMonsterEnabled(incMsg);
-                changed |= BanList.ServerAdminRead(incMsg, c);
-                changed |= Whitelist.ServerAdminRead(incMsg, c);
+                propertiesChanged |= changedMonsterSettings;
+                if (changedMonsterSettings) { ReadMonsterEnabled(incMsg); }
+                propertiesChanged |= BanList.ServerAdminRead(incMsg, c);
+                propertiesChanged |= Whitelist.ServerAdminRead(incMsg, c);
+                
+                if (propertiesChanged) { UpdateFlag(NetFlags.Properties); }
+                changed |= propertiesChanged;
             }
 
             if (flags.HasFlag(NetFlags.HiddenSubs))
@@ -175,12 +203,14 @@ namespace Barotrauma.Networking
                 MaxMissionCount = MathHelper.Clamp(maxMissionCount, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit);
 
                 changed |= true;
+                UpdateFlag(NetFlags.Misc);
             }
 
             if (flags.HasFlag(NetFlags.LevelSeed))
             {
                 GameMain.NetLobbyScreen.LevelSeed = incMsg.ReadString();
                 changed |= true;
+                UpdateFlag(NetFlags.LevelSeed);
             }
 
             if (changed)
@@ -271,6 +301,8 @@ namespace Barotrauma.Networking
 
             HiddenSubs.UnionWith(doc.Root.GetAttributeStringArray("HiddenSubs", Array.Empty<string>()));
 
+            SelectedSubmarine = SelectNonHiddenSubmarine(SelectedSubmarine);
+
             string[] defaultAllowedClientNameChars = 
                 new string[] {
                     "32-33",
@@ -345,7 +377,6 @@ namespace Barotrauma.Networking
 
             GameMain.NetLobbyScreen.SetBotSpawnMode(BotSpawnMode);
             GameMain.NetLobbyScreen.SetBotCount(BotCount);
-            GameMain.NetLobbyScreen.SetMaxMissionCount(MaxMissionCount);
 
             List<string> monsterNames = CharacterPrefab.Prefabs.Select(p => p.Identifier).ToList();
             MonsterEnabled = new Dictionary<string, bool>();
@@ -355,16 +386,25 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void SelectNonHiddenSubmarine()
+        public string SelectNonHiddenSubmarine(string current = null)
         {
-            if (HiddenSubs.Contains(GameMain.NetLobbyScreen.SelectedSub.Name))
+            current ??= GameMain.NetLobbyScreen.SelectedSub.Name;
+            if (HiddenSubs.Contains(current))
             {
-                var candidates = GameMain.NetLobbyScreen.GetSubList().Where(s => !HiddenSubs.Contains(s.Name)).ToArray();
+                var candidates
+                    = GameMain.NetLobbyScreen.GetSubList().Where(s => !HiddenSubs.Contains(s.Name)).ToArray();
                 if (candidates.Any())
                 {
                     GameMain.NetLobbyScreen.SelectedSub = candidates.GetRandom(Rand.RandSync.Unsynced);
+                    return GameMain.NetLobbyScreen.SelectedSub.Name;
+                }
+                else
+                {
+                    HiddenSubs.Remove(current);
+                    return current;
                 }
             }
+            return current;
         }
         
         public void LoadClientPermissions()

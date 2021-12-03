@@ -64,6 +64,8 @@ namespace Barotrauma.Items.Components
         private Character currentTarget; 
         const float aiFindTargetInterval = 5.0f;
 
+        private int currentLoaderIndex;
+
         private const float TinkeringPowerCostReduction = 0.2f;
         private const float TinkeringDamageIncrease = 0.2f;
         private const float TinkeringReloadDecrease = 0.2f;
@@ -592,16 +594,17 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    foreach (MapEntity e in item.linkedTo)
+                    for (int j = 0; j < item.linkedTo.Count; j++)
                     {
+                        var e = item.linkedTo[(j + currentLoaderIndex) % item.linkedTo.Count];
                         //use linked projectile containers in case they have to react to the turret being launched somehow
                         //(play a sound, spawn more projectiles)
                         if (!(e is Item linkedItem)) { continue; }
                         if (!item.prefab.IsLinkAllowed(e.prefab)) { continue; }
-                        if (linkedItem.Condition <= 0.0f) 
+                        if (linkedItem.Condition <= 0.0f)
                         {
                             loaderBroken = true;
-                            continue; 
+                            continue;
                         }
                         ItemContainer projectileContainer = linkedItem.GetComponent<ItemContainer>();
                         if (projectileContainer != null)
@@ -610,7 +613,6 @@ namespace Barotrauma.Items.Components
                             projectiles = GetLoadedProjectiles();
                             if (projectiles.Any()) { break; }
                         }
-
                     }
                 }
                 if (projectiles.Count == 0 && !LaunchWithoutProjectile)
@@ -705,6 +707,10 @@ namespace Barotrauma.Items.Components
                     {
                         ShiftItemsInProjectileContainer(container.GetComponent<ItemContainer>());
                     }
+                    if (item.linkedTo.Count > 0)
+                    {
+                        currentLoaderIndex = (currentLoaderIndex + 1) % item.linkedTo.Count;
+                    }
                 }
             }
 
@@ -759,6 +765,7 @@ namespace Barotrauma.Items.Components
                 Projectile projectileComponent = projectile.GetComponent<Projectile>();
                 if (projectileComponent != null)
                 {
+                    projectileComponent.Launcher = item;
                     projectileComponent.Attacker = projectileComponent.User = user;
                     if (projectileComponent.Attack != null)
                     {
@@ -1163,7 +1170,7 @@ namespace Barotrauma.Items.Components
             {
                 targetPos = closestEnemy.WorldPosition;
                 //if the enemy is inside another sub, aim at the room they're in to make it less obvious that the enemy "knows" exactly where the target is
-                if (closestEnemy.Submarine != null && closestEnemy.CurrentHull != null && closestEnemy.Submarine != item.Submarine)
+                if (closestEnemy.Submarine != null && closestEnemy.CurrentHull != null && closestEnemy.Submarine != item.Submarine && !closestEnemy.CanSeeTarget(Item))
                 {
                     targetPos = closestEnemy.CurrentHull.WorldPosition;
                 }
@@ -1442,8 +1449,9 @@ namespace Barotrauma.Items.Components
             List<Projectile> projectiles = new List<Projectile>();
             // check the item itself first
             CheckProjectileContainer(item, projectiles, out bool _);
-            foreach (MapEntity e in item.linkedTo)
+            for (int j = 0; j < item.linkedTo.Count; j++)
             {
+                var e = item.linkedTo[(j + currentLoaderIndex) % item.linkedTo.Count];
                 if (!item.prefab.IsLinkAllowed(e.prefab)) { continue; }
                 if (e is Item projectileContainer)
                 {
@@ -1451,7 +1459,6 @@ namespace Barotrauma.Items.Components
                     if (projectiles.Any() || stopSearching) { return projectiles; }
                 }
             }
-
             return projectiles;
         }
 

@@ -376,7 +376,7 @@ namespace Barotrauma.Items.Components
                 int quality = 0;
                 if (user?.Info != null)
                 {
-                    foreach (Character character in Character.CharacterList.Where(c => c.TeamID == user.TeamID))
+                    foreach (Character character in Character.GetFriendlyCrew(user))
                     {
                         character.CheckTalents(AbilityEffectType.OnAllyItemFabricatedAmount, fabricationValueItem);
                     }
@@ -433,13 +433,12 @@ namespace Barotrauma.Items.Components
                     {
                         float userSkill = user.GetSkillLevel(skill.Identifier);
                         float addedSkill = skill.Level * SkillSettings.Current.SkillIncreasePerFabricatorRequiredSkill / Math.Max(userSkill, 1.0f);
-                        var addedSkillValue = new AbilityValueString(0f, skill.Identifier);
+                        var addedSkillValue = new AbilityValueString(addedSkill, skill.Identifier);
                         user.CheckTalents(AbilityEffectType.OnItemFabricationSkillGain, addedSkillValue);
-                        addedSkill += addedSkillValue.Value;
 
                         user.Info.IncreaseSkillLevel(
                             skill.Identifier,
-                            addedSkill);
+                            addedSkillValue.Value);
                     }
                 }
 

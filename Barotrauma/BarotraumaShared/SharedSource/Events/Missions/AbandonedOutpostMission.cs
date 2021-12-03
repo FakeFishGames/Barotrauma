@@ -162,24 +162,6 @@ namespace Barotrauma
 #endif
                 }
             }
-
-            //if any of the target items is a reactor, prevent exploding it from damaging the player's sub
-            foreach (Item item in items)
-            {
-                if (item.GetComponent<Reactor>() is Reactor reactor && (reactor.statusEffectLists?.ContainsKey(ActionType.OnBroken) ?? false))
-                {
-                    foreach (var statusEffect in reactor.statusEffectLists[ActionType.OnBroken])
-                    {
-                        foreach (Explosion explosion in statusEffect.Explosions)
-                        {
-                            foreach (Submarine sub in Submarine.Loaded)
-                            {
-                                if (sub.TeamID == CharacterTeamType.Team1) { explosion.IgnoredSubmarines.Add(sub); }
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         private void InitCharacters(Submarine submarine)

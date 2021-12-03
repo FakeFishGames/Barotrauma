@@ -364,7 +364,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:SimPosition", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:SimPosition", GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return Vector2.Zero;
                 }
@@ -381,7 +381,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:SimPosition", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:SimPosition", GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return 0.0f;
                 }
@@ -401,7 +401,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.Mass:AccessRemoved", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.Mass:AccessRemoved", GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return 1.0f;
                 }
@@ -420,7 +420,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:AccessRemoved", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:AccessRemoved", GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return Vector2.Zero;
                 }
@@ -471,7 +471,7 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(value))
                 {
                     string errorMsg = "Attempted to set the anchor A of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace.CleanupStackTrace();
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:InvalidValue", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
 #endif
@@ -485,7 +485,7 @@ namespace Barotrauma
                         ", limb enabled: " + body.Enabled +
                         ", simple physics enabled: " + character.AnimController.SimplePhysicsEnabled + ")\n"
                         + Environment.StackTrace.CleanupStackTrace();
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:ExcessiveValue", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
 #endif
@@ -504,7 +504,7 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(value))
                 {
                     string errorMsg = "Attempted to set the anchor B of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace.CleanupStackTrace();
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:InvalidValue", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
 #endif
@@ -518,7 +518,7 @@ namespace Barotrauma
                         ", limb enabled: " + body.Enabled +
                         ", simple physics enabled: " + character.AnimController.SimplePhysicsEnabled + ")\n"
                         + Environment.StackTrace.CleanupStackTrace();
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:ExcessiveValue", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
 #endif

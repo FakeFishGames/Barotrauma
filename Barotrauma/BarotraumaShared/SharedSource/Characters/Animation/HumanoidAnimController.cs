@@ -811,35 +811,41 @@ namespace Barotrauma
             if (currentHull != null)
             {
                 float surfacePos = currentHull.Surface;
+                float surfaceThreshold = ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 1.0f);
                 //if the hull is almost full of water, check if there's a water-filled hull above it
                 //and use its water surface instead of the current hull's 
                 if (currentHull.Rect.Y - currentHull.Surface < 5.0f)
                 {
-                    foreach (Gap gap in currentHull.ConnectedGaps)
+                    GetSurfacePos(CurrentHull, ref surfacePos);
+                    void GetSurfacePos(Hull hull, ref float prevSurfacePos)
                     {
-                        if (gap.IsHorizontal || gap.Open <= 0.0f) { continue; }
-                        if (Collider.SimPosition.X < ConvertUnits.ToSimUnits(gap.Rect.X) || Collider.SimPosition.X > ConvertUnits.ToSimUnits(gap.Rect.Right)) { continue; }
-                        
-                        //if the gap is above us and leads outside, there's no surface to limit the movement
-                        if (!gap.IsRoomToRoom && gap.Position.Y > currentHull.Position.Y)
+                        if (prevSurfacePos > surfaceThreshold) { return; }
+                        foreach (Gap gap in hull.ConnectedGaps)
                         {
-                            surfacePos += 100000.0f;
-                            continue;
-                        }
+                            if (gap.IsHorizontal || gap.Open <= 0.0f || gap.WorldPosition.Y < hull.WorldPosition.Y) { continue; }
+                            if (Collider.SimPosition.X < ConvertUnits.ToSimUnits(gap.Rect.X) || Collider.SimPosition.X > ConvertUnits.ToSimUnits(gap.Rect.Right)) { continue; }
 
-                        foreach (var linkedTo in gap.linkedTo)
-                        {
-                            if (linkedTo is Hull hull && hull != currentHull)
+                            //if the gap is above us and leads outside, there's no surface to limit the movement
+                            if (!gap.IsRoomToRoom && gap.Position.Y > hull.Position.Y)
                             {
-                                surfacePos = Math.Max(surfacePos, hull.Surface);
-                                break;
+                                prevSurfacePos += 100000.0f;
+                                return;
+                            }
+
+                            foreach (var linkedTo in gap.linkedTo)
+                            {
+                                if (linkedTo is Hull otherHull && otherHull != hull)
+                                {
+                                    prevSurfacePos = Math.Max(surfacePos, otherHull.Surface);
+                                    GetSurfacePos(otherHull, ref prevSurfacePos);
+                                    break;
+                                }
                             }
                         }
                     }
                 }
 
-                surfaceLimiter = ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 1.0f) - surfacePos;
-                surfaceLimiter = Math.Max(1.0f, surfaceLimiter);
+                surfaceLimiter = Math.Max(1.0f, surfaceThreshold - surfacePos);
                 if (surfaceLimiter > 50.0f) { return; }
             }
 
@@ -1058,10 +1064,12 @@ namespace Barotrauma
             onGround = false;
             IgnorePlatforms = true;
 
-            Vector2 tempTargetMovement = TargetMovement;
-            tempTargetMovement.Y = Math.Min(tempTargetMovement.Y, 1.0f);
-
+            bool climbFast = targetMovement.Y > 3.0f;
             bool slide = targetMovement.Y < -1.1f;
+            Vector2 tempTargetMovement = TargetMovement;
+            tempTargetMovement.Y = climbFast ?
+                Math.Min(tempTargetMovement.Y, 2.0f) :
+                Math.Min(tempTargetMovement.Y, 1.0f);
 
             movement = MathUtils.SmoothStep(movement, tempTargetMovement, 0.3f);
 
@@ -1089,6 +1097,7 @@ namespace Barotrauma
             }
 
             float stepHeight = ConvertUnits.ToSimUnits(30.0f);
+            if (climbFast) { stepHeight *= 2; }
 
             if (currentHull == null && ladder.Item.Submarine != null)
             {
@@ -1104,58 +1113,69 @@ namespace Barotrauma
             }
 
             float bottomPos = Collider.SimPosition.Y - ColliderHeightFromFloor - Collider.radius - Collider.height / 2.0f;
-            float headPos = HeadPosition ?? 0;
             float torsoPos = TorsoPosition ?? 0;
-            MoveLimb(head, new Vector2(ladderSimPos.X - 0.2f * Dir, bottomPos + headPos), 10.5f);
             MoveLimb(torso, new Vector2(ladderSimPos.X - 0.35f * Dir, bottomPos + torsoPos), 10.5f);
+            float headPos = HeadPosition ?? 0;
+            MoveLimb(head, new Vector2(ladderSimPos.X - 0.2f * Dir, bottomPos + headPos), 10.5f);            
 
             Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.1f * Dir, Collider.SimPosition.Y), 10.5f);
             
             Vector2 handPos = new Vector2(
                 ladderSimPos.X,
                 bottomPos + torsoPos + movement.Y * 0.1f - ladderSimPos.Y);
+            if (climbFast) { handPos.Y -= stepHeight; }
 
+            bool aiming = this.aiming || aimingMelee;
             //prevent the hands from going above the top of the ladders
             handPos.Y = Math.Min(-0.5f, handPos.Y);
-
-            if (!character.IsKeyDown(InputType.Aim) || Math.Abs(movement.Y) > 0.01f)
+            if (!aiming || !(character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand)?.GetComponent<Holdable>()?.ControlPose ?? false) || Math.Abs(movement.Y) > 0.01f)
+            {
+                MoveLimb(rightHand,
+                    new Vector2(slide ? handPos.X + ladderSimSize.X * 0.5f : handPos.X,
+                    (slide ? handPos.Y : MathUtils.Round(handPos.Y, stepHeight * 2.0f)) + ladderSimPos.Y),
+                    5.2f);
+                rightHand.body.ApplyTorque(Dir * 2.0f);
+            }
+            if (!aiming || !(character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand)?.GetComponent<Holdable>()?.ControlPose ?? false) || Math.Abs(movement.Y) > 0.01f)
             {
                 MoveLimb(leftHand,
                     new Vector2(handPos.X - ladderSimSize.X * 0.5f,
                     (slide ? handPos.Y : MathUtils.Round(handPos.Y - stepHeight, stepHeight * 2.0f) + stepHeight) + ladderSimPos.Y),
                     5.2f); ;
-
-                MoveLimb(rightHand,
-                    new Vector2(slide ? handPos.X + ladderSimSize.X * 0.5f : handPos.X,
-                    (slide ? handPos.Y : MathUtils.Round(handPos.Y, stepHeight * 2.0f)) + ladderSimPos.Y),
-                    5.2f);
-
                 leftHand.body.ApplyTorque(Dir * 2.0f);
-                rightHand.body.ApplyTorque(Dir * 2.0f);
             }
 
             Vector2 footPos = new Vector2(
                 handPos.X - Dir * 0.05f,
                 bottomPos + ColliderHeightFromFloor - stepHeight * 2.7f - ladderSimPos.Y);
+            if (climbFast) { footPos.Y += stepHeight; }
+
+            //apply torque to the legs to make the knees bend
+            Limb leftLeg = GetLimb(LimbType.LeftLeg);
+            Limb rightLeg = GetLimb(LimbType.RightLeg);
 
             //only move the feet if they're above the bottom of the ladders
             //(if not, they'll just dangle in air, and the character holds itself up with it's arms)
-            if (footPos.Y > -ladderSimSize.Y && leftFoot != null && rightFoot != null)
+            if (footPos.Y > -ladderSimSize.Y - 0.2f && leftFoot != null && rightFoot != null)
             {
+                Limb refLimb = GetLimb(LimbType.Waist) ?? GetLimb(LimbType.Torso);
+                bool leftLegBackwards = Math.Abs(leftLeg.body.Rotation - refLimb.body.Rotation) > MathHelper.Pi;
+                bool rightLegBackwards = Math.Abs(rightLeg.body.Rotation - refLimb.body.Rotation) > MathHelper.Pi;
+
                 if (slide)
                 {
-                    MoveLimb(leftFoot, new Vector2(footPos.X - ladderSimSize.X * 0.5f, footPos.Y + ladderSimPos.Y), 15.5f, true);
-                    MoveLimb(rightFoot, new Vector2(footPos.X, footPos.Y + ladderSimPos.Y), 15.5f, true);
+                    if (!leftLegBackwards) { MoveLimb(leftFoot, new Vector2(footPos.X - ladderSimSize.X * 0.5f, footPos.Y + ladderSimPos.Y), 15.5f, true); }
+                    if (!rightLegBackwards) { MoveLimb(rightFoot, new Vector2(footPos.X, footPos.Y + ladderSimPos.Y), 15.5f, true); }
                 }
                 else
                 {
                     float leftFootPos = MathUtils.Round(footPos.Y + stepHeight, stepHeight * 2.0f) - stepHeight;
                     float prevLeftFootPos = MathUtils.Round(prevFootPos + stepHeight, stepHeight * 2.0f) - stepHeight;
-                    MoveLimb(leftFoot, new Vector2(footPos.X, leftFootPos + ladderSimPos.Y), 15.5f, true);
+                    if (!leftLegBackwards) { MoveLimb(leftFoot, new Vector2(footPos.X, leftFootPos + ladderSimPos.Y), 15.5f, true); }
 
                     float rightFootPos = MathUtils.Round(footPos.Y, stepHeight * 2.0f);
                     float prevRightFootPos = MathUtils.Round(prevFootPos, stepHeight * 2.0f);
-                    MoveLimb(rightFoot, new Vector2(footPos.X, rightFootPos + ladderSimPos.Y), 15.5f, true);
+                    if (!rightLegBackwards) { MoveLimb(rightFoot, new Vector2(footPos.X, rightFootPos + ladderSimPos.Y), 15.5f, true); }
 #if CLIENT
                     if (Math.Abs(leftFootPos - prevLeftFootPos) > stepHeight && leftFoot.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
                     {
@@ -1171,12 +1191,8 @@ namespace Barotrauma
                     prevFootPos = footPos.Y;
                 }
 
-                //apply torque to the legs to make the knees bend
-                Limb leftLeg = GetLimb(LimbType.LeftLeg);
-                Limb rightLeg = GetLimb(LimbType.RightLeg);
-
-                leftLeg.body.ApplyTorque(Dir * -8.0f);
-                rightLeg.body.ApplyTorque(Dir * -8.0f);
+                if (!leftLegBackwards) { leftLeg.body.ApplyTorque(Dir * -8.0f); }
+                if (!rightLegBackwards) { rightLeg.body.ApplyTorque(Dir * -8.0f); }
             }
 
             float movementFactor = (handPos.Y / stepHeight) * (float)Math.PI;
@@ -1185,8 +1201,11 @@ namespace Barotrauma
             Vector2 subSpeed = currentHull != null || ladder.Item.Submarine == null
                 ? Vector2.Zero : ladder.Item.Submarine.Velocity;
 
-            Vector2 climbForce = new Vector2(0.0f, movement.Y + 0.3f) * movementFactor;
             //reached the top of the ladders -> can't go further up
+            Vector2 climbForce = new Vector2(0.0f, movement.Y) * movementFactor;
+
+            if (!InWater) { climbForce.Y += 0.3f * movementFactor; }
+
             if (character.SimPosition.Y > ladderSimPos.Y) { climbForce.Y = Math.Min(0.0f, climbForce.Y); }
             //reached the bottom -> can't go further down
             float minHeightFromFloor = ColliderHeightFromFloor / 2 + Collider.height;
@@ -1200,8 +1219,11 @@ namespace Barotrauma
 
             //apply forces to the collider to move the Character up/down
             Collider.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * Collider.Mass);
-            float movementMultiplier = targetMovement.Y < 0 ? 0 : 1;
-            head.body.SmoothRotate(MathHelper.PiOver4 * movementMultiplier * Dir, WalkParams.HeadTorque);
+            if (!aiming)
+            {
+                float movementMultiplier = targetMovement.Y < 0 ? 0 : 1;
+                head.body.SmoothRotate(MathHelper.PiOver4 * movementMultiplier * Dir, WalkParams.HeadTorque);
+            }
             
             if (!ladder.Item.Prefab.Triggers.Any())
             {
@@ -1688,7 +1710,7 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #endif
-                GameAnalyticsManager.AddErrorEventOnce("FootIK:InvalidPos", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("FootIK:InvalidPos", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -1722,7 +1744,7 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #endif
-                GameAnalyticsManager.AddErrorEventOnce("FootIK:InvalidAngle", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("FootIK:InvalidAngle", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 

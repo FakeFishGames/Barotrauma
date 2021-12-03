@@ -672,36 +672,33 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (currentMode == MiniMapMode.HullStatus)
+            if (currentMode == MiniMapMode.HullStatus && item.Submarine != null)
             {
                 Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
                 spriteBatch.GraphicsDevice.ScissorRectangle = submarineContainer.Rect;
 
-                if (item.Submarine != null)
+                var sprite = GUI.Style.UIGlowSolidCircular?.Sprite;
+                float alpha = (MathF.Sin(blipState / maxBlipState * MathHelper.TwoPi) + 1.5f) * 0.5f;
+                if (sprite != null)
                 {
-                    var sprite = GUI.Style.UIGlowSolidCircular?.Sprite;
-                    float alpha = (MathF.Sin(blipState / maxBlipState * MathHelper.TwoPi) + 1.5f) * 0.5f;
-                    if (sprite != null)
+                    Vector2 spriteSize = sprite.size;
+                    Rectangle worldBorders = item.Submarine.GetDockedBorders();
+                    worldBorders.Location += item.Submarine.WorldPosition.ToPoint();
+                    foreach (Gap gap in Gap.GapList)
                     {
-                        Vector2 spriteSize = sprite.size;
-                        Rectangle worldBorders = item.Submarine.GetDockedBorders();
-                        worldBorders.Location += item.Submarine.WorldPosition.ToPoint();
-                        foreach (Gap gap in Gap.GapList)
-                        {
-                            if (gap.IsRoomToRoom || gap.Submarine != item.Submarine || gap.ConnectedDoor != null || gap.HiddenInGame) { continue; }
-                            RectangleF entityRect = ScaleRectToUI(gap, miniMapFrame.Rect, worldBorders);
+                        if (gap.IsRoomToRoom || gap.linkedTo.Count == 0 || gap.Submarine != item.Submarine || gap.ConnectedDoor != null || gap.HiddenInGame) { continue; }
+                        RectangleF entityRect = ScaleRectToUI(gap, miniMapFrame.Rect, worldBorders);
 
-                            Vector2 scale = new Vector2(entityRect.Size.X / spriteSize.X, entityRect.Size.Y / spriteSize.Y) * 2.0f;
+                        Vector2 scale = new Vector2(entityRect.Size.X / spriteSize.X, entityRect.Size.Y / spriteSize.Y) * 2.0f;
 
-                            Color color = ToolBox.GradientLerp(gap.Open, GUI.Style.HealthBarColorMedium, GUI.Style.HealthBarColorLow) * alpha;
-                            sprite.Draw(spriteBatch,
-                                miniMapFrame.Rect.Location.ToVector2() + entityRect.Center,
-                                color, origin: sprite.Origin, rotate: 0.0f, scale: scale);
-                        }
+                        Color color = ToolBox.GradientLerp(gap.Open, GUI.Style.HealthBarColorMedium, GUI.Style.HealthBarColorLow) * alpha;
+                        sprite.Draw(spriteBatch,
+                            miniMapFrame.Rect.Location.ToVector2() + entityRect.Center,
+                            color, origin: sprite.Origin, rotate: 0.0f, scale: scale);
                     }
-                }
+                }                
 
                 if (currentMode == MiniMapMode.HullStatus && hullStatusComponents != null)
                 {
@@ -991,8 +988,40 @@ namespace Barotrauma.Items.Components
                     continue;
                 }
 
-                hullData.HullOxygenAmount = RequireOxygenDetectors ? hullData.ReceivedOxygenAmount : hull.OxygenPercentage;
-                hullData.HullWaterAmount = RequireWaterDetectors ? hullData.ReceivedWaterAmount : Math.Min(hull.WaterVolume / hull.Volume, 1.0f);
+                if (RequireOxygenDetectors)
+                {
+                    hullData.HullOxygenAmount = hullData.ReceivedOxygenAmount;
+                }
+                else if (hullData.LinkedHulls.Any())
+                {
+                    hullData.HullOxygenAmount = 0.0f;
+                    foreach (Hull linkedHull in hullData.LinkedHulls)
+                    {
+                        hullData.HullOxygenAmount += linkedHull.OxygenPercentage;
+                    }
+                    hullData.HullOxygenAmount /= hullData.LinkedHulls.Count;
+                }
+                else
+                {
+                    hullData.HullOxygenAmount = hull.OxygenPercentage;
+                }
+                if (RequireWaterDetectors)
+                {
+                    hullData.HullWaterAmount = hullData.ReceivedWaterAmount;
+                }
+                else if (hullData.LinkedHulls.Any())
+                {
+                    hullData.HullWaterAmount = 0.0f;
+                    foreach (Hull linkedHull in hullData.LinkedHulls)
+                    {
+                        hullData.HullWaterAmount += Math.Min(linkedHull.WaterVolume / linkedHull.Volume, 1.0f);
+                    }
+                    hullData.HullWaterAmount /= hullData.LinkedHulls.Count;
+                }
+                else
+                {
+                    hullData.HullWaterAmount = Math.Min(hull.WaterVolume / hull.Volume, 1.0f);
+                }
 
                 float gapOpenSum = 0.0f;
 
@@ -1012,15 +1041,6 @@ namespace Barotrauma.Items.Components
 
                     float? oxygenAmount = hullData.HullOxygenAmount,
                            waterAmount = hullData.HullWaterAmount;
-
-                    foreach (Hull linkedHull in hullData.LinkedHulls)
-                    {
-                        oxygenAmount += linkedHull.OxygenPercentage;
-                        waterAmount += Math.Min(linkedHull.WaterVolume / linkedHull.Volume, 1.0f);
-                    }
-
-                    oxygenAmount /= (hullData.LinkedHulls.Count + 1);
-                    waterAmount /= (hullData.LinkedHulls.Count + 1);
 
                     string line1 = gapOpenSum > 0.1f ? TextManager.Get("MiniMapHullBreach") : string.Empty;
                     Color line1Color = GUI.Style.Red;
@@ -1111,10 +1131,9 @@ namespace Barotrauma.Items.Components
 
         private void DrawHUDBack(SpriteBatch spriteBatch, GUICustomComponent container)
         {
-            if (item.Submarine != null)
-            {
-                DrawSubmarine(spriteBatch);
-            }
+            if (item.Submarine == null) { return; }
+            
+            DrawSubmarine(spriteBatch);            
 
             if (Voltage < MinVoltage) { return; }
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
@@ -1155,7 +1174,8 @@ namespace Barotrauma.Items.Components
 
                         if (hullsVisible && hullData.HullWaterAmount is { } waterAmount)
                         {
-                            if (hullFrame.Rect.Height * waterAmount > 3.0f)
+                            if (!RequireWaterDetectors) { waterAmount = hull.WaterPercentage / 100.0f; }
+                            if (hullFrame.Rect.Height * waterAmount > 1.0f)
                             {
                                 RectangleF waterRect = new RectangleF(hullFrame.Rect.X, hullFrame.Rect.Y + hullFrame.Rect.Height * (1.0f - waterAmount), hullFrame.Rect.Width, hullFrame.Rect.Height * waterAmount);
 
@@ -1418,7 +1438,7 @@ namespace Barotrauma.Items.Components
             {
                 if (linkedEntity is Hull linkedHull)
                 {
-                    if (linkedHulls.Contains(linkedHull)) { continue; }
+                    if (linkedHulls.Contains(linkedHull) || linkedHull.HiddenInGame) { continue; }
                     linkedHulls.Add(linkedHull);
                     GetLinkedHulls(linkedHull, linkedHulls);
                 }
@@ -1598,7 +1618,7 @@ namespace Barotrauma.Items.Components
 
             bool IsPartofSub(MapEntity entity)
             {
-                if (entity.Submarine != sub && !connectedSubs.Contains(entity.Submarine)) { return false; }
+                if (entity.Submarine != sub && !connectedSubs.Contains(entity.Submarine) || entity.HiddenInGame) { return false; }
                 return !settings.IgnoreOutposts || sub.IsEntityFoundOnThisSub(entity, true);
             }
 

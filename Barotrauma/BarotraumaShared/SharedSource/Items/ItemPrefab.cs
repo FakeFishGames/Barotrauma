@@ -138,7 +138,7 @@ namespace Barotrauma
                         float maxCondition = subElement.GetAttributeFloat("maxcondition", 1.0f);
                         //Substract mincondition from required item's condition or delete it regardless?
                         bool useCondition = subElement.GetAttributeBool("usecondition", true);
-                        int count = subElement.GetAttributeInt("count", 1);
+                        int amount = subElement.GetAttributeInt("count", subElement.GetAttributeInt("amount", 1));
 
                         if (!string.IsNullOrEmpty(requiredItemIdentifier))
                         {
@@ -153,11 +153,11 @@ namespace Barotrauma
                                 MathUtils.NearlyEqual(r.MinCondition, minCondition) && MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
                             if (existing == null)
                             {
-                                RequiredItems.Add(new RequiredItem(requiredItem, count, minCondition, maxCondition, useCondition));
+                                RequiredItems.Add(new RequiredItem(requiredItem, amount, minCondition, maxCondition, useCondition));
                             }
                             else
                             {
-                                existing.Amount += count;
+                                existing.Amount += amount;
                             }
                         }
                         else
@@ -175,11 +175,11 @@ namespace Barotrauma
                                 MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
                             if (existing == null)
                             {
-                                RequiredItems.Add(new RequiredItem(matchingItems, count, minCondition, maxCondition, useCondition));
+                                RequiredItems.Add(new RequiredItem(matchingItems, amount, minCondition, maxCondition, useCondition));
                             }
                             else
                             {
-                                existing.Amount += count;
+                                existing.Amount += amount;
                             }
                         }
                         break;
@@ -544,6 +544,13 @@ namespace Barotrauma
 
         [Serialize(0.0f, false)]
         public float AddedRepairSpeedMultiplier
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(0.0f, false)]
+        public float AddedPickingSpeedMultiplier
         {
             get;
             private set;
@@ -1298,21 +1305,24 @@ namespace Barotrauma
         public ImmutableDictionary<string, PriceInfo> GetBuyPricesUnder(int maxCost = 0)
         {
             Dictionary<string, PriceInfo> priceLocations = new Dictionary<string, PriceInfo>();
-            foreach (KeyValuePair<string, PriceInfo> locationPrice in locationPrices)
+            if (locationPrices != null)
             {
-                PriceInfo priceInfo = locationPrice.Value;
+                foreach (KeyValuePair<string, PriceInfo> locationPrice in locationPrices)
+                {
+                    PriceInfo priceInfo = locationPrice.Value;
 
-                if (priceInfo == null)
-                {
-                    continue;
-                }
-                if (!priceInfo.CanBeBought)
-                {
-                    continue;
-                }
-                if (priceInfo.Price < maxCost || maxCost == 0)
-                {
-                    priceLocations.Add(locationPrice.Key, priceInfo);
+                    if (priceInfo == null)
+                    {
+                        continue;
+                    }
+                    if (!priceInfo.CanBeBought)
+                    {
+                        continue;
+                    }
+                    if (priceInfo.Price < maxCost || maxCost == 0)
+                    {
+                        priceLocations.Add(locationPrice.Key, priceInfo);
+                    }
                 }
             }
             return priceLocations.ToImmutableDictionary();
@@ -1343,17 +1353,18 @@ namespace Barotrauma
             return priceLocations.ToImmutableDictionary();
         }
 
-        public bool IsContainerPreferred(Item item, ItemContainer targetContainer, out bool isPreferencesDefined, out bool isSecondary)
+        public bool IsContainerPreferred(Item item, ItemContainer targetContainer, out bool isPreferencesDefined, out bool isSecondary, bool requireConditionRequirement = false)
         {
             isPreferencesDefined = PreferredContainers.Any();
             isSecondary = false;
             if (!isPreferencesDefined) { return true; }
-            if (PreferredContainers.Any(pc => IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Primary, targetContainer)))
+            if (PreferredContainers.Any(pc => (!requireConditionRequirement || HasConditionRequirement(pc)) && IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Primary, targetContainer)))
             {
                 return true;
             }
             isSecondary = true;
-            return PreferredContainers.Any(pc => IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Secondary, targetContainer));
+            return PreferredContainers.Any(pc => (!requireConditionRequirement || HasConditionRequirement(pc)) && IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Secondary, targetContainer));
+            static bool HasConditionRequirement(PreferredContainer pc) => pc.MinCondition > 0 || pc.MaxCondition < 100;
         }
 
         public bool IsContainerPreferred(Item item, string[] identifiersOrTags, out bool isPreferencesDefined, out bool isSecondary)

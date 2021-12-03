@@ -137,11 +137,25 @@ namespace Barotrauma
             get { return subBody?.Body; }
         }
 
+        /// <summary>
+        /// Extents of the solid items/structures (ones with a physics body) and hulls
+        /// </summary>
         public Rectangle Borders
         {
             get
             {
                 return subBody == null ? Rectangle.Empty : subBody.Borders;
+            }
+        }
+
+        /// <summary>
+        /// Extents of all the visible items/structures/hulls (including ones without a physics body)
+        /// </summary>
+        public Rectangle VisibleBorders
+        {
+            get
+            {
+                return subBody == null ? Rectangle.Empty : subBody.VisibleBorders;
             }
         }
 

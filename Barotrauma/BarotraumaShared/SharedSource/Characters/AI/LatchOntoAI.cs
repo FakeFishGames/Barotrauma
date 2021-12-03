@@ -207,7 +207,8 @@ namespace Barotrauma
                                 var cells = Level.Loaded.GetCells(character.WorldPosition, 1);
                                 if (cells.Count > 0)
                                 {
-                                    float closestDist = float.PositiveInfinity;
+                                    //ignore walls more than 200 meters away
+                                    float closestDist = 200.0f * 200.0f;
                                     foreach (Voronoi2.VoronoiCell cell in cells)
                                     {
                                         foreach (Voronoi2.GraphEdge edge in cell.Edges)

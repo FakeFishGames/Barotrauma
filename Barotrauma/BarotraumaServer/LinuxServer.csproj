@@ -6,7 +6,7 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma Dedicated Server</Product>
-    <Version>0.15.15.0</Version>
+    <Version>0.15.17.0</Version>
     <Copyright>Copyright © FakeFish 2018-2020</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>DedicatedServer</AssemblyName>
@@ -55,6 +55,7 @@
   <ItemGroup>
     <Content Include="..\BarotraumaShared\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Content Remove="..\BarotraumaShared\**\*.cs" />
+    <Content Remove="..\BarotraumaShared\**\*.props" />
     <Compile Include="..\BarotraumaShared\**\*.cs" />
     <Content Include="DedicatedServer.exe" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
@@ -62,18 +63,20 @@
   <ItemGroup Condition="'$(Configuration)'!='Debug'">
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Posix.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
-    <ProjectReference Include="..\..\Libraries\GameAnalytics\GA_SDK_NETSTANDARD\GA_SDK_NETSTANDARD.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\Lidgren.Network\Lidgren.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Posix.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
-    <ProjectReference Include="..\..\Libraries\GameAnalytics\GA_SDK_NETSTANDARD\GA_SDK_NETSTANDARD.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\Lidgren.Network\Lidgren.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="RestSharp" Version="106.13.0" />
+  </ItemGroup>
+  
   <!-- Sourced from https://stackoverflow.com/a/45248069 -->
   <Target Name="GetGitRevision" BeforeTargets="WriteGitRevision" Condition="'$(BuildHash)' == ''">
     <PropertyGroup>

@@ -228,7 +228,7 @@ namespace Barotrauma.Sounds
                 uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
 
                 float effectiveGain = gain;
-                if (category != null) effectiveGain *= Sound.Owner.GetCategoryGainMultiplier(category);
+                if (category != null) { effectiveGain *= Sound.Owner.GetCategoryGainMultiplier(category); }
 
                 Al.Sourcef(alSource, Al.Gain, effectiveGain);
                 int alError = Al.GetError();

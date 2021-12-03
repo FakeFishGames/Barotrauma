@@ -16,6 +16,8 @@ namespace Barotrauma.Items.Components
         private float deteriorationTimer;
         private float deteriorateAlwaysResetTimer;
 
+        private float repairBoost;
+
         bool wasBroken;
         bool wasGoodCondition;
 
@@ -214,6 +216,18 @@ namespace Barotrauma.Items.Components
             return ((average + 100.0f) / 2.0f) / 100.0f;
         }
 
+        public void RepairBoost(bool qteSuccess)
+        {
+            if (qteSuccess)
+            {
+                repairBoost = RepairDegreeOfSuccess(CurrentFixer, requiredSkills) * 3 * (currentFixerAction == FixActions.Repair ? 1.0f : -1.0f);
+            }
+            else
+            {
+                repairBoost = (1 - RepairDegreeOfSuccess(CurrentFixer, requiredSkills)) * 10 * (currentFixerAction == FixActions.Repair ? -1.0f : 1.0f);
+            }
+        }
+
         public bool StartRepairing(Character character, FixActions action)
         {
             if (character == null || character.IsDead || action == FixActions.None)
@@ -409,6 +423,12 @@ namespace Barotrauma.Items.Components
                 wasGoodCondition = true;
             }
 
+            if (!MathUtils.NearlyEqual(repairBoost, 0.0f))
+            {
+                item.Condition += repairBoost;
+                repairBoost = 0.0f;
+            }
+
             float fixDuration = MathHelper.Lerp(FixDurationLowSkill, FixDurationHighSkill, successFactor);
             fixDuration /= 1 + CurrentFixer.GetStatValue(StatTypes.RepairSpeed) + currentRepairItem?.Prefab.AddedRepairSpeedMultiplier ?? 0f;
             fixDuration /= 1 + item.GetQualityModifier(Quality.StatType.RepairSpeed);
@@ -444,6 +464,7 @@ namespace Barotrauma.Items.Components
                         SteamAchievementManager.OnItemRepaired(item, CurrentFixer);
                         CurrentFixer.CheckTalents(AbilityEffectType.OnRepairComplete);
                     }
+                    if (CurrentFixer?.SelectedConstruction == item) { CurrentFixer.SelectedConstruction = null; }
                     deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
                     wasBroken = false;
                     StopRepairing(CurrentFixer);

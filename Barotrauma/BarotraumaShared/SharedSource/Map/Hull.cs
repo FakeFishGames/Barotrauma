@@ -1575,7 +1575,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Error - tried to save a hull that's not a part of any submarine.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Hull.Save:WorldHull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Hull.Save:WorldHull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return null;
             }
 

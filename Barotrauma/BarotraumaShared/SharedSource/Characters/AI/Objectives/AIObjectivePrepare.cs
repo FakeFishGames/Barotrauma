@@ -1,5 +1,5 @@
-﻿#nullable enable
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -11,11 +11,15 @@ namespace Barotrauma
         public override string Identifier { get; set; } = "prepare";
         public override string DebugTag => $"{Identifier}";
         public override bool KeepDivingGearOn => true;
+        public override bool PrioritizeIfSubObjectivesActive => true;
 
-        private AIObjectiveGetItem? getSingleItemObjective;
-        private AIObjectiveGetItems? getMultipleItemsObjective;
+        private AIObjectiveGetItem getSingleItemObjective;
+        private AIObjectiveGetItems getAllItemsObjective;
+        private AIObjectiveGetItems getMultipleItemsObjective;
         private bool subObjectivesCreated;
-        private readonly ImmutableArray<string> gearTags;
+        private readonly Item targetItem;
+        private readonly ImmutableArray<string> requiredItems;
+        private readonly ImmutableArray<string> optionalItems;
         private readonly HashSet<Item> items = new HashSet<Item>();
         public bool KeepActiveWhenReady { get; set; }
         public bool CheckInventory { get; set; }
@@ -23,12 +27,29 @@ namespace Barotrauma
         public bool Equip { get; set; }
         public bool EvaluateCombatPriority { get; set; }
 
-        private AIObjective? GetSubObjective() => getSingleItemObjective ?? getMultipleItemsObjective as AIObjective;
-
-        public AIObjectivePrepare(Character character, AIObjectiveManager objectiveManager, IEnumerable<string> items, float priorityModifier = 1) 
+        private AIObjective GetSubObjective()
+        {
+            if (getSingleItemObjective != null) { return getSingleItemObjective; }
+            if (getAllItemsObjective == null || getAllItemsObjective.IsCompleted)
+            {
+                return getMultipleItemsObjective;
+            }
+            return getAllItemsObjective;
+        }
+        public AIObjectivePrepare(Character character, AIObjectiveManager objectiveManager, Item targetItem, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier)
         {
-            gearTags = items.ToImmutableArray();
+            this.targetItem = targetItem;
+        }
+
+        public AIObjectivePrepare(Character character, AIObjectiveManager objectiveManager, IEnumerable<string> optionalItems, IEnumerable<string> requiredItems = null, float priorityModifier = 1)
+            : base(character, objectiveManager, priorityModifier)
+        {
+            this.optionalItems = optionalItems.ToImmutableArray();
+            if (requiredItems != null)
+            {
+                this.requiredItems = requiredItems.ToImmutableArray();
+            }
         }
 
         protected override bool CheckObjectiveSpecific() => IsCompleted;
@@ -69,48 +90,76 @@ namespace Barotrauma
             }
             if (!subObjectivesCreated)
             {
-                if (FindAllItems)
+                if (FindAllItems && targetItem == null)
                 {
-                    if (!TryAddSubObjective(ref getMultipleItemsObjective, () => new AIObjectiveGetItems(character, objectiveManager, gearTags)
+                    getMultipleItemsObjective = CreateObjectives(optionalItems, requireAll: false);
+                    if (requiredItems != null && requiredItems.Any())
                     {
-                        CheckInventory = CheckInventory,
-                        Equip = Equip,
-                        EvaluateCombatPriority = EvaluateCombatPriority,
-                        RequireLoaded = true
-                    },
-                    onCompleted: () =>
+                        getAllItemsObjective = CreateObjectives(requiredItems, requireAll: true);
+                    }
+                    AIObjectiveGetItems CreateObjectives(IEnumerable<string> itemTags, bool requireAll)
                     {
-                        if (KeepActiveWhenReady)
+                        AIObjectiveGetItems objectiveReference = null;
+                        if (!TryAddSubObjective(ref objectiveReference, () => new AIObjectiveGetItems(character, objectiveManager, itemTags)
                         {
-                            if (getMultipleItemsObjective != null)
+                            CheckInventory = CheckInventory,
+                            Equip = Equip,
+                            EvaluateCombatPriority = EvaluateCombatPriority,
+                            RequireLoaded = true,
+                            RequireAllItems = requireAll
+                        },
+                        onCompleted: () =>
+                        {
+                            if (KeepActiveWhenReady)
                             {
-                                foreach (var item in getMultipleItemsObjective.achievedItems)
+                                if (objectiveReference != null)
                                 {
-                                    if (item?.IsOwnedBy(character) != null)
+                                    foreach (var item in objectiveReference.achievedItems)
                                     {
-                                        items.Add(item);
+                                        if (item?.IsOwnedBy(character) != null)
+                                        {
+                                            items.Add(item);
+                                        }
                                     }
                                 }
                             }
-                        }
-                        else
+                            else
+                            {
+                                IsCompleted = true;
+                            }
+                        },
+                        onAbandon: () => Abandon = true))
                         {
-                            IsCompleted = true;
+                            Abandon = true;
                         }
-                    },
-                    onAbandon: () => Abandon = true))
-                    {
-                        Abandon = true;
+                        return objectiveReference;
                     }
                 }
                 else
                 {
-                    if (!TryAddSubObjective(ref getSingleItemObjective, () => new AIObjectiveGetItem(character, gearTags, objectiveManager, equip: Equip, checkInventory: CheckInventory)
+                    Func<AIObjectiveGetItem> getItemConstructor;
+                    if (targetItem != null)
                     {
-                        EvaluateCombatPriority = EvaluateCombatPriority,
-                        SpeakIfFails = true,
-                        RequireLoaded = true
-                    },
+                        getItemConstructor = () => new AIObjectiveGetItem(character, targetItem, objectiveManager, equip: Equip)
+                        {
+                            SpeakIfFails = true
+                        };
+                    }
+                    else
+                    {
+                        IEnumerable<string> allItems = optionalItems;
+                        if (requiredItems != null && requiredItems.Any())
+                        {
+                            allItems = requiredItems;
+                        }
+                        getItemConstructor = () => new AIObjectiveGetItem(character, allItems, objectiveManager, equip: Equip, checkInventory: CheckInventory)
+                        {
+                            EvaluateCombatPriority = EvaluateCombatPriority,
+                            SpeakIfFails = true,
+                            RequireLoaded = true
+                        };
+                    }
+                    if (!TryAddSubObjective(ref getSingleItemObjective, getItemConstructor,
                     onCompleted: () =>
                     {
                         if (KeepActiveWhenReady)
@@ -143,8 +192,9 @@ namespace Barotrauma
             base.Reset();
             items.Clear();
             subObjectivesCreated = false;
-            RemoveSubObjective(ref getMultipleItemsObjective);
-            RemoveSubObjective(ref getSingleItemObjective);
+            getMultipleItemsObjective = null;
+            getSingleItemObjective = null;
+            getAllItemsObjective = null;
         }
     }
 }

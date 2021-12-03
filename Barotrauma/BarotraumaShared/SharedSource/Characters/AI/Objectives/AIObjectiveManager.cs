@@ -128,7 +128,7 @@ namespace Barotrauma
                 Item item = null;
                 if (orderPrefab.MustSetTarget)
                 {
-                    item = orderPrefab.GetMatchingItems(character.Submarine, mustBelongToPlayerSub: false, requiredTeam: character.Info.TeamID, interactableFor: character)?.GetRandom();
+                    item = orderPrefab.GetMatchingItems(character.Submarine, mustBelongToPlayerSub: false, requiredTeam: character.Info.TeamID, interactableFor: character, orderOption: autonomousObjective.option)?.GetRandom();
                 }
                 var order = new Order(orderPrefab, item ?? character.CurrentHull as Entity, orderPrefab.GetTargetItemComponent(item), orderGiver: character);
                 if (order == null) { continue; }
@@ -279,6 +279,7 @@ namespace Barotrauma
             float highestPriority = 0;
             for (int i = CurrentOrders.Count - 1; i >= 0; i--)
             {
+                if (CurrentOrders.Count <= i) { break; }
                 var orderObjective = CurrentOrders[i].Objective;
                 if (orderObjective == null) { continue; }
                 orderObjective.CalculatePriority();
@@ -354,6 +355,7 @@ namespace Barotrauma
             // Make sure the order priorities reflect those set by the player
             for (int i = CurrentOrders.Count - 1; i >= 0; i--)
             {
+                if (CurrentOrders.Count <= i) { break; }
                 var currentOrder = CurrentOrders[i];
                 if (currentOrder.Objective == null || currentOrder.MatchesOrder(order, option))
                 {
@@ -406,13 +408,14 @@ namespace Barotrauma
                     if (orderGiver == null) { return null; }
                     newObjective = new AIObjectiveGoTo(orderGiver, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        CloseEnough = Rand.Range(90, 100) + Rand.Range(50, 70) * Math.Min(HumanAIController.CountCrew(c => c.ObjectiveManager.CurrentOrder is AIObjectiveGoTo gotoOrder && gotoOrder.Target == orderGiver, onlyBots: true), 4),
-                        extraDistanceOutsideSub = 100,
-                        extraDistanceWhileSwimming = 100,
+                        CloseEnough = Rand.Range(80, 100),
+                        CloseEnoughMultiplier = Math.Min(1 + HumanAIController.CountCrew(c => c.ObjectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Target == orderGiver), onlyBots: true) * Rand.Range(0.8f, 1f), 4),
+                        ExtraDistanceOutsideSub = 100,
+                        ExtraDistanceWhileSwimming = 100,
                         AllowGoingOutside = true,
                         IgnoreIfTargetDead = true,
-                        isFollowOrderObjective = true,
-                        mimic = true,
+                        IsFollowOrderObjective = true,
+                        Mimic = character.IsOnPlayerTeam,
                         DialogueIdentifier = "dialogcannotreachplace"
                     };
                     break;
@@ -523,7 +526,7 @@ namespace Barotrauma
                     newObjective = new AIObjectiveEscapeHandcuffs(character, this, priorityModifier: priorityModifier);
                     break;
                 case "prepareforexpedition":
-                    newObjective = new AIObjectivePrepare(character, this, order.TargetItems)
+                    newObjective = new AIObjectivePrepare(character, this, order.GetTargetItems(option), order.RequireItems)
                     {
                         KeepActiveWhenReady = true,
                         CheckInventory = true,
@@ -532,15 +535,28 @@ namespace Barotrauma
                     };
                     break;
                 case "findweapon":
-                    newObjective = new AIObjectivePrepare(character, this, order.TargetItems)
+                    AIObjectivePrepare prepareObjective;
+                    if (order.TargetEntity is Item tItem)
                     {
-                        KeepActiveWhenReady = false,
-                        CheckInventory = false,
-                        Equip = true,
-                        EvaluateCombatPriority = true,
-                        FindAllItems = false
-                    };
+                        prepareObjective = new AIObjectivePrepare(character, this, targetItem: tItem);
+                    }
+                    else
+                    {
+                        prepareObjective = new AIObjectivePrepare(character, this, order.GetTargetItems(option), order.RequireItems)
+                        {
+                            KeepActiveWhenReady = false,
+                            CheckInventory = false,
+                            EvaluateCombatPriority = true,
+                            FindAllItems = false
+                        };
+                    }
+                    prepareObjective.KeepActiveWhenReady = false;
+                    prepareObjective.Equip = true;
+                    newObjective = prepareObjective;
                     newObjective.Completed += () => DismissSelf(order, option);
+                    break;
+                case "loaditems":
+                    newObjective = new AIObjectiveLoadItems(character, this, option, order.GetTargetItems(option), order.TargetEntity as Item, priorityModifier);
                     break;
                 default:
                     if (order.TargetItemComponent == null) { return null; }
@@ -573,16 +589,19 @@ namespace Barotrauma
 #endif
                 return;
             }
+            Order dismissOrder = Order.GetPrefab("dismissed");
+            var orderOption = Order.GetDismissOrderOption(currentOrder);
+            int priority = currentOrder.ManualPriority;
 #if CLIENT
             if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
             {
-                GameMain.GameSession?.CrewManager?.SetCharacterOrder(character, Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(currentOrder), currentOrder.ManualPriority, character);
+                GameMain.GameSession.CrewManager.SetCharacterOrder(character, dismissOrder, orderOption, priority, character);
             }
 #else
-            GameMain.Server?.SendOrderChatMessage(new OrderChatMessage(Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(currentOrder), currentOrder.ManualPriority, currentOrder.Order?.TargetSpatialEntity, character, character));
+            GameMain.Server?.SendOrderChatMessage(new OrderChatMessage(dismissOrder, orderOption, priority, currentOrder.Order.TargetSpatialEntity, character, character));
+            SetOrder(dismissOrder, orderOption, priority, character, speak: false);
 #endif
         }
-
 
         private bool IsAllowedToWait()
         {
@@ -632,10 +651,9 @@ namespace Barotrauma
             return ForcedOrder != null || CurrentOrders.Any();
         }
 
-        public bool HasOrder<T>() where T : AIObjective
-        {
-            return ForcedOrder is T || CurrentOrders.Any(o => o.Objective is T);
-        }
+        public bool HasOrder<T>(Func<T, bool> predicate = null) where T : AIObjective =>
+                ForcedOrder is T forcedOrder && (predicate == null || predicate(forcedOrder)) || 
+                CurrentOrders.Any(o => o.Objective is T order && (predicate == null || predicate(order)));
 
         public float GetOrderPriority(AIObjective objective)
         {

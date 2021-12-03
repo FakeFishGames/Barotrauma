@@ -1,11 +1,9 @@
 ﻿#region Using Statements
 
 using System;
-using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
 using System.Text;
-using GameAnalyticsSDK.Net;
 using Barotrauma.Steam;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -245,6 +243,13 @@ namespace Barotrauma
                 }
             }
 
+            if (GameAnalyticsManager.SendUserStatistics)
+            {
+                //send crash report before appending debug console messages (which may contain non-anonymous information)
+                GameAnalyticsManager.AddErrorEvent(GameAnalyticsManager.ErrorSeverity.Critical, sb.ToString());
+                GameAnalyticsManager.ShutDown();
+            }
+
             sb.AppendLine("Last debug messages:");
             for (int i = DebugConsole.Messages.Count - 1; i >= 0; i--)
             {
@@ -257,11 +262,9 @@ namespace Barotrauma
 
             if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging) { DebugConsole.SaveLogs(); }
 
-            if (GameSettings.SendUserStatistics)
+            if (GameAnalyticsManager.SendUserStatistics)
             {
                 CrashMessageBox("A crash report (\"" + filePath + "\") was saved in the root folder of the game and sent to the developers.", filePath);
-                GameAnalytics.AddErrorEvent(EGAErrorSeverity.Critical, crashReport);
-                GameAnalytics.OnQuit();
             }
             else
             {

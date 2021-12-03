@@ -406,6 +406,21 @@ namespace Barotrauma
 
             InitializeLevel(level);
 
+            GameAnalyticsManager.AddProgressionEvent(
+                GameAnalyticsManager.ProgressionStatus.Start,
+                GameMode?.Name ?? "none");
+
+            string eventId = "StartRound:GameMode:" + (GameMode?.Name ?? "none") + ":";
+            GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"));
+            GameAnalyticsManager.AddDesignEvent(eventId + "GameMode:" + (GameMode?.Name ?? "none"));
+            GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count() ?? 0));
+            foreach (Mission mission in missions)
+            {
+                GameAnalyticsManager.AddDesignEvent(eventId + "MissionType:" + (mission.Prefab.Type.ToString() ?? "none") + ":" + mission.Prefab.Identifier);
+            }
+            GameAnalyticsManager.AddDesignEvent(eventId + "LevelType:" + (Level.Loaded?.Type.ToString() ?? "none"));
+            GameAnalyticsManager.AddDesignEvent(eventId + "Biome:" + (Level.Loaded?.LevelData?.Biome?.Identifier ?? "none"));
+
 #if CLIENT
             if (GameMode is CampaignMode) { SteamAchievementManager.OnBiomeDiscovered(levelData.Biome); }
 
@@ -674,6 +689,8 @@ namespace Barotrauma
             {
                 IEnumerable<Character> crewCharacters = GetSessionCrewCharacters();
 
+                int prevMoney = (GameMode as CampaignMode)?.Money ?? 0;
+
                 foreach (Mission mission in missions)
                 {
                     mission.End();
@@ -731,6 +748,32 @@ namespace Barotrauma
                 missions.Clear();
                 IsRunning = false;
 
+
+                bool success = false;
+#if CLIENT
+                success = CrewManager.GetCharacters().Any(c => !c.IsDead);
+#else
+                success = GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
+#endif
+                double roundDuration = Timing.TotalTime - RoundStartTime;
+                GameAnalyticsManager.AddProgressionEvent(
+                    success ? GameAnalyticsManager.ProgressionStatus.Complete : GameAnalyticsManager.ProgressionStatus.Fail,
+                    GameMode?.Name ?? "none",
+                    roundDuration);
+                string eventId = "EndRound:GameMode:" + (GameMode?.Name ?? "none") + ":";
+                GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"), roundDuration);
+                GameAnalyticsManager.AddDesignEvent(eventId + "GameMode:" + (GameMode?.Name ?? "none"), roundDuration);
+                GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count() ?? 0), roundDuration);
+                foreach (Mission mission in missions)
+                {
+                    GameAnalyticsManager.AddDesignEvent(eventId + "MissionType:" + (mission.Prefab.Type.ToString() ?? "none") + ":" + mission.Prefab.Identifier + ":" + (mission.Completed ? "Completed" : "Failed"), roundDuration);
+                }
+                GameAnalyticsManager.AddDesignEvent(eventId + "LevelType:" + (Level.Loaded?.Type.ToString() ?? "none"), roundDuration);
+                GameAnalyticsManager.AddDesignEvent(eventId + "Biome:" + (Level.Loaded?.LevelData?.Biome?.Identifier ?? "none"), roundDuration);
+                if (GameMode is CampaignMode campaignMode)
+                {
+                    GameAnalyticsManager.AddDesignEvent(eventId + "MoneyEarned", campaignMode.Money - prevMoney);
+                }
 #if CLIENT
                 HintManager.OnRoundEnded();
 #endif

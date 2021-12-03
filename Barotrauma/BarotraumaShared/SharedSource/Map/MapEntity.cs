@@ -386,7 +386,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Cloning entity \"" + e.Name + "\" failed.", ex);
                     GameAnalyticsManager.AddErrorEventOnce(
                         "MapEntity.Clone:" + e.Name,
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "Cloning entity \"" + e.Name + "\" failed (" + ex.Message + ").\n" + ex.StackTrace.CleanupStackTrace());
                     return clones;
                 }
@@ -447,7 +447,7 @@ namespace Barotrauma
                     {
                         DebugConsole.ThrowError("Error while cloning wires - item \"" + connectedItem.Name + "\" was not found in entities to clone.");
                         GameAnalyticsManager.AddErrorEventOnce("MapEntity.Clone:ConnectedNotFound" + connectedItem.ID,
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            GameAnalyticsManager.ErrorSeverity.Error,
                             "Error while cloning wires - item \"" + connectedItem.Name + "\" was not found in entities to clone.");
                         continue;
                     }
@@ -458,7 +458,7 @@ namespace Barotrauma
                     {
                         DebugConsole.ThrowError("Error while cloning wires - connection \"" + originalWire.Connections[n].Name + "\" was not found in connected item \"" + connectedItem.Name + "\".");
                         GameAnalyticsManager.AddErrorEventOnce("MapEntity.Clone:ConnectionNotFound" + connectedItem.ID,
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            GameAnalyticsManager.ErrorSeverity.Error,
                             "Error while cloning wires - connection \"" + originalWire.Connections[n].Name + "\" was not found in connected item \"" + connectedItem.Name + "\".");
                         continue;
                     }

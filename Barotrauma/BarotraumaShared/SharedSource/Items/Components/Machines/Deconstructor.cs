@@ -158,10 +158,21 @@ namespace Barotrauma.Items.Components
             // In multiplayer, the server handles the deconstruction into new items
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
+            float amountMultiplier = 1f;
+
             if (user != null && !user.Removed)
             {
-                var abilityTargetItem = new AbilityItem(targetItem);
+                var abilityTargetItem = new AbilityDeconstructedItem(targetItem, user);
                 user.CheckTalents(AbilityEffectType.OnItemDeconstructed, abilityTargetItem);
+
+                foreach (Character character in Character.GetFriendlyCrew(user))
+                {
+                    character.CheckTalents(AbilityEffectType.OnItemDeconstructedByAlly, abilityTargetItem);
+                }
+
+                var itemCreationMultiplier = new AbilityValueItem(amountMultiplier, targetItem.Prefab);
+                user.CheckTalents(AbilityEffectType.OnItemDeconstructedMaterial, itemCreationMultiplier);
+                amountMultiplier = (int)itemCreationMultiplier.Value;
             }
 
             if (targetItem.Prefab.RandomDeconstructionOutput)
@@ -187,18 +198,18 @@ namespace Barotrauma.Items.Components
 
                 foreach (DeconstructItem deconstructProduct in products)
                 {
-                    CreateDeconstructProduct(deconstructProduct, inputItems);
+                    CreateDeconstructProduct(deconstructProduct, inputItems, amountMultiplier);
                 }
             }
             else
             {
                 foreach (DeconstructItem deconstructProduct in validDeconstructItems)
                 {
-                    CreateDeconstructProduct(deconstructProduct, inputItems);
+                    CreateDeconstructProduct(deconstructProduct, inputItems, amountMultiplier);
                 }
             }
 
-            void CreateDeconstructProduct(DeconstructItem deconstructProduct, IEnumerable<Item> inputItems)
+            void CreateDeconstructProduct(DeconstructItem deconstructProduct, IEnumerable<Item> inputItems, float amountMultiplier)
             {
                 float percentageHealth = targetItem.Condition / targetItem.MaxCondition;
 
@@ -247,18 +258,14 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                int amount = 1;
-
                 if (user != null && !user.Removed)
                 {
-                    var itemsCreated = new AbilityValueItem(amount, targetItem.Prefab);
-                    user.CheckTalents(AbilityEffectType.OnItemDeconstructedMaterial, itemsCreated);
-                    amount = (int)itemsCreated.Value;
-
                     // used to spawn items directly into the deconstructor
                     var itemContainer = new AbilityItemPrefabItem(item, targetItem.Prefab);
                     user.CheckTalents(AbilityEffectType.OnItemDeconstructedInventory, itemContainer);
                 }
+
+                int amount = (int)amountMultiplier;
 
                 for (int i = 0; i < amount; i++)
                 {
@@ -269,7 +276,17 @@ namespace Barotrauma.Items.Components
                         for (int i = 0; i < outputContainer.Capacity; i++)
                         {
                             var containedItem = outputContainer.Inventory.GetItemAt(i);
-                            if (containedItem?.Combine(spawnedItem, null) ?? false)
+                            if (containedItem?.OwnInventory != null)
+                            {
+                                foreach (Item subItem in containedItem.ContainedItems.ToList())
+                                {
+                                    if (subItem.Combine(spawnedItem, null))
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                            else if (containedItem?.Combine(spawnedItem, null) ?? false)
                             {
                                 break;
                             }
@@ -409,4 +426,15 @@ namespace Barotrauma.Items.Components
             inputContainer.Inventory.Locked = IsActive;
         }
     }
+    class AbilityDeconstructedItem : AbilityObject, IAbilityItem, IAbilityCharacter
+    {
+        public AbilityDeconstructedItem(Item item, Character character)
+        {
+            Item = item;
+            Character = character;
+        }
+        public Item Item { get; set; }
+        public Character Character { get; set; }
+    }
+
 }

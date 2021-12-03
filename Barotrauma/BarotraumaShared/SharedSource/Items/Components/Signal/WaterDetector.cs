@@ -100,7 +100,12 @@ namespace Barotrauma.Items.Components
 
             if (item.CurrentHull != null)
             {
-                int waterPercentage = MathHelper.Clamp((int)Math.Ceiling(item.CurrentHull.WaterPercentage), 0, 100);
+                int waterPercentage = 0;
+                //ignore minuscule amounts of water
+                if (item.CurrentHull.WaterVolume < 1.0f)
+                {
+                    waterPercentage = MathHelper.Clamp((int)Math.Ceiling(item.CurrentHull.WaterPercentage), 0, 100);
+                }
                 item.SendSignal(waterPercentage.ToString(), "water_%");
             }
             string highPressureOut = (item.CurrentHull == null || item.CurrentHull.LethalPressure > 5.0f) ? "1" : "0";

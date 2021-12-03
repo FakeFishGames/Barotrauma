@@ -202,7 +202,7 @@ namespace Barotrauma
                     HumanAIController.FaceTarget(target.Item);
                     if (character.SelectedConstruction != target.Item)
                     {
-                        target.Item.TryInteract(character, false, true);
+                        target.Item.TryInteract(character, forceSelectKey: true);
                     }
                     if (component.AIOperate(deltaTime, character, this))
                     {

@@ -201,7 +201,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError(errorMsg);
 #endif
                 GameAnalyticsManager.AddErrorEventOnce("PhysicsBody.ClientRead:InvalidData" + parentDebugName,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
                 return null;
             }

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Extensions;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
@@ -202,6 +203,15 @@ namespace Barotrauma
             }
         }
 
+        public class AbilityStatusEffectIdentifier : AbilityObject
+        {
+            public AbilityStatusEffectIdentifier(string effectIdentifier)
+            {
+                EffectIdentifier = effectIdentifier;
+            }
+            public string EffectIdentifier { get; set; }
+        }
+
         public class GiveTalentInfo
         {
             public string[] TalentIdentifiers;
@@ -211,6 +221,23 @@ namespace Barotrauma
             {
                 TalentIdentifiers = element.GetAttributeStringArray("talentidentifiers", new string[0], convertToLowerInvariant: true);
                 GiveRandom = element.GetAttributeBool("giverandom", false);
+            }
+        }
+
+        public class GiveSkill
+        {
+            public string SkillIdentifier;
+            public float Amount;
+
+            public GiveSkill(XElement element, string parentDebugName)
+            {
+                SkillIdentifier = element.GetAttributeString("skillidentifier", string.Empty);
+                Amount = element.GetAttributeFloat("amount", 0);
+
+                if (SkillIdentifier == string.Empty)
+                {
+                    DebugConsole.ThrowError($"GiveSkill StatusEffect did not have a skill identifier defined in {parentDebugName}!");
+                }
             }
         }
 
@@ -346,8 +373,9 @@ namespace Barotrauma
 
         public readonly List<(string affliction, float amount)> ReduceAffliction;
 
+        private readonly List<string> talentTriggers;
         private readonly List<int> giveExperiences;
-        private readonly List<(string identifier, float amount)> giveSkills;
+        private readonly List<GiveSkill> giveSkills;
 
         public float Duration => duration;
 
@@ -399,8 +427,9 @@ namespace Barotrauma
             Explosions = new List<Explosion>();
             triggeredEvents = new List<EventPrefab>();
             ReduceAffliction = new List<(string affliction, float amount)>();
+            talentTriggers = new List<string>();
             giveExperiences = new List<int>();
-            giveSkills = new List<(string, float)>();
+            giveSkills = new List<GiveSkill>();
             multiplyAfflictionsByMaxVitality = element.GetAttributeBool("multiplyafflictionsbymaxvitality", false);
 
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
@@ -696,11 +725,14 @@ namespace Barotrauma
                     case "aitrigger":
                         aiTriggers.Add(new AITrigger(subElement));
                         break;
+                    case "talenttrigger":
+                        talentTriggers.Add(subElement.GetAttributeString("effectidentifier", string.Empty));
+                        break;
                     case "giveexperience":
                         giveExperiences.Add(subElement.GetAttributeInt("amount", 0));
                         break;
                     case "giveskill":
-                        giveSkills.Add((subElement.GetAttributeString("skillidentifier", ""), subElement.GetAttributeFloat("amount", 0)));
+                        giveSkills.Add(new GiveSkill(subElement, parentDebugName));
                         break;
                 }
             }
@@ -1256,6 +1288,7 @@ namespace Barotrauma
                         float reduceAmount = amount * GetAfflictionMultiplier(entity, targetCharacter, deltaTime);
                         float prevVitality = targetCharacter.Vitality;
                         targetCharacter.CharacterHealth.ReduceAffliction(targetLimb, affliction, reduceAmount, treatmentAction: actionType);
+                        targetCharacter.AIController?.OnHealed(healer: user, targetCharacter.Vitality - prevVitality);
                         if (user != null && user != targetCharacter)
                         {
                             if (!targetCharacter.IsDead)
@@ -1295,6 +1328,19 @@ namespace Barotrauma
                     }
                 }
 
+                if (talentTriggers.Any())
+                {
+                    Character targetCharacter = CharacterFromTarget(target);
+                    if (targetCharacter != null && !targetCharacter.Removed)
+                    {
+                        foreach (string talentTrigger in talentTriggers)
+                        {
+                            targetCharacter.CheckTalents(AbilityEffectType.OnStatusEffectIdentifier, new AbilityStatusEffectIdentifier(talentTrigger));
+                        }
+
+                    }
+                }
+
                 if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
                     // these effects do not need to be run clientside, as they are replicated from server to clients anyway
@@ -1310,23 +1356,18 @@ namespace Barotrauma
 
                     if (giveSkills.Any())
                     {
-                        foreach ((string skillIdentifier, float amount) in giveSkills)
+                        foreach (GiveSkill giveSkill in giveSkills)
                         {
                             Character targetCharacter = CharacterFromTarget(target);
                             if (targetCharacter != null && !targetCharacter.Removed)
                             {
-                                if (skillIdentifier?.ToLowerInvariant() == "randomskill")
-                                {
-                                    targetCharacter.Info?.IncreaseSkillLevel(GetRandomSkill(), amount);
+                                string skillIdentifier = giveSkill.SkillIdentifier.ToLowerInvariant() == "randomskill" ? GetRandomSkill() : giveSkill.SkillIdentifier;
 
-                                    string GetRandomSkill()
-                                    {
-                                        return targetCharacter.Info?.Job?.Skills.Select(s => s.Identifier).GetRandom();
-                                    }
-                                }
-                                else
+                                targetCharacter.Info?.IncreaseSkillLevel(skillIdentifier, giveSkill.Amount);
+
+                                string GetRandomSkill()
                                 {
-                                    targetCharacter.Info?.IncreaseSkillLevel(skillIdentifier?.ToLowerInvariant(), amount);
+                                    return targetCharacter.Info?.Job?.Skills.Select(s => s.Identifier).GetRandom();
                                 }
                             }
                         }
@@ -1685,6 +1726,7 @@ namespace Barotrauma
                             targetCharacter.CharacterHealth.ReduceAffliction(targetLimb, affliction, reduceAmount, treatmentAction: actionType);
                             if (element.User != null && element.User != targetCharacter)
                             {
+                                targetCharacter.AIController?.OnHealed(healer: element.User, targetCharacter.Vitality - prevVitality);
                                 if (!targetCharacter.IsDead)
                                 {
                                     targetCharacter.TryAdjustAttackerSkill(element.User, targetCharacter.Vitality - prevVitality);
@@ -1717,6 +1759,11 @@ namespace Barotrauma
             if (entity is Item sourceItem && sourceItem.HasTag("medical"))
             {
                 multiplier *= 1 + targetCharacter.GetStatValue(StatTypes.MedicalItemEffectivenessMultiplier);
+                
+                if (user != null)
+                {
+                    multiplier *= 1 + user.GetStatValue(StatTypes.MedicalItemApplyingMultiplier);
+                }
             }
             return multiplier * AfflictionMultiplier;
         }

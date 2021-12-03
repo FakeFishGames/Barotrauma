@@ -64,8 +64,8 @@ namespace Barotrauma
                         DebugConsole.ThrowError(errorMsg);
                         GameAnalyticsManager.AddErrorEventOnce(
                             "Ragdoll.Limbs:AccessRemoved",
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                            "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this) + "\n" + Environment.StackTrace.CleanupStackTrace());
+                            GameAnalyticsManager.ErrorSeverity.Error,
+                            "Attempted to access a potentially removed ragdoll. Character: " + character.SpeciesName + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this) + "\n" + Environment.StackTrace.CleanupStackTrace());
                         accessRemovedCharacterErrorShown = true;
                     }
                     return new Limb[0];
@@ -885,7 +885,7 @@ namespace Barotrauma
                 string errorMsg = "Ragdoll.GetCenterOfMass returned an invalid value (" + centerOfMass + "). Limb positions: {"
                     + string.Join(", ", limbs.Select(l => l.SimPosition)) + "}, total mass: " + totalMass + ".";
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.GetCenterOfMass", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.GetCenterOfMass", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return Collider.SimPosition;
             }
 
@@ -923,7 +923,7 @@ namespace Barotrauma
             {
                 GameAnalyticsManager.AddErrorEventOnce(
                     "Ragdoll.FindHull:InvalidPosition",
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     "Attempted to find a hull at an invalid position (" + findPos + ")\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
@@ -1354,19 +1354,19 @@ namespace Barotrauma
             string errorMsg = null;
             if (!MathUtils.IsValid(body.SimPosition) || Math.Abs(body.SimPosition.X) > 1e10f || Math.Abs(body.SimPosition.Y) > 1e10f)
             {
-                errorMsg = GetBodyName() + " position invalid (" + body.SimPosition + ", character: " + character.Name + ").";
+                errorMsg = GetBodyName() + " position invalid (" + body.SimPosition + ", character: [name]).";
             }
             else if (!MathUtils.IsValid(body.LinearVelocity) || Math.Abs(body.LinearVelocity.X) > 1000f || Math.Abs(body.LinearVelocity.Y) > 1000f)
             {
-                errorMsg = GetBodyName() + " velocity invalid (" + body.LinearVelocity + ", character: " + character.Name + ").";
+                errorMsg = GetBodyName() + " velocity invalid (" + body.LinearVelocity + ", character: [name]).";
             }
             else if (!MathUtils.IsValid(body.Rotation))
             {
-                errorMsg = GetBodyName() + " rotation invalid (" + body.Rotation + ", character: " + character.Name + ").";
+                errorMsg = GetBodyName() + " rotation invalid (" + body.Rotation + ", character: [name]).";
             }
             else if (!MathUtils.IsValid(body.AngularVelocity) || Math.Abs(body.AngularVelocity) > 1000f)
             {
-                errorMsg = GetBodyName() + " angular velocity invalid (" + body.AngularVelocity + ", character: " + character.Name + ").";
+                errorMsg = GetBodyName() + " angular velocity invalid (" + body.AngularVelocity + ", character: [name]).";
             }
             if (errorMsg != null)
             {
@@ -1384,11 +1384,11 @@ namespace Barotrauma
                 }
 
 #if DEBUG
-                DebugConsole.ThrowError(errorMsg);
+                DebugConsole.ThrowError(errorMsg.Replace("[name]", Character.Name));
 #else
-                DebugConsole.NewMessage(errorMsg, Color.Red);
+                DebugConsole.NewMessage(errorMsg.Replace("[name]", Character.Name), Color.Red);
 #endif
-                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.CheckValidity:" + character.ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.CheckValidity:" + character.ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg.Replace("[name]", Character.SpeciesName));
 
                 if (!MathUtils.IsValid(Collider.SimPosition) || Math.Abs(Collider.SimPosition.X) > 1e10f || Math.Abs(Collider.SimPosition.Y) > 1e10f)
                 {
@@ -1627,8 +1627,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace.CleanupStackTrace());
                 GameAnalyticsManager.AddErrorEventOnce(
                     "Ragdoll.SetPosition:InvalidPosition",
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace.CleanupStackTrace());
+                    GameAnalyticsManager.ErrorSeverity.Error,
+                    "Attempted to move a ragdoll (" + character.SpeciesName + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
             if (MainLimb == null) { return; }

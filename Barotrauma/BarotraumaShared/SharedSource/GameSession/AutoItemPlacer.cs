@@ -168,9 +168,9 @@ namespace Barotrauma
             {
                 if (itemPrefab == null)
                 {
-                    string errorMsg = "Error in AutoItemPlacer.SpawnItems - itemPrefab was null.\n"+Environment.StackTrace.CleanupStackTrace();
+                    string errorMsg = "Error in AutoItemPlacer.SpawnItems - itemPrefab was null.\n" + Environment.StackTrace.CleanupStackTrace();
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("AutoItemPlacer.SpawnItems:ItemNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("AutoItemPlacer.SpawnItems:ItemNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     return false;
                 }
                 bool success = false;

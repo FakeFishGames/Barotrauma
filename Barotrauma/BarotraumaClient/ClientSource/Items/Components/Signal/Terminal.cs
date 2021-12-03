@@ -26,12 +26,7 @@ namespace Barotrauma.Items.Components
                 AutoHideScrollBar = false
             };
 
-            // Create fillerBlock to cover historyBox so new values appear at the bottom of historyBox
-            // This could be removed if GUIListBox supported aligning its children
-            fillerBlock = new GUITextBlock(new RectTransform(new Vector2(1, 1), historyBox.Content.RectTransform, anchor: Anchor.TopCenter), string.Empty)
-            {
-                CanBeFocused = false
-            };
+            CreateFillerBlock();
 
             new GUIFrame(new RectTransform(new Vector2(0.9f, 0.01f), layoutGroup.RectTransform), style: "HorizontalLine");
 
@@ -52,6 +47,16 @@ namespace Barotrauma.Items.Components
                     textBox.Text = string.Empty;
                     return true;
                 }
+            };
+        }
+
+        // Create fillerBlock to cover historyBox so new values appear at the bottom of historyBox
+        // This could be removed if GUIListBox supported aligning its children
+        public void CreateFillerBlock()
+        {
+            fillerBlock = new GUITextBlock(new RectTransform(new Vector2(1, 1), historyBox.Content.RectTransform, anchor: Anchor.TopCenter), string.Empty)
+            {
+                CanBeFocused = false
             };
         }
 
@@ -130,7 +135,12 @@ namespace Barotrauma.Items.Components
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
-            msg.Write((string)extraData[2]);
+            if (extraData is null) { return; }
+
+            if (extraData[2] is string str)
+            {
+                msg.Write(str);
+            }
         }
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)

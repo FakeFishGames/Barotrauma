@@ -105,7 +105,7 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "set_text":
-
+                case "signal_in":
                     if (signal.value.Length > MaxMessageLength)
                     {
                         signal.value = signal.value.Substring(0, MaxMessageLength);
@@ -128,6 +128,8 @@ namespace Barotrauma.Items.Components
                     {
                         history.ClearChildren();
                     }
+
+                    CreateFillerBlock();
 #endif
                     break;
             }

@@ -553,6 +553,12 @@ namespace Barotrauma
                     levelGenerationParams = LevelGenerationParams.LevelParams.FirstOrDefault(p => p.Identifier == levelGenerationIdentifier);
                 }
 
+                if (SubmarineInfo.SavedSubmarines.None(s => s.Name.ToLowerInvariant() == subName.ToLowerInvariant()))
+                {
+                    ThrowError($"Cannot find a sub that matches the name \"{subName}\".");
+                    return;
+                }
+
                 GameMain.MainMenuScreen.QuickStart(fixedSeed: false, subName, difficulty, levelGenerationParams);
 
             }, getValidArgs: () => new[] { SubmarineInfo.SavedSubmarines.Select(s => s.Name).Distinct().ToArray() }));
@@ -1461,10 +1467,11 @@ namespace Barotrauma
                         {
                             foreach (ItemPrefab ingredientItemPrefab in ingredient.ItemPrefabs)
                             {
-                                NewMessage("        Its ingredient " + ingredientItemPrefab.Name + " has base cost " + ingredientItemPrefab.DefaultPrice.Price);
-                                totalPrice += ingredientItemPrefab.DefaultPrice.Price;
+                                int defaultPrice = ingredientItemPrefab.DefaultPrice?.Price ?? 0;
+                                NewMessage("        Its ingredient " + ingredientItemPrefab.Name + " has base cost " + defaultPrice);
+                                totalPrice += defaultPrice;
                                 totalBestPrice += ingredientItemPrefab.GetMinPrice();
-                                int basePrice = ingredientItemPrefab.DefaultPrice.Price;
+                                int basePrice = defaultPrice;
                                 foreach (KeyValuePair<string, PriceInfo> ingredientItemLocationPrice in ingredientItemPrefab.GetBuyPricesUnder())
                                 {
                                     if (basePrice > ingredientItemLocationPrice.Value.Price)
@@ -1630,7 +1637,7 @@ namespace Barotrauma
 
                 var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == parentItem);
                 int totalValue = 0;
-                NewMessage(parentItem.Name + " has the price " + parentItem.DefaultPrice.Price);
+                NewMessage(parentItem.Name + " has the price " + (parentItem.DefaultPrice?.Price ?? 0));
                 if (fabricationRecipe != null)
                 {
                     NewMessage("    It constructs from:");
@@ -1639,8 +1646,9 @@ namespace Barotrauma
                     {
                         foreach (ItemPrefab itemPrefab in requiredItem.ItemPrefabs)
                         {
-                            NewMessage("        " + itemPrefab.Name + " has the price " + itemPrefab.DefaultPrice.Price);
-                            totalValue += itemPrefab.DefaultPrice.Price;
+                            int defaultPrice = itemPrefab.DefaultPrice?.Price ?? 0;
+                            NewMessage("        " + itemPrefab.Name + " has the price " + defaultPrice);
+                            totalValue += defaultPrice;
                         }
                     }
                     NewMessage("Its total value was: " + totalValue);
@@ -1651,10 +1659,16 @@ namespace Barotrauma
                 {
                     ItemPrefab itemPrefab =
                         (MapEntityPrefab.Find(deconstructItem.ItemIdentifier, identifier: null, showErrorMessages: false) ??
-                        MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+                        MapEntityPrefab.Find(null, identifier: deconstructItem.ItemIdentifier, showErrorMessages: false)) as ItemPrefab;
+                    if (itemPrefab == null)
+                    {
+                        ThrowError($"       Couldn't find deconstruct product \"{deconstructItem.ItemIdentifier}\"!");
+                        continue;
+                    }
 
-                    NewMessage("       " + itemPrefab.Name + " has the price " + itemPrefab.DefaultPrice.Price);
-                    totalValue += itemPrefab.DefaultPrice.Price;
+                    int defaultPrice = itemPrefab.DefaultPrice?.Price ?? 0;
+                    NewMessage("       " + itemPrefab.Name + " has the price " + defaultPrice);
+                    totalValue += defaultPrice;
                 }
                 NewMessage("Its deconstruct value was: " + totalValue);
 
@@ -2485,8 +2499,6 @@ namespace Barotrauma
                 NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
                 NewMessage("Fullscreen enabled", Color.Green);
 
-                GameSettings.ShowUserStatisticsPrompt = true;
-
                 GameSettings.VerboseLogging = false;
 
                 if (GameMain.Config.MasterServerUrl != "http://www.undertowgames.com/baromaster")
@@ -3162,7 +3174,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Failed to spawn a submarine. Arguments: \"" + string.Join(" ", args) + "\".";
                     ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnSubmarine:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace.CleanupStackTrace());
+                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnSubmarine:Error", GameAnalyticsManager.ErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace.CleanupStackTrace());
                 }
             },
             () =>

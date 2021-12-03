@@ -233,7 +233,7 @@ namespace Barotrauma.Networking
 
                             DebugConsole.ThrowError(errorMsg);
 
-                            GameAnalyticsManager.AddErrorEventOnce("ClientEntityEventManager.Read:BitPosMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce("ClientEntityEventManager.Read:BitPosMismatch", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 
                             //TODO: force the BitPosition to correct place? Having some entity in a potentially incorrect state is not as bad as a desync kick
                             //msg.BitPosition = (int)(msgPosition + msgLength * 8);
@@ -252,7 +252,7 @@ namespace Barotrauma.Networking
                         DebugConsole.ThrowError("Failed to read event for entity \"" + entity.ToString() + "\"!", e);
 
                         GameAnalyticsManager.AddErrorEventOnce("ClientEntityEventManager.Read:ReadFailed" + entity.ToString(),
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                            GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                         msg.BitPosition = (int)(msgPosition + msgLength * 8);
                         msg.ReadPadBits();
                     }

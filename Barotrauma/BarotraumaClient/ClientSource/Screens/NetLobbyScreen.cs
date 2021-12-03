@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Steam;
 
 namespace Barotrauma
 {
@@ -39,12 +40,6 @@ namespace Barotrauma
         private readonly GUIImage micIcon;
 
         private readonly GUIScrollBar levelDifficultyScrollBar;
-
-        private readonly GUITickBox radiationEnabledTickBox;
-
-        private readonly GUIButton[] maxMissionCountButtons;
-        private readonly GUITextBlock maxMissionCountText;
-        private readonly GUITextBlock maxMissionCountDescription;
 
         private readonly GUIButton[] traitorProbabilityButtons;
         private readonly GUITextBlock traitorProbabilityText;
@@ -191,6 +186,9 @@ namespace Barotrauma
                 ModeList.Select(value, true);
             }
         }
+
+        public IReadOnlyList<SubmarineInfo> GetSubList()
+            => SubList.Content.Children.Select(c => c.UserData as SubmarineInfo).ToArray();
 
         public readonly GUIListBox PlayerList;
 
@@ -1185,45 +1183,6 @@ namespace Barotrauma
                 }
             };
 
-            if (MapGenerationParams.Instance.RadiationParams != null)
-            {
-                radiationEnabledTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), TextManager.Get("CampaignOption.EnableRadiation"), font: GUI.Style.Font)
-                {
-                    Selected = true,
-                    OnSelected = box =>
-                    {
-                        GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, radiationEnabled: box.Selected);
-                        return true;
-                    }
-                };
-            }
-
-            var maxMissionCountSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
-            maxMissionCountDescription = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), maxMissionCountSettingHolder.RectTransform), TextManager.Get("maxmissioncount", fallBackTag: "missions"), wrap: true)
-            {
-                ToolTip = TextManager.Get("maxmissioncounttooltip")
-            };
-            var maxMissionCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), maxMissionCountSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
-            maxMissionCountButtons = new GUIButton[2];
-            maxMissionCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), maxMissionCountContainer.RectTransform), style: "GUIButtonToggleLeft")
-            {
-                OnClicked = (button, obj) =>
-                {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, maxMissionCount: -1);
-                    return true;
-                }
-            };
-            maxMissionCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), maxMissionCountContainer.RectTransform), "0", textAlignment: Alignment.Center, style: "GUITextBox");
-            maxMissionCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), maxMissionCountContainer.RectTransform), style: "GUIButtonToggleRight")
-            {
-                OnClicked = (button, obj) =>
-                {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, maxMissionCount: 1);
-                    return true;
-                }
-            };
-            maxMissionCountSettingHolder.Children.ForEach(c => c.ToolTip = maxMissionCountSettingHolder.ToolTip);
-
             List<GUIComponent> settingsElements = settingsContent.Children.ToList();
             for (int i = 0; i < settingsElements.Count; i++)
             {
@@ -1372,16 +1331,6 @@ namespace Barotrauma
             }
             SeedBox.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             levelDifficultyScrollBar.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            if (radiationEnabledTickBox != null)
-            {
-                radiationEnabledTickBox.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            }
-            maxMissionCountDescription.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            maxMissionCountText.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            foreach (var button in maxMissionCountButtons)
-            {
-                button.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            }
 
             traitorProbabilityButtons[0].Enabled = traitorProbabilityButtons[1].Enabled = traitorProbabilityText.Enabled =
                 !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
@@ -2163,16 +2112,125 @@ namespace Barotrauma
             if (child != null) { PlayerList.RemoveChild(child); }
         }
 
+        private Client ExtractClientFromClickableArea(GUITextBlock.ClickableArea area)
+        {
+            if (!UInt64.TryParse(area.Data.Metadata, out UInt64 id)) { return null; }
+            Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id)
+                            ?? GameMain.Client.ConnectedClients.Find(c => c.ID == id)
+                            ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.SteamID == id)
+                            ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.ID == id);
+            return client;
+        }
+        
         public void SelectPlayer(GUITextBlock component, GUITextBlock.ClickableArea area)
         {
-            if (!UInt64.TryParse(area.Data.Metadata, out UInt64 id)) { return; }
-            Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id)
-                ?? GameMain.Client.ConnectedClients.Find(c => c.ID == id)
-                ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.SteamID == id)
-                ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.ID == id);
-            if (client == null) { return; }
+            var client = ExtractClientFromClickableArea(area);
+            if (client is null) { return; }
             GameMain.NetLobbyScreen.SelectPlayer(client);
         }
+
+        public void ShowPlayerContextMenu(GUITextBlock component, GUITextBlock.ClickableArea area)
+        {
+            var client = ExtractClientFromClickableArea(area);
+            if (client is null) { return; }
+            CreateModerationContextMenu(client);
+        }
+
+        #region Context Menu
+        public static void CreateModerationContextMenu(Client client)
+        {
+            if (GUIContextMenu.CurrentContextMenu != null) { return; }
+            if (GameMain.IsSingleplayer || client == null || ((!GameMain.Client?.PreviouslyConnectedClients?.Contains(client)) ?? true)) { return; }
+            bool hasSteam = client.SteamID > 0 && SteamManager.IsInitialized,
+                 canKick  = GameMain.Client.HasPermission(ClientPermissions.Kick),
+                 canBan   = GameMain.Client.HasPermission(ClientPermissions.Ban) && client.AllowKicking,
+                 canPromo = GameMain.Client.HasPermission(ClientPermissions.ManagePermissions);
+
+            // Disable options if we are targeting ourselves
+            if (client.ID == GameMain.Client?.ID)
+            {
+                canKick = canBan = canPromo = false;
+            }
+
+            List<ContextMenuOption> options = new List<ContextMenuOption>();
+            
+            options.Add(new ContextMenuOption("ViewSteamProfile", isEnabled: hasSteam, onSelected: delegate
+            { 
+                Steamworks.SteamFriends.OpenWebOverlay($"https://steamcommunity.com/profiles/{client.SteamID}");
+            }));
+
+            options.Add(new ContextMenuOption("ModerationMenu.UserDetails", isEnabled: true, onSelected: delegate
+            {
+                GameMain.NetLobbyScreen?.SelectPlayer(client);
+            }));
+
+
+            // Creates sub context menu options for all the ranks
+            List<ContextMenuOption> permissionOptions = new List<ContextMenuOption>();
+            foreach (PermissionPreset rank in PermissionPreset.List)
+            {
+                permissionOptions.Add(new ContextMenuOption(rank.Name, isEnabled: true, onSelected: () =>
+                {
+                    string label = TextManager.GetWithVariables(rank.Permissions == ClientPermissions.None ?  "clearrankprompt" : "giverankprompt", new []{ "[user]", "[rank]" }, new []{ client.Name, rank.Name });
+                    GUIMessageBox msgBox = new GUIMessageBox(string.Empty, label, new[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
+
+                    msgBox.Buttons[0].OnClicked = delegate
+                    {
+                        client.SetPermissions(rank.Permissions, rank.PermittedCommands);
+                        GameMain.Client.UpdateClientPermissions(client);
+                        msgBox.Close();
+                        return true;
+                    };
+                    msgBox.Buttons[1].OnClicked = delegate
+                    {
+                        msgBox.Close();
+                        return true;
+                    };
+                }) { Tooltip = rank.Description });
+            }
+
+            options.Add(new ContextMenuOption("Permissions", isEnabled: canPromo, options: permissionOptions.ToArray()));
+
+            Color clientColor = client.Character?.Info?.Job.Prefab.UIColor ?? Color.White;
+
+            if (GameMain.Client.ConnectedClients.Contains(client))
+            {
+                options.Add(new ContextMenuOption(client.MutedLocally ? "Unmute" : "Mute", isEnabled: client.ID != GameMain.Client?.ID, onSelected: delegate
+                {
+                    client.MutedLocally = !client.MutedLocally;
+                }));
+
+                bool kickEnabled = client.ID != GameMain.Client?.ID && client.AllowKicking;
+
+                // if the user can kick create a kick option else create the votekick option
+                ContextMenuOption kickOption;
+                if (canKick)
+                {
+                    kickOption = new ContextMenuOption("Kick", isEnabled: kickEnabled, onSelected: delegate
+                    {
+                        GameMain.Client?.CreateKickReasonPrompt(client.Name, false);
+                    });
+                }
+                else
+                {
+                    kickOption = new ContextMenuOption("VoteToKick", isEnabled: kickEnabled, onSelected: delegate
+                    {
+                        GameMain.Client?.VoteForKick(client);
+                    });
+                }
+
+                options.Add(kickOption);
+            }
+
+            options.Add(new ContextMenuOption("Ban", isEnabled: canBan, onSelected: delegate
+            {
+                GameMain.Client?.CreateKickReasonPrompt(client.Name, true);
+            }));
+
+            GUIContextMenu.CreateContextMenu(null, client.Name, headerColor: clientColor, options.ToArray());
+        }
+        
+        #endregion
 
         public bool SelectPlayer(Client selectedClient)
         {
@@ -2763,7 +2821,8 @@ namespace Barotrauma
                     msg.ClickableAreas.Add(new GUITextBlock.ClickableArea()
                     {
                         Data = data,
-                        OnClick = GameMain.NetLobbyScreen.SelectPlayer
+                        OnClick = GameMain.NetLobbyScreen.SelectPlayer,
+                        OnSecondaryClick = GameMain.NetLobbyScreen.ShowPlayerContextMenu
                     });
                 }
             }
@@ -3221,6 +3280,7 @@ namespace Barotrauma
             {
                 CreateSubPreview(submarine);
             }
+            UpdateSubVisibility();
         }
 
         private bool ViewJobInfo(GUIButton button, object obj)
@@ -3369,14 +3429,28 @@ namespace Barotrauma
             return btn;
         }
 
-        public Pair<string, string> FailedSelectedSub;
-        public Pair<string, string> FailedSelectedShuttle;
+        public readonly struct FailedSubInfo
+        {
+            public readonly string Name;
+            public readonly string Hash;
+            public FailedSubInfo(string name, string hash) { Name = name; Hash = hash; }
+            public void Deconstruct(out string name, out string hash) { name = Name; hash = Hash; }
+            public static bool operator ==(FailedSubInfo a, FailedSubInfo b)
+                => a.Name.Equals(b.Name, StringComparison.OrdinalIgnoreCase)
+                    && a.Hash.Equals(b.Hash, StringComparison.OrdinalIgnoreCase);
+            public static bool operator !=(FailedSubInfo a, FailedSubInfo b)
+                => !(a == b);
+        }
 
-        public List<Pair<string, string>> FailedCampaignSubs = new List<Pair<string, string>>();
-        public List<Pair<string, string>> FailedOwnedSubs = new List<Pair<string, string>>();
+        public FailedSubInfo? FailedSelectedSub;
+        public FailedSubInfo? FailedSelectedShuttle;
+
+        public List<FailedSubInfo> FailedCampaignSubs = new List<FailedSubInfo>();
+        public List<FailedSubInfo> FailedOwnedSubs = new List<FailedSubInfo>();
 
         public bool TrySelectSub(string subName, string md5Hash, GUIListBox subList)
         {
+            UpdateSubVisibility();
             if (GameMain.Client == null) { return false; }
 
             //already downloading the selected sub file
@@ -3441,9 +3515,13 @@ namespace Barotrauma
             //if we get to this point, a matching sub was not found or it has an incorrect MD5 hash
 
             if (subList == SubList)
-                FailedSelectedSub = new Pair<string, string>(subName, md5Hash);
+            {
+                FailedSelectedSub = new FailedSubInfo(subName, md5Hash);
+            }
             else
-                FailedSelectedShuttle = new Pair<string, string>(subName, md5Hash);
+            {
+                FailedSelectedShuttle = new FailedSubInfo(subName, md5Hash);
+            }
 
             string errorMsg = "";
             if (sub == null || !SubmarineInfo.SavedSubmarines.Contains(sub))
@@ -3542,22 +3620,22 @@ namespace Barotrauma
             {
                 UserData = "request" + serverSubmarine.Name
             };
-            requestFileBox.Buttons[0].UserData = new string[] { serverSubmarine.Name, serverSubmarine.MD5Hash.Hash };
+            requestFileBox.Buttons[0].UserData = new FailedSubInfo(serverSubmarine.Name, serverSubmarine.MD5Hash.Hash);
             requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
             requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
             {
-                string[] fileInfo = (string[])userdata;
+                FailedSubInfo fileInfo = (FailedSubInfo)userdata;
 
-                if (deliveryData == "owned")
+                if (deliveryData == "owned") //owned!!!!
                 {
-                    FailedOwnedSubs.Add(new Pair<string, string>(fileInfo[0], fileInfo[1]));
+                    FailedOwnedSubs.Add(fileInfo);
                 }
                 else if (deliveryData == "campaign")
                 {
-                    FailedCampaignSubs.Add(new Pair<string, string>(fileInfo[0], fileInfo[1]));
+                    FailedCampaignSubs.Add(fileInfo);
                 }
 
-                GameMain.Client?.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
+                GameMain.Client?.RequestFile(FileTransferType.Submarine, fileInfo.Name, fileInfo.Hash);
                 return true;
             };
             requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
@@ -3691,7 +3769,7 @@ namespace Barotrauma
                 };
 
                 var subName = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), frameContent.RectTransform),
-                    text: sub.Name)
+                    text: sub.DisplayName)
                 {
                     CanBeFocused = false
                 };
@@ -3823,7 +3901,9 @@ namespace Barotrauma
             foreach (GUIComponent child in SubList.Content.Children)
             {
                 if (!(child.UserData is SubmarineInfo sub)) { continue; }
-                child.Visible = !GameMain.Client.ServerSettings.HiddenSubs.Contains(sub.Name)
+                child.Visible =
+                    (!GameMain.Client.ServerSettings.HiddenSubs.Contains(sub.Name)
+                     || (GameMain.GameSession?.SubmarineInfo != null && GameMain.GameSession.SubmarineInfo.Name.Equals(sub.Name, StringComparison.OrdinalIgnoreCase)))
                     && (string.IsNullOrEmpty(subSearchBox.Text) || sub.DisplayName.Contains(subSearchBox.Text, StringComparison.OrdinalIgnoreCase));
             }
         }

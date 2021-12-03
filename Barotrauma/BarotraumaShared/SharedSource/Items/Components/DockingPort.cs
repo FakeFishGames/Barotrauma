@@ -484,7 +484,7 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "DockingPort.CreateDoorBody:InvalidPosition",
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
                 position = Vector2.Zero;
             }
@@ -779,29 +779,25 @@ namespace Barotrauma.Items.Components
 
             if (IsHorizontal)
             {
-                if (hulls[0].WorldRect.X < hulls[1].WorldRect.X)
+                if (hulls[0].WorldRect.X > hulls[1].WorldRect.X)
                 {
-                    gap.linkedTo.Add(hulls[0]);
-                    gap.linkedTo.Add(hulls[1]);
+                    var temp = hulls[0];
+                    hulls[0] = hulls[1];
+                    hulls[1] = temp;
                 }
-                else
-                {
-                    gap.linkedTo.Add(hulls[1]);
-                    gap.linkedTo.Add(hulls[0]);
-                }
+                gap.linkedTo.Add(hulls[0]);
+                gap.linkedTo.Add(hulls[1]);
             }
             else
             {
-                if (hulls[0].WorldRect.Y > hulls[1].WorldRect.Y)
+                if (hulls[0].WorldRect.Y < hulls[1].WorldRect.Y)
                 {
-                    gap.linkedTo.Add(hulls[0]);
-                    gap.linkedTo.Add(hulls[1]);
+                    var temp = hulls[0];
+                    hulls[0] = hulls[1];
+                    hulls[1] = temp;
                 }
-                else
-                {
-                    gap.linkedTo.Add(hulls[1]);
-                    gap.linkedTo.Add(hulls[0]);
-                }
+                gap.linkedTo.Add(hulls[0]);
+                gap.linkedTo.Add(hulls[1]);
             }
 
             for (int i = 0; i < 2; i++)
@@ -813,7 +809,7 @@ namespace Barotrauma.Items.Components
 
                 if (IsHorizontal)
                 {
-                    if (item.WorldPosition.X < DockingTarget.item.WorldPosition.X)
+                    if (doorGap.WorldPosition.X < gap.WorldPosition.X)
                     {
                         if (!doorGap.linkedTo.Contains(hulls[0])) { doorGap.linkedTo.Add(hulls[0]); }
                     }
@@ -831,7 +827,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    if (item.WorldPosition.Y > DockingTarget.item.WorldPosition.Y)
+                    if (doorGap.WorldPosition.Y > gap.WorldPosition.Y)
                     {
                         if (!doorGap.linkedTo.Contains(hulls[0])) { doorGap.linkedTo.Add(hulls[0]); }
                     }

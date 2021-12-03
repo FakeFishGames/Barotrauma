@@ -439,7 +439,7 @@ namespace Barotrauma
             catch (FormatException)
             {
                 string errorMsg = "Failed to format text \"" + text + "\", args: " + string.Join(", ", args);
-                GameAnalyticsManager.AddErrorEventOnce("TextManager.GetFormatted:FormatException", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("TextManager.GetFormatted:FormatException", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return text;
             }
         }
@@ -721,7 +721,7 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg, exception);
 #endif
-                GameAnalyticsManager.AddErrorEventOnce("TextManager.GetServerMessage:" + serverMessage, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("TextManager.GetServerMessage:" + serverMessage, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return errorMsg;
             }
         }

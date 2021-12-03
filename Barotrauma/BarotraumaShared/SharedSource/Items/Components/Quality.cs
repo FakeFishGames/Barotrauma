@@ -26,12 +26,13 @@ namespace Barotrauma.Items.Components
             RepairToolStructureRepairMultiplier,
             RepairToolStructureDamageMultiplier,
             RepairToolDeattachTimeMultiplier,
-            StoppingPowerMultiplier,
+            FirepowerMultiplier,
             StrikingPowerMultiplier,
             StrikingSpeedMultiplier,
             FiringRateMultiplier,
             // unused as of now
             AttackMultiplier,
+            // unused as of now
             AttackSpeedMultiplier,
             ForceDoorsOpenSpeedMultiplier,
             RangedSpreadReduction,
@@ -46,7 +47,7 @@ namespace Barotrauma.Items.Components
 
         private int qualityLevel;
 
-        [Serialize(0, true)]
+        [Editable, Serialize(0, true)]
         public int QualityLevel
         {
             get { return qualityLevel; }

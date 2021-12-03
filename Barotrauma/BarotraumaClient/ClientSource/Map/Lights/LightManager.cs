@@ -497,11 +497,13 @@ namespace Barotrauma.Lights
             return true;
         }
 
+        private readonly Dictionary<Hull, Rectangle> visibleHulls = new Dictionary<Hull, Rectangle>();
         private Dictionary<Hull, Rectangle> GetVisibleHulls(Camera cam)
         {
-            Dictionary<Hull, Rectangle> visibleHulls = new Dictionary<Hull, Rectangle>();
+            visibleHulls.Clear();
             foreach (Hull hull in Hull.hullList)
             {
+                if (hull.HiddenInGame) { continue; }
                 var drawRect =
                     hull.Submarine == null ?
                     hull.Rect :

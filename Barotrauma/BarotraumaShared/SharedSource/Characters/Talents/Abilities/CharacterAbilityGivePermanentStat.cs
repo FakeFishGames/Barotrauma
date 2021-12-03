@@ -26,7 +26,7 @@ namespace Barotrauma.Abilities
             value = abilityElement.GetAttributeFloat("value", 0f);
             maxValue = abilityElement.GetAttributeFloat("maxvalue", float.MaxValue);
             targetAllies = abilityElement.GetAttributeBool("targetallies", false);
-            removeOnDeath = abilityElement.GetAttributeBool("removeondeath", true);
+            removeOnDeath = abilityElement.GetAttributeBool("removeondeath", false);
             giveOnAddingFirstTime = abilityElement.GetAttributeBool("giveonaddingfirsttime", characterAbilityGroup.AbilityEffectType == AbilityEffectType.None);
             setValue = abilityElement.GetAttributeBool("setvalue", false);
         }

@@ -186,7 +186,7 @@ namespace Barotrauma.Networking
                         DebugConsole.ThrowError(errorMsg, e);
                     }
                     GameAnalyticsManager.AddErrorEventOnce("ServerEntityEventManager.Read:ReadFailed" + entityName,
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "Failed to read server event for entity \"" + entityName + "\"!\n" + e.StackTrace.CleanupStackTrace());
                 }
 

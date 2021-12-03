@@ -1407,7 +1407,7 @@ namespace Barotrauma
                         {
                             string errorMsg = $"Error while loading structure \"{s.Name}\". Section damage index out of bounds. Index: {index}, section count: {s.SectionCount}.";
                             DebugConsole.ThrowError(errorMsg);
-                            GameAnalyticsManager.AddErrorEventOnce("Structure.Load:SectionIndexOutOfBounds", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce("Structure.Load:SectionIndexOutOfBounds", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                         }
                         else
                         {

@@ -1445,7 +1445,7 @@ namespace Barotrauma
 #else
                 if (GameSettings.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
 #endif
-                GameAnalyticsManager.AddErrorEventOnce("Item.ClientReadPosition:nophysicsbody", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.ClientReadPosition:nophysicsbody", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -1586,7 +1586,7 @@ namespace Barotrauma
                 string errorMsg = "Failed to spawn item, prefab not found (name: " + (itemName ?? "null") + ", identifier: " + (itemIdentifier ?? "null") + ")";
                 errorMsg += "\n" + string.Join(", ", GameMain.Config.AllEnabledPackages.Select(cp => cp.Name));
                 GameAnalyticsManager.AddErrorEventOnce("Item.ReadSpawnData:PrefabNotFound" + (itemName ?? "null") + (itemIdentifier ?? "null"),
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Critical,
+                    GameAnalyticsManager.ErrorSeverity.Critical,
                     errorMsg);
                 DebugConsole.ThrowError(errorMsg);
                 return null;
@@ -1607,7 +1607,7 @@ namespace Barotrauma
                         string errorMsg =
                             $"Failed to spawn item \"{(itemIdentifier ?? "null")}\" in the inventory of \"{parentItem.prefab.Identifier} ({parentItem.ID})\" (component index out of range). Index: {itemContainerIndex}, components: {parentItem.components.Count}.";
                         GameAnalyticsManager.AddErrorEventOnce("Item.ReadSpawnData:ContainerIndexOutOfRange" + (itemName ?? "null") + (itemIdentifier ?? "null"),
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            GameAnalyticsManager.ErrorSeverity.Error,
                             errorMsg);
                         DebugConsole.ThrowError(errorMsg);
                         inventory = parentItem.GetComponent<ItemContainer>()?.Inventory;

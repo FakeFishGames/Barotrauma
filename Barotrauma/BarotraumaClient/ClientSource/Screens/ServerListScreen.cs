@@ -2376,10 +2376,9 @@ namespace Barotrauma
                     }
                     catch (Exception ex)
                     {
-                        string errorMsg = "Failed to ping a server (" + ip + ") - " + (ex?.InnerException?.Message ?? ex.Message);
-                        GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + ip, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + ip, GameAnalyticsManager.ErrorSeverity.Warning, "Failed to ping a server - " + (ex?.InnerException?.Message ?? ex.Message));
 #if DEBUG
-                        DebugConsole.NewMessage(errorMsg, Color.Red);
+                        DebugConsole.NewMessage("Failed to ping a server (" + ip + ") - " + (ex?.InnerException?.Message ?? ex.Message), Color.Red);
 #endif
                     }
                 }

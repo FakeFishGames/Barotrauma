@@ -313,7 +313,7 @@ namespace Barotrauma
                         ShipCommandLog("Dismissing " + shipIssueWorker + " for character " + shipIssueWorker.OrderedCharacter);
 #endif
                         Order orderPrefab = Order.GetPrefab("dismissed");
-                        character.Speak(orderPrefab.GetChatMessage(shipIssueWorker.OrderedCharacter.Name, "", givingOrderToSelf: false));
+                        //character.Speak(orderPrefab.GetChatMessage(shipIssueWorker.OrderedCharacter.Name, "", givingOrderToSelf: false));
                         shipIssueWorker.OrderedCharacter.SetOrder(Order.GetPrefab("dismissed"), orderOption: null, priority: 3, character);
                         shipIssueWorker.RemoveOrder();
                         break;

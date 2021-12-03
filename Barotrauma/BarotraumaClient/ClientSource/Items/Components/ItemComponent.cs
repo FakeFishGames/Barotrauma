@@ -406,7 +406,7 @@ namespace Barotrauma.Items.Components
                     DebugConsole.Log("Invalid sound volume (item " + item.Name + ", " + GetType().ToString() + "): " + newVolume);
                     GameAnalyticsManager.AddErrorEventOnce(
                         "ItemComponent.PlaySound:" + item.Name + GetType().ToString(),
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "Invalid sound volume (item " + item.Name + ", " + GetType().ToString() + "): " + newVolume);
                     return 0.0f;
                 }

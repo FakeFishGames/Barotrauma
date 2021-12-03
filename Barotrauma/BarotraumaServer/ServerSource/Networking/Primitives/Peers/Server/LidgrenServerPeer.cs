@@ -125,7 +125,7 @@ namespace Barotrauma.Networking
             catch (Exception e)
             {
                 string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("LidgrenServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("LidgrenServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #else
@@ -208,15 +208,13 @@ namespace Barotrauma.Networking
 
             PendingClient pendingClient = pendingClients.Find(c => (c.Connection is LidgrenConnection l) && l.NetConnection == inc.SenderConnection);
 
-            byte incByte = inc.ReadByte();
-            bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
-            bool isConnectionInitializationStep = (incByte & (byte)PacketHeader.IsConnectionInitializationStep) != 0;
+            PacketHeader packetHeader = (PacketHeader)inc.ReadByte();
 
-            if (isConnectionInitializationStep && pendingClient != null)
+            if (packetHeader.IsConnectionInitializationStep() && pendingClient != null)
             {
                 ReadConnectionInitializationStep(pendingClient, new ReadWriteMessage(inc.Data, (int)inc.Position, inc.LengthBits, false));
             }
-            else if (!isConnectionInitializationStep)
+            else if (!packetHeader.IsConnectionInitializationStep())
             {
                 LidgrenConnection conn = connectedClients.Find(c => (c is LidgrenConnection l) && l.NetConnection == inc.SenderConnection) as LidgrenConnection;
                 if (conn == null)
@@ -242,7 +240,7 @@ namespace Barotrauma.Networking
 
                 //DebugConsole.NewMessage(isCompressed + " " + isConnectionInitializationStep + " " + (int)incByte + " " + length);
 
-                IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.PositionInBytes, length, conn);
+                IReadMessage msg = new ReadOnlyMessage(inc.Data, packetHeader.IsCompressed(), inc.PositionInBytes, length, conn);
                 OnMessageReceived?.Invoke(conn, msg);
             }
         }

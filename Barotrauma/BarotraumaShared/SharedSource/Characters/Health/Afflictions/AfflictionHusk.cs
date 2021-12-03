@@ -59,17 +59,25 @@ namespace Barotrauma
             }
         }
 
-        private float DormantThreshold => (Prefab as AfflictionPrefabHusk)?.DormantThreshold ?? Prefab.MaxStrength * 0.5f;
-        private float ActiveThreshold => (Prefab as AfflictionPrefabHusk)?.ActiveThreshold ?? Prefab.MaxStrength * 0.75f;
+        private readonly AfflictionPrefabHusk HuskPrefab;
 
-        private float TransitionThreshold => (Prefab as AfflictionPrefabHusk)?.TransitionThreshold ?? Prefab.MaxStrength * 0.75f;
+        private float DormantThreshold => HuskPrefab.DormantThreshold;
+        private float ActiveThreshold => HuskPrefab.ActiveThreshold;
+        private float TransitionThreshold => HuskPrefab.TransitionThreshold;
+        private float TransformThresholdOnDeath => HuskPrefab.TransformThresholdOnDeath;
 
-        private float TransformThresholdOnDeath => (Prefab as AfflictionPrefabHusk)?.TransformThresholdOnDeath ?? ActiveThreshold;
-
-        public AfflictionHusk(AfflictionPrefab prefab, float strength) : base(prefab, strength) { }
+        public AfflictionHusk(AfflictionPrefab prefab, float strength) : base(prefab, strength)
+        {
+            HuskPrefab = prefab as AfflictionPrefabHusk;
+            if (HuskPrefab == null)
+            {
+                DebugConsole.ThrowError("Error in husk affliction definition: the prefab is of wrong type!");
+            }
+        }
 
         public override void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
+            if (HuskPrefab == null) { return; }
             base.Update(characterHealth, targetLimb, deltaTime);
             character = characterHealth.Character;
             if (character == null) { return; }
@@ -272,11 +280,13 @@ namespace Barotrauma
 
             if ((Prefab as AfflictionPrefabHusk)?.TransferBuffs ?? false)
             {
-                foreach (Affliction affliction in character.CharacterHealth.Afflictions)
+                foreach (Affliction affliction in character.CharacterHealth.GetAllAfflictions())
                 {
                     if (affliction.Prefab.IsBuff)
                     {
-                        husk.CharacterHealth.ApplyAffliction(null, affliction.Prefab.Instantiate(affliction.Strength));
+                        husk.CharacterHealth.ApplyAffliction(
+                            character.CharacterHealth.GetAfflictionLimb(affliction), 
+                            affliction.Prefab.Instantiate(affliction.Strength));
                     }
                 }
             }
