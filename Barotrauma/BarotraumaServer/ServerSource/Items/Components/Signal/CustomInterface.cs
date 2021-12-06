@@ -28,9 +28,14 @@ namespace Barotrauma.Items.Components
                 {
                     if (customInterfaceElementList[i].HasPropertyName)
                     {
-                        if (!customInterfaceElementList[i].IsIntegerInput)
+                        if (!customInterfaceElementList[i].IsNumberInput)
                         {
                             TextChanged(customInterfaceElementList[i], elementValues[i]);
+                        }
+                        else if (!customInterfaceElementList[i].IsIntegerInput) // Is float.
+                        {
+                            float.TryParse(elementValues[i], out float value);
+                            ValueChanged(customInterfaceElementList[i], value);
                         }
                         else
                         {

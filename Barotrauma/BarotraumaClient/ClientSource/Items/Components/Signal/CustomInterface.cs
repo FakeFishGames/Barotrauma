@@ -45,7 +45,7 @@ namespace Barotrauma.Items.Components
                     };
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), 
                         TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label);
-                    if (!ciElement.IsIntegerInput)
+                    if (!ciElement.IsNumberInput)
                     {
                         var textBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), ciElement.Signal, style: "GUITextBoxNoIcon")
                         {
@@ -77,20 +77,48 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        int.TryParse(ciElement.Signal, out int signal);
-                        var numberInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), GUINumberInput.NumberType.Int)
+                        GUINumberInput numberInput;
+                        if (!ciElement.IsIntegerInput) // Is float.
                         {
-                            UserData = ciElement,
-                            MinValueInt = ciElement.NumberInputMin,
-                            MaxValueInt = ciElement.NumberInputMax,
-                            IntValue = Math.Clamp(signal, ciElement.NumberInputMin, ciElement.NumberInputMax)
-                        };
+                            float.TryParse(ciElement.Signal, out float floatSignal);
+                            float.TryParse(ciElement.NumberInputMin, out float numberInputMin);
+                            float.TryParse(ciElement.NumberInputMax, out float numberInputMax);
+                            float.TryParse(ciElement.NumberInputStep, out float numberInputStep);
+                            numberInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), GUINumberInput.NumberType.Float)
+                            {
+                                UserData = ciElement,
+                                MinValueFloat = numberInputMin,
+                                MaxValueFloat = numberInputMax,
+                                FloatValue = Math.Clamp(floatSignal, numberInputMin, numberInputMax),
+                                DecimalsToDisplay = ciElement.NumberInputDecimalPlaces,
+                                valueStep = numberInputStep
+                            };
+                        }
+                        else // Is Integer.
+                        {
+                            int.TryParse(ciElement.Signal, out int intSignal);
+                            int.TryParse(ciElement.NumberInputMin, out int numberInputMin);
+                            int.TryParse(ciElement.NumberInputMax, out int numberInputMax);
+                            float.TryParse(ciElement.NumberInputStep, out float numberInputStep);
+                            numberInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), GUINumberInput.NumberType.Int)
+                            {
+                                UserData = ciElement,
+                                MinValueInt = numberInputMin,
+                                MaxValueInt = numberInputMax,
+                                IntValue = Math.Clamp(intSignal, numberInputMin, numberInputMax),
+                                valueStep = numberInputStep // Is cast to int farther in.
+                            };
+                        }
                         //reset size restrictions set by the Style to make sure the elements can fit the interface
                         numberInput.RectTransform.MinSize = numberInput.LayoutGroup.RectTransform.MinSize = new Point(0, 0);
                         numberInput.RectTransform.MaxSize = numberInput.LayoutGroup.RectTransform.MaxSize = new Point(int.MaxValue, int.MaxValue);
                         numberInput.OnValueChanged += (ni) =>
                         {
-                            if (GameMain.Client == null)
+                            if (GameMain.Client == null && !ciElement.IsIntegerInput)
+                            {
+                                ValueChanged(ni.UserData as CustomInterfaceElement, ni.FloatValue);
+                            }
+                            else if (GameMain.Client == null)
                             {
                                 ValueChanged(ni.UserData as CustomInterfaceElement, ni.IntValue);
                             }
@@ -306,7 +334,7 @@ namespace Barotrauma.Items.Components
             {
                 if (customInterfaceElementList[i].HasPropertyName)
                 {
-                    if (!customInterfaceElementList[i].IsIntegerInput)
+                    if (!customInterfaceElementList[i].IsNumberInput)
                     {
                         msg.Write(((GUITextBox)uiElements[i]).Text);
                     }
@@ -332,7 +360,7 @@ namespace Barotrauma.Items.Components
             {
                 if (customInterfaceElementList[i].HasPropertyName)
                 {
-                    if (!customInterfaceElementList[i].IsIntegerInput)
+                    if (!customInterfaceElementList[i].IsNumberInput)
                     {
                         TextChanged(customInterfaceElementList[i], msg.ReadString());
                     }

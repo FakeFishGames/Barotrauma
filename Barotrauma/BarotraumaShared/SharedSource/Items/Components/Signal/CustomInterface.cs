@@ -23,12 +23,16 @@ namespace Barotrauma.Items.Components
             public string PropertyName { get; }
             public bool TargetOnlyParentProperty { get; }
 
-            public int NumberInputMin { get; }
-            public int NumberInputMax { get; }
+            public string NumberInputMin { get; }
+            public string NumberInputMax { get; }
+            public string NumberInputStep { get; }
+            public int NumberInputDecimalPlaces { get; }
 
             public int MaxTextLength { get; }
 
-            public const int DefaultNumberInputMin = 0, DefaultNumberInputMax = 99;
+            public const string DefaultNumberInputMin = "0", DefaultNumberInputMax = "99", DefaultNumberInputStep = "1";
+            public const int DefaultNumberInputDecimalPlaces = 0;
+            public bool IsNumberInput { get; }
             public bool IsIntegerInput { get; }
             public bool HasPropertyName { get; }
             public bool ShouldSetProperty { get; set; }
@@ -49,11 +53,20 @@ namespace Barotrauma.Items.Components
                 ConnectionName = element.GetAttributeString("connection", "");
                 PropertyName = element.GetAttributeString("propertyname", "").ToLowerInvariant();
                 TargetOnlyParentProperty = element.GetAttributeBool("targetonlyparentproperty", false);
-                NumberInputMin = element.GetAttributeInt("min", DefaultNumberInputMin);
-                NumberInputMax = element.GetAttributeInt("max", DefaultNumberInputMax);
+                NumberInputMin = element.GetAttributeString("min", DefaultNumberInputMin);
+                NumberInputMax = element.GetAttributeString("max", DefaultNumberInputMax);
+                NumberInputStep = element.GetAttributeString("step", DefaultNumberInputStep);
+                NumberInputDecimalPlaces = element.GetAttributeInt("decimalplaces", DefaultNumberInputDecimalPlaces);
                 MaxTextLength = element.GetAttributeInt("maxtextlength", int.MaxValue);
                 HasPropertyName = !string.IsNullOrEmpty(PropertyName);
-                IsIntegerInput = HasPropertyName && element.Name.ToString().ToLowerInvariant() == "integerinput";
+                IsIntegerInput = element.GetAttributeString("numbertype", "integer").ToLowerInvariant() == "integer"; // False = float.
+                // NOTE: <IntegerInput/> is deprecated; use <NumberInput numbertype="integer" /> instead.
+                IsNumberInput = HasPropertyName && element.Name.ToString().ToLowerInvariant() == "numberinput";
+                if (HasPropertyName && element.Name.ToString().ToLowerInvariant() == "integerinput")
+                {
+                    IsNumberInput = true;
+                    IsIntegerInput = true;
+                }
 
                 if (element.Attribute("signal") is XAttribute attribute)
                 {
@@ -142,6 +155,8 @@ namespace Barotrauma.Items.Components
                     case "button":
                     case "textbox":
                     case "integerinput":
+                    // NOTE: <IntegerInput/> is deprecated; use <NumberInput numbertype="integer" /> instead.
+                    case "numberinput":
                         var button = new CustomInterfaceElement(subElement, this)
                         {
                             ContinuousSignal = false
@@ -282,6 +297,24 @@ namespace Barotrauma.Items.Components
         }
 
         private void ValueChanged(CustomInterfaceElement numberInputElement, int value)
+        {
+            if (numberInputElement == null) { return; }
+            numberInputElement.Signal = value.ToString();
+            if (!numberInputElement.TargetOnlyParentProperty)
+            {
+                foreach (ISerializableEntity e in item.AllPropertyObjects)
+                {
+                    if (!e.SerializableProperties.ContainsKey(numberInputElement.PropertyName)) { continue; }
+                    e.SerializableProperties[numberInputElement.PropertyName].TrySetValue(e, value);
+                }
+            }
+            else if (SerializableProperties.ContainsKey(numberInputElement.PropertyName))
+            {
+                SerializableProperties[numberInputElement.PropertyName].TrySetValue(this, value);
+            }
+        }
+
+        private void ValueChanged(CustomInterfaceElement numberInputElement, float value)
         {
             if (numberInputElement == null) { return; }
             numberInputElement.Signal = value.ToString();
