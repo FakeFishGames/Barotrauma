@@ -256,8 +256,28 @@ namespace Barotrauma
                     return;
                 }
             }
-            
-            var foundItem = Inventory.FindItemRecursive(item, it => it.Prefab.Identifier == "idcard" || it.GetComponent<RangedWeapon>() != null || it.GetComponent<MeleeWeapon>() != null);
+
+            Item foundItem = null;
+            if (isValid(item))
+            {
+                foundItem = item;
+            }
+            else
+            {
+                foreach (Item containedItem in item.ContainedItems)
+                {
+                    if (isValid(containedItem))
+                    {
+                        foundItem = containedItem;
+                        break;
+                    }
+                }
+            }
+
+            static bool isValid(Item item)
+            {
+                return item.Prefab.Identifier == "idcard" || item.GetComponent<RangedWeapon>() != null || item.GetComponent<MeleeWeapon>() != null;
+            }
 
             if (foundItem == null) { return; }
 
@@ -382,7 +402,7 @@ namespace Barotrauma
             //smaller karma penalty for attacking someone who's aiming with a weapon
             if (damage > 0.0f &&
                 target.IsKeyDown(InputType.Aim) &&
-                target.SelectedItems.Any(it => it != null && (it.GetComponent<MeleeWeapon>() != null || it.GetComponent<RangedWeapon>() != null)))
+                target.HeldItems.Any(it => it.GetComponent<MeleeWeapon>() != null || it.GetComponent<RangedWeapon>() != null))
             {
                 damage *= 0.5f;
                 stun *= 0.5f;
@@ -473,12 +493,12 @@ namespace Barotrauma
                 {
                     //cap the damage so the karma can't decrease by more than MaxStructureDamageKarmaDecreasePerSecond per second
                     var clientMemory = GetClientMemory(client);
-                    clientMemory.StructureDamageAccumulator += damageAmount;
                     if (clientMemory.StructureDamagePerSecond + damageAmount >= MaxStructureDamageKarmaDecreasePerSecond / StructureDamageKarmaDecrease)
                     {
-                        damageAmount -= (MaxStructureDamageKarmaDecreasePerSecond / StructureDamageKarmaDecrease) - clientMemory.StructureDamagePerSecond;
+                        damageAmount -= (clientMemory.StructureDamagePerSecond + damageAmount) - (MaxStructureDamageKarmaDecreasePerSecond / StructureDamageKarmaDecrease);
                         if (damageAmount <= 0.0f) { return; }
                     }
+                    clientMemory.StructureDamageAccumulator += damageAmount;
                 }
                 AdjustKarma(attacker, -damageAmount * StructureDamageKarmaDecrease, "Damaged structures");
             }
@@ -498,14 +518,22 @@ namespace Barotrauma
             AdjustKarma(character, karmaIncrease, "Repaired item");
         }
 
-        public void OnReactorOverHeating(Character character, float deltaTime)
+        public void OnReactorOverHeating(Item reactor, Character character, float deltaTime)
         {
-            AdjustKarma(character, -ReactorOverheatKarmaDecrease * deltaTime, "Caused reactor to overheat");
+            if (reactor?.Submarine == null || character == null) { return; }
+            if (reactor.Submarine.TeamID == CharacterTeamType.FriendlyNPC || reactor.Submarine.TeamID == character.TeamID)
+            {
+                AdjustKarma(character, -ReactorOverheatKarmaDecrease * deltaTime, "Caused reactor to overheat");
+            }
         }
 
-        public void OnReactorMeltdown(Character character)
+        public void OnReactorMeltdown(Item reactor, Character character)
         {
-            AdjustKarma(character, -ReactorMeltdownKarmaDecrease, "Caused a reactor meltdown");
+            if (reactor?.Submarine == null || character == null) { return; }
+            if (reactor.Submarine.TeamID == CharacterTeamType.FriendlyNPC || reactor.Submarine.TeamID == character.TeamID)
+            {
+                AdjustKarma(character, -ReactorMeltdownKarmaDecrease, "Caused a reactor meltdown");
+            }
         }
 
         public void OnExtinguishingFire(Character character, float deltaTime)

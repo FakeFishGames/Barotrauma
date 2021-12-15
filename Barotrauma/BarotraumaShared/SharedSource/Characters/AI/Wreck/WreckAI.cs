@@ -35,9 +35,16 @@ namespace Barotrauma
 
         private static IEnumerable<MapEntity> GetThalamusEntities(Submarine wreck, string tag) => MapEntity.mapEntityList.Where(e => e.Submarine == wreck && e.prefab != null && IsThalamus(e.prefab, tag));
 
-        private static bool IsThalamus(MapEntityPrefab entityPrefab, string tag) => entityPrefab.Category == MapEntityCategory.Thalamus || entityPrefab.Tags.Contains(tag);
+        private static bool IsThalamus(MapEntityPrefab entityPrefab, string tag) => entityPrefab.HasSubCategory("thalamus") || entityPrefab.Tags.Contains(tag);
 
-        public WreckAI(Submarine wreck)
+        public static WreckAI Create(Submarine wreck)
+        {
+            var wreckAI = new WreckAI(wreck);
+            if (wreckAI.Config == null) { return null; }
+            return wreckAI;
+        }
+
+        private WreckAI(Submarine wreck)
         {
             Wreck = wreck;
             Config = WreckAIConfig.GetRandom();
@@ -55,37 +62,59 @@ namespace Barotrauma
             }
             allItems = Wreck.GetItems(false);
             thalamusItems = allItems.FindAll(i => IsThalamus(i.prefab));
-            var hulls = Wreck.GetHulls(false);
+            hulls.AddRange(Wreck.GetHulls(false));
+            var potentialBrainHulls = new List<(Hull hull, float weight)>();
             brain = new Item(brainPrefab, Vector2.Zero, Wreck);
             thalamusItems.Add(brain);
-            Vector2 negativeMargin = new Vector2(40, 20);
-            Vector2 minSize = brain.Rect.Size.ToVector2() - negativeMargin;
-            Vector2 maxSize = new Vector2(brain.Rect.Width * 3, brain.Rect.Height * 3);
-            // First try to get a room that is not too big and not in the edges of the sub.
-            // Also try not to create the brain in a room that already have carrier items inside.
-            // Ignore hulls that have any linked hulls to keep the calculations simple.
+            Point minSize = brain.Rect.Size.Multiply(brain.Scale);
+            // Bigger hulls are allowed, but not preferred more than what's sufficent.
+            Vector2 sufficentSize = new Vector2(minSize.X * 2, minSize.Y * 1.1f);
             // Shrink the horizontal axis so that the brain is not placed in the left or right side, where we often have curved walls.
-            // Also ignore hulls that have open gaps, because we'll want the room to be full of water. The room will be filled with water when the brain is inserted in the room.
             Rectangle shrinkedBounds = ToolBox.GetWorldBounds(Wreck.WorldPosition.ToPoint(), new Point(Wreck.Borders.Width - 500, Wreck.Borders.Height));
-            bool BaseCondition(Hull h) => h.RectWidth > minSize.X && h.RectHeight > minSize.Y && h.GetLinkedEntities<Hull>().None() && h.ConnectedGaps.None(g => g.Open > 0);
-            bool IsNotTooBig(Hull h) => h.RectWidth < maxSize.X && h.RectHeight < maxSize.Y;
-            bool IsNotInFringes(Hull h) => shrinkedBounds.ContainsWorld(h.WorldRect);
-            bool DoesNotContainOtherItems(Hull h) => thalamusItems.None(i => i.CurrentHull == h);
-            Hull brainHull = hulls.GetRandom(h => BaseCondition(h) && IsNotTooBig(h) && IsNotInFringes(h) && DoesNotContainOtherItems(h), Rand.RandSync.Server);
-            if (brainHull == null)
+            foreach (Hull hull in hulls)
             {
-                brainHull = hulls.GetRandom(h => BaseCondition(h) && IsNotInFringes(h) && DoesNotContainOtherItems(h), Rand.RandSync.Server);
+                float distanceFromCenter = Vector2.Distance(Wreck.WorldPosition, hull.WorldPosition);
+                float distanceFactor = MathHelper.Lerp(1.0f, 0.5f, MathUtils.InverseLerp(0, Math.Max(shrinkedBounds.Width, shrinkedBounds.Height) / 2, distanceFromCenter));
+                float horizontalSizeFactor = MathHelper.Lerp(0.5f, 1.0f, MathUtils.InverseLerp(minSize.X, sufficentSize.X, hull.Rect.Width));
+                float verticalSizeFactor = MathHelper.Lerp(0.5f, 1.0f, MathUtils.InverseLerp(minSize.Y, sufficentSize.Y, hull.Rect.Height));
+                float weight = verticalSizeFactor * horizontalSizeFactor * distanceFactor;
+                if (hull.GetLinkedEntities<Hull>().Any())
+                {
+                    // Ignore hulls that have any linked hulls to keep the calculations simple.
+                    continue;
+                }
+                else if (hull.ConnectedGaps.Any(g => g.Open > 0 && (!g.IsRoomToRoom || g.Position.Y < hull.Position.Y)))
+                {
+                    // Ignore hulls that have open gaps to outside or below the center point, because we'll want the room to be full of water and not be accessible without breaking the wall.
+                    continue;
+                }
+                else if (thalamusItems.Any(i => i.CurrentHull == hull))
+                {
+                    // Don't create the brain in a room that already has thalamus items inside it.
+                    continue;
+                }
+                else if (hull.Rect.Width < minSize.X || hull.Rect.Height < minSize.Y)
+                {
+                    // Don't select too small rooms.
+                    continue;
+                }
+                if (weight > 0)
+                {
+                    potentialBrainHulls.Add((hull, weight));
+                }
             }
-            if (brainHull == null)
-            {
-                brainHull = hulls.GetRandom(h => BaseCondition(h) && (IsNotInFringes(h) || DoesNotContainOtherItems(h)), Rand.RandSync.Server);
-            }
-            if (brainHull == null)
-            {
-                brainHull = hulls.GetRandom(BaseCondition, Rand.RandSync.Server);
-            }
+            Hull brainHull = ToolBox.SelectWeightedRandom(potentialBrainHulls.Select(pbh => pbh.hull).ToList(), potentialBrainHulls.Select(pbh => pbh.weight).ToList(), Rand.RandSync.Server);
             var thalamusStructurePrefabs = StructurePrefab.Prefabs.Where(p => IsThalamus(p));
-            if (brainHull == null) { return; }
+            if (brainHull == null)
+            {
+                DebugConsole.AddWarning("Wreck AI: Cannot find a proper room for the brain. Using a random room.");
+                brainHull = hulls.GetRandom(Rand.RandSync.Server);
+            }
+            if (brainHull == null)
+            {
+                DebugConsole.ThrowError("Wreck AI: Cannot find any room for the brain! Failed to create the Thalamus.");
+                return;
+            }
             brainHull.WaterVolume = brainHull.Volume;
             brain.SetTransform(brainHull.SimPosition, rotation: 0, findNewHull: false);
             brain.CurrentHull = brainHull;
@@ -131,9 +160,9 @@ namespace Barotrauma
                             if (container == null) { continue; }
                             for (int i = 0; i < container.Inventory.Capacity; i++)
                             {
-                                if (container.Inventory.Items[i] != null) { continue; }
-                                if (MapEntityPrefab.List.GetRandom(e => e is ItemPrefab i && container.CanBeContained(i) && 
-                                        Config.ForbiddenAmmunition.None(id => id.Equals(i.Identifier, StringComparison.OrdinalIgnoreCase)), Rand.RandSync.Server) is ItemPrefab ammoPrefab)
+                                if (container.Inventory.GetItemAt(i) != null) { continue; }
+                                if (MapEntityPrefab.List.GetRandom(e => e is ItemPrefab ip && container.CanBeContained(ip, i) && 
+                                        Config.ForbiddenAmmunition.None(id => id.Equals(ip.Identifier, StringComparison.OrdinalIgnoreCase)), Rand.RandSync.Server) is ItemPrefab ammoPrefab)
                                 {
                                     Item ammo = new Item(ammoPrefab, container.Item.WorldPosition, Wreck);
                                     if (!container.Inventory.TryPutItem(ammo, i, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: false))
@@ -158,11 +187,15 @@ namespace Barotrauma
                     if (!spawnOrgans.Contains(item))
                     {
                         spawnOrgans.Add(item);
+                        if (item.CurrentHull != null)
+                        {
+                            // Try to flood the hull so that the spawner won't die.
+                            item.CurrentHull.WaterVolume = item.CurrentHull.Volume;
+                        }
                     }
                 }
             }
             wayPoints.AddRange(Wreck.GetWaypoints(false));
-            hulls.AddRange(Wreck.GetHulls(false));
             IsAlive = true;
             thalamusStructures = GetThalamusEntities<Structure>(Wreck, Config.Entity).ToList();
         }
@@ -246,7 +279,7 @@ namespace Barotrauma
             initialCellsSpawned = true;
         }
 
-        private void Kill()
+        public void Kill()
         {
             thalamusItems.ForEach(i => i.Condition = 0);
             foreach (var turret in turrets)
@@ -307,9 +340,16 @@ namespace Barotrauma
 
         public static void RemoveThalamusItems(Submarine wreck)
         {
+            List<MapEntity> thalamusItems = new List<MapEntity>();
             foreach (var wreckAiConfig in WreckAIConfig.List)
             {
-                GetThalamusEntities(wreck, wreckAiConfig.Entity).ForEachMod(e => e.Remove());
+                thalamusItems.AddRange(GetThalamusEntities(wreck, wreckAiConfig.Entity));
+            }
+            thalamusItems = thalamusItems.Distinct().ToList();
+            foreach (MapEntity thalamusItem in thalamusItems)
+            {
+                thalamusItem.Remove();
+                wreck.PhysicsBody.FarseerBody.FixtureList.Where(f => f.UserData == thalamusItem).ForEachMod(f => wreck.PhysicsBody.FarseerBody.Remove(f));
             }
         }
 
@@ -319,25 +359,40 @@ namespace Barotrauma
         private readonly List<Hull> populatedHulls = new List<Hull>();
         private float cellSpawnTimer;
 
-        private float CellSpawnTime => Config.AgentSpawnDelay;
-        private float CellSpawnRandomFactor => Config.AgentSpawnDelayRandomFactor;
-        private int MinCellsPerBrainRoom => Config.MinAgentsPerBrainRoom;
-        private int MaxCellsPerRoom => Config.MaxAgentsPerRoom;
-        private int MinCellsOutside => Config.MinAgentsOutside;
-        private int MaxCellsOutside => Config.MaxAgentsOutside;
-        private int MinCellsInside => Config.MinAgentsInside;
-        private int MaxCellsInside => Config.MaxAgentsInside;
-        private int MaxCellCount => Config.MaxAgentCount;
+        private int MinCellsPerBrainRoom => CalculateCellCount(0, Config.MinAgentsPerBrainRoom);
+        private int MaxCellsPerRoom => CalculateCellCount(1, Config.MaxAgentsPerRoom);
+        private int MinCellsOutside => CalculateCellCount(0, Config.MinAgentsOutside);
+        private int MaxCellsOutside => CalculateCellCount(0, Config.MaxAgentsOutside);
+        private int MinCellsInside => CalculateCellCount(3, Config.MinAgentsInside);
+        private int MaxCellsInside => CalculateCellCount(5, Config.MaxAgentsInside);
+        private int MaxCellCount => CalculateCellCount(5, Config.MaxAgentCount);
         private float MinWaterLevel => Config.MinWaterLevel;
+
+        private int CalculateCellCount(int minValue, int maxValue)
+        {
+            if (maxValue == 0) { return 0; }
+            float t = MathUtils.InverseLerp(0, 100, Level.Loaded.Difficulty * Config.AgentSpawnCountDifficultyMultiplier);
+            return (int)Math.Round(MathHelper.Lerp(minValue, maxValue, t));
+        }
+
+        private float GetSpawnTime()
+        {
+            float randomFactor = Config.AgentSpawnDelayRandomFactor;
+            float delay = Config.AgentSpawnDelay;
+            float min = delay;
+            float max = delay * 6;
+            float t = Level.Loaded.Difficulty * Config.AgentSpawnDelayDifficultyMultiplier * Rand.Range(1 - randomFactor, 1 + randomFactor);
+            return MathHelper.Lerp(max, min, MathUtils.InverseLerp(0, 100, t));
+        }
 
         void UpdateReinforcements(float deltaTime)
         {
-            if (protectiveCells.Count >= MaxCellCount || spawnOrgans.Count == 0) { return; }
+            if (spawnOrgans.Count == 0) { return; }
             cellSpawnTimer -= deltaTime;
             if (cellSpawnTimer < 0)
             {
                 TrySpawnCell(out _, spawnOrgans.GetRandom());
-                cellSpawnTimer = CellSpawnTime * Rand.Range(CellSpawnRandomFactor, 1 + CellSpawnRandomFactor);
+                cellSpawnTimer = GetSpawnTime();
             }
         }
 
@@ -364,7 +419,7 @@ namespace Barotrauma
             cell = Character.Create(Config.DefensiveAgent, targetEntity.WorldPosition, ToolBox.RandomSeed(8), hasAi: true, createNetworkEvent: true);
             protectiveCells.Add(cell);
             cell.OnDeath += OnCellDeath;
-            cellSpawnTimer = CellSpawnTime * Rand.Range(CellSpawnRandomFactor, 1 + CellSpawnRandomFactor);
+            cellSpawnTimer = GetSpawnTime();
             return true;
         }
         

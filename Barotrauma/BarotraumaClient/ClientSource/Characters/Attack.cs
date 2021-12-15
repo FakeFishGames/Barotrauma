@@ -1,5 +1,4 @@
-﻿using Barotrauma.Sounds;
-using Barotrauma.Particles;
+﻿using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
 using System.Xml.Linq;
 
@@ -39,14 +38,11 @@ namespace Barotrauma
 
         partial void DamageParticles(float deltaTime, Vector2 worldPosition)
         {
-            if (particleEmitter != null)
-            {
-                particleEmitter.Emit(deltaTime, worldPosition);
-            }
+            particleEmitter?.Emit(deltaTime, worldPosition);
 
             if (sound != null)
             {
-                SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range);
+                SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, ignoreMuffling: sound.IgnoreMuffling);
             }
         }
     }

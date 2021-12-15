@@ -641,18 +641,9 @@ namespace Barotrauma
                 NetConfig.MaxPhysicsBodyAngularVelocity);
         }
 
-        public void ApplyForce(Vector2 force)
+        public void ApplyForce(Vector2 force, float maxVelocity = NetConfig.MaxPhysicsBodyVelocity)
         {
-            if (!IsValidValue(force, "force", -1e10f, 1e10f)) return;
-            FarseerBody.ApplyForce(force);
-        }
-
-        /// <summary>
-        /// Apply a force to the body without increasing it's velocity above a specific limit.
-        /// </summary>
-        public void ApplyForce(Vector2 force, float maxVelocity)
-        {
-            if (!IsValidValue(maxVelocity, "max velocity")) return;
+            if (!IsValidValue(maxVelocity, "max velocity")) { return; }
 
             Vector2 velocityAddition = force / Mass * (float)Timing.Step;
             Vector2 newVelocity = FarseerBody.LinearVelocity + velocityAddition;
@@ -666,20 +657,20 @@ namespace Barotrauma
                 force = velocityAddition.ClampLength(maxVelAddition) * Mass / (float)Timing.Step;
             }
 
-            if (!IsValidValue(force, "clamped force", -1e10f, 1e10f)) return;
+            if (!IsValidValue(force, "clamped force", -1e10f, 1e10f)) { return; }
             FarseerBody.ApplyForce(force);
         }
 
         public void ApplyForce(Vector2 force, Vector2 point)
         {
-            if (!IsValidValue(force, "force", -1e10f, 1e10f)) return;
-            if (!IsValidValue(point, "point")) return;
+            if (!IsValidValue(force, "force", -1e10f, 1e10f)) { return; }
+            if (!IsValidValue(point, "point")) { return; }
             FarseerBody.ApplyForce(force, point);
         }
 
         public void ApplyTorque(float torque)
         {
-            if (!IsValidValue(torque, "torque")) return;
+            if (!IsValidValue(torque, "torque")) { return; }
             FarseerBody.ApplyTorque(torque);
         }
 
@@ -689,8 +680,8 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.X) < 1000000.0f);
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.Y) < 1000000.0f);
 
-            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return false;
-            if (!IsValidValue(rotation, "rotation")) return false;
+            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) { return false; }
+            if (!IsValidValue(rotation, "rotation")) { return false; }
 
             FarseerBody.SetTransform(simPosition, rotation);
             if (setPrevTransform) { SetPrevTransform(simPosition, rotation); }
@@ -703,8 +694,8 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.X) < 1000000.0f);
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.Y) < 1000000.0f);
 
-            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return false;
-            if (!IsValidValue(rotation, "rotation")) return false;
+            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) { return false; }
+            if (!IsValidValue(rotation, "rotation")) { return false; }
 
             FarseerBody.SetTransformIgnoreContacts(ref simPosition, rotation);
             if (setPrevTransform) { SetPrevTransform(simPosition, rotation); }
@@ -713,7 +704,7 @@ namespace Barotrauma
 
         public void SetPrevTransform(Vector2 simPosition, float rotation)
         {
-#if DEBUG || UNSTABLE
+#if DEBUG
             if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) { return; }
             if (!IsValidValue(rotation, "rotation")) { return; }
 #endif
@@ -749,15 +740,22 @@ namespace Barotrauma
 
         public void MoveToPos(Vector2 simPosition, float force, Vector2? pullPos = null)
         {
-            if (pullPos == null) pullPos = FarseerBody.Position;
+            if (pullPos == null) { pullPos = FarseerBody.Position; }
 
-            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return;
-            if (!IsValidValue(force, "force")) return;
+            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) { return; }
+            if (!IsValidValue(force, "force")) { return; }
 
             Vector2 vel = FarseerBody.LinearVelocity;
             Vector2 deltaPos = simPosition - (Vector2)pullPos;
+            if (deltaPos.LengthSquared() > 100.0f * 100.0f)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("Attempted to move a physics body to an invalid position.\n" + Environment.StackTrace.CleanupStackTrace());
+#endif
+                return;
+            }
             deltaPos *= force;
-            FarseerBody.ApplyLinearImpulse((deltaPos - vel * 0.5f) * FarseerBody.Mass, (Vector2)pullPos);
+            ApplyLinearImpulse((deltaPos - vel * 0.5f) * FarseerBody.Mass, (Vector2)pullPos);
         }
 
         /// <summary>
@@ -782,7 +780,7 @@ namespace Barotrauma
                 dragForce = Math.Min(drag, Mass * 500.0f) * -velDir;
             }
 
-            ApplyForce(dragForce + buoyancy, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            ApplyForce(dragForce + buoyancy);
             ApplyTorque(FarseerBody.AngularVelocity * FarseerBody.Mass * -0.08f);
         }
 

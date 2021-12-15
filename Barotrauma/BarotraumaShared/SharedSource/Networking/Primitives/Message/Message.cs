@@ -5,6 +5,7 @@ using Barotrauma.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Networking
 {
@@ -136,9 +137,28 @@ namespace Barotrauma.Networking
             EnsureBufferSize(ref buf, bitPos + 64);
 
             byte[] bytes = BitConverter.GetBytes(val);
-            WriteBytes(ref buf, ref bitPos, bytes, 0, bytes.Length);
-            bitPos += 64;
+            WriteBytes(ref buf, ref bitPos, bytes, 0, 8);
         }
+
+        internal static void WriteColorR8G8B8(ref byte[] buf, ref int bitPos, Microsoft.Xna.Framework.Color val)
+        {
+            EnsureBufferSize(ref buf, bitPos + 24);
+            
+            Write(ref buf, ref bitPos, val.R);
+            Write(ref buf, ref bitPos, val.G);
+            Write(ref buf, ref bitPos, val.B);
+        }
+        
+        internal static void WriteColorR8G8B8A8(ref byte[] buf, ref int bitPos, Microsoft.Xna.Framework.Color val)
+        {
+            EnsureBufferSize(ref buf, bitPos + 32);
+            
+            Write(ref buf, ref bitPos, val.R);
+            Write(ref buf, ref bitPos, val.G);
+            Write(ref buf, ref bitPos, val.B);
+            Write(ref buf, ref bitPos, val.A);
+        }
+        
         internal static void Write(ref byte[] buf, ref int bitPos, string val)
         {
             if (string.IsNullOrEmpty(val))
@@ -155,14 +175,14 @@ namespace Barotrauma.Networking
         internal static int WriteVariableUInt32(ref byte[] buf, ref int bitPos, uint value)
         {
             int retval = 1;
-            uint num1 = (uint)value;
-            while (num1 >= 0x80)
+            uint remainingValue = (uint)value;
+            while (remainingValue >= 0x80)
             {
-                Write(ref buf, ref bitPos, (byte)(num1 | 0x80));
-                num1 = num1 >> 7;
+                Write(ref buf, ref bitPos, (byte)(remainingValue | 0x80));
+                remainingValue = remainingValue >> 7;
                 retval++;
             }
-            Write(ref buf, ref bitPos, (byte)num1);
+            Write(ref buf, ref bitPos, (byte)remainingValue);
             return retval;
         }
 
@@ -218,7 +238,7 @@ namespace Barotrauma.Networking
         {
             byte retval = NetBitWriter.ReadByte(buf, 1, bitPos);
             bitPos++;
-            return (retval > 0 ? true : false);
+            return retval > 0;
         }
 
         internal static void ReadPadBits(byte[] buf, ref int bitPos)
@@ -300,23 +320,40 @@ namespace Barotrauma.Networking
             return BitConverter.ToDouble(bytes, 0);
         }
 
+        internal static Microsoft.Xna.Framework.Color ReadColorR8G8B8(byte[] buf, ref int bitPos)
+        {
+            byte r = ReadByte(buf, ref bitPos);
+            byte g = ReadByte(buf, ref bitPos);
+            byte b = ReadByte(buf, ref bitPos);
+            return new Color(r, g, b, (byte)255);
+        }
+        
+        internal static Microsoft.Xna.Framework.Color ReadColorR8G8B8A8(byte[] buf, ref int bitPos)
+        {
+            byte r = ReadByte(buf, ref bitPos);
+            byte g = ReadByte(buf, ref bitPos);
+            byte b = ReadByte(buf, ref bitPos);
+            byte a = ReadByte(buf, ref bitPos);
+            return new Color(r, g, b, a);
+        }
+
         internal static UInt32 ReadVariableUInt32(byte[] buf, ref int bitPos)
         {
             int bitLength = buf.Length * 8;
 
-            int num1 = 0;
-            int num2 = 0;
+            int result = 0;
+            int shift = 0;
             while (bitLength - bitPos >= 8)
             {
-                byte num3 = ReadByte(buf, ref bitPos);
-                num1 |= (num3 & 0x7f) << num2;
-                num2 += 7;
-                if ((num3 & 0x80) == 0)
-                    return (uint)num1;
+                byte chunk = ReadByte(buf, ref bitPos);
+                result |= (chunk & 0x7f) << shift;
+                shift += 7;
+                if ((chunk & 0x80) == 0)
+                    return (uint)result;
             }
 
             // ouch; failed to find enough bytes; malformed variable length number?
-            return (uint)num1;
+            return (uint)result;
         }
 
         internal static String ReadString(byte[] buf, ref int bitPos)
@@ -329,7 +366,7 @@ namespace Barotrauma.Networking
             if ((ulong)(bitLength - bitPos) < ((ulong)byteLen * 8))
             {
                 // not enough data
-				return null;
+                return null;
             }
 
             if ((bitPos & 7) == 0)
@@ -483,6 +520,16 @@ namespace Barotrauma.Networking
             MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
+        public void WriteColorR8G8B8(Color val)
+        {
+            MsgWriter.WriteColorR8G8B8(ref buf, ref seekPos, val);
+        }
+        
+        public void WriteColorR8G8B8A8(Color val)
+        {
+            MsgWriter.WriteColorR8G8B8A8(ref buf, ref seekPos, val);
+        }
+
         public void WriteVariableUInt32(UInt32 val)
         {
             MsgWriter.WriteVariableUInt32(ref buf, ref seekPos, val);
@@ -625,14 +672,28 @@ namespace Barotrauma.Networking
                     }
                 }
                 buf = new byte[decompressedData.Length];
-                Array.Copy(decompressedData, 0, buf, 0, decompressedData.Length);
+                try
+                {
+                    Array.Copy(decompressedData, 0, buf, 0, decompressedData.Length);
+                }
+                catch (ArgumentException e)
+                {
+                    throw new ArgumentException($"Failed to copy the incoming compressed buffer. Source buffer length: {decompressedData.Length}, start position: {0}, length: {decompressedData.Length}, destination buffer length: {buf.Length}.", e);
+                }
                 lengthBits = decompressedData.Length * 8;
                 DebugConsole.Log("Decompressing message: " + inLength + " to " + LengthBytes);
             }
             else
             {
                 buf = new byte[inBuf.Length];
-                Array.Copy(inBuf, startPos, buf, 0, inLength);
+                try
+                {
+                    Array.Copy(inBuf, startPos, buf, 0, inLength);
+                }
+                catch (ArgumentException e)
+                {
+                    throw new ArgumentException($"Failed to copy the incoming uncompressed buffer. Source buffer length: {inBuf.Length}, start position: {startPos}, length: {inLength}, destination buffer length: {buf.Length}.", e);
+                }
                 lengthBits = inLength * 8;
             }
             seekPos = 0;
@@ -702,6 +763,17 @@ namespace Barotrauma.Networking
         {
             return MsgReader.ReadString(buf, ref seekPos);
         }
+
+        public Color ReadColorR8G8B8()
+        {
+            return MsgReader.ReadColorR8G8B8(buf, ref seekPos);
+        }
+        
+        public Color ReadColorR8G8B8A8()
+        {
+            return MsgReader.ReadColorR8G8B8A8(buf, ref seekPos);
+        }
+        
 
         public int ReadRangedInteger(int min, int max)
         {
@@ -846,6 +918,16 @@ namespace Barotrauma.Networking
             MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
+        public void WriteColorR8G8B8(Color val)
+        {
+            MsgWriter.WriteColorR8G8B8(ref buf, ref seekPos, val);
+        }
+        
+        public void WriteColorR8G8B8A8(Color val)
+        {
+            MsgWriter.WriteColorR8G8B8A8(ref buf, ref seekPos, val);
+        }
+
         public void WriteVariableUInt32(UInt32 val)
         {
             MsgWriter.WriteVariableUInt32(ref buf, ref seekPos, val);
@@ -935,6 +1017,16 @@ namespace Barotrauma.Networking
         public String ReadString()
         {
             return MsgReader.ReadString(buf, ref seekPos);
+        }
+
+        public Color ReadColorR8G8B8()
+        {
+            return MsgReader.ReadColorR8G8B8(buf, ref seekPos);
+        }
+        
+        public Color ReadColorR8G8B8A8()
+        {
+            return MsgReader.ReadColorR8G8B8A8(buf, ref seekPos);
         }
 
         public int ReadRangedInteger(int min, int max)

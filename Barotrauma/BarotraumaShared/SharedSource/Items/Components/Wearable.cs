@@ -5,8 +5,8 @@ using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
-using Barotrauma.Extensions;
 using Barotrauma.Networking;
+using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
@@ -46,11 +46,23 @@ namespace Barotrauma
         public LimbType Limb { get; private set; }
         public bool HideLimb { get; private set; }
         public bool HideOtherWearables { get; private set; }
+        public bool CanBeHiddenByOtherWearables { get; private set; }
         public List<WearableType> HideWearablesOfType { get; private set; }
         public bool InheritLimbDepth { get; private set; }
-        public bool InheritTextureScale { get; private set; }
+        /// <summary>
+        /// Does the wearable inherit all the scalings of the wearer? Also the wearable's own scale is used!
+        /// </summary>
+        public bool InheritScale { get; private set; }
+        public bool IgnoreRagdollScale { get; private set; }
+        public bool IgnoreLimbScale { get; private set; }
+        public bool IgnoreTextureScale { get; private set; }
         public bool InheritOrigin { get; private set; }
         public bool InheritSourceRect { get; private set; }
+
+        public float Scale { get; private set; }
+
+        public float Rotation { get; private set; }
+
         public LimbType DepthLimb { get; private set; }
         private Wearable _wearableComponent;
         public Wearable WearableComponent
@@ -107,10 +119,9 @@ namespace Barotrauma
                 case WearableType.Husk:
                 case WearableType.Herpes:
                     Limb = LimbType.Head;
-                    HideLimb = type == WearableType.Husk || type == WearableType.Herpes;
                     HideOtherWearables = false;
                     InheritLimbDepth = true;
-                    InheritTextureScale = true;
+                    InheritScale = true;
                     InheritOrigin = true;
                     InheritSourceRect = true;
                     break;
@@ -144,6 +155,11 @@ namespace Barotrauma
                 // If the variant does not exist, parse the path so that it uses first variant.
                 SpritePath = tempPath.Replace("[VARIANT]", "1");
             }
+            if (!File.Exists(SpritePath) && _gender == Gender.None)
+            {
+                // If there's no sprite for Gender.None does not exist, try to use male sprite
+                SpritePath = tempPath.Replace("[GENDER]", "male");
+            }
             if (parseSpritePath)
             {
                 Sprite.ParseTexturePath(file: SpritePath);
@@ -156,20 +172,32 @@ namespace Barotrauma
             if (IsInitialized) { return; }
             _gender = UnassignedSpritePath.Contains("[GENDER]") ? gender : Gender.None;
             ParsePath(false);
-            if (Sprite != null)
-            {
-                Sprite.Remove();
-            }
+            Sprite?.Remove();
             Sprite = new Sprite(SourceElement, file: SpritePath);
             Limb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("limb", "Head"), true);
             HideLimb = SourceElement.GetAttributeBool("hidelimb", false);
             HideOtherWearables = SourceElement.GetAttributeBool("hideotherwearables", false);
+            CanBeHiddenByOtherWearables = SourceElement.GetAttributeBool("canbehiddenbyotherwearables", true);
             InheritLimbDepth = SourceElement.GetAttributeBool("inheritlimbdepth", true);
-            InheritTextureScale = SourceElement.GetAttributeBool("inherittexturescale", false);
+            var scale = SourceElement.GetAttribute("inheritscale");
+            if (scale != null)
+            {
+                InheritScale = scale.GetAttributeBool(false);
+            }
+            else
+            {
+                InheritScale = SourceElement.GetAttributeBool("inherittexturescale", false);
+            }
+            IgnoreLimbScale = SourceElement.GetAttributeBool("ignorelimbscale", false);
+            IgnoreTextureScale = SourceElement.GetAttributeBool("ignoretexturescale", false);
+            IgnoreRagdollScale = SourceElement.GetAttributeBool("ignoreragdollscale", false);
+            SourceElement.GetAttributeBool("inherittexturescale", false);
             InheritOrigin = SourceElement.GetAttributeBool("inheritorigin", false);
             InheritSourceRect = SourceElement.GetAttributeBool("inheritsourcerect", false);
             DepthLimb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("depthlimb", "None"), true);
             Sound = SourceElement.GetAttributeString("sound", "");
+            Scale = SourceElement.GetAttributeFloat("scale", 1.0f);
+            Rotation = MathHelper.ToRadians(SourceElement.GetAttributeFloat("rotation", 0.0f));
             var index = SourceElement.GetAttributePoint("sheetindex", new Point(-1, -1));
             if (index.X > -1 && index.Y > -1)
             {
@@ -196,7 +224,7 @@ namespace Barotrauma
 
 namespace Barotrauma.Items.Components
 {
-    class Wearable : Pickable, IServerSerializable
+    partial class Wearable : Pickable, IServerSerializable
     {
         private readonly XElement[] wearableElements;
         private readonly WearableSprite[] wearableSprites;
@@ -204,6 +232,9 @@ namespace Barotrauma.Items.Components
         private readonly Limb[] limb;
 
         private readonly List<DamageModifier> damageModifiers;
+        public readonly Dictionary<string, float> SkillModifiers = new Dictionary<string, float>();
+
+        public readonly Dictionary<StatTypes, float> WearableStatValues = new Dictionary<StatTypes, float>();
 
         public IEnumerable<DamageModifier> DamageModifiers
         {
@@ -259,7 +290,7 @@ namespace Barotrauma.Items.Components
             this.item = item;
 
             damageModifiers = new List<DamageModifier>();
-            
+
             int spriteCount = element.Elements().Count(x => x.Name.ToString() == "sprite");
             Variants = element.GetAttributeInt("variants", 0);
             variant = Rand.Range(1, Variants + 1, Rand.RandSync.Server);
@@ -272,7 +303,7 @@ namespace Barotrauma.Items.Components
             int i = 0;
             foreach (XElement subElement in element.Elements())
             {
-                switch (subElement.Name.ToString().ToLower())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
                         if (subElement.Attribute("texture") == null)
@@ -302,18 +333,48 @@ namespace Barotrauma.Items.Components
                     case "damagemodifier":
                         damageModifiers.Add(new DamageModifier(subElement, item.Name + ", Wearable"));
                         break;
+                    case "skillmodifier":
+                        string skillIdentifier = subElement.GetAttributeString("skillidentifier", string.Empty);
+                        float skillValue = subElement.GetAttributeFloat("skillvalue", 0f);
+                        if (SkillModifiers.ContainsKey(skillIdentifier))
+                        {
+                            SkillModifiers[skillIdentifier] += skillValue;
+                        }
+                        else
+                        {
+                            SkillModifiers.TryAdd(skillIdentifier, skillValue);
+                        }
+                        break;
+                    case "statvalue":
+                        StatTypes statType = CharacterAbilityGroup.ParseStatType(subElement.GetAttributeString("stattype", ""), Name);
+                        float statValue = subElement.GetAttributeFloat("value", 0f);
+                        if (WearableStatValues.ContainsKey(statType))
+                        {
+                            WearableStatValues[statType] += statValue;
+                        }
+                        else
+                        {
+                            WearableStatValues.TryAdd(statType, statValue);
+                        }
+                        break;
                 }
             }
         }
 
         public override void Equip(Character character)
         {
+            foreach (var allowedSlot in allowedSlots)
+            {
+                if (allowedSlot != InvSlotType.Any && !character.Inventory.IsInLimbSlot(item, allowedSlot)) { return; }
+            }
+
             picker = character;
+
             for (int i = 0; i < wearableSprites.Length; i++ )
             {
                 var wearableSprite = wearableSprites[i];
                 if (!wearableSprite.IsInitialized) { wearableSprite.Init(picker.Info?.Gender ?? Gender.None); }
-                if (picker.Info?.Gender != Gender.None && (wearableSprite.Gender != Gender.None))
+                if (picker.Info != null && picker.Info?.Gender != Gender.None && (wearableSprite.Gender != Gender.None))
                 {
                     // If the item is gender specific (it has a different textures for male and female), we have to change the gender here so that the texture is updated.
                     wearableSprite.Gender = picker.Info.Gender;
@@ -354,19 +415,19 @@ namespace Barotrauma.Items.Components
                         return i1.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes).CompareTo(i2.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes));
                     });
                 }
-
 #if CLIENT
                 equipLimb.UpdateWearableTypesToHide();
 #endif
             }
+            character.OnWearablesChanged();
         }
 
         public override void Drop(Character dropper)
         {
+            Character previousPicker = picker;
             Unequip(picker);
-
             base.Drop(dropper);
-
+            previousPicker?.OnWearablesChanged();
             picker = null;
             IsActive = false;
         }
@@ -375,6 +436,7 @@ namespace Barotrauma.Items.Components
         {
             if (character == null || character.Removed) { return; }
             if (picker == null) { return; }
+
             for (int i = 0; i < wearableSprites.Length; i++)
             {
                 Limb equipLimb = character.AnimController.GetLimb(limbType[i]);

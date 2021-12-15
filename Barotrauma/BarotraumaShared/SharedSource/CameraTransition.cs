@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using NLog.Targets;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,8 +19,11 @@ namespace Barotrauma
         private readonly Alignment? cameraEndPos;
         private readonly float? startZoom;
         private readonly float? endZoom;
-        public readonly float Duration;
+
+        public readonly float WaitDuration;
+        public readonly float PanDuration;
         public readonly bool FadeOut;
+        public readonly bool LosFadeIn;
 
         private readonly CoroutineHandle updateCoroutine;
 
@@ -28,10 +32,12 @@ namespace Barotrauma
         public bool AllowInterrupt = false;
         public bool RemoveControlFromCharacter = true;
         
-        public CameraTransition(ISpatialEntity targetEntity, Camera cam, Alignment? cameraStartPos, Alignment? cameraEndPos, bool fadeOut = true, float duration = 10.0f, float? startZoom = null, float? endZoom = null)
+        public CameraTransition(ISpatialEntity targetEntity, Camera cam, Alignment? cameraStartPos, Alignment? cameraEndPos, bool fadeOut = true, bool losFadeIn = false, float waitDuration = 0f, float panDuration = 10.0f, float? startZoom = null, float? endZoom = null)
         {
-            Duration = duration;
+            WaitDuration = waitDuration;
+            PanDuration = panDuration;
             FadeOut = fadeOut;
+            LosFadeIn = losFadeIn;
             this.cameraStartPos = cameraStartPos;
             this.cameraEndPos = cameraEndPos;
             this.startZoom = startZoom;
@@ -60,7 +66,7 @@ namespace Barotrauma
 
         private IEnumerable<object> Update(ISpatialEntity targetEntity, Camera cam)
         {
-            if (targetEntity == null) { yield return CoroutineStatus.Success; }
+            if (targetEntity == null || (targetEntity is Entity e && e.Removed)) { yield return CoroutineStatus.Success; }
 
             prevControlled = Character.Controlled;
             if (RemoveControlFromCharacter)
@@ -77,9 +83,12 @@ namespace Barotrauma
             Vector2 initialCameraPos = cam.Position;
             Vector2? initialTargetPos = targetEntity?.WorldPosition;
 
-            float timer = 0.0f;
-            while (timer < Duration)
+            float timer = -WaitDuration;
+
+            while (timer < PanDuration)
             {
+                float clampedTimer = Math.Max(timer, 0f);
+
                 if (Screen.Selected != GameMain.GameScreen)
                 {
                     yield return new WaitForSeconds(0.1f);
@@ -136,14 +145,20 @@ namespace Barotrauma
                         MathHelper.Lerp(maxPos.Y, minPos.Y, (cameraEndPos.Value.ToVector2().Y + 1.0f) / 2.0f)) :
                     prevControlled?.WorldPosition ?? targetEntity.WorldPosition;
 
-                Vector2 cameraPos = Vector2.SmoothStep(startPos, endPos, timer / Duration);
+                Vector2 cameraPos = Vector2.SmoothStep(startPos, endPos, clampedTimer / PanDuration);
                 cam.Translate(cameraPos - cam.Position);
                 
 #if CLIENT
-                cam.Zoom = MathHelper.SmoothStep(startZoom, endZoom, timer / Duration);
-                if (timer / Duration > 0.9f)
+                cam.Zoom = MathHelper.SmoothStep(startZoom, endZoom, clampedTimer / PanDuration);
+                if (clampedTimer / PanDuration > 0.9f)
                 {
-                    if (FadeOut) { GUI.ScreenOverlayColor = Color.Lerp(Color.TransparentBlack, Color.Black, ((timer / Duration) - 0.9f) * 10.0f); }
+                    if (FadeOut) { GUI.ScreenOverlayColor = Color.Lerp(Color.TransparentBlack, Color.Black, ((clampedTimer / PanDuration) - 0.9f) * 10.0f); }
+                }
+                if (LosFadeIn && clampedTimer / PanDuration > 0.8f)
+                {
+                    GameMain.LightManager.LosAlpha = ((clampedTimer / PanDuration) - 0.8f) * 5.0f;
+                    Lights.LightManager.ViewTarget = prevControlled ?? (targetEntity as Entity);
+                    GameMain.LightManager.LosEnabled = true;
                 }
 #endif
                 timer += CoroutineManager.UnscaledDeltaTime;
@@ -158,6 +173,7 @@ namespace Barotrauma
 #if CLIENT
             GUI.ScreenOverlayColor = Color.TransparentBlack;
             GameMain.LightManager.LosEnabled = true;
+            GameMain.LightManager.LosAlpha = 1f;
 #endif
 
             if (prevControlled != null && !prevControlled.Removed)

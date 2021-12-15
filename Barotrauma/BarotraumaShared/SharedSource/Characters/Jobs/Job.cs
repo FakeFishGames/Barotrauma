@@ -89,11 +89,11 @@ namespace Barotrauma
             return (skill == null) ? 0.0f : skill.Level;
         }
 
-        public void IncreaseSkillLevel(string skillIdentifier, float increase)
+        public void IncreaseSkillLevel(string skillIdentifier, float increase, bool increasePastMax)
         {
             if (skills.TryGetValue(skillIdentifier, out Skill skill))
             {
-                skill.Level += increase;
+                skill.IncreaseSkill(increase, increasePastMax);
             }
             else
             {
@@ -158,9 +158,12 @@ namespace Barotrauma
 
             if (itemElement.GetAttributeBool("equip", false))
             {
-                List<InvSlotType> allowedSlots = new List<InvSlotType>(item.AllowedSlots);
+                //if the item is both pickable and wearable, try to wear it instead of picking it up
+                List<InvSlotType> allowedSlots =
+                   item.GetComponents<Pickable>().Count() > 1 ?
+                   new List<InvSlotType>(item.GetComponent<Wearable>()?.AllowedSlots ?? item.GetComponent<Pickable>().AllowedSlots) :
+                   new List<InvSlotType>(item.AllowedSlots);
                 allowedSlots.Remove(InvSlotType.Any);
-
                 character.Inventory.TryPutItem(item, null, allowedSlots);
             }
             else
@@ -187,22 +190,21 @@ namespace Barotrauma
                 }
             }
 
-            if (item.Prefab.Identifier == "idcard" && spawnPoint != null)
+            if (item.Prefab.Identifier == "idcard")
             {
-                foreach (string s in spawnPoint.IdCardTags)
+                if (spawnPoint != null)
                 {
-                    item.AddTag(s);
+                    foreach (string s in spawnPoint.IdCardTags)
+                    {
+                        item.AddTag(s);
+                        if (!string.IsNullOrWhiteSpace(spawnPoint.IdCardDesc)) { item.Description = spawnPoint.IdCardDesc; }
+                    }
                 }
                 item.AddTag("name:" + character.Name);
                 item.AddTag("job:" + Name);
-                if (!string.IsNullOrWhiteSpace(spawnPoint.IdCardDesc))
-                    item.Description = spawnPoint.IdCardDesc;
 
                 IdCard idCardComponent = item.GetComponent<IdCard>();
-                if (idCardComponent != null)
-                {
-                    idCardComponent.Initialize(character.Info);
-                }
+                idCardComponent?.Initialize(character.Info);
             }
 
             foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())

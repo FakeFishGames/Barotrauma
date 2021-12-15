@@ -284,7 +284,7 @@ namespace Barotrauma
             limb.LastImpactSoundTime = (float)Timing.TotalTime;
             if (!string.IsNullOrWhiteSpace(limb.HitSoundTag))
             {
-                bool inWater = limb.inWater;
+                bool inWater = limb.InWater;
                 if (character.CurrentHull != null &&
                     character.CurrentHull.Surface > character.CurrentHull.Rect.Y - character.CurrentHull.Rect.Height + 5.0f &&
                     limb.SimPosition.Y < ConvertUnits.ToSimUnits(character.CurrentHull.Rect.Y - character.CurrentHull.Rect.Height) + limb.body.GetMaxExtent())
@@ -342,22 +342,41 @@ namespace Barotrauma
 
         partial void SetupDrawOrder()
         {
-            //make sure every character gets drawn at a distinct "layer" 
+            //make sure every character  gets drawn at a distinct "layer" 
             //(instead of having some of the limbs appear behind and some in front of other characters)
             float startDepth = 0.1f;
             float increment = 0.001f;
             foreach (Character otherCharacter in Character.CharacterList)
             {
-                if (otherCharacter == character) continue;
+                if (otherCharacter == character) { continue; }
                 startDepth += increment;
             }
-            //make sure each limb has a distinct depth value 
-            List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.ActiveSprite == null ? 0.0f : l.ActiveSprite.Depth).ToList();
+            //make sure each limb has a distinct depth value
+            List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.DefaultSpriteDepth).ToList();
             foreach (Limb limb in Limbs)
             {
-                if (limb.ActiveSprite != null)
-                    limb.ActiveSprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
+                var sprite = limb.GetActiveSprite();
+                if (sprite == null) { continue; }
+                sprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
+                foreach (var conditionalSprite in limb.ConditionalSprites)
+                {
+                    if (conditionalSprite.Exclusive)
+                    {
+                        conditionalSprite.ActiveSprite.Depth = sprite.Depth;
+                    }
+                }
             }
+            foreach (Limb limb in Limbs)
+            {
+                if (limb.ActiveSprite == null) { continue; }
+                if (limb.Params.InheritLimbDepth == LimbType.None) { continue; }
+                var matchingLimb = GetLimb(limb.Params.InheritLimbDepth);
+                if (matchingLimb != null)
+                {
+                    limb.ActiveSprite.Depth = matchingLimb.ActiveSprite.Depth - 0.0000001f;
+                }
+            }
+
             depthSortedLimbs.Reverse();
             inversedLimbDrawOrder = depthSortedLimbs.ToArray();
         }
@@ -479,15 +498,15 @@ namespace Barotrauma
             {
                 CalculateLimbDepths();
                 var controller = character.SelectedConstruction?.GetComponent<Controller>();
-                if (controller != null && controller.ControlCharacterPose && controller.User == character)
+                if (controller != null && controller.ControlCharacterPose && controller.User == character && controller.UserInCorrectPosition)
                 {
-                    if (controller.Item.SpriteDepth > maxDepth)
+                    if (controller.Item.SpriteDepth <= maxDepth || controller.DrawUserBehind)
                     {
-                        depthOffset = Math.Max(controller.Item.SpriteDepth - 0.0001f - maxDepth, 0.0f);
+                        depthOffset = Math.Max(controller.Item.GetDrawDepth() + 0.0001f - minDepth, -minDepth);
                     }
                     else
                     {
-                        depthOffset = Math.Max(controller.Item.SpriteDepth + 0.0001f - minDepth, -minDepth);
+                        depthOffset = Math.Max(controller.Item.GetDrawDepth() - 0.0001f - maxDepth, 0.0f);
                     }
                 }
             }
@@ -562,9 +581,16 @@ namespace Barotrauma
             if (this is HumanoidAnimController humanoid)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(humanoid.RightHandIKPos);
+                if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.Position; }
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUI.Style.Green, true);
                 pos = ConvertUnits.ToDisplayUnits(humanoid.LeftHandIKPos);
+                if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.Position; }
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUI.Style.Green, true);
+
+                Vector2 aimPos = humanoid.AimSourceWorldPos;
+                aimPos.Y = -aimPos.Y;
+                GUI.DrawLine(spriteBatch, aimPos - Vector2.UnitY * 3, aimPos + Vector2.UnitY * 3, Color.Red);
+                GUI.DrawLine(spriteBatch, aimPos - Vector2.UnitX * 3, aimPos + Vector2.UnitX * 3, Color.Red);
             }
 
             if (character.MemState.Count > 1)

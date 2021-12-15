@@ -1,11 +1,9 @@
 ﻿using Barotrauma.Items.Components;
-using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -58,6 +56,7 @@ namespace Barotrauma
             get { return open; }
             set 
             {
+                if (float.IsNaN(value)) { return; }
                 if (value > open) { openedTimer = 1.0f; }
                 open = MathHelper.Clamp(value, 0.0f, 1.0f); 
             }
@@ -120,10 +119,17 @@ namespace Barotrauma
                 return "Gap";
             }
         }
-        
+
         public Gap(MapEntityPrefab prefab, Rectangle rectangle)
-           : this (rectangle, Submarine.MainSub)
-        { }
+            : this(rectangle, Submarine.MainSub)
+        {
+#if CLIENT
+            if (SubEditorScreen.IsSubEditor())
+            {
+                SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { this }, false));
+            }
+#endif
+        }
 
         public Gap(Rectangle rect, Submarine submarine)
             : this(rect, rect.Width < rect.Height, submarine)
@@ -198,9 +204,9 @@ namespace Barotrauma
         public void AutoOrient()
         {
             Vector2 searchPosLeft = new Vector2(rect.X, rect.Y - rect.Height / 2);
-            Hull hullLeft = Hull.FindHullOld(searchPosLeft, null, false);
+            Hull hullLeft = Hull.FindHullUnoptimized(searchPosLeft, null, false);
             Vector2 searchPosRight = new Vector2(rect.Right, rect.Y - rect.Height / 2);
-            Hull hullRight = Hull.FindHullOld(searchPosRight, null, false);
+            Hull hullRight = Hull.FindHullUnoptimized(searchPosRight, null, false);
 
             if (hullLeft != null && hullRight != null && hullLeft != hullRight)
             {
@@ -209,9 +215,9 @@ namespace Barotrauma
             }
 
             Vector2 searchPosTop = new Vector2(rect.Center.X, rect.Y);
-            Hull hullTop = Hull.FindHullOld(searchPosTop, null, false);
+            Hull hullTop = Hull.FindHullUnoptimized(searchPosTop, null, false);
             Vector2 searchPosBottom = new Vector2(rect.Center.X, rect.Y - rect.Height);
-            Hull hullBottom = Hull.FindHullOld(searchPosBottom, null, false);
+            Hull hullBottom = Hull.FindHullUnoptimized(searchPosBottom, null, false);
 
             if (hullTop != null && hullBottom != null && hullTop != hullBottom)
             {
@@ -233,6 +239,13 @@ namespace Barotrauma
         {
             Hull[] hulls = new Hull[2];
 
+            foreach (var linked in linkedTo)
+            {
+                if (linked is Hull hull)
+                {
+                    hull.ConnectedGaps.Remove(this);
+                }
+            }
             linkedTo.Clear();
 
             Vector2[] searchPos = new Vector2[2];
@@ -249,8 +262,8 @@ namespace Barotrauma
 
             for (int i = 0; i < 2; i++)
             {
-                hulls[i] = Hull.FindHullOld(searchPos[i], null, false);
-                if (hulls[i] == null) hulls[i] = Hull.FindHullOld(searchPos[i], null, false, true);
+                hulls[i] = Hull.FindHullUnoptimized(searchPos[i], null, false);
+                if (hulls[i] == null) hulls[i] = Hull.FindHullUnoptimized(searchPos[i], null, false, true);
             }
 
             if (hulls[0] == null && hulls[1] == null) { return; }
@@ -595,7 +608,7 @@ namespace Barotrauma
             }
 
             Vector2 rayStart = ConvertUnits.ToSimUnits(WorldPosition);
-            Vector2 rayEnd = rayStart + rayDir * 500.0f;
+            Vector2 rayEnd = rayStart + rayDir * 5.0f;
 
             var levelCells = Level.Loaded.GetCells(WorldPosition, searchDepth: 1);
             foreach (var cell in levelCells)

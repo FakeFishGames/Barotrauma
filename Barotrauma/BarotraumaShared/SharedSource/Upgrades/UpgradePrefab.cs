@@ -46,7 +46,7 @@ namespace Barotrauma
             int price = BasePrice;
             for (int i = 1; i <= level; i++)
             {
-                price += (int)(price * MathHelper.Lerp( IncreaseLow, IncreaseHigh, i / (float)Prefab.MaxLevel) / 100);
+                price += (int)(price * MathHelper.Lerp(IncreaseLow, IncreaseHigh, i / (float)Prefab.MaxLevel) / 100);
             }
             return location?.GetAdjustedMechanicalCost(price) ?? price;
         }
@@ -68,7 +68,13 @@ namespace Barotrauma
             Name = element.GetAttributeString("name", string.Empty);
             IsWallUpgrade = element.GetAttributeBool("wallupgrade", false);
 
-            if (string.IsNullOrWhiteSpace(Name))
+            string nameIdentifier = element.GetAttributeString("nameidentifier", "");
+
+            if (!string.IsNullOrWhiteSpace(nameIdentifier))
+            {
+                Name = TextManager.Get($"{nameIdentifier}", returnNull: true) ?? string.Empty;
+            }
+            else if (string.IsNullOrWhiteSpace(Name))
             {
                 Name = TextManager.Get($"UpgradeCategory.{Identifier}", true) ?? string.Empty;
             }
@@ -85,17 +91,17 @@ namespace Barotrauma
             Categories.Add(this);
         }
 
-        public bool CanBeApplied(Item item, UpgradePrefab? upgradePrefab = null)
+        public bool CanBeApplied(Item item, UpgradePrefab? upgradePrefab)
         {
             if (IsWallUpgrade) { return false; }
 
-            if (upgradePrefab != null && item.disallowedUpgrades.Contains(upgradePrefab.Identifier)) { return false; }
+            if (upgradePrefab != null && upgradePrefab.IsDisallowed(item)) { return false; }
 
             return item.prefab.GetAllowedUpgrades().Contains(Identifier) ||
                    ItemTags.Any(tag => item.Prefab.Tags.Contains(tag) || item.Prefab.Identifier.Equals(tag, StringComparison.OrdinalIgnoreCase));
         }
-        
-        public bool CanBeApplied(XElement element)
+
+        public bool CanBeApplied(XElement element, UpgradePrefab prefab)
         {
             if (string.Equals("Structure", element.Name.ToString(), StringComparison.OrdinalIgnoreCase)) { return IsWallUpgrade; }
 
@@ -104,6 +110,10 @@ namespace Barotrauma
 
             ItemPrefab? item = ItemPrefab.Find(null, identifier);
             if (item == null) { return false; }
+
+            string[] disallowedUpgrades = element.GetAttributeStringArray("disallowedupgrades", new string[0]);
+
+            if (disallowedUpgrades.Any(s => s.Equals(Identifier, StringComparison.OrdinalIgnoreCase) || s.Equals(prefab.Identifier, StringComparison.OrdinalIgnoreCase))) { return false; }
 
             return item.GetAllowedUpgrades().Contains(Identifier) || 
                    ItemTags.Any(tag => item.Tags.Contains(tag) || item.Identifier.Equals(tag, StringComparison.OrdinalIgnoreCase));
@@ -126,6 +136,8 @@ namespace Barotrauma
         public string Name { get; }
 
         public string Description { get; }
+
+        public float IncreaseOnTooltip { get; }
 
         public string Identifier { get; }
 
@@ -168,7 +180,13 @@ namespace Barotrauma
 
             var targetProperties = new Dictionary<string, string[]>();
 
-            if (string.IsNullOrWhiteSpace(Name))
+            string nameIdentifier = element.GetAttributeString("nameidentifier", "");
+
+            if (!string.IsNullOrWhiteSpace(nameIdentifier))
+            {
+                Name = TextManager.Get($"UpgradeName.{nameIdentifier}", returnNull: true) ?? string.Empty;
+            }
+            else if (string.IsNullOrWhiteSpace(Name))
             {
                 Name = TextManager.Get($"UpgradeName.{Identifier}", returnNull: true) ?? string.Empty;
             }
@@ -177,6 +195,8 @@ namespace Barotrauma
             {
                 Description = TextManager.Get($"UpgradeDescription.{Identifier}", returnNull: true) ?? string.Empty;
             }
+
+            IncreaseOnTooltip = element.GetAttributeFloat("increaseontooltip", 0f);
 
             DebugConsole.Log("    " + Name);
 
@@ -241,6 +261,11 @@ namespace Barotrauma
             }
 
             Prefabs.Add(this, isOverride);
+        }
+
+        public bool IsDisallowed(Item item)
+        {
+            return item.disallowedUpgrades.Contains(Identifier) || UpgradeCategories.Any(c => item.disallowedUpgrades.Contains(c.Identifier));
         }
 
         public static UpgradePrefab? Find(string identifier)

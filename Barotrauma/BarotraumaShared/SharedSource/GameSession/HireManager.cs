@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -38,6 +38,13 @@ namespace Barotrauma
         {
             AvailableCharacters.ForEach(c => c.Remove());
             AvailableCharacters.Clear();
+        }
+
+        public void RenameCharacter(CharacterInfo characterInfo, string newName)
+        {
+            if (characterInfo == null || string.IsNullOrEmpty(newName)) { return; }
+            AvailableCharacters.FirstOrDefault(ci => ci == characterInfo)?.Rename(newName);
+            PendingHires.FirstOrDefault(ci => ci == characterInfo)?.Rename(newName);
         }
     }
 }

@@ -20,6 +20,15 @@ namespace Barotrauma
         [Serialize(1f, false)]
         public float HealthMultiplier { get; protected set; }
 
+        [Serialize(1f, false)]
+        public float HealthMultiplierInMultiplayer { get; protected set; }
+
+        [Serialize(1f, false)]
+        public float AimSpeed { get; protected set; }
+
+        [Serialize(1f, false)]
+        public float AimAccuracy { get; protected set; }
+
         private readonly HashSet<string> moduleFlags = new HashSet<string>();
 
         [Serialize("", true, "What outpost module tags does the NPC prefer to spawn in.")]
@@ -67,6 +76,9 @@ namespace Barotrauma
         [Serialize(AIObjectiveIdle.BehaviorType.Passive, false)]
         public AIObjectiveIdle.BehaviorType Behavior { get; protected set; }
 
+        [Serialize(float.PositiveInfinity, false)]
+        public float ReportRange { get; protected set; }
+
         public List<string> PreferredOutpostModuleTypes { get; protected set; }
 
         public string OriginalName { get { return Identifier; } }
@@ -78,6 +90,7 @@ namespace Barotrauma
         
 
         public readonly Dictionary<XElement, float> ItemSets = new Dictionary<XElement, float>();
+        public readonly Dictionary<XElement, float> CustomNPCSets = new Dictionary<XElement, float>();
 
         public HumanPrefab(XElement element, string filePath)
         {
@@ -87,6 +100,7 @@ namespace Barotrauma
             Job = Job.ToLowerInvariant();
             Element = element;
             element.GetChildElements("itemset").ForEach(e => ItemSets.Add(e, e.GetAttributeFloat("commonness", 1)));
+            element.GetChildElements("character").ForEach(e => CustomNPCSets.Add(e, e.GetAttributeFloat("commonness", 1)));
             PreferredOutpostModuleTypes = element.GetAttributeStringArray("preferredoutpostmoduletypes", new string[0], convertToLowerInvariant: true).ToList();
         }
 
@@ -105,28 +119,73 @@ namespace Barotrauma
             return Job != null && Job != "any" ? JobPrefab.Get(Job) : JobPrefab.Random(randSync);
         }
 
-        public void GiveItems(Character character, Submarine submarine, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public void InitializeCharacter(Character npc, ISpatialEntity positionToStayIn = null)
+        {
+            npc.AddStaticHealthMultiplier(HealthMultiplier);
+            if (GameMain.NetworkMember != null)
+            {
+                npc.AddStaticHealthMultiplier(HealthMultiplierInMultiplayer);
+            }
+
+            var humanAI = npc.AIController as HumanAIController;
+            if (humanAI != null)
+            {
+                var idleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
+                if (positionToStayIn != null && Behavior == AIObjectiveIdle.BehaviorType.StayInHull)
+                {
+                    idleObjective.TargetHull = AIObjectiveGoTo.GetTargetHull(positionToStayIn);
+                    idleObjective.Behavior = AIObjectiveIdle.BehaviorType.StayInHull;
+                }
+                else
+                {
+                    idleObjective.Behavior = Behavior;
+                    foreach (string moduleType in PreferredOutpostModuleTypes)
+                    {
+                        idleObjective.PreferredOutpostModuleTypes.Add(moduleType);
+                    }
+                }
+                humanAI.ReportRange = ReportRange;
+                humanAI.AimSpeed = AimSpeed;
+                humanAI.AimAccuracy = AimAccuracy;
+            }
+            if (CampaignInteractionType != CampaignMode.InteractionType.None)
+            {
+                (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(npc, CampaignInteractionType);
+                if (positionToStayIn != null && humanAI != null)
+                {
+                    humanAI.ObjectiveManager.SetForcedOrder(new AIObjectiveGoTo(positionToStayIn, npc, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, closeEnough: 200));
+                }
+            }
+        }
+
+        public void GiveItems(Character character, Submarine submarine, Rand.RandSync randSync = Rand.RandSync.Unsynced, bool createNetworkEvents = true)
         {
             var spawnItems = ToolBox.SelectWeightedRandom(ItemSets.Keys.ToList(), ItemSets.Values.ToList(), randSync);
             foreach (XElement itemElement in spawnItems.GetChildElements("item"))
             {
-                InitializeItems(character, itemElement, submarine);
+                InitializeItem(character, itemElement, submarine, this, createNetworkEvents: createNetworkEvents);
             }
         }
 
-        private void InitializeItems(Character character, XElement itemElement, Submarine submarine, Item parentItem = null)
+        public CharacterInfo GetCharacterInfo(Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        {
+            var characterElement = ToolBox.SelectWeightedRandom(CustomNPCSets.Keys.ToList(), CustomNPCSets.Values.ToList(), randSync);
+            return characterElement != null ? new CharacterInfo(characterElement) : null;
+        }
+
+        public static void InitializeItem(Character character, XElement itemElement, Submarine submarine, HumanPrefab humanPrefab, Item parentItem = null, bool createNetworkEvents = true)
         {
             ItemPrefab itemPrefab;
             string itemIdentifier = itemElement.GetAttributeString("identifier", "");
             itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
             if (itemPrefab == null)
             {
-                DebugConsole.ThrowError("Tried to spawn \"" + Identifier + "\" with the item \"" + itemIdentifier + "\". Matching item prefab not found.");
+                DebugConsole.ThrowError("Tried to spawn \"" + humanPrefab?.Identifier + "\" with the item \"" + itemIdentifier + "\". Matching item prefab not found.");
                 return;
             }
             Item item = new Item(itemPrefab, character.Position, null);
 #if SERVER
-            if (GameMain.Server != null && Entity.Spawner != null)
+            if (GameMain.Server != null && Entity.Spawner != null && createNetworkEvents)
             {
                 if (GameMain.Server.EntityEventManager.UniqueEvents.Any(ev => ev.Entity == item))
                 {
@@ -142,7 +201,11 @@ namespace Barotrauma
 #endif
             if (itemElement.GetAttributeBool("equip", false))
             {
-                List<InvSlotType> allowedSlots = new List<InvSlotType>(item.AllowedSlots);
+                //if the item is both pickable and wearable, try to wear it instead of picking it up
+                List<InvSlotType> allowedSlots =
+                    item.GetComponents<Pickable>().Count() > 1 ?
+                    new List<InvSlotType>(item.GetComponent<Wearable>()?.AllowedSlots ?? item.GetComponent<Pickable>().AllowedSlots) :
+                    new List<InvSlotType>(item.AllowedSlots);
                 allowedSlots.Remove(InvSlotType.Any);
 
                 character.Inventory.TryPutItem(item, null, allowedSlots);
@@ -154,10 +217,6 @@ namespace Barotrauma
             if (item.Prefab.Identifier == "idcard" || item.Prefab.Identifier == "idcardwreck")
             {
                 item.AddTag("name:" + character.Name);
-                if (Level.Loaded != null)
-                {
-                    item.ReplaceTag("wreck_id", Level.Loaded.GetWreckIDTag("wreck_id", submarine));
-                }
                 var job = character.Info?.Job;
                 if (job != null)
                 {
@@ -165,9 +224,10 @@ namespace Barotrauma
                 }
 
                 IdCard idCardComponent = item.GetComponent<IdCard>();
-                if (idCardComponent != null)
+                idCardComponent?.Initialize(character.Info);
+                if (submarine != null && (submarine.Info.IsWreck || submarine.Info.IsOutpost))
                 {
-                    idCardComponent.Initialize(character.Info);
+                    idCardComponent.SubmarineSpecificID = submarine.SubmarineSpecificIDTag;
                 }
 
                 var idCardTags = itemElement.GetAttributeStringArray("tags", new string[0]);
@@ -181,13 +241,10 @@ namespace Barotrauma
             {
                 wifiComponent.TeamID = character.TeamID;
             }
-            if (parentItem != null)
-            {
-                parentItem.Combine(item, user: null);
-            }
+            parentItem?.Combine(item, user: null);
             foreach (XElement childItemElement in itemElement.Elements())
             {
-                InitializeItems(character, childItemElement, submarine, item);
+                InitializeItem(character, childItemElement, submarine, humanPrefab, item, createNetworkEvents);
             }
         }
     }

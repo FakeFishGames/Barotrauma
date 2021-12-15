@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -31,6 +32,22 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        /// <summary>
+        /// Can be used to display messages on the terminal via status effects
+        /// </summary>
+        public string ShowMessage
+        {
+            get { return messageHistory.Count == 0 ? string.Empty : messageHistory.Last(); }
+            set
+            {
+                if (string.IsNullOrEmpty(value)) { return; }
+                ShowOnDisplay(value, addToHistory: true);
+            }
+        }
+
+        [Editable, Serialize(false, true, description: "The terminal will use a monospace font if this box is ticked.", alwaysUseInstanceValues: true)]
+        public bool UseMonospaceFont { get; set; }
+
         private string OutputValue { get; set; }
 
         public Terminal(Item item, XElement element)
@@ -42,29 +59,34 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element);
 
-        partial void ShowOnDisplay(string input);
+        partial void ShowOnDisplay(string input, bool addToHistory);
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (connection.Name != "signal_in") { return; }
-            if (signal.Length > MaxMessageLength)
+            if (signal.value.Length > MaxMessageLength)
             {
-                signal = signal.Substring(0, MaxMessageLength);
+                signal.value = signal.value.Substring(0, MaxMessageLength);
             }
 
-            string inputSignal = signal.Replace("\\n", "\n");
-            ShowOnDisplay(inputSignal);
+            string inputSignal = signal.value.Replace("\\n", "\n");
+            ShowOnDisplay(inputSignal, addToHistory: true);
         }
 
         public override void OnItemLoaded()
         {
+            bool isSubEditor = false;
+#if CLIENT
+            isSubEditor = Screen.Selected == GameMain.SubEditorScreen || GameMain.GameSession?.GameMode is TestGameMode;
+#endif
+
             base.OnItemLoaded();
             if (!string.IsNullOrEmpty(DisplayedWelcomeMessage))
             {
-                ShowOnDisplay(DisplayedWelcomeMessage);
+                ShowOnDisplay(DisplayedWelcomeMessage, addToHistory: !isSubEditor);
                 DisplayedWelcomeMessage = "";
                 //remove welcome message if a game session is running so it doesn't reappear on successive rounds
-                if (GameMain.GameSession != null)
+                if (GameMain.GameSession != null && !isSubEditor)
                 {
                     welcomeMessage = null;
                 }
@@ -88,7 +110,7 @@ namespace Barotrauma.Items.Components
             {
                 string msg = componentElement.GetAttributeString("msg" + i, null);
                 if (msg == null) { break; }
-                ShowOnDisplay(msg);
+                ShowOnDisplay(msg, addToHistory: true);
             }
         }
     }

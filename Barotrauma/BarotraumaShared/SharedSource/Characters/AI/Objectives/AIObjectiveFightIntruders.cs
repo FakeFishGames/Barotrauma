@@ -6,9 +6,11 @@ namespace Barotrauma
 {
     class AIObjectiveFightIntruders : AIObjectiveLoop<Character>
     {
-        public override string DebugTag => "fight intruders";
+        public override string Identifier { get; set; } = "fight intruders";
         protected override float IgnoreListClearInterval => 30;
         public override bool IgnoreUnsafeHulls => true;
+
+        protected override float TargetUpdateTimeMultiplier => 0.2f;
 
         public AIObjectiveFightIntruders(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier) { }
@@ -19,14 +21,19 @@ namespace Barotrauma
 
         protected override float TargetEvaluation()
         {
-            // TODO: sorting criteria
-            return Targets.None() ? 0 : 100;
+            if (!character.IsOnPlayerTeam) { return Targets.None() ? 0 : 100; }
+            int totalEnemies = Targets.Count();
+            if (totalEnemies == 0) { return 0; }
+            if (character.IsSecurity) { return 100; }
+            if (objectiveManager.IsOrder(this)) { return 100; }
+            return HumanAIController.IsTrueForAnyCrewMember(c => c.Character.IsSecurity && !c.Character.IsIncapacitated && c.Character.Submarine == character.Submarine) ? 0 : 100;
         }
 
         protected override AIObjective ObjectiveConstructor(Character target)
         {
-            var combatObjective = new AIObjectiveCombat(character, target, AIObjectiveCombat.CombatMode.Offensive, objectiveManager, PriorityModifier);
-            if (character.TeamID == Character.TeamType.FriendlyNPC && target.TeamID == Character.TeamType.Team1 && GameMain.GameSession?.GameMode is CampaignMode campaign)
+            AIObjectiveCombat.CombatMode combatMode = target.IsEscorted && character.TeamID == CharacterTeamType.Team1 ? AIObjectiveCombat.CombatMode.Arrest : AIObjectiveCombat.CombatMode.Offensive;
+            var combatObjective = new AIObjectiveCombat(character, target, combatMode, objectiveManager, PriorityModifier);
+            if (character.TeamID == CharacterTeamType.FriendlyNPC && target.TeamID == CharacterTeamType.Team1 && GameMain.GameSession?.GameMode is CampaignMode campaign)
             {
                 var reputation = campaign.Map?.CurrentLocation?.Reputation;
                 if (reputation != null && reputation.NormalizedValue < Reputation.HostileThreshold)
@@ -48,16 +55,16 @@ namespace Barotrauma
 
         public static bool IsValidTarget(Character target, Character character)
         {
-            if (target == null || target.IsDead || target.Removed) { return false; }
+            if (target == null || target.Removed) { return false; }
+            if (target.IsDead) { return false; }
+            if (target.IsUnconscious && target.Params.Health.ConstantHealthRegeneration <= 0.0f) { return false; }
             if (target == character) { return false; }
-            if (HumanAIController.IsFriendly(character, target)) { return false; }
             if (target.Submarine == null) { return false; }
-            if (target.Submarine.TeamID != character.TeamID) { return false; }
+            if (character.Submarine == null) { return false; }
             if (target.CurrentHull == null) { return false; }
-            if (character.Submarine != null)
-            {
-                if (!character.Submarine.IsConnectedTo(target.Submarine)) { return false; }
-            }
+            if (HumanAIController.IsFriendly(character, target)) { return false; }
+            if (!character.Submarine.IsConnectedTo(target.Submarine)) { return false; }
+            if (target.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI)) { return false; }
             return true;
         }
     }

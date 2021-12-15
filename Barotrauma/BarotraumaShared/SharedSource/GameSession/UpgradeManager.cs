@@ -28,6 +28,18 @@ namespace Barotrauma
         }
     }
 
+    internal class PurchasedItemSwap
+    {
+        public readonly Item ItemToRemove;
+        public readonly ItemPrefab ItemToInstall;
+
+        public PurchasedItemSwap(Item itemToRemove, ItemPrefab itemToInstall)
+        {
+            ItemToRemove = itemToRemove;
+            ItemToInstall = itemToInstall;
+        }
+    }
+
     /// <summary>
     /// This class handles all upgrade logic.
     /// Storing, applying, checking and validation of upgrades.
@@ -75,9 +87,10 @@ namespace Barotrauma
 
         public readonly List<PurchasedUpgrade> PendingUpgrades = new List<PurchasedUpgrade>();
 
+        public readonly List<PurchasedItemSwap> PurchasedItemSwaps = new List<PurchasedItemSwap>();
+
         private CampaignMetadata Metadata => Campaign.CampaignMetadata;
         private readonly CampaignMode Campaign;
-        private int spentMoney;
 
         public event Action? OnUpgradesChanged;
 
@@ -90,7 +103,67 @@ namespace Barotrauma
         public UpgradeManager(CampaignMode campaign, XElement element, bool isSingleplayer) : this(campaign)
         {
             DebugConsole.Log($"Restored upgrade manager from save file, ({element.Elements().Count()} pending upgrades).");
-            LoadPendingUpgrades(element, isSingleplayer);
+
+            //backwards compatibility: 
+            //upgrades used to be saved to a <pendingupgrades> element, now upgrades and item swaps are saved separately under a <upgrademanager> element
+            if (element.Name.LocalName.Equals("pendingupgrades", StringComparison.OrdinalIgnoreCase))
+            {
+                LoadPendingUpgrades(element, isSingleplayer);
+            }
+            else
+            {
+                foreach (XElement subElement in element.Elements())
+                {
+                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    {
+                        case "pendingupgrades":
+                            LoadPendingUpgrades(subElement, isSingleplayer);
+                            break;
+                    }
+                }
+            }
+        }
+
+        public int DetermineItemSwapCost(Item item, ItemPrefab? replacement)
+        {
+            if (replacement == null)
+            {
+                replacement = ItemPrefab.Find("", item.Prefab.SwappableItem.ReplacementOnUninstall);
+                if (replacement == null)
+                {
+                    DebugConsole.ThrowError("Failed to determine swap cost for item \"{}\". Trying to uninstall the item but no replacement item found.");
+                    return 0;
+                }
+            }
+
+            int price = 0;
+            if (replacement == item.Prefab)
+            {
+                if (item.PendingItemSwap != null)
+                {
+                    //refund the pending swap
+                    price -= item.PendingItemSwap.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation);
+                    //buy back the current item
+                    price += item.Prefab.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation);
+                }
+            }
+            else
+            {
+                price = replacement.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation);
+                if (item.PendingItemSwap != null)
+                {
+                    //refund the pending swap
+                    price -= item.PendingItemSwap.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation);
+                    //buy back the current item
+                    price += item.Prefab.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation);
+                }
+                //refund the current item
+                if (replacement != item.prefab)
+                {
+                    price -= item.Prefab.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation);
+                }
+            }
+            return price;
         }
 
         private DateTime lastUpgradeSpeak, lastErrorSpeak;
@@ -102,9 +175,7 @@ namespace Barotrauma
         /// Purchased upgrades are temporarily stored in <see cref="PendingUpgrades"/> and they are applied
         /// after the next round starts similarly how items are spawned in the stowage room after the round starts.
         /// </remarks>
-        /// <param name="prefab"></param>
-        /// <param name="category"></param>
-        public void PurchaseUpgrade(UpgradePrefab prefab, UpgradeCategory category)
+        public void PurchaseUpgrade(UpgradePrefab prefab, UpgradeCategory category, bool force = false)
         {
             if (!CanUpgradeSub())
             {
@@ -136,7 +207,12 @@ namespace Barotrauma
                     });
             }
 
-            if (Campaign.Money > price)
+            if (force)
+            {
+                price = 0;
+            }
+
+            if (Campaign.Money >= price)
             {
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                 {
@@ -149,12 +225,11 @@ namespace Barotrauma
                 }
 
                 Campaign.Money -= price;
-                spentMoney += price;
 
                 PurchasedUpgrade? upgrade = FindMatchingUpgrade(prefab, category);
 
 #if CLIENT
-                DebugLog($"CLIENT: Purchased level {GetUpgradeLevel(prefab, category) + 1} {category.Name}.{prefab.Name} for ${price}", GUI.Style.Orange);
+                DebugLog($"CLIENT: Purchased level {GetUpgradeLevel(prefab, category) + 1} {category.Name}.{prefab.Name} for {price}", GUI.Style.Orange);
 #endif
 
                 if (upgrade == null)
@@ -179,6 +254,190 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Purchases an item swap and handles logic for deducting the credit.
+        /// </summary>
+        public void PurchaseItemSwap(Item itemToRemove, ItemPrefab itemToInstall, bool force = false)
+        {
+            if (!CanUpgradeSub())
+            {
+                DebugConsole.ThrowError("Cannot swap items when switching to another submarine.");
+                return;
+            }
+            if (itemToRemove == null)
+            {
+                DebugConsole.ThrowError($"Cannot swap null item!");
+                return;
+            }
+            if (itemToRemove.HiddenInGame)
+            {
+                DebugConsole.ThrowError($"Cannot swap item \"{itemToRemove.Name}\" because it's set to be hidden in-game.");
+                return;
+            }
+            if (!itemToRemove.AllowSwapping)
+            {
+                DebugConsole.ThrowError($"Cannot swap item \"{itemToRemove.Name}\" because it's configured to be non-swappable.");
+                return;
+            }
+            if (!UpgradeCategory.Categories.Any(c => c.ItemTags.Any(t => itemToRemove.HasTag(t)) && c.ItemTags.Any(t => itemToInstall.Tags.Contains(t))))
+            {
+                DebugConsole.ThrowError($"Failed to swap item \"{itemToRemove.Name}\" with \"{itemToInstall.Name}\" (not in the same upgrade category).");
+                return;
+            }
+
+            if (itemToRemove.prefab == itemToInstall)
+            {
+                DebugConsole.ThrowError($"Failed to swap item \"{itemToRemove.Name}\" (trying to swap with the same item!).");
+                return;
+            }
+            SwappableItem? swappableItem = itemToRemove.Prefab.SwappableItem;
+            if (swappableItem == null)
+            {
+                DebugConsole.ThrowError($"Failed to swap item \"{itemToRemove.Name}\" (not configured as a swappable item).");
+                return;
+            }
+
+            var linkedItems = GetLinkedItemsToSwap(itemToRemove);
+
+            int price = 0;
+            if (!itemToRemove.AvailableSwaps.Contains(itemToInstall))
+            {
+                price = itemToInstall.SwappableItem.GetPrice(Campaign.Map?.CurrentLocation) * linkedItems.Count;
+            }
+
+            if (force)
+            {
+                price = 0;
+            }
+
+            if (Campaign.Money >= price)
+            {
+                PurchasedItemSwaps.RemoveAll(p => linkedItems.Contains(p.ItemToRemove));
+                if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+                {
+                    // only make the NPC speak if more than 5 minutes have passed since the last purchased service
+                    if (lastUpgradeSpeak == DateTime.MinValue || lastUpgradeSpeak.AddMinutes(5) < DateTime.Now)
+                    {
+                        UpgradeNPCSpeak(TextManager.Get("Dialog.UpgradePurchased"), Campaign.IsSinglePlayer);
+                        lastUpgradeSpeak = DateTime.Now;
+                    }
+                }
+
+                Campaign.Money -= price;
+
+                foreach (Item itemToSwap in linkedItems)
+                {
+                    itemToSwap.AvailableSwaps.Add(itemToSwap.Prefab);
+                    if (itemToInstall != null && !itemToSwap.AvailableSwaps.Contains(itemToInstall)) 
+                    {
+                        itemToSwap.PurchasedNewSwap = true;
+                        itemToSwap.AvailableSwaps.Add(itemToInstall); 
+                    }
+
+                    if (itemToSwap.Prefab != itemToInstall && itemToInstall != null)
+                    {
+                        itemToSwap.PendingItemSwap = itemToInstall;
+                        PurchasedItemSwaps.Add(new PurchasedItemSwap(itemToSwap, itemToInstall));
+                        DebugLog($"CLIENT: Swapped item \"{itemToSwap.Name}\" with \"{itemToInstall.Name}\".", Color.Orange);
+                    }
+                    else
+                    {
+                        DebugLog($"CLIENT: Cancelled swapping the item \"{itemToSwap.Name}\" with \"{(itemToSwap.PendingItemSwap?.Name ?? null)}\".", Color.Orange);
+                    }
+                }
+
+                OnUpgradesChanged?.Invoke();
+            }
+            else
+            {
+                DebugConsole.ThrowError("Tried to swap an item with insufficient funds, the transaction has not been completed.\n" +
+                                        $"Item to remove: {itemToRemove.Name}, Item to install: {itemToInstall.Name}, Cost: {price}, Have: {Campaign.Money}");
+            }
+        }
+
+        /// <summary>
+        /// Cancels the currently pending item swap, or uninstalls the item if there's no swap pending
+        /// </summary>
+        public void CancelItemSwap(Item itemToRemove, bool force = false)
+        {
+            if (!CanUpgradeSub())
+            {
+                DebugConsole.ThrowError("Cannot swap items when switching to another submarine.");
+                return;
+            }
+
+            if (itemToRemove?.PendingItemSwap == null && string.IsNullOrEmpty(itemToRemove?.Prefab.SwappableItem?.ReplacementOnUninstall))
+            {
+                DebugConsole.ThrowError($"Cannot uninstall item \"{itemToRemove?.Name}\" (no replacement item configured).");
+                return;
+            }
+
+            SwappableItem? swappableItem = itemToRemove.Prefab.SwappableItem;
+            if (swappableItem == null)
+            {
+                DebugConsole.ThrowError($"Failed to uninstall item \"{itemToRemove.Name}\" (not configured as a swappable item).");
+                return;
+            }
+
+            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+            {
+                // only make the NPC speak if more than 5 minutes have passed since the last purchased service
+                if (lastUpgradeSpeak == DateTime.MinValue || lastUpgradeSpeak.AddMinutes(5) < DateTime.Now)
+                {
+                    UpgradeNPCSpeak(TextManager.Get("Dialog.UpgradePurchased"), Campaign.IsSinglePlayer);
+                    lastUpgradeSpeak = DateTime.Now;
+                }
+            }
+
+            var linkedItems = GetLinkedItemsToSwap(itemToRemove);
+
+            foreach (Item itemToCancel in linkedItems)
+            {
+                if (itemToCancel.PendingItemSwap == null)
+                {
+                    var replacement = MapEntityPrefab.Find("", swappableItem.ReplacementOnUninstall) as ItemPrefab;
+                    if (replacement == null)
+                    {
+                        DebugConsole.ThrowError($"Failed to uninstall item \"{itemToCancel.Name}\". Could not find the replacement item \"{swappableItem.ReplacementOnUninstall}\".");
+                        return;
+                    }
+                    PurchasedItemSwaps.RemoveAll(p => p.ItemToRemove == itemToCancel);
+                    PurchasedItemSwaps.Add(new PurchasedItemSwap(itemToCancel, replacement));
+                    DebugLog($"Uninstalled item item \"{itemToCancel.Name}\".", Color.Orange);
+                    itemToCancel.PendingItemSwap = replacement;
+                }
+                else
+                {
+                    PurchasedItemSwaps.RemoveAll(p => p.ItemToRemove == itemToCancel);
+                    DebugLog($"Cancelled swapping the item \"{itemToCancel.Name}\" with \"{itemToCancel.PendingItemSwap.Name}\".", Color.Orange);
+                    itemToCancel.PendingItemSwap = null;
+                }
+            }
+
+#if CLIENT
+            OnUpgradesChanged?.Invoke();
+#endif       
+        }
+
+        public List<Item> GetLinkedItemsToSwap(Item item)
+        {
+            List<Item> linkedItems = new List<Item>() { item };
+            foreach (MapEntity linkedEntity in item.linkedTo)
+            {
+                foreach (MapEntity secondLinkedEntity in linkedEntity.linkedTo)
+                {
+                    if (!(secondLinkedEntity is Item linkedItem) || linkedItem == item) { continue; }
+                    if (linkedItem.AllowSwapping &&
+                        linkedItem.Prefab.SwappableItem != null && (linkedItem.Prefab.SwappableItem.CanBeBought || item.Prefab.SwappableItem.ReplacementOnUninstall == linkedItem.prefab.Identifier) &&
+                        linkedItem.Prefab.SwappableItem.SwapIdentifier.Equals(item.Prefab.SwappableItem.SwapIdentifier, StringComparison.OrdinalIgnoreCase))
+                    {
+                        linkedItems.Add(linkedItem);
+                    }
+                }
+            }
+            return linkedItems;
+        }
+
+        /// <summary>
         /// Applies all our pending upgrades to the submarine.
         /// </summary>
         /// <remarks>
@@ -195,24 +454,22 @@ namespace Barotrauma
         public void ApplyUpgrades()
         {
             PurchasedUpgrades.Clear();
+            PurchasedItemSwaps.Clear();
             if (Submarine.MainSub == null) { return; }
 
             List<PurchasedUpgrade> pendingUpgrades = PendingUpgrades;
 
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+            if (Level.Loaded is { Type: LevelData.LevelType.Outpost })
             {
-                if (Level.Loaded?.Type != LevelData.LevelType.Outpost)
+                return;
+            }
+
+            if (GameMain.NetworkMember is { IsClient: true })
+            {
+                if (loadedUpgrades != null)
                 {
-                    if (loadedUpgrades != null)
-                    {
-                        // client receives pending upgrades from the save file
-                        pendingUpgrades = loadedUpgrades;
-                    }
-                }
-                else
-                {
-                    // prevent the client from applying pending upgrades at an outpost when joining mid round
-                    return;
+                    // client receives pending upgrades from the save file
+                    pendingUpgrades = loadedUpgrades;
                 }
             }
 
@@ -221,36 +478,12 @@ namespace Barotrauma
             {
                 int newLevel = BuyUpgrade(prefab, category, Submarine.MainSub, level);
                 DebugConsole.Log($"    - {category.Identifier}.{prefab.Identifier} lvl. {level}, new: ({newLevel})");
-                if (newLevel > 0)
-                {
-                    SetUpgradeLevel(prefab, category, Math.Clamp(newLevel, 0, prefab.MaxLevel));
-                }
+                SetUpgradeLevel(prefab, category, Math.Clamp(GetRealUpgradeLevel(prefab, category) + level, 0, prefab.MaxLevel));
             }
 
             PendingUpgrades.Clear();
             loadedUpgrades?.Clear();
             loadedUpgrades = null;
-            spentMoney = 0;
-        }
-
-        /// <summary>
-        /// Cancels the pending upgrades and refunds the money spent
-        /// </summary>
-        private void RefundUpgrades()
-        {
-            DebugConsole.Log($"Refunded {spentMoney} marks in pending upgrades.");
-            if (spentMoney > 0)
-            {
-#if CLIENT
-                GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("UpgradeRefundTitle"), TextManager.Get("UpgradeRefundBody"), new[] { TextManager.Get("Ok") });
-                msgBox.Buttons[0].OnClicked += msgBox.Close;
-#endif
-            }
-
-            Campaign.Money += spentMoney;
-            spentMoney = 0;
-            PendingUpgrades.Clear();
-            PurchasedUpgrades.Clear();
         }
 
         public void CreateUpgradeErrorMessage(string text, bool isSinglePlayer, Character character)
@@ -308,7 +541,7 @@ namespace Barotrauma
 
                         if (upgrade == null || upgrade.Level != level || isOverMax)
                         {
-                            DebugConsole.AddWarning($"{wall.prefab.Name} has incorrect \"{prefab.Name}\" level! Expected {level} but got {upgrade?.Level ?? 0}. Fixing...");
+                            DebugLog($"{wall.prefab.Name} has incorrect \"{prefab.Name}\" level! Expected {level} but got {upgrade?.Level ?? 0}. Fixing...");
                             FixUpgradeOnItem(wall, prefab, level);
                         }
                     }
@@ -337,7 +570,7 @@ namespace Barotrauma
 
                         if (upgrade == null || upgrade.Level != level || isOverMax)
                         {
-                            DebugConsole.AddWarning($"{item.prefab.Name} has incorrect \"{prefab.Name}\" level! Expected {level} but got {upgrade?.Level ?? 0}{(isOverMax ? " (Over max level!)" : string.Empty)}. Fixing...");
+                            DebugLog($"{item.prefab.Name} has incorrect \"{prefab.Name}\" level! Expected {level} but got {upgrade?.Level ?? 0}{(isOverMax ? " (Over max level!)" : string.Empty)}. Fixing...");
                             FixUpgradeOnItem(item, prefab, level);
                         }
                     }
@@ -363,7 +596,7 @@ namespace Barotrauma
         /// <param name="submarine"></param>
         /// <param name="level"></param>
         /// <returns>New level that was applied, -1 if no upgrades were applied.</returns>
-        private static int BuyUpgrade(UpgradePrefab prefab, UpgradeCategory category, Submarine submarine, int level = 1)
+        private static int BuyUpgrade(UpgradePrefab prefab, UpgradeCategory category, Submarine submarine, int level = 1, Submarine parentSub = null)
         {
             int? newLevel = null;
             if (category.IsWallUpgrade)
@@ -402,6 +635,7 @@ namespace Barotrauma
 
             foreach (Submarine loadedSub in Submarine.Loaded.Where(sub => sub != submarine))
             {
+                if (loadedSub == parentSub) { continue; }
                 XElement? root = loadedSub.Info?.SubmarineElement;
                 if (root == null) { continue; }
 
@@ -413,7 +647,7 @@ namespace Barotrauma
                     ushort dockingPortID = (ushort) root.GetAttributeInt("originallinkedto", 0);
                     if (dockingPortID > 0 && submarine.GetItems(true).Any(item => item.ID == dockingPortID))
                     {
-                        BuyUpgrade(prefab, category, loadedSub, level);
+                        BuyUpgrade(prefab, category, loadedSub, level, submarine);
                     }
                 }
             }
@@ -480,113 +714,17 @@ namespace Barotrauma
             return Campaign.PendingSubmarineSwitch == null;
         }
 
-        public void RefundResetAndReload(SubmarineInfo newSubmarine, bool notifyClients = false)
+        public void Save(XElement? parent)
         {
-            RefundUpgrades();
-            ResetUpgrades();
-            Dictionary<string, int> newUpgrades = ReloadUpgradeValues(newSubmarine);
-#if SERVER
-            if (notifyClients)
-            {
-                SendUpgradeResetMessage(newUpgrades);
-            }
-#endif
+            if (parent == null) { return; }
+
+            var upgradeManagerElement = new XElement("upgrademanager");
+            parent.Add(upgradeManagerElement);
+
+            SavePendingUpgrades(upgradeManagerElement, PendingUpgrades);
         }
 
-        /// <summary>
-        /// Parses a SubmarineInfo and sets the store values accordingly.
-        /// Used when reloading a previously saved submarine. 
-        /// </summary>
-        /// <param name="info"></param>
-        private Dictionary<string, int> ReloadUpgradeValues(SubmarineInfo info)
-        {
-            Dictionary<string, int> newValues = new Dictionary<string, int>();
-            IEnumerable<XElement> linkedSubElements = info.SubmarineElement.Elements().Where(element => element.Name.ToString().Equals("LinkedSubmarine", StringComparison.OrdinalIgnoreCase)).SelectMany(element => element.Elements());
-            IEnumerable<XElement> mainSubElements = info.SubmarineElement.Elements().Where(Predicate);
-            List<XElement> elements = mainSubElements.Concat(linkedSubElements.Where(Predicate)).ToList();
-            foreach (UpgradeCategory category in UpgradeCategory.Categories)
-            {
-                foreach (UpgradePrefab prefab in UpgradePrefab.Prefabs)
-                {
-                    if (!prefab.UpgradeCategories.Contains(category)) { continue; }
-
-                    List<int> levels = GetUpgradeFromXML(elements, category, prefab);
-                    if (levels.Any())
-                    {
-                        int level = (int) levels.Average(i => i);
-                        newValues.Add(FormatIdentifier(prefab, category), level);
-                    }
-                }
-            }
-
-            foreach (var (dataIdentifier, level) in newValues)
-            {
-                Campaign.CampaignMetadata.SetValue(dataIdentifier, level);
-            }
-
-            return newValues;
-
-            static List<int> GetUpgradeFromXML(List<XElement> elements, UpgradeCategory category, UpgradePrefab prefab)
-            {
-                List<int> levels = new List<int>();
-                foreach (XElement subElement in elements)
-                {
-                    if (!category.CanBeApplied(subElement)) { continue; }
-
-                    foreach (XElement component in subElement.Elements())
-                    {
-                        if (string.Equals(component.Name.ToString(), "upgrade", StringComparison.OrdinalIgnoreCase))
-                        {
-                            string identifier = component.GetAttributeString("identifier", string.Empty);
-                            int level = component.GetAttributeInt("level", -1);
-                            if (string.IsNullOrWhiteSpace(identifier) || level <= 0) { continue; }
-
-                            UpgradePrefab? matchingPrefab = UpgradePrefab.Find(identifier);
-                            if (matchingPrefab == null || matchingPrefab != prefab) { continue; }
-
-                            if (matchingPrefab.UpgradeCategories.Contains(category)) { levels.Add(level); }
-                        }
-                    }
-                }
-
-                return levels;
-            }
-
-            static bool Predicate(XElement element) => element.HasElements && element.Elements().Any(e => e.Name.ToString().Equals("upgrade", StringComparison.OrdinalIgnoreCase));
-        }
-
-
-        /// <summary>
-        /// Resets our upgrade progress and prices.
-        /// This does not actually remove the upgrades from the submarine but resets the store interface.
-        /// </summary>
-        /// <remarks>
-        /// This method works by iterating thru all upgrade categories and prefabs and checking if they have a
-        /// valid key stored in the metadata, if they do set it to 0, upgrades without a key stored are always
-        /// assumed to be 0 so they don't need to be reset.
-        ///
-        /// Should initially be called server side as we can't trust clients with such a simple notification.
-        /// </remarks>
-        private void ResetUpgrades()
-        {
-            foreach (UpgradeCategory category in UpgradeCategory.Categories)
-            {
-                foreach (UpgradePrefab prefab in UpgradePrefab.Prefabs)
-                {
-                    if (!prefab.UpgradeCategories.Contains(category)) { continue; }
-
-                    string dataIdentifier = FormatIdentifier(prefab, category);
-                    if (Metadata.HasKey(dataIdentifier))
-                    {
-                        Metadata.SetValue(dataIdentifier, 0);
-                    }
-                }
-            }
-
-            OnUpgradesChanged?.Invoke();
-        }
-
-        public void SavePendingUpgrades(XElement? parent, List<PurchasedUpgrade> upgrades)
+        private void SavePendingUpgrades(XElement? parent, List<PurchasedUpgrade> upgrades)
         {
             if (parent == null) { return; }
 
@@ -606,7 +744,7 @@ namespace Barotrauma
 
         private void LoadPendingUpgrades(XElement? element, bool isSingleplayer = true)
         {
-            if (element == null || !element.HasElements) { return; }
+            if (!(element is { HasElements: true })) { return; }
 
             List<PurchasedUpgrade> pendingUpgrades = new List<PurchasedUpgrade>();
 
@@ -641,7 +779,7 @@ namespace Barotrauma
 #endif
         }
 
-        public static void LogError(string text, Dictionary<string, object?> data, Exception e = null)
+        public static void LogError(string text, Dictionary<string, object?> data, Exception? e = null)
         {
             string error = $"{text}\n";
             foreach (var (label, value) in data)
@@ -652,34 +790,10 @@ namespace Barotrauma
             DebugConsole.ThrowError(error.TrimEnd('\n'), e);
         }
 
-        public static Dictionary<string, int> GetMetadataLevels(CampaignMetadata? metadata)
-        {
-            Dictionary<string, int> values = new Dictionary<string, int>();
-
-            if (metadata == null) { return values; }
-
-            foreach (UpgradeCategory category in UpgradeCategory.Categories)
-            {
-                foreach (UpgradePrefab prefab in UpgradePrefab.Prefabs)
-                {
-                    string identifier = FormatIdentifier(prefab, category);
-                    if (metadata.HasKey(identifier) && !values.ContainsKey(identifier))
-                    {
-                        values.Add(identifier, metadata.GetInt(identifier));
-                    }
-                }
-            }
-
-            return values;
-        }
-
         /// <summary>
         /// Used to sync the pending upgrades list in multiplayer.
         /// </summary>
         /// <param name="upgrades"></param>
-        /// <remarks>
-        /// In singleplayer this is not used and should not be.
-        /// </remarks>
         public void SetPendingUpgrades(List<PurchasedUpgrade> upgrades)
         {
             PendingUpgrades.Clear();
@@ -689,7 +803,7 @@ namespace Barotrauma
 
         public static void DebugLog(string msg, Color? color = null)
         {
-#if UNSTABLE || DEBUG
+#if DEBUG
             DebugConsole.NewMessage(msg, color ?? Color.GreenYellow);
 #else
             DebugConsole.Log(msg);

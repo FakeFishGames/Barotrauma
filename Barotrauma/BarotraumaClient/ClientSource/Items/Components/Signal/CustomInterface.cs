@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -15,7 +14,7 @@ namespace Barotrauma.Items.Components
 
         private Point ElementMaxSize => new Point(uiElementContainer.Rect.Width, (int)(65 * GUI.yScale));
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific()
         {
             CreateGUI();
         }
@@ -37,41 +36,71 @@ namespace Barotrauma.Items.Components
             float elementSize = Math.Min(1.0f / visibleElements.Count(), 1);
             foreach (CustomInterfaceElement ciElement in visibleElements)
             {
-                if (!string.IsNullOrEmpty(ciElement.PropertyName))
+                if (ciElement.HasPropertyName)
                 {
-                   var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform), isHorizontal: true)
-                   {
-                       RelativeSpacing = 0.02f,
-                       UserData = ciElement
-                   };
-                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), 
-                        TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label);
-                    var textBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), "", style: "GUITextBoxNoIcon")
+                    var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform), isHorizontal: true)
                     {
-                        OverflowClip = true,
+                        RelativeSpacing = 0.02f,
                         UserData = ciElement
                     };
-                    //reset size restrictions set by the Style to make sure the elements can fit the interface
-                    textBox.RectTransform.MinSize = textBox.Frame.RectTransform.MinSize = new Point(0, 0);
-                    textBox.RectTransform.MaxSize = textBox.Frame.RectTransform.MaxSize = new Point(int.MaxValue, int.MaxValue);
-                    textBox.OnDeselected += (tb, key) =>
+                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), 
+                        TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label);
+                    if (!ciElement.IsIntegerInput)
                     {
-                        if (GameMain.Client == null)
+                        var textBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), ciElement.Signal, style: "GUITextBoxNoIcon")
                         {
-                            TextChanged(tb.UserData as CustomInterfaceElement, textBox.Text);
-                        }
-                        else
+                            OverflowClip = true,
+                            UserData = ciElement,
+                            MaxTextLength = ciElement.MaxTextLength
+                        };
+                        //reset size restrictions set by the Style to make sure the elements can fit the interface
+                        textBox.RectTransform.MinSize = textBox.Frame.RectTransform.MinSize = new Point(0, 0);
+                        textBox.RectTransform.MaxSize = textBox.Frame.RectTransform.MaxSize = new Point(int.MaxValue, int.MaxValue);
+                        textBox.OnDeselected += (tb, key) =>
                         {
-                            item.CreateClientEvent(this);
-                        }
-                    };
+                            if (GameMain.Client == null)
+                            {
+                                TextChanged(tb.UserData as CustomInterfaceElement, textBox.Text);
+                            }
+                            else
+                            {
+                                item.CreateClientEvent(this);
+                            }
+                        };
 
-                    textBox.OnEnterPressed += (tb, text) =>
+                        textBox.OnEnterPressed += (tb, text) =>
+                        {
+                            tb.Deselect();
+                            return true;
+                        };
+                        uiElements.Add(textBox);
+                    }
+                    else
                     {
-                        tb.Deselect();
-                        return true;
-                    };
-                    uiElements.Add(textBox);
+                        int.TryParse(ciElement.Signal, out int signal);
+                        var numberInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), GUINumberInput.NumberType.Int)
+                        {
+                            UserData = ciElement,
+                            MinValueInt = ciElement.NumberInputMin,
+                            MaxValueInt = ciElement.NumberInputMax,
+                            IntValue = Math.Clamp(signal, ciElement.NumberInputMin, ciElement.NumberInputMax)
+                        };
+                        //reset size restrictions set by the Style to make sure the elements can fit the interface
+                        numberInput.RectTransform.MinSize = numberInput.LayoutGroup.RectTransform.MinSize = new Point(0, 0);
+                        numberInput.RectTransform.MaxSize = numberInput.LayoutGroup.RectTransform.MaxSize = new Point(int.MaxValue, int.MaxValue);
+                        numberInput.OnValueChanged += (ni) =>
+                        {
+                            if (GameMain.Client == null)
+                            {
+                                ValueChanged(ni.UserData as CustomInterfaceElement, ni.IntValue);
+                            }
+                            else
+                            {
+                                item.CreateClientEvent(this);
+                            }
+                        };
+                        uiElements.Add(numberInput);
+                    }
                 }
                 else if (ciElement.ContinuousSignal)
                 {
@@ -175,7 +204,7 @@ namespace Barotrauma.Items.Components
             foreach (var uiElement in uiElements)
             {
                 if (!(uiElement.UserData is CustomInterfaceElement element)) { continue; }
-                bool visible = Screen.Selected == GameMain.SubEditorScreen || element.StatusEffects.Any() || !string.IsNullOrEmpty(element.PropertyName) || (element.Connection != null && element.Connection.Wires.Any(w => w != null));
+                bool visible = Screen.Selected == GameMain.SubEditorScreen || element.StatusEffects.Any() || element.HasPropertyName || (element.Connection != null && element.Connection.Wires.Any(w => w != null));
                 if (visible) { visibleElementCount++; }
                 if (uiElement.Visible != visible)
                 {
@@ -203,34 +232,27 @@ namespace Barotrauma.Items.Components
             {
                 if (uiElements[i] is GUIButton button)
                 {
-                    button.Text = string.IsNullOrWhiteSpace(customInterfaceElementList[i].Label) ?
-                        TextManager.GetWithVariable("connection.signaloutx", "[num]", (i + 1).ToString()) :
-                        customInterfaceElementList[i].Label;
+                    button.Text = CreateLabelText(i);
                     button.TextBlock.Wrap = button.Text.Contains(' ');
                 }
                 else if (uiElements[i] is GUITickBox tickBox)
                 {
-                    tickBox.Text = string.IsNullOrWhiteSpace(customInterfaceElementList[i].Label) ?
-                        TextManager.GetWithVariable("connection.signaloutx", "[num]", (i + 1).ToString()) :
-                        customInterfaceElementList[i].Label;
+                    tickBox.Text = CreateLabelText(i);
                     tickBox.TextBlock.Wrap = tickBox.Text.Contains(' ');
                 }
-                if (uiElements[i] is GUITextBox textBox)
+                else if (uiElements[i] is GUITextBox || uiElements[i] is GUINumberInput)
                 {
-                    var textBlock = textBox.Parent.GetChild<GUITextBlock>();
-                    textBlock.Text = string.IsNullOrWhiteSpace(customInterfaceElementList[i].Label) ?
-                        TextManager.GetWithVariable("connection.signaloutx", "[num]", (i + 1).ToString()) :
-                        customInterfaceElementList[i].Label;
+                    var textBlock = uiElements[i].Parent.GetChild<GUITextBlock>();
+                    textBlock.Text = CreateLabelText(i);
                     textBlock.Wrap = textBlock.Text.Contains(' ');
-
-                    foreach (ISerializableEntity e in item.AllPropertyObjects)
-                    {
-                        if (e.SerializableProperties.ContainsKey(customInterfaceElementList[i].PropertyName))
-                        {
-                            textBox.Text = e.SerializableProperties[customInterfaceElementList[i].PropertyName].GetValue(e) as string;
-                        }
-                    }
                 }
+            }
+
+            string CreateLabelText(int elementIndex)
+            {
+                return string.IsNullOrWhiteSpace(customInterfaceElementList[elementIndex].Label) ?
+                    TextManager.GetWithVariable("connection.signaloutx", "[num]", (elementIndex + 1).ToString()) :
+                    customInterfaceElementList[elementIndex].Label;
             }
 
             uiElementContainer.Recalculate();
@@ -258,14 +280,40 @@ namespace Barotrauma.Items.Components
             GUITextBlock.AutoScaleAndNormalize(textBlocks);
         }
 
+        partial void UpdateSignalsProjSpecific()
+        {
+            for (int i = 0; i < signals.Length && i < uiElements.Count; i++)
+            {
+                if (uiElements[i] is GUITextBox tb)
+                {
+                    tb.Text = customInterfaceElementList[i].Signal;
+                }
+                else if (uiElements[i] is GUINumberInput ni)
+                {
+                    if (ni.InputType == GUINumberInput.NumberType.Int)
+                    {
+                        int.TryParse(customInterfaceElementList[i].Signal, out int value);
+                        ni.IntValue = value;
+                    }
+                }
+            }
+        }
+
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             //extradata contains an array of buttons clicked by the player (or nothing if the player didn't click anything)
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {
-                if (!string.IsNullOrEmpty(customInterfaceElementList[i].PropertyName))
+                if (customInterfaceElementList[i].HasPropertyName)
                 {
-                    msg.Write(((GUITextBox)uiElements[i]).Text);
+                    if (!customInterfaceElementList[i].IsIntegerInput)
+                    {
+                        msg.Write(((GUITextBox)uiElements[i]).Text);
+                    }
+                    else
+                    {
+                        msg.Write(((GUINumberInput)uiElements[i]).IntValue.ToString());
+                    }
                 }
                 else if (customInterfaceElementList[i].ContinuousSignal)
                 {
@@ -282,9 +330,17 @@ namespace Barotrauma.Items.Components
         {
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {
-                if (!string.IsNullOrEmpty(customInterfaceElementList[i].PropertyName))
+                if (customInterfaceElementList[i].HasPropertyName)
                 {
-                    TextChanged(customInterfaceElementList[i], msg.ReadString());
+                    if (!customInterfaceElementList[i].IsIntegerInput)
+                    {
+                        TextChanged(customInterfaceElementList[i], msg.ReadString());
+                    }
+                    else
+                    {
+                        int.TryParse(msg.ReadString(), out int value);
+                        ValueChanged(customInterfaceElementList[i], value);
+                    }
                 }
                 else
                 {
@@ -300,6 +356,8 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+
+            UpdateSignalsProjSpecific();
         }
     }
 }

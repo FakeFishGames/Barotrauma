@@ -130,6 +130,7 @@ namespace Barotrauma
         public static GUIStyle Style;
 
         private static Texture2D t;
+        public static Texture2D WhiteTexture => t;
         private static Sprite[] MouseCursorSprites => Style.CursorSprite;
 
         private static bool debugDrawSounds, debugDrawEvents, debugDrawMetadata;
@@ -163,6 +164,7 @@ namespace Barotrauma
         public static ScalableFont SubHeadingFont => Style?.SubHeadingFont;
         public static ScalableFont DigitalFont => Style?.DigitalFont;
         public static ScalableFont HotkeyFont => Style?.HotkeyFont;
+        public static ScalableFont MonospacedFont => Style?.MonospacedFont;
 
         public static ScalableFont CJKFont { get; private set; }
 
@@ -208,6 +210,19 @@ namespace Barotrauma
             get { return pauseMenuOpen; }
         }
 
+        public static bool InputBlockingMenuOpen
+        {
+            get
+            {
+                return PauseMenuOpen ||
+                    SettingsMenuOpen ||
+                    DebugConsole.IsOpen ||
+                    GameSession.IsTabMenuOpen ||
+                    (GameMain.GameSession?.GameMode?.Paused ?? false) ||
+                    CharacterHUD.IsCampaignInterfaceOpen;
+            }
+        }
+
         public static bool PreventPauseMenuToggle = false;
 
         public static Color ScreenOverlayColor
@@ -217,6 +232,24 @@ namespace Barotrauma
         }
 
         public static bool DisableHUD, DisableUpperHUD, DisableItemHighlights, DisableCharacterNames;
+
+        private static bool isSavingIndicatorEnabled;
+        private static Color savingIndicatorColor = Color.Transparent;
+        private static bool IsSavingIndicatorVisible => savingIndicatorColor.A > 0;
+        private static float savingIndicatorSpriteIndex;
+        private static float savingIndicatorColorLerpAmount;
+        private static SavingIndicatorState savingIndicatorState = SavingIndicatorState.None;
+        private static float? timeUntilSavingIndicatorDisabled;
+
+        private static string loadedSpritesText;
+        private static DateTime loadedSpritesUpdateTime;
+
+        private enum SavingIndicatorState
+        {
+            None,
+            FadingIn,
+            FadingOut
+        }
 
         public static void Init(GameWindow window, IEnumerable<ContentPackage> selectedContentPackages, GraphicsDevice graphicsDevice)
         {
@@ -275,7 +308,7 @@ namespace Barotrauma
             });
             
             SubmarineIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(452, 385, 182, 81), new Vector2(0.5f, 0.5f));
-            arrow = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(392, 393, 49, 45), new Vector2(0.5f, 0.5f));
+            arrow = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(393, 393, 49, 45), new Vector2(0.5f, 0.5f));
             SpeechBubbleIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(385, 449, 66, 60), new Vector2(0.5f, 0.5f));
             BrokenIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(898, 386, 123, 123), new Vector2(0.5f, 0.5f));
         }
@@ -287,6 +320,7 @@ namespace Barotrauma
         {
             lock (mutex)
             {
+                usedIndicatorAngles.Clear();
 
                 if (ScreenChanged)
                 {
@@ -344,7 +378,11 @@ namespace Barotrauma
             }
 #endif
 
-                if (DisableHUD) { return; }
+                if (DisableHUD)
+                {
+                    DrawSavingIndicator(spriteBatch);
+                    return;
+                }
 
                 if (GameMain.ShowFPS || GameMain.DebugDraw)
                 {
@@ -421,9 +459,12 @@ namespace Barotrauma
                         "Particle count: " + GameMain.ParticleManager.ParticleCount + "/" + GameMain.ParticleManager.MaxParticles,
                         Color.Lerp(GUI.Style.Green, GUI.Style.Red, (GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, SmallFont);
 
-                    DrawString(spriteBatch, new Vector2(10, 115),
-                        "Loaded sprites: " + Sprite.LoadedSprites.Count() + "\n(" + Sprite.LoadedSprites.Select(s => s.FilePath).Distinct().Count() + " unique textures)",
-                        Color.White, Color.Black * 0.5f, 0, SmallFont);
+                    if (loadedSpritesText == null || DateTime.Now > loadedSpritesUpdateTime)
+                    {
+                        loadedSpritesText = "Loaded sprites: " + Sprite.LoadedSprites.Count() + "\n(" + Sprite.LoadedSprites.Select(s => s.FilePath).Distinct().Count() + " unique textures)";
+                        loadedSpritesUpdateTime = DateTime.Now + new TimeSpan(0, 0, seconds: 5);
+                    }
+                    DrawString(spriteBatch, new Vector2(10, 115), loadedSpritesText, Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                     if (debugDrawSounds)
                     {
@@ -538,60 +579,42 @@ namespace Barotrauma
                         }
                     }
 
+                    IEnumerable<string> strings;
                     if (MouseOn != null)
                     {
                         RectTransform mouseOnRect = MouseOn.RectTransform;
                         bool isAbsoluteOffsetInUse = mouseOnRect.AbsoluteOffset != Point.Zero || mouseOnRect.RelativeOffset == Vector2.Zero;
 
-                        string selectedString = $"Selected UI Element: {MouseOn.GetType().Name} ({ MouseOn.Style?.Element.Name.LocalName ?? "no style" }, {MouseOn.Rect}";
-                        string offsetString = $"Relative Offset: {mouseOnRect.RelativeOffset} | Absolute Offset: {(isAbsoluteOffsetInUse ? mouseOnRect.AbsoluteOffset : mouseOnRect.ParentRect.MultiplySize(mouseOnRect.RelativeOffset))}{(isAbsoluteOffsetInUse ? "" : " (Calculated from RelativeOffset)")}";
-                        string anchorPivotString = $"Anchor: {mouseOnRect.Anchor} | Pivot: {mouseOnRect.Pivot}";
-                        Vector2 selectedStringSize = SmallFont.MeasureString(selectedString);
-                        Vector2 offsetStringSize = SmallFont.MeasureString(offsetString);
-                        Vector2 anchorPivotStringSize = SmallFont.MeasureString(anchorPivotString);
-
-                        int padding = IntScale(10);
-                        int yPos = padding;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)selectedStringSize.X - padding, yPos), selectedString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)selectedStringSize.Y + padding / 2;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)offsetStringSize.X - padding, yPos), offsetString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)offsetStringSize.Y + padding / 2;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)anchorPivotStringSize.X - padding, yPos), anchorPivotString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)anchorPivotStringSize.Y + padding / 2;
+                        strings = new string[]
+                        {
+                            $"Selected UI Element: {MouseOn.GetType().Name} ({ MouseOn.Style?.Element.Name.LocalName ?? "no style" }, {MouseOn.Rect}",
+                            $"Relative Offset: {mouseOnRect.RelativeOffset} | Absolute Offset: {(isAbsoluteOffsetInUse ? mouseOnRect.AbsoluteOffset : mouseOnRect.ParentRect.MultiplySize(mouseOnRect.RelativeOffset))}{(isAbsoluteOffsetInUse ? "" : " (Calculated from RelativeOffset)")}",
+                            $"Anchor: {mouseOnRect.Anchor} | Pivot: {mouseOnRect.Pivot}"
+                        };
                     }
                     else
                     {
-                        string guiScaleString = $"GUI.Scale: {Scale}";
-                        string guixScaleString = $"GUI.xScale: {xScale}";
-                        string guiyScaleString = $"GUI.yScale: {yScale}";
-                        string relativeHorizontalAspectRatioString = $"RelativeHorizontalAspectRatio: {RelativeHorizontalAspectRatio}";
-                        string relativeVerticalAspectRatioString = $"RelativeVerticalAspectRatio: {RelativeVerticalAspectRatio}";
-                        Vector2 guiScaleStringSize = SmallFont.MeasureString(guiScaleString);
-                        Vector2 guixScaleStringSize = SmallFont.MeasureString(guixScaleString);
-                        Vector2 guiyScaleStringSize = SmallFont.MeasureString(guiyScaleString);
-                        Vector2 relativeHorizontalAspectRatioStringSize = SmallFont.MeasureString(relativeHorizontalAspectRatioString);
-                        Vector2 relativeVerticalAspectRatioStringSize = SmallFont.MeasureString(relativeVerticalAspectRatioString);
+                        strings = new string[]
+                        {
+                            $"GUI.Scale: {Scale}",
+                            $"GUI.xScale: {xScale}",
+                            $"GUI.yScale: {yScale}",
+                            $"RelativeHorizontalAspectRatio: {RelativeHorizontalAspectRatio}",
+                            $"RelativeVerticalAspectRatio: {RelativeVerticalAspectRatio}",
+                        };
+                    }
 
-                        int padding = IntScale(10);
-                        int yPos = padding;
+                    strings = strings.Concat(new string[] { $"Cam.Zoom: {Screen.Selected.Cam?.Zoom ?? 0f}" });
 
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guiScaleStringSize.X - padding, yPos), guiScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)guiScaleStringSize.Y + padding / 2;
+                    int padding = IntScale(10);
+                    int yPos = padding;
 
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guixScaleStringSize.X - padding, yPos), guixScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)guixScaleStringSize.Y + padding / 2;
+                    foreach (string str in strings)
+                    {
+                        Vector2 stringSize = SmallFont.MeasureString(str);
 
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guiyScaleStringSize.X - padding, yPos), guiyScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)guiyScaleStringSize.Y + padding / 2;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)relativeHorizontalAspectRatioStringSize.X - padding, yPos), relativeHorizontalAspectRatioString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)relativeHorizontalAspectRatioStringSize.Y + padding / 2;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)relativeVerticalAspectRatioStringSize.X - padding, yPos), relativeVerticalAspectRatioString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)relativeVerticalAspectRatioStringSize.Y + padding / 2;
+                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)stringSize.X - padding, yPos), str, Color.LightGreen, Color.Black, 0, SmallFont);
+                        yPos += (int)stringSize.Y + padding / 2;
                     }
                 }
 
@@ -644,10 +667,18 @@ namespace Barotrauma
                     }
                 }
 
+                DrawSavingIndicator(spriteBatch);
+
                 if (GameMain.WindowActive && !HideCursor)
                 {
                     spriteBatch.End();
                     spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerStateClamp, rasterizerState: GameMain.ScissorTestEnable);
+
+                    if (GameMain.GameSession?.CrewManager is { DraggedOrder: { SymbolSprite: { } orderSprite, Color: var color }, DragOrder: true })
+                    {
+                        float spriteSize = Math.Max(orderSprite.size.X, orderSprite.size.Y);
+                        orderSprite.Draw(spriteBatch, PlayerInput.LatestMousePosition, color, orderSprite.size / 2f, scale: 32f / spriteSize * Scale);
+                    }
 
                     var sprite = MouseCursorSprites[(int)MouseCursor] ?? MouseCursorSprites[(int)CursorState.Default];
                     sprite.Draw(spriteBatch, PlayerInput.LatestMousePosition, Color.White, sprite.Origin, 0f, Scale / 1.5f);
@@ -832,11 +863,10 @@ namespace Barotrauma
                     int index = 0;
                     if (updateList.Count > 0)
                     {
-                        index = updateList.Count - 1;
-                        while (updateList[index].UpdateOrder > item.UpdateOrder)
+                        index = updateList.Count;
+                        while (index > 0 && updateList[index-1].UpdateOrder > item.UpdateOrder)
                         {
                             index--;
-                            if (index == 0) { break; }
                         }
                     }
                     if (!updateListSet.Contains(item))
@@ -854,6 +884,7 @@ namespace Barotrauma
             lock (mutex)
             {
                 GUIMessageBox.AddActiveToGUIUpdateList();
+                GUIContextMenu.AddActiveToGUIUpdateList();
 
                 if (pauseMenuOpen)
                 {
@@ -903,13 +934,14 @@ namespace Barotrauma
                 GUIComponent prevMouseOn = MouseOn;
                 MouseOn = null;
                 int inventoryIndex = -1;
-            
-                if (Inventory.IsMouseOnInventory())
+
+                Inventory.RefreshMouseOnInventory();
+                if (Inventory.IsMouseOnInventory)
                 {
                     inventoryIndex = updateList.IndexOf(CharacterHUD.HUDFrame);
                 }
 
-                if (!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked())
+                if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || (prevMouseOn == null && !PlayerInput.SecondaryMouseButtonHeld()))
                 {
                     for (var i = updateList.Count - 1; i > inventoryIndex; i--)
                     {
@@ -917,7 +949,7 @@ namespace Barotrauma
                         if (!c.CanBeFocused) { continue; }
                         if (c.MouseRect.Contains(PlayerInput.MousePosition))
                         {
-                            if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || c == prevMouseOn)
+                            if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || c == prevMouseOn || prevMouseOn == null)
                             {
                                 MouseOn = c;
                             }
@@ -933,7 +965,6 @@ namespace Barotrauma
                 MouseCursor = UpdateMouseCursorState(MouseOn);
                 return MouseOn;
             }
-            
         }
         
         private static CursorState UpdateMouseCursorState(GUIComponent c)
@@ -972,8 +1003,7 @@ namespace Barotrauma
                             return editor.GetMouseCursorState();
                         // Portrait area during gameplay
                         case GameScreen _ when !(Character.Controlled?.ShouldLockHud() ?? true):
-                            if (HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) ||
-                                Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarArea).Contains(PlayerInput.MousePosition))
+                            if (HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) || CharacterHealth.IsMouseOnHealthBar())
                             {
                                 return CursorState.Hand;
                             }
@@ -981,12 +1011,6 @@ namespace Barotrauma
                         // Sub editor drag and highlight
                         case SubEditorScreen editor:
                         {
-                            // Portrait area
-                            if (editor.WiringMode && HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition))
-                            {
-                                return CursorState.Hand;
-                            }
-                        
                             foreach (var mapEntity in MapEntity.mapEntityList)
                             {
                                 if (MapEntity.StartMovingPos != Vector2.Zero)
@@ -1032,23 +1056,26 @@ namespace Barotrauma
                     {
                         if (listBox.DraggedElement != null) { return CursorState.Dragging; }
                         if (listBox.CanDragElements) { return CursorState.Move; }
-                    
-                        var hoverParent = c;
-                        while (true)
+
+                        if (listBox.HoverCursor != CursorState.Default)
                         {
-                            if (hoverParent == parent || hoverParent == null) { break; }
-                            if (hoverParent.State == GUIComponent.ComponentState.Hover) { return CursorState.Hand; }
-                            hoverParent = hoverParent.Parent;
+                            var hoverParent = c;
+                            while (true)
+                            {
+                                if (hoverParent == parent || hoverParent == null) { break; }
+                                if (hoverParent.State == GUIComponent.ComponentState.Hover) { return CursorState.Hand; }
+                                hoverParent = hoverParent.Parent;
+                            }
                         }
                     }
-                
-                    if (parent != null)
+
+                    if (parent != null && parent.CanBeFocused)
                     {
                         if (!parent.Rect.Equals(monitorRect)) { return parent.HoverCursor; }
                     }
                 }
-            
-                if (Inventory.IsMouseOnInventory()) { return Inventory.GetInventoryMouseCursor(); }
+
+                if (Inventory.IsMouseOnInventory) { return Inventory.GetInventoryMouseCursor(); }
 
                 var character = Character.Controlled;
                 // ReSharper disable once InvertIf
@@ -1117,15 +1144,26 @@ namespace Barotrauma
         /// Set the cursor to an hourglass.
         /// Will automatically revert after 10 seconds or when <see cref="ClearCursorWait"/> is called.
         /// </summary>
-        public static void SetCursorWaiting()
+        public static void SetCursorWaiting(int waitSeconds = 10, Func<bool> endCondition = null)
         {
             CoroutineManager.StartCoroutine(WaitCursorCoroutine(), "WaitCursorTimeout");
 
-            static IEnumerable<object> WaitCursorCoroutine()
+            IEnumerable<object> WaitCursorCoroutine()
             {
                 MouseCursor = CursorState.Waiting;
-                var timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
-                while (DateTime.Now < timeOut) { yield return CoroutineStatus.Running; }
+                var timeOut = DateTime.Now + new TimeSpan(0, 0, waitSeconds);
+                while (DateTime.Now < timeOut) 
+                { 
+                    if (endCondition != null)
+                    {
+                        try
+                        {
+                            if (endCondition.Invoke()) { break; }
+                        }
+                        catch { break; }
+                    }
+                    yield return CoroutineStatus.Running; 
+                }
                 if (MouseCursor == CursorState.Waiting) { MouseCursor = CursorState.Default; }
                 yield return CoroutineStatus.Success;
             }
@@ -1210,6 +1248,7 @@ namespace Barotrauma
                 Debug.Assert(updateList.Count == updateListSet.Count);
                 updateList.ForEach(c => c.UpdateAuto(deltaTime));
                 UpdateMessages(deltaTime);
+                UpdateSavingIndicator(deltaTime);
             }            
         }
 
@@ -1219,7 +1258,7 @@ namespace Barotrauma
             {
                 foreach (GUIMessage msg in messages)
                 {
-                    if (msg.WorldSpace) continue;
+                    if (msg.WorldSpace) { continue; }
                     msg.Timer -= deltaTime;
 
                     if (msg.Size.X > HUDLayoutSettings.MessageAreaTop.Width)
@@ -1244,7 +1283,7 @@ namespace Barotrauma
             
                 foreach (GUIMessage msg in messages)
                 {
-                    if (!msg.WorldSpace) continue;
+                    if (!msg.WorldSpace) { continue; }
                     msg.Timer -= deltaTime;                
                     msg.Pos += msg.Velocity * deltaTime;                
                 }
@@ -1254,20 +1293,76 @@ namespace Barotrauma
             
         }
 
+        private static void UpdateSavingIndicator(float deltaTime)
+        {
+            if (Style.SavingIndicator == null) { return; }
+            lock (mutex)
+            {
+                if (timeUntilSavingIndicatorDisabled.HasValue)
+                {
+                    timeUntilSavingIndicatorDisabled -= deltaTime;
+                    if (timeUntilSavingIndicatorDisabled <= 0.0f)
+                    {
+                        isSavingIndicatorEnabled = false;
+                        timeUntilSavingIndicatorDisabled = null;
+                    }
+                }
+                if (isSavingIndicatorEnabled)
+                {
+                    if (savingIndicatorColor == Color.Transparent)
+                    {
+                        savingIndicatorState = SavingIndicatorState.FadingIn;
+                        savingIndicatorColorLerpAmount = 0.0f;
+                    }
+                    else if (savingIndicatorColor == Color.White)
+                    {
+                        savingIndicatorState = SavingIndicatorState.None;
+                    }
+                }
+                else
+                {
+                    if (savingIndicatorColor == Color.White)
+                    {
+                        savingIndicatorState = SavingIndicatorState.FadingOut;
+                        savingIndicatorColorLerpAmount = 0.0f;
+                    }
+                    else if (savingIndicatorColor == Color.Transparent)
+                    {
+                        savingIndicatorState = SavingIndicatorState.None;
+                    }
+                }
+                if (savingIndicatorState != SavingIndicatorState.None)
+                {
+                    bool isFadingIn = savingIndicatorState == SavingIndicatorState.FadingIn;
+                    Color lerpStartColor = isFadingIn ? Color.Transparent : Color.White;
+                    Color lerpTargetColor = isFadingIn ? Color.White : Color.Transparent;
+                    savingIndicatorColorLerpAmount += (isFadingIn ? 2.0f : 0.5f) * deltaTime;
+                    savingIndicatorColor = Color.Lerp(lerpStartColor, lerpTargetColor, savingIndicatorColorLerpAmount);
+                }
+                if (IsSavingIndicatorVisible)
+                {
+                    savingIndicatorSpriteIndex = (savingIndicatorSpriteIndex + 15.0f * deltaTime) % (Style.SavingIndicator.FrameCount + 1);
+                }
+            }
+        }
+
         #region Element drawing
 
+        private static List<float> usedIndicatorAngles = new List<float>();
 
         /// <param name="createOffset">Should the indicator move based on the camera position?</param>
-        public static void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPosition, Camera cam, float hideDist, Sprite sprite, Color color, bool createOffset = true, float scaleMultiplier = 1.0f)
+        /// <param name="overrideAlpha">Override the distance-based alpha value with the specified alpha value</param>
+        public static void DrawIndicator(SpriteBatch spriteBatch, in Vector2 worldPosition, Camera cam, in Range<float> visibleRange, Sprite sprite, in Color color,
+            bool createOffset = true, float scaleMultiplier = 1.0f, float? overrideAlpha = null)
         {
             Vector2 diff = worldPosition - cam.WorldViewCenter;
             float dist = diff.Length();
 
-            float symbolScale = Math.Min(64.0f / sprite.size.X, 1.0f) * scaleMultiplier;
+            float symbolScale = Math.Min(64.0f / sprite.size.X, 1.0f) * scaleMultiplier * Scale;
 
-            if (dist > hideDist)
+            if (overrideAlpha.HasValue || (dist > visibleRange.Start && dist < visibleRange.End))
             {
-                float alpha = Math.Min((dist - hideDist) / 100.0f, 1.0f);
+                float alpha = overrideAlpha ?? MathUtils.Min((dist - visibleRange.Start) / 100.0f, 1.0f - ((dist - visibleRange.End + 100f) / 100.0f), 1.0f);
                 Vector2 targetScreenPos = cam.WorldToScreen(worldPosition);
 
                 if (!createOffset)
@@ -1278,19 +1373,48 @@ namespace Barotrauma
 
                 float screenDist = Vector2.Distance(cam.WorldToScreen(cam.WorldViewCenter), targetScreenPos);
                 float angle = MathUtils.VectorToAngle(diff);
+                float originalAngle = angle;
 
-                Vector2 unclampedDiff = new Vector2(
-                    (float)Math.Cos(angle) * screenDist,
-                    (float)-Math.Sin(angle) * screenDist);
+                const float minAngleDiff = 0.05f;
+                bool overlapFound = true;
+                int iterations = 0;
+                while (overlapFound && iterations < 10)
+                {
+                    overlapFound = false;
+                    foreach (float usedIndicatorAngle in usedIndicatorAngles)
+                    {
+                        float shortestAngle = MathUtils.GetShortestAngle(angle, usedIndicatorAngle);
+                        if (MathUtils.NearlyEqual(shortestAngle, 0.0f)) { shortestAngle = 0.01f; }
+                        if (Math.Abs(shortestAngle) < minAngleDiff)
+                        {
+                            angle -= Math.Sign(shortestAngle) * (minAngleDiff - Math.Abs(shortestAngle));
+                            overlapFound = true;
+                            break;
+                        }
+                    }
+                    iterations++;
+                }
+
+                usedIndicatorAngles.Add(angle);
 
                 Vector2 iconDiff = new Vector2(
+                    (float)Math.Cos(angle) * Math.Min(GameMain.GraphicsWidth * 0.4f, screenDist + 10),
+                    (float)-Math.Sin(angle) * Math.Min(GameMain.GraphicsHeight * 0.4f, screenDist + 10));
+
+                angle = MathHelper.Lerp(originalAngle, angle, MathHelper.Clamp(((screenDist + 10f) - iconDiff.Length()) / 10f, 0f, 1f));
+
+                /*Vector2 unclampedDiff = new Vector2(
+                    (float)Math.Cos(angle) * screenDist,
+                    (float)-Math.Sin(angle) * screenDist);*/
+
+                iconDiff = new Vector2(
                     (float)Math.Cos(angle) * Math.Min(GameMain.GraphicsWidth * 0.4f, screenDist),
                     (float)-Math.Sin(angle) * Math.Min(GameMain.GraphicsHeight * 0.4f, screenDist));
 
                 Vector2 iconPos = cam.WorldToScreen(cam.WorldViewCenter) + iconDiff;
                 sprite.Draw(spriteBatch, iconPos, color * alpha, rotate: 0.0f, scale: symbolScale);
 
-                if (unclampedDiff.Length() - 10 > iconDiff.Length())
+                if (/*unclampedDiff.Length()*/ screenDist - 10 > iconDiff.Length())
                 {
                     Vector2 normalizedDiff = Vector2.Normalize(targetScreenPos - iconPos);
                     Vector2 arrowOffset = normalizedDiff * sprite.size.X * symbolScale * 0.7f;
@@ -1299,9 +1423,15 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
+        public static void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPosition, Camera cam, float hideDist, Sprite sprite, Color color,
+            bool createOffset = true, float scaleMultiplier = 1.0f, float? overrideAlpha = null)
         {
-            DrawLine(sb, t, start, end, clr, depth, width);
+            DrawIndicator(spriteBatch, worldPosition, cam, new Range<float>(hideDist, float.PositiveInfinity), sprite, color, createOffset, scaleMultiplier, overrideAlpha);
+        }
+
+        public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, float width = 1)
+        {
+            DrawLine(sb, t, start, end, clr, depth, (int)width);
         }
 
         public static void DrawLine(SpriteBatch sb, Sprite sprite, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
@@ -1368,7 +1498,7 @@ namespace Barotrauma
             font.DrawStringWithColors(sb, text, pos, color, 0.0f, Vector2.Zero, 1f, SpriteEffects.None, depth, richTextData);
         }
 
-        public static void DrawRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, bool isFilled = false, float depth = 0.0f, int thickness = 1)
+        public static void DrawRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, bool isFilled = false, float depth = 0.0f, float thickness = 1)
         {
             if (size.X < 0)
             {
@@ -1383,7 +1513,7 @@ namespace Barotrauma
             DrawRectangle(sb, new Rectangle((int)start.X, (int)start.Y, (int)size.X, (int)size.Y), clr, isFilled, depth, thickness);
         }
 
-        public static void DrawRectangle(SpriteBatch sb, Rectangle rect, Color clr, bool isFilled = false, float depth = 0.0f, int thickness = 1)
+        public static void DrawRectangle(SpriteBatch sb, Rectangle rect, Color clr, bool isFilled = false, float depth = 0.0f, float thickness = 1)
         {
             if (isFilled)
             {
@@ -1391,15 +1521,36 @@ namespace Barotrauma
             }
             else
             {
-                sb.Draw(t, new Rectangle(rect.X + thickness, rect.Y, rect.Width - thickness * 2, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
-                sb.Draw(t, new Rectangle(rect.X + thickness, rect.Y + rect.Height - thickness, rect.Width - thickness * 2, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
-
-                sb.Draw(t, new Rectangle(rect.X, rect.Y, thickness, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
-                sb.Draw(t, new Rectangle(rect.X + rect.Width - thickness, rect.Y, thickness, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
+                Rectangle srcRect = new Rectangle(0, 0, 1, 1);
+                sb.Draw(t, new Vector2(rect.X, rect.Y), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(thickness, rect.Height), SpriteEffects.None, depth);
+                sb.Draw(t, new Vector2(rect.X + thickness, rect.Y), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(rect.Width - thickness, thickness), SpriteEffects.None, depth);
+                sb.Draw(t, new Vector2(rect.X + thickness, rect.Bottom - thickness), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(rect.Width - thickness, thickness), SpriteEffects.None, depth);
+                sb.Draw(t, new Vector2(rect.Right - thickness, rect.Y + thickness), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(thickness, rect.Height - thickness * 2f), SpriteEffects.None, depth);
             }
         }
 
-        public static void DrawRectangle(SpriteBatch sb, Vector2 center, float width, float height, float rotation, Color clr, float depth = 0.0f, int thickness = 1)
+        public static void DrawFilledRectangle(SpriteBatch sb, RectangleF rect, Color clr, float depth = 0.0f)
+        {
+            DrawFilledRectangle(sb, rect.Location, rect.Size, clr, depth);
+        }
+
+        public static void DrawFilledRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, float depth = 0.0f)
+        {
+            if (size.X < 0)
+            {
+                start.X += size.X;
+                size.X = -size.X;
+            }
+            if (size.Y < 0)
+            {
+                start.Y += size.Y;
+                size.Y = -size.Y;
+            }
+
+            sb.Draw(t, start, null, clr, 0f, Vector2.Zero, size, SpriteEffects.None, depth);
+        }
+
+        public static void DrawRectangle(SpriteBatch sb, Vector2 center, float width, float height, float rotation, Color clr, float depth = 0.0f, float thickness = 1)
         {
             Matrix rotate = Matrix.CreateRotationZ(rotation);
 
@@ -1416,7 +1567,7 @@ namespace Barotrauma
             DrawLine(sb, bottomLeft, topLeft, clr, depth, thickness);
         }
 
-        public static void DrawRectangle(SpriteBatch sb, Vector2[] corners, Color clr, float depth = 0.0f, int thickness = 1)
+        public static void DrawRectangle(SpriteBatch sb, Vector2[] corners, Color clr, float depth = 0.0f, float thickness = 1)
         {
             if (corners.Length != 4)
             {
@@ -1489,12 +1640,12 @@ namespace Barotrauma
 
             foreach (GUIMessage msg in messages)
             {
-                if (msg.WorldSpace) continue;
+                if (msg.WorldSpace) { continue; }
 
                 Vector2 drawPos = new Vector2(HUDLayoutSettings.MessageAreaTop.Right, HUDLayoutSettings.MessageAreaTop.Center.Y);
 
-                msg.Font.DrawString(spriteBatch, msg.Text, drawPos + msg.Pos + Vector2.One, Color.Black, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
-                msg.Font.DrawString(spriteBatch, msg.Text, drawPos + msg.Pos, msg.Color, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
+                msg.Font.DrawString(spriteBatch, msg.Text, drawPos + msg.DrawPos + Vector2.One, Color.Black, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
+                msg.Font.DrawString(spriteBatch, msg.Text, drawPos + msg.DrawPos, msg.Color, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
                 break;                
             }
 
@@ -1507,14 +1658,14 @@ namespace Barotrauma
             
             foreach (GUIMessage msg in messages)
             {
-                if (!msg.WorldSpace) continue;
+                if (!msg.WorldSpace) { continue; }
                 
                 if (cam != null)
                 {
                     float alpha = 1.0f;
-                    if (msg.Timer < 1.0f) alpha -= 1.0f - msg.Timer;                    
+                    if (msg.Timer < 1.0f) { alpha -= 1.0f - msg.Timer; }
 
-                    Vector2 drawPos = cam.WorldToScreen(msg.Pos);
+                    Vector2 drawPos = cam.WorldToScreen(msg.DrawPos);
                     msg.Font.DrawString(spriteBatch, msg.Text, drawPos + Vector2.One, Color.Black * alpha, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
                     msg.Font.DrawString(spriteBatch, msg.Text, drawPos, msg.Color * alpha, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
                 }                
@@ -1552,6 +1703,14 @@ namespace Barotrauma
                 }
                 ShapeExtensions.DrawPoint(spriteBatch, pos, color, dotSize);
             }
+        }
+
+        private static void DrawSavingIndicator(SpriteBatch spriteBatch)
+        {
+            if (!IsSavingIndicatorVisible || Style.SavingIndicator == null) { return; }
+            var sheet = Style.SavingIndicator;
+            Vector2 pos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) - new Vector2(HUDLayoutSettings.Padding) - 2 * Scale * sheet.FrameSize.ToVector2();
+            sheet.Draw(spriteBatch, (int)Math.Floor(savingIndicatorSpriteIndex), pos, savingIndicatorColor, origin: Vector2.Zero, rotate: 0.0f, scale: new Vector2(Scale));
         }
         #endregion
 
@@ -1608,7 +1767,8 @@ namespace Barotrauma
 
         public static Texture2D CreateCapsule(int radius, int height)
         {
-            int textureWidth = radius * 2, textureHeight = height + radius * 2;
+            int textureWidth = Math.Max(radius * 2, 1);
+            int textureHeight = Math.Max(height + radius * 2, 1);
             
             Color[] data = new Color[textureWidth * textureHeight];
 
@@ -1866,6 +2026,30 @@ namespace Barotrauma
             }
             return frame;
         }
+
+        public static GUIMessageBox AskForConfirmation(string header, string body, Action onConfirm, Action onDeny = null)
+        {
+            string[] buttons = { TextManager.Get("Ok"), TextManager.Get("Cancel") };
+            GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons, new Vector2(0.2f, 0.175f), minSize: new Point(300, 175));
+
+            // Cancel button
+            msgBox.Buttons[1].OnClicked = delegate
+            {
+                onDeny?.Invoke();
+                msgBox.Close();
+                return true;
+            };
+
+            // Ok button
+            msgBox.Buttons[0].OnClicked = delegate
+            {
+                onConfirm.Invoke();
+                msgBox.Close();
+                return true;
+            };
+            return msgBox;
+        }
+
         #endregion
 
         #region Element positioning
@@ -1993,7 +2177,7 @@ namespace Barotrauma
                     for (int j = i + 1; j < elements.Count; j++)
                     {
                         Rectangle rect2 = elements[j].Rect;
-                        if (!rect1.Intersects(rect2)) continue;
+                        if (!rect1.Intersects(rect2)) { continue; }
 
                         intersections = true;
                         Point centerDiff = rect1.Center - rect2.Center;
@@ -2022,10 +2206,10 @@ namespace Barotrauma
                         elements[j].RectTransform.ScreenSpaceOffset += moveAmount2.ToPoint();
                     }
 
-                    if (disallowedAreas == null) continue;
+                    if (disallowedAreas == null) { continue; }
                     foreach (Rectangle rect2 in disallowedAreas)
                     {
-                        if (!rect1.Intersects(rect2)) continue;
+                        if (!rect1.Intersects(rect2)) { continue; } 
                         intersections = true;
 
                         Point centerDiff = rect1.Center - rect2.Center;
@@ -2043,7 +2227,7 @@ namespace Barotrauma
                 iterations++;
             }
 
-            Vector2 ClampMoveAmount(Rectangle Rect, Rectangle clampTo, Vector2 moveAmount)
+            static Vector2 ClampMoveAmount(Rectangle Rect, Rectangle clampTo, Vector2 moveAmount)
             {
                 if (Rect.Y < clampTo.Y)
                 {
@@ -2079,7 +2263,7 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
-                Inventory.draggingItem = null;
+                Inventory.DraggingItems.Clear();
                 Inventory.DraggingInventory = null;
 
                 PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas, Anchor.Center), style: null);
@@ -2116,6 +2300,7 @@ namespace Barotrauma
                     }
                 };
 
+                bool IsOutpostLevel() => GameMain.GameSession != null && Level.IsLoadedOutpost;
                 if (Screen.Selected == GameMain.GameScreen && GameMain.GameSession != null)
                 {
                     if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
@@ -2148,45 +2333,22 @@ namespace Barotrauma
                             };
                             return true;
                         };
-                        var saveAndQuitButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuSaveQuit"))
+                        if (IsOutpostLevel())
                         {
-                            UserData = "save"
-                        };
-                        saveAndQuitButton.OnClicked += (btn, userdata) =>
-                        {
-                            //Only allow saving mid-round in outpost levels. Quitting in the middle of a mission reset progress to the start of the round.
-                            if (GameMain.GameSession == null)
+                            var saveAndQuitButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuSaveQuit"))
                             {
-                                pauseMenuOpen = false;
-
-                            }
-                            else if (GameMain.GameSession?.Campaign == null || Level.IsLoadedOutpost)
-                            {
-                                pauseMenuOpen = false;
-                                GameMain.QuitToMainMenu(save: true);
-                            }
-                            else
-                            {
-                                var msgBox = new GUIMessageBox("", TextManager.Get("PauseMenuSaveAndQuitVerification", fallBackTag: "pausemenuquitverification"), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
-                                {
-                                    UserData = "verificationprompt"
-                                };
-                                msgBox.Buttons[0].OnClicked = (_, userdata) =>
+                                UserData = "save",
+                                OnClicked = (btn, userData) =>
                                 {
                                     pauseMenuOpen = false;
-                                    GameMain.QuitToMainMenu(save: false);
+                                    if (IsOutpostLevel())
+                                    {
+                                        GameMain.QuitToMainMenu(save: true);
+                                    }
                                     return true;
-                                };
-                                msgBox.Buttons[0].OnClicked += msgBox.Close;
-                                msgBox.Buttons[1].OnClicked = (_, userdata) =>
-                                {
-                                    pauseMenuOpen = false;
-                                    msgBox.Close();
-                                    return true;
-                                };
-                            }
-                            return true;
-                        };
+                                }
+                            };
+                        }
                     }
                     else if (GameMain.GameSession.GameMode is TestGameMode)
                     {
@@ -2208,7 +2370,7 @@ namespace Barotrauma
                             OnClicked = (btn, userdata) =>
                             {
                                 if (!GameMain.Client.HasPermission(ClientPermissions.ManageRound)) { return false; }
-                                if (GameMain.GameSession.GameMode is CampaignMode || (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition))
+                                if (GameMain.GameSession.GameMode is CampaignMode && !IsOutpostLevel() || (!Submarine.MainSub.AtStartExit && !Submarine.MainSub.AtEndExit))
                                 {
                                     var msgBox = new GUIMessageBox("", 
                                         TextManager.Get(GameMain.GameSession.GameMode is CampaignMode ? "PauseMenuReturnToServerLobbyVerification" : "EndRoundSubNotAtLevelEnd"), 
@@ -2285,13 +2447,43 @@ namespace Barotrauma
         {
             if (messages.Any(msg => msg.Text == message)) { return; }
             messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), font ?? LargeFont));
-            if (playSound) SoundPlayer.PlayUISound(GUISoundType.UIMessage);
+            if (playSound) { SoundPlayer.PlayUISound(GUISoundType.UIMessage); }
         }
 
-        public static void AddMessage(string message, Color color, Vector2 worldPos, Vector2 velocity, float lifeTime = 3.0f, bool playSound = true, GUISoundType soundType = GUISoundType.UIMessage)
+        public static void AddMessage(string message, Color color, Vector2 pos, Vector2 velocity, float lifeTime = 3.0f, bool playSound = true, GUISoundType soundType = GUISoundType.UIMessage, int subId = -1)
         {
-            messages.Add(new GUIMessage(message, color, worldPos, velocity, lifeTime, Alignment.Center, LargeFont));
-            if (playSound) SoundPlayer.PlayUISound(soundType);
+            Submarine sub = Submarine.Loaded.FirstOrDefault(s => s.ID == subId);
+
+            var newMessage = new GUIMessage(message, color, pos, velocity, lifeTime, Alignment.Center, Font, sub: sub);
+            if (playSound) { SoundPlayer.PlayUISound(soundType); }
+            bool overlapFound = true;
+            int tries = 0;
+            while (overlapFound)
+            {
+                overlapFound = false;
+                foreach (var otherMessage in messages)
+                {
+                    float xDiff = otherMessage.Pos.X - newMessage.Pos.X;
+                    if (Math.Abs(xDiff) > (newMessage.Size.X + otherMessage.Size.X) / 2) { continue; }
+                    float yDiff = otherMessage.Pos.Y - newMessage.Pos.Y;
+                    if (Math.Abs(yDiff) > (newMessage.Size.Y + otherMessage.Size.Y) / 2) { continue; }
+                    Vector2 moveDir = -(new Vector2(xDiff, yDiff) + Rand.Vector(1.0f));
+                    if (moveDir.LengthSquared() > 0.0001f)
+                    {
+                        moveDir = Vector2.Normalize(moveDir);
+                    }
+                    else
+                    {
+                        moveDir = Rand.Vector(1.0f);
+                    }
+                    moveDir.Y = -Math.Abs(moveDir.Y);
+                    newMessage.Pos -= Vector2.UnitY * 10;
+                }
+                tries++;
+                if (tries > 20) { break; }
+            }
+
+            messages.Add(newMessage);
         }
 
         public static void ClearMessages()
@@ -2303,6 +2495,21 @@ namespace Barotrauma
         {
             float aspectRatio = HorizontalAspectRatio;
             return aspectRatio > 1.3f && aspectRatio < 1.4f;
+        }
+
+        public static void SetSavingIndicatorState(bool enabled)
+        {
+            if (enabled)
+            {
+                timeUntilSavingIndicatorDisabled = null;
+            }
+            isSavingIndicatorEnabled = enabled;
+        }
+
+        public static void DisableSavingIndicatorDelayed(float delay = 3.0f)
+        {
+            if (!isSavingIndicatorEnabled) { return; }
+            timeUntilSavingIndicatorDisabled = delay;
         }
         #endregion
     }

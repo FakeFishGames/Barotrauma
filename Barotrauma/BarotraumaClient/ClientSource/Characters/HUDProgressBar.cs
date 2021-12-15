@@ -72,7 +72,7 @@ namespace Barotrauma
             FadeTimer = 1.0f;
             if (!string.IsNullOrEmpty(textTag))
             {
-                textTag = textTag;
+                this.textTag = textTag;
                 Text = TextManager.Get(textTag);
             }
         }

@@ -78,36 +78,36 @@ namespace Barotrauma.Tutorials
             var patientHull2 = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "airlock").CurrentHull;
             medBay = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "medbay").CurrentHull;
 
-            var assistantInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("assistant"));
+            var assistantInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("assistant"));
             patient1 = Character.Create(assistantInfo, patientHull1.WorldPosition, "1");
-            patient1.TeamID = Character.TeamType.Team1;
+            patient1.TeamID = CharacterTeamType.Team1;
             patient1.GiveJobItems(null);
             patient1.CanSpeak = false;
-            patient1.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 45.0f) }, stun: 0, playSound: false);
+            patient1.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 15.0f) }, stun: 0, playSound: false);
             patient1.AIController.Enabled = false;
 
-            assistantInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("assistant"));
+            assistantInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("assistant"));
             patient2 = Character.Create(assistantInfo, patientHull2.WorldPosition, "2");
-            patient2.TeamID = Character.TeamType.Team1;
+            patient2.TeamID = CharacterTeamType.Team1;
             patient2.GiveJobItems(null);
             patient2.CanSpeak = false;
             patient2.AIController.Enabled = false;
 
-            var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("engineer"));
-            var subPatient1 = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job, Submarine.MainSub).WorldPosition, "3");
-            subPatient1.TeamID = Character.TeamType.Team1;
+            var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("engineer"));
+            var subPatient1 = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "3");
+            subPatient1.TeamID = CharacterTeamType.Team1;
             subPatient1.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 40.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient1);
 
-            var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("securityofficer"));
-            var subPatient2 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job, Submarine.MainSub).WorldPosition, "3");
-            subPatient2.TeamID = Character.TeamType.Team1;
+            var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("securityofficer"));
+            var subPatient2 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "3");
+            subPatient2.TeamID = CharacterTeamType.Team1;
             subPatient2.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.InternalDamage, 40.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient2);
 
-            var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("engineer"));
-            var subPatient3 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, engineerInfo.Job, Submarine.MainSub).WorldPosition, "3");
-            subPatient3.TeamID = Character.TeamType.Team1;
+            var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("engineer"));
+            var subPatient3 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, engineerInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "3");
+            subPatient3.TeamID = CharacterTeamType.Team1;
             subPatient3.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 20.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient3);
 
@@ -200,18 +200,18 @@ namespace Barotrauma.Tutorials
 
             do
             {
-                for (int i = 0; i < doctor_suppliesCabinet.Inventory.Items.Length; i++)
+                for (int i = 0; i < doctor_suppliesCabinet.Inventory.Capacity; i++)
                 {
-                    if (doctor_suppliesCabinet.Inventory.Items[i] != null)
+                    if (doctor_suppliesCabinet.Inventory.GetItemAt(i) != null)
                     {
                         HighlightInventorySlot(doctor_suppliesCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
                     }
                 }
                 if (doctor.SelectedConstruction == doctor_suppliesCabinet.Item)
                 {
-                    for (int i = 0; i < doctor.Inventory.slots.Length; i++)
+                    for (int i = 0; i < doctor.Inventory.Capacity; i++)
                     {
-                        if (doctor.Inventory.Items[i] == null) HighlightInventorySlot(doctor.Inventory, i, highlightColor, .5f, .5f, 0f);
+                        if (doctor.Inventory.GetItemAt(i) == null) { HighlightInventorySlot(doctor.Inventory, i, highlightColor, .5f, .5f, 0f); }
                     }
                 }
                 yield return null;
@@ -283,7 +283,7 @@ namespace Barotrauma.Tutorials
             doctor.RemoveActiveObjectiveEntity(patient1);
             TriggerTutorialSegment(3, GameMain.Config.KeyBindText(InputType.Command)); // Get the patient to medbay
 
-            while (patient1.CurrentOrder == null || patient1.CurrentOrder.Identifier != "follow")
+            while (patient1.GetCurrentOrderWithTopPriority()?.Order?.Identifier != "follow")
             {
                 // TODO: Rework order highlighting for new command UI
                 // GameMain.GameSession.CrewManager.HighlightOrderButton(patient1, "follow", highlightColor, new Vector2(5, 5));
@@ -309,16 +309,16 @@ namespace Barotrauma.Tutorials
             {
                 for (int i = 0; i < 3; i++)
                 {
-                    if (doctor_medBayCabinet.Inventory.Items[i] != null)
+                    if (doctor_medBayCabinet.Inventory.GetItemAt(i) != null)
                     {
                         HighlightInventorySlot(doctor_medBayCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
                     }
                 }
                 if (doctor.SelectedConstruction == doctor_medBayCabinet.Item)
                 {
-                    for (int i = 0; i < doctor.Inventory.slots.Length; i++)
+                    for (int i = 0; i < doctor.Inventory.Capacity; i++)
                     {
-                        if (doctor.Inventory.Items[i] == null) HighlightInventorySlot(doctor.Inventory, i, highlightColor, .5f, .5f, 0f);
+                        if (doctor.Inventory.GetItemAt(i) == null) { HighlightInventorySlot(doctor.Inventory, i, highlightColor, .5f, .5f, 0f); }
                     }
                 }
                 yield return null;

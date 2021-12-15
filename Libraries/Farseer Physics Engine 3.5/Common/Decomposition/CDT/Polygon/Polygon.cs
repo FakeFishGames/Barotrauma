@@ -187,10 +187,7 @@ namespace FarseerPhysics.Common.Decomposition.CDT.Polygon
 
         public void ClearSteinerPoints()
         {
-            if (_steinerPoints != null)
-            {
-                _steinerPoints.Clear();
-            }
+            _steinerPoints?.Clear();
         }
 
         /// <summary>

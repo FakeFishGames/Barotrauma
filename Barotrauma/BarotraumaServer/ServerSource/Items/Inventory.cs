@@ -10,25 +10,30 @@ namespace Barotrauma
     {
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
-            List<Item> prevItems = new List<Item>(Items);
+            List<Item> prevItems = new List<Item>(AllItems.Distinct());
 
-            byte itemCount = msg.ReadByte();
-            ushort[] newItemIDs = new ushort[itemCount];            
-            for (int i = 0; i < itemCount; i++)
+            byte slotCount = msg.ReadByte();
+            List<ushort>[] newItemIDs = new List<ushort>[slotCount];            
+            for (int i = 0; i < slotCount; i++)
             {
-                newItemIDs[i] = msg.ReadUInt16();
+                newItemIDs[i] = new List<ushort>();
+                int itemCount = msg.ReadRangedInteger(0, MaxStackSize);
+                for (int j = 0; j < itemCount; j++)
+                {
+                    newItemIDs[i].Add(msg.ReadUInt16());
+                }
             }
-            
-            if (c == null || c.Character == null) return;
+
+            if (c == null || c.Character == null) { return; }
 
             bool accessible = c.Character.CanAccessInventory(this);
-            if (this is CharacterInventory && accessible)
+            if (this is CharacterInventory characterInventory && accessible)
             {
-                if (Owner == null || !(Owner is Character))
+                if (Owner == null || !(Owner is Character ownerCharacter))
                 {
                     accessible = false;
                 }
-                else if (!((CharacterInventory)this).AccessibleWhenAlive && !((Character)Owner).IsDead)
+                else if (!characterInventory.AccessibleWhenAlive && !ownerCharacter.IsDead)
                 {
                     accessible = false;
                 }
@@ -42,41 +47,43 @@ namespace Barotrauma
                 CreateNetworkEvent();
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (!(Entity.FindEntityByID(newItemIDs[i]) is Item item)) { continue; }
-                    item.PositionUpdateInterval = 0.0f;
-                    if (item.ParentInventory != null && item.ParentInventory != this)
+                    foreach (ushort id in newItemIDs[i])
                     {
-                        item.ParentInventory.CreateNetworkEvent();
+                        if (!(Entity.FindEntityByID(id) is Item item)) { continue; }
+                        item.PositionUpdateInterval = 0.0f;
+                        if (item.ParentInventory != null && item.ParentInventory != this)
+                        {
+                            item.ParentInventory.CreateNetworkEvent();
+                        }
                     }
                 }
                 return;
             }
-            
-            List<Inventory> prevItemInventories = new List<Inventory>(Items.Select(i => i?.ParentInventory));
+
+            List<Inventory> prevItemInventories = new List<Inventory>() { this };
 
             for (int i = 0; i < capacity; i++)
             {
-                Item newItem = newItemIDs[i] == 0 ? null : Entity.FindEntityByID(newItemIDs[i]) as Item;
-                prevItemInventories.Add(newItem?.ParentInventory);
-
-                if (newItemIDs[i] == 0 || (newItem != Items[i]))
+                foreach (Item item in slots[i].Items.ToList())
                 {
-                    if (Items[i] != null)
+                    if (!newItemIDs[i].Contains(item.ID))
                     {
-                        Item droppedItem = Items[i];
+                        Item droppedItem = item;
                         Entity prevOwner = Owner;
+                        Inventory previousInventory = droppedItem.ParentInventory;
                         droppedItem.Drop(null);
+                        droppedItem.PreviousParentInventory = previousInventory;
 
-                        var previousInventory = prevOwner switch
+                        var previousCharacterInventory = prevOwner switch
                         {
-                            Item itemInventory => (itemInventory.FindParentInventory(inventory => inventory is CharacterInventory) as CharacterInventory),
+                            Item itemInventory => itemInventory.FindParentInventory(inventory => inventory is CharacterInventory) as CharacterInventory,
                             Character character => character.Inventory,
                             _ => null
                         };
 
-                        if (previousInventory != null && previousInventory != c.Character?.Inventory)
+                        if (previousCharacterInventory != null && previousCharacterInventory != c.Character?.Inventory)
                         {
-                            GameMain.Server?.KarmaManager.OnItemTakenFromPlayer(previousInventory, c, droppedItem);
+                            GameMain.Server?.KarmaManager.OnItemTakenFromPlayer(previousCharacterInventory, c, droppedItem);
                         }
                         
                         if (droppedItem.body != null && prevOwner != null)
@@ -84,26 +91,32 @@ namespace Barotrauma
                             droppedItem.body.SetTransform(prevOwner.SimPosition, 0.0f);
                         }
                     }
-                    System.Diagnostics.Debug.Assert(Items[i] == null);
                 }
+
+                foreach (ushort id in newItemIDs[i])
+                {
+                    Item newItem = id == 0 ? null : Entity.FindEntityByID(id) as Item;
+                    prevItemInventories.Add(newItem?.ParentInventory);
+                }                
             }
 
             for (int i = 0; i < capacity; i++)
             {
-                if (newItemIDs[i] > 0)
+                foreach (ushort id in newItemIDs[i])
                 {
-                    if (!(Entity.FindEntityByID(newItemIDs[i]) is Item item) || item == Items[i]) { continue; }
+                    if (!(Entity.FindEntityByID(id) is Item item) || slots[i].Contains(item)) { continue; }
 
                     if (GameMain.Server != null)
                     {
                         var holdable = item.GetComponent<Holdable>();
                         if (holdable != null && !holdable.CanBeDeattached()) { continue; }
 
-                        if (!prevItems.Contains(item) && !item.CanClientAccess(c))
+                        if (!prevItems.Contains(item) && !item.CanClientAccess(c) && 
+                            (c.Character == null || item.PreviousParentInventory == null || !c.Character.CanAccessInventory(item.PreviousParentInventory)))
                         {
-#if DEBUG || UNSTABLE
+    #if DEBUG || UNSTABLE
                             DebugConsole.NewMessage($"Client {c.Name} failed to pick up item \"{item}\" (parent inventory: {(item.ParentInventory?.Owner.ToString() ?? "null")}). No access.", Color.Yellow);
-#endif
+    #endif
                             if (item.body != null && !c.PendingPositionUpdates.Contains(item))
                             {
                                 c.PendingPositionUpdates.Enqueue(item);
@@ -115,9 +128,9 @@ namespace Barotrauma
                     TryPutItem(item, i, true, true, c.Character, false);
                     for (int j = 0; j < capacity; j++)
                     {
-                        if (Items[j] == item && newItemIDs[j] != item.ID)
+                        if (slots[j].Contains(item) && !newItemIDs[j].Contains(item.ID))
                         {
-                            Items[j] = null;
+                            slots[j].RemoveItem(item);
                         }
                     }
                 }
@@ -129,7 +142,7 @@ namespace Barotrauma
                 if (prevInventory != this) { prevInventory?.CreateNetworkEvent(); }
             }
 
-            foreach (Item item in Items.Distinct())
+            foreach (Item item in AllItems.Distinct())
             {
                 if (item == null) { continue; }
                 if (!prevItems.Contains(item))
@@ -148,7 +161,7 @@ namespace Barotrauma
             foreach (Item item in prevItems.Distinct())
             {
                 if (item == null) { continue; }
-                if (!Items.Contains(item))
+                if (!AllItems.Contains(item))
                 {
                     if (Owner == c.Character)
                     {

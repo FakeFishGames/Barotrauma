@@ -8,6 +8,8 @@ namespace Barotrauma
 {
     partial class MultiPlayerCampaign : CampaignMode
     {
+        public const int MinimumInitialMoney = 500;
+
         private UInt16 lastUpdateID;
         public UInt16 LastUpdateID
         {
@@ -57,13 +59,14 @@ namespace Barotrauma
             InitCampaignData();
         }
 
-        public static MultiPlayerCampaign StartNew(string mapSeed)
+        public static MultiPlayerCampaign StartNew(string mapSeed, SubmarineInfo selectedSub, CampaignSettings settings)
         {
             MultiPlayerCampaign campaign = new MultiPlayerCampaign();
             //only the server generates the map, the clients load it from a save file
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
-                campaign.map = new Map(campaign, mapSeed);
+                campaign.map = new Map(campaign, mapSeed, settings);
+                campaign.Settings = settings;
             }
             campaign.InitProjSpecific();
             return campaign;
@@ -96,6 +99,9 @@ namespace Barotrauma
         private void Load(XElement element)
         {
             Money = element.GetAttributeInt("money", 0);
+            PurchasedLostShuttles = element.GetAttributeBool("purchasedlostshuttles", false);
+            PurchasedHullRepairs = element.GetAttributeBool("purchasedhullrepairs", false);
+            PurchasedItemRepairs = element.GetAttributeBool("purchaseditemrepairs", false);
             CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
             if (CheatsEnabled)
             {
@@ -123,11 +129,14 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "campaignsettings":
+                        Settings = new CampaignSettings(subElement);
+                        break;
                     case "map":
                         if (map == null)
                         {
                             //map not created yet, loading this campaign for the first time
-                            map = Map.Load(this, subElement);
+                            map = Map.Load(this, subElement, Settings);
                         }
                         else
                         {
@@ -140,12 +149,14 @@ namespace Barotrauma
                     case "metadata":
                         CampaignMetadata = new CampaignMetadata(this, subElement);
                         break;
+                    case "upgrademanager":
                     case "pendingupgrades":
                         UpgradeManager = new UpgradeManager(this, subElement, isSingleplayer: false);
                         break;
                     case "bots" when GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer:
                         CrewManager.HasBots = subElement.GetAttributeBool("hasbots", false);
                         CrewManager.AddCharacterElements(subElement);
+                        CrewManager.ActiveOrdersElement = subElement.GetChildElement("activeorders");
                         break;
                     case "cargo":
                         CargoManager?.LoadPurchasedItems(subElement);
@@ -160,6 +171,12 @@ namespace Barotrauma
                             string subName = availableSub.GetAttributeString("name", "");
                             SubmarineInfo matchingSub = sourceList.Find(s => s.Name == subName);
                             if (matchingSub != null) { availableSubs.Add(matchingSub); }
+                        }
+                        break;
+                    case "savedexperiencepoints":
+                        foreach (XElement savedExp in subElement.Elements())
+                        {
+                            savedExperiencePoints.Add(new SavedExperiencePoints(savedExp));
                         }
                         break;
 #endif

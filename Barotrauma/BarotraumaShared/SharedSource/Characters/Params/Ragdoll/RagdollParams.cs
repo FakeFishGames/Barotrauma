@@ -34,7 +34,10 @@ namespace Barotrauma
         [Serialize("", true, description: "Default path for the limb sprite textures. Used only if the limb specific path for the limb is not defined"), Editable]
         public string Texture { get; set; }
 
-        [Serialize(0.0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'. Used mainly for animations and widgets."), Editable(-360, 360)]
+        [Serialize("1.0,1.0,1.0,1.0", true), Editable()]
+        public Color Color { get; set; }
+
+        [Serialize(0.0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'."), Editable(-360, 360)]
         public float SpritesheetOrientation { get; set; }
 
         public bool IsSpritesheetOrientationHorizontal
@@ -105,12 +108,17 @@ namespace Barotrauma
 
         public static string GetFolder(XDocument doc, string filePath)
         {
-            var folder = doc.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
+            var root = doc.Root;
+            if (root?.IsOverride() ?? false)
+            {
+                root = root.FirstElement();
+            }
+            var folder = root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
             if (string.IsNullOrEmpty(folder) || folder.Equals("default", StringComparison.OrdinalIgnoreCase))
             {
                 folder = Path.Combine(Path.GetDirectoryName(filePath), "Ragdolls") + Path.DirectorySeparatorChar;
             }
-            return folder;
+            return folder.CleanUpPathCrossPlatform(correctFilenameCase: true);
         }
 
         public static T GetDefaultRagdollParams<T>(string speciesName) where T : RagdollParams, new() => GetRagdollParams<T>(speciesName, GetDefaultFileName(speciesName));
@@ -136,7 +144,7 @@ namespace Barotrauma
                 string folder = GetFolder(speciesName);
                 if (Directory.Exists(folder))
                 {
-                    var files = Directory.GetFiles(folder);
+                    List<string> files = Directory.GetFiles(folder).ToList();
                     if (files.None())
                     {
                         DebugConsole.ThrowError($"[RagdollParams] Could not find any ragdoll files from the folder: {folder}. Using the default ragdoll.");
@@ -364,6 +372,21 @@ namespace Barotrauma
             }
         }
 #endif
+
+        private bool variantScaleApplied;
+        public void ApplyVariantScale(XDocument variantFile)
+        {
+            if (variantScaleApplied) { return; }
+            if (variantFile == null) { return; }
+            var scaleMultiplier = variantFile.Root.GetChildElement("ragdoll")?.GetAttributeFloat("scalemultiplier", 1f);
+            if (scaleMultiplier.HasValue)
+            {
+                JointScale *= scaleMultiplier.Value;
+                LimbScale *= scaleMultiplier.Value;
+            }
+            variantScaleApplied = true;
+        }
+
         #endregion
 
         #region Memento
@@ -536,7 +559,7 @@ namespace Barotrauma
                 }
             }
 
-            public override string GenerateName() => $"Limb {ID}";
+            public override string GenerateName() => Type != LimbType.None ? $"{Type} ({ID})" : $"Limb {ID}";
 
             public SpriteParams GetSprite() => deformSpriteParams ?? normalSpriteParams;
 
@@ -549,12 +572,14 @@ namespace Barotrauma
             /// <summary>
             /// The orientation of the sprite as drawn on the sprite sheet (in radians).
             /// </summary>
-            public float GetSpriteOrientation() => MathHelper.ToRadians(float.IsNaN(SpriteOrientation) ? Ragdoll.SpritesheetOrientation : SpriteOrientation);
+            public float GetSpriteOrientation() => MathHelper.ToRadians(GetSpriteOrientationInDegrees());
+
+            public float GetSpriteOrientationInDegrees() => float.IsNaN(SpriteOrientation) ? Ragdoll.SpritesheetOrientation : SpriteOrientation;
 
             [Serialize("", true), Editable]
             public string Notes { get; set; }
 
-            [Serialize(1f, true), Editable]
+            [Serialize(1f, true), Editable(DecimalCount = 2)]
             public float Scale { get; set; }
 
             [Serialize(true, true, description: "Does the limb flip when the character flips?"), Editable()]
@@ -569,8 +594,11 @@ namespace Barotrauma
             [Serialize(false, true, description: "Disable drawing for this limb."), Editable()]
             public bool Hide { get; set; }
 
-            [Serialize(float.NaN, true, description: "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings. Used mainly for animations and widgets."), Editable(-360, 360, ValueStep = 90, DecimalCount = 0)]
+            [Serialize(float.NaN, true, description: "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings."), Editable(-360, 360, ValueStep = 90, DecimalCount = 0)]
             public float SpriteOrientation { get; set; }
+
+            [Serialize(LimbType.None, true, description: "If set, the limb sprite will use the same sprite depth as the specified limb. Generally only useful for limbs that get added on the ragdoll on the fly (e.g. extra limbs added via gene splicing).")]
+            public LimbType InheritLimbDepth { get; set; }
 
             [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
             public float SteerForce { get; set; }
@@ -584,7 +612,7 @@ namespace Barotrauma
             [Serialize(0f, true, description: "Width of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Width { get; set; }
 
-            [Serialize(10f, true, description: "The more the density the heavier the limb is."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
+            [Serialize(10f, true, description: "The more the density the heavier the limb is."), Editable(MinValueFloat = 0, MaxValueFloat = 100, DecimalCount = 2)]
             public float Density { get; set; }
 
             [Serialize(false, true), Editable]
@@ -653,6 +681,9 @@ namespace Barotrauma
 
             [Serialize(50f, true), Editable]
             public float BlinkForce { get; set; }
+
+            [Serialize(false, true), Editable]
+            public bool OnlyBlinkInWater { get; set; }
 
             [Serialize(TransitionMode.Linear, true), Editable]
             public TransitionMode BlinkTransitionIn { get; private set; }
@@ -868,6 +899,9 @@ namespace Barotrauma
 
             [Serialize("", true), Editable()]
             public string Texture { get; set; }
+
+            [Serialize(false, true), Editable()]
+            public bool IgnoreTint { get; set; }
 
             [Serialize("1.0,1.0,1.0,1.0", true), Editable()]
             public Color Color { get; set; }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -7,17 +8,15 @@ namespace Barotrauma.Items.Components
     {
         class DelayedSignal
         {
-            public readonly string Signal;
-            public readonly float SignalStrength;
+            public readonly Signal Signal;
             //in number of frames
             public int SendTimer;
             //in number of frames
             public int SendDuration;
 
-            public DelayedSignal(string signal, float signalStrength, int sendTimer)
+            public DelayedSignal(Signal signal, int sendTimer)
             {
                 Signal = signal;
-                SignalStrength = signalStrength;
                 SendTimer = sendTimer;
             }
         }
@@ -25,7 +24,7 @@ namespace Barotrauma.Items.Components
         private int signalQueueSize;
         private int delayTicks;
 
-        private Queue<DelayedSignal> signalQueue;
+        private readonly Queue<DelayedSignal> signalQueue;
 
         private DelayedSignal prevQueuedSignal;
         
@@ -39,7 +38,7 @@ namespace Barotrauma.Items.Components
                 if (value == delay) { return; }
                 delay = value;
                 delayTicks = (int)(delay / Timing.Step);
-                signalQueueSize = delayTicks * 2;
+                signalQueueSize = Math.Max(delayTicks, 1) * 2;
             }
         }
 
@@ -75,34 +74,41 @@ namespace Barotrauma.Items.Components
             {
                 var signalOut = signalQueue.Peek();
                 signalOut.SendDuration -= 1;
-                item.SendSignal(0, signalOut.Signal, "signal_out", null, signalStrength: signalOut.SignalStrength);
-                if (signalOut.SendDuration <= 0) { signalQueue.Dequeue(); } else { break; }
+                item.SendSignal(new Signal(signalOut.Signal.value, strength: signalOut.Signal.strength), "signal_out");
+                if (signalOut.SendDuration <= 0) 
+                { 
+                    signalQueue.Dequeue(); 
+                } 
+                else 
+                { 
+                    break; 
+                }
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "signal_in":
                     if (signalQueue.Count >= signalQueueSize) { return; }
                     if (ResetWhenSignalReceived) { prevQueuedSignal = null; signalQueue.Clear(); }
-                    if (ResetWhenDifferentSignalReceived && signalQueue.Count > 0 && signalQueue.Peek().Signal != signal)
+                    if (ResetWhenDifferentSignalReceived && signalQueue.Count > 0 && signalQueue.Peek().Signal.value != signal.value)
                     {
                         prevQueuedSignal = null;
                         signalQueue.Clear();
                     }
 
                     if (prevQueuedSignal != null && 
-                        prevQueuedSignal.Signal == signal && 
-                        MathUtils.NearlyEqual(prevQueuedSignal.SignalStrength, signalStrength) &&
+                        prevQueuedSignal.Signal.value == signal.value && 
+                        MathUtils.NearlyEqual(prevQueuedSignal.Signal.strength, signal.strength) &&
                         ((prevQueuedSignal.SendTimer + prevQueuedSignal.SendDuration == delayTicks) || (prevQueuedSignal.SendTimer <= 0 && prevQueuedSignal.SendDuration > 0)))
                     {
                         prevQueuedSignal.SendDuration += 1;
                         return;
                     }
 
-                    prevQueuedSignal = new DelayedSignal(signal, signalStrength, delayTicks)
+                    prevQueuedSignal = new DelayedSignal(signal, delayTicks)
                     {
                         SendDuration = 1
                     };

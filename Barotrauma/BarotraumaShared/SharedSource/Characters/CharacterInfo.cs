@@ -1,19 +1,19 @@
 using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
-using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
     public enum Gender { None, Male, Female };
     public enum Race { None, White, Black, Brown, Asian };
     
-    // TODO: Generating the HeadInfo could be simplified.
     partial class CharacterInfo
     {
         public class HeadInfo
@@ -24,15 +24,7 @@ namespace Barotrauma
                 get { return _headSpriteId; }
                 set
                 {
-                    _headSpriteId = value;
-                    if (_headSpriteId < (int)headSpriteRange.X)
-                    {
-                        _headSpriteId = (int)headSpriteRange.Y;
-                    }
-                    if (_headSpriteId > (int)headSpriteRange.Y)
-                    {
-                        _headSpriteId = (int)headSpriteRange.X;
-                    }
+                    _headSpriteId = Math.Max(Math.Clamp(value, (int)headSpriteRange.X, (int)headSpriteRange.Y), 1);
                     GetSpriteSheetIndex();
                 }
             }
@@ -40,6 +32,10 @@ namespace Barotrauma
             public Vector2 headSpriteRange;
             public Gender gender;
             public Race race;
+
+            public Color HairColor;
+            public Color FacialHairColor;
+            public Color SkinColor;
 
             public int HairIndex { get; set; } = -1;
             public int BeardIndex { get; set; } = -1;
@@ -73,11 +69,11 @@ namespace Barotrauma
                 FaceAttachmentIndex = -1;
             }
 
-            private void GetSpriteSheetIndex()
+            public void GetSpriteSheetIndex()
             {
                 if (heads != null && heads.Any())
                 {
-                    var matchingHead = heads.Keys.FirstOrDefault(h => h.Gender == gender && h.Race == race && h.ID == _headSpriteId);
+                    var matchingHead = heads.Keys.FirstOrDefault(h => h.ID == HeadSpriteId && IsMatchingGender(h.Gender, gender) && IsMatchingRace(h.Race, race));
                     if (matchingHead != null)
                     {
                         if (heads.TryGetValue(matchingHead, out Vector2 index))
@@ -98,14 +94,13 @@ namespace Barotrauma
                 if (head != value && value != null)
                 {
                     head = value;
-                    if (head.race == Race.None)
+                    if (!IsValidRace(head.race))
                     {
                         head.race = GetRandomRace(Rand.RandSync.Unsynced);
                     }
                     CalculateHeadSpriteRange();
                     Head.HeadSpriteId = value.HeadSpriteId;
-                    HeadSprite = null;
-                    AttachmentSprites = null;
+                    RefreshHeadSprites();
                 }
             }
         }
@@ -149,11 +144,16 @@ namespace Barotrauma
 
         public XElement InventoryData;
         public XElement HealthData;
+        public XElement OrderData;
 
         private static ushort idCounter;
         private const string disguiseName = "???";
 
+        public bool HasNickname => Name != OriginalName;
+        public string OriginalName { get; private set; }
+
         public string Name;
+
         public string DisplayName
         {
             get
@@ -171,11 +171,8 @@ namespace Barotrauma
 
                 if (Character.Inventory != null)
                 {
-                    int cardSlotIndex = Character.Inventory.FindLimbSlot(InvSlotType.Card);
-                    if (cardSlotIndex < 0) return disguiseName;
-
-                    var idCard = Character.Inventory.Items[cardSlotIndex];
-                    if (idCard == null) return disguiseName;
+                    var idCard = Character.Inventory.GetItemInLimbSlot(InvSlotType.Card);
+                    if (idCard == null) { return disguiseName; }
 
                     //Disguise as the ID card name if it's equipped                    
                     string[] readTags = idCard.Tags.Split(',');
@@ -215,30 +212,56 @@ namespace Barotrauma
         
         public int Salary;
 
-        private Sprite headSprite;
+        public int ExperiencePoints { get; private set; }
+
+        public HashSet<string> UnlockedTalents { get; private set; } = new HashSet<string>();
+
+        /// <summary>
+        /// Endocrine boosters can unlock talents outside the user's talent tree. This method is used to cull them from the selection
+        /// </summary>
+        public IEnumerable<string> GetUnlockedTalentsInTree()
+        {
+            if (!TalentTree.JobTalentTrees.TryGetValue(Job.Prefab.Identifier, out TalentTree talentTree)) { return Enumerable.Empty<string>(); }
+
+            return UnlockedTalents.Where(t => talentTree.TalentIsInTree(t));
+        }
+
+        /// <summary>
+        /// Endocrine boosters can unlock talents outside the user's talent tree. This method is used to specifically get them
+        /// </summary>
+        public IEnumerable<string> GetEndocrineTalents()
+        {
+            if (!TalentTree.JobTalentTrees.TryGetValue(Job.Prefab.Identifier, out TalentTree talentTree)) { return Enumerable.Empty<string>(); }
+
+            return UnlockedTalents.Where(t => !talentTree.TalentIsInTree(t));
+        }
+
+        public int AdditionalTalentPoints { get; set; }
+
+        private Sprite _headSprite;
         public Sprite HeadSprite
         {
             get
             {
-                if (headSprite == null)
+                if (_headSprite == null)
                 {
                     LoadHeadSprite();
                 }
 #if CLIENT
-                if (headSprite != null)
+                if (_headSprite != null)
                 {
-                    CalculateHeadPosition(headSprite);
+                    CalculateHeadPosition(_headSprite);
                 }
 #endif
-                return headSprite;
+                return _headSprite;
             }
             private set
             {
-                if (headSprite != null)
+                if (_headSprite != null)
                 {
-                    headSprite.Remove();
+                    _headSprite.Remove();
                 }
-                headSprite = value;
+                _headSprite = value;
             }
         }
 
@@ -284,29 +307,13 @@ namespace Barotrauma
                     Character.CharacterHealth.ApplyAffliction(Character.AnimController.GetLimb(LimbType.Head), AfflictionPrefab.List.FirstOrDefault(a => a.Identifier.Equals("disguised", StringComparison.OrdinalIgnoreCase)).Instantiate(100f));
                 }
 
+                idCard ??= Character.Inventory?.GetItemInLimbSlot(InvSlotType.Card)?.GetComponent<IdCard>();
                 if (idCard != null)
                 {
 #if CLIENT
                     GetDisguisedSprites(idCard);
 #endif
                     return;
-                }
-
-                if (Character.Inventory != null)
-                {
-                    int cardSlotIndex = Character.Inventory.FindLimbSlot(InvSlotType.Card);
-                    if (cardSlotIndex >= 0)
-                    {
-                        idCard = Character.Inventory.Items[cardSlotIndex].GetComponent<IdCard>();
-
-                        if (idCard != null)
-                        {
-#if CLIENT
-                            GetDisguisedSprites(idCard);
-#endif
-                            return;
-                        }
-                    }
                 }
             }
 
@@ -352,13 +359,13 @@ namespace Barotrauma
 
         public CauseOfDeath CauseOfDeath;
 
-        public Character.TeamType TeamID;
+        public CharacterTeamType TeamID;
 
         private readonly NPCPersonalityTrait personalityTrait;
 
-        public Order CurrentOrder { get; set; }
-        public string CurrentOrderOption { get; set; }
-        public bool IsDismissed => CurrentOrder == null || CurrentOrder.Identifier.Equals("dismissed", StringComparison.OrdinalIgnoreCase);
+        public const int MaxCurrentOrders = 3;
+        public static int HighestManualOrderPriority => MaxCurrentOrders;
+        public List<OrderInfo> CurrentOrders { get; } = new List<OrderInfo>();
 
         //unique ID given to character infos in MP
         //used by clients to identify which infos are the same to prevent duplicate characters in round summary
@@ -384,29 +391,31 @@ namespace Barotrauma
             set
             {
                 Head.HeadSpriteId = value;
-                HeadSprite = null;
-                AttachmentSprites = null;
                 ResetHeadAttachments();
+                RefreshHeadSprites();
             }
         }
 
         public readonly bool HasGenders;
+        public readonly bool HasRaces;
 
         public Gender Gender
         {
             get { return Head.gender; }
             set
             {
-                if (Head.gender == value) return;
+                Gender previousValue = Head.gender;
                 Head.gender = value;
-                if (Head.gender == Gender.None)
+                if (!IsValidGender(Head.gender))
                 {
-                    Head.gender = Gender.Male;
+                    Head.gender = GetDefaultGender();
                 }
-                CalculateHeadSpriteRange();
-                ResetHeadAttachments();
-                HeadSprite = null;
-                AttachmentSprites = null;
+                if (Head.gender != previousValue)
+                {
+                    CalculateHeadSpriteRange();
+                    ResetHeadAttachments();
+                    RefreshHeadSprites();
+                }
             }
         }
 
@@ -415,28 +424,82 @@ namespace Barotrauma
             get { return Head.race; }
             set
             {
-                if (Head.race == value) { return; }
+                Race previousValue = Head.race;
                 Head.race = value;
-                if (Head.race == Race.None)
+                if (!IsValidRace(Head.race))
                 {
-                    Head.race = Race.White;
+                    Head.race = GetDefaultRace();
                 }
-                CalculateHeadSpriteRange();
-                ResetHeadAttachments();
-                HeadSprite = null;
-                AttachmentSprites = null;
+                if (Head.race != previousValue)
+                {
+                    CalculateHeadSpriteRange();
+                    ResetHeadAttachments();
+                    RefreshHeadSprites();
+                }
             }
         }
 
-        public int HairIndex { get => Head.HairIndex; set => Head.HairIndex = value; }
-        public int BeardIndex { get => Head.BeardIndex; set => Head.BeardIndex = value; }
-        public int MoustacheIndex { get => Head.MoustacheIndex; set => Head.MoustacheIndex = value; }
-        public int FaceAttachmentIndex { get => Head.FaceAttachmentIndex; set => Head.FaceAttachmentIndex = value; }
+        private bool IsValidRace(Race race) => HasRaces ? race != Race.None : race == Race.None;
 
-        public XElement HairElement { get => Head.HairElement; set => Head.HairElement = value; }
-        public XElement BeardElement { get => Head.BeardElement; set => Head.BeardElement = value; }
-        public XElement MoustacheElement { get => Head.MoustacheElement; set => Head.MoustacheElement = value; }
-        public XElement FaceAttachment { get => Head.FaceAttachment; set => Head.FaceAttachment = value; }
+        private bool IsValidGender(Gender gender) => HasGenders ? gender != Gender.None : gender == Gender.None;
+
+        private Gender GetDefaultGender() => HasGenders ? Gender.Male : Gender.None;
+
+        private Race GetDefaultRace() => HasRaces ? Race.White : Race.None;
+
+        public int HairIndex
+        {
+            get => Head.HairIndex;
+            set => Head.HairIndex = value;
+        }
+
+        public int BeardIndex
+        {
+            get => Head.BeardIndex;
+            set => Head.BeardIndex = value;
+        }
+
+        public int MoustacheIndex
+        {
+            get => Head.MoustacheIndex;
+            set => Head.MoustacheIndex = value;
+        }
+
+        public int FaceAttachmentIndex
+        {
+            get => Head.FaceAttachmentIndex;
+            set => Head.FaceAttachmentIndex = value;
+        }
+
+        public readonly ImmutableArray<(Color Color, float Commonness)> HairColors;
+        public readonly ImmutableArray<(Color Color, float Commonness)> FacialHairColors;
+        public readonly ImmutableArray<(Color Color, float Commonness)> SkinColors;
+        
+        public Color HairColor
+        {
+            get => Head.HairColor;
+            set => Head.HairColor = value;
+        }
+
+        public Color FacialHairColor
+        {
+            get => Head.FacialHairColor;
+            set => Head.FacialHairColor = value;
+        }
+
+        public Color SkinColor
+        {
+            get => Head.SkinColor;
+            set => Head.SkinColor = value;
+        }
+
+        public XElement HairElement => Head.HairElement;
+
+        public XElement BeardElement => Head.BeardElement;
+
+        public XElement MoustacheElement => Head.MoustacheElement;
+
+        public XElement FaceAttachment => Head.FaceAttachment;
 
         private RagdollParams ragdoll;
         public RagdollParams Ragdoll
@@ -445,6 +508,7 @@ namespace Barotrauma
             {
                 if (ragdoll == null)
                 {
+                    // TODO: support for variants
                     string speciesName = SpeciesName;
                     bool isHumanoid = CharacterConfigElement.GetAttributeBool("humanoid", speciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase));
                     ragdoll = isHumanoid 
@@ -458,8 +522,11 @@ namespace Barotrauma
 
         public bool IsAttachmentsLoaded => HairIndex > -1 && BeardIndex > -1 && MoustacheIndex > -1 && FaceAttachmentIndex > -1;
 
+        // talent-relevant values
+        public int MissionsCompletedSinceDeath = 0;
+
         // Used for creating the data
-        public CharacterInfo(string speciesName, string name = "", JobPrefab jobPrefab = null, string ragdollFileName = null, int variant = 0, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public CharacterInfo(string speciesName, string name = "", string originalName = "", JobPrefab jobPrefab = null, string ragdollFileName = null, int variant = 0, Rand.RandSync randSync = Rand.RandSync.Unsynced, string npcIdentifier = "")
         {
             if (speciesName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
@@ -472,42 +539,31 @@ namespace Barotrauma
             XDocument doc = CharacterPrefab.FindBySpeciesName(_speciesName)?.XDocument;
             if (doc == null) { return; }
             CharacterConfigElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
-            head = new HeadInfo();
+            // TODO: support for variants
+            Head = new HeadInfo();
             HasGenders = CharacterConfigElement.GetAttributeBool("genders", false);
-            if (HasGenders)
-            {
-                Head.gender = GetRandomGender(randSync);
-            }
-            Head.race = GetRandomRace(randSync);
-            CalculateHeadSpriteRange();
-            Head.HeadSpriteId = GetRandomHeadID(randSync);
+            HasRaces = CharacterConfigElement.GetAttributeBool("races", false);
+            SetGenderAndRace(randSync);
             Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Unsynced) : new Job(jobPrefab, variant);
+            HairColors = CharacterConfigElement.GetAttributeTupleArray("haircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
+            FacialHairColors = CharacterConfigElement.GetAttributeTupleArray("facialhaircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
+            SkinColors = CharacterConfigElement.GetAttributeTupleArray("skincolors", new (Color, float)[] { (new Color(255, 215, 200, 255), 100f) }).ToImmutableArray();
+            SetColors();
 
             if (!string.IsNullOrEmpty(name))
             {
                 Name = name;
             }
-            else
+            else if (!string.IsNullOrEmpty(npcIdentifier) && TextManager.Get("npctitle." + npcIdentifier, true) is string npcTitle)
             {
-                name = "";
-                if (CharacterConfigElement.Element("name") != null)
-                {
-                    string firstNamePath = CharacterConfigElement.Element("name").GetAttributeString("firstname", "");
-                    if (firstNamePath != "")
-                    {
-                        firstNamePath = firstNamePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
-                        Name = ToolBox.GetRandomLine(firstNamePath);
-                    }
-
-                    string lastNamePath = CharacterConfigElement.Element("name").GetAttributeString("lastname", "");
-                    if (lastNamePath != "")
-                    {
-                        lastNamePath = lastNamePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
-                        if (Name != "") Name += " ";
-                        Name += ToolBox.GetRandomLine(lastNamePath);
-                    }
-                }
+                Name = npcTitle;
             }
+            else
+            { 
+                name = "";
+                Name = GetRandomName(randSync);
+            }
+            OriginalName = !string.IsNullOrEmpty(originalName) ? originalName : Name;
             personalityTrait = NPCPersonalityTrait.GetRandom(name + HeadSpriteId);         
             Salary = CalculateSalary();
             if (ragdollFileName != null)
@@ -517,15 +573,77 @@ namespace Barotrauma
             LoadHeadAttachments();
         }
 
+        public string GetRandomName(Rand.RandSync randSync)
+        {
+            string name = "";
+            if (CharacterConfigElement.Element("name") != null)
+            {
+                string firstNamePath = CharacterConfigElement.Element("name").GetAttributeString("firstname", "");
+                if (firstNamePath != "")
+                {
+                    firstNamePath = firstNamePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
+                    name = ToolBox.GetRandomLine(firstNamePath, randSync);
+                }
+
+                string lastNamePath = CharacterConfigElement.Element("name").GetAttributeString("lastname", "");
+                if (lastNamePath != "")
+                {
+                    lastNamePath = lastNamePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
+                    if (name != "") { name += " "; }
+                    name += ToolBox.GetRandomLine(lastNamePath, randSync);
+                }
+            }
+
+            return name;
+        }
+
+        public static Color SelectRandomColor(in ImmutableArray<(Color Color, float Commonness)> array)
+            => ToolBox.SelectWeightedRandom(array, array.Select(p => p.Commonness).ToArray(), Rand.RandSync.Unsynced)
+                .Color;
+
+        private void SetGenderAndRace(Rand.RandSync randSync)
+        {
+            Head.gender = GetRandomGender(randSync);
+            Head.race = GetRandomRace(randSync);
+            CalculateHeadSpriteRange();
+            HeadSpriteId = GetRandomHeadID(randSync);
+        }
+        
+        private void SetColors()
+        {
+            HairColor = SelectRandomColor(HairColors);
+            FacialHairColor = SelectRandomColor(FacialHairColors);
+            SkinColor = SelectRandomColor(SkinColors);
+        }
+
+        private void CheckColors()
+        {
+            if (HairColor == Color.Black)
+            {
+                HairColor = SelectRandomColor(HairColors);
+            }
+            if (FacialHairColor == Color.Black)
+            {
+                FacialHairColor = SelectRandomColor(FacialHairColors);
+            }
+            if (SkinColor == Color.Black)
+            {
+                SkinColor = SelectRandomColor(SkinColors);
+            }
+        }
+
         // Used for loading the data
         public CharacterInfo(XElement infoElement)
         {
             ID = idCounter;
             idCounter++;
             Name = infoElement.GetAttributeString("name", "");
-            string genderStr = infoElement.GetAttributeString("gender", "male").ToLowerInvariant();
+            OriginalName = infoElement.GetAttributeString("originalname", null);
             Salary = infoElement.GetAttributeInt("salary", 1000);
-            Enum.TryParse(infoElement.GetAttributeString("race", "White"), true, out Race race);
+            ExperiencePoints = infoElement.GetAttributeInt("experiencepoints", 0);
+            UnlockedTalents = new HashSet<string>(infoElement.GetAttributeStringArray("unlockedtalents", new string[0], convertToLowerInvariant: true));
+            AdditionalTalentPoints = infoElement.GetAttributeInt("additionaltalentpoints", 0);
+            Enum.TryParse(infoElement.GetAttributeString("race", "None"), true, out Race race);
             Enum.TryParse(infoElement.GetAttributeString("gender", "None"), true, out Gender gender);
             _speciesName = infoElement.GetAttributeString("speciesname", null);
             XDocument doc = null;
@@ -540,16 +658,22 @@ namespace Barotrauma
                 doc = XMLExtensions.TryLoadXml(file);
             }
             if (doc == null) { return; }
+            // TODO: support for variants
             CharacterConfigElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             HasGenders = CharacterConfigElement.GetAttributeBool("genders", false);
-            if (HasGenders && gender == Gender.None)
+            HasRaces = CharacterConfigElement.GetAttributeBool("hasraces", false);
+            if (!IsValidGender(gender))
             {
                 gender = GetRandomGender(Rand.RandSync.Unsynced);
             }
-            else if (!HasGenders)
+            if (!IsValidRace(race))
             {
-                gender = Gender.None;
+                race = GetRandomRace(Rand.RandSync.Unsynced);
             }
+            HairColors = CharacterConfigElement.GetAttributeTupleArray("haircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
+            FacialHairColors = CharacterConfigElement.GetAttributeTupleArray("facialhaircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
+            SkinColors = CharacterConfigElement.GetAttributeTupleArray("skincolors", new (Color, float)[] { (new Color(255, 215, 200, 255), 100f) }).ToImmutableArray();
+            
             RecreateHead(
                 infoElement.GetAttributeInt("headspriteid", 1),
                 race,
@@ -558,6 +682,37 @@ namespace Barotrauma
                 infoElement.GetAttributeInt("beardindex", -1),
                 infoElement.GetAttributeInt("moustacheindex", -1),
                 infoElement.GetAttributeInt("faceattachmentindex", -1));
+
+            //backwards compatibility
+            if (infoElement.Attribute("skincolor") == null && infoElement.Attribute("race") != null)
+            {
+                string raceStr = infoElement.GetAttributeString("race", string.Empty);
+                Race obsoleteRace = Race.None;
+                Enum.TryParse(raceStr, ignoreCase: true, out obsoleteRace);
+                switch (obsoleteRace)
+                {
+                    case Race.White:
+                    case Race.None:
+                        SkinColor = new Color(255, 215, 200, 255);
+                        break;
+                    case Race.Brown:
+                        SkinColor = new Color(158, 95, 72, 255);
+                        break;
+                    case Race.Black:
+                        SkinColor = new Color(153, 75, 42, 255);
+                        break;
+                    case Race.Asian:
+                        SkinColor = new Color(191, 116, 61, 255);
+                        break;
+                }
+            }
+            else
+            {
+                SkinColor = infoElement.GetAttributeColor("skincolor", Color.Black);
+            }
+            HairColor = infoElement.GetAttributeColor("haircolor", Color.Black);
+            FacialHairColor = infoElement.GetAttributeColor("facialhaircolor", Color.Black);
+            CheckColors();
 
             if (string.IsNullOrEmpty(Name))
             {
@@ -580,26 +735,79 @@ namespace Barotrauma
                 }
             }
 
+            if (string.IsNullOrEmpty(OriginalName))
+            {
+                OriginalName = Name;
+            }
+
             StartItemsGiven = infoElement.GetAttributeBool("startitemsgiven", false);
             string personalityName = infoElement.GetAttributeString("personality", "");
             ragdollFileName = infoElement.GetAttributeString("ragdoll", string.Empty);
             if (!string.IsNullOrEmpty(personalityName))
             {
                 personalityTrait = NPCPersonalityTrait.List.Find(p => p.Name == personalityName);
-            }      
+            }
+
+            MissionsCompletedSinceDeath = infoElement.GetAttributeInt("missionscompletedsincedeath", 0);
+
             foreach (XElement subElement in infoElement.Elements())
             {
-                if (subElement.Name.ToString().Equals("job", StringComparison.OrdinalIgnoreCase))
+                bool jobCreated = false;
+                if (subElement.Name.ToString().Equals("job", StringComparison.OrdinalIgnoreCase) && !jobCreated)
                 {
                     Job = new Job(subElement);
-                    break;
+                    jobCreated = true;
+                    // there used to be a break here, but it had to be removed to make room for statvalues
+                    // using the jobCreated boolean to make sure that only the first job found is created
+                }
+                else if (subElement.Name.ToString().Equals("savedstatvalues", StringComparison.OrdinalIgnoreCase))
+                {
+                    foreach (XElement savedStat in subElement.Elements())
+                    {
+                        string statTypeString = savedStat.GetAttributeString("stattype", "").ToLowerInvariant();
+                        if (!Enum.TryParse(statTypeString, true, out StatTypes statType))
+                        {
+                            DebugConsole.ThrowError("Invalid stat type type \"" + statTypeString + "\" when loading character data in CharacterInfo!");
+                            continue;
+                        }
+
+                        float value = savedStat.GetAttributeFloat("statvalue", 0f);
+                        if (value == 0f) { continue; }
+
+                        string statIdentifier = savedStat.GetAttributeString("statidentifier", "").ToLowerInvariant();
+                        if (string.IsNullOrEmpty(statIdentifier))
+                        {
+                            DebugConsole.ThrowError("Stat identifier not specified for Stat Value when loading character data in CharacterInfo!");
+                            return;
+                        }
+
+                        bool removeOnDeath = savedStat.GetAttributeBool("removeondeath", true);
+                        ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath);
+                    }
                 }
             }
             LoadHeadAttachments();
         }
 
-        public Gender GetRandomGender(Rand.RandSync randSync) => (Rand.Range(0.0f, 1.0f, randSync) < CharacterConfigElement.GetAttributeFloat("femaleratio", 0.5f)) ? Gender.Female : Gender.Male;
-        public Race GetRandomRace(Rand.RandSync randSync) => new Race[] { Race.White, Race.Black, Race.Asian }.GetRandom(randSync);
+        public Gender GetRandomGender(Rand.RandSync randSync)
+        {
+            if (HasGenders)
+            {
+                return (Rand.Range(0.0f, 1.0f, randSync) < CharacterConfigElement.GetAttributeFloat("femaleratio", 0.5f)) ? Gender.Female : Gender.Male;
+            }
+            return Gender.None;
+        }
+
+        public Race GetRandomRace(Rand.RandSync randSync)
+        {
+            if (HasRaces)
+            {
+                return new Race[] { Race.White, Race.Black, Race.Asian }.GetRandom(randSync);
+            }
+            return Race.None;
+        }
+            
+            
         public int GetRandomHeadID(Rand.RandSync randSync) => Head.headSpriteRange != Vector2.Zero ? Rand.Range((int)Head.headSpriteRange.X, (int)Head.headSpriteRange.Y + 1, randSync) : 0;
 
         private List<XElement> hairs;
@@ -626,7 +834,17 @@ namespace Barotrauma
 
         public int GetIdentifier()
         {
-            int id = ToolBox.StringToInt(Name);
+            return GetIdentifier(Name);
+        }
+
+        public int GetIdentifierUsingOriginalName()
+        {
+            return GetIdentifier(OriginalName);
+        }
+
+        private int GetIdentifier(string name)
+        {
+            int id = ToolBox.StringToInt(name);
             id ^= HeadSpriteId;
             id ^= (int)Race << 6;
             id ^= HairIndex << 12;
@@ -656,9 +874,12 @@ namespace Barotrauma
         {
             if (elements == null) { return elements; }
             return elements.Where(w =>
-                Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == gender &&
-                Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == race);
+                IsMatchingGender(Enum.Parse<Gender>(w.GetAttributeString("gender", "None"), ignoreCase: true), gender) &&
+                IsMatchingRace(Enum.Parse<Race>(w.GetAttributeString("race", "None"), ignoreCase: true), race));
         }
+
+        public static bool IsMatchingGender(Gender gender, Gender myGender) => gender == Gender.None || gender == myGender;
+        public static bool IsMatchingRace(Race race, Race myRace) => race == Race.None || race == myRace;
 
         private void LoadHeadPresets()
         {
@@ -688,9 +909,16 @@ namespace Barotrauma
             // If there are any head presets defined, use them.
             if (heads.Any())
             {
-                var ids = heads.Keys.Where(h => h.Race == Race && h.Gender == Gender).Select(w => w.ID);
+                var ids = heads.Keys.Where(h => IsMatchingRace(Race, h.Race) && IsMatchingGender(Gender, h.Gender)).Select(w => w.ID);
                 ids = ids.OrderBy(id => id);
-                Head.headSpriteRange = new Vector2(ids.First(), ids.Last());
+                if (ids.Any())
+                {
+                    Head.headSpriteRange = new Vector2(ids.First(), ids.Last());
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"[CharacterInfo] Couldn't find a head definition that matches {Race} and {Gender}!");
+                }
             }
             // Else we calculate the range from the wearables.
             if (Head.headSpriteRange == Vector2.Zero)
@@ -723,26 +951,72 @@ namespace Barotrauma
             }
         }
 
+        public void RecreateHead(HeadInfo headInfo)
+        {
+            RecreateHead(
+                headInfo.HeadSpriteId,
+                headInfo.race,
+                headInfo.gender,
+                headInfo.HairIndex,
+                headInfo.BeardIndex,
+                headInfo.MoustacheIndex,
+                headInfo.FaceAttachmentIndex);
+
+            SkinColor = headInfo.SkinColor;
+            HairColor = headInfo.HairColor;
+            FacialHairColor = headInfo.FacialHairColor;
+            CheckColors();
+        }
+
+        /// <summary>
+        /// Recreates the head info and checks that everything is valid.
+        /// </summary>
         public void RecreateHead(int headID, Race race, Gender gender, int hairIndex, int beardIndex, int moustacheIndex, int faceAttachmentIndex)
         {
-            if (HasGenders && gender == Gender.None)
+            if (!IsValidGender(gender))
             {
                 gender = GetRandomGender(Rand.RandSync.Unsynced);
             }
-            else if (!HasGenders)
+            if (!IsValidRace(race))
             {
-                gender = Gender.None;
+                race = GetRandomRace(Rand.RandSync.Unsynced);
             }
             if (heads == null)
             {
                 LoadHeadPresets();
             }
-            head = new HeadInfo(headID, gender, race, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
+            Color skin = Color.Black;
+            Color hair = Color.Black;
+            Color facialHair = Color.Black;
+            if (head != null)
+            {
+                skin = head.SkinColor;
+                hair = head.HairColor;
+                facialHair = head.FacialHairColor;
+            }
+            head = new HeadInfo(headID, gender, race, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex)
+            {
+                SkinColor = skin,
+                HairColor = hair,
+                FacialHairColor = facialHair
+            };
             CalculateHeadSpriteRange();
             ReloadHeadAttachments();
+            RefreshHead();
         }
 
-        public void LoadHeadSprite()
+        /// <summary>
+        /// Reloads the head sprite and the attachment sprites.
+        /// </summary>
+        public void RefreshHead()
+        {
+            ReloadHeadAttachments();
+            RefreshHeadSprites();
+        }
+
+        partial void LoadHeadSpriteProjectSpecific(XElement limbElement);
+        
+        private void LoadHeadSprite()
         {
             foreach (XElement limbElement in Ragdoll.MainElement.Elements())
             {
@@ -752,12 +1026,15 @@ namespace Barotrauma
                 if (spriteElement == null) { continue; }
 
                 string spritePath = spriteElement.Attribute("texture").Value;
+                if (string.IsNullOrEmpty(spritePath)) { continue; }
 
                 spritePath = spritePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
                 spritePath = spritePath.Replace("[RACE]", Head.race.ToString().ToLowerInvariant());
                 spritePath = spritePath.Replace("[HEADID]", HeadSpriteId.ToString());
 
                 string fileName = Path.GetFileNameWithoutExtension(spritePath);
+
+                if (string.IsNullOrEmpty(fileName)) { continue; }
 
                 //go through the files in the directory to find a matching sprite
                 foreach (string file in Directory.GetFiles(Path.GetDirectoryName(spritePath)))
@@ -783,13 +1060,12 @@ namespace Barotrauma
                     break;
                 }
 
+                LoadHeadSpriteProjectSpecific(limbElement);
+
                 break;
             }
         }
 
-        /// <summary>
-        /// Loads only the elements according to the indices, not the sprites.
-        /// </summary>
         public void LoadHeadAttachments()
         {
             if (Wearables != null)
@@ -851,7 +1127,7 @@ namespace Barotrauma
             }
         }
 
-        private static List<XElement> AddEmpty(IEnumerable<XElement> elements, WearableType type, float commonness = 1)
+        public static List<XElement> AddEmpty(IEnumerable<XElement> elements, WearableType type, float commonness = 1)
         {
             // Let's add an empty element so that there's a chance that we don't get any actual element -> allows bald and beardless guys, for example.
             var emptyElement = new XElement("EmptyWearable", type.ToString(), new XAttribute("commonness", commonness));
@@ -860,9 +1136,9 @@ namespace Barotrauma
             return list;
         }
 
-        private XElement GetRandomElement(IEnumerable<XElement> elements)
+        public XElement GetRandomElement(IEnumerable<XElement> elements)
         {
-            var filtered = elements.Where(e => IsWearableAllowed(e));
+            var filtered = elements.Where(IsWearableAllowed);
             if (filtered.Count() == 0) { return null; }
             var element = ToolBox.SelectWeightedRandom(filtered.ToList(), GetWeights(filtered).ToList(), Rand.RandSync.Unsynced);
             return element == null || element.Name == "Empty" ? null : element;
@@ -887,7 +1163,7 @@ namespace Barotrauma
             return true;
         }
 
-        private static bool IsValidIndex(int index, List<XElement> list) => index >= 0 && index < list.Count;
+        public static bool IsValidIndex(int index, List<XElement> list) => index >= 0 && index < list.Count;
 
         private static IEnumerable<float> GetWeights(IEnumerable<XElement> elements) => elements.Select(h => h.GetAttributeFloat("commonness", 1f));
 
@@ -906,7 +1182,7 @@ namespace Barotrauma
             return (int)(salary * Job.Prefab.PriceMultiplier);
         }
 
-        public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 worldPos)
+        public void IncreaseSkillLevel(string skillIdentifier, float increase, bool gainedFromApprenticeship = false)
         {
             if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) || Character == null) { return; }         
 
@@ -915,20 +1191,29 @@ namespace Barotrauma
                 increase *= SkillSettings.Current.AssistantSkillIncreaseMultiplier;
             }
 
+            increase *= 1f + Character.GetStatValue(StatTypes.SkillGainSpeed);
+
             float prevLevel = Job.GetSkillLevel(skillIdentifier);
-            Job.IncreaseSkillLevel(skillIdentifier, increase);
+            Job.IncreaseSkillLevel(skillIdentifier, increase, Character.HasAbilityFlag(AbilityFlags.GainSkillPastMaximum));
 
             float newLevel = Job.GetSkillLevel(skillIdentifier);
 
-            OnSkillChanged(skillIdentifier, prevLevel, newLevel, worldPos);
-
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !MathUtils.NearlyEqual(newLevel, prevLevel))
-            {
-                GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateSkills });                
+            if ((int)newLevel > (int)prevLevel)
+            {                
+                // assume we are getting at least 1 point in skill, since this logic only runs in such cases
+                float increaseSinceLastSkillPoint = MathHelper.Max(increase, 1f);
+                var abilitySkillGain = new AbilitySkillGain(increaseSinceLastSkillPoint, skillIdentifier, Character, gainedFromApprenticeship);
+                Character.CheckTalents(AbilityEffectType.OnGainSkillPoint, abilitySkillGain);
+                foreach (Character character in Character.GetFriendlyCrew(Character))
+                {
+                    character.CheckTalents(AbilityEffectType.OnAllyGainSkillPoint, abilitySkillGain);
+                }
             }
+
+            OnSkillChanged(skillIdentifier, prevLevel, newLevel);
         }
 
-        public void SetSkillLevel(string skillIdentifier, float level, Vector2 worldPos)
+        public void SetSkillLevel(string skillIdentifier, float level)
         {
             if (Job == null) { return; }
 
@@ -936,17 +1221,127 @@ namespace Barotrauma
             if (skill == null)
             {
                 Job.Skills.Add(new Skill(skillIdentifier, level));
-                OnSkillChanged(skillIdentifier, 0.0f, level, worldPos);
+                OnSkillChanged(skillIdentifier, 0.0f, level);
             }
             else
             {
                 float prevLevel = skill.Level;
                 skill.Level = level;
-                OnSkillChanged(skillIdentifier, prevLevel, skill.Level, worldPos);
+                OnSkillChanged(skillIdentifier, prevLevel, skill.Level);
             }
         }
 
-        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos);
+        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel);
+
+        public void GiveExperience(int amount, bool isMissionExperience = false)
+        {
+            int prevAmount = ExperiencePoints;
+
+            var experienceGainMultiplier = new AbilityValue(1f);
+            if (isMissionExperience)
+            {
+                Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplier);
+            }
+            experienceGainMultiplier.Value += Character?.GetStatValue(StatTypes.ExperienceGainMultiplier) ?? 0;
+
+            amount = (int)(amount * experienceGainMultiplier.Value);
+            if (amount < 0) { return; }
+
+            ExperiencePoints += amount;
+            OnExperienceChanged(prevAmount, ExperiencePoints);
+        }
+
+        public void SetExperience(int newExperience)
+        {
+            if (newExperience < 0) { return; }
+
+            int prevAmount = ExperiencePoints;
+            ExperiencePoints = newExperience;
+            OnExperienceChanged(prevAmount, ExperiencePoints);
+        }
+
+        const int BaseExperienceRequired = -50;
+        const int AddedExperienceRequiredPerLevel = 500;
+
+        public int GetTotalTalentPoints()
+        {
+            return GetCurrentLevel() + AdditionalTalentPoints - 1;
+        }
+
+        public int GetAvailableTalentPoints()
+        {
+            // hashset always has at least 1 
+            return Math.Max(GetTotalTalentPoints() - GetUnlockedTalentsInTree().Count(), 0);
+        }
+
+        public float GetProgressTowardsNextLevel()
+        {
+            float progress = (ExperiencePoints - GetExperienceRequiredForCurrentLevel()) / (GetExperienceRequiredToLevelUp() - GetExperienceRequiredForCurrentLevel());
+            return progress;
+        }
+
+        public float GetExperienceRequiredForCurrentLevel()
+        {
+            GetCurrentLevel(out int experienceRequired);
+            return experienceRequired;
+        }
+
+        public float GetExperienceRequiredToLevelUp()
+        {
+            int level = GetCurrentLevel(out int experienceRequired);
+            return experienceRequired + ExperienceRequiredPerLevel(level);
+        }
+
+        public int GetCurrentLevel()
+        {
+            return GetCurrentLevel(out _);
+        }
+
+        private int GetCurrentLevel(out int experienceRequired)
+        {
+            int level = 1;
+            experienceRequired = 0;
+            while (experienceRequired + ExperienceRequiredPerLevel(level) <= ExperiencePoints)
+            {
+                experienceRequired += ExperienceRequiredPerLevel(level);
+                level++;
+            }
+            return level;
+        }
+
+        private int ExperienceRequiredPerLevel(int level)
+        {
+            return BaseExperienceRequired + AddedExperienceRequiredPerLevel * level;
+        }
+
+        partial void OnExperienceChanged(int prevAmount, int newAmount);
+
+        partial void OnPermanentStatChanged(StatTypes statType);
+
+        public void Rename(string newName)
+        {
+            if (string.IsNullOrEmpty(newName)) { return; }
+            // Replace the name tag of any existing id cards or duffel bags
+            foreach (var item in Item.ItemList)
+            {
+                if (item.Prefab.Identifier != "idcard" && !item.Tags.Contains("despawncontainer")) { continue; }
+                foreach (var tag in item.Tags.Split(','))
+                {
+                    var splitTag = tag.Split(":");
+                    if (splitTag.Length < 2) { continue; }
+                    if (splitTag[0] != "name") { continue; }
+                    if (splitTag[1] != Name) { continue; }
+                    item.ReplaceTag(tag, $"name:{newName}");
+                    break;
+                }
+            }
+            Name = newName;
+        }
+
+        public void ResetName()
+        {
+            Name = OriginalName;
+        }
 
         public XElement Save(XElement parentElement)
         {
@@ -954,20 +1349,28 @@ namespace Barotrauma
 
             charElement.Add(
                 new XAttribute("name", Name),
+                new XAttribute("originalname", OriginalName),
                 new XAttribute("speciesname", SpeciesName),
-                new XAttribute("gender", Head.gender == Gender.Male ? "male" : "female"),
+                new XAttribute("gender", Head.gender.ToString()),
                 new XAttribute("race", Head.race.ToString()),
                 new XAttribute("salary", Salary),
+                new XAttribute("experiencepoints", ExperiencePoints),
+                new XAttribute("unlockedtalents", string.Join(",", UnlockedTalents)),
+                new XAttribute("additionaltalentpoints", AdditionalTalentPoints),
                 new XAttribute("headspriteid", HeadSpriteId),
                 new XAttribute("hairindex", HairIndex),
                 new XAttribute("beardindex", BeardIndex),
                 new XAttribute("moustacheindex", MoustacheIndex),
                 new XAttribute("faceattachmentindex", FaceAttachmentIndex),
+                new XAttribute("skincolor", XMLExtensions.ColorToString(SkinColor)),
+                new XAttribute("haircolor", XMLExtensions.ColorToString(HairColor)),
+                new XAttribute("facialhaircolor", XMLExtensions.ColorToString(FacialHairColor)),
                 new XAttribute("startitemsgiven", StartItemsGiven),
                 new XAttribute("ragdoll", ragdollFileName),
                 new XAttribute("personality", personalityTrait == null ? "" : personalityTrait.Name));
-            
             // TODO: animations?
+
+            charElement.Add(new XAttribute("missionscompletedsincedeath", MissionsCompletedSinceDeath));
 
             if (Character != null)
             {
@@ -979,22 +1382,315 @@ namespace Barotrauma
             
             Job.Save(charElement);
 
+            XElement savedStatElement = new XElement("savedstatvalues");
+            foreach (var statValuePair in SavedStatValues)
+            {
+                foreach (var savedStat in statValuePair.Value)
+                {
+                    if (savedStat.StatValue == 0f) { continue; }
+                    if (savedStat.RemoveAfterRound) { continue; }
+
+                    savedStatElement.Add(new XElement("savedstatvalue",
+                        new XAttribute("stattype", statValuePair.Key.ToString()),
+                        new XAttribute("statidentifier", savedStat.StatIdentifier),
+                        new XAttribute("statvalue", savedStat.StatValue),
+                        new XAttribute("removeondeath", savedStat.RemoveOnDeath)
+                        ));
+                }
+            }
+
+
+
+            charElement.Add(savedStatElement);
+
             parentElement.Add(charElement);
             return charElement;
         }
 
-        public void ApplyHealthData(Character character, XElement healthData)
+        public static void SaveOrders(XElement parentElement, params OrderInfo[] orders)
+        {
+            if (parentElement == null || orders == null || orders.None()) { return; }
+            // If an order is invalid, we discard the order and increase the priority of the following orders so
+            // 1) the highest priority value will remain equal to CharacterInfo.HighestManualOrderPriority; and
+            // 2) the order priorities will remain sequential.
+            int priorityIncrease = 0;
+            var linkedSubs = GetLinkedSubmarines();
+            foreach (var orderInfo in orders)
+            {
+                var order = orderInfo.Order;
+                if (order == null || string.IsNullOrEmpty(order.Identifier))
+                {
+                    DebugConsole.ThrowError("Error saving an order - the order or its identifier is null");
+                    priorityIncrease++;
+                    continue;
+                }
+                int? linkedSubIndex = null;
+                bool targetAvailableInNextLevel = true;
+                if (order.TargetSpatialEntity != null)
+                {
+                    var entitySub = order.TargetSpatialEntity.Submarine;
+                    bool isOutside = entitySub == null;
+                    bool canBeOnLinkedSub = !isOutside && Submarine.MainSub != null && entitySub != Submarine.MainSub && linkedSubs.Any();
+                    bool isOnConnectedLinkedSub = false;
+                    if (canBeOnLinkedSub)
+                    {
+                        for (int i = 0; i < linkedSubs.Count; i++)
+                        {
+                            var ls = linkedSubs[i];
+                            if (!ls.LoadSub) { continue; }
+                            if (ls.Sub != entitySub) { continue; }
+                            linkedSubIndex = i;
+                            isOnConnectedLinkedSub = Submarine.MainSub.GetConnectedSubs().Contains(entitySub);
+                            break;
+                        }
+                    }
+                    targetAvailableInNextLevel = !isOutside && GameMain.GameSession?.Campaign?.PendingSubmarineSwitch == null && (isOnConnectedLinkedSub || entitySub == Submarine.MainSub);
+                    if (!targetAvailableInNextLevel)
+                    {
+                        if (!order.CanBeGeneralized)
+                        {
+                            DebugConsole.Log($"Trying to save an order ({order.Identifier}) targeting an entity that won't be connected to the main sub in the next level. The order requires a target so it won't be saved.");
+                            priorityIncrease++;
+                            continue;
+                        }
+                        else
+                        {
+                            DebugConsole.Log($"Saving an order ({order.Identifier}) targeting an entity that won't be connected to the main sub in the next level. The order will be saved as a generalized version.");
+                        }
+                    }
+                }
+                if (orderInfo.ManualPriority < 1)
+                {
+                    DebugConsole.ThrowError($"Error saving an order ({order.Identifier}) - the order priority is less than 1");
+                    priorityIncrease++;
+                    continue;
+                }
+                var orderElement = new XElement("order",
+                    new XAttribute("id", order.Identifier),
+                    new XAttribute("priority", orderInfo.ManualPriority + priorityIncrease),
+                    new XAttribute("targettype", (int)order.TargetType));
+                if (!string.IsNullOrEmpty(orderInfo.OrderOption))
+                {
+                    orderElement.Add(new XAttribute("option", orderInfo.OrderOption));
+                }
+                if (order.OrderGiver != null)
+                {
+                    orderElement.Add(new XAttribute("ordergiverinfoid", order.OrderGiver.Info.ID));
+                }
+                if (order.TargetSpatialEntity?.Submarine is Submarine targetSub)
+                {
+                    if (targetSub == Submarine.MainSub)
+                    {
+                        orderElement.Add(new XAttribute("onmainsub", true));
+                    }
+                    else if(linkedSubIndex.HasValue)
+                    {
+                        orderElement.Add(new XAttribute("linkedsubindex", linkedSubIndex));
+                    }
+                }
+                switch (order.TargetType)
+                {
+                    case Order.OrderTargetType.Entity when targetAvailableInNextLevel && order.TargetEntity is Entity e:
+                        orderElement.Add(new XAttribute("targetid", (uint)e.ID));
+                        break;
+                    case Order.OrderTargetType.Position when targetAvailableInNextLevel && order.TargetSpatialEntity is OrderTarget ot:
+                        var orderTargetElement = new XElement("ordertarget");
+                        var position = ot.WorldPosition;
+                        if (ot.Hull != null)
+                        {
+                            orderTargetElement.Add(new XAttribute("hullid", (uint)ot.Hull.ID));
+                            position -= ot.Hull.WorldPosition;
+                        }
+                        orderTargetElement.Add(new XAttribute("position", $"{position.X},{position.Y}"));
+                        orderElement.Add(orderTargetElement);
+                        break;
+                    case Order.OrderTargetType.WallSection when targetAvailableInNextLevel && order.TargetEntity is Structure s && order.WallSectionIndex.HasValue:
+                        orderElement.Add(new XAttribute("structureid", s.ID));
+                        orderElement.Add(new XAttribute("wallsectionindex", order.WallSectionIndex.Value));
+                        break;
+                }
+                parentElement.Add(orderElement);
+            }
+        }
+
+        /// <summary>
+        /// Save current orders to the parameter element
+        /// </summary>
+        public static void SaveOrderData(CharacterInfo characterInfo, XElement parentElement)
+        {
+            var currentOrders = new List<OrderInfo>(characterInfo.CurrentOrders);
+            // Sort the current orders to make sure the one with the highest priority comes first
+            currentOrders.Sort((x, y) => y.ManualPriority.CompareTo(x.ManualPriority));
+            SaveOrders(parentElement, currentOrders.ToArray());
+        }
+
+        /// <summary>
+        /// Save current orders to <see cref="OrderData"/>
+        /// </summary>
+        public void SaveOrderData()
+        {
+            OrderData = new XElement("orders");
+            SaveOrderData(this, OrderData);
+        }
+
+        public static void ApplyOrderData(Character character, XElement orderData)
+        {
+            if (character == null) { return; }
+            var orders = LoadOrders(orderData);
+            foreach (var order in orders)
+            {
+                character.SetOrder(order, order.Order?.OrderGiver, speak: false, force: true);
+            }
+        }
+
+        public void ApplyOrderData()
+        {
+            ApplyOrderData(Character, OrderData);
+        }
+
+        public static List<OrderInfo> LoadOrders(XElement ordersElement)
+        {
+            var orders = new List<OrderInfo>();
+            if (ordersElement == null) { return orders; }
+            // If an order is invalid, we discard the order and increase the priority of the following orders so
+            // 1) the highest priority value will remain equal to CharacterInfo.HighestManualOrderPriority; and
+            // 2) the order priorities will remain sequential.
+            int priorityIncrease = 0;
+            var linkedSubs = GetLinkedSubmarines();
+            foreach (var orderElement in ordersElement.GetChildElements("order"))
+            {
+                Order order = null;
+                string orderIdentifier = orderElement.GetAttributeString("id", "");
+                var orderPrefab = Order.GetPrefab(orderIdentifier);
+                if (orderPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Error loading a previously saved order - can't find an order prefab with the identifier \"{orderIdentifier}\"");
+                    priorityIncrease++;
+                    continue;
+                }
+                var targetType = (Order.OrderTargetType)orderElement.GetAttributeInt("targettype", 0);
+                int orderGiverInfoId = orderElement.GetAttributeInt("ordergiverinfoid", -1);
+                var orderGiver = orderGiverInfoId >= 0 ? Character.CharacterList.FirstOrDefault(c => c.Info?.ID == orderGiverInfoId) : null;
+                Entity targetEntity = null;
+                switch (targetType)
+                {
+                    case Order.OrderTargetType.Entity:
+                        ushort targetId = (ushort)orderElement.GetAttributeUInt("targetid", Entity.NullEntityID);
+                        if (!GetTargetEntity(targetId, out targetEntity)) { continue; }
+                        var targetComponent = orderPrefab.GetTargetItemComponent(targetEntity as Item);
+                        order = new Order(orderPrefab, targetEntity, targetComponent, orderGiver: orderGiver);
+                        break;
+                    case Order.OrderTargetType.Position:
+                        var orderTargetElement = orderElement.GetChildElement("ordertarget");
+                        var position = orderTargetElement.GetAttributeVector2("position", Vector2.Zero);
+                        ushort hullId = (ushort)orderTargetElement.GetAttributeUInt("hullid", 0);
+                        if (!GetTargetEntity(hullId, out targetEntity)) { continue; }
+                        if (!(targetEntity is Hull targetPositionHull))
+                        {
+                            DebugConsole.ThrowError($"Error loading a previously saved order ({orderIdentifier}) - entity with the ID {hullId} is of type {targetEntity?.GetType()} instead of Hull");
+                            priorityIncrease++;
+                            continue;
+                        }
+                        var orderTarget = new OrderTarget(targetPositionHull.WorldPosition + position, targetPositionHull);
+                        order = new Order(orderPrefab, orderTarget, orderGiver: orderGiver);
+                        break;
+                    case Order.OrderTargetType.WallSection:
+                        ushort structureId = (ushort)orderElement.GetAttributeInt("structureid", Entity.NullEntityID);
+                        if (!GetTargetEntity(structureId, out targetEntity)) { continue; }
+                        int wallSectionIndex = orderElement.GetAttributeInt("wallsectionindex", 0);
+                        if (!(targetEntity is Structure targetStructure))
+                        {
+                            DebugConsole.ThrowError($"Error loading a previously saved order ({orderIdentifier}) - entity with the ID {structureId} is of type {targetEntity?.GetType()} instead of Structure");
+                            priorityIncrease++;
+                            continue;
+                        }
+                        order = new Order(orderPrefab, targetStructure, wallSectionIndex, orderGiver: orderGiver);
+                        break;
+                }
+                string orderOption = orderElement.GetAttributeString("option", "");
+                int manualPriority = orderElement.GetAttributeInt("priority", 0) + priorityIncrease;
+                var orderInfo = new OrderInfo(order, orderOption, manualPriority);
+                orders.Add(orderInfo);
+
+                bool GetTargetEntity(ushort targetId, out Entity targetEntity)
+                {
+                    targetEntity = null;
+                    if (targetId == Entity.NullEntityID) { return true; }
+                    Submarine parentSub = null;
+                    if (orderElement.GetAttributeBool("onmainsub", false))
+                    {
+                        parentSub = Submarine.MainSub;
+                    }
+                    else
+                    {
+                        int linkedSubIndex = orderElement.GetAttributeInt("linkedsubindex", -1);
+                        if (linkedSubIndex >= 0 && linkedSubIndex < linkedSubs.Count &&
+                            linkedSubs[linkedSubIndex] is LinkedSubmarine linkedSub && linkedSub.LoadSub)
+                        {
+                            parentSub = linkedSub.Sub;
+                        }
+                    }
+                    if (parentSub != null)
+                    {
+                        targetId = GetOffsetId(parentSub, targetId);
+                        targetEntity = Entity.FindEntityByID(targetId);
+                    }
+                    else
+                    {
+                        if (!orderPrefab.CanBeGeneralized)
+                        {
+                            DebugConsole.ThrowError($"Error loading a previously saved order ({orderIdentifier}). Can't find the parent sub of the target entity. The order requires a target so it can't be loaded at all.");
+                            priorityIncrease++;
+                            return false;
+                        }
+                        else
+                        {
+                            DebugConsole.AddWarning($"Trying to load a previously saved order ({orderIdentifier}). Can't find the parent sub of the target entity. The order doesn't require a target so a more generic version of the order will be loaded instead.");
+                        }
+                    }
+                    return true;
+                }
+            }
+            return orders;
+        }
+
+        private static List<LinkedSubmarine> GetLinkedSubmarines()
+        {
+            return Entity.GetEntities()
+                .OfType<LinkedSubmarine>()
+                .Where(ls => ls.Submarine == Submarine.MainSub)
+                .OrderBy(e => e.ID)
+                .ToList();
+        }
+
+        private static ushort GetOffsetId(Submarine parentSub, ushort id)
+        {
+            if (parentSub != null)
+            {
+                var idRemap = new IdRemap(parentSub.Info.SubmarineElement, parentSub.IdOffset);
+                return idRemap.GetOffsetId(id);
+            }
+            return id;
+        }
+
+        public static void ApplyHealthData(Character character, XElement healthData)
         {
             if (healthData != null) { character?.CharacterHealth.Load(healthData); }
         }
 
-        public void ReloadHeadAttachments()
+        /// <summary>
+        /// Reloads the attachment xml elements according to the indices. Doesn't reload the sprites.
+        /// </summary>
+        private void ReloadHeadAttachments()
         {
             ResetLoadedAttachments();
             LoadHeadAttachments();
         }
 
-        public void ResetHeadAttachments()
+        /// <summary>
+        /// Loads only the elements according to the indices, not the sprites.
+        /// </summary>
+        private void ResetHeadAttachments()
         {
             ResetAttachmentIndices();
             ResetLoadedAttachments();
@@ -1013,13 +1709,9 @@ namespace Barotrauma
             faceAttachments = null;
         }
 
-        /// <summary>
-        /// Reset order data so it doesn't carry into further rounds, as the AI is "recreated" always in between rounds anyway.
-        /// </summary>
-        public void ResetCurrentOrder()
+        public void ClearCurrentOrders()
         {
-            CurrentOrder = null;
-            CurrentOrderOption = "";
+            CurrentOrders.Clear();
         }
 
         public void Remove()
@@ -1029,5 +1721,121 @@ namespace Barotrauma
             Portrait = null;
             AttachmentSprites = null;
         }
+
+        private void RefreshHeadSprites()
+        {
+            HeadSprite = null;
+            AttachmentSprites = null;
+        }
+
+        // This could maybe be a LookUp instead?
+        public readonly Dictionary<StatTypes, List<SavedStatValue>> SavedStatValues = new Dictionary<StatTypes, List<SavedStatValue>>();
+
+        public void ClearSavedStatValues()
+        {
+            foreach (StatTypes statType in SavedStatValues.Keys)
+            {
+                OnPermanentStatChanged(statType);
+            }
+            SavedStatValues.Clear();
+        }
+
+        public void ClearSavedStatValues(StatTypes statType)
+        {
+            SavedStatValues.Remove(statType);
+            OnPermanentStatChanged(statType);
+        }
+
+        public void ResetSavedStatValue(string statIdentifier)
+        {
+            foreach (StatTypes statType in SavedStatValues.Keys)
+            {
+                bool changed = false;
+                foreach (SavedStatValue savedStatValue in SavedStatValues[statType])
+                {
+                    if (savedStatValue.StatIdentifier != statIdentifier) { continue; }
+                    if (MathUtils.NearlyEqual(savedStatValue.StatValue, 0.0f)) { continue; }
+                    savedStatValue.StatValue = 0.0f;
+                    changed = true;
+                }
+                if (changed) { OnPermanentStatChanged(statType); }
+            }
+        }
+
+        public float GetSavedStatValue(StatTypes statType)
+        {
+            if (SavedStatValues.TryGetValue(statType, out var statValues))
+            {
+                return statValues.Sum(v => v.StatValue);
+            }
+            else
+            {
+                return 0f;
+            }
+        }
+        public float GetSavedStatValue(StatTypes statType, string statIdentifier)
+        {
+            if (SavedStatValues.TryGetValue(statType, out var statValues))
+            {
+                return statValues.Where(s => s.StatIdentifier.Equals(statIdentifier, StringComparison.OrdinalIgnoreCase)).Sum(v => v.StatValue);
+            }
+            else
+            {
+                return 0f;
+            }
+        }
+
+        public void ChangeSavedStatValue(StatTypes statType, float value, string statIdentifier, bool removeOnDeath, bool removeAfterRound = false, float maxValue = float.MaxValue, bool setValue = false)
+        {
+            if (!SavedStatValues.ContainsKey(statType))
+            {
+                SavedStatValues.Add(statType, new List<SavedStatValue>());
+            }
+
+            bool changed = false;
+            if (SavedStatValues[statType].FirstOrDefault(s => s.StatIdentifier == statIdentifier) is SavedStatValue savedStat)
+            {
+                float prevValue = savedStat.StatValue;
+                savedStat.StatValue = setValue ? value : MathHelper.Min(savedStat.StatValue + value, maxValue);
+                changed = !MathUtils.NearlyEqual(savedStat.StatValue, prevValue);
+            }
+            else
+            {
+                SavedStatValues[statType].Add(new SavedStatValue(statIdentifier, MathHelper.Min(value, maxValue), removeOnDeath, removeAfterRound));
+                changed = true;
+            }
+            if (changed) { OnPermanentStatChanged(statType); }
+        }
+    }
+
+    public class SavedStatValue
+    {
+        public string StatIdentifier { get; set; }
+        public float StatValue { get; set; }
+        public bool RemoveOnDeath { get; set; }
+        public bool RemoveAfterRound { get; set; }
+
+        public SavedStatValue(string statIdentifier, float value, bool removeOnDeath, bool retainAfterRound)
+        {
+            StatValue = value;
+            RemoveOnDeath = removeOnDeath;
+            StatIdentifier = statIdentifier;
+            RemoveAfterRound = retainAfterRound;
+        }
+    }
+
+    class AbilitySkillGain : AbilityObject, IAbilityValue, IAbilityString, IAbilityCharacter
+    {
+        public AbilitySkillGain(float value, string abilityString, Character character, bool gainedFromApprenticeship)
+        {
+            Value = value;
+            String = abilityString;
+            Character = character;
+            GainedFromApprenticeship = gainedFromApprenticeship;
+        }
+        public Character Character { get; set; }
+        public float Value { get; set; }
+        public string String { get; set; }
+        public bool GainedFromApprenticeship { get; set; }
     }
 }

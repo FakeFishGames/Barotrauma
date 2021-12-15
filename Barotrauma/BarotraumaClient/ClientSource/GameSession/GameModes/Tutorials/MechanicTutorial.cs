@@ -165,21 +165,23 @@ namespace Barotrauma.Tutorials
             // Room 6
             mechanic_divingSuitObjectiveSensor = Item.ItemList.Find(i => i.HasTag("mechanic_divingsuitobjectivesensor")).GetComponent<MotionSensor>();
             mechanic_divingSuitContainer = Item.ItemList.Find(i => i.HasTag("mechanic_divingsuitcontainer")).GetComponent<ItemContainer>();
-            for (int i = 0; i < mechanic_divingSuitContainer.Inventory.Items.Length; i++)
+            foreach (Item item in mechanic_divingSuitContainer.Inventory.AllItems)
             {
-                foreach (ItemComponent ic in mechanic_divingSuitContainer.Inventory.Items[i].Components)
-                {
-                    ic.CanBePicked = true;
-                }                    
-            }
-            mechanic_oxygenContainer = Item.ItemList.Find(i => i.HasTag("mechanic_oxygencontainer")).GetComponent<ItemContainer>();
-            for (int i = 0; i < mechanic_oxygenContainer.Inventory.Items.Length; i++)
-            {
-                foreach (ItemComponent ic in mechanic_oxygenContainer.Inventory.Items[i].Components)
+                foreach (ItemComponent ic in item.Components)
                 {
                     ic.CanBePicked = true;
                 }
             }
+
+            mechanic_oxygenContainer = Item.ItemList.Find(i => i.HasTag("mechanic_oxygencontainer")).GetComponent<ItemContainer>();
+            foreach (Item item in mechanic_oxygenContainer.Inventory.AllItems)
+            {
+                foreach (ItemComponent ic in item.Components)
+                {
+                    ic.CanBePicked = true;
+                }
+            }
+
             tutorial_mechanicFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoor")).GetComponent<Door>();
             tutorial_mechanicFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoorlight")).GetComponent<LightComponent>();
 
@@ -266,24 +268,24 @@ namespace Barotrauma.Tutorials
                     if (!firstSlotRemoved)
                     {
                         HighlightInventorySlot(mechanic_equipmentCabinet.Inventory, 0, highlightColor, .5f, .5f, 0f);
-                        if (mechanic_equipmentCabinet.Inventory.Items[0] == null) firstSlotRemoved = true;
+                        if (mechanic_equipmentCabinet.Inventory.GetItemAt(0) == null) { firstSlotRemoved = true; }
                     }
 
                     if (!secondSlotRemoved)
                     {
                         HighlightInventorySlot(mechanic_equipmentCabinet.Inventory, 1, highlightColor, .5f, .5f, 0f);
-                        if (mechanic_equipmentCabinet.Inventory.Items[1] == null) secondSlotRemoved = true;
+                        if (mechanic_equipmentCabinet.Inventory.GetItemAt(1) == null) { secondSlotRemoved = true; }
                     }
 
                     if (!thirdSlotRemoved)
                     {
                         HighlightInventorySlot(mechanic_equipmentCabinet.Inventory, 2, highlightColor, .5f, .5f, 0f);
-                        if (mechanic_equipmentCabinet.Inventory.Items[2] == null) thirdSlotRemoved = true;
+                        if (mechanic_equipmentCabinet.Inventory.GetItemAt(2) == null) { thirdSlotRemoved = true; }
                     }
 
-                    for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
+                    for (int i = 0; i < mechanic.Inventory.Capacity; i++)
                     {
-                        if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
+                        if (mechanic.Inventory.GetItemAt(i) == null) { HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f); }
                     }
                 }
 
@@ -355,16 +357,16 @@ namespace Barotrauma.Tutorials
             {
                 if (mechanic.SelectedConstruction == mechanic_craftingCabinet.Item)
                 {
-                    for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
+                    for (int i = 0; i < mechanic.Inventory.Capacity; i++)
                     {
-                        if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
+                        if (mechanic.Inventory.GetItemAt(i) == null) { HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f); }
                     }
 
                     if (mechanic.Inventory.FindItemByIdentifier("oxygentank") == null && mechanic.Inventory.FindItemByIdentifier("aluminium") == null)
                     {
-                        for (int i = 0; i < mechanic_craftingCabinet.Inventory.Items.Length; i++)
+                        for (int i = 0; i < mechanic_craftingCabinet.Capacity; i++)
                         {
-                            Item item = mechanic_craftingCabinet.Inventory.Items[i];
+                            Item item = mechanic_craftingCabinet.Inventory.GetItemAt(i);
                             if (item != null && item.prefab.Identifier == "oxygentank")
                             {
                                 HighlightInventorySlot(mechanic_craftingCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
@@ -374,9 +376,9 @@ namespace Barotrauma.Tutorials
 
                     if (mechanic.Inventory.FindItemByIdentifier("sodium") == null)
                     {
-                        for (int i = 0; i < mechanic_craftingCabinet.Inventory.Items.Length; i++)
+                        for (int i = 0; i < mechanic_craftingCabinet.Inventory.Capacity; i++)
                         {
-                            Item item = mechanic_craftingCabinet.Inventory.Items[i];
+                            Item item = mechanic_craftingCabinet.Inventory.GetItemAt(i);
                             if (item != null && item.prefab.Identifier == "sodium")
                             {
                                 HighlightInventorySlot(mechanic_craftingCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
@@ -408,9 +410,9 @@ namespace Barotrauma.Tutorials
                     {
                         HighlightInventorySlot(mechanic_deconstructor.OutputContainer.Inventory, "aluminium", highlightColor, .5f, .5f, 0f);
 
-                        for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
+                        for (int i = 0; i < mechanic.Inventory.Capacity; i++)
                         {
-                            if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
+                            if (mechanic.Inventory.GetItemAt(i) == null) { HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f); }
                         }
                     }
                     else
@@ -418,14 +420,10 @@ namespace Barotrauma.Tutorials
                         if (mechanic.Inventory.FindItemByIdentifier("oxygentank") != null && mechanic_deconstructor.InputContainer.Inventory.FindItemByIdentifier("oxygentank") == null)
                         {
                             HighlightInventorySlot(mechanic.Inventory, "oxygentank", highlightColor, .5f, .5f, 0f);
-
-                            if (mechanic_deconstructor.InputContainer.Inventory.slots != null)
+                            for (int i = 0; i < mechanic_deconstructor.InputContainer.Inventory.Capacity; i++)
                             {
-                                for (int i = 0; i < mechanic_deconstructor.InputContainer.Inventory.slots.Length; i++)
-                                {
-                                    HighlightInventorySlot(mechanic_deconstructor.InputContainer.Inventory, i, highlightColor, .5f, .5f, 0f);
-                                }
-                            }
+                                HighlightInventorySlot(mechanic_deconstructor.InputContainer.Inventory, i, highlightColor, .5f, .5f, 0f);
+                            }                            
                         }
 
                         if (mechanic_deconstructor.InputContainer.Inventory.FindItemByIdentifier("oxygentank") != null && !mechanic_deconstructor.IsActive)
@@ -461,7 +459,7 @@ namespace Barotrauma.Tutorials
                         {
                             HighlightInventorySlot(mechanic_fabricator.OutputContainer.Inventory, "extinguisher", highlightColor, .5f, .5f, 0f);
 
-                            /*for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
+                            /*for (int i = 0; i < mechanic.Inventory.Capacity; i++)
                             {
                                 if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
                             }*/
@@ -478,12 +476,12 @@ namespace Barotrauma.Tutorials
                             HighlightInventorySlot(mechanic.Inventory, "aluminium", highlightColor, .5f, .5f, 0f);
                             HighlightInventorySlot(mechanic.Inventory, "sodium", highlightColor, .5f, .5f, 0f);
 
-                            if (mechanic_fabricator.InputContainer.Inventory.Items[0] == null)
+                            if (mechanic_fabricator.InputContainer.Inventory.GetItemAt(0) == null)
                             {
                                 HighlightInventorySlot(mechanic_fabricator.InputContainer.Inventory, 0, highlightColor, .5f, .5f, 0f);
                             }
 
-                            if (mechanic_fabricator.InputContainer.Inventory.Items[1] == null)
+                            if (mechanic_fabricator.InputContainer.Inventory.GetItemAt(1) == null)
                             {
                                 HighlightInventorySlot(mechanic_fabricator.InputContainer.Inventory, 1, highlightColor, .5f, .5f, 0f);
                             }
@@ -524,16 +522,16 @@ namespace Barotrauma.Tutorials
             {
                 if (IsSelectedItem(mechanic_divingSuitContainer.Item))
                 {
-                    if (mechanic_divingSuitContainer.Inventory.slots != null)
+                    if (mechanic_divingSuitContainer.Inventory.visualSlots != null)
                     {
-                        for (int i = 0; i < mechanic_divingSuitContainer.Inventory.slots.Length; i++)
+                        for (int i = 0; i < mechanic_divingSuitContainer.Inventory.Capacity; i++)
                         {
                             HighlightInventorySlot(mechanic_divingSuitContainer.Inventory, i, highlightColor, 0.5f, 0.5f, 0f);
                         }
                     }
                 }
                 yield return null;
-            } while (!mechanic.HasEquippedItem("divingsuit"));
+            } while (!mechanic.HasEquippedItem("divingsuit", slotType: InvSlotType.OuterClothes));
             SetHighlight(mechanic_divingSuitContainer.Item, false);
             RemoveCompletedObjective(segments[8]);
             SetDoorAccess(tutorial_mechanicFinalDoor, tutorial_mechanicFinalDoorLight, true);

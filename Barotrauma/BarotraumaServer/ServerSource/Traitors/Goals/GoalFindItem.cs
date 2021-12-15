@@ -78,6 +78,7 @@ namespace Barotrauma
                 List<Item> suitableItems = new List<Item>();
                 foreach (Item item in Item.ItemList)
                 {
+                    if (item.HiddenInGame || item.NonInteractable || item.NonPlayerTeamInteractable) { continue; }
                     if (item.Submarine == null || traitors.All(traitor => item.Submarine.TeamID != traitor.Character.TeamID))
                     {
                         continue;
@@ -180,11 +181,14 @@ namespace Barotrauma
                 if (allowNew && !targetContainer.OwnInventory.IsFull())
                 {
                     existingItems.Clear();
-                    foreach (var item in targetContainer.OwnInventory.Items)
+                    foreach (var item in targetContainer.OwnInventory.AllItems.Distinct())
                     {
                         existingItems.Add(item);
                     }
-                    Entity.Spawner.AddToSpawnQueue(targetPrefab, targetContainer.OwnInventory);
+                    Entity.Spawner.AddToSpawnQueue(targetPrefab, targetContainer.OwnInventory, onSpawned: item =>
+                    {
+                        item.AddTag("traitormissionitem");
+                    });
                     target = null;
                 }
                 else if (allowExisting)
@@ -205,7 +209,7 @@ namespace Barotrauma
                 base.Update(deltaTime);
                 if (target == null)
                 {
-                    target = targetContainer.OwnInventory.Items.FirstOrDefault(item => item != null && item.Prefab.Identifier == (containedPrefab != null ? itemContainerId : identifier) && !existingItems.Contains(item));
+                    target = targetContainer.ContainedItems.FirstOrDefault(item => item.Prefab.Identifier == (containedPrefab != null ? itemContainerId : identifier) && !existingItems.Contains(item));
                     if (target != null)
                     {
                         if (containedPrefab != null)

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,15 +16,15 @@ namespace Barotrauma
 
         private Location furthestDiscoveredLocation;
 
-        private int Width => generationParams.Width;
-        private int Height => generationParams.Height;
+        public int Width { get; private set; }
+        public int Height { get; private set; }
 
         public Action<Location, LocationConnection> OnLocationSelected;
         /// <summary>
         /// From -> To
         /// </summary>
         public Action<Location, Location> OnLocationChanged;
-        public Action<LocationConnection, Mission> OnMissionSelected;
+        public Action<LocationConnection, IEnumerable<Mission>> OnMissionsSelected;
 
         public Location EndLocation { get; private set; }
 
@@ -43,9 +44,9 @@ namespace Barotrauma
             get { return Locations.IndexOf(SelectedLocation); }
         }
 
-        public int SelectedMissionIndex
+        public IEnumerable<int> GetSelectedMissionIndices()
         {
-            get { return SelectedConnection == null ? -1 : CurrentLocation.SelectedMissionIndex; }
+            return SelectedConnection == null ? Enumerable.Empty<int>() : CurrentLocation.GetSelectedMissionIndices();
         }
 
         public LocationConnection SelectedConnection { get; private set; }
@@ -56,20 +57,37 @@ namespace Barotrauma
 
         public List<LocationConnection> Connections { get; private set; }
 
-        public Map()
+        public Radiation Radiation;
+
+        public Map(CampaignSettings settings)
         {
             generationParams = MapGenerationParams.Instance;
+            Width = generationParams.Width;
+            Height = generationParams.Height;
             Locations = new List<Location>();
             Connections = new List<LocationConnection>();
+            if (generationParams.RadiationParams != null)
+            {
+                Radiation = new Radiation(this, generationParams.RadiationParams)
+                {
+                    Enabled = settings.RadiationEnabled
+                };
+            }
         }
 
         /// <summary>
         /// Load a previously saved campaign map from XML
         /// </summary>
-        private Map(CampaignMode campaign, XElement element) : this()
+        private Map(CampaignMode campaign, XElement element, CampaignSettings settings) : this(settings)
         {
             Seed = element.GetAttributeString("seed", "a");
             Rand.SetSyncedSeed(ToolBox.StringToInt(Seed));
+
+            Width = element.GetAttributeInt("width", Width);
+            Height = element.GetAttributeInt("height", Height);
+
+            bool lairsFound = false;
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -80,7 +98,14 @@ namespace Barotrauma
                         {
                             Locations.Add(null);
                         }
+                        lairsFound |= subElement.GetAttributeString("type", "").Equals("lair", StringComparison.OrdinalIgnoreCase);
                         Locations[i] = new Location(subElement);
+                        break;
+                    case "radiation":
+                        Radiation = new Radiation(this, generationParams.RadiationParams, subElement)
+                        {
+                            Enabled = settings.RadiationEnabled
+                        };
                         break;
                 }
             }
@@ -90,15 +115,18 @@ namespace Barotrauma
                 Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, $"location.{i}", -100, 100, Rand.Range(-10, 10, Rand.RandSync.Server));
             }
 
+            List<XElement> connectionElements = new List<XElement>();
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "connection":
                         Point locationIndices = subElement.GetAttributePoint("locations", new Point(0, 1));
+                        if (locationIndices.X == locationIndices.Y) { continue; }
                         var connection = new LocationConnection(Locations[locationIndices.X], Locations[locationIndices.Y])
                         {
                             Passed = subElement.GetAttributeBool("passed", false),
+                            Locked = subElement.GetAttributeBool("locked", false),
                             Difficulty = subElement.GetAttributeFloat("difficulty", 0.0f)
                         };
                         Locations[locationIndices.X].Connections.Add(connection);
@@ -110,6 +138,7 @@ namespace Barotrauma
                             LevelGenerationParams.GetBiomes().FirstOrDefault(b => b.OldIdentifier == biomeId) ??
                             LevelGenerationParams.GetBiomes().First();
                         Connections.Add(connection);
+                        connectionElements.Add(subElement);
                         break;
                 }
             }
@@ -148,13 +177,30 @@ namespace Barotrauma
                 }
             }
 
+            //backwards compatibility: if the map contained the now-removed lairs and has no hunting grounds, create some hunting grounds
+            if (lairsFound && !Connections.Any(c => c.LevelData.HasHuntingGrounds))
+            {
+                for (int i = 0; i < Connections.Count; i++)
+                {
+                    float maxHuntingGroundsProbability = 0.3f;
+                    Connections[i].LevelData.HasHuntingGrounds = Rand.Range(0.0f, 1.0f) < Connections[i].Difficulty / 100.0f * maxHuntingGroundsProbability;
+                    connectionElements[i].SetAttributeValue("hashuntinggrounds", true);
+                }
+            }
+
+            //backwards compatibility: if locations go out of bounds (map saved with different generation parameters before width/height were included in the xml)
+            float maxX = Locations.Select(l => l.MapPosition.X).Max();
+            if (maxX > Width) { Width = (int)(maxX + 10); }
+            float maxY = Locations.Select(l => l.MapPosition.Y).Max();
+            if (maxY > Height) { Height = (int)(maxY + 10); }
+
             InitProjectSpecific();
         }
 
         /// <summary>
         /// Generate a new campaign map from the seed
         /// </summary>
-        public Map(CampaignMode campaign, string seed) : this()
+        public Map(CampaignMode campaign, string seed, CampaignSettings settings) : this(settings)
         {
             Seed = seed;
             Rand.SetSyncedSeed(ToolBox.StringToInt(Seed));
@@ -185,8 +231,8 @@ namespace Barotrauma
             }
             System.Diagnostics.Debug.Assert(StartLocation != null, "Start location not assigned after level generation.");
 
+            CurrentLocation.Discover(true);
             CurrentLocation.CreateStore();
-            CurrentLocation.Discovered = true;
 
             InitProjectSpecific();
         }
@@ -247,21 +293,21 @@ namespace Barotrauma
 
                 for (int i = 0; i < 2; i++)
                 {
-                    if (newLocations[i] != null) continue;
+                    if (newLocations[i] != null) { continue; }
 
                     Vector2[] points = new Vector2[] { edge.Point1, edge.Point2 };
 
                     int positionIndex = Rand.Int(1, Rand.RandSync.Server);
 
                     Vector2 position = points[positionIndex];
-                    if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) position = points[1 - positionIndex];
-                    int zone = MathHelper.Clamp((int)Math.Floor(position.X / zoneWidth) + 1, 1, generationParams.DifficultyZones);
-                    newLocations[i] = Location.CreateRandom(position, zone, Rand.GetRNG(Rand.RandSync.Server), requireOutpost: false, Locations);
+                    if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) { position = points[1 - positionIndex]; }
+                    int zone = GetZoneIndex(position.X);
+                    newLocations[i] = Location.CreateRandom(position, zone, Rand.GetRNG(Rand.RandSync.Server), requireOutpost: false, existingLocations: Locations);
                     Locations.Add(newLocations[i]);
                 }
 
                 var newConnection = new LocationConnection(newLocations[0], newLocations[1]);
-                Connections.Add(newConnection);
+                Connections.Add(newConnection);                
             }
 
             //remove connections that are too short
@@ -284,19 +330,12 @@ namespace Barotrauma
                     if (connection2.Locations[1] == connection.Locations[0]) { connection2.Locations[1] = connection.Locations[1]; }
                 }
             }
-            
-            HashSet<Location> connectedLocations = new HashSet<Location>();
+
             foreach (LocationConnection connection in Connections)
             {
                 connection.Locations[0].Connections.Add(connection);
                 connection.Locations[1].Connections.Add(connection);
-
-                connectedLocations.Add(connection.Locations[0]);
-                connectedLocations.Add(connection.Locations[1]);
             }
-
-            //remove orphans
-            Locations.RemoveAll(c => !connectedLocations.Contains(c));
 
             //remove locations that are too close to each other
             float minLocationDistanceSqr = generationParams.MinLocationDistance * generationParams.MinLocationDistance;
@@ -320,7 +359,15 @@ namespace Barotrauma
                         {
                             connection.Locations[1] = Locations[i];
                         }
-                        Locations[i].Connections.Add(connection);
+
+                        if (connection.Locations[0] != connection.Locations[1])
+                        {
+                            Locations[i].Connections.Add(connection);
+                        }
+                        else
+                        {
+                            Connections.Remove(connection);
+                        }
                     }
                     Locations[i].Connections.RemoveAll(c => c.OtherLocation(Locations[i]) == Locations[j]);
                     Locations.RemoveAt(j);
@@ -341,6 +388,74 @@ namespace Barotrauma
                 }
             }
 
+            List<LocationConnection>[] connectionsBetweenZones = new List<LocationConnection>[generationParams.DifficultyZones];
+            for (int i = 0; i < generationParams.DifficultyZones; i++)
+            {
+                connectionsBetweenZones[i] = new List<LocationConnection>();
+            }
+            var shuffledConnections = Connections.ToList();
+            shuffledConnections.Shuffle(Rand.RandSync.Server);
+            foreach (var connection in shuffledConnections)
+            {
+                int zone1 = GetZoneIndex(connection.Locations[0].MapPosition.X);
+                int zone2 = GetZoneIndex(connection.Locations[1].MapPosition.X);
+                if (zone1 == zone2) { continue; }
+                if (zone1 > zone2)
+                {
+                    int temp = zone2;
+                    zone2 = zone1;
+                    zone1 = temp;
+                }
+
+                if (generationParams.GateCount[zone1] == 0) { continue; }
+
+                if (!connectionsBetweenZones[zone1].Any())
+                {
+                    connectionsBetweenZones[zone1].Add(connection);
+                }
+                else if (generationParams.GateCount[zone1] == 1)
+                {
+                    //if there's only one connection, place it at the center of the map
+                    if (Math.Abs(connection.CenterPos.Y - Height / 2) < Math.Abs(connectionsBetweenZones[zone1].First().CenterPos.Y - Height / 2))
+                    {
+                        connectionsBetweenZones[zone1].Clear();
+                        connectionsBetweenZones[zone1].Add(connection);
+                    }
+                }
+                else if (connectionsBetweenZones[zone1].Count() < generationParams.GateCount[zone1])
+                {
+                    connectionsBetweenZones[zone1].Add(connection);
+                }
+            }
+
+            for (int i = Connections.Count - 1; i >= 0; i--)
+            {
+                int zone1 = GetZoneIndex(Connections[i].Locations[0].MapPosition.X);
+                int zone2 = GetZoneIndex(Connections[i].Locations[1].MapPosition.X);
+                if (zone1 == zone2) { continue; }
+                if (zone1 == generationParams.DifficultyZones || zone2 == generationParams.DifficultyZones) { continue; }
+
+                if (generationParams.GateCount[Math.Min(zone1, zone2)] == 0) { continue; }
+
+                if (!connectionsBetweenZones[Math.Min(zone1, zone2)].Contains(Connections[i]))
+                {
+                    Connections.RemoveAt(i);
+                }
+                else
+                {
+                    var leftMostLocation =
+                        Connections[i].Locations[0].MapPosition.X < Connections[i].Locations[1].MapPosition.X ?
+                        Connections[i].Locations[0] :
+                        Connections[i].Locations[1];
+                    if (!leftMostLocation.Type.HasOutpost || leftMostLocation.Type.Identifier.Equals("abandoned", StringComparison.OrdinalIgnoreCase))
+                    {
+                        leftMostLocation.ChangeType(LocationType.List.First(lt => lt.HasOutpost && !lt.Identifier.Equals("abandoned", StringComparison.OrdinalIgnoreCase)));
+                    }
+                    leftMostLocation.IsGateBetweenBiomes = true;
+                    Connections[i].Locked = true;
+                }
+            }
+
             foreach (Location location in Locations)
             {
                 for (int i = location.Connections.Count - 1; i >= 0; i--)
@@ -352,25 +467,47 @@ namespace Barotrauma
                 }
             }
 
+            //remove orphans
+            Locations.RemoveAll(l => !Connections.Any(c => c.Locations.Contains(l)));
+
             foreach (LocationConnection connection in Connections)
             {
-                connection.Difficulty = MathHelper.Clamp((connection.CenterPos.X / Width * 100) + Rand.Range(-10.0f, 0.0f, Rand.RandSync.Server), 1.2f, 100.0f);
+                float difficulty = GetLevelDifficulty(connection.CenterPos.X / Width);
+                connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-10.0f, 0.0f, Rand.RandSync.Server), 1.2f, 100.0f);
             }
 
             AssignBiomes();
             CreateEndLocation();
-
+            
             foreach (Location location in Locations)
             {
-                location.LevelData = new LevelData(location);
+                location.LevelData = new LevelData(location)
+                {
+                    Difficulty = MathHelper.Clamp(GetLevelDifficulty(location.MapPosition.X / Width), 0.0f, 100.0f)
+                };
+                location.UnlockInitialMissions();
             }
             foreach (LocationConnection connection in Connections) 
             { 
                 connection.LevelData = new LevelData(connection);
             }
+
+            float GetLevelDifficulty(float areaDifficulty)
+            {
+                const float CurveModifier = 1.5f;
+                const float DifficultyMultiplier = 1.14f;
+                const float BaseDifficulty = -3f;
+                return (float)(1 - Math.Pow(1 - areaDifficulty, CurveModifier)) * DifficultyMultiplier * 100f + BaseDifficulty;
+            }
         }
 
         partial void GenerateLocationConnectionVisuals();
+
+        private int GetZoneIndex(float xPos)
+        {
+            float zoneWidth = Width / generationParams.DifficultyZones;
+            return MathHelper.Clamp((int)Math.Floor(xPos / zoneWidth) + 1, 1, generationParams.DifficultyZones);
+        }
 
         public Biome GetBiome(Vector2 mapPos)
         {
@@ -403,7 +540,7 @@ namespace Barotrauma
             {
                 allowedBiomes.Clear();
                 allowedBiomes.AddRange(biomes.Where(b => b.AllowedZones.Contains(generationParams.DifficultyZones - i)));
-                float zoneX = Width - zoneWidth * i;
+                float zoneX = zoneWidth * (generationParams.DifficultyZones - i);
 
                 foreach (Location location in Locations)
                 {
@@ -416,7 +553,7 @@ namespace Barotrauma
             foreach (LocationConnection connection in Connections)
             {
                 if (connection.Biome != null) { continue; }
-                connection.Biome = connection.Locations[0].Biome;
+                connection.Biome = connection.Locations[0].MapPosition.X > connection.Locations[1].MapPosition.X ? connection.Locations[0].Biome : connection.Locations[1].Biome;
             }
 
             System.Diagnostics.Debug.Assert(Locations.All(l => l.Biome != null));
@@ -543,11 +680,19 @@ namespace Barotrauma
             SelectedConnection.Passed = true;
 
             CurrentLocation = SelectedLocation;
-            CurrentLocation.Discovered = true;
+            CurrentLocation.Discover();
             SelectedLocation = null;
 
             CurrentLocation.CreateStore();
             OnLocationChanged?.Invoke(prevLocation, CurrentLocation);
+
+            if (GameMain.GameSession is { Campaign: { CampaignMetadata: { } metadata } })
+            {
+                metadata.SetValue("campaign.location.id", CurrentLocationIndex);
+                metadata.SetValue("campaign.location.name", CurrentLocation.Name);
+                metadata.SetValue("campaign.location.biome", CurrentLocation.Biome?.Identifier ?? "null");
+                metadata.SetValue("campaign.location.type", CurrentLocation.Type?.Identifier ?? "null");
+            }
         }
 
         public void SetLocation(int index)
@@ -566,7 +711,7 @@ namespace Barotrauma
 
             Location prevLocation = CurrentLocation;
             CurrentLocation = Locations[index];
-            CurrentLocation.Discovered = true;
+            CurrentLocation.Discover();
 
             if (prevLocation != CurrentLocation)
             {
@@ -599,9 +744,14 @@ namespace Barotrauma
             }
 
             SelectedLocation = Locations[index];
+            var currentDisplayLocation = GameMain.GameSession?.Campaign?.GetCurrentDisplayLocation();
             SelectedConnection = 
-                Connections.Find(c => c.Locations.Contains(GameMain.GameSession?.Campaign?.CurrentDisplayLocation) && c.Locations.Contains(SelectedLocation)) ??
+                Connections.Find(c => c.Locations.Contains(currentDisplayLocation) && c.Locations.Contains(SelectedLocation)) ??
                 Connections.Find(c => c.Locations.Contains(CurrentLocation) && c.Locations.Contains(SelectedLocation));
+            if (SelectedConnection?.Locked ?? false)
+            {
+                DebugConsole.ThrowError("A locked connection was selected - this should not be possible.\n" + Environment.StackTrace.CleanupStackTrace());
+            }
             OnLocationSelected?.Invoke(SelectedLocation, SelectedConnection);
         }
 
@@ -617,12 +767,15 @@ namespace Barotrauma
 
             SelectedLocation = location;
             SelectedConnection = Connections.Find(c => c.Locations.Contains(CurrentLocation) && c.Locations.Contains(SelectedLocation));
+            if (SelectedConnection?.Locked ?? false)
+            {
+                DebugConsole.ThrowError("A locked connection was selected - this should not be possible.\n" + Environment.StackTrace.CleanupStackTrace());
+            }
             OnLocationSelected?.Invoke(SelectedLocation, SelectedConnection);
         }
 
-        public void SelectMission(int missionIndex)
+        public void SelectMission(IEnumerable<int> missionIndices)
         {
-            if (SelectedConnection == null) { return; }
             if (CurrentLocation == null)
             {
                 string errorMsg = "Failed to select a mission (current location not set).";
@@ -630,21 +783,29 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("Map.SelectMission:CurrentLocationNotSet", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
-            CurrentLocation.SelectedMissionIndex = missionIndex;
 
-            //the destination must be the same as the destination of the mission
-            if (CurrentLocation.SelectedMission != null && 
-                CurrentLocation.SelectedMission.Locations[1] != SelectedLocation)
+            CurrentLocation.SetSelectedMissionIndices(missionIndices);
+
+            foreach (Mission selectedMission in CurrentLocation.SelectedMissions.ToList())
             {
-                CurrentLocation.SelectedMissionIndex = -1;
+                if (selectedMission.Locations[0] != CurrentLocation ||
+                    selectedMission.Locations[1] != CurrentLocation)
+                {
+                    if (SelectedConnection == null) { return; }
+                    //the destination must be the same as the destination of the mission
+                    if (selectedMission.Locations[1] != SelectedLocation)
+                    {
+                        CurrentLocation.DeselectMission(selectedMission);
+                    }
+                }
             }
 
-            OnMissionSelected?.Invoke(SelectedConnection, CurrentLocation.SelectedMission);
+            OnMissionsSelected?.Invoke(SelectedConnection, CurrentLocation.SelectedMissions);
         }
 
         public void SelectRandomLocation(bool preferUndiscovered)
         {
-            List<Location> nextLocations = CurrentLocation.Connections.Select(c => c.OtherLocation(CurrentLocation)).ToList();            
+            List<Location> nextLocations = CurrentLocation.Connections.Where(c => !c.Locked).Select(c => c.OtherLocation(CurrentLocation)).ToList();            
             List<Location> undiscoveredLocations = nextLocations.FindAll(l => !l.Discovered);
             
             if (undiscoveredLocations.Count > 0 && preferUndiscovered)
@@ -672,97 +833,116 @@ namespace Barotrauma
             {
                 ProgressWorld();
             }
+
+            Radiation?.OnStep(steps);
         }
 
         private void ProgressWorld()
         {
             foreach (Location location in Locations)
             {
-                if (furthestDiscoveredLocation == null || 
-                    location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
+                if (location.Discovered)
                 {
-                    furthestDiscoveredLocation = location;
+                    if (furthestDiscoveredLocation == null || 
+                        location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
+                    {
+                        furthestDiscoveredLocation = location;
+                    }
                 }
             }
 
             foreach (Location location in Locations)
             {
-                if (location.MapPosition.X < furthestDiscoveredLocation.MapPosition.X)
+                if (location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
                 {
-                    furthestDiscoveredLocation = location;
+                    continue;
                 }
 
-                if (location == CurrentLocation || location == SelectedLocation) { continue; }
+                if (location == CurrentLocation || location == SelectedLocation || location.IsGateBetweenBiomes) { continue; }
 
-                //find which types of locations this one can change to
-                var cct = location.Type.CanChangeTo;
-                List<LocationTypeChange> allowedTypeChanges = new List<LocationTypeChange>();
-                List<int> readyTypeChanges = new List<int>();
-                for (int i = 0; i < cct.Count; i++)
+                ProgressLocationTypeChanges(location);
+
+                if (location.Discovered)
                 {
-                    LocationTypeChange typeChange = cct[i];
-                    if (typeChange.RequireDiscovered && !location.Discovered) { continue; }
-                    //check if there are any adjacent locations that would prevent the change
-                    bool disallowedFound = false;
-                    foreach (string disallowedLocationName in typeChange.DisallowedAdjacentLocations)
-                    {
-                        if (location.Connections.Any(c => c.OtherLocation(location).Type.Identifier.Equals(disallowedLocationName, StringComparison.OrdinalIgnoreCase)))
-                        {
-                            disallowedFound = true;
-                            break;
-                        }
-                    }
-                    if (disallowedFound) { continue; }
-
-                    //check that there's a required adjacent location present
-                    bool requiredFound = false;
-                    foreach (string requiredLocationName in typeChange.RequiredAdjacentLocations)
-                    {
-                        if (location.Connections.Any(c => c.OtherLocation(location).Type.Identifier.Equals(requiredLocationName, StringComparison.OrdinalIgnoreCase)))
-                        {
-                            requiredFound = true;
-                            break;
-                        }
-                    }
-                    if (!requiredFound && typeChange.RequiredAdjacentLocations.Count > 0) { continue; }
-
-                    allowedTypeChanges.Add(typeChange);
-
-                    if (location.TypeChangeTimer >= typeChange.RequiredDuration)
-                    {
-                        readyTypeChanges.Add(i);
-                    }
+                    location.UpdateStore();
                 }
+            }
+        }
 
-                List<float> readyTypeProbabilities = readyTypeChanges.Select(i => cct[i].DetermineProbability(location)).ToList();
-                //select a random type change
-                if (Rand.Range(0.0f, 1.0f) < readyTypeChanges.Sum(i => readyTypeProbabilities[i]))
+        private void ProgressLocationTypeChanges(Location location)
+        {
+            location.TimeSinceLastTypeChange++;
+            location.LocationTypeChangeCooldown--;
+
+            if (location.PendingLocationTypeChange != null)
+            {
+                if (location.PendingLocationTypeChange.Value.typeChange.DetermineProbability(location) <= 0.0f)
                 {
-                    var selectedTypeChangeIndex = 
-                        ToolBox.SelectWeightedRandom(
-                            readyTypeChanges,
-                            readyTypeChanges.Select(i => readyTypeProbabilities[i]).ToList(),
-                            Rand.RandSync.Unsynced);
-                    var selectedTypeChange = cct[selectedTypeChangeIndex];
-                    if (selectedTypeChange != null)
-                    {
-                        string prevName = location.Name;
-                        location.ChangeType(LocationType.List.Find(lt => lt.Identifier.Equals(selectedTypeChange.ChangeToType, StringComparison.OrdinalIgnoreCase)));
-                        ChangeLocationType(location, prevName, selectedTypeChange);
-                        location.TypeChangeTimer = -1;
-                    }
-                }
-                
-                if (allowedTypeChanges.Count > 0)
-                {
-                    location.TypeChangeTimer++;
+                    //remove pending type change if it's no longer allowed
+                    location.PendingLocationTypeChange = null;
                 }
                 else
                 {
-                    location.TypeChangeTimer = 0;
+                    location.PendingLocationTypeChange =
+                        (location.PendingLocationTypeChange.Value.typeChange,
+                        location.PendingLocationTypeChange.Value.delay - 1,
+                        location.PendingLocationTypeChange.Value.parentMission);
+                    if (location.PendingLocationTypeChange.Value.delay <= 0)
+                    {
+                        ChangeLocationType(location, location.PendingLocationTypeChange.Value.typeChange);
+                    }
+                    return;
                 }
+            }
 
-                location.UpdateStore();
+            //find which types of locations this one can change to
+            Dictionary<LocationTypeChange, float> allowedTypeChanges = new Dictionary<LocationTypeChange, float>();
+            foreach (LocationTypeChange typeChange in location.Type.CanChangeTo)
+            {
+                float probability = typeChange.DetermineProbability(location);
+                if (probability <= 0.0f) { continue; }
+                allowedTypeChanges.Add(typeChange, probability);
+            }
+
+            //select a random type change
+            if (Rand.Range(0.0f, 1.0f) < allowedTypeChanges.Sum(change => change.Value))
+            {
+                var selectedTypeChange =
+                    ToolBox.SelectWeightedRandom(
+                        allowedTypeChanges.Keys.ToList(),
+                        allowedTypeChanges.Values.ToList(),
+                        Rand.RandSync.Unsynced);
+                if (selectedTypeChange != null)
+                {
+                    if (selectedTypeChange.RequiredDurationRange.X > 0)
+                    {
+                        location.PendingLocationTypeChange = 
+                            (selectedTypeChange,
+                            Rand.Range(selectedTypeChange.RequiredDurationRange.X, selectedTypeChange.RequiredDurationRange.Y),
+                            null);
+                    }
+                    else
+                    {
+                        ChangeLocationType(location, selectedTypeChange);
+                    }
+                    return;
+                }
+            }
+
+            foreach (LocationTypeChange typeChange in location.Type.CanChangeTo)
+            {
+                foreach (var requirement in typeChange.Requirements)
+                {
+                    if (requirement.AnyWithinDistance(location, requirement.RequiredProximityForProbabilityIncrease))
+                    {
+                        if (!location.ProximityTimer.ContainsKey(requirement)) { location.ProximityTimer[requirement] = 0; }
+                        location.ProximityTimer[requirement] += 1;
+                    }
+                    else
+                    {
+                        location.ProximityTimer.Remove(requirement);
+                    }
+                }
             }
         }
 
@@ -811,15 +991,43 @@ namespace Barotrauma
             return distance;
         }
 
-        partial void ChangeLocationType(Location location, string prevName, LocationTypeChange change);
+        private void ChangeLocationType(Location location, LocationTypeChange change)
+        {
+            string prevName = location.Name;
+
+            var newType = LocationType.List.Find(lt => lt.Identifier.Equals(change.ChangeToType, StringComparison.OrdinalIgnoreCase));
+            if (newType == null)
+            {
+                DebugConsole.ThrowError($"Failed to change the type of the location \"{location.Name}\". Location type \"{change.ChangeToType}\" not found.");
+                return;
+            }
+
+            if (newType.OutpostTeam != location.Type.OutpostTeam ||
+                newType.HasOutpost != location.Type.HasOutpost)
+            {
+                location.ClearMissions();
+            }
+            location.ChangeType(newType);
+            ChangeLocationTypeProjSpecific(location, prevName, change);
+            foreach (var requirement in change.Requirements)
+            {
+                location.ProximityTimer.Remove(requirement);
+            }
+            location.TimeSinceLastTypeChange = 0;
+            location.LocationTypeChangeCooldown = change.CooldownAfterChange;
+            location.PendingLocationTypeChange = null;
+        }
+
+        partial void ChangeLocationTypeProjSpecific(Location location, string prevName, LocationTypeChange change);
+
         partial void ClearAnimQueue();
 
         /// <summary>
         /// Load a previously saved map from an xml element
         /// </summary>
-        public static Map Load(CampaignMode campaign, XElement element)
+        public static Map Load(CampaignMode campaign, XElement element, CampaignSettings settings)
         {
-            Map map = new Map(campaign, element);
+            Map map = new Map(campaign, element, settings);
             map.LoadState(element, false);
 #if CLIENT
             map.DrawOffset = -map.CurrentLocation.MapPosition;
@@ -847,9 +1055,19 @@ namespace Barotrauma
                 {
                     case "location":
                         Location location = Locations[subElement.GetAttributeInt("i", 0)];
-
-                        location.TypeChangeTimer = subElement.GetAttributeInt("changetimer", 0);
-                        location.Discovered = subElement.GetAttributeBool("discovered", false);
+                        location.ProximityTimer.Clear();
+                        for (int i = 0; i < location.Type.CanChangeTo.Count; i++)
+                        {
+                            for (int j = 0; j < location.Type.CanChangeTo[i].Requirements.Count; j++)
+                            {
+                                location.ProximityTimer.Add(location.Type.CanChangeTo[i].Requirements[j], subElement.GetAttributeInt("changetimer" + i + "-" + j, 0));
+                            }
+                        }
+                        location.LoadLocationTypeChange(subElement);
+                        if (subElement.GetAttributeBool("discovered", false))
+                        {
+                            location.Discover(checkTalents: false);
+                        }
                         if (location.Discovered)
                         {
 #if CLIENT
@@ -861,7 +1079,6 @@ namespace Barotrauma
                             }
                         }
 
-
                         string locationType = subElement.GetAttributeString("type", "");
                         string prevLocationName = location.Name;
                         LocationType prevLocationType = location.Type;
@@ -872,14 +1089,22 @@ namespace Barotrauma
                             var change = prevLocationType.CanChangeTo.Find(c => c.ChangeToType.Equals(location.Type.Identifier, StringComparison.OrdinalIgnoreCase));
                             if (change != null)
                             {
-                                ChangeLocationType(location, prevLocationName, change);
+                                ChangeLocationTypeProjSpecific(location, prevLocationName, change);
+                                location.TimeSinceLastTypeChange = 0;
                             }
                         }
+
+                        location.LoadStore(subElement);
                         location.LoadMissions(subElement);
+
                         break;
                     case "connection":
                         int connectionIndex = subElement.GetAttributeInt("i", 0);
                         Connections[connectionIndex].Passed = subElement.GetAttributeBool("passed", false);
+                        Connections[connectionIndex].Locked = subElement.GetAttributeBool("locked", false);
+                        break;
+                    case "radiation":
+                        Radiation = new Radiation(this, generationParams.RadiationParams, subElement);
                         break;
                 }
             }
@@ -892,6 +1117,7 @@ namespace Barotrauma
             int currentLocationConnection = element.GetAttributeInt("currentlocationconnection", -1);
             if (currentLocationConnection >= 0)
             {
+                Connections[currentLocationConnection].Locked = false;
                 SelectLocation(Connections[currentLocationConnection].OtherLocation(CurrentLocation));
             }
             else
@@ -922,6 +1148,8 @@ namespace Barotrauma
                     mapElement.Add(new XAttribute("currentlocationconnection", Connections.IndexOf(Connections.Find(c => c.LevelData == Level.Loaded.LevelData))));
                 }
             }
+            mapElement.Add(new XAttribute("width", Width));
+            mapElement.Add(new XAttribute("height", Height));
             mapElement.Add(new XAttribute("selectedlocation", SelectedLocationIndex));
             mapElement.Add(new XAttribute("startlocation", Locations.IndexOf(StartLocation)));
             mapElement.Add(new XAttribute("endlocation", Locations.IndexOf(EndLocation)));
@@ -940,11 +1168,17 @@ namespace Barotrauma
 
                 var connectionElement = new XElement("connection",
                     new XAttribute("passed", connection.Passed),
+                    new XAttribute("locked", connection.Locked),
                     new XAttribute("difficulty", connection.Difficulty),
                     new XAttribute("biome", connection.Biome.Identifier),
                     new XAttribute("locations", Locations.IndexOf(connection.Locations[0]) + "," + Locations.IndexOf(connection.Locations[1])));
                 connection.LevelData.Save(connectionElement);
                 mapElement.Add(connectionElement);
+            }
+
+            if (Radiation != null)
+            {
+                mapElement.Add(Radiation.Save());
             }
 
             element.Add(mapElement);

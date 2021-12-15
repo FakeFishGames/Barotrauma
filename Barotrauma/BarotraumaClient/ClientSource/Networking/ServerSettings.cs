@@ -126,11 +126,15 @@ namespace Barotrauma.Networking
 
         public void ClientRead(IReadMessage incMsg)
         {
+            cachedServerListInfo = null;
+
             ServerName = incMsg.ReadString();
             ServerMessageText = incMsg.ReadString();
             MaxPlayers = incMsg.ReadByte();
             HasPassword = incMsg.ReadBoolean();
             IsPublic = incMsg.ReadBoolean();
+            GameMain.NetLobbyScreen.SetPublic(IsPublic);
+            AllowFileTransfers = incMsg.ReadBoolean();
             incMsg.ReadPadBits();
             TickRate = incMsg.ReadRangedInteger(1, 60);
             GameMain.NetworkMember.TickRate = TickRate;
@@ -147,7 +151,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminWrite(NetFlags dataToSend, int? missionTypeOr = null, int? missionTypeAnd = null, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0, bool? useRespawnShuttle = null)
+        public void ClientAdminWrite(NetFlags dataToSend, int? missionTypeOr = null, int? missionTypeAnd = null, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0, bool? radiationEnabled = null, bool? useRespawnShuttle = null, int maxMissionCount = 0)
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
@@ -212,6 +216,9 @@ namespace Barotrauma.Networking
 
                 outMsg.Write(autoRestart != null);
                 outMsg.Write(autoRestart ?? false);
+                outMsg.Write(radiationEnabled ?? RadiationEnabled);
+                outMsg.Write((byte)maxMissionCount + 1);
+
                 outMsg.WritePadBits();
             }
 
@@ -274,7 +281,7 @@ namespace Barotrauma.Networking
                 if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) { ToggleSettingsFrame(btn, userData); }
                 return true;
             };
-            
+
             new GUIButton(new RectTransform(Vector2.One, settingsFrame.RectTransform), "", style: null)
             {
                 OnClicked = ToggleSettingsFrame
@@ -500,8 +507,8 @@ namespace Barotrauma.Networking
 
             CreateLabeledSlider(roundsTab, "ServerSettingsRespawnInterval", out slider, out sliderLabel);
             string intervalLabel = sliderLabel.Text;
-            slider.Step = 0.05f;
             slider.Range = new Vector2(10.0f, 600.0f);
+            slider.StepValue = 10.0f;
             GetPropertyData("RespawnInterval").AssignGUIComponent(slider);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
@@ -646,7 +653,14 @@ namespace Barotrauma.Networking
 
             foreach (ItemPrefab ip in ItemPrefab.Prefabs)
             {
-                if (!ip.CanBeBought && !ip.Tags.Contains("smallitem")) continue;
+                if (ip.AllowAsExtraCargo.HasValue)
+                {
+                    if (!ip.AllowAsExtraCargo.Value) { continue; }
+                }
+                else
+                {
+                    if (!ip.CanBeBought) { continue; }
+                }
 
                 var itemFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), cargoFrame.Content.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
                 {
@@ -725,9 +739,17 @@ namespace Barotrauma.Networking
                 TextManager.Get("ServerSettingsDestructibleOutposts"));
             GetPropertyData("DestructibleOutposts").AssignGUIComponent(destructibleOutposts);
 
+            var lockAllDefaultWires = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
+                TextManager.Get("ServerSettingsLockAllDefaultWires"));
+            GetPropertyData("LockAllDefaultWires").AssignGUIComponent(lockAllDefaultWires);
+
             var allowRewiring = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowRewiring"));
             GetPropertyData("AllowRewiring").AssignGUIComponent(allowRewiring);
+
+            var allowWifiChatter = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform), 
+                TextManager.Get("ServerSettingsAllowWifiChat"));
+            GetPropertyData("AllowLinkingWifiToChat").AssignGUIComponent(allowWifiChatter);
 
             var allowDisguises = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowDisguises"));
@@ -915,6 +937,7 @@ namespace Barotrauma.Networking
 
         public bool ToggleSettingsFrame(GUIButton button, object obj)
         {
+            if (GameMain.NetworkMember == null) { return false; }
             if (settingsFrame == null)
             {
                 CreateSettingsFrame();
@@ -935,6 +958,13 @@ namespace Barotrauma.Networking
             }
 
             return false;
+        }
+
+        private ServerInfo cachedServerListInfo = null;
+        public ServerInfo GetServerListInfo()
+        {
+            cachedServerListInfo ??= GameMain.ServerListScreen.UpdateServerInfoWithServerSettings(GameMain.Client.ClientPeer.ServerConnection, this);
+            return cachedServerListInfo;
         }
     }
 }

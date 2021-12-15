@@ -58,6 +58,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize(1.0f, false, description: "How much the position of the item can vary from the wall the item spawns on.")]
+        public float RandomOffsetFromWall
+        {
+            get;
+            set;
+        }
+
         public bool Attached
         {
             get { return holdable != null && holdable.Attached; }
@@ -66,6 +73,14 @@ namespace Barotrauma.Items.Components
         public LevelResource(Item item, XElement element) : base(item, element)
         {
             IsActive = true;
+        }
+
+        public override void Move(Vector2 amount)
+        {
+            if (trigger != null && amount.LengthSquared() > 0.00001f)
+            {
+                trigger.SetTransform(item.SimPosition, 0.0f);
+            }
         }
 
         public override void Update(float deltaTime, Camera cam)

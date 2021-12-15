@@ -43,15 +43,16 @@ namespace Barotrauma
             }
 
             GUI.DrawString(spriteBatch, new Vector2(10, y), "EventManager", Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 20), "Event cooldown: " + eventCoolDown, Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 35), "Current intensity: " + (int) Math.Round(currentIntensity * 100), Color.Lerp(Color.White, GUI.Style.Red, currentIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 50), "Target intensity: " + (int) Math.Round(targetIntensity * 100), Color.Lerp(Color.White, GUI.Style.Red, targetIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 20), "Event cooldown: " + (int)Math.Max(eventCoolDown, 0), Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 35), "Current intensity: " + (int)Math.Round(currentIntensity * 100), Color.Lerp(Color.White, GUI.Style.Red, currentIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 50), "Target intensity: " + (int)Math.Round(targetIntensity * 100), Color.Lerp(Color.White, GUI.Style.Red, targetIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
 
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 65), "AvgHealth: " + (int) Math.Round(avgCrewHealth * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgCrewHealth), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 80), "AvgHullIntegrity: " + (int) Math.Round(avgHullIntegrity * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgHullIntegrity), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 95), "FloodingAmount: " + (int) Math.Round(floodingAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, floodingAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 110), "FireAmount: " + (int) Math.Round(fireAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, fireAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 125), "EnemyDanger: " + (int) Math.Round(enemyDanger * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, enemyDanger), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 65), "AvgHealth: " + (int)Math.Round(avgCrewHealth * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgCrewHealth), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 80), "AvgHullIntegrity: " + (int)Math.Round(avgHullIntegrity * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgHullIntegrity), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 95), "FloodingAmount: " + (int)Math.Round(floodingAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, floodingAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 110), "FireAmount: " + (int)Math.Round(fireAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, fireAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 125), "EnemyDanger: " + (int)Math.Round(enemyDanger * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, enemyDanger), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 140), "MonsterTotalStrength: " + (int)Math.Round(monsterTotalStrength), Color.Lerp(GUI.Style.Green, GUI.Style.Red, monsterTotalStrength / 5000f), Color.Black * 0.6f, 0, GUI.SmallFont);
 
 #if DEBUG
             if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt) &&
@@ -75,7 +76,7 @@ namespace Barotrauma
                 lastIntensityUpdate = (float) Timing.TotalTime;
             }
 
-            Rectangle graphRect = new Rectangle(15, y + 150, 150, 50);
+            Rectangle graphRect = new Rectangle(15, y + 165, 150, 50);
 
             GUI.DrawRectangle(spriteBatch, graphRect, Color.Black * 0.5f, true);
             intensityGraph.Draw(spriteBatch, graphRect, 1.0f, 0.0f, Color.Lerp(Color.White, GUI.Style.Red, currentIntensity));
@@ -86,15 +87,26 @@ namespace Barotrauma
                 new Vector2(graphRect.Right + 5, graphRect.Y + graphRect.Height * (1.0f - eventThreshold)), Color.Orange, 0, 1);
 
             y = graphRect.Bottom + 20;
-            if (eventCoolDown > 0.0f)
+            int x = graphRect.X;
+            if (isCrewAway && crewAwayDuration < settings.FreezeDurationWhenCrewAway)
             {
-                GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "Event cooldown active: " + (int) eventCoolDown, Color.LightGreen * 0.8f, null, 0, GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(x, y), "Events frozen (crew away from sub): " + ToolBox.SecondsToReadableTime(settings.FreezeDurationWhenCrewAway - crewAwayDuration), Color.LightGreen * 0.8f, null, 0, GUI.SmallFont);
+                y += 15;
+            }
+            else if (crewAwayResetTimer > 0.0f)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(x, y), "Events frozen (crew just returned to the sub): " + ToolBox.SecondsToReadableTime(crewAwayResetTimer), Color.LightGreen * 0.8f, null, 0, GUI.SmallFont);
+                y += 15;
+            }
+            else if (eventCoolDown > 0.0f)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(x, y), "Event cooldown active: " + ToolBox.SecondsToReadableTime(eventCoolDown), Color.LightGreen * 0.8f, null, 0, GUI.SmallFont);
                 y += 15;
             }
             else if (currentIntensity > eventThreshold)
             {
-                GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y),
-                    "Intensity too high for new events: " + (int) (currentIntensity * 100) + "%/" + (int) (eventThreshold * 100) + "%", Color.LightGreen * 0.8f, null, 0, GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(x, y),
+                    "Intensity too high for new events: " + (int)(currentIntensity * 100) + "%/" + (int)(eventThreshold * 100) + "%", Color.LightGreen * 0.8f, null, 0, GUI.SmallFont);
                 y += 15;
             }
 
@@ -102,22 +114,27 @@ namespace Barotrauma
             {
                 if (Submarine.MainSub == null) { break; }
 
-                GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "New event (ID " + eventSet.DebugIdentifier + ") after: ", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(x, y), "New event (ID " + eventSet.DebugIdentifier + ") after: ", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
                 y += 12;
 
+                if (eventSet.PerCave)
+                {
+                    GUI.DrawString(spriteBatch, new Vector2(x, y), "    submarine near cave", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
+                    y += 12;
+                }
                 if (eventSet.PerWreck)
                 {
-                    GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "    submarine near the wreck", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
+                    GUI.DrawString(spriteBatch, new Vector2(x, y), "    submarine near the wreck", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
                     y += 12;
                 }
                 if (eventSet.PerRuin)
                 {
-                    GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "    submarine near the ruins", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
+                    GUI.DrawString(spriteBatch, new Vector2(x, y), "    submarine near the ruins", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
                     y += 12;
                 }
                 if (roundDuration < eventSet.MinMissionTime)
                 {
-                    GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y),
+                    GUI.DrawString(spriteBatch, new Vector2(x, y),
                         "    " + (int) (eventSet.MinDistanceTraveled * 100.0f) + "% travelled (current: " + (int) (distanceTraveled * 100.0f) + " %)",
                         ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) ? Color.Lerp(GUI.Style.Yellow, GUI.Style.Red, eventSet.MinDistanceTraveled - distanceTraveled) : GUI.Style.Green) * 0.8f, null, 0, GUI.SmallFont);
                     y += 12;
@@ -125,7 +142,7 @@ namespace Barotrauma
 
                 if (CurrentIntensity < eventSet.MinIntensity || CurrentIntensity > eventSet.MaxIntensity)
                 {
-                    GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y),
+                    GUI.DrawString(spriteBatch, new Vector2(x, y),
                         "    intensity between " + ((int) eventSet.MinIntensity) + " and " + ((int) eventSet.MaxIntensity),
                         Color.Orange * 0.8f, null, 0, GUI.SmallFont);
                     y += 12;
@@ -133,22 +150,28 @@ namespace Barotrauma
 
                 if (roundDuration < eventSet.MinMissionTime)
                 {
-                    GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y),
+                    GUI.DrawString(spriteBatch, new Vector2(x, y),
                         "    " + (int) (eventSet.MinMissionTime - roundDuration) + " s",
                         Color.Lerp(GUI.Style.Yellow, GUI.Style.Red, (eventSet.MinMissionTime - roundDuration)), null, 0, GUI.SmallFont);
                 }
 
                 y += 15;
+
+                if (y > GameMain.GraphicsHeight * 0.9f)
+                {
+                    y = graphRect.Bottom + 35;
+                    x += 250;
+                }
             }
 
-            GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "Current events: ", Color.White * 0.9f, null, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(x, y), "Current events: ", Color.White * 0.9f, null, 0, GUI.SmallFont);
             y += 15;
 
             foreach (Event ev in activeEvents.Where(ev => !ev.IsFinished || PlayerInput.IsShiftDown()))
             {
-                GUI.DrawString(spriteBatch, new Vector2(graphRect.X + 5, y), ev.ToString(), (!ev.IsFinished ? Color.White : Color.Red) * 0.8f, null, 0, GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(x + 5, y), ev.ToString(), (!ev.IsFinished ? Color.White : Color.Red) * 0.8f, null, 0, GUI.SmallFont);
 
-                Rectangle rect = new Rectangle(new Point(graphRect.X + 5, y), GUI.SmallFont.MeasureString(ev.ToString()).ToPoint());
+                Rectangle rect = new Rectangle(new Point(x + 5, y), GUI.SmallFont.MeasureString(ev.ToString()).ToPoint());
 
                 Rectangle outlineRect = new Rectangle(rect.Location, rect.Size);
                 outlineRect.Inflate(4, 4);
@@ -176,6 +199,11 @@ namespace Barotrauma
                 }
 
                 y += 18;
+                if (y > GameMain.GraphicsHeight * 0.9f)
+                {
+                    y = graphRect.Bottom + 35;
+                    x += 250;
+                }
             }
         }
 
@@ -333,7 +361,7 @@ namespace Barotrauma
                           $"Spawn pending: {artifactEvent.SpawnPending.ColorizeObject()}\n" +
                           $"Spawn position: {artifactEvent.SpawnPos.ColorizeObject()}\n";
 
-            if (artifactEvent.Item != null)
+            if (artifactEvent.Item != null && !artifactEvent.Item.Removed)
             {
                 Vector2 pos = artifactEvent.Item.WorldPosition;
                 positions.Add(new DebugLine(pos, Color.White));
@@ -364,7 +392,8 @@ namespace Barotrauma
 
                 foreach (Character monster in monsterEvent.Monsters)
                 {
-                    text += $"    {monster.ColorizeObject()} -> (Dead: {monster.IsDead.ColorizeObject()}, Health: {monster.HealthPercentage.ColorizeObject()}%, AIState: {(monster.AIController?.State).ColorizeObject()})\n";
+                    text += $"    {monster.ColorizeObject()} -> (Dead: {monster.IsDead.ColorizeObject()}, Health: {monster.HealthPercentage.ColorizeObject()}%, AIState: {(monster.AIController is EnemyAIController enemyAI ? enemyAI.State : AIState.Idle ).ColorizeObject()})\n";
+                    if (monster.Removed) { continue; }
                     positions.Add(new DebugLine(monster.WorldPosition, Color.Red));
                 }
             }
@@ -530,6 +559,22 @@ namespace Barotrauma
                         {
                             IconColor = prefab.IconColor
                         };
+                    }
+                    break;
+                case NetworkEventType.UNLOCKPATH:
+                    UInt16 connectionIndex = msg.ReadUInt16();
+                    if (GameMain.GameSession?.Map?.Connections != null)
+                    {
+                        if (connectionIndex >= GameMain.GameSession.Map.Connections.Count)
+                        {
+                            DebugConsole.ThrowError($"Failed to unlock a path on the campaign map. Connection index out of bounds (index: {connectionIndex}, number of connections: {GameMain.GameSession.Map.Connections.Count})");
+                        }
+                        else
+                        {
+                            GameMain.GameSession.Map.Connections[connectionIndex].Locked = false;
+                            new GUIMessageBox(string.Empty, TextManager.Get("pathunlockedgeneric"),
+                                new string[0], type: GUIMessageBox.Type.InGame, iconStyle: "UnlockPathIcon", relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128));
+                        }
                     }
                     break;
             }

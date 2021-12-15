@@ -36,7 +36,7 @@ namespace Barotrauma
                     if (sabotageContainerIds.Contains(item.prefab.Identifier))
                     {
                         ++totalAmount;
-                        if (item.OwnInventory.Items.Length <= 0 || item.OwnInventory.Items.All(containedItem => containedItem != null && !validReplacementIds.Contains(containedItem.Prefab.Identifier)))
+                        if (item.OwnInventory.AllItems.All(containedItem => !validReplacementIds.Contains(containedItem.Prefab.Identifier)))
                         {
                             continue;
                         }

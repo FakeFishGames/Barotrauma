@@ -1,18 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 
 namespace Barotrauma
 {
     partial class AICharacter : Character
-    {
-        //characters that are further than this from the camera (and all clients)
-        //have all their limb physics bodies disabled
-        const float EnableSimplePhysicsDist = 6000.0f;        
-        const float DisableSimplePhysicsDist = EnableSimplePhysicsDist * 0.9f;
-
-        const float EnableSimplePhysicsDistSqr = EnableSimplePhysicsDist * EnableSimplePhysicsDist;
-        const float DisableSimplePhysicsDistSqr = DisableSimplePhysicsDist * DisableSimplePhysicsDist;
-        
+    {        
         private AIController aiController;
         
         public override AIController AIController
@@ -20,8 +11,8 @@ namespace Barotrauma
             get { return aiController; }
         }
 
-        public AICharacter(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, RagdollParams ragdoll = null)
-            : base(speciesName, position, seed, characterInfo, id: Entity.NullEntityID, isRemotePlayer: isNetworkPlayer, ragdollParams: ragdoll)
+        public AICharacter(CharacterPrefab prefab, string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isNetworkPlayer = false, RagdollParams ragdoll = null)
+            : base(prefab, speciesName, position, seed, characterInfo, id: id, isRemotePlayer: isNetworkPlayer, ragdollParams: ragdoll)
         {
             InitProjSpecific();
         }
@@ -63,11 +54,11 @@ namespace Barotrauma
             if (!IsRemotePlayer && !(AIController is HumanAIController))
             {
                 float characterDistSqr = GetDistanceSqrToClosestPlayer();
-                if (characterDistSqr > EnableSimplePhysicsDistSqr)
+                if (characterDistSqr > MathUtils.Pow2(Params.DisableDistance * 0.5f))
                 {
                     AnimController.SimplePhysicsEnabled = true;
                 }
-                else if (characterDistSqr < DisableSimplePhysicsDistSqr)
+                else if (characterDistSqr < MathUtils.Pow2(Params.DisableDistance * 0.5f * 0.9f))
                 {
                     AnimController.SimplePhysicsEnabled = false;
                 }

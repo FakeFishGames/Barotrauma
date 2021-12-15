@@ -3,13 +3,10 @@
 Welcome to Barotrauma's GitHub repository! If you're here to report an issue or to contribute to the development, please read the instructions below before you do.
 
 ## I have a question!
-Please check [our FAQ](https://barotraumagame.com/faq/) in case the question has already been answered. If not, you should stop by at our [Discord Server](discord.gg/undertow) and [Steam forums](https://steamcommunity.com/app/602960/discussions/).
+Please check [our FAQ](https://barotraumagame.com/faq/) in case the question has already been answered. If not, you can post the question on the [Barotrauma discussion forum](https://undertowgames.com/forum/viewforum.php?f=17) or stop by at our [Discord Server](https://discord.gg/undertow).
 
 ## Reporting a bug
 If you've encountered a bug, you can report it in the [issue tracker](https://github.com/Regalis11/Barotrauma/issues). Please follow the instructions in the issue template to make it easier for us to diagnose and fix the issue.
-
-## Sharing ideas and suggestions
-To keep the number of tickets in the issue tracker manageable, please do not post feature requests as tickets. Instead, you can use the [Discussions section](https://github.com/Regalis11/Barotrauma/discussions) to share and discuss feedback, ideas and suggestions for future development. 
 
 ## Code contributions
 Before you start doing modifications to the code or submitting pull requests to the repository, it is important that you've read and understood (at least the human-readable summary part) of [our EULA](https://github.com/Regalis11/Barotrauma/blob/master/EULA.txt). To sum it up, Barotrauma is not an open source project in the sense of free, open source software that you can freely distribute or reuse. Even though the early versions of the game have been available for free, current versions of the game have a price tag. If you're not comfortable with your contributions potentially being used in a commercial product, do not submit pull requests to the repository.

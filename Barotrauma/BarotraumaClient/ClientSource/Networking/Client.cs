@@ -10,6 +10,7 @@ namespace Barotrauma.Networking
     {
         public string Name;
         public string PreferredJob;
+        public CharacterTeamType PreferredTeam;
         public UInt16 NameID;
         public UInt64 SteamID;
         public byte ID;
@@ -113,7 +114,7 @@ namespace Barotrauma.Networking
                 return;
             }
             Permissions = permissions;
-            PermittedConsoleCommands = new List<DebugConsole.Command>(permittedConsoleCommands);
+            PermittedConsoleCommands.Clear(); PermittedConsoleCommands.AddRange(permittedConsoleCommands);
         }
 
         public void GivePermission(ClientPermissions permission)

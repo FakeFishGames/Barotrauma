@@ -1,9 +1,9 @@
-﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -43,6 +43,12 @@ namespace Barotrauma
             Prefabs.Remove(this);
         }
 
+        private static readonly Dictionary<string, float> _itemRepairPriorities = new Dictionary<string, float>();
+        /// <summary>
+        /// Tag -> priority.
+        /// </summary>
+        public static IReadOnlyDictionary<string, float> ItemRepairPriorities => _itemRepairPriorities;
+
         public static XElement NoJobElement;
         public static JobPrefab Get(string identifier)
         {
@@ -62,9 +68,20 @@ namespace Barotrauma
             }
         }
 
+        public class PreviewItem
+        {
+            public readonly string ItemIdentifier;
+            public readonly bool ShowPreview;
+
+            public PreviewItem(string itemIdentifier, bool showPreview)
+            {
+                ItemIdentifier = itemIdentifier;
+                ShowPreview = showPreview;
+            }
+        }
+
         public readonly Dictionary<int, XElement> ItemSets = new Dictionary<int, XElement>();
-        public readonly Dictionary<int, List<string>> ItemIdentifiers = new Dictionary<int, List<string>>();
-        public readonly Dictionary<int, Dictionary<string, bool>> ShowItemPreview = new Dictionary<int, Dictionary<string, bool>>();
+        public readonly Dictionary<int, List<PreviewItem>> PreviewItems = new Dictionary<int, List<PreviewItem>>();
         public readonly List<SkillPrefab> Skills = new List<SkillPrefab>();
         public readonly List<AutonomousObjective> AutonomousObjectives = new List<AutonomousObjective>();
         public readonly List<string> AppropriateOrders = new List<string>();
@@ -178,6 +195,14 @@ namespace Barotrauma
             private set;
         }
 
+        //whether the job should be available to NPCs
+        [Serialize(false, false)]
+        public bool HiddenJob
+        {
+            get;
+            private set;
+        }
+
         public Sprite Icon;
         public Sprite IconSmall;
 
@@ -195,7 +220,7 @@ namespace Barotrauma
             SerializableProperty.DeserializeProperties(this, element);
 
             Name = TextManager.Get("JobName." + Identifier);
-            Description = TextManager.Get("JobDescription." + Identifier);
+            Description = TextManager.Get("JobDescription." + Identifier, returnNull: true) ?? string.Empty;
             Identifier = Identifier.ToLowerInvariant();
             Element = element;
 
@@ -206,8 +231,7 @@ namespace Barotrauma
                 {
                     case "itemset":
                         ItemSets.Add(variant, subElement);
-                        ItemIdentifiers[variant] = new List<string>();
-                        ShowItemPreview[variant] = new Dictionary<string, bool>();
+                        PreviewItems[variant] = new List<PreviewItem>();
                         loadItemIdentifiers(subElement, variant);
                         variant++;
                         break;
@@ -250,8 +274,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        ItemIdentifiers[variant].Add(itemIdentifier);
-                        ShowItemPreview[variant][itemIdentifier] = itemElement.GetAttributeBool("showpreview", true);
+                        PreviewItems[variant].Add(new PreviewItem(itemIdentifier, itemElement.GetAttributeBool("showpreview", true)));
                     }
                     loadItemIdentifiers(itemElement, variant);
                 }
@@ -261,11 +284,12 @@ namespace Barotrauma
 
             Skills.Sort((x,y) => y.LevelRange.X.CompareTo(x.LevelRange.X));
 
-            ClothingElement = element.GetChildElement("PortraitClothing");
+            // Disabled on purpose, TODO: remove all references?
+            //ClothingElement = element.GetChildElement("PortraitClothing");
         }
         
 
-        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(p => p.Identifier != "watchman", sync);
+        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(p => !p.HiddenJob, sync);
 
         public static void LoadAll(IEnumerable<ContentFile> files)
         {
@@ -286,7 +310,6 @@ namespace Barotrauma
             }
             foreach (XElement element in mainElement.Elements())
             {
-                if (element.Name.ToString().Equals("nojob", StringComparison.OrdinalIgnoreCase)) { continue; }
                 if (element.IsOverride())
                 {
                     var job = new JobPrefab(element.FirstElement(), file.Path)
@@ -297,6 +320,7 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (!element.Name.ToString().Equals("job", StringComparison.OrdinalIgnoreCase)) { continue; }
                     var job = new JobPrefab(element, file.Path)
                     {
                         ContentPackage = file.ContentPackage
@@ -304,8 +328,31 @@ namespace Barotrauma
                     Prefabs.Add(job, false);
                 }
             }
-            NoJobElement = NoJobElement ?? mainElement.Element("NoJob");
-            NoJobElement = NoJobElement ?? mainElement.Element("nojob");
+            NoJobElement ??= mainElement.GetChildElement("nojob");
+            var itemRepairPrioritiesElement = mainElement.GetChildElement("ItemRepairPriorities");
+            if (itemRepairPrioritiesElement != null)
+            {
+                foreach (var subElement in itemRepairPrioritiesElement.Elements())
+                {
+                    string tag = subElement.GetAttributeString("tag", null);
+                    if (tag != null)
+                    {
+                        float priority = subElement.GetAttributeFloat("priority", -1f);
+                        if (priority >= 0)
+                        {
+                            _itemRepairPriorities.TryAdd(tag, priority);
+                        }
+                        else
+                        {
+                            DebugConsole.AddWarning($"The 'priority' attribute is missing from the the item repair priorities definition in {subElement} of {file.Path}.");
+                        }
+                    }
+                    else
+                    {
+                        DebugConsole.AddWarning($"The 'tag' attribute is missing from the the item repair priorities definition in {subElement} of {file.Path}.");
+                    }
+                }
+            }
         }
 
         public static void RemoveByFile(string filePath)

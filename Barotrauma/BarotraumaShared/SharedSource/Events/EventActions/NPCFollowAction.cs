@@ -48,9 +48,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    foreach (var goToObjective in humanAiController.ObjectiveManager.GetActiveObjectives<AIObjectiveGoTo>())
+                    foreach (var objective in humanAiController.ObjectiveManager.Objectives)
                     {
-                        if (goToObjective.Target == target)
+                        if (objective is AIObjectiveGoTo goToObjective && goToObjective.Target == target)
                         {
                             goToObjective.Abandon = true;
                         }

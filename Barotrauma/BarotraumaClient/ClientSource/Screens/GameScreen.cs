@@ -24,6 +24,9 @@ namespace Barotrauma
 
         public Effect PostProcessEffect { get; private set; }
         public Effect GradientEffect { get; private set; }
+        public Effect GrainEffect { get; private set; }
+        public Effect ThresholdTintEffect { get; private set; }
+        public Effect BlueprintEffect { get; set; }
 
         public GameScreen(GraphicsDevice graphics, ContentManager content)
         {
@@ -36,17 +39,20 @@ namespace Barotrauma
                 CreateRenderTargets(graphics);
             };
 
+            Effect LoadEffect(string path)
+                => content.Load<Effect>(path
 #if LINUX || OSX
-            //var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
-            damageEffect = content.Load<Effect>("Effects/damageshader_opengl");
-            PostProcessEffect = content.Load<Effect>("Effects/postprocess_opengl");
-            GradientEffect = content.Load<Effect>("Effects/gradientshader_opengl");
-#else
-            //var blurEffect = content.Load<Effect>("Effects/blurshader");
-            damageEffect = content.Load<Effect>("Effects/damageshader");
-            PostProcessEffect = content.Load<Effect>("Effects/postprocess");
-            GradientEffect = content.Load<Effect>("Effects/gradientshader");
+                        +"_opengl"
 #endif
+                );
+
+            //var blurEffect = LoadEffect("Effects/blurshader");
+            damageEffect = LoadEffect("Effects/damageshader");
+            PostProcessEffect = LoadEffect("Effects/postprocess");
+            GradientEffect = LoadEffect("Effects/gradientshader");
+            GrainEffect = LoadEffect("Effects/grainshader");
+            ThresholdTintEffect = LoadEffect("Effects/thresholdtint");
+            BlueprintEffect = LoadEffect("Effects/blueprintshader");
 
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
             damageEffect.Parameters["xStencil"].SetValue(damageStencil);
@@ -77,9 +83,8 @@ namespace Barotrauma
             }
             if (Character.Controlled?.Inventory != null)
             {
-                foreach (Item item in Character.Controlled.Inventory.Items)
+                foreach (Item item in Character.Controlled.Inventory.AllItems)
                 {
-                    if (item == null) { continue; }
                     if (Character.Controlled.HasEquippedItem(item))
                     {
                         item.AddToGUIUpdateList();
@@ -87,8 +92,7 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.GameSession != null) GameMain.GameSession.AddToGUIUpdateList();
-
+            GameMain.GameSession?.AddToGUIUpdateList();
             Character.AddAllToGUIUpdateList();
         }
         
@@ -134,7 +138,7 @@ namespace Barotrauma
                 for (int i = 0; i < Submarine.MainSubs.Length; i++)
                 {
                     if (Submarine.MainSubs[i] == null) continue;
-                    if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) continue;
+                    if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) { continue; }
 
                     Vector2 position = Submarine.MainSubs[i].SubBody != null ? Submarine.MainSubs[i].WorldPosition : Submarine.MainSubs[i].HiddenSubPosition;
 
@@ -143,6 +147,14 @@ namespace Barotrauma
                         spriteBatch, position, cam, 
                         Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height), 
                         GUI.SubmarineIcon, indicatorColor); 
+                }
+            }
+
+            if (!GUI.DisableHUD)
+            {
+                foreach (Character c in Character.CharacterList)
+                {
+                    c.DrawGUIMessages(spriteBatch, cam);
                 }
             }
 
@@ -169,10 +181,7 @@ namespace Barotrauma
                 Character.Controlled.ObstructVision && 
                 (Character.Controlled.ViewTarget == Character.Controlled || Character.Controlled.ViewTarget == null);
 
-            if (Character.Controlled != null)
-            {
-                GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
-            }
+            GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled?.CursorWorldPosition ?? Vector2.Zero);
 
             //------------------------------------------------------------------------
             graphics.SetRenderTarget(renderTarget);
@@ -249,6 +258,8 @@ namespace Barotrauma
             }
             spriteBatch.End();
 
+            Level.Loaded?.DrawFront(spriteBatch, cam);
+
             //draw the rendertarget and particles that are only supposed to be drawn in water into renderTargetWater
             graphics.SetRenderTarget(renderTargetWater);
 
@@ -317,10 +328,8 @@ namespace Barotrauma
             {
                 c.DrawFront(spriteBatch, cam);
             }
-            if (Level.Loaded != null)
-            {
-                Level.Loaded.DrawFront(spriteBatch, cam);
-            }
+
+            Level.Loaded?.DrawDebugOverlay(spriteBatch, cam);            
             if (GameMain.DebugDraw)
             {
                 MapEntity.mapEntityList.ForEach(me => me.AiTarget?.Draw(spriteBatch));
@@ -332,12 +341,13 @@ namespace Barotrauma
             }
             spriteBatch.End();
 
-            if (GameMain.LightManager.LosEnabled && GameMain.LightManager.LosMode != LosMode.None && Character.Controlled != null)
+            if (GameMain.LightManager.LosEnabled && GameMain.LightManager.LosMode != LosMode.None && Lights.LightManager.ViewTarget != null)
             {
                 GameMain.LightManager.LosEffect.CurrentTechnique = GameMain.LightManager.LosEffect.Techniques["LosShader"];
 
                 GameMain.LightManager.LosEffect.Parameters["xTexture"].SetValue(renderTargetBackground);
                 GameMain.LightManager.LosEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.LosTexture);
+                GameMain.LightManager.LosEffect.Parameters["xLosAlpha"].SetValue(GameMain.LightManager.LosAlpha);
 
                 Color losColor;
                 if (GameMain.LightManager.LosMode == LosMode.Transparent)
@@ -363,6 +373,19 @@ namespace Barotrauma
                 GameMain.LightManager.LosEffect.CurrentTechnique.Passes[0].Apply();
                 Quad.Render();
             }
+
+            if (Character.Controlled is { } character)
+            {
+                float grainStrength = character.GrainStrength;
+                Rectangle screenRect = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, effect: GrainEffect);
+                GUI.DrawRectangle(spriteBatch, screenRect, Color.White, isFilled: true);
+                GrainEffect.Parameters["seed"].SetValue(Rand.Range(0f, 1f, Rand.RandSync.Unsynced));
+                GrainEffect.Parameters["intensity"].SetValue(grainStrength);
+                GrainEffect.Parameters["grainColor"].SetValue(character.GrainColor.ToVector4());
+                spriteBatch.End();
+            }
+
             graphics.SetRenderTarget(null);
 
             float BlurStrength = 0.0f;
@@ -374,7 +397,10 @@ namespace Barotrauma
             {
                 BlurStrength = Character.Controlled.BlurStrength * 0.005f;
                 DistortStrength = Character.Controlled.DistortStrength;
-                chromaticAberrationStrength -= Vector3.One * Character.Controlled.RadialDistortStrength;
+                if (GameMain.Config.EnableRadialDistortion)
+                {
+                    chromaticAberrationStrength -= Vector3.One * Character.Controlled.RadialDistortStrength;
+                }
                 chromaticAberrationStrength += new Vector3(-0.03f, -0.015f, 0.0f) * Character.Controlled.ChromaticAberrationStrength;
             }
             else
@@ -438,8 +464,8 @@ namespace Barotrauma
 
             if (!PlayerInput.PrimaryMouseButtonHeld())
             {
-                Inventory.draggingSlot = null;
-                Inventory.draggingItem = null;
+                Inventory.DraggingSlot = null;
+                Inventory.DraggingItems.Clear();
             }
         }
     }

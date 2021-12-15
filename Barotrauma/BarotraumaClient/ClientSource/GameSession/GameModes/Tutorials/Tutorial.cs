@@ -224,10 +224,7 @@ namespace Barotrauma.Tutorials
 
         public virtual void Update(float deltaTime)
         {
-            if (videoPlayer != null)
-            {
-                videoPlayer.Update();
-            }
+            videoPlayer?.Update();
 
             if (activeObjectives != null)
             {
@@ -264,7 +261,7 @@ namespace Barotrauma.Tutorials
 
         protected virtual void TriggerTutorialSegment(int index, params object[] args)
         {
-            Inventory.draggingItem = null;
+            Inventory.DraggingItems.Clear();
             ContentRunning = true;
             activeContentSegment = segments[index];
             segments[index].Args = args;
@@ -410,7 +407,7 @@ namespace Barotrauma.Tutorials
         private void ReplaySegmentVideo(TutorialSegment segment)
         {
             if (ContentRunning) return;
-            Inventory.draggingItem = null;
+            Inventory.DraggingItems.Clear();
             ContentRunning = true;
             LoadVideo(segment);
             //videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, callback: () => ContentRunning = false);
@@ -419,7 +416,7 @@ namespace Barotrauma.Tutorials
         private void ShowSegmentText(TutorialSegment segment)
         {
             if (ContentRunning) return;
-            Inventory.draggingItem = null;
+            Inventory.DraggingItems.Clear();
             ContentRunning = true;
 
             string tutorialText = TextManager.GetFormatted(segment.TextContent.GetAttributeString("tag", ""), true, segment.Args);
@@ -535,15 +532,15 @@ namespace Barotrauma.Tutorials
                 titleBlock.RectTransform.IsFixedSize = true;
             }
 
-            List<RichTextData> richTextData = RichTextData.GetRichTextData(text, out text);
+            List<RichTextData> richTextData = RichTextData.GetRichTextData(" " + text, out text);
             GUITextBlock textBlock;
             if (richTextData == null)
             {
-                textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), " " + text, wrap: true);
+                textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), text, wrap: true);
             }
             else
             {
-                textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), richTextData, " " + text, wrap: true);
+                textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), richTextData, text, wrap: true);
             }
 
             textBlock.RectTransform.IsFixedSize = true;
@@ -609,10 +606,10 @@ namespace Barotrauma.Tutorials
         #region Highlights
         protected void HighlightInventorySlot(Inventory inventory, string identifier, Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount)
         {
-            if (inventory.slots == null) { return; }
-            for (int i = 0; i < inventory.Items.Length; i++)
+            if (inventory.visualSlots == null) { return; }
+            for (int i = 0; i < inventory.Capacity; i++)
             {
-                if (inventory.Items[i] != null && inventory.Items[i].Prefab.Identifier == identifier)
+                if (inventory.GetItemAt(i)?.Prefab.Identifier == identifier)
                 {
                     HighlightInventorySlot(inventory, i, color, fadeInDuration, fadeOutDuration, scaleUpAmount);
                 }
@@ -621,10 +618,10 @@ namespace Barotrauma.Tutorials
 
         protected void HighlightInventorySlotWithTag(Inventory inventory, string tag, Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount)
         {
-            if (inventory.slots == null) { return; }
-            for (int i = 0; i < inventory.Items.Length; i++)
+            if (inventory.visualSlots == null) { return; }
+            for (int i = 0; i < inventory.Capacity; i++)
             {
-                if (inventory.Items[i] != null && inventory.Items[i].HasTag(tag))
+                if (inventory.GetItemAt(i)?.HasTag(tag) ?? false)
                 {
                     HighlightInventorySlot(inventory, i, color, fadeInDuration, fadeOutDuration, scaleUpAmount);
                 }
@@ -633,8 +630,8 @@ namespace Barotrauma.Tutorials
 
         protected void HighlightInventorySlot(Inventory inventory, int index, Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount)
         {
-            if (inventory.slots == null || index < 0 || inventory.slots[index].HighlightTimer > 0) return;
-            inventory.slots[index].ShowBorderHighlight(color, fadeInDuration, fadeOutDuration, scaleUpAmount);
+            if (inventory.visualSlots == null || index < 0 || inventory.visualSlots[index].HighlightTimer > 0) { return; }
+            inventory.visualSlots[index].ShowBorderHighlight(color, fadeInDuration, fadeOutDuration, scaleUpAmount);
         }
         #endregion
     }

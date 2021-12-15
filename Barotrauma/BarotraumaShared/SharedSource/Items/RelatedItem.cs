@@ -17,6 +17,7 @@ namespace Barotrauma
         }
 
         public bool IsOptional { get; set; }
+
         public bool MatchOnEmpty { get; set; }
 
         public bool IgnoreInEditor { get; set; }
@@ -30,11 +31,22 @@ namespace Barotrauma
         public string Msg;
         public string MsgTag;
 
+        /// <summary>
+        /// Should broken (0 condition) items be excluded
+        /// </summary>
+        public bool ExcludeBroken { get; private set; }
+
+        public bool AllowVariants { get; private set; } = true;
 
         public RelationType Type
         {
             get { return type; }
         }
+
+        /// <summary>
+        /// Index of the slot the target must be in when targeting a Contained item
+        /// </summary>
+        public int TargetSlot = -1;
 
         public string JoinedIdentifiers
         {
@@ -72,13 +84,13 @@ namespace Barotrauma
         {
             if (item == null) { return false; }
             if (excludedIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) { return false; }
-            return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id));
+            return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id) || (AllowVariants && item.Prefab.VariantOf?.Identifier == id));
         }
         public bool MatchesItem(ItemPrefab itemPrefab)
         {
             if (itemPrefab == null) { return false; }
             if (excludedIdentifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id))) { return false; }
-            return Identifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id));
+            return Identifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id) || (AllowVariants && itemPrefab.VariantOf?.Identifier == id));
         }
 
         public RelatedItem(string[] identifiers, string[] excludedIdentifiers)
@@ -107,21 +119,20 @@ namespace Barotrauma
                     return CheckContained(parentItem);
                 case RelationType.Container:
                     if (parentItem == null || parentItem.Container == null) { return MatchOnEmpty; }
-                    return parentItem.Container.Condition > 0.0f && MatchesItem(parentItem.Container);
+                    return (!ExcludeBroken || parentItem.Container.Condition > 0.0f) && MatchesItem(parentItem.Container);
                 case RelationType.Equipped:
                     if (character == null) { return false; }
-                    if (MatchOnEmpty && character.SelectedItems.All(it => it == null)) { return true; }
-                    foreach (Item equippedItem in character.SelectedItems)
+                    if (MatchOnEmpty && !character.HeldItems.Any()) { return true; }
+                    foreach (Item equippedItem in character.HeldItems)
                     {
                         if (equippedItem == null) { continue; }
-                        if (equippedItem.Condition > 0.0f && MatchesItem(equippedItem)) { return true; }
+                        if ((!ExcludeBroken || equippedItem.Condition > 0.0f) && MatchesItem(equippedItem)) { return true; }
                     }
                     break;
                 case RelationType.Picked:
                     if (character == null || character.Inventory == null) { return false; }
-                    foreach (Item pickedItem in character.Inventory.Items)
+                    foreach (Item pickedItem in character.Inventory.AllItems)
                     {
-                        if (pickedItem == null) { continue; }
                         if (MatchesItem(pickedItem)) { return true; }
                     }
                     break;
@@ -134,18 +145,18 @@ namespace Barotrauma
 
         private bool CheckContained(Item parentItem)
         {
-            var containedItems = parentItem.OwnInventory?.Items;
-            if (containedItems == null) { return false; }
+            if (parentItem.OwnInventory == null) { return false; }
 
-            if (MatchOnEmpty && !containedItems.Any(ci => ci != null))
+            if (MatchOnEmpty && parentItem.OwnInventory.IsEmpty())
             {
                 return true;
             }
 
-            foreach (Item contained in containedItems)
+            foreach (Item contained in parentItem.ContainedItems)
             {
-                if (contained == null) { continue; }
-                if (contained.Condition > 0.0f && MatchesItem(contained)) { return true; }
+                if (TargetSlot > -1 && parentItem.OwnInventory.FindIndex(contained) != TargetSlot) { continue; }
+                if ((!ExcludeBroken || contained.Condition > 0.0f) && MatchesItem(contained)) { return true; }
+
                 if (CheckContained(contained)) { return true; }
             }
             return false;
@@ -157,7 +168,10 @@ namespace Barotrauma
                 new XAttribute("items", JoinedIdentifiers),
                 new XAttribute("type", type.ToString()),
                 new XAttribute("optional", IsOptional),
-                new XAttribute("ignoreineditor", IgnoreInEditor));
+                new XAttribute("ignoreineditor", IgnoreInEditor),
+                new XAttribute("excludebroken", ExcludeBroken),
+                new XAttribute("targetslot", TargetSlot),
+                new XAttribute("allowvariants", AllowVariants));
 
             if (excludedIdentifiers.Length > 0)
             {
@@ -215,9 +229,14 @@ namespace Barotrauma
                 }
             }
 
+
             if (identifiers.Length == 0 && excludedIdentifiers.Length == 0 && !returnEmpty) { return null; }
 
-            RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers);
+            RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers)
+            {
+                ExcludeBroken = element.GetAttributeBool("excludebroken", true),
+                AllowVariants = element.GetAttributeBool("allowvariants", true)
+            };
             string typeStr = element.GetAttributeString("type", "");
             if (string.IsNullOrEmpty(typeStr))
             {
@@ -264,6 +283,8 @@ namespace Barotrauma
             ri.IsOptional = element.GetAttributeBool("optional", false);
             ri.IgnoreInEditor = element.GetAttributeBool("ignoreineditor", false);
             ri.MatchOnEmpty = element.GetAttributeBool("matchonempty", false);
+            ri.TargetSlot = element.GetAttributeInt("targetslot", -1);
+
             return ri;
         }
     }

@@ -42,7 +42,7 @@ namespace Barotrauma.Items.Components
         protected bool canBeCombined;
         protected bool removeOnCombined;
 
-        public bool WasUsed;
+        public bool WasUsed, WasSecondaryUsed;
 
         public readonly Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
 
@@ -235,6 +235,12 @@ namespace Barotrauma.Items.Components
         [Serialize(0f, false, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).")]
         public float CombatPriority { get; private set; }
 
+        /// <summary>
+        /// Which sound should be played when manual sound selection type is selected? Not [Editable] because we don't want this visible in the editor for every component.
+        /// </summary>
+        [Serialize(0, true, alwaysUseInstanceValues: true)]
+        public int ManuallySelectedSound { get; private set; }
+
         public ItemComponent(Item item, XElement element)
         {
             this.item = item;
@@ -426,49 +432,47 @@ namespace Barotrauma.Items.Components
         //called then the item is dropped or dragged out of a "limbslot"
         public virtual void Unequip(Character character) { }
 
-        public virtual void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public virtual void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "activate":
                 case "use":
                 case "trigger_in":
-                    if (signal != "0")
+                    if (signal.value != "0")
                     {
-                        item.Use(1.0f, sender);
+                        item.Use(1.0f, signal.sender);
                     }
                     break;
                 case "toggle":
-                    if (signal != "0")
+                    if (signal.value != "0")
                     {
                         IsActive = !isActive;
                     }
                     break;
                 case "set_active":
                 case "set_state":
-                    IsActive = signal != "0";
+                    IsActive = signal.value != "0";
                     break;
             }
         }
 
         public virtual bool Combine(Item item, Character user)
         {
-            if (canBeCombined && this.item.Prefab == item.Prefab && item.Condition > 0.0f && this.item.Condition > 0.0f)
+            if (canBeCombined && this.item.Prefab == item.Prefab && 
+                item.Condition > 0.0f && this.item.Condition > 0.0f &&
+                !item.IsFullCondition && !this.item.IsFullCondition)
             {
-                float transferAmount = 0.0f;
-                if (this.Item.Condition <= item.Condition)
-                    transferAmount = Math.Min(item.Condition, this.item.MaxCondition - this.item.Condition);
-                else
-                    transferAmount = -Math.Min(this.item.Condition, item.MaxCondition - item.Condition);
+                float transferAmount = Math.Min(item.Condition, this.item.MaxCondition - this.item.Condition);
 
-                if (transferAmount == 0.0f) { return false; }
+                if (MathUtils.NearlyEqual(transferAmount, 0.0f)) { return false; }
                 if (removeOnCombined)
                 {
                     if (item.Condition - transferAmount <= 0.0f)
                     {
                         if (item.ParentInventory != null)
                         {
-                            if (item.ParentInventory.Owner is Character owner && owner.HasSelectedItem(item))
+                            if (item.ParentInventory.Owner is Character owner && owner.HeldItems.Contains(item))
                             {
                                 item.Unequip(owner);
                             }
@@ -484,7 +488,7 @@ namespace Barotrauma.Items.Components
                     {
                         if (this.Item.ParentInventory != null)
                         {
-                            if (this.Item.ParentInventory.Owner is Character owner && owner.HasSelectedItem(this.Item))
+                            if (this.Item.ParentInventory.Owner is Character owner && owner.HeldItems.Contains(this.Item))
                             {
                                 this.Item.Unequip(owner);
                             }
@@ -654,16 +658,19 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// Only checks if any of the Picked requirements are matched (used for checking id card(s)). Much simpler and a bit different than HasRequiredItems.
         /// </summary>
-        public bool HasAccess(Character character)
+        public virtual bool HasAccess(Character character)
         {
-            if (character.Inventory == null) { return false; }
+            if (character.IsBot && item.IgnoreByAI(character)) { return false; }
+            if (!item.IsInteractable(character)) { return false; }
             if (requiredItems.None()) { return true; }
-
-            foreach (Item item in character.Inventory.Items)
+            if (character.Inventory != null)
             {
-                if (requiredItems.Any(ri => ri.Value.Any(r => r.Type == RelatedItem.RelationType.Picked && r.MatchesItem(item))))
+                foreach (Item item in character.Inventory.AllItems)
                 {
-                    return true;
+                    if (requiredItems.Any(ri => ri.Value.Any(r => r.Type == RelatedItem.RelationType.Picked && r.MatchesItem(item))))
+                    {
+                        return true;
+                    }                    
                 }
             }
             return false;
@@ -679,7 +686,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Equipped])
                 {
-                    canContinue = CheckItems(ri, character.SelectedItems);
+                    canContinue = CheckItems(ri, character.HeldItems);
                     if (!canContinue) { break; }
                 }
             }
@@ -689,7 +696,7 @@ namespace Barotrauma.Items.Components
                 {
                     foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Picked])
                     {
-                        if (!CheckItems(ri, character.Inventory.Items)) { break; }
+                        if (!CheckItems(ri, character.Inventory.AllItems)) { break; }
                     }
                 }
             }
@@ -704,7 +711,27 @@ namespace Barotrauma.Items.Components
 
             bool CheckItems(RelatedItem relatedItem, IEnumerable<Item> itemList)
             {
-                bool Predicate(Item it) => it != null && it.Condition > 0.0f && relatedItem.MatchesItem(it);
+                bool Predicate(Item it)
+                {
+                    if (it == null || it.Condition <= 0.0f || !relatedItem.MatchesItem(it)) { return false; }
+                    if (item.Submarine != null)
+                    {
+                        var idCard = it.GetComponent<IdCard>();
+                        if (idCard != null)
+                        {
+                            //id cards don't work in enemy subs (except on items that only require the default "idcard" tag)
+                            if (idCard.TeamID != CharacterTeamType.None && idCard.TeamID != item.Submarine.TeamID && relatedItem.Identifiers.Any(id => id != "idcard"))
+                            {
+                                return false;
+                            }
+                            else if (idCard.SubmarineSpecificID != 0 && item.Submarine.SubmarineSpecificIDTag != idCard.SubmarineSpecificID)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                };
                 bool shouldBreak = false;
                 bool inEditor = false;
 #if CLIENT
@@ -740,7 +767,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null, float applyOnUserFraction = 0.0f)
         {
             if (statusEffectLists == null) { return; }
 
@@ -750,9 +777,15 @@ namespace Barotrauma.Items.Components
             bool reducesCondition = false;
             foreach (StatusEffect effect in statusEffects)
             {
-                if (broken && effect.type != ActionType.OnBroken) { continue; }
+                if (broken && !effect.AllowWhenBroken && effect.type != ActionType.OnBroken) { continue; }
                 if (user != null) { effect.SetUser(user); }
-                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, useTarget, false, false, worldPosition);
+                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, useTarget, isNetworkEvent: false, checkCondition: false, worldPosition);
+                if (user != null && applyOnUserFraction > 0.0f && effect.HasTargetType(StatusEffect.TargetType.Character))
+                {
+                    effect.AfflictionMultiplier = applyOnUserFraction;
+                    item.ApplyStatusEffect(effect, type, deltaTime, user, targetLimb == null ? null : user.AnimController.GetLimb(targetLimb.type), useTarget, false, false, worldPosition);
+                    effect.AfflictionMultiplier = 1.0f;
+                }
                 reducesCondition |= effect.ReducesItemCondition();
             }
             //if any of the effects reduce the item's condition, set the user for OnBroken effects as well
@@ -764,6 +797,10 @@ namespace Barotrauma.Items.Components
                     brokenEffects.ForEach(e => e.SetUser(user));
                 }
             }
+
+#if CLIENT
+            HintManager.OnStatusEffectApplied(this, type, character);
+#endif
         }
 
         public virtual void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
@@ -928,7 +965,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ParseMsg()
+        public virtual void ParseMsg()
         {
             string msg = TextManager.Get(Msg, true);
             if (msg != null)
@@ -945,33 +982,13 @@ namespace Barotrauma.Items.Components
         #region AI related
         protected const float AIUpdateInterval = 0.2f;
         protected float aiUpdateTimer;
-        private int itemIndex;
-        private Character previousUser;
-        protected bool FindSuitableContainer(Character character, Func<Item, float> priority, out Item suitableContainer)
-        {
-            suitableContainer = null;
-            if (character.AIController is HumanAIController aiController)
-            {
-                if (previousUser != character)
-                {
-                    previousUser = character;
-                    itemIndex = 0;
-                }
-                if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: aiController.IgnoredItems, customPriorityFunction: priority))
-                {
-                    suitableContainer = targetContainer;
-                    return true;
-                }
-            }
-            return false;
-        }
 
         protected AIObjectiveContainItem AIContainItems<T>(ItemContainer container, Character character, AIObjective currentObjective, int itemCount, bool equip, bool removeEmpty, bool spawnItemIfNotFound = false, bool dropItemOnDeselected = false) where T : ItemComponent
         {
             AIObjectiveContainItem containObjective = null;
             if (character.AIController is HumanAIController aiController)
             {
-                containObjective = new AIObjectiveContainItem(character, container.GetContainableItemIdentifiers.ToArray(), container, currentObjective.objectiveManager, spawnItemIfNotFound: spawnItemIfNotFound)
+                containObjective = new AIObjectiveContainItem(character, container.ContainableItemIdentifiers.ToArray(), container, currentObjective.objectiveManager, spawnItemIfNotFound: spawnItemIfNotFound)
                 {
                     targetItemCount = itemCount,
                     Equip = equip,
@@ -1006,83 +1023,6 @@ namespace Barotrauma.Items.Components
                 currentObjective.AddSubObjective(containObjective);
             }
             return containObjective;
-        }
-
-        /// <summary>
-        /// Returns true when done seeking the suitable container.
-        /// </summary>
-        protected bool AIDecontainEmptyItems(Character character, AIObjective objective, bool equip, ItemContainer sourceContainer = null)
-        {
-            if (character.AIController is HumanAIController aiController)
-            {
-                ItemContainer sourceC = sourceContainer ?? (item.OwnInventory?.Owner is Item it ? it.GetComponent<ItemContainer>() : null);
-                var containedItems = sourceContainer != null ? sourceContainer.Inventory.Items : item.OwnInventory.Items;
-                foreach (Item containedItem in containedItems)
-                {
-                    if (containedItem != null && containedItem.Condition <= 0.0f)
-                    {
-                        if (FindSuitableContainer(character,
-                            i =>
-                            {
-                                if (i.IsThisOrAnyContainerIgnoredByAI()) { return 0; }
-                                var container = i.GetComponent<ItemContainer>();
-                                if (container == null) { return 0; }
-                                if (container.Inventory.IsFull()) { return 0; }
-                                // Ignore containers that are identical to the source container
-                                if (sourceC != null && container.Item.Prefab == sourceC.Item.Prefab) { return 0; }
-                                if (container.ShouldBeContained(containedItem, out bool isRestrictionsDefined))
-                                {
-                                    if (isRestrictionsDefined)
-                                    {
-                                        return 4;
-                                    }
-                                    else
-                                    {
-                                        if (containedItem.Prefab.IsContainerPreferred(container, out bool isPreferencesDefined, out bool isSecondary))
-                                        {
-                                            return isPreferencesDefined ? isSecondary ? 2 : 3 : 1;
-                                        }
-                                        else
-                                        {
-                                            return isPreferencesDefined ? 0 : 1;
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    return 0;
-                                }
-                            }, out Item targetContainer))
-                        {
-                            var decontainObjective = new AIObjectiveDecontainItem(character, containedItem, objective.objectiveManager, sourceC, targetContainer?.GetComponent<ItemContainer>())
-                            {
-                                Equip = equip
-                            };
-                            decontainObjective.Abandoned += () =>
-                            {
-                                itemIndex = 0;
-                                if (targetContainer != null)
-                                {
-                                    aiController.IgnoredItems.Add(targetContainer);
-                                }
-                            };
-                            decontainObjective.Completed += () =>
-                            {
-                                if (targetContainer == null)
-                                {
-                                    itemIndex = 0;
-                                }
-                            };
-                            objective.AddSubObjectiveInQueue(decontainObjective);
-                        }
-                        else
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-            return true;
         }
         #endregion
     }

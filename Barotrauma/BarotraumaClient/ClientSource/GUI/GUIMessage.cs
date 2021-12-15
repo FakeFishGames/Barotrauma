@@ -55,6 +55,20 @@ namespace Barotrauma
             private set;
         }
         
+        public Submarine Submarine
+        {
+            get;
+            private set;
+        }
+
+        public Vector2 DrawPos
+        {
+            get
+            {
+                return Submarine == null ? Pos : Pos + Submarine.DrawPosition;
+            }
+        }
+
         public GUIMessage(string text, Color color, float lifeTime, ScalableFont font = null)
         {
             coloredText = new ColoredText(text, color, false, false);
@@ -67,11 +81,11 @@ namespace Barotrauma
             Font = font;
         }
 
-        public GUIMessage(string text, Color color, Vector2 worldPosition, Vector2 velocity, float lifeTime, Alignment textAlignment = Alignment.Center, ScalableFont font = null)
+        public GUIMessage(string text, Color color, Vector2 position, Vector2 velocity, float lifeTime, Alignment textAlignment = Alignment.Center, ScalableFont font = null, Submarine sub = null)
         {
             coloredText = new ColoredText(text, color, false, false);
             WorldSpace = true;
-            pos = worldPosition;
+            pos = position;
             Timer = lifeTime;
             Velocity = velocity;
             this.lifeTime = lifeTime;
@@ -92,6 +106,8 @@ namespace Barotrauma
 
             if (textAlignment.HasFlag(Alignment.Bottom))
                 Origin.Y += size.Y * 0.5f;
+
+            Submarine = sub;
         }
     }
 }

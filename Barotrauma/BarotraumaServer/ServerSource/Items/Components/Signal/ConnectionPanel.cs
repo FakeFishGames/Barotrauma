@@ -1,10 +1,7 @@
 ﻿using Barotrauma.Networking;
-using FarseerPhysics;
-using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -18,7 +15,7 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < Connections.Count; i++)
             {
                 wires[i] = new List<Wire>();
-                for (int j = 0; j < Connection.MaxLinked; j++)
+                for (int j = 0; j < Connections[i].MaxWires; j++)
                 {
                     ushort wireId = msg.ReadUInt16();
 
@@ -44,7 +41,7 @@ namespace Barotrauma.Items.Components
             }
 
             //don't allow rewiring locked panels
-            if (Locked || !GameMain.NetworkMember.ServerSettings.AllowRewiring) { return; }
+            if (Locked || TemporarilyLocked || !GameMain.NetworkMember.ServerSettings.AllowRewiring) { return; }
 
             item.CreateServerEvent(this);
 
@@ -68,9 +65,9 @@ namespace Barotrauma.Items.Components
             {
                 item.CreateServerEvent(this);
                 c.Character.Inventory?.CreateNetworkEvent();
-                for (int i = 0; i < 2; i++)
+                foreach (Item heldItem in c.Character.HeldItems)
                 {
-                    var selectedWire = c.Character.SelectedItems[i]?.GetComponent<Wire>();
+                    var selectedWire = heldItem?.GetComponent<Wire>();
                     if (selectedWire == null) { continue; }
 
                     selectedWire.CreateNetworkEvent();
@@ -79,7 +76,7 @@ namespace Barotrauma.Items.Components
                     var panel2 = selectedWire.Connections[1]?.ConnectionPanel;
                     if (panel2 != null && panel2 != this) { panel2.item.CreateServerEvent(panel2); }
 
-                    CoroutineManager.InvokeAfter(() =>
+                    CoroutineManager.Invoke(() =>
                     {
                         item.CreateServerEvent(this);
                         if (panel1 != null && panel1 != this) { panel1.item.CreateServerEvent(panel1); }

@@ -92,7 +92,16 @@ namespace Barotrauma
         public string SonarLabel;
         public string SonarIconIdentifier;
 
-        public bool Enabled => SoundRange > 0 || SightRange > 0;
+        private bool inDetectable;
+
+        /// <summary>
+        /// Should be reset to false each frame and kept indetectable by e.g. a status effect.
+        /// </summary>
+        public bool InDetectable
+        {
+            get => inDetectable || (SoundRange <= 0 && SightRange <= 0);
+            set => inDetectable = value;
+        }
 
         public float MinSoundRange, MinSightRange;
         public float MaxSoundRange = 100000, MaxSightRange = 100000;
@@ -144,21 +153,6 @@ namespace Barotrauma
             }
         }
 
-        public void Reset()
-        {
-            if (Static)
-            {
-                SightRange = MaxSightRange;
-                SoundRange = MaxSoundRange;
-            }
-            else
-            {
-                // Non-static ai targets must be kept alive by a custom logic (e.g. item components)
-                SightRange = StaticSight ? MaxSightRange : MinSightRange;
-                SoundRange = StaticSound ? MaxSoundRange : MinSoundRange;
-            }
-        }
-
         public AITarget(Entity e, XElement element) : this(e)
         {
             SightRange = element.GetAttributeFloat("sightrange", 0.0f);
@@ -196,14 +190,15 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            if (Enabled && !Static && FadeOutTime > 0)
+            InDetectable = false;
+            if (!Static && FadeOutTime > 0)
             {
                 // The aitarget goes silent/invisible if the components don't keep it active
-                if (!StaticSight)
+                if (!StaticSight && SightRange > 0)
                 {
                     DecreaseSightRange(deltaTime);
                 }
-                if (!StaticSound)
+                if (!StaticSound && SoundRange > 0)
                 {
                     DecreaseSoundRange(deltaTime);
                 }
@@ -232,8 +227,7 @@ namespace Barotrauma
 
         public bool IsWithinSector(Vector2 worldPosition)
         {
-            if (sectorRad >= MathHelper.TwoPi) return true;
-
+            if (sectorRad >= MathHelper.TwoPi) { return true; }
             Vector2 diff = worldPosition - WorldPosition;
             return MathUtils.GetShortestAngle(MathUtils.VectorToAngle(diff), MathUtils.VectorToAngle(sectorDir)) <= sectorRad * 0.5f;
         }
@@ -242,6 +236,21 @@ namespace Barotrauma
         {
             List.Remove(this);
             entity = null;
+        }
+
+        public void Reset()
+        {
+            if (Static)
+            {
+                SightRange = MaxSightRange;
+                SoundRange = MaxSoundRange;
+            }
+            else
+            {
+                // Non-static ai targets must be kept alive by a custom logic (e.g. item components)
+                SightRange = StaticSight ? MaxSightRange : MinSightRange;
+                SoundRange = StaticSound ? MaxSoundRange : MinSoundRange;
+            }
         }
     }
 }

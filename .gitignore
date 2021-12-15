@@ -20,6 +20,9 @@ bld/
 *.shproj.user
 *.vcxproj.user
 
+# Rider
+.idea/
+
 # Platform-specific webm_mem_playback files
 Libraries/webm_mem_playback/libvpx_x64_linux/
 Libraries/webm_mem_playback/libvpx_x64_vs15/
@@ -40,5 +43,13 @@ Libraries/webm_mem_playback/opus_x64_linux/
 # Win
 desktop.ini
 
-#Merge script
+# Merge script
 temp.txt
+
+# Private assets
+Barotrauma/BarotraumaShared/Content/*
+Barotrauma/**/GameAnalyticsKeys.cs
+.github/ISSUE_TEMPLATE/release-checklist.md
+
+#Rider
+*.DotSettings.user

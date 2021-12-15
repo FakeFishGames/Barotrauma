@@ -11,6 +11,7 @@ using System.Xml.Linq;
 using Barotrauma.Networking;
 using LimbParams = Barotrauma.RagdollParams.LimbParams;
 using JointParams = Barotrauma.RagdollParams.JointParams;
+using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
@@ -203,7 +204,7 @@ namespace Barotrauma
     partial class Limb : ISerializableEntity, ISpatialEntity
     {
         //how long it takes for severed limbs to fade out
-        public float SeveredFadeOutTime => Params.SeveredFadeOutTime;
+        public float SeveredFadeOutTime { get; private set; } = 10;
 
         public readonly Character character;
         /// <summary>
@@ -217,9 +218,9 @@ namespace Barotrauma
                         
         public Vector2 StepOffset => ConvertUnits.ToSimUnits(Params.StepOffset) * ragdoll.RagdollParams.JointScale;
 
-        public bool inWater;
+        public bool InWater { get; set; }
 
-        private readonly FixedMouseJoint pullJoint;
+        private FixedMouseJoint pullJoint;
 
         public readonly LimbType type;
 
@@ -308,6 +309,12 @@ namespace Barotrauma
             set
             {
                 if (isSevered == value) { return; }
+                if (value == true)
+                {
+                    // If any of the connected limbs have a longer fade out time, use that
+                    var connectedLimbs = GetConnectedLimbs();
+                    SeveredFadeOutTime = Math.Max(Params.SeveredFadeOutTime, connectedLimbs.Any() ? connectedLimbs.Max(l => l.SeveredFadeOutTime) : 0);
+                }
                 isSevered = value;
                 if (isSevered)
                 {
@@ -330,7 +337,7 @@ namespace Barotrauma
             }
         }
 
-        public Submarine Submarine => character.Submarine;
+        public Submarine Submarine => character?.Submarine;
 
         public bool Hidden
         {
@@ -340,7 +347,7 @@ namespace Barotrauma
 
         public Vector2 WorldPosition
         {
-            get { return character.Submarine == null ? Position : Position + character.Submarine.Position; }
+            get { return character?.Submarine == null ? Position : Position + character.Submarine.Position; }
         }
 
         public Vector2 Position
@@ -528,14 +535,19 @@ namespace Barotrauma
 
         public string Name => Params.Name;
 
-        // Exposed for status effects
+        // These properties are exposed for status effects
         public bool IsDead => character.IsDead;
+        public float Health => character.Health;
+        public float HealthPercentage => character.HealthPercentage;
+        public AIState AIState => character.AIController is EnemyAIController enemyAI ? enemyAI.State : AIState.Idle;
 
         public bool CanBeSeveredAlive
         {
             get
             {
                 if (character.IsHumanoid) { return false; }
+                // TODO: We might need this or solve the cases where a limb is severed while holding on to an item
+                //if (character.Params.CanInteract) { return false; }
                 if (this == character.AnimController.MainLimb) { return false; }
                 if (character.AnimController.CanWalk)
                 {
@@ -622,6 +634,14 @@ namespace Barotrauma
                             }
                             attack.DamageRange = ConvertUnits.ToDisplayUnits(attack.DamageRange);
                         }
+                        if (character.VariantOf != null && character.Params.VariantFile != null)
+                        {
+                            var attackElement = character.Params.VariantFile.Root.GetChildElement("attack");
+                            if (attackElement != null)
+                            {
+                                attack.DamageMultiplier = attackElement.GetAttributeFloat("damagemultiplier", 1f);
+                            }
+                        }
                         break;
                     case "damagemodifier":
                         DamageModifiers.Add(new DamageModifier(subElement, character.Name));
@@ -669,7 +689,7 @@ namespace Barotrauma
         private readonly List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
         private readonly List<DamageModifier> tempModifiers = new List<DamageModifier>();
         private readonly List<Affliction> afflictionsCopy = new List<Affliction>();
-        public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound)
+        public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound, float damageMultiplier = 1, float penetration = 0f, Character attacker = null)
         {
             appliedDamageModifiers.Clear();
             afflictionsCopy.Clear();
@@ -709,16 +729,29 @@ namespace Barotrauma
                         }
                     }
                 }
-                float finalDamageModifier = 1.0f;
+                float finalDamageModifier = damageMultiplier;
                 foreach (DamageModifier damageModifier in tempModifiers)
                 {
-                    finalDamageModifier *= damageModifier.DamageMultiplier;
+                    float damageModifierValue = damageModifier.DamageMultiplier;
+                    if (damageModifier.DeflectProjectiles && damageModifierValue < 1f)
+                    {
+                        damageModifierValue = MathHelper.Lerp(damageModifierValue, 1f, penetration);
+                    }
+                    finalDamageModifier *= damageModifierValue;
                 }
                 if (!MathUtils.NearlyEqual(finalDamageModifier, 1.0f))
                 {
                     newAffliction = affliction.CreateMultiplied(finalDamageModifier);
                 }
-
+                else
+                {
+                    newAffliction.SetStrength(affliction.NonClampedStrength);
+                }
+                if (attacker != null)
+                {
+                    var abilityAffliction = new AbilityAfflictionCharacter(newAffliction, character);
+                    attacker.CheckTalents(AbilityEffectType.OnAddDamageAffliction, abilityAffliction);
+                }
                 if (applyAffliction)
                 {
                     afflictionsCopy.Add(newAffliction);
@@ -726,6 +759,10 @@ namespace Barotrauma
                 appliedDamageModifiers.AddRange(tempModifiers);
             }
             var result = new AttackResult(afflictionsCopy, this, appliedDamageModifiers);
+            if (result.Afflictions.None())
+            {
+                playSound = false;
+            }
             AddDamageProjSpecific(playSound, result);
 
             float bleedingDamage = 0;
@@ -774,7 +811,7 @@ namespace Barotrauma
         {
             UpdateProjSpecific(deltaTime);
             
-            if (inWater)
+            if (InWater)
             {
                 body.ApplyWaterForces();
             }
@@ -814,26 +851,28 @@ namespace Barotrauma
                 }
             }
 
-            if (attack != null)
-            {
-                attack.UpdateCoolDown(deltaTime);
-            }
+            attack?.UpdateCoolDown(deltaTime);
         }
 
+        private bool temporarilyDisabled;
         private float reEnableTimer = -1;
-        public void HideAndDisable(float duration = 0)
+        public void HideAndDisable(float duration = 0, bool ignoreCollisions = true)
         {
+            if (Hidden || Disabled) { return; }
+            if (ignoreCollisions && IgnoreCollisions) { return; }
+            temporarilyDisabled = true;
             Hidden = true;
             Disabled = true;
-            IgnoreCollisions = true;
+            IgnoreCollisions = ignoreCollisions;
             if (duration > 0)
             {
                 reEnableTimer = duration;
             }
         }
 
-        private void ReEnable()
+        public void ReEnable()
         {
+            if (!temporarilyDisabled) { return; }
             Hidden = false;
             Disabled = false;
             IgnoreCollisions = false;
@@ -848,11 +887,28 @@ namespace Barotrauma
         /// </summary>
         public bool UpdateAttack(float deltaTime, Vector2 attackSimPos, IDamageable damageTarget, out AttackResult attackResult, float distance = -1, Limb targetLimb = null)
         {
-            attackResult = default(AttackResult);
+            attackResult = default;
             Vector2 simPos = ragdoll.SimplePhysicsEnabled ? character.SimPosition : SimPosition;
             float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(simPos, attackSimPos));
             bool wasRunning = attack.IsRunning;
             attack.UpdateAttackTimer(deltaTime, character);
+            if (attack.Blink)
+            {
+                if (attack.ForceOnLimbIndices != null && attack.ForceOnLimbIndices.Any())
+                {
+                    foreach (int limbIndex in attack.ForceOnLimbIndices)
+                    {
+                        if (limbIndex < 0 || limbIndex >= character.AnimController.Limbs.Length) { continue; }
+                        Limb limb = character.AnimController.Limbs[limbIndex];
+                        if (limb.IsSevered) { continue; }
+                        limb.Blink();
+                    }
+                }
+                else
+                {
+                    Blink();
+                }
+            }
 
             bool wasHit = false;
             Body structureBody = null;
@@ -863,11 +919,11 @@ namespace Barotrauma
                     case HitDetection.Distance:
                         if (dist < attack.DamageRange)
                         {
-                            structureBody = Submarine.PickBody(simPos, attackSimPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel, allowInsideFixture: true);    
-                            if (structureBody?.UserData as string == "ruinroom")
+                            structureBody = Submarine.PickBody(simPos, attackSimPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel, allowInsideFixture: true, customPredicate:                             
+                            (Fixture f) =>
                             {
-                                structureBody = null;
-                            }
+                                return f?.Body?.UserData as string != "ruinroom";
+                            });
                             if (damageTarget is Item i && i.GetComponent<Items.Components.Door>() != null)
                             {
                                 // If the attack is aimed to an item and hits an item, it's successful.
@@ -934,7 +990,7 @@ namespace Barotrauma
                 wasHit = damageTarget != null;
             }
 
-            if (wasHit)
+            if (wasHit || attack.HitDetectionType == HitDetection.None)
             {
                 if (character == Character.Controlled || GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
@@ -946,13 +1002,16 @@ namespace Barotrauma
                     NetEntityEvent.Type.ExecuteAttack, 
                     this, 
                     (damageTarget as Entity)?.ID ?? Entity.NullEntityID, 
-                    damageTarget is Character && targetLimb != null ? Array.IndexOf(((Character)damageTarget).AnimController.Limbs, targetLimb) : 0
+                    damageTarget is Character && targetLimb != null ? Array.IndexOf(((Character)damageTarget).AnimController.Limbs, targetLimb) : 0,
+                    attackSimPos.X,
+                    attackSimPos.Y
                 });   
 #endif
             }
 
             Vector2 diff = attackSimPos - SimPosition;
             bool applyForces = !attack.ApplyForcesOnlyOnce || !wasRunning;
+
             if (applyForces)
             {
                 if (attack.ForceOnLimbIndices != null && attack.ForceOnLimbIndices.Count > 0)
@@ -1090,12 +1149,23 @@ namespace Barotrauma
             foreach (StatusEffect statusEffect in statusEffects)
             {
                 if (statusEffect.type != actionType) { continue; }
+                if (statusEffect.type == ActionType.OnDamaged)
+                {
+                    if (!statusEffect.HasRequiredAfflictions(character.LastDamage)) { continue; }
+                    if (statusEffect.OnlyPlayerTriggered)
+                    {
+                        if (character.LastAttacker == null || !character.LastAttacker.IsPlayer)
+                        {
+                            continue;
+                        }
+                    }
+                }
                 if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                     statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
-                    statusEffect.GetNearbyTargets(WorldPosition, targets);
-                    statusEffect.Apply(ActionType.OnActive, deltaTime, character, targets);
+                    targets.AddRange(statusEffect.GetNearbyTargets(WorldPosition, targets));
+                    statusEffect.Apply(actionType, deltaTime, character, targets);
                 }
                 else
                 {
@@ -1103,7 +1173,40 @@ namespace Barotrauma
                     {
                         statusEffect.Apply(actionType, deltaTime, character, character, WorldPosition);
                     }
-                    statusEffect.Apply(actionType, deltaTime, character, this, WorldPosition);
+                    else if (statusEffect.targetLimbs != null)
+                    {
+                        foreach (var limbType in statusEffect.targetLimbs)
+                        {
+                            if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+                            {
+                                // Target all matching limbs
+                                foreach (var limb in ragdoll.Limbs)
+                                {
+                                    if (limb.IsSevered) { continue; }
+                                    if (limb.type == limbType)
+                                    {
+                                        statusEffect.Apply(actionType, deltaTime, character, limb);
+                                    }
+                                }
+                            }
+                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
+                            {
+                                // Target just the first matching limb
+                                Limb limb = ragdoll.GetLimb(limbType);
+                                statusEffect.Apply(actionType, deltaTime, character, limb);
+                            }
+                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.LastLimb))
+                            {
+                                // Target just the last matching limb
+                                Limb limb = ragdoll.Limbs.LastOrDefault(l => l.type == limbType && !l.IsSevered && !l.Hidden);
+                                statusEffect.Apply(actionType, deltaTime, character, limb);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        statusEffect.Apply(actionType, deltaTime, character, this, WorldPosition);
+                    }
                 }
             }
         }
@@ -1113,7 +1216,12 @@ namespace Barotrauma
 
         private float TotalBlinkDurationOut => Params.BlinkDurationOut + Params.BlinkHoldTime;
 
-        public void Blink(float deltaTime, float referenceRotation)
+        public void Blink()
+        {
+            blinkTimer = -TotalBlinkDurationOut;
+        }
+
+        public void UpdateBlink(float deltaTime, float referenceRotation)
         {
             if (blinkTimer > -TotalBlinkDurationOut)
             {
@@ -1147,10 +1255,38 @@ namespace Barotrauma
             }
         }
 
+        public IEnumerable<LimbJoint> GetConnectedJoints() => ragdoll.LimbJoints.Where(j => !j.IsSevered && (j.LimbA == this || j.LimbB == this));
+
+        public IEnumerable<Limb> GetConnectedLimbs()
+        {
+            var connectedJoints = GetConnectedJoints();
+            var connectedLimbs = new HashSet<Limb>();
+            foreach (Limb limb in ragdoll.Limbs)
+            {
+                var otherJoints = limb.GetConnectedJoints();
+                foreach (LimbJoint connectedJoint in connectedJoints)
+                {
+                    if (otherJoints.Contains(connectedJoint))
+                    {
+                        connectedLimbs.Add(limb);
+                    }
+                }
+            }
+            return connectedLimbs;
+        }
+
         public void Remove()
         {
             body?.Remove();
             body = null;
+            if (pullJoint != null)
+            {
+                if (GameMain.World.JointList.Contains(pullJoint))
+                {
+                    GameMain.World.Remove(pullJoint);
+                }
+                pullJoint = null;
+            }
             Release();
             RemoveProjSpecific();
             Removed = true;

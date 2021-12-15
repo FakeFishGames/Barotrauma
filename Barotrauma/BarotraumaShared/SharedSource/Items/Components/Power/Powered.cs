@@ -131,7 +131,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!powerOnSoundPlayed && powerOnSound != null)
                 {
-                    SoundPlayer.PlaySound(powerOnSound.Sound, item.WorldPosition, powerOnSound.Volume, powerOnSound.Range, hullGuess: item.CurrentHull);                    
+                    SoundPlayer.PlaySound(powerOnSound.Sound, item.WorldPosition, powerOnSound.Volume, powerOnSound.Range, hullGuess: item.CurrentHull, ignoreMuffling: powerOnSound.IgnoreMuffling);                    
                     powerOnSoundPlayed = true;
                 }
             }

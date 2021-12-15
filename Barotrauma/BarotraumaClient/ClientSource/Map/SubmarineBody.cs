@@ -79,14 +79,22 @@ namespace Barotrauma
 
             if (maxDamageStructure != null)
             {
-                SoundPlayer.PlayDamageSound(
-                    soundTag,
-                    impact * 10.0f,
-                    ConvertUnits.ToDisplayUnits(impactSimPos),
-                    MathHelper.Lerp(2000.0f, 10000.0f, (impact - MinCollisionImpact) / 2.0f),
-                    maxDamageStructure.Tags);
+                PlayDamageSound(impactSimPos, impact, soundTag, maxDamageStructure);
             }
         }
+
+        private void PlayDamageSound(Vector2 impactSimPos, float impact, string soundTag, Structure hitStructure = null)
+        {
+            if (impact < MinCollisionImpact) { return; }
+
+            SoundPlayer.PlayDamageSound(
+                soundTag,
+                impact * 10.0f,
+                ConvertUnits.ToDisplayUnits(impactSimPos),
+                MathHelper.Lerp(2000.0f, 10000.0f, (impact - MinCollisionImpact) / 2.0f),
+                hitStructure?.Tags);            
+        }
+
 
     }
 }

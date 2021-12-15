@@ -8,15 +8,18 @@ namespace Barotrauma
 {
     class AIObjectiveOperateItem : AIObjective
     {
-        public override string DebugTag => $"operate item {component.Name}";
+        public override string Identifier { get; set; } = "operate item";
+        public override string DebugTag =>  $"{Identifier} {component.Name}";
+
         public override bool AllowAutomaticItemUnequipping => true;
         public override bool AllowMultipleInstances => true;
         public override bool AllowInAnySub => true;
+        public override bool PrioritizeIfSubObjectivesActive => component != null && (component is Reactor || component is Turret);
 
-        private ItemComponent component, controller;
-        private Entity operateTarget;
-        private bool requireEquip;
-        private bool useController;
+        private readonly ItemComponent component, controller;
+        private readonly Entity operateTarget;
+        private readonly bool requireEquip;
+        private readonly bool useController;
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveGetItem getItemObjective;
 
@@ -34,16 +37,16 @@ namespace Barotrauma
         public Func<bool> completionCondition;
         private bool isDoneOperating;
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
-            bool isOrder = objectiveManager.CurrentOrder == this;
+            bool isOrder = objectiveManager.IsOrder(this);
             if (!IsAllowed || character.LockHands)
             {
                 Priority = 0;
                 Abandon = !isOrder;
                 return Priority;
             }
-            if (component.Item.ConditionPercentage <= 0)
+            if (!isOrder && component.Item.ConditionPercentage <= 0)
             {
                 Priority = 0;
             }
@@ -51,7 +54,7 @@ namespace Barotrauma
             {
                 if (isOrder)
                 {
-                    Priority = AIObjectiveManager.OrderPriority;
+                    Priority = objectiveManager.GetOrderPriority(this);
                 }
                 ItemComponent target = GetTarget();
                 Item targetItem = target?.Item;
@@ -69,10 +72,9 @@ namespace Barotrauma
                 {
                     if (!isOrder)
                     {
-                        if (reactor.LastUserWasPlayer && character.TeamID != Character.TeamType.FriendlyNPC ||
-                            HumanAIController.IsTrueForAnyCrewMember(c =>
-                                c.ObjectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder.GetTarget() == target))
+                        if (reactor.LastUserWasPlayer && character.TeamID != CharacterTeamType.FriendlyNPC)
                         {
+                            // The reactor was previously operated by a player -> ignore.
                             Priority = 0;
                             return Priority;
                         }
@@ -89,32 +91,56 @@ namespace Barotrauma
                         case "powerup":
                             // Check that we don't already have another order that is targeting the same item.
                             // Without this the autonomous objective will tell the bot to turn the reactor on again.
-                            if (objectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder != this && operateOrder.GetTarget() == target && operateOrder.Option != Option)
+                            if (IsAnotherOrderTargetingSameItem(objectiveManager.ForcedOrder) || objectiveManager.CurrentOrders.Any(o => IsAnotherOrderTargetingSameItem(o.Objective)))
                             {
                                 Priority = 0;
                                 return Priority;
                             }
+                            bool IsAnotherOrderTargetingSameItem(AIObjective objective)
+                            {
+                                return objective is AIObjectiveOperateItem operateObjective && operateObjective != this && operateObjective.GetTarget() == target && operateObjective.Option != Option;
+                            }
                             break;
+                    }
+                }
+                else if (!isOrder)
+                {
+                    var steering = component?.Item.GetComponent<Steering>();
+                    if (steering != null && (steering.AutoPilot || HumanAIController.IsTrueForAnyCrewMember(c => c != HumanAIController && c.Character.IsCaptain)))
+                    {
+                        // Ignore if already set to autopilot or if there's a captain onboard
+                        Priority = 0;
+                        return Priority;
                     }
                 }
                 if (targetItem.CurrentHull == null ||
                     targetItem.Submarine != character.Submarine && !isOrder ||
                     targetItem.CurrentHull.FireSources.Any() ||
                     HumanAIController.IsItemOperatedByAnother(target, out _) ||
-                    Character.CharacterList.Any(c => c.CurrentHull == targetItem.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
+                    Character.CharacterList.Any(c => c.CurrentHull == targetItem.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))
+                    || component.Item.IgnoreByAI(character) || useController && controller.Item.IgnoreByAI(character))
                 {
                     Priority = 0;
                 }
                 else
                 {
-                    float value = CumulatedDevotion + (AIObjectiveManager.OrderPriority * PriorityModifier);
-                    float max = isOrder ? MathHelper.Min(AIObjectiveManager.OrderPriority, 90) : AIObjectiveManager.RunPriority - 1;
-                    if (!isOrder && reactor != null && reactor.PowerOn && Option == "powerup")
+                    if (isOrder)
                     {
-                        // Decrease the priority when targeting a reactor that is already on.
-                        value /= 2;
+                        float max = objectiveManager.GetOrderPriority(this);
+                        float value = CumulatedDevotion + (max * PriorityModifier);
+                        Priority = MathHelper.Clamp(value, 0, max);
                     }
-                    Priority = MathHelper.Clamp(value, 0, max);
+                    else
+                    {
+                        float value = CumulatedDevotion + (AIObjectiveManager.LowestOrderPriority * PriorityModifier);
+                        float max = AIObjectiveManager.LowestOrderPriority - 1;
+                        if (reactor != null && reactor.PowerOn && reactor.FissionRate > 1 && reactor.AutoTemp && Option == "powerup")
+                        {
+                            // Already on, no need to operate.
+                            value = 0;
+                        }
+                        Priority = MathHelper.Clamp(value, 0, max);
+                    }
                 }
             }
             return Priority;
@@ -137,7 +163,7 @@ namespace Barotrauma
                 throw new Exception("target null");
 #endif
             }
-            else if (target.Item.NonInteractable)
+            else if (!target.Item.IsInteractable(character))
             {
                 Abandon = true;
             }
@@ -153,30 +179,18 @@ namespace Barotrauma
             ItemComponent target = GetTarget();
             if (useController && controller == null)
             {
-                character.Speak(TextManager.GetWithVariable("DialogCantFindController", "[item]", component.Item.Name, true), null, 2.0f, "cantfindcontroller", 30.0f);
+                if (character.IsOnPlayerTeam)
+                {
+                    character.Speak(TextManager.GetWithVariable("DialogCantFindController", "[item]", component.Item.Name, true), null, 2.0f, "cantfindcontroller", 30.0f);
+                }
                 Abandon = true;
                 return;
             }
-            // If this is not an order...
-            if (objectiveManager.CurrentOrder != this)
-            {
-                // Don't allow to operate an item that someone with a better skills already operates
-                if (HumanAIController.IsItemOperatedByAnother(target, out _))
-                {
-                    // Don't abandon
-                    return;
-                }
-                if (component.Item.IgnoreByAI || (useController && controller.Item.IgnoreByAI))
-                {
-                    Abandon = true;
-                    return;
-                }
-            }
             if (operateTarget != null)
             {
-                if (HumanAIController.IsTrueForAnyCrewMember(other => other != HumanAIController && other.ObjectiveManager.GetActiveObjective() is AIObjectiveOperateItem operateObjective && operateObjective.operateTarget == operateTarget))
+                if (HumanAIController.IsTrueForAnyCrewMember(other => other != HumanAIController && other.Character.IsBot && other.ObjectiveManager.GetActiveObjective() is AIObjectiveOperateItem operateObjective && operateObjective.operateTarget == operateTarget))
                 {
-                    // Another crew member is already targeting this entity.
+                    // Another crew member is already targeting this entity (leak).
                     Abandon = true;
                     return;
                 }
@@ -215,7 +229,7 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                else if (!character.Inventory.Items.Contains(component.Item))
+                else if (!character.Inventory.Contains(component.Item))
                 {
                     TryAddSubObjective(ref getItemObjective, () => new AIObjectiveGetItem(character, component.Item, objectiveManager, equip: true),
                         onAbandon: () => Abandon = true,
@@ -241,13 +255,14 @@ namespace Barotrauma
                                 continue;
                             }
                             //equip slot already taken
-                            if (character.Inventory.Items[i] != null)
+                            var existingItem = character.Inventory.GetItemAt(i);
+                            if (existingItem != null)
                             {
                                 //try to put the item in an Any slot, and drop it if that fails
-                                if (!character.Inventory.Items[i].AllowedSlots.Contains(InvSlotType.Any) ||
-                                    !character.Inventory.TryPutItem(character.Inventory.Items[i], character, new List<InvSlotType>() { InvSlotType.Any }))
+                                if (!existingItem.AllowedSlots.Contains(InvSlotType.Any) ||
+                                    !character.Inventory.TryPutItem(existingItem, character, new List<InvSlotType>() { InvSlotType.Any }))
                                 {
-                                    character.Inventory.Items[i].Drop(character);
+                                    existingItem.Drop(character);
                                 }
                             }
                             if (character.Inventory.TryPutItem(component.Item, i, true, false, character))
@@ -266,7 +281,7 @@ namespace Barotrauma
             }
         }
 
-        protected override bool Check() => isDoneOperating && !IsLoop;
+        protected override bool CheckObjectiveSpecific() => isDoneOperating && !IsLoop;
 
         public override void Reset()
         {

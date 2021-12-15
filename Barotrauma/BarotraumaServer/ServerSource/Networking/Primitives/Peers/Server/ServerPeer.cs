@@ -49,6 +49,16 @@ namespace Barotrauma.Networking
                     Connection.SetSteamIDIfUnknown(value ?? 0);
                 }
             }
+            private UInt64? ownerSteamId;
+            public UInt64? OwnerSteamID
+            {
+                get { return ownerSteamId; }
+                set
+                {
+                    ownerSteamId = value;
+                    Connection.SetOwnerSteamIDIfUnknown(value ?? 0);
+                }
+            }
             public Int32? PasswordSalt;
             public bool AuthSessionStarted;
 
@@ -59,6 +69,7 @@ namespace Barotrauma.Networking
                 InitializationStep = ConnectionInitialization.SteamTicketAndVersion;
                 Retries = 0;
                 SteamID = null;
+                OwnerSteamID = null;
                 PasswordSalt = null;
                 UpdateTime = Timing.TotalTime + Timing.Step * 3.0;
                 TimeOut = NetworkConnection.TimeoutThreshold;
@@ -107,8 +118,8 @@ namespace Barotrauma.Networking
                         RemovePendingClient(pendingClient, DisconnectReason.InvalidVersion,
                                     $"DisconnectMessage.InvalidVersion~[version]={GameMain.Version}~[clientversion]={version}");
 
-                        GameServer.Log(name + " (" + pendingClient.SteamID.ToString() + ") couldn't join the server (incompatible game version)", ServerLog.MessageType.Error);
-                        DebugConsole.NewMessage(name + " (" + pendingClient.SteamID.ToString() + ") couldn't join the server (incompatible game version)", Microsoft.Xna.Framework.Color.Red);
+                        GameServer.Log($"{name} ({steamId}) couldn't join the server (incompatible game version)", ServerLog.MessageType.Error);
+                        DebugConsole.NewMessage($"{name} ({steamId}) couldn't join the server (incompatible game version)", Microsoft.Xna.Framework.Color.Red);
                         return;
                     }
 
@@ -119,7 +130,7 @@ namespace Barotrauma.Networking
                     if (nameTaken != null)
                     {
                         RemovePendingClient(pendingClient, DisconnectReason.NameTaken, "");
-                        GameServer.Log(name + " (" + pendingClient.SteamID.ToString() + ") couldn't join the server (name too similar to the name of the client \"" + nameTaken.Name + "\").", ServerLog.MessageType.Error);
+                        GameServer.Log($"{name} ({steamId}) couldn't join the server (name too similar to the name of the client \"" + nameTaken.Name + "\").", ServerLog.MessageType.Error);
                         return;
                     }
 
@@ -172,6 +183,7 @@ namespace Barotrauma.Networking
             else if (pendingClient.Connection is SteamP2PConnection s)
             {
                 serverSettings.BanList.BanPlayer(pendingClient.Name, s.SteamID, banReason, duration);
+                serverSettings.BanList.BanPlayer(pendingClient.Name, s.OwnerSteamID, banReason, duration);
             }
         }
 
@@ -183,7 +195,8 @@ namespace Barotrauma.Networking
             }
             else if (pendingClient.Connection is SteamP2PConnection s)
             {
-                return serverSettings.BanList.IsBanned(s.SteamID, out banReason);
+                return serverSettings.BanList.IsBanned(s.SteamID, out banReason) ||
+                       serverSettings.BanList.IsBanned(s.OwnerSteamID, out banReason);
             }
             banReason = null;
             return false;
@@ -199,7 +212,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (connectedClients.Count >= serverSettings.MaxPlayers - 1)
+            if (connectedClients.Count >= serverSettings.MaxPlayers)
             {
                 RemovePendingClient(pendingClient, DisconnectReason.ServerFull, "");
             }
@@ -233,13 +246,15 @@ namespace Barotrauma.Networking
                 case ConnectionInitialization.ContentPackageOrder:
                     outMsg.Write(GameMain.Server.ServerName);
 
-                    var mpContentPackages = GameMain.Config.AllEnabledPackages.Where(cp => cp.HasMultiplayerIncompatibleContent).Reverse().ToList();
+                    var mpContentPackages = GameMain.Config.AllEnabledPackages.Where(cp => cp.HasMultiplayerIncompatibleContent).ToList();
                     outMsg.WriteVariableUInt32((UInt32)mpContentPackages.Count);
                     for (int i = 0; i < mpContentPackages.Count; i++)
                     {
                         outMsg.Write(mpContentPackages[i].Name);
                         outMsg.Write(mpContentPackages[i].MD5hash.Hash);
                         outMsg.Write(mpContentPackages[i].SteamWorkshopId);
+                        UInt32 installTimeDiffSeconds = (UInt32)((mpContentPackages[i].InstallTime ?? DateTime.UtcNow) - DateTime.UtcNow).TotalSeconds;
+                        outMsg.Write(installTimeDiffSeconds);
                     }
                     break;
                 case ConnectionInitialization.Password:
@@ -273,6 +288,7 @@ namespace Barotrauma.Networking
                 {
                     Steam.SteamManager.StopAuthSession(pendingClient.SteamID.Value);
                     pendingClient.SteamID = null;
+                    pendingClient.OwnerSteamID = null;
                     pendingClient.AuthSessionStarted = false;
                 }
             }

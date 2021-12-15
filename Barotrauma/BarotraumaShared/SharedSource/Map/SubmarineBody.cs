@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Collision;
@@ -145,7 +146,7 @@ namespace Barotrauma
 
                 foreach (Hull hull in Hull.hullList)
                 {
-                    if (hull.Submarine != submarine) { continue; }
+                    if (hull.Submarine != submarine || hull.IdFreed) { continue; }
 
                     Rectangle rect = hull.Rect;
                     farseerBody.CreateRectangle(
@@ -172,6 +173,11 @@ namespace Barotrauma
                     float simRadius = ConvertUnits.ToSimUnits(radius);
                     float simWidth  = ConvertUnits.ToSimUnits(width);
                     float simHeight = ConvertUnits.ToSimUnits(height);
+
+                    if (sub.FlippedX)
+                    {
+                        simPos.X = -simPos.X;
+                    }
 
                     if (width > 0.0f && height > 0.0f)
                     {
@@ -316,19 +322,30 @@ namespace Barotrauma
                         Math.Max(Body.LinearVelocity.Y, ConvertUnits.ToSimUnits(Level.Loaded.BottomPos - (worldBorders.Y - worldBorders.Height))));
                 }
 
-                if (Position.X < 0)
+                //hard limit for how far outside the level the sub can go
+                float maxDist = 200000.0f;
+                //the force of the current starts to increase exponentially after this point
+                float exponentialForceIncreaseDist = 150000.0f;
+                float distance = Position.X < 0 ? Math.Abs(Position.X) : Position.X - Level.Loaded.Size.X;
+                if (distance > 0)
                 {
-                    float force = Math.Abs(Position.X * 0.5f);
-                    totalForce += Vector2.UnitX * force;
-                    if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
+                    if (distance > maxDist)
                     {
-                        GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, Math.Min(force * 0.0001f, 5.0f));
+                        if (Position.X < 0)
+                        {
+                            Body.LinearVelocity = new Vector2(Math.Max(0, Body.LinearVelocity.X), Body.LinearVelocity.Y);
+                        }
+                        else
+                        {
+                            Body.LinearVelocity = new Vector2(Math.Min(0, Body.LinearVelocity.X), Body.LinearVelocity.Y);
+                        }
                     }
-                }
-                else
-                {
-                    float force = (Position.X - Level.Loaded.Size.X) * 0.5f;
-                    totalForce -= Vector2.UnitX * force;
+                    if (distance > exponentialForceIncreaseDist)
+                    {
+                        distance += (float)Math.Pow((distance - exponentialForceIncreaseDist) * 0.01f, 2.0f);
+                    }
+                    float force = distance * 0.5f;
+                    totalForce += (Position.X < 0 ? Vector2.UnitX : -Vector2.UnitX) * force;
                     if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
                     {
                         GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, Math.Min(force * 0.0001f, 5.0f));
@@ -435,7 +452,7 @@ namespace Barotrauma
 
         public void ApplyForce(Vector2 force)
         {
-            Body.ApplyForce(force, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            Body.ApplyForce(force);
         }
 
         public void SetPosition(Vector2 position)
@@ -449,22 +466,36 @@ namespace Barotrauma
             if (GameMain.GameSession?.GameMode is TestGameMode) { return; }
 #endif
             if (Level.Loaded == null) { return; }
-            float submarineDepth = submarine.RealWorldDepth;
-            if (submarineDepth < Level.Loaded.RealWorldCrushDepth) { return; }
+
+            //camera shake and sounds start playing 500 meters before crush depth
+            float depthEffectThreshold = 500.0f;
+            if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth - depthEffectThreshold || Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth - depthEffectThreshold)
+            {
+                return;
+            }
 
             depthDamageTimer -= deltaTime;
             if (depthDamageTimer > 0.0f) { return; }
 
+#if CLIENT
+            SoundPlayer.PlayDamageSound("pressure", Rand.Range(0.0f, 100.0f), submarine.WorldPosition + Rand.Vector(Rand.Range(0.0f, Math.Min(submarine.Borders.Width, submarine.Borders.Height))), 20000.0f);
+#endif
+
             foreach (Structure wall in Structure.WallList)
             {
-                if (wall.Submarine != submarine || wall.CrushDepth > submarineDepth) { continue; }
+                if (wall.Submarine != submarine) { continue; }
 
-                float pastCrushDepth = submarineDepth - wall.CrushDepth;
-                Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, pastCrushDepth * 0.1f, levelWallDamage: 0.0f);
+                float wallCrushDepth = wall.CrushDepth;
+                if (submarine.Info.SubmarineClass == SubmarineClass.DeepDiver) { wallCrushDepth *= 1.2f; }
+                float pastCrushDepth = submarine.RealWorldDepth - wallCrushDepth;
+                if (pastCrushDepth > 0)
+                {
+                    Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, pastCrushDepth * 0.1f, levelWallDamage: 0.0f);
+                }
                 if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
                 {
-                    GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, Math.Min(pastCrushDepth * 0.001f, 50.0f));
-                }                
+                    GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, MathHelper.Clamp(pastCrushDepth * 0.001f, 1.0f, 50.0f));
+                }
             }
 
             depthDamageTimer = 10.0f;
@@ -498,7 +529,7 @@ namespace Barotrauma
             {
                 return CheckCharacterCollision(contact, character);
             }
-            else if (f2.UserData is Items.Components.DockingPort)
+            else if (f1.UserData is Items.Components.DockingPort || f2.UserData is Items.Components.DockingPort)
             {
                 return false;
             }
@@ -538,8 +569,7 @@ namespace Barotrauma
             }
 
             var gaps = newHull?.ConnectedGaps ?? Gap.GapList.Where(g => g.Submarine == submarine);
-            targetPos = character.WorldPosition;
-            Gap adjacentGap = Gap.FindAdjacent(gaps, targetPos, 500.0f);
+            Gap adjacentGap = Gap.FindAdjacent(gaps, ConvertUnits.ToDisplayUnits(points[0]), 200.0f);
             if (adjacentGap == null) { return true; }
 
             if (newHull != null)
@@ -555,19 +585,29 @@ namespace Barotrauma
         {
             if (limb?.body?.FarseerBody == null || limb.character == null) { return; }
 
-            if (limb.Mass > MinImpactLimbMass)
+            float impactMass = limb.Mass;
+            var enemyAI = limb.character.AIController as EnemyAIController;
+            float attackMultiplier = 1.0f;
+            if (enemyAI?.ActiveAttack != null)
+            {
+                impactMass = Math.Max(Math.Max(limb.Mass, limb.character.AnimController.MainLimb.Mass), limb.character.AnimController.Collider.Mass);
+                attackMultiplier = enemyAI.ActiveAttack.SubmarineImpactMultiplier;
+            }
+
+            if (impactMass * attackMultiplier > MinImpactLimbMass)
             {
                 Vector2 normal = 
                     Vector2.DistanceSquared(Body.SimPosition, limb.SimPosition) < 0.0001f ?
                     Vector2.UnitY :
                     Vector2.Normalize(Body.SimPosition - limb.SimPosition);
 
-                float impact = Math.Min(Vector2.Dot(collision.Velocity, -normal), 50.0f) * Math.Min(limb.Mass / 100.0f, 1);
+                float impact = Math.Min(Vector2.Dot(collision.Velocity, -normal), 50.0f) * Math.Min(impactMass / 300.0f, 1);
+                impact *= attackMultiplier;                
 
-                ApplyImpact(impact, -normal, collision.ImpactPos, applyDamage: false);
+                ApplyImpact(impact, normal, collision.ImpactPos, applyDamage: false);
                 foreach (Submarine dockedSub in submarine.DockedTo)
                 {
-                    dockedSub.SubBody.ApplyImpact(impact, -normal, collision.ImpactPos, applyDamage: false);
+                    dockedSub.SubBody.ApplyImpact(impact, normal, collision.ImpactPos, applyDamage: false);
                 }
             }
 
@@ -630,17 +670,20 @@ namespace Barotrauma
 
                 Body.LinearVelocity -= velChange;
 
-                float damageAmount = contactDot * Body.Mass / limb.character.Mass;
-                limb.character.LastDamageSource = submarine;
-                limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(collision.ImpactPos), limb, 
-                    AfflictionPrefab.ImpactDamage.Instantiate(damageAmount).ToEnumerable(), 0.0f, true, 0.0f);
-
-                if (limb.character.IsDead)
+                if (contactDot > 0.1f)
                 {
-                    foreach (LimbJoint limbJoint in limb.character.AnimController.LimbJoints)
+                    float damageAmount = contactDot * Body.Mass / limb.character.Mass;
+                    limb.character.LastDamageSource = submarine;
+                    limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(collision.ImpactPos), limb, 
+                        AfflictionPrefab.ImpactDamage.Instantiate(damageAmount).ToEnumerable(), 0.0f, true, 0.0f);
+
+                    if (limb.character.IsDead)
                     {
-                        if (limbJoint.IsSevered || (limbJoint.LimbA != limb && limbJoint.LimbB != limb)) continue;
-                        limb.character.AnimController.SeverLimbJoint(limbJoint);
+                        foreach (LimbJoint limbJoint in limb.character.AnimController.LimbJoints)
+                        {
+                            if (limbJoint.IsSevered || (limbJoint.LimbA != limb && limbJoint.LimbB != limb)) continue;
+                            limb.character.AnimController.SeverLimbJoint(limbJoint);
+                        }
                     }
                 }
             }
@@ -798,9 +841,9 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
+            if (Character.Controlled != null && Character.Controlled.Submarine == submarine && Character.Controlled.KnockbackCooldownTimer <= 0.0f)
             {
-                GameMain.GameScreen.Cam.Shake = impact * 2.0f;
+                GameMain.GameScreen.Cam.Shake = Math.Max(impact * 10.0f, GameMain.GameScreen.Cam.Shake);
                 if (submarine.Info.Type == SubmarineType.Player && !submarine.DockedTo.Any(s => s.Info.Type != SubmarineType.Player))
                 {
                     float angularVelocity = 
@@ -814,34 +857,41 @@ namespace Barotrauma
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Submarine != submarine) { continue; }
-                
+                if (c.KnockbackCooldownTimer > 0.0f) { continue; }
+
+                c.KnockbackCooldownTimer = Character.KnockbackCooldown;
+
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     if (limb.IsSevered) { continue; }
                     limb.body.ApplyLinearImpulse(limb.Mass * impulse, 10.0f);
                 }
-                c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 10.0f);
 
                 bool holdingOntoSomething = false;
                 if (c.SelectedConstruction != null)
                 {
-                    var controller = c.SelectedConstruction.GetComponent<Items.Components.Controller>();
-                    holdingOntoSomething = controller != null && controller.LimbPositions.Any();
+                    holdingOntoSomething =
+                        c.SelectedConstruction.GetComponent<Ladder>() != null ||
+                        (c.SelectedConstruction.GetComponent<Controller>()?.LimbPositions.Any() ?? false);
                 }
 
-                //stun for up to 1 second if the impact equal or higher to the maximum impact
-                if (impact >= MaxCollisionImpact && !holdingOntoSomething)
+                if (!holdingOntoSomething)
                 {
-                    c.SetStun(Math.Min(impulse.Length() * 0.2f, 1.0f));
+                    c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 10.0f);
+                    //stun for up to 2 second if the impact equal or higher to the maximum impact
+                    if (impact >= MaxCollisionImpact)
+                    {
+                        c.AddDamage(impactPos, AfflictionPrefab.ImpactDamage.Instantiate(3.0f).ToEnumerable(), stun: Math.Min(impulse.Length() * 0.2f, 2.0f), playSound: true);
+                    }
                 }
             }
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.Submarine != submarine || item.CurrentHull == null || 
-                    item.body == null || !item.body.Enabled) continue;
+                if (item.Submarine != submarine || item.CurrentHull == null || item.body == null || !item.body.Enabled) { continue; }
 
                 item.body.ApplyLinearImpulse(item.body.Mass * impulse, 10.0f);
+                item.PositionUpdateInterval = 0.0f;
             }
 
             float dmg = applyDamage ? impact * ImpactDamageMultiplier : 0.0f;

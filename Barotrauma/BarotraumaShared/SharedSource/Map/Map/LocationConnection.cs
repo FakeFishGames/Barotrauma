@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -12,6 +13,8 @@ namespace Barotrauma
         public readonly List<Vector2[]> CrackSegments = new List<Vector2[]>();
 
         public bool Passed;
+
+        public bool Locked;
 
         public LevelData LevelData { get; set; }
 
@@ -31,8 +34,31 @@ namespace Barotrauma
             private set;
         }
 
+        private readonly List<Mission> availableMissions = new List<Mission>();
+        public IEnumerable<Mission> AvailableMissions
+        {
+            get
+            {
+                availableMissions.RemoveAll(m => m.Completed || (m.Failed && !m.Prefab.AllowRetry));
+                return availableMissions;
+            }
+        }
+
         public LocationConnection(Location location1, Location location2)
         {
+            if (location1 == null)
+            {
+                throw new ArgumentException("Invalid location connection: location1 was null");
+            }
+            if (location2 == null)
+            {
+                throw new ArgumentException("Invalid location connection: location2 was null");
+            }
+            if (location1 == location2)
+            {
+                throw new ArgumentException("Invalid location connection: location1 was the same as location2");
+            }
+
             Locations = new Location[] { location1, location2 };            
             Length = Vector2.Distance(location1.MapPosition, location2.MapPosition);
         }

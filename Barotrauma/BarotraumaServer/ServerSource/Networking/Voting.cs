@@ -65,7 +65,7 @@ namespace Barotrauma
 
         public void ServerRead(IReadMessage inc, Client sender)
         {
-            if (GameMain.Server == null || sender == null) return;
+            if (GameMain.Server == null || sender == null) { return; }
 
             byte voteTypeByte = inc.ReadByte();
             VoteType voteType = VoteType.Unknown;
@@ -83,13 +83,16 @@ namespace Barotrauma
             {
                 case VoteType.Sub:
                     int equalityCheckVal = inc.ReadInt32();
-                    SubmarineInfo sub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.EqualityCheckVal == equalityCheckVal);
+                    string hash = equalityCheckVal > 0 ? string.Empty : inc.ReadString();
+                    SubmarineInfo sub = equalityCheckVal > 0 ?
+                        SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Type == SubmarineType.Player && s.EqualityCheckVal == equalityCheckVal) :
+                        SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Type == SubmarineType.Player && s.MD5Hash.Hash == hash);
                     sender.SetVote(voteType, sub);
                     break;
                 case VoteType.Mode:
                     string modeIdentifier = inc.ReadString();
                     GameModePreset mode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
-                    if (!mode.Votable) { break; }
+                    if (mode == null || !mode.Votable) { break; }
                     sender.SetVote(voteType, mode);
                     break;
                 case VoteType.EndRound:

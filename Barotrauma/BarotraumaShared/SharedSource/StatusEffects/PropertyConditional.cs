@@ -10,7 +10,7 @@ namespace Barotrauma
     // - Use XElement instead of XAttribute in the constructor
     // - Simplify, remove unnecessary conversions
     // - Improve the flow so that the logic is undestandable.
-    // - Maybe ass some test cases for the operators?
+    // - Maybe add some test cases for the operators?
     class PropertyConditional
     {
         public enum ConditionType
@@ -18,6 +18,7 @@ namespace Barotrauma
             PropertyValue,
             Name,
             SpeciesName,
+            SpeciesGroup,
             HasTag,
             HasStatusTag,
             Affliction,
@@ -46,6 +47,7 @@ namespace Barotrauma
         public readonly OperatorType Operator;
         public readonly string AttributeName;
         public readonly string AttributeValue;
+        public readonly string[] SplitAttributeValue;
         public readonly float? FloatValue;
 
         public readonly string TargetItemComponentName;
@@ -55,8 +57,10 @@ namespace Barotrauma
 
         // Only used by conditionals targeting an item (makes the conditional check the item/character whose inventory this item is inside)
         public readonly bool TargetContainer;
+        // Only used by conditionals targeting an item. By default, containers check the parent item. This allows you to check the grandparent instead.
+        public readonly bool TargetGrandParent;
 
-        private readonly int cancelStatusEffect;
+        public readonly bool TargetContainedItem;
 
         // Remove this after refactoring
         public static bool IsValid(XAttribute attribute)
@@ -109,20 +113,8 @@ namespace Barotrauma
             TargetItemComponentName = attribute.Parent.GetAttributeString("targetitemcomponent", "");
             TargetContainer = attribute.Parent.GetAttributeBool("targetcontainer", false);
             TargetSelf = attribute.Parent.GetAttributeBool("targetself", false);
-
-            foreach (XElement subElement in attribute.Parent.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "cancel":
-                    case "canceleffect":
-                    case "cancelstatuseffect":
-                        //This only works if there's a conditional checking for status effect tags. There is no way to cancel *all* status effects atm.
-                        cancelStatusEffect = 1;
-                        if (subElement.GetAttributeBool("all", false)) cancelStatusEffect = 2;
-                        break;
-                }
-            }
+            TargetGrandParent = attribute.Parent.GetAttributeBool("targetgrandparent", false);
+            TargetContainedItem = attribute.Parent.GetAttributeBool("targetcontaineditem", false);
 
             if (!Enum.TryParse(AttributeName, true, out Type))
             {
@@ -137,6 +129,7 @@ namespace Barotrauma
             }
             
             AttributeValue = valueString;
+            SplitAttributeValue = valueString.Split(',');
             if (float.TryParse(AttributeValue, NumberStyles.Float, CultureInfo.InvariantCulture, out float value))
             {
                 FloatValue = value;
@@ -180,8 +173,23 @@ namespace Barotrauma
         }
 
         public bool Matches(ISerializableEntity target)
-        {
-            string valStr = AttributeValue.ToString();            
+        {          
+            if (TargetContainedItem)
+            {
+                if (target is Item item)
+                {
+                    return item.ContainedItems.Any(it => Matches(it));
+                }
+                else if (target is Items.Components.ItemComponent ic)
+                {
+                    return ic.Item.ContainedItems.Any(it => Matches(it));
+                }
+                else if (target is Character character)
+                {
+                    return character.Inventory != null && character.Inventory.AllItems.Any(it => Matches(it));
+                }
+            }
+
             switch (Type)
             {
                 case ConditionType.PropertyValue:
@@ -194,13 +202,12 @@ namespace Barotrauma
                     return false;
                 case ConditionType.Name:
                     if (target == null) { return Operator == OperatorType.NotEquals; }
-                    return (Operator == OperatorType.Equals) == (target.Name == valStr);
+                    return (Operator == OperatorType.Equals) == (target.Name == AttributeValue);
                 case ConditionType.HasTag:
                     {
                         if (target == null) { return Operator == OperatorType.NotEquals; }
-                        string[] readTags = valStr.Split(',');
                         int matches = 0;
-                        foreach (string tag in readTags)
+                        foreach (string tag in SplitAttributeValue)
                         {
                             if (target is Item item && item.HasTag(tag))
                             {
@@ -208,58 +215,38 @@ namespace Barotrauma
                             }
                         }
                         //If operator is == then it needs to match everything, otherwise if its != there must be zero matches.
-                        return Operator == OperatorType.Equals ? matches >= readTags.Length : matches <= 0;
+                        return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
                     }
                 case ConditionType.HasStatusTag:
                     if (target == null) { return Operator == OperatorType.NotEquals; }
                     bool success = false;
                     if (StatusEffect.DurationList.Any(d => d.Targets.Contains(target)) || DelayedEffect.DelayList.Any(d => d.Targets.Contains(target)))
                     {
-                        string[] readTags = valStr.Split(',');
-                        foreach (DurationListElement duration in StatusEffect.DurationList)
+                        int matches = 0;
+                        foreach (DurationListElement durationEffect in StatusEffect.DurationList)
                         {
-                            if (!duration.Targets.Contains(target)) { continue; }
-                            int matches = 0;
-                            foreach (string tag in readTags)
+                            if (!durationEffect.Targets.Contains(target)) { continue; }
+                            foreach (string tag in SplitAttributeValue)
                             {
-                                if (duration.Parent.HasTag(tag))
+                                if (durationEffect.Parent.HasTag(tag))
                                 {
                                     matches++;
                                 }
                             }
-                            success = Operator == OperatorType.Equals ? matches >= readTags.Length : matches <= 0;
-                            if (cancelStatusEffect > 0 && success)
-                            {
-                                StatusEffect.DurationList.Remove(duration);
-                            }
-                            if (cancelStatusEffect != 2)
-                            {
-                                //cancelStatusEffect 1 = only cancel once, cancelStatusEffect 2 = cancel all of matching tags
-                                return success;
-                            }
+                            success = Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
                         }
-                        foreach (DelayedListElement delay in DelayedEffect.DelayList)
+                        foreach (DelayedListElement delayedEffect in DelayedEffect.DelayList)
                         {
-                            if (!delay.Targets.Contains(target)) { continue; }
-                            int matches = 0;
-                            foreach (string tag in readTags)
+                            if (!delayedEffect.Targets.Contains(target)) { continue; }
+                            foreach (string tag in SplitAttributeValue)
                             {
-                                if (delay.Parent.HasTag(tag))
+                                if (delayedEffect.Parent.HasTag(tag))
                                 {
                                     matches++;
                                 }
                             }
-                            success = Operator == OperatorType.Equals ? matches >= readTags.Length : matches <= 0;
-                            if (cancelStatusEffect > 0 && success)
-                            {
-                                DelayedEffect.DelayList.Remove(delay);
-                            }
-                            if (cancelStatusEffect != 2)
-                            {
-                                //ditto
-                                return success;
-                            }
                         }
+                        return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
                     }
                     else if (Operator == OperatorType.NotEquals)
                     {
@@ -268,11 +255,19 @@ namespace Barotrauma
                     }
                     return success;
                 case ConditionType.SpeciesName:
-                    if (target == null) { return Operator == OperatorType.NotEquals; }
-                    if (!(target is Character targetCharacter)) { return false; }
-                    return (Operator == OperatorType.Equals) == targetCharacter.SpeciesName.Equals(valStr, StringComparison.OrdinalIgnoreCase);
+                    {
+                        if (target == null) { return Operator == OperatorType.NotEquals; }
+                        if (!(target is Character targetCharacter)) { return false; }
+                        return Operator == OperatorType.Equals == targetCharacter.SpeciesName.Equals(AttributeValue, StringComparison.OrdinalIgnoreCase);
+                    }
+                case ConditionType.SpeciesGroup:
+                    {
+                        if (target == null) { return Operator == OperatorType.NotEquals; }
+                        if (!(target is Character targetCharacter)) { return false; }
+                        return Operator == OperatorType.Equals == targetCharacter.Params.CompareGroup(AttributeValue);
+                    }
                 case ConditionType.EntityType:
-                    switch (valStr)
+                    switch (AttributeValue)
                     {
                         case "character":
                         case "Character":
@@ -299,7 +294,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            return limb.type.ToString().Equals(valStr, StringComparison.OrdinalIgnoreCase);
+                            return limb.type.ToString().Equals(AttributeValue, StringComparison.OrdinalIgnoreCase);
                         }
                     }
                 case ConditionType.Affliction:

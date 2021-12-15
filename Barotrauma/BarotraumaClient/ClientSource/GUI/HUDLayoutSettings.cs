@@ -128,7 +128,7 @@ namespace Barotrauma
 
 
             int messageAreaWidth = GameMain.GraphicsWidth / 3;
-            MessageAreaTop = new Rectangle((GameMain.GraphicsWidth - messageAreaWidth) / 2, ButtonAreaTop.Bottom, messageAreaWidth, ButtonAreaTop.Height);
+            MessageAreaTop = new Rectangle((GameMain.GraphicsWidth - messageAreaWidth) / 2, ButtonAreaTop.Bottom + ButtonAreaTop.Height, messageAreaWidth, ButtonAreaTop.Height);
 
             bool isFourByThree = GUI.IsFourByThree();
             int chatBoxWidth = !isFourByThree ? (int)(475 * GUI.Scale) : (int)(375 * GUI.Scale);
@@ -139,7 +139,9 @@ namespace Barotrauma
             int objectiveAnchorOffsetY = (int)(150 * GUI.Scale);
             ObjectiveAnchor = new Rectangle(Padding, ChatBoxArea.Y - objectiveAnchorOffsetY, objectiveAnchorWidth, 0);
 
-            CrewArea = new Rectangle(Padding, Padding, (int)Math.Max(400 * GUI.Scale, 220), ObjectiveAnchor.Top - Padding * 2);
+            int crewAreaY = ButtonAreaTop.Bottom + Padding;
+            int crewAreaHeight = ObjectiveAnchor.Top - Padding - crewAreaY;
+            CrewArea = new Rectangle(Padding, crewAreaY, (int)Math.Max(400 * GUI.Scale, 220), crewAreaHeight);
 
             InventoryAreaLower = new Rectangle(ChatBoxArea.Right + Padding * 7, inventoryTopY, GameMain.GraphicsWidth - Padding * 9 - ChatBoxArea.Width, GameMain.GraphicsHeight - inventoryTopY);
 
@@ -183,7 +185,7 @@ namespace Barotrauma
             if (GUI.MouseOn != null) { return false; }
 
             //don't close when hovering over an inventory element
-            if (Inventory.IsMouseOnInventory()) { return false; }
+            if (Inventory.IsMouseOnInventory) { return false; }
             
             bool input = PlayerInput.PrimaryMouseButtonDown() || PlayerInput.SecondaryMouseButtonClicked();
             return input && !rect.Contains(PlayerInput.MousePosition);

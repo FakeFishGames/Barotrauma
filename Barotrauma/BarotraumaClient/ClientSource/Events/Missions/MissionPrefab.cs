@@ -1,7 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -20,13 +18,54 @@ namespace Barotrauma
             private set;
         }
 
+        public bool DisplayTargetHudIcons
+        {
+            get;
+            private set;
+        }
+
+        public float HudIconMaxDistance
+        {
+            get;
+            private set;
+        }
+
+        public Sprite HudIcon
+        {
+            get
+            {
+                return hudIcon ?? Icon;
+            }
+        }
+
+        public Color HudIconColor
+        {
+            get
+            {
+                return hudIconColor ?? IconColor;
+            }
+        } 
+
+        private Sprite hudIcon;
+        private Color? hudIconColor;
+
         partial void InitProjSpecific(XElement element)
         {
+            DisplayTargetHudIcons = element.GetAttributeBool("displaytargethudicons", false);
+            HudIconMaxDistance = element.GetAttributeFloat("hudiconmaxdistance", 1000.0f);
             foreach (XElement subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("icon", StringComparison.OrdinalIgnoreCase)) { continue; }    
-                Icon = new Sprite(subElement);
-                IconColor = subElement.GetAttributeColor("color", Color.White);
+                string name = subElement.Name.ToString();
+                if (name.Equals("icon", StringComparison.OrdinalIgnoreCase))
+                {
+                    Icon = new Sprite(subElement);
+                    IconColor = subElement.GetAttributeColor("color", Color.White);
+                }
+                else if (name.Equals("hudicon", StringComparison.OrdinalIgnoreCase))
+                {
+                    hudIcon = new Sprite(subElement);
+                    hudIconColor = subElement.GetAttributeColor("color");
+                }
             }
         }
     }

@@ -25,7 +25,20 @@ namespace Steamworks
 
 		internal static void InstallEvents( bool server )
 		{
-			Dispatch.Install<DownloadItemResult_t>( x => OnDownloadItemResult?.Invoke( x.Result ), server );
+			Dispatch.Install<DownloadItemResult_t>( x =>
+			{
+				if (x.AppID == SteamClient.AppId)
+				{
+					OnDownloadItemResult?.Invoke(x.Result);
+
+					Ugc.Item item = new Ugc.Item(x.PublishedFileId);
+					if (item.IsInstalled && (onItemInstalled?.ContainsKey(x.PublishedFileId) ?? false))
+					{
+						onItemInstalled[x.PublishedFileId]?.Invoke();
+						onItemInstalled.Remove(x.PublishedFileId);
+					}
+				}
+			}, server );
 			Dispatch.Install<ItemInstalled_t>(x =>
 			{
 				if (x.AppID == SteamClient.AppId)

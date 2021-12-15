@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveExtinguishFire : AIObjective
     {
-        public override string DebugTag => "extinguish fire";
+        public override string Identifier { get; set; } = "extinguish fire";
         public override bool ForceRun => true;
         public override bool ConcurrentObjectives => true;
         public override bool KeepDivingGearOn => true;
@@ -27,7 +27,7 @@ namespace Barotrauma
             this.targetHull = targetHull;
         }
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             if (!IsAllowed)
             {
@@ -35,7 +35,7 @@ namespace Barotrauma
                 Abandon = true;
                 return Priority;
             }
-            bool isOrder = objectiveManager.IsCurrentOrder<AIObjectiveExtinguishFires>();
+            bool isOrder = objectiveManager.HasOrder<AIObjectiveExtinguishFires>();
             if (!isOrder && Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
             {
                 // Don't go into rooms with any enemies, unless it's an order
@@ -53,9 +53,13 @@ namespace Barotrauma
                     distanceFactor = 1;
                 }
                 float severity = AIObjectiveExtinguishFires.GetFireSeverity(targetHull);
-                if (severity > 0.5f && !isOrder)
+                if (severity > 0.75f && !isOrder && 
+                    targetHull.RoomName != null &&
+                    !targetHull.RoomName.Contains("reactor", StringComparison.OrdinalIgnoreCase) && 
+                    !targetHull.RoomName.Contains("engine", StringComparison.OrdinalIgnoreCase) && 
+                    !targetHull.RoomName.Contains("command", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Ignore severe fires unless ordered. (Let the fire drain all the oxygen instead).
+                    // Ignore severe fires to prevent casualities unless ordered to extinguish.
                     Priority = 0;
                     Abandon = true;
                 }
@@ -68,7 +72,7 @@ namespace Barotrauma
             return Priority;
         }
 
-        protected override bool Check() => targetHull.FireSources.None();
+        protected override bool CheckObjectiveSpecific() => targetHull.FireSources.None();
 
         private float sinTime;
         protected override void Act(float deltaTime)
@@ -78,7 +82,7 @@ namespace Barotrauma
             {
                 TryAddSubObjective(ref getExtinguisherObjective, () =>
                 {
-                    if (!character.HasEquippedItem("fireextinguisher", allowBroken: false))
+                    if (character.IsOnPlayerTeam && !character.HasEquippedItem("fireextinguisher", allowBroken: false))
                     {
                         character.Speak(TextManager.Get("DialogFindExtinguisher"), null, 2.0f, "findextinguisher", 30.0f);
                     }
@@ -88,7 +92,7 @@ namespace Barotrauma
                         // If the item is inside an unsafe hull, decrease the priority
                         GetItemPriority = i => HumanAIController.UnsafeHulls.Contains(i.CurrentHull) ? 0.1f : 1
                     };
-                    if (objectiveManager.IsCurrentOrder<AIObjectiveExtinguishFires>())
+                    if (objectiveManager.HasOrder<AIObjectiveExtinguishFires>())
                     {
                         getItemObjective.Abandoned += () => character.Speak(TextManager.Get("dialogcannotfindfireextinguisher"), null, 0.0f, "dialogcannotfindfireextinguisher", 10.0f);
                     };
@@ -111,9 +115,10 @@ namespace Barotrauma
                     float xDist = Math.Abs(character.WorldPosition.X - fs.WorldPosition.X) - fs.DamageRange;
                     float yDist = Math.Abs(character.WorldPosition.Y - fs.WorldPosition.Y);
                     bool inRange = xDist + yDist < extinguisher.Range;
-                    bool canSee = HumanAIController.VisibleHulls.Contains(fs.Hull) || character.CanSeeTarget(fs);
-                    bool move = !inRange || !canSee;
-                    if ((inRange && canSee) || useExtinquisherTimer > 0)
+                    // Use the hull position, because the fire x pos is sometimes inside a wall -> the bot can't ever see it and continues running towards the wall.
+                    ISpatialEntity lookTarget = character.CurrentHull == targetHull || character.CurrentHull.linkedTo.Contains(targetHull) ? targetHull : fs as ISpatialEntity;
+                    bool move = !inRange || !character.CanSeeTarget(lookTarget);
+                    if ((inRange && character.CanSeeTarget(lookTarget)) || useExtinquisherTimer > 0)
                     {
                         useExtinquisherTimer += deltaTime;
                         if (useExtinquisherTimer > 2.0f)
@@ -148,7 +153,7 @@ namespace Barotrauma
                                 onAbandon: () =>  Abandon = true, 
                                 onCompleted: () => RemoveSubObjective(ref gotoObjective)))
                         {
-                            gotoObjective.requiredCondition = () => HumanAIController.VisibleHulls.Contains(fs.Hull);
+                            gotoObjective.requiredCondition = () => targetHull == null || character.CanSeeTarget(targetHull);
                         }
                     }
                     else

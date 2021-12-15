@@ -64,6 +64,10 @@ namespace Barotrauma
         public readonly List<NPCConversation> Responses;
         private readonly int speakerIndex;
         private readonly List<string> allowedSpeakerTags;
+        private readonly bool requireNextLine;
+        // used primarily for team1 characters interacting with escorted personnel (TODO: not used anywhere)
+        private readonly bool requireSight;
+
         public static void LoadAll(IEnumerable<ContentFile> files)
         {
             foreach (var file in files)
@@ -161,6 +165,8 @@ namespace Barotrauma
             {
                 Responses.Add(new NPCConversation(subElement, filePath));
             }
+            requireNextLine = element.GetAttributeBool("requirenextline", false);
+            requireSight = element.GetAttributeBool("requiresight", false);
         }
 
         private static List<string> GetCurrentFlags(Character speaker)
@@ -178,7 +184,7 @@ namespace Barotrauma
                 {
                     if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0f && 
                         speaker?.CurrentHull != null && 
-                        speaker.TeamID == Character.TeamType.FriendlyNPC && 
+                        (speaker.TeamID == CharacterTeamType.FriendlyNPC || speaker.TeamID == CharacterTeamType.None) && 
                         Character.CharacterList.Any(c => c.TeamID != speaker.TeamID && c.CurrentHull == speaker.CurrentHull)) 
                     {
                         currentFlags.Add("EnterOutpost"); 
@@ -187,6 +193,11 @@ namespace Barotrauma
                 if (GameMain.GameSession.EventManager.CurrentIntensity <= 0.2f)
                 {
                     currentFlags.Add("Casual");
+                }
+
+                if (GameMain.GameSession.IsCurrentLocationRadiated())
+                {
+                    currentFlags.Add("InRadiation");
                 }
             }
 
@@ -206,20 +217,36 @@ namespace Barotrauma
                 var afflictions = speaker.CharacterHealth.GetAllAfflictions();
                 foreach (Affliction affliction in afflictions)
                 {
-                    var currentEffect = affliction.Prefab.GetActiveEffect(affliction.Strength);
+                    var currentEffect = affliction.GetActiveEffect();
                     if (currentEffect != null && !string.IsNullOrEmpty(currentEffect.DialogFlag) && !currentFlags.Contains(currentEffect.DialogFlag))
                     {
                         currentFlags.Add(currentEffect.DialogFlag);
                     }
                 }
 
-                if (speaker.TeamID == Character.TeamType.FriendlyNPC && speaker.Submarine != null && speaker.Submarine.Info.IsOutpost)
+                if (speaker.TeamID == CharacterTeamType.FriendlyNPC && speaker.Submarine != null && speaker.Submarine.Info.IsOutpost)
                 {
                     currentFlags.Add("OutpostNPC");
                 }
                 if (speaker.CampaignInteractionType != CampaignMode.InteractionType.None)
                 {
                     currentFlags.Add("CampaignNPC." + speaker.CampaignInteractionType);
+                }
+                if (GameMain.GameSession?.GameMode is CampaignMode campaignMode && 
+                    (campaignMode.Map?.CurrentLocation?.Type?.Identifier.Equals("abandoned", StringComparison.OrdinalIgnoreCase) ?? false))
+                {
+                    if (speaker.TeamID == CharacterTeamType.None)
+                    {
+                        currentFlags.Add("Bandit");
+                    }
+                    else if (speaker.TeamID == CharacterTeamType.FriendlyNPC)
+                    {
+                        currentFlags.Add("Hostage");
+                    }
+                }
+                if (speaker.IsEscorted)
+                {
+                    currentFlags.Add("escort");
                 }
             }
 
@@ -307,43 +334,15 @@ namespace Barotrauma
 
                     foreach (Character potentialSpeaker in availableSpeakers)
                     {
-                        //check if the character has an appropriate job to say the line
-                        if ((potentialSpeaker.Info?.Job != null && potentialSpeaker.Info.Job.Prefab.OnlyJobSpecificDialog) ||
-                            selectedConversation.AllowedJobs.Count > 0)
+                        if (CheckSpeakerViability(potentialSpeaker, selectedConversation, assignedSpeakers.Values.ToList(), ignoreFlags))
                         {
-                            if (!selectedConversation.AllowedJobs.Contains(potentialSpeaker.Info?.Job.Prefab)) { continue; }
+                            allowedSpeakers.Add(potentialSpeaker);
                         }
-
-                        //check if the character has all required flags to say the line
-                        if (!ignoreFlags)
-                        {
-                            var characterFlags = GetCurrentFlags(potentialSpeaker);
-                            if (!selectedConversation.Flags.All(flag => characterFlags.Contains(flag))) { continue; }
-                        }
-
-                        //check if the character is close enough to hear the rest of the speakers
-                        if (assignedSpeakers.Values.Any(s => !potentialSpeaker.CanHearCharacter(s))) { continue; }
-
-                        //check if the character has an appropriate personality
-                        if (selectedConversation.allowedSpeakerTags.Count > 0)
-                        {
-                            if (potentialSpeaker.Info?.PersonalityTrait == null) { continue; }
-                            if (!selectedConversation.allowedSpeakerTags.Any(t => potentialSpeaker.Info.PersonalityTrait.AllowedDialogTags.Any(t2 => t2 == t))) { continue; }
-                        }
-                        else
-                        {
-                            if (potentialSpeaker.Info?.PersonalityTrait != null &&
-                                !potentialSpeaker.Info.PersonalityTrait.AllowedDialogTags.Contains("none"))
-                            {
-                                continue;
-                            }
-                        }
-
-                        allowedSpeakers.Add(potentialSpeaker);
                     }
 
-                    if (allowedSpeakers.Count == 0)
+                    if (allowedSpeakers.Count == 0 || NextLineFailure(selectedConversation, availableSpeakers, allowedSpeakers, ignoreFlags))
                     {
+                        allowedSpeakers.Clear();
                         potentialLines.Remove(selectedConversation);
                     }
                     else
@@ -367,6 +366,62 @@ namespace Barotrauma
             CreateConversation(availableSpeakers, assignedSpeakers, selectedConversation, lineList, availableConversations);
         }
 
+        static bool NextLineFailure(NPCConversation selectedConversation, List<Character> availableSpeakers, List<Character> allowedSpeakers, bool ignoreFlags)
+        {
+            if (selectedConversation.requireNextLine)
+            {
+                foreach (NPCConversation nextConversation in selectedConversation.Responses)
+                {
+                    foreach (Character potentialNextSpeaker in availableSpeakers)
+                    {
+                        if (CheckSpeakerViability(potentialNextSpeaker, nextConversation, allowedSpeakers, ignoreFlags))
+                        {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+
+        static bool CheckSpeakerViability(Character potentialSpeaker, NPCConversation selectedConversation, List<Character> checkedSpeakers, bool ignoreFlags)
+        {
+            //check if the character has an appropriate job to say the line
+            if ((potentialSpeaker.Info?.Job != null && potentialSpeaker.Info.Job.Prefab.OnlyJobSpecificDialog) || selectedConversation.AllowedJobs.Count > 0)
+            {
+                if (!selectedConversation.AllowedJobs.Contains(potentialSpeaker.Info?.Job.Prefab)) { return false; }
+            }
+
+            //check if the character has all required flags to say the line
+            if (!ignoreFlags)
+            {
+                var characterFlags = GetCurrentFlags(potentialSpeaker);
+                if (!selectedConversation.Flags.All(flag => characterFlags.Contains(flag))) { return false; }
+            }
+
+            //check if the character is close enough to hear the rest of the speakers
+            if (checkedSpeakers.Any(s => !potentialSpeaker.CanHearCharacter(s))) { return false; }
+
+            //check if the character is close enough to see the rest of the speakers (this should be replaced with a more performant method)
+            if (checkedSpeakers.Any(s => !potentialSpeaker.CanSeeCharacter(s))) { return false; }
+
+            //check if the character has an appropriate personality
+            if (selectedConversation.allowedSpeakerTags.Count > 0)
+            {
+                if (potentialSpeaker.Info?.PersonalityTrait == null) { return false; }
+                if (!selectedConversation.allowedSpeakerTags.Any(t => potentialSpeaker.Info.PersonalityTrait.AllowedDialogTags.Any(t2 => t2 == t))) { return false; }
+            }
+            else
+            {
+                if (potentialSpeaker.Info?.PersonalityTrait != null &&
+                    !potentialSpeaker.Info.PersonalityTrait.AllowedDialogTags.Contains("none"))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
         private static NPCConversation GetRandomConversation(List<NPCConversation> conversations, bool avoidPreviouslyUsed)
         {
             if (!avoidPreviouslyUsed)

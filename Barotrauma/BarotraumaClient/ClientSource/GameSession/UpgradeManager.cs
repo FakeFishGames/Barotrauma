@@ -39,43 +39,5 @@ namespace Barotrauma
                 }
             }
         }
-
-        /// <summary>
-        /// Server has notified us that upgrades were reset.
-        /// </summary>
-        /// <param name="inc"></param>
-        /// <see cref="UpgradeManager.SendUpgradeResetMessage"/>
-        public void ClientRead(IReadMessage inc)
-        {
-            bool shouldReset = inc.ReadBoolean();
-            int money = inc.ReadInt32();
-            // uint length = inc.ReadUInt32();
-            //
-            // for (int i = 0; i < length; i++)
-            // {
-            //     string key = inc.ReadString();
-            //     byte value = inc.ReadByte();
-            //     Metadata.SetValue(key, value);
-            // }
-
-            Campaign.Money = money;
-
-            if (shouldReset)
-            {
-                ResetUpgrades();
-            }
-
-            // spentMoney is local, so this message box should only appear for those who have spent money on upgrades
-            if (spentMoney > 0)
-            {
-                GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("UpgradeRefundTitle"), TextManager.Get("UpgradeRefundBody"), new [] { TextManager.Get("Ok") });
-                msgBox.Buttons[0].OnClicked += msgBox.Close;
-            }
-
-            spentMoney = 0;
-            PendingUpgrades.Clear();
-            PurchasedUpgrades.Clear();
-            CanUpgrade = false;
-        }
     }
 }

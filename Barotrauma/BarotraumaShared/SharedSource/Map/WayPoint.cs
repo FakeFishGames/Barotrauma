@@ -6,19 +6,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.RuinGeneration;
 using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    public enum SpawnType { Path = 0, Human = 1, Enemy = 2, Cargo = 3, Corpse = 4 };
+    [Flags]
+    public enum SpawnType { Path = 0, Human = 1, Enemy = 2, Cargo = 4, Corpse = 8 };
+
     partial class WayPoint : MapEntity
     {
         public static List<WayPoint> WayPointList = new List<WayPoint>();
 
         public static bool ShowWayPoints = true, ShowSpawnPoints = true;
 
-        public const float LadderWaypointInterval = 100.0f;
+        public const float LadderWaypointInterval = 70.0f;
 
         protected SpawnType spawnType;
         private string[] idCardTags;
@@ -45,12 +46,15 @@ namespace Barotrauma
         public Hull CurrentHull { get; private set; }
 
         public Level.Tunnel Tunnel;
+        public RuinGeneration.Ruin Ruin;
 
         public SpawnType SpawnType
         {
             get { return spawnType; }
             set { spawnType = value; }
         }
+
+        public Action<WayPoint> OnLinksChanged { get; set; }
 
         public override string Name
         {
@@ -99,6 +103,13 @@ namespace Barotrauma
             {
                 SpawnType = SpawnType.Path;
             }
+
+#if CLIENT
+            if (SubEditorScreen.IsSubEditor())
+            {
+                SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { this }, false));
+            }
+#endif
         }
 
 
@@ -135,7 +146,7 @@ namespace Barotrauma
 
             DebugConsole.Log("Created waypoint (" + ID + ")");
 
-            CurrentHull = Hull.FindHull(WorldPosition);
+            FindHull();
         }
 
         public override MapEntity Clone()
@@ -178,43 +189,186 @@ namespace Barotrauma
                     door.Body.Enabled = true;
                 }
             }
-
-
+            bool isFlooded = submarine.Info.IsRuin || submarine.Info.Type == SubmarineType.OutpostModule && submarine.Info.OutpostModuleInfo.ModuleFlags.Contains("ruin");
             float diffFromHullEdge = 50;
-            float minDist = 150.0f;
+            float minDist = 100.0f;
             float heightFromFloor = 110.0f;
-
+            float hullMinHeight = 100;
+            var removals = new List<WayPoint>();
             foreach (Hull hull in Hull.hullList)
             {
-                if (hull.Rect.Height < 150) { continue; }
-
-                WayPoint prevWaypoint = null;
-
-                if (hull.Rect.Width < diffFromHullEdge * 3.0f)
+                if (isFlooded)
                 {
-                    new WayPoint(
-                        new Vector2(hull.Rect.X + hull.Rect.Width / 2.0f, hull.Rect.Y - hull.Rect.Height + heightFromFloor), SpawnType.Path, submarine);
-                    continue;
+                    diffFromHullEdge = 75;
+                    var hullWaypoints = new List<WayPoint>();
+                    float top = hull.Rect.Y;
+                    float bottom = hull.Rect.Y - hull.Rect.Height;
+                    if (hull.Rect.Width < 300 || hull.Rect.Height < 300)
+                    {
+                        // For narrow hulls, create one line of waypoints either horizontally or vertically
+                        if (hull.Rect.Width > hull.Rect.Height)
+                        {
+                            // Horizontal
+                            float y = hull.Rect.Y - hull.Rect.Height / 2;
+                            for (float x = hull.Rect.X + diffFromHullEdge; x <= hull.Rect.Right - diffFromHullEdge; x += minDist)
+                            {
+                                hullWaypoints.Add(new WayPoint(new Vector2(x, y), SpawnType.Path, submarine));
+                            }
+                        }
+                        else
+                        {
+                            // Vertical
+                            float x = hull.Rect.X + hull.Rect.Width / 2;
+                            for (float y = top - diffFromHullEdge; y >= bottom + diffFromHullEdge; y -= minDist)
+                            {
+                                hullWaypoints.Add(new WayPoint(new Vector2(x, y), SpawnType.Path, submarine));
+                            }
+                        }
+                    }
+                    if (hullWaypoints.None())
+                    {
+                        // Try to create a grid-like network of waypoints
+                        for (float x = hull.Rect.X + diffFromHullEdge; x <= hull.Rect.Right - diffFromHullEdge; x += minDist)
+                        {
+                            for (float y = top - diffFromHullEdge; y >= bottom + diffFromHullEdge; y -= minDist)
+                            {
+                                hullWaypoints.Add(new WayPoint(new Vector2(x, y), SpawnType.Path, submarine));
+                            }
+                        }
+                        if (hullWaypoints.None())
+                        {
+                            // If that fails, just create one waypoint at the center.
+                            hullWaypoints.Add(new WayPoint(new Vector2(hull.Rect.X + hull.Rect.Width / 2.0f, hull.Rect.Y - hull.Rect.Height / 2), SpawnType.Path, submarine));
+                        }
+                        foreach (WayPoint wp in hullWaypoints)
+                        {
+                            foreach (Structure wall in Structure.WallList)
+                            {
+                                if (wall.HasBody)
+                                {
+                                    // Remove waypoints that are too close/inside the walls.
+                                    Rectangle rect = wall.Rect;
+                                    rect.Inflate(10, 10);
+                                    if (rect.ContainsWorld(wp.Position))
+                                    {
+                                        removals.Add(wp);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // Connect the waypoints
+                    foreach (var wayPoint in hullWaypoints)
+                    {
+                        for (int dir = -1; dir <= 1; dir += 2)
+                        {
+                            WayPoint closest = wayPoint.FindClosest(dir, horizontalSearch: true, new Vector2(minDist * 1.9f, minDist));
+                            if (closest != null && closest.CurrentHull == wayPoint.CurrentHull)
+                            {
+                                wayPoint.ConnectTo(closest);
+                            }
+                            closest = wayPoint.FindClosest(dir, horizontalSearch: false, new Vector2(minDist, minDist * 1.9f));
+                            if (closest != null && closest.CurrentHull == wayPoint.CurrentHull)
+                            {
+                                wayPoint.ConnectTo(closest);
+                            }
+                        }
+                    }
                 }
-
-                for (float x = hull.Rect.X + diffFromHullEdge; x <= hull.Rect.Right - diffFromHullEdge; x += minDist)
+                else
                 {
-                    var wayPoint = new WayPoint(new Vector2(x, hull.Rect.Y - hull.Rect.Height + heightFromFloor), SpawnType.Path, submarine);
-                    if (prevWaypoint != null) { wayPoint.ConnectTo(prevWaypoint); }
+                    if (hull.Rect.Height < hullMinHeight) { continue; }
+                    // Do five raycasts to check if there's a floor. Don't create waypoints unless we can find a floor.
+                    Body floor = null;
+                    for (int i = 0; i < 5; i++)
+                    {
+                        float horizontalOffset = 0;
+                        switch (i)
+                        {
+                            case 1:
+                                horizontalOffset = hull.RectWidth * 0.2f;
+                                break;
+                            case 2:
+                                horizontalOffset = hull.RectWidth * 0.4f;
+                                break;
+                            case 3:
+                                horizontalOffset = -hull.RectWidth * 0.2f;
+                                break;
+                            case 4:
+                                horizontalOffset = -hull.RectWidth * 0.4f;
+                                break;
+                        }
+                        horizontalOffset = ConvertUnits.ToSimUnits(horizontalOffset);
+                        Vector2 floorPos = new Vector2(hull.SimPosition.X + horizontalOffset, ConvertUnits.ToSimUnits(hull.Rect.Y - hull.RectHeight - 50));
+                        floor = Submarine.PickBody(new Vector2(hull.SimPosition.X + horizontalOffset, hull.SimPosition.Y), floorPos, collisionCategory: Physics.CollisionWall | Physics.CollisionPlatform, customPredicate: f => !(f.Body.UserData is Submarine));
+                        if (floor != null) { break; }
+                    }
+                    if (floor == null) { continue; }
+                    float waypointHeight = hull.Rect.Height > heightFromFloor * 2 ? heightFromFloor : hull.Rect.Height / 2;
+                    if (hull.Rect.Width < diffFromHullEdge * 3.0f)
+                    {
+                        new WayPoint(new Vector2(hull.Rect.X + hull.Rect.Width / 2.0f, hull.Rect.Y - hull.Rect.Height + waypointHeight), SpawnType.Path, submarine);
+                    }
+                    else
+                    {
+                        WayPoint previousWaypoint = null;
+                        for (float x = hull.Rect.X + diffFromHullEdge; x <= hull.Rect.Right - diffFromHullEdge; x += minDist)
+                        {
+                            var wayPoint = new WayPoint(new Vector2(x, hull.Rect.Y - hull.Rect.Height + waypointHeight), SpawnType.Path, submarine);
+                            if (previousWaypoint != null) { wayPoint.ConnectTo(previousWaypoint); }
+                            previousWaypoint = wayPoint;
+                        }
+                        if (previousWaypoint == null)
+                        {
+                            // Ensure that we always create at least one waypoint per hull.
+                            new WayPoint(new Vector2(hull.Rect.X + hull.Rect.Width / 2.0f, hull.Rect.Y - hull.Rect.Height + waypointHeight), SpawnType.Path, submarine);
+                        }
+                    }
+                }
+            }
+
+            // Platforms
+            foreach (Structure platform in Structure.WallList)
+            {
+                if (!platform.IsPlatform) { continue; }
+                float waypointHeight = heightFromFloor;
+                WayPoint prevWaypoint = null;
+                for (float x = platform.Rect.X + diffFromHullEdge; x <= platform.Rect.Right - diffFromHullEdge; x += minDist)
+                {
+                    WayPoint wayPoint = new WayPoint(new Vector2(x, platform.Rect.Y + waypointHeight), SpawnType.Path, submarine);
+                    if (prevWaypoint != null)
+                    {
+                        wayPoint.ConnectTo(prevWaypoint);
+                    }
+                    // If the waypoint is close to hull waypoints, remove it.
+                    if (wayPoint != null)
+                    {
+                        for (int dir = -1; dir <= 1; dir += 2)
+                        {
+                            if (wayPoint.FindClosest(dir, horizontalSearch: true, tolerance: new Vector2(minDist, heightFromFloor), ignored: prevWaypoint.ToEnumerable()) != null)
+                            {
+                                wayPoint.Remove();
+                                wayPoint = null;
+                                break;
+                            }
+                        }
+                    }
                     prevWaypoint = wayPoint;
                 }
-            }            
+            }
 
-            float outSideWaypointInterval = 200.0f;
-            if (submarine.Info.Type != SubmarineType.OutpostModule)
+            float outSideWaypointInterval = 100.0f;
+            if (!isFlooded && submarine.Info.Type != SubmarineType.OutpostModule)
             {
-                int outsideWaypointDist = 100;
+                List<(WayPoint, int)> outsideWaypoints = new List<(WayPoint, int)>();
 
                 Rectangle borders = Hull.GetBorders();
-                borders.X -= outsideWaypointDist;
-                borders.Y += outsideWaypointDist;
-                borders.Width += outsideWaypointDist * 2;
-                borders.Height += outsideWaypointDist * 2;
+                int originalWidth = borders.Width;
+                int originalHeight = borders.Height;
+                borders.X -= Math.Min(500, originalWidth / 4);
+                borders.Y += Math.Min(500, originalHeight / 4);
+                borders.Width += Math.Min(1500, originalWidth / 2);
+                borders.Height += Math.Min(1000, originalHeight / 2);
                 borders.Location -= MathUtils.ToPoint(submarine.HiddenSubPosition);
 
                 if (borders.Width <= outSideWaypointInterval * 2)
@@ -238,6 +392,8 @@ namespace Barotrauma
                             new Vector2(x, borders.Y - borders.Height * i) + submarine.HiddenSubPosition,
                             SpawnType.Path, submarine);
 
+                        outsideWaypoints.Add((wayPoint, i));
+
                         if (x == borders.X + outSideWaypointInterval)
                         {
                             cornerWaypoint[i, 0] = wayPoint;
@@ -260,75 +416,174 @@ namespace Barotrauma
                             new Vector2(borders.X + borders.Width * i, y) + submarine.HiddenSubPosition,
                             SpawnType.Path, submarine);
 
+                        outsideWaypoints.Add((wayPoint, i));
+
                         if (y == borders.Y - borders.Height)
                         {
                             wayPoint.ConnectTo(cornerWaypoint[1, i]);
                         }
                         else
                         {
-                            wayPoint.ConnectTo(WayPoint.WayPointList[WayPointList.Count - 2]);
+                            wayPoint.ConnectTo(WayPointList[WayPointList.Count - 2]);
                         }
                     }
 
                     wayPoint.ConnectTo(cornerWaypoint[0, i]);
                 }
-            }
-               
-            List<Structure> stairList = new List<Structure>();
-            foreach (MapEntity me in mapEntityList)
-            {
-                if (!(me is Structure stairs)) { continue; }
 
-                if (stairs.StairDirection != Direction.None) stairList.Add(stairs);
+                Vector2 center = ConvertUnits.ToSimUnits(submarine.HiddenSubPosition);
+                float halfHeight = ConvertUnits.ToSimUnits(borders.Height / 2);
+                // Try to move the waypoints so that they are near the walls, roughly following the shape of the sub.
+                foreach (var wayPoint in outsideWaypoints)
+                {
+                    WayPoint wp = wayPoint.Item1;
+                    float xDiff = center.X - wp.SimPosition.X;
+                    Vector2 targetPos = new Vector2(center.X - xDiff * 0.5f, center.Y);
+                    Body wall = Submarine.PickBody(wp.SimPosition, targetPos, collisionCategory: Physics.CollisionWall, customPredicate: f => !(f.Body.UserData is Submarine));
+                    if (wall == null)
+                    {
+                        // Try again, and shoot to the center now. It happens with some subs that the first, offset raycast don't hit the walls.
+                        targetPos = new Vector2(center.X - xDiff, center.Y);
+                        wall = Submarine.PickBody(wp.SimPosition, targetPos, collisionCategory: Physics.CollisionWall, customPredicate: f => !(f.Body.UserData is Submarine));
+                    }
+                    if (wall != null)
+                    {
+                        float distanceFromWall = 1;
+                        if (xDiff > 0 && !submarine.Info.HasTag(SubmarineTag.Shuttle))
+                        {
+                            // We don't want to move the waypoints near the tail too close to the engine.
+                            float yDist = Math.Abs(center.Y - wp.SimPosition.Y);
+                            distanceFromWall = MathHelper.Lerp(1, 3, MathUtils.InverseLerp(halfHeight, 0, yDist));
+                        }
+                        Vector2 newPos = Submarine.LastPickedPosition + Submarine.LastPickedNormal * distanceFromWall;
+                        wp.rect = new Rectangle(ConvertUnits.ToDisplayUnits(newPos).ToPoint(), wp.rect.Size);
+                        wp.FindHull();
+                    }
+                }
+                // Remove unwanted points
+                WayPoint previous = null;
+                float tooClose = outSideWaypointInterval / 2;
+                foreach (var wayPoint in outsideWaypoints)
+                {
+                    WayPoint wp = wayPoint.Item1;
+                    if (wp.CurrentHull != null ||
+                        Submarine.PickBody(wp.SimPosition, wp.SimPosition + Vector2.Normalize(center - wp.SimPosition) * 0.1f, collisionCategory: Physics.CollisionWall | Physics.CollisionItem, customPredicate: f => !(f.Body.UserData is Submarine), allowInsideFixture: true) != null)
+                    {
+                        // Remove waypoints that got inside/too near the sub.
+                        removals.Add(wp);
+                        previous = wp;
+                        continue;
+                    }
+                    foreach (var otherWayPoint in outsideWaypoints)
+                    {
+                        WayPoint otherWp = otherWayPoint.Item1;
+                        if (otherWp == wp) { continue; }
+                        if (removals.Contains(otherWp)) { continue; }
+                        float sqrDist = Vector2.DistanceSquared(wp.Position, otherWp.Position);
+                        // Remove waypoints that are too close to each other.
+                        if (!removals.Contains(previous) && sqrDist < tooClose * tooClose)
+                        {
+                            removals.Add(wp);
+                        }
+                    }
+                    previous = wp;
+                }
+                foreach (WayPoint wp in removals)
+                {
+                    outsideWaypoints.RemoveAll(w => w.Item1 == wp);
+                }
+                for (int i = 0; i < outsideWaypoints.Count; i++)
+                {
+                    WayPoint current = outsideWaypoints[i].Item1;
+                    if (current.linkedTo.Count > 1) { continue; }
+                    WayPoint next = null;
+                    int maxConnections = 2;
+                    float tooFar = outSideWaypointInterval * 5;
+                    for (int j = 0; j < maxConnections; j++)
+                    {
+                        if (current.linkedTo.Count >= maxConnections) { break; }
+                        tooFar /= current.linkedTo.Count;
+                        next = current.FindClosestOutside(outsideWaypoints, tolerance: tooFar, filter: wp => wp.Item1 != next && wp.Item1.linkedTo.None(e => current.linkedTo.Contains(e)) && wp.Item1.linkedTo.Count < 2 && wp.Item2 < i);
+                        if (next != null)
+                        {
+                            current.ConnectTo(next);
+                        }
+                    }
+                }
             }
-
-            foreach (Structure stairs in stairList)
+            foreach (Structure wall in Structure.WallList)
             {
+                if (wall.StairDirection == Direction.None) { continue; }
                 WayPoint[] stairPoints = new WayPoint[3];
 
                 stairPoints[0] = new WayPoint(
-                    new Vector2(stairs.Rect.X - 32.0f,
-                        stairs.Rect.Y - (stairs.StairDirection == Direction.Left ? 80 : stairs.Rect.Height) + heightFromFloor), SpawnType.Path, submarine);
+                    new Vector2(wall.Rect.X - 32.0f,
+                        wall.Rect.Y - (wall.StairDirection == Direction.Left ? 80 : wall.Rect.Height) + heightFromFloor), SpawnType.Path, submarine);
 
                 stairPoints[1] = new WayPoint(
-                  new Vector2(stairs.Rect.Right + 32.0f,
-                      stairs.Rect.Y - (stairs.StairDirection == Direction.Left ? stairs.Rect.Height : 80) + heightFromFloor), SpawnType.Path, submarine);
+                    new Vector2(wall.Rect.Right + 32.0f,
+                        wall.Rect.Y - (wall.StairDirection == Direction.Left ? wall.Rect.Height : 80) + heightFromFloor), SpawnType.Path, submarine);
 
-                for (int i = 0; i < 2; i++ )
+                for (int i = 0; i < 2; i++)
                 {
                     for (int dir = -1; dir <= 1; dir += 2)
                     {
-                        WayPoint closest = stairPoints[i].FindClosest(dir, true, new Vector2(-30.0f, 30f));
-                        if (closest == null) continue;
+                        WayPoint closest = stairPoints[i].FindClosest(dir, horizontalSearch: true, new Vector2(100, 70));
+                        if (closest == null) { continue; }
                         stairPoints[i].ConnectTo(closest);
-                    }                    
+                    }
                 }
-                
-                stairPoints[2] = new WayPoint((stairPoints[0].Position + stairPoints[1].Position)/2, SpawnType.Path, submarine);
+
+                stairPoints[2] = new WayPoint((stairPoints[0].Position + stairPoints[1].Position) / 2, SpawnType.Path, submarine);
                 stairPoints[0].ConnectTo(stairPoints[2]);
                 stairPoints[2].ConnectTo(stairPoints[1]);
             }
+            removals.ForEach(wp => wp.Remove());
+            removals.Clear();
 
             foreach (Item item in Item.ItemList)
             {
                 var ladders = item.GetComponent<Ladder>();
                 if (ladders == null) { continue; }
 
+                Vector2 bottomPoint = new Vector2(item.Rect.Center.X, item.Rect.Top - item.Rect.Height + 10);
                 List<WayPoint> ladderPoints = new List<WayPoint>
                 {
-                    new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - item.Rect.Height + heightFromFloor), SpawnType.Path, submarine)
+                    new WayPoint(bottomPoint, SpawnType.Path, submarine),
                 };
 
-                WayPoint prevPoint = ladderPoints[0];
-                Vector2 prevPos = prevPoint.SimPosition;
                 List<Body> ignoredBodies = new List<Body>();
-
-                for (float y = ladderPoints[0].Position.Y + LadderWaypointInterval; y < item.Rect.Y - 1.0f; y += LadderWaypointInterval)
+                // Lowest point is only meaningful for hanging ladders inside the sub, but it shouldn't matter in other cases either.
+                // Start point is where the bots normally grasp the ladder when they stand on ground.
+                WayPoint lowestPoint = ladderPoints[0];
+                WayPoint prevPoint = lowestPoint;
+                Vector2 prevPos = prevPoint.SimPosition;
+                Body ground = Submarine.PickBody(lowestPoint.SimPosition, lowestPoint.SimPosition - Vector2.UnitY, ignoredBodies, 
+                    collisionCategory: Physics.CollisionWall | Physics.CollisionPlatform | Physics.CollisionStairs, 
+                    customPredicate: f => !(f.Body.UserData is Submarine));
+                float startHeight = ground != null ? ConvertUnits.ToDisplayUnits(ground.Position.Y) : bottomPoint.Y;
+                startHeight += heightFromFloor;
+                WayPoint startPoint = lowestPoint;
+                Vector2 nextPos = new Vector2(item.Rect.Center.X, startHeight);
+                // Don't create the start point if it's too close to the lowest point or if it's outside of the sub.
+                // If we skip creating the start point, the lowest point is used instead.
+                if (lowestPoint == null || Math.Abs(startPoint.Position.Y - startHeight) > 40 && Hull.FindHull(nextPos) != null)
+                {
+                    startPoint = new WayPoint(nextPos, SpawnType.Path, submarine);
+                    ladderPoints.Add(startPoint);
+                    if (lowestPoint != null)
+                    {
+                        startPoint.ConnectTo(lowestPoint);
+                    }
+                    prevPoint = startPoint;
+                    prevPos = prevPoint.SimPosition;
+                }
+                for (float y = startPoint.Position.Y + LadderWaypointInterval; y < item.Rect.Y - 1.0f; y += LadderWaypointInterval)
                 {
                     //first check if there's a door in the way
                     //(we need to create a waypoint linked to the door for NPCs to open it)
                     Body pickedBody = Submarine.PickBody(
-                        ConvertUnits.ToSimUnits(new Vector2(ladderPoints[0].Position.X, y)), 
+                        ConvertUnits.ToSimUnits(new Vector2(startPoint.Position.X, y)),
                         prevPos, ignoredBodies, Physics.CollisionWall, false,
                         (Fixture f) => f.Body.UserData is Item && ((Item)f.Body.UserData).GetComponent<Door>() != null);
 
@@ -341,7 +596,7 @@ namespace Barotrauma
                     {
                         //no door, check for walls
                         pickedBody = Submarine.PickBody(
-                            ConvertUnits.ToSimUnits(new Vector2(ladderPoints[0].Position.X, y)), prevPos, ignoredBodies, null, false,
+                            ConvertUnits.ToSimUnits(new Vector2(startPoint.Position.X, y)), prevPos, ignoredBodies, null, false,
                             (Fixture f) => f.Body.UserData is Structure);
                     }
 
@@ -374,83 +629,131 @@ namespace Barotrauma
                     }
                 }
 
-                if (prevPoint.rect.Y < item.Rect.Y - 10.0f)
+                // Cap
+                if (prevPoint.rect.Y < item.Rect.Y - 40)
                 {
-                    WayPoint newPoint = new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - 1.0f), SpawnType.Path, submarine);
-                    ladderPoints.Add(newPoint);
-                    newPoint.ConnectTo(prevPoint);
+                    WayPoint wayPoint = new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - 1.0f), SpawnType.Path, submarine);
+                    ladderPoints.Add(wayPoint);
+                    wayPoint.ConnectTo(prevPoint);
                 }
-                
-                //connect ladder waypoints to hull points at the right and left side
+
+                // Connect ladder waypoints to hull points at the right and left side
                 foreach (WayPoint ladderPoint in ladderPoints)
                 {
                     ladderPoint.Ladders = ladders;
-                    //don't connect if the waypoint is at a gap (= at the boundary of hulls and/or at a hatch)
-                    if (ladderPoint.ConnectedGap != null) continue;
-
+                    bool isHatch = ladderPoint.ConnectedGap != null && !ladderPoint.ConnectedGap.IsRoomToRoom;
                     for (int dir = -1; dir <= 1; dir += 2)
                     {
-                        WayPoint closest = ladderPoint.FindClosest(dir, true, new Vector2(-150.0f, 50f));
-                        if (closest == null) continue;
+                        WayPoint closest = null;
+                        if (isHatch)
+                        {
+                            closest = ladderPoint.FindClosest(dir, horizontalSearch: true, new Vector2(500, 1000), ladderPoint.ConnectedGap?.ConnectedDoor?.Body.FarseerBody, filter: wp => wp.CurrentHull == null, ignored: ladderPoints);
+                        }
+                        else
+                        {
+                            closest = ladderPoint.FindClosest(dir, horizontalSearch: true, new Vector2(150, 100), ladderPoint.ConnectedGap?.ConnectedDoor?.Body.FarseerBody, ignored: ladderPoints);
+                        }
+                        if (closest == null) { continue; }
                         ladderPoint.ConnectTo(closest);
                     }
                 }
             }
-                        
+
+            // Another pass: connect cap and bottom points with other ladders when they are vertically adjacent to another (double ladders)
+            foreach (Item item in Item.ItemList)
+            {
+                var ladders = item.GetComponent<Ladder>();
+                if (ladders == null) { continue; }
+                var wps = WayPointList.Where(wp => wp.Ladders == ladders).OrderByDescending(wp => wp.Rect.Y);
+                WayPoint cap = wps.First();
+                WayPoint above = cap.FindClosest(1, horizontalSearch: false, tolerance: new Vector2(25, 50), filter: wp => wp.Ladders != null && wp.Ladders != ladders);
+                above?.ConnectTo(cap);
+                WayPoint bottom = wps.Last();
+                WayPoint below = bottom.FindClosest(-1, horizontalSearch: false, tolerance: new Vector2(25, 50), filter: wp => wp.Ladders != null && wp.Ladders != ladders);
+                below?.ConnectTo(bottom);
+            }
+
             foreach (Gap gap in Gap.GapList)
             {
-                if (!gap.IsHorizontal) continue;
-                
-                //too small to walk through
-                if (gap.Rect.Height < 150.0f) continue;
-
-                var wayPoint = new WayPoint(
-                    new Vector2(gap.Rect.Center.X, gap.Rect.Y - gap.Rect.Height + heightFromFloor), SpawnType.Path, submarine, gap);
-
-                for (int dir = -1; dir <= 1; dir += 2)
+                if (gap.IsHorizontal)
                 {
-                    float tolerance = gap.IsRoomToRoom ? 50.0f : outSideWaypointInterval / 2.0f;
+                    if ( isFlooded)
+                    {
+                        // Too small to swim through
+                        if (gap.Rect.Height < 50) { continue; }
+                    }
+                    else
+                    {
+                        // Too small to walk through
+                        if (gap.Rect.Height < hullMinHeight) { continue; }
+                    }
 
-                    WayPoint closest = wayPoint.FindClosest(
-                        dir, true, new Vector2(-tolerance, tolerance), 
-                        gap.ConnectedDoor?.Body.FarseerBody);
-
+                    Vector2 pos = new Vector2(gap.Rect.Center.X, gap.Rect.Y - gap.Rect.Height + heightFromFloor);
+                    if (isFlooded)
+                    {
+                        pos.Y = gap.Rect.Y - gap.Rect.Height / 2;
+                    }
+                    var wayPoint = new WayPoint(pos, SpawnType.Path, submarine, gap);
+                    // The closest waypoint can be quite far if the gap is at an exterior door.
+                    Vector2 tolerance = gap.IsRoomToRoom && !isFlooded ? new Vector2(150, 70) : new Vector2(1000, 1000);
+                    for (int dir = -1; dir <= 1; dir += 2)
+                    {
+                        WayPoint closest = wayPoint.FindClosest(dir, horizontalSearch: true, tolerance, gap.ConnectedDoor?.Body.FarseerBody);
+                        if (closest != null)
+                        {
+                            wayPoint.ConnectTo(closest);
+                        }
+                    }
+                }
+                else
+                {
+                    // Create waypoints on vertical gaps on the outer walls, also hatches.
+                    if (!isFlooded && (gap.IsRoomToRoom || gap.linkedTo.None(l => l is Hull))) { continue; }
+                    // Too small to swim through
+                    if (gap.Rect.Width < 50.0f) { continue; }
+                    Vector2 pos = new Vector2(gap.Rect.Center.X, gap.Rect.Y - gap.Rect.Height / 2);
+                    // Some hatches are created in the block above where we handle the ladder waypoints. So we need to check for duplicates.
+                    if (WayPointList.Any(wp => wp.ConnectedGap == gap)) { continue; }
+                    var wayPoint = new WayPoint(pos, SpawnType.Path, submarine, gap);
+                    Hull connectedHull = (Hull)gap.linkedTo.First(l => l is Hull);
+                    int dir = Math.Sign(connectedHull.Position.Y - gap.Position.Y);
+                    WayPoint closest = wayPoint.FindClosest(dir, horizontalSearch: false, isFlooded ? new Vector2(500, 500) : new Vector2(50, 100));
                     if (closest != null)
                     {
                         wayPoint.ConnectTo(closest);
                     }
+                    if (isFlooded)
+                    {
+                        closest = wayPoint.FindClosest(-dir, horizontalSearch: false, isFlooded ? new Vector2(500, 500) : new Vector2(50, 100));
+                        if (closest != null)
+                        {
+                            wayPoint.ConnectTo(closest);
+                        }
+                    }
+                    // Link to outside
+                    for (dir = -1; dir <= 1; dir += 2)
+                    {
+                        closest = wayPoint.FindClosest(dir, horizontalSearch: true, new Vector2(500, 1000), gap.ConnectedDoor?.Body.FarseerBody, filter: wp => wp.CurrentHull == null);
+                        if (closest != null)
+                        {
+                            wayPoint.ConnectTo(closest);
+                        }
+                    }
                 }
             }
 
-            foreach (Gap gap in Gap.GapList)
-            {
-                if (gap.IsHorizontal || gap.IsRoomToRoom || !gap.linkedTo.Any(l => l is Hull)) { continue; }
-
-                //too small to walk through
-                if (gap.Rect.Width < 100.0f) { continue; }
-
-                var wayPoint = new WayPoint(
-                    new Vector2(gap.Rect.Center.X, gap.Rect.Y - gap.Rect.Height / 2), SpawnType.Path, submarine, gap);
-
-                float tolerance = outSideWaypointInterval / 2.0f;
-                Hull connectedHull = (Hull)gap.linkedTo.First(l => l is Hull);
-                int dir = Math.Sign(connectedHull.Position.Y - gap.Position.Y);
-
-                WayPoint closest = wayPoint.FindClosest(
-                    dir, false, new Vector2(-tolerance, tolerance),
-                    gap.ConnectedDoor?.Body.FarseerBody);
-
-                if (closest != null)
-                {
-                    wayPoint.ConnectTo(closest);
-                }
-            }
-
-            var orphans = WayPointList.FindAll(w => w.spawnType == SpawnType.Path && !w.linkedTo.Any());
-
+            var orphans = WayPointList.FindAll(w => w.spawnType == SpawnType.Path && w.linkedTo.None());
             foreach (WayPoint wp in orphans)
             {
                 wp.Remove();
+            }
+
+            foreach (WayPoint wp in WayPointList)
+            {
+                if (wp.SpawnType == SpawnType.Path && wp.CurrentHull == null && wp.Ladders == null && wp.linkedTo.Count < 2)
+                {
+                    DebugConsole.ThrowError($"Couldn't automatically link the waypoint {wp.ID} outside of the submarine. You should do it manually. The waypoint ID is shown in red color.");
+                }
             }
 
             //re-disable the bodies of the doors that are supposed to be open
@@ -462,7 +765,38 @@ namespace Barotrauma
             return true;
         }
 
-        private WayPoint FindClosest(int dir, bool horizontalSearch, Vector2 tolerance, Body ignoredBody = null)
+        private WayPoint FindClosestOutside(IEnumerable<(WayPoint, int)> waypointList, float tolerance, Body ignoredBody = null, IEnumerable<WayPoint> ignored = null, Func<(WayPoint, int), bool> filter = null)
+        {
+            float closestDist = 0;
+            WayPoint closest = null;
+            foreach (var wayPoint in waypointList)
+            {
+                WayPoint wp = wayPoint.Item1;
+                if (wp.SpawnType != SpawnType.Path || wp == this) { continue; }
+                // Ignore if already linked
+                if (linkedTo.Contains(wp)) { continue; }
+                if (ignored != null && ignored.Contains(wp)) { continue; }
+                if (filter != null && !filter(wayPoint)) { continue; }
+                float sqrDist = Vector2.DistanceSquared(Position, wp.Position);
+                if (sqrDist > tolerance * tolerance) { continue; }
+                if (closest == null || sqrDist < closestDist)
+                {
+                    var body = Submarine.CheckVisibility(SimPosition, wp.SimPosition, ignoreLevel: true, ignoreSubs: true, ignoreSensors: false);
+                    if (body != null && body != ignoredBody && !(body.UserData is Submarine))
+                    {
+                        if (body.UserData is Structure || body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall))
+                        {
+                            continue;
+                        }
+                    }
+                    closestDist = sqrDist;
+                    closest = wp;
+                }
+            }
+            return closest;
+        }
+
+        private WayPoint FindClosest(int dir, bool horizontalSearch, Vector2 tolerance, Body ignoredBody = null, IEnumerable<WayPoint> ignored = null, Func<WayPoint, bool> filter = null)
         {
             if (dir != -1 && dir != 1) { return null; }
 
@@ -473,33 +807,45 @@ namespace Barotrauma
             {
                 if (wp.SpawnType != SpawnType.Path || wp == this) { continue; }
 
+                float xDiff = wp.Position.X - Position.X;
+                float yDiff = wp.Position.Y - Position.Y;
+                float xDist = Math.Abs(xDiff);
+                float yDist = Math.Abs(yDiff);
+                if (tolerance.X < xDist) { continue; }
+                if (tolerance.Y < yDist) { continue; }
+
                 float dist = 0.0f;
                 float diff = 0.0f;
                 if (horizontalSearch)
                 {
-                    if ((wp.Position.Y - Position.Y) < tolerance.X || (wp.Position.Y - Position.Y) > tolerance.Y) { continue; }
-                    diff = wp.Position.X - Position.X;
-                    dist = Math.Abs(diff) + Math.Abs(wp.Position.Y - Position.Y) / 5.0f;
+                    diff = xDiff;
+                    dist = xDist + yDist / 5.0f;
                 }
                 else
                 {
-                    if ((wp.Position.X - Position.X) < tolerance.X || (wp.Position.X - Position.X) > tolerance.Y) { continue; }
-                    diff = wp.Position.Y - Position.Y;
-                    dist = Math.Abs(diff) + Math.Abs(wp.Position.X - Position.X) / 5.0f;
+                    diff = yDiff;
+                    dist = yDist + xDist / 5.0f;
                     //prefer ladder waypoints when moving vertically
                     if (wp.Ladders != null) { dist *= 0.5f; }
                 }
 
                 if (Math.Sign(diff) != dir) { continue; }
+                // Ignore if already linked
+                if (linkedTo.Contains(wp)) { continue; }
+                if (ignored != null && ignored.Contains(wp)) { continue; }
+                if (filter != null && !filter(wp)) { continue; }
 
                 if (closest == null || dist < closestDist)
                 {
-                    var body = Submarine.CheckVisibility(SimPosition, wp.SimPosition, true, true, false);
+                    var body = Submarine.CheckVisibility(SimPosition, wp.SimPosition, ignoreLevel: true, ignoreSubs: true, ignoreSensors: false);
                     if (body != null && body != ignoredBody && !(body.UserData is Submarine))
                     {
-                        if (body.UserData is Structure || body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { continue; }
+                        if (body.UserData is Structure || body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall))
+                        {
+                            continue;
+                        }
                     }
-                    
+
                     closestDist = dist;
                     closest = wp;
                 }
@@ -511,24 +857,32 @@ namespace Barotrauma
         public void ConnectTo(WayPoint wayPoint2)
         {
             System.Diagnostics.Debug.Assert(this != wayPoint2);
-
-            if (!linkedTo.Contains(wayPoint2)) { linkedTo.Add(wayPoint2); }
-            if (!wayPoint2.linkedTo.Contains(this)) { wayPoint2.linkedTo.Add(this); }
+            if (!linkedTo.Contains(wayPoint2)) 
+            {
+                OnLinksChanged?.Invoke(this);
+                linkedTo.Add(wayPoint2); 
+            }
+            if (!wayPoint2.linkedTo.Contains(this)) 
+            {
+                wayPoint2.OnLinksChanged?.Invoke(wayPoint2);
+                wayPoint2.linkedTo.Add(this); 
+            }
         }
 
-        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, Job assignedJob = null, Submarine sub = null, Ruin ruin = null, bool useSyncedRand = false)
+        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, JobPrefab assignedJob = null, Submarine sub = null, bool useSyncedRand = false, string spawnPointTag = null)
         {
             return WayPointList.GetRandom(wp =>
                 wp.Submarine == sub && 
-                wp.ParentRuin == ruin &&
                 wp.spawnType == spawnType &&
-                (assignedJob == null || (assignedJob != null && wp.AssignedJob == assignedJob.Prefab))
-                , useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced);
+                (string.IsNullOrEmpty(spawnPointTag) || wp.Tags.Any(t => t.Equals(spawnPointTag, StringComparison.OrdinalIgnoreCase))) &&
+                (assignedJob == null || (assignedJob != null && wp.AssignedJob == assignedJob)), 
+                useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced);
         }
 
         public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew, Submarine submarine)
         {
             List<WayPoint> subWayPoints = WayPointList.FindAll(wp => wp.Submarine == submarine);
+            subWayPoints.Shuffle();
 
             List<WayPoint> unassignedWayPoints = subWayPoints.FindAll(wp => wp.spawnType == SpawnType.Human);
 
@@ -539,7 +893,7 @@ namespace Barotrauma
                 //try to give the crew member a spawnpoint that hasn't been assigned to anyone and matches their job                
                 for (int n = 0; n < unassignedWayPoints.Count; n++)
                 {
-                    if (crew[i].Job.Prefab != unassignedWayPoints[n].AssignedJob) continue;
+                    if (crew[i].Job.Prefab != unassignedWayPoints[n].AssignedJob) { continue; }
                     assignedWayPoints[i] = unassignedWayPoints[n];
                     unassignedWayPoints.RemoveAt(n);
 
@@ -550,17 +904,17 @@ namespace Barotrauma
             //go through the crewmembers that don't have a spawnpoint yet (if any)
             for (int i = 0; i < crew.Count; i++)
             {
-                if (assignedWayPoints[i] != null) continue;
+                if (assignedWayPoints[i] != null) { continue; }
 
                 //try to assign a spawnpoint that matches the job, even if the spawnpoint is already assigned to someone else
                 foreach (WayPoint wp in subWayPoints)
                 {
-                    if (wp.spawnType != SpawnType.Human || wp.AssignedJob != crew[i].Job.Prefab) continue;
+                    if (wp.spawnType != SpawnType.Human || wp.AssignedJob != crew[i].Job.Prefab) { continue; }
 
                     assignedWayPoints[i] = wp;
                     break;
                 }
-                if (assignedWayPoints[i] != null) continue;
+                if (assignedWayPoints[i] != null) { continue; }
 
                 //try to assign a spawnpoint that isn't meant for any specific job
                 var nonJobSpecificPoints = subWayPoints.FindAll(wp => wp.spawnType == SpawnType.Human && wp.AssignedJob == null);
@@ -569,7 +923,7 @@ namespace Barotrauma
                     assignedWayPoints[i] = nonJobSpecificPoints[Rand.Int(nonJobSpecificPoints.Count, Rand.RandSync.Server)];
                 }
 
-                if (assignedWayPoints[i] != null) continue;
+                if (assignedWayPoints[i] != null) { continue; }
 
                 //everything else failed -> just give a random spawnpoint inside the sub
                 assignedWayPoints[i] = GetRandom(SpawnType.Human, null, submarine, useSyncedRand: true);
@@ -579,7 +933,7 @@ namespace Barotrauma
             {
                 if (assignedWayPoints[i] == null)
                 {
-                    DebugConsole.ThrowError("Couldn't find a waypoint for " + crew[i].Name + "!");
+                    DebugConsole.AddWarning("Couldn't find a waypoint for " + crew[i].Name + "!");
                     assignedWayPoints[i] = WayPointList[0];
                 }
             }
@@ -590,12 +944,19 @@ namespace Barotrauma
         public void FindHull()
         {
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
+#if CLIENT
+            //we may not be able to find the hull with the optimized method in the sub editor if new hulls have been added, use the unoptimized method
+            if (Screen.Selected == GameMain.SubEditorScreen)
+            {
+                CurrentHull ??= Hull.FindHullUnoptimized(WorldPosition);
+            }
+#endif
         }
 
         public override void OnMapLoaded()
         {
             InitializeLinks();
-            CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
+            FindHull();
             FindStairs();
         }
 
@@ -728,14 +1089,19 @@ namespace Barotrauma
         public override void ShallowRemove()
         {
             base.ShallowRemove();
-
             WayPointList.Remove(this);
         }
 
         public override void Remove()
         {
             base.Remove();
-
+            CurrentHull = null;
+            ConnectedGap = null;
+            Tunnel = null;
+            Ruin = null;
+            Stairs = null;
+            Ladders = null;
+            OnLinksChanged = null;
             WayPointList.Remove(this);
         }
     

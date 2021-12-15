@@ -181,6 +181,13 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize(true, true, "Should the generator force a hole to the bottom of the level to ensure there's a way to the abyss."), Editable]
+        public bool CreateHoleToAbyss
+        {
+            get;
+            set;
+        }
+
         [Serialize(1000, true, description: "The total number of level objects (vegetation, vents, etc) in the level."), Editable(MinValueInt = 0, MaxValueInt = 100000)]
         public int LevelObjectAmount
         {
@@ -404,7 +411,35 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(300000, true, description: "How far below the level the sea floor is placed."), Editable(MinValueFloat = Level.MaxEntityDepth, MaxValueFloat = 0.0f)]
+        [Serialize(5, true), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        public int AbyssIslandCount
+        {
+            get;
+            set;
+        }
+
+        [Serialize("4000,7000", true), Editable]
+        public Point AbyssIslandSizeMin
+        {
+            get;
+            set;
+        }
+
+        [Serialize("8000,10000", true), Editable]
+        public Point AbyssIslandSizeMax
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.5f, true), Editable()]
+        public float AbyssIslandCaveProbability
+        {
+            get;
+            set;
+        }
+
+        [Serialize(-300000, true, description: "How far below the level the sea floor is placed."), Editable(MinValueFloat = Level.MaxEntityDepth, MaxValueFloat = 0.0f)]
         public int SeaFloorDepth
         {
             get { return seaFloorBaseDepth; }
@@ -461,8 +496,11 @@ namespace Barotrauma
         [Serialize(1, true, description: "The number of alien ruins in the level."), Editable(MinValueInt = 0, MaxValueInt = 10)]
         public int RuinCount { get; set; }
 
+        [Serialize(1, true, description: "The minimum number of wrecks in the level. Note that this value cannot be higher than the amount of wreck prefabs (subs)."), Editable(MinValueInt = 0, MaxValueInt = 10)]
+        public int MinWreckCount { get; set; }
+
         [Serialize(1, true, description: "The maximum number of wrecks in the level. Note that this value cannot be higher than the amount of wreck prefabs (subs)."), Editable(MinValueInt = 0, MaxValueInt = 10)]
-        public int WreckCount { get; set; }
+        public int MaxWreckCount { get; set; }
 
         // TODO: Move the wreck parameters under a separate class?
 #region Wreck parameters
@@ -554,7 +592,7 @@ namespace Barotrauma
             var matchingLevelParams = LevelParams.FindAll(lp => lp.Type == type && lp.allowedBiomes.Any());
             if (biome == null)
             {
-                matchingLevelParams = matchingLevelParams.FindAll(lp => !lp.allowedBiomes.Any(b => b.IsEndBiome));
+                matchingLevelParams = matchingLevelParams.FindAll(lp => !lp.allowedBiomes.All(b => b.IsEndBiome));
             }
             else
             {

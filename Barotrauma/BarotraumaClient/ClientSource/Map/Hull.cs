@@ -90,7 +90,10 @@ namespace Barotrauma
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
-            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
+            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null)
+            {
+                CanTakeKeyBoardFocus = false
+            };
             new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUI.LargeFont);
 
             PositionEditingHUD();
@@ -98,7 +101,7 @@ namespace Barotrauma
             return editingHUD;
         }
 
-        public override void UpdateEditing(Camera cam)
+        public override void UpdateEditing(Camera cam, float deltaTime)
         {
             if (editingHUD == null || editingHUD.UserData as Hull != this)
             {
@@ -166,40 +169,43 @@ namespace Barotrauma
                 }
             }
 
-            if (EditWater)
+            if (!IdFreed)
             {
-                Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (Submarine.RectContains(WorldRect, position))
+                if (EditWater)
                 {
-                    if (PlayerInput.PrimaryMouseButtonHeld())
+                    Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
+                    if (Submarine.RectContains(WorldRect, position))
                     {
-                        WaterVolume += 1500.0f;
-                        networkUpdatePending = true;
-                        serverUpdateDelay = 0.5f;
+                        if (PlayerInput.PrimaryMouseButtonHeld())
+                        {
+                            WaterVolume += 1500.0f;
+                            networkUpdatePending = true;
+                            serverUpdateDelay = 0.5f;
+                        }
+                        else if (PlayerInput.SecondaryMouseButtonHeld())
+                        {
+                            WaterVolume -= 1500.0f;
+                            networkUpdatePending = true;
+                            serverUpdateDelay = 0.5f;
+                        }
                     }
-                    else if (PlayerInput.SecondaryMouseButtonHeld())
+                }
+                else if (EditFire)
+                {
+                    Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
+                    if (Submarine.RectContains(WorldRect, position))
                     {
-                        WaterVolume -= 1500.0f;
-                        networkUpdatePending = true;
-                        serverUpdateDelay = 0.5f;
+                        if (PlayerInput.PrimaryMouseButtonClicked())
+                        {
+                            new FireSource(position, this, isNetworkMessage: true);
+                            networkUpdatePending = true;
+                            serverUpdateDelay = 0.5f;
+                        }
                     }
                 }
             }
-            else if (EditFire)
-            {
-                Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (Submarine.RectContains(WorldRect, position))
-                {
-                    if (PlayerInput.PrimaryMouseButtonClicked())
-                    {
-                        new FireSource(position, this, isNetworkMessage: true);
-                        networkUpdatePending = true;
-                        serverUpdateDelay = 0.5f;
-                    }
-                }
-            }
-      
-            if (waterVolume < 1.0f) return;
+
+            if (waterVolume < 1.0f) { return; }
             for (int i = 1; i < waveY.Length - 1; i++)
             {
                 float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
@@ -626,9 +632,9 @@ namespace Barotrauma
                         PowerConsumptionTimer = message.ReadSingle()
                     };
                 }
-                else if (BallastFlora != null)
+                else
                 {
-                    BallastFlora.ClientRead(message, header);
+                    BallastFlora?.ClientRead(message, header);
                 }
                 return;
             }
@@ -670,7 +676,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            remoteBackgroundSections.Add(new BackgroundSection(new Rectangle(0, 0, 1, 1), i, colorStrength, color, 0));
+                            remoteBackgroundSections.Add(new BackgroundSection(new Rectangle(0, 0, 1, 1), (ushort)i, colorStrength, color, 0));
                         }
                     }
                     paintAmount = BackgroundSections.Sum(s => s.ColorStrength);

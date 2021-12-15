@@ -1,15 +1,10 @@
-﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using Barotrauma.IO;
-using System.Linq;
-using System.Xml.Linq;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     partial class AfflictionHusk : Affliction
     {
         partial void UpdateMessages()
         {
+            if (Prefab is AfflictionPrefabHusk { SendMessages: false }) { return; }
             switch (State)
             {
                 case InfectionState.Dormant:

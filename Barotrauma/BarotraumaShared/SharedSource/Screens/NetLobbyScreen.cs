@@ -36,7 +36,46 @@ namespace Barotrauma
             levelDifficultyScrollBar.OnMoved(levelDifficultyScrollBar, levelDifficultyScrollBar.BarScroll);
 #endif
         }
-        
+
+        public void SetRadiationEnabled(bool enabled)
+        {
+#if CLIENT
+            if (radiationEnabledTickBox == null) { return; }
+            radiationEnabledTickBox.Selected = enabled;
+#endif
+        }
+
+        public bool IsRadiationEnabled()
+        {
+#if CLIENT
+            return radiationEnabledTickBox != null && radiationEnabledTickBox.Selected;
+#elif SERVER
+            return GameMain.Server.ServerSettings.RadiationEnabled;
+#endif
+        }
+
+        public void SetMaxMissionCount(int maxMissionCount)
+        {
+#if SERVER
+            if (GameMain.Server != null)
+            {
+                if (maxMissionCount < CampaignSettings.MinMissionCountLimit) maxMissionCount = CampaignSettings.MaxMissionCountLimit;
+                if (maxMissionCount > CampaignSettings.MaxMissionCountLimit) maxMissionCount = CampaignSettings.MinMissionCountLimit;
+
+                GameMain.Server.ServerSettings.MaxMissionCount = maxMissionCount;
+                lastUpdateID++;
+            }
+#endif
+#if CLIENT
+            (maxMissionCountText as GUITextBlock).Text = maxMissionCount.ToString();
+#endif
+        }
+
+        public int GetMaxMissionCount()
+        {
+            return GameMain.NetworkMember?.ServerSettings?.MaxMissionCount ?? 0;
+        }
+
         public void ToggleTraitorsEnabled(int dir)
         {
 #if SERVER

@@ -18,6 +18,8 @@ namespace Barotrauma
         protected Color overlayTextColor;
         protected Sprite overlaySprite;
 
+        private TransitionType prevCampaignUIAutoOpenType;
+
         protected GUIButton endRoundButton;
 
         public GUIButton ReadyCheckButton;
@@ -53,19 +55,26 @@ namespace Barotrauma
                 {
                     chatBox.ToggleOpen = wasChatBoxOpen;
                 }
+                if (!value && CampaignUI?.SelectedTab == InteractionType.PurchaseSub)
+                {
+                    SubmarinePreview.Close();
+                }
                 showCampaignUI = value;
             }
         }
 
         public override void ShowStartMessage()
         {
-            if (Mission == null) return;
-
-            new GUIMessageBox(Mission.Name, Mission.Description, new string[0], type: GUIMessageBox.Type.InGame, icon: Mission.Prefab.Icon)
+            foreach (Mission mission in Missions)
             {
-                IconColor = Mission.Prefab.IconColor,
-                UserData = "missionstartmessage"
-            };
+                new GUIMessageBox(
+                    mission.Prefab.IsSideObjective ? TextManager.AddPunctuation(':', TextManager.Get("sideobjective"), mission.Name) : mission.Name, 
+                    mission.Description, new string[0], type: GUIMessageBox.Type.InGame, icon: mission.Prefab.Icon, parseRichText: true)
+                {
+                    IconColor = mission.Prefab.IconColor,
+                    UserData = "missionstartmessage"
+                };
+            }
         }
 
         /// <summary>
@@ -119,22 +128,22 @@ namespace Barotrauma
                 {
                     var backgroundSprite = GUI.Style.GetComponentStyle("CommandBackground").GetDefaultSprite();
                     Vector2 centerPos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2;
+                    string wrappedText = ToolBox.WrapText(overlayText, GameMain.GraphicsWidth / 3, GUI.Font);
+                    Vector2 textSize = GUI.Font.MeasureString(wrappedText);
+                    Vector2 textPos = centerPos - textSize / 2;
                     backgroundSprite.Draw(spriteBatch, 
                         centerPos, 
                         Color.White * (overlayTextColor.A / 255.0f), 
                         origin: backgroundSprite.size / 2,
                         rotate: 0.0f,
-                        scale: new Vector2(1.5f, 0.7f) * (GameMain.GraphicsWidth / 3 / backgroundSprite.size.X));
+                        scale: new Vector2(GameMain.GraphicsWidth / 2 / backgroundSprite.size.X, textSize.Y / backgroundSprite.size.Y * 1.5f));
 
-                    string wrappedText = ToolBox.WrapText(overlayText, GameMain.GraphicsWidth / 3, GUI.Font);
-                    Vector2 textSize = GUI.Font.MeasureString(wrappedText);
-                    Vector2 textPos = centerPos - textSize / 2;
                     GUI.DrawString(spriteBatch, textPos + Vector2.One, wrappedText, Color.Black * (overlayTextColor.A / 255.0f));
                     GUI.DrawString(spriteBatch, textPos, wrappedText, overlayTextColor);
 
                     if (!string.IsNullOrEmpty(overlayTextBottom))
                     {
-                        Vector2 bottomTextPos = centerPos + new Vector2(0.0f, textSize.Y + 30 * GUI.Scale) - GUI.Font.MeasureString(overlayTextBottom) / 2;
+                        Vector2 bottomTextPos = centerPos + new Vector2(0.0f, textSize.Y / 2 + 40 * GUI.Scale) - GUI.Font.MeasureString(overlayTextBottom) / 2;
                         GUI.DrawString(spriteBatch, bottomTextPos + Vector2.One, overlayTextBottom, Color.Black * (overlayTextColor.A / 255.0f));
                         GUI.DrawString(spriteBatch, bottomTextPos, overlayTextBottom, overlayTextColor);
                     }
@@ -147,7 +156,7 @@ namespace Barotrauma
                 if (ReadyCheckButton != null) { ReadyCheckButton.Visible = false; }
                 return; 
             }
-            if (Submarine.MainSub == null) { return; }
+            if (Submarine.MainSub == null || Level.Loaded == null) { return; }
 
             endRoundButton.Visible = false;
             var availableTransition = GetAvailableTransition(out _, out Submarine leavingSub);
@@ -158,7 +167,8 @@ namespace Barotrauma
                 case TransitionType.ProgressToNextEmptyLocation:
                     if (Level.Loaded.EndOutpost == null || !Level.Loaded.EndOutpost.DockedTo.Contains(leavingSub))
                     {
-                        buttonText = TextManager.GetWithVariable("EnterLocation", "[locationname]", Level.Loaded.EndLocation?.Name ?? "[ERROR]");
+                        string textTag = availableTransition == TransitionType.ProgressToNextLocation ? "EnterLocation" : "EnterEmptyLocation";
+                        buttonText = TextManager.GetWithVariable(textTag, "[locationname]", Level.Loaded.EndLocation?.Name ?? "[ERROR]");
                         endRoundButton.Visible = !ForceMapUI && !ShowCampaignUI;
                     }
                     break;
@@ -170,7 +180,8 @@ namespace Barotrauma
                 case TransitionType.ReturnToPreviousEmptyLocation:
                     if (Level.Loaded.StartOutpost == null || !Level.Loaded.StartOutpost.DockedTo.Contains(leavingSub))
                     {
-                        buttonText = TextManager.GetWithVariable("EnterLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
+                        string textTag = availableTransition == TransitionType.ReturnToPreviousLocation ? "EnterLocation" : "EnterEmptyLocation";
+                        buttonText = TextManager.GetWithVariable(textTag, "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
                         endRoundButton.Visible = !ForceMapUI && !ShowCampaignUI;
                     }
 
@@ -178,7 +189,7 @@ namespace Barotrauma
                 case TransitionType.None:
                 default:
                     if (Level.Loaded.Type == LevelData.LevelType.Outpost &&
-                        (Character.Controlled?.Submarine?.Info.Type == SubmarineType.Player || (Character.Controlled?.CurrentHull?.OutpostModuleTags?.Contains("airlock") ?? false)))
+                        (Character.Controlled?.Submarine?.Info.Type == SubmarineType.Player || (Character.Controlled?.CurrentHull?.OutpostModuleTags.Contains("airlock") ?? false)))
                     {
                         buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
                         endRoundButton.Visible = !ForceMapUI && !ShowCampaignUI;
@@ -194,20 +205,32 @@ namespace Barotrauma
 
             if (endRoundButton.Visible)
             {
-                if (!AllowedToEndRound()) { buttonText = TextManager.Get("map"); }
+                if (!AllowedToEndRound()) 
+                { 
+                    buttonText = TextManager.Get("map"); 
+                }
+                else if (prevCampaignUIAutoOpenType != availableTransition && 
+                        (availableTransition == TransitionType.ProgressToNextEmptyLocation || availableTransition == TransitionType.ReturnToPreviousEmptyLocation))
+                {
+                    HintManager.OnAvailableTransition(availableTransition);
+                    //opening the campaign map pauses the game and prevents HintManager from running -> update it manually to get the hint to show up immediately
+                    HintManager.Update();
+                    Map.SelectLocation(-1);
+                    endRoundButton.OnClicked(EndRoundButton, null);
+                    prevCampaignUIAutoOpenType = availableTransition;
+                }
                 endRoundButton.Text = ToolBox.LimitString(buttonText, endRoundButton.Font, endRoundButton.Rect.Width - 5);
                 if (endRoundButton.Text != buttonText)
                 {
                     endRoundButton.ToolTip = buttonText;
                 }
-                if (Character.Controlled?.ViewTarget is Item item)
-                {
-                    Turret turret = item.GetComponent<Turret>();
-                    endRoundButton.RectTransform.ScreenSpaceOffset = turret == null ? Point.Zero : new Point(0, (int)(turret.UIElementHeight * 1.25f));
-                }
-                else if (Character.Controlled?.CharacterHealth?.SuicideButton?.Visible ?? false)
+                if (Character.Controlled?.CharacterHealth?.SuicideButton?.Visible ?? false)
                 {
                     endRoundButton.RectTransform.ScreenSpaceOffset = new Point(0, Character.Controlled.CharacterHealth.SuicideButton.Rect.Height);
+                }
+                else if (GameMain.Client != null && GameMain.Client.IsFollowSubTickBoxVisible)
+                {
+                    endRoundButton.RectTransform.ScreenSpaceOffset = new Point(0, HUDLayoutSettings.Padding + GameMain.Client.FollowSubTickBox.Rect.Height);
                 }
                 else
                 {
@@ -215,9 +238,10 @@ namespace Barotrauma
                 }
             }
             endRoundButton.DrawManually(spriteBatch);
-            if (this is MultiPlayerCampaign)
+            if (this is MultiPlayerCampaign && ReadyCheckButton != null)
             {
-                ReadyCheckButton?.DrawManually(spriteBatch);
+                ReadyCheckButton.RectTransform.ScreenSpaceOffset = endRoundButton.RectTransform.ScreenSpaceOffset;
+                ReadyCheckButton.DrawManually(spriteBatch);
             }
         }
 
@@ -258,6 +282,7 @@ namespace Barotrauma
             {
                 case InteractionType.None:
                 case InteractionType.Talk:
+                case InteractionType.Examine:
                     return;
                 case InteractionType.Upgrade when !UpgradeManager.CanUpgradeSub():
                     UpgradeManager.CreateUpgradeErrorMessage(TextManager.Get("Dialog.CantUpgrade"), IsSinglePlayer, npc);

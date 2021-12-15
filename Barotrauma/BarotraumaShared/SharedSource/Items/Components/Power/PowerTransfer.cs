@@ -15,6 +15,9 @@ namespace Barotrauma.Items.Components
         //a list of connections a given connection is connected to, either directly or via other power transfer components
         private readonly Dictionary<Connection, HashSet<Connection>> connectedRecipients = new Dictionary<Connection, HashSet<Connection>>();
 
+        private float overloadCooldownTimer;
+        private const float OverloadCooldown = 5.0f;
+
         protected float powerLoad;
 
         protected bool isBroken;
@@ -173,12 +176,19 @@ namespace Barotrauma.Items.Components
             Overload = -currPowerConsumption > Math.Max(powerLoad, 200.0f) * maxOverVoltage;
             if (Overload && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
             {
+                if (overloadCooldownTimer > 0.0f)
+                {
+                    overloadCooldownTimer -= deltaTime;
+                    return;
+                }
+
                 //damage the item if voltage is too high (except if running as a client)
                 float prevCondition = item.Condition;
                 item.Condition -= deltaTime * 10.0f;
 
                 if (item.Condition <= 0.0f && prevCondition > 0.0f)
                 {
+                    overloadCooldownTimer = OverloadCooldown;
 #if CLIENT
                     SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: item.CurrentHull);
                     Vector2 baseVel = Rand.Vector(300.0f);
@@ -342,7 +352,7 @@ namespace Barotrauma.Items.Components
             powerOut?.SendPowerProbeSignal(source, power);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (item.Condition <= 0.0f || connection.IsPower) { return; }
             if (!connectedRecipients.ContainsKey(connection)) { return; }
@@ -351,16 +361,16 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Connection recipient in connectedRecipients[connection])
                 {
-                    if (recipient.Item == item || recipient.Item == source) { continue; }
+                    if (recipient.Item == item || recipient.Item == signal.source) { continue; }
 
-                    source?.LastSentSignalRecipients.Add(recipient.Item);
+                    signal.source?.LastSentSignalRecipients.Add(recipient);
 
                     foreach (ItemComponent ic in recipient.Item.Components)
                     {
                         //other junction boxes don't need to receive the signal in the pass-through signal connections
                         //because we relay it straight to the connected items without going through the whole chain of junction boxes
-                        if (ic is PowerTransfer && !(ic is RelayComponent) && connection.Name.Contains("signal")) { continue; }
-                        ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f, signalStrength);
+                        if (ic is PowerTransfer && !(ic is RelayComponent)) { continue; }
+                        ic.ReceiveSignal(signal, recipient);
                     }
 
                     foreach (StatusEffect effect in recipient.Effects)
@@ -369,6 +379,13 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+            connectedRecipients?.Clear();
+            connectionDirty?.Clear();
         }
     }
 }

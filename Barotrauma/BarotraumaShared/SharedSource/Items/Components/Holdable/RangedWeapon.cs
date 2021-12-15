@@ -1,10 +1,11 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Networking;
 using FarseerPhysics;
-using FarseerPhysics.Collision;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -12,7 +13,8 @@ namespace Barotrauma.Items.Components
 {
     partial class RangedWeapon : ItemComponent
     {
-        private float reload, reloadTimer;
+        private float reload;
+        public float ReloadTimer { get; private set; }
 
         private Vector2 barrelPos;
 
@@ -51,23 +53,45 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(0f, true, description: "The time required for a charge-type turret to charge up before able to fire.")]
+        public float MaxChargeTime
+        {
+            get;
+            private set;
+        }
+
+        private enum ChargingState
+        {
+            Inactive,
+            WindingUp,
+            WindingDown,
+        }
+        private ChargingState currentChargingState;
+
         public Vector2 TransformedBarrelPos
         {
             get
             {
-                Matrix bodyTransform = Matrix.CreateRotationZ(item.body.Rotation);
+                Matrix bodyTransform = Matrix.CreateRotationZ(item.body == null ? MathHelper.ToRadians(item.Rotation) : item.body.Rotation);
                 Vector2 flippedPos = barrelPos;
-                if (item.body.Dir < 0.0f) flippedPos.X = -flippedPos.X;
-                return Vector2.Transform(flippedPos, bodyTransform);
+                if (item.body != null && item.body.Dir < 0.0f) { flippedPos.X = -flippedPos.X; }
+                return Vector2.Transform(flippedPos, bodyTransform) * item.Scale;
             }
         }
-                
+
+
+        public Projectile LastProjectile { get; private set; }
+
+        private float currentChargeTime;
+        private bool tryingToCharge;
+
         public RangedWeapon(Item item, XElement element)
             : base(item, element)
         {
             item.IsShootable = true;
             // TODO: should define this in xml if we have ranged weapons that don't require aim to use
             item.RequireAimToUse = true;
+            characterUsable = true;
             InitProjSpecific(element);
         }
 
@@ -75,20 +99,51 @@ namespace Barotrauma.Items.Components
 
         public override void Equip(Character character)
         {
-            reloadTimer = Math.Min(reload, 1.0f);
+            ReloadTimer = Math.Min(reload, 1.0f);
             IsActive = true;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
-            reloadTimer -= deltaTime;
+            ReloadTimer -= deltaTime;
 
-            if (reloadTimer < 0.0f)
+            if (ReloadTimer < 0.0f)
             {
-                reloadTimer = 0.0f;
-                IsActive = false;
+                ReloadTimer = 0.0f;
+                // was this an optimization or related to something else? it cannot occur for charge-type weapons
+                //IsActive = false;
+                if (MaxChargeTime == 0.0f)
+                {
+                    IsActive = false;
+                    return;
+                }
             }
+
+            float previousChargeTime = currentChargeTime;
+
+            float chargeDeltaTime = tryingToCharge && ReloadTimer <= 0f ? deltaTime : -deltaTime;
+            currentChargeTime = Math.Clamp(currentChargeTime + chargeDeltaTime, 0f, MaxChargeTime);
+
+            tryingToCharge = false;
+
+            if (currentChargeTime == 0f)
+            {
+                currentChargingState = ChargingState.Inactive;
+            }
+            else if (currentChargeTime < previousChargeTime)
+            {
+                currentChargingState = ChargingState.WindingDown;
+            }
+            else
+            {
+                // if we are charging up or at maxed charge, remain winding up
+                currentChargingState = ChargingState.WindingUp;
+            }
+
+            UpdateProjSpecific(deltaTime);
         }
+
+        partial void UpdateProjSpecific(float deltaTime);
 
         private float GetSpread(Character user)
         {
@@ -100,11 +155,20 @@ namespace Barotrauma.Items.Components
         private readonly List<Body> limbBodies = new List<Body>();
         public override bool Use(float deltaTime, Character character = null)
         {
+            tryingToCharge = true;
             if (character == null || character.Removed) { return false; }
-            if ((item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) || reloadTimer > 0.0f) { return false; }
+            if ((item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) || ReloadTimer > 0.0f) { return false; }
+            if (currentChargeTime < MaxChargeTime) { return false; }
 
             IsActive = true;
-            reloadTimer = reload;
+            ReloadTimer = reload / (1 + character?.GetStatValue(StatTypes.RangedAttackSpeed) ?? 0f);
+            currentChargeTime = 0f;
+
+            if (character != null)
+            {
+                var abilityItem = new AbilityItem(item);
+                character.CheckTalents(AbilityEffectType.OnUseRangedWeapon, abilityItem);
+            }
 
             if (item.AiTarget != null)
             {
@@ -134,7 +198,13 @@ namespace Barotrauma.Items.Components
                     Vector2 barrelPos = TransformedBarrelPos + item.body.SimPosition;
                     float rotation = (Item.body.Dir == 1.0f) ? Item.body.Rotation : Item.body.Rotation - MathHelper.Pi;
                     float spread = GetSpread(character) * Rand.Range(-0.5f, 0.5f);
-                    projectile.Shoot(character, character.AnimController.AimSourceSimPos, barrelPos, rotation + spread, ignoredBodies: limbBodies.ToList(), createNetworkEvent: false);
+                    var lastProjectile = LastProjectile;
+                    if (lastProjectile != projectile)
+                    {
+                        lastProjectile?.Item.GetComponent<Rope>()?.Snap();
+                    }
+                    float damageMultiplier = 1f + item.GetQualityModifier(Quality.StatType.AttackMultiplier);
+                    projectile.Shoot(character, character.AnimController.AimSourceSimPos, barrelPos, rotation + spread, ignoredBodies: limbBodies.ToList(), createNetworkEvent: false, damageMultiplier);
                     projectile.Item.GetComponent<Rope>()?.Attach(Item, projectile.Item);
                     if (i == 0)
                     {
@@ -143,6 +213,7 @@ namespace Barotrauma.Items.Components
                     projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
                     Item.RemoveContained(projectile.Item);
                 }
+                LastProjectile = projectile;
             }
 
             LaunchProjSpecific();
@@ -150,9 +221,14 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        public override bool SecondaryUse(float deltaTime, Character character = null)
+        {
+            return characterUsable || character == null;
+        }
+
         public Projectile FindProjectile(bool triggerOnUseOnContainers = false)
         {
-            var containedItems = item.OwnInventory?.Items;
+            var containedItems = item.OwnInventory?.AllItemsMod;
             if (containedItems == null) { return null; }
 
             foreach (Item item in containedItems)
@@ -166,7 +242,7 @@ namespace Barotrauma.Items.Components
             foreach (Item it in containedItems)
             {
                 if (it == null) { continue; }
-                var containedSubItems = it.OwnInventory?.Items;
+                var containedSubItems = it.OwnInventory?.AllItemsMod;
                 if (containedSubItems == null) { continue; }
                 foreach (Item subItem in containedSubItems)
                 {

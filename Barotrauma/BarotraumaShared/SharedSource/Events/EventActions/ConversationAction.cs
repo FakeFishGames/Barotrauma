@@ -1,3 +1,4 @@
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -40,8 +41,14 @@ namespace Barotrauma
         [Serialize(true, true)]
         public bool WaitForInteraction { get; set; }
 
+        [Serialize("", true, "Tag to assign to whoever invokes the conversation")]
+        public string InvokerTag { get; set; }
+
         [Serialize(false, true)]
         public bool FadeToBlack { get; set; }
+
+        [Serialize(true, true, "Should the event end if the conversations is interrupted (e.g. if the speaker dies or falls unconscious mid-conversation). Defaults to true.")]
+        public bool EndEventIfInterrupted { get; set; }
 
         [Serialize("", true)]
         public string EventSprite { get; set; }
@@ -54,7 +61,6 @@ namespace Barotrauma
 
         private Character speaker;
 
-        private OrderInfo? prevSpeakerOrder;
         private AIObjective prevIdleObjective, prevGotoObjective;
 
         public List<SubactionGroup> Options { get; private set; }
@@ -104,19 +110,26 @@ namespace Barotrauma
                 {
 #if CLIENT
                     dialogBox?.Close();
+                    GUIMessageBox.MessageBoxes.ForEachMod(mb => 
+                    { 
+                        if (mb.UserData as string == "ConversationAction")
+                        {
+                            (mb as GUIMessageBox)?.Close();
+                        }
+                    });
 #else
                     foreach (Client c in GameMain.Server.ConnectedClients)
                     {
                         if (c.InGame && c.Character != null) { ServerWrite(speaker, c); }
                     }
-# endif
+#endif
                     ResetSpeaker();
                     dialogOpened = false;
                 }
 
                 if (Interrupted == null)
                 {
-                    goTo = "_end";
+                    if (EndEventIfInterrupted) { goTo = "_end"; }
                     return true;
                 }
                 else
@@ -166,23 +179,18 @@ namespace Barotrauma
         {
             if (speaker == null) { return; }
             speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
+            speaker.ActiveConversation = null;
             speaker.SetCustomInteract(null, null);
 #if SERVER
             GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
 #endif
             var humanAI = speaker.AIController as HumanAIController;
-            if (humanAI != null)
+            if (humanAI != null && !speaker.IsDead && !speaker.Removed)
             {
-                if (prevSpeakerOrder != null)
-                {
-                    humanAI.SetOrder(prevSpeakerOrder.Value.Order, prevSpeakerOrder.Value.OrderOption, orderGiver: null, speak: false);
-                }
-                else
-                {
-                    humanAI.SetOrder(null, string.Empty, orderGiver: null, speak: false);
-                }
+                humanAI.ClearForcedOrder();
                 if (prevIdleObjective != null) { humanAI.ObjectiveManager.AddObjective(prevIdleObjective); }
                 if (prevGotoObjective != null) { humanAI.ObjectiveManager.AddObjective(prevGotoObjective); }
+                humanAI.ObjectiveManager.SortObjectives();
             }
         }
 
@@ -205,26 +213,33 @@ namespace Barotrauma
                 if (dialogOpened)
                 {
 #if CLIENT
-                    Character.DisableControls = true;
+                    if (GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "ConversationAction"))
+                    {
+                        Character.DisableControls = true;
+                    }
+                    else
+                    {
+                        Reset();
+                    }
 #endif
-                    if (ShouldInterrupt()) 
+                    if (ShouldInterrupt())
                     {
                         ResetSpeaker();
-                        interrupt = true; 
+                        interrupt = true;
                     }
-                    return; 
+                    return;
                 }
 
                 if (!string.IsNullOrEmpty(SpeakerTag))
                 {
-                    if (speaker != null && !speaker.Removed && speaker.CampaignInteractionType == CampaignMode.InteractionType.Talk) { return; }
+                    if (speaker != null && !speaker.Removed && speaker.CampaignInteractionType == CampaignMode.InteractionType.Talk && speaker.ActiveConversation?.ParentEvent != this.ParentEvent) { return; }
                     speaker = ParentEvent.GetTargets(SpeakerTag).FirstOrDefault(e => e is Character) as Character;
                     if (speaker == null || speaker.Removed)
-                    { 
-                        return; 
+                    {
+                        return;
                     }
                     //some conversation already assigned to the speaker, wait for it to be removed
-                    if (speaker.CampaignInteractionType == CampaignMode.InteractionType.Talk)
+                    if (speaker.CampaignInteractionType == CampaignMode.InteractionType.Talk && speaker.ActiveConversation?.ParentEvent != this.ParentEvent)
                     {
                         return;
                     }
@@ -232,9 +247,10 @@ namespace Barotrauma
                     {
                         TryStartConversation(speaker);
                     }
-                    else
+                    else if (speaker.ActiveConversation != this)
                     {
                         speaker.CampaignInteractionType = CampaignMode.InteractionType.Talk;
+                        speaker.ActiveConversation = this;
 #if CLIENT
                         speaker.SetCustomInteract(
                             TryStartConversation, 
@@ -255,7 +271,12 @@ namespace Barotrauma
             }
             else
             {
-                if (Options.Any())
+                if (ShouldInterrupt())
+                {
+                    ResetSpeaker();
+                    interrupt = true;
+                }
+                else if (Options.Any())
                 {
                     Options[selectedOption].Update(deltaTime);
                 }
@@ -289,9 +310,15 @@ namespace Barotrauma
 
         private bool IsValidTarget(Entity e)
         {
-            return 
-                e is Character character && !character.Removed && !character.IsDead && !character.IsIncapacitated &&
+            bool isValid = e is Character character && !character.Removed && !character.IsDead && !character.IsIncapacitated &&
                 (e == Character.Controlled || character.IsRemotePlayer);
+#if SERVER
+            UpdateIgnoredClients();
+            isValid &= !ignoredClients.Keys.Any(c => c.Character == e);
+#elif CLIENT
+            isValid &= (e != Character.Controlled || !GUI.InputBlockingMenuOpen);
+#endif
+            return isValid;
         }
 
         private void TryStartConversation(Character speaker, Character targetCharacter = null)
@@ -305,16 +332,11 @@ namespace Barotrauma
 
             if (speaker?.AIController is HumanAIController humanAI)
             {
-                prevSpeakerOrder = null;
-                if (humanAI.CurrentOrder != null)
-                {
-                    prevSpeakerOrder = new OrderInfo(humanAI.CurrentOrder, humanAI.CurrentOrderOption);
-                }
                 prevIdleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
                 prevGotoObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveGoTo>();
-                humanAI.SetOrder(
-                    Order.PrefabList.Find(o => o.Identifier.Equals("wait", StringComparison.OrdinalIgnoreCase)), 
-                    option: string.Empty, orderGiver: null, speak: false);
+                humanAI.SetForcedOrder(
+                    Order.PrefabList.Find(o => o.Identifier.Equals("wait", StringComparison.OrdinalIgnoreCase)),
+                    option: string.Empty, orderGiver: null);
                 if (targets.Any()) 
                 {
                     Entity closestTarget = null;
@@ -335,9 +357,22 @@ namespace Barotrauma
                 }
             }
 
+            if (targetCharacter != null && !string.IsNullOrWhiteSpace(InvokerTag))
+            {
+                ParentEvent.AddTarget(InvokerTag, targetCharacter);
+            }
+
             ShowDialog(speaker, targetCharacter);
 
             dialogOpened = true;
+            if (speaker != null)
+            {
+                speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
+                speaker.SetCustomInteract(null, null);
+#if SERVER
+                GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
+#endif
+            }
         }
 
         partial void ShowDialog(Character speaker, Character targetCharacter);

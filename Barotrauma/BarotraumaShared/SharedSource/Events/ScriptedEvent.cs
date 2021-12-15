@@ -13,7 +13,8 @@ namespace Barotrauma
         private int prevEntityCount;
         private int prevPlayerCount, prevBotCount;
 
-        private string[] requiredDestinationTypes;
+        private readonly string[] requiredDestinationTypes;
+        public readonly bool RequireBeaconStation;
 
         public int CurrentActionIndex { get; private set; }
         public List<EventAction> Actions { get; } = new List<EventAction>();
@@ -21,7 +22,7 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            return "ScriptedEvent (" + prefab.EventType.ToString() +")";
+            return $"ScriptedEvent ({prefab.Identifier})";
         }
         
         public ScriptedEvent(EventPrefab prefab) : base(prefab)
@@ -43,6 +44,7 @@ namespace Barotrauma
             }
 
             requiredDestinationTypes = prefab.ConfigElement.GetAttributeStringArray("requireddestinationtypes", null);
+            RequireBeaconStation = prefab.ConfigElement.GetAttributeBool("requirebeaconstation", false);
         }
 
         public void AddTarget(string tag, Entity target)
@@ -136,6 +138,14 @@ namespace Barotrauma
             return targetsToReturn;
         }
 
+        public void RemoveTag(string tag)
+        {
+            if (string.IsNullOrWhiteSpace(tag)) { return; }
+            if (Targets.ContainsKey(tag)) { Targets.Remove(tag); }
+            if (cachedTargets.ContainsKey(tag)) { cachedTargets.Remove(tag); }
+            if (targetPredicates.ContainsKey(tag)) { targetPredicates.Remove(tag);  }
+        }
+
         public override void Update(float deltaTime)
         {
             int botCount = 0;
@@ -208,9 +218,16 @@ namespace Barotrauma
         {
             if (requiredDestinationTypes == null) { return true; }
             var currLocation = GameMain.GameSession?.Campaign?.Map.CurrentLocation;
-            if (currLocation == null) { return true; }
-            var locations = currLocation?.Connections?.Select(c => c.Locations.First(l => l != currLocation));
-            return locations.Any(l => requiredDestinationTypes.Any(t => l.Type.Identifier.Equals(t, StringComparison.OrdinalIgnoreCase)));
+            if (currLocation?.Connections == null) { return true; }
+            foreach (LocationConnection c in currLocation.Connections)
+            {
+                if (RequireBeaconStation && !c.LevelData.HasBeaconStation) { continue; }
+                if (requiredDestinationTypes.Any(t => c.OtherLocation(currLocation).Type.Identifier.Equals(t, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

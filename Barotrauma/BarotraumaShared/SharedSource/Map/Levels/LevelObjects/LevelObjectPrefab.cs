@@ -37,11 +37,12 @@ namespace Barotrauma
             MainPathWall = 1,
             SidePathWall = 2,
             CaveWall = 4,
-            RuinWall = 8,
-            SeaFloor = 16,
-            MainPath = 32,
-            LevelStart = 64,
-            LevelEnd = 128,
+            NestWall = 8,
+            RuinWall = 16,
+            SeaFloor = 32,
+            MainPath = 64,
+            LevelStart = 128,
+            LevelEnd = 256,
             Wall = MainPathWall | SidePathWall | CaveWall,
         }
 
@@ -175,6 +176,20 @@ namespace Barotrauma
             private set;
         }
 
+        [Editable, Serialize(true, true, description: "Can the object be placed near the start of the level.")]
+        public bool AllowAtStart
+        {
+            get;
+            private set;
+        }
+
+        [Editable, Serialize(true, true, description: "Can the object be placed near the end of the level.")]
+        public bool AllowAtEnd
+        {
+            get;
+            private set;
+        }
+
         [Serialize(0.0f, true, description: "Minimum length of a graph edge the object can spawn on."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         /// <summary>
         /// Minimum length of a graph edge the object can spawn on.
@@ -244,6 +259,27 @@ namespace Barotrauma
 
         [Serialize(0.0f, true, description: "How much the object disrupts submarine's sonar."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float SonarDisruption
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, true, description: "Can the object take damage from weapons/attacks that damage level walls."), Editable]
+        public bool TakeLevelWallDamage
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, true), Editable]
+        public bool HideWhenBroken
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(100.0f, true), Editable]
+        public float Health
         {
             get;
             private set;
@@ -442,14 +478,14 @@ namespace Barotrauma
         partial void InitProjSpecific(XElement element);
 
 
-        public float GetCommonness(CaveGenerationParams generationParams)
+        public float GetCommonness(CaveGenerationParams generationParams, bool requireCaveSpecificOverride = true)
         {
             if (generationParams?.Identifier != null &&
                 OverrideCommonness.TryGetValue(generationParams.Identifier, out float commonness))
             {
                 return commonness;
             }
-            return 0.0f;
+            return requireCaveSpecificOverride ? 0.0f : Commonness;
         }
 
         public float GetCommonness(LevelGenerationParams generationParams)

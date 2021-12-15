@@ -15,16 +15,23 @@ namespace Barotrauma.Items.Components
 
         public GUIButton SabotageButton { get; private set; }
 
+        public GUIButton TinkerButton { get; private set; }
+
         private GUIProgressBar progressBar;
 
-        private List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
+        private GUITextBlock progressBarOverlayText;
+
+        private GUILayoutGroup extraButtonContainer;
+
+        private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
         //the corresponding particle emitter is active when the condition is within this range
-        private List<Vector2> particleEmitterConditionRanges = new List<Vector2>();
+        private readonly List<Vector2> particleEmitterConditionRanges = new List<Vector2>();
 
         private SoundChannel repairSoundChannel;
 
         private string repairButtonText, repairingText;
         private string sabotageButtonText, sabotagingText;
+        private string tinkerButtonText, tinkeringText;
 
         private FixActions requestStartFixAction;
 
@@ -45,8 +52,24 @@ namespace Barotrauma.Items.Components
 
         public override bool ShouldDrawHUD(Character character)
         {
-            if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) return false;
-            return item.ConditionPercentage < RepairThreshold || character.IsTraitor && item.ConditionPercentage > MinSabotageCondition || (CurrentFixer == character && (!item.IsFullCondition || (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition)));
+            if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) { return false; }
+            if (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition) { return true; }
+
+            float maxRepairConditionMultiplier = GetMaxRepairConditionMultiplier(character);
+            if (item.Condition / maxRepairConditionMultiplier < RepairThreshold) { return true; }
+
+            if (CurrentFixer == character)
+            {
+                float condition = item.Condition / item.MaxRepairConditionMultiplier;
+                float maxCondition = item.MaxCondition / item.MaxRepairConditionMultiplier;
+                if (condition < maxCondition * maxRepairConditionMultiplier)
+                {
+                    return true;
+                }
+            }
+            if (IsTinkerable(character)) { return true; }
+
+            return false;
         }
 
         partial void InitProjSpecific(XElement element)
@@ -85,7 +108,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void CreateGUI()
+        protected override void CreateGUI()
         {
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.75f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
@@ -120,6 +143,11 @@ namespace Barotrauma.Items.Components
 
             progressBar = new GUIProgressBar(new RectTransform(new Vector2(0.6f, 1.0f), progressBarHolder.RectTransform),
                 color: GUI.Style.Green, barSize: 0.0f, style: "DeviceProgressBar");
+            progressBarOverlayText = new GUITextBlock(new RectTransform(Vector2.One, progressBar.RectTransform), string.Empty, font: GUI.SubHeadingFont, textAlignment: Alignment.Center)
+            {
+                IgnoreLayoutGroups = true
+            };
+
             repairButtonText = TextManager.Get("RepairButton");
             repairingText = TextManager.Get("Repairing");
             RepairButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), progressBarHolder.RectTransform, Anchor.TopCenter), repairButtonText)
@@ -135,9 +163,16 @@ namespace Barotrauma.Items.Components
             progressBarHolder.RectTransform.MinSize = RepairButton.RectTransform.MinSize;
             RepairButton.RectTransform.MinSize = new Point((int)(RepairButton.TextBlock.TextSize.X * 1.2f), RepairButton.RectTransform.MinSize.Y);
 
+            extraButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform), isHorizontal: true)
+            {
+                IgnoreLayoutGroups = true,
+                Stretch = true,
+                AbsoluteSpacing = GUI.IntScale(5)
+            };
+
             sabotageButtonText = TextManager.Get("SabotageButton");
             sabotagingText = TextManager.Get("Sabotaging");
-            SabotageButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter), sabotageButtonText, style: "GUIButtonSmall")
+            SabotageButton = new GUIButton(new RectTransform(Vector2.One, extraButtonContainer.RectTransform), sabotageButtonText, style: "GUIButtonSmall")
             {
                 IgnoreLayoutGroups = true,
                 Visible = false,
@@ -148,6 +183,22 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
+
+            tinkerButtonText = TextManager.Get("TinkerButton", returnNull: true) ?? "Tinker";
+            tinkeringText = TextManager.Get("Tinkering", returnNull: true) ?? "Tinkering";
+            TinkerButton = new GUIButton(new RectTransform(Vector2.One, extraButtonContainer.RectTransform), tinkerButtonText, style: "GUIButtonSmall")
+            {
+                IgnoreLayoutGroups = true,
+                Visible = false,
+                OnClicked = (btn, obj) =>
+                {
+                    requestStartFixAction = FixActions.Tinker;
+                    item.CreateClientEvent(this);
+                    return true;
+                }
+            };
+
+            extraButtonContainer.RectTransform.MinSize = new Point(0, SabotageButton.RectTransform.MinSize.Y);
         }
 
         partial void UpdateProjSpecific(float deltaTime)
@@ -176,6 +227,7 @@ namespace Barotrauma.Items.Components
                 {
                     case FixActions.Repair:
                     case FixActions.Sabotage:
+                    case FixActions.Tinker:
                         StartRepairing(Character.Controlled, requestStartFixAction);
                         requestStartFixAction = FixActions.None;
                         break;
@@ -211,10 +263,24 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
 
-            progressBar.BarSize = item.Condition / item.MaxCondition;
+            float defaultMaxCondition = (item.MaxCondition / item.MaxRepairConditionMultiplier);
+
+            progressBar.BarSize = item.Condition / defaultMaxCondition;
             progressBar.Color = ToolBox.GradientLerp(progressBar.BarSize, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green);
 
-            RepairButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Repair)) && !item.IsFullCondition;
+            if (item.Condition > defaultMaxCondition)
+            {
+                float extraCondition = item.MaxCondition * (item.MaxRepairConditionMultiplier - 1.0f);
+                progressBar.Color = ToolBox.GradientLerp((item.Condition - defaultMaxCondition) / extraCondition, GUI.Style.ColorReputationHigh, GUI.Style.ColorReputationVeryHigh);
+                progressBarOverlayText.Visible = true;
+                progressBarOverlayText.Text = $"{(int)Math.Round((item.Condition / defaultMaxCondition) * 100)}%";
+            }
+            else
+            {
+                progressBarOverlayText.Visible = false;
+            }
+
+            RepairButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Repair)) && !item.IsFullCondition && item.ConditionPercentage < RepairThreshold;
             RepairButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Repair) ? 
                 repairButtonText : 
                 repairingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
@@ -226,7 +292,18 @@ namespace Barotrauma.Items.Components
                 sabotageButtonText :
                 sabotagingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
+            TinkerButton.Visible = IsTinkerable(character);
+            TinkerButton.IgnoreLayoutGroups = !TinkerButton.Visible;
+            TinkerButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Tinker)) && CanTinker(character);
+            TinkerButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Tinker) ?
+                tinkerButtonText :
+                tinkeringText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
+
             System.Diagnostics.Debug.Assert(GuiFrame.GetChild(0) is GUILayoutGroup, "Repair UI hierarchy has changed, could not find skill texts");
+
+            extraButtonContainer.Visible = SabotageButton.Visible || TinkerButton.Visible;
+            extraButtonContainer.IgnoreLayoutGroups = !extraButtonContainer.Visible;
+
             foreach (GUIComponent c in GuiFrame.GetChild(0).Children)
             {
                 if (!(c.UserData is Skill skill)) continue;
@@ -278,9 +355,12 @@ namespace Barotrauma.Items.Components
             deteriorationTimer = msg.ReadSingle();
             deteriorateAlwaysResetTimer = msg.ReadSingle();
             DeteriorateAlways = msg.ReadBoolean();
+            tinkeringDuration = msg.ReadSingle();
+            tinkeringStrength = msg.ReadSingle();
             ushort currentFixerID = msg.ReadUInt16();
             currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
             CurrentFixer = currentFixerID != 0 ? Entity.FindEntityByID(currentFixerID) as Character : null;
+            item.MaxRepairConditionMultiplier = GetMaxRepairConditionMultiplier(CurrentFixer);
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)

@@ -130,7 +130,7 @@ namespace Barotrauma.Items.Components
                 if (body.UserData is Item item)
                 {
                     var door = item.GetComponent<Door>();
-                    if (door != null && door.IsOpen || door.IsBroken) continue;
+                    if (door != null && door.CanBeTraversed) { continue; }
                 }
 
                 targetHull = null;
@@ -239,7 +239,7 @@ namespace Barotrauma.Items.Components
         {
             if (targetSections.Count == 0) { return; }
 
-            Item liquidItem = liquidContainer?.Inventory.Items[0];
+            Item liquidItem = liquidContainer?.Inventory.FirstOrDefault();
             if (liquidItem == null) { return; }
 
             bool isCleaning = false;
@@ -281,10 +281,10 @@ namespace Barotrauma.Items.Components
             foreach (ParticleEmitter particleEmitter in particleEmitters)
             {
                 float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-                float particleRange = particleEmitter.Prefab.VelocityMax * particleEmitter.Prefab.ParticlePrefab.LifeTime;
+                float particleRange = particleEmitter.Prefab.Properties.VelocityMax * particleEmitter.Prefab.ParticlePrefab.LifeTime;
                 particleEmitter.Emit(
                     deltaTime, particleStartPos,
-                    item.CurrentHull, particleAngle, particleEmitter.Prefab.CopyEntityAngle ? -particleAngle : 0, velocityMultiplier: dist / particleRange * 1.5f,
+                    item.CurrentHull, particleAngle, particleEmitter.Prefab.Properties.CopyEntityAngle ? -particleAngle : 0, velocityMultiplier: dist / particleRange * 1.5f,
                     colorMultiplier: new Color(color.R, color.G, color.B, (byte)255));
             }
         }

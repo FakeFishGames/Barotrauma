@@ -50,20 +50,23 @@ namespace Barotrauma
         Corpses,
         WreckAIConfig,
         UpgradeModules,
-        MapCreature
+        MapCreature,
+        EnemySubmarine,
+        Talents,
+        TalentTrees,
     }
 
     public class ContentPackage
     {
         public static string Folder = "Data/ContentPackages/";
 
-        private static List<ContentPackage> regularPackages = new List<ContentPackage>();
+        private static readonly List<ContentPackage> regularPackages = new List<ContentPackage>();
         public static IReadOnlyList<ContentPackage> RegularPackages
         {
             get { return regularPackages; }
         }
 
-        private static List<ContentPackage> corePackages = new List<ContentPackage>();
+        private static readonly List<ContentPackage> corePackages = new List<ContentPackage>();
         public static IReadOnlyList<ContentPackage> CorePackages
         {
             get { return corePackages; }
@@ -101,11 +104,13 @@ namespace Barotrauma
             ContentType.Orders,
             ContentType.Corpses,
             ContentType.UpgradeModules,
-            ContentType.MapCreature
+            ContentType.MapCreature,
+            ContentType.EnemySubmarine,
+            ContentType.Talents,
         };
 
         //at least one file of each these types is required in core content packages
-        private static HashSet<ContentType> corePackageRequiredFiles = new HashSet<ContentType>
+        private static readonly HashSet<ContentType> corePackageRequiredFiles = new HashSet<ContentType>
         {
             ContentType.Jobs,
             ContentType.Item,
@@ -132,7 +137,9 @@ namespace Barotrauma
             ContentType.EventManagerSettings,
             ContentType.Orders,
             ContentType.Corpses,
-            ContentType.UpgradeModules
+            ContentType.UpgradeModules,
+            ContentType.EnemySubmarine,
+            ContentType.Talents,
         };
 
         public static IEnumerable<ContentType> CorePackageRequiredFiles
@@ -141,8 +148,8 @@ namespace Barotrauma
         }
 
         public static bool IngameModSwap = false;
-        
-        public string Name { get; set; }
+
+        public string Name { get; set; } = string.Empty;
 
         public string Path
         {
@@ -191,13 +198,13 @@ namespace Barotrauma
                 isCorePackage = value;
                 if (isCorePackage && regularPackages.Contains(this))
                 {
-                    corePackages.Add(this);
-                    regularPackages.Remove(this);
+                    corePackages.AddOnMainThread(this);
+                    regularPackages.RemoveOnMainThread(this);
                 }
                 else if (!isCorePackage && corePackages.Contains(this))
                 {
-                    regularPackages.Add(this);
-                    corePackages.Remove(this);
+                    regularPackages.AddOnMainThread(this);
+                    corePackages.RemoveOnMainThread(this);
                 }
             }
         }
@@ -208,10 +215,9 @@ namespace Barotrauma
         }
 
 
-        private List<ContentFile> files;
-        private List<ContentFile> filesToAdd;
-        private List<ContentFile> filesToRemove;
-
+        private readonly List<ContentFile> files;
+        private readonly List<ContentFile> filesToAdd;
+        private readonly List<ContentFile> filesToRemove;
 
         public IReadOnlyList<ContentFile> Files
         {
@@ -238,6 +244,12 @@ namespace Barotrauma
             get { return Files.Any(f => MultiplayerIncompatibleContent.Contains(f.Type)); }
         }
 
+        public bool IsCorrupt
+        {
+            get;
+            private set;
+        }
+
         private ContentPackage()
         {
             files = new List<ContentFile>();
@@ -256,7 +268,8 @@ namespace Barotrauma
 
             if (doc?.Root == null)
             {
-                DebugConsole.ThrowError("Couldn't load content package \"" + filePath + "\"!");
+                DebugConsole.ThrowError("Couldn't load content package \"" + filePath + "\"!"); 
+                IsCorrupt = true;
                 return;
             }
 
@@ -269,7 +282,16 @@ namespace Barotrauma
             {
                 SteamWorkshopId = SteamManager.GetWorkshopItemIDFromUrl(workshopUrl);
             }
-            GameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
+            string versionStr = doc.Root.GetAttributeString("gameversion", "0.0.0.0");
+            try
+            {
+                GameVersion = new Version(versionStr);
+            }
+            catch
+            {
+                DebugConsole.ThrowError($"Invalid version number in content package \"{Name}\" ({versionStr}).");
+                GameVersion = GameMain.Version;
+            }
             if (doc.Root.Attribute("installtime") != null)
             {
                 InstallTime = ToolBox.Epoch.ToDateTime(doc.Root.GetAttributeUInt("installtime", 0));
@@ -393,11 +415,14 @@ namespace Barotrauma
                     case ContentType.Submarine:
                     case ContentType.Wreck:
                     case ContentType.BeaconStation:
+                    case ContentType.EnemySubmarine:
                         break;
                     default:
                         try
                         {
-                            XDocument.Load(file.Path);
+                            using FileStream stream = File.Open(file.Path, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                            using var reader = XMLExtensions.CreateReader(stream);
+                            XDocument.Load(reader);
                         }
                         catch (Exception e)
                         {
@@ -510,7 +535,7 @@ namespace Barotrauma
                         {
                             refreshFiles = true;
                         }
-                        corePackages.Remove(p);
+                        corePackages.RemoveOnMainThread(p);
                     }
                     else
                     {
@@ -518,16 +543,16 @@ namespace Barotrauma
                         {
                             refreshFiles = true;
                         }
-                        regularPackages.Remove(p);
+                        regularPackages.RemoveOnMainThread(p);
                     }
                 }
                 if (IsCorePackage)
                 {
-                    corePackages.Add(this);
+                    corePackages.AddOnMainThread(this);
                 }
                 else
                 {
-                    regularPackages.Add(this);
+                    regularPackages.AddOnMainThread(this);
                 }
 
                 if (refreshFiles)
@@ -593,7 +618,8 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error while calculating content package hash: ", e);
+                    DebugConsole.ThrowError($"Error while calculating the MD5 hash of the content package \"{Name}\" (file path: {Path}). The content package may be corrupted. You may want to delete or reinstall the package.", e);
+                    break;
                 }             
             }
             
@@ -621,14 +647,12 @@ namespace Barotrauma
                 {
                     case ContentType.Character:
                         XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                        var rootElement = doc.Root;
-                        var element = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
-                        var ragdollFolder = RagdollParams.GetFolder(doc, file.Path).CleanUpPathCrossPlatform(true);
+                        var ragdollFolder = RagdollParams.GetFolder(doc, file.Path);
                         if (Directory.Exists(ragdollFolder))
                         {
                             Directory.GetFiles(ragdollFolder, "*.xml").ForEach(f => filePaths.Add(f));
                         }
-                        var animationFolder = AnimationParams.GetFolder(doc, file.Path).CleanUpPathCrossPlatform(true);
+                        var animationFolder = AnimationParams.GetFolder(doc, file.Path);
                         if (Directory.Exists(animationFolder))
                         {
                             Directory.GetFiles(animationFolder, "*.xml").ForEach(f => filePaths.Add(f));
@@ -726,18 +750,18 @@ namespace Barotrauma
             }
             if (newPackage.IsCorePackage) 
             { 
-                corePackages.Add(newPackage); 
+                corePackages.AddOnMainThread(newPackage); 
             }
             else 
             { 
-                regularPackages.Add(newPackage); 
+                regularPackages.AddOnMainThread(newPackage); 
             }
         }
 
         public static void RemovePackage(ContentPackage package)
         {
-            if (package.IsCorePackage) { corePackages.Remove(package); }
-            else { regularPackages.Remove(package); }
+            if (package.IsCorePackage) { corePackages.RemoveOnMainThread(package); }
+            else { regularPackages.RemoveOnMainThread(package); }
         }
 
         public static void LoadAll()
@@ -758,13 +782,14 @@ namespace Barotrauma
 
             IEnumerable<string> files = Directory.GetFiles(folder, "*.xml");
 
-            corePackages.Clear();
+            corePackages.ClearOnMainThread();
             var prevRegularPackages = regularPackages.Select(p => p.Name.ToLowerInvariant()).ToList();
-            regularPackages.Clear();
+            regularPackages.ClearOnMainThread();
 
             foreach (string filePath in files)
             {
-                AddPackage(new ContentPackage(filePath));
+                var newPackage = new ContentPackage(filePath);
+                if (!newPackage.IsCorrupt) { AddPackage(newPackage); }
             }
 
             IEnumerable<string> modDirectories = Directory.GetDirectories("Mods");
@@ -780,21 +805,25 @@ namespace Barotrauma
                 }
                 else if (File.Exists(modFilePath))
                 {
-                    AddPackage(new ContentPackage(modFilePath));
+                    var newPackage = new ContentPackage(modFilePath);
+                    if (!newPackage.IsCorrupt)
+                    {
+                        AddPackage(newPackage);
+                    }
                 }
             }
             SortContentPackages(p => prevRegularPackages.IndexOf(p.Name.ToLowerInvariant()));
             GameMain.Config?.SortContentPackages();
         }
 
-        public static void SortContentPackages<T>(Func<ContentPackage, T> order, bool refreshAll = false)
+        public static void SortContentPackages<T>(Func<ContentPackage, T> order, bool refreshAll = false, GameSettings config = null)
         {
             var ordered = regularPackages
                 .OrderBy(p => order(p))
                 .ThenBy(p => regularPackages.IndexOf(p))
                 .ToList();
-            regularPackages.Clear(); regularPackages.AddRange(ordered);
-            GameMain.Config?.SortContentPackages(refreshAll);
+            regularPackages.ClearOnMainThread(); regularPackages.AddRangeOnMainThread(ordered);
+            (config ?? GameMain.Config)?.SortContentPackages(refreshAll);
         }
 
         public void Delete()
@@ -803,12 +832,12 @@ namespace Barotrauma
             {
                 if (IsCorePackage)
                 {
-                    corePackages.Remove(this);
+                    corePackages.RemoveOnMainThread(this);
                     if (GameMain.Config.CurrentCorePackage == this) { GameMain.Config.AutoSelectCorePackage(null); }
                 }
                 else
                 {
-                    regularPackages.Remove(this);
+                    regularPackages.RemoveOnMainThread(this);
                     if (GameMain.Config.EnabledRegularPackages.Contains(this)) { GameMain.Config.DisableRegularPackage(this); }
                 }
                 GameMain.Config.SaveNewPlayerConfig();

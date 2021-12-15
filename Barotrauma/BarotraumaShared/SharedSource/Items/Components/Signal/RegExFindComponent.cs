@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -17,13 +18,38 @@ namespace Barotrauma.Items.Components
 
         private bool nonContinuousOutputSent;
 
+        private int maxOutputLength;
+        [Editable, Serialize(200, false, description: "The maximum length of the output string. Warning: Large values can lead to large memory usage or networking issues.")]
+        public int MaxOutputLength
+        {
+            get { return maxOutputLength; }
+            set
+            {
+                maxOutputLength = Math.Max(value, 0);
+            }
+        }
+
+        private string output;
+
         [InGameEditable, Serialize("1", true, description: "The signal this item outputs when the received signal matches the regular expression.", alwaysUseInstanceValues: true)]
-        public string Output { get; set; }
+        public string Output 
+        {
+            get { return output; }
+            set
+            {
+                if (value == null) { return; }
+                output = value;
+                if (output.Length > MaxOutputLength && (item.Submarine == null || !item.Submarine.Loading))
+                {
+                    output = output.Substring(0, MaxOutputLength);
+                }
+            }
+        }
 
         [InGameEditable, Serialize(false, true, description: "Should the component output a value of a capture group instead of a constant signal.", alwaysUseInstanceValues: true)]
         public bool UseCaptureGroup { get; set; }
 
-        [Serialize("0", true, description: "The signal this item outputs when the received signal does not match the regular expression.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("0", true, description: "The signal this item outputs when the received signal does not match the regular expression.", alwaysUseInstanceValues: true)]
         public string FalseOutput { get; set; }
 
         [InGameEditable, Serialize(true, true, description: "Should the component keep sending the output even after it stops receiving a signal, or only send an output when it receives a signal.", alwaysUseInstanceValues: true)]
@@ -46,7 +72,6 @@ namespace Barotrauma.Items.Components
 
                 catch
                 {
-                    item.SendSignal(0, "ERROR", "signal_out", null);
                     return;
                 }
             }
@@ -55,26 +80,28 @@ namespace Barotrauma.Items.Components
         public RegExFindComponent(Item item, XElement element)
             : base(item, element)
         {
+            nonContinuousOutputSent = true;
             IsActive = true;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (string.IsNullOrWhiteSpace(expression) || regex == null) return;
+            if (string.IsNullOrWhiteSpace(expression) || regex == null) { return; }
+            if (!ContinuousOutput && nonContinuousOutputSent) { return; }
 
             if (receivedSignal != previousReceivedSignal && receivedSignal != null)
             {
                 try
                 {
                     Match match = regex.Match(receivedSignal);
-                    previousResult =  match.Success;
+                    previousResult = match.Success;
                     previousGroups = UseCaptureGroup && previousResult ? match.Groups : null;
                     previousReceivedSignal = receivedSignal;
 
                 }
                 catch
                 {
-                    item.SendSignal(0, "ERROR", "signal_out", null);
+                    item.SendSignal("ERROR", "signal_out");
                     previousResult = false;
                     return;
                 }
@@ -106,25 +133,25 @@ namespace Barotrauma.Items.Components
 
             if (ContinuousOutput)
             {
-                if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(0, signalOut, "signal_out", null); }
+                if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(signalOut, "signal_out"); }
             }
-            else if (!nonContinuousOutputSent)
+            else
             {
-                if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(0, signalOut, "signal_out", null); }
+                if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(signalOut, "signal_out"); }
                 nonContinuousOutputSent = true;
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "signal_in":
-                    receivedSignal = signal;
+                    receivedSignal = signal.value;
                     nonContinuousOutputSent = false;
                     break;
                 case "set_output":
-                    Output = signal;
+                    Output = signal.value;
                     break;
             }
         }

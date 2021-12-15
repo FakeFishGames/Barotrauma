@@ -110,12 +110,7 @@ namespace Barotrauma.Networking
 
             if (frame == null) { return; }
 
-            var previewContainer =  new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.98f), frame.RectTransform, Anchor.Center))
-            {
-                Stretch = true
-            };
-
-            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), previewContainer.RectTransform, Anchor.CenterLeft), ServerName, font: GUI.LargeFont)
+            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform), ServerName, font: GUI.LargeFont)
             {
                 ToolTip = ServerName
             };
@@ -141,27 +136,30 @@ namespace Barotrauma.Networking
                 }
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), previewContainer.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform),
                 TextManager.AddPunctuation(':', TextManager.Get("ServerListVersion"), string.IsNullOrEmpty(GameVersion) ? TextManager.Get("Unknown") : GameVersion));
 
-            bool hidePlaystyleBanner = previewContainer.Rect.Height < 380 || !PlayStyle.HasValue;
+            bool hidePlaystyleBanner = !PlayStyle.HasValue;
             if (!hidePlaystyleBanner)
             {
                 PlayStyle playStyle = PlayStyle ?? Networking.PlayStyle.Serious;
                 Sprite playStyleBannerSprite = ServerListScreen.PlayStyleBanners[(int)playStyle];
                 float playStyleBannerAspectRatio = playStyleBannerSprite.SourceRect.Width / playStyleBannerSprite.SourceRect.Height;
-                var playStyleBanner = new GUIImage(new RectTransform(new Point(previewContainer.Rect.Width, (int)(previewContainer.Rect.Width / playStyleBannerAspectRatio)), previewContainer.RectTransform),
+                var playStyleBanner = new GUIImage(new RectTransform(new Point(frame.Rect.Width, (int)(frame.Rect.Width / playStyleBannerAspectRatio)), frame.RectTransform),
                                                    playStyleBannerSprite, null, true);
 
-                var playStyleName = new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.0f), playStyleBanner.RectTransform) { RelativeOffset = new Vector2(0.01f, 0.06f) },
+                var playStyleName = new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.0f), playStyleBanner.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.06f) },
                     TextManager.AddPunctuation(':', TextManager.Get("serverplaystyle"), TextManager.Get("servertag."+ playStyle)), textColor: Color.White, 
                     font: GUI.SmallFont, textAlignment: Alignment.Center, 
                     color: ServerListScreen.PlayStyleColors[(int)playStyle], style: "GUISlopedHeader");
                 playStyleName.RectTransform.NonScaledSize = (playStyleName.Font.MeasureString(playStyleName.Text) + new Vector2(20, 5) * GUI.Scale).ToPoint();
                 playStyleName.RectTransform.IsFixedSize = true;
             }
+            var serverType = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform),
+                TextManager.Get((OwnerID != 0 || LobbyID != 0) ? "SteamP2PServer" : "DedicatedServer"), textAlignment: Alignment.TopLeft);
+            serverType.RectTransform.MinSize = new Point(0, (int)(serverType.Rect.Height * 1.5f));
 
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), previewContainer.RectTransform))
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), frame.RectTransform))
             {
                 Stretch = true
             };
@@ -271,7 +269,6 @@ namespace Barotrauma.Networking
             else
                 usingWhiteList.Selected = UsingWhiteList.Value;
 
-
             content.RectTransform.SizeChanged += () =>
             {
                 GUITextBlock.AutoScaleAndNormalize(allowSpectating.TextBlock, allowRespawn.TextBlock, usingWhiteList.TextBlock);
@@ -280,7 +277,7 @@ namespace Barotrauma.Networking
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform),
                 TextManager.Get("ServerListContentPackages"), textAlignment: Alignment.Center, font: GUI.SubHeadingFont);
 
-            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), content.RectTransform)) { ScrollBarVisible = true };
+            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), frame.RectTransform)) { ScrollBarVisible = true };
             if (ContentPackageNames.Count == 0)
             {
                 new GUITextBlock(new RectTransform(Vector2.One, contentPackageList.Content.RectTransform), TextManager.Get("Unknown"), textAlignment: Alignment.Center)
@@ -295,7 +292,7 @@ namespace Barotrauma.Networking
                     var packageText = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.15f), contentPackageList.Content.RectTransform) { MinSize = new Point(0, 15) },
                         ContentPackageNames[i])
                     {
-                        Enabled = false
+                        CanBeFocused = false
                     };
                     if (i < ContentPackageHashes.Count)
                     {
@@ -308,7 +305,7 @@ namespace Barotrauma.Networking
                         //workshop download link found
                         if (i < ContentPackageWorkshopIds.Count && ContentPackageWorkshopIds[i] != 0)
                         {
-                            packageText.TextColor = Color.Yellow;
+                            packageText.TextColor = GUI.Style.Yellow;
                             packageText.ToolTip = TextManager.GetWithVariable("ServerListIncompatibleContentPackageWorkshopAvailable", "[contentpackage]", ContentPackageNames[i]);
                         }
                         else //no package or workshop download link found, tough luck
@@ -552,6 +549,11 @@ namespace Barotrauma.Networking
                 other.OwnerID == OwnerID &&
                 (other.LobbyID == LobbyID || other.LobbyID == 0 || LobbyID == 0) &&
                 ((OwnerID == 0) ? (other.IP == IP && other.Port == Port) : true);
+        }
+
+        public bool MatchesByEndpoint(ServerInfo other)
+        {
+            return OwnerID == other.OwnerID && (OwnerID != 0 ? true : (IP == other.IP && Port == other.Port));
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -42,8 +43,8 @@ namespace Barotrauma
             }
         }
 
-        public SalvageMission(MissionPrefab prefab, Location[] locations)
-            : base(prefab, locations)
+        public SalvageMission(MissionPrefab prefab, Location[] locations, Submarine sub)
+            : base(prefab, locations, sub)
         {
             containerTag = prefab.ConfigElement.GetAttributeString("containertag", "");
 
@@ -101,7 +102,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Start(Level level)
+        protected override void StartMissionSpecific(Level level)
         {
 #if SERVER
             originalInventoryID = Entity.NullEntityID;
@@ -125,12 +126,12 @@ namespace Barotrauma
                             item = suitableItems.FirstOrDefault(it => Vector2.DistanceSquared(it.WorldPosition, position) < 1000.0f);
                             break;
                         case Level.PositionType.Ruin:
-                            item = suitableItems.FirstOrDefault(it => it.ParentRuin != null && it.ParentRuin.Area.Contains(position));
-                            break;
                         case Level.PositionType.Wreck:
                             foreach (Item it in suitableItems)
                             {
-                                if (it.Submarine == null || it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
+                                if (it.Submarine?.Info == null) { continue; }
+                                if (spawnPositionType == Level.PositionType.Ruin && it.Submarine.Info.Type != SubmarineType.Ruin) { continue; }
+                                if (spawnPositionType == Level.PositionType.Wreck && it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
                                 Rectangle worldBorders = it.Submarine.Borders;
                                 worldBorders.Location += it.Submarine.WorldPosition.ToPoint();
                                 if (Submarine.RectContains(worldBorders, it.WorldPosition))
@@ -168,39 +169,43 @@ namespace Barotrauma
                 //try to find a container and place the item inside it
                 if (!string.IsNullOrEmpty(containerTag) && item.ParentInventory == null)
                 {
+                    List<ItemContainer> validContainers = new List<ItemContainer>();
                     foreach (Item it in Item.ItemList)
                     {
                         if (!it.HasTag(containerTag)) { continue; }
-                        if (it.NonInteractable) { continue; }
+                        if (!it.IsPlayerTeamInteractable) { continue; }
                         switch (spawnPositionType)
                         {
                             case Level.PositionType.Cave:
                             case Level.PositionType.MainPath:
-                                if (it.Submarine != null || it.ParentRuin != null) { continue; }
+                                if (it.Submarine != null) { continue; }
                                 break;
                             case Level.PositionType.Ruin:
-                                if (it.ParentRuin == null) { continue; }
+                                if (it.Submarine?.Info == null || !it.Submarine.Info.IsRuin) { continue; }
                                 break;
                             case Level.PositionType.Wreck:
                                 if (it.Submarine == null || it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
                                 break;
                         }
-                        var itemContainer = it.GetComponent<Items.Components.ItemContainer>();
-                        if (itemContainer == null) { continue; }
-                        if (itemContainer.Combine(item, user: null)) 
+                        var itemContainer = it.GetComponent<ItemContainer>();
+                        if (itemContainer != null && itemContainer.Inventory.CanBePut(item)) { validContainers.Add(itemContainer); }
+                    }
+                    if (validContainers.Any())
+                    {
+                        var selectedContainer = validContainers.GetRandom();
+                        if (selectedContainer.Combine(item, user: null))
                         {
 #if SERVER
-                            originalInventoryID = it.ID;
-                            originalItemContainerIndex = (byte)it.GetComponentIndex(itemContainer);
+                            originalInventoryID = selectedContainer.Item.ID;
+                            originalItemContainerIndex = (byte)selectedContainer.Item.GetComponentIndex(selectedContainer);
 #endif
-                            break; 
                         } // Placement successful
                     }
                 }
             }
         }
 
-        public override void Update(float deltaTime)
+        protected override void UpdateMissionSpecific(float deltaTime)
         {
             if (item == null)
             {
@@ -234,7 +239,7 @@ namespace Barotrauma
                     State = 1;
                     break;
                 case 1:
-                    if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition) { return; }
+                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) { return; }
                     State = 2;
                     break;
             }
@@ -242,10 +247,15 @@ namespace Barotrauma
 
         public override void End()
         {
-            var root = item.GetRootContainer() ?? item;
-            if (root.CurrentHull?.Submarine == null || (!root.CurrentHull.Submarine.AtEndPosition && !root.CurrentHull.Submarine.AtStartPosition) || item.Removed) 
+            var root = item?.GetRootContainer() ?? item;
+            if (root?.CurrentHull?.Submarine == null || (!root.CurrentHull.Submarine.AtEndExit && !root.CurrentHull.Submarine.AtStartExit) || item.Removed) 
             { 
                 return; 
+            }
+
+            if (Prefab.LocationTypeChangeOnCompleted != null)
+            {
+                ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
             }
 
             item?.Remove();

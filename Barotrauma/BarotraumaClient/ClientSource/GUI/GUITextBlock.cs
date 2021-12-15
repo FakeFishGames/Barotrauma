@@ -240,28 +240,34 @@ namespace Barotrauma
 
         public class StrikethroughSettings
         {
-            private Color color = GUI.Style.Red;
+            public Color Color { get; set; } = GUI.Style.Red;
             private int thickness;
             private int expand;
 
             public StrikethroughSettings(Color? color = null, int thickness = 1, int expand = 0)
             {
-                if (color != null) this.color = color.Value;
+                if (color != null) { Color = color.Value; }
                 this.thickness = thickness;
                 this.expand = expand;
             }
 
             public void Draw(SpriteBatch spriteBatch, float textSizeHalf, float xPos, float yPos)
             {
-                ShapeExtensions.DrawLine(spriteBatch, new Vector2(xPos - textSizeHalf - expand, yPos), new Vector2(xPos + textSizeHalf + expand, yPos), color, thickness);
+                ShapeExtensions.DrawLine(spriteBatch, new Vector2(xPos - textSizeHalf - expand, yPos), new Vector2(xPos + textSizeHalf + expand, yPos), Color, thickness);
             }
         }
 
         public StrikethroughSettings Strikethrough = null;
 
-        private readonly List<RichTextData> richTextData = null;
+        public List<RichTextData> RichTextData
+        {
+            get;
+            private set;
+        }
 
-        private readonly bool hasColorHighlight = false;
+        public bool HasColorHighlight => RichTextData != null;
+
+        public bool OverrideRichTextDataAlpha = true;
 
         public struct ClickableArea
         {
@@ -279,7 +285,8 @@ namespace Barotrauma
         /// If the rectT height is set 0, the height is calculated from the text.
         /// </summary>
         public GUITextBlock(RectTransform rectT, string text, Color? textColor = null, ScalableFont font = null, 
-            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool playerInput = false) 
+            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null,
+            bool playerInput = false, bool parseRichText = false) 
             : base(style, rectT)
         {
             if (color.HasValue)
@@ -289,7 +296,12 @@ namespace Barotrauma
             if (textColor.HasValue)
             {
                 OverrideTextColor(textColor.Value);
-            }            
+            }
+
+            if (parseRichText)
+            {
+                RichTextData = Barotrauma.RichTextData.GetRichTextData(text, out text);
+            }
 
             //if the text is in chinese/korean/japanese and we're not using a CJK-compatible font,
             //use the default CJK font as a fallback
@@ -318,14 +330,19 @@ namespace Barotrauma
         public GUITextBlock(RectTransform rectT, List<RichTextData> richTextData, string text, Color? textColor = null, ScalableFont font = null, Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool playerInput = false)
         : this(rectT, text, textColor, font, textAlignment, wrap, style, color, playerInput)
         {
-            this.richTextData = richTextData;
-            hasColorHighlight = richTextData != null;
+            this.RichTextData = richTextData;
         }
 
         public void CalculateHeightFromText(int padding = 0, bool removeExtraSpacing = false)
         {
             if (wrappedText == null) { return; }
             RectTransform.Resize(new Point(RectTransform.Rect.Width, (int)Font.MeasureString(wrappedText, removeExtraSpacing).Y + padding));
+        }
+
+        public void SetRichText(string richText)
+        {
+            RichTextData = Barotrauma.RichTextData.GetRichTextData(richText, out string sanitizedText);
+            Text = sanitizedText;
         }
         
         public override void ApplyStyle(GUIComponentStyle componentStyle)
@@ -478,7 +495,7 @@ namespace Barotrauma
                     for (int j = 0; j <= line.Length; j++)
                     {
                         Vector2 lineTextSize = Font.MeasureString(line.Substring(0, j)) * textScale;
-                        Vector2 indexPos = new Vector2(lineTextSize.X + Padding.X, totalTextHeight + Padding.Y - halfHeight);
+                        Vector2 indexPos = new Vector2(lineTextSize.X, totalTextHeight - halfHeight) + TextPos - Origin * textScale;
                         //DebugConsole.NewMessage($"index: {index}, pos: {indexPos}", Color.AliceBlue);
                         positions.Add(new Tuple<Vector2, int>(indexPos, index + j));
                     }
@@ -491,7 +508,7 @@ namespace Barotrauma
                 for (int i = 0; i <= Text.Length; i++)
                 {
                     Vector2 textSize = Font.MeasureString(textDrawn.Substring(0, i)) * textScale;
-                    Vector2 indexPos = new Vector2(textSize.X + Padding.X, textSize.Y + Padding.Y - halfHeight) + TextPos - Origin * textScale;
+                    Vector2 indexPos = new Vector2(textSize.X, textSize.Y - halfHeight) + TextPos - Origin * textScale;
                     //DebugConsole.NewMessage($"index: {i}, pos: {indexPos}", Color.WhiteSmoke);
                     positions.Add(new Tuple<Vector2, int>(indexPos, i));
                 }
@@ -568,8 +585,9 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
 
-            if (ClickableAreas.Any() && (GUI.MouseOn?.IsParentOf(this) ?? true) && Rect.Contains(PlayerInput.MousePosition))
+            if (ClickableAreas.Any() && (GUI.MouseOn?.IsParentOf(this) ?? true))
             {
+                if (!Rect.Contains(PlayerInput.MousePosition)) { return; }
                 int index = GetCaretIndexFromScreenPos(PlayerInput.MousePosition);
                 foreach (ClickableArea clickableArea in ClickableAreas)
                 {
@@ -627,7 +645,7 @@ namespace Barotrauma
                     currentTextColor = selectedTextColor;
                 }
 
-                if (!hasColorHighlight)
+                if (!HasColorHighlight)
                 {
                     string textToShow = Censor ? censoredText : (Wrap ? wrappedText : text);
                     Color colorToShow = currentTextColor * (currentTextColor.A / 255.0f);
@@ -639,18 +657,18 @@ namespace Barotrauma
                     }
 
                     Font.DrawString(spriteBatch, textToShow, pos, colorToShow, 0.0f, origin, TextScale, SpriteEffects.None, textDepth);
-
                 }
                 else
                 {
+                    if (OverrideRichTextDataAlpha)
+                    {
+                        RichTextData.ForEach(rt => rt.Alpha = currentTextColor.A / 255.0f);
+                    }
                     Font.DrawStringWithColors(spriteBatch, Censor ? censoredText : (Wrap ? wrappedText : text), pos,
-                        currentTextColor * (currentTextColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, richTextData);
+                        currentTextColor * (currentTextColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, RichTextData);
                 }
 
-                if (Strikethrough != null)
-                {
-                    Strikethrough.Draw(spriteBatch, (int)Math.Ceiling(TextSize.X / 2f), pos.X, ForceUpperCase ? pos.Y : pos.Y + GUI.Scale * 2f);
-                }
+                Strikethrough?.Draw(spriteBatch, (int)Math.Ceiling(TextSize.X / 2f), pos.X, ForceUpperCase ? pos.Y : pos.Y + GUI.Scale * 2f);
             }
 
             if (overflowClipActive)

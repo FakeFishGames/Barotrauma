@@ -7,10 +7,15 @@ namespace Barotrauma.Items.Components
 {
     partial class MiniMap : Powered
     {
-        class HullData
+        internal class HullData
         {
-            public float? Oxygen;
-            public float? Water;
+            public float? HullOxygenAmount,
+                          HullWaterAmount;
+
+            public float? ReceivedOxygenAmount,
+                          ReceivedWaterAmount;
+
+            public readonly HashSet<IdCard> Cards = new HashSet<IdCard>();
 
             public bool Distort;
             public float DistortionTimer;
@@ -45,17 +50,38 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize(true, true, description: "Enable hull status mode.")]
+        public bool EnableHullStatus
+        {
+            get;
+            set;
+        }
+
+        [Editable, Serialize(true, true, description: "Enable electrical view mode.")]
+        public bool EnableElectricalView
+        {
+            get;
+            set;
+        }
+
+        [Editable, Serialize(true, true, description: "Enable item finder mode.")]
+        public bool EnableItemFinder
+        {
+            get;
+            set;
+        }
+
         public MiniMap(Item item, XElement element)
             : base(item, element)
         {
             IsActive = true;
             hullDatas = new Dictionary<Hull, HullData>();
-            InitProjSpecific(element);
+            InitProjSpecific();
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific();
 
-        public override void Update(float deltaTime, Camera cam) 
+        public override void Update(float deltaTime, Camera cam)
         {
             //periodically reset all hull data
             //(so that outdated hull info won't be shown if detectors stop sending signals)
@@ -65,12 +91,28 @@ namespace Barotrauma.Items.Components
                 {
                     if (!hullData.Distort)
                     {
-                        hullData.Oxygen = null;
-                        hullData.Water = null;
+                        hullData.ReceivedOxygenAmount = null;
+                        hullData.ReceivedWaterAmount = null;
                     }
                 }
                 resetDataTime = DateTime.Now + new TimeSpan(0, 0, 1);
             }
+
+#if CLIENT
+            if (cardRefreshTimer > cardRefreshDelay)
+            {
+                if (item.Submarine is { } sub)
+                {
+                    UpdateIDCards(sub);
+                }
+
+                cardRefreshTimer = 0;
+            }
+            else
+            {
+                cardRefreshTimer += deltaTime;
+            }
+#endif
 
             currPowerConsumption = powerConsumption;
             currPowerConsumption *= MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
@@ -81,14 +123,15 @@ namespace Barotrauma.Items.Components
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }
         }
-        
+
         public override bool Pick(Character picker)
         {
             return picker != null;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
+            Item source = signal.source;
             if (source == null || source.CurrentHull == null) { return; }
 
             Hull sourceHull = source.CurrentHull;
@@ -98,30 +141,49 @@ namespace Barotrauma.Items.Components
                 hullDatas.Add(sourceHull, hullData);
             }
 
-            if (hullData.Distort) return;
+            if (hullData.Distort) { return; }
 
             switch (connection.Name)
             {
                 case "water_data_in":
                     //cheating a bit because water detectors don't actually send the water level
+                    float waterAmount;
                     if (source.GetComponent<WaterDetector>() == null)
                     {
-                        hullData.Water = Rand.Range(0.0f, 1.0f);
+                        waterAmount = Rand.Range(0.0f, 1.0f);
                     }
                     else
                     {
-                        hullData.Water = Math.Min(sourceHull.WaterVolume / sourceHull.Volume, 1.0f);
+                        waterAmount = Math.Min(sourceHull.WaterVolume / sourceHull.Volume, 1.0f);
+                    }
+                    hullData.ReceivedWaterAmount = waterAmount;
+                    foreach (var linked in sourceHull.linkedTo)
+                    {
+                        if (!(linked is Hull linkedHull)) { continue; }
+                        if (!hullDatas.TryGetValue(linkedHull, out HullData linkedHullData))
+                        {
+                            linkedHullData = new HullData();
+                            hullDatas.Add(linkedHull, linkedHullData);
+                        }
+                        linkedHullData.ReceivedWaterAmount = waterAmount;
                     }
                     break;
                 case "oxygen_data_in":
-                    float oxy;
-
-                    if (!float.TryParse(signal, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out oxy))
+                    if (!float.TryParse(signal.value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float oxy))
                     {
                         oxy = Rand.Range(0.0f, 100.0f);
                     }
-
-                    hullData.Oxygen = oxy;
+                    hullData.ReceivedOxygenAmount = oxy;
+                    foreach (var linked in sourceHull.linkedTo)
+                    {
+                        if (!(linked is Hull linkedHull)) { continue; }
+                        if (!hullDatas.TryGetValue(linkedHull, out HullData linkedHullData))
+                        {
+                            linkedHullData = new HullData();
+                            hullDatas.Add(linkedHull, linkedHullData);
+                        }
+                        linkedHullData.ReceivedOxygenAmount = oxy;
+                    }
                     break;
             }
         }

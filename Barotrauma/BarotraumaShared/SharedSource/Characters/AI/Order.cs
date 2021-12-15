@@ -19,27 +19,62 @@ namespace Barotrauma
 
     struct OrderInfo
     {
-        public string ComponentIdentifier { get; set; }
-        public Order Order { get; private set; }
-        public string OrderOption { get; private set; }
+        public Order Order { get; }
+        public string OrderOption { get; }
+        public int ManualPriority { get; }
+        public OrderType Type { get; }
+        public AIObjective Objective { get; }
+        public bool IsCurrentOrder => Type == OrderType.Current;
 
-        public OrderInfo(Order order, string orderOption)
+        public enum OrderType
         {
-            ComponentIdentifier = "currentorder";
+            Current,
+            Previous
+        }
+
+        private OrderInfo(Order order, string orderOption, int manualPriority, OrderType orderType, AIObjective objective)
+        {
             Order = order;
             OrderOption = orderOption;
+            ManualPriority = Math.Min(manualPriority, CharacterInfo.HighestManualOrderPriority);
+            Type = orderType;
+            Objective = objective;
         }
 
-        public OrderInfo(OrderInfo orderInfo)
-        {
-            ComponentIdentifier = "previousorder";
-            Order = orderInfo.Order;
-            OrderOption = orderInfo.OrderOption;
-        }
+        public OrderInfo(Order order, string orderOption, int manualPriority) : this(order, orderOption, manualPriority, OrderType.Current, null) { }
+
+        public OrderInfo(Order order, string orderOption, int manualPriority, AIObjective objective) : this(order, orderOption, manualPriority, OrderType.Current, objective) { }
+
+        public OrderInfo(OrderInfo orderInfo, int manualPriority) : this(orderInfo.Order, orderInfo.OrderOption, manualPriority, orderInfo.Type, orderInfo.Objective) { }
+
+        public OrderInfo(OrderInfo orderInfo, OrderType type) : this(orderInfo.Order, orderInfo.OrderOption, orderInfo.ManualPriority, type, orderInfo.Objective) { }
+
+        public bool MatchesOrder(string orderIdentifier, string orderOption) =>
+            (orderIdentifier == Order?.Identifier || (string.IsNullOrEmpty(orderIdentifier) && string.IsNullOrEmpty(Order?.Identifier))) &&
+            (orderOption == OrderOption || (string.IsNullOrEmpty(orderOption) && string.IsNullOrEmpty(OrderOption)));
 
         public bool MatchesOrder(Order order, string option) =>
-            order.Identifier == Order.Identifier &&
-            option == OrderOption;
+            MatchesOrder(order?.Identifier, option);
+
+        public bool MatchesOrder(OrderInfo orderInfo) =>
+            MatchesOrder(orderInfo.Order?.Identifier, orderInfo.OrderOption);
+
+        public bool MatchesDismissedOrder(string dismissOrderOption)
+        {
+            string[] dismissedOrder = dismissOrderOption?.Split('.');
+            if (dismissedOrder != null && dismissedOrder.Length > 0)
+            {
+                string dismissedOrderIdentifier = dismissedOrder.Length > 0 ? dismissedOrder[0] : null;
+                if (dismissedOrderIdentifier == null || dismissedOrderIdentifier != Order?.Identifier) { return false; }
+                string dismissedOrderOption = dismissedOrder.Length > 1 ? dismissedOrder[1] : null;
+                if (dismissedOrderOption == null && string.IsNullOrEmpty(OrderOption)) { return true; }
+                return dismissedOrderOption == OrderOption;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 
     class Order
@@ -59,6 +94,10 @@ namespace Barotrauma
         public Order Prefab { get; private set; }
 
         public readonly string Name;
+        /// <summary>
+        /// Name that can be used with the contextual version of the order
+        /// </summary>
+        public readonly string ContextualName;
 
         public readonly Sprite SymbolSprite;
 
@@ -97,12 +136,12 @@ namespace Barotrauma
         public bool TargetAllCharacters { get; }
         public bool IsReport => TargetAllCharacters && !MustSetTarget;
 
-
         public readonly float FadeOutTime;
 
         public Entity TargetEntity;
         public ItemComponent TargetItemComponent;
         public readonly bool UseController;
+        public readonly string[] ControllerTags;
         public Controller ConnectedController;
 
         public Character OrderGiver;
@@ -112,16 +151,21 @@ namespace Barotrauma
         //legacy support
         public readonly string[] AppropriateJobs;
         public readonly string[] Options;
+        public readonly string[] HiddenOptions;
+        public readonly string[] AllOptions;
         private readonly Dictionary<string, string> OptionNames;
 
         public readonly Dictionary<string, Sprite> OptionSprites;
 
-        private readonly Dictionary<string, Sprite> minimapIcons;
-        public Dictionary<string, Sprite> MinimapIcons => IsPrefab ? minimapIcons : Prefab.minimapIcons;
-
-        public readonly float Weight;
         public readonly bool MustSetTarget;
+        /// <summary>
+        /// Can the order be turned into a non-entity-targeting one if it was originally created with a target entity.
+        /// Note: if MustSetTarget is true, CanBeGeneralized will always be false.
+        /// </summary>
+        public readonly bool CanBeGeneralized;
         public readonly string AppropriateSkill;
+        public readonly bool Hidden;
+        public readonly bool IgnoreAtOutpost;
 
         public bool HasOptions => (IsPrefab ? Options : Prefab.Options).Length > 1;
         public bool IsPrefab { get; private set; }
@@ -158,6 +202,11 @@ namespace Barotrauma
         public OrderTargetType TargetType { get; }
         public int? WallSectionIndex { get; }
         public bool IsIgnoreOrder { get; }
+
+        /// <summary>
+        /// Should the order icon be drawn when the order target is inside a container
+        /// </summary>
+        public bool DrawIconWhenContained { get; }
 
         public static void Init()
         {
@@ -239,7 +288,8 @@ namespace Barotrauma
         private Order(XElement orderElement)
         {
             Identifier = orderElement.GetAttributeString("identifier", "");
-            Name = TextManager.Get("OrderName." + Identifier, true) ?? "Name not found";
+            Name = TextManager.Get("OrderName." + Identifier, returnNull: true) ?? "Name not found";
+            ContextualName = TextManager.Get("OrderNameContextual." + Identifier, returnNull: true) ?? Name;
 
             string targetItemType = orderElement.GetAttributeString("targetitemtype", "");
             if (!string.IsNullOrWhiteSpace(targetItemType))
@@ -260,13 +310,19 @@ namespace Barotrauma
             color = orderElement.GetAttributeColor("color");
             FadeOutTime = orderElement.GetAttributeFloat("fadeouttime", 0.0f);
             UseController = orderElement.GetAttributeBool("usecontroller", false);
+            ControllerTags = orderElement.GetAttributeStringArray("controllertags", new string[0]);
             TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
             AppropriateJobs = orderElement.GetAttributeStringArray("appropriatejobs", new string[0]);
             Options = orderElement.GetAttributeStringArray("options", new string[0]);
+            HiddenOptions = orderElement.GetAttributeStringArray("hiddenoptions", new string[0]);
+            AllOptions = Options.Concat(HiddenOptions).ToArray();
             var category = orderElement.GetAttributeString("category", null);
             if (!string.IsNullOrWhiteSpace(category)) { this.Category = (OrderCategory)Enum.Parse(typeof(OrderCategory), category, true); }
             MustSetTarget = orderElement.GetAttributeBool("mustsettarget", false);
+            CanBeGeneralized = !MustSetTarget && orderElement.GetAttributeBool("canbegeneralized", true);
             AppropriateSkill = orderElement.GetAttributeString("appropriateskill", null);
+            Hidden = orderElement.GetAttributeBool("hidden", false);
+            IgnoreAtOutpost = orderElement.GetAttributeBool("ignoreatoutpost", false);
 
             var optionNames = TextManager.Get("OrderOptions." + Identifier, true)?.Split(',', '，') ??
                 orderElement.GetAttributeStringArray("optionnames", new string[0]);
@@ -303,44 +359,42 @@ namespace Barotrauma
                 }
             }
 
-            minimapIcons = new Dictionary<string, Sprite>();
-            var minimapIconElements = orderElement.GetChildElements("minimapicon");
-            foreach (XElement minimapIconElement in minimapIconElements)
-            {
-                var id = minimapIconElement.GetAttributeString("id", null);
-                if (string.IsNullOrWhiteSpace(id)) { continue; }
-                minimapIcons.Add(id, new Sprite(minimapIconElement.GetChildElement("sprite"), lazyLoad: true));
-            }
-
             IsPrefab = true;
             MustManuallyAssign = orderElement.GetAttributeBool("mustmanuallyassign", false);
             IsIgnoreOrder = Identifier == "ignorethis" || Identifier == "unignorethis";
+            DrawIconWhenContained = orderElement.GetAttributeBool("displayiconwhencontained", false);
         }
 
         /// <summary>
         /// Constructor for order instances
         /// </summary>
-        public Order(Order prefab, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null, bool isAutonomous = false)
+        public Order(Order prefab, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null)
         {
             Prefab = prefab.Prefab ?? prefab;
 
-            Name                = prefab.Name;
-            Identifier          = prefab.Identifier;
-            ItemComponentType   = prefab.ItemComponentType;
-            CanTypeBeSubclass   = prefab.CanTypeBeSubclass;
-            TargetItems         = prefab.TargetItems;
-            Options             = prefab.Options;
-            SymbolSprite        = prefab.SymbolSprite;
-            Color               = prefab.Color;
-            UseController       = prefab.UseController;
-            TargetAllCharacters = prefab.TargetAllCharacters;
-            AppropriateJobs     = prefab.AppropriateJobs;
-            FadeOutTime         = prefab.FadeOutTime;
-            MustSetTarget       = prefab.MustSetTarget;
-            AppropriateSkill    = prefab.AppropriateSkill;
-            Category            = prefab.Category;
-            MustManuallyAssign  = prefab.MustManuallyAssign;
-            IsIgnoreOrder       = prefab.IsIgnoreOrder;
+            Name                  = prefab.Name;
+            ContextualName        = prefab.ContextualName;
+            Identifier            = prefab.Identifier;
+            ItemComponentType     = prefab.ItemComponentType;
+            CanTypeBeSubclass     = prefab.CanTypeBeSubclass;
+            TargetItems           = prefab.TargetItems;
+            Options               = prefab.Options;
+            SymbolSprite          = prefab.SymbolSprite;
+            Color                 = prefab.Color;
+            UseController         = prefab.UseController;
+            ControllerTags        = prefab.ControllerTags;
+            TargetAllCharacters   = prefab.TargetAllCharacters;
+            AppropriateJobs       = prefab.AppropriateJobs;
+            FadeOutTime           = prefab.FadeOutTime;
+            MustSetTarget         = prefab.MustSetTarget;
+            CanBeGeneralized      = prefab.CanBeGeneralized;
+            AppropriateSkill      = prefab.AppropriateSkill;
+            Category              = prefab.Category;
+            MustManuallyAssign    = prefab.MustManuallyAssign;
+            IsIgnoreOrder         = prefab.IsIgnoreOrder;
+            DrawIconWhenContained = prefab.DrawIconWhenContained;
+            Hidden                = prefab.Hidden;
+            IgnoreAtOutpost       = prefab.IgnoreAtOutpost;
 
             OrderGiver = orderGiver;
             TargetEntity = targetEntity;
@@ -348,12 +402,10 @@ namespace Barotrauma
             {
                 if (UseController)
                 {
-                    ConnectedController = targetItem.Item?.FindController();
+                    ConnectedController = targetItem.Item?.FindController(tags: ControllerTags);
                     if (ConnectedController == null)
                     {
-#if DEBUG
-                        throw new Exception("Tried to use controller, but couldn't find one");
-#endif
+                        DebugConsole.AddWarning("AI: Tried to use a controller for operating an item, but couldn't find any.");
                         UseController = false;
                     }
                 }
@@ -366,12 +418,18 @@ namespace Barotrauma
             IsPrefab = false;
         }
 
+        /// <summary>
+        /// Constructor for order instances
+        /// </summary>
         public Order(Order prefab, OrderTarget target, Character orderGiver = null) : this(prefab, targetEntity: null, targetItem: null, orderGiver)
         {
             TargetPosition = target;
             TargetType = OrderTargetType.Position;
         }
 
+        /// <summary>
+        /// Constructor for order instances
+        /// </summary>
         public Order(Order prefab, Structure wall, int? sectionIndex, Character orderGiver = null) : this(prefab, targetEntity: wall, null, orderGiver: orderGiver)
         {
             WallSectionIndex = sectionIndex;
@@ -395,19 +453,37 @@ namespace Barotrauma
             return false;
         }
 
-        public string GetChatMessage(string targetCharacterName, string targetRoomName, bool givingOrderToSelf, string orderOption = "")
+        public string GetChatMessage(string targetCharacterName, string targetRoomName, bool givingOrderToSelf, string orderOption = "", int? priority = null)
         {
-            orderOption ??= "";
-
-            string messageTag = (givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf." : "OrderDialog.") + Identifier;
-            if (!string.IsNullOrEmpty(orderOption)) { messageTag += "." + orderOption; }
-
-            if (targetCharacterName == null) { targetCharacterName = ""; }
-            if (targetRoomName == null) { targetRoomName = ""; }
-            string msg = TextManager.GetWithVariables(messageTag, new string[2] { "[name]", "[roomname]" }, new string[2] { targetCharacterName, targetRoomName }, new bool[2] { false, true }, true);
-            if (msg == null) { return ""; }
-
-            return msg;
+            priority ??= CharacterInfo.HighestManualOrderPriority;
+            // If the order has a lesser priority, it means we are rearranging character orders
+            if (!TargetAllCharacters && priority != CharacterInfo.HighestManualOrderPriority && Identifier != "dismissed")
+            {
+                return TextManager.GetWithVariable("rearrangedorders", "[name]", targetCharacterName ?? string.Empty, returnNull: true) ?? string.Empty;
+            }
+            string messageTag = $"{(givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf" : "OrderDialog")}";
+            messageTag += $".{Identifier}";
+            if (!string.IsNullOrEmpty(orderOption))
+            {
+                if (Identifier != "dismissed")
+                {
+                    messageTag += $".{orderOption}";
+                }
+                else
+                {
+                    string[] splitOption = orderOption.Split('.');
+                    if (splitOption.Length > 0)
+                    {
+                        messageTag += $".{splitOption[0]}";
+                    }
+                }
+            }
+            string msg = TextManager.GetWithVariables(messageTag,
+                new string[2] { "[name]", "[roomname]" },
+                new string[2] { targetCharacterName ?? string.Empty, targetRoomName ?? string.Empty },
+                formatCapitals: new bool[2] { false, true },
+                returnNull: true);
+            return msg ?? string.Empty;
         }
 
         /// <summary>
@@ -433,50 +509,76 @@ namespace Barotrauma
             return firstMatchingComponent != null;
         }
 
-        public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSub, Character.TeamType? requiredTeam = null)
+        /// <param name="interactableFor">Only returns items which are interactable for this character</param>
+        public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSub, CharacterTeamType? requiredTeam = null, Character interactableFor = null)
         {
             List<Item> matchingItems = new List<Item>();
             if (submarine == null) { return matchingItems; }
             if (ItemComponentType != null || TargetItems.Length > 0)
             {
-                matchingItems = TargetItems.Length > 0 ?
-                    Item.ItemList.FindAll(it => TargetItems.Contains(it.Prefab.Identifier) || it.HasTag(TargetItems)) :
-                    Item.ItemList.FindAll(it => TryGetTargetItemComponent(it, out _));
-                if (mustBelongToPlayerSub)
+                foreach (var item in Item.ItemList)
                 {
-                    matchingItems.RemoveAll(it => it.Submarine?.Info != null && it.Submarine.Info.Type != SubmarineType.Player);
-                }
-                matchingItems.RemoveAll(it => it.Submarine != submarine && !submarine.DockedTo.Contains(it.Submarine));
-                if (requiredTeam.HasValue)
-                {
-                    matchingItems.RemoveAll(it => it.Submarine == null || it.Submarine.TeamID != requiredTeam.Value);
-                }
-                matchingItems.RemoveAll(it => it.NonInteractable);
-                if (UseController)
-                {
-                    matchingItems.RemoveAll(i => i.Components.None(c => c.GetType() == ItemComponentType) && !i.TryFindController(out _));
+                    if (TargetItems.Length > 0 && !TargetItems.Contains(item.Prefab.Identifier) && !item.HasTag(TargetItems)) { continue; }
+                    if (TargetItems.Length == 0 && !TryGetTargetItemComponent(item, out _)) { continue; }
+                    if (mustBelongToPlayerSub && item.Submarine?.Info != null && item.Submarine.Info.Type != SubmarineType.Player) { continue; }
+                    if (item.Submarine != submarine && !submarine.DockedTo.Contains(item.Submarine)) { continue; }
+                    if (requiredTeam.HasValue && (item.Submarine == null || item.Submarine.TeamID != requiredTeam.Value)) { continue; }
+                    if (item.NonInteractable) { continue; }
+                    if (ItemComponentType != null && item.Components.None(c => c.GetType() == ItemComponentType)) { continue; }
+                    Controller controller = null;
+                    if (UseController && !item.TryFindController(out controller, tags: ControllerTags)) { continue; }
+                    if (interactableFor != null && (!item.IsInteractable(interactableFor) || (UseController && !controller.Item.IsInteractable(interactableFor)))) { continue; }
+                    matchingItems.Add(item);
                 }
             }
             return matchingItems;
         }
 
-        public List<Item> GetMatchingItems(bool mustBelongToPlayerSub)
+
+        /// <param name="interactableFor">Only returns items which are interactable for this character</param>
+        public List<Item> GetMatchingItems(bool mustBelongToPlayerSub, Character interactableFor = null)
         {
-            Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID == Character.TeamType.Team2 && Submarine.MainSubs.Length > 1 ?
+            Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID == CharacterTeamType.Team2 && Submarine.MainSubs.Length > 1 ?
                 Submarine.MainSubs[1] :
                 Submarine.MainSub;
-            return GetMatchingItems(submarine, mustBelongToPlayerSub);
+            return GetMatchingItems(submarine, mustBelongToPlayerSub, interactableFor: interactableFor);
         }
 
         public string GetOptionName(string id)
         {
-            return Prefab == null ? OptionNames[id] : Prefab.OptionNames[id];
+            if (Prefab == null)
+            {
+                if (OptionNames.ContainsKey(id)) { return OptionNames[id]; }
+            }
+            else
+            {
+                if (Prefab.OptionNames.ContainsKey(id)) { return Prefab.OptionNames[id]; }
+            }
+            return string.Empty;
         }
 
         public string GetOptionName(int index)
         {
             if (index < 0 || index >= Options.Length) { return null; }
             return GetOptionName(Options[index]);
+        }
+
+        /// <summary>
+        /// Used to create the order option for the Dismiss order to know which order it targets
+        /// </summary>
+        /// <param name="orderInfo">The order to target with the dismiss order</param>
+        public static string GetDismissOrderOption(OrderInfo orderInfo)
+        {
+            if (orderInfo.Order != null)
+            {
+                string option = orderInfo.Order.Identifier;
+                if (!string.IsNullOrEmpty(orderInfo.OrderOption))
+                {
+                    option += $".{orderInfo.OrderOption}";
+                }
+                return option;
+            }
+            return "";
         }
     }
 }

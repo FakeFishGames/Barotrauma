@@ -491,10 +491,7 @@ namespace FarseerPhysics.Common.Decomposition.CDT.Delaunay.Sweep
             {
                 triangle.MarkConstrainedEdge(index);
                 triangle = triangle.Neighbors[index];
-                if (triangle != null)
-                {
-                    triangle.MarkConstrainedEdge(ep, eq);
-                }
+                triangle?.MarkConstrainedEdge(ep, eq);
                 return true;
             }
             return false;

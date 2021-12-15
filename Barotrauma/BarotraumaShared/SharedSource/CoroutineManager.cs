@@ -58,12 +58,7 @@ namespace Barotrauma
             return handle;
         }
 
-        public static CoroutineHandle Invoke(Action action)
-        {
-            return StartCoroutine(DoInvokeAfter(action, 0.0f));
-        }
-
-        public static CoroutineHandle InvokeAfter(Action action, float delay)
+        public static CoroutineHandle Invoke(Action action, float delay = 0f)
         {
             return StartCoroutine(DoInvokeAfter(action, delay));
         }
@@ -106,24 +101,7 @@ namespace Barotrauma
         {
             lock (Coroutines)
             {
-                Coroutines.ForEach(c =>
-                {
-                    if (c.Name == name)
-                    {
-                        c.AbortRequested = true;
-                        if (c.Thread != null)
-                        {
-                            bool joined = false;
-                            while (!joined)
-                            {
-#if CLIENT
-                                CrossThread.ProcessTasks();
-#endif
-                                joined = c.Thread.Join(TimeSpan.FromMilliseconds(500));
-                            }
-                        }
-                    }
-                });
+                HandleCoroutineStopping(c => c.Name == name);
                 Coroutines.RemoveAll(c => c.Name == name);
             }
         }
@@ -132,7 +110,30 @@ namespace Barotrauma
         {
             lock (Coroutines)
             {
+                HandleCoroutineStopping(c => c == handle);
                 Coroutines.RemoveAll(c => c == handle);
+            }
+        }
+
+        private static void HandleCoroutineStopping(Func<CoroutineHandle, bool> filter)
+        {
+            foreach (CoroutineHandle coroutine in Coroutines)
+            {
+                if (filter(coroutine))
+                {
+                    coroutine.AbortRequested = true;
+                    if (coroutine.Thread != null)
+                    {
+                        bool joined = false;
+                        while (!joined)
+                        {
+#if CLIENT
+                            CrossThread.ProcessTasks();
+#endif
+                            joined = coroutine.Thread.Join(TimeSpan.FromMilliseconds(500));
+                        }
+                    }
+                }
             }
         }
 

@@ -14,31 +14,36 @@ namespace Barotrauma
 {
     partial class Structure : MapEntity, IDamageable, IServerSerializable
     {
-        public static bool ShowWalls = true, ShowStructures = true;        
+        public static bool ShowWalls = true, ShowStructures = true;
 
         private List<ConvexHull> convexHulls;
 
         private readonly Dictionary<DecorativeSprite, DecorativeSprite.State> spriteAnimState = new Dictionary<DecorativeSprite, DecorativeSprite.State>();
 
+        public readonly List<LightSource> Lights = new List<LightSource>();
+
         public override bool SelectableInEditor
         {
             get
             {
-                if (!GameMain.SubEditorScreen.ShowThalamus && prefab.Category.HasFlag(MapEntityCategory.Thalamus))
+                if (GameMain.SubEditorScreen.IsSubcategoryHidden(prefab.Subcategory))
                 {
                     return false;
                 }
                 return HasBody ? ShowWalls : ShowStructures;
             }
         }
-        
-        private string specialTag;
+
+#if DEBUG
         [Editable, Serialize("", true)]
+#else
+        [Serialize("", true)]
+#endif
         public string SpecialTag
         {
-            get { return specialTag; }
-            set { specialTag = value; }
-        }        
+            get;
+            set;
+        }
 
         partial void InitProjSpecific()
         {
@@ -80,19 +85,38 @@ namespace Barotrauma
             convexHulls.Add(h);
         }
 
-        public override void UpdateEditing(Camera cam)
+        public override void UpdateEditing(Camera cam, float deltaTime)
         {
             if (editingHUD == null || editingHUD.UserData as Structure != this)
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
-            }            
+            }
+        }
+
+        private void SetLightTextureOffset()
+        {
+            Vector2 textOffset = textureOffset;
+            if (FlippedX) { textOffset.X = -textOffset.X; }
+            if (FlippedY) { textOffset.Y = -textOffset.Y; }
+
+            foreach (LightSource light in Lights)
+            {
+                Vector2 bgOffset = new Vector2(
+                    MathUtils.PositiveModulo((int)-textOffset.X, light.texture.Width),
+                    MathUtils.PositiveModulo((int)-textOffset.Y, light.texture.Height));
+
+                light.LightTextureOffset = bgOffset;
+            }
         }
 
         public GUIComponent CreateEditingHUD(bool inGame = false)
         {
             int heightScaled = (int)(20 * GUI.Scale);
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
-            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
+            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null)
+            {
+                CanTakeKeyBoardFocus = false
+            };
             var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUI.LargeFont) { UserData = this };
 
             if (Submarine.MainSub?.Info?.Type == SubmarineType.OutpostModule)
@@ -121,7 +145,11 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("MirrorEntityXToolTip"),
                 OnClicked = (button, data) =>
                 {
-                    FlipX(relativeToSub: false);
+                    foreach (MapEntity me in SelectedList)
+                    {
+                        me.FlipX(relativeToSub: false);
+                    }
+                    if (!SelectedList.Contains(this)) { FlipX(relativeToSub: false); }
                     return true;
                 }
             };
@@ -130,7 +158,11 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("MirrorEntityYToolTip"),
                 OnClicked = (button, data) =>
                 {
-                    FlipY(relativeToSub: false);
+                    foreach (MapEntity me in SelectedList)
+                    {
+                        me.FlipY(relativeToSub: false);
+                    }
+                    if (!SelectedList.Contains(this)) { FlipY(relativeToSub: false); }
                     return true;
                 }
             };
@@ -139,7 +171,7 @@ namespace Barotrauma
                 OnClicked = (button, data) =>
                 {
                     Sprite.ReloadXML();
-                    Sprite.ReloadTexture();
+                    Sprite.ReloadTexture(updateAllSprites: true);
                     return true;
                 }
             };
@@ -147,7 +179,12 @@ namespace Barotrauma
             {
                 OnClicked = (button, data) =>
                 {
-                    Reset();
+                    foreach (MapEntity me in SelectedList)
+                    {
+                        (me as Item)?.Reset();
+                        (me as Structure)?.Reset();
+                    }
+                    if (!SelectedList.Contains(this)) { Reset(); }
                     CreateEditingHUD();
                     return true;
                 }
@@ -156,12 +193,12 @@ namespace Barotrauma
             buttonContainer.RectTransform.IsFixedSize = true;
             GUITextBlock.AutoScaleAndNormalize(buttonContainer.Children.Where(c => c is GUIButton).Select(b => ((GUIButton)b).TextBlock));
             editor.AddCustomContent(buttonContainer, editor.ContentCount);
-            
+
             PositionEditingHUD();
 
             return editingHUD;
         }
-        
+
         partial void OnImpactProjSpecific(Fixture f1, Fixture f2, Contact contact)
         {
             if (!Prefab.Platform && Prefab.StairDirection == Direction.None)
@@ -191,10 +228,11 @@ namespace Barotrauma
             Vector2 max = new Vector2(worldRect.Right, worldRect.Y);
             foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
             {
-                min.X =  Math.Min(worldPos.X - decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * decorativeSprite.Scale * Scale, min.X);
-                max.X = Math.Max(worldPos.X + decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * decorativeSprite.Scale * Scale, max.X);
-                min.Y = Math.Min(worldPos.Y - decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * decorativeSprite.Scale * Scale, min.Y);
-                max.Y = Math.Max(worldPos.Y + decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * decorativeSprite.Scale * Scale, max.Y);
+                float scale = decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale;
+                min.X = Math.Min(worldPos.X - decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * scale, min.X);
+                max.X = Math.Max(worldPos.X + decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * scale, max.X);
+                min.Y = Math.Min(worldPos.Y - decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * scale, min.Y);
+                max.Y = Math.Max(worldPos.Y + decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * scale, max.Y);
             }
 
             if (min.X > worldView.Right || max.X < worldView.X) { return false; }
@@ -220,9 +258,14 @@ namespace Barotrauma
             Draw(spriteBatch, editing, false, damageEffect);
         }
 
+        private float GetRealDepth()
+        {
+            return SpriteDepthOverrideIsSet ? SpriteOverrideDepth : prefab.sprite.Depth;
+        }
+
         public float GetDrawDepth()
         {
-            return GetDrawDepth(SpriteDepthOverrideIsSet ? SpriteOverrideDepth : prefab.sprite.Depth, prefab.sprite);
+            return GetDrawDepth(GetRealDepth(), prefab.sprite);
         }
 
         private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
@@ -235,12 +278,14 @@ namespace Barotrauma
             }
             else if (HiddenInGame) { return; }
 
-            Color color = IsHighlighted ? GUI.Style.Orange : spriteColor;
-            
+            Color color = IsIncludedInSelection && editing ? GUI.Style.Blue : IsHighlighted ? GUI.Style.Orange * Math.Max(spriteColor.A / (float) byte.MaxValue, 0.1f) : spriteColor;
+
             if (IsSelected && editing)
             {
                 //color = Color.Lerp(color, Color.Gold, 0.5f);
                 color = spriteColor;
+
+
 
                 Vector2 rectSize = rect.Size.ToVector2();
                 if (BodyWidth > 0.0f) { rectSize.X = BodyWidth; }
@@ -248,7 +293,7 @@ namespace Barotrauma
 
                 Vector2 bodyPos = WorldPosition + BodyOffset;
 
-                GUI.DrawRectangle(spriteBatch, new Vector2(bodyPos.X, -bodyPos.Y), rectSize.X, rectSize.Y, BodyRotation, Color.White, 
+                GUI.DrawRectangle(spriteBatch, new Vector2(bodyPos.X, -bodyPos.Y), rectSize.X, rectSize.Y, BodyRotation, Color.White,
                     thickness: Math.Max(1, (int)(2 / Screen.Selected.Cam.Zoom)));
             }
 
@@ -280,14 +325,14 @@ namespace Barotrauma
                             }
                             else
                             {
-                                dropShadowOffset = IsHorizontal ? 
-                                    new Vector2(0.0f, Math.Sign(Submarine.HiddenSubPosition.Y - Position.Y) * 10.0f) : 
+                                dropShadowOffset = IsHorizontal ?
+                                    new Vector2(0.0f, Math.Sign(Submarine.HiddenSubPosition.Y - Position.Y) * 10.0f) :
                                     new Vector2(Math.Sign(Submarine.HiddenSubPosition.X - Position.X) * 10.0f, 0.0f);
                             }
                         }
                         dropShadowOffset.Y = -dropShadowOffset.Y;
                     }
-                    
+
                     SpriteEffects oldEffects = Prefab.BackgroundSprite.effects;
                     Prefab.BackgroundSprite.effects ^= SpriteEffects;
 
@@ -320,7 +365,7 @@ namespace Barotrauma
                 }
             }
 
-            if (back == depth > 0.5f)
+            if (back == GetRealDepth() > 0.5f)
             {
                 SpriteEffects oldEffects = prefab.sprite.effects;
                 prefab.sprite.effects ^= SpriteEffects;
@@ -347,13 +392,13 @@ namespace Barotrauma
                     if (!HasDamage && i == 0)
                     {
                         drawSection = new Rectangle(
-                            drawSection.X, 
-                            drawSection.Y, 
+                            drawSection.X,
+                            drawSection.Y,
                             Sections[Sections.Length -1 ].rect.Right - drawSection.X,
                             drawSection.Y - (Sections[Sections.Length - 1].rect.Y - Sections[Sections.Length - 1].rect.Height));
                         i = Sections.Length;
                     }
-                    
+
                     Vector2 sectionOffset = new Vector2(
                         Math.Abs(rect.Location.X - drawSection.Location.X),
                         Math.Abs(rect.Location.Y - drawSection.Location.Y));
@@ -377,10 +422,10 @@ namespace Barotrauma
                 foreach (var decorativeSprite in Prefab.DecorativeSprites)
                 {
                     if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
-                    float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
-                    Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
+                    float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
+                    Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier) * Scale;
                     decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
-                        rotation, decorativeSprite.Scale * Scale, prefab.sprite.effects,
+                        rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, prefab.sprite.effects,
                         depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.sprite.Depth), 0.999f));
                 }
                 prefab.sprite.effects = oldEffects;
@@ -471,7 +516,7 @@ namespace Barotrauma
             }
             else
             {
-                if (!conditional.Matches(this)) { return false; }                
+                if (!conditional.Matches(this)) { return false; }
             }
             return true;
         }

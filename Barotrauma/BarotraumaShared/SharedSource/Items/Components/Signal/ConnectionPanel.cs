@@ -1,7 +1,5 @@
 ﻿using Barotrauma.Networking;
-using FarseerPhysics;
 using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -36,6 +34,11 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        public bool TemporarilyLocked
+        {
+            get { return Level.IsLoadedOutpost && item.GetComponent<DockingPort>() != null; }
+        }
+
         //connection panels can't be deactivated externally (by signals or status effects)
         public override bool IsActive
         {
@@ -67,10 +70,10 @@ namespace Barotrauma.Items.Components
             }
 
             base.IsActive = true;
-            InitProjSpecific(element);
+            InitProjSpecific();
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific();
 
         private bool linksInitialized;
         public override void OnMapLoaded()
@@ -111,7 +114,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
-            if (item.body != null)
+            if (item.body != null && item.body.BodyType == FarseerPhysics.BodyType.Dynamic)
             {
                 var holdable = item.GetComponent<Holdable>();
                 if (holdable == null || !holdable.Attachable)
@@ -130,21 +133,31 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Wire wire in c.Wires)
                 {
-                    if (wire == null) continue;
-#if CLIENT
-                    if (wire.Item.IsSelected) continue;
-#endif
-                    var wireNodes = wire.GetNodes();
-                    if (wireNodes.Count == 0) continue;
+                    if (wire == null) { continue; }
+                    TryMoveWire(wire);
+                }
+            }
 
-                    if (Submarine.RectContains(item.Rect, wireNodes[0] + wireNodeOffset))
-                    {
-                        wire.MoveNode(0, amount);
-                    }
-                    else if (Submarine.RectContains(item.Rect, wireNodes[wireNodes.Count - 1] + wireNodeOffset))
-                    {
-                        wire.MoveNode(wireNodes.Count - 1, amount);
-                    }
+            foreach (var wire in DisconnectedWires)
+            {
+                TryMoveWire(wire);
+            }
+
+            void TryMoveWire(Wire wire)
+            {
+#if CLIENT
+                if (wire.Item.IsSelected) { return; }
+#endif
+                var wireNodes = wire.GetNodes();
+                if (wireNodes.Count == 0) { return; }
+
+                if (Submarine.RectContains(item.Rect, wireNodes[0] + wireNodeOffset))
+                {
+                    wire.MoveNode(0, amount);
+                }
+                else if (Submarine.RectContains(item.Rect, wireNodes[wireNodes.Count - 1] + wireNodeOffset))
+                {
+                    wire.MoveNode(wireNodes.Count - 1, amount);
                 }
             }
         }
@@ -184,7 +197,7 @@ namespace Barotrauma.Items.Components
         {
             //attaching wires to items with a body is not allowed
             //(signal items remove their bodies when attached to a wall)
-            if (item.body != null)
+            if (item.body != null && item.body.BodyType == FarseerPhysics.BodyType.Dynamic)
             {
                 return false;
             }
@@ -212,10 +225,23 @@ namespace Barotrauma.Items.Components
             //no electrocution in sub editor
             if (Screen.Selected == GameMain.SubEditorScreen) { return true; }
 
-            var powered = item.GetComponent<Powered>();
-            if (powered != null)
+            var reactor = item.GetComponent<Reactor>();
+            if (reactor != null)
             {
-                //unpowered panels can be rewired without a risk of electrical shock
+                //reactors that arent generating power atm can be rewired without the risk of electrical shock
+                if (MathUtils.NearlyEqual(reactor.CurrPowerConsumption, 0.0f)) { return true; }
+            }
+            var powerContainer = item.GetComponent<PowerContainer>();
+            if (powerContainer != null)
+            {
+                //empty batteries/supercapacitors can be rewired without the risk of electrical shock
+                //non-empty ones always have a chance of zapping the user
+                if (powerContainer.Charge <= 0.0f) { return true; }
+            }
+            var powered = item.GetComponent<Powered>();
+            if (powered != null && powerContainer == null)
+            {
+                //unpowered panels can be rewired without the risk of electrical shock
                 if (powered.Voltage < 0.1f) { return true; }
             }
 
@@ -247,10 +273,32 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < loadedConnections.Count && i < Connections.Count; i++)
             {
-                loadedConnections[i].wireId.CopyTo(Connections[i].wireId, 0);
+                if (loadedConnections[i].wireId.Length == Connections[i].wireId.Length)
+                {
+                    loadedConnections[i].wireId.CopyTo(Connections[i].wireId, 0);
+                }
+                else
+                {
+                    //backwards compatibility when maximum number of wires has changed                    
+                    foreach (ushort id in loadedConnections[i].wireId)
+                    {
+                        for (int j = 0; j < Connections[i].wireId.Length; j++)
+                        {
+                            if (Connections[i].wireId[j] == 0)
+                            {
+                                Connections[i].wireId[j] = id;
+                                break;
+                            }
+                        }
+                    }
+                }
             }
 
             disconnectedWireIds = element.GetAttributeUshortArray("disconnectedwires", new ushort[0]).ToList();
+            for (int i = 0; i < disconnectedWireIds.Count; i++)
+            {
+                disconnectedWireIds[i] = idRemap.GetOffsetId(disconnectedWireIds[i]);
+            }
         }
 
         public override XElement Save(XElement parentElement)
@@ -325,6 +373,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+            Connections.Clear();
 
 #if CLIENT
             rewireSoundChannel?.FadeOutAndDispose();
@@ -332,7 +381,7 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             //do nothing
         }

@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class AIObjectiveCleanupItem : AIObjective
     {
-        public override string DebugTag => "cleanup item";
+        public override string Identifier { get; set; } = "cleanup item";
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => false;
 
@@ -26,7 +26,7 @@ namespace Barotrauma
             this.item = item;
         }
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             if (!IsAllowed)
             {
@@ -48,14 +48,33 @@ namespace Barotrauma
                 float selectedBonus = isSelected ? 100 - MaxDevotion : 0;
                 float devotion = (CumulatedDevotion + selectedBonus) / 100;
                 float reduction = IsPriority ? 1 : isSelected ? 2 : 3;
-                float max = MathHelper.Min(AIObjectiveManager.OrderPriority - reduction, 90);
+                float max = AIObjectiveManager.LowestOrderPriority - reduction;
                 Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (distanceFactor * PriorityModifier), 0, 1));
+                if (decontainObjective == null)
+                {
+                    // Halve the priority until there's a decontain objective (a valid container was found).
+                    Priority /= 2;
+                }
             }
             return Priority;
         }
 
         protected override void Act(float deltaTime)
         {
+            if (item.IgnoreByAI(character))
+            {
+                Abandon = true;
+                return;
+            }
+            if (item.ParentInventory != null)
+            {
+                if (item.Container != null && !AIObjectiveCleanupItems.IsValidContainer(item.Container, character, allowUnloading: objectiveManager.HasOrder<AIObjectiveCleanupItems>()))
+                {
+                    // Target was picked up or moved by someone.
+                    Abandon = true;
+                    return;
+                }
+            }
             // Only continue when the get item sub objectives have been completed.
             if (subObjectives.Any()) { return; }
             if (HumanAIController.FindSuitableContainer(character, item, ignoredContainers, ref itemIndex, out Item suitableContainer))
@@ -63,17 +82,19 @@ namespace Barotrauma
                 itemIndex = 0;
                 if (suitableContainer != null)
                 {
-                    bool equip = item.HasTag(AIObjectiveFindDivingGear.HEAVY_DIVING_GEAR) || (
-                            item.GetComponent<Wearable>() == null &&
-                            item.AllowedSlots.None(s =>
-                                s == InvSlotType.Card ||
-                                s == InvSlotType.Head ||
-                                s == InvSlotType.Headset ||
-                                s == InvSlotType.InnerClothes ||
-                                s == InvSlotType.OuterClothes));
+                    bool equip = item.GetComponent<Holdable>() != null ||
+                        item.AllowedSlots.Any(s => s != InvSlotType.Any) &&
+                        item.AllowedSlots.None(s =>
+                        s == InvSlotType.Card ||
+                        s == InvSlotType.Head ||
+                        s == InvSlotType.Headset ||
+                        s == InvSlotType.InnerClothes ||
+                        s == InvSlotType.OuterClothes);
+
                     TryAddSubObjective(ref decontainObjective, () => new AIObjectiveDecontainItem(character, item, objectiveManager, targetContainer: suitableContainer.GetComponent<ItemContainer>())
                     {
                         Equip = equip,
+                        TakeWholeStack = true,
                         DropIfFails = true
                     }, 
                     onCompleted: () =>
@@ -111,7 +132,7 @@ namespace Barotrauma
             }
         }
 
-        protected override bool Check() => IsCompleted;
+        protected override bool CheckObjectiveSpecific() => IsCompleted;
 
         public override void Reset()
         {
@@ -119,6 +140,14 @@ namespace Barotrauma
             ignoredContainers.Clear();
             itemIndex = 0;
             decontainObjective = null;
+        }
+
+        public void DropTarget()
+        {
+            if (item != null && character.HasItem(item))
+            {
+                item.Drop(character);
+            }
         }
     }
 }

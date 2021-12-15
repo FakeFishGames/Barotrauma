@@ -23,6 +23,14 @@ namespace Barotrauma
 
         public LevelWallVertexBuffer(VertexPositionTexture[] wallVertices, VertexPositionTexture[] wallEdgeVertices, Texture2D wallTexture, Texture2D edgeTexture, Color color)
         {
+            if (wallVertices.Length == 0)
+            {
+                throw new ArgumentException("Failed to instantiate a LevelWallVertexBuffer (no wall vertices).");
+            }
+            if (wallVertices.Length == 0)
+            {
+                throw new ArgumentException("Failed to instantiate a LevelWallVertexBuffer (no wall edge vertices).");
+            }
             this.wallVertices = LevelRenderer.GetColoredVertices(wallVertices, color);
             WallBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, wallVertices.Length, BufferUsage.WriteOnly);
             WallBuffer.SetData(this.wallVertices);
@@ -220,7 +228,7 @@ namespace Barotrauma
                 SamplerState.LinearWrap, DepthStencilState.DepthRead, null, null,
                 cam.Transform);            
 
-            backgroundSpriteManager?.DrawObjects(spriteBatch, cam, drawFront: false);
+            backgroundSpriteManager?.DrawObjectsBack(spriteBatch, cam);
             if (cam.Zoom > 0.05f)
             {
                 backgroundCreatureManager?.Draw(spriteBatch, cam);
@@ -262,8 +270,6 @@ namespace Barotrauma
                         color: Color.White * alpha, textureScale: new Vector2(texScale));                    
                 }
             }
-
-
             spriteBatch.End();
 
             RenderWalls(GameMain.Instance.GraphicsDevice, cam);
@@ -272,11 +278,21 @@ namespace Barotrauma
                 BlendState.NonPremultiplied,
                 SamplerState.LinearClamp, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
-            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawObjects(spriteBatch, cam, drawFront: true);
+            backgroundSpriteManager?.DrawObjectsMid(spriteBatch, cam);
             spriteBatch.End();
         }
 
-        public void Draw(SpriteBatch spriteBatch, Camera cam)
+        public void DrawForeground(SpriteBatch spriteBatch, Camera cam, LevelObjectManager backgroundSpriteManager = null)
+        {
+            spriteBatch.Begin(SpriteSortMode.Deferred,
+                BlendState.NonPremultiplied,
+                SamplerState.LinearClamp, DepthStencilState.DepthRead, null, null,
+                cam.Transform);
+            backgroundSpriteManager?.DrawObjectsFront(spriteBatch, cam);
+            spriteBatch.End();
+        }
+
+        public void DrawDebugOverlay(SpriteBatch spriteBatch, Camera cam)
         {
             if (GameMain.DebugDraw && cam.Zoom > 0.1f)
             {
@@ -294,7 +310,7 @@ namespace Barotrauma
                     {
                         GUI.DrawLine(spriteBatch, new Vector2(edge.Point1.X + cell.Translation.X, -(edge.Point1.Y + cell.Translation.Y)),
                             new Vector2(edge.Point2.X + cell.Translation.X, -(edge.Point2.Y + cell.Translation.Y)), edge.NextToCave ? Color.Red : (cell.Body == null ? Color.Cyan * 0.5f : (edge.IsSolid ? Color.White : Color.Gray)),
-                            width: edge.NextToCave ? 8 :1);
+                            width: edge.NextToCave ? 8 : 1);
                     }
 
                     foreach (Vector2 point in cell.BodyVertices)
@@ -313,6 +329,11 @@ namespace Barotrauma
                             Color.Lerp(Color.Yellow, GUI.Style.Red, i / (float)nodeList.Count), 0, 10);
                     }
                 }*/
+
+                foreach (var abyssIsland in level.AbyssIslands)
+                {
+                    GUI.DrawRectangle(spriteBatch, new Vector2(abyssIsland.Area.X, -abyssIsland.Area.Y - abyssIsland.Area.Height), abyssIsland.Area.Size.ToVector2(), Color.Cyan, thickness: 5);
+                }
 
                 foreach (var ruin in level.Ruins)
                 {

@@ -63,27 +63,29 @@ namespace Barotrauma.Items.Components
             }
 
             OutputValue = input;
-            item.SendSignal(0, input, "signal_out", null);
-            ShowOnDisplay(input);
+            ShowOnDisplay(input, addToHistory: true);
+            item.SendSignal(input, "signal_out");
         }
 
-        partial void ShowOnDisplay(string input)
+        partial void ShowOnDisplay(string input, bool addToHistory)
         {
-            messageHistory.Add(input);
-            while (messageHistory.Count > MaxMessages)
+            if (addToHistory)
             {
-                messageHistory.RemoveAt(0);
-            }
-
-            while (historyBox.Content.CountChildren > MaxMessages)
-            {
-                historyBox.RemoveChild(historyBox.Content.Children.First());
+                messageHistory.Add(input);
+                while (messageHistory.Count > MaxMessages)
+                {
+                    messageHistory.RemoveAt(0);
+                }
+                while (historyBox.Content.CountChildren > MaxMessages)
+                {
+                    historyBox.RemoveChild(historyBox.Content.Children.First());
+                }
             }
 
             GUITextBlock newBlock = new GUITextBlock(
                     new RectTransform(new Vector2(1, 0), historyBox.Content.RectTransform, anchor: Anchor.TopCenter),
                     "> " + input,
-                    textColor: Color.LimeGreen, wrap: true)
+                    textColor: Color.LimeGreen, wrap: true, font: UseMonospaceFont ? GUI.MonospacedFont : GUI.GlobalFont)
             {
                 CanBeFocused = false
             };
@@ -116,9 +118,9 @@ namespace Barotrauma.Items.Components
         // This method is overrided instead of the UpdateHUD method because this ensures the input box is selected
         // even when the terminal component is selected for the very first time. Doing the input box selection in the
         // UpdateHUD method only selects the input box on every terminal selection except for the very first time.
-        public override void AddToGUIUpdateList()
+        public override void AddToGUIUpdateList(int order = 0)
         {
-            base.AddToGUIUpdateList();
+            base.AddToGUIUpdateList(order: order);
             if (shouldSelectInputBox)
             {
                 inputBox.Select();

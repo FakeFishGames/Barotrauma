@@ -9,7 +9,7 @@ namespace Barotrauma
     {
         public override void DebugDraw(SpriteBatch spriteBatch)
         {
-            if (Character.IsDead) return;
+            if (Character.IsUnconscious || !Character.Enabled || !Enabled) { return; }
 
             Vector2 pos = Character.WorldPosition;
             pos.Y = -pos.Y;
@@ -38,7 +38,7 @@ namespace Barotrauma
                 }
                 targetPos.Y = -targetPos.Y;
                 GUI.DrawLine(spriteBatch, pos, targetPos, GUI.Style.Red * 0.5f, 0, 4);
-                if (wallTarget != null && (State == AIState.Attack || State == AIState.Aggressive || State == AIState.PassiveAggressive))
+                if (wallTarget != null)
                 {
                     Vector2 wallTargetPos = wallTarget.Position;
                     if (wallTarget.Structure.Submarine != null) { wallTargetPos += wallTarget.Structure.Submarine.Position; }
@@ -81,10 +81,10 @@ namespace Barotrauma
                         ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorB.X, -attachJoint.WorldAnchorB.Y)), GUI.Style.Green, 0, 4);
                 }
 
-                if (LatchOntoAI.WallAttachPos.HasValue)
+                if (LatchOntoAI.AttachPos.HasValue)
                 {
-                    //GUI.DrawLine(spriteBatch, pos,
-                    //    ConvertUnits.ToDisplayUnits(new Vector2(LatchOntoAI.WallAttachPos.Value.X, -LatchOntoAI.WallAttachPos.Value.Y)), GUI.Style.Green, 0, 3);
+                    GUI.DrawLine(spriteBatch, pos,
+                        ConvertUnits.ToDisplayUnits(new Vector2(LatchOntoAI.AttachPos.Value.X, -LatchOntoAI.AttachPos.Value.Y)), GUI.Style.Green, 0, 3);
                 }
             }
 

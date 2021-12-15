@@ -55,8 +55,6 @@ namespace Barotrauma
 
         partial void ApplyProjSpecific(float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Hull hull, Vector2 worldPosition, bool playSound)
         {
-            if (entity == null) { return; }
-
             if (playSound)
             {
                 PlaySound(entity, hull, worldPosition);
@@ -66,7 +64,7 @@ namespace Barotrauma
             {
                 float angle = 0.0f;
                 float particleRotation = 0.0f;
-                if (emitter.Prefab.CopyEntityAngle)
+                if (emitter.Prefab.Properties.CopyEntityAngle)
                 {
                     Limb targetLimb = null;
                     if (entity is Item item && item.body != null)
@@ -75,7 +73,7 @@ namespace Barotrauma
                         particleRotation = -item.body.Rotation;
                         if (item.body.Dir < 0.0f) { particleRotation += MathHelper.Pi; }
                     }
-                    else if (entity is Character c && targetLimbs?.FirstOrDefault(l => l != LimbType.None) is LimbType l)
+                    else if (entity is Character c && !c.Removed && targetLimbs?.FirstOrDefault(l => l != LimbType.None) is LimbType l)
                     {
                         targetLimb = c.AnimController.GetLimb(l);
                     }
@@ -95,6 +93,8 @@ namespace Barotrauma
             }            
         }
 
+        private bool ignoreMuffling;
+
         private void PlaySound(Entity entity, Hull hull, Vector2 worldPosition)
         {
             if (sounds.Count == 0) return;
@@ -111,7 +111,8 @@ namespace Barotrauma
                             GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull1" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                             return;
                         }
-                        soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hullGuess: hull);
+                        soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hullGuess: hull, ignoreMuffling: sound.IgnoreMuffling);
+                        ignoreMuffling = sound.IgnoreMuffling;
                         if (soundChannel != null) { soundChannel.Looping = loopSound; }
                     }
                 }
@@ -141,7 +142,8 @@ namespace Barotrauma
                     {
                         Submarine.ReloadRoundSound(selectedSound);
                     }
-                    soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull);
+                    soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull, ignoreMuffling: selectedSound.IgnoreMuffling);
+                    ignoreMuffling = selectedSound.IgnoreMuffling;
                     if (soundChannel != null) { soundChannel.Looping = loopSound; }
                 }
             }
@@ -176,7 +178,7 @@ namespace Barotrauma
                 else
                 {
                     statusEffect.soundChannel.Position = new Vector3(statusEffect.soundEmitter.WorldPosition, 0.0f);
-                    if (doMuffleCheck)
+                    if (doMuffleCheck && !statusEffect.ignoreMuffling)
                     {
                         statusEffect.soundChannel.Muffled = SoundPlayer.ShouldMuffleSound(
                             Character.Controlled, statusEffect.soundEmitter.WorldPosition, statusEffect.soundChannel.Far, Character.Controlled?.CurrentHull);

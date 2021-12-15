@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
         public Character User;
 
         [Editable(0.0f, 10000000.0f), 
-        Serialize(2000.0f, true, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
+        Serialize(500.0f, true, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
         public float MaxForce
         {
             get { return maxForce; }
@@ -41,6 +41,13 @@ namespace Barotrauma.Items.Components
             description: "The position of the propeller as an offset from the item's center (in pixels)."+
             " Determines where the particles spawn and the position that causes characters to take damage from the engine if the PropellerDamage is defined.")]
         public Vector2 PropellerPos
+        {
+            get;
+            set;
+        }
+
+        [Editable, Serialize(false, true)]
+        public bool DisablePropellerDamage
         {
             get;
             set;
@@ -65,6 +72,8 @@ namespace Barotrauma.Items.Components
                 return Math.Abs(targetForce / 100.0f) * (1.0f - item.ConditionPercentage / 10.0f); 
             }
         }
+
+        private const float TinkeringForceIncrease = 1.5f;
 
         public Engine(Item item, XElement element)
             : base(item, element)
@@ -106,31 +115,36 @@ namespace Barotrauma.Items.Components
             Force = MathHelper.Lerp(force, (Voltage < MinVoltage) ? 0.0f : targetForce, 0.1f);
             if (Math.Abs(Force) > 1.0f)
             {
+                float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, 1.0f);
+                float currForce = force * voltageFactor;
+                float condition = item.Condition / item.MaxCondition;
+                // Broken engine makes more noise.
+                float noise = Math.Abs(currForce) * MathHelper.Lerp(1.5f, 1f, condition);
+                UpdateAITargets(noise);
                 //arbitrary multiplier that was added to changes in submarine mass without having to readjust all engines
                 float forceMultiplier = 0.1f;
                 if (User != null)
                 {
                     forceMultiplier *= MathHelper.Lerp(0.5f, 2.0f, (float)Math.Sqrt(User.GetSkillLevel("helm") / 100));
                 }
+                currForce *= maxForce * forceMultiplier;
+                if (item.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering)
+                {
+                    currForce *= 1f + repairable.TinkeringStrength * TinkeringForceIncrease;
+                }
 
-                float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, 1.0f);
-                Vector2 currForce = new Vector2(force * maxForce * forceMultiplier * voltageFactor, 0.0f);
                 //less effective when in a bad condition
-                currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / item.MaxCondition);
-                item.Submarine.ApplyForce(currForce);
+                currForce *= MathHelper.Lerp(0.5f, 2.0f, condition);
+                if (item.Submarine.FlippedX) { currForce *= -1; }
+                Vector2 forceVector = new Vector2(currForce, 0);
+                item.Submarine.ApplyForce(forceVector);
                 UpdatePropellerDamage(deltaTime);
-                float maxChangeSpeed = 0.5f;
-                float modifier = 2;
-                float noise = MathUtils.NearlyEqual(0.0f, maxForce) ? 0.0f : currForce.Length() * forceMultiplier * modifier / maxForce;
-                float min = Math.Max(1 - maxChangeSpeed, 0);
-                float max = 1 + maxChangeSpeed;
-                UpdateAITargets(Math.Clamp(noise, min, max), deltaTime);
 #if CLIENT
                 particleTimer -= deltaTime;
                 if (particleTimer <= 0.0f)
                 {
-                    Vector2 particleVel = -currForce.ClampLength(5000.0f) / 5.0f;
-                    GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition + PropellerPos,
+                    Vector2 particleVel = -forceVector.ClampLength(5000.0f) / 5.0f;
+                    GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition + PropellerPos * item.Scale,
                         particleVel * Rand.Range(0.9f, 1.1f),
                         0.0f, item.CurrentHull);
                     particleTimer = 1.0f / particlesPerSec;
@@ -139,14 +153,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void UpdateAITargets(float increaseSpeed, float deltaTime)
+        private void UpdateAITargets(float noise)
         {
             if (item.AiTarget != null)
             {
-                item.AiTarget.IncreaseSoundRange(deltaTime, increaseSpeed);
+                item.AiTarget.SoundRange = MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, noise / 100);
                 if (item.CurrentHull != null && item.CurrentHull.AiTarget != null)
                 {
-                    // It's possible that some othe item increases the hull's soundrange more than the engine.
+                    // It's possible that some other item increases the hull's soundrange more than the engine.
                     item.CurrentHull.AiTarget.SoundRange = Math.Max(item.CurrentHull.AiTarget.SoundRange, item.AiTarget.SoundRange);
                 }
             }
@@ -154,21 +168,33 @@ namespace Barotrauma.Items.Components
 
         private void UpdatePropellerDamage(float deltaTime)
         {
+            if (DisablePropellerDamage) { return; }
+
             damageTimer += deltaTime;
-            if (damageTimer < 0.5f) return;
+            if (damageTimer < 0.5f) { return; }
             damageTimer = 0.1f;
 
-            if (propellerDamage == null) return;
-            Vector2 propellerWorldPos = item.WorldPosition + PropellerPos;
+            if (propellerDamage == null) { return; }
+
+            float scaledDamageRange = propellerDamage.DamageRange * item.Scale;
+
+            Vector2 propellerWorldPos = item.WorldPosition + PropellerPos * item.Scale; 
+            float broadRange = Math.Max(scaledDamageRange * 2, 500);
             foreach (Character character in Character.CharacterList)
             {
-                if (character.Submarine != null || !character.Enabled || character.Removed) continue;
+                if (!character.Enabled || character.Removed) { continue; }
+                if (Math.Abs(character.WorldPosition.X - propellerWorldPos.X) > broadRange) { continue; }
+                if (Math.Abs(character.WorldPosition.Y - propellerWorldPos.Y) > broadRange) { continue; }
 
-                float dist = Vector2.DistanceSquared(character.WorldPosition, propellerWorldPos);
-                if (dist > propellerDamage.DamageRange * propellerDamage.DamageRange) continue;
-
-                character.LastDamageSource = item;
-                propellerDamage.DoDamage(null, character, propellerWorldPos, 1.0f, true);
+                foreach (Limb limb in character.AnimController.Limbs)
+                {
+                    if (limb.IsSevered || !limb.body.Enabled) { continue; }
+                    float distSqr = Vector2.DistanceSquared(limb.WorldPosition, propellerWorldPos);
+                    if (distSqr > scaledDamageRange * scaledDamageRange) { continue; }
+                    character.LastDamageSource = item;
+                    propellerDamage.DoDamage(null, character, propellerWorldPos, 1.0f, true);
+                    break;
+                }
             }
         }
 
@@ -190,17 +216,17 @@ namespace Barotrauma.Items.Components
             PropellerPos = new Vector2(PropellerPos.X, -PropellerPos.Y);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
+            base.ReceiveSignal(signal, connection);
 
             if (connection.Name == "set_force")
             {
-                if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float tempForce))
+                if (float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float tempForce))
                 {
                     controlLockTimer = 0.1f;
                     targetForce = MathHelper.Clamp(tempForce, -100.0f, 100.0f);
-                    User = sender;
+                    User = signal.sender;
                 }
             }  
         }

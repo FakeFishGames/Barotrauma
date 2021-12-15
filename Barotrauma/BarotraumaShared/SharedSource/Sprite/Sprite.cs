@@ -28,7 +28,7 @@ namespace Barotrauma
                             return spr;
                         }
                         return null;
-                    }).Where(s => s!=null).ToList();
+                    }).Where(s => s != null).ToList();
                 }
                 return retVal;
             }
@@ -151,6 +151,12 @@ namespace Barotrauma
             {
                 sourceVector = overrideElement.GetAttributeVector4("sourcerect", Vector4.Zero);
             }
+            if ((overrideElement ?? SourceElement).Attribute("sheetindex") != null)
+            {
+                Point sheetElementSize = (overrideElement ?? SourceElement).GetAttributePoint("sheetelementsize", Point.Zero);
+                Point sheetIndex = (overrideElement ?? SourceElement).GetAttributePoint("sheetindex", Point.Zero);
+                sourceVector = new Vector4(sheetIndex.X * sheetElementSize.X, sheetIndex.Y * sheetElementSize.Y, sheetElementSize.X, sheetElementSize.Y);
+            }
             Compress = SourceElement.GetAttributeBool("compress", true);
             bool shouldReturn = false;
             if (!lazyLoad)
@@ -236,7 +242,7 @@ namespace Barotrauma
         {
             lock (list)
             {
-                list.RemoveAll(wRef => !wRef.TryGetTarget(out Sprite s) || s==this);
+                list.RemoveAll(wRef => !wRef.TryGetTarget(out Sprite s) || s == this);
             }
             DisposeTexture();
         }
@@ -294,6 +300,12 @@ namespace Barotrauma
                 {
                     sourceRect = overrideElement.GetAttributeRect("sourcerect", Rectangle.Empty);
                 }
+                if ((overrideElement ?? SourceElement).Attribute("sheetindex") != null)
+                {
+                    Point sheetElementSize = (overrideElement ?? SourceElement).GetAttributePoint("sheetelementsize", Point.Zero);
+                    Point sheetIndex = (overrideElement ?? SourceElement).GetAttributePoint("sheetindex", Point.Zero);
+                    sourceRect = new Rectangle(sheetIndex.X * sheetElementSize.X, sheetIndex.Y * sheetElementSize.Y, sheetElementSize.X, sheetElementSize.Y);
+                }
                 size = SourceElement.GetAttributeVector2("size", Vector2.One);
                 size.X *= sourceRect.Width;
                 size.Y *= sourceRect.Height;
@@ -324,7 +336,7 @@ namespace Barotrauma
             {
                 if (!path.EndsWith("/")) path += "/";
             }
-            FilePath = path + file;
+            FilePath = (path + file).CleanUpPathCrossPlatform(correctFilenameCase: true);
             if (!string.IsNullOrEmpty(FilePath))
             {
                 FullPath = Path.GetFullPath(FilePath);

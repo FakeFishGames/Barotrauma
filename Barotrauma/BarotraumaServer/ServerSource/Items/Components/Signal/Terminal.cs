@@ -19,27 +19,37 @@ namespace Barotrauma.Items.Components
                 GameServer.Log(GameServer.CharacterLogName(c.Character) + " entered \"" + newOutputValue + "\" on " + item.Name,
                     ServerLog.MessageType.ItemInteraction);
                 OutputValue = newOutputValue;
-                ShowOnDisplay(newOutputValue);
-                item.SendSignal(0, newOutputValue, "signal_out", null);
+                ShowOnDisplay(newOutputValue, addToHistory: true);
+                item.SendSignal(newOutputValue, "signal_out");
                 item.CreateServerEvent(this);
             }
         }
 
-        partial void ShowOnDisplay(string input)
+        partial void ShowOnDisplay(string input, bool addToHistory)
         {
-            messageHistory.Add(input);
-            while (messageHistory.Count > MaxMessages)
+            if (addToHistory)
             {
-                messageHistory.RemoveAt(0);
+                messageHistory.Add(input);
+                while (messageHistory.Count > MaxMessages)
+                {
+                    messageHistory.RemoveAt(0);
+                }
             }
         }
 
         public void SyncHistory()
         {
             //split too long messages to multiple parts
+            int msgIndex = 0;
             foreach (string str in messageHistory)
             {
                 string msgToSend = str;
+                if (string.IsNullOrEmpty(msgToSend))
+                {
+                    item.CreateServerEvent(this, new object[] { msgIndex, msgToSend });
+                    msgIndex++;
+                    continue;
+                }
                 if (msgToSend.Length > MaxMessageLength)
                 {
                     List<string> splitMessage = msgToSend.Split(' ').ToList();
@@ -62,20 +72,21 @@ namespace Barotrauma.Items.Components
                             if (!splitMessage.Any()) { break; }
                             tempMsg += " ";
                         } while (tempMsg.Length + splitMessage[0].Length < MaxMessageLength);
-                        item.CreateServerEvent(this, new string[] { msgToSend });
+                        item.CreateServerEvent(this, new object[] { msgIndex, tempMsg });
                         msgToSend = msgToSend.Remove(0, tempMsg.Length);
                     }
                 }
                 if (!string.IsNullOrEmpty(msgToSend))
                 {
-                    item.CreateServerEvent(this, new string[] { msgToSend });
-                }               
-            }            
+                    item.CreateServerEvent(this, new object[] { msgIndex, msgToSend });
+                }
+                msgIndex++;
+            }
         }
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
-            if (extraData.Length > 2 && extraData[2] is string str)
+            if (extraData.Length > 3 && extraData[3] is string str)
             {
                 msg.Write(str);
             }

@@ -60,7 +60,7 @@ namespace Barotrauma
             var newCampaignContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), campaignContainer.RectTransform, Anchor.Center), style: null);
             var loadCampaignContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), campaignContainer.RectTransform, Anchor.Center), style: null);
 
-            GameMain.NetLobbyScreen.CampaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer, null, saveFiles);
+            GameMain.NetLobbyScreen.CampaignSetupUI = new MultiPlayerCampaignSetupUI(newCampaignContainer, loadCampaignContainer, null, saveFiles);
 
             var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("NewCampaign"), style: "GUITabButton")
@@ -211,10 +211,7 @@ namespace Barotrauma
             {
                 Character.Controlled = null;
 
-                if (prevControlled != null)
-                {
-                    prevControlled.ClearInputs();
-                }
+                prevControlled?.ClearInputs();
 
                 overlayColor = Color.LightGray;
                 overlaySprite = Map.CurrentLocation.Type.GetPortrait(Map.CurrentLocation.PortraitId);
@@ -227,6 +224,11 @@ namespace Barotrauma
                 float timer = 0.0f;
                 while (timer < textDuration)
                 {
+                    if (GameMain.GameSession == null || Screen.Selected != GameMain.GameScreen)
+                    {
+                        GUI.DisableHUD = false;
+                        yield return CoroutineStatus.Success;
+                    }
                     // Try to grab the controlled here to prevent inputs, assigned late on multiplayer
                     if (Character.Controlled != null)
                     {
@@ -239,11 +241,20 @@ namespace Barotrauma
                     timer = Math.Min(timer + CoroutineManager.DeltaTime, textDuration);
                     yield return CoroutineStatus.Running;
                 }
+                var outpost = GameMain.GameSession.Level.StartOutpost;
+                var borders = outpost.GetDockedBorders();
+                borders.Location += outpost.WorldPosition.ToPoint();
+                GameMain.GameScreen.Cam.Position = new Vector2(borders.X + borders.Width / 2, borders.Y - borders.Height / 2);
+                float startZoom = 0.8f /
+                    ((float)Math.Max(borders.Width, borders.Height) / (float)GameMain.GameScreen.Cam.Resolution.X);
+                GameMain.GameScreen.Cam.MinZoom = Math.Min(startZoom, GameMain.GameScreen.Cam.MinZoom);
                 var transition = new CameraTransition(prevControlled, GameMain.GameScreen.Cam,
                     null, null,
                     fadeOut: false,
-                    duration: 5,
-                    startZoom: 1.5f, endZoom: 1.0f)
+                    losFadeIn: true,
+                    waitDuration: 1,
+                    panDuration: 5,
+                    startZoom: startZoom, endZoom: 1.0f)
                 {
                     AllowInterrupt = true,
                     RemoveControlFromCharacter = false
@@ -274,7 +285,8 @@ namespace Barotrauma
                 var transition = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam,
                     null, null,
                     fadeOut: false,
-                    duration: 5,
+                    losFadeIn: true,
+                    panDuration: 5,
                     startZoom: 0.5f, endZoom: 1.0f)
                 {
                     AllowInterrupt = true,
@@ -327,7 +339,7 @@ namespace Barotrauma
             var endTransition = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, null,
                 Alignment.Center,
                 fadeOut: false,
-                duration: EndTransitionDuration);
+                panDuration: EndTransitionDuration);
             GameMain.Client.EndCinematic = endTransition;
 
             Location portraitLocation = Map?.SelectedLocation ?? Map?.CurrentLocation ?? Level.Loaded?.StartLocation;
@@ -335,7 +347,7 @@ namespace Barotrauma
             {
                 overlaySprite = portraitLocation.Type.GetPortrait(portraitLocation.PortraitId);
             }
-            float fadeOutDuration = endTransition.Duration;
+            float fadeOutDuration = endTransition.PanDuration;
             float t = 0.0f;
             while (t < fadeOutDuration || endTransition.Running)
             {
@@ -368,6 +380,7 @@ namespace Barotrauma
                 }
             }
 
+            GUI.SetSavingIndicatorState(false);
             yield return CoroutineStatus.Success;
         }
 
@@ -420,7 +433,7 @@ namespace Barotrauma
                 {
                     //wasn't initially docked (sub doesn't have a docking port?)
                     // -> choose a destination when the sub is far enough from the start outpost
-                    if (!Submarine.MainSub.AtStartPosition)
+                    if (!Submarine.MainSub.AtStartExit)
                     {
                         ForceMapUI = true;
                         if (CampaignUI == null) { InitCampaignUI(); }
@@ -437,8 +450,10 @@ namespace Barotrauma
                 {
                     ShowCampaignUI = false;
                 }
+                HintManager.OnAvailableTransition(transitionType);
             }
         }
+
         public override void End(TransitionType transitionType = TransitionType.None)
         {
             base.End(transitionType);
@@ -450,7 +465,7 @@ namespace Barotrauma
             {
                 if (mb is GUIMessageBox msgBox)
                 {
-                    if (mb.UserData is Pair<string, ushort> pair && pair.First.Equals("conversationaction", StringComparison.OrdinalIgnoreCase))
+                    if (ReadyCheck.IsReadyCheck(mb) || mb.UserData is Pair<string, ushort> pair && pair.First.Equals("conversationaction", StringComparison.OrdinalIgnoreCase))
                     {
                         msgBox.Close();
                     }
@@ -465,6 +480,8 @@ namespace Barotrauma
             {
                 IsFirstRound = false;
                 CoroutineManager.StartCoroutine(DoLevelTransition(), "LevelTransition");
+                bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
+                GUI.SetSavingIndicatorState(success && (Level.IsLoadedOutpost || transitionType != TransitionType.None));
             }
         }
 
@@ -496,7 +513,7 @@ namespace Barotrauma
             var transition = new CameraTransition(endObject ?? Submarine.MainSub, GameMain.GameScreen.Cam,
                 null, Alignment.Center,
                 fadeOut: true,
-                duration: 10,
+                panDuration: 10,
                 startZoom: null, endZoom: 0.2f);
 
             while (transition.Running)
@@ -515,7 +532,13 @@ namespace Barotrauma
 
             msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
             msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
-            msg.Write(map.SelectedMissionIndex == -1 ? byte.MaxValue : (byte)map.SelectedMissionIndex);
+
+            var selectedMissionIndices = map.GetSelectedMissionIndices();
+            msg.Write((byte)selectedMissionIndices.Count());
+            foreach (int selectedMissionIndex in selectedMissionIndices)
+            {
+                msg.Write((byte)selectedMissionIndex);
+            }
             msg.Write(PurchasedHullRepairs);
             msg.Write(PurchasedItemRepairs);
             msg.Write(PurchasedLostShuttles);
@@ -550,6 +573,13 @@ namespace Barotrauma
                 msg.Write(category.Identifier);
                 msg.Write((byte)level);
             }
+
+            msg.Write((ushort)UpgradeManager.PurchasedItemSwaps.Count);
+            foreach (var itemSwap in UpgradeManager.PurchasedItemSwaps)
+            {
+                msg.Write(itemSwap.ItemToRemove.ID);
+                msg.Write(itemSwap.ItemToInstall?.Identifier ?? string.Empty);
+            }
         }
 
         //static because we may need to instantiate the campaign if it hasn't been done yet
@@ -562,8 +592,15 @@ namespace Barotrauma
             string mapSeed      = msg.ReadString();
             UInt16 currentLocIndex      = msg.ReadUInt16();
             UInt16 selectedLocIndex     = msg.ReadUInt16();
-            byte selectedMissionIndex   = msg.ReadByte();
-            bool allowDebugTeleport     = msg.ReadBoolean();
+
+            byte selectedMissionCount = msg.ReadByte();
+            List<int> selectedMissionIndices = new List<int>();
+            for (int i = 0; i < selectedMissionCount; i++)
+            {
+                selectedMissionIndices.Add(msg.ReadByte());
+            }
+
+            bool allowDebugTeleport = msg.ReadBoolean();
             float? reputation = null;
             if (msg.ReadBoolean()) { reputation = msg.ReadSingle(); }
             
@@ -638,6 +675,21 @@ namespace Barotrauma
                 pendingUpgrades.Add(new PurchasedUpgrade(prefab, category, upgradeLevel));
             }
 
+            ushort purchasedItemSwapCount = msg.ReadUInt16();
+            List<PurchasedItemSwap> purchasedItemSwaps = new List<PurchasedItemSwap>();
+            for (int i = 0; i < purchasedItemSwapCount; i++)
+            {
+                UInt16 itemToRemoveID = msg.ReadUInt16();
+                Item itemToRemove = Entity.FindEntityByID(itemToRemoveID) as Item;
+
+                string itemToInstallIdentifier = msg.ReadString();
+                ItemPrefab itemToInstall = string.IsNullOrEmpty(itemToInstallIdentifier) ? null : ItemPrefab.Find(string.Empty, itemToInstallIdentifier);
+
+                if (itemToRemove == null) { continue; }
+
+                purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
+            }
+
             bool hasCharacterData = msg.ReadBoolean();
             CharacterInfo myCharacterInfo = null;
             if (hasCharacterData)
@@ -649,7 +701,7 @@ namespace Barotrauma
             {
                 string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer);
 
-                GameMain.GameSession = new GameSession(null, savePath, GameModePreset.MultiPlayerCampaign, mapSeed);
+                GameMain.GameSession = new GameSession(null, savePath, GameModePreset.MultiPlayerCampaign, CampaignSettings.Unsure, mapSeed);
                 campaign = (MultiPlayerCampaign)GameMain.GameSession.GameMode;
                 campaign.CampaignID = campaignID;
                 GameMain.NetLobbyScreen.ToggleCampaignMode(true);
@@ -675,7 +727,7 @@ namespace Barotrauma
 
                     campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                     campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
-                    campaign.Map.SelectMission(selectedMissionIndex);
+                    campaign.Map.SelectMission(selectedMissionIndices);
                     campaign.Map.AllowDebugTeleport = allowDebugTeleport;
                     campaign.CargoManager.SetItemsInBuyCrate(buyCrateItems);
                     campaign.CargoManager.SetPurchasedItems(purchasedItems);
@@ -684,12 +736,32 @@ namespace Barotrauma
                     campaign.UpgradeManager.SetPendingUpgrades(pendingUpgrades);
                     campaign.UpgradeManager.PurchasedUpgrades.Clear();
 
+                    campaign.UpgradeManager.PurchasedUpgrades.Clear();
+                    foreach (var purchasedItemSwap in purchasedItemSwaps)
+                    {
+                        if (purchasedItemSwap.ItemToInstall == null)
+                        {
+                            campaign.UpgradeManager.CancelItemSwap(purchasedItemSwap.ItemToRemove, force: true);
+                        }
+                        else
+                        {
+                            campaign.UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, force: true);
+                        }
+                    }
+                    foreach (Item item in Item.ItemList)
+                    {
+                        if (item.PendingItemSwap != null && !purchasedItemSwaps.Any(it => it.ItemToRemove == item))
+                        {
+                            item.PendingItemSwap = null;
+                        }
+                    }
+
                     foreach (var (identifier, rep) in factionReps)
                     {
                        Faction faction = campaign.Factions.FirstOrDefault(f => f.Prefab.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
                        if (faction?.Reputation != null)
                        {
-                           faction.Reputation.Value = rep;
+                           faction.Reputation.SetReputation(rep);
                        }
                        else
                        {
@@ -699,7 +771,7 @@ namespace Barotrauma
 
                     if (reputation.HasValue)
                     {
-                        campaign.Map.CurrentLocation.Reputation.Value = reputation.Value;
+                        campaign.Map.CurrentLocation.Reputation.SetReputation(reputation.Value);
                         campaign?.CampaignUI?.UpgradeStore?.RefreshAll();
                     }
 
@@ -711,13 +783,20 @@ namespace Barotrauma
                             DebugConsole.ThrowError($"Error when receiving campaign data from the server: mission prefab \"{availableMission.First}\" not found.");
                             continue;
                         }
-                        if (availableMission.Second < 0 || availableMission.Second >= campaign.Map.CurrentLocation.Connections.Count)
+                        if (availableMission.Second == 255)
                         {
-                            DebugConsole.ThrowError($"Error when receiving campaign data from the server: connection index for mission \"{availableMission.First}\" out of range (index: {availableMission.Second}, current location: {campaign.Map.CurrentLocation.Name}, connections: {campaign.Map.CurrentLocation.Connections.Count}).");
-                            continue;
+                            campaign.Map.CurrentLocation.UnlockMission(missionPrefab);
                         }
-                        LocationConnection connection = campaign.Map.CurrentLocation.Connections[availableMission.Second];
-                        campaign.Map.CurrentLocation.UnlockMission(missionPrefab, connection);
+                        else
+                        {
+                            if (availableMission.Second < 0 || availableMission.Second >= campaign.Map.CurrentLocation.Connections.Count)
+                            {
+                                DebugConsole.ThrowError($"Error when receiving campaign data from the server: connection index for mission \"{availableMission.First}\" out of range (index: {availableMission.Second}, current location: {campaign.Map.CurrentLocation.Name}, connections: {campaign.Map.CurrentLocation.Connections.Count}).");
+                                continue;
+                            }
+                            LocationConnection connection = campaign.Map.CurrentLocation.Connections[availableMission.Second];
+                            campaign.Map.CurrentLocation.UnlockMission(missionPrefab, connection);
+                        }
                     }
 
                     GameMain.NetLobbyScreen.ToggleCampaignMode(true);
@@ -770,16 +849,29 @@ namespace Barotrauma
             {
                 pendingHires.Add(msg.ReadInt32());
             }
-            
-            bool validateHires = msg.ReadBoolean();
+
+            ushort hiredLength = msg.ReadUInt16();
+            List<CharacterInfo> hiredCharacters = new List<CharacterInfo>();
+            for (int i = 0; i < hiredLength; i++)
+            {
+                CharacterInfo hired = CharacterInfo.ClientRead("human", msg);
+                hired.Salary = msg.ReadInt32();
+                hiredCharacters.Add(hired);
+            }
+
+            bool renameCrewMember = msg.ReadBoolean();
+            if (renameCrewMember)
+            {
+                int renamedIdentifier = msg.ReadInt32();
+                string newName = msg.ReadString();
+                CharacterInfo renamedCharacter = CrewManager.CharacterInfos.FirstOrDefault(info => info.GetIdentifierUsingOriginalName() == renamedIdentifier);
+                if (renamedCharacter != null) { CrewManager.RenameCharacter(renamedCharacter, newName); }
+            }
 
             bool fireCharacter = msg.ReadBoolean();
-
-            int firedIdentifier = -1;
-            if (fireCharacter) { firedIdentifier = msg.ReadInt32(); }
-
             if (fireCharacter)
             {
+                int firedIdentifier = msg.ReadInt32();
                 CharacterInfo firedCharacter = CrewManager.CharacterInfos.FirstOrDefault(info => info.GetIdentifier() == firedIdentifier);
                 // this one might and is allowed to be null since the character is already fired on the original sender's game
                 if (firedCharacter != null) { CrewManager.FireCharacter(firedCharacter); }
@@ -787,10 +879,10 @@ namespace Barotrauma
 
             if (map?.CurrentLocation?.HireManager != null && CampaignUI?.CrewManagement != null)
             {
-                CampaignUI?.CrewManagement?.SetHireables(map.CurrentLocation, availableHires);
-                if (validateHires) { CampaignUI?.CrewManagement.ValidatePendingHires(); }
-                CampaignUI?.CrewManagement?.SetPendingHires(pendingHires, map?.CurrentLocation);
-                if (fireCharacter) { CampaignUI?.CrewManagement.UpdateCrew(); }
+                CampaignUI.CrewManagement.SetHireables(map.CurrentLocation, availableHires);
+                if (hiredCharacters.Any()) { CampaignUI.CrewManagement.ValidateHires(hiredCharacters); }
+                CampaignUI.CrewManagement.SetPendingHires(pendingHires, map.CurrentLocation);
+                if (renameCrewMember || fireCharacter) { CampaignUI.CrewManagement.UpdateCrew(); }
             }
         }
 
@@ -812,8 +904,7 @@ namespace Barotrauma
                 return; 
             }
             Load(doc.Root.Element("MultiPlayerCampaign"));
-            SubmarineInfo selectedSub;
-            GameMain.GameSession.OwnedSubmarines = SaveUtil.LoadOwnedSubmarines(doc, out selectedSub);
+            GameMain.GameSession.OwnedSubmarines = SaveUtil.LoadOwnedSubmarines(doc, out SubmarineInfo selectedSub);
             GameMain.GameSession.SubmarineInfo = selectedSub;
         }
     }

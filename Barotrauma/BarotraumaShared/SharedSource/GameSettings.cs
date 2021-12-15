@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Barotrauma.IO;
 using Barotrauma.Extensions;
+using System.Diagnostics;
 #if CLIENT
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
@@ -50,6 +51,7 @@ namespace Barotrauma
         public bool DynamicRangeCompressionEnabled { get; set; }
         public bool VoipAttenuationEnabled { get; set; }
         public bool UseDirectionalVoiceChat { get; set; }
+        public bool DisableVoiceChatFilters { get; set; }
 
         public IList<string> AudioDeviceNames;
         public IList<string> CaptureDeviceNames;
@@ -68,9 +70,12 @@ namespace Barotrauma
 
         public float NoiseGateThreshold { get; set; }
 
+        public bool UseLocalVoiceByDefault { get; set; }
+
 #if CLIENT
-        private KeyOrMouse[] keyMapping;
+        public KeyOrMouse[] keyMapping;
         private KeyOrMouse[] inventoryKeyMapping;
+        public static Dictionary<Keys, string> ConsoleKeybinds = new Dictionary<Keys, string>();
 #endif
 
         private WindowMode windowMode;
@@ -123,6 +128,8 @@ namespace Barotrauma
             set { jobPreferences = value; }
         }
 
+        public CharacterTeamType TeamPreference { get; set; }
+
         public bool AreJobPreferencesEqual(List<Pair<string, int>> compareTo)
         {
             if (jobPreferences == null || compareTo == null) return false;
@@ -136,14 +143,7 @@ namespace Barotrauma
             return true;
         }
 
-        public int CharacterHeadIndex { get; set; }
-        public int CharacterHairIndex { get; set; }
-        public int CharacterBeardIndex { get; set; }
-        public int CharacterMoustacheIndex { get; set; }
-        public int CharacterFaceAttachmentIndex { get; set; }
-
-        public Gender CharacterGender { get; set; }
-        public Race CharacterRace { get; set; }
+        internal CharacterInfo.HeadInfo PlayerCharacterCustomization { get; set; }
 
         private float aimAssistAmount;
         public float AimAssistAmount
@@ -154,6 +154,8 @@ namespace Barotrauma
 
         public bool EnableMouseLook { get; set; } = true;
 
+        public bool EnableRadialDistortion { get; set; } = true;
+
         public bool CrewMenuOpen { get; set; } = true;
         public bool ChatOpen { get; set; } = true;
 
@@ -162,7 +164,7 @@ namespace Barotrauma
         /// <summary>
         /// How many corpses there can be in a sub before they start to get despawned
         /// </summary>
-        public int CorpsesPerSubDespawnThreshold { get; set; }  = 5;
+        public int CorpsesPerSubDespawnThreshold { get; set; }  = 10;
 
         private string overrideSaveFolder, overrideMultiplayerSaveFolder;
 
@@ -282,17 +284,26 @@ namespace Barotrauma
             private set;
         }
 
+        public XElement ServerFilterElement
+        {
+            get;
+            private set;
+        }
+
         public volatile bool SuppressModFolderWatcher;
 
         public volatile bool WaitingForAutoUpdate;
+
+        public bool DisableInGameHints { get; set; }
 
 #if DEBUG
         public bool AutomaticQuickStartEnabled { get; set; }
         public bool AutomaticCampaignLoadEnabled { get; set; }
         public bool TextManagerDebugModeEnabled { get; set; }
-#endif
+        public bool TestScreenEnabled { get; set; }
 
-        private System.IO.FileSystemWatcher modsFolderWatcher;
+        public bool ModBreakerMode { get; set; }
+#endif
 
         private static int ContentFileLoadOrder(ContentFile a)
         {
@@ -349,22 +360,28 @@ namespace Barotrauma
 
         private List<Tuple<ContentPackage, bool>> backupModOrder;
 
-        public void SwapPackages(ContentPackage corePackage, List<ContentPackage> regularPackages)
+        public void BackUpModOrder()
         {
-            backupModOrder = new List<Tuple<ContentPackage, bool>>();
-            backupModOrder.Add(new Tuple<ContentPackage, bool>(CurrentCorePackage, true));
-            for (int i=0;i<ContentPackage.RegularPackages.Count;i++)
+            backupModOrder = new List<Tuple<ContentPackage, bool>>
+            {
+                new Tuple<ContentPackage, bool>(CurrentCorePackage, true)
+            };
+            for (int i = 0; i < ContentPackage.RegularPackages.Count; i++)
             {
                 var p = ContentPackage.RegularPackages[i];
                 backupModOrder.Add(new Tuple<ContentPackage, bool>(p, EnabledRegularPackages.Contains(p)));
             }
+        }
 
+        public void SwapPackages(ContentPackage corePackage, List<ContentPackage> regularPackages)
+        {
             List<ContentPackage> packagesToDisable = new List<ContentPackage>();
             packagesToDisable.Add(CurrentCorePackage);
-            packagesToDisable.AddRange(EnabledRegularPackages.Where(p => p.HasMultiplayerIncompatibleContent));
+            packagesToDisable.AddRange(enabledRegularPackages.Where(p => p.HasMultiplayerIncompatibleContent));
             List<ContentPackage> packagesToEnable = new List<ContentPackage>();
             packagesToEnable.Add(corePackage);
-            packagesToEnable.AddRange(regularPackages);
+            List<ContentPackage> regularPackagesToAdd = regularPackages.Where(p => p.HasMultiplayerIncompatibleContent).ToList();
+            packagesToEnable.AddRange(regularPackagesToAdd);
 
             IEnumerable<ContentFile> filesOfDisabledPkgs = packagesToDisable.SelectMany(p => p.Files);
             IEnumerable<ContentFile> filesOfEnabledPkgs = packagesToEnable.SelectMany(p => p.Files);
@@ -378,14 +395,18 @@ namespace Barotrauma
                     Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
 
             CurrentCorePackage = corePackage;
-            enabledRegularPackages.RemoveAll(p => p.HasMultiplayerIncompatibleContent); enabledRegularPackages.AddRange(regularPackages);
+            enabledRegularPackages.RemoveAll(p => p.HasMultiplayerIncompatibleContent); enabledRegularPackages.AddRange(regularPackagesToAdd);
 
             DisableContentPackageItems(filesToDisable);
             EnableContentPackageItems(filesToEnable);
 
             RefreshContentPackageItems(filesOfEnabledPkgs.Concat(filesToDisable));
 
-            ContentPackage.SortContentPackages(p => -regularPackages.IndexOf(p));
+            ContentPackage.SortContentPackages(p => -regularPackages.IndexOf(p), config: this);
+
+#if DEBUG
+            Debug.Assert(enabledRegularPackages.Count == enabledRegularPackages.Distinct().Count());
+#endif
         }
 
         public void RestoreBackupPackages()
@@ -395,7 +416,7 @@ namespace Barotrauma
             SwapPackages(
                 backupModOrder[0].Item1,
                 backupModOrder.Skip(1).Where(p => p.Item2).Select(p => p.Item1).ToList());
-            ContentPackage.SortContentPackages(p => backupModOrder.FindIndex(n => n.Item1 == p));
+            ContentPackage.SortContentPackages(p => backupModOrder.FindIndex(n => n.Item1 == p), config: this);
 
             backupModOrder = null;
         }
@@ -428,6 +449,8 @@ namespace Barotrauma
 
         public void SortContentPackages(bool refreshAll = false)
         {
+            var previousEnabledRegularPackages = enabledRegularPackages.ToList();
+
             for (int i = enabledRegularPackages.Count - 1; i >= 0; i--)
             {
                 var package = enabledRegularPackages[i];
@@ -465,6 +488,7 @@ namespace Barotrauma
             var sortedSelected = enabledRegularPackages
                     .OrderBy(p => -ContentPackage.RegularPackages.IndexOf(p))
                     .ToList();
+            if (previousEnabledRegularPackages.SequenceEqual(sortedSelected)) { return; }
             enabledRegularPackages.Clear(); enabledRegularPackages.AddRange(sortedSelected);
 
             CharacterPrefab.Prefabs.SortAll();
@@ -518,6 +542,12 @@ namespace Barotrauma
                     case ContentType.Text:
                         TextManager.LoadTextPack(file.Path);
                         break;
+                    case ContentType.Talents:
+                        TalentPrefab.LoadFromFile(file);
+                        break;
+                    case ContentType.TalentTrees:
+                        TalentTree.LoadFromFile(file);
+                        break;
 #if CLIENT
                     case ContentType.Particles:
                         GameMain.ParticleManager?.LoadPrefabsFromFile(file);
@@ -564,6 +594,12 @@ namespace Barotrauma
                     case ContentType.Text:
                         TextManager.RemoveTextPack(file.Path);
                         break;
+                    case ContentType.Talents:
+                        TalentPrefab.LoadFromFile(file);
+                        break;
+                    case ContentType.TalentTrees:
+                        TalentTree.LoadFromFile(file);
+                        break;
 #if CLIENT
                     case ContentType.Particles:
                         GameMain.ParticleManager?.RemovePrefabsByFile(file.Path);
@@ -586,7 +622,8 @@ namespace Barotrauma
                                f.Type == ContentType.Outpost ||
                                f.Type == ContentType.OutpostModule ||
                                f.Type == ContentType.Wreck ||
-                               f.Type == ContentType.BeaconStation)) { SubmarineInfo.RefreshSavedSubs(); }
+                               f.Type == ContentType.BeaconStation ||
+                               f.Type == ContentType.EnemySubmarine)) { SubmarineInfo.RefreshSavedSubs(); }
             if (files.Any(f => f.Type == ContentType.NPCSets)) { NPCSet.LoadSets(); }
             if (files.Any(f => f.Type == ContentType.OutpostConfig)) { OutpostGenerationParams.LoadPresets(); }
             if (files.Any(f => f.Type == ContentType.Factions)) { FactionPrefab.LoadFactions(); }
@@ -672,7 +709,6 @@ namespace Barotrauma
         public string MasterServerUrl { get; set; }
         public string RemoteContentUrl { get; set; }
         public bool AutoCheckUpdates { get; set; }
-        public bool WasGameUpdated { get; set; }
 
         private string playerName;
         public string PlayerName
@@ -698,10 +734,23 @@ namespace Barotrauma
 
         private const float MinHUDScale = 0.75f, MaxHUDScale = 1.25f;
         public static float HUDScale { get; set; }
+
         private const float MinInventoryScale = 0.75f, MaxInventoryScale = 1.25f;
         public static float InventoryScale { get; set; }
 
+        private const float MinTextScale = 0.5f, MaxTextScale = 1.5f;
+        public static float TextScale { get; set; }
+        private bool textScaleDirty;
+
         public List<string> CompletedTutorialNames { get; private set; }
+        /// <summary>
+        /// Identifiers of hints the player has chosen not to see again
+        /// </summary>
+        public HashSet<string> IgnoredHints { get; private set; } = new HashSet<string>();
+        public HashSet<string> EncounteredCreatures { get; private set; } = new HashSet<string>();
+        public HashSet<string> KilledCreatures { get; private set; } = new HashSet<string>();
+
+        public readonly HashSet<string> RecentlyEncounteredCreatures = new HashSet<string>();
 
         public static bool VerboseLogging { get; set; }
         public static bool SaveDebugConsoleLogs { get; set; }
@@ -729,10 +778,13 @@ namespace Barotrauma
 
         public bool ShowLanguageSelectionPrompt { get; set; }
 
+        public static bool ShowOffensiveServerPrompt { get; set; }
+
         private bool showTutorialSkipWarning = true;
 
         public static bool EnableSubmarineAutoSave { get; set; }
         public static int MaximumAutoSaves { get; set; }
+        public static int AutoSaveIntervalSeconds { get; set; }
         public static Color SubEditorBackgroundColor { get; set; }
         public static int SubEditorMaxUndoBuffer { get; set; }
 
@@ -749,93 +801,7 @@ namespace Barotrauma
 
             LoadDefaultConfig();
 
-            if (WasGameUpdated)
-            {
-                UpdaterUtil.CleanOldFiles();
-                WasGameUpdated = false;
-                SaveNewDefaultConfig();
-            }
-
             LoadPlayerConfig();
-
-            modsFolderWatcher = new System.IO.FileSystemWatcher("Mods");
-            modsFolderWatcher.Filter = "*";
-            modsFolderWatcher.NotifyFilter = System.IO.NotifyFilters.LastWrite | System.IO.NotifyFilters.FileName | System.IO.NotifyFilters.DirectoryName;
-            modsFolderWatcher.Created += OnModFolderUpdate;
-            modsFolderWatcher.Deleted += OnModFolderUpdate;
-            modsFolderWatcher.Renamed += OnModFolderUpdate;
-            modsFolderWatcher.EnableRaisingEvents = true;
-        }
-
-        private void OnModFolderUpdate(object sender, System.IO.FileSystemEventArgs e)
-        {
-            if (SuppressModFolderWatcher || (GameMain.NetworkMember?.IsClient ?? false)) { return; }
-            switch (e.ChangeType)
-            {
-                case System.IO.WatcherChangeTypes.Created:
-                    {
-                        string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
-                        if (File.Exists(cpPath) &&
-                            !ContentPackage.AllPackages.Any(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath))
-                        {
-                            ContentPackage.AddPackage(new ContentPackage(cpPath));
-                        }
-                    }
-                    break;
-                case System.IO.WatcherChangeTypes.Deleted:
-                    {
-                        string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
-                        var toRemove = ContentPackage.RegularPackages.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
-                        foreach (var cp in toRemove)
-                        {
-                            if (enabledRegularPackages.Contains(cp)) { DisableRegularPackage(cp); }
-                        }
-
-                        toRemove.AddRange(ContentPackage.CorePackages.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath));
-                        bool reselectCore = false;
-                        foreach (var cp in toRemove)
-                        {
-                            ContentPackage.RemovePackage(cp);
-                            if (cp.IsCorePackage)
-                            {
-                                reselectCore = true;
-                            }
-                        }
-                        if (reselectCore) { AutoSelectCorePackage(null); }
-                    }
-                    break;
-                case System.IO.WatcherChangeTypes.Renamed:
-                    {
-                        System.IO.RenamedEventArgs renameArgs = e as System.IO.RenamedEventArgs;
-
-                        string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
-                        var toRemove = ContentPackage.RegularPackages.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
-                        foreach (var cp in toRemove)
-                        {
-                            if (enabledRegularPackages.Contains(cp)) { DisableRegularPackage(cp); }
-                        }
-
-                        toRemove.AddRange(ContentPackage.CorePackages.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath));
-                        bool reselectCore = false;
-                        foreach (var cp in toRemove)
-                        {
-                            ContentPackage.RemovePackage(cp);
-                            if (cp.IsCorePackage)
-                            {
-                                reselectCore = true;
-                            }
-                        }
-
-                        cpPath = Path.GetFullPath(Path.Combine(renameArgs.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
-                        if (File.Exists(cpPath) &&
-                            !ContentPackage.AllPackages.Any(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath))
-                        {
-                            ContentPackage.AddPackage(new ContentPackage(cpPath));
-                        }
-                        if (reselectCore) { AutoSelectCorePackage(null); }
-                    }
-                    break;
-            }
         }
 
         private void LoadDefaultConfig(bool setLanguage = true, bool loadContentPackages = true)
@@ -859,7 +825,6 @@ namespace Barotrauma
 
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", MasterServerUrl);
             RemoteContentUrl = doc.Root.GetAttributeString("remotecontenturl", RemoteContentUrl);
-            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", WasGameUpdated);
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", VerboseLogging);
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", SaveDebugConsoleLogs);
             AutoUpdateWorkshopItems = doc.Root.GetAttributeBool("autoupdateworkshopitems", AutoUpdateWorkshopItems);
@@ -869,6 +834,7 @@ namespace Barotrauma
             LoadAudioSettings(doc);
 #if CLIENT
             LoadControls(doc);
+            LoadSubEditorImages(doc);
 #endif
             if (loadContentPackages)
             {
@@ -880,170 +846,6 @@ namespace Barotrauma
 #endif
 
             UnsavedSettings = false;
-        }
-
-        private void SaveNewDefaultConfig()
-        {
-            XDocument doc = new XDocument();
-
-            if (doc.Root == null)
-            {
-                doc.Add(new XElement("config"));
-            }
-
-            doc.Root.Add(
-                new XAttribute("language", TextManager.Language),
-                new XAttribute("masterserverurl", MasterServerUrl),
-                new XAttribute("remotecontenturl", RemoteContentUrl),
-                new XAttribute("autocheckupdates", AutoCheckUpdates),
-                new XAttribute("musicvolume", musicVolume),
-                new XAttribute("soundvolume", soundVolume),
-                new XAttribute("microphonevolume", microphoneVolume),
-                new XAttribute("voicechatvolume", voiceChatVolume),
-                new XAttribute("voicechatcutoffprevention", VoiceChatCutoffPrevention),
-                new XAttribute("verboselogging", VerboseLogging),
-                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
-                new XAttribute("submarineautosave", EnableSubmarineAutoSave),
-                new XAttribute("maxautosaves", MaximumAutoSaves),
-                new XAttribute("subeditorbackground", XMLExtensions.ColorToString(SubEditorBackgroundColor)),
-                new XAttribute("subeditorundobuffer", SubEditorMaxUndoBuffer),
-                new XAttribute("enablesplashscreen", EnableSplashScreen),
-                new XAttribute("usesteammatchmaking", UseSteamMatchmaking),
-                new XAttribute("quickstartsub", QuickStartSubmarineName),
-                new XAttribute("requiresteamauthentication", RequireSteamAuthentication),
-                new XAttribute("aimassistamount", aimAssistAmount),
-                new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning));
-
-            if (!ShowUserStatisticsPrompt)
-            {
-                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
-            }
-
-            if (WasGameUpdated)
-            {
-                doc.Root.Add(new XAttribute("wasgameupdated", true));
-            }
-
-            XElement gMode = doc.Root.Element("graphicsmode");
-            if (gMode == null)
-            {
-                gMode = new XElement("graphicsmode");
-                doc.Root.Add(gMode);
-            }
-            if (GraphicsWidth == 0 || GraphicsHeight == 0)
-            {
-                gMode.ReplaceAttributes(new XAttribute("displaymode", windowMode));
-            }
-            else
-            {
-                gMode.ReplaceAttributes(
-                    new XAttribute("width", GraphicsWidth),
-                    new XAttribute("height", GraphicsHeight),
-                    new XAttribute("vsync", VSyncEnabled),
-                    new XAttribute("framelimit", Timing.FrameLimit),
-                    new XAttribute("displaymode", windowMode));
-            }
-
-            XElement gSettings = doc.Root.Element("graphicssettings");
-            if (gSettings == null)
-            {
-                gSettings = new XElement("graphicssettings");
-                doc.Root.Add(gSettings);
-            }
-
-            gSettings.ReplaceAttributes(
-                new XAttribute("particlelimit", ParticleLimit),
-                new XAttribute("lightmapscale", LightMapScale),
-                new XAttribute("chromaticaberration", ChromaticAberrationEnabled),
-                new XAttribute("losmode", LosMode),
-                new XAttribute("hudscale", HUDScale),
-                new XAttribute("inventoryscale", InventoryScale));
-
-            foreach (ContentPackage contentPackage in ContentPackage.CorePackages)
-            {
-                if (contentPackage.Path.Contains(VanillaContentPackagePath))
-                {
-                    doc.Root.Add(new XElement("contentpackages", new XElement("core", new XAttribute("name", contentPackage.Name))));
-                    break;
-                }
-            }
-
-#if CLIENT
-            var keyMappingElement = new XElement("keymapping");
-            doc.Root.Add(keyMappingElement);
-            for (int i = 0; i < keyMapping.Length; i++)
-            {
-                KeyOrMouse bind = keyMapping[i];
-                if (bind.MouseButton == MouseButton.None)
-                {
-                    keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), bind.Key));
-                }
-                else
-                {
-                    keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), bind.MouseButton));
-                }
-            }
-
-            var inventoryKeyMappingElement = new XElement("inventorykeymapping");
-            doc.Root.Add(inventoryKeyMappingElement);
-            for (int i = 0; i < inventoryKeyMapping.Length; i++)
-            {
-                KeyOrMouse bind = inventoryKeyMapping[i];
-                if (bind.MouseButton == MouseButton.None)
-                {
-                    inventoryKeyMappingElement.Add(new XAttribute($"slot{i}", bind.Key));
-                }
-                else
-                {
-                    inventoryKeyMappingElement.Add(new XAttribute($"slot{i}", bind.MouseButton));
-                }
-            }
-#endif
-
-            var gameplay = new XElement("gameplay");
-            var jobPreferences = new XElement("jobpreferences");
-            foreach (Pair<string, int> job in JobPreferences)
-            {
-                XElement jobElement = new XElement("job");
-                jobElement.Add(new XAttribute("identifier", job.First));
-                jobElement.Add(new XAttribute("variant", job.Second));
-                jobPreferences.Add(jobElement);
-            }
-            gameplay.Add(jobPreferences);
-            doc.Root.Add(gameplay);
-
-            var playerElement = new XElement("player",
-                new XAttribute("name", playerName ?? ""),
-                new XAttribute("headindex", CharacterHeadIndex),
-                new XAttribute("gender", CharacterGender),
-                new XAttribute("race", CharacterRace),
-                new XAttribute("hairindex", CharacterHairIndex),
-                new XAttribute("beardindex", CharacterBeardIndex),
-                new XAttribute("moustacheindex", CharacterMoustacheIndex),
-                new XAttribute("faceattachmentindex", CharacterFaceAttachmentIndex));
-            doc.Root.Add(playerElement);
-
-            System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
-            {
-                Indent = true,
-                OmitXmlDeclaration = true,
-                NewLineOnAttributes = true
-            };
-
-            try
-            {
-                using (var writer = XmlWriter.Create(SavePath, settings))
-                {
-                    doc.WriteTo(writer);
-                    writer.Flush();
-                }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Saving game settings failed.", e);
-                GameAnalyticsManager.AddErrorEventOnce("GameSettings.Save:SaveFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Saving game settings failed.\n" + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
-            }
         }
 
 #region Load PlayerConfig
@@ -1079,6 +881,7 @@ namespace Barotrauma
             LoadAudioSettings(doc);
 #if CLIENT
             LoadControls(doc);
+            LoadSubEditorImages(doc);
 #endif
             LoadContentPackages(doc);
 
@@ -1102,14 +905,33 @@ namespace Barotrauma
                 }
             }
 
+            if (doc.Root.Element("ignoredhints") is XElement ignoredHintsElement)
+            {
+                IgnoredHints = new HashSet<string>(ignoredHintsElement.GetAttributeStringArray("identifiers", new string[0], convertToLowerInvariant: true));
+            }
+
+            XElement encounters = doc.Root.Element("encountered");
+            if (encounters != null)
+            {
+                EncounteredCreatures = new HashSet<string>(encounters.GetAttributeStringArray("creatures", new string[0], convertToLowerInvariant: true));
+            }
+            XElement kills = doc.Root.Element("killed");
+            if (kills != null)
+            {
+                KilledCreatures = new HashSet<string>(kills.GetAttributeStringArray("creatures", new string[0], convertToLowerInvariant: true));
+            }
+
+            ServerFilterElement = doc.Root.Element("serverfilters");
+
             UnsavedSettings = false;
+            textScaleDirty = false;
             return true;
         }
 
 #endregion
 
 #region Save PlayerConfig
-        public void SaveNewPlayerConfig()
+        public bool SaveNewPlayerConfig()
         {
             XDocument doc = new XDocument();
             UnsavedSettings = false;
@@ -1120,6 +942,7 @@ namespace Barotrauma
             }
 
             doc.Root.Add(
+                new XAttribute("gameversion", GameMain.Version.ToString()),
                 new XAttribute("language", TextManager.Language),
                 new XAttribute("masterserverurl", MasterServerUrl),
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
@@ -1130,6 +953,7 @@ namespace Barotrauma
                 new XAttribute("submarineautosave", EnableSubmarineAutoSave),
                 new XAttribute("subeditorundobuffer", SubEditorMaxUndoBuffer),
                 new XAttribute("maxautosaves", MaximumAutoSaves),
+                new XAttribute("autosaveintervalseconds", AutoSaveIntervalSeconds),
                 new XAttribute("subeditorbackground", XMLExtensions.ColorToString(SubEditorBackgroundColor)),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
                 new XAttribute("usesteammatchmaking", UseSteamMatchmaking),
@@ -1139,6 +963,7 @@ namespace Barotrauma
                 new XAttribute("pauseonfocuslost", PauseOnFocusLost),
                 new XAttribute("aimassistamount", aimAssistAmount),
                 new XAttribute("enablemouselook", EnableMouseLook),
+                new XAttribute("radialdistortion", EnableRadialDistortion),
                 new XAttribute("chatopen", ChatOpen),
                 new XAttribute("crewmenuopen", CrewMenuOpen),
                 new XAttribute("campaigndisclaimershown", CampaignDisclaimerShown),
@@ -1146,11 +971,14 @@ namespace Barotrauma
                 new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning),
                 new XAttribute("corpsedespawndelay", CorpseDespawnDelay),
                 new XAttribute("corpsespersubdespawnthreshold", CorpsesPerSubDespawnThreshold),
-                new XAttribute("usedualmodesockets", UseDualModeSockets)
+                new XAttribute("usedualmodesockets", UseDualModeSockets),
+                new XAttribute("disableingamehints", DisableInGameHints)
 #if DEBUG
                 , new XAttribute("automaticquickstartenabled", AutomaticQuickStartEnabled)
+                , new XAttribute(nameof(TestScreenEnabled).ToLower(), TestScreenEnabled)
                 , new XAttribute("automaticcampaignloadenabled", AutomaticCampaignLoadEnabled)
                 , new XAttribute("textmanagerdebugmodeenabled", TextManagerDebugModeEnabled)
+                , new XAttribute("modbreakermode", ModBreakerMode)
 #endif
                 );
 
@@ -1209,7 +1037,8 @@ namespace Barotrauma
                 new XAttribute("voicesetting", VoiceSetting),
                 new XAttribute("audiooutputdevice", System.Xml.XmlConvert.EncodeName(AudioOutputDevice ?? "")),
                 new XAttribute("voicecapturedevice", System.Xml.XmlConvert.EncodeName(VoiceCaptureDevice ?? "")),
-                new XAttribute("noisegatethreshold", NoiseGateThreshold));
+                new XAttribute("noisegatethreshold", NoiseGateThreshold),
+                new XAttribute("uselocalvoicebydefault", UseLocalVoiceByDefault));
 
             XElement gSettings = doc.Root.Element("graphicssettings");
             if (gSettings == null)
@@ -1224,7 +1053,8 @@ namespace Barotrauma
                 new XAttribute("chromaticaberration", ChromaticAberrationEnabled),
                 new XAttribute("losmode", LosMode),
                 new XAttribute("hudscale", HUDScale),
-                new XAttribute("inventoryscale", InventoryScale));
+                new XAttribute("inventoryscale", InventoryScale),
+                new XAttribute("textscale", TextScale));
 
             XElement contentPackagesElement = new XElement("contentpackages");
 
@@ -1273,6 +1103,25 @@ namespace Barotrauma
                     inventoryKeyMappingElement.Add(new XAttribute($"slot{i}", bind.MouseButton));
                 }
             }
+
+            var debugconsoleKeyMappingElement = new XElement("debugconsolemapping");
+            doc.Root.Add(debugconsoleKeyMappingElement);
+            foreach (var (key, command) in ConsoleKeybinds)
+            {
+                debugconsoleKeyMappingElement.Add(new XElement("Keybind", 
+                    new XAttribute("key", key.ToString()),
+                    new XAttribute("command", command)));
+            }
+
+            if (ServerFilterElement == null)
+            {
+                ShowOffensiveServerPrompt = true;
+                ServerFilterElement = new XElement("serverfilters");
+            }
+            GameMain.ServerListScreen?.SaveServerFilters(ServerFilterElement);
+            doc.Root.Add(ServerFilterElement);
+
+            SubEditorScreen.ImageManager.Save(doc.Root);
 #endif
 
             var gameplay = new XElement("gameplay");
@@ -1287,15 +1136,20 @@ namespace Barotrauma
             gameplay.Add(jobPreferences);
             doc.Root.Add(gameplay);
 
-            var playerElement = new XElement("player",
-                new XAttribute("name", playerName ?? ""),
-                new XAttribute("headindex", CharacterHeadIndex),
-                new XAttribute("gender", CharacterGender),
-                new XAttribute("race", CharacterRace),
-                new XAttribute("hairindex", CharacterHairIndex),
-                new XAttribute("beardindex", CharacterBeardIndex),
-                new XAttribute("moustacheindex", CharacterMoustacheIndex),
-                new XAttribute("faceattachmentindex", CharacterFaceAttachmentIndex));
+            var playerElement = new XElement("player", new XAttribute("name", playerName ?? ""));
+            if (PlayerCharacterCustomization != null)
+            {
+                playerElement.SetAttributeValue("headindex", PlayerCharacterCustomization.HeadSpriteId);
+                if (PlayerCharacterCustomization.gender != Gender.None) { playerElement.SetAttributeValue("gender", PlayerCharacterCustomization.gender); }
+                if (PlayerCharacterCustomization.race != Race.None) { playerElement.SetAttributeValue("race", PlayerCharacterCustomization.race); }
+                playerElement.SetAttributeValue("hairindex", PlayerCharacterCustomization.HairIndex);
+                playerElement.SetAttributeValue("beardindex", PlayerCharacterCustomization.BeardIndex);
+                playerElement.SetAttributeValue("moustacheindex", PlayerCharacterCustomization.MoustacheIndex);
+                playerElement.SetAttributeValue("faceattachmentindex", PlayerCharacterCustomization.FaceAttachmentIndex);
+                playerElement.SetAttributeValue("skincolor", XMLExtensions.ColorToString(PlayerCharacterCustomization.SkinColor));
+                playerElement.SetAttributeValue("haircolor", XMLExtensions.ColorToString(PlayerCharacterCustomization.HairColor));
+                playerElement.SetAttributeValue("facialhaircolor", XMLExtensions.ColorToString(PlayerCharacterCustomization.FacialHairColor));
+            }
             doc.Root.Add(playerElement);
 
 #if CLIENT
@@ -1317,6 +1171,11 @@ namespace Barotrauma
             }
             doc.Root.Add(tutorialElement);
 
+            doc.Root.Add(new XElement("ignoredhints", new XAttribute("identifiers", string.Join(",", IgnoredHints).Trim().ToLowerInvariant())));
+
+            doc.Root.Add(new XElement("encountered", new XAttribute("creatures", string.Join(",", EncounteredCreatures).Trim().ToLowerInvariant())));
+            doc.Root.Add(new XElement("killed", new XAttribute("creatures", string.Join(",", KilledCreatures).Trim().ToLowerInvariant())));
+
             System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {
                 Indent = true,
@@ -1337,7 +1196,10 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Saving game settings failed.", e);
                 GameAnalyticsManager.AddErrorEventOnce("GameSettings.Save:SaveFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
                     "Saving game settings failed.\n" + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
+                return false;
             }
+
+            return true;
         }
 #endregion
 
@@ -1353,6 +1215,7 @@ namespace Barotrauma
             QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", QuickStartSubmarineName);
             EnableSubmarineAutoSave = doc.Root.GetAttributeBool("submarineautosave", true);
             MaximumAutoSaves = doc.Root.GetAttributeInt("maxautosaves", 8);
+            AutoSaveIntervalSeconds = doc.Root.GetAttributeInt("autosaveintervalseconds", 300);
             SubEditorBackgroundColor = doc.Root.GetAttributeColor("subeditorbackground", new Color(0.051f, 0.149f, 0.271f, 1.0f));
             SubEditorMaxUndoBuffer = doc.Root.GetAttributeInt("subeditorundobuffer", 32);
             UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", UseSteamMatchmaking);
@@ -1361,6 +1224,7 @@ namespace Barotrauma
             PauseOnFocusLost = doc.Root.GetAttributeBool("pauseonfocuslost", PauseOnFocusLost);
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", AimAssistAmount);
             EnableMouseLook = doc.Root.GetAttributeBool("enablemouselook", EnableMouseLook);
+            EnableRadialDistortion = doc.Root.GetAttributeBool("radialdistortion", EnableRadialDistortion);
             CrewMenuOpen = doc.Root.GetAttributeBool("crewmenuopen", CrewMenuOpen);
             ChatOpen = doc.Root.GetAttributeBool("chatopen", ChatOpen);
             CorpseDespawnDelay = doc.Root.GetAttributeInt("corpsedespawndelay", 10 * 60);
@@ -1369,10 +1233,13 @@ namespace Barotrauma
             EditorDisclaimerShown = doc.Root.GetAttributeBool("editordisclaimershown", EditorDisclaimerShown);
             ShowTutorialSkipWarning = doc.Root.GetAttributeBool("tutorialskipwarning", true);
             UseDualModeSockets = doc.Root.GetAttributeBool("usedualmodesockets", true);
+            DisableInGameHints = doc.Root.GetAttributeBool("disableingamehints", DisableInGameHints);
 #if DEBUG
             AutomaticQuickStartEnabled = doc.Root.GetAttributeBool("automaticquickstartenabled", AutomaticQuickStartEnabled);
+            TestScreenEnabled = doc.Root.GetAttributeBool(nameof(TestScreenEnabled).ToLower(), TestScreenEnabled);
             AutomaticCampaignLoadEnabled = doc.Root.GetAttributeBool("automaticcampaignloadenabled", AutomaticCampaignLoadEnabled);
             TextManagerDebugModeEnabled = doc.Root.GetAttributeBool("textmanagerdebugmodeenabled", TextManagerDebugModeEnabled);
+            ModBreakerMode = doc.Root.GetAttributeBool("modbreakermode", ModBreakerMode);
 #endif
             XElement gameplayElement = doc.Root.Element("gameplay");
             jobPreferences = new List<Pair<string, int>>();
@@ -1389,29 +1256,34 @@ namespace Barotrauma
                         jobPreferences.Add(new Pair<string, int>(jobIdentifier, outfitVariant));
                     }
                 }
+
+                var teamPreferenceElement = gameplayElement.Element("teampreference");
+                if (teamPreferenceElement != null)
+                {
+                    TeamPreference = (CharacterTeamType)Enum.Parse(typeof(CharacterTeamType), teamPreferenceElement.GetAttributeString("team", CharacterTeamType.None.ToString()));
+                }
             }
 
             XElement playerElement = doc.Root.Element("player");
             if (playerElement != null)
             {
                 playerName = playerElement.GetAttributeString("name", playerName);
-                CharacterHeadIndex = playerElement.GetAttributeInt("headindex", CharacterHeadIndex);
-                if (Enum.TryParse(playerElement.GetAttributeString("gender", "none"), true, out Gender g))
+                int head = playerElement.GetAttributeInt("headindex", -1);
+                Enum.TryParse(playerElement.GetAttributeString("gender", "none"), true, out Gender gender);
+                Enum.TryParse(playerElement.GetAttributeString("race", "none"), true, out Race race);
+                int hair = playerElement.GetAttributeInt("hairindex", -1);
+                int beard = playerElement.GetAttributeInt("beardindex", -1);
+                int moustache = playerElement.GetAttributeInt("moustacheindex", -1);
+                int faceAttachment = playerElement.GetAttributeInt("faceattachmentindex", -1);
+                Color skinColor = playerElement.GetAttributeColor("skincolor", Color.Black);
+                Color hairColor = playerElement.GetAttributeColor("haircolor", Color.Black);
+                Color facialHairColor = playerElement.GetAttributeColor("facialhaircolor", Color.Black);
+                PlayerCharacterCustomization = new CharacterInfo.HeadInfo(head, gender, race, hair, beard, moustache, faceAttachment)
                 {
-                    CharacterGender = g;
-                }
-                if (Enum.TryParse(playerElement.GetAttributeString("race", "white"), true, out Race r))
-                {
-                    CharacterRace = r;
-                }
-                else
-                {
-                    CharacterRace = Race.White;
-                }
-                CharacterHairIndex = playerElement.GetAttributeInt("hairindex", CharacterHairIndex);
-                CharacterBeardIndex = playerElement.GetAttributeInt("beardindex", CharacterBeardIndex);
-                CharacterMoustacheIndex = playerElement.GetAttributeInt("moustacheindex", CharacterMoustacheIndex);
-                CharacterFaceAttachmentIndex = playerElement.GetAttributeInt("faceattachmentindex", CharacterFaceAttachmentIndex);
+                    SkinColor = skinColor,
+                    HairColor = hairColor,
+                    FacialHairColor = facialHairColor
+                };
             }
         }
 
@@ -1430,6 +1302,7 @@ namespace Barotrauma
             ChromaticAberrationEnabled = graphicsSettings.GetAttributeBool("chromaticaberration", ChromaticAberrationEnabled);
             HUDScale = graphicsSettings.GetAttributeFloat("hudscale", HUDScale);
             InventoryScale = graphicsSettings.GetAttributeFloat("inventoryscale", InventoryScale);
+            TextScale = graphicsSettings.GetAttributeFloat("textscale", TextScale);
             var losModeStr = graphicsSettings.GetAttributeString("losmode", "Transparent");
             if (!Enum.TryParse(losModeStr, out losMode))
             {
@@ -1466,6 +1339,7 @@ namespace Barotrauma
                 VoiceCaptureDevice = System.Xml.XmlConvert.DecodeName(audioSettings.GetAttributeString("voicecapturedevice", VoiceCaptureDevice));
                 AudioOutputDevice = System.Xml.XmlConvert.DecodeName(audioSettings.GetAttributeString("audiooutputdevice", AudioOutputDevice));
                 NoiseGateThreshold = audioSettings.GetAttributeFloat("noisegatethreshold", NoiseGateThreshold);
+                UseLocalVoiceByDefault = audioSettings.GetAttributeBool("uselocalvoicebydefault", UseLocalVoiceByDefault);
                 MicrophoneVolume = audioSettings.GetAttributeFloat("microphonevolume", MicrophoneVolume);
                 string voiceSettingStr = audioSettings.GetAttributeString("voicesetting", "");
                 if (Enum.TryParse(voiceSettingStr, out VoiceMode voiceSetting))
@@ -1479,6 +1353,32 @@ namespace Barotrauma
         {
             CurrentCorePackage = null;
             enabledRegularPackages.Clear();
+
+#if DEBUG && CLIENT
+            if (ModBreakerMode)
+            {
+                CurrentCorePackage = ContentPackage.CorePackages.GetRandom();
+                foreach (var regularPackage in ContentPackage.RegularPackages)
+                {
+                    if (Rand.Range(0.0, 1.0) <= 0.5)
+                    {
+                        enabledRegularPackages.Add(regularPackage);
+                    }
+                }
+                ContentPackage.SortContentPackages(p =>
+                {
+                    return Rand.Int(int.MaxValue);
+                }, config: this);
+
+                if (CurrentCorePackage == null)
+                {
+                    CurrentCorePackage = ContentPackage.CorePackages.First();
+                }
+
+                TextManager.LoadTextPacks(AllEnabledPackages);
+                return;
+            }
+#endif
 
             var contentPackagesElement = doc.Root.Element("contentpackages");
             if (contentPackagesElement != null)
@@ -1495,16 +1395,6 @@ namespace Barotrauma
                 List<XElement> subElements = regularElement?.Elements()?.ToList();
                 if (subElements != null)
                 {
-                    ContentPackage.SortContentPackages(p =>
-                    {
-                        int index = subElements.FindIndex(e =>
-                        {
-                            string name = e.GetAttributeString("name", null);
-                            return p.Name.Equals(name, StringComparison.OrdinalIgnoreCase);
-                        });
-                        return index;
-                    });
-
                     foreach (var subElement in subElements)
                     {
                         if (!bool.TryParse(subElement.GetAttributeString("enabled", "false"), out bool enabled) || !enabled) { continue; }
@@ -1516,6 +1406,16 @@ namespace Barotrauma
                         if (package == null) { continue; }
                         enabledRegularPackages.Add(package);
                     }
+
+                    ContentPackage.SortContentPackages(p =>
+                    {
+                        int index = subElements.FindIndex(e =>
+                        {
+                            string name = e.GetAttributeString("name", null);
+                            return p.Name.Equals(name, StringComparison.OrdinalIgnoreCase);
+                        });
+                        return index;
+                    }, config: this);
                 }
             }
             else
@@ -1532,8 +1432,6 @@ namespace Barotrauma
                     }
                 }
 
-                ContentPackage.SortContentPackages(p => enabledContentPackagePaths.IndexOf(p.Path.CleanUpPath().ToLowerInvariant()));
-
                 foreach (string path in enabledContentPackagePaths)
                 {
                     ContentPackage package = ContentPackage.AllPackages
@@ -1542,6 +1440,8 @@ namespace Barotrauma
                     if (package.IsCorePackage) { CurrentCorePackage = package; }
                     else { enabledRegularPackages.Add(package); }
                 }
+
+                ContentPackage.SortContentPackages(p => enabledContentPackagePaths.IndexOf(p.Path.CleanUpPath().ToLowerInvariant()), config: this);
             }
 
             if (CurrentCorePackage == null)
@@ -1583,20 +1483,16 @@ namespace Barotrauma
             VoiceSetting = VoiceMode.Disabled;
             VoiceCaptureDevice = null;
             NoiseGateThreshold = -45;
+            UseLocalVoiceByDefault = false;
             windowMode = WindowMode.BorderlessWindowed;
             losMode = LosMode.Transparent;
             UseSteamMatchmaking = true;
             RequireSteamAuthentication = true;
             QuickStartSubmarineName = string.Empty;
-            CharacterHeadIndex = 1;
-            CharacterHairIndex = -1;
-            CharacterBeardIndex = -1;
-            CharacterMoustacheIndex = -1;
-            CharacterFaceAttachmentIndex = -1;
-            CharacterGender = Gender.None;
-            CharacterRace = Race.White;
+            PlayerCharacterCustomization = null;
             aimAssistAmount = 0.5f;
             EnableMouseLook = true;
+            EnableRadialDistortion = true;
             CrewMenuOpen = true;
             ChatOpen = true;
             soundVolume = 0.5f;
@@ -1618,10 +1514,12 @@ namespace Barotrauma
                 Language = "English";
             }
             MasterServerUrl = "http://www.undertowgames.com/baromaster";
-            WasGameUpdated = false;
             VerboseLogging = false;
             SaveDebugConsoleLogs = false;
             AutoUpdateWorkshopItems = true;
+            TextScale = 1;
+            textScaleDirty = false;
+            DisableInGameHints = false;
         }
     }
 }

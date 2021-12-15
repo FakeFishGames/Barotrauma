@@ -26,6 +26,7 @@ namespace Barotrauma
         public static bool ShowFPS = false;
         public static bool ShowPerf = false;
         public static bool DebugDraw;
+        public static bool IsSingleplayer => NetworkMember == null;
         public static bool IsMultiplayer => NetworkMember != null;
 
         public static PerformanceCounter PerformanceCounter;
@@ -42,6 +43,7 @@ namespace Barotrauma
         public static SteamWorkshopScreen SteamWorkshopScreen;
 
         public static SubEditorScreen SubEditorScreen;
+        public static TestScreen TestScreen;
         public static ParticleEditorScreen ParticleEditorScreen;
         public static LevelEditorScreen LevelEditorScreen;
         public static SpriteEditorScreen SpriteEditorScreen;
@@ -77,10 +79,6 @@ namespace Barotrauma
             set
             {
                 if (gameSession == value) { return; }
-                if (value == null && Screen.Selected == GameScreen && gameSession.GameMode is CampaignMode)
-                {
-                    DebugConsole.AddWarning("GameSession set to null while in the game screen\n" + Environment.StackTrace.CleanupStackTrace());
-                }
                 if (gameSession?.GameMode != null && gameSession.GameMode != value?.GameMode)
                 {
                     gameSession.GameMode.Remove();
@@ -92,7 +90,16 @@ namespace Barotrauma
         public static ParticleManager ParticleManager;
         public static DecalManager DecalManager;
 
-        public static World World;
+        private static World world;
+        public static World World
+        {
+            get
+            {
+                if (world == null) { world = new World(new Vector2(0, -9.82f)); }
+                return world;
+            }
+            set { world = value; }
+        }
 
         public static LoadingScreen TitleScreen;
         private bool loadingScreenOpen;
@@ -187,6 +194,8 @@ namespace Barotrauma
 
 #if DEBUG
         public static bool FirstLoad = true;
+
+        public static bool CancelQuickStart;
 #endif
 
         public GameMain(string[] args)
@@ -242,13 +251,29 @@ namespace Barotrauma
             GameMain.ResetFrameTime();
             fixedTime = new GameTime();
 
-            World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
             FarseerPhysics.Settings.ContinuousPhysics = false;
             FarseerPhysics.Settings.VelocityIterations = 1;
             FarseerPhysics.Settings.PositionIterations = 1;
 
             MainThread = Thread.CurrentThread;
+
+            Window.FileDropped += OnFileDropped;
+        }
+
+        public static void OnFileDropped(object sender, FileDropEventArgs args)
+        {
+            if (!(Screen.Selected is { } screen)) { return; }
+
+            string filePath = args.FilePath;
+            if (string.IsNullOrWhiteSpace(filePath)) { return; }
+
+            string extension = Path.GetExtension(filePath).ToLower();
+
+            System.IO.FileInfo info = new System.IO.FileInfo(args.FilePath);
+            if (!info.Exists) { return; }
+
+            screen.OnFileDropped(filePath, extension);
         }
 
         public void ApplyGraphicsSettings()
@@ -286,7 +311,7 @@ namespace Barotrauma
 
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
-            
+
             GraphicsDeviceManager.ApplyChanges();
 
             if (windowMode == WindowMode.BorderlessWindowed)
@@ -465,7 +490,28 @@ namespace Barotrauma
 
                 while (Config.WaitingForAutoUpdate) { yield return CoroutineStatus.Running; }
             }
-            
+
+#if DEBUG
+            if (Config.ModBreakerMode)
+            {
+                Config.SelectCorePackage(ContentPackage.CorePackages.GetRandom());
+                foreach (var regularPackage in ContentPackage.RegularPackages)
+                {
+                    if (Rand.Range(0.0, 1.0) <= 0.5)
+                    {
+                        Config.EnableRegularPackage(regularPackage);
+                    }
+                    else
+                    {
+                        Config.DisableRegularPackage(regularPackage);
+                    }
+                }
+                ContentPackage.SortContentPackages(p =>
+                {
+                    return Rand.Int(int.MaxValue);
+                });
+            }
+#endif
 
             if (Config.AllEnabledPackages.None())
             {
@@ -532,16 +578,19 @@ namespace Barotrauma
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
             SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
+            TalentPrefab.LoadAll(GetFilesOfType(ContentType.Talents));
+            TalentTree.LoadAll(GetFilesOfType(ContentType.TalentTrees));
             Order.Init();
             EventManagerSettings.Init();
             BallastFloraPrefab.LoadAll(GetFilesOfType(ContentType.MapCreature));
+            HintManager.Init();
             TitleScreen.LoadState = 50.0f;
         yield return CoroutineStatus.Running;
 
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             TitleScreen.LoadState = 55.0f;
         yield return CoroutineStatus.Running;
-        
+
             UpgradePrefab.LoadAll(GetFilesOfType(ContentType.UpgradeModules));
             TitleScreen.LoadState = 56.0f;
         yield return CoroutineStatus.Running;
@@ -554,9 +603,10 @@ namespace Barotrauma
             ItemAssemblyPrefab.LoadAll();
             TitleScreen.LoadState = 60.0f;
         yield return CoroutineStatus.Running;
-            
+
             GameModePreset.Init();
 
+            SaveUtil.DeleteDownloadedSubs();
             SubmarineInfo.RefreshSavedSubs();
 
             TitleScreen.LoadState = 65.0f;
@@ -583,6 +633,7 @@ namespace Barotrauma
 #endif
 
             SubEditorScreen         = new SubEditorScreen();
+            TestScreen              = new TestScreen();
 
             TitleScreen.LoadState = 75.0f;
         yield return CoroutineStatus.Running;
@@ -605,7 +656,7 @@ namespace Barotrauma
             ParticleManager.LoadPrefabs();
             TitleScreen.LoadState = 88.0f;
             LevelObjectPrefab.LoadAll();
-            
+
             TitleScreen.LoadState = 90.0f;
         yield return CoroutineStatus.Running;
 
@@ -755,12 +806,18 @@ namespace Barotrauma
                     }
 
 #if DEBUG
-                    if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen && (Config.AutomaticQuickStartEnabled || Config.AutomaticCampaignLoadEnabled) && FirstLoad && !PlayerInput.KeyDown(Keys.LeftShift))
+                    CancelQuickStart |= PlayerInput.KeyDown(Keys.LeftShift);
+
+                    if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen && (Config.AutomaticQuickStartEnabled || Config.AutomaticCampaignLoadEnabled || Config.TestScreenEnabled) && FirstLoad && !CancelQuickStart)
                     {
                         loadingScreenOpen = false;
                         FirstLoad = false;
 
-                        if (Config.AutomaticQuickStartEnabled)
+                        if (Config.TestScreenEnabled)
+                        {
+                            TestScreen.Select();
+                        }
+                        else if (Config.AutomaticQuickStartEnabled)
                         {
                             MainMenuScreen.QuickStart();
                         }
@@ -865,8 +922,7 @@ namespace Barotrauma
                         }
                         //open the pause menu if not controlling a character OR if the character has no UIs active that can be closed with ESC
                         else if ((Character.Controlled == null || !itemHudActive())
-                            //TODO: do we need to check Inventory.SelectedSlot?
-                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null
+                            && CharacterHealth.OpenHealthWindow == null
                             && !CrewManager.IsCommandInterfaceOpen
                             && !(Screen.Selected is SubEditorScreen editor && !editor.WiringMode && Character.Controlled?.SelectedConstruction != null))
                         {
@@ -877,8 +933,8 @@ namespace Barotrauma
                         static bool itemHudActive()
                         {
                             if (Character.Controlled?.SelectedConstruction == null) { return false; }
-                            return 
-                                Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null) || 
+                            return
+                                Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null) ||
                                 ((Character.Controlled.ViewTarget as Item)?.Prefab?.FocusOnSelected ?? false);
                         }
                     }
@@ -903,7 +959,9 @@ namespace Barotrauma
                     }
 
 #if !DEBUG
-                    if (NetworkMember == null && !WindowActive && !Paused && true && Screen.Selected != MainMenuScreen && Config.PauseOnFocusLost)
+                    if (NetworkMember == null && !WindowActive && !Paused && true && Config.PauseOnFocusLost &&
+                        Screen.Selected != MainMenuScreen && Screen.Selected != ServerListScreen && Screen.Selected != NetLobbyScreen &&
+                        Screen.Selected != SubEditorScreen && Screen.Selected != LevelEditorScreen)
                     {
                         GUI.TogglePauseMenu();
                         Paused = true;
@@ -912,10 +970,9 @@ namespace Barotrauma
 
                     Screen.Selected.AddToGUIUpdateList();
 
-                    if (Client != null)
-                    {
-                        Client.AddToGUIUpdateList();
-                    }
+                    Client?.AddToGUIUpdateList();
+
+                    SubmarinePreview.AddToGUIUpdateList();
 
                     FileSelection.AddToGUIUpdateList();
 
@@ -943,10 +1000,7 @@ namespace Barotrauma
                         }
                     }
 
-                    if (NetworkMember != null)
-                    {
-                        NetworkMember.Update((float)Timing.Step);
-                    }
+                    NetworkMember?.Update((float)Timing.Step);
 
                     GUI.Update((float)Timing.Step);
                 }
@@ -1013,7 +1067,6 @@ namespace Barotrauma
                 spriteBatch.End();
             }
 
-
             sw.Stop();
             PerformanceCounter.AddElapsedTicks("Draw total", sw.ElapsedTicks);
             PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks * 1000.0f / (float)Stopwatch.Frequency);
@@ -1043,6 +1096,8 @@ namespace Barotrauma
         {
             if (save)
             {
+                GUI.SetSavingIndicatorState(true);
+
                 if (GameSession.Submarine != null && !GameSession.Submarine.Removed)
                 {
                     GameSession.SubmarineInfo = new SubmarineInfo(GameSession.Submarine);
@@ -1072,13 +1127,6 @@ namespace Barotrauma
                 if (Tutorial.Initialized)
                 {
                     ((TutorialMode)GameSession.GameMode).Tutorial?.Stop();
-                }
-
-                if (GameSettings.SendUserStatistics)
-                {
-                    Mission mission = GameSession.Mission;
-                    GameAnalyticsManager.AddDesignEvent("QuitRound:" + (save ? "Save" : "NoSave"));
-                    GameAnalyticsManager.AddDesignEvent("EndRound:" + (mission == null ? "NoMission" : (mission.Completed ? "MissionCompleted" : "MissionFailed")));
                 }
             }
             GUIMessageBox.CloseAll();
@@ -1113,7 +1161,6 @@ namespace Barotrauma
             {
                 new Pair<string, string>(TextManager.Get("EditorDisclaimerWikiLink"), TextManager.Get("EditorDisclaimerWikiUrl")),
                 new Pair<string, string>(TextManager.Get("EditorDisclaimerDiscordLink"), TextManager.Get("EditorDisclaimerDiscordUrl")),
-                new Pair<string, string>(TextManager.Get("EditorDisclaimerForumLink"), TextManager.Get("EditorDisclaimerForumUrl")),
             };
             foreach (var link in links)
             {
@@ -1214,13 +1261,19 @@ namespace Barotrauma
             base.OnExiting(sender, args);
         }
 
-        public void ShowOpenUrlInWebBrowserPrompt(string url)
+        public void ShowOpenUrlInWebBrowserPrompt(string url, string promptExtensionTag = null)
         {
             if (string.IsNullOrEmpty(url)) { return; }
             if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt") { return; }
 
-            var msgBox = new GUIMessageBox("", TextManager.GetWithVariable("openlinkinbrowserprompt", "[link]", url),
-                new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+            string text = TextManager.GetWithVariable("openlinkinbrowserprompt", "[link]", url);
+            string extensionText = TextManager.Get(promptExtensionTag, returnNull: true, useEnglishAsFallBack: false);
+            if (!string.IsNullOrEmpty(extensionText))
+            {
+                text += $"\n\n{extensionText}";
+            }
+
+            var msgBox = new GUIMessageBox("", text, new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
             {
                 UserData = "verificationprompt"
             };

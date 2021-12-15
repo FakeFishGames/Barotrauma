@@ -18,9 +18,11 @@ namespace Barotrauma
         //string = filename, point = min,max
         private readonly HashSet<Tuple<CharacterPrefab, Point>> monsterPrefabs = new HashSet<Tuple<CharacterPrefab, Point>>();
 
-        private readonly float itemSpawnRadius = 800.0f;
+        private float itemSpawnRadius = 800.0f;
         private readonly float approachItemsRadius = 1000.0f;
+        private readonly float nestObjectRadius = 1000.0f;
         private readonly float monsterSpawnRadius = 3000.0f;
+        private readonly int nestObjectAmount = 10;
 
         private readonly bool requireDelivery;
 
@@ -44,14 +46,17 @@ namespace Barotrauma
             }
         }
 
-        public NestMission(MissionPrefab prefab, Location[] locations)
-            : base(prefab, locations)
+        public NestMission(MissionPrefab prefab, Location[] locations, Submarine sub)
+            : base(prefab, locations, sub)
         {
             itemConfig = prefab.ConfigElement.Element("Items");
 
             itemSpawnRadius = prefab.ConfigElement.GetAttributeFloat("itemspawnradius", 800.0f);
             approachItemsRadius = prefab.ConfigElement.GetAttributeFloat("approachitemsradius", itemSpawnRadius * 2.0f);
             monsterSpawnRadius = prefab.ConfigElement.GetAttributeFloat("monsterspawnradius", approachItemsRadius * 2.0f);
+
+            nestObjectRadius = prefab.ConfigElement.GetAttributeFloat("nestobjectradius", itemSpawnRadius * 2.0f);
+            nestObjectAmount = prefab.ConfigElement.GetAttributeInt("nestobjectamount", 10);
 
             requireDelivery = prefab.ConfigElement.GetAttributeBool("requiredelivery", false);
 
@@ -61,7 +66,6 @@ namespace Barotrauma
             {
                 spawnPositionType = Level.PositionType.Cave | Level.PositionType.Ruin;
             }
-
 
             foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))
             {
@@ -86,7 +90,7 @@ namespace Barotrauma
 
         }
 
-        public override void Start(Level level)
+        protected override void StartMissionSpecific(Level level)
         {
             if (items.Any())
             {
@@ -103,10 +107,30 @@ namespace Barotrauma
                 //ruin/cave/wreck items are allowed to spawn close to the sub
                 float minDistance = spawnPositionType == Level.PositionType.Ruin || spawnPositionType == Level.PositionType.Cave || spawnPositionType == Level.PositionType.Wreck ?
                     0.0f : Level.Loaded.Size.X * 0.3f;
+
                 nestPosition = Level.Loaded.GetRandomItemPos(spawnPositionType, 100.0f, minDistance, 30.0f);
                 List<GraphEdge> spawnEdges = new List<GraphEdge>();
                 if (spawnPositionType == Level.PositionType.Cave)
                 {
+                    Level.Cave closestCave = null;
+                    float closestCaveDist = float.PositiveInfinity;
+                    foreach (var cave in Level.Loaded.Caves)
+                    {
+                        float dist = Vector2.DistanceSquared(nestPosition, cave.Area.Center.ToVector2());
+                        if (dist < closestCaveDist)
+                        {
+                            closestCave = cave;
+                            closestCaveDist = dist;
+                        }
+                    }
+                    if (closestCave != null)
+                    {
+                        closestCave.DisplayOnSonar = true;
+                        SpawnNestObjects(level, closestCave);
+#if SERVER
+                        selectedCave = closestCave;
+#endif
+                    }
                     var nearbyCells = Level.Loaded.GetCells(nestPosition, searchDepth: 3);
                     if (nearbyCells.Any())
                     {
@@ -126,20 +150,21 @@ namespace Barotrauma
                         if (!spawnEdges.Any())
                         {
                             GraphEdge closestEdge = null;
-                            float closestDist = float.PositiveInfinity;
+                            float closestDistSqr = float.PositiveInfinity;
                             foreach (var edge in nearbyCells.SelectMany(c => c.Edges))
                             {
                                 if (!edge.NextToCave || !edge.IsSolid) { continue; }
                                 float dist = Vector2.DistanceSquared(edge.Center, nestPosition);
-                                if (dist < closestDist)
+                                if (dist < closestDistSqr)
                                 {
                                     closestEdge = edge;
-                                    closestDist = dist;
+                                    closestDistSqr = dist;
                                 }
                             }
                             if (closestEdge != null)
                             {
                                 spawnEdges.Add(closestEdge);
+                                itemSpawnRadius = Math.Max(itemSpawnRadius, (float)Math.Sqrt(closestDistSqr) * 1.5f);
                             }
                         }
                     }
@@ -188,7 +213,12 @@ namespace Barotrauma
             }
         }
 
-        public override void Update(float deltaTime)
+        private void SpawnNestObjects(Level level, Level.Cave cave)
+        {
+            level.LevelObjectManager.PlaceNestObjects(level, cave, nestPosition, nestObjectRadius, nestObjectAmount);
+        }
+
+        protected override void UpdateMissionSpecific(float deltaTime)
         {
             if (IsClient)
             {
@@ -242,7 +272,7 @@ namespace Barotrauma
                    
                     break;
                 case 1:
-                    if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition) { return; }
+                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) { return; }
                     State = 2;
                     break;
             }
@@ -279,6 +309,13 @@ namespace Barotrauma
             {
                 GiveReward();
                 completed = true;
+                if (completed)
+                {
+                    if (Prefab.LocationTypeChangeOnCompleted != null)
+                    {
+                        ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                    }
+                }
             }
             foreach (Item item in items)
             {

@@ -1,12 +1,21 @@
 ﻿using Barotrauma.Networking;
+using System;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class MemoryComponent : ItemComponent, IServerSerializable
     {
-        const int MaxValueLength = ChatMessage.MaxLength;
-
+        private int maxValueLength;
+        [Editable, Serialize(200, false, description: "The maximum length of the stored value. Warning: Large values can lead to large memory usage or networking issues.")]
+        public int MaxValueLength
+        {
+            get { return maxValueLength; }
+            set
+            {
+                maxValueLength = Math.Max(value, 0);
+            }
+        }
 
         private string value;
 
@@ -17,10 +26,14 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (value == null) { return; }
-                this.value = value.Length <= MaxValueLength ? value : value.Substring(0, MaxValueLength);
+                this.value = value;
+                if (this.value.Length > MaxValueLength && (item.Submarine == null || !item.Submarine.Loading))
+                {
+                    this.value = this.value.Substring(0, MaxValueLength);
+                }
             }
         }
-        
+
         protected bool writeable = true;
 
         public MemoryComponent(Item item, XElement element)
@@ -31,25 +44,29 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            item.SendSignal(0, Value, "signal_out", null);
+            item.SendSignal(Value, "signal_out");
         }
 
         partial void OnStateChanged();
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "signal_in":
                     if (writeable) 
                     {
-                        if (Value == signal) { return; }
-                        Value = signal;
-                        OnStateChanged();
+                        string prevValue = Value;
+                        Value = signal.value;
+                        if (Value != prevValue)
+                        {
+                            OnStateChanged();
+                        }
                     }
                     break;
                 case "signal_store":
-                    writeable = signal == "1";
+                case "lock_state":
+                    writeable = signal.value == "1";
                     break;
             }
         }

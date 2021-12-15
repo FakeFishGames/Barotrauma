@@ -24,7 +24,10 @@ namespace Barotrauma.Networking
 
         //items created during respawn
         //any respawn items left in the shuttle are removed when the shuttle despawns
-        private List<Item> respawnItems = new List<Item>();
+        private readonly List<Item> respawnItems = new List<Item>();
+
+        //characters who spawned during the last respawn
+        private readonly List<Character> respawnedCharacters = new List<Character>();
 
         public bool UsingShuttle
         {
@@ -55,6 +58,14 @@ namespace Barotrauma.Networking
 
         public State CurrentState { get; private set; }
 
+        public bool UseRespawnPrompt
+        {
+            get
+            {
+                return GameMain.GameSession?.GameMode is CampaignMode && Level.Loaded != null && Level.Loaded?.Type != LevelData.LevelType.Outpost;
+            }
+        }
+
         private float maxTransportTime;
 
         private float updateReturnTimer;
@@ -70,6 +81,8 @@ namespace Barotrauma.Networking
             {
                 RespawnShuttle = new Submarine(shuttleInfo, true);
                 RespawnShuttle.PhysicsBody.FarseerBody.OnCollision += OnShuttleCollision;
+                //set crush depth slightly deeper than the main sub's
+                RespawnShuttle.RealWorldCrushDepth = Math.Max(RespawnShuttle.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth * 1.2f);
 
                 //prevent wifi components from communicating between the respawn shuttle and other subs
                 List<WifiComponent> wifiComponents = new List<WifiComponent>();
@@ -79,7 +92,7 @@ namespace Barotrauma.Networking
                 }
                 foreach (WifiComponent wifiComponent in wifiComponents)
                 {
-                    wifiComponent.TeamID = Character.TeamType.FriendlyNPC;
+                    wifiComponent.TeamID = CharacterTeamType.FriendlyNPC;
                 }
 
                 ResetShuttle();
@@ -176,16 +189,12 @@ namespace Barotrauma.Networking
             if (updateReturnTimer > 1.0f)
             {
                 updateReturnTimer = 0.0f;
-
-                if (shuttleSteering != null)
-                {
-                    shuttleSteering.SetDestinationLevelStart();
-                }
-                UpdateReturningProjSpecific();
+                shuttleSteering?.SetDestinationLevelStart();
+                UpdateReturningProjSpecific(deltaTime);
             }
         }
 
-        partial void UpdateReturningProjSpecific();
+        partial void UpdateReturningProjSpecific(float deltaTime);
         
         private IEnumerable<object> ForceShuttleToPos(Vector2 position, float speed)
         {
@@ -222,7 +231,7 @@ namespace Barotrauma.Networking
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.Submarine != RespawnShuttle) continue;
+                if (item.Submarine != RespawnShuttle) { continue; }
                 
                 //remove respawn items that have been left in the shuttle
                 if (respawnItems.Contains(item))
@@ -238,6 +247,19 @@ namespace Barotrauma.Networking
                 if (powerContainer != null)
                 {
                     powerContainer.Charge = powerContainer.Capacity;
+                }
+
+                var door = item.GetComponent<Door>();
+                if (door != null) { door.Stuck = 0.0f; }
+
+                var steering = item.GetComponent<Steering>();
+                if (steering != null)
+                {
+                    steering.MaintainPos = true;
+                    steering.AutoPilot = true;
+#if SERVER
+                    steering.UnsentChanges = true;
+#endif
                 }
             }
 
@@ -255,13 +277,20 @@ namespace Barotrauma.Networking
                 if (hull.Submarine != RespawnShuttle) { continue; }
                 hull.OxygenPercentage = 100.0f;
                 hull.WaterVolume = 0.0f;
+                hull.BallastFlora?.Kill();
             }
 
+            Dictionary<Character, Vector2> characterPositions = new Dictionary<Character, Vector2>();
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Submarine != RespawnShuttle) { continue; }
+                if (!respawnedCharacters.Contains(c)) 
+                {
+                    characterPositions.Add(c, c.WorldPosition);
+                    continue; 
+                }
 #if CLIENT
-                if (Character.Controlled == c) Character.Controlled = null;
+                if (Character.Controlled == c) { Character.Controlled = null; }
 #endif
                 c.Kill(CauseOfDeathType.Unknown, null, true);
                 c.Enabled = false;
@@ -269,9 +298,8 @@ namespace Barotrauma.Networking
                 Spawner.AddToRemoveQueue(c);
                 if (c.Inventory != null)
                 {
-                    foreach (Item item in c.Inventory.Items)
+                    foreach (Item item in c.Inventory.AllItems)
                     {
-                        if (item == null) continue;
                         Spawner.AddToRemoveQueue(item);
                     }
                 }
@@ -279,14 +307,34 @@ namespace Barotrauma.Networking
 
             RespawnShuttle.SetPosition(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + RespawnShuttle.Borders.Height));
             RespawnShuttle.Velocity = Vector2.Zero;
+
+            foreach (var characterPosition in characterPositions)
+            {
+                characterPosition.Key.TeleportTo(characterPosition.Value);
+            }
         }
 
-        partial void RespawnCharactersProjSpecific();
-        public void RespawnCharacters()
+        partial void RespawnCharactersProjSpecific(Vector2? shuttlePos);
+        public void RespawnCharacters(Vector2? shuttlePos)
         {
-            RespawnCharactersProjSpecific();
+            RespawnCharactersProjSpecific(shuttlePos);
         }
-        
+
+        public static Affliction GetRespawnPenaltyAffliction()
+        {
+            var respawnPenaltyAffliction = AfflictionPrefab.List.FirstOrDefault(a => a.AfflictionType.Equals("respawnpenalty", StringComparison.OrdinalIgnoreCase));
+            return respawnPenaltyAffliction?.Instantiate(10.0f);
+        }
+
+        public static void GiveRespawnPenaltyAffliction(Character character)
+        {
+            var respawnPenaltyAffliction = GetRespawnPenaltyAffliction();
+            if (respawnPenaltyAffliction != null)
+            {
+                character.CharacterHealth.ApplyAffliction(targetLimb: null, respawnPenaltyAffliction);
+            }
+        }
+
         public Vector2 FindSpawnPos()
         {
             if (Level.Loaded == null || Submarine.MainSub == null) { return Vector2.Zero; }

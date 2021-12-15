@@ -12,16 +12,14 @@ namespace Barotrauma.Items.Components
             get { return item.Rect.Size.ToVector2(); }
         }
 
-        
-
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
-            if (!IsActive || picker == null || !CanBeAttached(picker) || !picker.IsKeyDown(InputType.Aim) || picker != Character.Controlled) 
+            if (!IsActive || picker == null || !CanBeAttached(picker) || !picker.IsKeyDown(InputType.Aim) || picker != Character.Controlled)
             {
                 Drawable = false;
-                return; 
+                return;
             }
-            
+
             Vector2 gridPos = picker.Position;
             Vector2 roundedGridPos = new Vector2(
                 MathUtils.RoundTowardsClosest(picker.Position.X, Submarine.GridSize.X),
@@ -49,7 +47,7 @@ namespace Barotrauma.Items.Components
                 attachPos += item.Submarine.Position;
             }
 
-            Submarine.DrawGrid(spriteBatch, 14, gridPos, roundedGridPos, alpha: 0.7f);
+            Submarine.DrawGrid(spriteBatch, 14, gridPos, roundedGridPos, alpha: 0.4f);
 
             item.Sprite.Draw(
                 spriteBatch,
@@ -72,16 +70,14 @@ namespace Barotrauma.Items.Components
         public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             base.ClientRead(type, msg, sendingTime);
+
+            bool readAttachData = msg.ReadBoolean();
+            if (!readAttachData) { return; }
+
             bool shouldBeAttached = msg.ReadBoolean();
             Vector2 simPosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
             UInt16 submarineID = msg.ReadUInt16();
             Submarine sub = Entity.FindEntityByID(submarineID) as Submarine;
-
-            if (!attachable)
-            {
-                DebugConsole.ThrowError("Received an attachment event for an item that's not attachable.");
-                return;
-            }
 
             if (shouldBeAttached)
             {
@@ -98,7 +94,6 @@ namespace Barotrauma.Items.Components
                 if (attached)
                 {
                     DropConnectedWires(null);
-
                     if (body != null)
                     {
                         item.body = body;
@@ -107,6 +102,11 @@ namespace Barotrauma.Items.Components
                     IsActive = false;
 
                     DeattachFromWall();
+                }
+                else
+                {
+                    item.SetTransform(simPosition, 0.0f);
+                    item.Submarine = sub;
                 }
             }
         }

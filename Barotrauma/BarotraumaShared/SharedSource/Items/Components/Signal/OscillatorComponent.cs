@@ -12,8 +12,10 @@ namespace Barotrauma.Items.Components
         public enum WaveType
         {
             Pulse,
+            Sawtooth,
             Sine,
             Square,
+            Triangle,
         }
 
         private float frequency;
@@ -22,8 +24,11 @@ namespace Barotrauma.Items.Components
 
         [InGameEditable, Serialize(WaveType.Pulse, true, description: "What kind of a signal the item outputs." +
             " Pulse: periodically sends out a signal of 1." +
+            " Sawtooth: sends out a periodic wave that increases linearly from 0 to 1." +
             " Sine: sends out a sine wave oscillating between -1 and 1." +
-            " Square: sends out a signal that alternates between 0 and 1.", alwaysUseInstanceValues: true)]
+            " Square: sends out a signal that alternates between 0 and 1." +
+            " Triangle: sends out a wave that alternates between increasing linearly from -1 to 1 and decreasing from 1 to -1.",
+                                   alwaysUseInstanceValues: true)]
         public WaveType OutputType
         {
             get;
@@ -59,29 +64,38 @@ namespace Barotrauma.Items.Components
                     float pulseInterval = 1.0f / frequency;
                     while (phase >= pulseInterval)
                     {
-                        item.SendSignal(0, "1", "signal_out", null);
+                        item.SendSignal("1", "signal_out");
                         phase -= pulseInterval;
                     }
                     break;
+                case WaveType.Sawtooth:
+                    phase = (phase + deltaTime * frequency) % 1.0f;
+                    item.SendSignal(phase.ToString(CultureInfo.InvariantCulture), "signal_out");
+                    break;
                 case WaveType.Square:
                     phase = (phase + deltaTime * frequency) % 1.0f;
-                    item.SendSignal(0, phase < 0.5f ? "0" : "1", "signal_out", null);
+                    item.SendSignal(phase < 0.5f ? "0" : "1", "signal_out");
                     break;
                 case WaveType.Sine:
                     phase = (phase + deltaTime * frequency) % 1.0f;
-                    item.SendSignal(0, Math.Sin(phase * MathHelper.TwoPi).ToString(CultureInfo.InvariantCulture), "signal_out", null);
+                    item.SendSignal(Math.Sin(phase * MathHelper.TwoPi).ToString(CultureInfo.InvariantCulture), "signal_out");
+                    break;
+                case WaveType.Triangle:
+                    phase = (phase + deltaTime * frequency) % 1.0f;
+                    float output = 4.0f * MathF.Abs(MathUtils.PositiveModulo(phase - 0.25f, 1.0f) - 0.5f) - 1.0f;
+                    item.SendSignal(output.ToString(CultureInfo.InvariantCulture), "signal_out");
                     break;
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "set_frequency":
                 case "frequency_in":
                     float newFrequency;
-                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out newFrequency))
+                    if (float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out newFrequency))
                     {
                         Frequency = newFrequency;
                     }
@@ -90,7 +104,7 @@ namespace Barotrauma.Items.Components
                 case "set_outputtype":
                 case "set_wavetype":
                     WaveType newOutputType;
-                    if (Enum.TryParse(signal, out newOutputType))
+                    if (Enum.TryParse(signal.value, out newOutputType))
                     {
                         OutputType = newOutputType;
                     }

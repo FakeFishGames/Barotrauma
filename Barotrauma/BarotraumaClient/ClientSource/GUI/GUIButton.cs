@@ -201,7 +201,7 @@ namespace Barotrauma
         {
             base.ApplyStyle(style);
 
-            if (frame != null) { frame.ApplyStyle(style); }
+            frame?.ApplyStyle(style);
         }
 
         public override void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, bool useCircularFlash = false, Vector2? flashRectInflate = null)

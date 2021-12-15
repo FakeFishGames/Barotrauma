@@ -8,6 +8,8 @@ namespace Barotrauma
     {
         partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull)
         {
+            if (GameMain.Client?.MidRoundSyncing ?? false) { return; }
+
             if (shockwave)
             {
                 GameMain.ParticleManager.CreateParticle("shockwave", worldPosition,
@@ -22,47 +24,47 @@ namespace Barotrauma
                 var underwaterExplosion = GameMain.ParticleManager.CreateParticle("underwaterexplosion", worldPosition, Vector2.Zero, 0.0f, hull);
                 if (underwaterExplosion != null)
                 {
-                    underwaterExplosion.Size *= MathHelper.Clamp(attack.Range / 150.0f, 0.5f, 10.0f);
+                    underwaterExplosion.Size *= MathHelper.Clamp(Attack.Range / 150.0f, 0.5f, 10.0f);
                     underwaterExplosion.StartDelay = 0.0f;
                 }
             }
 
-            for (int i = 0; i < attack.Range * 0.1f; i++)
+            for (int i = 0; i < Attack.Range * 0.1f; i++)
             {
                 if (!underwater)
                 {
                     float particleSpeed = Rand.Range(0.0f, 1.0f);
-                    particleSpeed = particleSpeed * particleSpeed * attack.Range;
+                    particleSpeed = particleSpeed * particleSpeed * Attack.Range;
 
                     if (flames)
                     {
-                        float particleScale = MathHelper.Clamp(attack.Range * 0.0025f, 0.5f, 2.0f);
+                        float particleScale = MathHelper.Clamp(Attack.Range * 0.0025f, 0.5f, 2.0f);
                         var flameParticle = GameMain.ParticleManager.CreateParticle("explosionfire",
-                            ClampParticlePos(worldPosition + Rand.Vector((float)System.Math.Sqrt(Rand.Range(0.0f, attack.Range))), hull),
+                            ClampParticlePos(worldPosition + Rand.Vector((float)System.Math.Sqrt(Rand.Range(0.0f, Attack.Range))), hull),
                             Rand.Vector(Rand.Range(0.0f, particleSpeed)), 0.0f, hull);
                         if (flameParticle != null) flameParticle.Size *= particleScale;
                     }
                     if (smoke)
                     {
                         GameMain.ParticleManager.CreateParticle(Rand.Range(0.0f, 1.0f) < 0.5f ? "explosionsmoke" : "smoke",
-                            ClampParticlePos(worldPosition + Rand.Vector((float)System.Math.Sqrt(Rand.Range(0.0f, attack.Range))), hull),
+                            ClampParticlePos(worldPosition + Rand.Vector((float)System.Math.Sqrt(Rand.Range(0.0f, Attack.Range))), hull),
                             Rand.Vector(Rand.Range(0.0f, particleSpeed)), 0.0f, hull);
                     }
                 }
                 else if (underwaterBubble)
                 {
-                    Vector2 bubblePos = Rand.Vector(Rand.Range(0.0f, attack.Range * 0.5f));
+                    Vector2 bubblePos = Rand.Vector(Rand.Range(0.0f, Attack.Range * 0.5f));
 
                     GameMain.ParticleManager.CreateParticle("risingbubbles", worldPosition + bubblePos,
                         Vector2.Zero, 0.0f, hull);
 
-                    if (i < attack.Range * 0.02f)
+                    if (i < Attack.Range * 0.02f)
                     {
                         var underwaterExplosion = GameMain.ParticleManager.CreateParticle("underwaterexplosion", worldPosition + bubblePos,
                             Vector2.Zero, 0.0f, hull);
                         if (underwaterExplosion != null)
                         {
-                            underwaterExplosion.Size *= MathHelper.Clamp(attack.Range / 300.0f, 0.5f, 2.0f) * Rand.Range(0.8f, 1.2f);
+                            underwaterExplosion.Size *= MathHelper.Clamp(Attack.Range / 300.0f, 0.5f, 2.0f) * Rand.Range(0.8f, 1.2f);
                         }
                     }
                     
@@ -71,15 +73,15 @@ namespace Barotrauma
                 if (sparks)
                 {
                     GameMain.ParticleManager.CreateParticle("spark", worldPosition,
-                        Rand.Vector(Rand.Range(500.0f, 800.0f)), 0.0f, hull);
+                        Rand.Vector(Rand.Range(1200.0f, 2400.0f)), 0.0f, hull);
                 }
             }
 
             if (flash)
             {
-                float displayRange = flashRange.HasValue ? flashRange.Value : attack.Range;
+                float displayRange = flashRange ?? Attack.Range;
                 if (displayRange < 0.1f) { return; }
-                var light = new LightSource(worldPosition, displayRange, Color.LightYellow, null);
+                var light = new LightSource(worldPosition, displayRange, flashColor, null);
                 CoroutineManager.StartCoroutine(DimLight(light));
             }
         }
@@ -96,12 +98,10 @@ namespace Barotrauma
         private IEnumerable<object> DimLight(LightSource light)
         {
             float currBrightness = 1.0f;
-            float startRange = light.Range;
-
             while (light.Color.A > 0.0f && flashDuration > 0.0f)
             {
-                light.Color = new Color(light.Color.R, light.Color.G, light.Color.B, currBrightness);
-                currBrightness -= (1.0f / flashDuration) * CoroutineManager.DeltaTime;
+                light.Color = new Color(light.Color.R, light.Color.G, light.Color.B, (byte)(currBrightness * 255));
+                currBrightness -= 1.0f / flashDuration * CoroutineManager.DeltaTime;
 
                 yield return CoroutineStatus.Running;
             }

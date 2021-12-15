@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class AIObjectivePumpWater : AIObjectiveLoop<Pump>
     {
-        public override string DebugTag => "pump water";
+        public override string Identifier { get; set; } = "pump water";
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => true;
 
@@ -27,8 +27,8 @@ namespace Barotrauma
         protected override bool Filter(Pump pump)
         {
             if (pump == null) { return false; }
-            if (pump.Item.IgnoreByAI) { return false; }
-            if (pump.Item.NonInteractable) { return false; }
+            if (pump.Item.IgnoreByAI(character)) { return false; }
+            if (!pump.Item.IsInteractable(character)) { return false; }
             if (pump.Item.HasTag("ballast")) { return false; }
             if (pump.Item.Submarine == null) { return false; }
             if (pump.Item.CurrentHull == null) { return false; }

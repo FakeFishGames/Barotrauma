@@ -11,11 +11,12 @@ namespace Barotrauma
 {
     public enum AnimationType
     {
-        NotDefined,
-        Walk,
-        Run,
-        SwimSlow,
-        SwimFast
+        NotDefined = 0,
+        Walk = 1,
+        Run = 2,
+        Crouch = 3,
+        SwimSlow = 4,
+        SwimFast = 5
     }
 
     abstract class GroundedMovementParams : AnimationParams
@@ -54,20 +55,28 @@ namespace Barotrauma
 
     abstract class SwimParams : AnimationParams
     {
-        [Serialize(25.0f, true, description: "Turning speed (or rather a force applied on the main collider to make it turn). Note that you can set a limb-specific steering forces too (additional)."), Editable(MinValueFloat = 0, MaxValueFloat = 500, ValueStep = 1)]
+        [Serialize(25.0f, true, description: "Turning speed (or rather a force applied on the main collider to make it turn). Note that you can set a limb-specific steering forces too (additional)."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
         public float SteerTorque { get; set; }
+
+        [Serialize(25.0f, true, description: "How much torque is used to move the legs."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
+        public float LegTorque { get; set; }
     }
 
     abstract class AnimationParams : EditableParams, IMemorizable<AnimationParams>
     {
         public string SpeciesName { get; private set; }
-        public bool IsGroundedAnimation => AnimationType == AnimationType.Walk || AnimationType == AnimationType.Run;
+        public bool IsGroundedAnimation => AnimationType == AnimationType.Walk || AnimationType == AnimationType.Run || AnimationType == AnimationType.Crouch;
         public bool IsSwimAnimation => AnimationType == AnimationType.SwimSlow || AnimationType == AnimationType.SwimFast;
 
         protected static Dictionary<string, Dictionary<string, AnimationParams>> allAnimations = new Dictionary<string, Dictionary<string, AnimationParams>>();
 
+        private float _movementSpeed;
         [Serialize(1.0f, true), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = Ragdoll.MAX_SPEED, ValueStep = 0.1f)]
-        public float MovementSpeed { get; set; }
+        public float MovementSpeed
+        {
+            get => _movementSpeed;
+            set => _movementSpeed = value;
+        }
 
         [Serialize(1.0f, true, description: "The speed of the \"animation cycle\", i.e. how fast the character takes steps or moves the tail/legs/arms (the outcome depends what the clip is about)"),
             Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2, ValueStep = 0.01f)]
@@ -105,16 +114,31 @@ namespace Barotrauma
                 }
             }
         }
+
         public float TorsoAngleInRadians { get; private set; } = float.NaN;
+
+        [Serialize(50.0f, true, description: "How much torque is used to rotate the head to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
+        public float HeadTorque { get; set; }
+
+        [Serialize(50.0f, true, description: "How much torque is used to rotate the torso to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
+        public float TorsoTorque { get; set; }
+
+        [Serialize(25.0f, true, description: "How much torque is used to rotate the feet to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
+        public float FootTorque { get; set; }
 
         [Serialize(AnimationType.NotDefined, true), Editable]
         public virtual AnimationType AnimationType { get; protected set; }
 
-        public static string GetDefaultFileName(string speciesName, AnimationType animType) => $"{speciesName.CapitaliseFirstInvariant()}{animType.ToString()}";
-        public static string GetDefaultFile(string speciesName, AnimationType animType, ContentPackage contentPackage = null) 
-            => Path.Combine(GetFolder(speciesName, contentPackage), $"{GetDefaultFileName(speciesName, animType)}.xml");
+        [Serialize(1f, true, description: "How much force is used to rotate the arms to the IK position."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
+        public float ArmIKStrength { get; set; }
 
-        public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
+        [Serialize(1f, true, description: "How much force is used to rotate the hands to the IK position."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
+        public float HandIKStrength { get; set; }
+
+        public static string GetDefaultFileName(string speciesName, AnimationType animType) => $"{speciesName.CapitaliseFirstInvariant()}{animType}";
+        public static string GetDefaultFile(string speciesName, AnimationType animType) => Path.Combine(GetFolder(speciesName), $"{GetDefaultFileName(speciesName, animType)}.xml");
+
+        public static string GetFolder(string speciesName)
         {
             CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(speciesName);
             if (prefab?.XDocument == null)
@@ -127,12 +151,17 @@ namespace Barotrauma
 
         public static string GetFolder(XDocument doc, string filePath)
         {
-            var folder = doc.Root?.Element("animations")?.GetAttributeString("folder", string.Empty);
+            var root = doc.Root;
+            if (root?.IsOverride() ?? false)
+            {
+                root = root.FirstElement();
+            }
+            var folder = root?.Element("animations")?.GetAttributeString("folder", string.Empty);
             if (string.IsNullOrEmpty(folder) || folder.Equals("default", StringComparison.OrdinalIgnoreCase))
             {
                 folder = Path.Combine(Path.GetDirectoryName(filePath), "Animations");
             }
-            return folder;
+            return folder.CleanUpPathCrossPlatform(true);
         }
 
         /// <summary>
@@ -163,7 +192,16 @@ namespace Barotrauma
             return Enum.TryParse(typeString, out AnimationType fileType) && fileType == type;
         }
 
-        public static T GetDefaultAnimParams<T>(string speciesName, AnimationType animType) where T : AnimationParams, new() => GetAnimParams<T>(speciesName, animType, GetDefaultFileName(speciesName, animType));
+        public static T GetDefaultAnimParams<T>(Character character, AnimationType animType) where T : AnimationParams, new()
+        {
+            string speciesName = character.VariantOf ?? character.SpeciesName;
+            if (character.VariantOf != null && character.Params.VariantFile?.Root?.GetChildElement("animations")?.GetAttributeString("folder", null) != null)
+            {
+                // Use the overridden animations defined in the variant definition file.
+                speciesName = character.SpeciesName;
+            }
+            return GetAnimParams<T>(speciesName, animType, GetDefaultFileName(speciesName, animType));
+        }
 
         /// <summary>
         /// If the file name is left null, default file is selected. If fails, will select the default file. Note: Use the filename without the extensions, don't use the full path!
@@ -384,6 +422,8 @@ namespace Barotrauma
                         return typeof(HumanWalkParams);
                     case AnimationType.Run:
                         return typeof(HumanRunParams);
+                    case AnimationType.Crouch:
+                        return typeof(HumanCrouchParams);
                     case AnimationType.SwimSlow:
                         return typeof(HumanSwimSlowParams);
                     case AnimationType.SwimFast:

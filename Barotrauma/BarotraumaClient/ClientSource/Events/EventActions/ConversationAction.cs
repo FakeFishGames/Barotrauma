@@ -55,6 +55,12 @@ namespace Barotrauma
         {
             Debug.Assert(actionInstance == null || actionId == null);
 
+            if (GUI.InputBlockingMenuOpen)
+            {
+                if (actionId.HasValue) { SendIgnore(actionId.Value); }
+                return;
+            }
+
             shouldFadeToBlack = fadeToBlack;
 
             if (lastMessageBox != null && !lastMessageBox.Closed && GUIMessageBox.MessageBoxes.Contains(lastMessageBox))
@@ -210,9 +216,33 @@ namespace Barotrauma
                         }
                     };
 
+                    double allowCloseTime = Timing.TotalTime + 0.5;
                     closeButton.Children.ForEach(child => child.SpriteEffects = SpriteEffects.FlipVertically);
                     closeButton.Frame.FadeIn(0.5f, 0.5f);
                     closeButton.SlideIn(0.5f, 0.33f, 16, SlideDirection.Down);
+
+                    InputType? closeInput = null;
+                    if (GameMain.Config.KeyBind(InputType.Use).MouseButton == MouseButton.None)
+                    {
+                        closeInput = InputType.Use;
+                    }
+                    else if (GameMain.Config.KeyBind(InputType.Select).MouseButton == MouseButton.None)
+                    {
+                        closeInput = InputType.Select;
+                    }
+                    if (closeInput.HasValue)
+                    {
+                        closeButton.ToolTip = TextManager.ParseInputTypes($"{TextManager.Get("Close")} ([InputType.{closeInput.Value}])");
+                        closeButton.OnAddedToGUIUpdateList += (GUIComponent component) =>
+                        {
+                            if (Timing.TotalTime > allowCloseTime && PlayerInput.KeyHit(closeInput.Value))
+                            {
+                                GUIButton btn = component as GUIButton;
+                                btn?.OnClicked(btn, btn.UserData);
+                                btn?.Flash(GUI.Style.Green);
+                            }
+                        };
+                    }
                 }
             
                 for (int i = 0; i < optionButtons.Count; i++)
@@ -341,6 +371,15 @@ namespace Barotrauma
             outmsg.Write((byte)ClientPacketHeader.EVENTMANAGER_RESPONSE);
             outmsg.Write(actionId);
             outmsg.Write((byte)selectedOption);
+            GameMain.Client?.ClientPeer?.Send(outmsg, DeliveryMethod.Reliable);
+        }
+
+        private static void SendIgnore(UInt16 actionId)
+        {
+            IWriteMessage outmsg = new WriteOnlyMessage();
+            outmsg.Write((byte)ClientPacketHeader.EVENTMANAGER_RESPONSE);
+            outmsg.Write(actionId);
+            outmsg.Write(byte.MaxValue);
             GameMain.Client?.ClientPeer?.Send(outmsg, DeliveryMethod.Reliable);
         }
 

@@ -7,11 +7,11 @@ namespace Barotrauma
     {
         public static FishWalkParams GetDefaultAnimParams(Character character)
         {
-            return Check(character) ? GetDefaultAnimParams<FishWalkParams>(character.SpeciesName, AnimationType.Walk) : Empty;
+            return Check(character) ? GetDefaultAnimParams<FishWalkParams>(character, AnimationType.Walk) : Empty;
         }
         public static FishWalkParams GetAnimParams(Character character, string fileName = null)
         {
-            return Check(character) ? GetAnimParams<FishWalkParams>(character.SpeciesName, AnimationType.Walk, fileName) : Empty;
+            return Check(character) ? GetAnimParams<FishWalkParams>(character.VariantOf ?? character.SpeciesName, AnimationType.Walk, fileName) : Empty;
         }
 
         protected static FishWalkParams Empty = new FishWalkParams();
@@ -23,11 +23,11 @@ namespace Barotrauma
     {
         public static FishRunParams GetDefaultAnimParams(Character character)
         {
-            return Check(character) ? GetDefaultAnimParams<FishRunParams>(character.SpeciesName, AnimationType.Run) : Empty;
+            return Check(character) ? GetDefaultAnimParams<FishRunParams>(character, AnimationType.Run) : Empty;
         }
         public static FishRunParams GetAnimParams(Character character, string fileName = null)
         {
-            return Check(character) ? GetAnimParams<FishRunParams>(character.SpeciesName, AnimationType.Run, fileName) : Empty;
+            return Check(character) ? GetAnimParams<FishRunParams>(character.VariantOf ?? character.SpeciesName, AnimationType.Run, fileName) : Empty;
         }
 
         protected static FishRunParams Empty = new FishRunParams();
@@ -37,10 +37,10 @@ namespace Barotrauma
 
     class FishSwimFastParams : FishSwimParams
     {
-        public static FishSwimFastParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<FishSwimFastParams>(character.SpeciesName, AnimationType.SwimFast);
+        public static FishSwimFastParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<FishSwimFastParams>(character, AnimationType.SwimFast);
         public static FishSwimFastParams GetAnimParams(Character character, string fileName = null)
         {
-            return GetAnimParams<FishSwimFastParams>(character.SpeciesName, AnimationType.SwimFast, fileName);
+            return GetAnimParams<FishSwimFastParams>(character.VariantOf ?? character.SpeciesName, AnimationType.SwimFast, fileName);
         }
 
         public override void StoreSnapshot() => StoreSnapshot<FishSwimFastParams>();
@@ -48,10 +48,10 @@ namespace Barotrauma
 
     class FishSwimSlowParams : FishSwimParams
     {
-        public static FishSwimSlowParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<FishSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow);
+        public static FishSwimSlowParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<FishSwimSlowParams>(character, AnimationType.SwimSlow);
         public static FishSwimSlowParams GetAnimParams(Character character, string fileName = null)
         {
-            return GetAnimParams<FishSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow, fileName);
+            return GetAnimParams<FishSwimSlowParams>(character.VariantOf ?? character.SpeciesName, AnimationType.SwimSlow, fileName);
         }
 
         public override void StoreSnapshot() => StoreSnapshot<FishSwimSlowParams>();
@@ -87,17 +87,8 @@ namespace Barotrauma
         [Serialize(8.0f, true, description: "How much force is used to move the feet to the correct position."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float FootMoveForce { get; set; }
 
-        [Serialize(50.0f, true, description: "How much torque is used to rotate the head to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
-        public float HeadTorque { get; set; }
-
-        [Serialize(50.0f, true, description: "How much torque is used to rotate the torso to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
-        public float TorsoTorque { get; set; }
-
         [Serialize(50.0f, true, description: "How much torque is used to rotate the tail to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
         public float TailTorque { get; set; }
-
-        [Serialize(25.0f, true, description: "How much torque is used to rotate the feet to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
-        public float FootTorque { get; set; }
 
         [Serialize(0.0f, true, description: "Optional torque that's constantly applied to legs."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
         public float LegTorque { get; set; }
@@ -173,20 +164,12 @@ namespace Barotrauma
         [Editable, Serialize(true, true, description: "Should the character face towards the direction it's heading.")]
         public bool RotateTowardsMovement { get; set; }
 
-        [Serialize(25.0f, true, description: "How much torque is used to rotate the torso to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
-        public float TorsoTorque { get; set; }
-
-        [Serialize(25.0f, true, description: "How much torque is used to rotate the head to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
-        public float HeadTorque { get; set; }
-
-        [Serialize(50.0f, true, description: "How much torque is used to rotate the tail to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
+        [Serialize(50.0f, true, description: "How much torque is used to rotate the tail to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 2000, ValueStep = 1)]
         public float TailTorque { get; set; }
 
         [Serialize(1f, true, description: "Multiplier applied based on the angle difference between the tail and the main limb. Increasing the value prevents snake-like characters from getting tangled on themselves. Default = 1 (no boost)"), Editable(MinValueFloat = 1, MaxValueFloat = 100)]
         public float TailTorqueMultiplier { get; set; }
 
-        [Serialize(25.0f, true, description: "How much torque is used to rotate the feet to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
-        public float FootTorque { get; set; }
 
         [Serialize(null, true), Editable]
         public string FootAngles
@@ -224,10 +207,7 @@ namespace Barotrauma
         Dictionary<int, float> FootAnglesInRadians { get; set; }
         float TailAngle { get; set; }
         float TailAngleInRadians { get; }
-        float HeadTorque { get; set; }
-        float TorsoTorque { get; set; }
         float TailTorque { get; set; }
-        float FootTorque { get; set; }
         bool Flip { get; set; }
         float FlipCooldown { get; set; }
         float FlipDelay { get; set; }

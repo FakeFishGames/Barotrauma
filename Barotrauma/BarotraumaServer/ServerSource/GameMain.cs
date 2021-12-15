@@ -18,7 +18,17 @@ namespace Barotrauma
     {
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
 
-        public static World World;
+
+        private static World world;
+        public static World World
+        {
+            get
+            {
+                if (world == null) { world = new World(new Vector2(0, -9.82f)); }
+                return world;
+            }
+            set { world = value; }
+        }
         public static GameSettings Config;
 
         public static GameServer Server;
@@ -34,6 +44,8 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        public static Thread MainThread { get; private set; }
 
         //only screens the server implements
         public static GameScreen GameScreen;
@@ -91,6 +103,8 @@ namespace Barotrauma
 
             Console.WriteLine("Initializing GameScreen");
             GameScreen = new GameScreen();
+
+            MainThread = Thread.CurrentThread;
         }
 
         public void Init()
@@ -119,6 +133,8 @@ namespace Barotrauma
             ItemAssemblyPrefab.LoadAll();
             LevelObjectPrefab.LoadAll();
             BallastFloraPrefab.LoadAll(GetFilesOfType(ContentType.MapCreature));
+            TalentPrefab.LoadAll(GetFilesOfType(ContentType.Talents));
+            TalentTree.LoadAll(GetFilesOfType(ContentType.TalentTrees));
 
             GameModePreset.Init();
             DecalManager = new DecalManager();
@@ -173,6 +189,20 @@ namespace Barotrauma
             {
                 return ContentPackage.GetFilesOfType(Config.AllEnabledPackages, type);
             }
+        }
+
+        public bool TryStartChildServerRelay()
+        {            
+            for (int i = 0; i < CommandLineArgs.Length; i++)
+            {
+                switch (CommandLineArgs[i].Trim())
+                {
+                    case "-pipes":
+                        ChildServerRelay.Start(CommandLineArgs[i + 2], CommandLineArgs[i + 1]);
+                        return true;
+                }
+            }
+            return false;
         }
 
         public void StartServer()
@@ -260,7 +290,7 @@ namespace Barotrauma
                         i++;
                         break;
                     case "-pipes":
-                        ChildServerRelay.Start(CommandLineArgs[i + 2], CommandLineArgs[i + 1]);
+                        //handled in TryStartChildServerRelay
                         i += 2;
                         break;
                 }
@@ -319,6 +349,7 @@ namespace Barotrauma
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Items.Components.ItemComponent));
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Hull));
 
+            TryStartChildServerRelay();
             Init();
             StartServer();
 
@@ -361,7 +392,7 @@ namespace Barotrauma
                 }
 
 #if !DEBUG
-                if (Server?.OwnerConnection == null && !Console.IsOutputRedirected)
+                if (Server?.OwnerConnection == null)
                 {
                     DebugConsole.UpdateCommandLine((int)(Timing.Accumulator * 800));
                 }
@@ -388,6 +419,8 @@ namespace Barotrauma
 
             if (GameSettings.SaveDebugConsoleLogs) { DebugConsole.SaveLogs(); }
             if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
+
+            MainThread = null;
         }
 
         public static void ResetFrameTime()

@@ -5,37 +5,43 @@ namespace Barotrauma
 {
     abstract partial class MissionMode : GameMode
     {
-        private readonly Mission mission;
+        private readonly List<Mission> missions = new List<Mission>();
 
-        public override Mission Mission
+        public override IEnumerable<Mission> Missions
         {
             get
             {
-                return mission;
+                return missions;
             }
         }
 
-        public MissionMode(GameModePreset preset, MissionPrefab missionPrefab)
+        public MissionMode(GameModePreset preset, IEnumerable<MissionPrefab> missionPrefabs)
             : base(preset)
         {
             Location[] locations = { GameMain.GameSession.StartLocation, GameMain.GameSession.EndLocation };
-            mission = missionPrefab.Instantiate(locations);
+            foreach (MissionPrefab missionPrefab in missionPrefabs)
+            {
+                missions.Add(missionPrefab.Instantiate(locations, Submarine.MainSub));
+            }
         }
 
         public MissionMode(GameModePreset preset, MissionType missionType, string seed)
             : base(preset)
         {
             Location[] locations = { GameMain.GameSession.StartLocation, GameMain.GameSession.EndLocation };
-            mission = Mission.LoadRandom(locations, seed, false, missionType);
+            missions.Add(Mission.LoadRandom(locations, seed, false, missionType));
         }
 
-        protected static MissionPrefab ValidateMissionPrefab(MissionPrefab missionPrefab, Dictionary<MissionType, Type> missionClasses)
+        protected static IEnumerable<MissionPrefab> ValidateMissionPrefabs(IEnumerable<MissionPrefab> missionPrefabs, Dictionary<MissionType, Type> missionClasses)
         {
-            if (ValidateMissionType(missionPrefab.Type, missionClasses) != missionPrefab.Type)
+            foreach (MissionPrefab missionPrefab in missionPrefabs)
             {
-                throw new InvalidOperationException("Cannot start gamemode with mission type " + missionPrefab.Type);
+                if (ValidateMissionType(missionPrefab.Type, missionClasses) != missionPrefab.Type)
+                {
+                    throw new InvalidOperationException("Cannot start gamemode with mission type " + missionPrefab.Type);
+                }
             }
-            return missionPrefab;
+            return missionPrefabs;
         }
 
         protected static MissionType ValidateMissionType(MissionType missionType, Dictionary<MissionType, Type> missionClasses)

@@ -11,10 +11,9 @@ namespace Barotrauma
         private bool swarmSpawned;
         private readonly string monsterSpeciesName;
         private Point monsterCountRange;
-        private Level level;
         private readonly string sonarLabel;
 
-        public BeaconMission(MissionPrefab prefab, Location[] locations) : base(prefab, locations)
+        public BeaconMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
             swarmSpawned = false;
 
@@ -46,16 +45,15 @@ namespace Barotrauma
         {
             get
             {
-                yield return level.BeaconStation.WorldPosition;
+                if (level.BeaconStation == null)
+                {
+                    yield break;
+                }
+                yield return level.BeaconStation.WorldPosition;                
             }
         }
 
-        public override void Start(Level level)
-        {
-            this.level = level;
-        }
-
-        public override void Update(float deltaTime)
+        protected override void UpdateMissionSpecific(float deltaTime)
         {
             if (IsClient) { return; }
             if (!swarmSpawned && level.CheckBeaconActive())
@@ -93,7 +91,7 @@ namespace Barotrauma
                 int amount = Rand.Range(monsterCountRange.X, monsterCountRange.Y + 1);
                 for (int i = 0; i < amount; i++)
                 {
-                    CoroutineManager.InvokeAfter(() =>
+                    CoroutineManager.Invoke(() =>
                     {
                         //round ended before the coroutine finished
                         if (GameMain.GameSession == null || Level.Loaded == null) { return; }
@@ -109,8 +107,15 @@ namespace Barotrauma
             completed = level.CheckBeaconActive();
             if (completed)
             {
-                ChangeLocationType("None", "Explored");
+                if (Prefab.LocationTypeChangeOnCompleted != null)
+                {
+                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                }
                 GiveReward();
+                if (level?.LevelData != null)
+                {
+                    level.LevelData.IsBeaconActive = true;
+                }
             }
         }
 

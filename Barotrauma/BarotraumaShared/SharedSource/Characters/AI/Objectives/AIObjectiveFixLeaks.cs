@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     class AIObjectiveFixLeaks : AIObjectiveLoop<Gap>
     {
-        public override string DebugTag => "fix leaks";
+        public override string Identifier { get; set; } = "fix leaks";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         public override bool AllowInAnySub => true;
@@ -40,9 +40,9 @@ namespace Barotrauma
         {
             int totalLeaks = Targets.Count();
             if (totalLeaks == 0) { return 0; }
-            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveFixLeaks>() && !c.Character.IsIncapacitated, onlyBots: true);
+            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveFixLeaks>() && !c.Character.IsIncapacitated && c.Character.Submarine == character.Submarine, onlyBots: true);
             bool anyFixers = otherFixers > 0;
-            if (objectiveManager.CurrentOrder == this)
+            if (objectiveManager.IsOrder(this))
             {
                 float ratio = anyFixers ? totalLeaks / (float)otherFixers : 1;
                 return Targets.Sum(t => GetLeakSeverity(t)) * ratio;
@@ -51,7 +51,7 @@ namespace Barotrauma
             {
                 int secondaryLeaks = Targets.Count(l => l.IsRoomToRoom);
                 int leaks = totalLeaks - secondaryLeaks;
-                float ratio = leaks == 0 ? 1 : anyFixers ? leaks / otherFixers : 1;
+                float ratio = leaks == 0 ? 1 : anyFixers ? leaks / (float)otherFixers : 1;
                 if (anyFixers && (ratio <= 1 || otherFixers > 5 || otherFixers / (float)HumanAIController.CountCrew(onlyBots: true) > 0.75f))
                 {
                     // Enough fixers
@@ -72,7 +72,11 @@ namespace Barotrauma
         {
             if (gap == null) { return false; }
             // Don't fix a leak on a wall section set to be ignored
-            if (gap.ConnectedWall?.Sections?.Any(s => s.gap == gap && s.IgnoreByAI) ?? false) { return false; } 
+            if (gap.ConnectedWall != null)
+            {
+                if (gap.ConnectedWall.Sections.Any(s => s.gap == gap && s.IgnoreByAI(character))) { return false; } 
+                if (gap.ConnectedWall.MaxHealth <= 0.0f) { return false; }
+            }
             if (gap.ConnectedWall == null || gap.ConnectedDoor != null || gap.Open <= 0 || gap.linkedTo.All(l => l == null)) { return false; }
             if (gap.Submarine == null || character.Submarine == null) { return false; }
             // Don't allow going into another sub, unless it's connected and of the same team and type.

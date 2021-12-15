@@ -17,6 +17,7 @@ namespace Barotrauma.Networking
         class RemotePeer
         {
             public UInt64 SteamID;
+            public UInt64 OwnerSteamID;
             public double? DisconnectTime;
             public bool Authenticating;
             public bool Authenticated;
@@ -31,6 +32,7 @@ namespace Barotrauma.Networking
             public RemotePeer(UInt64 steamId)
             {
                 SteamID = steamId;
+                OwnerSteamID = 0;
                 DisconnectTime = null;
                 Authenticating = false;
                 Authenticated = false;
@@ -90,10 +92,19 @@ namespace Barotrauma.Networking
 
             if (status == Steamworks.AuthResponse.OK)
             {
+                remotePeer.OwnerSteamID = ownerID;
                 remotePeer.Authenticated = true;
                 remotePeer.Authenticating = false;
                 foreach (var msg in remotePeer.UnauthedMessages)
                 {
+                    //rewrite the owner id before
+                    //forwarding the messages to
+                    //the server, since it's only
+                    //known now
+                    int prevBitPosition = msg.Message.BitPosition;
+                    msg.Message.BitPosition = sizeof(ulong) * 8;
+                    msg.Message.Write(ownerID);
+                    msg.Message.BitPosition = prevBitPosition;
                     byte[] msgToSend = (byte[])msg.Message.Buffer.Clone();
                     Array.Resize(ref msgToSend, msg.Message.LengthBytes);
                     ChildServerRelay.Write(msgToSend);
@@ -131,6 +142,7 @@ namespace Barotrauma.Networking
 
             IWriteMessage outMsg = new WriteOnlyMessage();
             outMsg.Write(steamId);
+            outMsg.Write(remotePeer.OwnerSteamID);
             outMsg.Write(data, 1, dataLength - 1);
 
             DeliveryMethod deliveryMethod = (DeliveryMethod)data[0];
@@ -142,34 +154,27 @@ namespace Barotrauma.Networking
             bool isServerMessage = (incByte & (byte)PacketHeader.IsServerMessage) != 0;
             bool isHeartbeatMessage = (incByte & (byte)PacketHeader.IsHeartbeatMessage) != 0;
 
-            if (!remotePeer.Authenticated)
+            if (!remotePeer.Authenticated & !remotePeer.Authenticating && isConnectionInitializationStep)
             {
-                if (!remotePeer.Authenticating)
+                remotePeer.DisconnectTime = null;
+
+                IReadMessage authMsg = new ReadOnlyMessage(data, isCompressed, 2, dataLength - 2, null);
+                ConnectionInitialization initializationStep = (ConnectionInitialization)authMsg.ReadByte();
+                if (initializationStep == ConnectionInitialization.SteamTicketAndVersion)
                 {
-                    if (isConnectionInitializationStep)
+                    remotePeer.Authenticating = true;
+                    
+                    authMsg.ReadString(); //skip name
+                    authMsg.ReadInt32(); //skip owner key
+                    authMsg.ReadUInt64(); //skip steamid
+                    UInt16 ticketLength = authMsg.ReadUInt16();
+                    byte[] ticket = authMsg.ReadBytes(ticketLength);
+
+                    Steamworks.BeginAuthResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
+                    if (authSessionStartState != Steamworks.BeginAuthResult.OK)
                     {
-                        remotePeer.DisconnectTime = null;
-
-                        IReadMessage authMsg = new ReadOnlyMessage(data, isCompressed, 2, dataLength - 2, null);
-                        ConnectionInitialization initializationStep = (ConnectionInitialization)authMsg.ReadByte();
-                        //Console.WriteLine("received init step from "+steamId.ToString()+" ("+initializationStep.ToString()+")");
-                        if (initializationStep == ConnectionInitialization.SteamTicketAndVersion)
-                        {
-                            remotePeer.Authenticating = true;
-                            
-                            authMsg.ReadString(); //skip name
-                            authMsg.ReadInt32(); //skip owner key
-                            authMsg.ReadUInt64(); //skip steamid
-                            UInt16 ticketLength = authMsg.ReadUInt16();
-                            byte[] ticket = authMsg.ReadBytes(ticketLength);
-
-                            Steamworks.BeginAuthResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
-                            if (authSessionStartState != Steamworks.BeginAuthResult.OK)
-                            {
-                                DisconnectPeer(remotePeer, DisconnectReason.SteamAuthenticationFailed.ToString() + "/ Steam auth session failed to start: " + authSessionStartState.ToString());
-                                return;
-                            }
-                        }
+                        DisconnectPeer(remotePeer, DisconnectReason.SteamAuthenticationFailed.ToString() + "/ Steam auth session failed to start: " + authSessionStartState.ToString());
+                        return;
                     }
                 }
             }
@@ -312,7 +317,7 @@ namespace Barotrauma.Networking
                     }
                     if (!successSend)
                     {
-                        DebugConsole.ThrowError("Failed to send message to remote peer! (" + p2pData.Length.ToString() + " bytes)");
+                        DebugConsole.AddWarning("Failed to send message to remote peer! (" + p2pData.Length.ToString() + " bytes)");
                     }
                 }
             }
@@ -335,6 +340,7 @@ namespace Barotrauma.Networking
                 if (isConnectionInitializationStep)
                 {
                     IWriteMessage outMsg = new WriteOnlyMessage();
+                    outMsg.Write(selfSteamID);
                     outMsg.Write(selfSteamID);
                     outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep));
                     outMsg.Write(Name);
@@ -427,6 +433,7 @@ namespace Barotrauma.Networking
             IWriteMessage msgToSend = new WriteOnlyMessage();
             byte[] msgData = new byte[msg.LengthBytes];
             msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);
+            msgToSend.Write(selfSteamID);
             msgToSend.Write(selfSteamID);
             msgToSend.Write((byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None));
             msgToSend.Write((UInt16)length);

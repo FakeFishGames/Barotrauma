@@ -126,6 +126,12 @@ namespace Microsoft.Xna.Framework
                     Window.MouseState.X = ev.Motion.X;
                     Window.MouseState.Y = ev.Motion.Y;
                 }
+                else if (ev.Type == Sdl.EventType.DropFile)
+                {
+                    string file = InteropHelpers.Utf8ToString(ev.DropEvent.File);
+                    Sdl.Free(ev.DropEvent.File); //required according to SDL's documentation
+                    _view.DropFile(file);
+                }
                 else if (ev.Type == Sdl.EventType.KeyDown)
                 {
                     var key = KeyboardUtil.ToXna(ev.Key.Keysym.Sym);
@@ -135,7 +141,7 @@ namespace Microsoft.Xna.Framework
 
                     //TODO: rethink all of this
                     char character = (char)KeyboardUtil.ApplyModifiers(ev.Key.Keysym.Sym, ev.Key.Keysym.Mod);
-                    
+
                     if ((int)((char)ev.Key.Keysym.Sym) != ev.Key.Keysym.Sym)
                     {
                         character = '\0';
