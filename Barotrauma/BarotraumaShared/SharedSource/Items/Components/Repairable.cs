@@ -16,8 +16,6 @@ namespace Barotrauma.Items.Components
         private float deteriorationTimer;
         private float deteriorateAlwaysResetTimer;
 
-        private float repairBoost;
-
         bool wasBroken;
         bool wasGoodCondition;
 
@@ -208,7 +206,7 @@ namespace Barotrauma.Items.Components
 
         public float RepairDegreeOfSuccess(Character character, List<Skill> skills)
         {
-            if (skills.Count == 0) return 1.0f;
+            if (skills.Count == 0) { return 1.0f; }
 
             float skillSum = (from t in skills let characterLevel = character.GetSkillLevel(t.Identifier) select (characterLevel - (t.Level * SkillRequirementMultiplier))).Sum();
             float average = skillSum / skills.Count;
@@ -220,11 +218,14 @@ namespace Barotrauma.Items.Components
         {
             if (qteSuccess)
             {
-                repairBoost = RepairDegreeOfSuccess(CurrentFixer, requiredSkills) * 3 * (currentFixerAction == FixActions.Repair ? 1.0f : -1.0f);
+                item.Condition += RepairDegreeOfSuccess(CurrentFixer, requiredSkills) * 3 * (currentFixerAction == FixActions.Repair ? 1.0f : -1.0f);
             }
-            else
+            else if (Rand.Range(0.0f, 2.0f) > RepairDegreeOfSuccess(CurrentFixer, requiredSkills))
             {
-                repairBoost = (1 - RepairDegreeOfSuccess(CurrentFixer, requiredSkills)) * 10 * (currentFixerAction == FixActions.Repair ? -1.0f : 1.0f);
+                ApplyStatusEffects(ActionType.OnFailure, 1.0f, CurrentFixer);
+#if SERVER
+                GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, CurrentFixer.ID });
+#endif
             }
         }
 
@@ -312,6 +313,8 @@ namespace Barotrauma.Items.Components
                 currentRepairItem = null;
                 currentFixerAction = FixActions.None;
 #if CLIENT
+                qteTimer = QteDuration;
+                qteCooldown = 0.0f;
                 repairSoundChannel?.FadeOutAndDispose();
                 repairSoundChannel = null;
 #endif
@@ -421,12 +424,6 @@ namespace Barotrauma.Items.Components
             if (item.ConditionPercentage > MinSabotageCondition)
             {
                 wasGoodCondition = true;
-            }
-
-            if (!MathUtils.NearlyEqual(repairBoost, 0.0f))
-            {
-                item.Condition += repairBoost;
-                repairBoost = 0.0f;
             }
 
             float fixDuration = MathHelper.Lerp(FixDurationLowSkill, FixDurationHighSkill, successFactor);

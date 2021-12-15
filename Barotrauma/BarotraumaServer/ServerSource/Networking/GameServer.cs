@@ -1036,6 +1036,11 @@ namespace Barotrauma.Networking
                     case ClientNetObject.SYNC_IDS:
                         //TODO: might want to use a clever class for this
                         c.LastRecvLobbyUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvLobbyUpdate, GameMain.NetLobbyScreen.LastUpdateID);
+                        if (c.HasPermission(ClientPermissions.ManageSettings) &&
+                            NetIdUtils.IdMoreRecentOrMatches(c.LastRecvLobbyUpdate, c.LastSentServerSettingsUpdate))
+                        {
+                            c.LastRecvServerSettingsUpdate = c.LastSentServerSettingsUpdate;
+                        }
                         c.LastRecvChatMsgID = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvChatMsgID, c.LastChatMsgQueueID);
                         c.LastRecvClientListUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvClientListUpdate, LastClientListUpdateID);
 
@@ -2469,6 +2474,7 @@ namespace Barotrauma.Networking
             msg.Write(serverSettings.AllowFriendlyFire);
             msg.Write(serverSettings.LockAllDefaultWires);
             msg.Write(serverSettings.AllowRagdollButton);
+            msg.Write(serverSettings.AllowLinkingWifiToChat);
             msg.Write(serverSettings.UseRespawnShuttle);
             msg.Write((byte)serverSettings.LosMode);
             msg.Write(includesFinalize); msg.WritePadBits();

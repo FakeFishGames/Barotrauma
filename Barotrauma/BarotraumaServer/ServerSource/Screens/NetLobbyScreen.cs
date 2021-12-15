@@ -32,6 +32,7 @@ namespace Barotrauma
             set { selectedShuttle = value; lastUpdateID++; }
         }
 
+        [Obsolete("TODO: this list shouldn't exist, the client should just use the visible subs list instead")]
         public List<SubmarineInfo> CampaignSubmarines
         {
             get

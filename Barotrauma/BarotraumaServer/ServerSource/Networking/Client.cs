@@ -10,6 +10,9 @@ namespace Barotrauma.Networking
 
         public UInt16 LastRecvClientListUpdate = 0;
 
+        public UInt16 LastSentServerSettingsUpdate = 0;
+        public UInt16 LastRecvServerSettingsUpdate = 0;
+        
         public UInt16 LastRecvLobbyUpdate = 0;
 
         public UInt16 LastSentChatMsgID = 0; //last msg this client said

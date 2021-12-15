@@ -199,7 +199,7 @@ namespace Barotrauma
 
             foreach (Character potentialCharacter in Character.CharacterList)
             {
-                if (!HumanAIController.IsActive(character)) { continue; }
+                if (!HumanAIController.IsActive(potentialCharacter)) { continue; }
 
                 if (HumanAIController.IsFriendly(character, potentialCharacter, true) && potentialCharacter.AIController is HumanAIController)
                 {

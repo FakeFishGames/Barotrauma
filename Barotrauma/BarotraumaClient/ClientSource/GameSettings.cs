@@ -535,6 +535,9 @@ namespace Barotrauma
                     return false;
                 }
             };
+#if DEBUG
+            statisticsTickBox.Enabled = false;
+#endif
             void updateGATickBoxToolTip()
                 => statisticsTickBox.ToolTip = TextManager.Get($"GameAnalyticsStatus.{GameAnalyticsManager.UserConsented}");
             updateGATickBoxToolTip();

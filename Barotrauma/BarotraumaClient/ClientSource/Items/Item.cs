@@ -648,12 +648,18 @@ namespace Barotrauma
                 if (linkedTo.Contains(otherEntity))
                 {
                     linkedTo.Remove(otherEntity);
-                    if (otherEntity.linkedTo != null && otherEntity.linkedTo.Contains(this)) otherEntity.linkedTo.Remove(this);
+                    if (otherEntity.linkedTo != null && otherEntity.linkedTo.Contains(this))
+                    {
+                        otherEntity.linkedTo.Remove(this);
+                    }
                 }
                 else
                 {
                     linkedTo.Add(otherEntity);
-                    if (otherEntity.Linkable && otherEntity.linkedTo != null) otherEntity.linkedTo.Add(this);
+                    if (otherEntity.Linkable && otherEntity.linkedTo != null)
+                    {
+                        otherEntity.linkedTo.Add(this);
+                    }
                 }
             }
         }

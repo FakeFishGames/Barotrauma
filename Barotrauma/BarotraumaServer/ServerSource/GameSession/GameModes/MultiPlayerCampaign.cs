@@ -404,7 +404,7 @@ namespace Barotrauma
             LastSaveID++;
         }
 
-        private void UpdateCampaignSubs()
+        public static void UpdateCampaignSubs()
         {
             bool isSubmarineVisible(SubmarineInfo s)
                 => !GameMain.Server.ServerSettings.HiddenSubs.Any(h
@@ -433,6 +433,9 @@ namespace Barotrauma
 
             GameMain.NetLobbyScreen.CampaignSubmarines = availableSubs;
         }
+
+        public bool CanPurchaseSub(SubmarineInfo info)
+            => info.Price <= Money && GameMain.NetLobbyScreen.CampaignSubmarines.Contains(info);
 
         public void DiscardClientCharacterData(Client client)
         {

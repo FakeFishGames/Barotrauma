@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
 
         private float userDeconstructorSpeedMultiplier = 1.0f;
 
-        private const float TinkeringSpeedIncrease = 1.5f;
+        private const float TinkeringSpeedIncrease = 2.5f;
 
         private ItemContainer inputContainer, outputContainer;
 

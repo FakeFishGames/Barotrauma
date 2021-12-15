@@ -1,182 +1,25 @@
 ---------------------------------------------------------------------------------------------------------
-v0.15.17.0
+v0.15.21.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "allow linking wifi to chat" server setting preventing clients without the permission to manage server settings from using their headsets.
+- Fixed repair minigame not working correclty if the user has a talent that allows repairing past max condition.
+- Fixed "error in Order Pump Water - the number of option names doesn't match the number of options" errors in Russian, Korean and Traditional Chinese.
+
+---------------------------------------------------------------------------------------------------------
+v0.15.20.0
 ---------------------------------------------------------------------------------------------------------
 
 Changes:
+- New submarine: Orca 2.
+- Improved monster spawning: different monsters spawn in different biomes and tougher monsters are introduced gradually during the course of the campaign. WIP, probably requires balancing and adjusting. Feedback is welcome.
+- Adjusted gardening: the plants now require less continuous attention, making gardening a more viable "downtime activity" that you can focus on when there's nothing else to do, and ignore when you're busy without killing the plants.
 - Readded GameAnalytics, a library that allows us to collect gameplay statistics and error reports automatically. Sending statistics is completely optional: when you launch the game, you're asked whether you want to allow the game to send us data or not. If you decline, no data of any kind is collected. The collected data is completely anonymous and doesn't contain any personal information, but only things such as error reports and statistics about the selected game mode, submarine, missions and mods.
+- Added a simple QTE "minigame" to the repair interface. Allows speeding up the repairs slightly and hopefully makes repairing feel a little more engaging.
 - Characters can climb up ladders faster by holding the sprint key.
-- Mudraptor shell shields block projectiles and can be destroyed by firing at them.
-- Bots take previous heals into account when determining when to react to attacks. Fixes deusizine and liquid oxygenite aggroing the bots when using them to treat oxygen loss.
+- Changed the way purchasable submarines for the multiplayer campaign are selected: instead of choosing them when creating the campaign, all of the server's visible submarines are made available for purchase.
 - Diving suits play a different warning sound when low on oxygen (<5% left in tank).
 - PUCS doesn't consume oxygen tanks in rooms with oxygen.
-- Added new option-specific bot dialogue for when bots can't find "loadables" for the Load Items order (unstable only).
-- Reworked "evasive maneuvers": now gives 15% more money for nest/swarm missions instead of giving attack bonus inside submarine.
-- Rework "expanded research": whenever you or another allied crewmember deconstructs depleted fuel, they gain 400 experience. This effect can only occur up to 3 times until you finish another mission.
-- Prototype Steam Cannon can damage ballast flora.
-- Water detectors treat minuscule amounts (< 1.0 water volume) as 0.
-- Improvements to the "infiltration" outpost event: you can talk to any of the clowns to progress, not just the one that spawned 1st, and the clowns head to the airlock when told to leave.
-- Improved the bots door interaction so that they don't slam the door at your face, nor bump into closed doors so often, or keep "smashing the select key" as frequently. There's now a three second cooldown after succesfully pressing a button before next attempt.
-- Changes to the default order assignment priorities, which determine the initial order of the orders when multiple is issued. You can still alter the order manually by dragging the order icons.
-- Bots now treat handcuffed targets as neutralized, unless they are hostiles spawned from events. Fixes e.g. bots killing captured prisoners, but also allows you to submit to the outpost guards by handcuffing yourself.
-- Load Items order: bots now prioritize containers that have empty space.
-- Load Items order: the Refill Oxygen Tanks option now also puts tanks into oxygen tank shelves.
-- Load Items order: bots now prioritize items further from the target condition when searching for items to laod, i.e. emptier oxygen tanks and battery cells and fuller ammunition boxes.
-
-Fixes:
-- Fixed certain monsters (e.g. hammerheads) attacking each other (unstable only).
-- Fixed mudraptors and crawlers trying to swim to the bottom of the ocean.
-- Fixed other clients' characters sometimes disappearing in MP when moving from sub to another (unstable only).
-- Fixes and improvements to Orca 2.
-- Fixed canister shell texture path (unstable only).
-- Fixed structures without a collider not being taken into account when determining which submarines are visible, causing them to vanish if there are only structures without a collider on the screen.
-- Fixed Round and Ceil components returning -0 when rounding a negative value to 0.
-- Fixed inability to swim up through a small hull on top of another one (e.g. the upper airlock in R-29).
-- Fixed skillbooks, oxygenite shards and sulphurite shards not spawning in crates.
-- Fixed name of the currently installed turret not being displayed in the submarine upgrade menu.
-- Fixed AI gunners not shooting at visible enemies inside the enemy submarine.
-- Prevent bots from healing the targets that have recently attacked them. Fixes bots healing and shooting you at the same time.
-- Fixed rescue order (healing) not working outside of the sub.
-- Fixed bots not knowing how to use the Rapid Fissile Accelerator. Also improves on how they use smg, assault rifle, and autoshotgun.
-- Fixed status monitor's electrical view not showing the power/load values in Korean.
-- Fixed status monitor displaying water levels strangely in multi-hull rooms (unstable only).
-- Fixed water flow sound volume having no upper limit, sometimes causing the sounds to drown out everything else (unstable only).
-- Fixed bots trying to equip a scooter when their hands are occupied by something that can't be put in the inventory (e.g. a crate), leading to weird twitching when they drop and immediately pick up the carried item.
-- Fixed unconscious NPCs being able to see you steal.
-- Fixed inability to order bots to operate turrets that are controlled via wifi components (unstable only).
-- Fixed bots staying in the "fight intruders" state indefinitely when there are neutralized (= handcuffed) hostiles on board, and repeatedly reporting that there are hostiles on board.
-- Bots stop moving before starting to repair a device. Fixes bots "flying" when the repair fails, because they'd start the repair while still running at full speed and would keep the momentum if they get stunned because of the failed repair. 
-- Fixed bots sometimes repathing too eagerly while they are on ladders, sometimes causing them to get stuck in places where they should switch from a ladder to another one nearby.
-- Fixed looking at the sonar sometimes causing a significant performance hit (most often in the abyss). If a path to a marker couldn't be found when determining the distance to the marker, the game would keep trying to find a path every frame.
-- Fixed "expert commando" talent affecting turrets.
-- Fixed Alien_Entrance3's left opening getting connected to other modules instead of being used as an entrance.
-- Fixed coilgun draining ammo boxes at the same rate regardless of the number of linked loaders.
-- Fixed some of the artifacts still playing sounds when inside a transport case.
-- Fixed inability to put genetic materials into a container inside another container.
-- Fixed characters legs sometimes bending the wrong way around when climbing (seems to happen most often when trying to get on ladders while swimming up-side down).
-- Fixed borked "Front E P2" collider.
-- Fixed bots taking items from fabricators/deconstructors when ordered to load items.
-- Fixed bots sometimes running headlessly for a brief period after having been ordered to load items.
-- Fixed hostages in the abandoned outpost rescue mission refusing to follow a player that has some diving gear on they don't have access to.
-- Fixed pirates giving redundant orders and consequently talking too much in the chat.
-- Fixed pirates not always shooting monsters if there's few of them.
-- Fixes to the bot navigation outside of the sub.
-- Fixed bots still trying to go through destructible ice chunks.
-- Fixed bots not closing the airlock doors when they go outside
-- Fixed bots not always trying to press the right button to interact with a door.
-- Fixed bots getting stuck when trying to follow a target with some diving gear they don't have access to. Now they should self-dismiss the order instead.
-- Fixed auto-dismissing orders clearing all the orders instead of just the one that should dismiss.
-- Fixed the follow distances between the characters when there's multiple bots following the player.
-- Fixed monsters always ignoring all items inside the sub when they are outside, consequently they didn't target the sonar or the engine, for example.
-- Fixed bots sometimes deploying Kastrull's drone for no reason.
-- Fixed the Load Items order sometimes dropping one item from the target container, even when there's space for the new item.
-- Fixed bots removing items too aggressively from their preferred containers (e.g. oxygen tanks from diving suits) during the Load Items order when the items had been even just very slightly used.
-
-Modding:
-- Fixed overriding a Controller component (e.g. button) resetting its Toggle and State settings.
-- Fixed ParticleEmitter's angle not getting mirrored when spawned by a mirrored item.
-
----------------------------------------------------------------------------------------------------------
-v0.15.16.0
----------------------------------------------------------------------------------------------------------
-
-Changes:
-- Added a simple QTE "minigame" to the repair interface. Allows speeding up the repairs slightly and hopefully makes repairing feel a little more engaging.
-- Medical curtains can be opened and closed.
-- Restrict the amount of additional cargo you can choose in multiplayer: max 10 items of a type, max 20 types of items.
-- Connected power to oxygen tank shelves in Azimuth, Berilia, Dugong, R-29 and Remora.
-- Allow editing item quality in the sub editor.
-- Changed the way purchasable submarines for the multiplayer campaign are selected: instead of choosing them when creating the campaign, all of the server's visible submarines are made available for purchase.
-- Added a new "Load Items" order with options "Recharge battery cells", "Refill oxygen tanks", and "Reload ammo": bots will take battery cells to be recharged, take oxygen tanks to be refilled, or place more ammo to loaders depending on the order option.
-- Reduced initial assignment priority for Operate orders: Operate Reactor, Operate Weapons, and Steer orders will now be assigned as the lowest priority order by default, but the current order priorities can still be adjusted like before by rearranging the orders on the crew list.
-- Minor adjustments to the the monster spawns in the ruins.
-- Husks now remain neutral towards characters that are late in the husk transformation, unless they act offensively.
-- Reduce Husk and Humanhusk sight from 1 to 0.5.
-- Prepare for expedition order: the bots now try to take five oxygen tanks instead of just one.
-- Prepare for experition order: require a diving suit for the order to complete.
-- Oxygenite shards are no longer oxygen sources and can't be inserted into diving gear or tools directly. They are still a source of liquid oxygenite, which can be used to craft oxygenite tanks.
-- Allow to grab targets when their inventory can be accessed. Allow to access the inventory of the bots.
-- Adjust the health interface: target is shown closer to the center of the screen.
-- Shotguns now spawn with 6 shells, autoshotguns with 8 (a full stack).
-- Add some dialog for the bots when they are getting attacked outside a friendly sub to tell the player why they are fleeing from an enemy and that they don't have a weapon.
-
-Talent improvements and fixes:
-- Overall balancing to the stats boots from talents.
-- Fixed "tandem fire" crashing the game if there are no other crewmates present.
-- Fixed "safety first" talent giving you mechanical skill when you gain electrical skill instead of the other way around.
-- Fixed talent menu showing extra talents as still being selectable after picking all-seeing-eye, even if there's no talent points left (unstable only).
-- Reworked "implacable": now allows the character to stay conscious for 15 seconds after falling below 0 health.
-- Reworked "field medic": if you complete a mission and all crew members survived, you gain medical skill.
-- Reworked "beat cop": now gives 25% repair speed and increases inflicted stuns by 25% (and the tackle).
-- Reworked "reverse engineer": whenever you deconstruct an alien artifact, you have a 50% chance to gain double output from it and gain 8 to a random skill. Small alien artifacts, when deconstructed, give 4 skill instead.
-- Reworked "curiosity": whenever you deconstruct an alien artifact, you and another random allied crewmember gains 125 experience. Small alien artifacts, when deconstructed, give 50 experience instead.
-- Reworked "expert commando": now gives, to ranged weapons, 70% spread reduction, 40% attack multiplier and 30% attack speed reduction while crouched.
-- Reworked "gene therapist": now gives an additional 25% medical item potency, correctly displays as adding a flat 10% to each refined genetic material.
-- Reworked "genetic stability": no longer gives 25% repair speed, and instead gives 15 to all skills. Probability of tainting genetic material reduced to 50%.
-- Reworked "still kicking": now rapidly heals over a short duration instead.
-- Reworked "stand and deliver": assistant skillbook can no longer be used on another character, instead the nearest ally gains 5 to all skills when the book is read by the talent owner.
-- Reworked "first aid training": Now gives a flat 35% increase to medical item potency when applied to the character.
-- "Advanced splicing", "optimized power-flow" and "elbow grease" can now only give up to 100 skill bonus.
-- Adjustments to some of the ability descriptions to address some inaccuracies/ambiguities.
-- Rebalanced combat stimulant: now applies faster, but less in total per dose. Healing reduced.
-- Droped type "poison" from chem addiction, making it non-healable (only chem withdrawal can be healed).
-
-Fixes:
-- Fixed certain wires in vanilla subs being impossible to remove.
-- Improvements to cave waypoints: should fix bots getting stuck next to destructible ice chunks even if there's a way past them.
-- Fixed other clients' characters sometimes appearing to teleport outside the sub for 1 frame when moving from sub to another, leading to further issues if the client has water-sensitive items in their inventory.
-- Fixed gaps sometimes getting connected to incorrect hulls between docking ports, preventing water from flowing down from the space between the ports.
-- Fixed mudraptor shell armor's sprite depth getting messed up when climbing ladders.
-- Fixed drunkenness, opiate withdrawal and chem withdrawal not causing nausea.
-- Fixed wire nodes getting misplaced in the sub editor when loading mirrored wires.
-- Fixed whitelist controls getting disabled when adding new players to the list if whitelist wasn't enabled when opening the server settings.
-- Fixed hardened/dementonite crowbars not opening doors faster than normal ones.
-- Fixed campaign setup menu going crazy if you try to scroll it with arrow keys.
-- Fixed bots losing their items if you quit the 1st MP campaign round without saving, continue, and repeat that again.
-- Fixed cargo sometimes spawning inside the floor. Happened because the spawn position was determined based on the purchased item's size, instead of the crate the item spawns in.
-- Fixed playstyle always being displayed as Serious in the server lobby unless you're hosting yourself.
-- Fixed handheld status monitor drawing the water levels and character icons of the previous sub when it's taken outside.
-- Fixed spawnitem command not working in the sub editor.
-- Fixed "slipsuit.png not found" error" when placing a slipsuit in a locker (unstable only).
-- Fixed alien pistol not having a crosshair.
-- Fixed weapon skill above 100 making weapons less accurate.
-- Fixed misaligned outpost reactor meters.
-- Fixed R and T not bringing up the chat if it's minimized (unstable only).
-- Fixed terminal inputs not working (unstable only).
-- Fixed hulls' "hidden in game" setting doing nothing.
-- Fixed certain items causing the "analyzeitem" and "deconstructvalue" console commands to crash.
-- Fixed context menus not opening when right-clicking player names in the chat and server log.
-- Improved the error message shown when a Steam lobby could not be created.
-- Reduced the severity and frequency of the "Maximum packet size exceeded" error in the server lobby.
-- Fixed the contextual order for fiding a weapon not targeting the selected item.
-- Fixed combat objective overriding the priority of find safety objective when the combat objective shouldn't even be active, leading to bots sometimes suffocating after combat if they don't have enough oxygen in the currently equipped tank.
-- Fixed bots trying to shoot through level walls.
-- Prepare for expedition: Fix bots not equipping a diving suit in multiplayer game.
-- Fixed sprite bleed in the outpost computer terminal sprite.
-- Fixed campaign getting "locked" if the submarine undocks immediately at the start of the round (on the first frame, e.g. as a result of some custom docking circuit).
-- Fixed deconstructor being unable to combine the output items if they're inside a container in the output slots.
-
-Modding:
-- Fixed certain explosion flashduration values causing the light to flicker/loop.
-- Fixed remaining errors with talent overrides.
-- Allow the enemy ai to target using groups in addition to species names.
-- Move the turret ammo box definitions from containers.xml to where the gun and the ammo is defined.
-
----------------------------------------------------------------------------------------------------------
-v0.15.15.0
----------------------------------------------------------------------------------------------------------
-
-- Fixed crashing when bots switch to the combat state.
-- Removed stun tools from riot officer loadout, replaced with riot shotgun.
-- Burns slowly heal by themselves, adjusted radiation poisoning accordingly.
-- Fixed bots being unable to clean up items stolen from an outpost after leaving the outpost.
-- Fixed incorrect base skill being used in skill reduction calculation.
-
----------------------------------------------------------------------------------------------------------
-v0.15.14.0
----------------------------------------------------------------------------------------------------------
-
-Changes:
-- Adjusted gardening: the plants now require less continuous attention, making gardening a more viable "downtime activity" that you can focus on when there's nothing else to do, and ignore when you're busy without killing the plants.
 - Added "Pump In" option to the contextual "Pump Water" order.
 - Added "fuel_percentage_left" output to reactors. Outputs the sum of the fuel rods' condition percentage, as opposed to the total "heating power" of the rods like the "fuel_out" output.
 - Powered down reactors don't zap the user when repairing.
@@ -199,6 +42,19 @@ Changes:
 - Added a menu to hide submarines in the server lobby, allowing hosts to remove vanilla submarines from the list without replacing the content package.
 - Added LOS effect to the server settings.
 - Added line break support to the server message.
+- Connected the diving suit lockers on the vanilla submarines to the power grid so that they refill the contained oxygen tanks.
+- Connected the oxygen shelves on Humpback to the power grid.
+- Allowed in-game editing of lamps in R-29.
+- Mudraptor shell shields block projectiles and can be destroyed by firing at them.
+- Prototype Steam Cannon can damage ballast flora.
+- Water detectors treat minuscule amounts (< 1.0 water volume) as 0.
+- Improvements to the "infiltration" outpost event: you can talk to any of the clowns to progress, not just the one that spawned 1st, and the clowns head to the airlock when told to leave.
+- Medical curtains can be opened and closed.
+- Restricted the amount of additional cargo you can choose in multiplayer: max 10 items of a type, max 20 types of items.
+- Allow editing item quality in the sub editor.
+- Removed stun tools from riot officer loadout, replaced with riot shotgun.
+- Burns slowly heal by themselves, adjusted radiation poisoning accordingly.
+- Shotguns now spawn with 6 shells, autoshotguns with 8 (a full stack).
 
 Multiplayer fixes:
 - Fixed campaign character resetting if the client, disconnects, rejoins and respawns on the same round after their character has gotten killed.
@@ -211,30 +67,83 @@ Multiplayer fixes:
 - Fixed crashing if you start the round as a spectator, take control of someone with console commands and try to access the tab menu's character tab.
 - Fixed empty exploding coilgun ammo boxes exploding client-side when deconstructed.
 - Fixed disabling friendly fire preventing buffs from being applied to crewmates, while allowing harmful afflictions to be applied (= the setting basically worked the wrong way around).
+- Fixed other clients' characters sometimes appearing to teleport outside the sub for 1 frame when moving from sub to another, leading to further issues if the client has water-sensitive items in their inventory.
+- Fixed whitelist controls getting disabled when adding new players to the list if whitelist wasn't enabled when opening the server settings.
+- Fixed bots losing their items if you quit the 1st MP campaign round without saving, continue, and repeat that again.
+- Fixed playstyle always being displayed as Serious in the server lobby unless you're hosting yourself.
+- Reduced the severity and frequency of the "Maximum packet size exceeded" error in the server lobby.
+- Fixed context menus not opening when right-clicking player names in the chat and server log.
+- Improved the error message shown when a Steam lobby could not be created.
 
-Talent fixes:
-- Fixed unlocking "all seeing eye" preventing you from unlocking further talents until you've gained enough EXP to compensate for the 3 "free" talents.
+Talent improvements and fixes:
+- Overall balancing to the stats boots from talents.
+- Adjustments to some of the ability descriptions to address some inaccuracies/ambiguities.
+- Reworked "implacable": now allows the character to stay conscious for 15 seconds after falling below 0 health.
+- Reworked "field medic": if you complete a mission and all crew members survived, you gain medical skill.
+- Reworked "beat cop": now gives 25% repair speed and increases inflicted stuns by 25% (and the tackle).
+- Reworked "reverse engineer": whenever you deconstruct an alien artifact, you have a 50% chance to gain double output from it and gain 8 to a random skill. Small alien artifacts, when deconstructed, give 4 skill instead.
+- Reworked "curiosity": whenever you deconstruct an alien artifact, you and another random allied crewmember gains 125 experience. Small alien artifacts, when deconstructed, give 50 experience instead.
+- Reworked "expert commando": now gives, to ranged weapons, 70% spread reduction, 40% attack multiplier and 30% attack speed reduction while crouched.
+- Reworked "gene therapist": now gives an additional 25% medical item potency, correctly displays as adding a flat 10% to each refined genetic material.
+- Reworked "genetic stability": no longer gives 25% repair speed, and instead gives 15 to all skills. Probability of tainting genetic material reduced to 50%.
+- Reworked "still kicking": now rapidly heals over a short duration instead.
+- Reworked "stand and deliver": assistant skillbook can no longer be used on another character, instead the nearest ally gains 5 to all skills when the book is read by the talent owner.
+- Reworked "first aid training": Now gives a flat 35% increase to medical item potency when applied to the character.
+- Reworked "evasive maneuvers": now gives 15% more money for nest/swarm missions instead of giving attack bonus inside submarine.
+- Reworked "expanded research": whenever you or another allied crewmember deconstructs depleted fuel, they gain 400 experience. This effect can only occur up to 3 times until you finish another mission.
 - "Scrap savant" and "scrounger" only spawn the scrap in items with the tag "container" and only if the container can hold scrap. Fixes ability to generate free scrap by placing containers like detonators and portable pumps in the wrecks.
+- "Advanced splicing", "optimized power-flow" and "elbow grease" can now only give up to 100 skill bonus.
 - Fixed "canned heat" not increasing the quality of fabricated oxygenite tanks.
 - Fixed "pyromaniac" applying the buff to the enemy you're damaging instead of your character.
 - Fixed server ending the round if the last player alive is an assistant with the "still kicking" talent and said assistant falls unconscious.
 - Electrochemist talent doesn't stun the attacker if the attack doesn't apply any harmful afflictions (e.g. if it only applies buffs or gives experience).
-- Fixed high-quality items with whose max condition is above 100% not being accepted as fabrication ingredients.
 - Fixed autofill not working on the new talent items.
-- Added PreferredContainers to the new talent items to allow the bots to clean them up.
 - Fixed "crew layabout" applying stat boosts to enemies as well.
+- Fixed "expert commando" talent affecting turrets.
+- Fixed hardened/dementonite crowbars not opening doors faster than normal ones.
+- Fixed unlocking "all seeing eye" preventing you from unlocking further talents until you've gained enough EXP to compensate for the 3 "free" talents.
+- Fixed high-quality items with whose max condition is above 100% not being accepted as fabrication ingredients.
+- Fixed "tandem fire" crashing the game if there are no other crewmates present.
+- Fixed "safety first" talent giving you mechanical skill when you gain electrical skill instead of the other way around.
+- Added PreferredContainers to the new talent items to allow the bots to clean them up.
+- Rebalanced combat stimulant: now applies faster, but less in total per dose. Healing reduced.
+- Dropped type "poison" from chem addiction, making it non-healable (only chem withdrawal can be healed).
 
 AI:
 - New order: Find Weapon
-- New order: Prepare for Expedition
+- New order: Prepare for Expedition.
+- New order: "Load Items", with options "Recharge battery cells", "Refill oxygen tanks", and "Reload ammo". Bots will take battery cells to be recharged, take oxygen tanks to be refilled, or place more ammo to loaders depending on the order option.
 - Added an option to pump in water. Only applicable to pumps that are not automatically controlled.
 - Orders that cannot be completed should now be dismissed automatically instead of keeping active but doing nothing.
 - The bots should now tell you when they can't follow an order, instead of always replying positively.
+- Changes to the default order assignment priorities, which determine the initial order of the orders when multiple is issued. You can still alter the order manually by dragging the order icons.
 - Fixed bots getting stuck with invalid paths for too long.
 - Fixed AIObjectiveGetItem not working properly when we try to ignore the items that already are in the inventory. In practice, only affects the find better weapons behavior in the combat objective (Fight Intruders).
 - Bots don't automatically unequip PUCS when they don't need diving gear.
 - Don't allow bots to heal pets (because they are likely to just kill them).
 - Fixed bots trying to equip diving gear when they have spliced genes that give pressure immunity and/or remove the need for oxygen.
+- Improved the bots door interaction so that they don't slam the door at your face, nor bump into closed doors so often, or keep "smashing the select key" as frequently. There's now a three second cooldown after succesfully pressing a button before next attempt.
+- Bots now hold still while waiting a door to open instead of moving towards it.
+- Bots now only put oxygen tanks into oxygen generators with the "Refill Oxygen Tanks" order option.
+- Bots take previous heals into account when determining when to react to attacks. Fixes deusizine and liquid oxygenite aggroing the bots when using them to treat oxygen loss.
+- Bots now treat handcuffed targets as neutralized, unless they are hostiles spawned from events. Fixes e.g. bots killing captured prisoners, but also allows you to submit to the outpost guards by handcuffing yourself.
+- Prevent bots from healing the targets that have recently attacked them. Fixes bots healing and shooting you at the same time.
+- Fixed rescue order (healing) not working outside of the sub.
+- Fixed bots not knowing how to use the Rapid Fissile Accelerator. Also improves on how they use smg, assault rifle, and autoshotgun.
+- Fixed unconscious NPCs being able to see you steal.
+- Fixed bots sometimes repathing too eagerly while they are on ladders, sometimes causing them to get stuck in places where they should switch from a ladder to another one nearby.
+- Fixed hostages in the abandoned outpost rescue mission refusing to follow a player that has some diving gear on they don't have access to.
+- Fixed pirates giving redundant orders and consequently talking too much in the chat.
+- Fixed pirates not always shooting monsters if there's only a few of them.
+- Fixed bots not always trying to press the right button to interact with a door.
+- Fixed bots getting stuck when trying to follow a target with some diving gear they don't have access to. Now they should self-dismiss the order instead.
+- Fixed bots sometimes deploying Kastrull's drone for no reason.
+- Improvements to cave waypoints: should fix bots getting stuck next to destructible ice chunks even if there's a way past them.
+- Husks now remain neutral towards characters that are late in the husk transformation, unless they act offensively.
+- Reduced Husk and Humanhusk sight from 1 to 0.5.
+- Oxygenite shards are no longer oxygen sources and can't be inserted into diving gear or tools directly. They are still a source of liquid oxygenite, which can be used to craft oxygenite tanks.
+- Added some dialog for the bots when they are getting attacked outside a friendly sub to tell the player why they are fleeing from an enemy and that they don't have a weapon.
+- Fixed combat objective overriding the priority of find safety objective when the combat objective shouldn't even be active, leading to bots sometimes suffocating after combat if they don't have enough oxygen in the currently equipped tank.
 
 Misc fixes:
 - Exploding the abandoned outpost reactor doesn't damage the player sub in missions that require destroying it.
@@ -287,6 +196,42 @@ Misc fixes:
 - Restrict downwards movement when a character has reached the bottom of a ladder to fix phasing through the floor.
 - Fixed characters' feet dangling in the air when moving from a ladder to another (e.g. when climbing from the sub to the outpost).
 - Adjusted flamethrower and prototype steam cannon particles to get them to match the range of the weapons more closely.
+- Fixed most outpost modules being named as airlock and consequently defined as "wet rooms". Fixes bots still slamming doors and hatches on each others face while moving around in the outposts.
+- Fixed portable pump consuming batteries when it's not pumping in/out.
+- Fixed waypoint connections on Remora drone causing navigation issues for the bots.
+- Fixed undocking a drone (e.g. on Remora/Kastrull) permanently breaking the navigation between the shuttle and the main sub.
+- Fixed mudraptors and crawlers trying to swim to the bottom of the ocean.
+- Fixed structures without a collider not being taken into account when determining which submarines are visible, causing them to vanish if there are only structures without a collider on the screen.
+- Fixed Round and Ceil components returning -0 when rounding a negative value to 0.
+- Fixed inability to swim up through a small hull on top of another one (e.g. the upper airlock in R-29).
+- Fixed skillbooks, oxygenite shards and sulphurite shards not spawning in crates.
+- Fixed name of the currently installed turret not being displayed in the submarine upgrade menu.
+- Fixed AI gunners not shooting at visible enemies inside the enemy submarine.
+- Fixed status monitor's electrical view not showing the power/load values in Korean.
+- Fixed bots trying to equip a scooter when their hands are occupied by something that can't be put in the inventory (e.g. a crate), leading to weird twitching when they drop and immediately pick up the carried item.
+- Bots stop moving before starting to repair a device. Fixes bots "flying away" when the repair fails, because they'd start the repair while still running at full speed and would keep the momentum if they get stunned because of the failed repair. 
+- Fixed looking at the sonar sometimes causing a significant performance hit (most often in the abyss). If a path to a marker couldn't be found when determining the distance to the marker, the game would keep trying to find a path every frame.
+- Fixed Alien_Entrance3's left opening getting connected to other modules instead of being used as an entrance.
+- Fixed coilgun draining ammo boxes at the same rate regardless of the number of linked loaders.
+- Fixed some of the artifacts still playing sounds when inside a transport case.
+- Fixed inability to put genetic materials into a container inside another container.
+- Fixed characters' legs sometimes bending the wrong way around when climbing (seems to happen most often when trying to get on ladders while swimming up-side down).
+- Fixed borked "Front E P2" collider.
+- Fixed certain wires in vanilla subs being impossible to remove.
+- Fixed gaps sometimes getting connected to incorrect hulls between docking ports, preventing water from flowing down from the space between the ports.
+- Fixed mudraptor shell armor's sprite depth getting messed up when climbing ladders.
+- Fixed drunkenness, opiate withdrawal and chem withdrawal not causing nausea.
+- Fixed wire nodes getting misplaced in the sub editor when loading mirrored wires.
+- Fixed campaign setup menu going crazy if you try to scroll it with arrow keys.
+- Fixed handheld status monitor drawing the water levels and character icons of the previous sub when it's taken outside.
+- Fixed spawnitem command not working in the sub editor.
+- Fixed alien pistol not having a crosshair.
+- Fixed weapon skill above 100 making weapons less accurate.
+- Fixed cargo sometimes spawning inside the floor. Happened because the spawn position was determined based on the purchased item's size, instead of the crate the item spawns in.
+- Fixed campaign getting "locked" if the submarine undocks immediately at the start of the round (on the first frame, e.g. as a result of some custom docking circuit).
+- Fixed deconstructor being unable to combine the output items if they're inside a container in the output slots.
+- Fixed misaligned outpost reactor meters.
+- Fixed sprite bleed in the outpost computer terminal sprite.
 
 Modding:
 - Fixed inability to override talent trees.
@@ -299,6 +244,13 @@ Modding:
 - Fixed crashing when trying to create a non-humanoid that can walk in the character editor.
 - Added a randomize button for level editor seed.
 - Fixed fabricators without a repairable component crashing the game when activated.
+- Fixed overriding a Controller component (e.g. button) resetting its Toggle and State settings.
+- Fixed ParticleEmitter's angle not getting mirrored when spawned by a mirrored item.
+- Fixed certain explosion flashduration values causing the light to flicker/loop.
+- Allow the enemy AI to target using groups in addition to species names.
+- Moved the turret ammo box definitions from containers.xml to where the gun and the ammo are defined.
+- Fixed hulls' "hidden in game" setting doing nothing.
+- Fixed certain items causing the "analyzeitem" and "deconstructvalue" console commands to crash.
 
 ---------------------------------------------------------------------------------------------------------
 v0.15.13.0
@@ -502,9 +454,6 @@ Additions and changes:
 - Enabled NVidia Optimus on Windows.
 
 Fixes:
-- Fixed crashing when an attack is applied on a character from a source other than another character, e.g. propeller (unstable only).
-- Fixed current_position_y output not working on nav terminals (unstable only).
-- Fixed fuel rods having a bullet as a contained indicator (unstable only).
 - Removed duplicate welcome messages from humpack's terminal.
 - Fixed start and spectate buttons shrinking in the server lobby every time they're hidden and re-enabled.
 - Fixed contained items inside contained items not moving when repositioning a container in the sub editor (e.g. when moving a weapon holder that contains a weapon with a magazine).
@@ -548,7 +497,6 @@ Fixes:
 - The overdosed NPC in the "good samaritan" event can't die until the player has triggered the event (completing the event after the NPC had already died made no sense).
 - Fixed console errors when an item a bot has been ordered to target was removed between rounds (e.g. an ignore order targeting a mission item that gets removed at the end of the round).
 - Fixes to oxygen generator logic: the generator now periodically recalculates how to distribute the oxygen between the vents, as opposed to doing it once at the start of the round. Just doing it once caused issues if there were e.g. vents or doors that are initially open between the rooms.
-- Fixed characters sometimes getting "stuck" when swimming in partially filled multi-hull rooms. Happened because the bottom of the current hull was used as the "floor" if the actual floor was too far below, even if there was another hull below the current one, causing the ragdoll to switch to walking animation and being unable to move because it's not touching the floor (unstable only).
 - Fixed outpost events always unlocking the same escort mission.
 - The hints about flooded rooms and ballast flora aren't shown in ruins, wrecks or enemy subs.
 - Fixed "stowaway" event triggering an event cooldown, preventing monsters from spawning at the beginning of the round.

@@ -861,13 +861,13 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(this != wayPoint2);
             if (!linkedTo.Contains(wayPoint2)) 
             {
+                linkedTo.Add(wayPoint2);
                 OnLinksChanged?.Invoke(this);
-                linkedTo.Add(wayPoint2); 
             }
             if (!wayPoint2.linkedTo.Contains(this)) 
             {
+                wayPoint2.linkedTo.Add(this);
                 wayPoint2.OnLinksChanged?.Invoke(wayPoint2);
-                wayPoint2.linkedTo.Add(this); 
             }
         }
 
@@ -1105,7 +1105,6 @@ namespace Barotrauma
             Ladders = null;
             OnLinksChanged = null;
             WayPointList.Remove(this);
-        }
-    
+        } 
     }
 }

@@ -182,8 +182,12 @@ namespace Barotrauma
                     {
                         if (character.SelectedConstruction != Item)
                         {
-                            if (!Item.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true) &&
-                                !Item.TryInteract(character, ignoreRequiredItems: true, forceUseKey: true))
+                            if (Item.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true) ||
+                                Item.TryInteract(character, ignoreRequiredItems: true, forceUseKey: true))
+                            {
+                                character.SelectedConstruction = Item;
+                            }
+                            else
                             {
                                 Abandon = true;
                             }

@@ -283,7 +283,8 @@ namespace Barotrauma
 
         public void PurchaseSubmarine(SubmarineInfo newSubmarine)
         {
-            if (Campaign == null) return;
+            if (Campaign is null) { return; }
+            if (Campaign.Money < newSubmarine.Price) { return; }
             if (!OwnedSubmarines.Any(s => s.Name == newSubmarine.Name))
             {
                 Campaign.Money -= newSubmarine.Price;

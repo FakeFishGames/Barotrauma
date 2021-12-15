@@ -42,15 +42,15 @@ namespace Barotrauma
         {
             if (maxAmount <= 1)
             {
-                return "MonsterEvent (" + speciesName + ")";
+                return $"MonsterEvent ({speciesName}, {SpawnPosType})";
             }
             else if (minAmount < maxAmount)
             {
-                return "MonsterEvent (" + speciesName + " x" + minAmount + "-" + maxAmount + ")";
+                return $"MonsterEvent ({speciesName} x{minAmount}-{maxAmount}, {SpawnPosType})";
             }
             else
             {
-                return "MonsterEvent (" + speciesName + " x" + maxAmount + ")";
+                return $"MonsterEvent ({speciesName} x{maxAmount}, {SpawnPosType})";
             }
         }
 

@@ -317,9 +317,11 @@ namespace Barotrauma
 #endif
 
             string exePath = Assembly.GetEntryAssembly()!.Location;
-            string? exeName = null;
+            string? exeName = string.Empty;
+#if SERVER
+            exeName = "s";
+#endif
             Md5Hash? exeHash = null;
-            exeName = Path.GetFileNameWithoutExtension(exePath).Replace(":", "");
             try
             {
                 using (var stream = File.OpenRead(exePath))
@@ -333,16 +335,27 @@ namespace Barotrauma
             }
             try
             {
+                string buildConfiguration = "Release";
+#if DEBUG
+                buildConfiguration = "Debug";
+#elif UNSTABLE
+                buildConfiguration = "Unstable";
+#endif
                 loadedImplementation?.ConfigureBuild(GameMain.Version.ToString()
-                    + (string.IsNullOrEmpty(exeName) ? "Unknown" : exeName) + ":"
-                    + ((exeHash?.ShortHash == null) ? "Unknown" : exeHash.ShortHash));
+                    + exeName + ":"
+                    + AssemblyInfo.GitRevision + ":"
+                    + buildConfiguration);
                 loadedImplementation?.ConfigureAvailableCustomDimensions01("singleplayer", "multiplayer", "editor");
 
                 InitKeys();
 
                 loadedImplementation?.AddDesignEvent("Executable:"
-                    + (string.IsNullOrEmpty(exeName) ? "Unknown" : exeName) + ":"
-                    + ((exeHash?.ShortHash == null) ? "Unknown" : exeHash.ShortHash));
+                    + GameMain.Version.ToString()
+                    + exeName + ":"
+                    + ((exeHash?.ShortHash == null) ? "Unknown" : exeHash.ShortHash) + ":"
+                    + AssemblyInfo.GitBranch + ":"
+                    + AssemblyInfo.GitRevision + ":"
+                    + buildConfiguration);
             }
             catch (Exception e)
             {

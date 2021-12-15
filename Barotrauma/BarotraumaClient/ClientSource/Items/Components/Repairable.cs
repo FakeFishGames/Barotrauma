@@ -38,9 +38,9 @@ namespace Barotrauma.Items.Components
         private bool qteSuccess;
 
         private float qteTimer;
-        private const float qteTime = 0.5f;
+        private const float QteDuration = 0.5f;
         private float qteCooldown;
-        private const float qteCooldownTime = 0.5f;
+        private const float QteCooldownDuration = 0.5f;
 
         public float FakeBrokenTimer;
 
@@ -155,7 +155,7 @@ namespace Barotrauma.Items.Components
                 IgnoreLayoutGroups = true
             };
 
-            qteTimer = qteTime;
+            qteTimer = QteDuration;
 
             repairButtonText = TextManager.Get("RepairButton");
             repairingText = TextManager.Get("Repairing");
@@ -276,14 +276,13 @@ namespace Barotrauma.Items.Components
                     qteCooldown -= deltaTime;
                     if (qteCooldown <= 0.0f)
                     {
-                        qteTimer = qteTime;
+                        qteTimer = QteDuration;
                     }
                 }
                 else
                 {
-                    qteTimer -= deltaTime * (qteTimer / qteTime);
-                    if (qteTimer < 0.0f) qteTimer = qteTime;
-                
+                    qteTimer -= deltaTime * (qteTimer / QteDuration);
+                    if (qteTimer < 0.0f) { qteTimer = QteDuration; }                
                 }
             }
             else
@@ -307,11 +306,11 @@ namespace Barotrauma.Items.Components
             if (qteCooldown > 0.0f)
             {
                 qteSliderColor = qteSuccess ? GUI.Style.Green : GUI.Style.Red * 0.5f;
-                progressBar.Color = ToolBox.GradientLerp(qteCooldown / qteCooldownTime, progressBar.Color, qteSliderColor, Color.White);
+                progressBar.Color = ToolBox.GradientLerp(qteCooldown / QteCooldownDuration, progressBar.Color, qteSliderColor, Color.White);
             }
             else
             {
-                if (qteTimer / qteTime <= item.Condition / item.MaxCondition)
+                if (qteTimer / QteDuration <= item.Condition / item.MaxCondition)
                 {
                     qteSliderColor = Color.Lerp(qteSliderColor, GUI.Style.Green, 0.5f);
                 }
@@ -319,7 +318,7 @@ namespace Barotrauma.Items.Components
 
             progressBar.Parent.Parent.Parent.DrawManually(spriteBatch, true);
             GUI.DrawRectangle(spriteBatch,
-                    new Rectangle(sliderRect.X + (int)((qteTimer / qteTime) * sliderRect.Width), sliderRect.Y - 5, 2, sliderRect.Height + 10),
+                    new Rectangle(sliderRect.X + (int)((qteTimer / QteDuration) * sliderRect.Width), sliderRect.Y - 5, 2, sliderRect.Height + 10),
                     qteSliderColor, true);
 
             if (item.Condition > defaultMaxCondition)
@@ -341,7 +340,7 @@ namespace Barotrauma.Items.Components
 
             SabotageButton.Visible = character.IsTraitor;
             SabotageButton.IgnoreLayoutGroups = !SabotageButton.Visible;
-            SabotageButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Sabotage)) && character.IsTraitor && IsBelowRepairThreshold;
+            SabotageButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Sabotage)) && character.IsTraitor && item.ConditionPercentage > MinSabotageCondition;
             SabotageButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Sabotage || !character.IsTraitor) ?
                 sabotageButtonText :
                 sabotagingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
@@ -408,7 +407,8 @@ namespace Barotrauma.Items.Components
         {
             if (currentFixerAction == FixActions.Repair)
             {
-                qteSuccess = qteCooldown <= 0.0f && qteTimer / qteTime <= item.Condition / item.MaxCondition;
+                float defaultMaxCondition = item.MaxCondition / item.MaxRepairConditionMultiplier;
+                qteSuccess = qteCooldown <= 0.0f && qteTimer / QteDuration <= item.Condition / defaultMaxCondition;
             }
             else
             {
@@ -420,8 +420,8 @@ namespace Barotrauma.Items.Components
             SoundPlayer.PlayUISound(qteSuccess ? GUISoundType.IncreaseQuantity : GUISoundType.DecreaseQuantity);
 
             //on failure during cooldown reset cursor to beginning
-            if (!qteSuccess && qteCooldown > 0.0f) { qteTimer = qteTime; }
-            qteCooldown = qteCooldownTime;
+            if (!qteSuccess && qteCooldown > 0.0f) { qteTimer = QteDuration; }
+            qteCooldown = QteCooldownDuration;
             //this will be set on button down so we can reset it here
             requestStartFixAction = FixActions.None;
             item.CreateClientEvent(this);
@@ -438,7 +438,11 @@ namespace Barotrauma.Items.Components
             currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
             CurrentFixer = currentFixerID != 0 ? Entity.FindEntityByID(currentFixerID) as Character : null;
             item.MaxRepairConditionMultiplier = GetMaxRepairConditionMultiplier(CurrentFixer);
-            repairBoost = msg.ReadSingle();
+            if (CurrentFixer == null)
+            {
+                qteTimer = QteDuration;
+                qteCooldown = 0.0f;
+            }
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)

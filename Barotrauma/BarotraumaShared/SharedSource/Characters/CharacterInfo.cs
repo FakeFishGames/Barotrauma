@@ -1206,7 +1206,7 @@ namespace Barotrauma
             return (int)(salary * Job.Prefab.PriceMultiplier);
         }
 
-        public void IncreaseSkillLevel(string skillIdentifier, float increase, bool gainedFromApprenticeship = false)
+        public void IncreaseSkillLevel(string skillIdentifier, float increase, bool gainedFromAbility = false)
         {
             if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) || Character == null) { return; }         
 
@@ -1226,7 +1226,7 @@ namespace Barotrauma
             {                
                 // assume we are getting at least 1 point in skill, since this logic only runs in such cases
                 float increaseSinceLastSkillPoint = MathHelper.Max(increase, 1f);
-                var abilitySkillGain = new AbilitySkillGain(increaseSinceLastSkillPoint, skillIdentifier, Character, gainedFromApprenticeship);
+                var abilitySkillGain = new AbilitySkillGain(increaseSinceLastSkillPoint, skillIdentifier, Character, gainedFromAbility);
                 Character.CheckTalents(AbilityEffectType.OnGainSkillPoint, abilitySkillGain);
                 foreach (Character character in Character.GetFriendlyCrew(Character))
                 {
@@ -1298,9 +1298,9 @@ namespace Barotrauma
             return Math.Max(GetTotalTalentPoints() - GetUnlockedTalentsInTree().Count(), 0);
         }
 
-        public int GetProgressTowardsNextLevel()
+        public float GetProgressTowardsNextLevel()
         {
-            return (ExperiencePoints - GetExperienceRequiredForCurrentLevel()) / (GetExperienceRequiredToLevelUp() - GetExperienceRequiredForCurrentLevel());
+            return (ExperiencePoints - GetExperienceRequiredForCurrentLevel()) / (float)(GetExperienceRequiredToLevelUp() - GetExperienceRequiredForCurrentLevel());
         }
 
         public int GetExperienceRequiredForCurrentLevel()
@@ -1860,16 +1860,16 @@ namespace Barotrauma
 
     class AbilitySkillGain : AbilityObject, IAbilityValue, IAbilityString, IAbilityCharacter
     {
-        public AbilitySkillGain(float value, string abilityString, Character character, bool gainedFromApprenticeship)
+        public AbilitySkillGain(float value, string abilityString, Character character, bool gainedFromAbility)
         {
             Value = value;
             String = abilityString;
             Character = character;
-            GainedFromApprenticeship = gainedFromApprenticeship;
+            GainedFromAbility = gainedFromAbility;
         }
         public Character Character { get; set; }
         public float Value { get; set; }
         public string String { get; set; }
-        public bool GainedFromApprenticeship { get; set; }
+        public bool GainedFromAbility { get; }
     }
 }

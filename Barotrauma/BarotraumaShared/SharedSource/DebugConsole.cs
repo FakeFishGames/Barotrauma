@@ -1531,6 +1531,11 @@ namespace Barotrauma
                 }
             }, isCheat: true));
             
+            commands.Add(new Command("skipeventcooldown", "skipeventcooldown: Skips the currently active event cooldown and triggers pending monster spawns immediately.", args =>
+            {
+                GameMain.GameSession?.EventManager?.SkipEventCooldown();
+            }, isCheat: true));
+
             commands.Add(new Command("ballastflora", "infectballast [options]: Infect ballasts and control its growth.", args =>
             {
                 if (args.Length == 0)

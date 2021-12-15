@@ -2573,7 +2573,9 @@ namespace Barotrauma
 
         private void WritePropertyChange(IWriteMessage msg, object[] extraData, bool inGameEditableOnly)
         {
-            var allProperties = inGameEditableOnly ? GetInGameEditableProperties() : GetProperties<Editable>();
+            //ignoreConditions: true = include all ConditionallyEditable properties at this point,
+            //to ensure client/server doesn't get any properties mixed up if there's some conditions that can vary between the server and the clients
+            var allProperties = inGameEditableOnly ? GetInGameEditableProperties(ignoreConditions: true) : GetProperties<Editable>();
             SerializableProperty property = extraData[1] as SerializableProperty;
             if (property != null)
             {
@@ -2660,16 +2662,25 @@ namespace Barotrauma
             }
         }
 
-        private List<Pair<object, SerializableProperty>> GetInGameEditableProperties()
+        private List<Pair<object, SerializableProperty>> GetInGameEditableProperties(bool ignoreConditions = false)
         {
-            return GetProperties<ConditionallyEditable>()
-                .Where(ce => ce.Second.GetAttribute<ConditionallyEditable>().IsEditable(this))
-                .Union(GetProperties<InGameEditable>()).ToList();
+            if (ignoreConditions)
+            {
+                return GetProperties<ConditionallyEditable>().Union(GetProperties<InGameEditable>()).ToList();
+            }
+            else
+            {
+                return GetProperties<ConditionallyEditable>()
+                    .Where(ce => ce.Second.GetAttribute<ConditionallyEditable>().IsEditable(this))
+                    .Union(GetProperties<InGameEditable>()).ToList();
+            }
         }
 
         private void ReadPropertyChange(IReadMessage msg, bool inGameEditableOnly, Client sender = null)
         {
-            var allProperties = inGameEditableOnly ? GetInGameEditableProperties() : GetProperties<Editable>();
+            //ignoreConditions: true = include all ConditionallyEditable properties at this point,
+            //to ensure client/server doesn't get any properties mixed up if there's some conditions that can vary between the server and the clients
+            var allProperties = inGameEditableOnly ? GetInGameEditableProperties(ignoreConditions: true) : GetProperties<Editable>();
             if (allProperties.Count == 0) { return; }
 
             int propertyIndex = 0;
@@ -2686,9 +2697,12 @@ namespace Barotrauma
                 if (!ic.AllowInGameEditing) { allowEditing = false; }
             }
 
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !CanClientAccess(sender))
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
-                allowEditing = false;
+                if (!CanClientAccess(sender) || !(property.GetAttribute<ConditionallyEditable>()?.IsEditable(this) ?? true))
+                {
+                    allowEditing = false;
+                }
             }
 
             Type type = property.PropertyType;

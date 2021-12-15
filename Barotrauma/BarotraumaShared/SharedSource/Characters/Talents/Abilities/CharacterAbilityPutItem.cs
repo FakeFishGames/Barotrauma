@@ -36,7 +36,7 @@ namespace Barotrauma.Abilities
                 if (GameMain.GameSession?.RoundEnding ?? true)
                 {
                     Item item = new Item(itemPrefab, Character.WorldPosition, Character.Submarine);
-                    if (!Character.Inventory.TryPutItem(item, Character))
+                    if (!Character.Inventory.TryPutItem(item, Character, item.AllowedSlots))
                     {
                         foreach (Item containedItem in Character.Inventory.AllItemsMod)
                         {

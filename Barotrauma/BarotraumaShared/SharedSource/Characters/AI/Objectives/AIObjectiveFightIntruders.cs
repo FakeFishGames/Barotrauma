@@ -65,7 +65,7 @@ namespace Barotrauma
             if (HumanAIController.IsFriendly(character, target)) { return false; }
             if (!character.Submarine.IsConnectedTo(target.Submarine)) { return false; }
             if (target.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI)) { return false; }
-            if (ShouldArrest(target, character) && target.HasEquippedItem("handlocker")) { return false; }
+            if (target.IsArrested) { return false; }
             return true;
         }
 

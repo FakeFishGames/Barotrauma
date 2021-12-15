@@ -196,7 +196,7 @@ namespace Barotrauma
             DelayWhenCrewAway = element.GetAttributeBool("delaywhencrewaway", !PerRuin && !PerCave && !PerWreck);
             OncePerOutpost = element.GetAttributeBool("onceperoutpost", false);
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
-            IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost);
+            IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
 
             Commonness[""] = element.GetAttributeFloat("commonness", 1.0f);
             foreach (XElement subElement in element.Elements())

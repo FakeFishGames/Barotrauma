@@ -70,7 +70,7 @@ namespace Barotrauma.Items.Components
         public bool HasPower => IsActive && Voltage >= MinVoltage;
         public bool IsAutoControlled => pumpSpeedLockTimer > 0.0f || isActiveLockTimer > 0.0f;
 
-        private const float TinkeringSpeedIncrease = 1.5f;
+        private const float TinkeringSpeedIncrease = 4.0f;
 
         public Pump(Item item, XElement element)
             : base(item, element)

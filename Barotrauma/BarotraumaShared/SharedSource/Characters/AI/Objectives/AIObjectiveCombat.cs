@@ -111,7 +111,7 @@ namespace Barotrauma
         public CombatMode Mode { get; private set; }
 
         private bool IsOffensiveOrArrest => initialMode == CombatMode.Offensive || initialMode == CombatMode.Arrest;
-        private bool TargetEliminated => IsEnemyDisabled || Enemy.IsUnconscious && Enemy.Params.Health.ConstantHealthRegeneration <= 0.0f || Enemy.IsHuman && Enemy.HasEquippedItem("handlocker") && !character.IsInstigator;
+        private bool TargetEliminated => IsEnemyDisabled || Enemy.IsUnconscious && Enemy.Params.Health.ConstantHealthRegeneration <= 0.0f || Enemy.IsArrested && !character.IsInstigator;
         private bool IsEnemyDisabled => Enemy == null || Enemy.Removed || Enemy.IsDead;
 
         private float AimSpeed => HumanAIController.AimSpeed;
@@ -668,6 +668,13 @@ namespace Barotrauma
             {
                 if (!Weapon.AllowedSlots.Contains(InvSlotType.Any) || !character.Inventory.TryPutItem(Weapon, character, new List<InvSlotType>() { InvSlotType.Any }))
                 {
+                    if (Weapon.AllowedSlots.Contains(InvSlotType.Bag))
+                    {
+                        if (character.Inventory.TryPutItem(Weapon, character, new List<InvSlotType>() { InvSlotType.Bag }))
+                        {
+                            return;
+                        }
+                    }
                     Weapon.Drop(character);
                 }
             }
@@ -680,10 +687,10 @@ namespace Barotrauma
             {
                 return false;
             }
-            if (!character.HasEquippedItem(Weapon))
+            if (!character.HasEquippedItem(Weapon, predicate: IsHandSlotType))
             {
                 Weapon.TryInteract(character, forceSelectKey: true);
-                var slots = Weapon.AllowedSlots.Where(s => s == InvSlotType.LeftHand || s == InvSlotType.RightHand || s == (InvSlotType.LeftHand | InvSlotType.RightHand));
+                var slots = Weapon.AllowedSlots.Where(s => IsHandSlotType(s));
                 if (character.Inventory.TryPutItem(Weapon, character, slots))
                 {
                     aimTimer = Rand.Range(0.2f, 0.4f) / AimSpeed;
@@ -697,6 +704,8 @@ namespace Barotrauma
                 }
             }
             return true;
+
+            bool IsHandSlotType(InvSlotType s) => s == InvSlotType.LeftHand || s == InvSlotType.RightHand || s == (InvSlotType.LeftHand | InvSlotType.RightHand);
         }
 
         private float findHullTimer;
@@ -903,8 +912,9 @@ namespace Barotrauma
             TryAddSubObjective(ref seekAmmunitionObjective,
                 constructor: () => new AIObjectiveContainItem(character, ammunitionIdentifiers, Weapon.GetComponent<ItemContainer>(), objectiveManager)
                 {
-                    ItemCount = Weapon.GetComponent<ItemContainer>().Capacity,
-                    checkInventory = false
+                    ItemCount = Weapon.GetComponent<ItemContainer>().Capacity * Weapon.GetComponent<ItemContainer>().MaxStackSize,
+                    checkInventory = false,
+                    MoveWholeStack = true
                 },
                 onCompleted: () => RemoveSubObjective(ref seekAmmunitionObjective),
                 onAbandon: () =>

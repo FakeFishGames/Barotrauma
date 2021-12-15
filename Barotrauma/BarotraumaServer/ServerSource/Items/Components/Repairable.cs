@@ -48,7 +48,6 @@ namespace Barotrauma.Items.Components
             msg.Write(tinkeringStrength);
             msg.Write(CurrentFixer == null ? (ushort)0 : CurrentFixer.ID);
             msg.WriteRangedInteger((int)currentFixerAction, 0, 2);
-            msg.Write(repairBoost);
         }
     }
 }

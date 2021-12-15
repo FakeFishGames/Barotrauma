@@ -37,7 +37,7 @@ namespace Barotrauma.Items.Components
         [Serialize(1.0f, true)]
         public float SkillRequirementMultiplier { get; set; }
 
-        private const float TinkeringSpeedIncrease = 1.5f;
+        private const float TinkeringSpeedIncrease = 2.5f;
 
         private enum FabricatorState
         {

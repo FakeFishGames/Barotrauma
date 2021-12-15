@@ -1155,7 +1155,7 @@ namespace Barotrauma
 
             if (afflictionsDirty())
             {
-                var currentAfflictions = afflictions.Where(a => a.Value == selectedLimb && a.Key.ShouldShowIcon(Character)).Select(a => a.Key);
+                var currentAfflictions = afflictions.Where(a => ShouldDisplayAfflictionOnLimb(a, selectedLimb)).Select(a => a.Key);
                 CreateAfflictionInfos(currentAfflictions);
                 CreateRecommendedTreatments();
             }
@@ -1170,7 +1170,7 @@ namespace Barotrauma
                 //not displaying one of the current afflictions -> dirty
                 foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
                 {
-                    if (kvp.Value != selectedLimb || !kvp.Key.ShouldShowIcon(Character)) { continue; }
+                    if (!ShouldDisplayAfflictionOnLimb(kvp, selectedLimb)) { continue; }
                     if (!displayedAfflictions.Any(d => d.affliction == kvp.Key)) { return true; }
                 }
                 //displaying an affliction we no longer have -> dirty
@@ -1187,7 +1187,7 @@ namespace Barotrauma
             afflictionIconContainer.ClearChildren();
             displayedAfflictions.Clear();
 
-            Affliction mostSevereAffliction = SortAfflictionsBySeverity(afflictions).FirstOrDefault();
+            Affliction mostSevereAffliction = SortAfflictionsBySeverity(afflictions, excludeBuffs: false).FirstOrDefault();
             GUIButton buttonToSelect = null;
 
             foreach (Affliction affliction in afflictions)
@@ -1779,25 +1779,10 @@ namespace Barotrauma
             i = 0;
             foreach (LimbHealth limbHealth in limbHealths)
             {
-                bool shouldDisplayAffliction(KeyValuePair<Affliction, LimbHealth> kvp, LimbHealth limbHealth)
-                {
-                    if (!kvp.Key.ShouldShowIcon(Character)) { return false; }
-                    if (kvp.Value == limbHealth) 
-                    { 
-                        return true; 
-                    }
-                    else if (kvp.Value == null)
-                    {
-                        Limb indicatorLimb = Character.AnimController.GetLimb(kvp.Key.Prefab.IndicatorLimb);
-                        return indicatorLimb != null && indicatorLimb.HealthIndex == i;
-                    }
-                    return false;
-                }
-
                 afflictionsDisplayedOnLimb.Clear();
                 foreach (var affliction in afflictions)
                 {
-                    if (shouldDisplayAffliction(affliction, limbHealth)) { afflictionsDisplayedOnLimb.Add(affliction.Key); }
+                    if (ShouldDisplayAfflictionOnLimb(affliction, limbHealth)) { afflictionsDisplayedOnLimb.Add(affliction.Key); }
                 }
 
                 if (!afflictionsDisplayedOnLimb.Any()) { i++; continue; }
@@ -1837,6 +1822,22 @@ namespace Barotrauma
                         Color.LightGray * 0.5f, width: 4);
                 }
             }
+        }
+
+
+        private bool ShouldDisplayAfflictionOnLimb(KeyValuePair<Affliction, LimbHealth> kvp, LimbHealth limbHealth)
+        {
+            if (!kvp.Key.ShouldShowIcon(Character)) { return false; }
+            if (kvp.Value == limbHealth)
+            {
+                return true;
+            }
+            else if (kvp.Value == null)
+            {
+                Limb indicatorLimb = Character.AnimController.GetLimb(kvp.Key.Prefab.IndicatorLimb);
+                return indicatorLimb != null && indicatorLimb.HealthIndex == limbHealths.IndexOf(limbHealth);
+            }
+            return false;
         }
 
         private void DrawLimbAfflictionIcon(SpriteBatch spriteBatch, Affliction affliction, float iconScale, ref Vector2 iconPos)

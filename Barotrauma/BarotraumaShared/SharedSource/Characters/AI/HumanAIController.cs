@@ -726,6 +726,7 @@ namespace Barotrauma
 
                     if (!item.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(item, Character, new List<InvSlotType>() { InvSlotType.Any }) && Character.Submarine?.TeamID == Character.TeamID )
                     {
+                        if (item.AllowedSlots.Contains(InvSlotType.Bag) && Character.Inventory.TryPutItem(item, Character, new List<InvSlotType>() { InvSlotType.Bag })) { continue; }
                         findItemState = FindItemState.OtherItem;
                         if (FindSuitableContainer(item, out Item targetContainer))
                         {
@@ -877,8 +878,7 @@ namespace Barotrauma
                         if (target.CurrentHull != hull || !target.Enabled) { continue; }
                         if (AIObjectiveFightIntruders.IsValidTarget(target, Character))
                         {
-                            bool arrested = AIObjectiveFightIntruders.ShouldArrest(target, Character) && target.HasEquippedItem("handlocker");
-                            if (!arrested && AddTargets<AIObjectiveFightIntruders, Character>(Character, target) && newOrder == null)
+                            if (!target.IsArrested && AddTargets<AIObjectiveFightIntruders, Character>(Character, target) && newOrder == null)
                             {
                                 var orderPrefab = Order.GetPrefab("reportintruders");
                                 newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
@@ -1871,7 +1871,7 @@ namespace Barotrauma
             float enemyFactor = 1;
             if (!ignoreEnemies)
             {
-                bool isValidTarget(Character e) => IsActive(e) && !IsFriendly(character, e);
+                bool isValidTarget(Character e) => IsActive(e) && !IsFriendly(character, e) && !e.IsArrested;
                 int enemyCount = visibleHulls == null ?
                     Character.CharacterList.Count(e => isValidTarget(e) && e.CurrentHull == hull) :
                     Character.CharacterList.Count(e => isValidTarget(e) && visibleHulls.Contains(e.CurrentHull));

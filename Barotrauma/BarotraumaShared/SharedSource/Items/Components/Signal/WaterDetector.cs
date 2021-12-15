@@ -77,7 +77,7 @@ namespace Barotrauma.Items.Components
                     //item in water -> we definitely want to send the True output
                     isInWater = true;
                 }
-                else if (item.CurrentHull != null && item.CurrentHull.WaterPercentage > 0.0f)
+                else if (item.CurrentHull != null && item.CurrentHull.WaterPercentage > 0.0f && item.CurrentHull.WaterVolume > 1.0f)
                 {
                     //(center of the) item in not water -> check if the water surface is below the bottom of the item's rect
                     if (item.CurrentHull.Surface > item.Rect.Y - item.Rect.Height)
@@ -102,7 +102,7 @@ namespace Barotrauma.Items.Components
             {
                 int waterPercentage = 0;
                 //ignore minuscule amounts of water
-                if (item.CurrentHull.WaterVolume < 1.0f)
+                if (item.CurrentHull.WaterVolume > 1.0f)
                 {
                     waterPercentage = MathHelper.Clamp((int)Math.Ceiling(item.CurrentHull.WaterPercentage), 0, 100);
                 }

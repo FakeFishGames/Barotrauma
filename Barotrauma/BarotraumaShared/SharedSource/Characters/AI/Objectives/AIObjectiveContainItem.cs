@@ -186,7 +186,9 @@ namespace Barotrauma
                             AllowToFindDivingGear = AllowToFindDivingGear,
                             AllowDangerousPressure = AllowDangerousPressure,
                             TargetCondition = ConditionLevel,
-                            ItemFilter = (Item potentialItem) => RemoveEmpty ? container.CanBeContained(potentialItem) : container.Inventory.CanBePut(potentialItem)
+                            ItemFilter = (Item potentialItem) => RemoveEmpty ? container.CanBeContained(potentialItem) : container.Inventory.CanBePut(potentialItem),
+                            ItemCount = ItemCount,
+                            TakeWholeStack = MoveWholeStack
                         }, onAbandon: () =>
                         {
                             Abandon = true;

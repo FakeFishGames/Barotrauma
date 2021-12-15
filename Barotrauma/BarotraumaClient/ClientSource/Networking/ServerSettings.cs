@@ -92,9 +92,8 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminRead(IReadMessage incMsg, NetFlags requiredFlags)
+        public void ClientAdminRead(IReadMessage incMsg)
         {
-            if (!requiredFlags.HasFlag(NetFlags.Properties)) { return; }
             int count = incMsg.ReadUInt16();
             for (int i = 0; i < count; i++)
             {
@@ -162,7 +161,7 @@ namespace Barotrauma.Networking
             incMsg.ReadPadBits();
             if (isAdmin)
             {
-                ClientAdminRead(incMsg, requiredFlags);
+                ClientAdminRead(incMsg);
             }
         }
 

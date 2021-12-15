@@ -30,10 +30,9 @@ namespace Barotrauma
 
         public static SubmarineVote SubVote;
 
-        private void StartSubmarineVote(IReadMessage inc, VoteType voteType, Client sender)
+        private void StartSubmarineVote(SubmarineInfo subInfo, VoteType voteType, Client sender)
         {
-            string subName = inc.ReadString();
-            SubVote.Sub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
+            SubVote.Sub = subInfo;
             SubVote.DeliveryFee = voteType == VoteType.SwitchSub ? GameMain.GameSession.Map.DistanceToClosestLocationWithOutpost(GameMain.GameSession.Map.CurrentLocation, out Location endLocation) : 0;
             SubVote.VoteType = voteType;
             SubVote.State = VoteState.Started;
@@ -130,7 +129,12 @@ namespace Barotrauma
                     bool startVote = inc.ReadBoolean();
                     if (startVote)
                     {
-                        StartSubmarineVote(inc, voteType, sender);
+                        string subName = inc.ReadString();
+                        SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
+                        if (GameMain.GameSession?.Campaign is MultiPlayerCampaign campaign && campaign.CanPurchaseSub(subInfo))
+                        {
+                            StartSubmarineVote(subInfo, voteType, sender);
+                        }
                     }
                     else
                     {

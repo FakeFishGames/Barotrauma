@@ -438,7 +438,7 @@ namespace Barotrauma
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                     DrawString(spriteBatch, new Vector2(10, 40),
-                        $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count} awake, {GameMain.World.BodyList.FindAll(b => b.Awake && b.BodyType == BodyType.Dynamic && b.Enabled).Count} dynamic)",
+                        $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.Count(b => b != null && b.Awake && b.Enabled)} awake, {GameMain.World.BodyList.Count(b => b != null && b.Awake && b.BodyType == BodyType.Dynamic && b.Enabled)} dynamic)",
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                     if (Screen.Selected.Cam != null)

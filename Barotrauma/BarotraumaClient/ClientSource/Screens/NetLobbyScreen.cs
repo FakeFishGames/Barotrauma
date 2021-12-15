@@ -827,7 +827,8 @@ namespace Barotrauma
                 TextManager.Get("Votes"), textAlignment: Alignment.CenterRight)
             {
                 UserData = "subvotes",
-                Visible = false
+                Visible = false,
+                CanBeFocused = false
             };
 
             //respawn shuttle / submarine preview ------------------------------------------------------------------
@@ -3435,9 +3436,12 @@ namespace Barotrauma
             public readonly string Hash;
             public FailedSubInfo(string name, string hash) { Name = name; Hash = hash; }
             public void Deconstruct(out string name, out string hash) { name = Name; hash = Hash; }
+
+            private static bool StringsEqual(string a, string b)
+                => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+            
             public static bool operator ==(FailedSubInfo a, FailedSubInfo b)
-                => a.Name.Equals(b.Name, StringComparison.OrdinalIgnoreCase)
-                    && a.Hash.Equals(b.Hash, StringComparison.OrdinalIgnoreCase);
+                => StringsEqual(a.Name, b.Name) && StringsEqual(a.Hash, b.Hash);
             public static bool operator !=(FailedSubInfo a, FailedSubInfo b)
                 => !(a == b);
         }

@@ -9,7 +9,7 @@ namespace Barotrauma
         public string Identifier { get; }
 
         public const float MaximumSkill = 100.0f;
-        
+
         public float Level
         {
             get { return level; }
@@ -18,7 +18,7 @@ namespace Barotrauma
 
         public void IncreaseSkill(float value, bool increasePastMax)
         {
-            level = MathHelper.Clamp(level + value, 0.0f, increasePastMax ? float.MaxValue : MaximumSkill);
+            level = MathHelper.Clamp(level + value, 0.0f, increasePastMax ? SkillSettings.Current.MaximumOlympianSkill : MaximumSkill);
         }
 
         private Sprite icon;

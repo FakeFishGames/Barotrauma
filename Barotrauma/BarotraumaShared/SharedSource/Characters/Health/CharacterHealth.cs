@@ -959,14 +959,11 @@ namespace Barotrauma
             {
                 var affliction = kvp.Key;
                 var limbHealth = kvp.Value;
-                if (limb != null)
+                if (limb != null && affliction.Prefab.IndicatorLimb != limb.type)
                 {
                     if (limbHealth == null) { continue; }
                     int healthIndex = limbHealths.IndexOf(limbHealth);
-                    Limb targetLimb =
-                        Character.AnimController.Limbs.LastOrDefault(l => !l.IsSevered && !l.Hidden && l.HealthIndex == healthIndex) ??
-                        Character.AnimController.MainLimb;
-                    if (limb != targetLimb) { continue; }
+                    if (limb.HealthIndex != healthIndex) { continue; }
                 }
 
                 float strength = affliction.Strength;

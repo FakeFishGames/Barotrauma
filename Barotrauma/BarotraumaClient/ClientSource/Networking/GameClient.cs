@@ -1470,6 +1470,7 @@ namespace Barotrauma.Networking
             serverSettings.AllowFriendlyFire = inc.ReadBoolean();
             serverSettings.LockAllDefaultWires = inc.ReadBoolean();
             serverSettings.AllowRagdollButton = inc.ReadBoolean();
+            serverSettings.AllowLinkingWifiToChat = inc.ReadBoolean();
             GameMain.NetLobbyScreen.UsingShuttle = inc.ReadBoolean();
             GameMain.LightManager.LosMode = (LosMode)inc.ReadByte();
             bool includesFinalize = inc.ReadBoolean(); inc.ReadPadBits();

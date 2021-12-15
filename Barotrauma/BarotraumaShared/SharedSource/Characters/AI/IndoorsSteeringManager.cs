@@ -26,8 +26,9 @@ namespace Barotrauma
 
         private float findPathTimer;
 
+        private const float buttonPressCooldown = 3;
         private float checkDoorsTimer;
-        private float buttonPressCooldown;
+        private float buttonPressTimer;
 
         public SteeringPath CurrentPath
         {
@@ -98,7 +99,7 @@ namespace Barotrauma
             base.Update(speed);
             float step = 1.0f / 60.0f;
             checkDoorsTimer -= step;
-            buttonPressCooldown -= step;
+            buttonPressTimer -= step;
             findPathTimer -= step;
         }
 
@@ -120,10 +121,18 @@ namespace Barotrauma
         {
             steering += base.DoSteeringSeek(targetSimPos, weight);
         }
-
+        
         public void SteeringSeek(Vector2 target, float weight, float minGapWidth = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisiblity = true)
         {
-            steering += CalculateSteeringSeek(target, weight, minGapWidth, startNodeFilter, endNodeFilter, nodeFilter, checkVisiblity);
+            if (buttonPressTimer > 0 && lastDoor.door != null && lastDoor.state && !lastDoor.door.IsOpen)
+            {
+                // We have pressed the button and are waiting for the door to open -> Hold still until we can press the button again.
+                Reset();
+            }
+            else
+            {
+                steering += CalculateSteeringSeek(target, weight, minGapWidth, startNodeFilter, endNodeFilter, nodeFilter, checkVisiblity);
+            }
         }
 
         /// <summary>
@@ -612,18 +621,17 @@ namespace Barotrauma
                     float closestDist = 0;
                     bool canAccess = CanAccessDoor(door, button =>
                     {
-                        if (currentWaypoint == null) { return true; }
-                        // Check that the button is on the right side of the door. If the door is open, doesn't matter
-                        if (!door.IsOpen)
+                        // Check that the button is on the right side of the door.
+                        if (nextWaypoint != null)
                         {
                             if (door.LinkedGap.IsHorizontal)
                             {
-                                int dir = Math.Sign((nextWaypoint ?? currentWaypoint).WorldPosition.X - door.Item.WorldPosition.X);
+                                int dir = Math.Sign((nextWaypoint).WorldPosition.X - door.Item.WorldPosition.X);
                                 if (button.Item.WorldPosition.X * dir > door.Item.WorldPosition.X * dir) { return false; }
                             }
                             else
                             {
-                                int dir = Math.Sign((nextWaypoint ?? currentWaypoint).WorldPosition.Y - door.Item.WorldPosition.Y);
+                                int dir = Math.Sign((nextWaypoint).WorldPosition.Y - door.Item.WorldPosition.Y);
                                 if (button.Item.WorldPosition.Y * dir > door.Item.WorldPosition.Y * dir) { return false; }
                             }
                         }
@@ -637,7 +645,7 @@ namespace Barotrauma
                     });
                     if (canAccess)
                     {
-                        bool pressButton = buttonPressCooldown <= 0 || lastDoor.door != door || lastDoor.state != shouldBeOpen;
+                        bool pressButton = buttonPressTimer <= 0 || lastDoor.door != door || lastDoor.state != shouldBeOpen;
                         if (door.HasIntegratedButtons)
                         {
                             if (pressButton && character.CanSeeTarget(door.Item))
@@ -645,11 +653,11 @@ namespace Barotrauma
                                 if (door.Item.TryInteract(character, forceSelectKey: true))
                                 {
                                     lastDoor = (door, shouldBeOpen);
-                                    buttonPressCooldown = 3;
+                                    buttonPressTimer = buttonPressCooldown;
                                 }
                                 else
                                 {
-                                    buttonPressCooldown = 0;
+                                    buttonPressTimer = 0;
                                 }
                             }
                             break;
@@ -663,11 +671,11 @@ namespace Barotrauma
                                     if (closestButton.Item.TryInteract(character, forceSelectKey: true))
                                     {
                                         lastDoor = (door, shouldBeOpen);
-                                        buttonPressCooldown = 3;
+                                        buttonPressTimer = buttonPressCooldown;
                                     }
                                     else
                                     {
-                                        buttonPressCooldown = 0;
+                                        buttonPressTimer = 0;
                                     }
                                 }
                                 break;

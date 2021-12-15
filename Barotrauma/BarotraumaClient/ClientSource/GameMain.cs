@@ -476,7 +476,9 @@ namespace Barotrauma
                 DebugConsole.Log("Selected content packages: " + string.Join(", ", Config.AllEnabledPackages.Select(cp => cp.Name)));
             }
 
+#if !DEBUG
             GameAnalyticsManager.InitIfConsented();
+#endif
 
             yield return CoroutineStatus.Running;
 

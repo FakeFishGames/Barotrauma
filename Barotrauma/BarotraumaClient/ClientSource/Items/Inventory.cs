@@ -314,7 +314,7 @@ namespace Barotrauma
                         }
                     }
 
-                    string colorStr = XMLExtensions.ColorToString(!item.AllowStealing ? GUI.Style.Red : Color.White);
+                    string colorStr = XMLExtensions.ColorToString(item.SpawnedInCurrentOutpost && !item.AllowStealing ? GUI.Style.Red : Color.White);
 
                     toolTip = $"‖color:{colorStr}‖{name}‖color:end‖";
                     if (item.GetComponent<Quality>() != null)

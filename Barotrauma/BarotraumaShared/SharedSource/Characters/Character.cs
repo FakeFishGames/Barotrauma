@@ -621,6 +621,11 @@ namespace Barotrauma
             get { return CharacterHealth.IsUnconscious; }
         }
 
+        public bool IsArrested
+        {
+            get { return IsHuman && HasEquippedItem("handlocker"); }
+        }
+
         public bool IsPet
         {
             get { return AIController is EnemyAIController enemyController && enemyController.PetBehavior != null; }
@@ -2043,16 +2048,21 @@ namespace Barotrauma
 
         public bool HasItem(Item item, bool requireEquipped = false, InvSlotType? slotType = null) => requireEquipped ? HasEquippedItem(item, slotType) : item.IsOwnedBy(this);
 
-        public bool HasEquippedItem(Item item, InvSlotType? slotType = null)
+        public bool HasEquippedItem(Item item, InvSlotType? slotType = null, Func<InvSlotType, bool> predicate = null)
         {
             if (Inventory == null) { return false; }
             for (int i = 0; i < Inventory.Capacity; i++)
             {
+                InvSlotType slot = Inventory.SlotTypes[i];
+                if (predicate != null)
+                {
+                    if (!predicate(slot)) { continue; }
+                }
                 if (slotType.HasValue)
                 {
-                    if (!slotType.Value.HasFlag(Inventory.SlotTypes[i])) { continue; }
+                    if (!slotType.Value.HasFlag(slot)) { continue; }
                 }
-                else if (Inventory.SlotTypes[i] == InvSlotType.Any)
+                else if (slot == InvSlotType.Any)
                 {
                     continue;
                 }

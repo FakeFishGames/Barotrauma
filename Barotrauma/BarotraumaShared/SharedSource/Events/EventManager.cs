@@ -149,12 +149,12 @@ namespace Barotrauma
             }
             MTRandom rand = new MTRandom(seed);
 
-            EventSet initialEventSet = SelectRandomEvents(EventSet.List, rand);
+            EventSet initialEventSet = SelectRandomEvents(EventSet.List, requireCampaignSet: GameMain.GameSession?.GameMode is CampaignMode, rand);
             EventSet additiveSet = null;
             if (initialEventSet != null && initialEventSet.Additive)
             {
                 additiveSet = initialEventSet;
-                initialEventSet = SelectRandomEvents(EventSet.List.FindAll(e => !e.Additive), rand);
+                initialEventSet = SelectRandomEvents(EventSet.List.FindAll(e => !e.Additive), requireCampaignSet: GameMain.GameSession?.GameMode is CampaignMode, rand);
             }
             if (initialEventSet != null)
             {
@@ -418,6 +418,11 @@ namespace Barotrauma
             pathFinder = null;
         }
 
+        public void SkipEventCooldown()
+        {
+            eventCoolDown = 0.0f;
+        }
+
         private float CalculateCommonness(EventPrefab eventPrefab, float baseCommonness)
         {
             if (level.LevelData.NonRepeatableEvents.Contains(eventPrefab)) { return 0.0f; }
@@ -500,7 +505,7 @@ namespace Barotrauma
                     }
                     if (eventSet.ChildSets.Count > 0)
                     {
-                        var newEventSet = SelectRandomEvents(eventSet.ChildSets, rand);
+                        var newEventSet = SelectRandomEvents(eventSet.ChildSets, random: rand);
                         if (newEventSet != null)
                         {
                             CreateEvents(newEventSet, rand);
@@ -535,17 +540,37 @@ namespace Barotrauma
             }
         }
 
-        private EventSet SelectRandomEvents(List<EventSet> eventSets, Random random = null)
+        private EventSet SelectRandomEvents(List<EventSet> eventSets, bool? requireCampaignSet = null, Random random = null)
         {
             if (level == null) { return null; }
             Random rand = random ?? new MTRandom(ToolBox.StringToInt(level.Seed));
 
             var allowedEventSets = 
                 eventSets.Where(es => 
-                    es.IsCampaignSet == GameMain.GameSession?.GameMode is CampaignMode &&
                     level.Difficulty >= es.MinLevelDifficulty && level.Difficulty <= es.MaxLevelDifficulty && 
                     level.LevelData.Type == es.LevelType && 
                     (string.IsNullOrEmpty(es.BiomeIdentifier) || es.BiomeIdentifier.Equals(level.LevelData.Biome.Identifier, StringComparison.OrdinalIgnoreCase)));
+
+            if (requireCampaignSet.HasValue)
+            {
+                if (requireCampaignSet.Value)
+                {
+                    if (allowedEventSets.Any(es => es.IsCampaignSet))
+                    {
+                        allowedEventSets =
+                            allowedEventSets.Where(es => es.IsCampaignSet);
+                    }
+                    else
+                    {
+                        DebugConsole.AddWarning("No campaign event sets available. Using a non-campaign-specific set instead.");
+                    }
+                }
+                else
+                {
+                    allowedEventSets =
+                        allowedEventSets.Where(es => !es.IsCampaignSet);
+                }
+            }
 
             Location location = (GameMain.GameSession?.GameMode as CampaignMode)?.Map?.CurrentLocation ?? level?.StartLocation;
             LocationType locationType = location?.GetLocationType();

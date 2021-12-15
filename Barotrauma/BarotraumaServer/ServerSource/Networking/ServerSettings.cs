@@ -15,13 +15,17 @@ namespace Barotrauma.Networking
         public static readonly char SubmarineSeparatorChar = '|';
 
         public readonly Dictionary<NetFlags, UInt16> LastUpdateIdForFlag = new Dictionary<NetFlags, UInt16>();
+        public UInt16 LastPropertyUpdateId { get; private set; } = 1;
         
         public void UpdateFlag(NetFlags flag)
             => LastUpdateIdForFlag[flag] = (UInt16)(GameMain.NetLobbyScreen.LastUpdateID + 1);
 
+        private bool IsFlagRequired(Client c, NetFlags flag)
+            => LastUpdateIdForFlag[flag] > c.LastRecvLobbyUpdate;
+        
         public NetFlags GetRequiredFlags(Client c)
             => LastUpdateIdForFlag.Keys
-                .Where(k => LastUpdateIdForFlag[k] > c.LastRecvLobbyUpdate)
+                .Where(k => IsFlagRequired(c, k))
                 .Concat(NetFlags.None.ToEnumerable()) //prevents InvalidOperationException in Aggregate
                 .Aggregate((f1, f2) => f1 | f2);
         
@@ -43,14 +47,7 @@ namespace Barotrauma.Networking
 
         public void ServerAdminWrite(IWriteMessage outMsg, Client c)
         {
-            //outMsg.Write(isPublic);
-            //outMsg.Write(EnableUPnP);
-            //outMsg.WritePadBits();
-            //outMsg.Write((UInt16)QueryPort);
-
-            NetFlags requiredFlags = GetRequiredFlags(c);
-            if (!requiredFlags.HasFlag(NetFlags.Properties)) { return; }
-
+            c.LastSentServerSettingsUpdate = LastPropertyUpdateId;
             WriteNetProperties(outMsg);
             WriteMonsterEnabled(outMsg);
             BanList.ServerAdminWrite(outMsg, c);
@@ -85,7 +82,8 @@ namespace Barotrauma.Networking
             
             WriteHiddenSubs(outMsg);
 
-            if (c.HasPermission(Networking.ClientPermissions.ManageSettings))
+            if (c.HasPermission(Networking.ClientPermissions.ManageSettings)
+                && !NetIdUtils.IdMoreRecentOrMatches(c.LastRecvServerSettingsUpdate, LastPropertyUpdateId))
             {
                 outMsg.Write(true);
                 outMsg.WritePadBits();
@@ -153,8 +151,12 @@ namespace Barotrauma.Networking
                 if (changedMonsterSettings) { ReadMonsterEnabled(incMsg); }
                 propertiesChanged |= BanList.ServerAdminRead(incMsg, c);
                 propertiesChanged |= Whitelist.ServerAdminRead(incMsg, c);
-                
-                if (propertiesChanged) { UpdateFlag(NetFlags.Properties); }
+
+                if (propertiesChanged)
+                {
+                    UpdateFlag(NetFlags.Properties);
+                    LastPropertyUpdateId = (UInt16)(GameMain.NetLobbyScreen.LastUpdateID + 1);
+                }
                 changed |= propertiesChanged;
             }
 

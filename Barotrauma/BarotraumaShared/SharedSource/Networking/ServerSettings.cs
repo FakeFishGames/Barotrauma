@@ -1067,6 +1067,7 @@ namespace Barotrauma.Networking
             }
 
 #if SERVER
+            MultiPlayerCampaign.UpdateCampaignSubs();
             SelectNonHiddenSubmarine();
 #endif
         }
