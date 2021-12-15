@@ -1466,7 +1466,7 @@ namespace Barotrauma.Items.Components
                 maxRotation += MathHelper.TwoPi;
             }
             rotation = (minRotation + maxRotation) / 2;
-
+            targetRotation = rotation;
             UpdateTransformedBarrelPos();
         }
 
@@ -1487,7 +1487,7 @@ namespace Barotrauma.Items.Components
                 maxRotation += MathHelper.TwoPi;
             }
             rotation = (minRotation + maxRotation) / 2;
-
+            targetRotation = rotation;
             UpdateTransformedBarrelPos();
         }
 
@@ -1546,12 +1546,12 @@ namespace Barotrauma.Items.Components
         {
             base.OnItemLoaded();
             FindLightComponent();
+            targetRotation = rotation;
             if (!loadedBaseRotation.HasValue)
             {
                 if (item.FlippedX) { FlipX(relativeToSub: false); }
                 if (item.FlippedY) { FlipY(relativeToSub: false); }
             }
-            targetRotation = rotation;
         }
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
