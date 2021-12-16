@@ -710,7 +710,7 @@ namespace Barotrauma.Items.Components
 
                         if (item.CurrentHull is { } currentHull && currentHull == hull)
                         {
-                            Sprite pingCircle = GUI.Style.YouAreHereCircle.Sprite;
+                            Sprite? pingCircle = GUI.Style.YouAreHereCircle?.Sprite;
                             if (pingCircle is null) { continue; }
 
                             Vector2 charPos = item.WorldPosition;

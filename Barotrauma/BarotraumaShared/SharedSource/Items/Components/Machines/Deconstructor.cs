@@ -280,10 +280,7 @@ namespace Barotrauma.Items.Components
                             {
                                 foreach (Item subItem in containedItem.ContainedItems.ToList())
                                 {
-                                    if (subItem.Combine(spawnedItem, null))
-                                    {
-                                        break;
-                                    }
+                                    if (subItem.Combine(spawnedItem, null)) { break; }
                                 }
                             }
                             else if (containedItem?.Combine(spawnedItem, null) ?? false)
@@ -302,12 +299,9 @@ namespace Barotrauma.Items.Components
                 foreach (ItemContainer ic in targetItem.GetComponents<ItemContainer>())
                 {
                     if (ic?.Inventory == null || ic.RemoveContainedItemsOnDeconstruct) { continue; }
-                    foreach (Item containedItem in ic.Inventory.AllItemsMod)
+                    foreach (Item outputItem in ic.Inventory.AllItemsMod)
                     {
-                        if (!outputContainer.Inventory.TryPutItem(containedItem, user: null))
-                        {
-                            containedItem.Drop(dropper: null);
-                        }
+                        tryPutInOutputSlots(outputItem);
                     }
                 }
                 inputContainer.Inventory.RemoveItem(targetItem);
@@ -317,13 +311,29 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                if (!outputContainer.Inventory.CanBePut(targetItem) || (Entity.Spawner?.IsInRemoveQueue(targetItem) ?? false))
+                if (Entity.Spawner?.IsInRemoveQueue(targetItem) ?? false)
                 {
                     targetItem.Drop(dropper: null);
                 }
                 else
                 {
-                    outputContainer.Inventory.TryPutItem(targetItem, user: null, createNetworkEvent: true);
+                    tryPutInOutputSlots(targetItem);
+                }
+            }
+
+            void tryPutInOutputSlots(Item item)
+            {
+                for (int i = 0; i < outputContainer.Capacity; i++)
+                {
+                    var containedItem = outputContainer.Inventory.GetItemAt(i);
+                    if (containedItem?.OwnInventory != null && containedItem.OwnInventory.TryPutItem(item, user: null))
+                    {
+                        return;
+                    }
+                }
+                if (!outputContainer.Inventory.TryPutItem(item, user: null))
+                {
+                    item.Drop(dropper: null);
                 }
             }
         }

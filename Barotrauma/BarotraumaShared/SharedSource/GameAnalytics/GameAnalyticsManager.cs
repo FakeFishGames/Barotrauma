@@ -203,12 +203,26 @@ namespace Barotrauma
             private readonly Action? onQuit;
             private void OnQuit()
             {
-                if (assembly != null) { onQuit?.Invoke(); }
+                try
+                {
+                    
+                    if (assembly != null) { onQuit?.Invoke(); }
+                }
+                catch (Exception e)
+                {
+                    e = e.GetInnermost();
+
+                    DebugConsole.AddWarning($"Failed to call GameAnalytics.OnQuit: {e.Message} {e.StackTrace}");
+                    //If this happens then GameAnalytics is just broken,
+                    //let's just hope that it uninitialized correctly and
+                    //allow the game to keep running
+                }
             }
 
             public void Dispose()
             {
                 if (loadContext is null) { return; }
+
                 OnQuit();
                 loadContext?.Unload();
                 loadContext = null;

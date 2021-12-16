@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------------
+v0.15.22.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed crashing on startup on some versions of macOS.
+- Fixed GameAnalytics consent prompt going outside the window on small resolutions and/or large text sizes.
+- Fixed Kastrull's drone sometimes spawning inside the sub client-side in multiplayer.
+- Fixed opening the settings menu resetting the game window, which caused screen capture software to stop capturing the window.
+- Fixed certain mods that don't configure the "you are here" circle sprite for the status monitors causing crashes.
+- Fixed abilities that give simultaneous skill gain (minor in mechanics, once upon a time in europa, apprenticeship) not giving the extra skill points.
+- Fixed deconstructor not being able to put the items into containers in the output slots.
+
+---------------------------------------------------------------------------------------------------------
 v0.15.21.0
 ---------------------------------------------------------------------------------------------------------
 

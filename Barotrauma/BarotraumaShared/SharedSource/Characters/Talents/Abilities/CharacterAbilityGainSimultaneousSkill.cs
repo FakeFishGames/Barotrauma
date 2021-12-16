@@ -18,7 +18,7 @@ namespace Barotrauma.Abilities
         {
             if (abilityObject is AbilitySkillGain abilitySkillGain)
             {
-                if (ignoreAbilitySkillGain && !abilitySkillGain.GainedFromAbility) { return; }
+                if (ignoreAbilitySkillGain && abilitySkillGain.GainedFromAbility) { return; }
                 Character.Info?.IncreaseSkillLevel(skillIdentifier, abilitySkillGain.Value, gainedFromAbility: true);
             }
             else
