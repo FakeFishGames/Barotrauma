@@ -266,7 +266,6 @@ namespace Barotrauma.Items.Components
                 }
 
                 int amount = (int)amountMultiplier;
-
                 for (int i = 0; i < amount; i++)
                 {
                     Entity.Spawner.AddToSpawnQueue(itemPrefab, outputContainer.Inventory, condition, onSpawned: (Item spawnedItem) =>
@@ -276,16 +275,24 @@ namespace Barotrauma.Items.Components
                         for (int i = 0; i < outputContainer.Capacity; i++)
                         {
                             var containedItem = outputContainer.Inventory.GetItemAt(i);
+                            bool combined = false;
                             if (containedItem?.OwnInventory != null)
                             {
                                 foreach (Item subItem in containedItem.ContainedItems.ToList())
                                 {
-                                    if (subItem.Combine(spawnedItem, null)) { break; }
+                                    if (subItem.Combine(spawnedItem, null)) 
+                                    {
+                                        combined = true;
+                                        break; 
+                                    }
                                 }
                             }
-                            else if (containedItem?.Combine(spawnedItem, null) ?? false)
+                            if (!combined)
                             {
-                                break;
+                                if (containedItem?.Combine(spawnedItem, null) ?? false)
+                                {
+                                    break;
+                                }
                             }
                         }
                         PutItemsToLinkedContainer();
