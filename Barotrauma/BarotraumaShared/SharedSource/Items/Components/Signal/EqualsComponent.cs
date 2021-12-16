@@ -108,6 +108,9 @@ namespace Barotrauma.Items.Components
                     receivedSignal[1] = signal.value;
                     timeSinceReceived[1] = 0.0f;
                     break;
+                case "set_output":
+                    output = signal.value;
+                    break;
             }
         }
     }
