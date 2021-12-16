@@ -94,6 +94,7 @@ namespace Barotrauma
         private GUIFrame hullVolumeFrame;
 
         private GUIFrame saveAssemblyFrame;
+        private GUIFrame snapToGridFrame;
 
         const int PreviouslyUsedCount = 10;
         private GUIFrame previouslyUsedPanel;
@@ -756,6 +757,21 @@ namespace Barotrauma
                 return true;
             };
             saveAssemblyFrame.RectTransform.MinSize = new Point(saveAssemblyFrame.Rect.Width, (int)(saveAssemblyButton.Rect.Height / saveAssemblyButton.RectTransform.RelativeSize.Y));
+
+            snapToGridFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), TopPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft)
+            { MinSize = new Point((int)(250 * GUI.Scale), (int)(80 * GUI.Scale)), AbsoluteOffset = new Point((int)(10 * GUI.Scale), -saveAssemblyFrame.Rect.Height - entityCountPanel.Rect.Height - (int)(10 * GUI.Scale)) }, "InnerFrame")
+            {
+                Visible = false
+            };
+            var saveStampButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.8f), snapToGridFrame.RectTransform, Anchor.Center), "Snap to Grid"); // TODO: ADD TEXT IN MANAGER
+            saveStampButton.TextBlock.AutoScaleHorizontal = true;
+            saveStampButton.OnClicked += (btn, userdata) =>
+            {
+                SnapToGrid();
+                return true;
+            };
+            snapToGridFrame.RectTransform.MinSize = new Point(snapToGridFrame.Rect.Width, (int)(saveStampButton.Rect.Height / saveStampButton.RectTransform.RelativeSize.Y));
+
 
 
             //Entity menu
@@ -2590,6 +2606,37 @@ namespace Barotrauma
             saveFrame = null;
             return false;
         }
+        private void SnapToGrid()
+        {
+            // First move components
+            foreach (Item item in MapEntity.SelectedList.Where(entity => entity is Item).Cast<Item>())
+            {
+                var wire = item.GetComponent<Wire>();
+                if (wire == null)
+                {
+                    // Items snap to centre of nearest grid square
+                    Vector2 offset = item.Position;
+                    offset = new Vector2((MathF.Floor(offset.X / Submarine.GridSize.X) + .5f) * Submarine.GridSize.X - offset.X, (MathF.Floor(offset.Y / Submarine.GridSize.Y) + .5f) * Submarine.GridSize.Y - offset.Y);
+                    item.Move(offset);
+                }
+            }
+
+            // Then move wires, separated as moving components also moves the start and end node of wires
+            foreach (Item item in MapEntity.SelectedList.Where(entity => entity is Item).Cast<Item>())
+            {
+                var wire = item.GetComponent<Wire>();
+                if (wire != null)
+                {
+                    for (int i = 0; i < wire.GetNodes().Count; i++)
+                    {
+                        // Items wire nodes to centre of nearest grid square
+                        Vector2 offset = wire.GetNodes()[i] + Submarine.MainSub.HiddenSubPosition;
+                        offset = new Vector2((MathF.Floor(offset.X / Submarine.GridSize.X) + .5f) * Submarine.GridSize.X - offset.X, (MathF.Floor(offset.Y / Submarine.GridSize.Y) + .5f) * Submarine.GridSize.Y - offset.Y);
+                        wire.MoveNode(i, offset);
+                    }
+                }
+            }
+        }
 
         private void CreateLoadScreen()
         {
@@ -4210,6 +4257,7 @@ namespace Barotrauma
                 saveFrame = null;
                 loadFrame = null;
                 saveAssemblyFrame = null;
+                snapToGridFrame = null;
                 CreateUI();
                 UpdateEntityList();
             }
@@ -4257,6 +4305,7 @@ namespace Barotrauma
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
             hullVolumeFrame.RectTransform.AbsoluteOffset = new Point(Math.Max(showEntitiesPanel.Rect.Right, previouslyUsedPanel.Rect.Right), 0);
             saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
+            snapToGridFrame.Visible = MapEntity.SelectedList.Count > 0;
 
             var offset = cam.WorldView.Top - cam.ScreenToWorld(new Vector2(0, GameMain.GraphicsHeight - EntityMenu.Rect.Top)).Y;
 
@@ -4718,7 +4767,8 @@ namespace Barotrauma
                 MouseDragStart = Vector2.Zero;
             }
 
-            if (!saveAssemblyFrame.Rect.Contains(PlayerInput.MousePosition) && dummyCharacter?.SelectedConstruction == null && !WiringMode && GUI.MouseOn == null)
+            if (!saveAssemblyFrame.Rect.Contains(PlayerInput.MousePosition) && !snapToGridFrame.Rect.Contains(PlayerInput.MousePosition)  &&
+                dummyCharacter?.SelectedConstruction == null && !WiringMode && GUI.MouseOn == null)
             {
                 MapEntity.UpdateSelecting(cam);
             }
