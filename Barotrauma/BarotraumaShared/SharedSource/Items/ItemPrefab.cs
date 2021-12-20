@@ -91,6 +91,7 @@ namespace Barotrauma
         public readonly bool RequiresRecipe;
         public readonly float OutCondition; //Percentage-based from 0 to 1
         public readonly List<Skill> RequiredSkills;
+        public readonly int RecipeHash;
 
         public int Amount { get; }
 
@@ -185,6 +186,21 @@ namespace Barotrauma
                         break;
                 }
             }
+
+            RecipeHash = GenerateHash();
+        }
+
+        private int GenerateHash()
+        {
+            var outputId = TargetItem.UIntIdentifier;
+
+            var requiredItems = string.Join(':', RequiredItems
+                .Select(i => i.ItemPrefabs.Select(p => p.UIntIdentifier))
+                .Select(i => string.Join(':', i)));
+
+            var requiredSkills = string.Join(':', RequiredSkills.Select(s => $"{s.Identifier}:{s.Level}"));
+
+            return $"{Amount}|{outputId}|{RequiredTime}|{requiredItems}|{requiredSkills}".GetHashCode();
         }
     }
 

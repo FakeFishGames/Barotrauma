@@ -106,9 +106,7 @@ namespace Barotrauma.Items.Components
             }
             fabricationRecipes.Sort((r1, r2) =>
             {
-                int hash1 = (int)r1.TargetItem.UIntIdentifier;
-                int hash2 = (int)r2.TargetItem.UIntIdentifier;
-                return hash1 - hash2;
+                return r1.RecipeHash - r2.RecipeHash;
             });
 
             state = FabricatorState.Stopped;
