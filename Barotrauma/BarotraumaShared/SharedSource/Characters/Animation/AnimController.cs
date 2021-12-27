@@ -462,7 +462,7 @@ namespace Barotrauma
                 DebugConsole.Log(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "HumanoidAnimController.HoldItem:InvalidPos:" + character.Name + item.Name,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
 
                 return;

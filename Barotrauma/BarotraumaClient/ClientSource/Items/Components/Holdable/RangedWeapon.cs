@@ -108,7 +108,7 @@ namespace Barotrauma.Items.Components
                     float sizeMultiplier = Math.Clamp(chargeRatio, 0.1f, 1f);
                     foreach (ParticleEmitter emitter in particleEmitterCharges)
                     {
-                        emitter.Emit(deltaTime, particlePos, hullGuess: null, sizeMultiplier: sizeMultiplier, colorMultiplier: emitter.Prefab.Properties.ColorMultiplier);
+                        emitter.Emit(deltaTime, particlePos, hullGuess: item.CurrentHull, sizeMultiplier: sizeMultiplier, colorMultiplier: emitter.Prefab.Properties.ColorMultiplier);
                     }
 
                     if (chargeSoundChannel == null || !chargeSoundChannel.IsPlaying)
@@ -157,6 +157,14 @@ namespace Barotrauma.Items.Components
                 crosshairSprite?.Draw(spriteBatch, crosshairPos, Color.White, 0, currentCrossHairScale);
                 crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, currentCrossHairPointerScale);
             }
+
+            if (GameMain.DebugDraw)
+            {
+                Vector2 barrelPos = item.DrawPosition + ConvertUnits.ToDisplayUnits(TransformedBarrelPos);
+                barrelPos = Screen.Selected.Cam.WorldToScreen(barrelPos);
+                GUI.DrawLine(spriteBatch, barrelPos - Vector2.UnitY * 3, barrelPos + Vector2.UnitY * 3, Color.Red);
+                GUI.DrawLine(spriteBatch, barrelPos - Vector2.UnitX * 3, barrelPos + Vector2.UnitX * 3, Color.Red);
+            }
         }
 
         partial void LaunchProjSpecific()
@@ -166,7 +174,7 @@ namespace Barotrauma.Items.Components
 			if (item.body.Dir < 0.0f) { rotation += MathHelper.Pi; }
             foreach (ParticleEmitter emitter in particleEmitters)
             {
-                emitter.Emit(1.0f, particlePos, hullGuess: null, angle: rotation, particleRotation: rotation);
+                emitter.Emit(1.0f, particlePos, hullGuess: item.CurrentHull, angle: rotation, particleRotation: rotation);
             }
         }
 

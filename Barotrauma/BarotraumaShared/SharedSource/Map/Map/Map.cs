@@ -472,8 +472,11 @@ namespace Barotrauma
 
             foreach (LocationConnection connection in Connections)
             {
-                float difficulty = GetLevelDifficulty(connection.CenterPos.X / Width);
-                connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-10.0f, 0.0f, Rand.RandSync.Server), 1.2f, 100.0f);
+                //float difficulty = GetLevelDifficulty(connection.CenterPos.X / Width);
+                //connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-10.0f, 0.0f, Rand.RandSync.Server), 1.2f, 100.0f);
+                float difficulty = connection.CenterPos.X / Width * 100;
+                float random = difficulty > 10 ? 5 : 0;
+                connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-random, random, Rand.RandSync.Server), 1.0f, 100.0f);
             }
 
             AssignBiomes();
@@ -761,7 +764,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Failed to select a location. " + (location?.Name ?? "null") + " not found in the map.";
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Map.SelectLocation:LocationNotFound", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Map.SelectLocation:LocationNotFound", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -780,7 +783,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Failed to select a mission (current location not set).";
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Map.SelectMission:CurrentLocationNotSet", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Map.SelectMission:CurrentLocationNotSet", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 

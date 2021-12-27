@@ -147,16 +147,12 @@ namespace Barotrauma.Items.Components
             {
                 case "water_data_in":
                     //cheating a bit because water detectors don't actually send the water level
-                    float waterAmount;
-                    if (source.GetComponent<WaterDetector>() == null)
+                    bool fromWaterDetector = source.GetComponent<WaterDetector>() != null;
+                    hullData.ReceivedWaterAmount = null;
+                    if (fromWaterDetector)
                     {
-                        waterAmount = Rand.Range(0.0f, 1.0f);
+                        hullData.ReceivedWaterAmount = Math.Min(sourceHull.WaterVolume / sourceHull.Volume, 1.0f);
                     }
-                    else
-                    {
-                        waterAmount = Math.Min(sourceHull.WaterVolume / sourceHull.Volume, 1.0f);
-                    }
-                    hullData.ReceivedWaterAmount = waterAmount;
                     foreach (var linked in sourceHull.linkedTo)
                     {
                         if (!(linked is Hull linkedHull)) { continue; }
@@ -165,7 +161,11 @@ namespace Barotrauma.Items.Components
                             linkedHullData = new HullData();
                             hullDatas.Add(linkedHull, linkedHullData);
                         }
-                        linkedHullData.ReceivedWaterAmount = waterAmount;
+                        linkedHullData.ReceivedWaterAmount = null;
+                        if (fromWaterDetector)
+                        {
+                            linkedHullData.ReceivedWaterAmount = Math.Min(linkedHull.WaterVolume / linkedHull.Volume, 1.0f);
+                        }
                     }
                     break;
                 case "oxygen_data_in":

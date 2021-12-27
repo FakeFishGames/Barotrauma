@@ -206,7 +206,7 @@ namespace Barotrauma.Tutorials
             engineer_submarineJunctionBox_3.Condition = 0f;
         }
 
-        public override IEnumerable<object> UpdateState()
+        public override IEnumerable<CoroutineStatus> UpdateState()
         {
             while (GameMain.Instance.LoadingScreenOpen) yield return null;
 
@@ -378,7 +378,7 @@ namespace Barotrauma.Tutorials
                     }
                 }
                 yield return null;
-            } while (engineer_brokenJunctionBox.Condition < repairableJunctionBoxComponent.RepairThreshold); // Wait until repaired
+            } while (repairableJunctionBoxComponent.IsBelowRepairThreshold); // Wait until repaired
             SetHighlight(engineer_brokenJunctionBox, false);
             RemoveCompletedObjective(segments[3]);
             SetDoorAccess(engineer_thirdDoor, engineer_thirdDoorLight, true);
@@ -422,7 +422,7 @@ namespace Barotrauma.Tutorials
             Repairable repairableJunctionBoxComponent3 = engineer_submarineJunctionBox_3.GetComponent<Repairable>();
 
             // Remove highlights when each individual machine is repaired
-            do { CheckJunctionBoxHighlights(repairableJunctionBoxComponent1, repairableJunctionBoxComponent2, repairableJunctionBoxComponent3); yield return null; } while (engineer_submarineJunctionBox_1.Condition < repairableJunctionBoxComponent1.RepairThreshold || engineer_submarineJunctionBox_2.Condition < repairableJunctionBoxComponent2.RepairThreshold || engineer_submarineJunctionBox_3.Condition < repairableJunctionBoxComponent3.RepairThreshold);
+            do { CheckJunctionBoxHighlights(repairableJunctionBoxComponent1, repairableJunctionBoxComponent2, repairableJunctionBoxComponent3); yield return null; } while (repairableJunctionBoxComponent1.IsBelowRepairThreshold || repairableJunctionBoxComponent2.IsBelowRepairThreshold || repairableJunctionBoxComponent3.IsBelowRepairThreshold);
             CheckJunctionBoxHighlights(repairableJunctionBoxComponent1, repairableJunctionBoxComponent2, repairableJunctionBoxComponent3);
             RemoveCompletedObjective(segments[5]);
             yield return new WaitForSeconds(2f, false);
@@ -462,7 +462,7 @@ namespace Barotrauma.Tutorials
             return engineer?.SelectedConstruction == item;
         }
 
-        private IEnumerable<object> ReactorOperatedProperly()
+        private IEnumerable<CoroutineStatus> ReactorOperatedProperly()
         {
             float timer;
 
@@ -566,17 +566,17 @@ namespace Barotrauma.Tutorials
 
         private void CheckJunctionBoxHighlights(Repairable comp1, Repairable comp2, Repairable comp3)
         {
-            if (engineer_submarineJunctionBox_1.Condition > comp1.RepairThreshold && engineer_submarineJunctionBox_1.ExternalHighlight)
+            if (!comp1.IsBelowRepairThreshold && engineer_submarineJunctionBox_1.ExternalHighlight)
             {
                 SetHighlight(engineer_submarineJunctionBox_1, false);
                 engineer.RemoveActiveObjectiveEntity(engineer_submarineJunctionBox_1);
             }
-            if (engineer_submarineJunctionBox_2.Condition > comp2.RepairThreshold && engineer_submarineJunctionBox_2.ExternalHighlight)
+            if (!comp2.IsBelowRepairThreshold && engineer_submarineJunctionBox_2.ExternalHighlight)
             {
                 SetHighlight(engineer_submarineJunctionBox_2, false);
                 engineer.RemoveActiveObjectiveEntity(engineer_submarineJunctionBox_2);
             }
-            if (engineer_submarineJunctionBox_3.Condition > comp3.RepairThreshold && engineer_submarineJunctionBox_3.ExternalHighlight)
+            if (!comp3.IsBelowRepairThreshold && engineer_submarineJunctionBox_3.ExternalHighlight)
             {
                 SetHighlight(engineer_submarineJunctionBox_3, false);
                 engineer.RemoveActiveObjectiveEntity(engineer_submarineJunctionBox_3);

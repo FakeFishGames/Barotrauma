@@ -44,6 +44,8 @@ namespace Barotrauma
 
         public UISprite PingCircle { get; private set; }
 
+        public UISprite YouAreHereCircle { get; private set; }
+
         public UISprite UIGlowCircular { get; private set; }
 
         public UISprite UIGlowSolidCircular { get; private set; }
@@ -252,6 +254,9 @@ namespace Barotrauma
                         break;
                     case "pingcircle":
                         PingCircle = new UISprite(subElement);
+                        break;
+                    case "youareherecircle":
+                        YouAreHereCircle = new UISprite(subElement);
                         break;
                     case "radiation":
                         RadiationSprite = new UISprite(subElement);

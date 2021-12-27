@@ -101,7 +101,7 @@ namespace Barotrauma
 
         private float currentHighlightState, fadeInDuration, fadeOutDuration;
         private Color currentHighlightColor;
-        private IEnumerable<object> UpdateBorderHighlight()
+        private IEnumerable<CoroutineStatus> UpdateBorderHighlight()
         {
             HighlightTimer = 1.0f;
             while (currentHighlightState < fadeInDuration + fadeOutDuration)
@@ -314,7 +314,7 @@ namespace Barotrauma
                         }
                     }
 
-                    string colorStr = XMLExtensions.ColorToString(!item.AllowStealing ? GUI.Style.Red : Color.White);
+                    string colorStr = XMLExtensions.ColorToString(item.SpawnedInCurrentOutpost && !item.AllowStealing ? GUI.Style.Red : Color.White);
 
                     toolTip = $"‖color:{colorStr}‖{name}‖color:end‖";
                     if (item.GetComponent<Quality>() != null)
@@ -1255,9 +1255,18 @@ namespace Barotrauma
                     else
                     {
                         bool anySuccess = false;
+                        bool allowCombine = true;
+                        //if we're dragging a stack of partial items or trying to drag to a stack of partial items
+                        //(which should not normally exist, but can happen when e.g. fire damages a stack of items)
+                        //don't allow combining because it leads to weird behavior (stack of items of mixed quality)
+                        if (DraggingItems.Count(it => !it.IsFullCondition && it.Condition > 0.0f) > 1 || 
+                            selectedInventory.GetItemsAt(slotIndex).Count(it => !it.IsFullCondition && it.Condition > 0.0f) > 1) 
+                        { 
+                            allowCombine = false; 
+                        }
                         foreach (Item item in DraggingItems)
                         {
-                            bool success =  selectedInventory.TryPutItem(item, slotIndex, allowSwapping: !anySuccess, true, Character.Controlled);
+                            bool success =  selectedInventory.TryPutItem(item, slotIndex, allowSwapping: !anySuccess, allowCombine, Character.Controlled);
                             anySuccess |= success;
                             if (!success) { break; }
                         }
@@ -1673,7 +1682,7 @@ namespace Barotrauma
                 }
                 sprite.Draw(spriteBatch, itemPos, spriteColor, rotation, scale);
 
-                if ((!item.AllowStealing || (inventory != null && inventory.slots[slotIndex].Items.Any(it => !it.AllowStealing))) && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
+                if (((item.SpawnedInCurrentOutpost && !item.AllowStealing) || (inventory != null && inventory.slots[slotIndex].Items.Any(it => it.SpawnedInCurrentOutpost && !it.AllowStealing))) && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
                 {
                     var stealIcon = CharacterInventory.LimbSlotIcons[InvSlotType.LeftHand];
                     Vector2 iconSize = new Vector2(25 * GUI.Scale);
@@ -1818,7 +1827,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> SyncItemsAfterDelay(UInt16 lastEventID)
+        private IEnumerable<CoroutineStatus> SyncItemsAfterDelay(UInt16 lastEventID)
         {
             while (syncItemsDelay > 0.0f || 
                 //don't apply inventory updates until 

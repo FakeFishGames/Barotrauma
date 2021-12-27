@@ -17,6 +17,8 @@ namespace Barotrauma.Items.Components
 
         public const float DefaultSonarRange = 10000.0f;
 
+        public const float PassivePowerConsumption = 0.1f;
+
         class ConnectedTransducer
         {
             public readonly SonarTransducer Transducer;
@@ -150,7 +152,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            currPowerConsumption = (currentMode == Mode.Active) ? powerConsumption : powerConsumption * 0.1f;
+            currPowerConsumption = (currentMode == Mode.Active) ? powerConsumption : powerConsumption * PassivePowerConsumption;
 
             UpdateOnActiveEffects(deltaTime);
 
@@ -332,7 +334,9 @@ namespace Barotrauma.Items.Components
             if (connection.Name == "transducer_in")
             {
                 var transducer = signal.source.GetComponent<SonarTransducer>();
-                if (transducer == null) return;
+                if (transducer == null) { return; }
+
+                transducer.ConnectedSonar = this;
 
                 var connectedTransducer = connectedTransducers.Find(t => t.Transducer == transducer);
                 if (connectedTransducer == null)

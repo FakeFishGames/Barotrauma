@@ -656,6 +656,34 @@ namespace Barotrauma
                 return target != null;
             }
 
+            public bool TryGetTarget(Character targetCharacter, out TargetParams target)
+            {
+                if (!TryGetTarget(targetCharacter.SpeciesName, out target))
+                {
+                    target = targets.FirstOrDefault(t => string.Equals(t.Tag, targetCharacter.Params.Group.ToString(), StringComparison.OrdinalIgnoreCase));
+                }
+                return target != null;
+            }
+
+            public bool TryGetTarget(IEnumerable<string> tags, out TargetParams target)
+            {
+                target = null;
+                if (tags == null || tags.None()) { return false; }
+                float priority = -1;
+                foreach (var potentialTarget in targets)
+                {
+                    if (potentialTarget.Priority > priority)
+                    {
+                        if (tags.Any(t => string.Equals(t, potentialTarget.Tag, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            target = potentialTarget;
+                            priority = target.Priority;
+                        }
+                    }
+                }
+                return target != null;
+            }
+
             public TargetParams GetTarget(string targetTag, bool throwError = true)
             {
                 if (!TryGetTarget(targetTag, out TargetParams target))

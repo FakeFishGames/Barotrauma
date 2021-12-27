@@ -18,7 +18,7 @@ namespace Barotrauma.Abilities
                 if (skillIdentifier != lastSkillIdentifier)
                 {
                     lastSkillIdentifier = skillIdentifier;
-                    Character.Info?.IncreaseSkillLevel(skillIdentifier, 1.0f);
+                    Character.Info?.IncreaseSkillLevel(skillIdentifier, 1.0f, gainedFromAbility: true);
                 }
             }
         }

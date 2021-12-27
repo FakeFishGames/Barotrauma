@@ -11,10 +11,10 @@ namespace Barotrauma
 {
     internal struct CampaignSettings
     {
-        public static CampaignSettings Empty = new CampaignSettings();
+        public static CampaignSettings Empty => new CampaignSettings();
 
         // Anything that uses this field I wasn't sure if actually needed the proper campaign settings to be passed down
-        public static CampaignSettings Unsure = Empty;
+        public static CampaignSettings Unsure => Empty;
         public bool RadiationEnabled { get; set; }
 
         public int TotalMaxMissionCount => MaxMissionCount + GetAddedMissionCount();
@@ -34,7 +34,7 @@ namespace Barotrauma
         {
             maxMissionCount = DefaultMaxMissionCount;
             RadiationEnabled = inc.ReadBoolean();
-            MaxMissionCount = inc.ReadInt32();
+            MaxMissionCount = inc.ReadRangedInteger(MinMissionCountLimit, MaxMissionCountLimit);
         }
 
         public CampaignSettings(XElement element)
@@ -47,7 +47,7 @@ namespace Barotrauma
         public void Serialize(IWriteMessage msg)
         {
             msg.Write(RadiationEnabled);
-            msg.Write(MaxMissionCount);
+            msg.WriteRangedInteger(MaxMissionCount, MinMissionCountLimit, MaxMissionCountLimit);
         }
 
         public int GetAddedMissionCount()
@@ -393,7 +393,7 @@ namespace Barotrauma
         /// </summary>
         protected abstract void LoadInitialLevel();
 
-        protected abstract IEnumerable<object> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null);
+        protected abstract IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null);
 
         /// <summary>
         /// Which type of transition between levels is currently possible (if any)
@@ -484,6 +484,10 @@ namespace Barotrauma
         /// </summary>
         private Submarine GetLeavingSub()
         {
+            if (Level.IsLoadedOutpost)
+            {
+                return Submarine.MainSub;
+            }
             //in single player, only the sub the controlled character is inside can transition between levels
             //in multiplayer, if there's subs at both ends of the level, only the one with more players inside can transition
             //TODO: ignore players who don't have the permission to trigger a transition between levels?
@@ -493,11 +497,6 @@ namespace Barotrauma
             Submarine leavingSubAtStart = GetLeavingSubAtStart(leavingPlayers);
             Submarine leavingSubAtEnd = GetLeavingSubAtEnd(leavingPlayers);
 
-            if (Level.IsLoadedOutpost)
-            {
-                leavingSubAtStart ??= Submarine.MainSub;
-                leavingSubAtEnd ??= Submarine.MainSub;            
-            }
             int playersInSubAtStart = leavingSubAtStart == null || !leavingSubAtStart.AtStartExit ? 0 :
                 leavingPlayers.Count(c => c.Submarine == leavingSubAtStart || leavingSubAtStart.DockedTo.Contains(c.Submarine) || (Level.Loaded.StartOutpost != null && c.Submarine == Level.Loaded.StartOutpost));
             int playersInSubAtEnd = leavingSubAtEnd == null || !leavingSubAtEnd.AtEndExit ? 0 :
@@ -572,7 +571,7 @@ namespace Barotrauma
             {
                 foreach (Item item in Item.ItemList)
                 {
-                    if (!item.SpawnedInOutpost || item.OriginalModuleIndex < 0) { continue; }
+                    if (!item.SpawnedInCurrentOutpost || item.OriginalModuleIndex < 0) { continue; }
                     var owner = item.GetRootInventoryOwner();
                     if ((!(owner?.Submarine?.Info?.IsOutpost ?? false)) || (owner is Character character && character.TeamID == CharacterTeamType.Team1) || item.Submarine == null || !item.Submarine.Info.IsOutpost)
                     {
@@ -686,6 +685,14 @@ namespace Barotrauma
                 int loops = CampaignMetadata.GetInt("campaign.endings", 0);
                 CampaignMetadata.SetValue("campaign.endings",  loops + 1);
             }
+
+            GameAnalyticsManager.AddProgressionEvent(
+                GameAnalyticsManager.ProgressionStatus.Complete,
+                Name ?? "none");
+            string eventId = "FinishCampaign:";
+            GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"));
+            GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count() ?? 0));
+            GameAnalyticsManager.AddDesignEvent(eventId + "Money", Money);            
         }
 
         protected virtual void EndCampaignProjSpecific() { }
@@ -712,7 +719,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> DoCharacterWait(Character npc, Character interactor)
+        private IEnumerable<CoroutineStatus> DoCharacterWait(Character npc, Character interactor)
         {
             if (npc == null || interactor == null) { yield return CoroutineStatus.Failure; }
 
@@ -907,7 +914,7 @@ namespace Barotrauma
 
         public int NumberOfMissionsAtLocation(Location location)
         {
-            return Map.CurrentLocation.SelectedMissions.Count(m => m.Locations.Contains(location));
+            return Map?.CurrentLocation?.SelectedMissions?.Count(m => m.Locations.Contains(location)) ?? 0;
         }
 
         public void CheckTooManyMissions(Location currentLocation, Client sender)

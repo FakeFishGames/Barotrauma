@@ -46,10 +46,19 @@ namespace Barotrauma
             }
             if (character.CurrentHull == null)
             {
-                Priority = (objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() ||
-                    objectiveManager.IsCurrentOrder<AIObjectiveReturn>() ||
-                    objectiveManager.Objectives.Any(o => o.Priority > 0 && o is AIObjectiveCombat))
-                    && HumanAIController.HasDivingSuit(character) ? 0 : 100;
+                if (!character.NeedsAir)
+                {
+                    Priority = 0;
+                }
+                else
+                {
+                    Priority = (
+                        objectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Priority > 0) ||
+                        objectiveManager.HasOrder<AIObjectiveReturn>(o => o.Priority > 0) ||
+                        objectiveManager.HasActiveObjective<AIObjectiveRescue>() ||
+                        objectiveManager.Objectives.Any(o => o is AIObjectiveCombat && o.Priority > 0))
+                        && HumanAIController.HasDivingSuit(character) ? 0 : 100;
+                }
             }
             else
             {
@@ -253,7 +262,7 @@ namespace Barotrauma
                     }
                     foreach (Character enemy in Character.CharacterList)
                     {
-                        if (!HumanAIController.IsActive(enemy) || HumanAIController.IsFriendly(enemy)) { continue; }
+                        if (!HumanAIController.IsActive(enemy) || HumanAIController.IsFriendly(enemy) || enemy.IsArrested) { continue; }
                         if (HumanAIController.VisibleHulls.Contains(enemy.CurrentHull))
                         {
                             Vector2 dir = character.Position - enemy.Position;

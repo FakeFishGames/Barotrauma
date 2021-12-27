@@ -64,9 +64,14 @@ namespace Barotrauma.Items.Components
         private Character currentTarget; 
         const float aiFindTargetInterval = 5.0f;
 
+        private int currentLoaderIndex;
+
         private const float TinkeringPowerCostReduction = 0.2f;
         private const float TinkeringDamageIncrease = 0.2f;
         private const float TinkeringReloadDecrease = 0.2f;
+
+        public Character ActiveUser;
+        private float resetActiveUserTimer;
 
         public float Rotation
         {
@@ -362,7 +367,7 @@ namespace Barotrauma.Items.Components
                 UpdateTransformedBarrelPos();
             }
 
-            if (user != null && user.Removed)
+            if (user is { Removed: true })
             {
                 user = null;
             }
@@ -370,6 +375,19 @@ namespace Barotrauma.Items.Components
             {
                 resetUserTimer -= deltaTime;
                 if (resetUserTimer <= 0.0f) { user = null; }
+            }
+            
+            if (ActiveUser is { Removed: true })
+            {
+                ActiveUser = null;
+            }
+            else
+            {
+                resetActiveUserTimer -= deltaTime;
+                if (resetActiveUserTimer <= 0.0f)
+                {
+                    ActiveUser = null;
+                }
             }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
@@ -576,16 +594,17 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    foreach (MapEntity e in item.linkedTo)
+                    for (int j = 0; j < item.linkedTo.Count; j++)
                     {
+                        var e = item.linkedTo[(j + currentLoaderIndex) % item.linkedTo.Count];
                         //use linked projectile containers in case they have to react to the turret being launched somehow
                         //(play a sound, spawn more projectiles)
                         if (!(e is Item linkedItem)) { continue; }
                         if (!item.prefab.IsLinkAllowed(e.prefab)) { continue; }
-                        if (linkedItem.Condition <= 0.0f) 
+                        if (linkedItem.Condition <= 0.0f)
                         {
                             loaderBroken = true;
-                            continue; 
+                            continue;
                         }
                         ItemContainer projectileContainer = linkedItem.GetComponent<ItemContainer>();
                         if (projectileContainer != null)
@@ -594,7 +613,6 @@ namespace Barotrauma.Items.Components
                             projectiles = GetLoadedProjectiles();
                             if (projectiles.Any()) { break; }
                         }
-
                     }
                 }
                 if (projectiles.Count == 0 && !LaunchWithoutProjectile)
@@ -689,6 +707,10 @@ namespace Barotrauma.Items.Components
                     {
                         ShiftItemsInProjectileContainer(container.GetComponent<ItemContainer>());
                     }
+                    if (item.linkedTo.Count > 0)
+                    {
+                        currentLoaderIndex = (currentLoaderIndex + 1) % item.linkedTo.Count;
+                    }
                 }
             }
 
@@ -743,9 +765,12 @@ namespace Barotrauma.Items.Components
                 Projectile projectileComponent = projectile.GetComponent<Projectile>();
                 if (projectileComponent != null)
                 {
+                    projectileComponent.Launcher = item;
                     projectileComponent.Attacker = projectileComponent.User = user;
-                    projectileComponent.Attack.DamageMultiplier = 1f + (TinkeringDamageIncrease * tinkeringStrength);
-
+                    if (projectileComponent.Attack != null)
+                    {
+                        projectileComponent.Attack.DamageMultiplier = 1f + (TinkeringDamageIncrease * tinkeringStrength);
+                    }
                     projectileComponent.Use();
                     projectile.GetComponent<Rope>()?.Attach(item, projectile);
                     projectileComponent.User = user;
@@ -956,10 +981,11 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            if (character.AIController.SelectedAiTarget?.Entity is Character previousTarget &&
-                previousTarget.IsDead)
+            if (character.AIController.SelectedAiTarget?.Entity is Character previousTarget && previousTarget.IsDead)
             {
-                character.Speak(TextManager.Get("DialogTurretTargetDead"), identifier: "killedtarget" + previousTarget.ID, minDurationBetweenSimilar: 10.0f);
+                character.Speak(TextManager.Get("DialogTurretTargetDead"),
+                    identifier: "killedtarget" + previousTarget.ID,
+                    minDurationBetweenSimilar: 10.0f);
                 character.AIController.SelectTarget(null);
             }
 
@@ -986,7 +1012,9 @@ namespace Barotrauma.Items.Components
                         }
                         else
                         {
-                            character.Speak(TextManager.Get("DialogSupercapacitorIsBroken"), identifier: "supercapacitorisbroken", minDurationBetweenSimilar: 30.0f);
+                            character.Speak(TextManager.Get("DialogSupercapacitorIsBroken"),
+                                identifier: "supercapacitorisbroken",
+                                minDurationBetweenSimilar: 30.0f);
                             canShoot = false;
                         }
                     }
@@ -999,7 +1027,9 @@ namespace Barotrauma.Items.Components
                 }
                 if (lowestCharge <= 0 && batteryToLoad.Item.ConditionPercentage > 0)
                 {
-                    character.Speak(TextManager.Get("DialogTurretHasNoPower"), identifier: "turrethasnopower", minDurationBetweenSimilar: 30.0f);
+                    character.Speak(TextManager.Get("DialogTurretHasNoPower"),
+                        identifier: "turrethasnopower",
+                        minDurationBetweenSimilar: 30.0f);
                     canShoot = false;
                 }
             }
@@ -1039,7 +1069,9 @@ namespace Barotrauma.Items.Components
                 {
                     if (character.IsOnPlayerTeam)
                     {
-                        character.Speak(TextManager.GetWithVariable("DialogCannotLoadTurret", "[itemname]", item.Name, formatCapitals: true), identifier: "cannotloadturret", minDurationBetweenSimilar: 30.0f);
+                        character.Speak(TextManager.GetWithVariable("DialogCannotLoadTurret", "[itemname]", item.Name, formatCapitals: true),
+                            identifier: "cannotloadturret",
+                            minDurationBetweenSimilar: 30.0f);
                     }
                     return true;
                 }
@@ -1049,7 +1081,9 @@ namespace Barotrauma.Items.Components
                     loadItemsObjective.ignoredContainerIdentifiers = new string[] { containerItem.prefab.Identifier };
                     if (character.IsOnPlayerTeam)
                     {
-                        character.Speak(TextManager.GetWithVariable("DialogLoadTurret", "[itemname]", item.Name, formatCapitals: true), identifier: "loadturret", minDurationBetweenSimilar: 30.0f);
+                        character.Speak(TextManager.GetWithVariable("DialogLoadTurret", "[itemname]", item.Name, formatCapitals: true),
+                            identifier: "loadturret",
+                            minDurationBetweenSimilar: 30.0f);
                     }
                     loadItemsObjective.Abandoned += CheckRemainingAmmo;
                     loadItemsObjective.Completed += CheckRemainingAmmo;
@@ -1063,11 +1097,15 @@ namespace Barotrauma.Items.Components
                         int remainingAmmo = Submarine.MainSub.GetItems(false).Count(i => i.HasTag(ammoType) && i.Condition > 1);
                         if (remainingAmmo == 0)
                         {
-                            character.Speak(TextManager.Get($"DialogOutOf{ammoType}", fallBackTag: "DialogOutOfTurretAmmo"), identifier: "outofammo", minDurationBetweenSimilar: 30.0f);
+                            character.Speak(TextManager.Get($"DialogOutOf{ammoType}", fallBackTag: "DialogOutOfTurretAmmo"),
+                                identifier: "outofammo",
+                                minDurationBetweenSimilar: 30.0f);
                         }
                         else if (remainingAmmo < 3)
                         {
-                            character.Speak(TextManager.Get($"DialogLowOn{ammoType}"), identifier: "outofammo", minDurationBetweenSimilar: 30.0f);
+                            character.Speak(TextManager.Get($"DialogLowOn{ammoType}"),
+                                identifier: "outofammo",
+                                minDurationBetweenSimilar: 30.0f);
                         }
                     }
                 }
@@ -1090,7 +1128,8 @@ namespace Barotrauma.Items.Components
 
             float closestDistance = maxDistance * maxDistance;
 
-            if (currentTarget != null)
+            bool hadCurrentTarget = currentTarget != null;
+            if (hadCurrentTarget)
             {
                 if (currentTarget.Removed || currentTarget.IsDead)
                 {
@@ -1131,7 +1170,7 @@ namespace Barotrauma.Items.Components
             {
                 targetPos = closestEnemy.WorldPosition;
                 //if the enemy is inside another sub, aim at the room they're in to make it less obvious that the enemy "knows" exactly where the target is
-                if (closestEnemy.Submarine != null && closestEnemy.CurrentHull != null && closestEnemy.Submarine != item.Submarine)
+                if (closestEnemy.Submarine != null && closestEnemy.CurrentHull != null && closestEnemy.Submarine != item.Submarine && !closestEnemy.CanSeeTarget(Item))
                 {
                     targetPos = closestEnemy.CurrentHull.WorldPosition;
                 }
@@ -1222,24 +1261,32 @@ namespace Barotrauma.Items.Components
             {
                 if (character.IsOnPlayerTeam)
                 {
-                    if (character.AIController.SelectedAiTarget == null)
+                    if (character.AIController.SelectedAiTarget == null && !hadCurrentTarget)
                     {
                         if (GameMain.Config.RecentlyEncounteredCreatures.Contains(closestEnemy.SpeciesName))
                         {
-                            character.Speak(TextManager.Get("DialogNewTargetSpotted"), null, 0.0f, "newtargetspotted", 30.0f);
+                            character.Speak(TextManager.Get("DialogNewTargetSpotted"),
+                                identifier: "newtargetspotted",
+                                minDurationBetweenSimilar: 30.0f);
                         }
                         else if (GameMain.Config.EncounteredCreatures.Any(name => name.Equals(closestEnemy.SpeciesName, StringComparison.OrdinalIgnoreCase)))
                         {
-                            character.Speak(TextManager.GetWithVariable("DialogIdentifiedTargetSpotted", "[speciesname]", closestEnemy.DisplayName), null, 0.0f, "identifiedtargetspotted", 30.0f);
+                            character.Speak(TextManager.GetWithVariable("DialogIdentifiedTargetSpotted", "[speciesname]", closestEnemy.DisplayName),
+                                identifier: "identifiedtargetspotted",
+                                minDurationBetweenSimilar: 30.0f);
                         }
                         else
                         {
-                            character.Speak(TextManager.Get("DialogUnidentifiedTargetSpotted"), null, 0.0f, "unidentifiedtargetspotted", 5.0f);
+                            character.Speak(TextManager.Get("DialogUnidentifiedTargetSpotted"),
+                                identifier: "unidentifiedtargetspotted",
+                                minDurationBetweenSimilar: 5.0f);
                         }
                     }
                     else if (GameMain.Config.EncounteredCreatures.None(name => name.Equals(closestEnemy.SpeciesName, StringComparison.OrdinalIgnoreCase)))
                     {
-                        character.Speak(TextManager.Get("DialogUnidentifiedTargetSpotted"), null, 0.0f, "unidentifiedtargetspotted", 5.0f);
+                        character.Speak(TextManager.Get("DialogUnidentifiedTargetSpotted"),
+                            identifier: "unidentifiedtargetspotted",
+                            minDurationBetweenSimilar: 5.0f);
                     }
                     character.AddEncounter(closestEnemy);
                 }
@@ -1247,7 +1294,9 @@ namespace Barotrauma.Items.Components
             }
             else if (closestEnemy == null && character.IsOnPlayerTeam)
             {
-                character.Speak(TextManager.Get("DialogIceSpireSpotted"), null, 0.0f, "icespirespotted", 60.0f);
+                character.Speak(TextManager.Get("DialogIceSpireSpotted"),
+                    identifier: "icespirespotted",
+                    minDurationBetweenSimilar: 60.0f);
             }
 
             character.CursorPosition = targetPos.Value;
@@ -1289,7 +1338,9 @@ namespace Barotrauma.Items.Components
                 if (!shoot) { return false; }
                 if (character.IsOnPlayerTeam)
                 {
-                    character.Speak(TextManager.Get("DialogFireTurret"), null, 0.0f, "fireturret", 10.0f);
+                    character.Speak(TextManager.Get("DialogFireTurret"),
+                        identifier: "fireturret",
+                        minDurationBetweenSimilar: 30.0f);
                 }
                 character.SetInput(InputType.Shoot, true, true);
             }
@@ -1389,6 +1440,7 @@ namespace Barotrauma.Items.Components
             crosshairSprite?.Remove(); crosshairSprite = null;
             crosshairPointerSprite?.Remove(); crosshairPointerSprite = null;
             moveSoundChannel?.Dispose(); moveSoundChannel = null;
+            WeaponIndicatorSprite?.Remove(); WeaponIndicatorSprite = null;
 #endif
         }
 
@@ -1397,8 +1449,9 @@ namespace Barotrauma.Items.Components
             List<Projectile> projectiles = new List<Projectile>();
             // check the item itself first
             CheckProjectileContainer(item, projectiles, out bool _);
-            foreach (MapEntity e in item.linkedTo)
+            for (int j = 0; j < item.linkedTo.Count; j++)
             {
+                var e = item.linkedTo[(j + currentLoaderIndex) % item.linkedTo.Count];
                 if (!item.prefab.IsLinkAllowed(e.prefab)) { continue; }
                 if (e is Item projectileContainer)
                 {
@@ -1406,7 +1459,6 @@ namespace Barotrauma.Items.Components
                     if (projectiles.Any() || stopSearching) { return projectiles; }
                 }
             }
-
             return projectiles;
         }
 
@@ -1503,12 +1555,16 @@ namespace Barotrauma.Items.Components
                         IsActive = true;
                     }
                     user = sender;
+                    ActiveUser = sender;
+                    resetActiveUserTimer = 1f;
                     resetUserTimer = 10.0f;
                     break;
                 case "trigger_in":
                     if (signal.value == "0") { return; }
                     item.Use((float)Timing.Step, sender);
                     user = sender;
+                    ActiveUser = sender;
+                    resetActiveUserTimer = 1f;
                     resetUserTimer = 10.0f;
                     //triggering the Use method through item.Use will fail if the item is not characterusable and the signal was sent by a character
                     //so lets do it manually
@@ -1521,12 +1577,18 @@ namespace Barotrauma.Items.Components
                     if (lightComponent != null && signal.value != "0")
                     {
                         lightComponent.IsOn = !lightComponent.IsOn;
+                        UpdateLightComponent();
                     }
                     break;
                 case "set_light":
                     if (lightComponent != null)
                     {
-                        lightComponent.IsOn = signal.value != "0";
+                        bool shouldBeOn = signal.value != "0";
+                        if (shouldBeOn != lightComponent.IsOn)
+                        {
+                            lightComponent.IsOn = shouldBeOn;
+                            UpdateLightComponent();
+                        }
                     }
                     break;
             }

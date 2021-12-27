@@ -203,6 +203,14 @@ namespace Barotrauma
             enemySub.TeamID = CharacterTeamType.None;
             //make the enemy sub withstand atleast the same depth as the player sub
             enemySub.RealWorldCrushDepth = Math.Max(enemySub.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth);
+            if (Level.Loaded != null)
+            {
+                //...and the depth of the patrol positions + 1000 m
+                foreach (var patrolPos in patrolPositions)
+                {
+                    enemySub.RealWorldCrushDepth = Math.Max(enemySub.RealWorldCrushDepth, Level.Loaded.GetRealWorldDepth(patrolPos.Y) + 1000);
+                }
+            }
             enemySub.ImmuneToBallastFlora = true;
         }
 

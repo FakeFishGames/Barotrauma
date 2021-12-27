@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -119,12 +120,6 @@ namespace Barotrauma
 #endif
             }
 
-#if SERVER
-            List<SubmarineInfo> availableSubs = new List<SubmarineInfo>();
-            List<SubmarineInfo> sourceList = new List<SubmarineInfo>();
-            sourceList.AddRange(SubmarineInfo.SavedSubmarines);
-#endif
-
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -165,14 +160,6 @@ namespace Barotrauma
                         petsElement = subElement;
                         break;
 #if SERVER
-                    case "availablesubs":
-                        foreach (XElement availableSub in subElement.Elements())
-                        {
-                            string subName = availableSub.GetAttributeString("name", "");
-                            SubmarineInfo matchingSub = sourceList.Find(s => s.Name == subName);
-                            if (matchingSub != null) { availableSubs.Add(matchingSub); }
-                        }
-                        break;
                     case "savedexperiencepoints":
                         foreach (XElement savedExp in subElement.Elements())
                         {
@@ -188,14 +175,6 @@ namespace Barotrauma
 
             InitCampaignData();
 #if SERVER
-            // Fallback if using a save with no available subs assigned, use vanilla submarines
-            if (availableSubs.Count == 0)
-            {
-                GameMain.NetLobbyScreen.CampaignSubmarines.AddRange(sourceList.FindAll(s => s.IsCampaignCompatible && s.IsVanillaSubmarine()));
-            }
-
-            GameMain.NetLobbyScreen.CampaignSubmarines = availableSubs;
-
             characterData.Clear();
             string characterDataPath = GetCharacterDataSavePath();
             if (!File.Exists(characterDataPath))

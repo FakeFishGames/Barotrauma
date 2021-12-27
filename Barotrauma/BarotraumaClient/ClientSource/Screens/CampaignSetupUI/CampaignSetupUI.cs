@@ -7,13 +7,9 @@ namespace Barotrauma
     {
         protected readonly GUIComponent newGameContainer, loadGameContainer;
 
-        protected GUIListBox subList;
         protected GUIListBox saveList;
-        protected List<GUITickBox> subTickBoxes;
 
         protected GUITextBox saveNameBox, seedBox;
-
-        protected GUILayoutGroup subPreviewContainer;
 
         protected GUIButton loadGameButton;
         

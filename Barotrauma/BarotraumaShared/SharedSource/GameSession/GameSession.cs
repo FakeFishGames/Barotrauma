@@ -283,7 +283,8 @@ namespace Barotrauma
 
         public void PurchaseSubmarine(SubmarineInfo newSubmarine)
         {
-            if (Campaign == null) return;
+            if (Campaign is null) { return; }
+            if (Campaign.Money < newSubmarine.Price) { return; }
             if (!OwnedSubmarines.Any(s => s.Name == newSubmarine.Name))
             {
                 Campaign.Money -= newSubmarine.Price;
@@ -312,7 +313,7 @@ namespace Barotrauma
             return isRadiated;
         }
 
-        public void StartRound(string levelSeed, float? difficulty = null)
+        public void StartRound(string levelSeed, float? difficulty = null, LevelGenerationParams levelGenerationParams = null)
         {
             LevelData randomLevel = null;
             foreach (Mission mission in Missions.Union(GameMode.Missions))
@@ -324,11 +325,11 @@ namespace Barotrauma
                 {
                     LocationType locationType = LocationType.List.FirstOrDefault(lt => missionPrefab.AllowedLocationTypes.Any(m => m.Equals(lt.Identifier, StringComparison.OrdinalIgnoreCase)));
                     CreateDummyLocations(locationType);
-                    randomLevel = LevelData.CreateRandom(levelSeed, difficulty, requireOutpost: true);
+                    randomLevel = LevelData.CreateRandom(levelSeed, difficulty, levelGenerationParams, requireOutpost: true);
                     break;
                 }
             }
-            randomLevel ??= LevelData.CreateRandom(levelSeed, difficulty);
+            randomLevel ??= LevelData.CreateRandom(levelSeed, difficulty, levelGenerationParams);
             StartRound(randomLevel);
         }
 
@@ -350,6 +351,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't start game session, saved submarine is empty. The submarine file may be corrupted.");
                 return;
             }
+
+            Submarine.LockX = Submarine.LockY = false;
 
             LevelData = levelData;
 
@@ -403,6 +406,21 @@ namespace Barotrauma
             }
 
             InitializeLevel(level);
+
+            GameAnalyticsManager.AddProgressionEvent(
+                GameAnalyticsManager.ProgressionStatus.Start,
+                GameMode?.Name ?? "none");
+
+            string eventId = "StartRound:GameMode:" + (GameMode?.Name ?? "none") + ":";
+            GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"));
+            GameAnalyticsManager.AddDesignEvent(eventId + "GameMode:" + (GameMode?.Name ?? "none"));
+            GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count() ?? 0));
+            foreach (Mission mission in missions)
+            {
+                GameAnalyticsManager.AddDesignEvent(eventId + "MissionType:" + (mission.Prefab.Type.ToString() ?? "none") + ":" + mission.Prefab.Identifier);
+            }
+            GameAnalyticsManager.AddDesignEvent(eventId + "LevelType:" + (Level.Loaded?.Type.ToString() ?? "none"));
+            GameAnalyticsManager.AddDesignEvent(eventId + "Biome:" + (Level.Loaded?.LevelData?.Biome?.Identifier ?? "none"));
 
 #if CLIENT
             if (GameMode is CampaignMode) { SteamAchievementManager.OnBiomeDiscovered(levelData.Biome); }
@@ -510,10 +528,6 @@ namespace Barotrauma
                 {
                     mpCampaign.UpgradeManager.ApplyUpgrades();
                     mpCampaign.UpgradeManager.SanityCheckUpgrades(Submarine);
-                }
-                if (GameMode is CampaignMode)
-                {
-                    Submarine.WarmStartPower();
                 }
             }
 
@@ -676,6 +690,8 @@ namespace Barotrauma
             {
                 IEnumerable<Character> crewCharacters = GetSessionCrewCharacters();
 
+                int prevMoney = (GameMode as CampaignMode)?.Money ?? 0;
+
                 foreach (Mission mission in missions)
                 {
                     mission.End();
@@ -733,6 +749,32 @@ namespace Barotrauma
                 missions.Clear();
                 IsRunning = false;
 
+
+                bool success = false;
+#if CLIENT
+                success = CrewManager.GetCharacters().Any(c => !c.IsDead);
+#else
+                success = GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
+#endif
+                double roundDuration = Timing.TotalTime - RoundStartTime;
+                GameAnalyticsManager.AddProgressionEvent(
+                    success ? GameAnalyticsManager.ProgressionStatus.Complete : GameAnalyticsManager.ProgressionStatus.Fail,
+                    GameMode?.Name ?? "none",
+                    roundDuration);
+                string eventId = "EndRound:GameMode:" + (GameMode?.Name ?? "none") + ":";
+                GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"), roundDuration);
+                GameAnalyticsManager.AddDesignEvent(eventId + "GameMode:" + (GameMode?.Name ?? "none"), roundDuration);
+                GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count() ?? 0), roundDuration);
+                foreach (Mission mission in missions)
+                {
+                    GameAnalyticsManager.AddDesignEvent(eventId + "MissionType:" + (mission.Prefab.Type.ToString() ?? "none") + ":" + mission.Prefab.Identifier + ":" + (mission.Completed ? "Completed" : "Failed"), roundDuration);
+                }
+                GameAnalyticsManager.AddDesignEvent(eventId + "LevelType:" + (Level.Loaded?.Type.ToString() ?? "none"), roundDuration);
+                GameAnalyticsManager.AddDesignEvent(eventId + "Biome:" + (Level.Loaded?.LevelData?.Biome?.Identifier ?? "none"), roundDuration);
+                if (GameMode is CampaignMode campaignMode)
+                {
+                    GameAnalyticsManager.AddDesignEvent(eventId + "MoneyEarned", campaignMode.Money - prevMoney);
+                }
 #if CLIENT
                 HintManager.OnRoundEnded();
 #endif

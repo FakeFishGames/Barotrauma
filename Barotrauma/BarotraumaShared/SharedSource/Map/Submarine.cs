@@ -137,11 +137,25 @@ namespace Barotrauma
             get { return subBody?.Body; }
         }
 
+        /// <summary>
+        /// Extents of the solid items/structures (ones with a physics body) and hulls
+        /// </summary>
         public Rectangle Borders
         {
             get
             {
                 return subBody == null ? Rectangle.Empty : subBody.Borders;
+            }
+        }
+
+        /// <summary>
+        /// Extents of all the visible items/structures/hulls (including ones without a physics body)
+        /// </summary>
+        public Rectangle VisibleBorders
+        {
+            get
+            {
+                return subBody == null ? Rectangle.Empty : subBody.VisibleBorders;
             }
         }
 
@@ -272,14 +286,6 @@ namespace Barotrauma
         public override string ToString()
         {
             return "Barotrauma.Submarine (" + (Info?.Name ?? "[NULL INFO]") + ", " + IdOffset + ")";
-        }
-
-        public override bool Removed
-        {
-            get
-            {
-                return !loaded.Contains(this);
-            }
         }
 
         public int CalculateBasePrice()
@@ -1126,22 +1132,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Run the power logic so the sub is already powered up at the start of the round (as long as the reactor was on)
-        /// </summary>
-        public void WarmStartPower()
-        {
-            for (int i = 0; i < 600; i++)
-            {
-                Powered.UpdatePower((float)Timing.Step);
-                foreach (Entity e in Item.ItemList)
-                {
-                    if (!(e is Item item) || item.GetComponent<Powered>() == null || e.Submarine != this) { continue; }
-                    item.Update((float)Timing.Step, GameMain.GameScreen.Cam);
-                }
-            }
-        }
-
         public void SetPrevTransform(Vector2 position)
         {
             prevPosition = position;
@@ -1398,7 +1388,7 @@ namespace Barotrauma
                         if (me.Submarine != this) { continue; }
                         if (me is Item item)
                         {
-                            item.SpawnedInOutpost = info.OutpostGenerationParams != null;
+                            item.SpawnedInCurrentOutpost = info.OutpostGenerationParams != null;
                             item.AllowStealing = info.OutpostGenerationParams?.AllowStealing ?? true;
                             if (item.GetComponent<Repairable>() != null && indestructible)
                             {

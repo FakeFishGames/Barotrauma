@@ -846,22 +846,26 @@ namespace Barotrauma
 
             var currentOrPending = item.PendingItemSwap ?? item.Prefab;
             string name = currentOrPending.Name;
-            string quantityText = "";
+            string nameWithQuantity = "";
             if (linkedItems.Count > 1)
             {
                 foreach (ItemPrefab distinctItem in linkedItems.Select(it => it.Prefab).Distinct())
                 {
-                    if (quantityText != string.Empty)
+                    if (nameWithQuantity != string.Empty)
                     {
-                        quantityText += ", ";
+                        nameWithQuantity += ", ";
                     }
                     int count = linkedItems.Count(it => it.Prefab == distinctItem);
-                    quantityText += distinctItem.Name;
+                    nameWithQuantity += distinctItem.Name;
                     if (count > 1)
                     {
-                        quantityText += " " + TextManager.GetWithVariable("campaignstore.quantity", "[amount]", count.ToString());
+                        nameWithQuantity += " " + TextManager.GetWithVariable("campaignstore.quantity", "[amount]", count.ToString());
                     }
                 }
+            }
+            else
+            {
+                nameWithQuantity = name;
             }
 
             bool isOpen = false;
@@ -884,7 +888,7 @@ namespace Barotrauma
             new GUITextBlock(rectT(0.3f, 1f, buttonLayout), text: slotText, font: GUI.SubHeadingFont);
             GUILayoutGroup group = new GUILayoutGroup(rectT(0.7f, 1f, buttonLayout), isHorizontal: true) { Stretch = true };
 
-            string title = item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : quantityText;
+            string title = item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : nameWithQuantity;
             GUITextBlock text = new GUITextBlock(rectT(0.7f, 1f, group), text: title, font: GUI.SubHeadingFont, textAlignment: Alignment.Right, parseRichText: true)
             {
                 TextColor = GUI.Style.Orange
@@ -907,7 +911,7 @@ namespace Barotrauma
                 if (isUninstallPending) { canUninstall = false; }
 
                 frames.Add(CreateUpgradeEntry(rectT(1f, 0.25f, parent.Content), currentOrPending.UpgradePreviewSprite,
-                                item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : TextManager.GetWithVariable("upgrades.installeditem", "[itemname]", quantityText),
+                                item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : TextManager.GetWithVariable("upgrades.installeditem", "[itemname]", nameWithQuantity),
                                 currentOrPending.Description,
                                 0, null, addBuyButton: canUninstall, addProgressBar: false, buttonStyle: "WeaponUninstallButton"));
 

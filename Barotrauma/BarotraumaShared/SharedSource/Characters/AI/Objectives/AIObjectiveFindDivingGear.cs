@@ -19,10 +19,15 @@ namespace Barotrauma
         private AIObjectiveContainItem getOxygen;
         private Item targetItem;
 
-        public static float MIN_OXYGEN = 10;
-        public static string HEAVY_DIVING_GEAR = "deepdiving";
-        public static string LIGHT_DIVING_GEAR = "lightdiving";
-        public static string OXYGEN_SOURCE = "oxygensource";
+        public const float MIN_OXYGEN = 10;
+
+        public const string HEAVY_DIVING_GEAR = "deepdiving";
+        public const string LIGHT_DIVING_GEAR = "lightdiving";
+        /// <summary>
+        /// Diving gear that's suitable for wearing indoors (-> the bots don't try to unequip it when they don't need diving gear)
+        /// </summary>
+        public const string DIVING_GEAR_WEARABLE_INDOORS = "divinggear_wearableindoors";
+        public const string OXYGEN_SOURCE = "oxygensource";
 
         protected override bool CheckObjectiveSpecific() => targetItem != null && character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.Head);
 

@@ -259,7 +259,9 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            SetActive(msg.ReadBoolean());
+            ushort userID = msg.ReadUInt16();
+            Character user = userID == Entity.NullEntityID ? null : Entity.FindEntityByID(userID) as Character;
+            SetActive(msg.ReadBoolean(), user);
             progressTimer = msg.ReadSingle();
         }
     }

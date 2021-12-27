@@ -15,7 +15,7 @@ namespace Barotrauma.Tutorials
         {
         }
 
-        public override IEnumerable<object> UpdateState()
+        public override IEnumerable<CoroutineStatus> UpdateState()
         {
             Character Controlled = Character.Controlled;
             if (Controlled == null) yield return CoroutineStatus.Success;
@@ -634,7 +634,7 @@ namespace Barotrauma.Tutorials
             return Character.Controlled.Inventory.FindItemByIdentifier(itemIdentifier) != null;
         }
         
-        protected IEnumerable<object> KeepReactorRunning(Reactor reactor)
+        protected IEnumerable<CoroutineStatus> KeepReactorRunning(Reactor reactor)
         {
             do
             {
@@ -652,7 +652,7 @@ namespace Barotrauma.Tutorials
         /// <summary>
         /// keeps the enemy away from the sub until the capacitors are loaded
         /// </summary>
-        private IEnumerable<object> KeepEnemyAway(Character enemy, PowerContainer[] capacitors)
+        private IEnumerable<CoroutineStatus> KeepEnemyAway(Character enemy, PowerContainer[] capacitors)
         {
             do
             {

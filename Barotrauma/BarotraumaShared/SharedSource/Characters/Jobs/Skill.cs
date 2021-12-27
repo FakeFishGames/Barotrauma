@@ -9,7 +9,7 @@ namespace Barotrauma
         public string Identifier { get; }
 
         public const float MaximumSkill = 100.0f;
-        
+
         public float Level
         {
             get { return level; }
@@ -18,7 +18,7 @@ namespace Barotrauma
 
         public void IncreaseSkill(float value, bool increasePastMax)
         {
-            level = MathHelper.Clamp(level + value, 0.0f, increasePastMax ? float.MaxValue : MaximumSkill);
+            level = MathHelper.Clamp(level + value, 0.0f, increasePastMax ? SkillSettings.Current.MaximumOlympianSkill : MaximumSkill);
         }
 
         private Sprite icon;
@@ -34,14 +34,14 @@ namespace Barotrauma
             }
         }
 
-        internal SkillPrefab Prefab { get; private set; }
+        public readonly float PriceMultiplier = 1.0f;
 
         public Skill(SkillPrefab prefab)
         {
-            this.Prefab = prefab;
             Identifier = prefab.Identifier;
-            level = Rand.Range(prefab.LevelRange.X, prefab.LevelRange.Y, Rand.RandSync.Server);
+            level = Rand.Range(prefab.LevelRange.Start, prefab.LevelRange.End, Rand.RandSync.Server);
             icon = GetIcon();
+            PriceMultiplier = prefab.PriceMultiplier;
         }
 
         public Skill(string identifier, float level)

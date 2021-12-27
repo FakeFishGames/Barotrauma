@@ -1,6 +1,4 @@
 ﻿using Barotrauma.Networking;
-using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -20,6 +18,7 @@ namespace Barotrauma.Items.Components
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
+            msg.Write(user?.ID ?? 0);
             msg.Write(IsActive);
             msg.Write(progressTimer);
         }

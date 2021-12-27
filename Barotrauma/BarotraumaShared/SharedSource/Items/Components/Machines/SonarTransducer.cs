@@ -8,6 +8,8 @@ namespace Barotrauma.Items.Components
 
         private float sendSignalTimer;
 
+        public Sonar ConnectedSonar;
+
         public SonarTransducer(Item item, XElement element) : base(item, element)
         {
             IsActive = true;
@@ -17,7 +19,7 @@ namespace Barotrauma.Items.Components
         {
             UpdateOnActiveEffects(deltaTime);
 
-            CurrPowerConsumption = powerConsumption;
+            CurrPowerConsumption = powerConsumption * (ConnectedSonar?.CurrentMode == Sonar.Mode.Active ? 1.0f : Sonar.PassivePowerConsumption);
 
             if (Voltage >= MinVoltage)
             {

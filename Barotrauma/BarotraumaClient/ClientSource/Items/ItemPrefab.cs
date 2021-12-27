@@ -11,7 +11,7 @@ namespace Barotrauma
     class BrokenItemSprite
     {
         //sprite will be rendered if the condition of the item is below this
-        public readonly float MaxCondition;
+        public readonly float MaxConditionPercentage;
         public readonly Sprite Sprite;
         public readonly bool FadeIn;
         public readonly Point Offset;
@@ -19,7 +19,7 @@ namespace Barotrauma
         public BrokenItemSprite(Sprite sprite, float maxCondition, bool fadeIn, Point offset)
         {
             Sprite = sprite;
-            MaxCondition = MathHelper.Clamp(maxCondition, 0.0f, 100.0f);
+            MaxConditionPercentage = MathHelper.Clamp(maxCondition, 0.0f, 100.0f);
             FadeIn = fadeIn;
             Offset = offset;
         }

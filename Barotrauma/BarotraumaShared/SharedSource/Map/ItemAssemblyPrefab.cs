@@ -145,8 +145,7 @@ namespace Barotrauma
 
         public static List<MapEntity> PasteEntities(Vector2 position, Submarine sub, XElement configElement, string filePath = null, bool selectInstance = false)
         {
-            int idOffset = Entity.FindFreeID(1);
-            if (MapEntity.mapEntityList.Any()) { idOffset = MapEntity.mapEntityList.Max(e => e.ID); }
+            int idOffset = Entity.FindFreeIdBlock(configElement.Elements().Count());
             List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, filePath, idOffset);
             if (entities.Count == 0) { return entities; }
 

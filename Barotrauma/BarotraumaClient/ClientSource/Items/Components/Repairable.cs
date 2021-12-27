@@ -35,6 +35,13 @@ namespace Barotrauma.Items.Components
 
         private FixActions requestStartFixAction;
 
+        private bool qteSuccess;
+
+        private float qteTimer;
+        private const float QteDuration = 0.5f;
+        private float qteCooldown;
+        private const float QteCooldownDuration = 0.5f;
+
         public float FakeBrokenTimer;
 
         [Serialize("", false, description: "An optional description of the needed repairs displayed in the repair interface.")]
@@ -55,14 +62,13 @@ namespace Barotrauma.Items.Components
             if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) { return false; }
             if (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition) { return true; }
 
-            float maxRepairConditionMultiplier = GetMaxRepairConditionMultiplier(character);
-            if (item.Condition / maxRepairConditionMultiplier < RepairThreshold) { return true; }
+            float defaultMaxCondition = item.MaxCondition / item.MaxRepairConditionMultiplier;
+
+            if (MathUtils.Percentage(item.Condition, defaultMaxCondition) < RepairThreshold) { return true; }
 
             if (CurrentFixer == character)
             {
-                float condition = item.Condition / item.MaxRepairConditionMultiplier;
-                float maxCondition = item.MaxCondition / item.MaxRepairConditionMultiplier;
-                if (condition < maxCondition * maxRepairConditionMultiplier)
+                if (item.Condition < item.MaxCondition)
                 {
                     return true;
                 }
@@ -143,10 +149,13 @@ namespace Barotrauma.Items.Components
 
             progressBar = new GUIProgressBar(new RectTransform(new Vector2(0.6f, 1.0f), progressBarHolder.RectTransform),
                 color: GUI.Style.Green, barSize: 0.0f, style: "DeviceProgressBar");
+
             progressBarOverlayText = new GUITextBlock(new RectTransform(Vector2.One, progressBar.RectTransform), string.Empty, font: GUI.SubHeadingFont, textAlignment: Alignment.Center)
             {
                 IgnoreLayoutGroups = true
             };
+
+            qteTimer = QteDuration;
 
             repairButtonText = TextManager.Get("RepairButton");
             repairingText = TextManager.Get("Repairing");
@@ -156,6 +165,11 @@ namespace Barotrauma.Items.Components
                 {
                     requestStartFixAction = FixActions.Repair;
                     item.CreateClientEvent(this);
+                    return true;
+                },
+                OnButtonDown = () =>
+                {
+                    QTEAction();
                     return true;
                 }
             };
@@ -180,6 +194,11 @@ namespace Barotrauma.Items.Components
                 {
                     requestStartFixAction = FixActions.Sabotage;
                     item.CreateClientEvent(this);
+                    return true;
+                },
+                OnButtonDown = () =>
+                {
+                    QTEAction();
                     return true;
                 }
             };
@@ -251,6 +270,20 @@ namespace Barotrauma.Items.Components
                 {
                     repairSoundChannel = SoundPlayer.PlaySound("repair", item.WorldPosition, hullGuess: item.CurrentHull);
                 }
+
+                if (qteCooldown > 0.0f)
+                {
+                    qteCooldown -= deltaTime;
+                    if (qteCooldown <= 0.0f)
+                    {
+                        qteTimer = QteDuration;
+                    }
+                }
+                else
+                {
+                    qteTimer -= deltaTime * (qteTimer / QteDuration);
+                    if (qteTimer < 0.0f) { qteTimer = QteDuration; }                
+                }
             }
             else
             {
@@ -268,6 +301,26 @@ namespace Barotrauma.Items.Components
             progressBar.BarSize = item.Condition / defaultMaxCondition;
             progressBar.Color = ToolBox.GradientLerp(progressBar.BarSize, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green);
 
+            Rectangle sliderRect = progressBar.GetSliderRect(1.0f);
+            Color qteSliderColor = Color.White;
+            if (qteCooldown > 0.0f)
+            {
+                qteSliderColor = qteSuccess ? GUI.Style.Green : GUI.Style.Red * 0.5f;
+                progressBar.Color = ToolBox.GradientLerp(qteCooldown / QteCooldownDuration, progressBar.Color, qteSliderColor, Color.White);
+            }
+            else
+            {
+                if (qteTimer / QteDuration <= item.Condition / item.MaxCondition)
+                {
+                    qteSliderColor = Color.Lerp(qteSliderColor, GUI.Style.Green, 0.5f);
+                }
+            }
+
+            progressBar.Parent.Parent.Parent.DrawManually(spriteBatch, true);
+            GUI.DrawRectangle(spriteBatch,
+                    new Rectangle(sliderRect.X + (int)((qteTimer / QteDuration) * sliderRect.Width), sliderRect.Y - 5, 2, sliderRect.Height + 10),
+                    qteSliderColor, true);
+
             if (item.Condition > defaultMaxCondition)
             {
                 float extraCondition = item.MaxCondition * (item.MaxRepairConditionMultiplier - 1.0f);
@@ -280,9 +333,9 @@ namespace Barotrauma.Items.Components
                 progressBarOverlayText.Visible = false;
             }
 
-            RepairButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Repair)) && !item.IsFullCondition && item.ConditionPercentage < RepairThreshold;
-            RepairButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Repair) ? 
-                repairButtonText : 
+            RepairButton.Enabled = (currentFixerAction == FixActions.None || CurrentFixer == character) && !item.IsFullCondition;
+            RepairButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Repair) ?
+                repairButtonText :
                 repairingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
             SabotageButton.Visible = character.IsTraitor;
@@ -350,6 +403,30 @@ namespace Barotrauma.Items.Components
             repairSoundChannel = null;
         }
 
+        private void QTEAction()
+        {
+            if (currentFixerAction == FixActions.Repair)
+            {
+                float defaultMaxCondition = item.MaxCondition / item.MaxRepairConditionMultiplier;
+                qteSuccess = qteCooldown <= 0.0f && qteTimer / QteDuration <= item.Condition / defaultMaxCondition;
+            }
+            else
+            {
+                return;
+            }
+
+            if (!GameMain.IsMultiplayer) { RepairBoost(qteSuccess); }
+
+            SoundPlayer.PlayUISound(qteSuccess ? GUISoundType.IncreaseQuantity : GUISoundType.DecreaseQuantity);
+
+            //on failure during cooldown reset cursor to beginning
+            if (!qteSuccess && qteCooldown > 0.0f) { qteTimer = QteDuration; }
+            qteCooldown = QteCooldownDuration;
+            //this will be set on button down so we can reset it here
+            requestStartFixAction = FixActions.None;
+            item.CreateClientEvent(this);
+        }
+
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             deteriorationTimer = msg.ReadSingle();
@@ -361,11 +438,17 @@ namespace Barotrauma.Items.Components
             currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
             CurrentFixer = currentFixerID != 0 ? Entity.FindEntityByID(currentFixerID) as Character : null;
             item.MaxRepairConditionMultiplier = GetMaxRepairConditionMultiplier(CurrentFixer);
+            if (CurrentFixer == null)
+            {
+                qteTimer = QteDuration;
+                qteCooldown = 0.0f;
+            }
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             msg.WriteRangedInteger((int)requestStartFixAction, 0, 2);
+            msg.Write(qteSuccess);
         }
     }
 }

@@ -1058,11 +1058,17 @@ namespace Barotrauma
         /// <param name="inclusive">Does being exactly at the edge of the hull count as being inside?</param>
         public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
         {
-            if (EntityGrids == null) return null;
+            if (EntityGrids == null)
+            {
+                return null;
+            }
 
             if (guess != null)
             {
-                if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position, inclusive)) return guess;
+                if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position, inclusive))
+                {
+                    return guess;
+                }
             }
 
             foreach (EntityGrid entityGrid in EntityGrids)
@@ -1088,15 +1094,19 @@ namespace Barotrauma
                         continue;
                     }
                 }
-
                 Vector2 transformedPosition = position;
-                if (useWorldCoordinates && entityGrid.Submarine != null) transformedPosition -= entityGrid.Submarine.Position;
-
+                if (useWorldCoordinates && entityGrid.Submarine != null)
+                {
+                    transformedPosition -= entityGrid.Submarine.Position;
+                }
                 var entities = entityGrid.GetEntities(transformedPosition);
-                if (entities == null) continue;
+                if (entities == null) { continue; }
                 foreach (Hull hull in entities)
                 {
-                    if (Submarine.RectContains(hull.rect, transformedPosition, inclusive)) return hull;
+                    if (Submarine.RectContains(hull.rect, transformedPosition, inclusive))
+                    {
+                        return hull;
+                    }
                 }
             }
 
@@ -1565,7 +1575,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Error - tried to save a hull that's not a part of any submarine.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Hull.Save:WorldHull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Hull.Save:WorldHull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return null;
             }
 

@@ -14,6 +14,7 @@ namespace Barotrauma.Items.Components
     partial class Turret : Powered, IDrawableComponent, IServerSerializable
     {
         private Sprite crosshairSprite, crosshairPointerSprite;
+        public Sprite WeaponIndicatorSprite;
 
         private GUIProgressBar powerIndicator;
 
@@ -133,6 +134,9 @@ namespace Barotrauma.Items.Components
                 {
                     case "crosshair":
                         crosshairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));
+                        break;
+                    case "weaponindicator":
+                        WeaponIndicatorSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));
                         break;
                     case "crosshairpointer":
                         crosshairPointerSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));

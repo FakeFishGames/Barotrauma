@@ -147,7 +147,14 @@ namespace Barotrauma.Steam
 
                     if (currentLobby == null)
                     {
-                        DebugConsole.ThrowError("Failed to create Steam lobby");
+                        DebugConsole.ThrowError("Failed to create Steam lobby: returned lobby was null");
+                        lobbyState = LobbyState.NotConnected;
+                        return;
+                    }
+
+                    if (currentLobby.Value.Result != Steamworks.Result.OK)
+                    {
+                        DebugConsole.ThrowError($"Failed to create Steam lobby: result was {currentLobby.Value.Result}");
                         lobbyState = LobbyState.NotConnected;
                         return;
                     }
@@ -525,18 +532,6 @@ namespace Barotrauma.Steam
         }
 
 #region Connecting to servers
-        private static Steamworks.AuthTicket currentTicket = null;
-        public static Steamworks.AuthTicket GetAuthSessionTicket()
-        {
-            if (!isInitialized)
-            {
-                return null;
-            }
-
-            currentTicket?.Cancel();
-            currentTicket = Steamworks.SteamUser.GetAuthSessionTicket();
-            return currentTicket;
-        }
 
         public static Steamworks.BeginAuthResult StartAuthSession(byte[] authTicketData, ulong clientSteamID)
         {
@@ -884,9 +879,9 @@ namespace Barotrauma.Steam
 
             catch (Exception e)
             {
-                string errorMsg = "Failed to save workshop item preview image to \"" + previewImagePath + "\" when creating workshop item staging folder.";
+                string errorMsg = "Failed to save workshop item preview image when creating workshop item staging folder.";
                 GameAnalyticsManager.AddErrorEventOnce("SteamManager.CreateWorkshopItemStaging:WriteAllBytesFailed" + previewImagePath,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + e.Message);
+                    GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + e.Message);
             }
 
             return true;
@@ -935,7 +930,7 @@ namespace Barotrauma.Steam
             return workshopPublishStatus;
         }
 
-        private static IEnumerable<object> PublishItem(WorkshopPublishStatus workshopPublishStatus)
+        private static IEnumerable<CoroutineStatus> PublishItem(WorkshopPublishStatus workshopPublishStatus)
         {
             if (!isInitialized)
             {
@@ -1434,8 +1429,8 @@ namespace Barotrauma.Steam
                     "\" not found. Could not combine path (" + (item.Directory ?? "directory name empty") + ").";
                 DebugConsole.ThrowError(errorMessage);
                 GameAnalyticsManager.AddErrorEventOnce("SteamManager.CheckWorkshopItemInstalled:PathCombineException" + item.Title,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    errorMessage);
+                    GameAnalyticsManager.ErrorSeverity.Error,
+                    "Metadata file for a Workshop item not found. Could not combine path.");
                 return false;
             }
 
@@ -1567,8 +1562,8 @@ namespace Barotrauma.Steam
                         }
                         GameAnalyticsManager.AddErrorEventOnce(
                             "SteamManager.AutoUpdateWorkshopItems:" + e.Message,
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                            "Failed to autoupdate workshop item \"" + item.Title + "\". " + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
+                            GameAnalyticsManager.ErrorSeverity.Error,
+                            "Failed to autoupdate workshop item. " + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
                     });
                 }
             }

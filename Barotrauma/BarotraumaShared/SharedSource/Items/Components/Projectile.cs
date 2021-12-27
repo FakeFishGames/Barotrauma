@@ -61,6 +61,13 @@ namespace Barotrauma.Items.Components
 
         public List<Body> IgnoredBodies;
 
+        /// <summary>
+        /// The item that launched this projectile (if any)
+        /// </summary>
+        public Item Launcher;
+
+        private Character stickTargetCharacter;
+
         private Character _user;
         public Character User
         {
@@ -322,6 +329,7 @@ namespace Barotrauma.Items.Components
                     item.body.SetTransform(item.body.SimPosition, launchAngle);
                     float modifiedLaunchImpulse = LaunchImpulse * (1 + Rand.Range(-ImpulseSpread, ImpulseSpread));
                     DoLaunch(launchDir * modifiedLaunchImpulse * item.body.Mass);
+                    System.Diagnostics.Debug.WriteLine("launch: " + modifiedLaunchImpulse + "   -   " + item.body.LinearVelocity);
                 }
             }
             User = character;
@@ -345,7 +353,7 @@ namespace Barotrauma.Items.Components
             launchPos = item.SimPosition;
 
             item.body.Enabled = true;            
-            item.body.ApplyLinearImpulse(impulse, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.9f);
+            item.body.ApplyLinearImpulse(impulse, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.95f);
             
             item.body.FarseerBody.OnCollision += OnProjectileCollision;
             item.body.FarseerBody.IsBullet = true;
@@ -521,11 +529,13 @@ namespace Barotrauma.Items.Components
 
                 if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return -1; }
                 if (fixture.Body.UserData as string == "ruinroom" || fixture.Body?.UserData is Hull || fixture.UserData is Hull) { return -1; }
-
-                //ignore everything else than characters, sub walls and level walls
-                if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return -1; }
+                if (!(fixture.Body.UserData is Holdable holdable && holdable.CanPush)) 
+                {
+                    //ignore everything else than characters, sub walls and level walls
+                    if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
+                        !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
+                        !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return -1; }
+                }
 
                 //if doing the raycast in a submarine's coordinate space, ignore anything that's not in that sub
                 if (submarine != null)
@@ -564,7 +574,7 @@ namespace Barotrauma.Items.Components
                 hits.Add(new HitscanResult(fixture, point, normal, fraction));
 
                 return 1;
-            }, rayStart, rayEnd, Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel);
+            }, rayStart, rayEnd, Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking);
 
             return hits;
         }
@@ -614,8 +624,8 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            //target very far from the item -> update the item's transform to make sure it's inside the same sub as the target (or outside)
-            if (Math.Abs(stickJoint.JointTranslation) > 100.0f)
+            // Update the item's transform to make sure it's inside the same sub as the target (or outside)
+            if (StickTarget?.UserData is Limb target && target.Submarine != item.Submarine || Math.Abs(stickJoint.JointTranslation) > 100.0f)
             {
                 item.UpdateTransform();
             }
@@ -752,7 +762,7 @@ namespace Barotrauma.Items.Components
                 if (Attack != null) { attackResult = Attack.DoDamageToLimb(User ?? Attacker, limb, item.WorldPosition, 1.0f); }
                 if (limb.character != null) { character = limb.character; }
             }
-            else if (target.Body.UserData is Item targetItem)
+            else if ((target.Body.UserData as Item ?? (target.Body.UserData as ItemComponent)?.Item) is Item targetItem)
             {
                 if (targetItem.Removed) { return false; }
                 if (Attack != null && targetItem.Prefab.DamagedByProjectiles && targetItem.Condition > 0) 
@@ -866,7 +876,7 @@ namespace Barotrauma.Items.Components
                         (DoesStick ||
                         (StickToCharacters && (target.Body.UserData is Limb || target.Body.UserData is Character)) ||
                         (StickToStructures && target.Body.UserData is Structure) ||
-                        (StickToItems && target.Body.UserData is Item)))                
+                        (StickToItems && target.Body.UserData is Item)))
             {
                 Vector2 dir = new Vector2(
                     (float)Math.Cos(item.body.Rotation),
@@ -965,9 +975,14 @@ namespace Barotrauma.Items.Components
             GameMain.World.Add(stickJoint);
 
             IsActive = true;
+            if (targetBody.UserData is Limb limb)
+            {
+                stickTargetCharacter = limb.character;
+                stickTargetCharacter.AttachedProjectiles.Add(this);
+            }
         }
 
-        private void Unstick()
+        public void Unstick()
         {
             StickTarget = null;
             if (stickJoint != null)
@@ -979,25 +994,21 @@ namespace Barotrauma.Items.Components
                 stickJoint = null;
             }
             if (!item.body.FarseerBody.IsBullet) { IsActive = false; }
+            item.GetComponent<Rope>()?.Snap();
+            if (stickTargetCharacter != null)
+            {
+                stickTargetCharacter.AttachedProjectiles.Remove(this);
+                stickTargetCharacter = null;
+            }
         }
 
         protected override void RemoveComponentSpecific()
         {
             base.RemoveComponentSpecific();
-            if (stickJoint != null)
+            if (IsStuckToTarget || stickJoint != null || stickTargetCharacter != null)
             {
-                try
-                {
-                    GameMain.World.Remove(stickJoint);
-                }
-                catch
-                {
-                    //the body that the projectile was stuck to has been removed
-                }
-
-                stickJoint = null;
+                Unstick();
             }
-
         }
         partial void LaunchProjSpecific(Vector2 startLocation, Vector2 endLocation);
     }

@@ -141,7 +141,7 @@ namespace Barotrauma.Tutorials
             captain_mechanic.AIController.Enabled = captain_security.AIController.Enabled = captain_engineer.AIController.Enabled = false;
         }
 
-        public override IEnumerable<object> UpdateState()
+        public override IEnumerable<CoroutineStatus> UpdateState()
         {
             while (GameMain.Instance.LoadingScreenOpen) yield return null;
 

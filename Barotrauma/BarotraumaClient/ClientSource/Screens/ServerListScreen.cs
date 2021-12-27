@@ -578,6 +578,7 @@ namespace Barotrauma
                             RecalculateHolder();
                         }
                         serverInfo.CreatePreviewWindow(serverPreview.Content);
+                        serverPreview.ForceLayoutRecalculation();
                         btn.Children.ForEach(c => c.SpriteEffects = serverPreviewContainer.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
                     }
                     return true;
@@ -1715,7 +1716,7 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(WaitForRefresh());
         }
 
-        private IEnumerable<object> WaitForRefresh()
+        private IEnumerable<CoroutineStatus> WaitForRefresh()
         {
             waitingForRefresh = true;
             if (refreshDisableTimer > DateTime.Now)
@@ -2058,7 +2059,7 @@ namespace Barotrauma
             FilterServers();
         }
 
-        private IEnumerable<object> EstimateLobbyPing(ServerInfo serverInfo, GUITextBlock serverPingText)
+        private IEnumerable<CoroutineStatus> EstimateLobbyPing(ServerInfo serverInfo, GUITextBlock serverPingText)
         {
             while (!steamPingInfoReady)
             {
@@ -2096,7 +2097,7 @@ namespace Barotrauma
             waitingForRefresh = false;
         }
 
-        private IEnumerable<object> SendMasterServerRequest()
+        private IEnumerable<CoroutineStatus> SendMasterServerRequest()
         {
             RestClient client = null;
             try
@@ -2271,7 +2272,7 @@ namespace Barotrauma
             return true;
         }
         
-        private IEnumerable<object> ConnectToServer(string endpoint, string serverName)
+        private IEnumerable<CoroutineStatus> ConnectToServer(string endpoint, string serverName)
         {
             string serverIP = null;
             UInt64 serverSteamID = SteamManager.SteamIDStringToUInt64(endpoint);
@@ -2375,10 +2376,9 @@ namespace Barotrauma
                     }
                     catch (Exception ex)
                     {
-                        string errorMsg = "Failed to ping a server (" + ip + ") - " + (ex?.InnerException?.Message ?? ex.Message);
-                        GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + ip, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + ip, GameAnalyticsManager.ErrorSeverity.Warning, "Failed to ping a server - " + (ex?.InnerException?.Message ?? ex.Message));
 #if DEBUG
-                        DebugConsole.NewMessage(errorMsg, Color.Red);
+                        DebugConsole.NewMessage("Failed to ping a server (" + ip + ") - " + (ex?.InnerException?.Message ?? ex.Message), Color.Red);
 #endif
                     }
                 }

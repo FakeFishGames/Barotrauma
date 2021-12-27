@@ -36,7 +36,7 @@ namespace Barotrauma
                     CharacterStateInfo serverPos = character.MemState.Last();
                     if (!character.isSynced)
                     {
-                        SetPosition(serverPos.Position, false);
+                        SetPosition(serverPos.Position, lerp: false);
                         Collider.LinearVelocity = Vector2.Zero;
                         character.MemLocalState.Clear();
                         character.LastNetworkUpdateID = serverPos.ID;
@@ -63,7 +63,10 @@ namespace Barotrauma
                         {
                             foreach (var ic in character.MemState[0].SelectedItem.Components)
                             {
-                                if (ic.CanBeSelected) ic.Select(character);
+                                if (ic.CanBeSelected)
+                                {
+                                    ic.Select(character);
+                                }
                             }
                         }
                         character.SelectedConstruction = character.MemState[0].SelectedItem;
@@ -98,6 +101,16 @@ namespace Barotrauma
                         if (distSqrd > 10.0f || !character.CanMove)
                         {
                             Collider.TargetRotation = newRotation;
+                            if (distSqrd > 10.0f)
+                            {
+                                //teleported very far - see if we need to move to another sub
+                                Hull serverHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(newPosition), CurrentHull, newPosition.Y < lowestSubPos);
+                                if (currentHull != null && serverHull != null && serverHull.Submarine != currentHull.Submarine)
+                                {
+                                    character.Submarine = serverHull.Submarine;
+                                    character.CurrentHull = CurrentHull = serverHull;
+                                }
+                            }
                             SetPosition(newPosition, lerp: distSqrd < 5.0f, ignorePlatforms: false);
                         }
                         else
@@ -159,7 +172,7 @@ namespace Barotrauma
 
                 if (!character.isSynced)
                 {
-                    SetPosition(serverPos.Position, false);
+                    SetPosition(serverPos.Position, lerp: false);
                     Collider.LinearVelocity = Vector2.Zero;
                     character.MemLocalState.Clear();
                     character.LastNetworkUpdateID = serverPos.ID;
@@ -194,7 +207,7 @@ namespace Barotrauma
                         {
                             if (character.SelectedConstruction != serverPos.SelectedItem)
                             {
-                                serverPos.SelectedItem.TryInteract(character, true, true);
+                                serverPos.SelectedItem.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true);
                             }
                             character.SelectedConstruction = serverPos.SelectedItem;
                         }
@@ -448,8 +461,8 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("Failed to draw a ragdoll, limbs have been removed. Character: \"" + character.Name + "\", removed: " + character.Removed + "\n" + Environment.StackTrace.CleanupStackTrace());
                 GameAnalyticsManager.AddErrorEventOnce("Ragdoll.Draw:LimbsRemoved", 
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Failed to draw a ragdoll, limbs have been removed. Character: \"" + character.Name + "\", removed: " + character.Removed + "\n" + Environment.StackTrace.CleanupStackTrace());
+                    GameAnalyticsManager.ErrorSeverity.Error,
+                    "Failed to draw a ragdoll, limbs have been removed. Character: \"" + character.SpeciesName + "\", removed: " + character.Removed + "\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -460,12 +473,17 @@ namespace Barotrauma
             }
 
             float depthOffset = GetDepthOffset();
+            if (!MathUtils.NearlyEqual(depthOffset, 0.0f))
+            {
+                foreach (Limb limb in limbs) { limb.ActiveSprite.Depth += depthOffset; }
+            }
             for (int i = 0; i < limbs.Length; i++)
             {
-                var limb = inversedLimbDrawOrder[i];
-                if (depthOffset != 0.0f) { limb.ActiveSprite.Depth += depthOffset; }
-                limb.Draw(spriteBatch, cam, color);
-                if (depthOffset != 0.0f) { limb.ActiveSprite.Depth -= depthOffset; }
+                inversedLimbDrawOrder[i].Draw(spriteBatch, cam, color);
+            }
+            if (!MathUtils.NearlyEqual(depthOffset, 0.0f))
+            {
+                foreach (Limb limb in limbs) { limb.ActiveSprite.Depth -= depthOffset; }
             }
             LimbJoints.ForEach(j => j.Draw(spriteBatch));
         }
@@ -486,7 +504,14 @@ namespace Barotrauma
                 if (character.WorldPosition.X < character.SelectedConstruction.WorldPosition.X)
                 {
                     //at the left side of the ladder, needs to be drawn in front of the rungs
-                    depthOffset = Math.Max(ladder.BackgroundSpriteDepth - 0.01f - maxDepth, 0.0f);
+                    if (maxDepth > ladder.BackgroundSpriteDepth)
+                    {
+                        depthOffset = Math.Max(ladder.BackgroundSpriteDepth - 0.01f - maxDepth, 0.0f);
+                    }
+                    else
+                    {
+                        depthOffset = Math.Max(ladder.Item.GetDrawDepth() + 0.0001f - minDepth, -minDepth);
+                    }
                 }
                 else
                 {
@@ -581,10 +606,10 @@ namespace Barotrauma
             if (this is HumanoidAnimController humanoid)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(humanoid.RightHandIKPos);
-                if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.Position; }
+                if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.DrawPosition; }
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUI.Style.Green, true);
                 pos = ConvertUnits.ToDisplayUnits(humanoid.LeftHandIKPos);
-                if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.Position; }
+                if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.DrawPosition; }
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUI.Style.Green, true);
 
                 Vector2 aimPos = humanoid.AimSourceWorldPos;

@@ -5,18 +5,21 @@ namespace Barotrauma.Abilities
 {
     class CharacterAbilityGainSimultaneousSkill : CharacterAbility
     {
-        private string skillIdentifier;
+        private readonly string skillIdentifier;
+        private readonly bool ignoreAbilitySkillGain;
 
         public CharacterAbilityGainSimultaneousSkill(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             skillIdentifier = abilityElement.GetAttributeString("skillidentifier", "").ToLowerInvariant();
+            ignoreAbilitySkillGain = abilityElement.GetAttributeBool("ignoreabilityskillgain", true);
         }
 
         protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if ((abilityObject as IAbilityValue)?.Value is float skillIncrease)
+            if (abilityObject is AbilitySkillGain abilitySkillGain)
             {
-                Character.Info?.IncreaseSkillLevel(skillIdentifier, skillIncrease);
+                if (ignoreAbilitySkillGain && !abilitySkillGain.GainedFromAbility) { return; }
+                Character.Info?.IncreaseSkillLevel(skillIdentifier, abilitySkillGain.Value, gainedFromAbility: true);
             }
             else
             {

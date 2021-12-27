@@ -74,6 +74,19 @@ namespace Barotrauma.Steam
             return Steamworks.SteamClient.Name;
         }
 
+        private static Steamworks.AuthTicket currentTicket = null;
+        public static Steamworks.AuthTicket GetAuthSessionTicket()
+        {
+            if (!isInitialized)
+            {
+                return null;
+            }
+
+            currentTicket?.Cancel();
+            currentTicket = Steamworks.SteamUser.GetAuthSessionTicket();
+            return currentTicket;
+        }
+
         public static bool OverlayCustomURL(string url)
         {
             if (!isInitialized || !Steamworks.SteamClient.IsValid)

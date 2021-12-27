@@ -202,7 +202,7 @@ namespace Barotrauma
                     HumanAIController.FaceTarget(target.Item);
                     if (character.SelectedConstruction != target.Item)
                     {
-                        target.Item.TryInteract(character, false, true);
+                        target.Item.TryInteract(character, forceSelectKey: true);
                     }
                     if (component.AIOperate(deltaTime, character, this))
                     {
@@ -213,7 +213,6 @@ namespace Barotrauma
                 {
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50)
                     {
-                        DialogueIdentifier = "dialogcannotreachtarget",
                         TargetName = target.Item.Name,
                         endNodeFilter = node => node.Waypoint.Ladders == null
                     },

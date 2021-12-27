@@ -147,7 +147,7 @@ namespace Barotrauma
                    MathUtils.NearlyEqual(rangeA, rangeB);
         }
 
-        public static IEnumerable<object> Init()
+        public static IEnumerable<CoroutineStatus> Init()
         {
             OverrideMusicType = null;
 
@@ -470,14 +470,14 @@ namespace Barotrauma
                 {
                     string errorMsg = "Failed to update water ambience volume - submarine's movement value invalid (" + movementSoundVolume + ", sub velocity: " + sub.Velocity + ")";
                     DebugConsole.Log(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("SoundPlayer.UpdateWaterAmbience:InvalidVolume", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("SoundPlayer.UpdateWaterAmbience:InvalidVolume", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     movementSoundVolume = 0.0f;
                 }
                 if (!MathUtils.IsValid(insideSubFactor))
                 {
                     string errorMsg = "Failed to update water ambience volume - inside sub value invalid (" + insideSubFactor + ")";
                     DebugConsole.Log(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("SoundPlayer.UpdateWaterAmbience:InvalidVolume", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("SoundPlayer.UpdateWaterAmbience:InvalidVolume", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     insideSubFactor = 0.0f;
                 }
             }
@@ -609,7 +609,7 @@ namespace Barotrauma
                         flowSoundChannels[i] = FlowSounds[i].Play(1.0f, FlowSoundRange, soundPos);
                         flowSoundChannels[i].Looping = true;
                     }
-                    flowSoundChannels[i].Gain = Math.Max(flowVolumeRight[i], flowVolumeLeft[i]);
+                    flowSoundChannels[i].Gain = Math.Min(Math.Max(flowVolumeRight[i], flowVolumeLeft[i]), 1.0f);
                     flowSoundChannels[i].Position = new Vector3(soundPos, 0.0f);
                 }
             }
@@ -790,7 +790,7 @@ namespace Barotrauma
             if (sound == null)
             {
                 string errorMsg = "Error in SoundPlayer.PlaySound (sound was null)\n" + Environment.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("SoundPlayer.PlaySound:SoundNull" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("SoundPlayer.PlaySound:SoundNull" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return null;
             }
 
@@ -826,7 +826,7 @@ namespace Barotrauma
                 //find appropriate music for the current situation
                 string currentMusicType = GetCurrentMusicType();
                 float currentIntensity = GameMain.GameSession?.EventManager != null ?
-                    GameMain.GameSession.EventManager.CurrentIntensity * 100.0f : 0.0f;
+                    GameMain.GameSession.EventManager.MusicIntensity * 100.0f : 0.0f;
 
                 IEnumerable<BackgroundMusic> suitableMusic = GetSuitableMusicClips(currentMusicType, currentIntensity);
                 int mainTrackIndex = 0;

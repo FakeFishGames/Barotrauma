@@ -169,7 +169,7 @@ namespace Barotrauma.Items.Components
                     CollidesWith = Physics.CollisionCharacter,
                     CollisionCategories = Physics.CollisionItemBlocking,
                     Enabled = false,
-                    UserData = "Holdable.Pusher"
+                    UserData = this
                 };
                 Pusher.FarseerBody.OnCollision += OnPusherCollision;
                 Pusher.FarseerBody.FixedRotation = false;

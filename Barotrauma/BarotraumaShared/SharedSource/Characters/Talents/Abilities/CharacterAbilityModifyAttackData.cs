@@ -5,7 +5,7 @@ namespace Barotrauma.Abilities
 {
     class CharacterAbilityModifyAttackData : CharacterAbility
     {
-        private readonly List<Affliction> afflictions;
+        private readonly List<Affliction> afflictions = new List<Affliction>();
 
         private readonly float addedDamageMultiplier;
         private readonly float addedPenetration;

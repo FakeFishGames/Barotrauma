@@ -92,6 +92,11 @@ namespace Barotrauma
             ParentEvent.AddTargetPredicate(Tag, e => e is Item it && SubmarineTypeMatches(it.Submarine) && it.HasTag(tag));
         }
 
+        private void TagHullsByName(string name)
+        {
+            ParentEvent.AddTargetPredicate(Tag, e => e is Hull h && SubmarineTypeMatches(h.Submarine) && h.RoomName.Contains(name, StringComparison.OrdinalIgnoreCase));
+        }
+
         private bool SubmarineTypeMatches(Submarine sub)
         {
             if (SubmarineType == SubType.Any) { return true; }
@@ -143,6 +148,9 @@ namespace Barotrauma
                         break;
                     case "itemtag":
                         if (kvp.Length > 1) { TagItemsByTag(kvp[1].Trim()); }
+                        break;
+                    case "hullname":
+                        if (kvp.Length > 1) { TagHullsByName(kvp[1].Trim()); }
                         break;
                 }
             }

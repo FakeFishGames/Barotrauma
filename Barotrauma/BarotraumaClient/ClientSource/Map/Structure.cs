@@ -438,7 +438,7 @@ namespace Barotrauma
                     for (int i = 0; i < Bodies.Count; i++)
                     {
                         Vector2 pos = FarseerPhysics.ConvertUnits.ToDisplayUnits(Bodies[i].Position);
-                        if (Submarine != null) pos += Submarine.Position;
+                        if (Submarine != null) { pos += Submarine.DrawPosition; }
                         pos.Y = -pos.Y;
                         GUI.DrawRectangle(spriteBatch,
                             pos,
@@ -536,7 +536,7 @@ namespace Barotrauma
                 invalidMessage = true;
                 string errorMsg = $"Error while reading a network event for the structure \"{Name} ({ID})\". Section count does not match (server: {sectionCount} client: {Sections.Length})";
                 DebugConsole.NewMessage(errorMsg, Color.Red);
-                GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
             }
 
             for (int i = 0; i < sectionCount; i++)

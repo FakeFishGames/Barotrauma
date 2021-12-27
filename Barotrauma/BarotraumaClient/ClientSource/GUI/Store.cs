@@ -266,7 +266,7 @@ namespace Barotrauma
                         };
                         if (balanceAfterTransaction != CurrentLocation.StoreCurrentBalance)
                         {
-                            var newStatus = Location.GetStoreBalanceStatus(balanceAfterTransaction);
+                            var newStatus = CurrentLocation.GetStoreBalanceStatus(balanceAfterTransaction);
                             if (CurrentLocation.ActiveStoreBalanceStatus.SellPriceModifier != newStatus.SellPriceModifier)
                             {
                                 string tooltipTag = newStatus.SellPriceModifier > CurrentLocation.ActiveStoreBalanceStatus.SellPriceModifier ?

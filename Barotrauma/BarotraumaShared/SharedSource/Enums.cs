@@ -60,6 +60,7 @@
         OnGainMissionMoney,
         OnLocationDiscovered,
         OnItemDeconstructed,
+        OnItemDeconstructedByAlly,
         OnItemDeconstructedMaterial,
         OnItemDeconstructedInventory,
         OnStopTinkering,
@@ -68,6 +69,7 @@
         OnCrewGeneticMaterialCombinedOrRefined,
         AfterSubmarineAttacked,
         OnApplyTreatment,
+        OnStatusEffectIdentifier,
     }
 
     public enum StatTypes
@@ -111,6 +113,7 @@
         GeneticMaterialRefineBonus,
         GeneticMaterialTaintedProbabilityReductionOnCombine,
         SkillGainSpeed,
+        MedicalItemApplyingMultiplier,
         // Tinker
         TinkeringDuration,
         TinkeringStrength,

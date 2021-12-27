@@ -26,9 +26,9 @@ namespace Barotrauma
 
         private float findPathTimer;
 
-        private float buttonPressCooldown;
-
-        const float ButtonPressInterval = 0.25f;
+        private const float buttonPressCooldown = 3;
+        private float checkDoorsTimer;
+        private float buttonPressTimer;
 
         public SteeringPath CurrentPath
         {
@@ -97,9 +97,10 @@ namespace Barotrauma
         public override void Update(float speed)
         {
             base.Update(speed);
-
-            buttonPressCooldown -= 1.0f / 60.0f;
-            findPathTimer -= 1.0f / 60.0f;
+            float step = 1.0f / 60.0f;
+            checkDoorsTimer -= step;
+            buttonPressTimer -= step;
+            findPathTimer -= step;
         }
 
         public void SetPath(SteeringPath path)
@@ -120,10 +121,18 @@ namespace Barotrauma
         {
             steering += base.DoSteeringSeek(targetSimPos, weight);
         }
-
+        
         public void SteeringSeek(Vector2 target, float weight, float minGapWidth = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisiblity = true)
         {
-            steering += CalculateSteeringSeek(target, weight, minGapWidth, startNodeFilter, endNodeFilter, nodeFilter, checkVisiblity);
+            if (buttonPressTimer > 0 && lastDoor.door != null && lastDoor.state && !lastDoor.door.IsOpen)
+            {
+                // We have pressed the button and are waiting for the door to open -> Hold still until we can press the button again.
+                Reset();
+            }
+            else
+            {
+                steering += CalculateSteeringSeek(target, weight, minGapWidth, startNodeFilter, endNodeFilter, nodeFilter, checkVisiblity);
+            }
         }
 
         /// <summary>
@@ -204,28 +213,23 @@ namespace Barotrauma
                     pathFinder.ApplyPenaltyToOutsideNodes = character.Submarine != null && character.PressureProtection <= 0;
                     var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", minGapSize, startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility);
                     bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null || character.Submarine != null && findPathTimer < -1 && Math.Abs(character.AnimController.TargetMovement.Combine()) <= 0;
-                    if (newPath.Unreachable || newPath.Nodes.None())
-                    {
-                        useNewPath = false;
-                    }
-                    else if (!useNewPath && currentPath != null && currentPath.CurrentNode != null)
+                    if (!useNewPath && currentPath?.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                     {
                         // Check if the new path is the same as the old, in which case we just ignore it and continue using the old path (or the progress would reset).
                         if (IsIdenticalPath())
                         {
                             useNewPath = false;
                         }
-                        else
+                        else if (!character.IsClimbing)
                         {
                             // Use the new path if it has significantly lower cost (don't change the path if it has marginally smaller cost. This reduces navigating backwards due to new path that is calculated from the node just behind us).
                             float t = (float)currentPath.CurrentIndex / (currentPath.Nodes.Count - 1);
                             useNewPath = newPath.Cost < currentPath.Cost * MathHelper.Lerp(0.95f, 0, t);
-                            if (!useNewPath && character.Submarine != null && !character.IsClimbing)
+                            if (!useNewPath && character.Submarine != null)
                             {
                                 // It's possible that the current path was calculated from a start point that is no longer valid.
                                 // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
                                 // This is a special case for cases e.g. where the character falls and thus needs a new path.
-                                // Don't do this outside or when climbing ladders, because both cause issues.
                                 useNewPath = Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 3, 2);
                             }
                         }
@@ -319,7 +323,8 @@ namespace Barotrauma
                 return currentTarget - pos2;
             }
             bool doorsChecked = false;
-            if (!character.LockHands && buttonPressCooldown <= 0.0f)
+            checkDoorsTimer = Math.Min(checkDoorsTimer, GetDoorCheckTime());
+            if (!character.LockHands && checkDoorsTimer <= 0.0f)
             {
                 CheckDoorsInPath();
                 doorsChecked = true;
@@ -340,7 +345,7 @@ namespace Barotrauma
             {
                 if (character.CanInteractWith(ladders.Item))
                 {
-                    ladders.Item.TryInteract(character, false, true);
+                    ladders.Item.TryInteract(character, forceSelectKey: true);
                 }
                 else
                 {
@@ -351,7 +356,7 @@ namespace Barotrauma
                     if (previousLadders != null && previousLadders != ladders && character.SelectedConstruction != previousLadders.Item &&
                         character.CanInteractWith(previousLadders.Item) && Math.Abs(previousLadders.Item.WorldPosition.X - ladders.Item.WorldPosition.X) < 5)
                     {
-                        previousLadders.Item.TryInteract(character, false, true);
+                        previousLadders.Item.TryInteract(character, forceSelectKey: true);
                     }
                 }
             }
@@ -391,7 +396,7 @@ namespace Barotrauma
                         // Try to change the ladder (hatches between two submarines)
                         if (character.SelectedConstruction != nextLadder.Item && nextLadder.Item.IsInsideTrigger(character.WorldPosition))
                         {
-                            nextLadder.Item.TryInteract(character, false, true);
+                            nextLadder.Item.TryInteract(character, forceSelectKey: true);
                         }
                     }
                     if (isAboveFloor || nextLadderSameAsCurrent)
@@ -491,7 +496,14 @@ namespace Barotrauma
             else
             {
                 // We'll want this to run each time, because the delegate is used to find a valid button component.
-                bool canAccessButtons = door.Item.GetConnectedComponents<Controller>(true).Any(b => b.HasAccess(character) && (buttonFilter == null || buttonFilter(b)));
+                bool canAccessButtons = false;
+                foreach (var button in door.Item.GetConnectedComponents<Controller>(true))
+                {
+                    if (button.HasAccess(character) && (buttonFilter == null || buttonFilter(button)))
+                    {
+                        canAccessButtons = true;
+                    }
+                }
                 return canAccessButtons || door.IsOpen || ShouldBreakDoor(door);
             }
         }
@@ -504,8 +516,22 @@ namespace Barotrauma
             return ConvertUnits.ToDisplayUnits(Math.Max(colliderSize.X, colliderSize.Y));
         }
 
+        private (Door door, bool state) lastDoor;
+        private float GetDoorCheckTime()
+        {
+            if (steering.LengthSquared() > 0)
+            {
+                return character.AnimController.IsMovingFast ? 0.1f : 0.3f;
+            }
+            else
+            {
+                return float.PositiveInfinity;
+            }
+        }
+
         private void CheckDoorsInPath()
         {
+            checkDoorsTimer = GetDoorCheckTime();
             if (!canOpenDoors) { return; }
             for (int i = 0; i < 5; i++)
             {
@@ -522,8 +548,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    bool closeDoors = character.IsBot && character.IsInFriendlySub || character.Params.AI != null && character.Params.AI.KeepDoorsClosed;
-                    if (i == 0 || !closeDoors)
+                    if (i == 0)
                     {
                         currentWaypoint = currentPath.CurrentNode;
                         nextWaypoint = currentPath.NextNode;
@@ -544,7 +569,7 @@ namespace Barotrauma
                         if (currentWaypoint.ConnectedDoor.LinkedGap != null)
                         {
                             // Keep the airlock doors closed, but not in ruins/wrecks
-                            if (currentWaypoint.ConnectedDoor.LinkedGap.IsRoomToRoom || currentWaypoint.Submarine?.Info.IsRuin != null || currentWaypoint.Submarine?.Info.IsWreck != null)
+                            if (currentWaypoint.ConnectedDoor.LinkedGap.IsRoomToRoom && currentWaypoint.CurrentHull is { IsWetRoom: false } || currentWaypoint.Submarine == null || currentWaypoint.Submarine.Info.IsRuin || currentWaypoint.Submarine.Info.IsWreck)
                             {
                                 shouldBeOpen = true;
                                 door = currentWaypoint.ConnectedDoor;
@@ -570,28 +595,48 @@ namespace Barotrauma
                 }
 
                 if (door == null) { return; }
+
+                if (door.BotsShouldKeepOpen) { shouldBeOpen = true; }    
                 
-                //toggle the door if it's the previous node and open, or if it's current node and closed
                 if ((door.IsOpen || door.IsBroken) != shouldBeOpen)
                 {
+                    if (!shouldBeOpen)
+                    {
+                        if (character.AIController is HumanAIController humanAI)
+                        {
+                            bool keepDoorsClosed = character.IsBot && door.Item.Submarine?.TeamID == character.TeamID || character.Params.AI != null && character.Params.AI.KeepDoorsClosed;
+                            if (!keepDoorsClosed) { return; }
+                            bool isInAirlock = door.Item.CurrentHull is { IsWetRoom: true } || character.CurrentHull is { IsWetRoom: true };
+                            if (!isInAirlock)
+                            {
+                                // Don't slam the door at anyones face
+                                if (Character.CharacterList.Any(c => c != character && humanAI.IsFriendly(c) && humanAI.VisibleHulls.Contains(c.CurrentHull) && !c.IsUnconscious))
+                                {
+                                    return;
+                                }
+                            }
+                        }
+                    }
                     Controller closestButton = null;
                     float closestDist = 0;
                     bool canAccess = CanAccessDoor(door, button =>
                     {
-                        if (currentWaypoint == null) { return true; }
                         // Check that the button is on the right side of the door.
-                        if (door.LinkedGap.IsHorizontal)
+                        if (nextWaypoint != null)
                         {
-                            int dir = Math.Sign((nextWaypoint ?? currentWaypoint).WorldPosition.X - door.Item.WorldPosition.X);
-                            if (button.Item.WorldPosition.X * dir > door.Item.WorldPosition.X * dir) { return false; }
-                        }
-                        else
-                        {
-                            int dir = Math.Sign((nextWaypoint ?? currentWaypoint).WorldPosition.Y - door.Item.WorldPosition.Y);
-                            if (button.Item.WorldPosition.Y * dir > door.Item.WorldPosition.Y * dir) { return false; }
+                            if (door.LinkedGap.IsHorizontal)
+                            {
+                                int dir = Math.Sign((nextWaypoint).WorldPosition.X - door.Item.WorldPosition.X);
+                                if (button.Item.WorldPosition.X * dir > door.Item.WorldPosition.X * dir) { return false; }
+                            }
+                            else
+                            {
+                                int dir = Math.Sign((nextWaypoint).WorldPosition.Y - door.Item.WorldPosition.Y);
+                                if (button.Item.WorldPosition.Y * dir > door.Item.WorldPosition.Y * dir) { return false; }
+                            }
                         }
                         float distance = Vector2.DistanceSquared(button.Item.WorldPosition, character.WorldPosition);
-                        if (closestButton == null || distance < closestDist)
+                        if (closestButton == null || distance < closestDist && character.CanSeeTarget(button.Item))
                         {
                             closestButton = button;
                             closestDist = distance;
@@ -600,18 +645,39 @@ namespace Barotrauma
                     });
                     if (canAccess)
                     {
+                        bool pressButton = buttonPressTimer <= 0 || lastDoor.door != door || lastDoor.state != shouldBeOpen;
                         if (door.HasIntegratedButtons)
                         {
-                            door.Item.TryInteract(character, false, true);
-                            buttonPressCooldown = ButtonPressInterval;
+                            if (pressButton && character.CanSeeTarget(door.Item))
+                            {
+                                if (door.Item.TryInteract(character, forceSelectKey: true))
+                                {
+                                    lastDoor = (door, shouldBeOpen);
+                                    buttonPressTimer = buttonPressCooldown;
+                                }
+                                else
+                                {
+                                    buttonPressTimer = 0;
+                                }
+                            }
                             break;
                         }
                         else if (closestButton != null)
                         {
-                            if (Vector2.DistanceSquared(closestButton.Item.WorldPosition, character.WorldPosition) < MathUtils.Pow(closestButton.Item.InteractDistance + GetColliderLength(), 2))
+                            if (closestDist < MathUtils.Pow2(closestButton.Item.InteractDistance + GetColliderLength()))
                             {
-                                closestButton.Item.TryInteract(character, false, true);
-                                buttonPressCooldown = ButtonPressInterval;
+                                if (pressButton)
+                                {
+                                    if (closestButton.Item.TryInteract(character, forceSelectKey: true))
+                                    {
+                                        lastDoor = (door, shouldBeOpen);
+                                        buttonPressTimer = buttonPressCooldown;
+                                    }
+                                    else
+                                    {
+                                        buttonPressTimer = 0;
+                                    }
+                                }
                                 break;
                             }
                             else
@@ -631,6 +697,7 @@ namespace Barotrauma
                                     // The button is on the wrong side of the door or a wall
                                     currentPath.Unreachable = true;
                                 }
+                                lastDoor = (null, false);
                                 return;
                             }
                         }

@@ -26,7 +26,7 @@ namespace Barotrauma
 
         public static bool ShowLinks = true;
                 
-        private HashSet<string> tags;
+        private readonly HashSet<string> tags;
 
         private bool isWire, isLogic;
 
@@ -40,6 +40,10 @@ namespace Barotrauma
             }
         }
 
+        public float HullOxygenPercentage
+        {
+            get { return CurrentHull?.OxygenPercentage ?? 0.0f; }
+        }
 
         private CampaignMode.InteractionType campaignInteractionType = CampaignMode.InteractionType.None;
         public CampaignMode.InteractionType CampaignInteractionType
@@ -64,13 +68,13 @@ namespace Barotrauma
 #endif
 
         //components that determine the functionality of the item
-        private Dictionary<Type, ItemComponent> componentsByType = new Dictionary<Type, ItemComponent>();
-        private List<ItemComponent> components;
+        private readonly Dictionary<Type, ItemComponent> componentsByType = new Dictionary<Type, ItemComponent>();
+        private readonly List<ItemComponent> components;
         /// <summary>
         /// Components that are Active or need to be updated for some other reason (status effects, sounds)
         /// </summary>
         private readonly List<ItemComponent> updateableComponents = new List<ItemComponent>();
-        private List<IDrawableComponent> drawableComponents;
+        private readonly List<IDrawableComponent> drawableComponents;
         private bool hasComponentsToDraw;
 
         public PhysicsBody body;
@@ -99,7 +103,7 @@ namespace Barotrauma
 
         private readonly List<Repairable> repairables;
 
-        private Quality qualityComponent;
+        private readonly Quality qualityComponent;
 
         private readonly Queue<float> impactQueue = new Queue<float>();
 
@@ -358,7 +362,6 @@ namespace Barotrauma
             protected set;
         }
 
-        [Serialize("", false)]
         /// <summary>
         /// Can be used by status effects or conditionals to check what item this item is contained inside
         /// </summary>
@@ -371,7 +374,6 @@ namespace Barotrauma
                     ParentInventory?.Owner?.ToString() ?? 
                     "";
             }
-            set { /*do nothing*/ }
         }
 
 
@@ -392,7 +394,6 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(false, false)]
         /// <summary>
         /// Can be used by status effects or conditionals to check if the physics body of the item is active
         /// </summary>
@@ -402,7 +403,6 @@ namespace Barotrauma
             {
                 return body != null && body.Enabled;
             }
-            set { /*do nothing*/ }
         }
 
         [Serialize(0.0f, false)]
@@ -473,7 +473,12 @@ namespace Barotrauma
         public float HealthMultiplier
         {
             get => healthMultiplier;
-            set { healthMultiplier = MathHelper.Clamp(value, 0.0f, float.PositiveInfinity); }
+            set 
+            {
+                float prevConditionPercentage = ConditionPercentage;
+                healthMultiplier = MathHelper.Clamp(value, 0.0f, float.PositiveInfinity);
+                Condition = MaxCondition * prevConditionPercentage / 100.0f;
+            }
         }
 
         private float maxRepairConditionMultiplier = 1.0f;
@@ -535,8 +540,18 @@ namespace Barotrauma
                         isActive = true;
                     }
                 }
+
+                LastConditionChange = condition - prev;
+                ConditionLastUpdated = Timing.TotalTime;
             }
         }
+
+        private double ConditionLastUpdated { get; set; }
+        private float LastConditionChange { get; set; }
+        /// <summary>
+        /// Return true if the condition of this item increased within the last second.
+        /// </summary>
+        public bool ConditionIncreasedRecently => (Timing.TotalTime < ConditionLastUpdated + 1.0f) && LastConditionChange > 0.0f;
 
         public float Health
         {
@@ -564,21 +579,26 @@ namespace Barotrauma
 
         public bool StolenDuringRound;
 
-        private bool spawnedInOutpost;
-        public bool SpawnedInOutpost
+        private bool spawnedInCurrentOutpost;
+        public bool SpawnedInCurrentOutpost
         {
-            get { return spawnedInOutpost; }
+            get { return spawnedInCurrentOutpost; }
             set
             {
-                if (!spawnedInOutpost && value)
+                if (!spawnedInCurrentOutpost && value)
                 {
                     OriginalOutpost = GameMain.GameSession?.StartLocation?.BaseName ?? "";
                 }
-                spawnedInOutpost = value;
+                spawnedInCurrentOutpost = value;
             }
         }
 
-        public bool AllowStealing = true;
+        [Serialize(true, true, alwaysUseInstanceValues: true)]
+        public bool AllowStealing
+        {
+            get;
+            set;
+        }
 
         private string originalOutpost;
         [Serialize("", true, alwaysUseInstanceValues: true)]
@@ -588,9 +608,9 @@ namespace Barotrauma
             set
             {
                 originalOutpost = value;
-                if (!string.IsNullOrEmpty(value) && GameMain.GameSession?.StartLocation?.BaseName == value)
+                if (!string.IsNullOrEmpty(value) && GameMain.GameSession?.LevelData?.Type == LevelData.LevelType.Outpost && GameMain.GameSession?.StartLocation?.BaseName == value)
                 {
-                    spawnedInOutpost = true;
+                    spawnedInCurrentOutpost = true;
                 }
             }
         }
@@ -988,7 +1008,8 @@ namespace Barotrauma
 
         partial void InitProjSpecific();
 
-        public bool IsContainerPreferred(ItemContainer container, out bool isPreferencesDefined, out bool isSecondary) => Prefab.IsContainerPreferred(this, container, out isPreferencesDefined, out isSecondary);
+        public bool IsContainerPreferred(ItemContainer container, out bool isPreferencesDefined, out bool isSecondary, bool requireConditionRestriction = false)
+            => Prefab.IsContainerPreferred(this, container, out isPreferencesDefined, out isSecondary, requireConditionRestriction);
 
         public override MapEntity Clone()
         {
@@ -1008,7 +1029,7 @@ namespace Barotrauma
                 errorMsg += "Original components: " + string.Join(", ", components.Select(c => c.GetType().ToString()));
                 errorMsg += ", cloned components: " + string.Join(", ", clone.components.Select(c => c.GetType().ToString()));
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Item.Clone:" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.Clone:" + Name, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
             }
 
             for (int i = 0; i < components.Count && i < clone.components.Count; i++)
@@ -1180,7 +1201,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "Item.SetPosition:InvalidPosition" + ID,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
                 return;
             }
@@ -1736,10 +1757,10 @@ namespace Barotrauma
             Submarine prevSub = Submarine;
 
             var projectile = GetComponent<Projectile>();
-            if (projectile?.StickTarget?.UserData is Limb limb)
+            if (projectile?.StickTarget?.UserData is Limb limb && limb.character != null)
             {
-                Submarine = body.Submarine = limb.character?.Submarine;
-                currentHull = limb.character?.CurrentHull;
+                Submarine = body.Submarine = limb.character.Submarine;
+                currentHull = limb.character.CurrentHull;
             }
             else
             {
@@ -2004,7 +2025,7 @@ namespace Barotrauma
                 var wifiComponent = recipient.Item.GetComponent<WifiComponent>();
                 if (wifiComponent != null && wifiComponent.CanTransmit())
                 {
-                    foreach (var wifiReceiver in wifiComponent.GetReceiversInRange())
+                    foreach (var wifiReceiver in wifiComponent.GetTransmittersInRange())
                     {
                         var receiverConnections = wifiReceiver.Item.Connections;
                         if (receiverConnections == null) { continue; }
@@ -2125,7 +2146,7 @@ namespace Barotrauma
 
         }
 
-        private IEnumerable<object> DelaySignal(Signal signal, Connection connection)
+        private IEnumerable<CoroutineStatus> DelaySignal(Signal signal, Connection connection)
         {
             do
             {
@@ -2161,7 +2182,7 @@ namespace Barotrauma
             return c != null && c.Character != null && c.Character.CanInteractWith(this);
         }
 
-        public bool TryInteract(Character picker, bool ignoreRequiredItems = false, bool forceSelectKey = false, bool forceActionKey = false)
+        public bool TryInteract(Character user, bool ignoreRequiredItems = false, bool forceSelectKey = false, bool forceUseKey = false)
         {
             if (CampaignInteractionType != CampaignMode.InteractionType.None) { return false; }
 
@@ -2171,12 +2192,11 @@ namespace Barotrauma
             Skill requiredSkill = null;
             float skillMultiplier = 1;
 #endif
-            if (!IsInteractable(picker)) { return false; }
+            if (!IsInteractable(user)) { return false; }
             foreach (ItemComponent ic in components)
             {
                 bool pickHit = false, selectHit = false;
-
-                if (picker.IsKeyDown(InputType.Aim))
+                if (user.IsKeyDown(InputType.Aim))
                 {
                     pickHit = false;
                     selectHit = false;
@@ -2185,26 +2205,44 @@ namespace Barotrauma
                 {
                     if (forceSelectKey)
                     {
-                        if (ic.PickKey == InputType.Select) pickHit = true;
-                        if (ic.SelectKey == InputType.Select) selectHit = true;
+                        if (ic.PickKey == InputType.Select)
+                        {
+                            pickHit = true;
+                        }
+                        if (ic.SelectKey == InputType.Select)
+                        {
+                            selectHit = true;
+                        }
                     }
-                    else if (forceActionKey)
+                    else if (forceUseKey)
                     {
-                        if (ic.PickKey == InputType.Use) pickHit = true;
-                        if (ic.SelectKey == InputType.Use) selectHit = true;
+                        if (ic.PickKey == InputType.Use)
+                        {
+                            pickHit = true;
+                        }
+                        if (ic.SelectKey == InputType.Use)
+                        {
+                            selectHit = true;
+                        }
                     }
                     else
                     {
-                        pickHit = picker.IsKeyHit(ic.PickKey);
-                        selectHit = picker.IsKeyHit(ic.SelectKey);
+                        pickHit = user.IsKeyHit(ic.PickKey);
+                        selectHit = user.IsKeyHit(ic.SelectKey);
 
 #if CLIENT
                         //if the cursor is on a UI component, disable interaction with the left mouse button
                         //to prevent accidentally selecting items when clicking UI elements
-                        if (picker == Character.Controlled && GUI.MouseOn != null)
+                        if (user == Character.Controlled && GUI.MouseOn != null)
                         {
-                            if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
-                            if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
+                            if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0)
+                            {
+                                pickHit = false;
+                            }
+                            if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0)
+                            {
+                                selectHit = false;
+                            }
                         }
 #endif
                     }
@@ -2215,50 +2253,50 @@ namespace Barotrauma
                 if (Screen.Selected == GameMain.SubEditorScreen && GameMain.SubEditorScreen.WiringMode)
                 {
                     pickHit = selectHit = GameMain.Config.KeyBind(InputType.Use).MouseButton == MouseButton.None ?
-                        picker.IsKeyHit(InputType.Use) :
-                        picker.IsKeyHit(InputType.Select);
+                        user.IsKeyHit(InputType.Use) :
+                        user.IsKeyHit(InputType.Select);
                 }
 #endif
                 if (!pickHit && !selectHit) { continue; }
                 
                 bool showUiMsg = false;
 #if CLIENT
-                if (!ic.HasRequiredSkills(picker, out Skill tempRequiredSkill)) { hasRequiredSkills = false; skillMultiplier = ic.GetSkillMultiplier(); }
-                showUiMsg = picker == Character.Controlled && Screen.Selected != GameMain.SubEditorScreen;
+                if (!ic.HasRequiredSkills(user, out Skill tempRequiredSkill)) { hasRequiredSkills = false; skillMultiplier = ic.GetSkillMultiplier(); }
+                showUiMsg = user == Character.Controlled && Screen.Selected != GameMain.SubEditorScreen;
 #endif
-                if (!ignoreRequiredItems && !ic.HasRequiredItems(picker, showUiMsg)) { continue; }
-                if ((ic.CanBePicked && pickHit && ic.Pick(picker)) ||
-                    (ic.CanBeSelected && selectHit && ic.Select(picker)))
+                if (!ignoreRequiredItems && !ic.HasRequiredItems(user, showUiMsg)) { continue; }
+                if ((ic.CanBePicked && pickHit && ic.Pick(user)) ||
+                    (ic.CanBeSelected && selectHit && ic.Select(user)))
                 {
                     picked = true;
-                    ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
+                    ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, user);
 #if CLIENT
-                    if (picker == Character.Controlled) { GUI.ForceMouseOn(null); }
+                    if (user == Character.Controlled) { GUI.ForceMouseOn(null); }
                     if (tempRequiredSkill != null) { requiredSkill = tempRequiredSkill; }
 #endif
-                    if (ic.CanBeSelected) { selected = true; }
+                    if (ic.CanBeSelected && !(ic is Door)) { selected = true; }
                 }
             }
 
             if (!picked) { return false; }
 
-            if (picker != null)
+            if (user != null)
             {
-                if (picker.SelectedConstruction == this)
+                if (user.SelectedConstruction == this)
                 {
-                    if (picker.IsKeyHit(InputType.Select) || forceSelectKey)
+                    if (user.IsKeyHit(InputType.Select) || forceSelectKey)
                     {
-                        picker.SelectedConstruction = null;
+                        user.SelectedConstruction = null;
                     }
                 }
                 else if (selected)
                 {
-                    picker.SelectedConstruction = this;
+                    user.SelectedConstruction = this;
                 }
             }
 
 #if CLIENT
-            if (!hasRequiredSkills && Character.Controlled == picker && Screen.Selected != GameMain.SubEditorScreen)
+            if (!hasRequiredSkills && Character.Controlled == user && Screen.Selected != GameMain.SubEditorScreen)
             {
                 if (requiredSkill != null)
                 {
@@ -2268,7 +2306,10 @@ namespace Barotrauma
             }
 #endif
 
-            if (Container != null) Container.RemoveContained(this);
+            if (Container != null)
+            {
+                Container.RemoveContained(this);
+            }
 
             return true;         
         }
@@ -2532,7 +2573,9 @@ namespace Barotrauma
 
         private void WritePropertyChange(IWriteMessage msg, object[] extraData, bool inGameEditableOnly)
         {
-            var allProperties = inGameEditableOnly ? GetInGameEditableProperties() : GetProperties<Editable>();
+            //ignoreConditions: true = include all ConditionallyEditable properties at this point,
+            //to ensure client/server doesn't get any properties mixed up if there's some conditions that can vary between the server and the clients
+            var allProperties = inGameEditableOnly ? GetInGameEditableProperties(ignoreConditions: true) : GetProperties<Editable>();
             SerializableProperty property = extraData[1] as SerializableProperty;
             if (property != null)
             {
@@ -2543,21 +2586,21 @@ namespace Barotrauma
                 }
 
                 object value = property.GetValue(propertyOwner.First);
-                if (value is string)
+                if (value is string stringVal)
                 {
-                    msg.Write((string)value);
+                    msg.Write(stringVal);
                 }
-                else if (value is float)
+                else if (value is float floatVal)
                 {
-                    msg.Write((float)value);
+                    msg.Write(floatVal);
                 }
-                else if (value is int)
+                else if (value is int intVal)
                 {
-                    msg.Write((int)value);
+                    msg.Write(intVal);
                 }
-                else if (value is bool)
+                else if (value is bool boolVal)
                 {
-                    msg.Write((bool)value);
+                    msg.Write(boolVal);
                 }
                 else if (value is Color color)
                 {
@@ -2566,35 +2609,35 @@ namespace Barotrauma
                     msg.Write(color.B);
                     msg.Write(color.A);
                 }
-                else if (value is Vector2)
+                else if (value is Vector2 vector2)
                 {
-                    msg.Write(((Vector2)value).X);
-                    msg.Write(((Vector2)value).Y);
+                    msg.Write(vector2.X);
+                    msg.Write(vector2.Y);
                 }
-                else if (value is Vector3)
+                else if (value is Vector3 vector3)
                 {
-                    msg.Write(((Vector3)value).X);
-                    msg.Write(((Vector3)value).Y);
-                    msg.Write(((Vector3)value).Z);
+                    msg.Write(vector3.X);
+                    msg.Write(vector3.Y);
+                    msg.Write(vector3.Z);
                 }
-                else if (value is Vector4)
+                else if (value is Vector4 vector4)
                 {
-                    msg.Write(((Vector4)value).X);
-                    msg.Write(((Vector4)value).Y);
-                    msg.Write(((Vector4)value).Z);
-                    msg.Write(((Vector4)value).W);
+                    msg.Write(vector4.X);
+                    msg.Write(vector4.Y);
+                    msg.Write(vector4.Z);
+                    msg.Write(vector4.W);
                 }
-                else if (value is Point)
+                else if (value is Point point)
                 {
-                    msg.Write(((Point)value).X);
-                    msg.Write(((Point)value).Y);
+                    msg.Write(point.X);
+                    msg.Write(point.Y);
                 }
-                else if (value is Rectangle)
+                else if (value is Rectangle rect)
                 {
-                    msg.Write(((Rectangle)value).X);
-                    msg.Write(((Rectangle)value).Y);
-                    msg.Write(((Rectangle)value).Width);
-                    msg.Write(((Rectangle)value).Height);
+                    msg.Write(rect.X);
+                    msg.Write(rect.Y);
+                    msg.Write(rect.Width);
+                    msg.Write(rect.Height);
                 }
                 else if (value is Enum)
                 {
@@ -2619,16 +2662,25 @@ namespace Barotrauma
             }
         }
 
-        private List<Pair<object, SerializableProperty>> GetInGameEditableProperties()
+        private List<Pair<object, SerializableProperty>> GetInGameEditableProperties(bool ignoreConditions = false)
         {
-            return GetProperties<ConditionallyEditable>()
-                .Where(ce => ce.Second.GetAttribute<ConditionallyEditable>().IsEditable(this))
-                .Union(GetProperties<InGameEditable>()).ToList();
+            if (ignoreConditions)
+            {
+                return GetProperties<ConditionallyEditable>().Union(GetProperties<InGameEditable>()).ToList();
+            }
+            else
+            {
+                return GetProperties<ConditionallyEditable>()
+                    .Where(ce => ce.Second.GetAttribute<ConditionallyEditable>().IsEditable(this))
+                    .Union(GetProperties<InGameEditable>()).ToList();
+            }
         }
 
         private void ReadPropertyChange(IReadMessage msg, bool inGameEditableOnly, Client sender = null)
         {
-            var allProperties = inGameEditableOnly ? GetInGameEditableProperties() : GetProperties<Editable>();
+            //ignoreConditions: true = include all ConditionallyEditable properties at this point,
+            //to ensure client/server doesn't get any properties mixed up if there's some conditions that can vary between the server and the clients
+            var allProperties = inGameEditableOnly ? GetInGameEditableProperties(ignoreConditions: true) : GetProperties<Editable>();
             if (allProperties.Count == 0) { return; }
 
             int propertyIndex = 0;
@@ -2645,9 +2697,12 @@ namespace Barotrauma
                 if (!ic.AllowInGameEditing) { allowEditing = false; }
             }
 
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !CanClientAccess(sender))
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
-                allowEditing = false;
+                if (!CanClientAccess(sender) || !(property.GetAttribute<ConditionallyEditable>()?.IsEditable(this) ?? true))
+                {
+                    allowEditing = false;
+                }
             }
 
             Type type = property.PropertyType;
@@ -2746,7 +2801,7 @@ namespace Barotrauma
 #endif
                     GameAnalyticsManager.AddErrorEventOnce(
                         "Item.ReadPropertyChange:" + Name + ":" + type,
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                        GameAnalyticsManager.ErrorSeverity.Warning,
                         "Failed to convert the int value \"" + intVal + "\" to " + type + " (item " + Name + ")");
                 }
             }

@@ -79,17 +79,17 @@ namespace Barotrauma.Abilities
 
         protected virtual void ApplyEffect()
         {
-            DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not have a definition for ApplyEffect");
+            DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not have a definition for ApplyEffect in talent {CharacterTalent.DebugIdentifier}");
         }
 
         protected virtual void ApplyEffect(AbilityObject abilityObject)
         {
-            DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not take a parameter for ApplyEffect");
+            DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not take a parameter for ApplyEffect in talent {CharacterTalent.DebugIdentifier}");
         }
 
         protected void LogabilityObjectMismatch()
         {
-            DebugConsole.ThrowError($"Incompatible ability! Ability {this} is incompatitible with this type of ability effect type.");
+            DebugConsole.ThrowError($"Incompatible ability! Ability {this} is incompatitible with this type of ability effect type in talent {CharacterTalent.DebugIdentifier}");
         }
 
         // XML

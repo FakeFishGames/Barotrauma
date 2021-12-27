@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -19,11 +20,11 @@ namespace Barotrauma
 
     struct OrderInfo
     {
-        public Order Order { get; }
-        public string OrderOption { get; }
-        public int ManualPriority { get; }
-        public OrderType Type { get; }
-        public AIObjective Objective { get; }
+        public readonly Order Order;
+        public readonly string OrderOption;
+        public readonly int ManualPriority;
+        public readonly OrderType Type;
+        public readonly AIObjective Objective;
         public bool IsCurrentOrder => Type == OrderType.Current;
 
         public enum OrderType
@@ -40,6 +41,8 @@ namespace Barotrauma
             Type = orderType;
             Objective = objective;
         }
+
+        public OrderInfo(Order order, string orderOption) : this(order, orderOption, CharacterInfo.HighestManualOrderPriority, null) { }
 
         public OrderInfo(Order order, string orderOption, int manualPriority) : this(order, orderOption, manualPriority, OrderType.Current, null) { }
 
@@ -103,7 +106,10 @@ namespace Barotrauma
 
         public readonly Type ItemComponentType;
         public readonly bool CanTypeBeSubclass;
-        public readonly string[] TargetItems;
+        public readonly ImmutableArray<string> TargetItems;
+        public readonly ImmutableArray<string> RequireItems;
+        private readonly Dictionary<string, ImmutableArray<string>> OptionTargetItems;
+        public bool HasOptionSpecificTargetItems => OptionTargetItems != null && OptionTargetItems.Any();
 
         public readonly string Identifier;
 
@@ -170,6 +176,7 @@ namespace Barotrauma
         public bool HasOptions => (IsPrefab ? Options : Prefab.Options).Length > 1;
         public bool IsPrefab { get; private set; }
         public readonly bool MustManuallyAssign;
+        public readonly bool AutoDismiss;
 
         public readonly OrderTarget TargetPosition;
 
@@ -207,6 +214,12 @@ namespace Barotrauma
         /// Should the order icon be drawn when the order target is inside a container
         /// </summary>
         public bool DrawIconWhenContained { get; }
+
+        /// <summary>
+        /// Affects how high on the order list the order will be placed (i.e. the manual priority order when it's given) when it's first given.
+        /// Manually rearranging orders will override this priority.
+        /// </summary>
+        public int AssignmentPriority { get; }
 
         public static void Init()
         {
@@ -305,8 +318,6 @@ namespace Barotrauma
                 }
             }
             CanTypeBeSubclass = orderElement.GetAttributeBool("cantypebesubclass", false);
-
-            TargetItems = orderElement.GetAttributeStringArray("targetitems", new string[0], trim: true, convertToLowerInvariant: true);
             color = orderElement.GetAttributeColor("color");
             FadeOutTime = orderElement.GetAttributeFloat("fadeouttime", 0.0f);
             UseController = orderElement.GetAttributeBool("usecontroller", false);
@@ -316,6 +327,36 @@ namespace Barotrauma
             Options = orderElement.GetAttributeStringArray("options", new string[0]);
             HiddenOptions = orderElement.GetAttributeStringArray("hiddenoptions", new string[0]);
             AllOptions = Options.Concat(HiddenOptions).ToArray();
+
+            OptionTargetItems = new Dictionary<string, ImmutableArray<string>>();
+            if (orderElement.GetAttributeString("targetitems", "") is string targetItems && targetItems.Contains(';'))
+            {
+                string[] splitTargetItems = targetItems.Split(';');
+#if DEBUG
+                if (splitTargetItems.Length != AllOptions.Length)
+                {
+                    DebugConsole.ThrowError($"Order \"{Identifier}\" has option-specific target items, but the option count doesn't match the target item count");
+                }
+#endif
+                var allTargetItems = new List<string>();
+                for (int i = 0; i < AllOptions.Length; i++)
+                {
+                    string[] optionTargetItems = i < splitTargetItems.Length ? splitTargetItems[i].Split(',', '，') : new string[0];
+                    for (int j = 0; j < optionTargetItems.Length; j++)
+                    {
+                        optionTargetItems[j] = optionTargetItems[j].ToLowerInvariant().Trim();
+                        allTargetItems.Add(optionTargetItems[j]);
+                    }
+                    OptionTargetItems.Add(AllOptions[i], optionTargetItems.ToImmutableArray());
+                }
+                TargetItems = allTargetItems.ToImmutableArray();
+            }
+            else
+            {
+                TargetItems = orderElement.GetAttributeStringArray("targetitems", new string[0], trim: true, convertToLowerInvariant: true).ToImmutableArray();
+            }
+            RequireItems = orderElement.GetAttributeStringArray("requireitems", new string[0], trim: true, convertToLowerInvariant: true).ToImmutableArray();
+
             var category = orderElement.GetAttributeString("category", null);
             if (!string.IsNullOrWhiteSpace(category)) { this.Category = (OrderCategory)Enum.Parse(typeof(OrderCategory), category, true); }
             MustSetTarget = orderElement.GetAttributeBool("mustsettarget", false);
@@ -363,6 +404,8 @@ namespace Barotrauma
             MustManuallyAssign = orderElement.GetAttributeBool("mustmanuallyassign", false);
             IsIgnoreOrder = Identifier == "ignorethis" || Identifier == "unignorethis";
             DrawIconWhenContained = orderElement.GetAttributeBool("displayiconwhencontained", false);
+            AutoDismiss = orderElement.GetAttributeBool("autodismiss", Category == OrderCategory.Movement);
+            AssignmentPriority = Math.Clamp(orderElement.GetAttributeInt("assignmentpriority", 100), 0, 100);
         }
 
         /// <summary>
@@ -378,6 +421,8 @@ namespace Barotrauma
             ItemComponentType     = prefab.ItemComponentType;
             CanTypeBeSubclass     = prefab.CanTypeBeSubclass;
             TargetItems           = prefab.TargetItems;
+            OptionTargetItems     = prefab.OptionTargetItems;
+            RequireItems          = prefab.RequireItems;
             Options               = prefab.Options;
             SymbolSprite          = prefab.SymbolSprite;
             Color                 = prefab.Color;
@@ -395,6 +440,7 @@ namespace Barotrauma
             DrawIconWhenContained = prefab.DrawIconWhenContained;
             Hidden                = prefab.Hidden;
             IgnoreAtOutpost       = prefab.IgnoreAtOutpost;
+            AssignmentPriority    = prefab.AssignmentPriority;
 
             OrderGiver = orderGiver;
             TargetEntity = targetEntity;
@@ -510,16 +556,17 @@ namespace Barotrauma
         }
 
         /// <param name="interactableFor">Only returns items which are interactable for this character</param>
-        public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSub, CharacterTeamType? requiredTeam = null, Character interactableFor = null)
+        public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSub, CharacterTeamType? requiredTeam = null, Character interactableFor = null, string orderOption = null)
         {
             List<Item> matchingItems = new List<Item>();
             if (submarine == null) { return matchingItems; }
-            if (ItemComponentType != null || TargetItems.Length > 0)
+            if (ItemComponentType != null || TargetItems.Any() || RequireItems.Any())
             {
                 foreach (var item in Item.ItemList)
                 {
-                    if (TargetItems.Length > 0 && !TargetItems.Contains(item.Prefab.Identifier) && !item.HasTag(TargetItems)) { continue; }
-                    if (TargetItems.Length == 0 && !TryGetTargetItemComponent(item, out _)) { continue; }
+                    if (RequireItems.Any() && !TargetItemsMatchItem(RequireItems, item)) { continue; }
+                    if (TargetItems.Any() && !TargetItemsMatchItem(item, orderOption)) { continue; }
+                    if (RequireItems.None() && TargetItems.None() && !TryGetTargetItemComponent(item, out _)) { continue; }
                     if (mustBelongToPlayerSub && item.Submarine?.Info != null && item.Submarine.Info.Type != SubmarineType.Player) { continue; }
                     if (item.Submarine != submarine && !submarine.DockedTo.Contains(item.Submarine)) { continue; }
                     if (requiredTeam.HasValue && (item.Submarine == null || item.Submarine.TeamID != requiredTeam.Value)) { continue; }
@@ -534,14 +581,13 @@ namespace Barotrauma
             return matchingItems;
         }
 
-
         /// <param name="interactableFor">Only returns items which are interactable for this character</param>
-        public List<Item> GetMatchingItems(bool mustBelongToPlayerSub, Character interactableFor = null)
+        public List<Item> GetMatchingItems(bool mustBelongToPlayerSub, Character interactableFor = null, string orderOption = null)
         {
             Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID == CharacterTeamType.Team2 && Submarine.MainSubs.Length > 1 ?
                 Submarine.MainSubs[1] :
                 Submarine.MainSub;
-            return GetMatchingItems(submarine, mustBelongToPlayerSub, interactableFor: interactableFor);
+            return GetMatchingItems(submarine, mustBelongToPlayerSub, interactableFor: interactableFor, orderOption: orderOption);
         }
 
         public string GetOptionName(string id)
@@ -579,6 +625,35 @@ namespace Barotrauma
                 return option;
             }
             return "";
+        }
+
+        public override string ToString()
+        {
+            return $"Order ({Name})";
+        }
+
+        public ImmutableArray<string> GetTargetItems(string option = null)
+        {
+            if (string.IsNullOrEmpty(option) || !OptionTargetItems.TryGetValue(option, out ImmutableArray<string> optionTargetItems))
+            {
+                return TargetItems;
+            }
+            else
+            {
+                return optionTargetItems;
+            }
+        }
+
+        public bool TargetItemsMatchItem(Item item, string option = null)
+        {
+            if (item == null) { return false; }
+            ImmutableArray<string> targetItems = GetTargetItems(option);
+            return TargetItemsMatchItem(targetItems, item);
+        }
+
+        public static bool TargetItemsMatchItem(ImmutableArray<string> targetItems, Item item)
+        {
+            return item != null && targetItems != null && targetItems.Length > 0 && (targetItems.Contains(item.Prefab.Identifier) || item.HasTag(targetItems));
         }
     }
 }

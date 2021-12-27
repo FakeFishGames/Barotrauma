@@ -11,6 +11,7 @@ namespace Barotrauma.Networking
         public const int MaxPlayers = 30;
 
         public const int ServerNameMaxLength = 60;
+        public const int ServerMessageMaxLength = 2000;
 
         public static string MasterServerUrl = GameMain.Config.MasterServerUrl;
 

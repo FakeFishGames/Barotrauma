@@ -39,6 +39,8 @@ namespace Barotrauma
 
         private readonly float itemRepairStrength;
 
+        public readonly HashSet<Submarine> IgnoredSubmarines = new HashSet<Submarine>();
+
         public float EmpStrength { get; set; }
         
         public float BallastFloraDamage { get; set; }
@@ -149,7 +151,7 @@ namespace Barotrauma
 
             if (!MathUtils.NearlyEqual(Attack.GetStructureDamage(1.0f), 0.0f) || !MathUtils.NearlyEqual(Attack.GetLevelWallDamage(1.0f), 0.0f))
             {
-                RangedStructureDamage(worldPosition, displayRange, Attack.GetStructureDamage(1.0f), Attack.GetLevelWallDamage(1.0f), attacker);
+                RangedStructureDamage(worldPosition, displayRange, Attack.GetStructureDamage(1.0f), Attack.GetLevelWallDamage(1.0f), attacker, IgnoredSubmarines);
             }
 
             if (BallastFloraDamage > 0.0f)
@@ -397,13 +399,14 @@ namespace Barotrauma
         /// <summary>
         /// Returns a dictionary where the keys are the structures that took damage and the values are the amount of damage taken
         /// </summary>
-        public static Dictionary<Structure, float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage, float levelWallDamage, Character attacker = null)
+        public static Dictionary<Structure, float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage, float levelWallDamage, Character attacker = null, IEnumerable<Submarine> ignoredSubmarines = null)
         {
             List<Structure> structureList = new List<Structure>();            
             float dist = 600.0f;
             foreach (MapEntity entity in MapEntity.mapEntityList)
             {
                 if (!(entity is Structure structure)) { continue; }
+                if (ignoredSubmarines != null && entity.Submarine != null && ignoredSubmarines.Contains(entity.Submarine)) { continue; }
 
                 if (structure.HasBody &&
                     !structure.IsPlatform &&

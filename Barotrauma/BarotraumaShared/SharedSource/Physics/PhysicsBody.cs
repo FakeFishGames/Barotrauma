@@ -226,7 +226,14 @@ namespace Barotrauma
         public bool PhysEnabled
         {
             get { return FarseerBody.Enabled; }
-            set { isPhysEnabled = value; if (Enabled) FarseerBody.Enabled = value; }
+            set
+            {
+                isPhysEnabled = value;
+                if (Enabled)
+                {
+                    FarseerBody.Enabled = value;
+                }
+            }
         }
 
         public Vector2 SimPosition
@@ -539,7 +546,7 @@ namespace Barotrauma
                 if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "PhysicsBody.SetPosition:InvalidPosition" + userData,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
                 return false;
             }
@@ -566,7 +573,7 @@ namespace Barotrauma
                 if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "PhysicsBody.SetPosition:InvalidPosition" + userData,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
                 return false;
             }

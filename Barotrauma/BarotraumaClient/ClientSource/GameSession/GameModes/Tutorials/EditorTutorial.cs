@@ -10,7 +10,7 @@ namespace Barotrauma.Tutorials
         {
         }
 
-        public override IEnumerable<object> UpdateState()
+        public override IEnumerable<CoroutineStatus> UpdateState()
         {
             /*infoBox = CreateInfoFrame("Use the mouse wheel to zoom in and out, and WASD to move the camera around.", true);
 

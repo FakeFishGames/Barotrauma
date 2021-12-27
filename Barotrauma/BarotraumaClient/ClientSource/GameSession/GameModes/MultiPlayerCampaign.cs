@@ -60,7 +60,7 @@ namespace Barotrauma
             var newCampaignContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), campaignContainer.RectTransform, Anchor.Center), style: null);
             var loadCampaignContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), campaignContainer.RectTransform, Anchor.Center), style: null);
 
-            GameMain.NetLobbyScreen.CampaignSetupUI = new MultiPlayerCampaignSetupUI(newCampaignContainer, loadCampaignContainer, null, saveFiles);
+            GameMain.NetLobbyScreen.CampaignSetupUI = new MultiPlayerCampaignSetupUI(newCampaignContainer, loadCampaignContainer, saveFiles);
 
             var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("NewCampaign"), style: "GUITabButton")
@@ -188,7 +188,7 @@ namespace Barotrauma
         }
 
 
-        private IEnumerable<object> DoInitialCameraTransition()
+        private IEnumerable<CoroutineStatus> DoInitialCameraTransition()
         {
             while (GameMain.Instance.LoadingScreenOpen)
             {
@@ -310,12 +310,12 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        protected override IEnumerable<object> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null)
+        protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null)
         {
             yield return CoroutineStatus.Success;
         }
 
-        private IEnumerable<object> DoLevelTransition()
+        private IEnumerable<CoroutineStatus> DoLevelTransition()
         {
             SoundPlayer.OverrideMusicType = CrewManager.GetCharacters().Any(c => !c.IsDead) ? "endround" : "crewdead";
             SoundPlayer.OverrideMusicDuration = 18.0f;
@@ -361,7 +361,7 @@ namespace Barotrauma
             //--------------------------------------
 
             //wait for the new level to be loaded
-            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, seconds: 30);
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, seconds: 60);
             while (Level.Loaded == prevLevel || Level.Loaded == null)
             {
                 if (DateTime.Now > timeOut || Screen.Selected != GameMain.GameScreen)  { break; }
@@ -480,8 +480,6 @@ namespace Barotrauma
             {
                 IsFirstRound = false;
                 CoroutineManager.StartCoroutine(DoLevelTransition(), "LevelTransition");
-                bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
-                GUI.SetSavingIndicatorState(success && (Level.IsLoadedOutpost || transitionType != TransitionType.None));
             }
         }
 
@@ -500,7 +498,7 @@ namespace Barotrauma
             };
         }
 
-        private IEnumerable<object> DoEndCampaignCameraTransition()
+        private IEnumerable<CoroutineStatus> DoEndCampaignCameraTransition()
         {
             Character controlled = Character.Controlled;
             if (controlled != null)

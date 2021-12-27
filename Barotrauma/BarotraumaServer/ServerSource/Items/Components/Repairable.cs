@@ -14,6 +14,7 @@ namespace Barotrauma.Items.Components
         {
             if (c.Character == null) { return; }
             var requestedFixAction = (FixActions)msg.ReadRangedInteger(0, 2);
+            var QTESuccess = msg.ReadBoolean();
             if (requestedFixAction != FixActions.None)
             {
                 if (!c.Character.IsTraitor && requestedFixAction == FixActions.Sabotage)
@@ -30,6 +31,11 @@ namespace Barotrauma.Items.Components
                     StartRepairing(c.Character, requestedFixAction);
                     item.CreateServerEvent(this);
                 }
+            }
+            else
+            {
+                RepairBoost(QTESuccess);
+                item.CreateServerEvent(this);
             }
         }
 

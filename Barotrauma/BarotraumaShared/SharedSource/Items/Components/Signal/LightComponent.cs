@@ -43,7 +43,16 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public float Rotation;
+        private float rotation;
+        public float Rotation
+        {
+            get { return rotation; }
+            set 
+            { 
+                rotation = value;
+                SetLightSourceTransform();
+            }
+        }
 
         [Editable, Serialize(true, true, description: "Should structures cast shadows when light from this light source hits them. " +
             "Disabling shadows increases the performance of the game, and is recommended for lights with a short range.", alwaysUseInstanceValues: true)]
@@ -246,39 +255,14 @@ namespace Barotrauma.Items.Components
                 SetLightSourceState(false, 0.0f);
                 return;
             }
-#if CLIENT
-            if (ParentBody != null)
-            {
-                Light.Position = ParentBody.Position;
-            }
-            else if (turret != null)
-            {
-                Light.Position = new Vector2(item.Rect.X + turret.TransformedBarrelPos.X, item.Rect.Y - turret.TransformedBarrelPos.Y);
-            }
-            else
-            {
-                Light.Position = item.Position;
-            }
-#endif
+
+            SetLightSourceTransform();
+
             PhysicsBody body = ParentBody ?? item.body;
-            if (body != null)
+            if (body != null && !body.Enabled)
             {
-#if CLIENT
-                Light.Rotation = body.Dir > 0.0f ? body.DrawRotation : body.DrawRotation - MathHelper.Pi;
-                Light.LightSpriteEffect = (body.Dir > 0.0f) ? SpriteEffects.None : SpriteEffects.FlipVertically;
-#endif
-                if (!body.Enabled)
-                {
-                    SetLightSourceState(false, 0.0f);
-                    return;
-                }
-            }
-            else
-            {
-#if CLIENT
-                Light.Rotation = -Rotation - MathHelper.ToRadians(item.Rotation);
-                Light.LightSpriteEffect = item.SpriteEffects;
-#endif
+                SetLightSourceState(false, 0.0f);
+                return;                
             }
 
             currPowerConsumption = powerConsumption;
@@ -333,6 +317,9 @@ namespace Barotrauma.Items.Components
                     if (signal.value != prevColorSignal)
                     {
                         LightColor = XMLExtensions.ParseColor(signal.value, false);
+#if CLIENT
+                        SetLightSourceState(Light.Enabled, currentBrightness);
+#endif
                         prevColorSignal = signal.value;
                     }
                     break;
@@ -350,5 +337,8 @@ namespace Barotrauma.Items.Components
         }
 
         partial void SetLightSourceState(bool enabled, float brightness);
+
+        partial void SetLightSourceTransform();
+
     }
 }

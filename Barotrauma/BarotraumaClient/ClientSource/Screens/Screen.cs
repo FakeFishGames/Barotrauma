@@ -43,7 +43,7 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(UpdateColorFade(from, to, duration));
         }
 
-        private IEnumerable<object> UpdateColorFade(Color from, Color to, float duration)
+        private IEnumerable<CoroutineStatus> UpdateColorFade(Color from, Color to, float duration)
         {
             while (Selected != this)
             {

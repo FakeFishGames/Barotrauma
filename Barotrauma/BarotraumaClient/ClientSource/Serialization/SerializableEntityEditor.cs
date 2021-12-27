@@ -358,7 +358,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    displayName = TextManager.Get(fallbackTag, true);
+                    displayName = TextManager.Get(fallbackTag, true) ?? TextManager.Get($"sp.{fallbackTag}.name", true);
                 }
             }
             

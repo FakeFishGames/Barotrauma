@@ -183,6 +183,11 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// ListBoxes with lots of content in them clamp the size of the scrollbar above a certain minimum size; this is the relative bar size without the clamping applied.
+        /// </summary>
+        public float UnclampedBarSize;
+
         public float BarSize
         {
             get { return barSize; }
@@ -299,9 +304,15 @@ namespace Barotrauma
                     }
                     else
                     {
+                        float barScale = 1.0f;
+                        if (UnclampedBarSize > 0.0f)
+                        {
+                            barScale = (UnclampedBarSize / BarSize);
+                        }
+
                         MoveButton(new Vector2(
-                            Math.Sign(PlayerInput.MousePosition.X - Bar.Rect.Center.X) * Bar.Rect.Width,
-                            Math.Sign(PlayerInput.MousePosition.Y - Bar.Rect.Center.Y) * Bar.Rect.Height));
+                            Math.Sign(PlayerInput.MousePosition.X - Bar.Rect.Center.X) * Bar.Rect.Width * barScale,
+                            Math.Sign(PlayerInput.MousePosition.Y - Bar.Rect.Center.Y) * Bar.Rect.Height * barScale));
                     }
                 }
             }       

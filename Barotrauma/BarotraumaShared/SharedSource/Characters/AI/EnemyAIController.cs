@@ -339,11 +339,15 @@ namespace Barotrauma
                 {
                     targetingTag = "dead";
                 }
+                else if (AIParams.TryGetTarget(targetCharacter.CharacterHealth.GetActiveAfflictionTags(), out CharacterParams.TargetParams tp) && tp.Threshold > Character.GetDamageDoneByAttacker(targetCharacter))
+                {
+                    targetingTag = tp.Tag;
+                }
                 else if (PetBehavior != null && aiTarget.Entity == PetBehavior.Owner) 
                 { 
-                    targetingTag = "owner"; 
+                    targetingTag = "owner";
                 }
-                else if (AIParams.TryGetTarget(targetCharacter.SpeciesName, out CharacterParams.TargetParams tP))
+                else if (AIParams.TryGetTarget(targetCharacter, out CharacterParams.TargetParams tP))
                 {
                     targetingTag = tP.Tag;
                 }
@@ -353,7 +357,7 @@ namespace Barotrauma
                     {
                         targetingTag = "husk";
                     }
-                    else
+                    else if (!Character.IsFriendly(targetCharacter))
                     {
                         if (enemy.CombatStrength > CombatStrength)
                         {
@@ -385,6 +389,10 @@ namespace Barotrauma
                     if (targetItem.GetComponent<Sonar>() != null)
                     {
                         targetingTag = "sonar";
+                    }
+                    if (targetItem.GetComponent<Door>() != null)
+                    {
+                        targetingTag = "door";
                     }
                 }
             }
@@ -511,8 +519,7 @@ namespace Barotrauma
                 }
                 else if (avoidTimer <= 0 || activeTriggers.Any() && returnTimer <= 0)
                 {
-                    CharacterParams.TargetParams targetingParams = null;
-                    UpdateTargets(Character, out targetingParams);
+                    UpdateTargets(out CharacterParams.TargetParams targetingParams);
                     updateTargetsTimer = updateTargetsInterval * Rand.Range(0.75f, 1.25f);
                     if (SelectedAiTarget == null)
                     {
@@ -1973,7 +1980,7 @@ namespace Barotrauma
                         ChangeTargetState(attacker, canAttack ? AIState.Attack : AIState.Escape, 100);
                     }
                 }
-                else if (canAttack && attacker.IsHuman && AIParams.TryGetTarget(attacker.SpeciesName, out CharacterParams.TargetParams targetingParams))
+                else if (canAttack && attacker.IsHuman && AIParams.TryGetTarget(attacker, out CharacterParams.TargetParams targetingParams))
                 {
                     if (targetingParams.State == AIState.Aggressive || targetingParams.State == AIState.PassiveAggressive)
                     {
@@ -2362,7 +2369,7 @@ namespace Barotrauma
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the Character can see/hear the target and chooses the most preferable target within
         //sight/hearing range
-        public AITarget UpdateTargets(Character character, out CharacterParams.TargetParams targetingParams)
+        public AITarget UpdateTargets(out CharacterParams.TargetParams targetingParams)
         {
             AITarget newTarget = null;
             targetValue = 0;
@@ -2386,70 +2393,35 @@ namespace Barotrauma
                 }
                 Character targetCharacter = aiTarget.Entity as Character;
                 //ignore the aitarget if it is the Character itself
-                if (targetCharacter == character) { continue; }
+                if (targetCharacter == Character) { continue; }
 
                 float valueModifier = 1;
-                string targetingTag = null;
+                string targetingTag = GetTargetingTag(aiTarget);
                 if (targetCharacter != null)
                 {
                     // ignore if target is tagged to be explicitly ignored (Feign Death)
                     if (targetCharacter.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI)) { continue; }
-
-                    if (targetCharacter.IsDead)
+                    if (AIParams.Targets.None() && Character.IsFriendly(targetCharacter))
                     {
-                        targetingTag = "dead";
+                        continue;
                     }
-                    else if (PetBehavior != null && aiTarget.Entity == PetBehavior.Owner)
+                    if (targetCharacter.AIController is EnemyAIController enemy)
                     {
-                        targetingTag = "owner";
-                    }
-                    else if (AIParams.TryGetTarget(targetCharacter.SpeciesName, out CharacterParams.TargetParams tP))
-                    {
-                        targetingTag = tP.Tag;
-                    }
-                    else
-                    {
-                        if (Character.IsFriendly(targetCharacter))
+                        if (targetingTag == "stronger" && (State == AIState.Avoid || State == AIState.Escape || State == AIState.Flee))
                         {
-                            continue;
-                        }
-                        if (targetCharacter.AIController is EnemyAIController enemy)
-                        {
-                            if (targetCharacter.IsHusk && AIParams.HasTag("husk"))
+                            if (SelectedAiTarget == aiTarget)
                             {
-                                targetingTag = "husk";
+                                // Freightened -> hold on to the target
+                                valueModifier *= 2;
                             }
-                            else
+                            if (IsBeingChasedBy(targetCharacter))
                             {
-                                if (enemy.CombatStrength > CombatStrength)
-                                {
-                                    targetingTag = "stronger";
-                                }
-                                else if (enemy.CombatStrength < CombatStrength)
-                                {
-                                    targetingTag = "weaker";
-                                }
-                                else
-                                {
-                                    targetingTag = "equal";
-                                }
-                                if (targetingTag == "stronger" && (State == AIState.Avoid || State == AIState.Escape || State == AIState.Flee))
-                                {
-                                    if (SelectedAiTarget == aiTarget)
-                                    {
-                                        // Freightened -> hold on to the target
-                                        valueModifier *= 2;
-                                    }
-                                    if (IsBeingChasedBy(targetCharacter))
-                                    {
-                                        valueModifier *= 2;
-                                    }
-                                    if (Character.CurrentHull != null && !VisibleHulls.Contains(targetCharacter.CurrentHull))
-                                    {
-                                        // Inside but in a different room
-                                        valueModifier /= 2;
-                                    }
-                                }
+                                valueModifier *= 2;
+                            }
+                            if (Character.CurrentHull != null && !VisibleHulls.Contains(targetCharacter.CurrentHull))
+                            {
+                                // Inside but in a different room
+                                valueModifier /= 2;
                             }
                         }
                     }
@@ -2469,7 +2441,7 @@ namespace Barotrauma
                     if (aiTarget.Entity is Hull hull)
                     {
                         // Ignore the target if it's a room and the character is already inside a sub
-                        if (character.CurrentHull != null) { continue; }
+                        if (Character.CurrentHull != null) { continue; }
                         // Ignore ruins
                         if (hull.Submarine == null) { continue; }
                         if (hull.Submarine.Info.IsRuin) { continue; }
@@ -2479,7 +2451,7 @@ namespace Barotrauma
                     if (aiTarget.Entity is Item item)
                     {
                         door = item.GetComponent<Door>();
-                        bool targetingFromOutsideToInside = item.CurrentHull != null && character.CurrentHull == null;
+                        bool targetingFromOutsideToInside = item.CurrentHull != null && Character.CurrentHull == null;
                         if (targetingFromOutsideToInside)
                         {
                             if (door != null && (!canAttackDoors && !AIParams.CanOpenDoors) || !canAttackWalls)
@@ -2488,28 +2460,12 @@ namespace Barotrauma
                                 continue;
                             }
                         }
-                        foreach (var prio in AIParams.Targets)
+                        if (door == null && targetingFromOutsideToInside)
                         {
-                            if (item.HasTag(prio.Tag))
+                            if (item.Submarine?.Info is { IsRuin: true })
                             {
-                                targetingTag = prio.Tag;
-                                break;
-                            }
-                        }
-                        if (door == null && targetingTag == null)
-                        {
-                            if (item.GetComponent<Sonar>() != null)
-                            {
-                                targetingTag = "sonar";
-                            }
-                            else if (targetingFromOutsideToInside)
-                            {
-                                targetingTag = "room";
-                                if (item.Submarine?.Info.IsRuin != null)
-                                {
-                                    // Ignore ruin items when the creature is outside.
-                                    continue;
-                                }
+                                // Ignore ruin items when the creature is outside.
+                                continue;
                             }
                         }
                         else if (targetingTag == "nasonov")
@@ -2521,14 +2477,13 @@ namespace Barotrauma
                             }
                         }
                         // Ignore the target if it's a decoy and the character is already inside a sub
-                        if (character.CurrentHull != null && targetingTag == "decoy")
+                        if (Character.CurrentHull != null && targetingTag == "decoy")
                         {
                             continue;
                         }
                     }
                     else if (aiTarget.Entity is Structure s)
                     {
-                        targetingTag = "wall";
                         if (!s.HasBody)
                         {
                             // Ignore structures that doesn't have a body (not walls)
@@ -2537,7 +2492,7 @@ namespace Barotrauma
                         if (s.IsPlatform) { continue; }
                         if (s.Submarine == null) { continue; }
                         if (s.Submarine.Info.IsRuin) { continue; }
-                        bool isCharacterInside = character.CurrentHull != null;
+                        bool isCharacterInside = Character.CurrentHull != null;
                         bool isInnerWall = s.prefab.Tags.Contains("inner");
                         if (isInnerWall && !isCharacterInside)
                         {
@@ -2624,21 +2579,12 @@ namespace Barotrauma
                             }
                         }
                     }
-                    else
-                    {
-                        targetingTag = "room";
-                    }
                     if (door != null)
                     {
-                        // If there's not a more specific tag for the door
-                        if (string.IsNullOrEmpty(targetingTag) || targetingTag == "room")
-                        {
-                            targetingTag = "door";
-                        }
                         if (door.Item.Submarine == null) { continue; }
                         bool isOutdoor = door.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom;
                         // Ignore inner doors when outside
-                        if (character.CurrentHull == null && !isOutdoor) { continue; }
+                        if (Character.CurrentHull == null && !isOutdoor) { continue; }
                         bool isOpen = door.CanBeTraversed;
                         if (!isOpen)
                         {
@@ -2651,7 +2597,7 @@ namespace Barotrauma
                         }
                         if (IsAggressiveBoarder)
                         {
-                            if (character.CurrentHull == null)
+                            if (Character.CurrentHull == null)
                             {
                                 // Increase the priority if the character is outside and the door is from outside to inside
                                 if (door.CanBeTraversed)
@@ -2679,14 +2625,14 @@ namespace Barotrauma
                 if (targetingTag == null) { continue; }
                 var targetParams = GetTargetParams(targetingTag);
                 if (targetParams == null) { continue; }
-                if (targetParams.IgnoreInside && character.CurrentHull != null) { continue; }
-                if (targetParams.IgnoreOutside && character.CurrentHull == null) { continue; }
+                if (targetParams.IgnoreInside && Character.CurrentHull != null) { continue; }
+                if (targetParams.IgnoreOutside && Character.CurrentHull == null) { continue; }
                 if (targetParams.IgnoreIncapacitated && targetCharacter != null && targetCharacter.IsIncapacitated) { continue; }
                 if (targetParams.IgnoreIfNotInSameSub)
                 {
                     if (aiTarget.Entity.Submarine != Character.Submarine) { continue; }
                     var targetHull = targetCharacter != null ? targetCharacter.CurrentHull : aiTarget.Entity is Item it ? it.CurrentHull : null;
-                    if ((targetHull == null) != (character.CurrentHull == null)) { continue; }
+                    if ((targetHull == null) != (Character.CurrentHull == null)) { continue; }
                 }
                 if (targetParams.State == AIState.Observe || targetParams.State == AIState.Eat)
                 {
@@ -2706,7 +2652,7 @@ namespace Barotrauma
                         {
                             target = selectedTargetingParams == targetParams ? targetParams.ThresholdMax : targetParams.ThresholdMin;
                         }
-                        if (character.HealthPercentage > target)
+                        if (Character.HealthPercentage > target)
                         {
                              continue;
                         }
@@ -2721,7 +2667,7 @@ namespace Barotrauma
                         // Halve the priority for each swarm mate targeting the same target -> reduces stacking
                         foreach (Character otherCharacter in SwarmBehavior.Members)
                         {
-                            if (otherCharacter == character) { continue; }
+                            if (otherCharacter == Character) { continue; }
                             if (otherCharacter.AIController?.SelectedAiTarget != aiTarget) { continue; }
                             valueModifier /= 2;
                         }
@@ -2731,15 +2677,15 @@ namespace Barotrauma
                         // The same as above, but using all the friendly characters in the level.
                         foreach (Character otherCharacter in Character.CharacterList)
                         {
-                            if (otherCharacter == character) { continue; }
+                            if (otherCharacter == Character) { continue; }
                             if (otherCharacter.AIController?.SelectedAiTarget != aiTarget) { continue; }
-                            if (!character.IsFriendly(otherCharacter)) { continue; }
+                            if (!Character.IsFriendly(otherCharacter)) { continue; }
                             valueModifier /= 2;
                         }
                     }
                 }
                 if (!aiTarget.IsWithinSector(WorldPosition)) { continue; }
-                Vector2 toTarget = aiTarget.WorldPosition - character.WorldPosition;
+                Vector2 toTarget = aiTarget.WorldPosition - Character.WorldPosition;
                 float dist = toTarget.Length();
                 float nonModifiedDist = dist;
                 //if the target has been within range earlier, the character will notice it more easily
@@ -2829,7 +2775,7 @@ namespace Barotrauma
                         Character owner = GetOwner(i);
                         // Don't target items that we own. 
                         // This is a rare case, and almost entirely related to Humanhusks, so let's check it last to reduce unnecessary checks (although the check shouldn't be expensive)
-                        if (owner == character) { continue; }
+                        if (owner == Character) { continue; }
                         if (owner != null && (Character.IsFriendly(owner) || owner.AiTarget != null && ignoredTargets.Contains(owner.AiTarget)))
                         {
                             continue;

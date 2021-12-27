@@ -470,7 +470,9 @@ namespace Barotrauma.Items.Components
             if (!AllowDragAndDrop && user != null) { return false; }
             if (!slotRestrictions.Any(s => s.MatchesItem(item))) { return false; }
             if (user != null && !user.CanAccessInventory(Inventory)) { return false; }
-            
+            //genetic materials use special logic for combining, don't allow doing it by placing them inside each other here
+            if (this.Item.GetComponent<GeneticMaterial>() != null) { return false; }
+
             if (Inventory.TryPutItem(item, user))
             {            
                 IsActive = true;
@@ -575,7 +577,7 @@ namespace Barotrauma.Items.Components
                     {
                         DebugConsole.Log("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace.CleanupStackTrace());
                         GameAnalyticsManager.AddErrorEventOnce("ItemContainer.SetContainedItemPositions.InvalidPosition:" + contained.Name,
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            GameAnalyticsManager.ErrorSeverity.Error,
                             "SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace.CleanupStackTrace());
                     }
                     contained.body.Submarine = item.Submarine;

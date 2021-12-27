@@ -1,4 +1,3 @@
-using Barotrauma.Extensions;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -6,8 +5,6 @@ namespace Barotrauma
     partial class CombatMission : Mission
     {
         private Submarine[] subs;
-        // TODO: not used
-        private List<Character>[] crews;
 
         private readonly string[] descriptions;
         private static string[] teamNames = { "Team A", "Team B" };
@@ -103,15 +100,16 @@ namespace Barotrauma
 
             subs[0].NeutralizeBallast(); 
             subs[0].TeamID = CharacterTeamType.Team1;
-            subs[0].DockedTo.ForEach(s => s.TeamID = CharacterTeamType.Team1);
+            subs[0].GetConnectedSubs().ForEach(s => s.TeamID = CharacterTeamType.Team1);
 
             subs[1].NeutralizeBallast();
             subs[1].TeamID = CharacterTeamType.Team2;
-            subs[1].DockedTo.ForEach(s => s.TeamID = CharacterTeamType.Team2);
+            subs[1].GetConnectedSubs().ForEach(s => s.TeamID = CharacterTeamType.Team2);
             subs[1].SetPosition(subs[1].FindSpawnPos(Level.Loaded.EndPosition));
             subs[1].FlipX();
-
+#if SERVER
             crews = new List<Character>[] { new List<Character>(), new List<Character>() };
+#endif
         }
 
         public override void End()

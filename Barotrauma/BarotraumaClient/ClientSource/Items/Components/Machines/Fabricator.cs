@@ -329,8 +329,6 @@ namespace Barotrauma.Items.Components
                 var missingCounts = missingItems.GroupBy(missingItem => missingItem).ToDictionary(x => x.Key, x => x.Count());
                 missingItems = missingItems.Distinct().ToList();
 
-                var availableIngredients = GetAvailableIngredients();
-
                 foreach (FabricationRecipe.RequiredItem requiredItem in missingItems)
                 {
                     while (slotIndex < inputContainer.Capacity && inputContainer.Inventory.GetItemAt(slotIndex) != null)
@@ -341,23 +339,23 @@ namespace Barotrauma.Items.Components
                     requiredItem.ItemPrefabs
                         .Where(requiredPrefab => availableIngredients.ContainsKey(requiredPrefab.Identifier))
                         .ForEach(requiredPrefab => {
-                            var availablePrefabs = availableIngredients[requiredPrefab.Identifier];
-
-                            availablePrefabs
-                                .Where(availablePrefab => availablePrefab.ParentInventory != inputContainer.Inventory)
-                                .Where(availablePrefab => availablePrefab.ParentInventory.visualSlots != null) //slots are null if the inventory has never been displayed 
-                                .ForEach(availablePrefab => {                                                  //(linked item, but the UI is not set to be displayed at the same time)
-                                    int availableSlotIndex = availablePrefab.ParentInventory.FindIndex(availablePrefab);
-
-                                    if (availablePrefab.ParentInventory.visualSlots[availableSlotIndex].HighlightTimer <= 0.0f)
+                            var availableItems = availableIngredients[requiredPrefab.Identifier];
+                            foreach (Item it in availableItems)
+                            {
+                                if (it.ParentInventory == inputContainer.Inventory) { continue; }
+                                var rootContainer = it.GetRootContainer();
+                                if (rootContainer?.OwnInventory?.visualSlots == null) { continue; }
+                                int availableSlotIndex = rootContainer.OwnInventory.FindIndex(it.Container == rootContainer ? it : it.Container);
+                                if (availableSlotIndex < 0) { continue; }
+                                if (rootContainer.OwnInventory.visualSlots[availableSlotIndex].HighlightTimer <= 0.0f)
+                                {
+                                    rootContainer.OwnInventory.visualSlots[availableSlotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
+                                    if (slotIndex < inputContainer.Capacity)
                                     {
-                                        availablePrefab.ParentInventory.visualSlots[availableSlotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
-                                        if (slotIndex < inputContainer.Capacity)
-                                        {
-                                            inputContainer.Inventory.visualSlots[slotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
-                                        }
+                                        inputContainer.Inventory.visualSlots[slotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
                                     }
-                                });
+                                }
+                            }
                         });
 
                     if (slotIndex >= inputContainer.Capacity) { break; }
@@ -676,7 +674,17 @@ namespace Barotrauma.Items.Components
             activateButton.Enabled = false;
             inSufficientPowerWarning.Visible = currPowerConsumption > 0 && !hasPower;
 
-            var availableIngredients = GetAvailableIngredients();
+            if (!IsActive)
+            {
+                //only check ingredients if the fabricator isn't active (if it is, this is done in Update)
+                if (refreshIngredientsTimer <= 0.0f)
+                {
+                    RefreshAvailableIngredients();
+                    refreshIngredientsTimer = RefreshIngredientsInterval;
+                }
+                refreshIngredientsTimer -= deltaTime;
+            }
+
             if (character != null)
             {
                 foreach (GUIComponent child in itemList.Content.Children)

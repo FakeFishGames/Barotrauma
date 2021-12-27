@@ -93,13 +93,6 @@ namespace Barotrauma
                 _abandon = value;
                 if (_abandon)
                 {
-#if DEBUG
-                    if (HumanAIController.debugai && objectiveManager.IsOrder(this) && !objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() && !objectiveManager.IsCurrentOrder<AIObjectiveReturn>())
-                    {
-                        // TODO: dismiss
-                        throw new Exception("Order abandoned!");
-                    }
-#endif
                     OnAbandon();
                 }
             }
@@ -247,7 +240,7 @@ namespace Barotrauma
             }
         }
 
-        protected bool IsAllowed
+        public bool IsAllowed
         {
             get 
             {
@@ -271,7 +264,7 @@ namespace Barotrauma
             if (!IsAllowed)
             {
                 Priority = 0;
-                Abandon = !isOrder;
+                Abandon = true;
                 return Priority;
             }
             if (isOrder)
@@ -290,9 +283,9 @@ namespace Barotrauma
         /// </summary>
         public float CalculatePriority()
         {
+            ForceWalk = false;
             Priority = GetPriority();
             ForceHighestPriority = false;
-            ForceWalk = false;
             return Priority;
         }
 
@@ -508,5 +501,34 @@ namespace Barotrauma
                 }
             }
         }
+
+        protected static bool CanEquip(Character character, Item item)
+        {
+            bool canEquip = item != null;
+            if (canEquip && !item.AllowedSlots.Contains(InvSlotType.Any))
+            {
+                canEquip = false;
+                var inv = character.Inventory;
+                foreach (var allowedSlot in item.AllowedSlots)
+                {
+                    foreach (var slotType in inv.SlotTypes)
+                    {
+                        if (!allowedSlot.HasFlag(slotType)) { continue; }
+                        for (int i = 0; i < inv.Capacity; i++)
+                        {
+                            canEquip = true;
+                            if (allowedSlot.HasFlag(inv.SlotTypes[i]) && inv.GetItemAt(i) != null)
+                            {
+                                canEquip = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return canEquip;
+        }
+
+        protected bool CanEquip(Item item) => CanEquip(character, item);
     }
 }

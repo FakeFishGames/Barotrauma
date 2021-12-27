@@ -951,7 +951,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Creature death animation error: invalid limb mass on character \"" + character.SpeciesName + "\" (type: " + limb.type + ", mass: " + limb.Mass + ")";
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("FishAnimController.UpdateDying:InvalidMass" + character.ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("FishAnimController.UpdateDying:InvalidMass" + character.ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     deathAnimTimer = deathAnimDuration;
                     return;
                 }
@@ -961,7 +961,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Creature death animation error: invalid diff (center of mass: " + centerOfMass + ", limb position: " + limb.SimPosition + ")";
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("FishAnimController.UpdateDying:InvalidDiff" + character.ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("FishAnimController.UpdateDying:InvalidDiff" + character.ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     deathAnimTimer = deathAnimDuration;
                     return;
                 }

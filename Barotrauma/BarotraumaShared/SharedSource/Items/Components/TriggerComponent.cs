@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class TriggerComponent : ItemComponent
+    partial class TriggerComponent : ItemComponent 
     {
         [Editable, Serialize(0.0f, true, description: "The maximum amount of force applied to the triggering entitites.", alwaysUseInstanceValues: true)]
         public float Force { get; set; }
@@ -18,12 +18,32 @@ namespace Barotrauma.Items.Components
         private float Radius { get; set; }
         private float RadiusInDisplayUnits { get; set; }
         private bool TriggeredOnce { get; set; }
-
+        private float CurrentForceFluctuation { get; set; } = 1.0f;
         public bool TriggerActive { get; private set; }
+        private float ForceFluctuationTimer { get; set; }
+        private static float TimeInLevel
+        {
+            get
+            {
+                if (GameMain.GameSession != null)
+                {
+                    return (float)(Timing.TotalTime - GameMain.GameSession.RoundStartTime);
+                }
+                else
+                {
+                    return 0.0f;
+                }
+            }
+        } 
 
         private readonly LevelTrigger.TriggererType triggeredBy;
         private readonly HashSet<Entity> triggerers = new HashSet<Entity>();
         private readonly bool triggerOnce;
+        private readonly bool distanceBasedForce;
+        private readonly bool forceFluctuation;
+        private readonly float forceFluctuationStrength;
+        private readonly float forceFluctuationFrequency;
+        private readonly float forceFluctuationInterval;
         private readonly List<ISerializableEntity> statusEffectTargets = new List<ISerializableEntity>();
         /// <summary>
         /// Effects applied to entities inside the trigger
@@ -42,6 +62,15 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError($"Error in ForceComponent config: \"{triggeredByAttribute}\" is not a valid triggerer type.");
             }
             triggerOnce = element.GetAttributeBool("triggeronce", false);
+            distanceBasedForce = element.GetAttributeBool("distancebasedforce", false);
+            forceFluctuation = element.GetAttributeBool("forcefluctuation", false);
+            forceFluctuationStrength = element.GetAttributeFloat("forcefluctuationstrength", 1.0f);
+            forceFluctuationStrength = Math.Clamp(forceFluctuationStrength, 0.0f, 1.0f);
+            forceFluctuationFrequency = element.GetAttributeFloat("fluctuationfrequency", 1.0f);
+            forceFluctuationFrequency = Math.Max(forceFluctuationFrequency, 0.01f);
+            forceFluctuationInterval = element.GetAttributeFloat("fluctuationinterval", 0.01f);
+            forceFluctuationInterval = Math.Max(forceFluctuationInterval, 0.01f);
+
             string parentDebugName = $"TriggerComponent in {item.Name}";
             foreach (XElement subElement in element.Elements())
             {
@@ -128,6 +157,19 @@ namespace Barotrauma.Items.Components
 
             TriggerActive = triggerers.Any();
 
+            if (forceFluctuation && TriggerActive && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
+            {
+                ForceFluctuationTimer += deltaTime;
+                if (ForceFluctuationTimer >= forceFluctuationInterval)
+                {
+                    float v = MathF.Sin(2 * MathF.PI * forceFluctuationFrequency * TimeInLevel);
+                    float amount = MathUtils.InverseLerp(-1.0f, 1.0f, v);
+                    CurrentForceFluctuation = MathHelper.Lerp(1.0f - forceFluctuationStrength, 1.0f, amount);
+                    ForceFluctuationTimer = 0.0f;
+                    GameMain.NetworkMember?.CreateEntityEvent(this);
+                }
+            }
+
             foreach (Entity triggerer in triggerers)
             {
                 LevelTrigger.ApplyStatusEffects(statusEffects, item.WorldPosition, triggerer, deltaTime, statusEffectTargets);
@@ -167,9 +209,9 @@ namespace Barotrauma.Items.Components
         {
             Vector2 diff = ConvertUnits.ToDisplayUnits(PhysicsBody.SimPosition - body.SimPosition);
             if (diff.LengthSquared() < 0.0001f) { return; }
-            float distanceFactor = LevelTrigger.GetDistanceFactor(body, PhysicsBody, RadiusInDisplayUnits);
+            float distanceFactor = distanceBasedForce ? LevelTrigger.GetDistanceFactor(body, PhysicsBody, RadiusInDisplayUnits) : 1.0f;
             if (distanceFactor <= 0.0f) { return; }
-            Vector2 force = distanceFactor * Force * Vector2.Normalize(diff);
+            Vector2 force = distanceFactor * (CurrentForceFluctuation * Force) * Vector2.Normalize(diff);
             if (force.LengthSquared() < 0.01f) { return; }
             body.ApplyForce(force);
         }

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
@@ -15,14 +16,19 @@ namespace Barotrauma.Abilities
             if (!TalentTree.JobTalentTrees.TryGetValue(Character.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return; }
 
             var subTree = talentTree.TalentSubTrees.Find(t => t.TalentOptionStages.Any(ts => ts.Talents.Contains(CharacterTalent.Prefab)));
+
             if (subTree != null)
             {
+                subTree.ForceUnlock = true;
                 foreach (var talentOption in subTree.TalentOptionStages)
                 {
                     foreach (var talent in talentOption.Talents)
                     {
                         if (talent == CharacterTalent.Prefab) { continue; }
-                        Character.GiveTalent(talent);
+                        if (Character.GiveTalent(talent))
+                        {
+                            Character.Info.AdditionalTalentPoints++;
+                        }
                     }
                 }
             }

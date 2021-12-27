@@ -175,12 +175,12 @@ namespace Barotrauma
                 }
             }
 
-            float displayCondition = FakeBroken ? 0.0f : condition;
+            float displayCondition = FakeBroken ? 0.0f : ConditionPercentage;
             for (int i = 0; i < Prefab.BrokenSprites.Count;i++)
             {
                 if (Prefab.BrokenSprites[i].FadeIn) { continue; }
-                float minCondition = i > 0 ? Prefab.BrokenSprites[i - i].MaxCondition : 0.0f;
-                if (displayCondition <= minCondition || displayCondition <= Prefab.BrokenSprites[i].MaxCondition)
+                float minCondition = i > 0 ? Prefab.BrokenSprites[i - i].MaxConditionPercentage : 0.0f;
+                if (displayCondition <= minCondition || displayCondition <= Prefab.BrokenSprites[i].MaxConditionPercentage)
                 {
                     activeSprite = Prefab.BrokenSprites[i].Sprite;
                     break;
@@ -284,8 +284,8 @@ namespace Barotrauma
                 {
                     if (Prefab.BrokenSprites[i].FadeIn)
                     {
-                        float min = i > 0 ? Prefab.BrokenSprites[i - i].MaxCondition : 0.0f;
-                        float max = Prefab.BrokenSprites[i].MaxCondition;
+                        float min = i > 0 ? Prefab.BrokenSprites[i - i].MaxConditionPercentage : 0.0f;
+                        float max = Prefab.BrokenSprites[i].MaxConditionPercentage;
                         fadeInBrokenSpriteAlpha = 1.0f - ((displayCondition - min) / (max - min));
                         if (fadeInBrokenSpriteAlpha > 0.0f && fadeInBrokenSpriteAlpha <= 1.0f)
                         {
@@ -293,7 +293,7 @@ namespace Barotrauma
                         }
                         continue;
                     }
-                    if (displayCondition <= Prefab.BrokenSprites[i].MaxCondition)
+                    if (displayCondition <= Prefab.BrokenSprites[i].MaxConditionPercentage)
                     {
                         activeSprite = Prefab.BrokenSprites[i].Sprite;
                         drawOffset = Prefab.BrokenSprites[i].Offset.ToVector2() * Scale;
@@ -648,12 +648,18 @@ namespace Barotrauma
                 if (linkedTo.Contains(otherEntity))
                 {
                     linkedTo.Remove(otherEntity);
-                    if (otherEntity.linkedTo != null && otherEntity.linkedTo.Contains(this)) otherEntity.linkedTo.Remove(this);
+                    if (otherEntity.linkedTo != null && otherEntity.linkedTo.Contains(this))
+                    {
+                        otherEntity.linkedTo.Remove(this);
+                    }
                 }
                 else
                 {
                     linkedTo.Add(otherEntity);
-                    if (otherEntity.Linkable && otherEntity.linkedTo != null) otherEntity.linkedTo.Add(this);
+                    if (otherEntity.Linkable && otherEntity.linkedTo != null)
+                    {
+                        otherEntity.linkedTo.Add(this);
+                    }
                 }
             }
         }
@@ -1445,7 +1451,7 @@ namespace Barotrauma
 #else
                 if (GameSettings.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
 #endif
-                GameAnalyticsManager.AddErrorEventOnce("Item.ClientReadPosition:nophysicsbody", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.ClientReadPosition:nophysicsbody", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -1586,7 +1592,7 @@ namespace Barotrauma
                 string errorMsg = "Failed to spawn item, prefab not found (name: " + (itemName ?? "null") + ", identifier: " + (itemIdentifier ?? "null") + ")";
                 errorMsg += "\n" + string.Join(", ", GameMain.Config.AllEnabledPackages.Select(cp => cp.Name));
                 GameAnalyticsManager.AddErrorEventOnce("Item.ReadSpawnData:PrefabNotFound" + (itemName ?? "null") + (itemIdentifier ?? "null"),
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Critical,
+                    GameAnalyticsManager.ErrorSeverity.Critical,
                     errorMsg);
                 DebugConsole.ThrowError(errorMsg);
                 return null;
@@ -1607,7 +1613,7 @@ namespace Barotrauma
                         string errorMsg =
                             $"Failed to spawn item \"{(itemIdentifier ?? "null")}\" in the inventory of \"{parentItem.prefab.Identifier} ({parentItem.ID})\" (component index out of range). Index: {itemContainerIndex}, components: {parentItem.components.Count}.";
                         GameAnalyticsManager.AddErrorEventOnce("Item.ReadSpawnData:ContainerIndexOutOfRange" + (itemName ?? "null") + (itemIdentifier ?? "null"),
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            GameAnalyticsManager.ErrorSeverity.Error,
                             errorMsg);
                         DebugConsole.ThrowError(errorMsg);
                         inventory = parentItem.GetComponent<ItemContainer>()?.Inventory;
@@ -1632,7 +1638,7 @@ namespace Barotrauma
             {
                 item = new Item(itemPrefab, pos, sub, id: itemId)
                 {
-                    SpawnedInOutpost = spawnedInOutpost,
+                    SpawnedInCurrentOutpost = spawnedInOutpost,
                     AllowStealing = allowStealing,
                     Quality = quality
                 };

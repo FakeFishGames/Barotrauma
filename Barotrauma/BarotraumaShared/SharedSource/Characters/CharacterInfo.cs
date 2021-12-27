@@ -365,6 +365,30 @@ namespace Barotrauma
 
         public const int MaxCurrentOrders = 3;
         public static int HighestManualOrderPriority => MaxCurrentOrders;
+        public int GetManualOrderPriority(Order order)
+        {
+            if (order != null && order.AssignmentPriority < 100 && CurrentOrders.Any())
+            {
+                int orderPriority = HighestManualOrderPriority;
+                for (int i = 0; i < CurrentOrders.Count; i++)
+                {
+                    if (CurrentOrders[i].Order is Order currentOrder && order.AssignmentPriority >= currentOrder.AssignmentPriority)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        orderPriority--;
+                    }
+                }
+                return Math.Max(orderPriority, 1);
+            }
+            else
+            {
+                return HighestManualOrderPriority;
+            }
+        }
+
         public List<OrderInfo> CurrentOrders { get; } = new List<OrderInfo>();
 
         //unique ID given to character infos in MP
@@ -1176,13 +1200,13 @@ namespace Barotrauma
             int salary = 0;
             foreach (Skill skill in Job.Skills)
             {
-                salary += (int)(skill.Level * skill.Prefab.PriceMultiplier);
+                salary += (int)(skill.Level * skill.PriceMultiplier);
             }
 
             return (int)(salary * Job.Prefab.PriceMultiplier);
         }
 
-        public void IncreaseSkillLevel(string skillIdentifier, float increase, bool gainedFromApprenticeship = false)
+        public void IncreaseSkillLevel(string skillIdentifier, float increase, bool gainedFromAbility = false)
         {
             if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) || Character == null) { return; }         
 
@@ -1202,7 +1226,7 @@ namespace Barotrauma
             {                
                 // assume we are getting at least 1 point in skill, since this logic only runs in such cases
                 float increaseSinceLastSkillPoint = MathHelper.Max(increase, 1f);
-                var abilitySkillGain = new AbilitySkillGain(increaseSinceLastSkillPoint, skillIdentifier, Character, gainedFromApprenticeship);
+                var abilitySkillGain = new AbilitySkillGain(increaseSinceLastSkillPoint, skillIdentifier, Character, gainedFromAbility);
                 Character.CheckTalents(AbilityEffectType.OnGainSkillPoint, abilitySkillGain);
                 foreach (Character character in Character.GetFriendlyCrew(Character))
                 {
@@ -1276,17 +1300,16 @@ namespace Barotrauma
 
         public float GetProgressTowardsNextLevel()
         {
-            float progress = (ExperiencePoints - GetExperienceRequiredForCurrentLevel()) / (GetExperienceRequiredToLevelUp() - GetExperienceRequiredForCurrentLevel());
-            return progress;
+            return (ExperiencePoints - GetExperienceRequiredForCurrentLevel()) / (float)(GetExperienceRequiredToLevelUp() - GetExperienceRequiredForCurrentLevel());
         }
 
-        public float GetExperienceRequiredForCurrentLevel()
+        public int GetExperienceRequiredForCurrentLevel()
         {
             GetCurrentLevel(out int experienceRequired);
             return experienceRequired;
         }
 
-        public float GetExperienceRequiredToLevelUp()
+        public int GetExperienceRequiredToLevelUp()
         {
             int level = GetCurrentLevel(out int experienceRequired);
             return experienceRequired + ExperienceRequiredPerLevel(level);
@@ -1388,7 +1411,6 @@ namespace Barotrauma
                 foreach (var savedStat in statValuePair.Value)
                 {
                     if (savedStat.StatValue == 0f) { continue; }
-                    if (savedStat.RemoveAfterRound) { continue; }
 
                     savedStatElement.Add(new XElement("savedstatvalue",
                         new XAttribute("stattype", statValuePair.Key.ToString()),
@@ -1746,6 +1768,20 @@ namespace Barotrauma
             OnPermanentStatChanged(statType);
         }
 
+        public void RemoveSavedStatValuesOnDeath()
+        {
+            foreach (StatTypes statType in SavedStatValues.Keys)
+            {
+                foreach (SavedStatValue savedStatValue in SavedStatValues[statType])
+                {
+                    if (!savedStatValue.RemoveOnDeath) { continue; }
+                    if (MathUtils.NearlyEqual(savedStatValue.StatValue, 0.0f)) { continue; }
+                    savedStatValue.StatValue = 0.0f;
+                    // no need to make a network update, as this is only done after the character has died
+                }
+            }
+        }
+
         public void ResetSavedStatValue(string statIdentifier)
         {
             foreach (StatTypes statType in SavedStatValues.Keys)
@@ -1785,7 +1821,7 @@ namespace Barotrauma
             }
         }
 
-        public void ChangeSavedStatValue(StatTypes statType, float value, string statIdentifier, bool removeOnDeath, bool removeAfterRound = false, float maxValue = float.MaxValue, bool setValue = false)
+        public void ChangeSavedStatValue(StatTypes statType, float value, string statIdentifier, bool removeOnDeath, float maxValue = float.MaxValue, bool setValue = false)
         {
             if (!SavedStatValues.ContainsKey(statType))
             {
@@ -1801,7 +1837,7 @@ namespace Barotrauma
             }
             else
             {
-                SavedStatValues[statType].Add(new SavedStatValue(statIdentifier, MathHelper.Min(value, maxValue), removeOnDeath, removeAfterRound));
+                SavedStatValues[statType].Add(new SavedStatValue(statIdentifier, MathHelper.Min(value, maxValue), removeOnDeath));
                 changed = true;
             }
             if (changed) { OnPermanentStatChanged(statType); }
@@ -1813,29 +1849,27 @@ namespace Barotrauma
         public string StatIdentifier { get; set; }
         public float StatValue { get; set; }
         public bool RemoveOnDeath { get; set; }
-        public bool RemoveAfterRound { get; set; }
 
-        public SavedStatValue(string statIdentifier, float value, bool removeOnDeath, bool retainAfterRound)
+        public SavedStatValue(string statIdentifier, float value, bool removeOnDeath)
         {
             StatValue = value;
             RemoveOnDeath = removeOnDeath;
             StatIdentifier = statIdentifier;
-            RemoveAfterRound = retainAfterRound;
         }
     }
 
     class AbilitySkillGain : AbilityObject, IAbilityValue, IAbilityString, IAbilityCharacter
     {
-        public AbilitySkillGain(float value, string abilityString, Character character, bool gainedFromApprenticeship)
+        public AbilitySkillGain(float value, string abilityString, Character character, bool gainedFromAbility)
         {
             Value = value;
             String = abilityString;
             Character = character;
-            GainedFromApprenticeship = gainedFromApprenticeship;
+            GainedFromAbility = gainedFromAbility;
         }
         public Character Character { get; set; }
         public float Value { get; set; }
         public string String { get; set; }
-        public bool GainedFromApprenticeship { get; set; }
+        public bool GainedFromAbility { get; }
     }
 }

@@ -44,7 +44,7 @@ namespace Barotrauma
 #endif
         }
 
-        private IEnumerable<object> Update(List<Submarine> subs, Camera cam)
+        private IEnumerable<CoroutineStatus> Update(List<Submarine> subs, Camera cam)
         {
             if (!subs.Any()) yield return CoroutineStatus.Success;
 

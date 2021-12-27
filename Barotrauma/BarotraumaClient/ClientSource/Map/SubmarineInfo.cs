@@ -26,7 +26,7 @@ namespace Barotrauma
                 catch (Exception e)
                 {
                     DebugConsole.ThrowError("Loading the preview image of the submarine \"" + Name + "\" failed. The file may be corrupted.", e);
-                    GameAnalyticsManager.AddErrorEventOnce("Submarine..ctor:PreviewImageLoadingFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("Submarine..ctor:PreviewImageLoadingFailed", GameAnalyticsManager.ErrorSeverity.Error,
                         "Loading the preview image of the submarine \"" + Name + "\" failed. The file may be corrupted.");
                     PreviewImage = null;
                 }
@@ -202,6 +202,7 @@ namespace Barotrauma
                 }
             }
             GUITextBlock.AutoScaleAndNormalize(parent.Content.GetAllChildren<GUITextBlock>().Where(c => c != submarineNameText && c != descBlock));
+            parent.ForceLayoutRecalculation();
         }
     }
 }

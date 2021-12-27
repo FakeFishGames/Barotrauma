@@ -60,5 +60,10 @@ namespace Barotrauma
         {
             GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.UpdateMoney });
         }
+
+        partial void OnTalentGiven(string talentIdentifier)
+        {
+            GameServer.Log($"{GameServer.CharacterLogName(this)} has gained the talent '{talentIdentifier}'", ServerLog.MessageType.Talent);
+        }
     }
 }

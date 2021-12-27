@@ -222,6 +222,9 @@ namespace Barotrauma
             [Serialize("", false)]
             public string DialogFlag { get; private set; }
 
+            [Serialize("", false)]
+            public string Tag { get; private set; }
+
             [Serialize("0,0,0,0", false)]
             public Color MinFaceTint { get; private set; }
 
@@ -234,6 +237,11 @@ namespace Barotrauma
             [Serialize("0,0,0,0", false)]
             public Color MaxBodyTint { get; private set; }
 
+            /// <summary>
+            /// Prevents AfflictionHusks with the specified identifier(s) from transforming the character into an AI-controlled character
+            /// </summary>
+            public string[] BlockTransformation { get; private set; }
+
             public readonly Dictionary<StatTypes, (float minValue, float maxValue)> AfflictionStatValues = new Dictionary<StatTypes, (float minValue, float maxValue)>();
             public readonly HashSet<AbilityFlags> AfflictionAbilityFlags = new HashSet<AbilityFlags>();
 
@@ -245,6 +253,7 @@ namespace Barotrauma
                 SerializableProperty.DeserializeProperties(this, element);
 
                 resistanceFor = element.GetAttributeStringArray("resistancefor", new string[0], convertToLowerInvariant: true);
+                BlockTransformation = element.GetAttributeStringArray("blocktransformation", new string[0], convertToLowerInvariant: true);
 
                 foreach (XElement subElement in element.Elements())
                 {
@@ -265,6 +274,9 @@ namespace Barotrauma
                         case "abilityflag":
                             var flagType = CharacterAbilityGroup.ParseFlagType(subElement.GetAttributeString("flagtype", ""), parentDebugName);
                             AfflictionAbilityFlags.Add(flagType);
+                            break;
+                        case "affliction":
+                            DebugConsole.AddWarning($"Error in affliction \"{parentDebugName}\" - additional afflictions caused by the affliction should be configured inside status effects.");
                             break;
                     }
                 }

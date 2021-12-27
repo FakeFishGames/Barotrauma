@@ -406,7 +406,7 @@ namespace Barotrauma.Items.Components
                     DebugConsole.Log("Invalid sound volume (item " + item.Name + ", " + GetType().ToString() + "): " + newVolume);
                     GameAnalyticsManager.AddErrorEventOnce(
                         "ItemComponent.PlaySound:" + item.Name + GetType().ToString(),
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "Invalid sound volume (item " + item.Name + ", " + GetType().ToString() + "): " + newVolume);
                     return 0.0f;
                 }
@@ -576,7 +576,7 @@ namespace Barotrauma.Items.Components
             delayedCorrectionCoroutine = CoroutineManager.StartCoroutine(DoDelayedCorrection(type, buffer, sendingTime, waitForMidRoundSync));
         }
 
-        private IEnumerable<object> DoDelayedCorrection(ServerNetObject type, IReadMessage buffer, float sendingTime, bool waitForMidRoundSync)
+        private IEnumerable<CoroutineStatus> DoDelayedCorrection(ServerNetObject type, IReadMessage buffer, float sendingTime, bool waitForMidRoundSync)
         {
             while (GameMain.Client != null && 
                 (correctionTimer > 0.0f || (waitForMidRoundSync && GameMain.Client.MidRoundSyncing)))

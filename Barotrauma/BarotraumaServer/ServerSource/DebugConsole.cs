@@ -98,7 +98,7 @@ namespace Barotrauma
                     {
                         ColoredText msg = queuedMessages.Dequeue();
                         Messages.Add(msg);
-                        if (GameSettings.SaveDebugConsoleLogs)
+                        if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging)
                         {
                             unsavedMessages.Add(msg);
                             if (unsavedMessages.Count >= messagesPerFile)
@@ -269,7 +269,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Failed to write input to command line (window width: " + Console.WindowWidth + ", window height: " + Console.WindowHeight + ")\n"
                     + e.Message + "\n" + e.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("DebugConsole.RewriteInputToCommandLine", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("DebugConsole.RewriteInputToCommandLine", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
             }
         }
 
@@ -281,7 +281,7 @@ namespace Barotrauma
                 {
                     var msg = queuedMessages.Dequeue();
                     Messages.Add(msg);
-                    if (GameSettings.SaveDebugConsoleLogs)
+                    if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging)
                     {
                         unsavedMessages.Add(msg);
                         if (unsavedMessages.Count >= messagesPerFile)
@@ -1315,7 +1315,7 @@ namespace Barotrauma
 
             commands.Add(new Command("sub|submarine", "submarine [name]: Select the submarine for the next round.", (string[] args) =>
             {
-                SubmarineInfo sub = GameMain.NetLobbyScreen.GetSubList().Find(s => s.Name.ToLower() == string.Join(" ", args).ToLower());
+                SubmarineInfo sub = GameMain.NetLobbyScreen.GetSubList().Find(s => s.Name.Equals(string.Join(" ", args), StringComparison.OrdinalIgnoreCase));
 
                 if (sub != null)
                 {
@@ -1377,7 +1377,7 @@ namespace Barotrauma
 
             commands.Add(new Command("endgame|endround|end", "end/endgame/endround: End the current round.", (string[] args) =>
             {
-                if (Screen.Selected == GameMain.NetLobbyScreen) return;
+                if (Screen.Selected == GameMain.NetLobbyScreen) { return; }
                 GameMain.Server.EndGame();
             }));
 
@@ -1399,11 +1399,18 @@ namespace Barotrauma
 
             commands.Add(new Command("eventdata", "", (string[] args) =>
             {
-                if (args.Length == 0) return;
-                ServerEntityEvent ev = GameMain.Server.EntityEventManager.Events[Convert.ToUInt16(args[0])];
+                if (args.Length == 0) { return; }
+                if (!UInt16.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out ushort eventId)) { return; }
+                ServerEntityEvent ev = GameMain.Server.EntityEventManager.Events.Find(ev => ev.ID == eventId);
                 if (ev != null)
                 {
-                    NewMessage(ev.StackTrace.CleanupStackTrace(), Color.Lime);
+                    string entityData = "";
+                    if (ev.Entity is { ID: var entityId, Removed: var removed, IdFreed: var idFreed })
+                    {
+                        entityData = $"Entity ID: {entityId}; Entity removed: {removed}; Entity ID freed: {idFreed}";
+                    }
+                    NewMessage($"EventData {eventId}\n{entityData}", Color.Lime);
+                    //NewMessage(ev.StackTrace.CleanupStackTrace(), Color.Lime);
                 }
             }));
 
@@ -1578,16 +1585,9 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     Character tpCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args, false);
-                    if (tpCharacter == null) return;
-
-                    //var cam = GameMain.GameScreen.Cam;
-                    tpCharacter.AnimController.CurrentHull = null;
-                    tpCharacter.Submarine = null;
-                    tpCharacter.AnimController.SetPosition(ConvertUnits.ToSimUnits(cursorWorldPos));
-                    tpCharacter.AnimController.FindHull(cursorWorldPos, true);
-                    if (tpCharacter.AIController?.SteeringManager is IndoorsSteeringManager pathSteering)
+                    if (tpCharacter != null)
                     {
-                        pathSteering.ResetPath();
+                        tpCharacter.TeleportTo(cursorWorldPos);
                     }
                 }
             );
@@ -1779,7 +1779,7 @@ namespace Barotrauma
                     List<TalentTree> talentTrees = new List<TalentTree>();
                     if (args.Length == 0 || args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
                     {
-                        talentTrees.AddRange(TalentTree.JobTalentTrees.Values);
+                        talentTrees.AddRange(TalentTree.JobTalentTrees);
                     }
                     else
                     {
@@ -2369,6 +2369,16 @@ namespace Barotrauma
                 {
                     GameMain.Server.CreateEntityEvent(wall);
                 }
+            }));
+            commands.Add(new Command("stallfiletransfers", "stallfiletransfers [seconds]: A debug command that stalls each file transfer packet by the specified duration.", (string[] args) =>
+            {
+                float seconds = 0.0f;
+                if (args.Length > 0)
+                {
+                    float.TryParse(args[0], out seconds);
+                }
+                GameMain.Server.FileSender.StallPacketsTime = seconds;
+                NewMessage("Set file transfer stall time to " + seconds);
             }));
 #endif
         }

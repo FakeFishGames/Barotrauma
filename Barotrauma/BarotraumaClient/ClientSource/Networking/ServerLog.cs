@@ -242,7 +242,8 @@ namespace Barotrauma.Networking
                     textBlock.ClickableAreas.Add(new GUITextBlock.ClickableArea()
                     {
                         Data = data,
-                        OnClick = GameMain.NetLobbyScreen.SelectPlayer
+                        OnClick = GameMain.NetLobbyScreen.SelectPlayer,
+                        OnSecondaryClick = GameMain.NetLobbyScreen.ShowPlayerContextMenu
                     });
                 }
             }

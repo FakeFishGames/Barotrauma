@@ -756,14 +756,17 @@ namespace Barotrauma.Items.Components
         {
             if (item.ParentInventory != null) { return; }
 #if CLIENT
-            if (!relativeToSub && Screen.Selected != GameMain.SubEditorScreen) { return; }
+            if (!relativeToSub)
+            {
+                if (Screen.Selected != GameMain.SubEditorScreen || (item.Submarine?.Loading ?? false)) { return; }
+            }
 #else
             if (!relativeToSub) { return; }
 #endif
 
             Vector2 refPos = item.Submarine == null ?
                 Vector2.Zero :
-               item.Position - item.Submarine.HiddenSubPosition;
+                item.Position - item.Submarine.HiddenSubPosition;
 
             for (int i = 0; i < nodes.Count; i++)
             {

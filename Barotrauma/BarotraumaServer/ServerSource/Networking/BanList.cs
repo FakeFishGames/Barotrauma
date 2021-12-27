@@ -274,6 +274,8 @@ namespace Barotrauma.Networking
         public void Save()
         {
             GameServer.Log("Saving banlist", ServerLog.MessageType.ServerMessage);
+            
+            GameMain.Server?.ServerSettings?.UpdateFlag(ServerSettings.NetFlags.Properties);
 
             bannedPlayers.RemoveAll(bp => bp.ExpirationTime.HasValue && DateTime.Now > bp.ExpirationTime.Value);
 
@@ -344,7 +346,7 @@ namespace Barotrauma.Networking
             catch (Exception e)
             {
                 string errorMsg = "Error while writing banlist. {" + e + "}\n" + e.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("Banlist.ServerAdminWrite", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Banlist.ServerAdminWrite", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 throw;
             }
         }
