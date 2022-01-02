@@ -13,7 +13,21 @@ namespace Barotrauma.Items.Components
 
         private bool isOn;
 
-        private float throttlePowerOutput;
+        private float prevVoltage;
+
+        private float? newVoltage = null;
+
+        private float prevLoad = 0;
+
+        private float prevOutputLoad = 0;
+
+        private float bufferdiff = 0;
+
+        private float internalBuffer = 0;
+
+        private float thirdInverseMax = 0;
+
+        private float loadEqnConstant = 0;
 
         private static readonly Dictionary<string, string> connectionPairs = new Dictionary<string, string>
         {
@@ -25,7 +39,20 @@ namespace Barotrauma.Items.Components
             { "signal_in4", "signal_out4" },
             { "signal_in5", "signal_out5" }
         };
-        public float DisplayLoad { get; set; }
+        public float DisplayLoad
+        {
+            get
+            {
+                if (powerOut != null && powerOut.Grid != null)
+                {
+                    return powerOut.Grid.Load;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
 
         [Editable, Serialize(1000.0f, true, description: "The maximum amount of power that can pass through the item.")]
         public float MaxPower
@@ -34,6 +61,8 @@ namespace Barotrauma.Items.Components
             set
             {
                 maxPower = Math.Max(0.0f, value);
+                thirdInverseMax = 1 / (3 * maxPower);
+                loadEqnConstant = (8 * maxPower + 3) / 3;
             }
         }
 
@@ -59,8 +88,14 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             IsActive = true;
-            throttlePowerOutput = MaxPower;
+            prevVoltage = 0;
+            internalBuffer = MaxPower * 2;
+
+            // Set constants for load Formula to reduce calculation time
+            thirdInverseMax = 1 / (3 * maxPower);
+            loadEqnConstant = (8 * maxPower + 3) / 3;
         }
+
 
         public override void OnItemLoaded()
         {
@@ -87,8 +122,8 @@ namespace Barotrauma.Items.Components
             RefreshConnections();
 
             item.SendSignal(IsOn ? "1" : "0", "state_out");
-			
-            if (!CanTransfer) { Voltage = 0.0f; return; }
+            item.SendSignal(((int)Math.Round(-PowerLoad)).ToString(), "power_value_out");
+            item.SendSignal(((int)Math.Round(DisplayLoad)).ToString(), "load_value_out");
 
             if (isBroken)
             {
@@ -98,75 +133,214 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (powerOut != null)
-            {
-				bool overloaded = false;
-                foreach (Connection recipient in powerOut.Recipients)
-                {
-                    var pt = recipient.Item.GetComponent<PowerTransfer>();
-                    if (pt != null)
-                    {
-						float overload = -pt.CurrPowerConsumption - pt.PowerLoad;
-						throttlePowerOutput += overload * deltaTime * 0.5f;
-						overloaded = overload > 1.0f;
-                    }
-                }
-                throttlePowerOutput = overloaded ?
-					MathHelper.Clamp(throttlePowerOutput, 0.0f, MaxPower): 					
-					Math.Max(throttlePowerOutput - MaxPower * 0.1f * deltaTime, 0.0f);
-            }
-
-            if (Math.Min(-currPowerConsumption, PowerLoad) > maxPower && CanBeOverloaded)
+            if (Voltage > OverloadVoltage && CanBeOverloaded)
             {
                 item.Condition = 0.0f;
             }
         }
 
-        public override void ReceivePowerProbeSignal(Connection connection, Item source, float power)
+        /// <summary>
+        /// Relay power consumption. Load consumption is based on the internal buffer
+        /// this allows for the relay to react to demand and find equilibrium in loop configurations
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <returns></returns>
+        public override float ConnCurrConsumption(Connection conn = null)
         {
-            if (!IsOn || item.Condition <= 0.0f) { return; }
-
-            //we've already received this signal
-            if (lastPowerProbeRecipients.Contains(this)) { return; }
-            lastPowerProbeRecipients.Add(this);
-
-            if (power < 0.0f)
+            //Can't output or draw if broken
+            if (isBroken)
             {
-                if (!connection.IsOutput || powerIn == null) { return; }
+                return 0;
+            }
 
-                //power being drawn from the power_out connection
-                DisplayLoad -= Math.Min(power, 0.0f);
-                powerLoad -= Math.Min(power + throttlePowerOutput, 0.0f);
+            if (conn == powerIn)
+            {
+                float loadDraw = MaxPower;
+                if (internalBuffer > MaxPower)
+                {
+                    //Buffer load charging curve - special relay sauce
+                    // Original formula (buffer - 3*maxPower)^2 / (3 * maxPower) - (maxPower / 3) + 1
+                    //loadDraw = MathHelper.Clamp((float)Math.Pow(internalBuffer - 3*MaxPower,2) / (3*MaxPower) - MaxPower/3 + 1, 1, MaxPower);
+                    //Optimised formula 0.2% error from original
+                    loadDraw = MathHelper.Clamp(internalBuffer * internalBuffer * thirdInverseMax - 2 * internalBuffer + loadEqnConstant, 1, MaxPower);
 
-                //pass the load to items connected to the input
-                powerIn.SendPowerProbeSignal(source, Math.Max(power, -MaxPower));
+                    //Slight smoothing to load to minimise relay jank
+                    loadDraw = MathHelper.Clamp((loadDraw + prevLoad * 0.1f) / 1.1f, 1, MaxPower);
+                    prevLoad = loadDraw;
+                }
+
+                //Add on extra load after calculation
+                loadDraw += ExtraLoad;
+                return loadDraw;
             }
             else
             {
-                if (connection.IsOutput || powerOut == null) { return; }
-                //power being supplied to the power_in connection
-                if (currPowerConsumption - power < -MaxPower)
+                //Flag output as power out
+                return -1;
+            }
+        }
+
+        private bool RelayCanOutput()
+        {
+            //Only allow output if device is on, buffers have charge and the connected grids aren't short circuited
+            return isOn && powerIn != null && powerIn.Grid != null && internalBuffer > 0 && powerOut != null && powerOut.Grid != null && powerIn.Grid != powerOut.Grid;
+        }
+
+        /// <summary>
+        /// Minimum and maximum power out for the relay.
+        /// Max out is adjusted to allow for other relays to compensate
+        /// if this relay is undervolted.
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <param name="load"></param>
+        /// <returns></returns>
+        public override Vector3 MinMaxPowerOut(Connection conn, float load = 0)
+        {
+            Vector3 minMaxPower = new Vector3();
+            if (conn == powerIn)
+            {
+                minMaxPower.X = CurrPowerConsumption;
+                minMaxPower.Y = CurrPowerConsumption;
+            }
+            else
+            {
+                if (RelayCanOutput())
                 {
-                    power += MaxPower + (currPowerConsumption - power);
-                }
+                    //Determine output limits from buffer and voltage
+                    float bufferDraw = MathHelper.Min(internalBuffer, MaxPower);
+                    float voltageLimit = MathHelper.Min(MaxPower, load) * prevVoltage;
 
-                currPowerConsumption -= power;
+                    //If undervolted adjust max output so that other relays can compensate
+                    if (prevVoltage < 1)
+                    {
+                        voltageLimit *= prevVoltage;
+                    }
 
-                foreach (Connection recipient in powerOut.Recipients)
-                {
-                    if (!recipient.IsPower) { continue; }
-                    var powered = recipient.Item.GetComponent<Powered>();
-                    if (powered == null) { continue; }
-					
-					float load = powered.CurrPowerConsumption;
-					var powerTransfer = powered as PowerTransfer;
-					if (powerTransfer != null) { load = powerTransfer.PowerLoad;  }
-
-                    float powerOut = power * (load / Math.Max(powerLoad + throttlePowerOutput, 0.01f));
-                    powered.ReceivePowerProbeSignal(recipient, source, Math.Min(powerOut, power));
+                    minMaxPower.Y = -MathHelper.Min(voltageLimit, bufferDraw);
                 }
             }
+
+            return minMaxPower;
+        }
+
+        /// <summary>
+        /// Power out for the relay connection
+        /// Relay will output the necessary power to the grid based on maximum power output of other
+        /// relays and will undervolt and overvolt the grid following its supply grid
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <param name="power"></param>
+        /// <param name="minMaxPower"></param>
+        /// <param name="load"></param>
+        /// <returns>Power outputted to the grid (negative is adding power)</returns>
+        public override float ConnPowerOut(Connection conn, float power, Vector3 minMaxPower, float load)
+        {
+            if (conn == powerIn)
+            {
+                return CurrPowerConsumption;
+            }
+            else if (RelayCanOutput())
+            {
+                //Determine output limits of the relay
+                float bufferDraw = MathHelper.Min(internalBuffer, MaxPower);
+                float voltageLimit = MathHelper.Min(MaxPower, load) * prevVoltage;
+                float maxOut = -MathHelper.Min(voltageLimit, bufferDraw);
+
+                //Don't output negative power to the grid
+                if (maxOut >= 0)
+                {
+                    PowerLoad = 0;
+                    return 0;
+                }
+
+                prevOutputLoad = load;
+
+                //Calculate power out
+                PowerLoad = MathHelper.Clamp((load * prevVoltage - power) / MathHelper.Max(minMaxPower.Y, 0.0000001f) * maxOut, maxOut, 0);
+                return PowerLoad;
+            }
             
+            //Else relay isn't outputting
+            PowerLoad = 0;
+            return 0;
+        }
+
+        /// <summary>
+        /// Connection's grid resolved, determine the difference to be added to the buffer
+        /// Ensure the prevVoltage voltage is updated once both grids are resolved
+        /// </summary>
+        /// <param name="conn"></param>
+        public override void GridResolved(Connection conn) {
+            if (conn == powerIn)
+            {
+                if (powerIn != null && powerIn.Grid != null)
+                {
+                    float addToBuffer = powerIn.Grid.Voltage * (CurrPowerConsumption - ExtraLoad);
+
+                    //Limit power input to the previous voltage to prevent wild oscilations in overload
+                    if (powerIn.Grid.Voltage > 1)
+                    {
+                        addToBuffer = prevVoltage * (CurrPowerConsumption - ExtraLoad);
+                    }
+
+                    //Cap the max power input
+                    if (addToBuffer > MaxPower)
+                    {
+                        addToBuffer = MaxPower;
+                    }
+
+                    //To prevent problems with grid order, only update voltage and buffer after input and output grids have been resolved
+                    if (newVoltage == null)
+                    {
+                        //temporarily store the new voltage and also indicates that the input connection side has been updated
+                        newVoltage = powerIn.Grid.Voltage;
+                        bufferdiff = addToBuffer;
+                    }
+                    else
+                    {
+                        updateBuffer(addToBuffer, powerIn.Grid.Voltage);
+                    }
+                }
+            }
+            else
+            {
+                //To prevent problems with grid order, only update voltage and buffer after input and output grids have been resolved
+                if (newVoltage == null)
+                {
+                    //Flag that output conenction has been updated already
+                    newVoltage = -1;
+                    bufferdiff = PowerLoad;
+                }
+                else
+                {
+                    updateBuffer(PowerLoad, (float)newVoltage);
+                }
+            }
+        }
+
+        private void updateBuffer(float addToBuffer, float newvoltage)
+        {
+            //Update buffer and voltage
+            float limit = MaxPower * 2;
+
+            //Clamp the buffer to have a constant load in a severe overload event, otherwise wild oscillation will occur
+            if (RelayCanOutput() && powerIn.Grid.Voltage > 2)
+            {
+                limit = MathHelper.Min(limit, 3 * MaxPower - (float)Math.Sqrt((3 * prevOutputLoad + MaxPower - 3) * MaxPower));
+            }
+
+            //Add to the internal buffer
+            internalBuffer = MathHelper.Clamp(internalBuffer + bufferdiff + addToBuffer, 0, limit);
+
+            //Decay overvoltage slightly, helps resolve large chain loops to a grid
+            if (newvoltage > 1)
+            {
+                newvoltage = MathHelper.Max(newvoltage - 0.0005f, 1);
+            }
+
+            prevVoltage = newvoltage;
+            newVoltage = null;
+            bufferdiff = 0;
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)

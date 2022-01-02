@@ -114,14 +114,26 @@ namespace Barotrauma.Items.Components
             }
 #endif
 
-            currPowerConsumption = powerConsumption;
-            currPowerConsumption *= MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
-
             hasPower = Voltage > MinVoltage;
             if (hasPower)
             {
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }
+        }
+
+        /// <summary>
+        /// Consumption of MiniMap. Only consume power when active and adjust consumption based on condition.
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <returns></returns>
+        public override float ConnCurrConsumption(Connection conn = null)
+        {
+            if (conn != powerIn || !IsActive)
+            {
+                return 0;
+            }
+
+            return PowerConsumption * MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
         }
 
         public override bool Pick(Character picker)

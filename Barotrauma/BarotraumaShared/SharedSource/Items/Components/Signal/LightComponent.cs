@@ -245,8 +245,6 @@ namespace Barotrauma.Items.Components
             }
             UpdateOnActiveEffects(deltaTime);
 
-            if (powerIn == null && powerConsumption > 0.0f) { Voltage -= deltaTime; }
-
 #if CLIENT
             Light.ParentSub = item.Submarine;
 #endif
@@ -265,7 +263,7 @@ namespace Barotrauma.Items.Components
                 return;                
             }
 
-            currPowerConsumption = powerConsumption;
+            //currPowerConsumption = powerConsumption;
             if (Rand.Range(0.0f, 1.0f) < 0.05f && Voltage < Rand.Range(0.0f, MinVoltage))
             {
 #if CLIENT

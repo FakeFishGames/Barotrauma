@@ -33,6 +33,12 @@ namespace Barotrauma.Items.Components
 
         public readonly ushort[] wireId;
 
+        //The grid the connection is a part of
+        public GridInfo Grid;
+
+        //Priority in which power outputted will be handled - load is unaffected
+        public int priority = (int)PowerPriority.Default;
+
         public bool IsPower
         {
             get;
@@ -236,6 +242,34 @@ namespace Barotrauma.Items.Components
                 var otherConnection = previousWire.OtherConnection(this);
                 if (otherConnection != null)
                 {
+                    //Change the connection grids or flag them for updating
+                    if (IsPower && otherConnection.IsPower && Grid != null)
+                    {
+                        //Check if both connections belong to a larger grid
+                        if (otherConnection.recipients.Count > 1 && recipients.Count > 1)
+                        {
+                            Powered.ChangedConnections.Add(otherConnection);
+                            Powered.ChangedConnections.Add(this);
+                        }
+                        else if (recipients.Count > 1)
+                        {
+                            //This wire was the only one at the other grid
+                            otherConnection.Grid?.RemoveConnection(otherConnection);
+                            otherConnection.Grid = null;
+                        }
+                        else if (otherConnection.recipients.Count > 1)
+                        {
+                            Grid?.RemoveConnection(this);
+                            Grid = null;
+                        }
+                        else if (Grid.Connections.Count == 2)
+                        {
+                            //Delete the grid as these were the only 2 devices
+                            Powered.Grids.Remove(Grid.ID);
+                            Grid = null;
+                            otherConnection.Grid = null;
+                        }
+                    }
                     otherConnection.recipientsDirty = true;
                 }
             }
@@ -244,10 +278,32 @@ namespace Barotrauma.Items.Components
             recipientsDirty = true;
             if (wire != null)
             {
+
                 ConnectionPanel.DisconnectedWires.Remove(wire);
                 var otherConnection = wire.OtherConnection(this);
                 if (otherConnection != null)
                 {
+                    //Set the other connection grid if a grid exists already
+                    if (IsPower && otherConnection.IsPower)
+                    {
+                        if (Grid == null && otherConnection.Grid != null)
+                        {
+                            otherConnection.Grid.AddConnection(this);
+                            Grid = otherConnection.Grid;
+                        }
+                        else if (Grid != null && otherConnection.Grid == null)
+                        {
+                            Grid.AddConnection(otherConnection);
+                            otherConnection.Grid = Grid;
+                        }
+                        else
+                        {
+                            //Flag change so that proper grids can be formed
+                            Powered.ChangedConnections.Add(this);
+                            Powered.ChangedConnections.Add(otherConnection);
+                        }
+                    }
+
                     otherConnection.recipientsDirty = true;
                 }
             }
@@ -282,20 +338,17 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public void SendPowerProbeSignal(Item source, float power)
-        {
-            for (int i = 0; i < MaxWires; i++)
-            {
-                if (wires[i] == null) { continue; }
-
-                Connection recipient = wires[i].OtherConnection(this);
-                if (recipient == null || !recipient.IsPower) { continue; }
-
-                recipient.item.GetComponent<Powered>()?.ReceivePowerProbeSignal(recipient, source, power);
-            }
-        }
         public void ClearConnections()
         {
+            if (IsPower && Grid != null)
+            {
+                Powered.ChangedConnections.Add(this);
+                foreach (Connection c in recipients)
+                {
+                    Powered.ChangedConnections.Add(c);
+                }
+            }
+
             for (int i = 0; i < MaxWires; i++)
             {
                 if (wires[i] == null) continue;

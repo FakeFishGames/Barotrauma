@@ -19,8 +19,6 @@ namespace Barotrauma.Items.Components
         {
             UpdateOnActiveEffects(deltaTime);
 
-            CurrPowerConsumption = powerConsumption * (ConnectedSonar?.CurrentMode == Sonar.Mode.Active ? 1.0f : Sonar.PassivePowerConsumption);
-
             if (Voltage >= MinVoltage)
             {
                 sendSignalTimer += deltaTime;
@@ -30,6 +28,16 @@ namespace Barotrauma.Items.Components
                     sendSignalTimer = SendSignalInterval;
                 }
             }
+        }
+
+        public override float ConnCurrConsumption(Connection conn = null)
+        {
+            if (conn != powerIn || !IsActive)
+            {
+                return 0;
+            }
+
+            return PowerConsumption * (ConnectedSonar?.CurrentMode == Sonar.Mode.Active ? 1.0f : Sonar.PassivePowerConsumption);
         }
     }
 }

@@ -501,7 +501,7 @@ namespace Barotrauma
                 if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
                 if (!MathUtils.IsValid(value)) { return; }
                 if (Indestructible) { return; }
-                if (InvulnerableToDamage && value <= condition) { return;}
+                if (InvulnerableToDamage && value <= condition) { return; }
 
                 float prev = condition;
                 bool wasInFullCondition = IsFullCondition;
@@ -509,6 +509,19 @@ namespace Barotrauma
                 condition = MathHelper.Clamp(value, 0.0f, MaxCondition);
                 if (condition == 0.0f && prev > 0.0f)
                 {
+                    //Flag connections to be updated as device is broken
+                    if (connections != null)
+                    {
+                        foreach (KeyValuePair<string, Connection> c in connections.Where(c => c.Value.IsPower && c.Value.Grid != null))
+                        {
+                            Powered.ChangedConnections.Add(c.Value);
+                            foreach (Connection conn in c.Value.Recipients)
+                            {
+                                Powered.ChangedConnections.Add(conn);
+                            }
+                        }
+                    }
+
 #if CLIENT
                     foreach (ItemComponent ic in components)
                     {
@@ -517,6 +530,21 @@ namespace Barotrauma
                     if (Screen.Selected == GameMain.SubEditorScreen) { return; }
 #endif
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
+                }
+                else if (condition > 0.0f && prev <= 0.0f)
+                {
+                    //Flag connections to be updated as device is now working again
+                    if (connections != null)
+                    {
+                        foreach (KeyValuePair<string, Connection> c in connections.Where(c => c.Value.IsPower))
+                        {
+                            Powered.ChangedConnections.Add(c.Value);
+                            foreach(Connection conn in c.Value.Recipients)
+                            {
+                                Powered.ChangedConnections.Add(conn);
+                            }
+                        }
+                    }
                 }
                 
                 SetActiveSprite();

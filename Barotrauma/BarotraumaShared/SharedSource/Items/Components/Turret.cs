@@ -652,8 +652,9 @@ namespace Barotrauma.Items.Components
 
                 if (!ignorePower)
                 {
-                    var batteries = item.GetConnectedComponents<PowerContainer>();
+                    List<PowerContainer> batteries = GetConnectedBatteries();
                     float neededPower = GetPowerRequiredToShoot();
+
                     // tinkering is currently not factored into the common method as it is checked only when shooting
                     // but this is a minor issue that causes mostly cosmetic woes. might still be worth refactoring later
                     neededPower /= 1f + (tinkeringStrength * TinkeringPowerCostReduction);
@@ -992,7 +993,7 @@ namespace Barotrauma.Items.Components
             bool canShoot = true;
             if (!HasPowerToShoot())
             {
-                var batteries = item.GetConnectedComponents<PowerContainer>();
+                List<PowerContainer> batteries = GetConnectedBatteries();
                 float lowestCharge = 0.0f;
                 PowerContainer batteryToLoad = null;
                 foreach (PowerContainer battery in batteries)
@@ -1346,6 +1347,17 @@ namespace Barotrauma.Items.Components
             }
             aiTargetingGraceTimer = 5f;
             return false;
+        }
+
+        /// <summary>
+        /// Turret doesn't consume grid power, directly takes from the batteries on its grid instead.
+        /// Possible change this to cause a high draw when fired to discourage directly connecting to grid
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <returns></returns>
+        public override float ConnCurrConsumption(Connection conn = null)
+        {
+            return 0;
         }
 
         private bool CanShoot(Body targetBody, Character user = null, WreckAI ai = null, bool targetSubmarines = true)

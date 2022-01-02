@@ -197,9 +197,6 @@ namespace Barotrauma.Items.Components
             inputContainer.Inventory.Locked = true;
             outputContainer.Inventory.Locked = true;
 
-            currPowerConsumption = powerConsumption;
-            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
-
             if (GameMain.NetworkMember?.IsServer ?? true)
             {
                 State = FabricatorState.Active;
@@ -297,11 +294,10 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (powerConsumption <= 0) { Voltage = 1.0f; }
 
             float fabricationSpeedIncrease = 1f + tinkeringStrength * TinkeringSpeedIncrease;
 
-            timeUntilReady -= deltaTime * fabricationSpeedIncrease * Math.Min(Voltage, 1.0f);
+            timeUntilReady -= deltaTime * fabricationSpeedIncrease * Math.Min(powerConsumption <= 0 ? 1 : Voltage, 1.0f);
 
             UpdateRequiredTimeProjSpecific();
 
@@ -458,6 +454,25 @@ namespace Barotrauma.Items.Components
                 CancelFabricating();
             }
 
+        }
+
+        /// <summary>
+        /// Consumption of fabricator. Only consume power when active and adjust consumption based on repairable.
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <returns></returns>
+        public override float ConnCurrConsumption(Connection conn = null)
+        {
+            //No consumption if not powerin or is off
+            if (conn != this.powerIn || !IsActive)
+            {
+                return 0;
+            }
+
+            currPowerConsumption = PowerConsumption;
+            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
+
+            return currPowerConsumption;
         }
 
         private int GetFabricatedItemQuality(FabricationRecipe fabricatedItem, Character user)

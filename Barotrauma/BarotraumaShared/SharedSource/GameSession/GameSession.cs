@@ -399,6 +399,9 @@ namespace Barotrauma
                 }
             }
 
+            //Clear out the stored grids
+            Powered.Grids.Clear();
+
             Level level = null;
             if (levelData != null)
             {
@@ -685,6 +688,9 @@ namespace Barotrauma
         public void EndRound(string endMessage, List<TraitorMissionResult> traitorResults = null, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
         {
             RoundEnding = true;
+
+            //Clear the grids to allow for garbage collection
+            Powered.Grids.Clear();
 
             try
             {

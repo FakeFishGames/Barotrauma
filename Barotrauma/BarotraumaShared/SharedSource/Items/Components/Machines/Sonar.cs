@@ -152,8 +152,6 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            currPowerConsumption = (currentMode == Mode.Active) ? powerConsumption : powerConsumption * PassivePowerConsumption;
-
             UpdateOnActiveEffects(deltaTime);
 
             if (UseTransducers)
@@ -233,8 +231,22 @@ namespace Barotrauma.Items.Components
                     ++pingIndex;
                 }
             }
+        }
 
-            Voltage -= deltaTime;
+        /// <summary>
+        /// Consumption of sonar. Only consume power when active and adjust the load based
+        /// on the sonar mode
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <returns></returns>
+        public override float ConnCurrConsumption(Connection conn = null)
+        {
+            if (conn != powerIn || !IsActive)
+            {
+                return 0;
+            }
+
+            return (currentMode == Mode.Active) ? powerConsumption : powerConsumption * PassivePowerConsumption;
         }
 
         public override bool Use(float deltaTime, Character character = null)

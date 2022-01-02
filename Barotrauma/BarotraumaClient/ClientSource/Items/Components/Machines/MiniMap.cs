@@ -1114,7 +1114,12 @@ namespace Barotrauma.Items.Components
                     }
                     else if (it.GetComponent<PowerTransfer>() is { } powerTransfer)
                     {
-                        int current = (int)-powerTransfer.CurrPowerConsumption, load = (int)powerTransfer.PowerLoad;
+                        int current = 0, load = 0;
+                        if (powerTransfer.PowerConnections.Count > 0 && powerTransfer.PowerConnections[0].Grid != null)
+                        {
+                            current = (int)powerTransfer.PowerConnections[0].Grid.Power;
+                            load = (int)powerTransfer.PowerConnections[0].Grid.Load;
+                        }
 
                         line1 = TextManager.GetWithVariable("statusmonitor.junctionpower.tooltip", "[amount]", current.ToString(), fallBackTag: "statusmonitor.junctioncurrent.tooltip");
                         line2 = TextManager.GetWithVariable("statusmonitor.junctionload.tooltip", "[amount]", load.ToString());

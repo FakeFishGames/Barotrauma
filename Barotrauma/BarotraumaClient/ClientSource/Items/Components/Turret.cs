@@ -580,7 +580,7 @@ namespace Barotrauma.Items.Components
 
         private void GetAvailablePower(out float availableCharge, out float availableCapacity)
         {
-            var batteries = item.GetConnectedComponents<PowerContainer>();
+            List<PowerContainer> batteries = GetConnectedBatteries();
 
             availableCharge = 0.0f;
             availableCapacity = 0.0f;

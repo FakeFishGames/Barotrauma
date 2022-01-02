@@ -292,8 +292,6 @@ namespace Barotrauma.Items.Components
                 controlledSub = sonar.ConnectedTransducers.Any() ? sonar.ConnectedTransducers.First().Item.Submarine : null;
             }
 
-            currPowerConsumption = powerConsumption;
-
             if (Voltage < MinVoltage) { return; }
 
             if (user != null && user.Removed)

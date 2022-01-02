@@ -672,7 +672,7 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             activateButton.Enabled = false;
-            inSufficientPowerWarning.Visible = currPowerConsumption > 0 && !hasPower;
+            inSufficientPowerWarning.Visible = IsActive && !hasPower;
 
             if (!IsActive)
             {

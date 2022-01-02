@@ -36,8 +36,8 @@ namespace Barotrauma.Items.Components
         private float fireTimer, fireDelay;
 
         private float maxPowerOutput;
-
-        private readonly Queue<float> loadQueue = new Queue<float>();
+        private float minUpdatePowerOut;
+        private float maxUpdatePowerOut;
 
         private bool unsentChanges;
         private float sendUpdateTimer;
@@ -248,7 +248,7 @@ namespace Barotrauma.Items.Components
             //so the player doesn't have to keep adjusting the rate impossibly fast when the load fluctuates heavily
             if (!MathUtils.NearlyEqual(MaxPowerOutput, 0.0f))
             {
-                CorrectTurbineOutput += MathHelper.Clamp((Load / MaxPowerOutput * 100.0f) - CorrectTurbineOutput, -10.0f, 10.0f) * deltaTime;
+                CorrectTurbineOutput += MathHelper.Clamp((Load / MaxPowerOutput * 100.0f) - CorrectTurbineOutput, -20.0f, 20.0f) * deltaTime;
             }
 
             //calculate tolerances of the meters based on the skills of the user
@@ -277,25 +277,6 @@ namespace Barotrauma.Items.Components
             TurbineOutput = MathHelper.Lerp(turbineOutput, TargetTurbineOutput, deltaTime);
 
             float temperatureFactor = Math.Min(temperature / 50.0f, 1.0f);
-            currPowerConsumption = -MaxPowerOutput * Math.Min(turbineOutput / 100.0f, temperatureFactor);
-
-            //if the turbine output and coolant flow are the optimal range, 
-            //make the generated power slightly adjust according to the load
-            //  (-> the reactor can automatically handle small changes in load as long as the values are roughly correct)
-            if (turbineOutput > optimalTurbineOutput.X && turbineOutput < optimalTurbineOutput.Y && 
-                temperature > optimalTemperature.X && temperature < optimalTemperature.Y)
-            {
-                float maxAutoAdjust = maxPowerOutput * 0.1f;
-                autoAdjustAmount = MathHelper.Lerp(
-                    autoAdjustAmount, 
-                    MathHelper.Clamp(-Load - currPowerConsumption, -maxAutoAdjust, maxAutoAdjust), 
-                    deltaTime * 10.0f);
-            }
-            else
-            {
-                autoAdjustAmount = MathHelper.Lerp(autoAdjustAmount, 0.0f, deltaTime * 10.0f);
-            }
-            currPowerConsumption += autoAdjustAmount;
 
             if (!PowerOn)
             {
@@ -304,37 +285,9 @@ namespace Barotrauma.Items.Components
             }
             else if (autoTemp)
             {
-                UpdateAutoTemp(2.0f, deltaTime);
-            }
-            float currentLoad = 0.0f;
-            List<Connection> connections = item.Connections;
-            if (connections != null && connections.Count > 0)
-            {
-                foreach (Connection connection in connections)
-                {
-                    if (!connection.IsPower) { continue; }
-                    foreach (Connection recipient in connection.Recipients)
-                    {
-                        if (!(recipient.Item is Item it)) { continue; }
-
-                        PowerTransfer pt = it.GetComponent<PowerTransfer>();
-                        if (pt == null) { continue; }
-
-                        //calculate how much external power there is in the grid 
-                        //(power coming from somewhere else than this reactor, e.g. batteries)
-                        float externalPower = Math.Max(CurrPowerConsumption - pt.CurrPowerConsumption, 0) * 0.95f;
-                        //reduce the external power from the load to prevent overloading the grid
-                        currentLoad = Math.Max(currentLoad, pt.PowerLoad - externalPower);
-                    }
-                }
+                UpdateAutoTemp(10.0f, deltaTime * 2f);
             }
 
-            loadQueue.Enqueue(currentLoad);
-            while (loadQueue.Count() > 60.0f)
-            {
-                Load = loadQueue.Average();
-                loadQueue.Dequeue();
-            }
 
             float fuelLeft = 0.0f;
             var containedItems = item.OwnInventory?.AllItems;
@@ -403,6 +356,98 @@ namespace Barotrauma.Items.Components
                 sendUpdateTimer = NetworkUpdateIntervalHigh;
                 unsentChanges = false;
             }
+        }
+
+        /// <summary>
+        /// Indicate that the reactor is a power source
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <returns></returns>
+        public override float ConnCurrConsumption(Connection conn = null)
+        {
+            //There is only one power connection to a reactor 
+            return -1;
+        }
+
+        /// <summary>
+        /// Min and Max power output of the reactor based on tolerance
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <param name="load"></param>
+        /// <returns></returns>
+        public override Vector3 MinMaxPowerOut(Connection conn, float load)
+        {
+            float tolerance = 1f;
+
+            //If within the optimal output allow for slight output adjustments
+            if (turbineOutput > optimalTurbineOutput.X && turbineOutput < optimalTurbineOutput.Y &&
+                temperature > optimalTemperature.X && temperature < optimalTemperature.Y)
+            {
+                tolerance = 3f;
+            }
+
+            float temperatureFactor = Math.Min(temperature / 50.0f, 1.0f);
+            float minOutput = -MaxPowerOutput * Math.Clamp(Math.Min((turbineOutput - tolerance) / 100.0f, temperatureFactor),0, 1);
+            float maxOutput = -MaxPowerOutput * Math.Min((turbineOutput + tolerance) / 100.0f, temperatureFactor);
+
+            //Store min max power out
+            maxUpdatePowerOut = maxOutput;
+            minUpdatePowerOut = minOutput;
+
+            //Max Power Rating of the reactor, limit if reactor is shutting down
+            float reactorMax = -MaxPowerOutput;
+            if (!PowerOn)
+            {
+                reactorMax = maxUpdatePowerOut;
+            }
+
+            return new Vector3(minOutput, maxOutput, reactorMax);
+        }
+
+        /// <summary>
+        /// Determine how much power to be outputted and to update the display load
+        /// Display load is adjusted to work in multi-reactor setup
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <param name="power"></param>
+        /// <param name="minMaxPower"></param>
+        /// <param name="load"></param>
+        /// <returns></returns>
+        public override float ConnPowerOut(Connection conn, float power, Vector3 minMaxPower, float load)
+        {
+            //Load must be calculated at this stage instead of at gridResolved to remove influence of lower priority devices
+            float loadLeft = MathHelper.Max(load - power,0);
+            float expectedPower = MathHelper.Clamp(loadLeft, minMaxPower.X, minMaxPower.Y);
+
+            //Delta ratio of Min and Max power output capability of the grid
+            float ratio = MathHelper.Max((loadLeft - minMaxPower.X) / (minMaxPower.Y - minMaxPower.X), 0);
+            if (float.IsInfinity(ratio))
+            {
+                ratio = 0;
+            }
+
+
+            float output = MathHelper.Clamp(-ratio * (minUpdatePowerOut - maxUpdatePowerOut) + minUpdatePowerOut, maxUpdatePowerOut, minUpdatePowerOut);
+            float newLoad = loadLeft;
+
+            //Adjust behaviour for multi reactor setup
+            if (MaxPowerOutput != minMaxPower.Z)
+            {
+                float idealLoad = MaxPowerOutput / minMaxPower.Z * loadLeft;
+                float loadadjust = MathHelper.Clamp((ratio - 0.5f) * 25 + idealLoad - (turbineOutput / 100 * MaxPowerOutput), -MaxPowerOutput / 100, MaxPowerOutput / 100);
+                newLoad = MathHelper.Clamp(loadLeft - (expectedPower + output) + loadadjust, 0, loadLeft);
+            }
+
+            //Make sure load isn't negative
+            if (float.IsNegative(newLoad))
+            {
+                newLoad = 0.0f;
+            }
+            
+            //Update relevant variables
+            Load = newLoad;
+            currPowerConsumption = output;
+            return output;
         }
 
         private float GetGeneratedHeat(float fissionRate)

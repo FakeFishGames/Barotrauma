@@ -24,7 +24,14 @@ namespace Barotrauma.Items.Components
 
         public float PowerLoad
         {
-            get { return powerLoad; }
+            get
+            {
+                if (this is RelayComponent || PowerConnections.Count == 0 || PowerConnections[0].Grid == null)
+                {
+                    return powerLoad;
+                }
+                return PowerConnections[0].Grid.Load;
+            }
             set { powerLoad = value; }
         }
 
@@ -69,7 +76,7 @@ namespace Barotrauma.Items.Components
             get { return extraLoad; }
             set 
             {
-                extraLoad = Math.Max(value, 0.0f);
+                extraLoad = value;
                 extraLoadSetTime = (float)Timing.TotalTime;
             }
         }
@@ -154,9 +161,34 @@ namespace Barotrauma.Items.Components
         {
             RefreshConnections();
 
+            float powerReadingOut = 0;
+            float loadReadingOut = ExtraLoad;
+            if (powerLoad < 0)
+            {
+                powerReadingOut = -powerLoad;
+                loadReadingOut = 0;
+            }
+
+            if (powerOut != null && powerOut.Grid != null)
+            {
+                powerReadingOut = powerOut.Grid.Power;
+                loadReadingOut = powerOut.Grid.Load;
+            }
+
+            item.SendSignal(((int)Math.Round(powerReadingOut)).ToString(), "power_value_out");
+            item.SendSignal(((int)Math.Round(loadReadingOut)).ToString(), "load_value_out");
+
             if (Timing.TotalTime > extraLoadSetTime + 1.0)
             {
-                extraLoad = Math.Max(extraLoad - 1000.0f * deltaTime, 0);
+                //Decay the extra load to 0 from either positive or negative
+                if (extraLoad > 0)
+                {
+                    extraLoad = Math.Max(extraLoad - 1000.0f * deltaTime, 0);
+                }
+                else
+                {
+                    extraLoad = Math.Min(extraLoad + 1000.0f * deltaTime, 0);
+                }
             }
 
             if (!CanTransfer) { return; }
@@ -173,7 +205,9 @@ namespace Barotrauma.Items.Components
             if (!item.Repairables.Any() || !CanBeOverloaded) { return; }
 
             float maxOverVoltage = Math.Max(OverloadVoltage, 1.0f);
-            Overload = -currPowerConsumption > Math.Max(powerLoad, 200.0f) * maxOverVoltage;
+
+            Overload = Voltage > maxOverVoltage;
+
             if (Overload && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
             {
                 if (overloadCooldownTimer > 0.0f)
@@ -210,6 +244,19 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Junction box needs to add their extra load
+        /// </summary>
+        /// <param name="conn">Connection being queried</param>
+        /// <param name="power">Current grid power</param>
+        /// <param name="minMaxPower">Vector3 containing minimum grid power(X), Max grid power devices can output(Y) and extra variable to help in calculations(Z)</param>
+        /// <param name="load">Current load on the grid</param>
+        /// <returns>Power pushed to the grid (Negative means adding for consistency)</returns>
+        public override float ConnPowerOut(Connection conn, float power, Vector3 minMaxPower, float load)
+        {
+            return conn == powerOut ? PowerConsumption + ExtraLoad : 0;
         }
 
         public override bool Pick(Character picker)
@@ -331,25 +378,6 @@ namespace Barotrauma.Items.Components
             }
 
             SetAllConnectionsDirty();
-        }
-
-        public override void ReceivePowerProbeSignal(Connection connection, Item source, float power)
-        {
-            //we've already received this signal
-            if (lastPowerProbeRecipients.Contains(this)) { return; }
-            if (item.Condition <= 0.0f) { return; }
-
-            lastPowerProbeRecipients.Add(this);
-
-            if (power < 0.0f)
-            {
-                powerLoad -= power;
-            }
-            else
-            {
-                currPowerConsumption -= power;
-            }
-            powerOut?.SendPowerProbeSignal(source, power);
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)

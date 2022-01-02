@@ -420,6 +420,13 @@ namespace Barotrauma
                         y += 15;
                     }
 
+                    if (Powered.Grids != null)
+                    {
+                        DrawString(spriteBatch, new Vector2(300, y), "Grids: " + Powered.Grids.Count, Color.LightGreen, Color.Black * 0.5f, 0, SmallFont);
+
+                        y += 15;
+                    }
+
                     if (Settings.EnableDiagnostics)
                     {
                         DrawString(spriteBatch, new Vector2(320, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)GameMain.World.ContinuousPhysicsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);

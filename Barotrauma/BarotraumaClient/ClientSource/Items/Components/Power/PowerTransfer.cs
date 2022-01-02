@@ -73,7 +73,14 @@ namespace Barotrauma.Items.Components
             {
                 TextAlignment = Alignment.CenterRight,
                 ToolTip = TextManager.Get("PowerTransferTipPower"),
-                TextGetter = () => ((int)Math.Round(-currPowerConsumption)).ToString()
+                TextGetter = () => {
+                    float currPower = powerLoad < 0 ? -powerLoad: 0;
+                    if (this is RelayComponent == false && PowerConnections != null && PowerConnections.Count > 0 && PowerConnections[0].Grid != null)
+                    {
+                        currPower = PowerConnections[0].Grid.Power;
+                    }
+                    return ((int)Math.Round(currPower)).ToString();
+                }
             };
             var kw1 = new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.5f), upperTextArea.RectTransform),
                 TextManager.Get("kilowatt"), textColor: GUI.Style.TextColor, font: GUI.Font)
@@ -88,7 +95,20 @@ namespace Barotrauma.Items.Components
             {
                 TextAlignment = Alignment.CenterRight,
                 ToolTip = TextManager.Get("PowerTransferTipLoad"),
-                TextGetter = () => ((int)Math.Round(this is RelayComponent relay ? relay.DisplayLoad : powerLoad)).ToString()
+                TextGetter = () =>
+                {
+                    float load = PowerLoad;
+                    if (this is RelayComponent relay)
+                    {
+                        load = relay.DisplayLoad;
+                    }
+                    else if (load < 0)
+                    {
+                        load = 0;
+                    }
+
+                    return ((int)Math.Round(load)).ToString();
+                }
             };
             var kw2 = new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.5f), lowerTextArea.RectTransform),
                 TextManager.Get("kilowatt"), textColor: GUI.Style.TextColor, font: GUI.Font)
@@ -106,8 +126,8 @@ namespace Barotrauma.Items.Components
         {
             if (GuiFrame == null) return;
 
-            float voltage = powerLoad <= 0.0f ? 1.0f : -currPowerConsumption / powerLoad;
-            powerIndicator.Selected = IsActive && currPowerConsumption < -0.1f;
+            float voltage = (PowerConnections.Count > 0 && PowerConnections[0].Grid != null) ? PowerConnections[0].Grid.Voltage : 0f;
+            powerIndicator.Selected = IsActive && voltage > 0;
             highVoltageIndicator.Selected = Timing.TotalTime % 0.5f < 0.25f && powerIndicator.Selected && voltage > 1.2f;
             lowVoltageIndicator.Selected = Timing.TotalTime % 0.5f < 0.25f && powerIndicator.Selected && voltage < 0.8f;
         }

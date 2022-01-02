@@ -88,8 +88,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (powerConsumption <= 0.0f) { Voltage = 1.0f; }
-            progressTimer += deltaTime * Math.Min(Voltage, 1.0f);
+            progressTimer += deltaTime * Math.Min(powerConsumption <= 0.0f ? 1 : Voltage, 1.0f);
 
             float tinkeringStrength = 0f;
             if (repairable.IsTinkering)
@@ -408,7 +407,7 @@ namespace Barotrauma.Items.Components
             if (inputContainer.Inventory.IsEmpty()) { active = false; }
 
             IsActive = active;
-            currPowerConsumption = IsActive ? powerConsumption : 0.0f;
+            //currPowerConsumption = IsActive ? powerConsumption : 0.0f;
             userDeconstructorSpeedMultiplier = user != null ? 1f + user.GetStatValue(StatTypes.DeconstructorSpeedMultiplier) : 1f;
 
 #if SERVER

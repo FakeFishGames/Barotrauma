@@ -117,7 +117,6 @@ namespace Barotrauma.Items.Components
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
             if (character != null && !CharacterUsable) { return false; }
 
-            CurrPowerConsumption = powerConsumption;
             charging = true;
             timer = Duration;
             IsActive = true;
@@ -141,10 +140,10 @@ namespace Barotrauma.Items.Components
             timer -= deltaTime;
             if (charging)
             {
-                if (GetAvailableBatteryPower() >= powerConsumption)
+                if (GetAvailableBatteryPower() >= PowerConsumption)
                 {
-                    var batteries = item.GetConnectedComponents<PowerContainer>();
-                    float neededPower = powerConsumption;
+                    List<PowerContainer> batteries = GetConnectedBatteries();
+                    float neededPower = PowerConsumption;
                     while (neededPower > 0.0001f && batteries.Count > 0)
                     {
                         batteries.RemoveAll(b => b.Charge <= 0.0001f || b.MaxOutPut <= 0.0001f);
@@ -167,6 +166,16 @@ namespace Barotrauma.Items.Components
                     Discharge();
                 }
             }
+        }
+
+        /// <summary>
+        /// Discharge coil only draws power when charging
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <returns></returns>
+        public override float ConnCurrConsumption(Connection conn = null)
+        {
+            return charging && IsActive ? PowerConsumption : 0;
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)

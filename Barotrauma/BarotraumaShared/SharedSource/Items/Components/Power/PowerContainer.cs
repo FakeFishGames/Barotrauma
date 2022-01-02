@@ -14,8 +14,6 @@ namespace Barotrauma.Items.Components
 
         private float charge;
 
-        //private float rechargeVoltage;
-
         //how fast the battery can be recharged
         private float maxRechargeSpeed;
 
@@ -141,79 +139,150 @@ namespace Barotrauma.Items.Components
 
             isRunning = true;
             float chargeRatio = charge / capacity;
-            float gridPower = 0.0f;
-            float gridLoad = 0.0f;
-            foreach (Connection c in item.Connections)
-            {
-                if (!c.IsPower || !c.IsOutput) { continue; }
-                foreach (Connection c2 in c.Recipients)
-                {
-                    if (c2.Item.Condition <= 0.0f) { continue; }
-
-                    PowerTransfer pt = c2.Item.GetComponent<PowerTransfer>();
-                    if (pt == null)
-                    {
-                        foreach (Powered powered in c2.Item.GetComponents<Powered>())
-                        {
-                            if (!powered.IsActive) continue;
-                            gridLoad += powered.CurrPowerConsumption;
-                        }
-                        continue;
-                    }
-                    if (!pt.IsActive || !pt.CanTransfer) { continue; }
-                    gridPower -= pt.CurrPowerConsumption;
-                    gridLoad += pt.PowerLoad;
-                }
-            }
             
             if (chargeRatio > 0.0f)
             {
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }
-            
-            if (charge >= capacity)
-            {
-                //rechargeVoltage = 0.0f;
-                charge = capacity;
-                CurrPowerConsumption = 0.0f;
-            }
-            else
-            {
-                float missingCharge = capacity - charge;
-                float targetRechargeSpeed = rechargeSpeed;
-                if (missingCharge < 1.0f)
-                {
-                    targetRechargeSpeed *= missingCharge;
-                }
-                currPowerConsumption = MathHelper.Lerp(currPowerConsumption, targetRechargeSpeed, 0.05f);
-                Charge += currPowerConsumption * Math.Min(Voltage, 1.0f) / 3600.0f;
-            }                       
 
-            if (charge <= 0.0f)
+            float loadReading = 0;
+            if (powerOut != null && powerOut.Grid != null)
             {
-                CurrPowerOutput = 0.0f;
-                charge = 0.0f;
-                return;
-            }
-            else
-            {
-                //output starts dropping when the charge is less than 10%
-                float maxOutputRatio = 1.0f;
-                if (chargeRatio < 0.1f)
-                {
-                    maxOutputRatio = Math.Max(chargeRatio * 10.0f, 0.0f);
-                }
-
-                CurrPowerOutput += (gridLoad - gridPower) * deltaTime;
-
-                float maxOutput = Math.Min(MaxOutPut * maxOutputRatio, gridLoad);
-                CurrPowerOutput = MathHelper.Clamp(CurrPowerOutput, 0.0f, maxOutput);
-                Charge -= CurrPowerOutput / 3600.0f;            
+                loadReading = powerOut.Grid.Load;
             }
 
+            item.SendSignal(((int)Math.Round(-CurrPowerOutput)).ToString(), "power_value_out");
+            item.SendSignal(((int)Math.Round(loadReading)).ToString(), "load_value_out");
             item.SendSignal(((int)Math.Round(Charge)).ToString(), "charge");
             item.SendSignal(((int)Math.Round(Charge / capacity * 100)).ToString(), "charge_%");
             item.SendSignal(((int)Math.Round(RechargeSpeed / maxRechargeSpeed * 100)).ToString(), "charge_rate");
+        }
+
+        /// <summary>
+        /// Container power draw and flag that output can provide power.
+        /// Power consumption is proportional to set recharge speed and if there is
+        /// less than max charge.
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <returns></returns>
+        public override float ConnCurrConsumption(Connection conn = null)
+        {
+            if (conn == this.powerIn)
+            {
+                //Don't draw power if fully charged
+                if (charge >= capacity)
+                {
+                    charge = capacity;
+                    return 0;
+                }
+                else
+                {
+                    float missingCharge = capacity - charge;
+                    float targetRechargeSpeed = rechargeSpeed;
+
+                    //For the last kwMin scale the recharge rate linearly to prevent over charging and have a smooth cutoff
+                    if (missingCharge < 1.0f)
+                    {
+                        targetRechargeSpeed *= missingCharge;
+                    }
+
+                    return MathHelper.Clamp(targetRechargeSpeed, 0, MaxRechargeSpeed);
+                }
+            }
+            else
+            {
+                //Reset PowerOut
+                CurrPowerOutput = 0;
+
+                // Flag that power can be provided if their is any charge
+                return charge > 0 ? -1 : 0;
+            }
+
+        }
+
+        /// <summary>
+        /// Minimum and maximum output for the queried pin.
+        /// Powerin min max equals CurrPowerConsumption as its abnormal for there to be power out.
+        /// PowerOut min power out is zero and max is the maxout unless below 10% charge where
+        /// the output is scaled relative to the 10% charge.
+        /// </summary>
+        /// <param name="conn">Connection being queried</param>
+        /// <param name="load">Current grid load</param>
+        /// <returns>Minimum and maximum power output for the pin</returns>
+        public override Vector3 MinMaxPowerOut(Connection conn, float load = 0)
+        {
+            Vector3 minMaxPower = new Vector3();
+
+            if (conn == powerIn)
+            {
+                minMaxPower.X = CurrPowerConsumption;
+                minMaxPower.Y = CurrPowerConsumption;
+            }
+            else
+            {
+                float chargeRatio = charge / capacity;
+                if (chargeRatio < 0.1f)
+                {
+                    minMaxPower.Y = Math.Max(chargeRatio * 10.0f, 0.0f) * -MaxOutPut;
+                }
+                else
+                {
+                    minMaxPower.Y = -MaxOutPut;
+                }
+            }
+
+            return minMaxPower;
+        }
+
+        /// <summary>
+        /// Finalized power out from the container for the pin, provided the given grid information
+        /// Output power based on the maxpower all batteries can output. So all batteries can
+        /// equally share powerout based on their output capabilities.
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <param name="power"></param>
+        /// <param name="minMaxPower"></param>
+        /// <param name="load"></param>
+        /// <returns></returns>
+        public override float ConnPowerOut(Connection conn, float power, Vector3 minMaxPower, float load)
+        {
+            if (conn == powerOut)
+            {
+                //Calculate the max power the container can output
+                float maxPowerOutput = -MaxOutPut;
+                float chargeRatio = charge / capacity;
+                if (chargeRatio < 0.1f)
+                {
+                    maxPowerOutput *= Math.Max(chargeRatio * 10.0f, 0.0f);
+                }
+
+                //Set power output based on the relative max power output capabilities and load demand
+                CurrPowerOutput = MathHelper.Clamp((load - power) / minMaxPower.Y, 0, 1) * maxPowerOutput;
+                return CurrPowerOutput;
+            }
+            else
+            {
+                //If powerin pin just output the CurrPowerConsumption
+                return CurrPowerConsumption;
+            }
+        }
+
+        /// <summary>
+        /// When the corresponding grid pin is resolved adjust the container's charge.
+        /// </summary>
+        /// <param name="conn"></param>
+        public override void GridResolved(Connection conn)
+        {
+            if (conn == powerIn)
+            {
+                //Increase charge based on how much power came in from the grid
+                Charge += (CurrPowerConsumption * Voltage) / 60 * UpdateInterval;
+            }
+            else
+            {
+                //Decrease charge based on how much power is leaving the device
+                Charge = Math.Clamp(Charge + CurrPowerOutput / 60 * UpdateInterval, 0, Capacity);
+            }
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)

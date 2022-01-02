@@ -53,3 +53,4 @@ Barotrauma/**/GameAnalyticsKeys.cs
 
 #Rider
 *.DotSettings.user
+/Barotrauma/BarotraumaClient/Content

@@ -44,25 +44,15 @@ namespace Barotrauma.Items.Components
             UpdateOnActiveEffects(deltaTime);
 
             CurrFlow = 0.0f;
-            currPowerConsumption = powerConsumption;
-            //consume more power when in a bad condition
-            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
-
-            if (powerConsumption <= 0.0f)
-            {
-                Voltage = 1.0f;
-            }
 
             if (item.CurrentHull == null) { return; }
-
-            if (Voltage < MinVoltage)
+            
+            if (Voltage < MinVoltage && PowerConsumption > 0)
             {
                 return;
             }
-            
-            CurrFlow = Math.Min(Voltage, 1.0f) * generatedAmount * 100.0f;
 
-            //less effective when in bad condition
+            CurrFlow = Math.Min(PowerConsumption > 0 ? Voltage : 1.0f, 1.0f) * generatedAmount * 100.0f;
             float conditionMult = item.Condition / item.MaxCondition;
             //100% condition = 100% oxygen
             //50% condition = 25% oxygen
@@ -70,6 +60,25 @@ namespace Barotrauma.Items.Components
             CurrFlow *= conditionMult * conditionMult;
 
             UpdateVents(CurrFlow, deltaTime);
+        }
+
+        /// <summary>
+        /// Consumption of Oxygen Generator. Only consume power when active and adjust consumption based on repairable.
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <returns></returns>
+        public override float ConnCurrConsumption(Connection conn = null)
+        {
+            if (conn != this.powerIn)
+            {
+                return 0;
+            }
+
+            float consumption = powerConsumption;
+
+            //consume more power when in a bad condition
+            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref consumption);
+            return consumption;
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)

@@ -92,10 +92,6 @@ namespace Barotrauma.Items.Components
                 FlowPercentage = ((float)TargetLevel - hullPercentage) * 10.0f;
             }
 
-            currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
-            //pumps consume more power when in a bad condition
-            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
-
             if (!HasPower) { return; }
 
             UpdateProjSpecific(deltaTime);
@@ -119,7 +115,6 @@ namespace Barotrauma.Items.Components
             item.CurrentHull.WaterVolume += currFlow;
             if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 0.5f; }
 
-            Voltage -= deltaTime;
         }
 
         public void InfectBallast(string identifier, bool allowMultiplePerShip = false)
@@ -148,6 +143,26 @@ namespace Barotrauma.Items.Components
 #if SERVER
             hull.BallastFlora.SendNetworkMessage(hull.BallastFlora, BallastFloraBehavior.NetworkHeader.Spawn);
 #endif
+        }
+
+        /// <summary>
+        /// Consumption of Pump. Only consume power when active and adjust consumption based on repairable.
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <returns></returns>
+        public override float ConnCurrConsumption(Connection conn = null)
+        {
+            //There shouldn't be other power connections to this
+            if (conn != this.powerIn)
+            {
+                return 0;
+            }
+            
+            currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
+            //pumps consume more power when in a bad condition
+            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
+
+            return currPowerConsumption;
         }
 
         partial void UpdateProjSpecific(float deltaTime);

@@ -469,6 +469,10 @@ namespace Barotrauma.Items.Components
             wire.Connect(powerConnection, false, false);
             recipient.TryAddLink(wire);
             wire.Connect(recipient, false, false);
+
+            //Flag connections to be updated
+            Powered.ChangedConnections.Add(powerConnection);
+            Powered.ChangedConnections.Add(recipient);
         }
 
         private void CreateDoorBody()
@@ -899,6 +903,13 @@ namespace Barotrauma.Items.Components
 
             DockingTarget.Undock();
             DockingTarget = null;
+
+            //Flag power connection
+            Connection powerConnection = Item.Connections.Find(c => c.IsPower);
+            if (powerConnection != null)
+            {
+                Powered.ChangedConnections.Add(powerConnection);
+            }
 
             if (doorBody != null)
             {

@@ -103,14 +103,16 @@ namespace Barotrauma.Items.Components
 
             controlLockTimer -= deltaTime;
 
-            currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
-            //engines consume more power when in a bad condition
-            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
+            if (powerConsumption == 0.0f)
+            {
+                prevVoltage = 1;
+                hasPower = true;
+            }
+            else
+            {
+                hasPower = Voltage > MinVoltage;
+            }
 
-            if (powerConsumption == 0.0f) { Voltage = 1.0f; }
-
-            prevVoltage = Voltage;
-            hasPower = Voltage > MinVoltage;
 
             Force = MathHelper.Lerp(force, (Voltage < MinVoltage) ? 0.0f : targetForce, 0.1f);
             if (Math.Abs(Force) > 1.0f)
@@ -152,6 +154,37 @@ namespace Barotrauma.Items.Components
 #endif
             }
         }
+
+        /// <summary>
+        /// Consumption of engine. Only consume power when active and adjust consumption based on repairable and target force.
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <returns></returns>
+        public override float ConnCurrConsumption(Connection conn = null)
+        {
+            if (conn != this.powerIn)
+            {
+                return 0;
+            }
+
+            currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
+            //engines consume more power when in a bad condition
+            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
+            return currPowerConsumption;
+        }
+
+        /// <summary>
+        /// When grid is resolved update the previous voltage
+        /// </summary>
+        /// <param name="conn"></param>
+        public override void GridResolved(Connection conn) 
+        {
+            if (conn == powerIn)
+            {
+                prevVoltage = Voltage;
+            }
+        }
+
 
         private void UpdateAITargets(float noise)
         {
