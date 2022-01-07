@@ -106,7 +106,7 @@ namespace Barotrauma.Items.Components
             }
             fabricationRecipes.Sort((r1, r2) =>
             {
-                return r1.RecipeHash - r2.RecipeHash;
+                return (int)r1.RecipeHash - (int)r2.RecipeHash;
             });
 
             state = FabricatorState.Stopped;

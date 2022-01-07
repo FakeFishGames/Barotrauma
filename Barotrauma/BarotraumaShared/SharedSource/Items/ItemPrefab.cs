@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -91,7 +92,7 @@ namespace Barotrauma
         public readonly bool RequiresRecipe;
         public readonly float OutCondition; //Percentage-based from 0 to 1
         public readonly List<Skill> RequiredSkills;
-        public readonly int RecipeHash;
+        public readonly uint RecipeHash;
 
         public int Amount { get; }
 
@@ -190,7 +191,7 @@ namespace Barotrauma
             RecipeHash = GenerateHash();
         }
 
-        private int GenerateHash()
+        private uint GenerateHash()
         {
             var outputId = TargetItem.UIntIdentifier;
 
@@ -200,7 +201,10 @@ namespace Barotrauma
 
             var requiredSkills = string.Join(':', RequiredSkills.Select(s => $"{s.Identifier}:{s.Level}"));
 
-            return $"{Amount}|{outputId}|{RequiredTime}|{requiredItems}|{requiredSkills}".GetHashCode();
+            using(var md5 = MD5.Create())
+            {
+                return ToolBox.StringToUInt32Hash($"{Amount}|{outputId}|{RequiredTime}|{requiredItems}|{requiredSkills}", md5);
+            }
         }
     }
 
