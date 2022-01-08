@@ -783,7 +783,16 @@ namespace Barotrauma
                 itemPrefab.FabricationRecipes.Clear();
                 foreach (XElement fabricationRecipe in itemPrefab.fabricationRecipeElements)
                 {
-                    itemPrefab.FabricationRecipes.Add(new FabricationRecipe(fabricationRecipe, itemPrefab));
+                    var newRecipe = new FabricationRecipe(fabricationRecipe, itemPrefab);
+                    var duplicateHashRecipe = itemPrefab.FabricationRecipes.FirstOrDefault(r => r.RecipeHash == newRecipe.RecipeHash);
+                    if(duplicateHashRecipe != null)
+                    {
+                        DebugConsole.AddWarning(
+                            $"{duplicateHashRecipe.DisplayName} has the same hash as {newRecipe.DisplayName}. " +
+                            $"This can cause issues with fabrication."
+                        );
+                    }
+                    itemPrefab.FabricationRecipes.Add(newRecipe);
                 }
             }
         }
