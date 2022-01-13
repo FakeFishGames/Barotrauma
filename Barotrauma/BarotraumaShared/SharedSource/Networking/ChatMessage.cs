@@ -220,25 +220,28 @@ namespace Barotrauma.Networking
                 case ChatMessageType.Order:
                     if (receiver != null && !receiver.IsDead)
                     {
-                        var receiverItem = receiver.Inventory?.AllItems.FirstOrDefault(i => i.GetComponent<WifiComponent>() != null);
-                        //character doesn't have a radio -> don't send
-                        if (receiverItem == null || !receiver.HasEquippedItem(receiverItem)) { return spokenMsg; }
-
-                        var senderItem = sender.Inventory?.AllItems.FirstOrDefault(i => i.GetComponent<WifiComponent>() != null);
-                        if (senderItem == null || !sender.HasEquippedItem(senderItem)) { return spokenMsg; }
-
-                        var receiverRadio = receiverItem.GetComponent<WifiComponent>();
-                        var senderRadio = senderItem.GetComponent<WifiComponent>();
-
-                        if (!receiverRadio.CanReceive(senderRadio)) { return spokenMsg; }
-
-                        string msg = ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range);
-                        if (sender.SpeechImpediment > 0.0f)
+                        foreach (Item receiverItem in receiver.Inventory?.AllItems.Where(i => i.GetComponent<WifiComponent>()?.LinkToChat ?? false))
                         {
-                            //speech impediment doesn't reduce the range when using a radio, but adds extra garbling
-                            msg = ApplyDistanceEffect(msg, sender.SpeechImpediment / 100.0f);
+                            if (!receiver.HasEquippedItem(receiverItem)) { continue; }
+
+                            foreach (Item senderItem in sender.Inventory?.AllItems.Where(i => i.GetComponent<WifiComponent>()?.LinkToChat ?? false))
+                            {
+                                if (!sender.HasEquippedItem(senderItem)) { continue; }
+
+                                var receiverRadio = receiverItem.GetComponent<WifiComponent>();
+                                var senderRadio = senderItem.GetComponent<WifiComponent>();
+                                if (!receiverRadio.CanReceive(senderRadio)) { continue; }
+
+                                string msg = ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range);
+                                if (sender.SpeechImpediment > 0.0f)
+                                {
+                                    //speech impediment doesn't reduce the range when using a radio, but adds extra garbling
+                                    msg = ApplyDistanceEffect(msg, sender.SpeechImpediment / 100.0f);
+                                }
+                                return msg;
+                            }
                         }
-                        return msg;
+                        return spokenMsg;
                     }
                     break;
             }
@@ -268,7 +271,7 @@ namespace Barotrauma.Networking
             foreach (Item item in sender.Inventory.AllItems)
             {
                 var wifiComponent = item.GetComponent<WifiComponent>();
-                if (wifiComponent == null || !wifiComponent.CanTransmit() || !sender.HasEquippedItem(item)) { continue; }
+                if (wifiComponent == null || !wifiComponent.LinkToChat || !wifiComponent.CanTransmit() || !sender.HasEquippedItem(item)) { continue; }
                 if (radio == null || wifiComponent.Range > radio.Range)
                 {
                     radio = wifiComponent;

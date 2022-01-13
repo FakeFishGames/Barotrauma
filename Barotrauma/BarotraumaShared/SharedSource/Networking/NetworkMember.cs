@@ -29,7 +29,8 @@ namespace Barotrauma.Networking
         REQUEST_STARTGAMEFINALIZE, //tell the server you're ready to finalize round initialization
 
         ERROR,           //tell the server that an error occurred
-        CREW,
+        CREW,            //hiring UI
+        MEDICAL,         //medical clinic
         READY_CHECK,
         READY_TO_SPAWN
         
@@ -80,7 +81,8 @@ namespace Barotrauma.Networking
         MISSION,
         EVENTACTION,
         CREW,               //anything related to managing bots in multiplayer
-        READY_CHECK         //start, end and update a ready check 
+        MEDICAL,            //medical clinic
+        READY_CHECK         //start, end and update a ready check
     }
     enum ServerNetObject
     {
@@ -144,7 +146,9 @@ namespace Barotrauma.Networking
         NotOnWhitelist,
         ExcessiveDesyncOldEvent,
         ExcessiveDesyncRemovedEvent,
-        SyncTimeout
+        SyncTimeout,
+        SteamP2PError,
+        SteamP2PTimeOut,
     }
 
     abstract partial class NetworkMember

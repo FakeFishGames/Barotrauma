@@ -208,12 +208,13 @@ namespace Barotrauma.Items.Components
 
         public override bool RecreateGUIOnResolutionChange => true;
 
+        public List<RelatedItem> ContainableItems { get; }
+
         public ItemContainer(Item item, XElement element)
             : base(item, element)
         {
             int totalCapacity = capacity;
 
-            List<RelatedItem> containableItems = null;
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -225,8 +226,8 @@ namespace Barotrauma.Items.Components
                             DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - containable with no identifiers.");
                             continue;
                         }
-                        containableItems ??= new List<RelatedItem>();
-                        containableItems.Add(containable);
+                        ContainableItems ??= new List<RelatedItem>();
+                        ContainableItems.Add(containable);
                         break;
                     case "subcontainer":
                         totalCapacity += subElement.GetAttributeInt("capacity", 1);
@@ -237,7 +238,7 @@ namespace Barotrauma.Items.Components
             slotRestrictions = new SlotRestrictions[totalCapacity];
             for (int i = 0; i < capacity; i++)
             {
-                slotRestrictions[i] = new SlotRestrictions(maxStackSize, containableItems);
+                slotRestrictions[i] = new SlotRestrictions(maxStackSize, ContainableItems);
             }
 
             int subContainerIndex = capacity;
@@ -344,6 +345,19 @@ namespace Barotrauma.Items.Components
             return slotRestrictions[index].MatchesItem(itemPrefab);
         }
 
+        public bool ContainsItemsWithSameIdentifier(Item item)
+        {
+            if (item == null) { return false; }
+            foreach (var containedItem in Inventory.AllItems)
+            {
+                if (containedItem.Prefab.Identifier == item.Prefab.Identifier)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
 
         public override void Update(float deltaTime, Camera cam)
@@ -432,7 +446,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            var abilityItem = new AbilityItem(item);
+            var abilityItem = new AbilityItemContainer(item);
             character.CheckTalents(AbilityEffectType.OnOpenItemContainer, abilityItem);
 
             return base.Select(character);
@@ -492,6 +506,21 @@ namespace Barotrauma.Items.Components
         public override void Equip(Character character)
         {
             IsActive = true;
+        }
+
+        public override void ReceiveSignal(Signal signal, Connection connection)
+        {
+            switch (connection.Name)
+            {
+                case "activate":
+                case "use":
+                case "trigger_in":
+                    if (signal.value != "0")
+                    {
+                        item.Use(1.0f, signal.sender);
+                    }
+                    break;
+            }
         }
 
         public void SetContainedItemPositions()
@@ -689,7 +718,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-
         protected override void ShallowRemoveComponentSpecific()
         {
         }
@@ -742,5 +770,14 @@ namespace Barotrauma.Items.Components
             componentElement.Add(new XAttribute("contained", string.Join(',', itemIdStrings)));
             return componentElement;
         }
+    }
+
+    class AbilityItemContainer : AbilityObject, IAbilityItem
+    {
+        public AbilityItemContainer(Item item)
+        {
+            Item = item;
+        }
+        public Item Item { get; set; }
     }
 }

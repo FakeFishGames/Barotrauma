@@ -682,8 +682,8 @@ namespace Barotrauma
             get { return CharacterHealth.BloodlossAmount; }
             set
             {
-                if (!MathUtils.IsValid(value)) return;
-                CharacterHealth.BloodlossAmount = MathHelper.Clamp(value, 0.0f, 100.0f);
+                if (!MathUtils.IsValid(value)) { return; }
+                CharacterHealth.BloodlossAmount = value;
             }
         }
 
@@ -1830,7 +1830,7 @@ namespace Barotrauma
                             if (!attack.IsValidTarget(attackTarget)) { return false; }
                             if (attackTarget is ISerializableEntity se && attackTarget is Character)
                             {
-                                if (attack.Conditionals.Any(c => !c.Matches(se))) { return false; }
+                                if (attack.Conditionals.Any(c => !c.TargetSelf && !c.Matches(se))) { return false; }
                             }
                         }
                         if (attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(this))) { return false; }
@@ -2270,16 +2270,17 @@ namespace Barotrauma
                 }
             }
 
-            if (SelectedConstruction?.GetComponent<RemoteController>()?.TargetItem == item ||
-                HeldItems.Any(it => it.GetComponent<RemoteController>()?.TargetItem == item))
-            {
-                return true;
-            }
-
             if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) { return false; }
 
             Pickable pickableComponent = item.GetComponent<Pickable>();
             if (pickableComponent != null && pickableComponent.Picker != this && pickableComponent.Picker != null && !pickableComponent.Picker.IsDead) { return false; }
+
+            if (SelectedConstruction?.GetComponent<RemoteController>()?.TargetItem == item) { return true; }
+            //optimization: don't use HeldItems because it allocates memory and this method is executed very frequently
+            var heldItem1 = Inventory?.GetItemInLimbSlot(InvSlotType.RightHand);
+            if (heldItem1?.GetComponent<RemoteController>()?.TargetItem == item) { return true; }
+            var heldItem2 = Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand);
+            if (heldItem2?.GetComponent<RemoteController>()?.TargetItem == item) { return true; }
 
             Vector2 characterDirection = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(AnimController.Collider.Rotation));
 
@@ -3225,7 +3226,7 @@ namespace Barotrauma
 
             if (orderGiver != null)
             {
-                var abilityOrderedCharacter = new AbilityCharacter(this);
+                var abilityOrderedCharacter = new AbilityOrderedCharacter(this);
                 orderGiver.CheckTalents(AbilityEffectType.OnGiveOrder, abilityOrderedCharacter);
 
                 if (orderGiver.LastOrderedCharacter != this)
@@ -3547,12 +3548,12 @@ namespace Barotrauma
             }
 #endif
             // Don't allow beheading for monster attacks, because it happens too frequently (crawlers/tigerthreshers etc attacking each other -> they will most often target to the head)
-            TrySeverLimbJoints(limbHit, attack.SeverLimbsProbability, attackResult.Damage, allowBeheading: attacker == null || attacker.IsHuman || attacker.IsPlayer);
+            TrySeverLimbJoints(limbHit, attack.SeverLimbsProbability, attackResult.Damage, allowBeheading: attacker == null || attacker.IsHuman || attacker.IsPlayer, attacker: attacker);
 
             return attackResult;
         }
 
-        public void TrySeverLimbJoints(Limb targetLimb, float severLimbsProbability, float damage, bool allowBeheading)
+        public void TrySeverLimbJoints(Limb targetLimb, float severLimbsProbability, float damage, bool allowBeheading, Character attacker = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 #if DEBUG
@@ -3590,9 +3591,20 @@ namespace Barotrauma
                 if (severed)
                 {       
                     Limb otherLimb = joint.LimbA == targetLimb ? joint.LimbB : joint.LimbA;
-                    otherLimb.body.ApplyLinearImpulse(targetLimb.LinearVelocity * targetLimb.Mass, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);             
+                    otherLimb.body.ApplyLinearImpulse(targetLimb.LinearVelocity * targetLimb.Mass, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
+                    if (attacker != null)
+                    {
+                        foreach (var statusEffect in statusEffects)
+                        {
+                            if (statusEffect.type == ActionType.OnSevered) { statusEffect.SetUser(attacker); }
+                        }
+                        foreach (var statusEffect in targetLimb.StatusEffects)
+                        {
+                            if (statusEffect.type == ActionType.OnSevered) { statusEffect.SetUser(attacker); }
+                        }
+                    }
                     ApplyStatusEffects(ActionType.OnSevered, 1.0f);
-                    targetLimb.ApplyStatusEffects(ActionType.OnSevered, 1.0f);
+                    targetLimb.ApplyStatusEffects(ActionType.OnSevered, 1.0f); 
                 }
             }
             if (wasSevered && targetLimb.character.AIController is EnemyAIController enemyAI)
@@ -3961,8 +3973,8 @@ namespace Barotrauma
                 causeOfDeathAffliction?.Source ?? LastAttacker, LastDamageSource);
             OnDeath?.Invoke(this, CauseOfDeath);
 
-            var abilityKiller = new AbilityCharacter(CauseOfDeath.Killer);
-            CheckTalents(AbilityEffectType.OnDieToCharacter, abilityKiller);
+            var abilityCharacterKiller = new AbilityCharacterKiller(CauseOfDeath.Killer);
+            CheckTalents(AbilityEffectType.OnDieToCharacter, abilityCharacterKiller);
 
             if (GameMain.GameSession != null && Screen.Selected == GameMain.GameScreen)
             {
@@ -4472,18 +4484,17 @@ namespace Barotrauma
             if (info == null) { return false; }
             info.UnlockedTalents.Add(talentPrefab.Identifier);
             if (characterTalents.Any(t => t.Prefab == talentPrefab)) { return false; }
-
 #if SERVER
             GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.UpdateTalents });
 #endif
             CharacterTalent characterTalent = new CharacterTalent(talentPrefab, this);
-            characterTalent.ActivateTalent(addingFirstTime);
             characterTalents.Add(characterTalent);
+            characterTalent.ActivateTalent(addingFirstTime);
             characterTalent.AddedThisRound = addingFirstTime;
 
             if (addingFirstTime)
             {
-                OnTalentGiven(talentPrefab.Identifier);
+                OnTalentGiven(talentPrefab);
             }
             return true;
         }
@@ -4491,6 +4502,24 @@ namespace Barotrauma
         public bool HasTalent(string identifier)
         {
             return info.UnlockedTalents.Contains(identifier);
+        }
+
+        public bool HasUnlockedAllTalents()
+        {
+            if (TalentTree.JobTalentTrees.TryGetValue(Info.Job.Prefab.Identifier, out TalentTree talentTree))
+            {
+                foreach (TalentSubTree talentSubTree in talentTree.TalentSubTrees)
+                {
+                    foreach (TalentOption talentOption in talentSubTree.TalentOptionStages)
+                    {
+                        if (talentOption.Talents.None(t => HasTalent(t.Identifier)))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
         }
 
         public static IEnumerable<Character> GetFriendlyCrew(Character character)
@@ -4552,7 +4581,7 @@ namespace Barotrauma
         }
 
         partial void OnMoneyChanged(int prevAmount, int newAmount);
-        partial void OnTalentGiven(string talentIdentifier);
+        partial void OnTalentGiven(TalentPrefab talentPrefab);
 
         /// <summary>
         /// This dictionary is used for stats that are required very frequently. Not very performant, but easier to develop with for now.
@@ -4722,6 +4751,51 @@ namespace Barotrauma
         }
         public Character Character { get; set; }
         public Character Killer { get; set; }
+    }
+
+    class AbilityAttackData : AbilityObject, IAbilityCharacter
+    {
+        public float DamageMultiplier { get; set; } = 1f;
+        public float AddedPenetration { get; set; } = 0f;
+        public List<Affliction> Afflictions { get; set; }
+        public bool ShouldImplode { get; set; } = false;
+        public Attack SourceAttack { get; }
+        public Character Character { get; set; }
+        public Character Attacker { get; set; }
+
+        public AbilityAttackData(Attack sourceAttack, Character character)
+        {
+            SourceAttack = sourceAttack;
+            Character = character;
+        }
+    }
+
+    class AbilityAttackResult : AbilityObject, IAbilityAttackResult
+    {
+        public AttackResult AttackResult { get; set; }
+
+        public AbilityAttackResult(AttackResult attackResult)
+        {
+            AttackResult = attackResult;
+        }
+    }
+
+    class AbilityCharacterKiller : AbilityObject, IAbilityCharacter
+    {
+        public AbilityCharacterKiller(Character character)
+        {
+            Character = character;
+        }
+        public Character Character { get; set; }
+    }
+
+    class AbilityOrderedCharacter : AbilityObject, IAbilityCharacter
+    {
+        public AbilityOrderedCharacter(Character character)
+        {
+            Character = character;
+        }
+        public Character Character { get; set; }
     }
 
 }

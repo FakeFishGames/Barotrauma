@@ -333,6 +333,7 @@ namespace Barotrauma.Items.Components
             FindLightComponent();
             if (loadedRotationLimits.HasValue) { RotationLimits = loadedRotationLimits.Value; }
             if (loadedBaseRotation.HasValue) { BaseRotation = loadedBaseRotation.Value; }
+            targetRotation = rotation;
             UpdateTransformedBarrelPos();
         }
 
@@ -1516,7 +1517,7 @@ namespace Barotrauma.Items.Components
                 minRotation += MathHelper.TwoPi;
                 maxRotation += MathHelper.TwoPi;
             }
-            rotation = (minRotation + maxRotation) / 2;
+            targetRotation = rotation = (minRotation + maxRotation) / 2;
 
             UpdateTransformedBarrelPos();
         }
@@ -1537,7 +1538,7 @@ namespace Barotrauma.Items.Components
                 minRotation += MathHelper.TwoPi;
                 maxRotation += MathHelper.TwoPi;
             }
-            rotation = (minRotation + maxRotation) / 2;
+            targetRotation = rotation = (minRotation + maxRotation) / 2;
 
             UpdateTransformedBarrelPos();
         }
@@ -1607,6 +1608,7 @@ namespace Barotrauma.Items.Components
         {
             base.OnItemLoaded();
             FindLightComponent();
+            targetRotation = rotation;
             if (!loadedBaseRotation.HasValue)
             {
                 if (item.FlippedX) { FlipX(relativeToSub: false); }

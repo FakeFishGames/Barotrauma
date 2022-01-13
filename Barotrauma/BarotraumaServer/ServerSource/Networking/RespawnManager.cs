@@ -351,7 +351,7 @@ namespace Barotrauma.Networking
             {
                 if (campaign?.GetClientCharacterData(c) == null || c.CharacterInfo.Job == null)
                 {
-                    c.CharacterInfo.Job = new Job(c.AssignedJob.First, c.AssignedJob.Second);
+                    c.CharacterInfo.Job = new Job(c.AssignedJob.First, Rand.RandSync.Unsynced, c.AssignedJob.Second);
                 }
             }
 

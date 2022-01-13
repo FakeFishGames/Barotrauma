@@ -1233,7 +1233,7 @@ namespace Barotrauma
                 }
             }
 
-            Rectangle subRect = Submarine.CalculateDimensions();
+            Rectangle subRect = Submarine.Borders;
 
             Alignment roomPos;
             if (rect.Y - rect.Height / 2 > subRect.Y + subRect.Height * 0.66f)

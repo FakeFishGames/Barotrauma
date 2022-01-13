@@ -217,7 +217,7 @@ namespace Barotrauma
             public string[] TalentIdentifiers;
             public bool GiveRandom;
 
-            public GiveTalentInfo(XElement element, string parentDebugName)
+            public GiveTalentInfo(XElement element, string _)
             {
                 TalentIdentifiers = element.GetAttributeStringArray("talentidentifiers", new string[0], convertToLowerInvariant: true);
                 GiveRandom = element.GetAttributeBool("giverandom", false);
@@ -751,12 +751,39 @@ namespace Barotrauma
             for (int i = 0; i < propertyNames.Length; i++)
             {
                 if (propertyNames[i] != "condition") { continue; }
-                if (propertyEffects[i].GetType() == typeof(float))
+                object propertyEffect = propertyEffects[i];
+                if (propertyEffect.GetType() == typeof(float))
                 {
-                    return (float)propertyEffects[i] < 0.0f || (setValue && (float)propertyEffects[i] <= 0.0f);
+                    return (float)propertyEffect < 0.0f || (setValue && (float)propertyEffect <= 0.0f);
                 }
             }
             return false;
+        }
+
+        public bool IncreasesItemCondition()
+        {
+            for (int i = 0; i < propertyNames.Length; i++)
+            {
+                if (propertyNames[i] != "condition") { continue; }
+                object propertyEffect = propertyEffects[i];
+                if (propertyEffect.GetType() == typeof(float))
+                {
+                    return (float)propertyEffect > 0.0f || (setValue && (float)propertyEffect > 0.0f);
+                }
+            }
+            return false;
+        }
+
+        public bool MatchesTagConditionals(ItemPrefab itemPrefab)
+        {
+            if (itemPrefab == null || !HasConditions)
+            {
+                return false;
+            }
+            else
+            {
+                return itemPrefab.Tags.Any(t => propertyConditionals.Any(pc => pc.MatchesTagCondition(t)));
+            }
         }
 
         public bool HasRequiredAfflictions(AttackResult attackResult)
@@ -787,7 +814,7 @@ namespace Barotrauma
             return true;
         }
 
-        public IEnumerable<ISerializableEntity> GetNearbyTargets(Vector2 worldPosition, List<ISerializableEntity> targets = null)
+        public IReadOnlyList<ISerializableEntity> GetNearbyTargets(Vector2 worldPosition, List<ISerializableEntity> targets = null)
         {
             targets ??= new List<ISerializableEntity>();
             if (Range <= 0.0f) { return targets; }
@@ -843,23 +870,24 @@ namespace Barotrauma
             }
         }
 
-        public bool HasRequiredConditions(IEnumerable<ISerializableEntity> targets)
+        public bool HasRequiredConditions(IReadOnlyList<ISerializableEntity> targets)
         {
             return HasRequiredConditions(targets, propertyConditionals);
         }
 
-        private bool HasRequiredConditions(IEnumerable<ISerializableEntity> targets, IEnumerable<PropertyConditional> conditionals, bool targetingContainer = false)
+        private bool HasRequiredConditions(IReadOnlyList<ISerializableEntity> targets, IReadOnlyList<PropertyConditional> conditionals, bool targetingContainer = false)
         {
-            if (conditionals.None()) { return true; }
-            if (requiredItems.Any() && requiredItems.All(ri => ri.MatchOnEmpty) && targets.None()) { return true; }
+            if (conditionals.Count == 0) { return true; }
+            if (targets.Count == 0 && requiredItems.Count > 0 && requiredItems.All(ri => ri.MatchOnEmpty)) { return true; }
             switch (conditionalComparison)
             {
                 case PropertyConditional.Comparison.Or:
-                    foreach (PropertyConditional pc in conditionals)
+                    for (int i = 0; i < conditionals.Count; i++)
                     {
+                        var pc = conditionals[i];
                         if (pc.TargetContainer && !targetingContainer)
                         {
-                            var target = targets.FirstOrDefault(t => t is Item || t is ItemComponent);
+                            var target = FindTargetItemOrComponent(targets);
                             var targetItem = target as Item ?? (target as ItemComponent)?.Item;
                             if (targetItem?.ParentInventory == null) 
                             {
@@ -881,37 +909,28 @@ namespace Barotrauma
                                 if (pc.Type == PropertyConditional.ConditionType.HasTag)
                                 {
                                     //if we're checking for tags, just check the Item object, not the ItemComponents
-                                    if (HasRequiredConditions((container as ISerializableEntity).ToEnumerable(), pc.ToEnumerable(), targetingContainer: true)) { return true; }
+                                    if (pc.Matches(container)) { return true; }
                                 }
                                 else
                                 {
-                                    if (HasRequiredConditions(container.AllPropertyObjects, pc.ToEnumerable(), targetingContainer: true)) { return true; } 
+                                    if (AnyTargetMatches(container.AllPropertyObjects, pc.TargetItemComponentName, pc)) { return true; } 
                                 }                                
                             }
-                            if (owner is Character character && HasRequiredConditions(character.ToEnumerable(), pc.ToEnumerable(), targetingContainer: true)) { return true; }                            
+                            if (owner is Character character && pc.Matches(character)) { return true; }                            
                         }
                         else
                         {
-                            foreach (ISerializableEntity target in targets)
-                            {
-                                if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
-                                {
-                                    if (!(target is ItemComponent ic) || ic.Name != pc.TargetItemComponentName)
-                                    {
-                                        continue;
-                                    }
-                                }
-                                if (pc.Matches(target)) { return true; }
-                            }
+                            if (AnyTargetMatches(targets, pc.TargetItemComponentName, pc)) { return true; }                            
                         }
                     }
                     return false;
                 case PropertyConditional.Comparison.And:
-                    foreach (PropertyConditional pc in conditionals)
+                    for (int i = 0; i < conditionals.Count; i++)
                     {
+                        var pc = conditionals[i];
                         if (pc.TargetContainer && !targetingContainer)
                         {
-                            var target = targets.FirstOrDefault(t => t is Item || t is ItemComponent);
+                            var target = FindTargetItemOrComponent(targets);
                             var targetItem = target as Item ?? (target as ItemComponent)?.Item;
                             if (targetItem?.ParentInventory == null) 
                             {
@@ -933,28 +952,48 @@ namespace Barotrauma
                                 if (pc.Type == PropertyConditional.ConditionType.HasTag)
                                 {
                                     //if we're checking for tags, just check the Item object, not the ItemComponents
-                                    if (!HasRequiredConditions((container as ISerializableEntity).ToEnumerable(), pc.ToEnumerable(), targetingContainer: true)) { return false; }
+                                    if (!pc.Matches(container)) { return false; }
                                 }
                                 else
                                 {
-                                    if (!HasRequiredConditions(container.AllPropertyObjects, pc.ToEnumerable(), targetingContainer: true)) { return false; }
+                                    if (!AnyTargetMatches(container.AllPropertyObjects, pc.TargetItemComponentName, pc)) { return false; }
                                 }
                             }
-                            if (owner is Character character && !HasRequiredConditions(character.ToEnumerable(), pc.ToEnumerable(), targetingContainer: true)) { return false; }
+                            if (owner is Character character && !pc.Matches(character)) { return false; }
                         }
                         else
                         {
-                            var validTargets = targets;
-                            if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
-                            {
-                                validTargets = targets.Where(t => t is ItemComponent ic && ic.Name == pc.TargetItemComponentName);
-                            }
-                            if (targets.None(t => pc.Matches(t))) { return false; }
+                            if (!AnyTargetMatches(targets, pc.TargetItemComponentName, pc)) { return false; }
                         }
                     }
                     return true;
                 default:
                     throw new NotImplementedException();
+            }
+
+            static bool AnyTargetMatches(IReadOnlyList<ISerializableEntity> targets, string targetItemComponentName, PropertyConditional conditional)
+            {
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    if (!string.IsNullOrEmpty(targetItemComponentName))
+                    {
+                        if (!(targets[i] is ItemComponent ic) || ic.Name != targetItemComponentName) { continue; }
+                    }
+                    if (conditional.Matches(targets[i]))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            static ISerializableEntity FindTargetItemOrComponent(IReadOnlyList<ISerializableEntity> targets)
+            {
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    if (targets[i] is Item || targets[i] is ItemComponent) { return targets[i]; }
+                }
+                return null;
             }
         }
 
@@ -972,14 +1011,27 @@ namespace Barotrauma
             {
                 if (targetIdentifiers == null) { return true; }
                 if (targetIdentifiers.Contains("structure")) { return true; }
-                if (targetIdentifiers.Any(id => id.Equals(structure.Prefab.Identifier, StringComparison.OrdinalIgnoreCase))) { return true; }
+                foreach (var id in targetIdentifiers)
+                {
+                    if (id.Equals(structure.Prefab.Identifier, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
             }
             else if (entity is Character character)
             {
                 return IsValidTarget(character);
             }
             if (targetIdentifiers == null) { return true; }
-            return targetIdentifiers.Any(id => id.Equals(entity.Name, StringComparison.OrdinalIgnoreCase));
+            foreach (var id in targetIdentifiers)
+            {
+                if (id.Equals(entity.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         protected bool IsValidTarget(ItemComponent itemComponent)
@@ -989,7 +1041,14 @@ namespace Barotrauma
             if (targetIdentifiers == null) { return true; }
             if (targetIdentifiers.Contains("itemcomponent")) { return true; }
             if (itemComponent.Item.HasTag(targetIdentifiers)) { return true; }
-            return targetIdentifiers.Any(id => id.Equals(itemComponent.Item.Prefab.Identifier, StringComparison.OrdinalIgnoreCase));
+            foreach (var id in targetIdentifiers)
+            {
+                if (id.Equals(itemComponent.Item.Prefab.Identifier, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         protected bool IsValidTarget(Item item)
@@ -999,7 +1058,14 @@ namespace Barotrauma
             if (targetIdentifiers == null) { return true; }
             if (targetIdentifiers.Contains("item")) { return true; }
             if (item.HasTag(targetIdentifiers)) { return true; }
-            return targetIdentifiers.Any(id => id.Equals(item.Prefab.Identifier, StringComparison.OrdinalIgnoreCase));
+            foreach (var id in targetIdentifiers)
+            {
+                if (id.Equals(item.Prefab.Identifier, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         protected bool IsValidTarget(Character character)
@@ -1008,7 +1074,14 @@ namespace Barotrauma
             if (OnlyOutside && character.CurrentHull != null) { return false; }
             if (targetIdentifiers == null) { return true; }
             if (targetIdentifiers.Contains("character")) { return true; }
-            return targetIdentifiers.Any(id => id.Equals(character.SpeciesName, StringComparison.OrdinalIgnoreCase));
+            foreach (var id in targetIdentifiers)
+            {
+                if (id.Equals(character.SpeciesName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void SetUser(Character user)
@@ -1037,12 +1110,14 @@ namespace Barotrauma
                 }
             }
 
-            if (!HasRequiredConditions(target.ToEnumerable())) { return; }
-            Apply(deltaTime, entity, target.ToEnumerable(), worldPosition);
+            currentTargets.Clear();
+            currentTargets.Add(target);
+            if (!HasRequiredConditions(currentTargets)) { return; }
+            Apply(deltaTime, entity, currentTargets, worldPosition);
         }
 
         protected readonly List<ISerializableEntity> currentTargets = new List<ISerializableEntity>();
-        public virtual void Apply(ActionType type, float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Vector2? worldPosition = null)
+        public virtual void Apply(ActionType type, float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
             if (this.type != type) { return; }
 
@@ -1095,39 +1170,52 @@ namespace Barotrauma
             return hull;
         }
 
-        private Vector2 GetPosition(Entity entity, IEnumerable<ISerializableEntity> targets, Vector2? worldPosition = null)
+        private Vector2 GetPosition(Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
             Vector2 position = worldPosition ?? (entity == null || entity.Removed ? Vector2.Zero : entity.WorldPosition);
             if (worldPosition == null)
             {
-                if (entity is Character character && !character.Removed && targetLimbs?.FirstOrDefault(l => l != LimbType.None) is LimbType limbType)
+                if (entity is Character character && !character.Removed && targetLimbs != null)
                 {
-                    Limb limb = character.AnimController.GetLimb(limbType);
-                    if (limb != null && !limb.Removed)
+                    foreach (var targetLimbType in targetLimbs)
                     {
-                        position = limb.WorldPosition;
+                        Limb limb = character.AnimController.GetLimb(targetLimbType);
+                        if (limb != null && !limb.Removed)
+                        {
+                            position = limb.WorldPosition;
+                            break;
+                        }
+                    }
+                }
+                else if (HasTargetType(TargetType.Contained))
+                {
+                    for (int i = 0; i < targets.Count; i++)
+                    {
+                        if (targets[i] is Item targetItem)
+                        {
+                            position = targetItem.WorldPosition;
+                            break;
+                        }
                     }
                 }
                 else
                 {
-                    if (targets.FirstOrDefault(t => t is Limb) is Limb targetLimb && !targetLimb.Removed)
+                    for (int i = 0; i < targets.Count; i++)
                     {
-                        position = targetLimb.WorldPosition;
-                    }
-                    else if (HasTargetType(TargetType.Contained))
-                    {
-                        if (targets.FirstOrDefault(t => t is Item) is Item targetItem)
+                        if (targets[i] is Limb targetLimb && !targetLimb.Removed)
                         {
-                            position = targetItem.WorldPosition;
+                            position = targetLimb.WorldPosition;
+                            break;
                         }
                     }
                 }
+                
             }
             position += Offset;
             return position;
         }
 
-        protected void Apply(float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Vector2? worldPosition = null)
+        protected void Apply(float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
             if (lifeTime > 0)
             {
@@ -1137,58 +1225,68 @@ namespace Barotrauma
 
             Hull hull = GetHull(entity);
             Vector2 position = GetPosition(entity, targets, worldPosition);
-            foreach (ISerializableEntity serializableEntity in targets)
+            if (useItemCount > 0)
             {
-                if (!(serializableEntity is Item item)) { continue; }
-
-                Character targetCharacter = targets.FirstOrDefault(t => t is Character character && !character.Removed) as Character;
-                if (targetCharacter == null)
+                Character useTargetCharacter = null;
+                Limb useTargetLimb = null;
+                for (int i = 0; i < targets.Count; i++)
                 {
-                    foreach (var target in targets)
+                    if (targets[i] is Character character && !character.Removed)
                     {
-                        if (target is Limb limb && limb.character != null && !limb.character.Removed)
-                        {
-                            targetCharacter = ((Limb)target).character;
-                        }
+                        useTargetCharacter = character;
+                        break;
+                    }
+                    else if (targets[i] is Limb limb && limb.character != null && !limb.character.Removed)
+                    {
+                        useTargetLimb = limb;
+                        useTargetCharacter ??= limb.character;
+                        break;
                     }
                 }
-                for (int i = 0; i < useItemCount; i++)
+                for (int i = 0; i < targets.Count; i++)
                 {
-                    if (item.Removed) { continue; }
-                    item.Use(deltaTime, targetCharacter, targets.FirstOrDefault(t => t is Limb) as Limb);
+                    if (!(targets[i] is Item item)) { continue; }                
+                    for (int j = 0; j < useItemCount; j++)
+                    {
+                        if (item.Removed) { continue; }
+                        item.Use(deltaTime, useTargetCharacter, useTargetLimb);
+                    }
                 }
             }
 
             if (removeItem)
             {
-                foreach (var target in targets)
+                for (int i = 0; i < targets.Count; i++)
                 {
-                    if (target is Item item) { Entity.Spawner?.AddToRemoveQueue(item); }
+                    if (targets[i] is Item item) { Entity.Spawner?.AddToRemoveQueue(item); }
                 }
             }
             if (removeCharacter)
             {
-                foreach (var target in targets)
+                for (int i = 0; i < targets.Count; i++)
                 {
-                    if (target is Character character) { Entity.Spawner?.AddToRemoveQueue(character); }
+                    if (targets[i] is Character character) { Entity.Spawner?.AddToRemoveQueue(character); }
                 }
             }
             if (breakLimb || hideLimb)
             {
-                foreach (var target in targets)
+                for (int i = 0; i < targets.Count; i++)
                 {
-                    if (target is Character character)
+                    if (targets[i] is Character character)
                     {
-                        var matchingLimb = character.AnimController.Limbs.FirstOrDefault(l => l.body == sourceBody);
-                        if (matchingLimb != null)
+                        foreach (Limb limb in character.AnimController.Limbs)
                         {
-                            if (breakLimb)
+                            if (limb.body == sourceBody)
                             {
-                                character.TrySeverLimbJoints(matchingLimb, severLimbsProbability: 100, damage: 100, allowBeheading: true);
-                            }
-                            else
-                            {
-                                matchingLimb.HideAndDisable(hideLimbTimer);
+                                if (breakLimb)
+                                {
+                                    character.TrySeverLimbJoints(limb, severLimbsProbability: 100, damage: 100, allowBeheading: true, attacker: user);
+                                }
+                                else
+                                {
+                                    limb.HideAndDisable(hideLimbTimer);
+                                }
+                                break;
                             }
                         }
                     }
@@ -1201,10 +1299,10 @@ namespace Barotrauma
             }
             else
             {
-                foreach (ISerializableEntity target in targets)
+                for (int i = 0; i < targets.Count; i++)
                 {
+                    var target = targets[i];
                     if (target == null) { continue; }
-
                     if (target is Entity targetEntity)
                     {
                         if (targetEntity.Removed) { continue; }
@@ -1215,13 +1313,13 @@ namespace Barotrauma
                         position = limb.WorldPosition + Offset;
                     }
 
-                    for (int i = 0; i < propertyNames.Length; i++)
+                    for (int j = 0; j < propertyNames.Length; j++)
                     {
-                        if (target == null || target.SerializableProperties == null || !target.SerializableProperties.TryGetValue(propertyNames[i], out SerializableProperty property))
+                        if (target == null || target.SerializableProperties == null || !target.SerializableProperties.TryGetValue(propertyNames[j], out SerializableProperty property))
                         {
                             continue;
                         }
-                        ApplyToProperty(target, property, propertyEffects[i], deltaTime);
+                        ApplyToProperty(target, property, j, deltaTime);
                     }
                 }
             }
@@ -1231,8 +1329,11 @@ namespace Barotrauma
                 explosion.Explode(position, damageSource: entity, attacker: user);
             }
 
-            foreach (ISerializableEntity target in targets)
+            bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
+
+            for (int i = 0; i < targets.Count; i++)
             {
+                var target = targets[i];
                 //if the effect has a duration, these will be done in the UpdateAll method
                 if (duration > 0) { break; }
                 if (target == null) { continue; }
@@ -1251,7 +1352,7 @@ namespace Barotrauma
                             if (limb.IsSevered) { continue; }
                             if (targetLimbs != null && !targetLimbs.Contains(limb.type)) { continue; }
                             AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source, allowStacking: !setValue);
-                            limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true);
+                            limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true, attacker: affliction.Source);
                             RegisterTreatmentResults(entity, limb, affliction, result);
                             //only apply non-limb-specific afflictions to the first limb
                             if (!affliction.Prefab.LimbSpecific) { break; }
@@ -1263,7 +1364,7 @@ namespace Barotrauma
                         if (limb.character.Removed || limb.Removed) { continue; }
                         newAffliction = GetMultipliedAffliction(affliction, entity, limb.character, deltaTime, multiplyAfflictionsByMaxVitality);
                         AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source, allowStacking: !setValue);
-                        limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true);
+                        limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true, attacker: affliction.Source);
                         RegisterTreatmentResults(entity, limb, affliction, result);
                     }
                 }
@@ -1302,7 +1403,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (aiTriggers.Any())
+                if (aiTriggers.Count > 0)
                 {
                     Character targetCharacter = target as Character;
                     if (targetCharacter == null)
@@ -1328,7 +1429,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (talentTriggers.Any())
+                if (talentTriggers.Count > 0)
                 {
                     Character targetCharacter = CharacterFromTarget(target);
                     if (targetCharacter != null && !targetCharacter.Removed)
@@ -1337,14 +1438,12 @@ namespace Barotrauma
                         {
                             targetCharacter.CheckTalents(AbilityEffectType.OnStatusEffectIdentifier, new AbilityStatusEffectIdentifier(talentTrigger));
                         }
-
                     }
                 }
 
-                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
+                if (isNotClient)
                 {
                     // these effects do not need to be run clientside, as they are replicated from server to clients anyway
-
                     foreach (int giveExperience in giveExperiences)
                     {
                         Character targetCharacter = CharacterFromTarget(target);
@@ -1354,7 +1453,7 @@ namespace Barotrauma
                         }
                     }
 
-                    if (giveSkills.Any())
+                    if (giveSkills.Count > 0)
                     {
                         foreach (GiveSkill giveSkill in giveSkills)
                         {
@@ -1373,7 +1472,7 @@ namespace Barotrauma
                         }
                     }
 
-                    if (giveTalentInfos.Any())
+                    if (giveTalentInfos.Count > 0)
                     {
                         Character targetCharacter = CharacterFromTarget(target);
                         if (targetCharacter?.Info == null) { continue; }
@@ -1408,7 +1507,6 @@ namespace Barotrauma
                 fire.Size = new Vector2(FireSize, fire.Size.Y);
             }
 
-            bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
             if (isNotClient && GameMain.GameSession?.EventManager is { } eventManager)
             {
                 foreach (EventPrefab eventPrefab in triggeredEvents)
@@ -1423,7 +1521,7 @@ namespace Barotrauma
                         {
                             List<Entity> eventTargets = targets.Where(t => t is Entity).Cast<Entity>().ToList();
 
-                            if (eventTargets.Any())
+                            if (eventTargets.Count > 0)
                             {
                                 scriptedEvent.Targets.Add(triggeredEventTargetTag, eventTargets);
                             }
@@ -1616,17 +1714,19 @@ namespace Barotrauma
             }
         }
 
-        partial void ApplyProjSpecific(float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Hull currentHull, Vector2 worldPosition, bool playSound);
+        partial void ApplyProjSpecific(float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Hull currentHull, Vector2 worldPosition, bool playSound);
 
-        private void ApplyToProperty(ISerializableEntity target, SerializableProperty property, object value, float deltaTime)
+        private void ApplyToProperty(ISerializableEntity target, SerializableProperty property, int effectIndex, float deltaTime)
         {
             if (disableDeltaTime || setValue) { deltaTime = 1.0f; }
-            if (value is int || value is float)
+            object propertyEffect = propertyEffects[effectIndex];
+            if (propertyEffect is int || propertyEffect is float)
             {
-                var propertyValue = property.GetValue(target);
-                if (propertyValue is float propertyValueF)
+                float propertyValueF = property.GetFloatValue(target);
+                if (property.PropertyType == typeof(float))
                 {
-                    float floatValue = Convert.ToSingle(value) * deltaTime;
+                    float floatValue = propertyEffect is float single ? single : (int)propertyEffect;
+                    floatValue *= deltaTime;
                     if (!setValue)
                     {
                         floatValue += propertyValueF;
@@ -1634,18 +1734,23 @@ namespace Barotrauma
                     property.TrySetValue(target, floatValue);
                     return;
                 }
-                else if (propertyValue is int integer)
+                else if (property.PropertyType == typeof(int))
                 {
-                    int intValue = (int)(Convert.ToInt32(value) * deltaTime);
+                    int intValue = (int)(propertyEffect is float single ? single * deltaTime : (int)propertyEffect * deltaTime);
                     if (!setValue)
                     {
-                        intValue += integer;
+                        intValue += (int)propertyValueF;
                     }
                     property.TrySetValue(target, intValue);
                     return;
                 }
             }
-            property.TrySetValue(target, value);
+            else if (propertyEffect is bool propertyValueBool)
+            {
+                property.TrySetValue(target, propertyValueBool);
+                return;
+            }
+            property.TrySetValue(target, propertyEffect);
         }
 
         public static void UpdateAll(float deltaTime)
@@ -1682,7 +1787,7 @@ namespace Barotrauma
                         {
                             continue;
                         }
-                        element.Parent.ApplyToProperty(target, property, element.Parent.propertyEffects[n], CoroutineManager.UnscaledDeltaTime);
+                        element.Parent.ApplyToProperty(target, property, n, CoroutineManager.UnscaledDeltaTime);
                     }
 
                     foreach (Affliction affliction in element.Parent.Afflictions)

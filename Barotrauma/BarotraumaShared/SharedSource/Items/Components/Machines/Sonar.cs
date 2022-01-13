@@ -106,6 +106,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize(false, false, description: "Should the sonar view be centered on the transducers or the submarine's center of mass. Only has an effect if UseTransducers is enabled.")]
+        public bool CenterOnTransducers
+        {
+            get;
+            set;
+        }
+
         [Editable, Serialize(false, false, description: "Does the sonar have mineral scanning mode. " +
             "Only available in-game when the Item has no Steering component.")]
         public bool HasMineralScanner { get; set; }
@@ -318,7 +325,7 @@ namespace Barotrauma.Items.Components
             Vector2 transducerPosSum = Vector2.Zero;
             foreach (ConnectedTransducer transducer in connectedTransducers)
             {
-                if (transducer.Transducer.Item.Submarine != null)
+                if (transducer.Transducer.Item.Submarine != null && CenterOnTransducers)
                 {
                     return transducer.Transducer.Item.Submarine.WorldPosition;
                 }

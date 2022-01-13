@@ -115,7 +115,7 @@ namespace Barotrauma.Items.Components
             reloadTimer /= (1f + item.GetQualityModifier(Quality.StatType.StrikingSpeedMultiplier));
 
             item.body.FarseerBody.CollisionCategories = Physics.CollisionProjectile;
-            item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall;
+            item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionItemBlocking;
             item.body.FarseerBody.OnCollision += OnCollision;
             item.body.FarseerBody.IsBullet = true;
             item.body.PhysEnabled = true;
@@ -361,6 +361,10 @@ namespace Barotrauma.Items.Components
                 }
                 hitTargets.Add(targetItem);
             }
+            else if (f2.Body.UserData is Holdable holdable && holdable.CanPush)
+            {
+                hitTargets.Add(holdable.Item);
+            }
             else
             {
                 return false;
@@ -410,6 +414,14 @@ namespace Barotrauma.Items.Components
                 {
                     if (targetItem.Removed) { return; }
                     Attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
+                }
+                else if (target.UserData is Holdable holdable && holdable.CanPush)
+                {
+                    if (holdable.Item.Removed) { return; }
+                    Attack.DoDamage(User, holdable.Item, item.WorldPosition, 1.0f);
+                    RestoreCollision();
+                    hitting = false;
+                    User = null;
                 }
                 else
                 {

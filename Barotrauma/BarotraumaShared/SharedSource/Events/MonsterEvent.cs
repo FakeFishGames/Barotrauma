@@ -15,6 +15,7 @@ namespace Barotrauma
 
         private readonly float scatter;
         private readonly float offset;
+        private readonly float delayBetweenSpawns;
 
         private Vector2? spawnPos;
 
@@ -92,6 +93,7 @@ namespace Barotrauma
 
             offset = prefab.ConfigElement.GetAttributeFloat("offset", 0);
             scatter = Math.Clamp(prefab.ConfigElement.GetAttributeFloat("scatter", 500), 0, 3000);
+            delayBetweenSpawns = prefab.ConfigElement.GetAttributeFloat("delaybetweenspawns", 0.1f);
 
             if (GameMain.NetworkMember != null)
             {
@@ -538,7 +540,7 @@ namespace Barotrauma
                             SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
                             DebugConsole.NewMessage($"Spawned: {ToString()}. Strength: {StringFormatter.FormatZeroDecimal(monsters.Sum(m => m.Params.AI.CombatStrength))}.", Color.LightBlue, debugOnly: true);
                         }
-                    }, Rand.Range(0f, amount / 2f));
+                    }, delayBetweenSpawns * i);
                 }
             }
 

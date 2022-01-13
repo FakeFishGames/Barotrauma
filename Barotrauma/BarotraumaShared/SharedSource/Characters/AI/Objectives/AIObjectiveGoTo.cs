@@ -96,6 +96,8 @@ namespace Barotrauma
 
         public float? OverridePriority = null;
 
+        public Func<bool> SpeakCannotReachCondition { get; set; }
+
         protected override float GetPriority()
         {
             bool isOrder = objectiveManager.IsOrder(this);
@@ -166,14 +168,14 @@ namespace Barotrauma
                 DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target}", Color.Yellow);
             }
 #endif
-            if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder == objectiveManager.CurrentObjective && DialogueIdentifier != null && SpeakIfFails)
-            {
-                string msg = TargetName == null ? TextManager.Get(DialogueIdentifier, true) : TextManager.GetWithVariable(DialogueIdentifier, "[name]", TargetName, formatCapitals: !(Target is Character));
-                if (msg != null)
-                {
-                    character.Speak(msg, identifier: DialogueIdentifier, minDurationBetweenSimilar: 20.0f);
-                }
-            }
+            if (!character.IsOnPlayerTeam) { return; }
+            if (objectiveManager.CurrentOrder != objectiveManager.CurrentObjective) { return; }
+            if (DialogueIdentifier == null) { return; }
+            if (!SpeakIfFails) { return; }
+            if (SpeakCannotReachCondition != null && !SpeakCannotReachCondition()) { return; }
+            string msg = TargetName == null ? TextManager.Get(DialogueIdentifier, true) : TextManager.GetWithVariable(DialogueIdentifier, "[name]", TargetName, formatCapitals: !(Target is Character));
+            if (msg == null) { return; }
+            character.Speak(msg, identifier: DialogueIdentifier, minDurationBetweenSimilar: 20.0f);
         }
 
         public void ForceAct(float deltaTime) => Act(deltaTime);
@@ -635,21 +637,27 @@ namespace Barotrauma
         {
             get
             {
-                if (SteeringManager == PathSteering && PathSteering.CurrentPath?.CurrentNode?.Ladders != null)
+                if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.CurrentPath.Finished && PathSteering.IsCurrentNodeLadder)
                 {
-                    //don't consider the character to be close enough to the target while climbing ladders,
-                    //UNLESS the last node in the path has been reached
-                    //otherwise characters can let go of the ladders too soon once they're close enough to the target
-                    if (PathSteering.CurrentPath.NextNode != null) { return false; }
+                    // Climbing a ladder
+                    if (Target.WorldPosition.Y > character.WorldPosition.Y)
+                    {
+                        // The target is still above us
+                        return false;
+                    }
+                    if (!character.AnimController.IsAboveFloor)
+                    {
+                        // Going through a hatch
+                        return false;
+                    }
                 }
                 if (!AlwaysUseEuclideanDistance && !character.AnimController.InWater)
                 {
-                    float yDiff = Math.Abs(Target.WorldPosition.Y - character.WorldPosition.Y);
-                    if (yDiff > CloseEnough) { return false; }
-                    float xDiff = Math.Abs(Target.WorldPosition.X - character.WorldPosition.X);
-                    return xDiff <= CloseEnough;
+                    float yDist = Math.Abs(Target.WorldPosition.Y - character.WorldPosition.Y);
+                    if (yDist > CloseEnough) { return false; }
+                    float xDist = Math.Abs(Target.WorldPosition.X - character.WorldPosition.X);
+                    return xDist <= CloseEnough;
                 }
-
                 Vector2 sourcePos = UseDistanceRelativeToAimSourcePos ? character.AnimController.AimSourceWorldPos : character.WorldPosition;
                 return Vector2.DistanceSquared(Target.WorldPosition, sourcePos) < CloseEnough * CloseEnough;
             }

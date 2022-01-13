@@ -88,6 +88,7 @@ namespace Barotrauma
             Circle, Rectangle, Capsule, HorizontalCapsule
         };
 
+        public const float MinDensity = 0.01f;
         public const float DefaultAngularDamping = 5.0f;
 
         private static readonly List<PhysicsBody> list = new List<PhysicsBody>();
@@ -330,6 +331,7 @@ namespace Barotrauma
 
         public PhysicsBody(float width, float height, float radius, float density)
         {
+            density = Math.Max(density, MinDensity);
             CreateBody(width, height, radius, density);
             LastSentPosition = FarseerBody.Position;
             list.Add(this);
@@ -367,7 +369,7 @@ namespace Barotrauma
             float radius = ConvertUnits.ToSimUnits(limbParams.Radius) * limbParams.Scale * limbParams.Ragdoll.LimbScale;
             float height = ConvertUnits.ToSimUnits(limbParams.Height) * limbParams.Scale * limbParams.Ragdoll.LimbScale;
             float width = ConvertUnits.ToSimUnits(limbParams.Width) * limbParams.Scale * limbParams.Ragdoll.LimbScale;
-            density = limbParams.Density;
+            density = Math.Max(limbParams.Density, MinDensity);
             CreateBody(width, height, radius, density);
             FarseerBody.BodyType = BodyType.Dynamic;
             FarseerBody.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
@@ -386,13 +388,13 @@ namespace Barotrauma
             float radius = ConvertUnits.ToSimUnits(element.GetAttributeFloat("radius", 0.0f)) * scale;
             float height = ConvertUnits.ToSimUnits(element.GetAttributeFloat("height", 0.0f)) * scale;
             float width = ConvertUnits.ToSimUnits(element.GetAttributeFloat("width", 0.0f)) * scale;
-            density = element.GetAttributeFloat("density", 10.0f);
+            density = Math.Max(element.GetAttributeFloat("density", 10.0f), MinDensity);
             CreateBody(width, height, radius, density);
             Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
             FarseerBody.BodyType = bodyType;
             FarseerBody.CollisionCategories = Physics.CollisionItem;
             FarseerBody.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
-            FarseerBody.Friction = element.GetAttributeFloat("friction", 0.3f);
+            FarseerBody.Friction = element.GetAttributeFloat("friction", 0.5f);
             FarseerBody.Restitution = element.GetAttributeFloat("restitution", 0.05f);                    
             FarseerBody.UserData = this;
             SetTransformIgnoreContacts(position, 0.0f);

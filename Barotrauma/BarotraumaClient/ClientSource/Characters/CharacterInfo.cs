@@ -521,6 +521,7 @@ namespace Barotrauma
             ch.SkinColor = skinColor;
             ch.HairColor = hairColor;
             ch.FacialHairColor = facialHairColor;
+            ch.SetPersonalityTrait();
             if (ch.Job != null)
             {
                 foreach (KeyValuePair<string, float> skill in skillLevels)

@@ -948,6 +948,9 @@ namespace Barotrauma.Networking
                 case ServerPacketHeader.CREW:
                     campaign?.ClientReadCrew(inc);
                     break;
+                case ServerPacketHeader.MEDICAL:
+                    campaign?.MedicalClinic?.ClientRead(inc);
+                    break;
                 case ServerPacketHeader.READY_CHECK:
                     ReadyCheck.ClientRead(inc);
                     break;
@@ -1116,9 +1119,9 @@ namespace Barotrauma.Networking
                 disconnectReason != DisconnectReason.InvalidVersion)
             {
                 GameAnalyticsManager.AddErrorEventOnce(
-                "GameClient.HandleDisconnectMessage",
-                GameAnalyticsManager.ErrorSeverity.Debug,
-                "Client received a disconnect message. Reason: " + disconnectReason.ToString());
+                    "GameClient.HandleDisconnectMessage",
+                    GameAnalyticsManager.ErrorSeverity.Debug,
+                    "Client received a disconnect message. Reason: " + disconnectReason.ToString());
             }
 
             if (disconnectReason == DisconnectReason.ServerFull)
@@ -1271,7 +1274,15 @@ namespace Barotrauma.Networking
         private void ReadAchievement(IReadMessage inc)
         {
             string achievementIdentifier = inc.ReadString();
-            SteamAchievementManager.UnlockAchievement(achievementIdentifier);
+            int amount = inc.ReadInt32();
+            if (amount == 0)
+            {
+                SteamAchievementManager.UnlockAchievement(achievementIdentifier);
+            }
+            else
+            {
+                SteamAchievementManager.IncrementStat(achievementIdentifier, amount);
+            }
         }
 
         private void ReadTraitorMessage(IReadMessage inc)
@@ -1471,7 +1482,7 @@ namespace Barotrauma.Networking
             serverSettings.LockAllDefaultWires = inc.ReadBoolean();
             serverSettings.AllowRagdollButton = inc.ReadBoolean();
             serverSettings.AllowLinkingWifiToChat = inc.ReadBoolean();
-            GameMain.NetLobbyScreen.UsingShuttle = inc.ReadBoolean();
+            bool usingShuttle = GameMain.NetLobbyScreen.UsingShuttle = inc.ReadBoolean();
             GameMain.LightManager.LosMode = (LosMode)inc.ReadByte();
             bool includesFinalize = inc.ReadBoolean(); inc.ReadPadBits();
             GameMain.LightManager.LightingEnabled = true;
@@ -1482,6 +1493,8 @@ namespace Barotrauma.Networking
 
             Task loadTask = null;
             var roundSummary = (GUIMessageBox.MessageBoxes.Find(c => c?.UserData is RoundSummary)?.UserData) as RoundSummary;
+
+            bool isOutpost = false;
 
             if (gameMode != GameModePreset.MultiPlayerCampaign)
             {
@@ -1621,6 +1634,7 @@ namespace Barotrauma.Networking
                 {
                     GameMain.GameSession.StartRound(levelData, mirrorLevel);
                 }
+                isOutpost = levelData.Type == LevelData.LevelType.Outpost;
             }
 
             if (GameMain.Client?.ServerSettings?.Voting != null)
@@ -1740,8 +1754,7 @@ namespace Barotrauma.Networking
 
             if (respawnAllowed)
             {
-                bool isOutpost = GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign && Level.Loaded?.Type == LevelData.LevelType.Outpost;
-                respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle && !isOutpost ? GameMain.NetLobbyScreen.SelectedShuttle : null);
+                respawnManager = new RespawnManager(this, usingShuttle && !isOutpost ? GameMain.NetLobbyScreen.SelectedShuttle : null);
             }
 
             gameStarted = true;
@@ -1872,7 +1885,7 @@ namespace Barotrauma.Networking
                             if (int.TryParse(ownedIndexes[i], out int index))
                             {
                                 SubmarineInfo sub = GameMain.Client.ServerSubmarines[index];
-                                if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, "owned"))
+                                if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, NetLobbyScreen.SubmarineDeliveryData.Owned))
                                 {
                                     GameMain.GameSession.OwnedSubmarines.Add(sub);
                                 }
@@ -1888,7 +1901,7 @@ namespace Barotrauma.Networking
                             if (int.TryParse(ownedIndexes[i], out index))
                             {
                                 SubmarineInfo sub = GameMain.Client.ServerSubmarines[index];
-                                if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, "owned"))
+                                if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, NetLobbyScreen.SubmarineDeliveryData.Owned))
                                 {
                                     GameMain.NetLobbyScreen.ServerOwnedSubmarines.Add(sub);
                                 }
@@ -2090,13 +2103,6 @@ namespace Barotrauma.Networking
                             string selectShuttleName = inc.ReadString();
                             string selectShuttleHash = inc.ReadString();
 
-                            UInt16 campaignSubmarineIndexCount = inc.ReadUInt16();
-                            List<int> campaignSubIndices = new List<int>();
-                            for (int i = 0; i< campaignSubmarineIndexCount; i++)
-                            {
-                                campaignSubIndices.Add(inc.ReadUInt16());
-                            }
-
                             bool allowSubVoting = inc.ReadBoolean();
                             bool allowModeVoting = inc.ReadBoolean();
 
@@ -2157,16 +2163,11 @@ namespace Barotrauma.Networking
                                     if (GameMain.Client.IsServerOwner) RequestSelectMode(modeIndex);
                                 }
 
-                                if (campaignSubIndices != null)
+                                if (GameMain.NetLobbyScreen.SelectedMode == GameModePreset.MultiPlayerCampaign)
                                 {
-                                    GameMain.NetLobbyScreen.CampaignSubmarines = new List<SubmarineInfo>();
-                                    foreach (UInt16 campaignSubIndex in campaignSubIndices)
+                                    foreach (SubmarineInfo sub in ServerSubmarines.Where(s => !ServerSettings.HiddenSubs.Contains(s.Name)))
                                     {
-                                        SubmarineInfo sub = GameMain.Client.ServerSubmarines[campaignSubIndex];
-                                        if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, "campaign"))
-                                        {
-                                            GameMain.NetLobbyScreen.CampaignSubmarines.Add(sub);
-                                        }
+                                        GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, NetLobbyScreen.SubmarineDeliveryData.Campaign);
                                     }
                                 }
 
@@ -2599,7 +2600,6 @@ namespace Barotrauma.Networking
                     NetLobbyScreen.FailedSubInfo failedCampaignSub = GameMain.NetLobbyScreen.FailedCampaignSubs.Find(s => s.Name == newSub.Name && s.Hash == newSub.MD5Hash.Hash);
                     if (failedCampaignSub != default)
                     {
-                        GameMain.NetLobbyScreen.CampaignSubmarines.Add(newSub);
                         GameMain.NetLobbyScreen.FailedCampaignSubs.Remove(failedCampaignSub);
                     }
 

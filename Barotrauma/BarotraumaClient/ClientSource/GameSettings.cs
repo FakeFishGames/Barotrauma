@@ -524,6 +524,7 @@ namespace Barotrauma
                 return true;
             };
 
+#if !OSX
             var statisticsTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.045f), leftPanel.RectTransform), TextManager.Get("statisticsconsenttickbox"))
             {
                 OnSelected = (GUITickBox tickBox) =>
@@ -562,6 +563,8 @@ namespace Barotrauma
                 statisticsTickBox.OnSelected = prevHandler;
                 statisticsTickBox.Enabled = GameAnalyticsManager.UserConsented != GameAnalyticsManager.Consent.Error;
             });
+#endif
+
 
             // right panel --------------------------------------
 

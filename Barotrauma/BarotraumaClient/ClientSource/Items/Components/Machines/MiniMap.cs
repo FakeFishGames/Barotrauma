@@ -537,9 +537,9 @@ namespace Barotrauma.Items.Components
             if (item.Submarine == null && displayedSubs.Count > 0 ||                                         // item not inside a sub anymore, but display is still showing subs
                 item.Submarine is { } itemSub &&
                 (
-                    !displayedSubs.Contains(itemSub) ||                                                      // current sub not displayed
-                    itemSub.DockedTo.Any(s => !displayedSubs.Contains(s)) ||                                 // some of the docked subs not displayed
-                    displayedSubs.Any(s => s != itemSub && !itemSub.DockedTo.Contains(s))                    // displaying a sub that shouldn't be displayed
+                    !displayedSubs.Contains(itemSub) ||                                                                     // current sub not displayed
+                    itemSub.DockedTo.Any(s => !displayedSubs.Contains(s) && itemSub.ConnectedDockingPorts[s].IsLocked) ||   // some of the docked subs not displayed
+                    displayedSubs.Any(s => s != itemSub && !itemSub.DockedTo.Contains(s))                                   // displaying a sub that shouldn't be displayed
                 ) ||
                 prevResolution.X != GameMain.GraphicsWidth || prevResolution.Y != GameMain.GraphicsHeight || // resolution changed
                 !submarineContainer.Children.Any())                                                          // We lack a GUI
@@ -1092,6 +1092,12 @@ namespace Barotrauma.Items.Components
                 if (!(entity is Item it)) { continue; }
                 if (!electricalChildren.TryGetValue(miniMapGuiComponent, out GUIComponent component)) { continue; }
 
+                if (entity.Removed)
+                {
+                    component.Visible = false;
+                    continue;
+                }
+
                 if (item.Submarine == null || !hasPower)
                 {
                     component.Color = component.OutlineColor = NoPowerElectricalColor;
@@ -1117,7 +1123,7 @@ namespace Barotrauma.Items.Components
                         int current = (int)-powerTransfer.CurrPowerConsumption, load = (int)powerTransfer.PowerLoad;
 
                         line1 = TextManager.GetWithVariable("statusmonitor.junctionpower.tooltip", "[amount]", current.ToString(), fallBackTag: "statusmonitor.junctioncurrent.tooltip");
-                        line2 = TextManager.GetWithVariable("statusmonitor.junctionload.tooltip", "[amount]", load.ToString());
+                        line2 = TextManager.GetWithVariables("statusmonitor.junctionload.tooltip", new string[] { "[amount]", "[load]" }, new string[] { load.ToString(), load.ToString() });
                     }
 
                     string line3 = TextManager.GetWithVariable("statusmonitor.durability.tooltip", "[amount]", durability.ToString());

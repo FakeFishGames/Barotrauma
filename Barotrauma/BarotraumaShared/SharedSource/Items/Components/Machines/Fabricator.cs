@@ -179,8 +179,6 @@ namespace Barotrauma.Items.Components
             if (selectedItem == null) { return; }
             if (!outputContainer.Inventory.CanBePut(selectedItem.TargetItem, selectedItem.OutCondition * selectedItem.TargetItem.Health)) { return; }
 
-            RefreshAvailableIngredients();
-
 #if CLIENT
             itemList.Enabled = false;
             activateButton.Text = TextManager.Get("FabricatorCancel");
@@ -189,7 +187,13 @@ namespace Barotrauma.Items.Components
             IsActive = true;
             this.user = user;
             fabricatedItem = selectedItem;
-            MoveIngredientsToInputContainer(selectedItem);
+            RefreshAvailableIngredients();
+
+            bool isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
+            if (!isClient)
+            {
+                MoveIngredientsToInputContainer(selectedItem);
+            }
             
             requiredTime = GetRequiredTime(fabricatedItem, user);
             timeUntilReady = requiredTime;
@@ -230,21 +234,19 @@ namespace Barotrauma.Items.Components
             }
 
             if (fabricatedItem == null) { return; }
-            fabricatedItem = null;
-
-#if CLIENT
+#if SERVER
+            if (user != null)
+            {
+                GameServer.Log(GameServer.CharacterLogName(user) + " cancelled the fabrication of " + fabricatedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+            }
+#elif CLIENT
             itemList.Enabled = true;
             if (activateButton != null)
             {
                 activateButton.Text = TextManager.Get("FabricatorCreate");
             }
 #endif
-#if SERVER
-            if (user != null)
-            {
-                GameServer.Log(GameServer.CharacterLogName(user) + " cancelled the fabrication of " + fabricatedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
-            }
-#endif
+            fabricatedItem = null;
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -256,15 +258,20 @@ namespace Barotrauma.Items.Components
             }
             refreshIngredientsTimer -= deltaTime;
 
-            if (fabricatedItem == null || !CanBeFabricated(fabricatedItem, availableIngredients, user))
+            bool isClient = GameMain.NetworkMember?.IsClient ?? false;
+
+            if (!isClient)
             {
-                CancelFabricating();
-                return;
+                if (fabricatedItem == null || !CanBeFabricated(fabricatedItem, availableIngredients, user))
+                {
+                    CancelFabricating();
+                    return;
+                }
             }
 
             progressState = fabricatedItem == null ? 0.0f : (requiredTime - timeUntilReady) / requiredTime;
 
-            if (GameMain.NetworkMember?.IsClient ?? false)
+            if (isClient)
             {
                 hasPower = State != FabricatorState.Paused;
                 if (!hasPower)
@@ -365,28 +372,29 @@ namespace Barotrauma.Items.Components
                             availableItems.Remove(availableItem);
                             Entity.Spawner.AddToRemoveQueue(availableItem);
                             inputContainer.Inventory.RemoveItem(availableItem);
+                            break;
                         }
                     }
                 });
 
                 int amountFittingContainer = outputContainer.Inventory.HowManyCanBePut(fabricatedItem.TargetItem, fabricatedItem.OutCondition * fabricatedItem.TargetItem.Health);
 
-                var fabricationValueItem = new AbilityValueItem(fabricatedItem.Amount, fabricatedItem.TargetItem);
+                var fabricationitemAmount = new AbilityFabricationItemAmount(fabricatedItem.TargetItem, fabricatedItem.Amount);
 
                 int quality = 0;
                 if (user?.Info != null)
                 {
                     foreach (Character character in Character.GetFriendlyCrew(user))
                     {
-                        character.CheckTalents(AbilityEffectType.OnAllyItemFabricatedAmount, fabricationValueItem);
+                        character.CheckTalents(AbilityEffectType.OnAllyItemFabricatedAmount, fabricationitemAmount);
                     }
-                    user.CheckTalents(AbilityEffectType.OnItemFabricatedAmount, fabricationValueItem);
+                    user.CheckTalents(AbilityEffectType.OnItemFabricatedAmount, fabricationitemAmount);
 
                     quality = GetFabricatedItemQuality(fabricatedItem, user);
                 }
 
                 var tempUser = user;
-                for (int i = 0; i < (int)fabricationValueItem.Value; i++)
+                for (int i = 0; i < (int)fabricationitemAmount.Value; i++)
                 {
                     float outCondition = fabricatedItem.OutCondition;
                     if (i < amountFittingContainer)
@@ -433,7 +441,7 @@ namespace Barotrauma.Items.Components
                     {
                         float userSkill = user.GetSkillLevel(skill.Identifier);
                         float addedSkill = skill.Level * SkillSettings.Current.SkillIncreasePerFabricatorRequiredSkill / Math.Max(userSkill, 1.0f);
-                        var addedSkillValue = new AbilityValueString(addedSkill, skill.Identifier);
+                        var addedSkillValue = new AbilityFabricatorSkillGain(skill.Identifier, addedSkill);
                         user.CheckTalents(AbilityEffectType.OnItemFabricationSkillGain, addedSkillValue);
 
                         user.Info.IncreaseSkillLevel(
@@ -542,6 +550,11 @@ namespace Barotrauma.Items.Components
 
         private void RefreshAvailableIngredients()
         {
+            Character user = this.user;
+#if CLIENT
+            user ??= Character.Controlled;
+#endif
+
             List<Item> itemList = new List<Item>();
             itemList.AddRange(inputContainer.Inventory.AllItems);
             foreach (MapEntity linkedTo in item.linkedTo)
@@ -550,6 +563,10 @@ namespace Barotrauma.Items.Components
                 {
                     var itemContainer = linkedItem.GetComponent<ItemContainer>();
                     if (itemContainer == null) { continue; }
+                    if (user != null)
+                    {
+                        if (!itemContainer.HasRequiredItems(user, addMessage: false)) { continue; }
+                    }
 
                     var deconstructor = linkedItem.GetComponent<Deconstructor>();
                     if (deconstructor != null)
@@ -568,17 +585,10 @@ namespace Barotrauma.Items.Components
                     itemList.AddRange(container.Inventory.AllItems);
                 }
             }
-#if CLIENT
-            if (Character.Controlled?.Inventory != null)
-            {
-                itemList.AddRange(Character.Controlled.Inventory.AllItems);
-            }
-#else
             if (user?.Inventory != null)
             {
                 itemList.AddRange(user.Inventory.AllItems);
             }
-#endif
             availableIngredients.Clear();
             foreach (Item item in itemList)
             {
@@ -599,8 +609,6 @@ namespace Barotrauma.Items.Components
         {
             //required ingredients that are already present in the input container
             List<Item> usedItems = new List<Item>();
-
-            bool isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
 
             targetItem.RequiredItems.ForEach(requiredItem => {
                 for (int i = 0; i < requiredItem.Amount; i++)
@@ -630,10 +638,11 @@ namespace Barotrauma.Items.Components
                             if (!inputContainer.Inventory.CanBePut(availablePrefab))
                             {
                                 var unneededItem = inputContainer.Inventory.AllItems.FirstOrDefault(it => !usedItems.Contains(it));
-                                unneededItem?.Drop(null, createNetworkEvent: !isClient);
+                                unneededItem?.Drop(null);
                             }
-                            inputContainer.Inventory.TryPutItem(availablePrefab, user: null, createNetworkEvent: !isClient);
+                            inputContainer.Inventory.TryPutItem(availablePrefab, user: null);
                         }
+                        break;
                     }
                 }
             });
@@ -683,6 +692,27 @@ namespace Barotrauma.Items.Components
                 requiredTime = savedRequiredTime;
             }
             savedFabricatedItem = null;
+        }
+        class AbilityFabricatorSkillGain : AbilityObject, IAbilityValue, IAbilitySkillIdentifier
+        {
+            public AbilityFabricatorSkillGain(string skillIdentifier, float skillAmount)
+            {
+                SkillIdentifier = skillIdentifier;
+                Value = skillAmount;
+            }
+            public float Value { get; set; }
+            public string SkillIdentifier { get; set; }
+        }
+
+        class AbilityFabricationItemAmount : AbilityObject, IAbilityValue, IAbilityItemPrefab
+        {
+            public AbilityFabricationItemAmount(ItemPrefab itemPrefab, float itemAmount)
+            {
+                ItemPrefab = itemPrefab;
+                Value = itemAmount;
+            }
+            public float Value { get; set; }
+            public ItemPrefab ItemPrefab { get; set; }
         }
     }
 }

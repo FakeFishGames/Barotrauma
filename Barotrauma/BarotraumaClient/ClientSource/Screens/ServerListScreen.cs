@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -20,6 +21,11 @@ namespace Barotrauma
     {
         //how often the client is allowed to refresh servers
         private readonly TimeSpan AllowedRefreshInterval = new TimeSpan(0, 0, 3);
+
+        public ImmutableDictionary<UInt64, ContentPackage> ContentPackagesByWorkshopId { get; private set; }
+            = ImmutableDictionary<UInt64, ContentPackage>.Empty;
+        public ImmutableDictionary<string, ContentPackage> ContentPackagesByHash { get; private set; }
+            = ImmutableDictionary<string, ContentPackage>.Empty;
 
         private GUIFrame menu;
 
@@ -1011,6 +1017,17 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
+
+            ContentPackagesByWorkshopId = ContentPackage.AllPackages
+                .Select(p => new KeyValuePair<UInt64, ContentPackage>(p.SteamWorkshopId, p))
+                .Where(p => p.Key != 0)
+                .GroupBy(x => x.Key).Select(g => g.First())
+                .ToImmutableDictionary();
+            ContentPackagesByHash = ContentPackage.AllPackages
+                .Select(p => new KeyValuePair<string, ContentPackage>(p.MD5hash.Hash, p))
+                .GroupBy(x => x.Key).Select(g => g.First())
+                .ToImmutableDictionary();
+
             SelectedTab = ServerListTab.All;
             LoadServerFilters(GameMain.Config.ServerFilterElement);
             if (GameSettings.ShowOffensiveServerPrompt)
@@ -1039,6 +1056,8 @@ namespace Barotrauma
 
         public override void Deselect()
         {
+            ContentPackagesByWorkshopId = ImmutableDictionary<UInt64, ContentPackage>.Empty;
+            ContentPackagesByHash = ImmutableDictionary<string, ContentPackage>.Empty;
             base.Deselect();
 
             GameMain.Config.SaveNewPlayerConfig();
@@ -1491,7 +1510,7 @@ namespace Barotrauma
                     }
                     TaskPool.Add($"Get{avatarSize}AvatarAsync", avatarFunc(friend.Id), (task) =>
                     {
-                        Steamworks.Data.Image? img = ((Task<Steamworks.Data.Image?>)task).Result;
+                        if (!task.TryGetResult(out Steamworks.Data.Image? img)) { return; }
                         if (!img.HasValue) { return; }
 
                         var avatarImage = img.Value;
@@ -2203,7 +2222,7 @@ namespace Barotrauma
                         TaskPool.PrintTaskExceptions(t, $"Failed to retrieve Workshop item info (ID {entry.Id})");
                         return;
                     }
-                    Steamworks.Ugc.Item? item = ((Task<Steamworks.Ugc.Item?>)t).Result;
+                    t.TryGetResult(out Steamworks.Ugc.Item? item);
 
                     if (!item.HasValue)
                     {
@@ -2313,7 +2332,7 @@ namespace Barotrauma
                 {
                     var info = obj.Item1;
                     var text = obj.Item2;
-                    info.Ping = ((Task<int>)rtt).Result; info.PingChecked = true;
+                    rtt.TryGetResult(out info.Ping); info.PingChecked = true;
                     text.TextColor = GetPingTextColor(info.Ping);
                     text.Text = info.Ping > -1 ? info.Ping.ToString() : "?";
                     lock (activePings)

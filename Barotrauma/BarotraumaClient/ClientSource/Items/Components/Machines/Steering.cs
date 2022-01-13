@@ -403,7 +403,7 @@ namespace Barotrauma.Items.Components
             {
                 if (GameMain.Client == null)
                 {
-                    item.SendSignal("1", "toggle_docking");
+                    item.SendSignal(new Signal("1", sender: Character.Controlled), "toggle_docking");
                 }
                 else
                 {

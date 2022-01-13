@@ -23,6 +23,7 @@ namespace Barotrauma
         private Submarine? submarine;
         private Character? dummyCharacter;
         public static Effect BlueprintEffect;
+        private GUIFrame container;
 
         private TabMenu tabMenu;
 
@@ -42,21 +43,25 @@ namespace Barotrauma
                     return true;
                 }
             };
+
         }
 
         public override void Select()
         {
             base.Select();
-
+            container = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "InnerGlow", color: Color.Black);
+            var tab = new GUIFrame(new RectTransform(Vector2.One, container.RectTransform), color: Color.Black * 0.9f);
+            MedicalClinicUI clinic = new MedicalClinicUI(new MedicalClinic(null!), tab);
+            clinic.RequestLatestPending();
             if (dummyCharacter is { Removed: false })
             {
                 dummyCharacter?.Remove();
             }
 
-            dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.DummyID, hasAi: false);
-            dummyCharacter.Info.Job = new Job(JobPrefab.Prefabs.Where(jp => TalentTree.JobTalentTrees.ContainsKey(jp.Identifier)).GetRandom());
-            dummyCharacter.Info.Name = "Galldren";
-            dummyCharacter.Inventory.CreateSlots();
+            // dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.DummyID, hasAi: false);
+            // dummyCharacter.Info.Job = new Job(JobPrefab.Prefabs.Where(jp => TalentTree.JobTalentTrees.ContainsKey(jp.Identifier)).GetRandom());
+            // dummyCharacter.Info.Name = "Galldren";
+            // dummyCharacter.Inventory.CreateSlots();
 
             Character.Controlled = dummyCharacter;
             GameMain.World.ProcessChanges();
@@ -67,9 +72,9 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             Frame.AddToGUIUpdateList();
-            CharacterHUD.AddToGUIUpdateList(dummyCharacter);
-            dummyCharacter?.SelectedConstruction?.AddToGUIUpdateList();
-            tabMenu.AddToGUIUpdateList();
+            container.AddToGUIUpdateList();
+            // CharacterHUD.AddToGUIUpdateList(dummyCharacter);
+            // dummyCharacter?.SelectedConstruction?.AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
@@ -92,12 +97,12 @@ namespace Barotrauma
             graphics.Clear(BackgroundColor);
 
             spriteBatch.Begin(SpriteSortMode.BackToFront, transformMatrix: Cam.Transform);
-            miniMapItem?.Draw(spriteBatch, false);
-            if (dummyCharacter is { } dummy)
-            {
-                dummyCharacter.DrawFront(spriteBatch, Cam);
-                dummyCharacter.Draw(spriteBatch, Cam);
-            }
+            // miniMapItem?.Draw(spriteBatch, false);
+            // if (dummyCharacter is { } dummy)
+            // {
+            //     dummyCharacter.DrawFront(spriteBatch, Cam);
+            //     dummyCharacter.Draw(spriteBatch, Cam);
+            // }
             spriteBatch.End();
 
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState);

@@ -242,6 +242,11 @@ namespace Barotrauma
             {
                 ReadyCheckButton.RectTransform.ScreenSpaceOffset = endRoundButton.RectTransform.ScreenSpaceOffset;
                 ReadyCheckButton.DrawManually(spriteBatch);
+                if (ReadyCheck.ReadyCheckCooldown > DateTime.Now)
+                {
+                    float progress = (ReadyCheck.ReadyCheckCooldown - DateTime.Now).Seconds / 60.0f;
+                    ReadyCheckButton.Color = ToolBox.GradientLerp(progress, Color.White, GUI.Style.Red);
+                }
             }
         }
 
@@ -290,6 +295,9 @@ namespace Barotrauma
                 case InteractionType.Crew when GameMain.NetworkMember != null:
                     CampaignUI.CrewManagement.SendCrewState(false);
                     goto default;
+                case InteractionType.MedicalClinic:
+                    CampaignUI.MedicalClinic.RequestLatestPending();
+                    goto default;
                 default:
                     ShowCampaignUI = true;
                     CampaignUI.SelectTab(npc.CampaignInteractionType);
@@ -318,6 +326,8 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
+
+            MedicalClinic?.Update(deltaTime);
 
             if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
             {

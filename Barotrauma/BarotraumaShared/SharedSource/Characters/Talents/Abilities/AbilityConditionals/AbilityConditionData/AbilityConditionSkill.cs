@@ -18,13 +18,13 @@ namespace Barotrauma.Abilities
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
-            if ((abilityObject as IAbilityString)?.String is string skillIdentifier)
+            if ((abilityObject as IAbilitySkillIdentifier)?.SkillIdentifier is string skillIdentifier)
             {
                 return MatchesConditionSpecific(skillIdentifier);
             }
             else
             {
-                LogAbilityConditionError(abilityObject, typeof(IAbilityString));
+                LogAbilityConditionError(abilityObject, typeof(IAbilitySkillIdentifier));
                 return false;
             }
         }

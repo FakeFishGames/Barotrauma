@@ -24,6 +24,7 @@ namespace Barotrauma.Items.Components
 
         private readonly int[] channelMemory = new int[ChannelMemorySize];
 
+        private Connection signalInConnection;
         private Connection signalOutConnection;
 
         [Serialize(CharacterTeamType.None, true, description: "WiFi components can only communicate with components that have the same Team ID.", alwaysUseInstanceValues: true)]
@@ -98,6 +99,7 @@ namespace Barotrauma.Items.Components
             if (item.Connections != null)
             {
                 signalOutConnection = item.Connections.Find(c => c.Name == "signal_out");
+                signalInConnection = item.Connections.Find(c => c.Name == "signal_in");
             }
             if (channelMemory.All(m => m == 0))
             {
@@ -207,6 +209,18 @@ namespace Barotrauma.Items.Components
 
                 if (wifiComp.signalOutConnection != null)
                 {
+                    if (signal.source != null && wifiComp.signalInConnection != null)
+                    {
+                        if (signal.source.LastSentSignalRecipients.Contains(wifiComp.signalInConnection)) 
+                        { 
+                            //signal already passed through this wifi component -> stop here to prevent an infinite loop
+                            continue; 
+                        }
+                        else
+                        {
+                            signal.source.LastSentSignalRecipients.Add(wifiComp.signalInConnection);
+                        }
+                    }
                     wifiComp.item.SendSignal(s, wifiComp.signalOutConnection);
                 }
 

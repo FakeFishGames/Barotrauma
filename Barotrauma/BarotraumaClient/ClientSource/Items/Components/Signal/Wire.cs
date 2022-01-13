@@ -286,7 +286,6 @@ namespace Barotrauma.Items.Components
                 item.Color, depth, 0.3f);
         }
 
-
         public static void UpdateEditing(List<Wire> wires)
         {
             var doubleClicked = PlayerInput.DoubleClicked();
@@ -509,6 +508,31 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void Move(Vector2 amount)
+        {
+            //only used in the sub editor, hence only in the client project
+            if (!item.IsSelected) { return; }
+
+            Vector2 wireNodeOffset = item.Submarine == null ? Vector2.Zero : item.Submarine.HiddenSubPosition + amount;            
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                if (i == 0 || i == nodes.Count - 1)
+                {
+                    if (connections[0]?.Item != null && !connections[0].Item.IsSelected && 
+                        (Submarine.RectContains(connections[0].Item.Rect, nodes[i] + wireNodeOffset) || Submarine.RectContains(connections[0].Item.Rect, nodes[i] + wireNodeOffset - amount)))
+                    {
+                        continue;
+                    }
+                    else if (connections[1]?.Item != null && !connections[1].Item.IsSelected && 
+                        (Submarine.RectContains(connections[1].Item.Rect, nodes[i] + wireNodeOffset) || Submarine.RectContains(connections[1].Item.Rect, nodes[i] + wireNodeOffset - amount)))
+                    {
+                        continue;
+                    }
+                }                
+                nodes[i] += amount;
+            }
+            UpdateSections();
+        }
         public bool IsMouseOn()
         {
             if (GUI.MouseOn == null)

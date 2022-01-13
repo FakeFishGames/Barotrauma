@@ -29,7 +29,7 @@ namespace Barotrauma.Abilities
             }
             else
             {
-                LogabilityObjectMismatch();
+                LogAbilityObjectMismatch();
             }
         }
     }

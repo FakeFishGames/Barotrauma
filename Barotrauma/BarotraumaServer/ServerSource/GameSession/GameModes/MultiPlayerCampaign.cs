@@ -348,7 +348,6 @@ namespace Barotrauma
                         }
                     }
                 }
-                UpdateCampaignSubs();
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
                 PendingSubmarineSwitch = null;
@@ -399,44 +398,12 @@ namespace Barotrauma
             Map.OnMissionsSelected += (loc, mission) => { LastUpdateID++; };
             Reputation.OnAnyReputationValueChanged += () => { LastUpdateID++; };
 
-            UpdateCampaignSubs();
-            
             //increment save ID so clients know they're lacking the most up-to-date save file
             LastSaveID++;
         }
 
-        public static void UpdateCampaignSubs()
-        {
-            bool isSubmarineVisible(SubmarineInfo s)
-                => !GameMain.Server.ServerSettings.HiddenSubs.Any(h
-                    => s.Name.Equals(h, StringComparison.OrdinalIgnoreCase));
-            
-            List<SubmarineInfo> availableSubs =
-                SubmarineInfo.SavedSubmarines
-                    .Where(s =>
-                        s.IsCampaignCompatible
-                        && isSubmarineVisible(s))
-                    .ToList();
-
-            if (!availableSubs.Any())
-            {
-                //None of the available subs were marked as campaign-compatible, just include all visible subs
-                availableSubs.AddRange(
-                    SubmarineInfo.SavedSubmarines
-                        .Where(isSubmarineVisible));
-            }
-
-            if (!availableSubs.Any())
-            {
-                //No subs are visible at all! Just make the selected one available
-                availableSubs.Add(GameMain.NetLobbyScreen.SelectedSub);
-            }
-
-            GameMain.NetLobbyScreen.CampaignSubmarines = availableSubs;
-        }
-
         public bool CanPurchaseSub(SubmarineInfo info)
-            => info.Price <= Money && GameMain.NetLobbyScreen.CampaignSubmarines.Contains(info);
+            => info.Price <= Money && GetCampaignSubs().Contains(info);
 
         public void DiscardClientCharacterData(Client client)
         {

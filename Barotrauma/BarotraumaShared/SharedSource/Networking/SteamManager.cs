@@ -136,6 +136,10 @@ namespace Barotrauma.Steam
                 DebugConsole.NewMessage("Failed to increment stat \"" + statName + "\".");
 #endif
             }
+            else
+            {
+                StoreStats();
+            }
             return success;
         }
 
@@ -149,6 +153,10 @@ namespace Barotrauma.Steam
 #if DEBUG
                 DebugConsole.NewMessage("Failed to increment stat \"" + statName + "\".");
 #endif
+            }
+            else
+            {
+                StoreStats();
             }
             return success;
         }

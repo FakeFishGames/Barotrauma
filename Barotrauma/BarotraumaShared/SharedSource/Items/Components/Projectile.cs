@@ -268,7 +268,8 @@ namespace Barotrauma.Items.Components
             IgnoredBodies = ignoredBodies;
             Vector2 projectilePos = weaponPos;
             //make sure there's no obstacles between the base of the weapon (or the shoulder of the character) and the end of the barrel
-            if (Submarine.PickBody(weaponPos, spawnPos, IgnoredBodies, Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking) == null)
+            if (Submarine.PickBody(weaponPos, spawnPos, IgnoredBodies, Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking, 
+                customPredicate: (Fixture f) =>  { return !IgnoredBodies.Contains(f.Body); }) == null)
             {
                 //no obstacles -> we can spawn the projectile at the barrel
                 projectilePos = spawnPos;
@@ -359,7 +360,7 @@ namespace Barotrauma.Items.Components
             item.body.FarseerBody.IsBullet = true;
 
             item.body.CollisionCategories = Physics.CollisionProjectile;
-            item.body.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel;
+            item.body.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking;
 
             IsActive = true;
 

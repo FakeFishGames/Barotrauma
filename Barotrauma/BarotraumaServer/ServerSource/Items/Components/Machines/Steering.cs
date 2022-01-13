@@ -50,14 +50,14 @@ namespace Barotrauma.Items.Components
                 newSteeringInput = new Vector2(msg.ReadSingle(), msg.ReadSingle());
             }
 
-            if (!item.CanClientAccess(c)) return;
+            if (!item.CanClientAccess(c)) { return; }
 
             user = c.Character;
             AutoPilot = autoPilot;
 
             if (dockingButtonClicked)
             {
-                item.SendSignal("1", "toggle_docking");
+                item.SendSignal(new Signal("1", sender: c.Character), "toggle_docking");
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(this), true });
             }
 

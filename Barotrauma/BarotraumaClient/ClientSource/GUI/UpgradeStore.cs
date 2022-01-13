@@ -16,7 +16,6 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
-    
     internal class UpgradeStore
     {
         public readonly struct CategoryData
@@ -1688,7 +1687,7 @@ namespace Barotrauma
 
         private bool HasPermission => campaignUI.Campaign.AllowedToManageCampaign();
 
-        private static string FormatCurrency(int money, bool format = true)
+        public static string FormatCurrency(int money, bool format = true)
         {
             return TextManager.GetWithVariable("CurrencyFormat", "[credits]", format ? string.Format(CultureInfo.InvariantCulture, "{0:N0}", money) : money.ToString());
         }

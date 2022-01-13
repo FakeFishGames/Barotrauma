@@ -382,51 +382,55 @@ namespace Barotrauma
                     mouthLimb.body.ApplyLinearImpulse(Vector2.UnitY * force * 2, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                     mouthLimb.body.ApplyTorque(-force * 50);
                 }
-                var jaw = GetLimb(LimbType.Jaw);
-                if (jaw != null)
-                {
-                    jaw.body.ApplyTorque(-(float)Math.Sin(eatTimer * 150) * jaw.Mass * 25);
-                }
 
-                character.ApplyStatusEffects(ActionType.OnEating, deltaTime);
-
-                float particleFrequency = MathHelper.Clamp(eatSpeed / 2, 0.02f, 0.5f);
-                if (Rand.Value() < particleFrequency / 6)
+                if (Character.CanEat)
                 {
-                    target.AnimController.MainLimb.AddDamage(target.SimPosition, dmg, 0, 0, false);
-                }
-                if (Rand.Value() < particleFrequency)
-                {
-                    target.AnimController.MainLimb.AddDamage(target.SimPosition, 0, dmg, 0, false);
-                }
-                if (eatTimer % 1.0f < 0.5f && (eatTimer - deltaTime * eatSpeed) % 1.0f > 0.5f)
-                {
-                    static bool CanBeSevered(LimbJoint j) => !j.IsSevered && j.CanBeSevered && j.LimbA != null && !j.LimbA.IsSevered && j.LimbB != null && !j.LimbB.IsSevered;
-                    //keep severing joints until there is only one limb left
-                    var nonSeveredJoints = target.AnimController.LimbJoints.Where(CanBeSevered);
-                    if (nonSeveredJoints.None())
+                    var jaw = GetLimb(LimbType.Jaw);
+                    if (jaw != null)
                     {
-                        //small monsters don't eat the contents of the character's inventory
-                        if (Mass < target.AnimController.Mass)
-                        {
-                            target.Inventory?.AllItemsMod.ForEach(it => it?.Drop(dropper: null));
-                        }
-
-                        //only one limb left, the character is now full eaten
-                        Entity.Spawner?.AddToRemoveQueue(target);
-
-                        if (Character.AIController is EnemyAIController enemyAi)
-                        {
-                            enemyAi.PetBehavior?.OnEat("dead", 1.0f);
-                        }
-
-                        character.SelectedCharacter = null;
+                        jaw.body.ApplyTorque(-(float)Math.Sin(eatTimer * 150) * jaw.Mass * 25);
                     }
-                    else //sever a random joint
+
+                    character.ApplyStatusEffects(ActionType.OnEating, deltaTime);
+
+                    float particleFrequency = MathHelper.Clamp(eatSpeed / 2, 0.02f, 0.5f);
+                    if (Rand.Value() < particleFrequency / 6)
                     {
-                        target.AnimController.SeverLimbJoint(nonSeveredJoints.GetRandom());
+                        target.AnimController.MainLimb.AddDamage(target.SimPosition, dmg, 0, 0, false);
                     }
-                }
+                    if (Rand.Value() < particleFrequency)
+                    {
+                        target.AnimController.MainLimb.AddDamage(target.SimPosition, 0, dmg, 0, false);
+                    }
+                    if (eatTimer % 1.0f < 0.5f && (eatTimer - deltaTime * eatSpeed) % 1.0f > 0.5f)
+                    {
+                        static bool CanBeSevered(LimbJoint j) => !j.IsSevered && j.CanBeSevered && j.LimbA != null && !j.LimbA.IsSevered && j.LimbB != null && !j.LimbB.IsSevered;
+                        //keep severing joints until there is only one limb left
+                        var nonSeveredJoints = target.AnimController.LimbJoints.Where(CanBeSevered);
+                        if (nonSeveredJoints.None())
+                        {
+                            //small monsters don't eat the contents of the character's inventory
+                            if (Mass < target.AnimController.Mass)
+                            {
+                                target.Inventory?.AllItemsMod.ForEach(it => it?.Drop(dropper: null));
+                            }
+
+                            //only one limb left, the character is now full eaten
+                            Entity.Spawner?.AddToRemoveQueue(target);
+
+                            if (Character.AIController is EnemyAIController enemyAi)
+                            {
+                                enemyAi.PetBehavior?.OnEat("dead", 1.0f);
+                            }
+
+                            character.SelectedCharacter = null;
+                        }
+                        else //sever a random joint
+                        {
+                            target.AnimController.SeverLimbJoint(nonSeveredJoints.GetRandom());
+                        }
+                    }
+                }                
             }
             else
             {

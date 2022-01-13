@@ -45,6 +45,8 @@ namespace Barotrauma
 
         public UpgradeStore UpgradeStore { get; set; }
 
+        public MedicalClinicUI MedicalClinic { get; set; }
+
         public CampaignUI(CampaignMode campaign, GUIComponent container)
         {
             Campaign = campaign;
@@ -270,6 +272,9 @@ namespace Barotrauma
             // Submarine buying tab
             tabs[(int)CampaignMode.InteractionType.PurchaseSub] = new GUIFrame(new RectTransform(Vector2.One, container.RectTransform, Anchor.TopLeft), color: Color.Black * 0.9f);
 
+            tabs[(int)CampaignMode.InteractionType.MedicalClinic] = new GUIFrame(new RectTransform(Vector2.One, container.RectTransform), color: Color.Black * 0.9f);
+            MedicalClinic = new MedicalClinicUI(Campaign.MedicalClinic, GetTabContainer(CampaignMode.InteractionType.MedicalClinic));
+
             // mission info -------------------------------------------------------------------------
 
             locationInfoPanel = new GUIFrame(new RectTransform(new Vector2(0.35f, 0.75f), GetTabContainer(CampaignMode.InteractionType.Map).RectTransform, Anchor.CenterRight)
@@ -354,6 +359,10 @@ namespace Barotrauma
 
                 case CampaignMode.InteractionType.Store:
                     Store?.Update(deltaTime);
+                    break;
+                
+                case CampaignMode.InteractionType.MedicalClinic:
+                    MedicalClinic?.Update(deltaTime);
                     break;
             }
         }

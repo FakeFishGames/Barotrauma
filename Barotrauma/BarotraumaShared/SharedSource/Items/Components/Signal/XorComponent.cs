@@ -15,14 +15,14 @@ namespace Barotrauma.Items.Components
             int sendOutput = 0;
             for (int i = 0; i < timeSinceReceived.Length; i++)
             {
-                if (timeSinceReceived[i] <= timeFrame) sendOutput += 1;
+                if (timeSinceReceived[i] <= timeFrame) { sendOutput += 1; }
                 timeSinceReceived[i] += deltaTime;
             }
 
             string signalOut = sendOutput == 1 ? output : falseOutput;
-            if (string.IsNullOrEmpty(signalOut)) return;
+            if (string.IsNullOrEmpty(signalOut)) { return; }
 
-            item.SendSignal(signalOut, "signal_out");
+            item.SendSignal(new Signal(signalOut, sender: signalSender[0] ?? signalSender[1]), "signal_out");
         }
     }
 }

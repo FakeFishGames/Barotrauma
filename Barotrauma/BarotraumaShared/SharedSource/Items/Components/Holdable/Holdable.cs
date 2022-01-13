@@ -166,7 +166,7 @@ namespace Barotrauma.Items.Components
                 Pusher = new PhysicsBody(item.body.width, item.body.height, item.body.radius, item.body.Density)
                 {
                     BodyType = BodyType.Dynamic,
-                    CollidesWith = Physics.CollisionCharacter,
+                    CollidesWith = Physics.CollisionCharacter | Physics.CollisionProjectile,
                     CollisionCategories = Physics.CollisionItemBlocking,
                     Enabled = false,
                     UserData = this
@@ -604,7 +604,14 @@ namespace Barotrauma.Items.Components
                     int maxAttachableCount = (int)character.Info.GetSavedStatValue(StatTypes.MaxAttachableCount, item.Prefab.Identifier);
                     int currentlyAttachedCount = Item.ItemList.Count(
                         i => i.Submarine == attachTarget?.Submarine && i.GetComponent<Holdable>() is Holdable holdable && holdable.Attached && i.Prefab.Identifier == item.prefab.Identifier);
-                    if (currentlyAttachedCount >= maxAttachableCount) 
+                    if (maxAttachableCount == 0)
+                    {
+#if CLIENT
+                        GUI.AddMessage(TextManager.Get("itemmsgrequiretraining"), Color.Red);
+#endif
+                        return false;
+                    }
+                    else if (currentlyAttachedCount >= maxAttachableCount) 
                     {
 #if CLIENT
                         GUI.AddMessage($"{TextManager.Get("itemmsgtotalnumberlimited")} ({currentlyAttachedCount}/{maxAttachableCount})", Color.Red);
@@ -801,7 +808,7 @@ namespace Barotrauma.Items.Components
                     equipLimb = picker.AnimController.GetLimb(LimbType.Torso);
                 }
 
-                if (equipLimb != null)
+                if (equipLimb != null && !equipLimb.Removed)
                 {
                     float itemAngle = (equipLimb.Rotation + holdAngle * picker.AnimController.Dir);
 
@@ -812,6 +819,11 @@ namespace Barotrauma.Items.Components
                     item.SetTransform(equipLimb.SimPosition - transformedHandlePos, itemAngle);
                 }
             }
+        }
+
+        public override void ReceiveSignal(Signal signal, Connection connection)
+        {
+            //do nothing
         }
 
         public override void FlipX(bool relativeToSub)

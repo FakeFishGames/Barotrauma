@@ -14,7 +14,7 @@ namespace Barotrauma
         {
             get
             {
-                return ShowGaps;
+                return ShowGaps && SubEditorScreen.IsLayerVisible(this);
             }
         }
 
@@ -42,7 +42,7 @@ namespace Barotrauma
                 }
             }
 
-            if (!editing || !ShowGaps) { return; }
+            if (!editing || !ShowGaps || !SubEditorScreen.IsLayerVisible(this)) { return; }
 
             Color clr = (open == 0.0f) ? GUI.Style.Red : Color.Cyan;
             if (IsHighlighted) clr = Color.Gold;
@@ -128,8 +128,14 @@ namespace Barotrauma
             {
                 //no flow particles between linked hulls (= rooms consisting of multiple hulls)
                 if (hull1.linkedTo.Contains(hull2)) { return; }
-                if (hull1.linkedTo.Any(h => h.linkedTo.Contains(hull1) && h.linkedTo.Contains(hull2))) { return; }
-                if (hull2.linkedTo.Any(h => h.linkedTo.Contains(hull1) && h.linkedTo.Contains(hull2))) { return; }
+                foreach (Hull h in hull1.linkedTo)
+                {
+                    if (h.linkedTo.Contains(hull1) && h.linkedTo.Contains(hull2)) { return; }
+                }
+                foreach (Hull h in hull2.linkedTo)
+                {
+                    if (h.linkedTo.Contains(hull1) && h.linkedTo.Contains(hull2)) { return; }
+                }
             }
 
             Vector2 pos = Position;
@@ -177,7 +183,7 @@ namespace Barotrauma
                         "bubbles",
                         (Submarine == null ? pos : pos + Submarine.Position),
                         velocity, 0, flowTargetHull);
-                    
+
                     particleTimer -= emitInterval;
                 }
             }

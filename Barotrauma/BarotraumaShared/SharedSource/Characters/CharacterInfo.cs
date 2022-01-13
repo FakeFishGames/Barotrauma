@@ -361,7 +361,7 @@ namespace Barotrauma
 
         public CharacterTeamType TeamID;
 
-        private readonly NPCPersonalityTrait personalityTrait;
+        private NPCPersonalityTrait personalityTrait;
 
         public const int MaxCurrentOrders = 3;
         public static int HighestManualOrderPriority => MaxCurrentOrders;
@@ -568,7 +568,7 @@ namespace Barotrauma
             HasGenders = CharacterConfigElement.GetAttributeBool("genders", false);
             HasRaces = CharacterConfigElement.GetAttributeBool("races", false);
             SetGenderAndRace(randSync);
-            Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Unsynced) : new Job(jobPrefab, variant);
+            Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Unsynced) : new Job(jobPrefab, randSync, variant);
             HairColors = CharacterConfigElement.GetAttributeTupleArray("haircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
             FacialHairColors = CharacterConfigElement.GetAttributeTupleArray("facialhaircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
             SkinColors = CharacterConfigElement.GetAttributeTupleArray("skincolors", new (Color, float)[] { (new Color(255, 215, 200, 255), 100f) }).ToImmutableArray();
@@ -584,17 +584,21 @@ namespace Barotrauma
             }
             else
             { 
-                name = "";
                 Name = GetRandomName(randSync);
             }
             OriginalName = !string.IsNullOrEmpty(originalName) ? originalName : Name;
-            personalityTrait = NPCPersonalityTrait.GetRandom(name + HeadSpriteId);         
+            SetPersonalityTrait();
             Salary = CalculateSalary();
             if (ragdollFileName != null)
             {
                 this.ragdollFileName = ragdollFileName;
             }
             LoadHeadAttachments();
+        }
+
+        private void SetPersonalityTrait()
+        {
+            personalityTrait = NPCPersonalityTrait.GetRandom(Name + HeadSpriteId);
         }
 
         public string GetRandomName(Rand.RandSync randSync)
@@ -1261,7 +1265,7 @@ namespace Barotrauma
         {
             int prevAmount = ExperiencePoints;
 
-            var experienceGainMultiplier = new AbilityValue(1f);
+            var experienceGainMultiplier = new AbilityExperienceGainMultiplier(1f);
             if (isMissionExperience)
             {
                 Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplier);
@@ -1858,18 +1862,27 @@ namespace Barotrauma
         }
     }
 
-    class AbilitySkillGain : AbilityObject, IAbilityValue, IAbilityString, IAbilityCharacter
+    class AbilitySkillGain : AbilityObject, IAbilityValue, IAbilitySkillIdentifier, IAbilityCharacter
     {
-        public AbilitySkillGain(float value, string abilityString, Character character, bool gainedFromAbility)
+        public AbilitySkillGain(float skillAmount, string skillIdentifier, Character character, bool gainedFromAbility)
         {
-            Value = value;
-            String = abilityString;
+            Value = skillAmount;
+            SkillIdentifier = skillIdentifier;
             Character = character;
             GainedFromAbility = gainedFromAbility;
         }
         public Character Character { get; set; }
         public float Value { get; set; }
-        public string String { get; set; }
+        public string SkillIdentifier { get; set; }
         public bool GainedFromAbility { get; }
+    }
+
+    class AbilityExperienceGainMultiplier : AbilityObject, IAbilityValue
+    {
+        public AbilityExperienceGainMultiplier(float experienceGainMultiplier)
+        {
+            Value = experienceGainMultiplier;
+        }
+        public float Value { get; set; }
     }
 }

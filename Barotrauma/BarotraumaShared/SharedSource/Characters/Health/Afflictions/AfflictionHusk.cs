@@ -52,10 +52,6 @@ namespace Barotrauma
             {
                 if (state == value) { return; }
                 state = value;
-                if (character != null && character == Character.Controlled)
-                {
-                    UpdateMessages();
-                }
             }
         }
 
@@ -81,6 +77,9 @@ namespace Barotrauma
             base.Update(characterHealth, targetLimb, deltaTime);
             character = characterHealth.Character;
             if (character == null) { return; }
+
+            UpdateMessages();
+
             if (!subscribedToDeathEvent)
             {
                 character.OnDeath += CharacterDead;

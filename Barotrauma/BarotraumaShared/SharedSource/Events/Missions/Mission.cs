@@ -355,7 +355,7 @@ namespace Barotrauma
             IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters();
 
             // use multipliers here so that we can easily add them together without introducing multiplicative XP stacking
-            var experienceGainMultiplier = new AbilityValue(1f);
+            var experienceGainMultiplier = new AbilityExperienceGainMultiplier(1f);
             crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnAllyGainMissionExperience, experienceGainMultiplier));
             crewCharacters.ForEach(c => experienceGainMultiplier.Value += c.GetStatValue(StatTypes.MissionExperienceGainMultiplier));
 
@@ -374,11 +374,11 @@ namespace Barotrauma
 #endif
 
             // apply money gains afterwards to prevent them from affecting XP gains
-            var moneyGainMission = new AbilityValueMission(1f, this);
-            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnGainMissionMoney, moneyGainMission));
-            crewCharacters.ForEach(c => moneyGainMission.Value += c.GetStatValue(StatTypes.MissionMoneyGainMultiplier));
+            var missionMoneyGainMultiplier = new AbilityMissionMoneyGainMultiplier(this, 1f);
+            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnGainMissionMoney, missionMoneyGainMultiplier));
+            crewCharacters.ForEach(c => missionMoneyGainMultiplier.Value += c.GetStatValue(StatTypes.MissionMoneyGainMultiplier));
 
-            campaign.Money += (int)(reward * moneyGainMission.Value);
+            campaign.Money += (int)(reward * missionMoneyGainMultiplier.Value);
 
             foreach (Character character in crewCharacters)
             {
@@ -534,4 +534,16 @@ namespace Barotrauma
                 cargoRoom.Rect.Y - cargoRoom.Rect.Height + itemPrefab.Size.Y / 2);
         }
     }
+
+    class AbilityMissionMoneyGainMultiplier : AbilityObject, IAbilityValue, IAbilityMission
+    {
+        public AbilityMissionMoneyGainMultiplier(Mission mission, float moneyGainMultiplier)
+        {
+            Value = moneyGainMultiplier;
+            Mission = mission;
+        }
+        public float Value { get; set; }
+        public Mission Mission { get; set; }
+    }
+
 }

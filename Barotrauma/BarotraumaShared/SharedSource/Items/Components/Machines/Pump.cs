@@ -29,6 +29,15 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public float CurrentBrokenVolume
+        {
+            get
+            {
+                if (item.ConditionPercentage > 10.0f || !IsActive) { return 0.0f; }
+                return (1.0f - item.ConditionPercentage / 10.0f) * 100.0f;
+            }
+        }
+
         private float pumpSpeedLockTimer, isActiveLockTimer;
 
         [Serialize(0.0f, true, description: "How fast the item is currently pumping water (-100 = full speed out, 100 = full speed in). Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
@@ -72,6 +81,8 @@ namespace Barotrauma.Items.Components
 
         private const float TinkeringSpeedIncrease = 4.0f;
 
+        public override bool UpdateWhenInactive => true;
+
         public Pump(Item item, XElement element)
             : base(item, element)
         {
@@ -82,11 +93,15 @@ namespace Barotrauma.Items.Components
         
         public override void Update(float deltaTime, Camera cam)
         {
+            pumpSpeedLockTimer -= deltaTime;
+            isActiveLockTimer -= deltaTime;
+
+            if (!IsActive) { return; }
+
             currFlow = 0.0f;
 
             if (TargetLevel != null)
             {
-                pumpSpeedLockTimer -= deltaTime;
                 float hullPercentage = 0.0f;
                 if (item.CurrentHull != null) { hullPercentage = (item.CurrentHull.WaterVolume / item.CurrentHull.Volume) * 100.0f; }
                 FlowPercentage = ((float)TargetLevel - hullPercentage) * 10.0f;

@@ -150,7 +150,7 @@ namespace Barotrauma
 
         private CoroutineHandle disableTailCoroutine;
 
-        private readonly IEnumerable<Body> myBodies;
+        private readonly List<Body> myBodies;
 
         public LatchOntoAI LatchOntoAI { get; private set; }
         public SwarmBehavior SwarmBehavior { get; private set; }
@@ -306,7 +306,8 @@ namespace Barotrauma
 
             requiredHoleCount = (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderWidth) / Structure.WallSectionSize);
 
-            myBodies = Character.AnimController.Limbs.Select(l => l.body.FarseerBody);
+            myBodies = Character.AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
+            myBodies.Add(Character.AnimController.Collider.FarseerBody);
         }
 
         private CharacterParams.AIParams _aiParams;
@@ -1837,7 +1838,7 @@ namespace Barotrauma
             if (!attack.IsValidTarget(target)) { return false; }
             if (target is ISerializableEntity se && target is Character)
             {
-                if (attack.Conditionals.Any(c => !c.Matches(se))) { return false; }
+                if (attack.Conditionals.Any(c => !c.TargetSelf && !c.Matches(se))) { return false; }
             }
             if (attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(Character))) { return false; }
             if (attack.Ranged)
@@ -2182,10 +2183,22 @@ namespace Barotrauma
             float margin = MathHelper.PiOver4 * distanceFactor;
             if (angle < margin)
             {
-                var collisionCategories = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel;
-                var pickedBody = Submarine.PickBody(weapon.SimPosition, target.SimPosition, myBodies, collisionCategories, allowInsideFixture: true);
+                var collisionCategories = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel;                
+                var pickedBody = Submarine.PickBody(weapon.SimPosition, Character.GetRelativeSimPosition(target), myBodies, collisionCategories, allowInsideFixture: true);
                 if (pickedBody != null)
                 {
+                    if (target is MapEntity)
+                    {
+                        if (pickedBody.UserData is Submarine sub && sub == target.Submarine)
+                        {
+                            return true;
+                        }
+                        else if (target == pickedBody.UserData)
+                        {
+                            return true;
+                        }
+                    }
+
                     Character t = null;
                     if (pickedBody.UserData is Character c)
                     {

@@ -503,13 +503,6 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void Move(Vector2 amount)
-        {
-#if CLIENT
-            if (item.IsSelected) MoveNodes(amount);
-#endif
-        }
-
         public List<Vector2> GetNodes()
         {
             return new List<Vector2>(nodes);

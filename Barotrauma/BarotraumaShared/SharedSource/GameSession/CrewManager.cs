@@ -47,7 +47,9 @@ namespace Barotrauma
         {
             if (order.TargetEntity == null)
             {
-                DebugConsole.ThrowError("Attempted to add an order with no target entity to CrewManager!\n" + Environment.StackTrace.CleanupStackTrace());
+                string message = $"Attempted to add a \"{order.Name}\" order with no target entity to CrewManager!\n{Environment.StackTrace.CleanupStackTrace()}";
+                DebugConsole.AddWarning(message);
+                GameAnalyticsManager.AddErrorEventOnce("CrewManager.AddOrder:OrderTargetEntityNull", GameAnalyticsManager.ErrorSeverity.Error, message);
                 return false;
             }
 
@@ -185,6 +187,10 @@ namespace Barotrauma
 
         public void InitRound()
         {
+#if CLIENT
+            GUIContextMenu.CurrentContextMenu = null;
+#endif
+            
             characters.Clear();
 
             List<WayPoint> spawnWaypoints = null;
@@ -437,17 +443,17 @@ namespace Barotrauma
             return filteredCharacters
                     // 1. Prioritize those who are on the same submarine than the controlled character
                     .OrderByDescending(c => Character.Controlled == null || c.Submarine == Character.Controlled.Submarine)
-                    // 2. Prioritize those who have been given the same maintenance or operate order as now issued
-                    .ThenByDescending(c => c.CurrentOrders.Any(o =>
-                        o.Order != null && o.Order.Identifier == order.Identifier &&
-                        (order.Category == OrderCategory.Maintenance || order.Category == OrderCategory.Operate)))
+                    // 2. Prioritize those who are already ordered to operate the device
+                    .ThenByDescending(c => order.Category == OrderCategory.Operate && c.CurrentOrders.Any(o => o.Order != null && o.Order.Identifier == order.Identifier && o.Order.TargetEntity == order.TargetEntity))
                     // 3. Prioritize those with the appropriate job for the order
                     .ThenByDescending(c => order.HasAppropriateJob(c))
-                    // 4. Prioritize bots over player controlled characters
+                    // 4. Prioritize those who don't yet have another Operate order of the same kind (which allows quick-assigning multiple Operate orders to different characters)
+                    .ThenByDescending(c => order.Category == OrderCategory.Operate && c.CurrentOrders.None(o => o.Order != null && o.Order.Identifier == order.Identifier))
+                    // 5. Prioritize bots over player controlled characters
                     .ThenByDescending(c => c.IsBot)
-                    // 5. Use the priority value of the current objective
+                    // 6. Use the priority value of the current objective
                     .ThenBy(c => c.AIController is HumanAIController humanAI ? humanAI.ObjectiveManager.CurrentObjective?.Priority : 0)
-                    // 6. Prioritize those with the best skill for the order
+                    // 7. Prioritize those with the best skill for the order
                     .ThenByDescending(c => c.GetSkillLevel(order.AppropriateSkill));
         }
 

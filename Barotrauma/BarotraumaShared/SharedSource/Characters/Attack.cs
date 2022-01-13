@@ -130,6 +130,9 @@ namespace Barotrauma
             set => _structureDamage = value;
         }
 
+        [Serialize(true, true), Editable]
+        public bool EmitStructureDamageParticles { get; private set; }
+
         private float _itemDamage;
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float ItemDamage
@@ -311,7 +314,7 @@ namespace Barotrauma
             return totalDamage * DamageMultiplier;
         }
 
-        public Attack(float damage, float bleedingDamage, float burnDamage, float structureDamage, float itemDamage, float range = 0.0f, float penetration = 0f)
+        public Attack(float damage, float bleedingDamage, float burnDamage, float structureDamage, float itemDamage, float range = 0.0f)
         {
             if (damage > 0.0f) Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(damage), null);
             if (bleedingDamage > 0.0f) Afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamage), null);

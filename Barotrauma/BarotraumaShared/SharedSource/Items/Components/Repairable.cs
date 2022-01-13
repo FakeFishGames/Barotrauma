@@ -16,6 +16,9 @@ namespace Barotrauma.Items.Components
         private float deteriorationTimer;
         private float deteriorateAlwaysResetTimer;
 
+        private int prevSentConditionValue;
+        private string conditionSignal;
+
         bool wasBroken;
         bool wasGoodCondition;
 
@@ -112,6 +115,9 @@ namespace Barotrauma.Items.Components
         private float tinkeringStrength;
 
         public float TinkeringStrength => tinkeringStrength;
+
+        private bool tinkeringPowersDevices;
+        public bool TinkeringPowersDevices => tinkeringPowersDevices;
 
         public bool IsBelowRepairThreshold => item.ConditionPercentage <= RepairThreshold;
         public bool IsBelowRepairIconThreshold => item.ConditionPercentage <= RepairThreshold / 2;
@@ -266,6 +272,7 @@ namespace Barotrauma.Items.Components
                 if (action == FixActions.Tinker)
                 {
                     tinkeringStrength = 1f + CurrentFixer.GetStatValue(StatTypes.TinkeringStrength);
+                    tinkeringPowersDevices = CurrentFixer.HasAbilityFlag(AbilityFlags.TinkeringPowersDevices);
 
                     if (character.HasAbilityFlag(AbilityFlags.CanTinkerFabricatorsAndDeconstructors) && item.GetComponent<Deconstructor>() != null || item.GetComponent<Fabricator>() != null)
                     {
@@ -346,7 +353,13 @@ namespace Barotrauma.Items.Components
             UpdateProjSpecific(deltaTime);
             IsTinkering = false;
 
-            item.SendSignal($"{(int) item.ConditionPercentage}", "condition_out");
+            if (prevSentConditionValue != (int)item.ConditionPercentage || conditionSignal == null)
+            {
+                prevSentConditionValue = (int)item.ConditionPercentage;
+                conditionSignal = prevSentConditionValue.ToString();
+            }
+
+            item.SendSignal(conditionSignal, "condition_out");
 
             if (CurrentFixer == null)
             {

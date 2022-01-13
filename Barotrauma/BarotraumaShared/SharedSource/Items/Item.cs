@@ -262,6 +262,7 @@ namespace Barotrauma
                 if (Screen.Selected == GameMain.SubEditorScreen)
                 {
                     SetContainedItemPositions();
+                    GetComponent<LightComponent>()?.SetLightSourceTransform();
                 }
 #endif
             }
@@ -732,12 +733,12 @@ namespace Barotrauma
             "Disclaimer: It's possible or even likely that the views block each other, if they were not designed to be viewed together!")]
         public bool DisplaySideBySideWhenLinked { get; set; }
 
-        public IEnumerable<Repairable> Repairables
+        public List<Repairable> Repairables
         {
             get { return repairables; }
         }
 
-        public IEnumerable<ItemComponent> Components
+        public List<ItemComponent> Components
         {
             get { return components; }
         }
@@ -782,7 +783,7 @@ namespace Barotrauma
         }
 
         private readonly List<ISerializableEntity> allPropertyObjects = new List<ISerializableEntity>();
-        public IEnumerable<ISerializableEntity> AllPropertyObjects
+        public IReadOnlyList<ISerializableEntity> AllPropertyObjects
         {
             get { return allPropertyObjects; }
         }
@@ -1079,7 +1080,7 @@ namespace Barotrauma
             allPropertyObjects.Add(component);
             components.Add(component);
 
-            if (component.IsActive || component.Parent != null || (component.IsActiveConditionals != null && component.IsActiveConditionals.Any()))
+            if (component.IsActive || component.UpdateWhenInactive || component.Parent != null || (component.IsActiveConditionals != null && component.IsActiveConditionals.Any()))
             {
                 updateableComponents.Add(component);
             }
@@ -1092,7 +1093,7 @@ namespace Barotrauma
 #endif
                 //component doesn't need to be updated if it isn't active, doesn't have a parent that could activate it, 
                 //nor status effects, sounds or conditionals that would need to run
-                if (!isActive && 
+                if (!isActive && !component.UpdateWhenInactive && 
                     !hasSounds &&
                     component.Parent == null &&
                     (component.IsActiveConditionals == null || !component.IsActiveConditionals.Any()) &&
@@ -1672,7 +1673,7 @@ namespace Barotrauma
                 ic.WasUsed = false;
                 ic.WasSecondaryUsed = false;
 
-                if (ic.IsActive)
+                if (ic.IsActive || ic.UpdateWhenInactive)
                 {
                     if (condition <= 0.0f)
                     {
@@ -1809,7 +1810,7 @@ namespace Barotrauma
         /// </summary>
         private void ApplyWaterForces()
         {
-            if (body.Mass <= 0.0f)
+            if (body.Mass <= 0.0f || body.Density <= 0.0f)
             {
                 return;
             }
@@ -2087,18 +2088,19 @@ namespace Barotrauma
             return controller != null;
         }
 
-        public void SendSignal(string signal, string connectionName)
+        public bool SendSignal(string signal, string connectionName)
         {
-            SendSignal(new Signal(signal), connectionName);
+            return SendSignal(new Signal(signal), connectionName);
         }
 
-        public void SendSignal(Signal signal, string connectionName)
+        public bool SendSignal(Signal signal, string connectionName)
         {
-            if (connections == null) { return; }
-            if (!connections.TryGetValue(connectionName, out Connection connection)) { return; }
+            if (connections == null) { return false; }
+            if (!connections.TryGetValue(connectionName, out Connection connection)) { return false; }
 
             signal.source ??= this;
             SendSignal(signal, connection);
+            return true;
         }
 
         private readonly HashSet<(Signal Signal, Connection Connection)> delayedSignals = new HashSet<(Signal Signal, Connection Connection)>();
@@ -2113,9 +2115,14 @@ namespace Barotrauma
             //if the signal has been passed through this item multiple times already, interrupt it to prevent infinite loops
             if (signal.stepsTaken > 5 && signal.source != null)
             {
-                if (signal.source.LastSentSignalRecipients.AtLeast(3, recipient => recipient == connection))
+                int duplicateRecipients = 0;
+                foreach (var recipient in signal.source.LastSentSignalRecipients)
                 {
-                    return;
+                    if (recipient == connection)
+                    {
+                        duplicateRecipients++;
+                        if (duplicateRecipients > 2) { return; }
+                    }
                 }
             }
 
@@ -2126,7 +2133,16 @@ namespace Barotrauma
                 //if there's an equal signal waiting to be sent
                 //to the same connection, don't add a new one
                 signal.stepsTaken = 0;
-                if (!delayedSignals.Any(s => s.Connection == connection && s.Signal.source == signal.source && s.Signal.value == signal.value && s.Signal.sender == signal.sender))
+                bool duplicateFound = false;
+                foreach (var s in delayedSignals)
+                {
+                    if (s.Connection == connection && s.Signal.source == signal.source && s.Signal.value == signal.value && s.Signal.sender == signal.sender)
+                    {
+                        duplicateFound = true;
+                        break;
+                    }
+                }
+                if (!duplicateFound)
                 {
                     delayedSignals.Add((signal, connection));
                     CoroutineManager.StartCoroutine(DelaySignal(signal, connection));
@@ -2134,16 +2150,17 @@ namespace Barotrauma
             }
             else
             {
-                foreach (StatusEffect effect in connection.Effects)
+                if (connection.Effects != null && signal.value != "0" && !string.IsNullOrEmpty(signal.value))
                 {
-                    if (condition <= 0.0f && effect.type != ActionType.OnBroken) { continue; }
-                    if (signal.value != "0" && !string.IsNullOrEmpty(signal.value)) { ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step); }
+                    foreach (StatusEffect effect in connection.Effects)
+                    {
+                        if (condition <= 0.0f && effect.type != ActionType.OnBroken) { continue; }
+                        ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step);
+                    }
                 }
-
                 signal.source ??= this;
                 connection.SendSignal(signal);
             }
-
         }
 
         private IEnumerable<CoroutineStatus> DelaySignal(Signal signal, Connection connection)
@@ -2463,8 +2480,6 @@ namespace Barotrauma
                 user.CheckTalents(AbilityEffectType.OnApplyTreatment, abilityItem);
 
             }
-
-
 
             if (remove) { Spawner?.AddToRemoveQueue(this); }
         }
@@ -2849,6 +2864,14 @@ namespace Barotrauma
         {
             string name = element.Attribute("name").Value;
             string identifier = element.GetAttributeString("identifier", "");
+
+            if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(identifier))
+            {
+                string errorMessage = "Failed to load an item (both name and identifier were null):\n"+element.ToString();
+                DebugConsole.ThrowError(errorMessage);
+                GameAnalyticsManager.AddErrorEventOnce("Item.Load:NameAndIdentifierNull", GameAnalyticsManager.ErrorSeverity.Error, errorMessage);
+                return null;
+            }
 
             string pendingSwap = element.GetAttributeString("pendingswap", "");
             ItemPrefab appliedSwap = null;
@@ -3272,6 +3295,19 @@ namespace Barotrauma
                     item.Remove();
                 }
             }
+        }
+    }
+    class AbilityApplyTreatment : AbilityObject, IAbilityCharacter, IAbilityItem
+    {
+        public Character Character { get; set; }
+        public Character User { get; set; }
+        public Item Item { get; set; }
+
+        public AbilityApplyTreatment(Character user, Character target, Item item)
+        {
+            Character = target;
+            User = user;
+            Item = item;
         }
     }
 }

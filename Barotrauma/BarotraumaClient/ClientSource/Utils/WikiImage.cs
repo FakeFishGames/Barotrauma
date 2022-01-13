@@ -122,7 +122,7 @@ namespace Barotrauma
         {
             int width = 4096; int height = 4096;
 
-            Rectangle subDimensions = sub.CalculateDimensions(false);
+            Rectangle subDimensions = sub.Borders;
             Vector2 viewPos = subDimensions.Center.ToVector2();
             float scale = Math.Min(width / (float)subDimensions.Width, height / (float)subDimensions.Height);
 

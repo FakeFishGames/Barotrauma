@@ -278,7 +278,7 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0, j = 0; i < maxSides; i++)
             {
-                if (!occupiedSides.IsBitSet((TileSide) (1 << i)))
+                if (!occupiedSides.HasFlag((TileSide) (1 << i)))
                 {
                     pool[j] = i;
                     j++;
@@ -303,7 +303,7 @@ namespace Barotrauma.Items.Components
 
         public bool CanGrowMore() => (Sides | BlockedSides).Count() < 4;
 
-        public bool IsSideBlocked(TileSide side) => BlockedSides.IsBitSet(side) || Sides.IsBitSet(side);
+        public bool IsSideBlocked(TileSide side) => BlockedSides.HasFlag(side) || Sides.HasFlag(side);
 
         public static Rectangle CreatePlantRect(Vector2 pos) => new Rectangle((int) pos.X - Size / 2, (int) pos.Y + Size / 2, Size, Size);
     }
@@ -774,7 +774,7 @@ namespace Barotrauma.Items.Components
 
                     TileSide oppositeSide = connectingSide.GetOppositeSide();
 
-                    if (otherVine.BlockedSides.IsBitSet(connectingSide))
+                    if (otherVine.BlockedSides.HasFlag(connectingSide))
                     {
                         newVine.BlockedSides |= oppositeSide;
                         continue;

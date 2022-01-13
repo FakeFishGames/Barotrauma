@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -20,6 +21,8 @@ namespace Barotrauma
         private Item Container { get; }
         private ItemContainer ItemContainer { get; }
         private ImmutableArray<string> TargetContainerTags { get; }
+        private ImmutableHashSet<string> ValidContainableItemIdentifiers { get; }
+        private static Dictionary<ItemPrefab, ImmutableHashSet<string>> AllValidContainableItemIdentifiers { get; } = new Dictionary<ItemPrefab, ImmutableHashSet<string>>();
 
         private int itemIndex = 0;
         private AIObjectiveDecontainItem decontainObjective;
@@ -47,6 +50,109 @@ namespace Barotrauma
                     abandonGetItemDialogueIdentifier = optionSpecificDialogueIdentifier;
                 }
             }
+            ValidContainableItemIdentifiers = GetValidContainableItemIdentifiers();
+            if (ValidContainableItemIdentifiers.None())
+            {
+#if DEBUG
+                DebugConsole.ShowError($"No valid containable item identifiers found for the Load Item objective targeting {Container}");
+#endif
+                Abandon = true;
+                return;
+            }
+        }
+
+        private enum CheckStatus { Unfinished, Finished }
+
+        private ImmutableHashSet<string> GetValidContainableItemIdentifiers()
+        {
+            if (AllValidContainableItemIdentifiers.TryGetValue(Container.Prefab, out var existingIdentifiers))
+            {
+                return existingIdentifiers;
+            }
+            // Status effects are often used to alter item condition so using the Containable Item Identifiers directly can lead to unwanted results
+            // For example, placing welding fuel tanks inside oxygen tank shelves
+            bool defaultContainableItemIdentifiers = true;
+            var potentialContainablePrefabs = MapEntityPrefab.List
+                .Where(mep => mep is ItemPrefab ip && ItemContainer.ContainableItemIdentifiers.Any(i => i == ip.Identifier || ip.Tags.Contains(i)))
+                .Cast<ItemPrefab>();
+            var validContainableItemIdentifiers = new HashSet<string>();
+            foreach (var component in Container.Components)
+            {
+                if (CheckComponent() == CheckStatus.Finished)
+                {
+                    break;
+                }
+                CheckStatus CheckComponent()
+                {
+                    if (component.statusEffectLists != null)
+                    {
+                        foreach (var (_, statusEffects) in component.statusEffectLists)
+                        {
+                            if (CheckStatusEffects(statusEffects) == CheckStatus.Finished)
+                            {
+                                return CheckStatus.Finished;
+                            }
+                        }
+                    }
+                    if (component is ItemContainer itemContainer && itemContainer.ContainableItems != null)
+                    {
+                        foreach (var item in itemContainer.ContainableItems)
+                        {
+                            if (CheckStatusEffects(item.statusEffects) == CheckStatus.Finished)
+                            {
+                                return CheckStatus.Finished;
+                            }
+                        }
+                    }
+                    return CheckStatus.Unfinished;
+                    CheckStatus CheckStatusEffects(IEnumerable<StatusEffect> statusEffects)
+                    {
+                        if (statusEffects == null) { return CheckStatus.Unfinished; }
+                        foreach (var statusEffect in statusEffects)
+                        {
+                            if ((statusEffect.TargetIdentifiers == null || statusEffect.TargetIdentifiers.None()) && !statusEffect.HasConditions) { continue; }
+                            switch (TargetItemCondition)
+                            {
+                                case AIObjectiveLoadItems.ItemCondition.Empty:
+                                    if (!statusEffect.ReducesItemCondition()) { continue; }
+                                    break;
+                                case AIObjectiveLoadItems.ItemCondition.Full:
+                                    if (!statusEffect.IncreasesItemCondition()) { continue; }
+                                    break;
+                                default:
+                                    continue;
+                            }
+                            defaultContainableItemIdentifiers = false;
+                            if (statusEffect.TargetIdentifiers != null)
+                            {
+                                foreach (string target in statusEffect.TargetIdentifiers)
+                                {
+                                    foreach (var prefab in potentialContainablePrefabs)
+                                    {
+                                        if (CheckPrefab(prefab, () => prefab.Tags.Contains(target)) == CheckStatus.Finished) { return CheckStatus.Finished; }
+                                    }
+                                }
+                            }
+                            foreach (var prefab in potentialContainablePrefabs)
+                            {
+                                if (CheckPrefab(prefab, () => statusEffect.MatchesTagConditionals(prefab)) == CheckStatus.Finished) { return CheckStatus.Finished; }
+                            }
+                            CheckStatus CheckPrefab(ItemPrefab prefab, Func<bool> isValid)
+                            {
+                                if (validContainableItemIdentifiers.Contains(prefab.Identifier)) { return CheckStatus.Unfinished; }
+                                if (!isValid()) { return CheckStatus.Unfinished; }
+                                validContainableItemIdentifiers.Add(prefab.Identifier);
+                                if (potentialContainablePrefabs.Any(p => !validContainableItemIdentifiers.Contains(p.Identifier))) { return CheckStatus.Unfinished; }
+                                return CheckStatus.Finished;
+                            }
+                        }
+                        return CheckStatus.Unfinished;
+                    }
+                }
+            }
+            var newIdentifiers = defaultContainableItemIdentifiers ? ItemContainer.ContainableItemIdentifiers.ToImmutableHashSet() : validContainableItemIdentifiers.ToImmutableHashSet();
+            AllValidContainableItemIdentifiers.Add(Container.Prefab, newIdentifiers);
+            return newIdentifiers;
         }
 
         protected override float GetPriority()
@@ -116,7 +222,7 @@ namespace Barotrauma
             base.Update(deltaTime);
             if (targetItem == null)
             {
-                if (character.FindItem(ref itemIndex, out Item item, identifiers: ItemContainer.ContainableItemIdentifiers, ignoreBroken: false, customPredicate: IsValidContainable, customPriorityFunction: GetConditionBasedPriority))
+                if (character.FindItem(ref itemIndex, out Item item, identifiers: ValidContainableItemIdentifiers, ignoreBroken: false, customPredicate: IsValidContainable, customPriorityFunction: GetPriority))
                 {
                     if (item == null)
                     {
@@ -125,17 +231,19 @@ namespace Barotrauma
                     }
                     targetItem = item;
                 }
-                // Prefer items closer to full condition when target condition is Empty, and vice versa
-                float GetConditionBasedPriority(Item item)
+                float GetPriority(Item item)
                 {
                     try
                     {
-                        return TargetItemCondition switch
+                        // Prefer items closer to full condition when target condition is Empty, and vice versa
+                        float conditionBasedPriority = TargetItemCondition switch
                         {
                             AIObjectiveLoadItems.ItemCondition.Full => MathUtils.InverseLerp(100.0f, 0.0f, item.ConditionPercentage),
                             AIObjectiveLoadItems.ItemCondition.Empty => MathUtils.InverseLerp(0.0f, 100.0f, item.ConditionPercentage),
                             _ => throw new NotImplementedException()
                         };
+                        // Prefer items that have the same identifier as one of the already contained items
+                        return ItemContainer.ContainsItemsWithSameIdentifier(item) ? conditionBasedPriority : conditionBasedPriority / 2;
                     }
                     catch (NotImplementedException)
                     {
@@ -161,10 +269,11 @@ namespace Barotrauma
                 TryAddSubObjective(ref decontainObjective,
                     constructor: () => new AIObjectiveDecontainItem(character, targetItem, objectiveManager, targetContainer: ItemContainer, priorityModifier: PriorityModifier)
                     {
+                        AbandonGetItemDialogueCondition = () => IsValidContainable(targetItem),
                         AbandonGetItemDialogueIdentifier = abandonGetItemDialogueIdentifier,
                         Equip = true,
                         RemoveExistingWhenNecessary = true,
-                        RemoveExistingPredicate = (i) => AIObjectiveLoadItems.ItemMatchesTargetCondition(i, TargetItemCondition),
+                        RemoveExistingPredicate = (i) => !ValidContainableItemIdentifiers.Contains(i.Prefab.Identifier) || AIObjectiveLoadItems.ItemMatchesTargetCondition(i, TargetItemCondition),
                         RemoveExistingMax = 1
                     },
                     onCompleted: () =>
@@ -189,6 +298,7 @@ namespace Barotrauma
         {
             if (item == null) { return false; }
             if (item.Removed) { return false; }
+            if (!ValidContainableItemIdentifiers.Contains(item.Prefab.Identifier)) { return false; }
             if (ignoredItems.Contains(item)) { return false; }
             if ((item.SpawnedInCurrentOutpost && !item.AllowStealing) == character.IsOnPlayerTeam) { return false; }
             var rootInventoryOwner = item.GetRootInventoryOwner();

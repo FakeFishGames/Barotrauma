@@ -192,6 +192,37 @@ namespace Barotrauma
             }
 #endif
         }
+        
+        
+        public static List<SubmarineInfo> GetCampaignSubs()
+        {
+            bool isSubmarineVisible(SubmarineInfo s)
+                => !GameMain.NetworkMember.ServerSettings.HiddenSubs.Any(h
+                    => s.Name.Equals(h, StringComparison.OrdinalIgnoreCase));
+            
+            List<SubmarineInfo> availableSubs =
+                SubmarineInfo.SavedSubmarines
+                    .Where(s =>
+                        s.IsCampaignCompatible
+                        && isSubmarineVisible(s))
+                    .ToList();
+
+            if (!availableSubs.Any())
+            {
+                //None of the available subs were marked as campaign-compatible, just include all visible subs
+                availableSubs.AddRange(
+                    SubmarineInfo.SavedSubmarines
+                        .Where(isSubmarineVisible));
+            }
+
+            if (!availableSubs.Any())
+            {
+                //No subs are visible at all! Just make the selected one available
+                availableSubs.Add(GameMain.NetLobbyScreen.SelectedSub);
+            }
+
+            return availableSubs;
+        }
 
     }
 }

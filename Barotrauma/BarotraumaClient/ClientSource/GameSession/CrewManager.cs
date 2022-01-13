@@ -718,7 +718,7 @@ namespace Barotrauma
         /// Sets the character's current order (if it's close enough to receive messages from orderGiver) and
         /// displays the order in the crew UI
         /// </summary>
-        public void SetCharacterOrder(Character character, Order order, string option, int priority, Character orderGiver, Hull targetHull = null)
+        public void SetCharacterOrder(Character character, Order order, string option, int priority, Character orderGiver, Hull targetHull = null, bool isNewOrder = true)
         {
             if (order != null && order.TargetAllCharacters)
             {
@@ -768,7 +768,7 @@ namespace Barotrauma
 
                 if (IsSinglePlayer)
                 {
-                    orderGiver.Speak(order.GetChatMessage("", hull?.DisplayName, givingOrderToSelf: character == orderGiver), ChatMessageType.Order);
+                    orderGiver.Speak(order.GetChatMessage("", hull?.DisplayName, givingOrderToSelf: character == orderGiver, isNewOrder: isNewOrder), ChatMessageType.Order);
                 }
                 else
                 {
@@ -784,7 +784,7 @@ namespace Barotrauma
                 if (IsSinglePlayer)
                 {
                     character.SetOrder(order, option, priority, orderGiver, speak: orderGiver != character);
-                    string message = order?.GetChatMessage(character.Name, orderGiver?.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver, orderOption: option, priority: priority);
+                    string message = order?.GetChatMessage(character.Name, orderGiver?.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver, orderOption: option, isNewOrder: isNewOrder);
                     orderGiver?.Speak(message);
                 }
                 else if (orderGiver != null)
@@ -1071,7 +1071,7 @@ namespace Barotrauma
             var priority = Math.Max(CharacterInfo.HighestManualOrderPriority - orderList.Content.GetChildIndex(orderComponent), 1);
             if (orderInfo.ManualPriority == priority) { return; }
             var character = (Character)orderList.UserData;
-            SetCharacterOrder(character, orderInfo.Order, orderInfo.OrderOption, priority, Character.Controlled);
+            SetCharacterOrder(character, orderInfo.Order, orderInfo.OrderOption, priority, Character.Controlled, isNewOrder: false);
         }
 
         private string CreateOrderTooltip(Order orderPrefab, string option, Entity targetEntity)
@@ -2582,15 +2582,12 @@ namespace Barotrauma
                     {
                         contextualOrders.Remove(pumpOrderInfo);
                     }
-                    if (contextualOrders.None())
+                    orderIdentifier = "cleanupitems";
+                    if (contextualOrders.None(info => info.Order.Identifier.Equals(orderIdentifier)))
                     {
-                        orderIdentifier = "cleanupitems";
-                        if (contextualOrders.None(info => info.Order.Identifier.Equals(orderIdentifier)))
+                        if (AIObjectiveCleanupItems.IsValidTarget(itemContext, Character.Controlled, checkInventory: false) || AIObjectiveCleanupItems.IsValidContainer(itemContext, Character.Controlled))
                         {
-                            if (AIObjectiveCleanupItems.IsValidTarget(itemContext, Character.Controlled, checkInventory: false) || AIObjectiveCleanupItems.IsValidContainer(itemContext, Character.Controlled))
-                            {
-                                contextualOrders.Add(new OrderInfo(new Order(Order.GetPrefab(orderIdentifier), itemContext, targetItem: null, Character.Controlled), null));
-                            }
+                            contextualOrders.Add(new OrderInfo(new Order(Order.GetPrefab(orderIdentifier), itemContext, targetItem: null, Character.Controlled), null));
                         }
                     }
                     AddIgnoreOrder(itemContext);
@@ -3521,16 +3518,6 @@ namespace Barotrauma
         {
             crewList.ClearChildren();
             InitRound();
-        }
-
-        public void EndRound()
-        {
-            //remove characterinfos whose characters have been removed or killed
-            characterInfos.RemoveAll(c => c.Character == null || c.Character.Removed || c.CauseOfDeath != null);
-
-            characters.Clear();
-            crewList.ClearChildren();
-            GUIContextMenu.CurrentContextMenu = null;
         }
 
         public void Reset()

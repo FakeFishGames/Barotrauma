@@ -17,6 +17,9 @@ namespace Barotrauma
     {
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
 
+        public static bool IsSingleplayer => NetworkMember == null;
+        public static bool IsMultiplayer => NetworkMember != null;
+
 
         private static World world;
         public static World World

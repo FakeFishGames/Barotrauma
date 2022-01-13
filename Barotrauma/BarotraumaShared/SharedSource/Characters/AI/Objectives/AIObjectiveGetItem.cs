@@ -59,6 +59,7 @@ namespace Barotrauma
         public bool CheckPathForEachItem { get; set; }
         public bool SpeakIfFails { get; set; }
         public string CannotFindDialogueIdentifierOverride { get; set; }
+        public Func<bool> CannotFindDialogueCondition { get; set; }
 
         private int _itemCount = 1;
         public int ItemCount
@@ -560,22 +561,18 @@ namespace Barotrauma
                 DebugConsole.NewMessage($"{character.Name}: Get item failed to reach {moveToTarget}", Color.Yellow);
 #endif
             }
-            if (SpeakIfFails)
-            {
-                SpeakCannotFind();
-            }
+            SpeakCannotFind();
         }
 
         private void SpeakCannotFind()
         {
-            if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder == objectiveManager.CurrentObjective)
-            {
-                string msg = TextManager.Get(CannotFindDialogueIdentifierOverride, returnNull: true) ?? TextManager.Get("dialogcannotfinditem", returnNull: true);
-                if (msg != null)
-                {
-                    character.Speak(msg, identifier: "dialogcannotfinditem", minDurationBetweenSimilar: 20.0f);
-                }
-            }
+            if (!SpeakIfFails) { return; }
+            if (!character.IsOnPlayerTeam) { return; }
+            if (objectiveManager.CurrentOrder != objectiveManager.CurrentObjective) { return; }
+            if (CannotFindDialogueCondition != null && !CannotFindDialogueCondition()) { return; }
+            string msg = TextManager.Get(CannotFindDialogueIdentifierOverride, returnNull: true) ?? TextManager.Get("dialogcannotfinditem", returnNull: true);
+            if (msg == null) { return; }
+            character.Speak(msg, identifier: "dialogcannotfinditem", minDurationBetweenSimilar: 20.0f);
         }
     }
 }

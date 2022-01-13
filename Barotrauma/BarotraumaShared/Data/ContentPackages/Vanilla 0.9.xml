@@ -144,6 +144,7 @@
   <Submarine file="Submarines/Venture.sub" />
   <Submarine file="Submarines/Azimuth.sub" />
   <Submarine file="Submarines/R-29.sub" />
+  <Submarine file="Submarines/Barsuk.sub" />
   <Text file="Content/Texts/English/EnglishVanilla.xml" />
   <Text file="Content/Texts/German/GermanVanilla.xml" />
   <Text file="Content/Texts/French/FrenchVanilla.xml" />

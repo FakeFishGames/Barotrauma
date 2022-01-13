@@ -178,15 +178,28 @@ namespace Barotrauma
             {
                 if (target is Item item)
                 {
-                    return item.ContainedItems.Any(it => Matches(it));
+                    foreach (var containedItem in item.ContainedItems)
+                    {
+                        if (Matches(containedItem)) { return true; }
+                    }
+                    return false;
                 }
                 else if (target is Items.Components.ItemComponent ic)
                 {
-                    return ic.Item.ContainedItems.Any(it => Matches(it));
+                    foreach (var containedItem in ic.Item.ContainedItems)
+                    {
+                        if (Matches(containedItem)) { return true; }
+                    }
+                    return false;
                 }
                 else if (target is Character character)
                 {
-                    return character.Inventory != null && character.Inventory.AllItems.Any(it => Matches(it));
+                    if (character.Inventory == null) { return false; }
+                    foreach (var containedItem in character.Inventory.AllItems)
+                    {
+                        if (Matches(containedItem)) { return true; }
+                    }
+                    return false;
                 }
             }
 
@@ -204,56 +217,34 @@ namespace Barotrauma
                     if (target == null) { return Operator == OperatorType.NotEquals; }
                     return (Operator == OperatorType.Equals) == (target.Name == AttributeValue);
                 case ConditionType.HasTag:
+                    if (target == null) { return Operator == OperatorType.NotEquals; }
+                    return MatchesTagCondition(target);
+                case ConditionType.HasStatusTag:
+                    if (target == null) { return Operator == OperatorType.NotEquals; }
+                    int matches = 0;
+                    foreach (DurationListElement durationEffect in StatusEffect.DurationList)
                     {
-                        if (target == null) { return Operator == OperatorType.NotEquals; }
-                        int matches = 0;
+                        if (!durationEffect.Targets.Contains(target)) { continue; }
                         foreach (string tag in SplitAttributeValue)
                         {
-                            if (target is Item item && item.HasTag(tag))
+                            if (durationEffect.Parent.HasTag(tag))
                             {
                                 matches++;
                             }
                         }
-                        //If operator is == then it needs to match everything, otherwise if its != there must be zero matches.
-                        return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
                     }
-                case ConditionType.HasStatusTag:
-                    if (target == null) { return Operator == OperatorType.NotEquals; }
-                    bool success = false;
-                    if (StatusEffect.DurationList.Any(d => d.Targets.Contains(target)) || DelayedEffect.DelayList.Any(d => d.Targets.Contains(target)))
+                    foreach (DelayedListElement delayedEffect in DelayedEffect.DelayList)
                     {
-                        int matches = 0;
-                        foreach (DurationListElement durationEffect in StatusEffect.DurationList)
+                        if (!delayedEffect.Targets.Contains(target)) { continue; }
+                        foreach (string tag in SplitAttributeValue)
                         {
-                            if (!durationEffect.Targets.Contains(target)) { continue; }
-                            foreach (string tag in SplitAttributeValue)
+                            if (delayedEffect.Parent.HasTag(tag))
                             {
-                                if (durationEffect.Parent.HasTag(tag))
-                                {
-                                    matches++;
-                                }
-                            }
-                            success = Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
-                        }
-                        foreach (DelayedListElement delayedEffect in DelayedEffect.DelayList)
-                        {
-                            if (!delayedEffect.Targets.Contains(target)) { continue; }
-                            foreach (string tag in SplitAttributeValue)
-                            {
-                                if (delayedEffect.Parent.HasTag(tag))
-                                {
-                                    matches++;
-                                }
+                                matches++;
                             }
                         }
-                        return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
                     }
-                    else if (Operator == OperatorType.NotEquals)
-                    {
-                        //no status effects, so the tags cannot be equal -> condition met
-                        return true;
-                    }
-                    return success;
+                    return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;                   
                 case ConditionType.SpeciesName:
                     {
                         if (target == null) { return Operator == OperatorType.NotEquals; }
@@ -335,96 +326,87 @@ namespace Barotrauma
                     return false;
             }
         }
+
+        private bool MatchesTagCondition(ISerializableEntity target)
+        {
+            if (!(target is Item item)) { return false; }
+
+            int matches = 0;
+            foreach (string tag in SplitAttributeValue)
+            {
+                if (item.HasTag(tag))
+                {
+                    matches++;
+                }
+            }
+            //If operator is == then it needs to match everything, otherwise if its != there must be zero matches.
+            return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
+        }
+
+        public bool MatchesTagCondition(string targetTag)
+        {
+            if (string.IsNullOrEmpty(targetTag) || Type != ConditionType.HasTag) { return false; }
+
+            int matches = 0;
+            foreach (string tag in SplitAttributeValue)
+            {
+                if (targetTag.Equals(tag, StringComparison.OrdinalIgnoreCase))
+                {
+                    matches++;
+                }
+            }
+            //If operator is == then it needs to match everything, otherwise if its != there must be zero matches.
+            return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
+        }
         
         // TODO: refactor and add tests
         private bool Matches(ISerializableEntity target, SerializableProperty property)
         {
-            object propertyValue = property.GetValue(target);
+            Type type = property.PropertyType;
 
-            if (propertyValue == null)
+            if (type == typeof(float) || type == typeof(int))
             {
-                DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" - property.GetValue() returns null!");
+                float floatValue = property.GetFloatValue(target);
+                switch (Operator)
+                {
+                    case OperatorType.Equals:
+                        return MathUtils.NearlyEqual(floatValue, FloatValue.Value);
+                    case OperatorType.NotEquals:
+                        return !MathUtils.NearlyEqual(floatValue, FloatValue.Value);
+                    case OperatorType.GreaterThan:
+                        return floatValue > FloatValue.Value;
+                    case OperatorType.LessThan:
+                        return floatValue < FloatValue.Value;
+                    case OperatorType.GreaterThanEquals:
+                        return floatValue >= FloatValue.Value;
+                    case OperatorType.LessThanEquals:
+                        return floatValue <= FloatValue.Value;
+                }
                 return false;
             }
 
-            Type type = propertyValue.GetType();
-            float? floatProperty = null;
-            if (type == typeof(float) || type == typeof(int))
-            {
-                floatProperty = (float)propertyValue;
-            }
 
             switch (Operator)
             {
                 case OperatorType.Equals:
                     if (type == typeof(bool))
                     {
-                        return ((bool)propertyValue) == (AttributeValue == "true" || AttributeValue == "True");
+                        return property.GetBoolValue(target) == (AttributeValue == "true" || AttributeValue == "True");
                     }
-                    else if (FloatValue == null)
-                    {
-                        return propertyValue.ToString().Equals(AttributeValue);
-                    }
-                    else
-                    {
-                        return propertyValue.Equals(FloatValue);
-                    }
+                    return property.GetValue(target).ToString().Equals(AttributeValue);
+
                 case OperatorType.NotEquals:
                     if (type == typeof(bool))
                     {
-                        return ((bool)propertyValue) != (AttributeValue == "true" || AttributeValue == "True");
+                        return property.GetBoolValue(target) != (AttributeValue == "true" || AttributeValue == "True");
                     }
-                    else if (FloatValue == null)
-                    {
-                        return !propertyValue.ToString().Equals(AttributeValue);
-                    }
-                    else
-                    {
-                        return !propertyValue.Equals(FloatValue);
-                    }
+                    return !property.GetValue(target).ToString().Equals(AttributeValue);
                 case OperatorType.GreaterThan:
-                    if (FloatValue == null)
-                    {
-                        DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
-                            + "Make sure the type of the value set in the config files matches the type of the property.");
-                    }
-                    else if (floatProperty > FloatValue)
-                    {
-                        return true;
-                    }
-                    break;
-                case OperatorType.LessThan:
-                    if (FloatValue == null)
-                    {
-                        DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
-                            + "Make sure the type of the value set in the config files matches the type of the property.");
-                    }
-                    else if (floatProperty < FloatValue)
-                    {
-                        return true;
-                    }
-                    break;
-                case OperatorType.GreaterThanEquals:
-                    if (FloatValue == null)
-                    {
-                        DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
-                            + "Make sure the type of the value set in the config files matches the type of the property.");
-                    }
-                    else if (floatProperty >= FloatValue)
-                    {
-                        return true;
-                    }
-                    break;
                 case OperatorType.LessThanEquals:
-                    if (FloatValue == null)
-                    {
-                        DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
-                            + "Make sure the type of the value set in the config files matches the type of the property.");
-                    }
-                    else if (floatProperty <= FloatValue)
-                    {
-                        return true;
-                    }
+                case OperatorType.LessThan:
+                case OperatorType.GreaterThanEquals:
+                    DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
+                        + "Make sure the type of the value set in the config files matches the type of the property.");
                     break;
             }
             return false;

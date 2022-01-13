@@ -272,7 +272,7 @@ namespace Barotrauma.Items.Components
                     powered.voltage = -pt1.CurrPowerConsumption / Math.Max(pt1.PowerLoad, 1.0f);
 					continue; 
 				}
-                if (powered.powerConsumption <= 0.0f && !(powered is PowerContainer))
+                if ((powered.powerConsumption <= 0.0f || (powered.Item.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering && repairable.TinkeringPowersDevices)) && !(powered is PowerContainer))
                 {
                     powered.voltage = 1.0f;
                     continue;

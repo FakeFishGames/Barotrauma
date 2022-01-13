@@ -34,14 +34,14 @@ namespace Barotrauma
         private readonly List<RemoteDecal> remoteDecals = new List<RemoteDecal>();
 
         private readonly HashSet<Decal> pendingDecalUpdates = new HashSet<Decal>();
-        
+
         private double lastAmbientLightEditTime;
 
         public override bool SelectableInEditor
         {
             get
             {
-                return ShowHulls;
+                return ShowHulls && SubEditorScreen.IsLayerVisible(this);
             }
         }
 
@@ -133,39 +133,41 @@ namespace Barotrauma
                 else
                 {
                     if (!entity.linkedTo.Contains(this)) { entity.linkedTo.Add(this); }
-                    if (!linkedTo.Contains(this)) { linkedTo.Add(entity); }                       
+                    if (!linkedTo.Contains(this)) { linkedTo.Add(entity); }
                 }
             }
         }
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
-            serverUpdateDelay -= deltaTime;
-            if (serverUpdateDelay <= 0.0f)
+            if (GameMain.Client != null)
             {
-                ApplyRemoteState();
-            }
-
-            if (networkUpdatePending)
-            {
-                networkUpdateTimer += deltaTime;
-                if (networkUpdateTimer > 0.2f)
+               serverUpdateDelay -= deltaTime;
+                if (serverUpdateDelay <= 0.0f)
                 {
-                    if (!pendingSectionUpdates.Any() && !pendingDecalUpdates.Any())
+                    ApplyRemoteState();
+                }
+                if (networkUpdatePending)
+                {
+                    networkUpdateTimer += deltaTime;
+                    if (networkUpdateTimer > 0.2f)
                     {
-                        GameMain.NetworkMember?.CreateEntityEvent(this);
+                        if (!pendingSectionUpdates.Any() && !pendingDecalUpdates.Any())
+                        {
+                            GameMain.NetworkMember?.CreateEntityEvent(this);
+                        }
+                        foreach (Decal decal in pendingDecalUpdates)
+                        {
+                            GameMain.NetworkMember?.CreateEntityEvent(this, new object[] { decal });
+                        }
+                        foreach (int pendingSectionUpdate in pendingSectionUpdates)
+                        {
+                            GameMain.NetworkMember?.CreateEntityEvent(this, new object[] { pendingSectionUpdate });
+                        }
+                        pendingSectionUpdates.Clear();
+                        networkUpdatePending = false;
+                        networkUpdateTimer = 0.0f;
                     }
-                    foreach (Decal decal in pendingDecalUpdates)
-                    {
-                        GameMain.NetworkMember?.CreateEntityEvent(this, new object[] { decal });
-                    }
-                    foreach (int pendingSectionUpdate in pendingSectionUpdates)
-                    {
-                        GameMain.NetworkMember?.CreateEntityEvent(this, new object[] { pendingSectionUpdate });
-                    }
-                    pendingSectionUpdates.Clear();
-                    networkUpdatePending = false;
-                    networkUpdateTimer = 0.0f;
                 }
             }
 
@@ -243,7 +245,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (!ShowHulls && !GameMain.DebugDraw) { return; }
+            if ((!ShowHulls || !SubEditorScreen.IsLayerVisible(this)) && !GameMain.DebugDraw) { return; }
 
             if (!editing && (!GameMain.DebugDraw || Screen.Selected.Cam.Zoom < 0.1f)) { return; }
 
@@ -385,22 +387,21 @@ namespace Barotrauma
             }
         }
 
+        private static readonly Vector3[] corners = new Vector3[6];
+        private static readonly Vector2[] uvCoords = new Vector2[4];
+        private static readonly Vector3[] prevCorners = new Vector3[2];
+        private static readonly Vector2[] prevUVs = new Vector2[2];
+
         private void UpdateVertices(Camera cam, EntityGrid entityGrid, WaterRenderer renderer)
         {
             Vector2 submarinePos = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 
             //if there's no more space in the buffer, don't render the water in the hull
-            //not an ideal solution, but this seems to only happen in cases where the missing 
+            //not an ideal solution, but this seems to only happen in cases where the missing
             //water is not very noticeable (e.g. zoomed very far out so that multiple subs and ruins are visible)
             if (renderer.PositionInBuffer > renderer.vertices.Length - 6)
             {
                 return;
-            }
-
-            if (!renderer.IndoorsVertices.ContainsKey(entityGrid))
-            {
-                renderer.IndoorsVertices[entityGrid] = new VertexPositionColorTexture[WaterRenderer.DefaultIndoorsBufferSize];
-                renderer.PositionInIndoorsBuffer[entityGrid] = 0;
             }
 
             //calculate where the surface should be based on the water volume
@@ -408,14 +409,13 @@ namespace Barotrauma
             float bottom = top - rect.Height;
             float renderSurface = drawSurface + submarinePos.Y;
 
-            if (bottom > cam.WorldView.Y || top < cam.WorldView.Y - cam.WorldView.Height) return;
+            if (bottom > cam.WorldView.Y || top < cam.WorldView.Y - cam.WorldView.Height) { return; }
+            if (rect.X + submarinePos.X > cam.WorldView.Right || rect.Right + submarinePos.X < cam.WorldView.X) { return; }
 
-            Matrix transform = cam.Transform * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;            
+            Matrix transform = cam.Transform * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
             if (!update)
             {
                 // create the four corners of our triangle.
-
-                Vector3[] corners = new Vector3[4];
 
                 corners[0] = new Vector3(rect.X, rect.Y, 0.0f);
                 corners[1] = new Vector3(rect.X + rect.Width, rect.Y, 0.0f);
@@ -423,7 +423,6 @@ namespace Barotrauma
                 corners[2] = new Vector3(corners[1].X, rect.Y - rect.Height, 0.0f);
                 corners[3] = new Vector3(corners[0].X, corners[2].Y, 0.0f);
 
-                Vector2[] uvCoords = new Vector2[4];
                 for (int i = 0; i < 4; i++)
                 {
                     corners[i] += new Vector3(submarinePos, 0.0f);
@@ -443,6 +442,15 @@ namespace Barotrauma
                 return;
             }
 
+            if (!renderer.IndoorsVertices.ContainsKey(entityGrid))
+            {
+                renderer.IndoorsVertices[entityGrid] = new VertexPositionColorTexture[WaterRenderer.DefaultIndoorsBufferSize];
+            }
+            if (!renderer.PositionInIndoorsBuffer.ContainsKey(entityGrid))
+            {
+                renderer.PositionInIndoorsBuffer[entityGrid] = 0;
+            }
+
             float x = rect.X;
             if (Submarine != null) { x += Submarine.DrawPosition.X; }
 
@@ -454,20 +462,15 @@ namespace Barotrauma
 
             x += start * WaveWidth;
 
-            Vector3[] prevCorners = new Vector3[2];
-            Vector2[] prevUVs = new Vector2[2];
-
             int width = WaveWidth;
-            
+
             for (int i = start; i < end; i++)
             {
-                Vector3[] corners = new Vector3[6];
-
                 //top left
                 corners[0] = new Vector3(x, top, 0.0f);
                 //watersurface left
                 corners[3] = new Vector3(corners[0].X, renderSurface + waveY[i], 0.0f);
-                
+
                 //top right
                 corners[1] = new Vector3(x + width, top, 0.0f);
                 //watersurface right
@@ -477,7 +480,7 @@ namespace Barotrauma
                 corners[4] = new Vector3(x, bottom, 0.0f);
                 //bottom right
                 corners[5] = new Vector3(x + width, bottom, 0.0f);
-                
+
                 Vector2[] uvCoords = new Vector2[4];
                 for (int n = 0; n < 4; n++)
                 {
@@ -714,7 +717,7 @@ namespace Barotrauma
             }
             remoteBackgroundSections.Clear();
 
-            if (remoteDecals.Any())
+            if (remoteDecals.Count > 0)
             {
                 decals.Clear();
                 foreach (RemoteDecal remoteDecal in remoteDecals)

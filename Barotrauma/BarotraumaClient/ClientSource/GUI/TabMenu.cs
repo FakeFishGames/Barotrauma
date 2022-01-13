@@ -1543,30 +1543,12 @@ namespace Barotrauma
             GUITextBlock.AutoScaleAndNormalize(skillNames);
         }
 
-        private bool HasUnlockedAllTalents(Character controlledCharacter)
-        {
-            if (TalentTree.JobTalentTrees.TryGetValue(controlledCharacter.Info.Job.Prefab.Identifier, out TalentTree talentTree))
-            {
-                foreach (TalentSubTree talentSubTree in talentTree.TalentSubTrees)
-                {
-                    foreach (TalentOption talentOption in talentSubTree.TalentOptionStages)
-                    {
-                        if (talentOption.Talents.None(t => controlledCharacter.HasTalent(t.Identifier)))
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-            return true;
-        }
-
         private void UpdateTalentButtons()
         {
             Character controlledCharacter = Character.Controlled;
             if (controlledCharacter?.Info == null) { return; }
 
-            bool unlockedAllTalents = HasUnlockedAllTalents(controlledCharacter);
+            bool unlockedAllTalents = controlledCharacter.HasUnlockedAllTalents();
 
             if (unlockedAllTalents)
             {

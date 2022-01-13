@@ -60,7 +60,16 @@ namespace Barotrauma
                 ushort id = msg.ReadUInt16();
                 bool scanned = msg.ReadBoolean();
                 Entity entity = Entity.FindEntityByID(id);
-                scanTargets.Add(entity as WayPoint, scanned);
+                if (!(entity is WayPoint wayPoint))
+                {
+                    string errorMsg = $"Failed to find a waypoint in ScanMission.ClientReadScanTargetStatus. Entity {id} was {(entity?.ToString() ?? null)}";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("ScanMission.ClientReadScanTargetStatus", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                }
+                else
+                {
+                    scanTargets.Add(wayPoint, scanned);
+                }
             }
         }
     }

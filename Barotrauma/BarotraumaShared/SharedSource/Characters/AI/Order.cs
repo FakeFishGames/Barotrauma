@@ -374,7 +374,7 @@ namespace Barotrauma
             }
             if (OptionNames.Count != Options.Length)
             {
-                DebugConsole.ThrowError("Error in Order " + Name + " - the number of option names doesn't match the number of options.");
+                DebugConsole.AddWarning("Error in Order " + Name + " - the number of option names doesn't match the number of options.");
                 OptionNames.Clear();
                 Options.ForEach(o => OptionNames.Add(o, o));
             }
@@ -499,16 +499,14 @@ namespace Barotrauma
             return false;
         }
 
-        public string GetChatMessage(string targetCharacterName, string targetRoomName, bool givingOrderToSelf, string orderOption = "", int? priority = null)
+        public string GetChatMessage(string targetCharacterName, string targetRoomName, bool givingOrderToSelf, string orderOption = "", bool isNewOrder = true)
         {
-            priority ??= CharacterInfo.HighestManualOrderPriority;
-            // If the order has a lesser priority, it means we are rearranging character orders
-            if (!TargetAllCharacters && priority != CharacterInfo.HighestManualOrderPriority && Identifier != "dismissed")
+            if (!TargetAllCharacters && !isNewOrder && Identifier != "dismissed")
             {
+                // Use special dialogue when we're rearranging character orders
                 return TextManager.GetWithVariable("rearrangedorders", "[name]", targetCharacterName ?? string.Empty, returnNull: true) ?? string.Empty;
             }
-            string messageTag = $"{(givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf" : "OrderDialog")}";
-            messageTag += $".{Identifier}";
+            string messageTag = $"{(givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf" : "OrderDialog")}.{Identifier}";
             if (!string.IsNullOrEmpty(orderOption))
             {
                 if (Identifier != "dismissed")

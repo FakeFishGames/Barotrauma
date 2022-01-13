@@ -50,7 +50,7 @@ namespace Barotrauma.Items.Components
             set 
             { 
                 rotation = value;
-                SetLightSourceTransform();
+                SetLightSourceTransformProjSpecific();
             }
         }
 
@@ -256,7 +256,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            SetLightSourceTransform();
+            SetLightSourceTransformProjSpecific();
 
             PhysicsBody body = ParentBody ?? item.body;
             if (body != null && !body.Enabled)
@@ -338,7 +338,11 @@ namespace Barotrauma.Items.Components
 
         partial void SetLightSourceState(bool enabled, float brightness);
 
-        partial void SetLightSourceTransform();
+        public void SetLightSourceTransform()
+        {
+            SetLightSourceTransformProjSpecific();
+        }
 
+        partial void SetLightSourceTransformProjSpecific();
     }
 }

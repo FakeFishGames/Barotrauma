@@ -16,7 +16,6 @@ namespace Barotrauma
         public virtual bool IgnoreUnsafeHulls => false;
         public virtual bool AbandonWhenCannotCompleteSubjectives => true;
         public virtual bool AllowSubObjectiveSorting => false;
-        public virtual bool ForceOrderPriority => true;
         public virtual bool PrioritizeIfSubObjectivesActive => false;
 
         /// <summary>

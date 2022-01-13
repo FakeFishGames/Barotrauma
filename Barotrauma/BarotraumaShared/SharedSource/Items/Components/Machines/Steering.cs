@@ -311,7 +311,7 @@ namespace Barotrauma.Items.Components
             }
 
             // override autopilot pathing while the AI rams, and go full speed ahead
-            if (AIRamTimer > 0f)
+            if (AIRamTimer > 0f && controlledSub != null)
             {
                 AIRamTimer -= deltaTime;
                 TargetVelocity = GetSteeringVelocity(AITacticalTarget, 0f);

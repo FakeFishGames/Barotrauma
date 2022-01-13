@@ -1535,7 +1535,7 @@ namespace Barotrauma
             element.Add(new XAttribute("tags", Info.Tags.ToString()));
             element.Add(new XAttribute("gameversion", GameMain.Version.ToString()));
 
-            Rectangle dimensions = CalculateDimensions();
+            Rectangle dimensions = VisibleBorders;
             element.Add(new XAttribute("dimensions", XMLExtensions.Vector2ToString(dimensions.Size.ToVector2())));
             var cargoContainers = GetCargoContainers();
             element.Add(new XAttribute("cargocapacity", cargoContainers.Sum(c => c.container.Capacity)));
@@ -1615,7 +1615,7 @@ namespace Barotrauma
             Info.CheckSubsLeftBehind(element);
         }
 
-        public bool SaveAs(string filePath, System.IO.MemoryStream previewImage = null)
+        public bool TrySaveAs(string filePath, System.IO.MemoryStream previewImage = null)
         {
             var newInfo = new SubmarineInfo(this)
             {
@@ -1628,8 +1628,19 @@ namespace Barotrauma
             //remove reference to the preview image from the old info, so we don't dispose it (the new info still uses the texture)
             Info.PreviewImage = null;
 #endif
-            Info.Dispose(); Info = newInfo;
-            return newInfo.SaveAs(filePath, previewImage);
+            Info.Dispose();
+            Info = newInfo;
+
+            try
+            {
+                newInfo.SaveAs(filePath, previewImage);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError($"Saving submarine \"{filePath}\" failed!", e);
+                return false;
+            }
+            return true;
         }
 
         public static bool Unloading
@@ -1643,9 +1654,8 @@ namespace Barotrauma
             Unloading = true;
 
 #if CLIENT
-            RemoveAllRoundSounds(); //Sound.OnGameEnd();
-
-            if (GameMain.LightManager != null) GameMain.LightManager.ClearLights();
+            RemoveAllRoundSounds();
+            GameMain.LightManager?.ClearLights();
 #endif
 
             var _loaded = new List<Submarine>(loaded);

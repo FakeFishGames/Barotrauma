@@ -794,7 +794,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
                 if (parent != null)
                 {
-                    if (otherBranch.BlockedSides.IsBitSet(connectingSide))
+                    if (otherBranch.BlockedSides.HasFlag(connectingSide))
                     {
                         branch.BlockedSides |= oppositeSide;
                         continue;

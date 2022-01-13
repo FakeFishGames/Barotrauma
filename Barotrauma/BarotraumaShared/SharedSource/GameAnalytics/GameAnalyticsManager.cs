@@ -367,7 +367,6 @@ namespace Barotrauma
                     + GameMain.Version.ToString()
                     + exeName + ":"
                     + ((exeHash?.ShortHash == null) ? "Unknown" : exeHash.ShortHash) + ":"
-                    + AssemblyInfo.GitBranch + ":"
                     + AssemblyInfo.GitRevision + ":"
                     + buildConfiguration);
             }

@@ -1,6 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System;
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -18,7 +16,7 @@ namespace Barotrauma.Abilities
             if (abilityObject is AbilitySkillGain abilitySkillGain && abilitySkillGain.Character != Character)
             {
                 if (ignoreAbilitySkillGain && abilitySkillGain.GainedFromAbility) { return; }
-                Character.Info?.IncreaseSkillLevel(abilitySkillGain.String, 1.0f, gainedFromAbility: true);
+                Character.Info?.IncreaseSkillLevel(abilitySkillGain.SkillIdentifier, 1.0f, gainedFromAbility: true);
             }
         }
     }

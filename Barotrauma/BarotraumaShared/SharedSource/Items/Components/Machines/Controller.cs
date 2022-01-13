@@ -370,18 +370,29 @@ namespace Barotrauma.Items.Components
 
         public Item GetFocusTarget()
         {
-            item.SendSignal(new Signal(MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), sender: user), "position_out");
-
-            for (int i = item.LastSentSignalRecipients.Count - 1; i >= 0; i--)
+            Item focusTarget = null;
+            for (int c = 0; c < 2; c++)
             {
-                if (item.LastSentSignalRecipients[i].Item.Condition <= 0.0f || item.LastSentSignalRecipients[i].IsPower) { continue; }
-                if (item.LastSentSignalRecipients[i].Item.Prefab.FocusOnSelected)
+                //try finding the item to focus on using trigger_out, and if that fails, using position_out
+                string connectionName = c == 0 ? "trigger_out" : "position_out";
+                string signal = c == 0 ? "0" : MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture);
+                if (!item.SendSignal(new Signal(signal, sender: user), connectionName) || focusTarget != null)
                 {
-                    return item.LastSentSignalRecipients[i].Item;
+                    continue;
+                }
+
+                for (int i = item.LastSentSignalRecipients.Count - 1; i >= 0; i--)
+                {
+                    if (item.LastSentSignalRecipients[i].Item.Condition <= 0.0f || item.LastSentSignalRecipients[i].IsPower) { continue; }
+                    if (item.LastSentSignalRecipients[i].Item.Prefab.FocusOnSelected)
+                    {
+                        focusTarget = item.LastSentSignalRecipients[i].Item;
+                        break;
+                    }
                 }
             }
-            
-            return null;
+
+            return focusTarget;
         }
 
         public override bool Pick(Character picker)

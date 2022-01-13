@@ -390,10 +390,10 @@ namespace Barotrauma.Items.Components
 
             if (SerializableProperties.TryGetValue(sound.VolumeProperty, out SerializableProperty property))
             {
-                float newVolume = 0.0f;
+                float newVolume;
                 try
                 {
-                    newVolume = (float)property.GetValue(this);
+                    newVolume = property.GetFloatValue(this);
                 }
                 catch
                 {

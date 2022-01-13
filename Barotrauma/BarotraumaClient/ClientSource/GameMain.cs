@@ -437,8 +437,8 @@ namespace Barotrauma
                 TaskPool.Add("AutoUpdateWorkshopItemsAsync",
                     SteamManager.AutoUpdateWorkshopItemsAsync(), (task) =>
                 {
-                    bool result = ((Task<bool>)task).Result;
-
+                    if (!task.TryGetResult(out bool result)) { return; }
+                    
                     Config.WaitingForAutoUpdate = false;
                 });
 
@@ -756,7 +756,10 @@ namespace Barotrauma
                     }
 
 #if DEBUG
-                    CancelQuickStart |= PlayerInput.KeyDown(Keys.LeftShift);
+                    if (PlayerInput.KeyHit(Keys.LeftShift))
+                    {
+                        CancelQuickStart = !CancelQuickStart;
+                    }
 
                     if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen && (Config.AutomaticQuickStartEnabled || Config.AutomaticCampaignLoadEnabled || Config.TestScreenEnabled) && FirstLoad && !CancelQuickStart)
                     {

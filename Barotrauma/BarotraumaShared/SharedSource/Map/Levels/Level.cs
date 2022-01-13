@@ -574,9 +574,9 @@ namespace Barotrauma
             siteCoordsX = new List<double>((borders.Height / siteInterval.Y) * (borders.Width / siteInterval.Y));
             siteCoordsY = new List<double>((borders.Height / siteInterval.Y) * (borders.Width / siteInterval.Y));
             int caveSiteInterval = 500;
-            for (int x = siteInterval.X / 2; x < borders.Width; x += siteInterval.X)
+            for (int x = siteInterval.X / 2; x < borders.Width - siteInterval.X / 2; x += siteInterval.X)
             {
-                for (int y = siteInterval.Y / 2; y < borders.Height; y += siteInterval.Y)
+                for (int y = siteInterval.Y / 2; y < borders.Height - siteInterval.Y / 2; y += siteInterval.Y)
                 {
                     int siteX = x + Rand.Range(-siteVariance.X, siteVariance.X, Rand.RandSync.Server);
                     int siteY = y + Rand.Range(-siteVariance.Y, siteVariance.Y, Rand.RandSync.Server);
@@ -613,8 +613,11 @@ namespace Barotrauma
                         if (Rand.Range(0, 10, Rand.RandSync.Server) != 0) { continue; }
                     }
 
-                    siteCoordsX.Add(siteX);
-                    siteCoordsY.Add(siteY);
+                    if (!TooClose(siteX, siteY))
+                    {
+                        siteCoordsX.Add(siteX);
+                        siteCoordsY.Add(siteY);
+                    }
 
                     if (closeToCave)
                     {
@@ -625,21 +628,42 @@ namespace Barotrauma
                                 int caveSiteX = x2 + Rand.Int(caveSiteInterval / 2, Rand.RandSync.Server);
                                 int caveSiteY = y2 + Rand.Int(caveSiteInterval / 2, Rand.RandSync.Server);
 
-                                bool tooClose = false;
-                                for (int i = 0; i < siteCoordsX.Count; i++)
+                                if (!TooClose(caveSiteX, caveSiteY))
                                 {
-                                    if (MathUtils.DistanceSquared(caveSiteX, caveSiteY, siteCoordsX[i], siteCoordsY[i]) < 10.0f * 10.0f)
-                                    {
-                                        tooClose = true;
-                                        break;
-                                    }
+                                    siteCoordsX.Add(caveSiteX);
+                                    siteCoordsY.Add(caveSiteY);
                                 }
-                                if (tooClose) { continue; }
-                                siteCoordsX.Add(caveSiteX);
-                                siteCoordsY.Add(caveSiteY);
                             }
                         }
                     }
+                }
+            }
+
+            bool TooClose(double siteX, double siteY)
+            {
+                for (int i = 0; i < siteCoordsX.Count; i++)
+                {
+                    if (MathUtils.DistanceSquared(siteCoordsX[i], siteCoordsY[i], siteX, siteY) < 10.0f * 10.0f)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            for (int i = 0; i < siteCoordsX.Count; i++)
+            {
+                Debug.Assert(
+                    siteCoordsX[i] > 0 || siteCoordsY[i] > 0,
+                    $"Potential error in level generation: a voronoi site was outside the bounds of the level ({siteCoordsX[i]}, {siteCoordsY[i]})");
+                Debug.Assert(
+                    siteCoordsX[i] < borders.Width || siteCoordsY[i] < borders.Height,
+                    $"Potential error in level generation: a voronoi site was outside the bounds of the level ({siteCoordsX[i]}, {siteCoordsY[i]})");
+                for (int j = i + 1; j < siteCoordsX.Count; j++)
+                {
+                    Debug.Assert(
+                        MathUtils.DistanceSquared(siteCoordsX[i], siteCoordsY[i], siteCoordsX[j], siteCoordsY[j]) > 1.0f,
+                        "Potential error in level generation: two voronoi sites are extremely close to each other.");
                 }
             }
 
@@ -1011,7 +1035,7 @@ namespace Barotrauma
                 foreach (InterestingPosition pos in PositionsOfInterest)
                 {
                     if (pos.PositionType != PositionType.MainPath && pos.PositionType != PositionType.SidePath) { continue; }
-                    if (pos.Position.X < 5000 || pos.Position.X > Size.X - 5000) { continue; }
+                    if (pos.Position.X < pathBorders.X + minMainPathWidth || pos.Position.X > pathBorders.Right - minMainPathWidth) { continue; }
                     if (Math.Abs(pos.Position.X - startPosition.X) < minMainPathWidth * 2 || Math.Abs(pos.Position.X - endPosition.X) < minMainPathWidth * 2) { continue; }
                     if (GetTooCloseCells(pos.Position.ToVector2(), minMainPathWidth * 0.7f).Count > 0) { continue; }
                     iceChunkPositions.Add(pos.Position);
@@ -2897,6 +2921,7 @@ namespace Barotrauma
             float? edgeLength = null, float maxResourceOverlap = 0.4f)
         {
             edgeLength ??= Vector2.Distance(location.Edge.Point1, location.Edge.Point2);
+            Vector2 edgeDir = (location.Edge.Point2 - location.Edge.Point1) / edgeLength.Value;
             var minResourceOverlap = -((edgeLength.Value - (resourceCount * resourcePrefab.Size.X)) / (resourceCount * resourcePrefab.Size.X));
             minResourceOverlap = Math.Max(minResourceOverlap, 0.0f);
             var lerpAmounts = new float[resourceCount];
@@ -2912,7 +2937,7 @@ namespace Barotrauma
             placedResources = new List<Item>();
             for (int i = 0; i < resourceCount; i++)
             {
-                Vector2 selectedPos = Vector2.Lerp(location.Edge.Point1, location.Edge.Point2, startOffset + lerpAmounts[i]);
+                Vector2 selectedPos = Vector2.Lerp(location.Edge.Point1 + edgeDir * resourcePrefab.Size.X / 2, location.Edge.Point2 - edgeDir * resourcePrefab.Size.X / 2, startOffset + lerpAmounts[i]);
                 var item = new Item(resourcePrefab, selectedPos, submarine: null);
                 Vector2 edgeNormal = location.Edge.GetNormal(location.Cell);
                 float moveAmount = (item.body == null ? item.Rect.Height / 2 : ConvertUnits.ToDisplayUnits(item.body.GetMaxExtent() * 0.7f));
@@ -3627,10 +3652,23 @@ namespace Barotrauma
             Wrecks = new List<Submarine>(wreckCount);
             for (int i = 0; i < wreckCount; i++)
             {
-                ContentFile contentFile = wreckFiles[i];
-                if (contentFile == null) { continue; }
-                string wreckName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path);
-                SpawnSubOnPath(wreckName, contentFile, SubmarineType.Wreck);
+                //how many times we'll try placing another sub before giving up
+                const int MaxSubsToTry = 2;
+                int attempts = 0;
+                while (wreckFiles.Any() && attempts < MaxSubsToTry)
+                {
+                    ContentFile contentFile = wreckFiles.First();
+                    wreckFiles.RemoveAt(0);
+                    if (contentFile == null) { continue; }
+                    string wreckName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path);
+                    if (SpawnSubOnPath(wreckName, contentFile, SubmarineType.Wreck) != null)
+                    {
+                        //placed successfully
+                        break;
+                    }
+                    attempts++;
+                }
+
             }
             totalSW.Stop();
             Debug.WriteLine($"{Wrecks.Count} wrecks created in { totalSW.ElapsedMilliseconds} (ms)");

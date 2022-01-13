@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Xml.Linq;
 
@@ -111,6 +110,17 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize(false, true, description: "If true, the recharge speed (and power consumption) of the device goes up exponentially as the recharge rate is increased.")]
+        public bool ExponentialRechargeSpeed { get; set; }
+
+        private float efficiency;
+        [Editable(minValue: 0.0f, maxValue: 1.0f, decimals: 2), Serialize(0.95f, true, description: "The amount of power you can get out of a item relative to the amount of power that's put into it.")]
+        public float Efficiency
+        {
+            get { return efficiency; }
+            set { efficiency = MathHelper.Clamp(value, 0.0f, 1.0f); }
+        }
+
         public float RechargeRatio => RechargeSpeed / MaxRechargeSpeed;
 
         public const float aiRechargeTargetRatio = 0.5f;
@@ -170,7 +180,7 @@ namespace Barotrauma.Items.Components
             {
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }
-            
+
             if (charge >= capacity)
             {
                 //rechargeVoltage = 0.0f;
@@ -181,13 +191,17 @@ namespace Barotrauma.Items.Components
             {
                 float missingCharge = capacity - charge;
                 float targetRechargeSpeed = rechargeSpeed;
+                if (ExponentialRechargeSpeed)
+                {
+                    targetRechargeSpeed = MathF.Pow(rechargeSpeed / maxRechargeSpeed, 2) * maxRechargeSpeed;
+                }
                 if (missingCharge < 1.0f)
                 {
                     targetRechargeSpeed *= missingCharge;
                 }
                 currPowerConsumption = MathHelper.Lerp(currPowerConsumption, targetRechargeSpeed, 0.05f);
-                Charge += currPowerConsumption * Math.Min(Voltage, 1.0f) / 3600.0f;
-            }                       
+                Charge += currPowerConsumption * Math.Min(Voltage, 1.0f) / 3600.0f * efficiency;
+            }
 
             if (charge <= 0.0f)
             {

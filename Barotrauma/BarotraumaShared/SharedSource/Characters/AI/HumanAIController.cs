@@ -832,6 +832,8 @@ namespace Barotrauma
                 if (container == null) { return 0; }
                 if (!container.HasAccess(character)) { return 0; }
                 if (!container.Inventory.CanBePut(containableItem)) { return 0; }
+                var rootContainer = container.Item.GetRootContainer();
+                if (rootContainer?.GetComponent<Fabricator>() != null || rootContainer?.GetComponent<Fabricator>() != null) { return 0; }
                 if (container.ShouldBeContained(containableItem, out bool isRestrictionsDefined))
                 {
                     if (isRestrictionsDefined)
@@ -1088,6 +1090,7 @@ namespace Barotrauma
 
         private void RespondToAttack(Character attacker, AttackResult attackResult)
         {
+            float minorDamageThreshold = 10;
             float healAmount = 0.0f;
             if (attacker != null)
             {
@@ -1135,6 +1138,7 @@ namespace Barotrauma
                 // Don't react to attackers that are outside of the sub (e.g. AoE attacks)
                 return;
             }
+            bool isAttackerInfected = false;
             bool isAttackerFightingEnemy = false;
             if (IsFriendly(attacker))
             {
@@ -1155,10 +1159,14 @@ namespace Barotrauma
                 }
                 else
                 {
+                    isAttackerInfected = attacker.CharacterHealth.GetAfflictionStrength("alieninfection") > 0;
                     // Inform other NPCs
-                    if (cumulativeDamage > 1 || totalDamage >= 10)
+                    if (isAttackerInfected || cumulativeDamage > 1 || totalDamage >= minorDamageThreshold)
                     {
-                        InformOtherNPCs(cumulativeDamage);
+                        if (GameMain.IsMultiplayer || !attacker.IsPlayer || Character.TeamID != attacker.TeamID)
+                        {
+                            InformOtherNPCs(cumulativeDamage);
+                        }
                     }
                     if (Character.IsBot)
                     {
@@ -1167,7 +1175,7 @@ namespace Barotrauma
                         {
                             if (Character.IsSecurity)
                             {
-                                if (attacker.TeamID != Character.TeamID && cumulativeDamage > 1 || cumulativeDamage > 10)
+                                if (attacker.TeamID != Character.TeamID && cumulativeDamage > 1 || cumulativeDamage > minorDamageThreshold)
                                 {
                                     Character.Speak(TextManager.Get("dialogattackedbyfriendlysecurityarrest"), null, 0.50f, "attackedbyfriendlysecurityarrest", minDurationBetweenSimilar: 30.0f);
                                 }
@@ -1181,26 +1189,8 @@ namespace Barotrauma
                                 Character.Speak(TextManager.Get("DialogAttackedByFriendly"), null, 0.50f, "attackedbyfriendly", minDurationBetweenSimilar: 30.0f);
                             }
                         }
-                        if (cumulativeDamage > 1 && attacker.TeamID != Character.TeamID)
-                        {
-                            // If the attacker is using a low damage and high frequency weapon like a repair tool, we shouldn't use any delay.
-                            AddCombatObjective(DetermineCombatMode(Character, cumulativeDamage), attacker, delay: realDamage > 1 ? GetReactionTime() : 0);
-                        }
-                        else
-                        {
-                            // Don't react to minor (accidental) dmg done by characters that are in the same team
-                            if (cumulativeDamage < 10)
-                            {
-                                if (!Character.IsSecurity && cumulativeDamage > 1)
-                                {
-                                    AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, attacker);
-                                }
-                            }
-                            else
-                            {
-                                AddCombatObjective(DetermineCombatMode(Character, cumulativeDamage, dmgThreshold: 50), attacker, GetReactionTime() * 2);
-                            }
-                        }
+                        // If the attacker is using a low damage and high frequency weapon like a repair tool, we shouldn't use any delay.
+                        AddCombatObjective(DetermineCombatMode(Character, cumulativeDamage), attacker, delay: realDamage > 1 ? GetReactionTime() : 0);
                     }
                     if (!isAttackerFightingEnemy)
                     {
@@ -1242,13 +1232,13 @@ namespace Barotrauma
                             continue;
                         } 
                     }
-                    var combatMode = DetermineCombatMode(otherCharacter, cumulativeDamage, isWitnessing, dmgThreshold: attacker.TeamID == Character.TeamID ? 50 : 10);
+                    var combatMode = DetermineCombatMode(otherCharacter, cumulativeDamage, isWitnessing);
                     float delay = isWitnessing ? GetReactionTime() : Rand.Range(2.0f, 5.0f, Rand.RandSync.Unsynced);
                     otherHumanAI.AddCombatObjective(combatMode, attacker, delay);
                 }
             }
 
-            AIObjectiveCombat.CombatMode DetermineCombatMode(Character c, float cumulativeDamage, bool isWitnessing = false, float dmgThreshold = 10, bool allowOffensive = true)
+            AIObjectiveCombat.CombatMode DetermineCombatMode(Character c, float cumulativeDamage, bool isWitnessing = false)
             {
                 if (!IsFriendly(attacker))
                 {
@@ -1268,6 +1258,17 @@ namespace Barotrauma
                 }
                 else
                 {
+                    float dmgThreshold = attacker.TeamID == Character.TeamID ? 50 : minorDamageThreshold;
+                    if (isAttackerInfected)
+                    {
+                        cumulativeDamage = 100;
+                    }
+                    if (GameMain.IsSingleplayer && attacker.IsPlayer && Character.TeamID == attacker.TeamID)
+                    {
+                        // Bots in the player team never act aggressively in single player when attacked by the player
+                        dmgThreshold = minorDamageThreshold;
+                        return cumulativeDamage > dmgThreshold ? AIObjectiveCombat.CombatMode.Retreat : AIObjectiveCombat.CombatMode.None;
+                    }
                     if (Character.Submarine == null || !Character.Submarine.GetConnectedSubs().Contains(attacker.Submarine))
                     {
                         // Outside or attacked from an unconnected submarine -> don't react.
@@ -1279,17 +1280,17 @@ namespace Barotrauma
                         isAttackerFightingEnemy = true;
                         return AIObjectiveCombat.CombatMode.None;
                     }
-                    else if (isWitnessing && Character.CombatAction != null && !c.IsSecurity)
+                    if (isWitnessing && Character.CombatAction != null && !c.IsSecurity)
                     {
                         return Character.CombatAction.WitnessReaction;
                     }
-                    else if (attacker.IsPlayer && FindInstigator() is Character instigator)
+                    if (attacker.IsPlayer && FindInstigator() is Character instigator)
                     {
-                        // The guards don't react when the player there's an instigator around
+                        // The guards don't react to player's aggressions when there's an instigator around
                         isAttackerFightingEnemy = true;
                         return c.IsSecurity ? AIObjectiveCombat.CombatMode.None : (instigator.CombatAction != null ? instigator.CombatAction.WitnessReaction : AIObjectiveCombat.CombatMode.Retreat);
                     }
-                    else if (attacker.TeamID == CharacterTeamType.FriendlyNPC && !(attacker.AIController.IsMentallyUnstable || attacker.AIController.IsMentallyUnstable))
+                    if (attacker.TeamID == CharacterTeamType.FriendlyNPC && !(attacker.AIController.IsMentallyUnstable || attacker.AIController.IsMentallyUnstable))
                     {
                         if (c.IsSecurity)
                         {
@@ -1307,15 +1308,11 @@ namespace Barotrauma
                             // Already targeting the attacker -> treat as a more serious threat.
                             cumulativeDamage *= 2;
                         }
-                        if (attackResult.Afflictions != null && attackResult.Afflictions.Any(a => a is AfflictionHusk))
-                        {
-                            cumulativeDamage = 100;
-                        }
                         if (cumulativeDamage > dmgThreshold)
                         {
                             if (c.IsSecurity)
                             {
-                                return c.IsSecurity && allowOffensive ? AIObjectiveCombat.CombatMode.Offensive : AIObjectiveCombat.CombatMode.Arrest;
+                                return c.IsSecurity ? AIObjectiveCombat.CombatMode.Offensive : AIObjectiveCombat.CombatMode.Arrest;
                             }
                             else
                             {
@@ -1838,7 +1835,7 @@ namespace Barotrauma
             bool ignoreFire = objectiveManager.CurrentOrder is AIObjectiveExtinguishFires extinguishOrder && extinguishOrder.Priority > 0 || objectiveManager.HasActiveObjective<AIObjectiveExtinguishFire>();
             bool ignoreWater = HasDivingSuit(character);
             bool ignoreOxygen = ignoreWater || HasDivingMask(character);
-            bool ignoreEnemies = ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || ObjectiveManager.Objectives.Any(o => o is AIObjectiveFightIntruders);
+            bool ignoreEnemies = ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || ObjectiveManager.GetActiveObjectives<AIObjectiveFightIntruders>().Any();
             float safety = CalculateHullSafety(hull, visibleHulls, character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies);
             if (isCurrentHull)
             {

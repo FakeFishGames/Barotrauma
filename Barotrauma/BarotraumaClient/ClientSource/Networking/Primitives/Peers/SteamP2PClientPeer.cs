@@ -100,7 +100,7 @@ namespace Barotrauma.Networking
             if (!isActive) { return; }
             if (steamId != hostSteamId) { return; }
             Close($"SteamP2P connection failed: {error}");
-            OnDisconnectMessageReceived?.Invoke($"SteamP2P connection failed: {error}");
+            OnDisconnectMessageReceived?.Invoke($"{DisconnectReason.SteamP2PError}/SteamP2P connection failed: {error}");
         }
 
         private void OnP2PData(ulong steamId, byte[] data, int dataLength)
@@ -167,14 +167,14 @@ namespace Barotrauma.Networking
                     if (state == null)
                     {
                         Close("SteamP2P connection could not be established");
-                        OnDisconnectMessageReceived?.Invoke("SteamP2P connection could not be established");
+                        OnDisconnectMessageReceived?.Invoke(DisconnectReason.SteamP2PError.ToString());
                     }
                     else
                     {
                         if (state?.P2PSessionError != Steamworks.P2PSessionError.None)
                         {
                             Close($"SteamP2P error code: {state?.P2PSessionError}");
-                            OnDisconnectMessageReceived?.Invoke($"SteamP2P error code: {state?.P2PSessionError}");
+                            OnDisconnectMessageReceived?.Invoke($"{DisconnectReason.SteamP2PError}/SteamP2P error code: {state?.P2PSessionError}");
                         }
                     }
                     connectionStatusTimer = 1.0f;
@@ -210,7 +210,7 @@ namespace Barotrauma.Networking
             if (timeout < 0.0)
             {
                 Close("Timed out");
-                OnDisconnectMessageReceived?.Invoke("");
+                OnDisconnectMessageReceived?.Invoke(DisconnectReason.SteamP2PTimeOut.ToString());
                 return;
             }
 
@@ -349,13 +349,19 @@ namespace Barotrauma.Networking
             outMsg.Write((byte)PacketHeader.IsDisconnectMessage);
             outMsg.Write(msg ?? "Disconnected");
 
-            Steamworks.SteamNetworking.SendP2PPacket(hostSteamId, outMsg.Buffer, outMsg.LengthBytes, 0, Steamworks.P2PSend.Reliable);
-            sentBytes += outMsg.LengthBytes;
+            try
+            {
+                Steamworks.SteamNetworking.SendP2PPacket(hostSteamId, outMsg.Buffer, outMsg.LengthBytes, 0, Steamworks.P2PSend.Reliable);
+                sentBytes += outMsg.LengthBytes;
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to send a disconnect message to the server using SteamP2P.", e);
+            }
 
             Thread.Sleep(100);
 
             Steamworks.SteamNetworking.ResetActions();
-
             Steamworks.SteamNetworking.CloseP2PSessionWithUser(hostSteamId);
 
             steamAuthTicket?.Cancel(); steamAuthTicket = null;

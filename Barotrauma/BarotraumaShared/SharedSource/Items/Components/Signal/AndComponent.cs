@@ -12,6 +12,8 @@ namespace Barotrauma.Items.Components
 
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
+
+        protected readonly Character[] signalSender = new Character[2];
         
         [InGameEditable(DecimalCount = 2), Serialize(0.0f, true, description: "The item sends the output if both inputs have received a non-zero signal within the timeframe. If set to 0, the inputs must receive a signal at the same time.", alwaysUseInstanceValues: true)]
         public float TimeFrame
@@ -80,14 +82,14 @@ namespace Barotrauma.Items.Components
             bool sendOutput = true;
             for (int i = 0; i < timeSinceReceived.Length; i++)
             {
-                if (timeSinceReceived[i] > timeFrame) sendOutput = false;
+                if (timeSinceReceived[i] > timeFrame) { sendOutput = false; }
                 timeSinceReceived[i] += deltaTime;
             }
 
             string signalOut = sendOutput ? output : falseOutput;
-            if (string.IsNullOrEmpty(signalOut)) return;
+            if (string.IsNullOrEmpty(signalOut)) { return; }
 
-            item.SendSignal(signalOut, "signal_out");
+            item.SendSignal(new Signal(signalOut, sender: signalSender[0] ?? signalSender[1]), "signal_out");
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)
@@ -95,12 +97,14 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "signal_in1":
-                    if (signal.value == "0") return;
+                    if (signal.value == "0") { return; }
                     timeSinceReceived[0] = 0.0f;
+                    signalSender[0] = signal.sender;
                     break;
                 case "signal_in2":
-                    if (signal.value == "0") return;
+                    if (signal.value == "0") { return; }
                     timeSinceReceived[1] = 0.0f;
+                    signalSender[1] = signal.sender;
                     break;
                 case "set_output":
                     output = signal.value;

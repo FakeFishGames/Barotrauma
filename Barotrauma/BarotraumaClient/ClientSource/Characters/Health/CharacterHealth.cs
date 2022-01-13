@@ -531,6 +531,8 @@ namespace Barotrauma
             bloodParticleTimer -= deltaTime * (affliction.Strength / 10.0f);
             if (bloodParticleTimer <= 0.0f)
             {
+                Limb limb = targetLimb ?? Character.AnimController.MainLimb;
+
                 bool inWater = Character.AnimController.InWater;
                 var drawTarget = inWater ? Particles.ParticlePrefab.DrawTargetType.Water : Particles.ParticlePrefab.DrawTargetType.Air;
                 var emitter = Character.BloodEmitters.FirstOrDefault(e => e.Prefab.ParticlePrefab.DrawTarget == drawTarget || e.Prefab.ParticlePrefab.DrawTarget == Particles.ParticlePrefab.DrawTargetType.Both);
@@ -543,13 +545,13 @@ namespace Barotrauma
                 if (!inWater)
                 {
                     bloodParticleSize *= 2.0f;
-                    velocity = targetLimb.LinearVelocity * 100.0f;
+                    velocity = limb.LinearVelocity * 100.0f;
                 }
 
                 // TODO: use the blood emitter?
                 var blood = GameMain.ParticleManager.CreateParticle(
                     inWater ? Character.Params.BleedParticleWater : Character.Params.BleedParticleAir,
-                    targetLimb.WorldPosition, velocity, 0.0f, Character.AnimController.CurrentHull);
+                    limb.WorldPosition, velocity, 0.0f, Character.AnimController.CurrentHull);
 
                 if (blood != null && !inWater)
                 {
@@ -1123,22 +1125,23 @@ namespace Barotrauma
 
         public static Color GetAfflictionIconColor(AfflictionPrefab prefab, Affliction affliction)
         {
+            return GetAfflictionIconColor(prefab, affliction.Strength);
+        }
+
+        public static Color GetAfflictionIconColor(AfflictionPrefab prefab, float afflictionStrength)
+        {
             // No specific colors, use generic
             if (prefab.IconColors == null)
             {
                 if (prefab.IsBuff)
                 {
-                    return ToolBox.GradientLerp(affliction.Strength / prefab.MaxStrength, GUI.Style.BuffColorLow, GUI.Style.BuffColorMedium, GUI.Style.BuffColorHigh);
+                    return ToolBox.GradientLerp(afflictionStrength / prefab.MaxStrength, GUI.Style.BuffColorLow, GUI.Style.BuffColorMedium, GUI.Style.BuffColorHigh);
                 }
-                else
-                {
-                    return ToolBox.GradientLerp(affliction.Strength / prefab.MaxStrength, GUI.Style.DebuffColorLow, GUI.Style.DebuffColorMedium, GUI.Style.DebuffColorHigh);
-                }
+
+                return ToolBox.GradientLerp(afflictionStrength / prefab.MaxStrength, GUI.Style.DebuffColorLow, GUI.Style.DebuffColorMedium, GUI.Style.DebuffColorHigh);
             }
-            else
-            {
-                return ToolBox.GradientLerp(affliction.Strength / prefab.MaxStrength, prefab.IconColors);
-            }
+
+            return ToolBox.GradientLerp(afflictionStrength / prefab.MaxStrength, prefab.IconColors);
         }
 
         public static Color GetAfflictionIconColor(Affliction affliction) => GetAfflictionIconColor(affliction.Prefab, affliction);
@@ -1153,7 +1156,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (afflictionsDirty())
+            if (afflictionsDirty() || selectedLimb != currentDisplayedLimb)
             {
                 var currentAfflictions = afflictions.Where(a => ShouldDisplayAfflictionOnLimb(a, selectedLimb)).Select(a => a.Key);
                 CreateAfflictionInfos(currentAfflictions);

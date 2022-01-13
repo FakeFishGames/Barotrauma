@@ -479,8 +479,11 @@ namespace Barotrauma
         {
             if (i < 0 || i >= slots.Length)
             {
-                string errorMsg = "Inventory.TryPutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace.CleanupStackTrace();
+                string errorMsg = $"Inventory.TryPutItem failed: index was out of range (item: {(item?.Name ?? "null")}, inventory: {(Owner?.ToString() ?? "null")}).\n" + Environment.StackTrace.CleanupStackTrace();
                 GameAnalyticsManager.AddErrorEventOnce("Inventory.TryPutItem:IndexOutOfRange", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#endif
                 return false;
             }
 

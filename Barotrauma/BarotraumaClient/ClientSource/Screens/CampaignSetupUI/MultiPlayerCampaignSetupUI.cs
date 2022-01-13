@@ -246,6 +246,8 @@ namespace Barotrauma
 
             foreach (string saveFile in saveFiles)
             {
+                if (string.IsNullOrEmpty(saveFile)) { continue; }
+
                 string fileName = saveFile;
                 string subName = "";
                 string saveTime = "";

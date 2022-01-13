@@ -24,7 +24,19 @@ namespace Barotrauma.Items.Components
         /// </summary>
         public bool AlwaysAllowRewiring
         {
-            get { return item.Submarine?.Info.Type == SubmarineType.BeaconStation; }
+            get 
+            {
+                if (item.Submarine == null) { return true; }
+                switch (item.Submarine.Info.Type)
+                {
+                    case SubmarineType.Wreck:
+                    case SubmarineType.BeaconStation:
+                    case SubmarineType.EnemySubmarine:
+                    case SubmarineType.Ruin:
+                        return true;
+                }
+                return false;
+            }
         }
 
         [Editable, Serialize(false, true, description: "Locked connection panels cannot be rewired in-game.", alwaysUseInstanceValues: true)]

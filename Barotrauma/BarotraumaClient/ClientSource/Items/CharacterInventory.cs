@@ -504,6 +504,13 @@ namespace Barotrauma
             {
                 HUDLayoutSettings.InventoryTopY = visualSlots[0].EquipButtonRect.Y - (int)(15 * GUI.Scale);
             }
+            else
+            {
+                for (int i = 0; i < capacity; i++)
+                {
+                    visualSlots[i].DrawOffset = Vector2.Zero;
+                }
+            }
         }
 
         protected override void ControlInput(Camera cam)

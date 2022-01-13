@@ -1120,7 +1120,7 @@ namespace Barotrauma
                     return;
                 }
 
-                if (Submarine.MainSub.SaveAs(Barotrauma.IO.Path.Combine(SubmarineInfo.SavePath, fileName + ".sub")))
+                if (Submarine.MainSub.TrySaveAs(Barotrauma.IO.Path.Combine(SubmarineInfo.SavePath, fileName + ".sub")))
                 {
                     NewMessage("Sub saved", Color.Green);
                 }
@@ -2392,8 +2392,9 @@ namespace Barotrauma
             commands.Add(new Command("querylobbies", "Queries all SteamP2P lobbies", (args) =>
             {
                 TaskPool.Add("DebugQueryLobbies",
-                    SteamManager.LobbyQueryRequest(), (t) => {
-                        var lobbies = ((Task<List<Steamworks.Data.Lobby>>)t).Result;
+                    SteamManager.LobbyQueryRequest(), (t) =>
+                    {
+                        t.TryGetResult(out List<Steamworks.Data.Lobby> lobbies);
                         foreach (var lobby in lobbies)
                         {
                             NewMessage(lobby.GetData("name") + ", " + lobby.GetData("lobbyowner"), Color.Yellow);

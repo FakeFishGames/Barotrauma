@@ -74,7 +74,7 @@ namespace Barotrauma.Items.Components
 
             if (PickingTime > 0.0f)
             {
-                var abilityPickingTime = new AbilityValueItem(PickingTime, item.Prefab);
+                var abilityPickingTime = new AbilityItemPickingTime(PickingTime, item.Prefab);
                 picker.CheckTalents(AbilityEffectType.OnItemPicked, abilityPickingTime);
 
                 if (requiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
@@ -299,5 +299,16 @@ namespace Barotrauma.Items.Components
                 Pick(Entity.FindEntityByID(pickerID) as Character);
             }
         }
+    }
+
+    class AbilityItemPickingTime : AbilityObject, IAbilityValue, IAbilityItemPrefab
+    {
+        public AbilityItemPickingTime(float pickingTime, ItemPrefab itemPrefab)
+        {
+            Value = pickingTime;
+            ItemPrefab = itemPrefab;
+        }
+        public float Value { get; set; }
+        public ItemPrefab ItemPrefab { get; set; }
     }
 }

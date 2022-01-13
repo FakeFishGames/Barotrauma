@@ -11,7 +11,7 @@ namespace Barotrauma
         public override string Identifier { get; set; } = "cleanup items";
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => false;
-        public override bool ForceOrderPriority => false;
+        protected override bool ForceOrderPriority => false;
 
         public readonly List<Item> prioritizedItems = new List<Item>();
 

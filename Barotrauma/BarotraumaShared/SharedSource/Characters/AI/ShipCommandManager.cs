@@ -75,7 +75,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            if (!Active) { return; }
+            if (!Active || character.IsArrested) { return; }
             decisionTimer -= deltaTime;
             if (decisionTimer <= 0.0f)
             {
@@ -344,7 +344,6 @@ namespace Barotrauma
 
             ShipIssueWorkers.Clear();
 
-            // could have support for multiple reactors, todo m61
             if (CommandedSubmarine.GetItems(false).Find(i => i.HasTag("reactor") && !i.NonInteractable)?.GetComponent<Reactor>() is Reactor reactor)
             {
                 ShipIssueWorkers.Add(new ShipIssueWorkerPowerUpReactor(this, Order.GetPrefab("operatereactor"), reactor.Item, reactor, "powerup"));

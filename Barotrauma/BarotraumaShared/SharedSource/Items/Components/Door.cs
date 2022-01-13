@@ -144,16 +144,6 @@ namespace Barotrauma.Items.Components
             if (linkedGap == null)
             {
                 Rectangle rect = item.Rect;
-                if (IsHorizontal)
-                {
-                    rect.Y += 5;
-                    rect.Height += 10;
-                }
-                else
-                {
-                    rect.X -= 5;
-                    rect.Width += 10;
-                }
                 linkedGap = new Gap(rect, !IsHorizontal, Item.Submarine)
                 {
                     Submarine = item.Submarine

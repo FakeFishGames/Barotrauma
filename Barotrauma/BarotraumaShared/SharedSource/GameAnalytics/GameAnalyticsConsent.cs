@@ -149,6 +149,13 @@ namespace Barotrauma
                 SetConsent(Consent.Error);
             }
 
+            if (!SteamManager.IsInitialized)
+            {
+                DebugConsole.AddWarning("Error in GameAnalyticsManager.GetConsent: Could not get a Steam authentication ticket (not connected to Steam).");
+                SetConsent(Consent.Error);
+                return;
+            }
+
             string authTicketStr;
             try
             {
@@ -183,7 +190,7 @@ namespace Barotrauma
                     return;
                 }
 
-                var response = ((Task<IRestResponse>)t).Result;
+                if (!t.TryGetResult(out IRestResponse response)) { return; }
                 if (!CheckResponse(response))
                 {
                     SetConsent(Consent.Error);

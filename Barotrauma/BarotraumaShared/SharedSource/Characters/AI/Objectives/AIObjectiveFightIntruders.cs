@@ -26,6 +26,7 @@ namespace Barotrauma
             if (totalEnemies == 0) { return 0; }
             if (character.IsSecurity) { return 100; }
             if (objectiveManager.IsOrder(this)) { return 100; }
+            // If there's any security officers onboard, leave fighting for them.
             return HumanAIController.IsTrueForAnyCrewMember(c => c.Character.IsSecurity && !c.Character.IsIncapacitated && c.Character.Submarine == character.Submarine) ? 0 : 100;
         }
 
@@ -64,6 +65,7 @@ namespace Barotrauma
             if (target.CurrentHull == null) { return false; }
             if (HumanAIController.IsFriendly(character, target)) { return false; }
             if (!character.Submarine.IsConnectedTo(target.Submarine)) { return false; }
+            if (character.Submarine.TeamID != target.Submarine.TeamID) { return false; }
             if (target.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI)) { return false; }
             if (target.IsArrested) { return false; }
             return true;

@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
         private HashSet<ItemPrefab> ActivatingItemPrefabs { get; set; } = new HashSet<ItemPrefab>();
 
 
-        private bool AllowUsingButtons => ActivatingItemPrefabs.None() || Container.Inventory.AllItems.Any(i => i != null && ActivatingItemPrefabs.Any(p => p == i.Prefab));
+        private bool AllowUsingButtons => ActivatingItemPrefabs.None() || (Container != null && Container.Inventory.AllItems.Any(i => i != null && ActivatingItemPrefabs.Any(p => p == i.Prefab)));
 
         public ButtonTerminal(Item item, XElement element) : base(item, element)
         {
@@ -101,12 +101,12 @@ namespace Barotrauma.Items.Components
 
         partial void OnItemLoadedProjSpecific();
 
-        private bool SendSignal(int signalIndex, bool isServerMessage = false)
+        private bool SendSignal(int signalIndex, Character sender, bool isServerMessage = false)
         {
             if (!isServerMessage && !AllowUsingButtons) { return false; }
             string signal = Signals[signalIndex];
             string connectionName = $"signal_out{signalIndex + 1}";
-            item.SendSignal(signal, connectionName);
+            item.SendSignal(new Signal(signal, sender: sender), connectionName);
             return true;
         }
 

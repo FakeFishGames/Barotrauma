@@ -46,6 +46,7 @@ namespace Barotrauma
         public override bool AllowSubObjectiveSorting => true;
         public virtual bool InverseTargetEvaluation => false;
         protected virtual bool ResetWhenClearingIgnoreList => true;
+        protected virtual bool ForceOrderPriority => true;
 
         public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace.CleanupStackTrace()); }
 

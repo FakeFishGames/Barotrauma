@@ -19,15 +19,6 @@ namespace Barotrauma.Items.Components
         private readonly List<(Vector2 position, ParticleEmitter emitter)> pumpOutEmitters = new List<(Vector2 position, ParticleEmitter emitter)>(); 
         private readonly List<(Vector2 position, ParticleEmitter emitter)> pumpInEmitters = new List<(Vector2 position, ParticleEmitter emitter)>();
 
-        public float CurrentBrokenVolume
-        {
-            get
-            {
-                if (item.ConditionPercentage > 10.0f || !IsActive) { return 0.0f; }
-                return (1.0f - item.ConditionPercentage / 10.0f) * 100.0f;
-            }
-        }
-
         partial void InitProjSpecific(XElement element)
         {
             foreach (XElement subElement in element.Elements())
@@ -193,8 +184,6 @@ namespace Barotrauma.Items.Components
         private readonly float flickerFrequency = 1;
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            pumpSpeedLockTimer -= deltaTime;
-            isActiveLockTimer -= deltaTime;
             autoControlIndicator.Selected = IsAutoControlled;
             PowerButton.Enabled = isActiveLockTimer <= 0.0f;
             if (HasPower)

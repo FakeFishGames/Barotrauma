@@ -2,12 +2,19 @@
 {
     partial class AfflictionHusk : Affliction
     {
+        private InfectionState? prevDisplayedMessage;
         partial void UpdateMessages()
         {
             if (Prefab is AfflictionPrefabHusk { SendMessages: false }) { return; }
+            if (prevDisplayedMessage.HasValue && prevDisplayedMessage.Value == State) { return; }
+
             switch (State)
             {
                 case InfectionState.Dormant:
+                    if (Strength < DormantThreshold * 0.5f)
+                    {
+                        return;
+                    }
                     GUI.AddMessage(TextManager.Get("HuskDormant"), GUI.Style.Red);
                     break;
                 case InfectionState.Transition:
@@ -23,6 +30,7 @@
                 default:
                     break;
             }
+            prevDisplayedMessage = State;
         }
     }
 }

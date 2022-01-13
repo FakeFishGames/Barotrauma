@@ -363,6 +363,7 @@ namespace Barotrauma
         public readonly string Name, Description;
         public readonly string TranslationOverride;
         public readonly bool IsBuff;
+        public readonly float HealCostMultiplier;
 
         public readonly string CauseOfDeathDescription, SelfCauseOfDeathDescription;
 
@@ -655,6 +656,7 @@ namespace Barotrauma
             Name = TextManager.Get("AfflictionName." + translationId, true) ?? element.GetAttributeString("name", "");
             Description = TextManager.Get("AfflictionDescription." + translationId, true) ?? element.GetAttributeString("description", "");
             IsBuff = element.GetAttributeBool("isbuff", false);
+            HealCostMultiplier = element.GetAttributeFloat(nameof(HealCostMultiplier).ToLowerInvariant(), 1f);
 
             if (element.Attribute("nameidentifier") != null)
             {
@@ -677,7 +679,7 @@ namespace Barotrauma
             MaxStrength         = element.GetAttributeFloat("maxstrength", 100.0f);
             GrainBurst          = element.GetAttributeFloat(nameof(GrainBurst).ToLowerInvariant(), 0.0f);
 
-            ShowInHealthScannerThreshold = element.GetAttributeFloat("showinhealthscannerthreshold", Math.Max(ActivationThreshold, 0.05f));
+            ShowInHealthScannerThreshold = element.GetAttributeFloat("showinhealthscannerthreshold", Math.Max(ActivationThreshold, AfflictionType == "talentbuff" ? float.MaxValue : 0.05f));
             TreatmentThreshold = element.GetAttributeFloat("treatmentthreshold", Math.Max(ActivationThreshold, 5.0f));
 
             DamageOverlayAlpha  = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
@@ -750,6 +752,32 @@ namespace Barotrauma
                 }
             }
         }
+
+#if CLIENT
+        public void ReloadSoundsIfNeeded()
+        {
+            foreach (var effect in effects)
+            {
+                foreach (var statusEffect in effect.StatusEffects)
+                {
+                    foreach (var sound in statusEffect.Sounds)
+                    {
+                        if (sound.Sound == null) { Submarine.ReloadRoundSound(sound); }                       
+                    }
+                }
+            }
+            foreach (var periodicEffect in periodicEffects)
+            {
+                foreach (var statusEffect in periodicEffect.StatusEffects)
+                {
+                    foreach (var sound in statusEffect.Sounds)
+                    {
+                        if (sound.Sound == null) { Submarine.ReloadRoundSound(sound); }
+                    }
+                }
+            }
+        }
+#endif
 
         public override string ToString()
         {

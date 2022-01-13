@@ -583,6 +583,8 @@ namespace Barotrauma
 
         private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
 
+        public IEnumerable<StatusEffect> StatusEffects { get { return statusEffects; } }
+
         public Limb(Ragdoll ragdoll, Character character, LimbParams limbParams)
         {
             this.ragdoll = ragdoll;
@@ -756,8 +758,8 @@ namespace Barotrauma
                 }
                 if (attacker != null)
                 {
-                    var abilityAffliction = new AbilityAfflictionCharacter(newAffliction, character);
-                    attacker.CheckTalents(AbilityEffectType.OnAddDamageAffliction, abilityAffliction);
+                    var abilityAfflictionCharacter = new AbilityAfflictionCharacter(newAffliction, character);
+                    attacker.CheckTalents(AbilityEffectType.OnAddDamageAffliction, abilityAfflictionCharacter);
                 }
                 if (applyAffliction)
                 {
@@ -1309,4 +1311,16 @@ namespace Barotrauma
 
         partial void LoadParamsProjSpecific();
     }
+
+    class AbilityAfflictionCharacter : AbilityObject, IAbilityAffliction, IAbilityCharacter
+    {
+        public AbilityAfflictionCharacter(Affliction affliction, Character character)
+        {
+            Affliction = affliction;
+            Character = character;
+        }
+        public Character Character { get; set; }
+        public Affliction Affliction { get; set; }
+    }
+
 }

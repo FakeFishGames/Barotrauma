@@ -411,9 +411,9 @@ namespace Barotrauma
                 GameAnalyticsManager.ProgressionStatus.Start,
                 GameMode?.Name ?? "none");
 
-            string eventId = "StartRound:GameMode:" + (GameMode?.Name ?? "none") + ":";
+            string eventId = "StartRound:" + (GameMode?.Preset?.Identifier ?? "none") + ":";
             GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"));
-            GameAnalyticsManager.AddDesignEvent(eventId + "GameMode:" + (GameMode?.Name ?? "none"));
+            GameAnalyticsManager.AddDesignEvent(eventId + "GameMode:" + (GameMode?.Preset?.Identifier ?? "none"));
             GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count() ?? 0));
             foreach (Mission mission in missions)
             {
@@ -421,6 +421,17 @@ namespace Barotrauma
             }
             GameAnalyticsManager.AddDesignEvent(eventId + "LevelType:" + (Level.Loaded?.Type.ToString() ?? "none"));
             GameAnalyticsManager.AddDesignEvent(eventId + "Biome:" + (Level.Loaded?.LevelData?.Biome?.Identifier ?? "none"));
+            if (GameMode is CampaignMode campaignMode) 
+            { 
+                if (campaignMode.Map?.Radiation != null && campaignMode.Map.Radiation.Enabled)
+                {
+                    GameAnalyticsManager.AddDesignEvent(eventId + "RadiationEnabled");
+                }
+                else
+                {
+                    GameAnalyticsManager.AddDesignEvent(eventId + "RadiationDisabled");
+                }
+            }
 
 #if CLIENT
             if (GameMode is CampaignMode) { SteamAchievementManager.OnBiomeDiscovered(levelData.Biome); }
@@ -456,6 +467,8 @@ namespace Barotrauma
                     GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Location"), StartLocation.Name), Color.CadetBlue, playSound: false);
                 }
             }
+
+            ReadyCheck.ReadyCheckCooldown = DateTime.MinValue;
 
             GUI.PreventPauseMenuToggle = false;
 
@@ -895,14 +908,7 @@ namespace Barotrauma
 
             ((CampaignMode)GameMode).Save(doc.Root);
 
-            try
-            {
-                doc.SaveSafe(filePath);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Saving gamesession to \"" + filePath + "\" failed!", e);
-            }
+            doc.SaveSafe(filePath, throwExceptions: true);
         }
 
         /*public void Load(XElement saveElement)

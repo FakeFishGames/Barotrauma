@@ -78,10 +78,11 @@ namespace Barotrauma
         //there can be no events before this time has passed during the 1st campaign round
         const float FirstRoundEventDelay = 0.0f;
 
-        public enum InteractionType { None, Talk, Examine, Map, Crew, Store, Repair, Upgrade, PurchaseSub }
+        public enum InteractionType { None, Talk, Examine, Map, Crew, Store, Repair, Upgrade, PurchaseSub, MedicalClinic }
 
         public readonly CargoManager CargoManager;
         public UpgradeManager UpgradeManager;
+        public MedicalClinic MedicalClinic;
 
         public List<Faction> Factions;
 
@@ -176,6 +177,7 @@ namespace Barotrauma
         {
             Money = InitialMoney;
             CargoManager = new CargoManager(this);
+            MedicalClinic = new MedicalClinic(this);
         }
 
         /// <summary>

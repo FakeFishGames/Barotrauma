@@ -434,6 +434,7 @@ namespace Barotrauma.Items.Components
             DeteriorateAlways = msg.ReadBoolean();
             tinkeringDuration = msg.ReadSingle();
             tinkeringStrength = msg.ReadSingle();
+            tinkeringPowersDevices = msg.ReadBoolean();
             ushort currentFixerID = msg.ReadUInt16();
             currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
             CurrentFixer = currentFixerID != 0 ? Entity.FindEntityByID(currentFixerID) as Character : null;

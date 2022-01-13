@@ -1,4 +1,140 @@
 ---------------------------------------------------------------------------------------------------------
+v0.16.0.0
+---------------------------------------------------------------------------------------------------------
+
+Changes and additions:
+- Added a medical clinic to outposts that allows you to heal your crew for a price.
+- Added Barsuk, a small beginner-level sub.
+- Added photoshop-like layers to submarine editor.
+- Added some new decorative items and structures.
+- Adjusted medical items' effects on bleeding and burns. Bandages, plastiseal and antibiotic glue are now much more effective at treating them, and morphine & fentanyl only heal them by a negligible amount.
+- Heavily increased supercapacitor's power consumption and made the recharge speed increase exponentially when the recharge rate is increased.
+- Optimizations to signal logic, status effects and property conditionals.
+- Added "separator" property to Concat Component.
+- Added "power_value_out" and "load_value_out" connections to junction boxes.
+- Added "set_output" connection to Greater Than Component, Equals Component and Regex Component.
+- Made alien materials spawn in abyss islands.
+- Exposed wall healths in the sub editor.
+- Modified Orca2 and R-29 reactor values so they're more in line with other subs.
+- Made ballast flora toxins more visible and made them emit a sound.
+- Health scanner doesn't show buffs from talents.
+- Made impacts toss items around less effectively, especially when the item is heavy.
+- Periscopes determine which turret to focus on using the trigger_out connection instead of position_out (making it easier to build circuits that switch which turret a periscope controls).
+- Gave spinelings and threshers inventories (+ added alien blood as loot) to make it possible for "gene harvester" and "deep sea slayer" to spawn loot.
+- Monsters' burns don't heal by themselves.
+- "Allow rewiring" server setting doesn't affect wrecks, pirate subs or ruins.
+- Added an option to disable all in-game hints to the hint message box.
+- Option to make sonar displays center on the connected sonar transducer.
+- Made the sizes of signal components consistent (32x32px, they also align to the grid now).
+- Don't allow fabricators to take items from linked containers the user doesn't have access to.
+- Connected diving suit lockers to oxygen in vanilla subs.
+
+AI:
+- When quick-assigning orders, prioritize the characters with the same Operate order only when they are targeting the same item.
+- When quick-assigning orders, don't prioritize characters with the same Maintenance order. Otherwise, Maintenance orders will always be quick-assigned to characters who already have the samer order. This will prevent giving out multiple Maintenance orders of the same type to multiple characters using the quick-assignment logic.
+- Allow quick-assigning the same kind of Operate order to multiple characters. Previously, it would always be given to the character that already had the same kind of order.
+- Fixed bots sometimes getting stuck while trying to fix a leak that's not in the same sub (e.g. bot in Remora and the leak in the drone).
+- Fixed oxygen shards from old saves still being used as oxygen sources by bots.
+- Fixed bots getting stuck in certain spots with ladders (e.g. Berilia's reactor room).
+- Fixed contextual "clean up" order not being visible for weapons.
+- Defined preferred containers for some items and added "locker" as the secondary preferred container for most items. Helps bots clean up things even when they can't find the primary container for the items.
+- Fixed bots sometimes halting briefly next to a door when they shouldn't.
+- "Fight intruders" order doesn't make the bots enter abandoned outposts to fight the enemies there.
+- Disable aggressive behavior towards the player for the friendly crew members in single player (= accidental friendly fire never turns the security hostile in single player).
+- Fixed bots saying they can't find items to load when someone takes an item they were targeting.
+- Fixed bots saying they can't reach a leak when someone else fixes it before them.
+- Fixed bots sometimes trying to adjust auto-controlled pumps when doing the autonomous Pump Water objective.
+- Arrested pirate captains don't try to give orders to their crew.
+- Change how captains (and theoretically other bots with an autonomous fight intruders order) behave: instead of idling around, they'll flee to the safety. And if there's no security officers around, they should fight the enemy aggressively.
+- Fixed bots filling target containers with items that can't be refilled/recharged when given the Load Items order (e.g. putting welding fuel tanks in oxygen tank shelves).
+- Made bots prefer the same fuel rods or ammo as already loaded when they're operating a reactor or a turret and need to find new ones.
+
+Bugfixes:
+- Fixed equipping two of the same genetic material and then unequipping one of them removing all the genetic effects.
+- Fixed "novice seafarer", "experienced seafarer" and "naval architect" achievements being possible to unlock even if cheats are enabled.
+- Fixed kills in multiplayer sessions not progressing the "xenocide" and "genocide" achievements, and kills being reported to Steam unreliably.
+- Fixed clients not spawning the respawn shuttle if they join after the server had disabled the shuttle mid-round, leading to an "entity not found" kick.
+- Fixed medical effects being different when the medical item is fired with a syringe gun.
+- Fixed fabricator sometimes desyncing in MP when some of the ingredients are in the user's inventory.
+- Fixed clients trying to reconnect to SteamP2P indefinitely if establishing the initial connection fails, eventually leading to a crash.
+- Fixed "allow linking wifi to chat" server setting causing syncing problems with headsets. The setting wasn't synced with clients who don't have settings management permissions, which would cause them to get some of the wifi components' properties mixed up and sometimes prevent them from communicating using the headsets.
+- Fixed "unused talent points" indicator staying visible after all talents have been unlocked if the character's gained extra talent points from other talents.
+- Fixed motion detector requiring the target's velocity to be higher than the specified minimum velocity, instead of higher than or equal. As a result, a minimum velocity of 0 would not sometimes detect targets in range.
+- Fixed bots sometimes trying to put items they're cleaning up into containers inside fabricators/deconstructors (e.g. an oxygen tank into a diving suit in a fabricator).
+- Fixed hammerhead matriarchs sometimes spawning in low-difficulty levels.
+- Fixed bots equipping gene splicers when cleaning them up, causing the genetic material to get destroyed when the bot puts the splicer in a container.
+- Fixed an exploit that allowed combining genetic materials in deconstructors.
+- Fixed "fixitems" command setting genetic materials' condition to 100.
+- Fixed "reset to prefab" not resetting wall healths.
+- Fixed certain logic components not passing forwards the character who sent the signal, preventing e.g. the character who undocked a drone from being logged or the character who killed something from being determined if the signal activates a weapon.
+- Orca 2: Fixed missing power wires to a couple small pumps, neutral ballast level, gunnery marked as wet room. Added a duct block between upper and lower deck. Some minor visual fixes.
+- Fixed voronoi sites sometimes getting placed outside the level's bounds, leading to messed up level geometry.
+- Fixed turrets always starting at rotation 0 at the beginning of the round (instead of halfway between the min/max angles like in the editor).
+- Fixed incorrect talents sometimes unlocking server-side when unlocking "All-Seeing Eye". Happened because the server checked how many talents the client can unlock before applying All-Seeing Eye, which meant that the 3 extra talents would not be available, and the server would leave the last 3 talents unlocked.
+- Fixed changing a delay component's delay using the editing hud not having an effect in-game when the component is receiving a continuous signal.
+- Take structures/items with a collider into account when calculating a sub's dimensions (as opposed to just hulls). Fixes dimensions being incorrect in the submarine's info if the sub includes structures that extend far outside the hulls.
+- Fixed crashing when swimming up from hull to another in a specific kind of hull configuration (two hulls side-by-side, with a gap leading up to another one).
+- Fixed oxygen shards from old saves still being used as oxygen sources by bots.
+- Fixed changes not being applied to all selected items when multi-editing a string field in the sub editor and deselecting the items without applying the changes by pressing enter.
+- The game doesn't try to save a campaign if an exception occurs at any point during the saving process (should fix rare occurrences of campaign saves getting corrupted).
+- Don't allow signals to deactivate ItemContainers. Fixes portable pumps' "toggle" input not working-
+- Fixed "inspired to act" talent only giving a skill bonus of 9.98 instead of 10.
+- Fixed removed items staying visible on the status monitor's electrical tab.
+- Fixed plants still using the old values in old saves (i.e. dying too fast when not watered).
+- Outposts can't request the "psychosisartifact_event" item (an event-specific special artifact that looks identical to the normal ones).
+- Fixed size of a door's gap relative to the door changing when rescaling the door in the sub editor.
+- Fixed fabricator consuming all the suitable ingredients when the ingredient is configured using a tag instead of an identifier (e.g. fabricating a stun gun dart would consume all the wires in the input slots).
+- Fixed motion detector's detect offset getting mirrored when copying a mirrored detector.
+- Fixed status monitor's submarine blueprint refreshing when initiating docking with a shuttle, instead of when the docking ports lock (sometimes causing the shuttle to appear slightly off from the docking port on the monito).
+- Fixed fabricator failing to stack oxygenite tanks.
+- Fixed "atmos machine" talent not spawning the alien pistol.
+- Fixed items in the player's inventory not getting highlighted as valid ingredients when using a fabricator.
+- Fixed fabricator failing to stack oxygenite tanks.
+- Attempt to fix a rare crash caused by ScalableFont.DrawStringWithColors.
+- Fixed freezing when trying to enable GameAnalytics from the settings menu on Mac.
+- Fixed locked connection panel and non-interactable lights in R-29.
+- Fixed Delay Component failing to parse set_delay inputs on systems that use comma as the decimal separator.
+- Fixed charge rate not being displayed correctly on batteries in Chinese.
+- Fixed junction box load not being displayed on status monitors in Russian.
+- Fixed oxygen tanks being misaligned in oxygen generators.
+- Fixed motion sensor not being able to detect subs in the sub editor test mode.
+- Fixed recycled volatile fulgurium rods incorrectly using mechanical instead of electrical skill.
+- Consider the character who severed a limb as the character who inflicted the afflictions caused by severing the limb. + Consider the character who caused bleeding as the character who caused the resulting bloodloss. Fixes achievements not unlocking if you kill a target by cutting its limbs off or by making it bleed to death.
+- Fixed characters sometimes becoming momentarily unresponsive when swimming out from a hull.
+- Fixed speed penalty caused by the vegetation in caves sometimes not disappearing after passing through the vegetation.
+- Fixed links from a docking port to a linked sub not being considered valid in the sub editor (only a link from linked sub to a docking port). Now the order of the link doesn't matter.
+- Fixed repair window showing up if you use a periscope wired to a broken device.
+- Fixed sonar getting misaligned when switching to the docking mode (the amount of misalignment being relative to the distance of the docking port from the sub's center).
+- Fixed "hazardous materials" considering any reactor outside the main sub a wreck reactor.
+- Fixed light textures not rotating with the lamps in the sub editor.
+- Fixed elements in CustomInterface getting misaligned if the signal_out connections aren't used in sequential order (e.g. if you only connect a wire to outputs 2 and 3).
+- Fixed server including lines multiple times in the saved server logs (e.g. the 2nd saved log file would include some lines that were already saved to the 1st log file).
+- Fixed ranged weapons (including turrets) triggering electrochemist's stun.
+- Fixed initial husk infection message being displayed immediately after getting infected, not after the infection advances.
+- Fixed equip slots being misplaced if you open the health interface when the equip slots have been hidden.
+- Fixed wrecks sometimes not spawning in levels despite a wreck mission being selected.
+- Fixed characters moving slowly downwards when aiming underwater.
+- Fixed moloch shell shields not protecting the user from non-hitscan weapons or melee weapons.
+- Fixed messed up mining crane sprite.
+- Fixed crashing when pirates try to operate the sub using a nav terminal that doesn't control any sub (doesn't affect vanilla subs because they don't contain that kind of nav terminals).
+- Fixed fabricator showing the info of the selected item wrong when selecting the fabricator with another character (e.g. fabrication time still calculated based on the previous user's skills).
+- Fixed characters reading skillbooks upside-down.
+- Fixed personality traits changing after every round in mp campaign.
+- Fixed monsters always eating the character they're grabbing, even when the monster is configured as not being able to eat (in practice only happened when a player controlled something like a fractal guardian and grabbed another character).
+- Fixed characters sometimes using the "priorities have changed" dialogue when giving a new order.
+- Fixed pumps' auto-controlled status not being updated correctly.
+
+Modding:
+- Added "HealCostMultiplier" attribute to AfflictionPrefabs that adjusts the heal cost in medical clinic.
+- EntitySpawnerComponent treats positive y offset as up to make it more consistent with other components.
+- Added an option to define a hard limit for how many entities EntitySpawnerComponent can spawn.
+- Fixed "targetself" attack conditionals checking both the attacker and the target.
+- Added "delaybetweenspawns" property to MonsterEvents (determines the delay between spawning the individual monsters of a given monster event).
+- Don't allow setting an item's or limb's density to 0 (leads to "attempted to apply invalid force/torque" errors).
+- Fixed shields blocking projectiles from the user's weapon. Didn't affect any vanilla items, because all the shields are 2-hand items that prevent using a weapon at the same time.
+- Fixed ButtonTerminals without an ItemContainer component causing crashes.
+
+---------------------------------------------------------------------------------------------------------
 v0.15.23.0
 ---------------------------------------------------------------------------------------------------------
 

@@ -78,7 +78,7 @@ namespace Barotrauma.Networking
                     txt = orderPrefab.GetChatMessage(orderMessageInfo.TargetCharacter?.Name, targetRoom,
                         givingOrderToSelf: orderMessageInfo.TargetCharacter == senderCharacter,
                         orderOption: orderOption,
-                        priority: orderMessageInfo.Priority);
+                        isNewOrder: orderMessageInfo.IsNewOrder);
 
                     if (GameMain.Client.GameStarted && Screen.Selected == GameMain.GameScreen)
                     {

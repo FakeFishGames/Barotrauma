@@ -117,7 +117,7 @@ namespace Barotrauma
         private float AimSpeed => HumanAIController.AimSpeed;
         private float AimAccuracy => HumanAIController.AimAccuracy;
 
-        private bool EnemyIsClose() => Enemy != null && character.CurrentHull != null && character.CurrentHull == Enemy.CurrentHull || Vector2.DistanceSquared(character.Position, Enemy.Position) < 500;
+        private bool EnemyIsClose() => Enemy != null && Enemy.CurrentHull != null && HumanAIController.VisibleHulls.Contains(Enemy.CurrentHull) && Math.Abs(character.WorldPosition.X - Enemy.WorldPosition.X) < 300;
 
         public AIObjectiveCombat(Character character, Character enemy, CombatMode mode, AIObjectiveManager objectiveManager, float priorityModifier = 1, float coolDown = 10.0f) 
             : base(character, objectiveManager, priorityModifier)
@@ -366,7 +366,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                bool isAllowedToSeekWeapons = !EnemyIsClose() && character.TeamID != CharacterTeamType.FriendlyNPC && IsOffensiveOrArrest;
+                bool isAllowedToSeekWeapons = character.CurrentHull != null && !EnemyIsClose() && character.TeamID != CharacterTeamType.FriendlyNPC && IsOffensiveOrArrest;
                 if (!isAllowedToSeekWeapons)
                 {
                     if (WeaponComponent == null)
@@ -1190,19 +1190,5 @@ namespace Barotrauma
                 }
             }
         }
-
-        //private float CalculateEnemyStrength()
-        //{
-        //    float enemyStrength = 0;
-        //    AttackContext currentContext = character.GetAttackContext();
-        //    foreach (Limb limb in Enemy.AnimController.Limbs)
-        //    {
-        //        if (limb.attack == null) continue;
-        //        if (!limb.attack.IsValidContext(currentContext)) { continue; }
-        //        if (!limb.attack.IsValidTarget(AttackTarget.Character)) { continue; }
-        //        enemyStrength += limb.attack.GetTotalDamage(false);
-        //    }
-        //    return enemyStrength;
-        //}
     }
 }

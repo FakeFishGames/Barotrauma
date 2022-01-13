@@ -827,6 +827,13 @@ namespace Barotrauma
 
         protected override void Update(float deltaTime)
         {
+            foreach (GUIComponent child in Children)
+            {
+                if (child == ScrollBar || child == Content || child == ContentBackground) { continue; }
+
+                throw new InvalidOperationException($"Children were found in {nameof(GUIListBox)}, Add them to {nameof(GUIListBox)}.{nameof(Content)} instead.");
+            }
+
             if (!Visible) { return; }
 
             UpdateChildrenRect();
@@ -836,7 +843,6 @@ namespace Barotrauma
             {
                 UpdateScrollBarSize();
             }
-
 
             if (FadeElements)
             {

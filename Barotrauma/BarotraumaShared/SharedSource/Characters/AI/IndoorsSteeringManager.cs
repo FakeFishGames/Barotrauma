@@ -52,17 +52,11 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns true if the current or the next node is in ladders.
-        /// </summary>
-        public bool InLadders =>
-            currentPath != null && currentPath.CurrentNode != null &&
-            (currentPath.CurrentNode.Ladders != null && currentPath.CurrentNode.Ladders.Item.IsInteractable(character) ||
-             (currentPath.NextNode != null && currentPath.NextNode.Ladders != null && currentPath.NextNode.Ladders.Item.IsInteractable(character)));
-
-        /// <summary>
         /// Returns true if any node in the path is in stairs
         /// </summary>
         public bool InStairs => currentPath != null && currentPath.Nodes.Any(n => n.Stairs != null);
+
+        public bool IsCurrentNodeLadder => currentPath?.CurrentNode?.Ladders != null && currentPath.CurrentNode.Ladders.Item.IsInteractable(character);
 
         public bool IsNextNodeLadder => GetNextLadder() != null;
 
@@ -99,14 +93,24 @@ namespace Barotrauma
             base.Update(speed);
             float step = 1.0f / 60.0f;
             checkDoorsTimer -= step;
-            buttonPressTimer -= step;
+            if (lastDoor.door == null || !lastDoor.shouldBeOpen || lastDoor.door.IsOpen)
+            {
+                buttonPressTimer = 0;
+            }
+            else
+            {
+                buttonPressTimer -= step;
+            }
             findPathTimer -= step;
         }
 
         public void SetPath(SteeringPath path)
         {
             currentPath = path;
-            if (path.Nodes.Any()) currentTarget = path.Nodes[path.Nodes.Count - 1].SimPosition;
+            if (path.Nodes.Any())
+            {
+                currentTarget = path.Nodes[path.Nodes.Count - 1].SimPosition;
+            }
             findPathTimer = Math.Min(findPathTimer, 1.0f);
             IsPathDirty = false;
         }
@@ -124,15 +128,9 @@ namespace Barotrauma
         
         public void SteeringSeek(Vector2 target, float weight, float minGapWidth = 0, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisiblity = true)
         {
-            if (buttonPressTimer > 0 && lastDoor.door != null && lastDoor.state && !lastDoor.door.IsOpen)
-            {
-                // We have pressed the button and are waiting for the door to open -> Hold still until we can press the button again.
-                Reset();
-            }
-            else
-            {
-                steering += CalculateSteeringSeek(target, weight, minGapWidth, startNodeFilter, endNodeFilter, nodeFilter, checkVisiblity);
-            }
+            // Have to use a variable here or resetting doesn't work.
+            Vector2 addition = CalculateSteeringSeek(target, weight, minGapWidth, startNodeFilter, endNodeFilter, nodeFilter, checkVisiblity);
+            steering += addition;
         }
 
         /// <summary>
@@ -328,7 +326,13 @@ namespace Barotrauma
             {
                 CheckDoorsInPath();
                 doorsChecked = true;
-            }       
+            }
+            if (buttonPressTimer > 0 && lastDoor.door != null && lastDoor.shouldBeOpen && !lastDoor.door.IsOpen)
+            {
+                // We have pressed the button and are waiting for the door to open -> Hold still until we can press the button again.
+                Reset();
+                return Vector2.Zero;
+            }
             Vector2 pos = host.WorldPosition;
             bool isDiving = character.AnimController.InWater && character.AnimController.HeadInWater;
             // Only humanoids can climb ladders
@@ -378,7 +382,7 @@ namespace Barotrauma
                 //at the same height as the waypoint
                 if (Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y) < (collider.height / 2 + collider.radius) * 1.25f)
                 {
-                    float heightFromFloor = character.AnimController.GetColliderBottom().Y - character.AnimController.FloorY;
+                    float heightFromFloor = character.AnimController.GetHeightFromFloor();
                     if (heightFromFloor <= 0.0f)
                     {
                         diff.Y = Math.Max(diff.Y, 100);
@@ -516,7 +520,7 @@ namespace Barotrauma
             return ConvertUnits.ToDisplayUnits(Math.Max(colliderSize.X, colliderSize.Y));
         }
 
-        private (Door door, bool state) lastDoor;
+        private (Door door, bool shouldBeOpen) lastDoor;
         private float GetDoorCheckTime()
         {
             if (steering.LengthSquared() > 0)
@@ -539,7 +543,6 @@ namespace Barotrauma
                 WayPoint nextWaypoint = null;
                 Door door = null;
                 bool shouldBeOpen = false;
-
                 if (currentPath.Nodes.Count == 1)
                 {
                     door = currentPath.Nodes.First().ConnectedDoor;
@@ -645,7 +648,7 @@ namespace Barotrauma
                     });
                     if (canAccess)
                     {
-                        bool pressButton = buttonPressTimer <= 0 || lastDoor.door != door || lastDoor.state != shouldBeOpen;
+                        bool pressButton = buttonPressTimer <= 0 || lastDoor.door != door || lastDoor.shouldBeOpen != shouldBeOpen;
                         if (door.HasIntegratedButtons)
                         {
                             if (pressButton && character.CanSeeTarget(door.Item))
@@ -653,7 +656,7 @@ namespace Barotrauma
                                 if (door.Item.TryInteract(character, forceSelectKey: true))
                                 {
                                     lastDoor = (door, shouldBeOpen);
-                                    buttonPressTimer = buttonPressCooldown;
+                                    buttonPressTimer = shouldBeOpen ? buttonPressCooldown : 0;
                                 }
                                 else
                                 {
@@ -671,7 +674,7 @@ namespace Barotrauma
                                     if (closestButton.Item.TryInteract(character, forceSelectKey: true))
                                     {
                                         lastDoor = (door, shouldBeOpen);
-                                        buttonPressTimer = buttonPressCooldown;
+                                        buttonPressTimer = shouldBeOpen ? buttonPressCooldown : 0;
                                     }
                                     else
                                     {
@@ -697,7 +700,6 @@ namespace Barotrauma
                                     // The button is on the wrong side of the door or a wall
                                     currentPath.Unreachable = true;
                                 }
-                                lastDoor = (null, false);
                                 return;
                             }
                         }

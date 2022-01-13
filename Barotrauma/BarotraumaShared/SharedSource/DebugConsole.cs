@@ -984,8 +984,8 @@ namespace Barotrauma
             
             commands.Add(new Command("teleportsub", "teleportsub [start/end/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
             {
-                if (Submarine.MainSub == null || Level.Loaded == null) return;
-                if (Level.Loaded.Type == LevelData.LevelType.Outpost)
+                if (Submarine.MainSub == null) { return; }
+                if (Level.Loaded?.Type == LevelData.LevelType.Outpost && GameMain.GameSession != null)
                 {
                     NewMessage("The teleportsub command is unavailable in outpost levels!", Color.Red);
                     return;
@@ -1001,6 +1001,11 @@ namespace Barotrauma
                 }
                 else if (args[0].Equals("start", StringComparison.OrdinalIgnoreCase))
                 {
+                    if (Level.Loaded == null)
+                    {
+                        NewMessage("Can't teleport the sub to the start of the level (no level loaded).", Color.Red);
+                        return;
+                    }
                     Vector2 pos = Level.Loaded.StartPosition;
                     if (Level.Loaded.StartOutpost != null)
                     {
@@ -1010,6 +1015,11 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (Level.Loaded == null)
+                    {
+                        NewMessage("Can't teleport the sub to the end of the level (no level loaded).", Color.Red);
+                        return;
+                    }
                     Vector2 pos = Level.Loaded.EndPosition;
                     if (Level.Loaded.EndOutpost != null)
                     {
@@ -1189,6 +1199,7 @@ namespace Barotrauma
             {
                 foreach (Item it in Item.ItemList)
                 {
+                    if (it.GetComponent<GeneticMaterial>() != null) { continue; }
                     it.Condition = it.MaxCondition;
                 }
             }, null, true));

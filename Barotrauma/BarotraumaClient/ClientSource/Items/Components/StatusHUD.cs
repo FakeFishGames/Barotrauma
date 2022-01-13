@@ -301,7 +301,7 @@ namespace Barotrauma.Items.Components
                 Dictionary<AfflictionPrefab, float> combinedAfflictionStrengths = new Dictionary<AfflictionPrefab, float>();
                 foreach (Affliction affliction in allAfflictions)
                 {
-                    if (affliction.Strength < affliction.Prefab.ShowInHealthScannerThreshold || affliction.Strength <= 0.0f) continue;
+                    if (affliction.Strength < affliction.Prefab.ShowInHealthScannerThreshold || affliction.Strength <= 0.0f) { continue; }
                     if (combinedAfflictionStrengths.ContainsKey(affliction.Prefab))
                     {
                         combinedAfflictionStrengths[affliction.Prefab] += affliction.Strength;
@@ -314,7 +314,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (AfflictionPrefab affliction in combinedAfflictionStrengths.Keys)
                 {
-                    texts.Add(TextManager.AddPunctuation(':', affliction.Name, Math.Max(((int)combinedAfflictionStrengths[affliction]), 1).ToString() + " %"));
+                    texts.Add(TextManager.AddPunctuation(':', affliction.Name, Math.Max((int)combinedAfflictionStrengths[affliction], 1).ToString() + " %"));
                     textColors.Add(Color.Lerp(GUI.Style.Orange, GUI.Style.Red, combinedAfflictionStrengths[affliction] / affliction.MaxStrength));
                 }
             }

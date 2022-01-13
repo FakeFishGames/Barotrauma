@@ -247,16 +247,6 @@ namespace Barotrauma
             return msgBox;
         }
 
-        private void NotifyPrompt(string header, string body)
-        {
-            GUIMessageBox msgBox = new GUIMessageBox(header, body, new[] { TextManager.Get("Ok") }, new Vector2(0.2f, 0.175f), minSize: new Point(300, 175));
-            msgBox.Buttons[0].OnClicked = delegate
-            {
-                msgBox.Close();
-                return true;
-            };
-        }
-
         private bool SaveProjectToFile(GUIButton button, object o)
         {
             string directory = Path.GetFullPath("EventProjects");
@@ -315,7 +305,7 @@ namespace Barotrauma
                 CreateNodes(prefab.ConfigElement, ref hadNodes);
                 if (!hadNodes)
                 {
-                    NotifyPrompt(TextManager.Get("EventEditor.RandomGenerationHeader"), TextManager.Get("EventEditor.RandomGenerationBody"));
+                    GUI.NotifyPrompt(TextManager.Get("EventEditor.RandomGenerationHeader"), TextManager.Get("EventEditor.RandomGenerationBody"));
                 }
                 return true;
             });

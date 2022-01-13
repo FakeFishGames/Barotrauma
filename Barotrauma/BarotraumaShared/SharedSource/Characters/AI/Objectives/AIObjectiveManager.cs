@@ -643,7 +643,12 @@ namespace Barotrauma
 
         public bool IsOrder(AIObjective objective)
         {
-            return objective == ForcedOrder || CurrentOrders.Any(o => o.Objective == objective);
+            if (objective == ForcedOrder) { return true; }
+            foreach (var order in CurrentOrders)
+            {
+                if (order.Objective == objective) { return true; }
+            }
+            return false;
         }
 
         public bool HasOrders()
