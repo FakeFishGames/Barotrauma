@@ -236,9 +236,9 @@ namespace Barotrauma.Networking
             return radioComponent.HasRequiredContainedItems(sender, addMessage: false);
         }
 
-        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Client senderClient = null, Character senderCharacter = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None)
+        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Client senderClient = null, Character senderCharacter = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
         {
-            AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter, senderClient, changeType: changeType));
+            AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter, senderClient, changeType: changeType, textColor: textColor));
         }
 
         public virtual void AddChatMessage(ChatMessage message)
@@ -247,7 +247,7 @@ namespace Barotrauma.Networking
                         
             if (message.Sender != null && !message.Sender.IsDead)
             {
-                message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)message.Type]);
+                message.Sender.ShowSpeechBubble(2.0f, message.Color);
             }
         }
 

@@ -2251,7 +2251,35 @@ namespace Barotrauma
                     NewMessage(tag, Color.Yellow);
                 }
             }));
-            
+
+            commands.Add(new Command("sendchatmessage", "Sends a chat message with specified type and color.", (string[] args) =>
+            {
+                if (args.Length < 2)
+                    return;
+
+                ChatMessageType chatMessageType = ChatMessageType.Default;
+                Color? chatMessageColor = null;
+
+                if (args.Length >= 3 && int.TryParse(args[2], out int result))
+				{
+                    chatMessageType = (ChatMessageType)result;
+				}
+
+                if (args.Length >= 7 &&
+                    int.TryParse(args[3], out int r) &&
+                    int.TryParse(args[4], out int g) &&
+                    int.TryParse(args[5], out int b) &&
+                    int.TryParse(args[6], out int a))
+				{
+                    chatMessageColor = new Color(r, g, b, a);
+				}
+
+                foreach (var client in GameMain.Server.ConnectedClients)
+                {
+                    GameMain.Server.SendDirectChatMessage(ChatMessage.Create(args[0], args[1], chatMessageType, null, null, textColor: chatMessageColor), client);
+                }
+            }));
+
             AssignOnClientRequestExecute(
                 "setskill",
                 (senderClient, cursorWorldPos, args) =>

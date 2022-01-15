@@ -46,6 +46,11 @@ namespace Barotrauma.Networking
                     senderName = senderCharacter.Name;
                 }
             }
+
+            Color? textColor = null;
+            if (msg.ReadBoolean())
+                textColor = msg.ReadColorR8G8B8A8();
+
             msg.ReadPadBits();
 
             switch (type)
@@ -135,14 +140,18 @@ namespace Barotrauma.Networking
                         //only show the message box if the text differs from the text in the currently visible box
                         if ((GUIMessageBox.VisibleBox as GUIMessageBox)?.Text?.Text != txt)
                         {
-                            new GUIMessageBox("", txt);
+                            GUIMessageBox messageBox = new GUIMessageBox("", txt);
+                            if (textColor != null) messageBox.Text.TextColor = textColor.Value;
                         }
                         break;
                     case ChatMessageType.ServerMessageBoxInGame:
-                        new GUIMessageBox("", txt, new string[0], type: GUIMessageBox.Type.InGame, iconStyle: styleSetting);
+                        {
+                            GUIMessageBox messageBox = new GUIMessageBox("", txt, new string[0], type: GUIMessageBox.Type.InGame, iconStyle: styleSetting);
+                            if (textColor != null) messageBox.Text.TextColor = textColor.Value;
+                        }
                         break;
                     case ChatMessageType.Console:
-                        DebugConsole.NewMessage(txt, MessageColor[(int)ChatMessageType.Console]);
+                        DebugConsole.NewMessage(txt, textColor == null ? MessageColor[(int)ChatMessageType.Console] : textColor.Value);
                         break;
                     case ChatMessageType.ServerLog:
                         if (!Enum.TryParse(senderName, out ServerLog.MessageType messageType))
@@ -152,7 +161,7 @@ namespace Barotrauma.Networking
                         GameMain.Client.ServerSettings.ServerLog?.WriteLine(txt, messageType);
                         break;
                     default:
-                        GameMain.Client.AddChatMessage(txt, type, senderName, senderClient, senderCharacter, changeType);
+                        GameMain.Client.AddChatMessage(txt, type, senderName, senderClient, senderCharacter, changeType, textColor: textColor);
                         break;
                 }
                 LastID = id;

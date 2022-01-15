@@ -212,6 +212,11 @@ namespace Barotrauma.Networking
             {
                 msg.Write(Sender.ID);
             }
+            msg.Write(customTextColor != null);
+            if (customTextColor != null)
+            {
+                msg.WriteColorR8G8B8A8(customTextColor.Value);
+            }
             msg.WritePadBits();
             if (Type == ChatMessageType.ServerMessageBoxInGame)
             {
