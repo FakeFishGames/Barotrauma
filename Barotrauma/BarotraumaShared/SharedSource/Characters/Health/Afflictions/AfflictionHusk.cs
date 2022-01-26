@@ -106,7 +106,7 @@ namespace Barotrauma
             {
                 if (State != InfectionState.Active && stun)
                 {
-                    character.SetStun(Rand.Range(2, 4));
+                    character.SetStun(Rand.Range(2f, 3f));
                 }
                 State = InfectionState.Active;
                 ActivateHusk();

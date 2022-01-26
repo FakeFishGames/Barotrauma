@@ -58,7 +58,7 @@ namespace Barotrauma
             }
         }
 
-        private readonly List<RectTransform> children = new List<RectTransform>();
+        protected readonly List<RectTransform> children = new List<RectTransform>();
         public IEnumerable<RectTransform> Children => children;
 
         public int CountChildren => children.Count;

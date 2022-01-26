@@ -54,7 +54,7 @@ namespace Barotrauma
 
         private void CreateGUI()
         {
-            GuiFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.4f), GUICanvas.Instance) { MinSize = new Point(300, 400) });
+            GuiFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.4f), GUI.Canvas) { MinSize = new Point(300, 400) });
             GUILayoutGroup layoutGroup = new GUILayoutGroup(RectTransform(0.9f, 0.9f, GuiFrame, Anchor.Center)) { Stretch = true };
 
             // === BUTTONS === //

@@ -23,7 +23,6 @@ namespace Barotrauma.Items.Components
 
         public ButtonTerminal(Item item, XElement element) : base(item, element)
         {
-            IsActive = true;
             RequiredSignalCount = element.GetChildElements("TerminalButton").Count(c => c.GetAttribute("style") != null);
             if (RequiredSignalCount < 1)
             {
@@ -88,13 +87,13 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            var containers = item.GetComponents<ItemContainer>().ToList();
-            if (containers.Count != 1)
+            var containers = item.GetComponents<ItemContainer>();
+            if (containers.Count() != 1)
             {
                 DebugConsole.ThrowError($"Error in item \"{item.Name}\": the ButtonTerminal component requires exactly one ItemContainer component!");
                 return;
             }
-            Container = containers[0];
+            Container = containers.FirstOrDefault();
 
             OnItemLoadedProjSpecific();
         }

@@ -782,7 +782,7 @@ namespace Barotrauma
                     {
                         if (priceInfo.MaxAvailableAmount > priceInfo.MinAvailableAmount)
                         {
-                            quantity = Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount);
+                            quantity = Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount + 1);
                         }
                         else
                         {
@@ -1010,7 +1010,7 @@ namespace Barotrauma
 
         private void GenerateRandomPriceModifier()
         {
-            StorePriceModifier = Rand.Range(-StorePriceModifierRange, StorePriceModifierRange);
+            StorePriceModifier = Rand.Range(-StorePriceModifierRange, StorePriceModifierRange + 1);
         }
 
         private void CreateStoreSpecials()

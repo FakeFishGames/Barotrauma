@@ -223,11 +223,6 @@ namespace Barotrauma.Networking
                     AutoRestart = autoRestart;
                 }
 
-                RadiationEnabled = incMsg.ReadBoolean();
-
-                int maxMissionCount = MaxMissionCount + incMsg.ReadByte() - 1;
-                MaxMissionCount = MathHelper.Clamp(maxMissionCount, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit);
-
                 changed |= true;
                 UpdateFlag(NetFlags.Misc);
             }

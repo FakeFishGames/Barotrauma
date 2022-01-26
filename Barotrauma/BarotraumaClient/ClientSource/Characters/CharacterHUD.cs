@@ -113,7 +113,7 @@ namespace Barotrauma
 
             return 
                 character?.Inventory != null && 
-                character.AllowInput &&
+                !character.Removed && !character.IsKnockedDown &&
                 (controller?.User != character || !controller.HideHUD) &&
                 !IsCampaignInterfaceOpen &&
                 !ConversationAction.FadeScreenToBlack;

@@ -319,6 +319,19 @@ namespace Barotrauma
                 }
             }
 
+            foreach (Character character in characters)
+            {
+                if (character.Inventory == null) { continue; }
+                foreach (Item item in character.Inventory.AllItemsMod)
+                {
+                    //item didn't spawn with the characters -> drop it
+                    if (!characterItems.Any(c => c.Value.Contains(item)))
+                    {
+                        item.Drop(character);
+                    }
+                }
+            }
+
             // characters that survived will take their items with them, in case players tried to be crafty and steal them
             // this needs to run here in case players abort the mission by going back home
             // TODO: I think this might feel like a bug.

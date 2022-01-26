@@ -329,7 +329,7 @@ namespace Barotrauma
 
         private bool MatchesTagCondition(ISerializableEntity target)
         {
-            if (!(target is Item item)) { return false; }
+            if (!(target is Item item)) { return Operator == OperatorType.NotEquals; }
 
             int matches = 0;
             foreach (string tag in SplitAttributeValue)

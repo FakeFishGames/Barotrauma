@@ -261,9 +261,16 @@ namespace Barotrauma
 
         public AttackResult LastDamage;
 
+        public Dictionary<ItemPrefab, double> ItemSelectedDurations
+        {
+            get { return itemSelectedDurations; }
+        }
+        private readonly Dictionary<ItemPrefab, double> itemSelectedDurations = new Dictionary<ItemPrefab, double>();
+        private double itemSelectedTime;
+
         public float InvisibleTimer;
 
-        private CharacterPrefab prefab;
+        private readonly CharacterPrefab prefab;
 
         public readonly CharacterParams Params;
         public string SpeciesName => Params?.SpeciesName ?? "null";
@@ -700,7 +707,7 @@ namespace Barotrauma
         {
             get
             {
-                if (!CanSpeak || IsUnconscious || Stun > 0.0f || IsDead) { return 100.0f; }
+                if (!CanSpeak || IsUnconscious || IsKnockedDown) { return 100.0f; }
                 return speechImpediment;
             }
             set
@@ -737,9 +744,7 @@ namespace Barotrauma
             get => _selectedConstruction;
             set
             {
-#if CLIENT
                 var prevSelectedConstruction = _selectedConstruction;
-#endif
                 _selectedConstruction = value;
 #if CLIENT
                 HintManager.OnSetSelectedConstruction(this, prevSelectedConstruction, _selectedConstruction);
@@ -755,6 +760,19 @@ namespace Barotrauma
                     }
                 }
 #endif
+                if (prevSelectedConstruction == null && _selectedConstruction != null)
+                {
+                    itemSelectedTime = Timing.TotalTime;
+                }
+                else if (prevSelectedConstruction != null && _selectedConstruction == null && itemSelectedTime > 0)
+                {
+                    if (!itemSelectedDurations.ContainsKey(prevSelectedConstruction.Prefab))
+                    {
+                        itemSelectedDurations.Add(prevSelectedConstruction.Prefab, 0);
+                    }
+                    itemSelectedDurations[prevSelectedConstruction.Prefab] += Timing.TotalTime - itemSelectedTime;
+                    itemSelectedTime = 0;
+                }
             }
         }
 
@@ -3950,27 +3968,44 @@ namespace Barotrauma
 
             AnimController.Frozen = false;
 
-            if (GameAnalyticsManager.SendUserStatistics)
-            {
-                string characterType = "Unknown";
-
-                if (this == Controlled)
-                    characterType = "Player";
-                else if (IsRemotePlayer)
-                    characterType = "RemotePlayer";
-                else if (AIController is EnemyAIController)
-                    characterType = "Enemy";
-                else if (AIController is HumanAIController)
-                    characterType = "AICrew";
-
-                string causeOfDeathStr = causeOfDeathAffliction == null ?
-                    causeOfDeath.ToString() : causeOfDeathAffliction.Prefab.Name.Replace(" ", "");
-                GameAnalyticsManager.AddDesignEvent("Kill:" + characterType + ":" + SpeciesName + ":" + causeOfDeathStr);
-            }
-
             CauseOfDeath = new CauseOfDeath(
                 causeOfDeath, causeOfDeathAffliction?.Prefab,
-                causeOfDeathAffliction?.Source ?? LastAttacker, LastDamageSource);
+                causeOfDeathAffliction?.Source, LastDamageSource);
+
+            if (GameAnalyticsManager.SendUserStatistics)
+            {
+                string causeOfDeathStr = causeOfDeathAffliction == null ?
+                    causeOfDeath.ToString() : causeOfDeathAffliction.Prefab.Identifier.Replace(" ", "");
+
+                string characterType = GetCharacterType(this);
+                GameAnalyticsManager.AddDesignEvent("Kill:" + characterType + ":" + causeOfDeathStr);
+                if (CauseOfDeath.Killer != null)
+                {
+                    GameAnalyticsManager.AddDesignEvent("Kill:" + characterType + ":Killer:" + GetCharacterType(CauseOfDeath.Killer));
+                }
+                if (CauseOfDeath.DamageSource != null)
+                {
+                    string damageSourceStr = CauseOfDeath.DamageSource.ToString();
+                    if (CauseOfDeath.DamageSource is Item damageSourceItem) { damageSourceStr = damageSourceItem.ToString(); }
+                    GameAnalyticsManager.AddDesignEvent("Kill:" + characterType + ":DamageSource:" + damageSourceStr);
+                }
+
+                static string GetCharacterType(Character character)
+                {
+                    if (character.IsPlayer)
+                        return "Player";
+                    else if (character.AIController is EnemyAIController)
+                        return "Enemy" + character.SpeciesName;
+                    else if (character.AIController is HumanAIController && character.TeamID == CharacterTeamType.Team2)
+                        return "EnemyHuman";
+                    else if (character.Info != null && character.TeamID == CharacterTeamType.Team1)
+                        return "AICrew";
+                    else if (character.Info != null && character.TeamID == CharacterTeamType.FriendlyNPC)
+                        return "FriendlyNPC";
+                    return "Unknown";
+                }
+            }
+
             OnDeath?.Invoke(this, CauseOfDeath);
 
             var abilityCharacterKiller = new AbilityCharacterKiller(CauseOfDeath.Killer);
@@ -4097,7 +4132,7 @@ namespace Barotrauma
             info?.Remove();
 
 #if CLIENT
-            GameMain.GameSession?.CrewManager?.KillCharacter(this);
+            GameMain.GameSession?.CrewManager?.KillCharacter(this, resetCrewListIndex: false);
 #endif
 
             CharacterList.Remove(this);
@@ -4111,6 +4146,8 @@ namespace Barotrauma
                     Spawner?.AddToRemoveQueue(item);
                 }
             }
+
+            itemSelectedDurations.Clear();
 
             DisposeProjSpecific();
 

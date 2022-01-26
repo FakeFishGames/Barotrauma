@@ -115,7 +115,7 @@ namespace Barotrauma
 
         private float? maxHealth;
 
-        [Serialize(100.0f, true), Editable]
+        [Serialize(100.0f, true), Editable(MinValueFloat = 0)]
         public float MaxHealth
         {
             get => maxHealth ?? Prefab.Health;
@@ -898,8 +898,8 @@ namespace Barotrauma
                 {
                     var worldRect = section.WorldRect;
                     Vector2 particlePos = new Vector2(
-                        Rand.Range(worldRect.X, worldRect.Right),
-                        Rand.Range(worldRect.Y - worldRect.Height, worldRect.Y));
+                        Rand.Range(worldRect.X, worldRect.Right + 1),
+                        Rand.Range(worldRect.Y - worldRect.Height, worldRect.Y + 1));
 
                     var particle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, Rand.Vector(Rand.Range(1.0f, 50.0f)), collisionIgnoreTimer: 1f);
                     if (particle == null) break;

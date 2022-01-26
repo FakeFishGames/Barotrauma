@@ -764,6 +764,7 @@ namespace Barotrauma
                 if (applyAffliction)
                 {
                     afflictionsCopy.Add(newAffliction);
+                    newAffliction.Source ??= attacker;
                 }
                 appliedDamageModifiers.AddRange(tempModifiers);
             }

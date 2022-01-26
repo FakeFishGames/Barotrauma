@@ -420,7 +420,7 @@ namespace Barotrauma
 
                             if (Character.AIController is EnemyAIController enemyAi)
                             {
-                                enemyAi.PetBehavior?.OnEat("dead", 1.0f);
+                                enemyAi.PetBehavior?.OnEat(target);
                             }
 
                             character.SelectedCharacter = null;

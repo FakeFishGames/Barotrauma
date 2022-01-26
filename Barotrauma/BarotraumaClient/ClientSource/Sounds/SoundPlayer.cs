@@ -1157,7 +1157,7 @@ namespace Barotrauma
         public static void PlaySplashSound(Vector2 worldPosition, float strength)
         {
             if (SplashSounds.Count == 0) { return; }
-            int splashIndex = MathHelper.Clamp((int)(strength + Rand.Range(-2, 2)), 0, SplashSounds.Count - 1);
+            int splashIndex = MathHelper.Clamp((int)(strength + Rand.Range(-2.0f, 2.0f)), 0, SplashSounds.Count - 1);
             float range = 800.0f;
             var channel = SplashSounds[splashIndex].Play(1.0f, range, worldPosition, muffle: ShouldMuffleSound(Character.Controlled, worldPosition, range, null));
         }

@@ -397,6 +397,7 @@ namespace Barotrauma.Items.Components
                 for (int i = 0; i < (int)fabricationitemAmount.Value; i++)
                 {
                     float outCondition = fabricatedItem.OutCondition;
+                    GameAnalyticsManager.AddDesignEvent("ItemFabricated:" + (GameMain.GameSession?.GameMode?.Name ?? "none") + ":" + fabricatedItem.TargetItem.Identifier);
                     if (i < amountFittingContainer)
                     {
                         Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * outCondition, quality,

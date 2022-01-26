@@ -726,7 +726,15 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case ClientPacketHeader.REQUEST_STARTGAMEFINALIZE:
-                    if (gameStarted && connectedClient != null)
+                    if (connectedClient == null)
+                    {
+                        DebugConsole.AddWarning("Received a REQUEST_STARTGAMEFINALIZE message. Client not connected, ignoring the message.");
+                    }
+                    else if (!gameStarted)
+                    {
+                        DebugConsole.AddWarning("Received a REQUEST_STARTGAMEFINALIZE message. Game not started, ignoring the message.");
+                    }
+                    else
                     {
                         SendRoundStartFinalize(connectedClient);
                     }
@@ -746,7 +754,7 @@ namespace Barotrauma.Networking
                         string seed = inc.ReadString();
                         string subName = inc.ReadString();
                         string subHash = inc.ReadString();
-                        CampaignSettings settings = new CampaignSettings(inc);
+                        CampaignSettings settings = new CampaignSettings(inc);    
 
                         var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash);
 
@@ -769,6 +777,7 @@ namespace Barotrauma.Networking
                             {
                                 ServerSettings.RadiationEnabled = settings.RadiationEnabled;
                                 ServerSettings.MaxMissionCount = settings.MaxMissionCount;
+                                ServerSettings.SaveSettings();
                                 MultiPlayerCampaign.StartNewCampaign(localSavePath, matchingSub.FilePath, seed, settings);
                             }
                         }
@@ -1904,7 +1913,7 @@ namespace Barotrauma.Networking
 
             int chatMessageBytes = outmsg.LengthBytes;
             WriteChatMessages(outmsg, c);
-            chatMessageBytes = outmsg.LengthBytes - outmsg.LengthBytes;
+            chatMessageBytes = outmsg.LengthBytes - chatMessageBytes;
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
             
@@ -1927,7 +1936,11 @@ namespace Barotrauma.Networking
                     warningMsg +=
                         "    Settings buffer size: " + settingsBuf.LengthBytes + " bytes\n";
                 }
-                if (GameSettings.VerboseLogging) { DebugConsole.AddWarning(warningMsg); }
+#if DEBUG || UNSTABLE
+                DebugConsole.ThrowError(warningMsg);
+#else
+                if (GameSettings.VerboseLogging) { DebugConsole.AddWarning(warningMsg); }                
+#endif
                 GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:ClientWriteLobby" + outmsg.LengthBytes, GameAnalyticsManager.ErrorSeverity.Warning, warningMsg);
             }
             
@@ -1943,11 +1956,15 @@ namespace Barotrauma.Networking
                 //these large initial messages until the client acknowledges receiving them
                 c.LastRecvLobbyUpdate++;
 
-                SendVoteStatus(new List<Client>() { c });
             }
             else
             {
                 serverPeer.Send(outmsg, c.Connection, DeliveryMethod.Unreliable);
+            }
+
+            if (isInitialUpdate)
+            {
+                SendVoteStatus(new List<Client>() { c });
             }
         }
 
@@ -2893,9 +2910,9 @@ namespace Barotrauma.Networking
             SendDirectChatMessage(msg, recipient);
         }
 
-        public void SendConsoleMessage(string txt, Client recipient)
+        public void SendConsoleMessage(string txt, Client recipient, Color? color = null)
         {
-            ChatMessage msg = ChatMessage.Create("", txt, ChatMessageType.Console, null);
+            ChatMessage msg = ChatMessage.Create("", txt, ChatMessageType.Console, sender: null, textColor: color);
             SendDirectChatMessage(msg, recipient);
         }
 

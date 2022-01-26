@@ -66,11 +66,16 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (signalQueue.Count == 0)
+            {
+                IsActive = false;
+                return;
+            }
+
             foreach (var val in signalQueue)
             {
                 val.SendTimer -= 1;
             }
-
             while (signalQueue.Count > 0 && signalQueue.Peek().SendTimer <= 0)
             {
                 var signalOut = signalQueue.Peek();
@@ -114,6 +119,7 @@ namespace Barotrauma.Items.Components
                         SendDuration = 1
                     };
                     signalQueue.Enqueue(prevQueuedSignal);
+                    IsActive = true;
                     break;
                 case "set_delay":
                     if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float newDelay))

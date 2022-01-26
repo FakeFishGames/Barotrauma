@@ -51,7 +51,7 @@ namespace Barotrauma
         private const float RamTimerMax = 17.5f;
 
         public readonly List<ShipIssueWorker> ShipIssueWorkers = new List<ShipIssueWorker>();
-        private const float MinimumIssueThreshold = 10f;
+        public const float MinimumIssueThreshold = 10f;
         private const float IssueDevotionBuffer = 5f;
 
         private float decisionTimer = 6f;

@@ -1,11 +1,79 @@
 ---------------------------------------------------------------------------------------------------------
+v0.16.1.0
+---------------------------------------------------------------------------------------------------------
+
+Changes and additions:
+- Added 2 new subs: Herja and Winterhalter.
+- Improvements and fixes to Barsuk or Orca 2.
+- Improvements to clothing and headgear sprites.
+- Improvements to the human sprites.
+- Item update optimizations.
+- The order of the crew list is saved between rounds in single player.
+- Pulse laser ammo can be bought from outposts and cities.
+- Indicate when a bot is following someone else than you on the crew list's order icons.
+- Bots that follow a character who's going inside/outside stick closer to the character they're following. Helps the bots to get back inside Barsuk with you.
+- Wired Herja and Barsuk diving suit lockers (unstable only).
+- Chaingun tweaks: doubled turning speed when firing, reduced charging up time, reduced ammo consumption and made the ammo boxes more expensive.
+- Simplified Remora drone docking system.
+- Show notifications about reputation changes mid-round.
+- Escorted NPCs drop the items they took from the sub (like suits) at the end of the round.
+- Added some extra logging to diagnose the "did not receive STARTGAMEFINALIZE message from the server" errors.
+- Added warnings when the game fails to run the physics at the desired 60 updates per second (which would cause rubberbanding in multiplayer). The warnings are shown below the FPS when the client is running slowly, and in the debug console of the host/moderators/admins when the server is.
+- Additions to supercapacitors to make the new high recharge speed work better: warning indicators on the capacitor UI, high recharge speed makes the capacitors emit a red glow and smoke, show the current recharge speed (in kW, not just percentage) in the UI, made the recharge speed adjust more slowly (to make it less easy to wreck the electrical grid with rapid capacitor adjustments).
+- Adjusted supercapacitors: reduced the max power consumption, increased efficiency (less load, the time it takes to recharge is still the same). Unstable only.
+- Made turret icons on the minimap gray instead of red when not manned (easy to think there's something wrong with the turret when it's red).
+- Abandoned outpost's oxygen generators now consume power.
+- Adjusted affliction heal costs in the medical clinic (unstable only).
+- Made characters crouch a little lower (enough to make it possible to shoot while standing behind a crouching character).
+- Added a "sendchatmessage" console command with an option to configure the color of the message.
+- Added button to align selected items and wire nodes to grid to the sub editor.
+
+Fixes:
+- Misc localization fixes and improvements.
+- Fixed tab menu's character tab not refreshing when switching to another character.
+- Fixed ballast flora still being present when you replace an infested lost shuttle in an outpost.
+- Fixed occasional crashes and entity ID errors when entering a new level with a ballast flora infested sub.
+- Fixed inability to swap SMG magazines (or other items that go inside the held item) by double-clicking.
+- Fixed "atmos machine" not spawning psychosis artifacts.
+- Removed "periscopes determine which turret to focus on using the trigger_out connection instead of position_out" from the changelog (decided not to change this after all, because it causes problems and the position_out behavior can be worked around using relays). (unstable only)
+- Fixed "center on sonar transducer" setting working backwards (unstable only).
+- Fixed ability to remove tainted genetic materials' negative effects in the clinic (unstable only).
+- Fixed genetic materials being tainted by default (unstable only).
+- Fixed pets becoming hostile towards the crew and other pets if a human attacks the character they're protecting.
+- Fixed bots reacting (fleeing/attacking) to any amount of damage their crewmates do to them in multiplayer (unstable only).
+- Fixed security bots pointing their guns at you indefinitely when you inflict a small amount of damage on them (unstable only).
+- Fixed "failed to parse the string to Vector2" when loading bot orders that have been saved on a system that uses comma as a decimal separator.
+- Fixed sub editor's group list being empty when re-entering the editor.
+- Fixed rounding error in RespawnManager that caused it to require 1 extra dead player to trigger a respawn (e.g. 9 players and a minimum of 30% players to respawn required 3 players, but the client-side texts showed 2).
+- Fixed crashing when opening the head dropdown lists in the single player campaign's character customization menu (unstable only).
+- Fixed wikiimage_sub outputting an empty image (unstable only).
+- Fixed "stairs left" appearing mirrored in the status monitor's sub blueprint and in the sub editor's entity selection menu.
+- Fixed pirates not operating turrets when they have no power. 
+- Fixed Wifi Component's "set_channel" input not working when sending signals to it via chat in multiplayer.
+- Fixed autoshotgun not taking stacks into account in the ammo indicator below the inventory slot (= displaying it as being full when there's one shell in each slot, even though more could be stacked on the slots).
+- Fixed hitscan turrets sometimes hitting targets inside your own sub when there's linked subs present.
+- Fixed bots not unequipping diving suits when they have an order but not actively following it (i.e. they are on idle).
+- Fixed broken Outpost Wall 3 sprite (unstable only).
+- Fixed junction boxes' signal components not working (unstable only).
+- Fixed artifact's effects not working when the artifact is held by a character (unstable only).
+- Fixed faraday and nasonov artifacts' periodic explosions stopping if the round is ended during their 0.5s "reset" period.
+- Fixed oxygenite shards not exploding in depth charge shells.
+- Fixed endworm not having a burn damage modifier in the right tooth.
+- Fixed killer sometimes being determined incorrectly when a character gets killed by something else than another character: e.g. if a character got crushed by pressure, the character who last did damage to them was considered to be the killer, which could for example lead to achievements being unlocked in inappropriate situations.
+
+Modding:
+- If a mod makes a vanilla item movable/detachable and sets it as being attached by default, attach it to a wall when loading a sub that already had those items placed. I.e. making static devices movable doesn't cause them to deattach in existing subs.
+- Fixed monster AI's targeting priorities doing nothing if the threshold is 0 and the target hasn't done any damage.
+- Fixed custom ID card tags not working in wrecks.
+
+---------------------------------------------------------------------------------------------------------
 v0.16.0.0
 ---------------------------------------------------------------------------------------------------------
 
 Changes and additions:
 - Added a medical clinic to outposts that allows you to heal your crew for a price.
 - Added Barsuk, a small beginner-level sub.
-- Added photoshop-like layers to submarine editor.
+- Entities can be grouped together and the groups selectively hidden in the submarine editor.
 - Added some new decorative items and structures.
 - Adjusted medical items' effects on bleeding and burns. Bandages, plastiseal and antibiotic glue are now much more effective at treating them, and morphine & fentanyl only heal them by a negligible amount.
 - Heavily increased supercapacitor's power consumption and made the recharge speed increase exponentially when the recharge rate is increased.
@@ -19,7 +87,6 @@ Changes and additions:
 - Made ballast flora toxins more visible and made them emit a sound.
 - Health scanner doesn't show buffs from talents.
 - Made impacts toss items around less effectively, especially when the item is heavy.
-- Periscopes determine which turret to focus on using the trigger_out connection instead of position_out (making it easier to build circuits that switch which turret a periscope controls).
 - Gave spinelings and threshers inventories (+ added alien blood as loot) to make it possible for "gene harvester" and "deep sea slayer" to spawn loot.
 - Monsters' burns don't heal by themselves.
 - "Allow rewiring" server setting doesn't affect wrecks, pirate subs or ruins.

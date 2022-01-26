@@ -600,6 +600,10 @@ namespace Barotrauma
                     OnClicked = (bt, userdata) => { SelectTab((Tab)userdata); return true; }
                 };
                 tabButtons[(int)tab].Text = ToolBox.LimitString(buttonText, tabButtons[(int)tab].Font, (int)(0.75f * tabWidth * tabButtonHolder.Rect.Width));
+                if (tabButtons[(int)tab].Text != buttonText)
+                {
+                    tabButtons[(int)tab].ToolTip = buttonText;
+                }
             }
 
             /// Graphics tab --------------------------------------------------------------

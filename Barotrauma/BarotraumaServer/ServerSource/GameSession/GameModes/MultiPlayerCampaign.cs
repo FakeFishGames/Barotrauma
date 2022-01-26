@@ -285,10 +285,14 @@ namespace Barotrauma
                     break;
                 case TransitionType.ProgressToNextLocation:
                     Map.MoveToNextLocation();
+                    TotalPassedLevels++;
                     break;
                 case TransitionType.End:
                     EndCampaign();
                     IsFirstRound = true;
+                    break;
+                case TransitionType.ProgressToNextEmptyLocation:
+                    TotalPassedLevels++;
                     break;
             }
 
@@ -697,6 +701,7 @@ namespace Barotrauma
                 {
                     this.PurchasedHullRepairs = true;
                     Money -= hullRepairCost;
+                    GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
                 }
                 else if (!purchasedHullRepairs)
                 {
@@ -710,6 +715,7 @@ namespace Barotrauma
                 {
                     this.PurchasedItemRepairs = true;
                     Money -= itemRepairCost;
+                    GameAnalyticsManager.AddMoneySpentEvent(itemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
                 }
                 else if (!purchasedItemRepairs)
                 {
@@ -728,6 +734,7 @@ namespace Barotrauma
                 {
                     this.PurchasedLostShuttles = true;
                     Money -= shuttleRetrieveCost;
+                    GameAnalyticsManager.AddMoneySpentEvent(shuttleRetrieveCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
                 }
                 else if (!purchasedItemRepairs)
                 {
@@ -998,7 +1005,9 @@ namespace Barotrauma
                 new XAttribute("purchasedhullrepairs", PurchasedHullRepairs),
                 new XAttribute("purchaseditemrepairs", PurchasedItemRepairs),
                 new XAttribute("cheatsenabled", CheatsEnabled));
+
             modeElement.Add(Settings.Save());
+            modeElement.Add(SaveStats());
             CampaignMetadata?.Save(modeElement);
             Map.Save(modeElement);
             CargoManager?.SavePurchasedItems(modeElement);

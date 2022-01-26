@@ -651,7 +651,11 @@ namespace Barotrauma
 
         public void Dispose()
         {
-            previewFrame = null;
+            if (previewFrame != null)
+            {
+                previewFrame.RectTransform.Parent = null;
+                previewFrame = null;
+            }
             spriteRecorder?.Dispose();
             isDisposed = true;
         }

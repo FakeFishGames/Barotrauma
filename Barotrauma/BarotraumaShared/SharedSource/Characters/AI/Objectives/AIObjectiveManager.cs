@@ -408,7 +408,7 @@ namespace Barotrauma
                     if (orderGiver == null) { return null; }
                     newObjective = new AIObjectiveGoTo(orderGiver, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        CloseEnough = Rand.Range(80, 100),
+                        CloseEnough = Rand.Range(80f, 100f),
                         CloseEnoughMultiplier = Math.Min(1 + HumanAIController.CountCrew(c => c.ObjectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Target == orderGiver), onlyBots: true) * Rand.Range(0.8f, 1f), 4),
                         ExtraDistanceOutsideSub = 100,
                         ExtraDistanceWhileSwimming = 100,

@@ -43,7 +43,6 @@ namespace Barotrauma
         private readonly float minDistance = 50;
         private readonly float seekGapsInterval = 1;
         private float seekGapsTimer;
-        private bool cannotFollow;
 
         /// <summary>
         /// Display units
@@ -52,6 +51,11 @@ namespace Barotrauma
         {
             get
             {
+                if (IsFollowOrderObjective && Target is Character targetCharacter && (targetCharacter.CurrentHull == null) != (character.CurrentHull == null))
+                {
+                    // Keep close when the target is going inside/outside
+                    return minDistance;
+                }
                 float dist = _closeEnough * CloseEnoughMultiplier;
                 float extraMultiplier = Math.Clamp(CloseEnoughMultiplier * 0.6f, 1, 3);
                 if (character.AnimController.InWater)
@@ -288,27 +292,15 @@ namespace Barotrauma
                         {
                             TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: false, objectiveManager),
                                 onAbandon: () => Abandon = true,
-                                onCompleted: () =>
-                                {
-                                    cannotFollow = false;
-                                    RemoveSubObjective(ref findDivingGear);
-                                });
+                                onCompleted: () => RemoveSubObjective(ref findDivingGear));
                         }
                         else
                         {
                             TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
                                 onAbandon: () => Abandon = true,
-                                onCompleted: () =>
-                                {
-                                    cannotFollow = false;
-                                    RemoveSubObjective(ref findDivingGear);
-                                });
+                                onCompleted: () => RemoveSubObjective(ref findDivingGear));
                         }
                         return;
-                    }
-                    else
-                    {
-                        cannotFollow = false;
                     }
                 }
                 if (repeat)
@@ -735,7 +727,6 @@ namespace Barotrauma
             findDivingGear = null;
             seekGapsTimer = 0;
             TargetGap = null;
-            cannotFollow = false;
         }
     }
 }

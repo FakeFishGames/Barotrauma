@@ -1540,7 +1540,7 @@ namespace Barotrauma
                         if (prefab != null)
                         {
                             hull.BallastFlora = new BallastFloraBehavior(hull, prefab, Vector2.Zero);
-                            hull.BallastFlora.LoadSave(subElement);
+                            hull.BallastFlora.LoadSave(subElement, idRemap);
                         }
                         break;
                 }

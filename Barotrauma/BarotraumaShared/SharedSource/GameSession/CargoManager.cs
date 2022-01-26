@@ -132,6 +132,7 @@ namespace Barotrauma
                 // Exchange money
                 var itemValue = item.Quantity * buyValues[item.ItemPrefab];
                 campaign.Money -= itemValue;
+                GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier);
                 Location.StoreCurrentBalance += itemValue;
 
                 if (removeFromCrate)
@@ -291,7 +292,7 @@ namespace Barotrauma
             float floorPos = hull.Rect.Y - hull.Rect.Height;
 
             Vector2 position = new Vector2(
-                hull.Rect.Width > 40 ? Rand.Range(hull.Rect.X + 20, hull.Rect.Right - 20) : hull.Rect.Center.X,
+                hull.Rect.Width > 40 ? Rand.Range(hull.Rect.X + 20f, hull.Rect.Right - 20f) : hull.Rect.Center.X,
                 floorPos);
 
             //check where the actual floor structure is in case the bottom of the hull extends below it

@@ -1442,6 +1442,11 @@ namespace Barotrauma.Items.Components
             crosshairPointerSprite?.Remove(); crosshairPointerSprite = null;
             moveSoundChannel?.Dispose(); moveSoundChannel = null;
             WeaponIndicatorSprite?.Remove(); WeaponIndicatorSprite = null;
+            if (powerIndicator != null)
+            {
+                powerIndicator.RectTransform.Parent = null;
+                powerIndicator = null;
+            }
 #endif
         }
 

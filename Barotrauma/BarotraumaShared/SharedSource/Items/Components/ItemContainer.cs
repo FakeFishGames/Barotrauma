@@ -304,7 +304,12 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-            }            
+            }
+
+            if (item.GetComponent<Planter>() != null)
+            {
+                GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "null") + ":GardeningPlanted:" + containedItem.prefab.Identifier);
+            }
 
             //no need to Update() if this item has no statuseffects and no physics body
             IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);

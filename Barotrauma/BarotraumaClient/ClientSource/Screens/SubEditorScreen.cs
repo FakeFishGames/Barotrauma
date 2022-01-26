@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Xml.Linq;
@@ -21,6 +22,38 @@ namespace Barotrauma
 {
     class SubEditorScreen : EditorScreen
     {
+        private enum LayerVisibility
+        {
+            Visible,
+            Invisible
+        }
+
+        private enum LayerLinkage
+        {
+            Unlinked,
+            Linked
+        }
+
+        private readonly struct LayerData
+        {
+            public readonly LayerVisibility Visible;
+            public readonly LayerLinkage Linkage;
+
+            public static readonly LayerData Default = new LayerData(LayerVisibility.Visible, LayerLinkage.Unlinked);
+
+            public LayerData(LayerVisibility visible, LayerLinkage linkage)
+            {
+                Visible = visible;
+                Linkage = linkage;
+            }
+
+            public void Deconstruct(out LayerVisibility isvisible, out LayerLinkage islinked)
+            {
+                isvisible = Visible;
+                islinked = Linkage;
+            }
+        }
+
         private static readonly string[] crewExperienceLevels =
         {
             "CrewExperienceLow",
@@ -94,6 +127,7 @@ namespace Barotrauma
         private GUIFrame hullVolumeFrame;
 
         private GUIFrame saveAssemblyFrame;
+        private GUIFrame snapToGridFrame;
 
         const int PreviouslyUsedCount = 10;
         private GUIFrame previouslyUsedPanel;
@@ -238,7 +272,7 @@ namespace Barotrauma
 
         public bool WiringMode => mode == Mode.Wiring;
 
-        public static readonly Dictionary<string, bool> Layers = new Dictionary<string, bool>();
+        private static readonly Dictionary<string, LayerData> Layers = new Dictionary<string, LayerData>();
 
         public SubEditorScreen()
         {
@@ -507,7 +541,7 @@ namespace Barotrauma
 
             //-----------------------------------------------
 
-            layerPanel = new GUIFrame(new RectTransform(new Vector2(0.175f, 0.4f), GUI.Canvas))
+            layerPanel = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.4f), GUI.Canvas))
             {
                 Visible = false
             };
@@ -520,6 +554,7 @@ namespace Barotrauma
                 AutoHideScrollBar = false,
                 OnSelected = (component, o) =>
                 {
+                    if (GUI.MouseOn is GUITickBox) { return false; } // lol
                     if (!(o is string layer)) { return false; }
 
                     MapEntity.SelectedList.Clear();
@@ -847,6 +882,19 @@ namespace Barotrauma
             };
             saveAssemblyFrame.RectTransform.MinSize = new Point(saveAssemblyFrame.Rect.Width, (int)(saveAssemblyButton.Rect.Height / saveAssemblyButton.RectTransform.RelativeSize.Y));
 
+            snapToGridFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), TopPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft)
+            { MinSize = new Point((int)(250 * GUI.Scale), (int)(80 * GUI.Scale)), AbsoluteOffset = new Point((int)(10 * GUI.Scale), -saveAssemblyFrame.Rect.Height - entityCountPanel.Rect.Height - (int)(10 * GUI.Scale)) }, "InnerFrame")
+            {
+                Visible = false
+            };
+            var saveStampButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.8f), snapToGridFrame.RectTransform, Anchor.Center), TextManager.Get("subeditor.snaptogrid", fallBackTag: "spriteeditor.snaptogrid"));
+            saveStampButton.TextBlock.AutoScaleHorizontal = true;
+            saveStampButton.OnClicked += (btn, userdata) =>
+            {
+                SnapToGrid();
+                return true;
+            };
+            snapToGridFrame.RectTransform.MinSize = new Point(snapToGridFrame.Rect.Width, (int)(saveStampButton.Rect.Height / saveStampButton.RectTransform.RelativeSize.Y));
 
             //Entity menu
             //------------------------------------------------
@@ -941,7 +989,7 @@ namespace Barotrauma
             };
 
             paddedTab.Recalculate();
-
+            UpdateLayerPanel();
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
@@ -1161,6 +1209,7 @@ namespace Barotrauma
                 {
                     CanBeFocused = false,
                     LoadAsynchronously = true,
+                    SpriteEffects = icon.effects,
                     Color = legacy ? iconColor * 0.6f : iconColor
                 };
             }
@@ -1344,8 +1393,8 @@ namespace Barotrauma
             }
 
             ImageManager.OnEditorSelected();
+            ReconstructLayers();
 
-            GameAnalyticsManager.SetCustomDimension01("editor");
             if (!GameMain.Config.EditorDisclaimerShown)
             {
                 GameMain.Instance.ShowEditorDisclaimer();
@@ -1455,7 +1504,6 @@ namespace Barotrauma
             loadFrame = null;
 
             MapEntity.DeselectAll();
-            MapEntity.SelectionGroups.Clear();
             ClearUndoBuffer();
 
             SetMode(Mode.Default);
@@ -2205,7 +2253,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), priceGroup.RectTransform),
                 TextManager.Get("subeditor.price"), textAlignment: Alignment.CenterLeft, wrap: true);
 
-            int basePrice = GameMain.DebugDraw ? 0 : Submarine.MainSub?.CalculateBasePrice() ?? 1000;
+            int basePrice = (GameMain.DebugDraw ? 0 : Submarine.MainSub?.CalculateBasePrice()) ?? 1000;
             new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), priceGroup.RectTransform), GUINumberInput.NumberType.Int, hidePlusMinusButtons: true)
             {
                 IntValue = Math.Max(Submarine.MainSub?.Info?.Price ?? basePrice, basePrice),
@@ -2680,6 +2728,38 @@ namespace Barotrauma
 
             saveFrame = null;
             return false;
+        }
+
+        private void SnapToGrid()
+        {
+            // First move components
+            foreach (Item item in MapEntity.SelectedList.Where(entity => entity is Item).Cast<Item>())
+            {
+                var wire = item.GetComponent<Wire>();
+                if (wire == null)
+                {
+                    // Items snap to centre of nearest grid square
+                    Vector2 offset = item.Position;
+                    offset = new Vector2((MathF.Floor(offset.X / Submarine.GridSize.X) + .5f) * Submarine.GridSize.X - offset.X, (MathF.Floor(offset.Y / Submarine.GridSize.Y) + .5f) * Submarine.GridSize.Y - offset.Y);
+                    item.Move(offset);
+                }
+            }
+
+            // Then move wires, separated as moving components also moves the start and end node of wires
+            foreach (Item item in MapEntity.SelectedList.Where(entity => entity is Item).Cast<Item>())
+            {
+                var wire = item.GetComponent<Wire>();
+                if (wire != null)
+                {
+                    for (int i = 0; i < wire.GetNodes().Count; i++)
+                    {
+                        // Items wire nodes to centre of nearest grid square
+                        Vector2 offset = wire.GetNodes()[i] + Submarine.MainSub.HiddenSubPosition;
+                        offset = new Vector2((MathF.Floor(offset.X / Submarine.GridSize.X) + .5f) * Submarine.GridSize.X - offset.X, (MathF.Floor(offset.Y / Submarine.GridSize.Y) + .5f) * Submarine.GridSize.Y - offset.Y);
+                        wire.MoveNode(i, offset);
+                    }
+                }
+            }
         }
 
         private void CreateLoadScreen()
@@ -3232,7 +3312,6 @@ namespace Barotrauma
                     }),
                     new ContextMenuOption("editor.layer.openlayermenu", isEnabled: true, onSelected: () =>
                     {
-                        if (visibilityButton is null) { return; }
                         previouslyUsedPanel.Visible = false;
                         undoBufferPanel.Visible = false;
                         showEntitiesPanel.Visible = false;
@@ -3289,7 +3368,7 @@ namespace Barotrauma
                 MoveToLayer(name, content);
             }
 
-            Layers.Add(name, true);
+            Layers.Add(name, LayerData.Default);
             UpdateLayerPanel();
         }
 
@@ -3304,7 +3383,7 @@ namespace Barotrauma
 
             if (!string.IsNullOrWhiteSpace(newName))
             {
-                Layers.TryAdd(newName, true);
+                Layers.TryAdd(newName, LayerData.Default);
             }
             UpdateLayerPanel();
         }
@@ -3316,7 +3395,7 @@ namespace Barotrauma
             {
                 if (!string.IsNullOrWhiteSpace(entity.Layer))
                 {
-                    Layers.TryAdd(entity.Layer, true);
+                    Layers.TryAdd(entity.Layer, LayerData.Default);
                 }
             }
             UpdateLayerPanel();
@@ -4352,8 +4431,13 @@ namespace Barotrauma
             layerList.Content.ClearChildren();
 
             layerList.Deselect();
+            GUILayoutGroup buttonHeaders = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.075f), layerList.Content.RectTransform), isHorizontal: true, childAnchor: Anchor.BottomLeft);
 
-            foreach (var (layer, isVisible) in Layers)
+            new GUIButton(new RectTransform(new Vector2(0.25f, 1f), buttonHeaders.RectTransform), TextManager.Get("editor.layer.headervisible"), style: "GUIButtonSmallFreeScale") { CanBeFocused = false, ForceUpperCase = true  };
+            new GUIButton(new RectTransform(new Vector2(0.15f, 1f), buttonHeaders.RectTransform), TextManager.Get("editor.layer.headerlink"), style: "GUIButtonSmallFreeScale") { CanBeFocused = false, ForceUpperCase = true  };
+            new GUIButton(new RectTransform(new Vector2(0.65f, 1f), buttonHeaders.RectTransform), TextManager.Get("name"), style: "GUIButtonSmallFreeScale") { CanBeFocused = false, ForceUpperCase = true };
+
+            foreach (var (layer, (visibility, linkage)) in Layers)
             {
                 GUIFrame parent = new GUIFrame(new RectTransform(new Vector2(1f, 0.1f), layerList.Content.RectTransform), style: "ListBoxElement")
                 {
@@ -4362,33 +4446,54 @@ namespace Barotrauma
 
                 GUILayoutGroup layerGroup = new GUILayoutGroup(new RectTransform(Vector2.One, parent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
-                GUITickBox layerVisibleButton = new GUITickBox(new RectTransform(Vector2.One, layerGroup.RectTransform, scaleBasis: ScaleBasis.BothHeight), string.Empty)
+                GUILayoutGroup layerVisibilityLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1f), layerGroup.RectTransform), childAnchor: Anchor.Center);
+                GUITickBox layerVisibleButton = new GUITickBox(new RectTransform(Vector2.One, layerVisibilityLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), string.Empty)
                 {
-                    Selected = isVisible,
+                    Selected = visibility == LayerVisibility.Visible,
                     OnSelected = box =>
                     {
-                        if (!Layers.TryGetValue(layer, out bool _))
+                        if (!Layers.TryGetValue(layer, out LayerData data))
                         {
                             UpdateLayerPanel();
                             return false;
                         }
 
-                        Layers[layer] = box.Selected;
+                        Layers[layer] = new LayerData(box.Selected ? LayerVisibility.Visible : LayerVisibility.Invisible, data.Linkage);
+                        return true;
+                    }
+                };
+
+                GUILayoutGroup layerChainLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 1f), layerGroup.RectTransform), childAnchor: Anchor.Center);
+                GUITickBox layerChainButton = new GUITickBox(new RectTransform(Vector2.One, layerChainLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), string.Empty)
+                {
+                    Selected = linkage == LayerLinkage.Linked,
+                    OnSelected = box =>
+                    {
+                        if (!Layers.TryGetValue(layer, out LayerData data))
+                        {
+                            UpdateLayerPanel();
+                            return false;
+                        }
+
+                        Layers[layer] = new LayerData(data.Visible, box.Selected ? LayerLinkage.Linked : LayerLinkage.Unlinked);
                         return true;
                     }
                 };
 
                 layerGroup.Recalculate();
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f - layerVisibleButton.RectTransform.RelativeSize.X, 1f), layerGroup.RectTransform), layer, textAlignment: Alignment.CenterLeft)
+                new GUITextBlock(new RectTransform(new Vector2(0.6f, 1f), layerGroup.RectTransform), layer, textAlignment: Alignment.CenterLeft)
                 {
                     CanBeFocused = false
                 };
 
                 layerGroup.Recalculate();
+                layerChainLayout.Recalculate();
+                layerVisibilityLayout.Recalculate();
             }
 
             layerList.RecalculateChildren();
+            buttonHeaders.Recalculate();
         }
 
         public void UpdateUndoHistoryPanel()
@@ -4454,6 +4559,7 @@ namespace Barotrauma
                 saveFrame = null;
                 loadFrame = null;
                 saveAssemblyFrame = null;
+                snapToGridFrame = null;
                 CreateUI();
                 UpdateEntityList();
             }
@@ -4501,6 +4607,7 @@ namespace Barotrauma
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
             hullVolumeFrame.RectTransform.AbsoluteOffset = new Point(Math.Max(showEntitiesPanel.Rect.Right, previouslyUsedPanel.Rect.Right), 0);
             saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
+            snapToGridFrame.Visible = MapEntity.SelectedList.Count > 0;
 
             var offset = cam.WorldView.Top - cam.ScreenToWorld(new Vector2(0, GameMain.GraphicsHeight - EntityMenu.Rect.Top)).Y;
 
@@ -4962,7 +5069,8 @@ namespace Barotrauma
                 MouseDragStart = Vector2.Zero;
             }
 
-            if (!saveAssemblyFrame.Rect.Contains(PlayerInput.MousePosition) && dummyCharacter?.SelectedConstruction == null && !WiringMode && GUI.MouseOn == null)
+            if (!saveAssemblyFrame.Rect.Contains(PlayerInput.MousePosition) && !snapToGridFrame.Rect.Contains(PlayerInput.MousePosition)  &&
+                dummyCharacter?.SelectedConstruction == null && !WiringMode && GUI.MouseOn == null)
             {
                 if (layerList is { Visible: true } && GUI.KeyboardDispatcher.Subscriber == layerList)
                 {
@@ -5338,17 +5446,34 @@ namespace Barotrauma
 
         public static bool IsLayerVisible(MapEntity entity)
         {
-            if (!IsSubEditor()) { return true; }
+            if (!IsSubEditor() || string.IsNullOrWhiteSpace(entity.Layer)) { return true; }
 
-            if (string.IsNullOrWhiteSpace(entity.Layer)) { return true; }
-
-            if (!Layers.TryGetValue(entity.Layer, out bool isVisible))
+            if (!Layers.TryGetValue(entity.Layer, out LayerData data))
             {
-                Layers.TryAdd(entity.Layer, true);
+                Layers.TryAdd(entity.Layer, LayerData.Default);
                 return true;
             }
 
-            return isVisible;
+            return data.Visible == LayerVisibility.Visible;
+        }
+
+        public static bool IsLayerLinked(MapEntity entity)
+        {
+            if (!IsSubEditor() || string.IsNullOrWhiteSpace(entity.Layer)) { return false; }
+
+            if (!Layers.TryGetValue(entity.Layer, out LayerData data))
+            {
+                Layers.TryAdd(entity.Layer, LayerData.Default);
+                return true;
+            }
+
+            return data.Linkage == LayerLinkage.Linked;
+        }
+
+        public static ImmutableHashSet<MapEntity> GetEntitiesInSameLayer(MapEntity entity)
+        {
+            if (string.IsNullOrWhiteSpace(entity.Layer)) { return ImmutableHashSet<MapEntity>.Empty; }
+            return MapEntity.mapEntityList.Where(me => me.Layer == entity.Layer).ToImmutableHashSet();
         }
     }
 }

@@ -855,6 +855,10 @@ namespace Barotrauma.Items.Components
                     {
                         currentTargets.Add(structure);
                     }
+                    if (character != null)
+                    {
+                        currentTargets.Add(character);
+                    }
                     effect.Apply(actionType, deltaTime, item, currentTargets);
                 }
                 else if (effect.HasTargetType(StatusEffect.TargetType.Character))

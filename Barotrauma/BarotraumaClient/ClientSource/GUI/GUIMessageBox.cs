@@ -618,6 +618,7 @@ namespace Barotrauma
 
         public bool Close(GUIButton button, object obj)
         {
+            RectTransform.Parent = null;
             Close();            
             return true;
         }

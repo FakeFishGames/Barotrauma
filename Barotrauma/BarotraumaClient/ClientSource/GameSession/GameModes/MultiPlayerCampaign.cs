@@ -97,7 +97,7 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
-            var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, GUICanvas.Instance),
+            var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, GUI.Canvas),
                 isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
                 CanBeFocused = false
@@ -108,7 +108,7 @@ namespace Barotrauma
                 buttonCenter = buttonHeight / 2,
                 screenMiddle = GameMain.GraphicsWidth / 2;
 
-            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(screenMiddle - buttonWidth / 2, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonCenter, buttonWidth, buttonHeight), GUICanvas.Instance),
+            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(screenMiddle - buttonWidth / 2, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonCenter, buttonWidth, buttonHeight), GUI.Canvas),
                 TextManager.Get("EndRound"), textAlignment: Alignment.Center, style: "EndRoundButton")
             {
                 Pulse = true,
@@ -145,7 +145,7 @@ namespace Barotrauma
             int readyButtonHeight = buttonHeight;
             int readyButtonWidth = (int) (GUI.Scale * 50);
 
-            ReadyCheckButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(screenMiddle + (buttonWidth / 2) + GUI.IntScale(16), HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonCenter, readyButtonWidth, readyButtonHeight), GUICanvas.Instance), 
+            ReadyCheckButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(screenMiddle + (buttonWidth / 2) + GUI.IntScale(16), HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonCenter, readyButtonWidth, readyButtonHeight), GUI.Canvas), 
                 style: "RepairBuyButton")
             {
                 ToolTip = TextManager.Get("ReadyCheck.Tooltip"),

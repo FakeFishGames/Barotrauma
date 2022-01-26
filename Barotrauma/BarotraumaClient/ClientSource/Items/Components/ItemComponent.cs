@@ -143,7 +143,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public GUIFrame GuiFrame { get; protected set; }
+        public GUIFrame GuiFrame { get; set; }
 
         [Serialize(false, false)]
         public bool AllowUIOverlap
@@ -554,7 +554,7 @@ namespace Barotrauma.Items.Components
                 color = GuiFrameSource.GetAttributeColor("color", Color.White);
             }
             string style = GuiFrameSource.Attribute("style") == null ? null : GuiFrameSource.GetAttributeString("style", "");
-            GuiFrame = new GUIFrame(RectTransform.Load(GuiFrameSource, GUI.Canvas.ItemComponentHolder, Anchor.Center), style, color);
+            GuiFrame = new GUIFrame(RectTransform.Load(GuiFrameSource, GUI.Canvas, Anchor.Center), style, color);
             DefaultLayout = GUILayoutSettings.Load(GuiFrameSource);
             if (GuiFrame != null)
             {

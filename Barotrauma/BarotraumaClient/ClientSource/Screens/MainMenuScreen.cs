@@ -501,8 +501,6 @@ namespace Barotrauma
             
             ResetButtonStates(null);
 
-            GameAnalyticsManager.SetCustomDimension01("");
-
             if (GameMain.SteamWorkshopScreen != null)
             {
                 CoroutineManager.StartCoroutine(GameMain.SteamWorkshopScreen.RefreshDownloadState());
@@ -1019,7 +1017,10 @@ namespace Barotrauma
 
             if (backgroundSprite == null)
             {
-                backgroundSprite = (LocationType.List.Where(l => l.UseInMainMenu).GetRandom())?.GetPortrait(0);
+#if UNSTABLE
+                backgroundSprite = new Sprite("Content/UnstableBackground.png", sourceRectangle: null);
+#endif
+                backgroundSprite ??= LocationType.List.Where(l => l.UseInMainMenu).GetRandom()?.GetPortrait(0);
             }
 
             if (backgroundSprite != null)
@@ -1159,7 +1160,7 @@ namespace Barotrauma
             //GameMain.LobbyScreen.Select();
         }
 
-        #region UI Methods
+#region UI Methods
         private void CreateCampaignSetupUI()
         {
             menuTabs[(int)Tab.NewGame].ClearChildren();
@@ -1432,7 +1433,7 @@ namespace Barotrauma
             playstyleDescription.TextAlignment = playstyleDescription.WrappedText.Contains('\n') ?
                Alignment.CenterLeft : Alignment.Center;
         }
-        #endregion
+#endregion
 
         private void FetchRemoteContent()
         {

@@ -143,7 +143,7 @@ namespace Barotrauma
                 Hull fireHull = Hull.hullList.GetRandom(h => h.Submarine == character.Submarine);
                 if (fireHull != null)
                 {
-                    var fakeFire = new DummyFireSource(Vector2.One * 500.0f, new Vector2(Rand.Range(fireHull.WorldRect.X, fireHull.WorldRect.Right), fireHull.WorldPosition.Y), fireHull, isNetworkMessage: true)
+                    var fakeFire = new DummyFireSource(Vector2.One * 500.0f, new Vector2(Rand.Range(fireHull.WorldRect.X, fireHull.WorldRect.Right), fireHull.WorldPosition.Y + 1), fireHull, isNetworkMessage: true)
                     {
                         CausedByPsychosis = true,
                         DamagesItems = false,

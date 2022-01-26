@@ -314,26 +314,6 @@ namespace Barotrauma.Items.Components
             return TextManager.GetWithVariable("roomname.subdiroclock", "[dir]", clockDir.ToString());
         }
 
-        private Vector2 GetTransducerPos()
-        {
-            if (!UseTransducers || connectedTransducers.Count == 0)
-            {
-                //use the position of the sub if the item is static (no body) and inside a sub
-                return item.Submarine != null && item.body == null ? item.Submarine.WorldPosition : item.WorldPosition;
-            }
-
-            Vector2 transducerPosSum = Vector2.Zero;
-            foreach (ConnectedTransducer transducer in connectedTransducers)
-            {
-                if (transducer.Transducer.Item.Submarine != null && CenterOnTransducers)
-                {
-                    return transducer.Transducer.Item.Submarine.WorldPosition;
-                }
-                transducerPosSum += transducer.Transducer.Item.WorldPosition;
-            }
-            return transducerPosSum / connectedTransducers.Count;
-        }
-
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
             base.ReceiveSignal(signal, connection);

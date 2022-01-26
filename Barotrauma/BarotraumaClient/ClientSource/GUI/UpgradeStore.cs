@@ -433,6 +433,7 @@ namespace Barotrauma
                         if (AvailableMoney >= hullRepairCost)
                         {
                             Campaign.Money -= hullRepairCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
                             Campaign.PurchasedHullRepairs = true;
                             button.Enabled = false;
                             SelectTab(UpgradeTab.Repairs);
@@ -467,6 +468,7 @@ namespace Barotrauma
                         if (AvailableMoney >= itemRepairCost && !Campaign.PurchasedItemRepairs)
                         {
                             Campaign.Money -= itemRepairCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
                             Campaign.PurchasedItemRepairs = true;
                             button.Enabled = false;
                             SelectTab(UpgradeTab.Repairs);
@@ -512,6 +514,7 @@ namespace Barotrauma
                         if (AvailableMoney >= shuttleRetrieveCost && !Campaign.PurchasedLostShuttles)
                         {
                             Campaign.Money -= shuttleRetrieveCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
                             Campaign.PurchasedLostShuttles = true;
                             button.Enabled = false;
                             SelectTab(UpgradeTab.Repairs);

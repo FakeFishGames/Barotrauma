@@ -8,11 +8,14 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class WifiComponent : ItemComponent
+    partial class WifiComponent : ItemComponent, IServerSerializable
     {
         private static readonly List<WifiComponent> list = new List<WifiComponent>();
 
         const int ChannelMemorySize = 10;
+
+        private const int MinChannel = 0;
+        private const int MaxChannel = 10000;
 
         private float range;
 
@@ -49,7 +52,7 @@ namespace Barotrauma.Items.Components
             get { return channel; }
             set
             {
-                channel = MathHelper.Clamp(value, 0, 10000);
+                channel = MathHelper.Clamp(value, MinChannel, MaxChannel);
             }
         }
 
@@ -295,7 +298,14 @@ namespace Barotrauma.Items.Components
                 case "set_channel":
                     if (int.TryParse(signal.value, out int newChannel))
                     {
+                        int prevChannel = Channel;
                         Channel = newChannel;
+                        if (prevChannel != Channel)
+                        {
+#if SERVER
+                            item.CreateServerEvent(this);
+#endif
+                        }
                     }
                     break;
                 case "set_range":

@@ -221,6 +221,9 @@ namespace Barotrauma
         /// </summary>
         public int AssignmentPriority { get; }
 
+        public bool ColoredWhenControllingGiver { get; }
+        public bool DisplayGiverInTooltip { get; }
+
         public static void Init()
         {
             Prefabs = new Dictionary<string, Order>();
@@ -406,6 +409,8 @@ namespace Barotrauma
             DrawIconWhenContained = orderElement.GetAttributeBool("displayiconwhencontained", false);
             AutoDismiss = orderElement.GetAttributeBool("autodismiss", Category == OrderCategory.Movement);
             AssignmentPriority = Math.Clamp(orderElement.GetAttributeInt("assignmentpriority", 100), 0, 100);
+            ColoredWhenControllingGiver = orderElement.GetAttributeBool("coloredwhencontrollinggiver", false);
+            DisplayGiverInTooltip = orderElement.GetAttributeBool("displaygiverintooltip", false);
         }
 
         /// <summary>
@@ -441,6 +446,8 @@ namespace Barotrauma
             Hidden                = prefab.Hidden;
             IgnoreAtOutpost       = prefab.IgnoreAtOutpost;
             AssignmentPriority    = prefab.AssignmentPriority;
+            ColoredWhenControllingGiver = prefab.ColoredWhenControllingGiver;
+            DisplayGiverInTooltip = prefab.DisplayGiverInTooltip;
 
             OrderGiver = orderGiver;
             TargetEntity = targetEntity;

@@ -378,7 +378,10 @@ namespace Barotrauma
             crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnGainMissionMoney, missionMoneyGainMultiplier));
             crewCharacters.ForEach(c => missionMoneyGainMultiplier.Value += c.GetStatValue(StatTypes.MissionMoneyGainMultiplier));
 
-            campaign.Money += (int)(reward * missionMoneyGainMultiplier.Value);
+            int totalReward = (int)(reward * missionMoneyGainMultiplier.Value);
+            campaign.Money += totalReward;
+
+            GameAnalyticsManager.AddMoneyGainedEvent(totalReward, GameAnalyticsManager.MoneySource.MissionReward, Prefab.Identifier);
 
             foreach (Character character in crewCharacters)
             {

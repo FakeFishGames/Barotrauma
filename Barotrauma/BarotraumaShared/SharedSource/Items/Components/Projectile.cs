@@ -543,6 +543,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (fixture.Body.UserData is VoronoiCell) { return -1; }
                     if (fixture.Body.UserData is Entity entity && entity.Submarine != submarine) { return -1; }
+                    if (fixture.Body.UserData is Limb limb && limb.character?.Submarine != submarine) { return -1; }
                 }
 
                 //ignore level cells if the item and the point of impact are inside a sub

@@ -87,7 +87,11 @@ namespace Barotrauma.Items.Components
             }
 
             string signalOut = sendOutput ? output : falseOutput;
-            if (string.IsNullOrEmpty(signalOut)) { return; }
+            if (string.IsNullOrEmpty(signalOut))
+            {
+                IsActive = false;
+                return;
+            }
 
             item.SendSignal(new Signal(signalOut, sender: signalSender[0] ?? signalSender[1]), "signal_out");
         }
@@ -100,11 +104,13 @@ namespace Barotrauma.Items.Components
                     if (signal.value == "0") { return; }
                     timeSinceReceived[0] = 0.0f;
                     signalSender[0] = signal.sender;
+                    IsActive = true;
                     break;
                 case "signal_in2":
                     if (signal.value == "0") { return; }
                     timeSinceReceived[1] = 0.0f;
                     signalSender[1] = signal.sender;
+                    IsActive = true;
                     break;
                 case "set_output":
                     output = signal.value;

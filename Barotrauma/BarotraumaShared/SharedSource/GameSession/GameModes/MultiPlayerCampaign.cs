@@ -126,6 +126,10 @@ namespace Barotrauma
                 {
                     case "campaignsettings":
                         Settings = new CampaignSettings(subElement);
+#if CLIENT
+                        GameMain.NetworkMember.ServerSettings.MaxMissionCount = Settings.MaxMissionCount;
+                        GameMain.NetworkMember.ServerSettings.RadiationEnabled = Settings.RadiationEnabled;
+#endif
                         break;
                     case "map":
                         if (map == null)
@@ -158,6 +162,9 @@ namespace Barotrauma
                         break;
                     case "pets":
                         petsElement = subElement;
+                        break;
+                    case "stats":
+                        LoadStats(subElement);
                         break;
 #if SERVER
                     case "savedexperiencepoints":

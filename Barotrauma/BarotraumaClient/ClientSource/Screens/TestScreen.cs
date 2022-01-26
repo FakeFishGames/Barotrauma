@@ -65,7 +65,6 @@ namespace Barotrauma
 
             Character.Controlled = dummyCharacter;
             GameMain.World.ProcessChanges();
-            TabMenu.selectedTab = TabMenu.InfoFrameTab.Talents;
             tabMenu = new TabMenu();
         }
 

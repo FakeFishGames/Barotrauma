@@ -328,7 +328,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            dir = new Vector2(1, Rand.Range(-1, 1));
+                            dir = new Vector2(1, Rand.Range(-1f, 1f));
                         }
                         Vector2 targetPos = spawnPos.Value + dir * offset;
                         var targetWaypoint = waypoints.OrderBy(wp => Vector2.DistanceSquared(wp.WorldPosition, targetPos)).FirstOrDefault();
@@ -475,6 +475,7 @@ namespace Barotrauma
                 {
                     scatterAmount = 0;
                 }
+
                 for (int i = 0; i < amount; i++)
                 {
                     string seed = Level.Loaded.Seed + i.ToString();
@@ -539,6 +540,13 @@ namespace Barotrauma
                             //otherwise it'll make the spawned characters act as a swarm
                             SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
                             DebugConsole.NewMessage($"Spawned: {ToString()}. Strength: {StringFormatter.FormatZeroDecimal(monsters.Sum(m => m.Params.AI.CombatStrength))}.", Color.LightBlue, debugOnly: true);
+                        }
+
+                        if (GameMain.GameSession != null)
+                        {
+                            GameAnalyticsManager.AddDesignEvent(
+                                $"MonsterSpawn:{GameMain.GameSession.GameMode?.Preset?.Identifier ?? "none"}:{Level.Loaded?.LevelData?.Biome?.Identifier ?? "none"}:{SpawnPosType}:{speciesName}",
+                                value: Timing.TotalTime - GameMain.GameSession.RoundStartTime);
                         }
                     }, delayBetweenSpawns * i);
                 }

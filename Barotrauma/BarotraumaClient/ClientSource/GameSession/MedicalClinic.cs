@@ -205,6 +205,11 @@ namespace Barotrauma
                 return;
             }
 
+            if (campaign?.CampaignUI?.MedicalClinic is { } ui)
+            {
+                ui.ClosePopup();
+            }
+
             healAllRequests.Add(new RequestAction<HealRequest>(onReceived, GetTimeout()));
             ClientSend(null, NetworkHeader.HEAL_PENDING, DeliveryMethod.Reliable);
         }

@@ -857,7 +857,7 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case ServerPacketHeader.STARTGAMEFINALIZE:
-                    DebugConsole.Log("Received STARTGAMEFINALIZE packet.");
+                    DebugConsole.NewMessage("Received STARTGAMEFINALIZE packet. Round init status: " + roundInitStatus);
                     if (roundInitStatus == RoundInitStatus.WaitingForStartGameFinalize)
                     {
                         //waiting for a save file

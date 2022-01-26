@@ -37,7 +37,6 @@ namespace Barotrauma
         {
             IsSinglePlayer = isSinglePlayer;
             conversationTimer = 5.0f;
-
             InitProjectSpecific();
         }
 
@@ -100,10 +99,10 @@ namespace Barotrauma
             foreach (XElement characterElement in element.Elements())
             {
                 if (!characterElement.Name.ToString().Equals("character", StringComparison.OrdinalIgnoreCase)) { continue; }
-
                 CharacterInfo characterInfo = new CharacterInfo(characterElement);
 #if CLIENT
                 if (characterElement.GetAttributeBool("lastcontrolled", false)) { characterInfo.LastControlled = true; }
+                characterInfo.CrewListIndex = characterElement.GetAttributeInt("crewlistindex", -1);
 #endif
                 characterInfos.Add(characterInfo);
                 foreach (XElement subElement in characterElement.Elements())
@@ -133,7 +132,7 @@ namespace Barotrauma
             characterInfos.Remove(characterInfo);
         }
         
-        public void AddCharacter(Character character)
+        public void AddCharacter(Character character, bool sortCrewList = true)
         {
             if (character.Removed)
             {
@@ -155,7 +154,11 @@ namespace Barotrauma
                 characterInfos.Add(character.Info);
             }
 #if CLIENT
-            AddCharacterToCrewList(character);
+            var characterComponent = AddCharacterToCrewList(character);
+            if (sortCrewList)
+            {
+                SortCrewList();
+            }
             if (character.CurrentOrders != null)
             {
                 foreach (var order in character.CurrentOrders)
@@ -254,11 +257,15 @@ namespace Barotrauma
                     }
                 }
                 
-                AddCharacter(character);
+                AddCharacter(character, sortCrewList: false);
 #if CLIENT
                 if (IsSinglePlayer && (Character.Controlled == null || character.Info.LastControlled)) { Character.Controlled = character; }
 #endif
             }
+
+#if CLIENT
+            if (IsSinglePlayer) { SortCrewList(); }
+#endif
 
             //longer delay in multiplayer to prevent the server from triggering NPC conversations while the players are still loading the round
             conversationTimer = IsSinglePlayer ? Rand.Range(5.0f, 10.0f) : Rand.Range(45.0f, 60.0f);

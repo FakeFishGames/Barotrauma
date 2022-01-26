@@ -53,6 +53,7 @@
 using Barotrauma;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -156,6 +157,11 @@ namespace Voronoi2
 
         public bool IsDestructible;
         public bool DoesDamage;
+
+        /// <summary>
+        /// Executed when the cell is destroyed (only applies to destructible level walls)
+        /// </summary>
+        public Action OnDestroyed;
 
         public Vector2 Center
         {

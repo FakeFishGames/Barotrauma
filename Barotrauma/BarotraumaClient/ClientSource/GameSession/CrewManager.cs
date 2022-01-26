@@ -83,7 +83,7 @@ namespace Barotrauma
 
         partial void InitProjectSpecific()
         {
-            guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent)
+            guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), null, Color.Transparent)
             {
                 CanBeFocused = false
             };
@@ -302,7 +302,7 @@ namespace Barotrauma
         /// </summary>
         /// <param name="character">The character to remove</param>
         /// <param name="removeInfo">If the character info is also removed, the character will not be visible in the round summary.</param>
-        public void RemoveCharacter(Character character, bool removeInfo = false)
+        public void RemoveCharacter(Character character, bool removeInfo = false, bool resetCrewListIndex = true)
         {
             if (character == null)
             {
@@ -311,14 +311,15 @@ namespace Barotrauma
             }
             characters.Remove(character);
             if (removeInfo) { characterInfos.Remove(character.Info); }
+            if (resetCrewListIndex) { ResetCrewListIndex(character); }
         }
 
         /// <summary>
         /// Add character to the list without actually adding it to the crew
         /// </summary>
-        public void AddCharacterToCrewList(Character character)
+        public GUIComponent AddCharacterToCrewList(Character character)
         {
-            if (character == null) { return; }
+            if (character == null) { return null; }
 
             var background = new GUIFrame(
                 new RectTransform(crewListEntrySize, parent: crewList.Content.RectTransform, anchor: Anchor.TopRight),
@@ -510,6 +511,8 @@ namespace Barotrauma
                     return true;
                 }
             };
+
+            return background;
         }
 
         private void SetCharacterComponentTooltip(GUIComponent characterComponent)
@@ -549,13 +552,13 @@ namespace Barotrauma
             if (characterInfos.Contains(revivedCharacter.Info)) { AddCharacter(revivedCharacter); }
         }
 
-        public void KillCharacter(Character killedCharacter)
+        public void KillCharacter(Character killedCharacter, bool resetCrewListIndex = true)
         {
             if (crewList.Content.GetChildByUserData(killedCharacter) is GUIComponent characterComponent)
             {
                 CoroutineManager.StartCoroutine(KillCharacterAnim(characterComponent));
             }
-            RemoveCharacter(killedCharacter);
+            RemoveCharacter(killedCharacter, resetCrewListIndex: resetCrewListIndex);
         }
 
         private IEnumerable<CoroutineStatus> KillCharacterAnim(GUIComponent component)
@@ -601,9 +604,53 @@ namespace Barotrauma
         {
             if (crewList != this.crewList) { return; }
             if (!(draggedElementData is Character)) { return; }
-            if (crewList.HasDraggedElementIndexChanged) { return; }
             if (!IsSinglePlayer) { return; }
-            CharacterClicked(crewList.DraggedElement, draggedElementData);
+            if (crewList.HasDraggedElementIndexChanged)
+            {
+                UpdateCrewListIndices();
+            }
+            else
+            {
+                CharacterClicked(crewList.DraggedElement, draggedElementData);
+            }
+        }
+
+        private void ResetCrewListIndex(Character c)
+        {
+            if (c?.Info == null) { return; }
+            c.Info.CrewListIndex = -1;
+            UpdateCrewListIndices();
+        }
+
+        private void UpdateCrewListIndices()
+        {
+            if (crewList == null) { return; }
+            for (int i = 0; i < crewList.Content.CountChildren; i++)
+            {
+                var characterComponent = crewList.Content.GetChild(i);
+                if (!(characterComponent?.UserData is Character c)) { continue; }
+                if (c.Info == null) { continue; }
+                c.Info.CrewListIndex = i;
+            }
+        }
+
+        private void SortCrewList()
+        {
+            if (crewList == null) { return; }
+            crewList.Content.RectTransform.SortChildren((x, y) =>
+            {
+                var infoX = (x.GUIComponent.UserData as Character)?.Info?.CrewListIndex;
+                var infoY = (y.GUIComponent.UserData as Character)?.Info?.CrewListIndex;
+                if (infoX.HasValue)
+                {
+                    return infoY.HasValue ? infoX.Value.CompareTo(infoY.Value) : -1;
+                }
+                else
+                {
+                    return infoY.HasValue ? 1 : 0;
+                }
+            });
+            UpdateCrewListIndices();
         }
 
         #endregion
@@ -1077,7 +1124,13 @@ namespace Barotrauma
         private string CreateOrderTooltip(Order orderPrefab, string option, Entity targetEntity)
         {
             if (orderPrefab == null) { return ""; }
-            if (!string.IsNullOrEmpty(option))
+            if (orderPrefab.DisplayGiverInTooltip && orderPrefab.OrderGiver != null)
+            {
+                return TextManager.GetWithVariables("crewlistordericontooltip",
+                    new string[2] { "[ordername]", "[orderoption]" },
+                    new string[2] { orderPrefab.Name, orderPrefab.OrderGiver.DisplayName });
+            }
+            else if (!string.IsNullOrEmpty(option))
             {
                 return TextManager.GetWithVariables("crewlistordericontooltip",
                     new string[2] { "[ordername]", "[orderoption]" },
@@ -1210,6 +1263,10 @@ namespace Barotrauma
             DisableCommandUI();
             Character.Controlled = character;
             HintManager.OnChangeCharacter();
+            if (GameSession.TabMenuInstance != null && TabMenu.SelectedTab == TabMenu.InfoFrameTab.Talents)
+            {
+                GameSession.TabMenuInstance.SelectInfoFrameTab(TabMenu.SelectedTab);
+            }
         }
 
         private int TryAdjustIndex(int amount)
@@ -1566,10 +1623,28 @@ namespace Barotrauma
                             {
                                 crewList.Select(character, force: true);
                             }
+                            // Icon colors might change based on the target so we check if they need to be updated
+                            if (GetCurrentOrderIconList(characterComponent) is GUIListBox currentOrderIconList)
+                            {
+                                foreach (var orderIcon in currentOrderIconList.Content.Children)
+                                {
+                                    if (!(orderIcon.UserData is OrderInfo orderInfo)) { continue; }
+                                    if (!(orderInfo.Order is Order order)) { continue; }
+                                    if (order.ColoredWhenControllingGiver && order.OrderGiver != Character.Controlled)
+                                    {
+                                        orderIcon.Color = AIObjective.ObjectiveIconColor;
+                                    }
+                                    else
+                                    {
+                                        orderIcon.Color = order.Color;
+                                    }
+                                }
+                            }
+                            // Only update the order highlights and objective icons here in singleplayer
+                            // The server will let the clients know when they need to update in multiplayer
                             if (GameMain.IsSingleplayer && character.IsBot && character.AIController is HumanAIController controller &&
                                 controller.ObjectiveManager is AIObjectiveManager objectiveManager)
                             {
-                                // In multiplayer, these are set through character networking (the server lets the clients now when these are updated)
                                 if (objectiveManager.CurrentObjective is AIObjective currentObjective)
                                 {
                                     if (objectiveManager.IsOrder(currentObjective))
@@ -1638,8 +1713,8 @@ namespace Barotrauma
                 bool foundMatch = false;
                 foreach (var orderIcon in currentOrderIconList.Content.Children)
                 {
-                    var glowComponent = orderIcon.GetChildByUserData("glow");
-                    if (glowComponent == null) { continue; }
+                    if (!(orderIcon.GetChildByUserData("glow") is GUIComponent glowComponent)) { continue; }
+                    glowComponent.Color = orderIcon.Color;
                     if (foundMatch)
                     {
                         glowComponent.Visible = false;
@@ -1684,11 +1759,11 @@ namespace Barotrauma
                     objectiveIconFrame.ClearChildren();
                     if (sprite != null)
                     {
-                        var objectiveIcon = CreateNodeIcon(Vector2.One, objectiveIconFrame.RectTransform, sprite, Color.LightGray, tooltip: tooltip);
+                        var objectiveIcon = CreateNodeIcon(Vector2.One, objectiveIconFrame.RectTransform, sprite, AIObjective.ObjectiveIconColor, tooltip: tooltip);
                         new GUIFrame(new RectTransform(new Vector2(1.5f), objectiveIcon.RectTransform, anchor: Anchor.Center), style: "OuterGlowCircular")
                         {
                             CanBeFocused = false,
-                            Color = Color.LightGray
+                            Color = AIObjective.ObjectiveIconColor
                         };
                         objectiveIconFrame.Visible = true;
                     }
@@ -1909,7 +1984,7 @@ namespace Barotrauma
             ScaleCommandUI();
 
             commandFrame = new GUIFrame(
-                new RectTransform(Vector2.One, GUICanvas.Instance, anchor: Anchor.Center),
+                new RectTransform(Vector2.One, GUI.Canvas, anchor: Anchor.Center),
                 style: null,
                 color: Color.Transparent);
             background = new GUIImage(
@@ -3530,12 +3605,14 @@ namespace Barotrauma
         public void Save(XElement parentElement)
         {
             XElement element = new XElement("crew");
-            foreach (CharacterInfo ci in characterInfos)
+            for (int i = 0; i < characterInfos.Count; i++)
             {
+                var ci = characterInfos[i];
                 var infoElement = ci.Save(element);
                 if (ci.InventoryData != null) { infoElement.Add(ci.InventoryData); }
                 if (ci.HealthData != null) { infoElement.Add(ci.HealthData); }
                 if (ci.OrderData != null) { infoElement.Add(ci.OrderData); }
+                infoElement.Add(new XAttribute("crewlistindex", ci.CrewListIndex));
                 if (ci.LastControlled) { infoElement.Add(new XAttribute("lastcontrolled", true)); }
             }
             SaveActiveOrders(element);

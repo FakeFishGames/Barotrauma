@@ -340,7 +340,7 @@ namespace Barotrauma
                 {
                     targetingTag = "dead";
                 }
-                else if (AIParams.TryGetTarget(targetCharacter.CharacterHealth.GetActiveAfflictionTags(), out CharacterParams.TargetParams tp) && tp.Threshold > Character.GetDamageDoneByAttacker(targetCharacter))
+                else if (AIParams.TryGetTarget(targetCharacter.CharacterHealth.GetActiveAfflictionTags(), out CharacterParams.TargetParams tp) && tp.Threshold >= Character.GetDamageDoneByAttacker(targetCharacter))
                 {
                     targetingTag = tp.Tag;
                 }
@@ -678,7 +678,10 @@ namespace Barotrauma
                                 return a.Damage >= selectedTargetingParams.Threshold;
                             }
                             Character attacker = targetCharacter.LastAttackers.LastOrDefault(IsValid)?.Character;
-                            if (attacker != null)
+                            //if the attacker has the same targeting tag as the character we're protecting, we can't change the TargetState
+                            //otherwise e.g. a pet that's set to follow humans would start attacking all humans (and other pets, since they're considered part of the same group) when a hostile human attacks it
+                            //TODO: a way for pets to differentiate hostile and friendly humans?
+                            if (attacker?.AiTarget != null && !targetCharacter.SpeciesName.Equals(GetTargetingTag(attacker.AiTarget), StringComparison.OrdinalIgnoreCase))
                             {
                                 // Attack the character that attacked the target we are protecting
                                 ChangeTargetState(attacker, AIState.Attack, selectedTargetingParams.Priority * 2);
@@ -1598,7 +1601,7 @@ namespace Barotrauma
                                     }
                                     else
                                     {
-                                        sweepTimer = Rand.Range(-1000, 1000) * selectedTargetingParams.SweepSpeed;
+                                        sweepTimer = Rand.Range(-1000f, 1000f) * selectedTargetingParams.SweepSpeed;
                                     }
                                 }
                                 break;
@@ -2305,7 +2308,7 @@ namespace Barotrauma
 
                                 if (item.Condition <= 0.0f)
                                 {
-                                    if (!wasBroken) { PetBehavior?.OnEat(item.GetTags(), 1.0f); }
+                                    if (!wasBroken) { PetBehavior?.OnEat(item); }
                                     Entity.Spawner.AddToRemoveQueue(item);
                                 }
                             }

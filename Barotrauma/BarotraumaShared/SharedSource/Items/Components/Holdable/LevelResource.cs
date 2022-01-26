@@ -51,7 +51,11 @@ namespace Barotrauma.Items.Components
 #else
                 if (deattachTimer >= DeattachDuration)
                 {
-                    holdable.DeattachFromWall();
+                    if (holdable.Attached)
+                    {
+                        GameAnalyticsManager.AddDesignEvent("ResourceCollected:" + (GameMain.GameSession?.GameMode?.Name ?? "none") + ":" + item.Prefab.Identifier);
+                        holdable.DeattachFromWall();
+                    }
                     trigger.Enabled = false;
                 }
 #endif

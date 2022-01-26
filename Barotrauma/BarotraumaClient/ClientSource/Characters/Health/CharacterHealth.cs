@@ -2018,6 +2018,27 @@ namespace Barotrauma
 
             limbIndicatorOverlay?.Remove();
             limbIndicatorOverlay = null;
+
+            if (healthWindow != null)
+            {
+                healthWindow.RectTransform.Parent = null;
+                healthWindow = null;
+            }
+            if (healthBarHolder != null)
+            {
+                healthBarHolder.RectTransform.Parent = null;
+                healthBarHolder = null;
+            }
+            if (SuicideButton != null)
+            {
+                SuicideButton.RectTransform.Parent = null;
+                SuicideButton = null;
+            }
+            if (afflictionTooltip != null)
+            {
+                afflictionTooltip.RectTransform.Parent = null;
+                afflictionTooltip = null;
+            }
         }
     }
 }

@@ -363,7 +363,9 @@ namespace Barotrauma
         public readonly string Name, Description;
         public readonly string TranslationOverride;
         public readonly bool IsBuff;
+        public readonly bool HealableInMedicalClinic;
         public readonly float HealCostMultiplier;
+        public readonly int BaseHealCost;
 
         public readonly string CauseOfDeathDescription, SelfCauseOfDeathDescription;
 
@@ -656,7 +658,13 @@ namespace Barotrauma
             Name = TextManager.Get("AfflictionName." + translationId, true) ?? element.GetAttributeString("name", "");
             Description = TextManager.Get("AfflictionDescription." + translationId, true) ?? element.GetAttributeString("description", "");
             IsBuff = element.GetAttributeBool("isbuff", false);
+
+            HealableInMedicalClinic = element.GetAttributeBool("healableinmedicalclinic", 
+                !IsBuff && 
+                !AfflictionType.Equals("geneticmaterialbuff", StringComparison.OrdinalIgnoreCase) && 
+                !AfflictionType.Equals("geneticmaterialdebuff", StringComparison.OrdinalIgnoreCase));
             HealCostMultiplier = element.GetAttributeFloat(nameof(HealCostMultiplier).ToLowerInvariant(), 1f);
+            BaseHealCost = element.GetAttributeInt(nameof(BaseHealCost).ToLowerInvariant(), 0);
 
             if (element.Attribute("nameidentifier") != null)
             {

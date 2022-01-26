@@ -225,6 +225,7 @@ namespace Barotrauma
                 }
 
                 Campaign.Money -= price;
+                GameAnalyticsManager.AddMoneySpentEvent(price, GameAnalyticsManager.MoneySink.SubmarineUpgrade, prefab.Identifier);
 
                 PurchasedUpgrade? upgrade = FindMatchingUpgrade(prefab, category);
 
@@ -323,6 +324,7 @@ namespace Barotrauma
                 }
 
                 Campaign.Money -= price;
+                GameAnalyticsManager.AddMoneySpentEvent(price, GameAnalyticsManager.MoneySink.SubmarineWeapon, itemToInstall.Identifier);
 
                 foreach (Item itemToSwap in linkedItems)
                 {

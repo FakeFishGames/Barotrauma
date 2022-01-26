@@ -30,7 +30,7 @@ namespace Barotrauma
         private float holdFireTimer;
         private bool hasAimed;
         private bool isLethalWeapon;
-        private bool AllowCoolDown => !IsOffensiveOrArrest || Mode != initialMode;
+        private bool AllowCoolDown => !IsOffensiveOrArrest || Mode != initialMode || character.TeamID == Enemy.TeamID;
 
         public Character Enemy { get; private set; }
         public bool HoldPosition { get; set; }
@@ -143,7 +143,7 @@ namespace Barotrauma
             {
                 Mode = CombatMode.Retreat;
             }
-            spreadTimer = Rand.Range(-10, 10);
+            spreadTimer = Rand.Range(-10f, 10f);
             HumanAIController.SortTimer = 0;
         }
 
@@ -1177,7 +1177,7 @@ namespace Barotrauma
         }
 
         private void SpeakNoWeapons() => Speak("dialogcombatnoweapons", delay: 0, minDuration: 30);
-        private void AskHelp() => Speak("dialogcombatretreating", delay: Rand.Range(0, 1), minDuration: 20);
+        private void AskHelp() => Speak("dialogcombatretreating", delay: Rand.Range(0f, 1f), minDuration: 20);
 
         private void Speak(string textIdentifier, float delay, float minDuration)
         {

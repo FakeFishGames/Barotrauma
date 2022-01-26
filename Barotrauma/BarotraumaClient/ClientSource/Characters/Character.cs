@@ -154,7 +154,7 @@ namespace Barotrauma
 
             public bool PlaySound;
 
-            public GUIMessage(string rawText, Color color, float delay, string identifier = null, int? value = null)
+            public GUIMessage(string rawText, Color color, float delay, string identifier = null, int? value = null, float lifeTime = 3.0f)
             {
                 RawText = Text = rawText;
                 if (value.HasValue)
@@ -166,7 +166,7 @@ namespace Barotrauma
                 Size = GUI.Font.MeasureString(Text);
                 Color = color;
                 Identifier = identifier;
-                Lifetime = 3.0f;
+                Lifetime = lifeTime;
             }
         }
 
@@ -997,7 +997,7 @@ namespace Barotrauma
             return nameColor;
         }
 
-        public void AddMessage(string rawText, Color color, bool playSound, string identifier = null, int? value = null)
+        public void AddMessage(string rawText, Color color, bool playSound, string identifier = null, int? value = null, float lifetime = 3.0f)
         {
             GUIMessage existingMessage = null;
 
@@ -1026,7 +1026,7 @@ namespace Barotrauma
             }
             if (existingMessage == null || !value.HasValue)
             {
-                var newMessage = new GUIMessage(rawText, color, delay, identifier, value);
+                var newMessage = new GUIMessage(rawText, color, delay, identifier, value, lifetime);
                 guiMessages.Insert(0, newMessage);
                 if (playSound)
                 {

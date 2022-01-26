@@ -124,7 +124,6 @@ namespace Barotrauma.Steam
             return unlocked;
         }
 
-
         public static bool IncrementStat(string statName, int increment)
         {
             if (!isInitialized || !Steamworks.SteamClient.IsValid) { return false; }
@@ -161,6 +160,12 @@ namespace Barotrauma.Steam
             return success;
         }
 
+        public static int GetStatInt(string statName)
+        {
+            if (!isInitialized || !Steamworks.SteamClient.IsValid) { return 0; }
+            return  Steamworks.SteamUserStats.GetStatInt(statName);
+        }
+
         public static bool StoreStats()
         {
             if (!isInitialized || !Steamworks.SteamClient.IsValid) { return false; }
@@ -173,6 +178,17 @@ namespace Barotrauma.Steam
 #endif
             }
             return success;
+        }
+
+        public static bool TryGetUnlockedAchievements(out List<Steamworks.Data.Achievement> achievements)
+        {
+            if (!isInitialized || !Steamworks.SteamClient.IsValid) 
+            {
+                achievements = null;
+                return false; 
+            }
+            achievements = Steamworks.SteamUserStats.Achievements.Where(a => a.State).ToList();
+            return true;
         }
 
         public static void Update(float deltaTime)

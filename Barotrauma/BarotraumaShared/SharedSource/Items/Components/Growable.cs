@@ -1,13 +1,13 @@
 ﻿#nullable enable
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Linq;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
 using Vector4 = Microsoft.Xna.Framework.Vector4;
 
@@ -398,8 +398,6 @@ namespace Barotrauma.Items.Components
         private int flowerVariants;
         private int leafVariants;
         private int[] flowerTiles;
-        private const int serverHealthUpdateDelay = 10;
-        private int serverHealthUpdateTimer;
 
         public float Health
         {
@@ -553,18 +551,20 @@ namespace Barotrauma.Items.Components
 
             if (spawnProduct && ProducedItems.Any())
             {
-                SpawnItem(ProducedItems.RandomElementByWeight(it => it.Probability), spawnPos);
+                SpawnItem(Item, ProducedItems.RandomElementByWeight(it => it.Probability), spawnPos);
                 return;
             }
 
             if (spawnSeed)
             {
-                SpawnItem(ProducedSeed, spawnPos);
+                SpawnItem(Item, ProducedSeed, spawnPos);
             }
 
-            static void SpawnItem(ProducedItem producedItem, Vector2 pos)
+            static void SpawnItem(Item thisItem, ProducedItem producedItem, Vector2 pos)
             {
                 if (producedItem.Prefab == null) { return; }
+
+                GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "null") + ":GardeningProduce:" + thisItem.prefab.Identifier + ":" + producedItem.Prefab.Identifier);
 
                 Entity.Spawner?.AddToSpawnQueue(producedItem.Prefab, pos, onSpawned: it =>
                 {
@@ -586,8 +586,13 @@ namespace Barotrauma.Items.Components
         {
             if (Decayed) { return true; }
 
-            if (0 >= Health)
+            if (Health <= 0)
             {
+                if (!Decayed)
+                {
+                    GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "null") + ":GardeningDied:" + item.prefab.Identifier);
+                }
+
                 Decayed = true;
 #if CLIENT
                 foreach (VineTile vine in Vines)

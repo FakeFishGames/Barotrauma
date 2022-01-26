@@ -1,12 +1,11 @@
-using System;
 using Barotrauma.Steam;
 using RestSharp;
+using System;
 using System.Net;
-using System.Threading.Tasks;
 
 namespace Barotrauma
 {
-    public static partial class GameAnalyticsManager
+    static partial class GameAnalyticsManager
     {
         public enum Consent
         {

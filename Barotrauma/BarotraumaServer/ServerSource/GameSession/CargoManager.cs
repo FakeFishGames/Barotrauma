@@ -55,6 +55,7 @@ namespace Barotrauma
                 SoldItems.Add(item);
                 Location.StoreCurrentBalance -= itemValue;
                 campaign.Money += itemValue;
+                GameAnalyticsManager.AddMoneyGainedEvent(itemValue, GameAnalyticsManager.MoneySource.Store, item.ItemPrefab.Identifier);
             }
             OnSoldItemsChanged?.Invoke();
         }

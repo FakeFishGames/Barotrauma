@@ -232,6 +232,8 @@ namespace Barotrauma
                 Location.StoreCurrentBalance -= itemValue;
                 campaign.Money += itemValue;
 
+                GameAnalyticsManager.AddMoneyGainedEvent(itemValue, GameAnalyticsManager.MoneySource.Store, item.ItemPrefab.Identifier);
+
                 // Remove from the sell crate
                 // TODO: Simplify duplicate logic?
                 if (sellingMode == Store.StoreTab.Sell && ItemsInSellCrate.Find(pi => pi.ItemPrefab == item.ItemPrefab) is { } inventoryItem)

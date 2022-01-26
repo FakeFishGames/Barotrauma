@@ -20,7 +20,7 @@ namespace Barotrauma
         private static Sprite ownerIcon, moderatorIcon;
 
         public enum InfoFrameTab { Crew, Mission, Reputation, Traitor, Submarine, Talents };
-        public static InfoFrameTab selectedTab;
+        public static InfoFrameTab SelectedTab { get; private set; }
         private GUIFrame infoFrame, contentFrame;
 
         private readonly List<GUIButton> tabButtons = new List<GUIButton>();
@@ -130,8 +130,8 @@ namespace Barotrauma
         {
             if (!initialized) { Initialize(); }
 
-            CreateInfoFrame(selectedTab);
-            SelectInfoFrameTab(null, selectedTab);
+            CreateInfoFrame(SelectedTab);
+            SelectInfoFrameTab(SelectedTab);
         }
 
         public void Update()
@@ -147,8 +147,8 @@ namespace Barotrauma
                 }
             }
 
-            if (selectedTab != InfoFrameTab.Crew) return;
-            if (linkedGUIList == null) return;
+            if (SelectedTab != InfoFrameTab.Crew) { return; }
+            if (linkedGUIList == null) { return; }
 
             if (GameMain.IsMultiplayer)
             {
@@ -226,7 +226,7 @@ namespace Barotrauma
                 {
                     UserData = tab,
                     ToolTip = TextManager.Get(textTag),
-                    OnClicked = SelectInfoFrameTab
+                    OnClicked = (btn, userData) => { SelectInfoFrameTab((InfoFrameTab)userData); return true; }
                 };
                 tabButtons.Add(newButton);
                 return newButton;
@@ -277,16 +277,16 @@ namespace Barotrauma
                 talentsButton.Enabled = Character.Controlled?.Info != null;
                 if (!talentsButton.Enabled && selectedTab == InfoFrameTab.Talents)
                 {
-                    SelectInfoFrameTab(null, InfoFrameTab.Crew);
+                    SelectInfoFrameTab(InfoFrameTab.Crew);
                 }
             };
 
             talentPointNotification = GameSession.CreateTalentIconNotification(talentsButton);
         }
 
-        private bool SelectInfoFrameTab(GUIButton button, object userData)
+        public void SelectInfoFrameTab(InfoFrameTab selectedTab)
         {
-            selectedTab = (InfoFrameTab)userData;
+            SelectedTab = selectedTab;
 
             CreateInfoFrame(selectedTab);
             tabButtons.ForEach(tb => tb.Selected = (InfoFrameTab)tb.UserData == selectedTab);
@@ -310,7 +310,7 @@ namespace Barotrauma
                 case InfoFrameTab.Traitor:
                     TraitorMissionPrefab traitorMission = GameMain.Client.TraitorMission;
                     Character traitor = GameMain.Client.Character;
-                    if (traitor == null || traitorMission == null) return false;
+                    if (traitor == null || traitorMission == null) { return; }
                     CreateTraitorInfo(infoFrameHolder, traitorMission, traitor);
                     break;
                 case InfoFrameTab.Submarine:
@@ -320,8 +320,6 @@ namespace Barotrauma
                     CreateTalentInfo(infoFrameHolder);
                     break;
             }
-
-            return true;
         }
 
         private const float jobColumnWidthPercentage = 0.138f;
@@ -859,7 +857,7 @@ namespace Barotrauma
             string msg = ChatMessage.GetTimeStamp() + message.TextWithSender;
             storedMessages.Add(new Pair<string, PlayerConnectionChangeType>(msg, message.ChangeType));
 
-            if (GameSession.IsTabMenuOpen && selectedTab == InfoFrameTab.Crew)
+            if (GameSession.IsTabMenuOpen && SelectedTab == InfoFrameTab.Crew)
             {
                 TabMenu instance = GameSession.TabMenuInstance;
                 instance.AddLineToLog(msg, message.ChangeType);

@@ -507,7 +507,7 @@ namespace Barotrauma.Items.Components
                         {
                             Vector2 origin = weaponSprite.Origin;
                             float scale = parentWidth / Math.Max(weaponSprite.size.X, weaponSprite.size.Y);
-                            Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? GUI.Style.Red : GUI.Style.Green;
+                            Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? Color.DimGray : GUI.Style.Green;
                             weaponSprite.Draw(batch, center, color, origin, rotation, scale, it.SpriteEffects);
                         }
                     });
@@ -1335,7 +1335,7 @@ namespace Barotrauma.Items.Components
 
             RectangleF entityRect = ScaleRectToUI(structure, parent, border);
             Vector2 spriteScale = new Vector2(entityRect.Size.X / sprite.size.X, entityRect.Size.Y / sprite.size.Y);
-            sprite.Draw(spriteBatch, new Vector2(entityRect.Location.X + inflate, entityRect.Location.Y + inflate), structure.SpriteColor, Vector2.Zero, 0f, spriteScale, structure.SpriteEffects);
+            sprite.Draw(spriteBatch, new Vector2(entityRect.Location.X + inflate, entityRect.Location.Y + inflate), structure.SpriteColor, Vector2.Zero, 0f, spriteScale, sprite.effects ^ structure.SpriteEffects);
         }
 
         private static RectangleF ScaleRectToUI(MapEntity entity, RectangleF parentRect, RectangleF worldBorders)
@@ -1717,6 +1717,21 @@ namespace Barotrauma.Items.Components
             }
 
             return new MiniMapHullData(scaledPolygon, worldRect, parentRect.Size, snappedRectangles, hullRefs.ToImmutableArray());
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+            if (searchAutoComplete != null)
+            {
+                searchAutoComplete.RectTransform.Parent = null;
+                searchAutoComplete = null;
+            }
+            if (hullInfoFrame != null)
+            {
+                hullInfoFrame.RectTransform.Parent = null;
+                hullInfoFrame = null;
+            }
         }
     }
 }

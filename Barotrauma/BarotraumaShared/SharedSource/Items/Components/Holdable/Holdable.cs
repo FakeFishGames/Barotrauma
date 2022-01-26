@@ -237,9 +237,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private bool loadedFromXml;
         public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
             base.Load(componentElement, usePrefabValues, idRemap);
+
+            loadedFromXml = true;
 
             if (usePrefabValues)
             {
@@ -536,7 +539,16 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     attachTargetCell = GetAttachTargetCell(150.0f);
-                    if (attachTargetCell != null) { IsActive = true; }
+                    if (attachTargetCell != null && attachTargetCell.IsDestructible) 
+                    {
+                        attachTargetCell.OnDestroyed += () =>
+                        {
+                            if (attachTargetCell != null && attachTargetCell.CellType != Voronoi2.CellType.Solid)
+                            {
+                                Drop(dropConnectedWires: true, dropper: null);
+                            }
+                        };
+                    }
                 }
             }
 
@@ -562,7 +574,7 @@ namespace Barotrauma.Items.Components
 
         public void DeattachFromWall()
         {
-            if (!attachable) return;
+            if (!attachable) { return; }
 
             Attached = false;
             attachTargetCell = null;
@@ -733,15 +745,6 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (attachTargetCell != null)
-            {
-                if (attachTargetCell.CellType != Voronoi2.CellType.Solid)
-                {
-                    Drop(dropConnectedWires: true, dropper: null);
-                }
-                return;
-            }
-
             if (item.body == null || !item.body.Enabled) { return; }
             if (picker == null || !picker.HasEquippedItem(item))
             {
@@ -838,15 +841,25 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
-            if (item.Submarine != null && item.Submarine.Loading) return;
+            if (item.Submarine != null && item.Submarine.Loading) { return; }
             OnMapLoaded();
             item.SetActiveSprite();
         }
 
         public override void OnMapLoaded()
         {
-            if (!attachable) return;
+            if (!attachable) { return; }
             
+            //a mod has overridden the item, and the base item didn't have a Holdable component = a mod made the item movable/detachable
+            if (item.Prefab.IsOverride && !loadedFromXml)
+            {
+                if (attachedByDefault)
+                {
+                    AttachToWall();
+                    return;
+                }
+            }
+
             if (Attached)
             {
                 AttachToWall();

@@ -389,6 +389,12 @@ namespace Barotrauma
                     DrawString(spriteBatch, new Vector2(10, 10),
                         "FPS: " + Math.Round(GameMain.PerformanceCounter.AverageFramesPerSecond),
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
+                    if (GameMain.GameSession != null && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 1.0)
+                    {
+                        DrawString(spriteBatch, new Vector2(10, 25),
+                            $"Physics: {GameMain.CurrentUpdateRate}",
+                            (GameMain.CurrentUpdateRate < Timing.FixedUpdateRate) ? Color.Red : Color.White, Color.Black * 0.5f, 0, SmallFont);
+                    }
                 }
 
                 if (GameMain.ShowPerf)
@@ -397,7 +403,7 @@ namespace Barotrauma
                     DrawString(spriteBatch, new Vector2(300, y),
                         "Draw - Avg: " + GameMain.PerformanceCounter.DrawTimeGraph.Average().ToString("0.00") + " ms" +
                         " Max: " + GameMain.PerformanceCounter.DrawTimeGraph.LargestValue().ToString("0.00") + " ms",
-                        GUI.Style.Green, Color.Black * 0.8f, font: SmallFont);
+                        Style.Green, Color.Black * 0.8f, font: SmallFont);
                     y += 15;
                     GameMain.PerformanceCounter.DrawTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), color: Style.Green);
                     y += 50;
@@ -408,7 +414,6 @@ namespace Barotrauma
                         Color.LightBlue, Color.Black * 0.8f, font: SmallFont);
                     y += 15;
                     GameMain.PerformanceCounter.UpdateTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), color: Color.LightBlue);
-                    GameMain.PerformanceCounter.UpdateIterationsGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), maxValue: 20, color: Style.Red);
                     y += 50;
                     foreach (string key in GameMain.PerformanceCounter.GetSavedIdentifiers)
                     {
@@ -431,7 +436,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (GameMain.DebugDraw)
+                if (GameMain.DebugDraw && !Submarine.Unloading && !(Screen.Selected is RoundSummaryScreen))
                 {
                     DrawString(spriteBatch, new Vector2(10, 25),
                         "Physics: " + GameMain.World.UpdateTime,
@@ -2435,6 +2440,11 @@ namespace Barotrauma
         private static bool TogglePauseMenu(GUIButton button, object obj)
         {
             pauseMenuOpen = !pauseMenuOpen;
+            if (!pauseMenuOpen && PauseMenu != null)
+            {
+                PauseMenu.RectTransform.Parent = null;
+                PauseMenu = null;
+            }
             return true;
         }
 

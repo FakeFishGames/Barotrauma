@@ -102,7 +102,7 @@ namespace Barotrauma
                 {
                     Identifier = value.Identifier;
                     Strength = (ushort)Math.Ceiling(value.Strength);
-                    Price = (ushort)(Strength * value.Prefab.HealCostMultiplier);
+                    Price = (ushort)(value.Prefab.BaseHealCost + Strength * value.Prefab.HealCostMultiplier);
                 }
             }
 
@@ -276,9 +276,15 @@ namespace Barotrauma
             PendingHeals.Add(crewMember);
         }
 
+        public static bool IsHealable(Affliction affliction)
+        {
+            return affliction.Prefab.HealableInMedicalClinic && affliction.Strength > GetShowTreshold(affliction);
+            static float GetShowTreshold(Affliction affliction) => Math.Max(0, Math.Min(affliction.Prefab.ShowIconToOthersThreshold, affliction.Prefab.ShowInHealthScannerThreshold));
+        }
+
         private NetAffliction[] GetAllAfflictions(CharacterHealth health)
         {
-            IEnumerable<Affliction> rawAfflictions = health.GetAllAfflictions().Where(a => !a.Prefab.IsBuff && a.Strength > GetShowTreshold(a));
+            IEnumerable<Affliction> rawAfflictions = health.GetAllAfflictions().Where(a => IsHealable(a));
 
             List<NetAffliction> afflictions = new List<NetAffliction>();
 
@@ -289,7 +295,7 @@ namespace Barotrauma
                 {
                     afflictions.Remove(foundAffliction);
                     foundAffliction.Strength += (ushort)affliction.Strength;
-                    foundAffliction.Price += (ushort)GetAdjustedPrice((int)(affliction.Prefab.HealCostMultiplier * affliction.Strength));
+                    foundAffliction.Price += (ushort)GetAdjustedPrice(GetHealPrice(affliction));
                     newAffliction = foundAffliction;
                 }
                 else
@@ -303,7 +309,7 @@ namespace Barotrauma
 
             return afflictions.ToArray();
 
-            static float GetShowTreshold(Affliction affliction) => Math.Max(0, Math.Min(affliction.Prefab.ShowIconToOthersThreshold, affliction.Prefab.ShowInHealthScannerThreshold));
+            static int GetHealPrice(Affliction affliction) => (int)(affliction.Prefab.BaseHealCost + (affliction.Prefab.HealCostMultiplier * affliction.Strength));
         }
 
         public int GetTotalCost() => PendingHeals.SelectMany(h => h.Afflictions).Aggregate(0, (current, affliction) => current + affliction.Price);

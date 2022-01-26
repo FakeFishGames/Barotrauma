@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Barotrauma.Lights;
 
@@ -35,9 +36,6 @@ namespace Barotrauma
         public static List<MapEntity> CopiedList = new List<MapEntity>();
 
         private static List<MapEntity> highlightedList = new List<MapEntity>();
-
-        // Test feature. Not yet saved.
-        public static Dictionary<MapEntity, HashSet<MapEntity>> SelectionGroups { get; private set; } = new Dictionary<MapEntity, HashSet<MapEntity>>();
 
         private static float highlightTimer;
 
@@ -197,7 +195,7 @@ namespace Barotrauma
                     {
                         Paste(cam.ScreenToWorld(PlayerInput.MousePosition));
                     }
-                    else if (PlayerInput.KeyHit(Keys.G))
+                    /*else if (PlayerInput.KeyHit(Keys.G))
                     {
                         if (SelectedList.Any())
                         {
@@ -217,7 +215,7 @@ namespace Barotrauma
                                 }
                             }
                         }
-                    }
+                    }*/
                 }
             }
 
@@ -360,14 +358,15 @@ namespace Barotrauma
                 {
                     if (highLightedEntity != null)
                     {
-                        if (SelectionGroups.TryGetValue(highLightedEntity, out HashSet<MapEntity> group))
+                        if (SubEditorScreen.IsLayerLinked(highLightedEntity)/*SelectionGroups.TryGetValue(highLightedEntity, out HashSet<MapEntity> group)*/)
                         {
-                            foreach (MapEntity entity in group.Where(e => !newSelection.Contains(e)))
+                            ImmutableHashSet<MapEntity> entitiesInSameLayer = SubEditorScreen.GetEntitiesInSameLayer(highLightedEntity);
+                            foreach (MapEntity entity in entitiesInSameLayer.Where(e => !newSelection.Contains(e)))
                             {
                                 newSelection.Add(entity);
                             }
 
-                            foreach (MapEntity entity in group)
+                            foreach (MapEntity entity in entitiesInSameLayer)
                             {
                                 entity.IsIncludedInSelection = true;
                             }
@@ -1197,14 +1196,24 @@ namespace Barotrauma
 
             Rectangle selectionRect = Submarine.AbsRect(pos, size);
 
-            foreach (MapEntity e in mapEntityList)
+            foreach (MapEntity entity in mapEntityList)
             {
-                if (!e.SelectableInEditor) continue;
+                if (!entity.SelectableInEditor) { continue; }
 
-                if (Submarine.RectsOverlap(selectionRect, e.rect))
+                if (Submarine.RectsOverlap(selectionRect, entity.rect))
                 {
-                    foundEntities.Add(e);
-                    e.IsIncludedInSelection = true;
+                    foundEntities.Add(entity);
+                    entity.IsIncludedInSelection = true;
+
+                    if (SubEditorScreen.IsLayerLinked(entity))
+                    {
+                        ImmutableHashSet<MapEntity> entitiesInSameLayer = SubEditorScreen.GetEntitiesInSameLayer(entity);
+                        foreach (MapEntity layerEntity in entitiesInSameLayer.Where(e => !foundEntities.Contains(e)))
+                        {
+                            foundEntities.Add(layerEntity);
+                            layerEntity.IsIncludedInSelection = true;
+                        }
+                    }
                 }
             }
 

@@ -1534,6 +1534,7 @@ namespace Barotrauma
                     if (int.TryParse(args[0], out int money))
                     {
                         campaign.Money += money;
+                        GameAnalyticsManager.AddMoneyGainedEvent(money, GameAnalyticsManager.MoneySource.Cheat, "console");
                     }
                     else
                     {

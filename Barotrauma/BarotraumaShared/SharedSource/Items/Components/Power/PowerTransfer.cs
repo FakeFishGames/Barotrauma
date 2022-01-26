@@ -244,7 +244,6 @@ namespace Barotrauma.Items.Components
             return picker != null;
         }
 
-        private static readonly HashSet<Connection> tempConnected = new HashSet<Connection>();
         protected void RefreshConnections()
         {
             var connections = item.Connections;
@@ -260,41 +259,51 @@ namespace Barotrauma.Items.Components
                 }
 
                 //find all connections that are connected to this one (directly or via another PowerTransfer)
-                tempConnected.Clear();
+                HashSet<Connection> tempConnected;
+                if (!connectedRecipients.ContainsKey(c))
+                {
+                    tempConnected = new HashSet<Connection>();
+                    connectedRecipients.Add(c, tempConnected);
+                }
+                else
+                {
+                    tempConnected = connectedRecipients[c];
+                    tempConnected.Clear();
+                    //mark all previous recipients as dirty
+                    foreach (Connection recipient in tempConnected)
+                    {
+                        var pt = recipient.Item.GetComponent<PowerTransfer>();
+                        if (pt != null) { pt.connectionDirty[recipient] = true; }
+                    }
+                }
+
+                tempConnected.Add(c);
                 if (item.Condition > 0.0f)
                 {
-                    if (!connectedRecipients.ContainsKey(c))
-                    {
-                        connectedRecipients.Add(c, tempConnected);
-                    }
-                    else
-                    {
-                        //mark all previous recipients as dirty
-                        foreach (Connection recipient in connectedRecipients[c])
-                        {
-                            var pt = recipient.Item.GetComponent<PowerTransfer>();
-                            if (pt != null) pt.connectionDirty[recipient] = true;
-                        }
-                    }
-
-                    tempConnected.Add(c);
                     GetConnected(c, tempConnected);
-                }
-                connectedRecipients[c] = tempConnected;
-
-                //go through all the PowerTransfers that we're connected to and set their connections to match the ones we just calculated
-                //(no need to go through the recursive GetConnected method again)
-                foreach (Connection recipient in tempConnected)
-                {
-                    if (recipient == c) { continue; }
-                    var recipientPowerTransfer = recipient.Item.GetComponent<PowerTransfer>();
-                    if (recipientPowerTransfer == null) { continue; }
-                    if (!connectedRecipients.ContainsKey(recipient))
+                    //go through all the PowerTransfers that we're connected to and set their connections to match the ones we just calculated
+                    //(no need to go through the recursive GetConnected method again)
+                    foreach (Connection recipient in tempConnected)
                     {
-                        connectedRecipients.Add(recipient, tempConnected);
+                        if (recipient == c) { continue; }
+                        var recipientPowerTransfer = recipient.Item.GetComponent<PowerTransfer>();
+                        if (recipientPowerTransfer == null) { continue; }
+                        if (!recipientPowerTransfer.connectedRecipients.ContainsKey(recipient))
+                        {
+                            recipientPowerTransfer.connectedRecipients.Add(recipient, new HashSet<Connection>());
+                        }
+                        else
+                        {
+                            recipientPowerTransfer.connectedRecipients[recipient].Clear();
+                        }
+                        foreach (var connection in tempConnected)
+                        {
+                            recipientPowerTransfer.connectedRecipients[recipient].Add(connection);
+                        }
+                        recipientPowerTransfer.connectionDirty[recipient] = false;
                     }
-                    recipientPowerTransfer.connectionDirty[recipient] = false;
                 }
+                connectionDirty[c] = false;
             }
         }
 

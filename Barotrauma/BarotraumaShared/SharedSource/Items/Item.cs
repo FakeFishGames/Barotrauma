@@ -1741,7 +1741,7 @@ namespace Barotrauma
             }
             else
             {
-                if (updateableComponents.Count == 0 && aiTarget == null && !hasStatusEffectsOfType[(int)ActionType.Always] && (body == null || !body.Enabled))
+                if (updateableComponents.Count == 0 && !hasStatusEffectsOfType[(int)ActionType.Always] && (body == null || !body.Enabled))
                 {
 #if CLIENT
                     positionBuffer.Clear();
@@ -2088,19 +2088,18 @@ namespace Barotrauma
             return controller != null;
         }
 
-        public bool SendSignal(string signal, string connectionName)
+        public void SendSignal(string signal, string connectionName)
         {
-            return SendSignal(new Signal(signal), connectionName);
+            SendSignal(new Signal(signal), connectionName);
         }
 
-        public bool SendSignal(Signal signal, string connectionName)
+        public void SendSignal(Signal signal, string connectionName)
         {
-            if (connections == null) { return false; }
-            if (!connections.TryGetValue(connectionName, out Connection connection)) { return false; }
+            if (connections == null) { return; }
+            if (!connections.TryGetValue(connectionName, out Connection connection)) { return; }
 
             signal.source ??= this;
             SendSignal(signal, connection);
-            return true;
         }
 
         private readonly HashSet<(Signal Signal, Connection Connection)> delayedSignals = new HashSet<(Signal Signal, Connection Connection)>();
@@ -3248,6 +3247,9 @@ namespace Barotrauma
             foreach (ItemComponent ic in components)
             {
                 ic.Remove();
+#if CLIENT
+                ic.GuiFrame = null;
+#endif
             }
             ItemList.Remove(this);
 

@@ -26,6 +26,8 @@ namespace Barotrauma.Items.Components
 
         public PhysicsBody ParentBody;
 
+        private bool isOn;
+
         private Turret turret;
 
         [Serialize(100.0f, true, description: "The range of the emitted light. Higher values are more performance-intensive.", alwaysUseInstanceValues: true),
@@ -85,12 +87,13 @@ namespace Barotrauma.Items.Components
         [Editable, Serialize(false, true, description: "Is the light currently on.", alwaysUseInstanceValues: true)]
         public bool IsOn
         {
-            get { return IsActive; }
+            get { return isOn; }
             set
             {
-                if (IsActive == value) { return; }
+                if (isOn == value && IsActive == value) { return; }
 
-                IsActive = value;
+                IsActive = isOn = value;
+                SetLightSourceState(value, value ? lightBrightness : 0.0f);
                 OnStateChanged();
             }
         }
@@ -200,9 +203,8 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (base.IsActive == value) { return; }
-                base.IsActive = value;
-
-                SetLightSourceState(value, value ? lightBrightness : 0.0f);
+                base.IsActive = isOn = value;
+                SetLightSourceState(value, value ? lightBrightness : 0.0f);                
             }
         }
 
@@ -235,6 +237,23 @@ namespace Barotrauma.Items.Components
             base.OnItemLoaded();
             SetLightSourceState(IsActive, lightBrightness);
             turret = item.GetComponent<Turret>();
+        }
+
+        public override void OnMapLoaded()
+        {
+            if (item.body == null && powerConsumption <= 0.0f && Parent == null && turret == null && 
+                (statusEffectLists == null || !statusEffectLists.ContainsKey(ActionType.OnActive)) && 
+                (IsActiveConditionals == null || IsActiveConditionals.Count == 0))
+            {
+                lightBrightness = 1.0f;
+                SetLightSourceState(true, lightBrightness);
+                SetLightSourceTransformProjSpecific();
+                base.IsActive = false;
+                isOn = true;
+#if CLIENT
+                Light.ParentSub = item.Submarine;
+#endif
+            }
         }
 
         public override void Update(float deltaTime, Camera cam)

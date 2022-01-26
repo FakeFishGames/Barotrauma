@@ -570,6 +570,7 @@ namespace Barotrauma.Items.Components
             {
                 GUI.RemoveFromUpdateList(GuiFrame, true);
                 GuiFrame.RectTransform.Parent = null;
+                GuiFrame = null;
             }
 #endif
 

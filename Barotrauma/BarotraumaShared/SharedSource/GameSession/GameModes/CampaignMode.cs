@@ -78,6 +78,9 @@ namespace Barotrauma
         //there can be no events before this time has passed during the 1st campaign round
         const float FirstRoundEventDelay = 0.0f;
 
+        public double TotalPlayTime;
+        public int TotalPassedLevels;
+
         public enum InteractionType { None, Talk, Examine, Map, Crew, Store, Repair, Upgrade, PurchaseSub, MedicalClinic }
 
         public readonly CargoManager CargoManager;
@@ -92,7 +95,7 @@ namespace Barotrauma
 
         public CampaignSettings Settings;
 
-        private List<Mission> extraMissions = new List<Mission>();
+        private readonly List<Mission> extraMissions = new List<Mission>();
 
         public enum TransitionType
         {
@@ -690,11 +693,13 @@ namespace Barotrauma
 
             GameAnalyticsManager.AddProgressionEvent(
                 GameAnalyticsManager.ProgressionStatus.Complete,
-                Name ?? "none");
+                Preset?.Identifier ?? "none");
             string eventId = "FinishCampaign:";
             GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"));
             GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count() ?? 0));
-            GameAnalyticsManager.AddDesignEvent(eventId + "Money", Money);            
+            GameAnalyticsManager.AddDesignEvent(eventId + "Money", Money);
+            GameAnalyticsManager.AddDesignEvent(eventId + "Playtime", TotalPlayTime);
+            GameAnalyticsManager.AddDesignEvent(eventId + "PassedLevels", TotalPassedLevels);
         }
 
         protected virtual void EndCampaignProjSpecific() { }
@@ -707,12 +712,14 @@ namespace Barotrauma
             location.RemoveHireableCharacter(characterInfo);
             CrewManager.AddCharacterInfo(characterInfo);
             Money -= characterInfo.Salary;
+            GameAnalyticsManager.AddMoneySpentEvent(characterInfo.Salary, GameAnalyticsManager.MoneySink.Crew, characterInfo.Job?.Prefab.Identifier ?? "unknown");
             return true;
         }
 
         private void NPCInteract(Character npc, Character interactor)
         {
             if (!npc.AllowCustomInteract) { return; }
+            GameAnalyticsManager.AddDesignEvent("CampaignInteraction:" + Preset.Identifier + ":" + npc.CampaignInteractionType);
             NPCInteractProjSpecific(npc, interactor);
             string coroutineName = "DoCharacterWait." + (npc?.ID ?? Entity.NullEntityID);
             if (!CoroutineManager.IsCoroutineRunning(coroutineName))
@@ -876,6 +883,19 @@ namespace Barotrauma
         }
 
         public abstract void Save(XElement element);
+
+        protected void LoadStats(XElement element)
+        {
+            TotalPlayTime = element.GetAttributeDouble(nameof(TotalPlayTime).ToLowerInvariant(), 0);
+            TotalPassedLevels = element.GetAttributeInt(nameof(TotalPassedLevels).ToLowerInvariant(), 0);
+        }
+
+        protected XElement SaveStats()
+        {
+            return new XElement("stats", 
+                new XAttribute(nameof(TotalPlayTime).ToLowerInvariant(), TotalPlayTime), 
+                new XAttribute(nameof(TotalPassedLevels).ToLowerInvariant(), TotalPassedLevels));
+        }
         
         public void LogState()
         {

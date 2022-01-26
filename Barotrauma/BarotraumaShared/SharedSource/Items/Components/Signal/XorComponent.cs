@@ -20,7 +20,11 @@ namespace Barotrauma.Items.Components
             }
 
             string signalOut = sendOutput == 1 ? output : falseOutput;
-            if (string.IsNullOrEmpty(signalOut)) { return; }
+            if (string.IsNullOrEmpty(signalOut))
+            {
+                IsActive = false;
+                return;
+            }
 
             item.SendSignal(new Signal(signalOut, sender: signalSender[0] ?? signalSender[1]), "signal_out");
         }

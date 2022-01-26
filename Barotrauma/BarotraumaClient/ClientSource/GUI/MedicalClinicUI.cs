@@ -347,7 +347,7 @@ namespace Barotrauma
             // sum up all the afflictions and their strengths
             Dictionary<AfflictionPrefab, float> afflictionAndStrength = new Dictionary<AfflictionPrefab, float>();
 
-            foreach (Affliction affliction in health.GetAllAfflictions().Where(a => !a.Prefab.IsBuff && a.Strength > 0))
+            foreach (Affliction affliction in health.GetAllAfflictions().Where(a => MedicalClinic.IsHealable(a)))
             {
                 if (afflictionAndStrength.TryGetValue(affliction.Prefab, out float strength))
                 {
@@ -581,7 +581,6 @@ namespace Barotrauma
                 OnClicked = (button, _) =>
                 {
                     button.Enabled = false;
-                    ClosePopup();
                     medicalClinic.HealAllButtonAction(request =>
                     {
                         switch (request.HealResult)
@@ -595,7 +594,9 @@ namespace Barotrauma
                         }
 
                         button.Enabled = true;
+                        ClosePopup();
                     });
+                    ClosePopup();
                     return true;
                 }
             };
@@ -993,7 +994,7 @@ namespace Barotrauma
             }
         }
 
-        private void ClosePopup()
+        public void ClosePopup()
         {
             if (selectedCrewElement is { } popup)
             {

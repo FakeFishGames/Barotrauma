@@ -556,7 +556,14 @@ namespace Barotrauma
             switch (Name)
             {
                 case nameof(Powered.Voltage):
-                    if (parentObject is Powered powered) { value = powered.Voltage; return true; }
+                    {
+                        if (parentObject is Powered powered) { value = powered.Voltage; return true; }
+                    }
+                    break;
+                case nameof(Powered.CurrPowerConsumption):
+                    {
+                        if (parentObject is Powered powered) { value = powered.CurrPowerConsumption; return true; }
+                    }
                     break;
                 case nameof(PowerContainer.Charge):
                     {
@@ -566,6 +573,11 @@ namespace Barotrauma
                 case nameof(PowerContainer.ChargePercentage):
                     {
                         if (parentObject is PowerContainer powerContainer) { value = powerContainer.ChargePercentage; return true; }
+                    }
+                    break;
+                case nameof(PowerContainer.RechargeRatio):
+                    {
+                        if (parentObject is PowerContainer powerContainer) { value = powerContainer.RechargeRatio; return true; }
                     }
                     break;
                 case nameof(Reactor.AvailableFuel):

@@ -436,7 +436,7 @@ namespace Barotrauma
         /// <summary>
         /// Are there any active contacts between the physics body and the target entity
         /// </summary>
-        public static bool CheckContactsForEntity(PhysicsBody triggerBody, Entity separatingEntity)
+        public static bool CheckContactsForEntity(PhysicsBody triggerBody, Entity targetEntity)
         {
             foreach (Fixture fixture in triggerBody.FarseerBody.FixtureList)
             {
@@ -447,10 +447,11 @@ namespace Barotrauma
                         contactEdge.Contact.Enabled &&
                         contactEdge.Contact.IsTouching)
                     {
-                        if (contactEdge.Contact.FixtureA != fixture && contactEdge.Contact.FixtureB != fixture)
-                        {
-                            if (GetEntity(contactEdge.Contact.FixtureB) == separatingEntity || GetEntity(contactEdge.Contact.FixtureA) == separatingEntity) { return true; }
-                        }
+                        if ((contactEdge.Contact.FixtureA.Body == triggerBody.FarseerBody && GetEntity(contactEdge.Contact.FixtureB) == targetEntity) ||
+                            (contactEdge.Contact.FixtureB.Body == triggerBody.FarseerBody && GetEntity(contactEdge.Contact.FixtureA) == targetEntity))
+                        { 
+                            return true; 
+                        }                        
                     }
                     contactEdge = contactEdge.Next;
                 }
@@ -560,6 +561,8 @@ namespace Barotrauma
 
             foreach (Entity triggerer in triggerers)
             {
+                if (triggerer.Removed) { continue; }
+
                 ApplyStatusEffects(statusEffects, worldPosition, triggerer, deltaTime, targets);
 
                 if (triggerer is IDamageable damageable)
@@ -691,6 +694,8 @@ namespace Barotrauma
 
         private void ApplyForce(PhysicsBody body)
         {
+            if (body == null) { return; }
+
             float distFactor = 1.0f;
             if (ForceFalloff)
             {

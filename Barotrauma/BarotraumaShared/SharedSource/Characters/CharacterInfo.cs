@@ -1527,7 +1527,7 @@ namespace Barotrauma
                             orderTargetElement.Add(new XAttribute("hullid", (uint)ot.Hull.ID));
                             position -= ot.Hull.WorldPosition;
                         }
-                        orderTargetElement.Add(new XAttribute("position", $"{position.X},{position.Y}"));
+                        orderTargetElement.Add(new XAttribute("position", XMLExtensions.Vector2ToString(position)));
                         orderElement.Add(orderTargetElement);
                         break;
                     case Order.OrderTargetType.WallSection when targetAvailableInNextLevel && order.TargetEntity is Structure s && order.WallSectionIndex.HasValue:

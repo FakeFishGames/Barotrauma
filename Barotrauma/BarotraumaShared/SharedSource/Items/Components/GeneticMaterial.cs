@@ -74,7 +74,6 @@ namespace Barotrauma.Items.Components
                     a.Identifier.Equals(Effect, StringComparison.OrdinalIgnoreCase) ||
                     a.AfflictionType.Equals(Effect, StringComparison.OrdinalIgnoreCase)).GetRandom();
             }
-            Tainted = true;
         }
 
         [Serialize(3.0f, false)]

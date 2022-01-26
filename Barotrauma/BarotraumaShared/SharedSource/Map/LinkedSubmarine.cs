@@ -352,6 +352,7 @@ namespace Barotrauma
                     if (hull.Submarine != sub) { continue; }
                     hull.WaterVolume = 0.0f;
                     hull.OxygenPercentage = 100.0f;
+                    hull.BallastFlora?.Kill();
                 }
             }
 

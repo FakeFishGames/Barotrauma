@@ -128,13 +128,13 @@ namespace Barotrauma
             {
                 //no flow particles between linked hulls (= rooms consisting of multiple hulls)
                 if (hull1.linkedTo.Contains(hull2)) { return; }
-                foreach (Hull h in hull1.linkedTo)
+                foreach (var linkedEntity in hull1.linkedTo)
                 {
-                    if (h.linkedTo.Contains(hull1) && h.linkedTo.Contains(hull2)) { return; }
+                    if (linkedEntity is Hull h && h.linkedTo.Contains(hull1) && h.linkedTo.Contains(hull2)) { return; }
                 }
-                foreach (Hull h in hull2.linkedTo)
+                foreach (var linkedEntity in hull2.linkedTo)
                 {
-                    if (h.linkedTo.Contains(hull1) && h.linkedTo.Contains(hull2)) { return; }
+                    if (linkedEntity is Hull h && h.linkedTo.Contains(hull1) && h.linkedTo.Contains(hull2)) { return; }
                 }
             }
 
@@ -244,7 +244,7 @@ namespace Barotrauma
                     float emitInterval = 1.0f / particlesPerSec;
                     while (particleTimer > emitInterval)
                     {
-                        pos.X = Rand.Range(rect.X, rect.X + rect.Width);
+                        pos.X = Rand.Range(rect.X, rect.X + rect.Width + 1);
                         Vector2 velocity = new Vector2(
                             lerpedFlowForce.X * Rand.Range(0.5f, 0.7f),
                             MathHelper.Clamp(lerpedFlowForce.Y, -500.0f, 1000.0f) * Rand.Range(0.5f, 0.7f));

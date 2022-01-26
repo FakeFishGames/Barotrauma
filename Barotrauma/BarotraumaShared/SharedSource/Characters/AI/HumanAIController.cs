@@ -565,7 +565,7 @@ namespace Barotrauma
                         Character.AnimController.HeadInWater ||
                         Character.Submarine == null ||
                         (Character.Submarine.TeamID != Character.TeamID && !Character.IsEscorted) ||
-                        ObjectiveManager.CurrentOrders.Any(o => o.Objective.KeepDivingGearOn) ||
+                        !ObjectiveManager.IsCurrentObjective<AIObjectiveIdle>() && ObjectiveManager.CurrentOrders.Any(o => o.Objective.KeepDivingGearOn) ||
                         ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn) ||
                         Character.CurrentHull.OxygenPercentage < HULL_LOW_OXYGEN_PERCENTAGE + 10;
                     bool IsOrderedToWait() => Character.IsOnPlayerTeam && ObjectiveManager.CurrentOrder is AIObjectiveGoTo goTo && goTo.Target == Character;
@@ -1090,7 +1090,6 @@ namespace Barotrauma
 
         private void RespondToAttack(Character attacker, AttackResult attackResult)
         {
-            float minorDamageThreshold = 10;
             float healAmount = 0.0f;
             if (attacker != null)
             {
@@ -1099,7 +1098,7 @@ namespace Barotrauma
             // excluding poisons etc
             float realDamage = attackResult.Damage - healAmount;
             // including poisons etc
-            float totalDamage = realDamage - healAmount;
+            float totalDamage = realDamage;
             if (attackResult.Afflictions != null)
             {
                 foreach (Affliction affliction in attackResult.Afflictions)
@@ -1140,6 +1139,13 @@ namespace Barotrauma
             }
             bool isAttackerInfected = false;
             bool isAttackerFightingEnemy = false;
+            float minorDamageThreshold = 1;
+            float majorDamageThreshold = 20;
+            if (attacker.TeamID == Character.TeamID)
+            {
+                minorDamageThreshold = 10;
+                majorDamageThreshold = 40;
+            }
             if (IsFriendly(attacker))
             {
                 if (attacker.AnimController.Anim == Barotrauma.AnimController.Animation.CPR && attacker.SelectedCharacter == Character)
@@ -1148,11 +1154,11 @@ namespace Barotrauma
                     // Should not cancel any existing ai objectives (so that if the character attacked you and then helped, we still would want to retaliate).
                     return;
                 }
-                float cumulativeDamage = Character.GetDamageDoneByAttacker(attacker);
+                float cumulativeDamage = realDamage + Character.GetDamageDoneByAttacker(attacker);
                 bool isAccidental = attacker.IsBot && !IsMentallyUnstable && !attacker.AIController.IsMentallyUnstable && Character.CombatAction == null;
                 if (isAccidental)
                 {
-                    if (!Character.IsSecurity && cumulativeDamage > 1)
+                    if (!Character.IsSecurity && cumulativeDamage > minorDamageThreshold)
                     {
                         AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, attacker);
                     }
@@ -1161,7 +1167,7 @@ namespace Barotrauma
                 {
                     isAttackerInfected = attacker.CharacterHealth.GetAfflictionStrength("alieninfection") > 0;
                     // Inform other NPCs
-                    if (isAttackerInfected || cumulativeDamage > 1 || totalDamage >= minorDamageThreshold)
+                    if (isAttackerInfected || cumulativeDamage > minorDamageThreshold || totalDamage > minorDamageThreshold)
                     {
                         if (GameMain.IsMultiplayer || !attacker.IsPlayer || Character.TeamID != attacker.TeamID)
                         {
@@ -1170,27 +1176,36 @@ namespace Barotrauma
                     }
                     if (Character.IsBot)
                     {
-                        if (ObjectiveManager.CurrentObjective is AIObjectiveFightIntruders) { return; }
-                        if (attacker.IsPlayer)
+                        var combatMode = DetermineCombatMode(Character, cumulativeDamage);
+                        if (attacker.IsPlayer && !Character.IsInstigator && !ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>())
                         {
-                            if (Character.IsSecurity)
+                            switch (combatMode)
                             {
-                                if (attacker.TeamID != Character.TeamID && cumulativeDamage > 1 || cumulativeDamage > minorDamageThreshold)
-                                {
-                                    Character.Speak(TextManager.Get("dialogattackedbyfriendlysecurityarrest"), null, 0.50f, "attackedbyfriendlysecurityarrest", minDurationBetweenSimilar: 30.0f);
-                                }
-                                else
-                                {
-                                    Character.Speak(TextManager.Get("dialogattackedbyfriendlysecurityresponse"), null, 0.50f, "attackedbyfriendlysecurityresponse", minDurationBetweenSimilar: 30.0f);
-                                }
-                            }
-                            else if (!Character.IsInstigator && cumulativeDamage > 1)
-                            {
-                                Character.Speak(TextManager.Get("DialogAttackedByFriendly"), null, 0.50f, "attackedbyfriendly", minDurationBetweenSimilar: 30.0f);
+                                case AIObjectiveCombat.CombatMode.Defensive:
+                                case AIObjectiveCombat.CombatMode.Retreat:
+                                    if (Character.IsSecurity)
+                                    {
+                                        Character.Speak(TextManager.Get("dialogattackedbyfriendlysecurityresponse"), null, 0.5f, "attackedbyfriendlysecurityresponse", minDurationBetweenSimilar: 10.0f);
+                                    }
+                                    else
+                                    {
+                                        Character.Speak(TextManager.Get("DialogAttackedByFriendly"), null, 0.5f, "attackedbyfriendly", minDurationBetweenSimilar: 10.0f);
+                                    }
+                                    break;
+                                case AIObjectiveCombat.CombatMode.Offensive:
+                                case AIObjectiveCombat.CombatMode.Arrest:
+                                    Character.Speak(TextManager.Get("dialogattackedbyfriendlysecurityarrest"), null, 0.5f, "attackedbyfriendlysecurityarrest", minDurationBetweenSimilar: 10.0f);
+                                    break;
+                                case AIObjectiveCombat.CombatMode.None:
+                                    if (Character.IsSecurity && realDamage > 1)
+                                    {
+                                        Character.Speak(TextManager.Get("dialogattackedbyfriendlysecurityresponse"), null, 0.5f, "attackedbyfriendlysecurityresponse", minDurationBetweenSimilar: 10.0f);
+                                    }
+                                    break;
                             }
                         }
                         // If the attacker is using a low damage and high frequency weapon like a repair tool, we shouldn't use any delay.
-                        AddCombatObjective(DetermineCombatMode(Character, cumulativeDamage), attacker, delay: realDamage > 1 ? GetReactionTime() : 0);
+                        AddCombatObjective(combatMode, attacker, delay: realDamage > 1 ? GetReactionTime() : 0);
                     }
                     if (!isAttackerFightingEnemy)
                     {
@@ -1203,15 +1218,15 @@ namespace Barotrauma
                 if (Character.Submarine != null && Character.Submarine.GetConnectedSubs().Contains(attacker.Submarine))
                 {
                     // Non-friendly
-                    InformOtherNPCs(Character.GetDamageDoneByAttacker(attacker));
+                    InformOtherNPCs();
                 }
                 if (Character.IsBot)
                 {
-                    AddCombatObjective(DetermineCombatMode(Character, cumulativeDamage: realDamage), attacker);
+                    AddCombatObjective(DetermineCombatMode(Character), attacker);
                 }
             }
 
-            void InformOtherNPCs(float cumulativeDamage)
+            void InformOtherNPCs(float cumulativeDamage = 0)
             {
                 foreach (Character otherCharacter in Character.CharacterList)
                 {
@@ -1238,7 +1253,7 @@ namespace Barotrauma
                 }
             }
 
-            AIObjectiveCombat.CombatMode DetermineCombatMode(Character c, float cumulativeDamage, bool isWitnessing = false)
+            AIObjectiveCombat.CombatMode DetermineCombatMode(Character c, float cumulativeDamage = 0, bool isWitnessing = false)
             {
                 if (!IsFriendly(attacker))
                 {
@@ -1258,7 +1273,6 @@ namespace Barotrauma
                 }
                 else
                 {
-                    float dmgThreshold = attacker.TeamID == Character.TeamID ? 50 : minorDamageThreshold;
                     if (isAttackerInfected)
                     {
                         cumulativeDamage = 100;
@@ -1266,8 +1280,7 @@ namespace Barotrauma
                     if (GameMain.IsSingleplayer && attacker.IsPlayer && Character.TeamID == attacker.TeamID)
                     {
                         // Bots in the player team never act aggressively in single player when attacked by the player
-                        dmgThreshold = minorDamageThreshold;
-                        return cumulativeDamage > dmgThreshold ? AIObjectiveCombat.CombatMode.Retreat : AIObjectiveCombat.CombatMode.None;
+                        return cumulativeDamage > minorDamageThreshold ? AIObjectiveCombat.CombatMode.Retreat : AIObjectiveCombat.CombatMode.None;
                     }
                     if (Character.Submarine == null || !Character.Submarine.GetConnectedSubs().Contains(attacker.Submarine))
                     {
@@ -1308,20 +1321,24 @@ namespace Barotrauma
                             // Already targeting the attacker -> treat as a more serious threat.
                             cumulativeDamage *= 2;
                         }
-                        if (cumulativeDamage > dmgThreshold)
+                        if (cumulativeDamage > majorDamageThreshold)
                         {
                             if (c.IsSecurity)
                             {
-                                return c.IsSecurity ? AIObjectiveCombat.CombatMode.Offensive : AIObjectiveCombat.CombatMode.Arrest;
+                                return AIObjectiveCombat.CombatMode.Offensive;
                             }
                             else
                             {
                                 return c == Character ? AIObjectiveCombat.CombatMode.Defensive : AIObjectiveCombat.CombatMode.Retreat;
                             }
                         }
-                        else
+                        else if (cumulativeDamage > minorDamageThreshold)
                         {
                             return c.IsSecurity ? AIObjectiveCombat.CombatMode.Arrest : AIObjectiveCombat.CombatMode.Retreat;
+                        }
+                        else
+                        {
+                            return AIObjectiveCombat.CombatMode.None;
                         }
                     }
 
