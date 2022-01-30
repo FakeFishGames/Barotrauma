@@ -220,6 +220,7 @@ namespace Barotrauma
                 {
                     RespawnManager.ReduceCharacterSkills(characterInfo);
                     characterInfo.RemoveSavedStatValuesOnDeath();
+                    characterInfo.CauseOfDeath = null;
                 }
                 c.CharacterInfo = characterInfo;
                 characterData.RemoveAll(cd => cd.MatchesClient(c));

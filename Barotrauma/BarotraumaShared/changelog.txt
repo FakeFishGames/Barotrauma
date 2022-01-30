@@ -1,4 +1,30 @@
 ---------------------------------------------------------------------------------------------------------
+v0.15.23.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed inability to switch subs in multiplayer campaign, unless you opt to switch at the same time as you purchase the new sub.
+- Fixed server not loading the previous save, but continuing from where you left off if you return to the server lobby without saving and try to continue.
+- Fixed characters who've died and respawned during a round getting a penalty to their skills again on the following round.
+- Attempt to fix clients sometimes gaining control of an incorrect character in the multiplayer campaign.
+
+---------------------------------------------------------------------------------------------------------
+v0.15.22.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed GameAnalytics consent prompt still going outside the window on small resolutions and/or large text sizes.
+- Fixed deconstructor not being able to put the items into containers in the output slots.
+
+---------------------------------------------------------------------------------------------------------
+v0.15.22.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed crashing on startup on some versions of macOS.
+- Fixed Kastrull's drone sometimes spawning inside the sub client-side in multiplayer.
+- Fixed opening the settings menu resetting the game window, which caused screen capture software to stop capturing the window.
+- Fixed certain mods that don't configure the "you are here" circle sprite for the status monitors causing crashes.
+- Fixed abilities that give simultaneous skill gain (minor in mechanics, once upon a time in europa, apprenticeship) not giving the extra skill points.
+
+---------------------------------------------------------------------------------------------------------
 v0.15.21.0
 ---------------------------------------------------------------------------------------------------------
 

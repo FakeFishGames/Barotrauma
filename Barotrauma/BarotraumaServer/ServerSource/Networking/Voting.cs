@@ -131,7 +131,7 @@ namespace Barotrauma
                     {
                         string subName = inc.ReadString();
                         SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
-                        if (GameMain.GameSession?.Campaign is MultiPlayerCampaign campaign && campaign.CanPurchaseSub(subInfo))
+                        if (GameMain.GameSession?.Campaign is MultiPlayerCampaign campaign && (campaign.CanPurchaseSub(subInfo) || GameMain.GameSession.IsSubmarineOwned(subInfo)))
                         {
                             StartSubmarineVote(subInfo, voteType, sender);
                         }
