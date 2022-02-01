@@ -113,7 +113,7 @@ namespace Barotrauma.Items.Components
                 }
                 throttlePowerOutput = overloaded ?
 					MathHelper.Clamp(throttlePowerOutput, 0.0f, MaxPower): 					
-					Math.Max(throttlePowerOutput - MaxPower * 0.1f * deltaTime, 0.0f);
+					Math.Max((throttlePowerOutput - MaxPower) * 0.1f * deltaTime, 0.0f);
             }
 
             if (Math.Min(-currPowerConsumption, PowerLoad) > maxPower && CanBeOverloaded)
