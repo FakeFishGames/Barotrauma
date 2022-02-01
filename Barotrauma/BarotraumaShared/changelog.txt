@@ -1,4 +1,56 @@
 ---------------------------------------------------------------------------------------------------------
+v0.16.2.0
+---------------------------------------------------------------------------------------------------------
+
+Changes and additions:
+- Added 3 new monster variants: Giant Spineling, Crawler Broodmother and Veteran Mudraptor.
+- Added the Submarine tab to the multiplayer campaign store to allow selling items on the submarine.
+- Added new campaign store related client permissions: use campaign store, buy items, sell inventory items, and sell submarine items.
+- Fixed wall healths being half of what they should be on vanilla subs, increased structure damages to compensate.
+- Prevented selling items from submarine containers tagged with "donttakeitems", e.g. constructors, deconstructors.
+- Added a new "Assault Enemy" order: bots with the order will seek out and attack any hostile characters in any connected submarines or outposts.
+- Made the order quick-assigning logic prefer characters who don't have the order yet (among the characters with the appropriate job).
+- Made it possible to use the order quick-assignment to give the Fix Leaks order to all character (although mechanics, engineers, and assistants are still preferred).
+- Misc improvements and fixes to Winterhalter, Herja and Barsuk (unstable only).
+- Balanced mission rewards, commonness and difficulties.
+- Optimizations to gap logic.
+- Chaingun projectiles and canister shells cause lacerations instead of gunshot wounds.
+- Added recycle recipe to SMG magazines.
+- Significantly reduced the speed at which welding tools fix walls.
+- Bots can find buttons connected to a door using links made in the sub editor. Allows working around complex circuits that prevent the bots from figuring out which button controls a door.
+- Allow using cheats in editors.
+- Don't show "hidden in-game" docking ports on the sonar, option to disable the docking port's particle and sound effects.
+- The prompt about forbidden words in the server's name is only shown when trying to start a public server.
+- Show prices in the submarine specs window (previously there was no way to see a sub's price in the server lobby).
+- Allow wiring non-interactable items and accessing non-interactable containers in the sub editor.
+
+Fixes:
+- Fixed static lights being on even if turned off in the sub editor (unstable only).
+- Fixed bots sometimes getting stuck on ladders while swimming.
+- Fixed some hairs clipping through hats (unstable only).
+- Fixed bots returning to the sub even when they have an active wait order. Happened when the order was given inside and then when e.g. the character is controlled by the player, and then when the player changes the character, the bot falls to the "find safety objective", because it's not allowed to stay outside.
+- Fixed aggressive boarders not being aggressive enough inside the player sub, because they couldn't target things that were blocked by a wall.
+- Adjusted threshers' targeting priorities. Tigerthreshers can now damage doors, but should do so only when they get inside.
+- Fixed crouching animation not appearing in MP when moving backwards while crouching (unstable only).
+- Fixed crashing when trying to send a messagebox to clients using console commands (unstable only).
+- Fixed some terminals not working in alien ruins (unstable only).
+- Fixed pumps not taking the volumes/shapes of the linked hulls into account when using "set_targetlevel", causing the neural level to be off in irregularly shaped multi-hull ballasts.
+- Fixed artifacts sometimes spawning outside the level when there's no artifact holder to place them in (e.g. when having 2 artifact missions active at the same time).
+- Fixed plasma cutter doing damage to all limbs, not just the one it hits (unstable only).
+- The electrical grid in beacon stations is turned indestructible after activating it. Should fix beacon missions sometimes failing for no apparent reason (if something happened to damage the beacon's walls during the round and flood it).
+- Fixed crashing when receiving a chat message when controlling a character with no inventory (unstable only).
+- Fixed monsters continuing to eat a characters who've been revived with console commands (leading to weird results, such as the character being able to run around after being dismembered)..
+- Attempt to fix a nullref exception in Map.RemoveFogOfWar (suspecting it was caused by a mod that didn't configure the campaign map's sprite for some biome).
+- Fixed console error when trying to make a legacy husk crouch.
+- Fixed the dialogue reserved for rearranging character orders not being used in multiplayer.
+- Fixed Operate orders not being dismissed automatically when another character is ordered to operate the same device.
+- Fixed WiFi components receiving non-radio chat messages in single player.
+- Fixed nav terminal's docking button staying visible if the terminal is disconnected from the docking port by deactivating a relay between them.
+
+Modding:
+- Fixed Rope component not attaching to the limb it's fired from in multiplayer (doesn't affect any vanilla content).
+
+---------------------------------------------------------------------------------------------------------
 v0.16.1.0
 ---------------------------------------------------------------------------------------------------------
 

@@ -629,18 +629,20 @@ namespace Barotrauma
         {
             get
             {
-                if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.CurrentPath.Finished && PathSteering.IsCurrentNodeLadder)
+                if (character.IsClimbing)
                 {
-                    // Climbing a ladder
-                    if (Target.WorldPosition.Y > character.WorldPosition.Y)
+                    if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.CurrentPath.Finished && PathSteering.IsCurrentNodeLadder)
                     {
-                        // The target is still above us
-                        return false;
-                    }
-                    if (!character.AnimController.IsAboveFloor)
-                    {
-                        // Going through a hatch
-                        return false;
+                        if (Target.WorldPosition.Y > character.WorldPosition.Y)
+                        {
+                            // The target is still above us
+                            return false;
+                        }
+                        if (!character.AnimController.IsAboveFloor)
+                        {
+                            // Going through a hatch
+                            return false;
+                        }
                     }
                 }
                 if (!AlwaysUseEuclideanDistance && !character.AnimController.InWater)

@@ -1591,8 +1591,10 @@ namespace Barotrauma
                                     if (rope != null && sourceBody.UserData is Limb sourceLimb)
                                     {
                                         rope.Attach(sourceLimb, newItem);
+#if SERVER
+                                        newItem.CreateServerEvent(rope);
+#endif
                                     }
-
                                     float spread = MathHelper.ToRadians(Rand.Range(-chosenItemSpawnInfo.AimSpread, chosenItemSpawnInfo.AimSpread));
                                     var worldPos = sourceBody.Position;
                                     float rotation = chosenItemSpawnInfo.Rotation;
@@ -1625,8 +1627,27 @@ namespace Barotrauma
                                 }
                                 else
                                 {
-                                    newItem.body?.ApplyLinearImpulse(Rand.Vector(1) * chosenItemSpawnInfo.Speed);
-                                    newItem.Rotation = chosenItemSpawnInfo.Rotation;
+                                    var body = newItem.body;
+                                    if (body != null)
+                                    {
+                                        float rotation = MathHelper.ToRadians(chosenItemSpawnInfo.Rotation);
+                                        if (chosenItemSpawnInfo.RotationType == ItemSpawnInfo.SpawnRotationType.Limb)
+                                        {
+                                            if (sourceBody != null)
+                                            {
+                                                rotation += sourceBody.Rotation;
+                                            }
+                                        }
+                                        else if (chosenItemSpawnInfo.RotationType == ItemSpawnInfo.SpawnRotationType.Collider)
+                                        {
+                                            if (entity is Character character)
+                                            {
+                                                rotation += character.AnimController.Collider.Rotation;
+                                            }
+                                        }
+                                        body.SetTransform(newItem.SimPosition, rotation);
+                                        body.ApplyLinearImpulse(Rand.Vector(1) * chosenItemSpawnInfo.Speed);
+                                    }
                                 }
                             });
                             break;

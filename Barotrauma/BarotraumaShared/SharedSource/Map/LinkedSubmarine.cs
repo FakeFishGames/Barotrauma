@@ -147,8 +147,6 @@ namespace Barotrauma
         {
             List<Vector2> points = new List<Vector2>();
 
-            var wallPrefabs = StructurePrefab.Prefabs.Where(mp => mp.Body);
-
             foreach (XElement element in rootElement.Elements())
             {
                 if (element.Name != "Structure") { continue; }
@@ -159,8 +157,12 @@ namespace Barotrauma
                 StructurePrefab prefab = Structure.FindPrefab(name, identifier);
                 if (prefab == null) { continue; }
 
+                float scale = element.GetAttributeFloat("scale", prefab.Scale);
+
                 var rect = element.GetAttributeVector4("rect", Vector4.Zero);
-                
+                rect.Z *= scale / prefab.Scale;
+                rect.W *= scale / prefab.Scale;
+
                 points.Add(new Vector2(rect.X, rect.Y));
                 points.Add(new Vector2(rect.X + rect.Z, rect.Y));
                 points.Add(new Vector2(rect.X, rect.Y - rect.W));

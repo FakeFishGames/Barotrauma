@@ -32,7 +32,8 @@ namespace Barotrauma
 
             public void ClientExecute(string[] args)
             {
-                if (!CheatsEnabled && IsCheat)
+                bool allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is EditorScreen);
+                if (!allowCheats && !CheatsEnabled && IsCheat)
                 {
                     NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);
 #if USE_STEAM
@@ -743,7 +744,7 @@ namespace Barotrauma
             AssignOnExecute("explosion", (string[] args) =>
             {
                 Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
-                float range = 500, force = 10, damage = 50, structureDamage = 10, itemDamage = 100, empStrength = 0.0f, ballastFloraStrength = 50f;
+                float range = 500, force = 10, damage = 50, structureDamage = 20, itemDamage = 100, empStrength = 0.0f, ballastFloraStrength = 50f;
                 if (args.Length > 0) float.TryParse(args[0], out range);
                 if (args.Length > 1) float.TryParse(args[1], out force);
                 if (args.Length > 2) float.TryParse(args[2], out damage);
@@ -1894,7 +1895,12 @@ namespace Barotrauma
                         ThrowError($"\"{args[0]}\" is not a valid Level.PositionType. Available options are: {string.Join(", ", enums)}");
                         return;
                     }
-                    debugLines = EventSet.GetDebugStatistics(filter: monsterEvent => monsterEvent.SpawnPosType.HasFlag(spawnType));
+                    bool fullLog = false;
+                    if (args.Length > 1)
+                    {
+                        bool.TryParse(args[1], out fullLog);
+                    }
+                    debugLines = EventSet.GetDebugStatistics(filter: monsterEvent => monsterEvent.SpawnPosType.HasFlag(spawnType), fullLog: fullLog);
                 }
                 else
                 {
@@ -2409,7 +2415,7 @@ namespace Barotrauma
                 TextManager.CheckForDuplicates(args[0]);
             }));
 
-            commands.Add(new Command("writetocsv", "Writes the default language (English) to a .csv file.", (string[] args) =>
+            commands.Add(new Command("writetocsv|xmltocsv", "Writes the default language (English) to a .csv file.", (string[] args) =>
             {
                 TextManager.WriteToCSV();
                 NPCConversation.WriteToCSV();

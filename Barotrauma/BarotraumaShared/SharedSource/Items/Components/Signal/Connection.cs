@@ -272,7 +272,7 @@ namespace Barotrauma.Items.Components
                     ic.ReceiveSignal(signal, connection);
                 }
 
-                if (recipient.Effects != null && signal.value != "0" && !string.IsNullOrEmpty(signal.value))
+                if (recipient.Effects != null && signal.value != "0")
                 {
                     foreach (StatusEffect effect in recipient.Effects)
                     {

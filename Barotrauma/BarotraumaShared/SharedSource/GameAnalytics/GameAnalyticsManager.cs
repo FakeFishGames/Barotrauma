@@ -507,20 +507,25 @@ namespace Barotrauma
                 return;
             }
 
-            var allPackages = GameMain.Config?.AllEnabledPackages.ToList();
-            if (allPackages?.Count > 0)
+            if (GameMain.Config != null)
             {
-                List<string> packageNames = new List<string>();
-                foreach (ContentPackage cp in allPackages)
+                var allPackages = GameMain.Config.AllEnabledPackages.ToList();
+                if (allPackages?.Count > 0)
                 {
-                    string sanitizedName = cp.Name.Replace(":", "").Replace(" ", "");
-                    sanitizedName = sanitizedName.Substring(0, Math.Min(32, sanitizedName.Length));
-                    packageNames.Add(sanitizedName);
-                    loadedImplementation?.AddDesignEvent("ContentPackage:" + sanitizedName);
+                    List<string> packageNames = new List<string>();
+                    foreach (ContentPackage cp in allPackages)
+                    {
+                        string sanitizedName = cp.Name.Replace(":", "").Replace(" ", "");
+                        sanitizedName = sanitizedName.Substring(0, Math.Min(32, sanitizedName.Length));
+                        packageNames.Add(sanitizedName);
+                        loadedImplementation?.AddDesignEvent("ContentPackage:" + sanitizedName);
+                    }
+                    packageNames.Sort();
+                    loadedImplementation?.AddDesignEvent("AllContentPackages:" + string.Join(", ", packageNames));
                 }
-                packageNames.Sort();
-                loadedImplementation?.AddDesignEvent("AllContentPackages:" + string.Join(", ", packageNames));
+                loadedImplementation?.AddDesignEvent("Language:" + GameMain.Config.Language);
             }
+
         }
 
         static partial void InitKeys();

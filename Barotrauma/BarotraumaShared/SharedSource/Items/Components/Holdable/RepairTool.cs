@@ -841,9 +841,9 @@ namespace Barotrauma.Items.Components
             if (statusEffectLists == null) { return; }
             if (!statusEffectLists.TryGetValue(actionType, out List<StatusEffect> statusEffects)) { return; }
 
-            currentTargets.Clear();
             foreach (StatusEffect effect in statusEffects)
             {
+                currentTargets.Clear();
                 effect.SetUser(user);
                 if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {

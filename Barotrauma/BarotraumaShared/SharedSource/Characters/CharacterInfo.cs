@@ -43,6 +43,7 @@ namespace Barotrauma
             public int FaceAttachmentIndex { get; set; } = -1;
 
             public XElement HairElement { get; set; }
+            public XElement HairWithHatElement { get; set; }
             public XElement BeardElement { get; set; }
             public XElement MoustacheElement { get; set; }
             public XElement FaceAttachment { get; set; }
@@ -1125,6 +1126,16 @@ namespace Barotrauma
                     Head.HairElement = GetRandomElement(hairs);
                     Head.HairIndex = hairs.IndexOf(Head.HairElement);
                 }
+                if (Head.HairElement != null)
+                {
+                    int thisHairIndex = hairs.IndexOf(head.HairElement);
+                    int hairWithHatIndex = head.HairElement.GetAttributeInt("replacewhenwearinghat", thisHairIndex);
+                    if (thisHairIndex != hairWithHatIndex && hairWithHatIndex > -1 && hairWithHatIndex < hairs.Count)
+                    {
+                        head.HairWithHatElement = hairs[hairWithHatIndex];
+                    }
+                }
+
                 if (IsValidIndex(Head.BeardIndex, beards))
                 {
                     Head.BeardElement = beards[Head.BeardIndex];

@@ -649,6 +649,8 @@ namespace Barotrauma
                             if (attackElement != null)
                             {
                                 attack.DamageMultiplier = attackElement.GetAttributeFloat("damagemultiplier", 1f);
+                                attack.RangeMultiplier = attackElement.GetAttributeFloat("rangemultiplier", 1f);
+                                attack.ImpactMultiplier = attackElement.GetAttributeFloat("impactmultiplier", 1f);
                             }
                         }
                         break;

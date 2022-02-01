@@ -448,19 +448,21 @@ namespace Barotrauma
                 filteredCharacters = filteredCharacters.Union(extraCharacters);
             }
             return filteredCharacters
-                    // 1. Prioritize those who are on the same submarine than the controlled character
+                    // Prioritize those who are on the same submarine as the controlled character
                     .OrderByDescending(c => Character.Controlled == null || c.Submarine == Character.Controlled.Submarine)
-                    // 2. Prioritize those who are already ordered to operate the device
+                    // Prioritize those who are already ordered to operate the device
                     .ThenByDescending(c => order.Category == OrderCategory.Operate && c.CurrentOrders.Any(o => o.Order != null && o.Order.Identifier == order.Identifier && o.Order.TargetEntity == order.TargetEntity))
-                    // 3. Prioritize those with the appropriate job for the order
+                    // Prioritize those with the appropriate job for the order
                     .ThenByDescending(c => order.HasAppropriateJob(c))
-                    // 4. Prioritize those who don't yet have another Operate order of the same kind (which allows quick-assigning multiple Operate orders to different characters)
-                    .ThenByDescending(c => order.Category == OrderCategory.Operate && c.CurrentOrders.None(o => o.Order != null && o.Order.Identifier == order.Identifier))
-                    // 5. Prioritize bots over player controlled characters
+                    // Prioritize those who don't yet have the same order (which allows quick-assigning the order to different characters)
+                    .ThenByDescending(c => c.CurrentOrders.None(o => o.Order != null && o.Order.Identifier == order.Identifier))
+                    // Prioritize those with the preferred job for the order
+                    .ThenByDescending(c => order.HasPreferredJob(c))
+                    // Prioritize bots over player-controlled characters
                     .ThenByDescending(c => c.IsBot)
-                    // 6. Use the priority value of the current objective
+                    // Prioritize those with a lower current objective priority
                     .ThenBy(c => c.AIController is HumanAIController humanAI ? humanAI.ObjectiveManager.CurrentObjective?.Priority : 0)
-                    // 7. Prioritize those with the best skill for the order
+                    // Prioritize those with a higher order skill level
                     .ThenByDescending(c => c.GetSkillLevel(order.AppropriateSkill));
         }
 

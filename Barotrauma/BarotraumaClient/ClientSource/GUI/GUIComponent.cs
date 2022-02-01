@@ -1091,6 +1091,29 @@ namespace Barotrauma
                         var maxVersion = new Version(attribute.Value);
                         if (GameMain.Version > maxVersion) { return false; }
                         break;
+                    case "buildconfiguration":
+                        switch (attribute.Value.ToString().ToLowerInvariant())
+                        {
+                            case "debug":
+#if DEBUG
+                                return true;
+#else
+                                break;
+#endif
+                            case "unstable":
+#if UNSTABLE
+                                return true;
+#else
+                                break;
+#endif
+                            case "release":
+#if !DEBUG && !UNSTABLE
+                                return true;
+#else
+                                break;
+#endif
+                        }
+                        return false;
                 }
             }
 

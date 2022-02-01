@@ -565,7 +565,7 @@ namespace Barotrauma
                         Character.AnimController.HeadInWater ||
                         Character.Submarine == null ||
                         (Character.Submarine.TeamID != Character.TeamID && !Character.IsEscorted) ||
-                        !ObjectiveManager.IsCurrentObjective<AIObjectiveIdle>() && ObjectiveManager.CurrentOrders.Any(o => o.Objective.KeepDivingGearOn) ||
+                        ObjectiveManager.CurrentOrders.Any(o => o.Objective.KeepDivingGearOnAlsoWhenInactive) ||
                         ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn) ||
                         Character.CurrentHull.OxygenPercentage < HULL_LOW_OXYGEN_PERCENTAGE + 10;
                     bool IsOrderedToWait() => Character.IsOnPlayerTeam && ObjectiveManager.CurrentOrder is AIObjectiveGoTo goTo && goTo.Target == Character;
@@ -878,7 +878,7 @@ namespace Barotrauma
                     foreach (Character target in Character.CharacterList)
                     {
                         if (target.CurrentHull != hull || !target.Enabled) { continue; }
-                        if (AIObjectiveFightIntruders.IsValidTarget(target, Character))
+                        if (AIObjectiveFightIntruders.IsValidTarget(target, Character, false))
                         {
                             if (!target.IsArrested && AddTargets<AIObjectiveFightIntruders, Character>(Character, target) && newOrder == null)
                             {
@@ -1772,7 +1772,7 @@ namespace Barotrauma
                     foreach (var enemy in Character.CharacterList)
                     {
                         if (enemy.CurrentHull != hull) { continue; }
-                        if (AIObjectiveFightIntruders.IsValidTarget(enemy, character))
+                        if (AIObjectiveFightIntruders.IsValidTarget(enemy, character, false))
                         {
                             AddTargets<AIObjectiveFightIntruders, Character>(character, enemy);
                         }

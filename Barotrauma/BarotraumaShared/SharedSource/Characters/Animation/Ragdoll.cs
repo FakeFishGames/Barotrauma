@@ -304,7 +304,27 @@ namespace Barotrauma
         public abstract float? TorsoPosition { get; }
         public abstract float? TorsoAngle { get; }
 
-        public float ImpactTolerance => RagdollParams.ImpactTolerance;
+        float? impactTolerance;
+        public float ImpactTolerance
+        {
+            get
+            {
+                if (impactTolerance == null)
+                {
+                    impactTolerance = RagdollParams.ImpactTolerance;
+                    if (character.Params.VariantFile != null)
+                    {
+                        float? tolerance = character.Params.VariantFile.Root.GetChildElement("ragdoll")?.GetAttributeFloat("impacttolerance", impactTolerance.Value);
+                        if (tolerance.HasValue)
+                        {
+                            impactTolerance = tolerance;
+                        }
+                    }
+                }
+                return impactTolerance.Value;
+            }
+        }
+
         public bool Draggable => RagdollParams.Draggable;
         public bool CanEnterSubmarine => RagdollParams.CanEnterSubmarine;
 
@@ -1833,7 +1853,7 @@ namespace Barotrauma
             float sin = (float)Math.Sin(mouthLimb.Rotation);
             Vector2 bodySize = mouthLimb.body.GetSize();
             Vector2 offset = new Vector2(mouthLimb.MouthPos.X * bodySize.X / 2, mouthLimb.MouthPos.Y * bodySize.Y / 2);
-            return mouthLimb.SimPosition + new Vector2(offset.X * cos - offset.Y * sin, offset.X * sin + offset.Y * cos) * mouthLimb.Scale * RagdollParams.LimbScale;
+            return mouthLimb.SimPosition + new Vector2(offset.X * cos - offset.Y * sin, offset.X * sin + offset.Y * cos);
         }
 
         public Vector2 GetColliderBottom()

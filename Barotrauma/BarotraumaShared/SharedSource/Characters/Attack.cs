@@ -101,11 +101,21 @@ namespace Barotrauma
         [Serialize(false, true, description: "Should the AI try to steer away from the target when aiming with this attack? Best combined with PassiveAggressive behavior."), Editable]
         public bool Retreat { get; private set; }
 
+        private float _range;
         [Serialize(0.0f, true, description: "The min distance from the attack limb to the target before the AI tries to attack."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
-        public float Range { get; set; }
+        public float Range
+        {
+            get => _range * RangeMultiplier;
+            set => _range = value;
+        }
 
+        private float _damageRange;
         [Serialize(0.0f, true, description: "The min distance from the attack limb to the target to do damage. In distance-based hit detection, the hit will be registered as soon as the target is within the damage range, unless the attack duration has expired."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
-        public float DamageRange { get; set; }
+        public float DamageRange
+        {
+            get => _damageRange * RangeMultiplier;
+            set => _damageRange = value;
+        }
 
         [Serialize(0.25f, true, description: "An approximation of the attack duration. Effectively defines the time window in which the hit can be registered. If set to too low value, it's possible that the attack won't hit the target in time."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2)]
         public float Duration { get; private set; }
@@ -145,9 +155,19 @@ namespace Barotrauma
         public float Penetration { get; private set; }
 
         /// <summary>
-        /// Currently only used with variants. Used for multiplying all the damage.
+        /// Used for multiplying all the damage.
         /// </summary>
         public float DamageMultiplier { get; set; } = 1;
+
+        /// <summary>
+        /// Used for multiplying all the ranges.
+        /// </summary>
+        public float RangeMultiplier { get; set; } = 1;
+
+        /// <summary>
+        /// Used for multiplying the physics forces.
+        /// </summary>
+        public float ImpactMultiplier { get; set; } = 1;
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float LevelWallDamage { get; set; }

@@ -135,7 +135,13 @@ namespace Barotrauma.Items.Components
             wireSprite = overrideSprite ?? defaultWireSprite;
         }
 
+
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        {
+            Draw(spriteBatch, editing, Vector2.Zero, itemDepth);
+        }
+
+        public void Draw(SpriteBatch spriteBatch, bool editing, Vector2 offset, float itemDepth = -1)
         {
             if (sections.Count == 0 && !IsActive || Hidden)
             {
@@ -155,6 +161,8 @@ namespace Barotrauma.Items.Components
             {
                 drawOffset = sub.DrawPosition + sub.HiddenSubPosition;
             }
+
+            drawOffset += offset;
 
             float baseDepth = UseSpriteDepth ? item.SpriteDepth : wireSprite.Depth;
             float depth = item.IsSelected ? 0.0f : SubEditorScreen.IsWiringMode() ? 0.02f : baseDepth + (item.ID % 100) * 0.000001f;// item.GetDrawDepth(wireSprite.Depth, wireSprite);

@@ -545,14 +545,21 @@ namespace Barotrauma
             foreach (PurchasedItem pi in CargoManager.ItemsInBuyCrate)
             {
                 msg.Write(pi.ItemPrefab.Identifier);
-                msg.WriteRangedInteger(pi.Quantity, 0, 100);
+                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
+            }
+
+            msg.Write((UInt16)CargoManager.ItemsInSellFromSubCrate.Count);
+            foreach (PurchasedItem pi in CargoManager.ItemsInSellFromSubCrate)
+            {
+                msg.Write(pi.ItemPrefab.Identifier);
+                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
             }
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
             {
                 msg.Write(pi.ItemPrefab.Identifier);
-                msg.WriteRangedInteger(pi.Quantity, 0, 100);
+                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
             }
 
             msg.Write((UInt16)CargoManager.SoldItems.Count);
@@ -562,6 +569,7 @@ namespace Barotrauma
                 msg.Write((UInt16)si.ID);
                 msg.Write(si.Removed);
                 msg.Write(si.SellerID);
+                msg.Write((byte)si.Origin);
             }
 
             msg.Write((ushort)UpgradeManager.PurchasedUpgrades.Count);
@@ -640,6 +648,15 @@ namespace Barotrauma
                 buyCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
             }
 
+            UInt16 subSellCrateItemCount = msg.ReadUInt16();
+            List<PurchasedItem> subSellCrateItems = new List<PurchasedItem>();
+            for (int i = 0; i < subSellCrateItemCount; i++)
+            {
+                string itemPrefabIdentifier = msg.ReadString();
+                int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
+                subSellCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
+            }
+
             UInt16 purchasedItemCount = msg.ReadUInt16();
             List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
             for (int i = 0; i < purchasedItemCount; i++)
@@ -657,7 +674,8 @@ namespace Barotrauma
                 UInt16 id = msg.ReadUInt16();
                 bool removed = msg.ReadBoolean();
                 byte sellerId = msg.ReadByte();
-                soldItems.Add(new SoldItem(ItemPrefab.Prefabs[itemPrefabIdentifier], id, removed, sellerId));
+                byte origin = msg.ReadByte();
+                soldItems.Add(new SoldItem(ItemPrefab.Prefabs[itemPrefabIdentifier], id, removed, sellerId, (SoldItem.SellOrigin)origin));
             }
 
             ushort pendingUpgradeCount = msg.ReadUInt16();
@@ -678,13 +696,9 @@ namespace Barotrauma
             for (int i = 0; i < purchasedItemSwapCount; i++)
             {
                 UInt16 itemToRemoveID = msg.ReadUInt16();
-                Item itemToRemove = Entity.FindEntityByID(itemToRemoveID) as Item;
-
                 string itemToInstallIdentifier = msg.ReadString();
                 ItemPrefab itemToInstall = string.IsNullOrEmpty(itemToInstallIdentifier) ? null : ItemPrefab.Find(string.Empty, itemToInstallIdentifier);
-
-                if (itemToRemove == null) { continue; }
-
+                if (!(Entity.FindEntityByID(itemToRemoveID) is Item itemToRemove)) { continue; }
                 purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
             }
 
@@ -728,12 +742,11 @@ namespace Barotrauma
                     campaign.Map.SelectMission(selectedMissionIndices);
                     campaign.Map.AllowDebugTeleport = allowDebugTeleport;
                     campaign.CargoManager.SetItemsInBuyCrate(buyCrateItems);
+                    campaign.CargoManager.SetItemsInSubSellCrate(subSellCrateItems);
                     campaign.CargoManager.SetPurchasedItems(purchasedItems);
                     campaign.CargoManager.SetSoldItems(soldItems);
                     if (storeBalance.HasValue) { campaign.Map.CurrentLocation.StoreCurrentBalance = storeBalance.Value; }
                     campaign.UpgradeManager.SetPendingUpgrades(pendingUpgrades);
-                    campaign.UpgradeManager.PurchasedUpgrades.Clear();
-
                     campaign.UpgradeManager.PurchasedUpgrades.Clear();
                     foreach (var purchasedItemSwap in purchasedItemSwaps)
                     {

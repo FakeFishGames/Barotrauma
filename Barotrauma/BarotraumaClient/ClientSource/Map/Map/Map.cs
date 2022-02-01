@@ -194,7 +194,11 @@ namespace Barotrauma
         private void RemoveFogOfWar(Location location, bool removeFromAdjacentLocations = true)
         {
             if (location == null) { return; }
-            Vector2 mapTileSize = mapTiles[0, 0].size * generationParams.MapTileScale;
+
+            var mapTile = generationParams.MapTiles.Values.FirstOrDefault()?.FirstOrDefault();
+            if (mapTile == null) { return; }
+
+            Vector2 mapTileSize = mapTile.size * generationParams.MapTileScale;
             int startX = (int)Math.Max(Math.Floor(location.MapPosition.X / mapTileSize.X - 0.25f), 0);
             int startY = (int)Math.Max(Math.Floor(location.MapPosition.Y / mapTileSize.Y - 0.25f), 0);
             int endX = (int)Math.Min(Math.Floor(location.MapPosition.X / mapTileSize.X + 0.25f), mapTiles.GetLength(0));

@@ -2870,19 +2870,16 @@ namespace Barotrauma.Networking
 
         public void SendCampaignState()
         {
-            MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
-            if (campaign == null)
+            if (!(GameMain.GameSession.GameMode is MultiPlayerCampaign campaign))
             {
                 DebugConsole.ThrowError("Failed send campaign state to the server (no campaign active).\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
-
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
             msg.Write((UInt16)ClientPermissions.ManageCampaign);
             campaign.ClientWrite(msg);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
-
             clientPeer.Send(msg, DeliveryMethod.Reliable);
         }
 

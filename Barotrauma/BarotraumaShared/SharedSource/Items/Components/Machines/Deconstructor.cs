@@ -300,7 +300,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            GameAnalyticsManager.AddDesignEvent("ItemDeconstructed:" + (GameMain.GameSession?.GameMode?.Name ?? "none") + ":" + targetItem.prefab.Identifier);
+            GameAnalyticsManager.AddDesignEvent("ItemDeconstructed:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none") + ":" + targetItem.prefab.Identifier);
 
             if (targetItem.AllowDeconstruct && allowRemove)
             {

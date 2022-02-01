@@ -166,16 +166,15 @@ namespace Barotrauma
         /// <summary>
         /// There is a client-side implementation of the method in <see cref="CampaignMode"/>
         /// </summary>
-        public bool AllowedToManageCampaign(Client client)
+        public bool AllowedToManageCampaign(Client client, ClientPermissions permissions = ClientPermissions.ManageCampaign)
         {
-            //allow ending the round if the client has permissions, is the owner, or the only client in the server,
+            //allow managing the campaign if the client has permissions, is the owner, or the only client in the server,
             //or if no-one has management permissions
             return
-                client.HasPermission(ClientPermissions.ManageCampaign) ||
+                client.HasPermission(permissions) ||
                 GameMain.Server.ConnectedClients.Count == 1 ||
                 IsOwner(client) ||
-                GameMain.Server.ConnectedClients.None(c =>
-                    c.InGame && (IsOwner(c) || c.HasPermission(ClientPermissions.ManageCampaign)));
+                GameMain.Server.ConnectedClients.None(c => c.InGame && (IsOwner(c) || c.HasPermission(permissions)));
         }
 
         public void SaveExperiencePoints(Client client)
@@ -562,14 +561,21 @@ namespace Barotrauma
             foreach (PurchasedItem pi in CargoManager.ItemsInBuyCrate)
             {
                 msg.Write(pi.ItemPrefab.Identifier);
-                msg.WriteRangedInteger(pi.Quantity, 0, 100);
+                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
+            }
+
+            msg.Write((UInt16)CargoManager.ItemsInSellFromSubCrate.Count);
+            foreach (PurchasedItem pi in CargoManager.ItemsInSellFromSubCrate)
+            {
+                msg.Write(pi.ItemPrefab.Identifier);
+                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
             }
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
             {
                 msg.Write(pi.ItemPrefab.Identifier);
-                msg.WriteRangedInteger(pi.Quantity, 0, 100);
+                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
             }
 
             msg.Write((UInt16)CargoManager.SoldItems.Count);
@@ -579,6 +585,7 @@ namespace Barotrauma
                 msg.Write((UInt16)si.ID);
                 msg.Write(si.Removed);
                 msg.Write(si.SellerID);
+                msg.Write((byte)si.Origin);
             }
 
             msg.Write((ushort)UpgradeManager.PendingUpgrades.Count);
@@ -633,6 +640,15 @@ namespace Barotrauma
                 buyCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
             }
 
+            UInt16 subSellCrateItemCount = msg.ReadUInt16();
+            List<PurchasedItem> subSellCrateItems = new List<PurchasedItem>();
+            for (int i = 0; i < subSellCrateItemCount; i++)
+            {
+                string itemPrefabIdentifier = msg.ReadString();
+                int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
+                subSellCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
+            }
+
             UInt16 purchasedItemCount = msg.ReadUInt16();
             List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
             for (int i = 0; i < purchasedItemCount; i++)
@@ -650,7 +666,8 @@ namespace Barotrauma
                 UInt16 id = msg.ReadUInt16();
                 bool removed = msg.ReadBoolean();
                 byte sellerId = msg.ReadByte();
-                soldItems.Add(new SoldItem(ItemPrefab.Prefabs[itemPrefabIdentifier], id, removed, sellerId));
+                byte origin = msg.ReadByte();
+                soldItems.Add(new SoldItem(ItemPrefab.Prefabs[itemPrefabIdentifier], id, removed, sellerId, (SoldItem.SellOrigin)origin));
             }
 
             ushort purchasedUpgradeCount = msg.ReadUInt16();
@@ -674,125 +691,146 @@ namespace Barotrauma
             for (int i = 0; i < purchasedItemSwapCount; i++)
             {
                 UInt16 itemToRemoveID = msg.ReadUInt16();
-                Item itemToRemove = Entity.FindEntityByID(itemToRemoveID) as Item;
-
                 string itemToInstallIdentifier = msg.ReadString();
                 ItemPrefab itemToInstall = string.IsNullOrEmpty(itemToInstallIdentifier) ? null : ItemPrefab.Find(string.Empty, itemToInstallIdentifier);
-
-                if (itemToRemove == null) { continue; }
-
+                if (!(Entity.FindEntityByID(itemToRemoveID) is Item itemToRemove)) { continue; }
                 purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
             }
 
-            if (!AllowedToManageCampaign(sender))
+            bool allowedToManageCampaign = AllowedToManageCampaign(sender);
+            if (AllowedToManageCampaign(sender))
             {
-                DebugConsole.ThrowError("Client \"" + sender.Name + "\" does not have a permission to manage the campaign");
-                return;
-            }
-            
-            Location location = Map.CurrentLocation;
-            int hullRepairCost      = location?.GetAdjustedMechanicalCost(HullRepairCost)     ?? HullRepairCost;
-            int itemRepairCost      = location?.GetAdjustedMechanicalCost(ItemRepairCost)     ?? ItemRepairCost;
-            int shuttleRetrieveCost = location?.GetAdjustedMechanicalCost(ShuttleReplaceCost) ?? ShuttleReplaceCost;
-
-            if (purchasedHullRepairs != this.PurchasedHullRepairs)
-            {
-                if (purchasedHullRepairs && Money >= hullRepairCost)
+                Location location = Map.CurrentLocation;
+                int hullRepairCost = location?.GetAdjustedMechanicalCost(HullRepairCost) ?? HullRepairCost;
+                int itemRepairCost = location?.GetAdjustedMechanicalCost(ItemRepairCost) ?? ItemRepairCost;
+                int shuttleRetrieveCost = location?.GetAdjustedMechanicalCost(ShuttleReplaceCost) ?? ShuttleReplaceCost;
+                if (purchasedHullRepairs != this.PurchasedHullRepairs)
                 {
-                    this.PurchasedHullRepairs = true;
-                    Money -= hullRepairCost;
-                    GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
+                    if (purchasedHullRepairs && Money >= hullRepairCost)
+                    {
+                        this.PurchasedHullRepairs = true;
+                        Money -= hullRepairCost;
+                        GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
+                    }
+                    else if (!purchasedHullRepairs)
+                    {
+                        this.PurchasedHullRepairs = false;
+                        Money += hullRepairCost;
+                    }
                 }
-                else if (!purchasedHullRepairs)
+                if (purchasedItemRepairs != this.PurchasedItemRepairs)
                 {
-                    this.PurchasedHullRepairs = false;
-                    Money += hullRepairCost;
+                    if (purchasedItemRepairs && Money >= itemRepairCost)
+                    {
+                        this.PurchasedItemRepairs = true;
+                        Money -= itemRepairCost;
+                        GameAnalyticsManager.AddMoneySpentEvent(itemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
+                    }
+                    else if (!purchasedItemRepairs)
+                    {
+                        this.PurchasedItemRepairs = false;
+                        Money += itemRepairCost;
+                    }
                 }
-            }
-            if (purchasedItemRepairs != this.PurchasedItemRepairs)
-            {
-                if (purchasedItemRepairs && Money >= itemRepairCost)
+                if (purchasedLostShuttles != this.PurchasedLostShuttles)
                 {
-                    this.PurchasedItemRepairs = true;
-                    Money -= itemRepairCost;
-                    GameAnalyticsManager.AddMoneySpentEvent(itemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
+                    if (GameMain.GameSession?.SubmarineInfo != null &&
+                        GameMain.GameSession.SubmarineInfo.LeftBehindSubDockingPortOccupied)
+                    {
+                        GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("ReplaceShuttleDockingPortOccupied"), sender, ChatMessageType.MessageBox);
+                    }
+                    else if (purchasedLostShuttles && Money >= shuttleRetrieveCost)
+                    {
+                        this.PurchasedLostShuttles = true;
+                        Money -= shuttleRetrieveCost;
+                        GameAnalyticsManager.AddMoneySpentEvent(shuttleRetrieveCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
+                    }
+                    else if (!purchasedItemRepairs)
+                    {
+                        this.PurchasedLostShuttles = false;
+                        Money += shuttleRetrieveCost;
+                    }
                 }
-                else if (!purchasedItemRepairs)
+                if (currentLocIndex < Map.Locations.Count && Map.AllowDebugTeleport)
                 {
-                    this.PurchasedItemRepairs = false;
-                    Money += itemRepairCost;
+                    Map.SetLocation(currentLocIndex);
                 }
-            }
-            if (purchasedLostShuttles != this.PurchasedLostShuttles)
-            {
-                if (GameMain.GameSession?.SubmarineInfo != null &&
-                    GameMain.GameSession.SubmarineInfo.LeftBehindSubDockingPortOccupied)
-                {
-                    GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("ReplaceShuttleDockingPortOccupied"), sender, ChatMessageType.MessageBox);
-                }
-                else if (purchasedLostShuttles && Money >= shuttleRetrieveCost)
-                {
-                    this.PurchasedLostShuttles = true;
-                    Money -= shuttleRetrieveCost;
-                    GameAnalyticsManager.AddMoneySpentEvent(shuttleRetrieveCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
-                }
-                else if (!purchasedItemRepairs)
-                {
-                    this.PurchasedLostShuttles = false;
-                    Money += shuttleRetrieveCost;
-                }
-            }
-
-            if (currentLocIndex < Map.Locations.Count && Map.AllowDebugTeleport)
-            {
-                Map.SetLocation(currentLocIndex);
-            }
-
-            Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
-            if (Map.SelectedLocation == null) { Map.SelectRandomLocation(preferUndiscovered: true); }
-            if (Map.SelectedConnection != null) { Map.SelectMission(selectedMissionIndices); }
-
-            CheckTooManyMissions(Map.CurrentLocation, sender);
-
-            List<PurchasedItem> currentBuyCrateItems = new List<PurchasedItem>(CargoManager.ItemsInBuyCrate);
-            currentBuyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, -i.Quantity));
-            buyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, i.Quantity));
-
-            CargoManager.SellBackPurchasedItems(new List<PurchasedItem>(CargoManager.PurchasedItems));
-            CargoManager.PurchaseItems(purchasedItems, false);
-
-            // for some reason CargoManager.SoldItem is never cleared by the server, I've added a check to SellItems that ignores all
-            // sold items that are removed so they should be discarded on the next message
-            CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems));
-            CargoManager.SellItems(soldItems);
-
-            foreach (var (prefab, category, _) in purchasedUpgrades)
-            {
-                UpgradeManager.PurchaseUpgrade(prefab, category);
-
-                // unstable logging
-                int price = prefab.Price.GetBuyprice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
-                int level = UpgradeManager.GetUpgradeLevel(prefab, category);
-                GameServer.Log($"SERVER: Purchased level {level} {category.Identifier}.{prefab.Identifier} for {price}", ServerLog.MessageType.ServerMessage);
+                Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
+                if (Map.SelectedLocation == null) { Map.SelectRandomLocation(preferUndiscovered: true); }
+                if (Map.SelectedConnection != null) { Map.SelectMission(selectedMissionIndices); }
+                CheckTooManyMissions(Map.CurrentLocation, sender);
             }
 
-            foreach (var purchasedItemSwap in purchasedItemSwaps)
+            bool allowedToUseStore = AllowedToManageCampaign(sender, ClientPermissions.CampaignStore);
+            if (allowedToManageCampaign || allowedToUseStore || AllowedToManageCampaign(sender, ClientPermissions.BuyItems))
             {
-                if (purchasedItemSwap.ItemToInstall == null)
+                var currentBuyCrateItems = new List<PurchasedItem>(CargoManager.ItemsInBuyCrate);
+                currentBuyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, -i.Quantity));
+                buyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, i.Quantity));
+                CargoManager.SellBackPurchasedItems(new List<PurchasedItem>(CargoManager.PurchasedItems));
+                CargoManager.PurchaseItems(purchasedItems, false);
+            }
+
+            bool allowedToSellSubItems = AllowedToManageCampaign(sender, ClientPermissions.SellSubItems);
+            if (allowedToManageCampaign || allowedToUseStore || allowedToSellSubItems)
+            {
+                var currentSubSellCrateItems = new List<PurchasedItem>(CargoManager.ItemsInSellFromSubCrate);
+                currentSubSellCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInSubSellCrate(i.ItemPrefab, -i.Quantity));
+                subSellCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInSubSellCrate(i.ItemPrefab, i.Quantity));
+            }
+
+            bool allowedToSellInventoryItems = AllowedToManageCampaign(sender, ClientPermissions.SellInventoryItems);
+            if (allowedToManageCampaign || allowedToUseStore || (allowedToSellInventoryItems && allowedToSellSubItems))
+            {
+                // for some reason CargoManager.SoldItem is never cleared by the server, I've added a check to SellItems that ignores all
+                // sold items that are removed so they should be discarded on the next message
+                CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems));
+                CargoManager.SellItems(soldItems);
+            }
+            else if (allowedToSellInventoryItems || allowedToSellSubItems)
+            {
+                if (allowedToSellInventoryItems)
                 {
-                    UpgradeManager.CancelItemSwap(purchasedItemSwap.ItemToRemove);
+                    CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems.Where(i => i.Origin == SoldItem.SellOrigin.Character)));
+                    soldItems.RemoveAll(i => i.Origin != SoldItem.SellOrigin.Character);
                 }
                 else
                 {
-                    UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall);
+                    CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems.Where(i => i.Origin == SoldItem.SellOrigin.Submarine)));
+                    soldItems.RemoveAll(i => i.Origin != SoldItem.SellOrigin.Submarine);
                 }
+                CargoManager.SellItems(soldItems);
             }
-            foreach (Item item in Item.ItemList)
+
+            if (allowedToManageCampaign)
             {
-                if (item.PendingItemSwap != null && !purchasedItemSwaps.Any(it => it.ItemToRemove == item))
+                foreach (var (prefab, category, _) in purchasedUpgrades)
                 {
-                    UpgradeManager.CancelItemSwap(item);
-                    item.PendingItemSwap = null;
+                    UpgradeManager.PurchaseUpgrade(prefab, category);
+
+                    // unstable logging
+                    int price = prefab.Price.GetBuyprice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
+                    int level = UpgradeManager.GetUpgradeLevel(prefab, category);
+                    GameServer.Log($"SERVER: Purchased level {level} {category.Identifier}.{prefab.Identifier} for {price}", ServerLog.MessageType.ServerMessage);
+                }
+                foreach (var purchasedItemSwap in purchasedItemSwaps)
+                {
+                    if (purchasedItemSwap.ItemToInstall == null)
+                    {
+                        UpgradeManager.CancelItemSwap(purchasedItemSwap.ItemToRemove);
+                    }
+                    else
+                    {
+                        UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall);
+                    }
+                }
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.PendingItemSwap != null && !purchasedItemSwaps.Any(it => it.ItemToRemove == item))
+                    {
+                        UpgradeManager.CancelItemSwap(item);
+                        item.PendingItemSwap = null;
+                    }
                 }
             }
         }

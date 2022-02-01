@@ -738,8 +738,9 @@ namespace Barotrauma.Items.Components
             }
             lastTarget = target;
 
-            float projectileNewSpeed = 0.5f;
-            float projectileDeflectedNewSpeed = 0.1f;
+            int remainingHits = Math.Max(MaxTargetsToHit - hits.Count, 0);
+            float speedMultiplier = Math.Min(0.4f + remainingHits * 0.1f, 1.0f);
+            float deflectedSpeedMultiplier = 0.1f;
 
             AttackResult attackResult = new AttackResult();
             Character character = null;
@@ -755,8 +756,8 @@ namespace Barotrauma.Items.Components
                 // when hitting limbs with piercing ammo, don't lose as much speed
                 if (MaxTargetsToHit > 1)
                 {
-                    projectileNewSpeed = 1f;
-                    projectileDeflectedNewSpeed = 0.8f;
+                    speedMultiplier = 1f;
+                    deflectedSpeedMultiplier = 0.8f;
                 }
                 if (limb.IsSevered || limb.character == null || limb.character.Removed) { return false; }
 
@@ -869,7 +870,7 @@ namespace Barotrauma.Items.Components
             if (attackResult.AppliedDamageModifiers != null &&
                 (attackResult.AppliedDamageModifiers.Any(dm => dm.DeflectProjectiles) && !StickToDeflective))
             {
-                item.body.LinearVelocity *= projectileDeflectedNewSpeed;
+                item.body.LinearVelocity *= deflectedSpeedMultiplier;
             }
             else if (   // When hitting characters the collision normal seems to sometimes point into wrong direction, resulting in a failed attempt to stick
                         //Vector2.Dot(Vector2.Normalize(velocity), collisionNormal) < 0.0f && 
@@ -901,13 +902,13 @@ namespace Barotrauma.Items.Components
                     item.CreateServerEvent(this);
                 }
 #endif
-                item.body.LinearVelocity *= projectileNewSpeed;
+                item.body.LinearVelocity *= speedMultiplier;
 
                 return Hitscan;                
             }
             else
             {
-                item.body.LinearVelocity *= projectileNewSpeed;
+                item.body.LinearVelocity *= speedMultiplier;
             }
 
             var containedItems = item.OwnInventory?.AllItems;

@@ -38,7 +38,7 @@ namespace Barotrauma.Networking
                 string orderOption = orderMessageInfo.OrderOption ??
                     (orderMessageInfo.OrderOptionIndex == null || orderMessageInfo.OrderOptionIndex < 0 || orderMessageInfo.OrderOptionIndex >= orderPrefab.Options.Length ?
                         "" : orderPrefab.Options[orderMessageInfo.OrderOptionIndex.Value]);
-                orderMsg = new OrderChatMessage(orderPrefab, orderOption, orderMessageInfo.Priority, orderTargetPosition ?? orderTargetEntity as ISpatialEntity, orderTargetCharacter, c.Character)
+                orderMsg = new OrderChatMessage(orderPrefab, orderOption, orderMessageInfo.Priority, orderTargetPosition ?? orderTargetEntity as ISpatialEntity, orderTargetCharacter, c.Character, isNewOrder: orderMessageInfo.IsNewOrder)
                 {
                     WallSectionIndex = wallSectionIndex
                 };

@@ -26,7 +26,7 @@ namespace Barotrauma
 
         private bool spawnPending;
 
-        private readonly int maxAmountPerLevel = int.MaxValue;
+        public readonly int MaxAmountPerLevel = int.MaxValue;
 
         public List<Character> Monsters => monsters;
         public Vector2? SpawnPos => spawnPos;
@@ -74,7 +74,7 @@ namespace Barotrauma
             minAmount = prefab.ConfigElement.GetAttributeInt("minamount", defaultAmount);
             maxAmount = Math.Max(prefab.ConfigElement.GetAttributeInt("maxamount", 1), minAmount);
 
-            maxAmountPerLevel = prefab.ConfigElement.GetAttributeInt("maxamountperlevel", int.MaxValue);
+            MaxAmountPerLevel = prefab.ConfigElement.GetAttributeInt("maxamountperlevel", int.MaxValue);
 
             var spawnPosTypeStr = prefab.ConfigElement.GetAttributeString("spawntype", "");
             if (string.IsNullOrWhiteSpace(spawnPosTypeStr) ||
@@ -367,9 +367,9 @@ namespace Barotrauma
 
             if (spawnPos == null)
             {
-                if (maxAmountPerLevel < int.MaxValue)
+                if (MaxAmountPerLevel < int.MaxValue)
                 {
-                    if (Character.CharacterList.Count(c => c.SpeciesName == speciesName) >= maxAmountPerLevel)
+                    if (Character.CharacterList.Count(c => c.SpeciesName == speciesName) >= MaxAmountPerLevel)
                     {
                         disallowed = true;
                         return;

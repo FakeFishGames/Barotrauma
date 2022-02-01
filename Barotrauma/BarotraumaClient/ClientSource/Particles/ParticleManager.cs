@@ -196,6 +196,19 @@ namespace Barotrauma.Particles
             particles[particleCount] = swap;
         }
 
+
+        public void RemoveParticle(Particle particle)
+        {
+            for (int i = 0; i < particleCount; i++)
+            {
+                if (particles[i] == particle)
+                {
+                    RemoveParticle(i);
+                    return;
+                }
+            }
+        }
+
         public void Update(float deltaTime)
         {
             MaxParticles = GameMain.Config.ParticleLimit;

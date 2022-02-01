@@ -1,3 +1,4 @@
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -58,6 +59,18 @@ namespace Barotrauma
             if (IsClient) { return; }
             if (!swarmSpawned && level.CheckBeaconActive())
             {
+                List<Submarine> connectedSubs = level.BeaconStation.GetConnectedSubs();
+                foreach (Item item in Item.ItemList)
+                {
+                    if (!connectedSubs.Contains(item.Submarine)) { continue; }
+                    if (item.GetComponent<PowerTransfer>() != null ||
+                        item.GetComponent<PowerContainer>() != null ||
+                        item.GetComponent<Reactor>() != null)
+                    {
+                        item.Indestructible = true;
+                    }
+                }
+
                 State = 1;
 
                 Vector2 spawnPos = level.BeaconStation.WorldPosition;

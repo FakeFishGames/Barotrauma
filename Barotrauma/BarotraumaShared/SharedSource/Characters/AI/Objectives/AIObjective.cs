@@ -30,6 +30,8 @@ namespace Barotrauma
         public virtual bool ConcurrentObjectives => false;
 
         public virtual bool KeepDivingGearOn => false;
+        public virtual bool KeepDivingGearOnAlsoWhenInactive => false;
+
         /// <summary>
         /// There's a separate property for diving suit and mask: KeepDivingGearOn.
         /// </summary>

@@ -439,7 +439,7 @@ namespace Barotrauma
             for (int i = 0; i < Content.CountChildren; i++)
             {
                 GUIComponent child = Content.GetChild(i);
-                if (!child.Visible) { continue; }
+                if (child == null || !child.Visible) { continue; }
                 if (RectTransform != null)
                 {
                     callback(i, new Point(x, y));

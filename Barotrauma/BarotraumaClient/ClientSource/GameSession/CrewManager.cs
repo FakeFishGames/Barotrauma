@@ -145,12 +145,14 @@ namespace Barotrauma
                             string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
                             // add to local history
                             ChatBox.ChatManager.Store(text);
+                            WifiComponent headset = null;
+                            ChatMessageType messageType =
+                                ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled, out headset)) ? ChatMessageType.Radio : ChatMessageType.Default;
                             AddSinglePlayerChatMessage(
                                 Character.Controlled.Info.Name,
-                                msg,
-                                ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
+                                msg, messageType,
                                 Character.Controlled);
-                            if (ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent headset))
+                            if (messageType == ChatMessageType.Radio && headset != null)
                             {
                                 Signal s = new Signal(msg, sender: Character.Controlled, source: headset.Item);
                                 headset.TransmitSignal(s, sentFromChat: true);
@@ -819,7 +821,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    OrderChatMessage msg = new OrderChatMessage(order, "", priority, order.IsReport ? hull : order.TargetEntity, null, orderGiver);
+                    OrderChatMessage msg = new OrderChatMessage(order, "", priority, order.IsReport ? hull : order.TargetEntity, null, orderGiver, isNewOrder: isNewOrder);
                     GameMain.Client?.SendChatMessage(msg);
                 }
             }
@@ -836,7 +838,7 @@ namespace Barotrauma
                 }
                 else if (orderGiver != null)
                 {
-                    OrderChatMessage msg = new OrderChatMessage(order, option, priority, order?.TargetSpatialEntity ?? order?.TargetItemComponent?.Item, character, orderGiver);
+                    OrderChatMessage msg = new OrderChatMessage(order, option, priority, order?.TargetSpatialEntity ?? order?.TargetItemComponent?.Item, character, orderGiver, isNewOrder: isNewOrder);
                     GameMain.Client?.SendChatMessage(msg);
                 }
             }
@@ -2533,6 +2535,7 @@ namespace Barotrauma
             {
                 shortcutNodes.Add(CreateOrderNode(shortcutNodeSize, null, Point.Zero, dismissedOrderPrefab, -1));
             }
+            shortcutNodes.RemoveAll(n => n.UserData is Order o && !IsOrderAvailable(o));
             if (shortcutNodes.Count < 1) { return; }
             shortcutCenterNode = new GUIFrame(new RectTransform(shortcutCenterNodeSize, parent: commandFrame.RectTransform, anchor: Anchor.Center), style: null)
             {
@@ -2573,7 +2576,7 @@ namespace Barotrauma
 
         private void CreateOrderNodes(OrderCategory orderCategory)
         {
-            var orders = Order.PrefabList.FindAll(o => o.Category == orderCategory && !o.IsReport);
+            var orders = Order.PrefabList.FindAll(o => o.Category == orderCategory && !o.IsReport && IsOrderAvailable(o));
             Order order;
             bool disableNode;
             var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance,
@@ -2725,6 +2728,7 @@ namespace Barotrauma
                     contextualOrders.Add(new OrderInfo(Order.GetPrefab(orderIdentifier), null));
                 }
             }
+            contextualOrders.RemoveAll(o => !IsOrderAvailable(o.Order));
             var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance, contextualOrders.Count, MathHelper.ToRadians(90f + 180f / contextualOrders.Count));
             bool disableNode = !CanCharacterBeHeard();
             for (int i = 0; i < contextualOrders.Count; i++)
@@ -3483,6 +3487,20 @@ namespace Barotrauma
             return character?.Info?.GetManualOrderPriority(order) ?? CharacterInfo.HighestManualOrderPriority;
         }
 
+        private bool IsOrderAvailable(Order order)
+        {
+            if (order == null) { return false; }
+            switch (order.Identifier.ToLowerInvariant())
+            {
+                case "assaultenemy":
+                    Character character = characterContext ?? Character.Controlled;
+                    if (character?.Submarine == null) { return false; }
+                    return character.Submarine.GetConnectedSubs().Any(s => s.TeamID != character.TeamID);
+                default:
+                    return true;
+            }
+        }
+
         #region Crew Member Assignment Logic
         private bool CanOpenManualAssignment(GUIComponent node)
         {
@@ -3559,7 +3577,7 @@ namespace Barotrauma
                 bool hasLeaks = Character.Controlled.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f);
                 ToggleReportButton("reportbreach", hasLeaks);
 
-                bool hasIntruders = Character.CharacterList.Any(c => c.CurrentHull == Character.Controlled.CurrentHull && AIObjectiveFightIntruders.IsValidTarget(c, Character.Controlled));
+                bool hasIntruders = Character.CharacterList.Any(c => c.CurrentHull == Character.Controlled.CurrentHull && AIObjectiveFightIntruders.IsValidTarget(c, Character.Controlled, false));
                 ToggleReportButton("reportintruders", hasIntruders);
 
                 foreach (GUIComponent reportButton in ReportButtonFrame.Children)

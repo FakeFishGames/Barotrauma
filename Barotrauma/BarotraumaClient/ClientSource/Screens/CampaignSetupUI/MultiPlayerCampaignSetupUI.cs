@@ -244,7 +244,11 @@ namespace Barotrauma
 
             foreach (string saveFile in saveFiles)
             {
-                if (string.IsNullOrEmpty(saveFile)) { continue; }
+                if (string.IsNullOrEmpty(saveFile))
+                {
+                    DebugConsole.AddWarning("Error when updating campaign load menu: path to a save file was empty.\n" + Environment.StackTrace);
+                    continue;
+                }
 
                 string fileName = saveFile;
                 string subName = "";

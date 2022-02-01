@@ -521,6 +521,7 @@ namespace Barotrauma
                 if (targetCharacter == null) { return; }
 
                 targetCharacter.GodMode = !targetCharacter.GodMode;
+                NewMessage((targetCharacter.GodMode ? "Enabled godmode on " : "Disabled godmode on " + targetCharacter.Name), Color.White);
             },
             () =>
             {
@@ -1040,6 +1041,20 @@ namespace Barotrauma
             commands.Add(new Command("crash", "crash: Crashes the game.", (string[] args) =>
             {
                 throw new Exception("crash command issued");
+            }));
+
+            commands.Add(new Command("fastforward", "fastforward [seconds]: Fast forwards the game by x seconds. Note that large numbers may cause a long freeze.", (string[] args) =>
+            {
+                float seconds = 0;
+                if (args.Length > 0) { float.TryParse(args[0], out seconds); }
+                System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+                sw.Start();
+                for (int i = 0; i < seconds * Timing.FixedUpdateRate; i++)
+                {
+                    Screen.Selected?.Update(Timing.Step);
+                }
+                sw.Stop();
+                NewMessage($"Fast-forwarded by {seconds} seconds (took {sw.ElapsedMilliseconds / 1000.0f} s).");
             }));
 
             commands.Add(new Command("removecharacter", "removecharacter [character name]: Immediately deletes the specified character.", (string[] args) =>

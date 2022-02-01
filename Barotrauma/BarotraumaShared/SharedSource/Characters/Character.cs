@@ -1249,6 +1249,10 @@ namespace Barotrauma
             Info.HairElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Hair)));
 
 #if CLIENT
+            if (info.Head?.HairWithHatElement != null)
+            {
+                head.HairWithHatSprite = new WearableSprite(info.Head?.HairWithHatElement.Element("sprite"), WearableType.Hair);
+            }
             head.EnableHuskSprite = Params.Husk;
             head.LoadHerpesSprite();
             head.UpdateWearableTypesToHide();
@@ -3499,7 +3503,7 @@ namespace Barotrauma
 
             Limb limbHit = targetLimb;
 
-            float attackImpulse = attack.TargetImpulse + attack.TargetForce * deltaTime;
+            float attackImpulse = attack.TargetImpulse + attack.TargetForce  * attack.ImpactMultiplier * deltaTime;
 
             AbilityAttackData attackData = new AbilityAttackData(attack, this);
             if (attacker != null)
@@ -3537,7 +3541,7 @@ namespace Barotrauma
             }
 
             if (limbHit == null) { return new AttackResult(); }
-            Vector2 forceWorld = attack.TargetImpulseWorld + attack.TargetForceWorld;
+            Vector2 forceWorld = attack.TargetImpulseWorld + attack.TargetForceWorld * attack.ImpactMultiplier;
             if (attacker != null)
             {
                 forceWorld.X *= attacker.AnimController.Dir;
@@ -3845,39 +3849,48 @@ namespace Barotrauma
                     targets.AddRange(statusEffect.GetNearbyTargets(WorldPosition, targets));
                     statusEffect.Apply(actionType, deltaTime, this, targets);
                 }
-                else
+                else if (statusEffect.targetLimbs != null)
                 {
-                    statusEffect.Apply(actionType, deltaTime, this, this);
-                    if (statusEffect.targetLimbs != null)
+                    foreach (var limbType in statusEffect.targetLimbs)
                     {
-                        foreach (var limbType in statusEffect.targetLimbs)
+                        if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                         {
-                            if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+                            // Target all matching limbs
+                            foreach (var limb in AnimController.Limbs)
                             {
-                                // Target all matching limbs
-                                foreach (var limb in AnimController.Limbs)
+                                if (limb.IsSevered) { continue; }
+                                if (limb.type == limbType)
                                 {
-                                    if (limb.IsSevered) { continue; }
-                                    if (limb.type == limbType)
-                                    {
-                                        statusEffect.Apply(actionType, deltaTime, this, limb);
-                                    }
+                                    statusEffect.sourceBody = limb.body;
+                                    statusEffect.Apply(actionType, deltaTime, this, limb);
                                 }
                             }
-                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
+                        }
+                        else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
+                        {
+                            // Target just the first matching limb
+                            Limb limb = AnimController.GetLimb(limbType);
+                            if (limb != null)
                             {
-                                // Target just the first matching limb
-                                Limb limb = AnimController.GetLimb(limbType);
+                                statusEffect.sourceBody = limb.body;
                                 statusEffect.Apply(actionType, deltaTime, this, limb);
                             }
-                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.LastLimb))
+                        }
+                        else if (statusEffect.HasTargetType(StatusEffect.TargetType.LastLimb))
+                        {
+                            // Target just the last matching limb
+                            Limb limb = AnimController.Limbs.LastOrDefault(l => l.type == limbType && !l.IsSevered && !l.Hidden);
+                            if (limb != null)
                             {
-                                // Target just the last matching limb
-                                Limb limb = AnimController.Limbs.LastOrDefault(l => l.type == limbType && !l.IsSevered && !l.Hidden);
+                                statusEffect.sourceBody = limb.body;
                                 statusEffect.Apply(actionType, deltaTime, this, limb);
                             }
                         }
                     }
+                }
+                if (statusEffect.HasTargetType(StatusEffect.TargetType.This) || statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+                {
+                    statusEffect.Apply(actionType, deltaTime, this, this);
                 }
             }
             if (actionType != ActionType.OnDamaged && actionType != ActionType.OnSevered)

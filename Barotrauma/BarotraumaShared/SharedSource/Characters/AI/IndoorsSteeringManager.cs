@@ -9,10 +9,10 @@ namespace Barotrauma
 {
     class IndoorsSteeringManager : SteeringManager
     {
-        private PathFinder pathFinder;
+        private readonly PathFinder pathFinder;
         private SteeringPath currentPath;
 
-        private bool canOpenDoors;
+        private readonly bool canOpenDoors;
         public bool CanBreakDoors { get; set; }
 
         private bool ShouldBreakDoor(Door door) =>
@@ -20,7 +20,7 @@ namespace Barotrauma
             !door.Item.Indestructible && !door.Item.InvulnerableToDamage &&
             (door.Item.Submarine == null || door.Item.Submarine.TeamID != character.TeamID);
 
-        private Character character;
+        private readonly Character character;
 
         private Vector2 currentTarget;
 
@@ -77,8 +77,10 @@ namespace Barotrauma
 
         public IndoorsSteeringManager(ISteerable host, bool canOpenDoors, bool canBreakDoors) : base(host)
         {
-            pathFinder = new PathFinder(WayPoint.WayPointList.FindAll(wp => wp.SpawnType == SpawnType.Path), true);
-            pathFinder.GetNodePenalty = GetNodePenalty;
+            pathFinder = new PathFinder(WayPoint.WayPointList.FindAll(wp => wp.SpawnType == SpawnType.Path), true)
+            {
+                GetNodePenalty = GetNodePenalty
+            };
 
             this.canOpenDoors = canOpenDoors;
             this.CanBreakDoors = canBreakDoors;
@@ -508,6 +510,16 @@ namespace Barotrauma
                         canAccessButtons = true;
                     }
                 }
+                foreach (var linked in door.Item.linkedTo)
+                {
+                    if (!(linked is Item linkedItem)) { continue; }
+                    var button = linkedItem.GetComponent<Controller>();
+                    if (button == null) { continue; }
+                    if (button.HasAccess(character) && (buttonFilter == null || buttonFilter(button)))
+                    {
+                        canAccessButtons = true;
+                    }
+                }                
                 return canAccessButtons || door.IsOpen || ShouldBreakDoor(door);
             }
         }

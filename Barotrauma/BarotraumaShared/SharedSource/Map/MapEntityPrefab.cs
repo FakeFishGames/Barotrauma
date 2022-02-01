@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -315,6 +316,11 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Failed to find a matching MapEntityPrefab (name: \"" + name + "\", identifier: \"" + identifier + "\").\n" + Environment.StackTrace.CleanupStackTrace());
             }
             return null;
+        }
+
+        public static MapEntityPrefab GetRandom(Predicate<MapEntityPrefab> predicate, Rand.RandSync sync)
+        {
+            return List.GetRandom(p => predicate(p), sync);
         }
 
         /// <summary>

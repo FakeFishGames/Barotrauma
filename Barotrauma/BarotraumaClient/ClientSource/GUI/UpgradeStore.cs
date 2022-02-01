@@ -167,6 +167,7 @@ namespace Barotrauma
         //TODO: move this somewhere else
         public static void UpdateCategoryList(GUIListBox categoryList, CampaignMode campaign, Submarine? drawnSubmarine, IEnumerable<UpgradeCategory> applicableCategories)
         {
+            var subItems = GetSubItems();
             foreach (GUIComponent component in categoryList.Content.Children)
             {
                 if (!(component.UserData is CategoryData data)) { continue; }
@@ -178,7 +179,7 @@ namespace Barotrauma
                 var customizeButton = component.FindChild("customizebutton", true);
                 if (customizeButton != null)
                 {
-                    customizeButton.Visible = HasSwappableItems(data.Category);
+                    customizeButton.Visible = HasSwappableItems(data.Category, subItems);
                 }
             }
 
@@ -719,15 +720,18 @@ namespace Barotrauma
 
         private bool customizeTabOpen;
 
-        private static bool HasSwappableItems(UpgradeCategory category)
+        private static bool HasSwappableItems(UpgradeCategory category, List<Item>? subItems = null)
         {
             if (Submarine.MainSub == null) { return false; }
-            return Submarine.MainSub.GetItems(true).Any(i =>
+            subItems ??= GetSubItems();
+            return subItems.Any(i =>
                 i.Prefab.SwappableItem != null &&
                 !i.HiddenInGame && i.AllowSwapping &&
                 (i.Prefab.SwappableItem.CanBeBought || ItemPrefab.Prefabs.Any(ip => ip.SwappableItem?.ReplacementOnUninstall == i.Prefab.Identifier)) &&
                 Submarine.MainSub.IsEntityFoundOnThisSub(i, true) && category.ItemTags.Any(t => i.HasTag(t)));
         }
+
+        private static List<Item> GetSubItems() => Submarine.MainSub?.GetItems(true) ?? new List<Item>();
 
         private void SelectUpgradeCategory(List<UpgradePrefab> prefabs, UpgradeCategory category, Submarine submarine)
         {

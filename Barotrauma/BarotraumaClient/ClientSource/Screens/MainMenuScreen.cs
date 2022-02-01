@@ -717,7 +717,7 @@ namespace Barotrauma
         }
 #endregion
 
-        public void QuickStart(bool fixedSeed = false, string sub = null, float difficulty = 40, LevelGenerationParams levelGenerationParams = null)
+        public void QuickStart(bool fixedSeed = false, string sub = null, float difficulty = 50, LevelGenerationParams levelGenerationParams = null)
         {
             if (fixedSeed)
             {
@@ -1396,7 +1396,7 @@ namespace Barotrauma
                         return false;
                     }
 
-                    if (ForbiddenWordFilter.IsForbidden(name, out string forbiddenWord))
+                    if (isPublicBox.Selected && ForbiddenWordFilter.IsForbidden(name, out string forbiddenWord))
                     {
                         var msgBox = new GUIMessageBox("", 
                             TextManager.GetWithVariables("forbiddenservernameverification", new string[] { "[forbiddenword]", "[servername]" }, new string[] { forbiddenWord, name }), 

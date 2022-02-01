@@ -768,34 +768,40 @@ namespace Barotrauma
                         switch (e)
                         {
                             case Item item:
-                            {
-                                if (item.FlippedX && item.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
-                                if (item.flippedY && item.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
-                                break;
-                            }
+                                {
+                                    if (item.FlippedX && item.Prefab.CanSpriteFlipX) { spriteEffects ^= SpriteEffects.FlipHorizontally; }
+                                    if (item.flippedY && item.Prefab.CanSpriteFlipY) { spriteEffects ^= SpriteEffects.FlipVertically; }
+                                    var wire = item.GetComponent<Wire>();
+                                    if (wire != null && !wire.Item.body.Enabled)
+                                    {
+                                        wire.Draw(spriteBatch, editing: false, new Vector2(moveAmount.X, -moveAmount.Y));
+                                        continue;
+                                    }
+                                    break;
+                                }
                             case Structure structure:
-                            {
-                                if (structure.FlippedX && structure.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
-                                if (structure.flippedY && structure.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
-                                break;
-                            }
+                                {
+                                    if (structure.FlippedX && structure.Prefab.CanSpriteFlipX) { spriteEffects ^= SpriteEffects.FlipHorizontally; }
+                                    if (structure.flippedY && structure.Prefab.CanSpriteFlipY) { spriteEffects ^= SpriteEffects.FlipVertically; }
+                                    break;
+                                }
                             case WayPoint wayPoint:
-                            {
-                                Vector2 drawPos = e.WorldPosition;
-                                drawPos.Y = -drawPos.Y;
-                                drawPos += moveAmount;
-                                wayPoint.Draw(spriteBatch, drawPos);
-                                continue;
-                            }
+                                {
+                                    Vector2 drawPos = e.WorldPosition;
+                                    drawPos.Y = -drawPos.Y;
+                                    drawPos += moveAmount;
+                                    wayPoint.Draw(spriteBatch, drawPos);
+                                    continue;
+                                }
                             case LinkedSubmarine linkedSub:
-                            {
-                                var ma = moveAmount;
-                                ma.Y = -ma.Y;
-                                Vector2 lPos = linkedSub.Position;
-                                lPos += ma;
-                                linkedSub.Draw(spriteBatch, lPos, alpha: 0.5f);
-                                break;
-                            }
+                                {
+                                    var ma = moveAmount;
+                                    ma.Y = -ma.Y;
+                                    Vector2 lPos = linkedSub.Position;
+                                    lPos += ma;
+                                    linkedSub.Draw(spriteBatch, lPos, alpha: 0.5f);
+                                    break;
+                                }
                         }
                         e.prefab?.DrawPlacing(spriteBatch,
                             new Rectangle(e.WorldRect.Location + new Point((int)moveAmount.X, (int)-moveAmount.Y), e.WorldRect.Size), e.Scale, spriteEffects);

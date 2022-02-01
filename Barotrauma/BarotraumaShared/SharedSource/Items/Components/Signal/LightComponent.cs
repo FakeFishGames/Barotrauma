@@ -241,7 +241,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnMapLoaded()
         {
-            if (item.body == null && powerConsumption <= 0.0f && Parent == null && turret == null && 
+            if (item.body == null && powerConsumption <= 0.0f && Parent == null && turret == null && IsOn &&
                 (statusEffectLists == null || !statusEffectLists.ContainsKey(ActionType.OnActive)) && 
                 (IsActiveConditionals == null || IsActiveConditionals.Count == 0))
             {

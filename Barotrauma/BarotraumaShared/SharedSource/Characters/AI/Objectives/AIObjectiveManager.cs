@@ -422,7 +422,7 @@ namespace Barotrauma
                 case "wait":
                     newObjective = new AIObjectiveGoTo(order.TargetSpatialEntity ?? character, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        AllowGoingOutside = character.Submarine == null || (order.TargetSpatialEntity != null && character.Submarine != order.TargetSpatialEntity.Submarine)
+                        AllowGoingOutside = true
                     };
                     break;
                 case "return":
@@ -467,6 +467,12 @@ namespace Barotrauma
                     break;
                 case "fightintruders":
                     newObjective = new AIObjectiveFightIntruders(character, this, priorityModifier);
+                    break;
+                case "assaultenemy":
+                    newObjective = new AIObjectiveFightIntruders(character, this, priorityModifier)
+                    {
+                        TargetCharactersInOtherSubs = true
+                    };
                     break;
                 case "steer":
                     var steering = (order?.TargetEntity as Item)?.GetComponent<Steering>();

@@ -3,12 +3,10 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -20,6 +18,9 @@ namespace Barotrauma
 
         protected List<ushort> linkedToID;
         public List<ushort> unresolvedLinkedToID;
+
+        private const int GapUpdateInterval = 4;
+        private static int gapUpdateTimer;
 
         /// <summary>
         /// List of upgrades this item has
@@ -410,6 +411,7 @@ namespace Barotrauma
             }
 
             //connect clone wires to the clone items and refresh links between doors and gaps
+            List<Wire> orphanedWires = new List<Wire>();
             for (int i = 0; i < clones.Count; i++)
             {
                 if (!(clones[i] is Item cloneItem)) { continue; }
@@ -442,7 +444,7 @@ namespace Barotrauma
                     }
 
                     var connectedItem = originalWire.Connections[n].Item;
-                    if (connectedItem == null) { continue; }
+                    if (connectedItem == null || !entitiesToClone.Contains(connectedItem)) { continue; }
 
                     //index of the item the wire is connected to
                     int itemIndex = entitiesToClone.IndexOf(connectedItem);
@@ -469,6 +471,20 @@ namespace Barotrauma
                     (clones[itemIndex] as Item).Connections[connectionIndex].TryAddLink(cloneWire);
                     cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], false);
                 }
+
+                if (cloneWire.Connections[0] == null || cloneWire.Connections[1] == null)
+                {
+                    if (!clones.Any(c => (c as Item)?.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(cloneWire) ?? false))
+                    {
+                        orphanedWires.Add(cloneWire);
+                    }
+                }
+            }
+
+            foreach (var orphanedWire in orphanedWires)
+            {
+                orphanedWire.Item.Remove();
+                clones.Remove(orphanedWire.Item);
             }
 
             return clones;
@@ -548,20 +564,27 @@ namespace Barotrauma
             {
                 hull.Update(deltaTime, cam);
             }
+#if CLIENT
+            Hull.UpdateCheats(deltaTime, cam);
+#endif
 
             foreach (Structure structure in Structure.WallList)
             {
                 structure.Update(deltaTime, cam);
             }
 
-
             //update gaps in random order, because otherwise in rooms with multiple gaps
             //the water/air will always tend to flow through the first gap in the list,
             //which may lead to weird behavior like water draining down only through
             //one gap in a room even if there are several
-            foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
+            gapUpdateTimer++;
+            if (gapUpdateTimer >= GapUpdateInterval)
             {
-                gap.Update(deltaTime, cam);
+                foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
+                {
+                    gap.Update(deltaTime * GapUpdateInterval, cam);
+                }
+                gapUpdateTimer = 0;
             }
 
             Powered.UpdatePower(deltaTime);

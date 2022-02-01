@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -208,9 +207,9 @@ namespace Barotrauma
                                 "watersplash",
                                 (Submarine == null ? pos : pos + Submarine.Position) - Vector2.UnitY * Rand.Range(0.0f, 10.0f),
                                 velocity, 0, flowTargetHull);
-
                             if (particle != null)
                             {
+                                if (particle.CurrentHull == null) { GameMain.ParticleManager.RemoveParticle(particle); }
                                 particle.Size *= Math.Min(Math.Abs(flowForce.X / 500.0f), 5.0f);
                             }
                         }
@@ -238,9 +237,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (Math.Sign(flowTargetHull.Rect.Y - rect.Y) != Math.Sign(lerpedFlowForce.Y)) return;
+                    if (Math.Sign(flowTargetHull.Rect.Y - rect.Y) != Math.Sign(lerpedFlowForce.Y)) { return; }
 
-                    float particlesPerSec = open * rect.Width * 0.3f * particleAmountMultiplier;
+                    float particlesPerSec = Math.Max(open * rect.Width * 0.3f * particleAmountMultiplier, 20.0f);
                     float emitInterval = 1.0f / particlesPerSec;
                     while (particleTimer > emitInterval)
                     {
@@ -252,17 +251,21 @@ namespace Barotrauma
                         if (flowTargetHull.WaterVolume < flowTargetHull.Volume * 0.95f)
                         {
                             var splash = GameMain.ParticleManager.CreateParticle(
-                            "watersplash",
-                            Submarine == null ? pos : pos + Submarine.Position,
-                            velocity, 0, FlowTargetHull);
-                            if (splash != null) splash.Size = splash.Size * MathHelper.Clamp(rect.Width / 50.0f, 0.8f, 4.0f);
+                                "watersplash",
+                                Submarine == null ? pos : pos + Submarine.Position,
+                                velocity, 0, FlowTargetHull);
+                            if (splash != null) 
+                            {
+                                if (splash.CurrentHull == null) { GameMain.ParticleManager.RemoveParticle(splash); }
+                                splash.Size *= MathHelper.Clamp(rect.Width / 50.0f, 1.5f, 4.0f); 
+                            }
                         }
                         if (Math.Abs(flowForce.Y) > 190.0f && Rand.Range(0.0f, 1.0f) < 0.3f && flowTargetHull.WaterVolume > flowTargetHull.Volume * 0.1f)
                         {
                             GameMain.ParticleManager.CreateParticle(
-                            "bubbles",
-                            Submarine == null ? pos : pos + Submarine.Position,
-                            flowForce / 2.0f, 0, FlowTargetHull);
+                                "bubbles",
+                                Submarine == null ? pos : pos + Submarine.Position,
+                                flowForce / 2.0f, 0, FlowTargetHull);
                         }
                         particleTimer -= emitInterval;
                     }

@@ -97,17 +97,16 @@ namespace Barotrauma
         /// <summary>
         /// There is a server-side implementation of the method in <see cref="MultiPlayerCampaign"/>
         /// </summary>
-        public bool AllowedToManageCampaign()
+        public bool AllowedToManageCampaign(ClientPermissions permissions = ClientPermissions.ManageCampaign)
         {
-            //allow ending the round if the client has permissions, is the owner, the only client in the server,
+            //allow managing the round if the client has permissions, is the owner, the only client in the server,
             //or if no-one has management permissions
             if (GameMain.Client == null) { return true; }
             return
-                GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) ||
+                GameMain.Client.HasPermission(permissions) ||
                 GameMain.Client.ConnectedClients.Count == 1 ||
                 GameMain.Client.IsServerOwner ||
-                GameMain.Client.ConnectedClients.None(c =>
-                    c.InGame && (c.IsOwner || c.HasPermission(ClientPermissions.ManageCampaign)));
+                GameMain.Client.ConnectedClients.None(c => c.InGame && (c.IsOwner || c.HasPermission(permissions)));
         }
 
         public override void Draw(SpriteBatch spriteBatch)

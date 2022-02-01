@@ -85,7 +85,9 @@ namespace Barotrauma.Networking
             get
             {
                 if (customTextColor != null) { return customTextColor.Value; }
-                return MessageColor[(int)Type];
+                int intType = (int)Type;
+                if (intType < 0 || intType >= MessageColor.Length) { return Color.White; }
+                return MessageColor[intType];
             }
 
             set
@@ -230,13 +232,13 @@ namespace Barotrauma.Networking
                     break;
                 case ChatMessageType.Radio:
                 case ChatMessageType.Order:
-                    if (receiver != null && !receiver.IsDead)
+                    if (receiver?.Inventory != null && !receiver.IsDead)
                     {
-                        foreach (Item receiverItem in receiver.Inventory?.AllItems.Where(i => i.GetComponent<WifiComponent>()?.LinkToChat ?? false))
+                        foreach (Item receiverItem in receiver.Inventory.AllItems.Where(i => i.GetComponent<WifiComponent>()?.LinkToChat ?? false))
                         {
-                            if (!receiver.HasEquippedItem(receiverItem)) { continue; }
+                            if (sender.Inventory == null || !receiver.HasEquippedItem(receiverItem)) { continue; }
 
-                            foreach (Item senderItem in sender.Inventory?.AllItems.Where(i => i.GetComponent<WifiComponent>()?.LinkToChat ?? false))
+                            foreach (Item senderItem in sender.Inventory.AllItems.Where(i => i.GetComponent<WifiComponent>()?.LinkToChat ?? false))
                             {
                                 if (!sender.HasEquippedItem(senderItem)) { continue; }
 

@@ -37,6 +37,19 @@ namespace Barotrauma
 
         private double lastAmbientLightEditTime;
 
+        private float drawSurface;
+
+        public float DrawSurface
+        {
+            get { return drawSurface; }
+            set
+            {
+                if (Math.Abs(drawSurface - value) < 0.00001f) { return; }
+                drawSurface = MathHelper.Clamp(value, rect.Y - rect.Height, rect.Y);
+                update = true;
+            }
+        }
+
         public override bool SelectableInEditor
         {
             get
@@ -138,8 +151,15 @@ namespace Barotrauma
             }
         }
 
-        partial void UpdateProjSpecific(float deltaTime, Camera cam)
+        partial void UpdateProjSpecific(float deltaTime, Camera _)
         {
+            float waterDepth = WaterVolume / rect.Width;
+            //interpolate the position of the rendered surface towards the "target surface"
+            drawSurface = Math.Max(MathHelper.Lerp(
+                drawSurface,
+                rect.Y - rect.Height + waterDepth,
+                deltaTime * 10.0f), rect.Y - rect.Height);
+
             if (GameMain.Client != null)
             {
                serverUpdateDelay -= deltaTime;
@@ -171,55 +191,56 @@ namespace Barotrauma
                 }
             }
 
-            if (!IdFreed)
-            {
-                if (EditWater)
-                {
-                    Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-                    if (Submarine.RectContains(WorldRect, position))
-                    {
-                        if (PlayerInput.PrimaryMouseButtonHeld())
-                        {
-                            WaterVolume += 1500.0f;
-                            networkUpdatePending = true;
-                            serverUpdateDelay = 0.5f;
-                        }
-                        else if (PlayerInput.SecondaryMouseButtonHeld())
-                        {
-                            WaterVolume -= 1500.0f;
-                            networkUpdatePending = true;
-                            serverUpdateDelay = 0.5f;
-                        }
-                    }
-                }
-                else if (EditFire)
-                {
-                    Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-                    if (Submarine.RectContains(WorldRect, position))
-                    {
-                        if (PlayerInput.PrimaryMouseButtonClicked())
-                        {
-                            new FireSource(position, this, isNetworkMessage: true);
-                            networkUpdatePending = true;
-                            serverUpdateDelay = 0.5f;
-                        }
-                    }
-                }
-            }
-
-            if (waterVolume < 1.0f) { return; }
+            /*if (waterVolume < 1.0f) { return; }
             for (int i = 1; i < waveY.Length - 1; i++)
             {
                 float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
-                if (maxDelta > 1.0f && maxDelta > Rand.Range(1.0f, 10.0f))
+                if (maxDelta > 0.1f && maxDelta > Rand.Range(0.1f, 10.0f))
                 {
                     var particlePos = new Vector2(rect.X + WaveWidth * i, surface + waveY[i]);
-                    if (Submarine != null) particlePos += Submarine.Position;
+                    if (Submarine != null) { particlePos += Submarine.Position; }
 
                     GameMain.ParticleManager.CreateParticle("mist",
                         particlePos,
                         new Vector2(0.0f, -50.0f), 0.0f, this);
                 }
+            }*/
+        }
+
+        public static void UpdateCheats(float deltaTime, Camera cam)
+        {
+            bool primaryMouseButtonHeld = PlayerInput.PrimaryMouseButtonHeld();
+            bool secondaryMouseButtonHeld = PlayerInput.SecondaryMouseButtonHeld();
+            if (!primaryMouseButtonHeld && !secondaryMouseButtonHeld) { return; }
+
+            Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
+            Hull hull = FindHull(position);
+
+            if (hull == null || hull.IdFreed) { return; }
+            if (EditWater)
+            {
+                if (primaryMouseButtonHeld)
+                {
+                    hull.WaterVolume += 100000.0f * deltaTime;
+                    hull.networkUpdatePending = true;
+                    hull.serverUpdateDelay = 0.5f;
+                }
+                else if (secondaryMouseButtonHeld)
+                {
+                    hull.WaterVolume -= 100000.0f * deltaTime;
+                    hull.networkUpdatePending = true;
+                    hull.serverUpdateDelay = 0.5f;
+                }
+                
+            }
+            else if (EditFire)
+            {
+                if (primaryMouseButtonHeld)
+                {
+                    new FireSource(position, hull, isNetworkMessage: true);
+                    hull.networkUpdatePending = true;
+                    hull.serverUpdateDelay = 0.5f;
+                }                
             }
         }
 

@@ -346,7 +346,12 @@ namespace Barotrauma
 
             Vector2 limbDiff = attackSimPosition - mouthPos;
             float extent = Math.Max(mouthLimb.body.GetMaxExtent(), 1);
-            if (limbDiff.LengthSquared() < extent * extent)
+            bool tooFar = character.InWater ? limbDiff.LengthSquared() > extent * extent : limbDiff.X > extent;
+            if (tooFar)
+            {
+                character.SelectedCharacter = null;
+            }
+            else
             {
                 //pull the target character to the position of the mouth
                 //(+ make the force fluctuate to waggle the character a bit)
@@ -383,7 +388,7 @@ namespace Barotrauma
                     mouthLimb.body.ApplyTorque(-force * 50);
                 }
 
-                if (Character.CanEat)
+                if (Character.CanEat && target.IsDead)
                 {
                     var jaw = GetLimb(LimbType.Jaw);
                     if (jaw != null)
@@ -431,10 +436,6 @@ namespace Barotrauma
                         }
                     }
                 }                
-            }
-            else
-            {
-                character.SelectedCharacter = null;
             }
         }
 

@@ -235,6 +235,13 @@ namespace Barotrauma
         /// </summary>
         public bool IsInteractable(Character character)
         {
+#if CLIENT
+            if (Screen.Selected is EditorScreen)
+            {
+                return true;
+            }
+#endif
+
             if (character != null && character.IsOnPlayerTeam)
             {
                 return IsPlayerTeamInteractable;
@@ -638,6 +645,10 @@ namespace Barotrauma
             }
         }
 
+        private float buoyancySineMagnitude;
+        private float buoyancySineFrequency;
+        private float buoyancyRandomForce;
+
         public bool FireProof
         {
             get { return Prefab.FireProof; }
@@ -866,9 +877,11 @@ namespace Barotrauma
                                 }
                             }
                         }
-
-                        body.FarseerBody.AngularDamping = element.GetAttributeFloat("angulardamping", 0.2f);
-                        body.FarseerBody.LinearDamping = element.GetAttributeFloat("lineardamping", 0.1f);
+                        body.FarseerBody.AngularDamping = subElement.GetAttributeFloat("angulardamping", 0.2f);
+                        body.FarseerBody.LinearDamping = subElement.GetAttributeFloat("lineardamping", 0.1f);
+                        buoyancySineMagnitude = subElement.GetAttributeFloat("buoyancysinemagnitude", 0f);
+                        buoyancySineFrequency = subElement.GetAttributeFloat("buoyancysinefrequency", 0f);
+                        buoyancyRandomForce = subElement.GetAttributeFloat("buoyancyrandom", 0f);
                         body.UserData = this;
                         break;
                     case "trigger":
@@ -1716,7 +1729,7 @@ namespace Barotrauma
                 UpdateNetPosition(deltaTime);
                 if (inWater)
                 {
-                    ApplyWaterForces();
+                    ApplyWaterForces(deltaTime);
                     CurrentHull?.ApplyFlowForces(deltaTime, this);
                 }
             }
@@ -1805,16 +1818,24 @@ namespace Barotrauma
             transformDirty = false;
         }
 
+        private float sineTime;
         /// <summary>
         /// Applies buoyancy, drag and angular drag caused by water
         /// </summary>
-        private void ApplyWaterForces()
+        private void ApplyWaterForces(float deltaTime)
         {
             if (body.Mass <= 0.0f || body.Density <= 0.0f)
             {
                 return;
             }
-
+            if (buoyancySineFrequency > 0)
+            {
+                if (sineTime >= float.MaxValue)
+                {
+                    sineTime = float.MinValue;
+                }
+                sineTime += deltaTime * buoyancySineFrequency;
+            }
             float forceFactor = 1.0f;
             if (CurrentHull != null)
             {
@@ -1833,7 +1854,10 @@ namespace Barotrauma
 
             Vector2 drag = body.LinearVelocity * volume;
 
-            body.ApplyForce((uplift - drag) * 10.0f);
+            float sine = (float)Math.Sin(sineTime) * buoyancySineMagnitude;
+            Vector2 sineForce = Vector2.UnitY * sine * volume;
+            Vector2 randomForce = Vector2.UnitY * Rand.Range(-buoyancyRandomForce, buoyancyRandomForce, Rand.RandSync.Unsynced) * volume;
+            body.ApplyForce((uplift - drag) * 10.0f + sineForce + randomForce);
 
             //apply simple angular drag
             body.ApplyTorque(body.AngularVelocity * volume * -0.05f);
@@ -1971,7 +1995,7 @@ namespace Barotrauma
             return connectedComponents;
         }
 
-        private void GetConnectedComponentsRecursive<T>(HashSet<Connection> alreadySearched, List<T> connectedComponents) where T : ItemComponent
+        private void GetConnectedComponentsRecursive<T>(HashSet<Connection> alreadySearched, List<T> connectedComponents, bool ignoreInactiveRelays = false) where T : ItemComponent
         {
             ConnectionPanel connectionPanel = GetComponent<ConnectionPanel>();
             if (connectionPanel == null) { return; }
@@ -1980,18 +2004,18 @@ namespace Barotrauma
             {
                 if (alreadySearched.Contains(c)) { continue; }
                 alreadySearched.Add(c);
-                GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents);
+                GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents, ignoreInactiveRelays);
             }
         }
 
         /// <summary>
         /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
         /// </summary>
-        public List<T> GetConnectedComponentsRecursive<T>(Connection c) where T : ItemComponent
+        public List<T> GetConnectedComponentsRecursive<T>(Connection c, bool ignoreInactiveRelays = false) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
             HashSet<Connection> alreadySearched = new HashSet<Connection>();
-            GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents);
+            GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents, ignoreInactiveRelays);
 
             return connectedComponents;
         }
@@ -2008,7 +2032,7 @@ namespace Barotrauma
             ("signal_in2", "signal_out")
         };
 
-        private void GetConnectedComponentsRecursive<T>(Connection c, HashSet<Connection> alreadySearched, List<T> connectedComponents) where T : ItemComponent
+        private void GetConnectedComponentsRecursive<T>(Connection c, HashSet<Connection> alreadySearched, List<T> connectedComponents, bool ignoreInactiveRelays) where T : ItemComponent
         {
             alreadySearched.Add(c);
                         
@@ -2033,12 +2057,18 @@ namespace Barotrauma
                         foreach (Connection wifiOutput in receiverConnections)
                         {
                             if ((wifiOutput.IsOutput == recipient.IsOutput) || alreadySearched.Contains(wifiOutput)) { continue; }
-                            GetConnectedComponentsRecursive(wifiOutput, alreadySearched, connectedComponents);
+                            GetConnectedComponentsRecursive(wifiOutput, alreadySearched, connectedComponents, ignoreInactiveRelays);
                         }
                     }
                 }
 
-                recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents);                   
+                recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents, ignoreInactiveRelays);                   
+            }
+
+            if (ignoreInactiveRelays)
+            {
+                var relay = GetComponent<RelayComponent>();
+                if (relay != null && !relay.IsOn) { return; }
             }
 
             foreach ((string input, string output) in connectionPairs)
@@ -2049,7 +2079,7 @@ namespace Barotrauma
                     if (pairedConnection != null)
                     {
                         if (alreadySearched.Contains(pairedConnection)) { continue; }
-                        GetConnectedComponentsRecursive(pairedConnection, alreadySearched, connectedComponents);
+                        GetConnectedComponentsRecursive(pairedConnection, alreadySearched, connectedComponents, ignoreInactiveRelays);
                     }
                 }
                 else if (output == c.Name)
@@ -2058,7 +2088,7 @@ namespace Barotrauma
                     if (pairedConnection != null)
                     {
                         if (alreadySearched.Contains(pairedConnection)) { continue; }
-                        GetConnectedComponentsRecursive(pairedConnection, alreadySearched, connectedComponents);
+                        GetConnectedComponentsRecursive(pairedConnection, alreadySearched, connectedComponents, ignoreInactiveRelays);
                     }
                 }
             }

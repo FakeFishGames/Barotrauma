@@ -103,7 +103,20 @@ namespace Barotrauma.Items.Components
             if (TargetLevel != null)
             {
                 float hullPercentage = 0.0f;
-                if (item.CurrentHull != null) { hullPercentage = (item.CurrentHull.WaterVolume / item.CurrentHull.Volume) * 100.0f; }
+                if (item.CurrentHull != null) 
+                {
+                    float hullWaterVolume = item.CurrentHull.WaterVolume;
+                    float totalHullVolume = item.CurrentHull.Volume;
+                    foreach (var linked in item.CurrentHull.linkedTo)
+                    {
+                        if ((linked is Hull linkedHull))
+                        {
+                            hullWaterVolume += linkedHull.WaterVolume;
+                            totalHullVolume += linkedHull.Volume;
+                        }
+                    }
+                    hullPercentage = hullWaterVolume / totalHullVolume * 100.0f; 
+                }
                 FlowPercentage = ((float)TargetLevel - hullPercentage) * 10.0f;
             }
 
@@ -131,8 +144,8 @@ namespace Barotrauma.Items.Components
             //less effective when in a bad condition
             currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / item.MaxCondition);
 
-            item.CurrentHull.WaterVolume += currFlow;
-            if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 0.5f; }
+            item.CurrentHull.WaterVolume += currFlow * deltaTime * Timing.FixedUpdateRate;
+            if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 30.0f * deltaTime; }
 
             Voltage -= deltaTime;
         }

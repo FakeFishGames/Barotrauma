@@ -533,7 +533,7 @@ namespace Barotrauma
             
             bool onSlope = Math.Abs(movement.X) > 0.01f && Math.Abs(floorNormal.X) > 0.1f && Math.Sign(floorNormal.X) != Math.Sign(movement.X);
 
-            bool movingHorizontally = !MathUtils.NearlyEqual(targetMovement.X, 0.0f);
+            bool movingHorizontally = !MathUtils.NearlyEqual(TargetMovement.X, 0.0f);
 
             if (Stairs != null || onSlope)
             {
