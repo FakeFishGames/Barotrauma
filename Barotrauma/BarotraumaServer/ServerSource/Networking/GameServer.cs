@@ -1337,9 +1337,9 @@ namespace Barotrauma.Networking
                     break;
                 case ClientPermissions.ManageRound:
                     bool end = inc.ReadBoolean();
-                    bool save = inc.ReadBoolean();
                     if (end)
                     {
+                        bool save = inc.ReadBoolean();
                         if (gameStarted)
                         {
                             Log("Client \"" + GameServer.ClientLogName(sender) + "\" ended the round.", ServerLog.MessageType.ServerMessage);
