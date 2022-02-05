@@ -4,6 +4,8 @@ namespace Barotrauma.Items.Components
 {
     class OxygenDetector : ItemComponent
     {
+        public const int LowOxygenPercentage = 35;
+
         public OxygenDetector(Item item, XElement element)
             : base (item, element)
         {
@@ -14,7 +16,9 @@ namespace Barotrauma.Items.Components
         {
             if (item.CurrentHull == null) return;
 
-            item.SendSignal(((int)item.CurrentHull.OxygenPercentage).ToString(), "signal_out");            
+            int oxygenPercentage = (int)item.CurrentHull.OxygenPercentage;
+            item.SendSignal((oxygenPercentage).ToString(), "signal_out");
+            item.SendSignal((oxygenPercentage <= LowOxygenPercentage ? "1" : "0"), "low_oxygen");
         }
 
     }
