@@ -586,7 +586,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 //Calcualte Grid voltage, limit between 0 - 1000
-                float newVoltage = MathHelper.Min(gridKvp.Value.Power / MathHelper.Max(gridKvp.Value.Load, 0.1f), 1000);
+                float newVoltage = MathHelper.Min(gridKvp.Value.Power / MathHelper.Max(gridKvp.Value.Load, 1E-10f), 1000);
                 if (float.IsNegative(newVoltage))
                 {
                     newVoltage = 0.0f;

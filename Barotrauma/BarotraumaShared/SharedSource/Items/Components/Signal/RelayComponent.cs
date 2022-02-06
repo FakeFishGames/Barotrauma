@@ -62,7 +62,7 @@ namespace Barotrauma.Items.Components
             {
                 maxPower = Math.Max(0.0f, value);
                 thirdInverseMax = 1 / (3 * maxPower);
-                loadEqnConstant = (8 * maxPower + 3) / 3;
+                loadEqnConstant = (8 * maxPower ) / 3;
             }
         }
 
@@ -93,7 +93,7 @@ namespace Barotrauma.Items.Components
 
             // Set constants for load Formula to reduce calculation time
             thirdInverseMax = 1 / (3 * maxPower);
-            loadEqnConstant = (8 * maxPower + 3) / 3;
+            loadEqnConstant = (8 * maxPower ) / 3;
         }
 
 
@@ -159,13 +159,13 @@ namespace Barotrauma.Items.Components
                 if (internalBuffer > MaxPower)
                 {
                     //Buffer load charging curve - special relay sauce
-                    // Original formula (buffer - 3*maxPower)^2 / (3 * maxPower) - (maxPower / 3) + 1
-                    //loadDraw = MathHelper.Clamp((float)Math.Pow(internalBuffer - 3*MaxPower,2) / (3*MaxPower) - MaxPower/3 + 1, 1, MaxPower);
+                    // Original formula (buffer - 3*maxPower)^2 / (3 * maxPower) - (maxPower / 3)
+                    //loadDraw = MathHelper.Clamp((float)Math.Pow(internalBuffer - 3*MaxPower,2) / (3*MaxPower) - MaxPower/3, 1, MaxPower);
                     //Optimised formula 0.2% error from original
-                    loadDraw = MathHelper.Clamp(internalBuffer * internalBuffer * thirdInverseMax - 2 * internalBuffer + loadEqnConstant, 1, MaxPower);
+                    loadDraw = MathHelper.Clamp(internalBuffer * internalBuffer * thirdInverseMax - 2 * internalBuffer + loadEqnConstant, 0.001f, MaxPower);
 
                     //Slight smoothing to load to minimise relay jank
-                    loadDraw = MathHelper.Clamp((loadDraw + prevLoad * 0.1f) / 1.1f, 1, MaxPower);
+                    loadDraw = MathHelper.Clamp((loadDraw + prevLoad * 0.1f) / 1.1f, 0.001f, MaxPower);
                     prevLoad = loadDraw;
                 }
 
@@ -256,7 +256,7 @@ namespace Barotrauma.Items.Components
                 prevOutputLoad = load;
 
                 //Calculate power out
-                PowerLoad = MathHelper.Clamp((load * prevVoltage - power) / MathHelper.Max(minMaxPower.Y, 0.0000001f) * maxOut, maxOut, 0);
+                PowerLoad = MathHelper.Clamp((load * prevVoltage - power) / MathHelper.Max(minMaxPower.Y, 1E-20f) * maxOut, maxOut, 0);
                 return PowerLoad;
             }
             
@@ -326,7 +326,7 @@ namespace Barotrauma.Items.Components
             //Clamp the buffer to have a constant load in a severe overload event, otherwise wild oscillation will occur
             if (RelayCanOutput() && powerIn.Grid.Voltage > 2)
             {
-                limit = MathHelper.Min(limit, 3 * MaxPower - (float)Math.Sqrt((3 * prevOutputLoad + MaxPower - 3) * MaxPower));
+                limit = MathHelper.Min(limit, 3 * MaxPower - (float)Math.Sqrt((3 * prevOutputLoad + MaxPower) * MaxPower));
             }
 
             //Add to the internal buffer
