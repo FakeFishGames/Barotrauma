@@ -96,8 +96,8 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(500.0f, true)]
-        public float MaximumOlympianSkill
+        [Serialize(200.0f, true)]
+        public float MaximumSkillWithTalents
         {
             get;
             set;

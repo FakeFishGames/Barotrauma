@@ -461,7 +461,7 @@ namespace Barotrauma
             ReloadAfflictions(element);
         }
         
-        public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true, PhysicsBody sourceBody = null)
+        public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true, PhysicsBody sourceBody = null, Limb sourceLimb = null)
         {
             Character targetCharacter = target as Character;
             if (OnlyHumans)
@@ -486,10 +486,10 @@ namespace Barotrauma
             foreach (StatusEffect effect in statusEffects)
             {
                 effect.sourceBody = sourceBody;
-                // TODO: do we want to apply the effect at the world position or the entity positions in each cases? -> go through also other cases where status effects are applied
                 if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
-                    effect.Apply(effectType, deltaTime, attacker, attacker, worldPosition);
+                    // TODO: do we want to apply the effect at the world position or the entity positions in each cases? -> go through also other cases where status effects are applied
+                    effect.Apply(effectType, deltaTime, attacker, sourceLimb ?? attacker as ISerializableEntity, worldPosition);
                 }
                 if (targetCharacter != null)
                 {
@@ -526,7 +526,7 @@ namespace Barotrauma
         }
 
         readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
-        public AttackResult DoDamageToLimb(Character attacker, Limb targetLimb, Vector2 worldPosition, float deltaTime, bool playSound = true, PhysicsBody sourceBody = null)
+        public AttackResult DoDamageToLimb(Character attacker, Limb targetLimb, Vector2 worldPosition, float deltaTime, bool playSound = true, PhysicsBody sourceBody = null, Limb sourceLimb = null)
         {
             if (targetLimb == null)
             {
@@ -553,7 +553,7 @@ namespace Barotrauma
                 effect.sourceBody = sourceBody;
                 if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
-                    effect.Apply(effectType, deltaTime, attacker, attacker);
+                    effect.Apply(effectType, deltaTime, attacker, sourceLimb ?? attacker as ISerializableEntity);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.Character))
                 {

@@ -896,13 +896,20 @@ namespace Barotrauma
                 {
                     if (wearable.Type == WearableType.Husk) { continue; }
                     if (wearableTypesToHide.Contains(wearable.Type)) 
-                    { 
-                        if (wearable.Type == WearableType.Hair && HairWithHatSprite != null)
+                    {
+                        if (wearable.Type == WearableType.Hair)
                         {
-                            DrawWearable(HairWithHatSprite, depthStep, spriteBatch, blankColor, alpha: color.A / 255f, spriteEffect);
-                            depthStep += step;
+                            if (HairWithHatSprite != null)
+                            {
+                                DrawWearable(HairWithHatSprite, depthStep, spriteBatch, blankColor, alpha: color.A / 255f, spriteEffect);
+                                depthStep += step;
+                                continue;
+                            }
                         }
-                        continue; 
+                        else
+                        {
+                            continue;
+                        }
                     }
                     DrawWearable(wearable, depthStep, spriteBatch, blankColor, alpha: color.A / 255f, spriteEffect);
                     //if there are multiple sprites on this limb, make the successive ones be drawn in front

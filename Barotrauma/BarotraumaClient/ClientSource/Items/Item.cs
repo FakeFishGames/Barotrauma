@@ -1181,7 +1181,7 @@ namespace Barotrauma
             }
             texts.Add(new ColoredText(nameText, GUI.Style.TextColor, false, false));
 
-            if (CampaignInteractionType != CampaignMode.InteractionType.None)
+            if (CampaignMode.BlocksInteraction(CampaignInteractionType))
             {
                 texts.Add(new ColoredText(TextManager.GetWithVariable($"CampaignInteraction.{CampaignInteractionType}", "[key]", GameMain.Config.KeyBindText(InputType.Use)), Color.Cyan, false, false));
             }
@@ -1550,6 +1550,7 @@ namespace Barotrauma
 
             Vector2 pos = Vector2.Zero;
             Submarine sub = null;
+            float rotation = 0.0f;
             int itemContainerIndex = -1;
             int inventorySlotIndex = -1;
 
@@ -1561,7 +1562,7 @@ namespace Barotrauma
             else
             {
                 pos = new Vector2(msg.ReadSingle(), msg.ReadSingle());
-
+                rotation = msg.ReadRangedSingle(0, MathHelper.TwoPi, 8);
                 ushort subID = msg.ReadUInt16();
                 if (subID > 0)
                 {

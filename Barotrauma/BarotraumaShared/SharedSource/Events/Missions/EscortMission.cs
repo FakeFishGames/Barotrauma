@@ -50,7 +50,8 @@ namespace Barotrauma
                 return;
             }
 
-            int multiplier = CalculateScalingEscortedCharacterCount();
+            // Disabled for now, because they make balancing the missions a pain.
+            int multiplier = 1;//CalculateScalingEscortedCharacterCount();
             calculatedReward = Prefab.Reward * multiplier;
 
             string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", GetReward(missionSub))}‖end‖";
@@ -319,31 +320,33 @@ namespace Barotrauma
                 }
             }
 
-            foreach (Character character in characters)
+            if (!IsClient)
             {
-                if (character.Inventory == null) { continue; }
-                foreach (Item item in character.Inventory.AllItemsMod)
+                foreach (Character character in characters)
                 {
-                    //item didn't spawn with the characters -> drop it
-                    if (!characterItems.Any(c => c.Value.Contains(item)))
+                    if (character.Inventory == null) { continue; }
+                    foreach (Item item in character.Inventory.AllItemsMod)
                     {
-                        item.Drop(character);
+                        //item didn't spawn with the characters -> drop it
+                        if (!characterItems.Any(c => c.Value.Contains(item)))
+                        {
+                            item.Drop(character);
+                        }
                     }
                 }
-            }
 
-            // characters that survived will take their items with them, in case players tried to be crafty and steal them
-            // this needs to run here in case players abort the mission by going back home
-            // TODO: I think this might feel like a bug.
-            foreach (var characterItem in characterItems)
-            {
-                if (Survived(characterItem.Key) || !completed)
+                // characters that survived will take their items with them, in case players tried to be crafty and steal them
+                // this needs to run here in case players abort the mission by going back home
+                foreach (var characterItem in characterItems)
                 {
-                    foreach (Item item in characterItem.Value)
+                    if (Survived(characterItem.Key) || !completed)
                     {
-                        if (!item.Removed)
+                        foreach (Item item in characterItem.Value)
                         {
-                            item.Remove();
+                            if (!item.Removed)
+                            {
+                                item.Remove();
+                            }
                         }
                     }
                 }

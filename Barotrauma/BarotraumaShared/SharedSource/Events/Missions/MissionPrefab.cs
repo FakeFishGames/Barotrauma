@@ -96,9 +96,9 @@ namespace Barotrauma
         public readonly bool RequireWreck;
 
         /// <summary>
-        /// The mission can only be received when travelling from Pair.First to Pair.Second
+        /// The mission can only be received when travelling from a location of the first type to a location of the second type
         /// </summary>
-        public readonly List<Pair<string, string>> AllowedConnectionTypes;
+        public readonly List<(string from, string to)> AllowedConnectionTypes;
 
         /// <summary>
         /// The mission can only be received in these location types
@@ -185,7 +185,14 @@ namespace Barotrauma
 
             tags = element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true);
 
-            Name        = TextManager.Get("MissionName." + TextIdentifier, true) ?? element.GetAttributeString("name", "");
+            Name = TextManager.Get("MissionName." + TextIdentifier, true);
+            if (Name == null)
+            {
+#if DEBUG
+                DebugConsole.ThrowError($"Error in mission \"{Identifier}\" - could not find a name in localization files. Make sure the texts are present in the loca file or that the mission is set to share texts with another mission using the TextIdentifier attribute.");
+#endif
+                Name = element.GetAttributeString("name", "");
+            }
             Description = TextManager.Get("MissionDescription." + TextIdentifier, true) ?? element.GetAttributeString("description", "");
             Reward      = element.GetAttributeInt("reward", 1);
             AllowRetry  = element.GetAttributeBool("allowretry", false);
@@ -209,10 +216,20 @@ namespace Barotrauma
                 FailureMessage = element.GetAttributeString("failuremessage", "");
             }
 
-            SonarLabel          = 
-                TextManager.Get("MissionSonarLabel." + TextIdentifier, true) ?? 
-                TextManager.Get("MissionSonarLabel." + element.GetAttributeString("sonarlabel", ""), true) ?? 
-                element.GetAttributeString("sonarlabel", "");
+            if (element.Attribute("sonarlabel") == null)
+            {
+                SonarLabel =
+                    TextManager.Get("MissionSonarLabel." + TextIdentifier, true) ??
+                    TextManager.Get("missionsonarlabel.target");
+            }
+            else
+            {            
+                SonarLabel = 
+                    TextManager.Get("MissionSonarLabel." + element.GetAttributeString("sonarlabel", ""), true) ??
+                    TextManager.Get(element.GetAttributeString("sonarlabel", ""), true) ??
+                    element.GetAttributeString("sonarlabel", "");
+            }
+
             SonarIconIdentifier = element.GetAttributeString("sonaricon", "");
 
             MultiplayerOnly     = element.GetAttributeBool("multiplayeronly", false);
@@ -224,7 +241,7 @@ namespace Barotrauma
 
             Headers = new List<string>();
             Messages = new List<string>();
-            AllowedConnectionTypes = new List<Pair<string, string>>();
+            AllowedConnectionTypes = new List<(string from, string to)>();
 
             for (int i = 0; i < 100; i++)
             {
@@ -260,9 +277,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            AllowedConnectionTypes.Add(new Pair<string, string>(
-                                subElement.GetAttributeString("from", ""),
-                                subElement.GetAttributeString("to", "")));
+                            AllowedConnectionTypes.Add((subElement.GetAttributeString("from", "").ToLowerInvariant(), subElement.GetAttributeString("to", "").ToLowerInvariant()));
                         }
                         break;
                     case "locationtypechange":
@@ -358,13 +373,15 @@ namespace Barotrauma
                     AllowedLocationTypes.Any(lt => lt.Equals(from.Type.Identifier, StringComparison.OrdinalIgnoreCase));
             }
 
-            foreach (Pair<string, string> allowedConnectionType in AllowedConnectionTypes)
+            foreach ((string fromType, string toType) in AllowedConnectionTypes)
             {
-                if (allowedConnectionType.First.Equals("any", StringComparison.OrdinalIgnoreCase) ||
-                    allowedConnectionType.First.Equals(from.Type.Identifier, StringComparison.OrdinalIgnoreCase))
+                if (fromType.Equals("any", StringComparison.OrdinalIgnoreCase) ||
+                    fromType.Equals(from.Type.Identifier, StringComparison.OrdinalIgnoreCase) ||
+                    (fromType == "anyoutpost" && from.HasOutpost()))
                 {
-                    if (allowedConnectionType.Second.Equals("any", StringComparison.OrdinalIgnoreCase) ||
-                        allowedConnectionType.Second.Equals(to.Type.Identifier, StringComparison.OrdinalIgnoreCase))
+                    if (toType.Equals("any", StringComparison.OrdinalIgnoreCase) ||
+                        toType.Equals(to.Type.Identifier, StringComparison.OrdinalIgnoreCase) ||
+                        (toType == "anyoutpost" && to.HasOutpost()))
                     {
                         return true;
                     }

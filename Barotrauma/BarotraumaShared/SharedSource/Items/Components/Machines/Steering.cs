@@ -370,8 +370,22 @@ namespace Barotrauma.Items.Components
                 item.SendSignal(new Signal((ConvertUnits.ToDisplayUnits(sub.Velocity.X * Physics.DisplayToRealWorldRatio) * 3.6f).ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_velocity_x");
                 item.SendSignal(new Signal((ConvertUnits.ToDisplayUnits(sub.Velocity.Y * Physics.DisplayToRealWorldRatio) * -3.6f).ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_velocity_y");
 
-                item.SendSignal(new Signal((sub.WorldPosition.X * Physics.DisplayToRealWorldRatio).ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_position_x");
-                item.SendSignal(new Signal(sub.RealWorldDepth.ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_position_y");
+                Vector2 pos = new Vector2(sub.WorldPosition.X * Physics.DisplayToRealWorldRatio, sub.RealWorldDepth);
+                if (sonar != null && sonar.UseTransducers && sonar.CenterOnTransducers && sonar.ConnectedTransducers.Any())
+                {
+                    pos = Vector2.Zero;
+                    foreach (var connectedTransducer in sonar.ConnectedTransducers)
+                    {
+                        pos += connectedTransducer.Item.WorldPosition;
+                    }
+                    pos /= sonar.ConnectedTransducers.Count();
+                    pos = new Vector2(
+                        pos.X * Physics.DisplayToRealWorldRatio,
+                        Level.Loaded?.GetRealWorldDepth(pos.Y) ?? (-pos.Y * Physics.DisplayToRealWorldRatio));
+                }
+
+                item.SendSignal(new Signal(pos.X.ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_position_x");
+                item.SendSignal(new Signal(pos.Y.ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_position_y");
             }
 
             // if our tactical AI pilot has left, revert back to maintaining position

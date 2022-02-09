@@ -5,6 +5,7 @@
         private InfectionState? prevDisplayedMessage;
         partial void UpdateMessages()
         {
+            if (character != Character.Controlled) { return; }
             if (Prefab is AfflictionPrefabHusk { SendMessages: false }) { return; }
             if (prevDisplayedMessage.HasValue && prevDisplayedMessage.Value == State) { return; }
 

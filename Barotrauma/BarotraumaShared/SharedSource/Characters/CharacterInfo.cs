@@ -1134,6 +1134,10 @@ namespace Barotrauma
                     {
                         head.HairWithHatElement = hairs[hairWithHatIndex];
                     }
+                    else
+                    {
+                        head.HairWithHatElement = null;
+                    }
                 }
 
                 if (IsValidIndex(Head.BeardIndex, beards))

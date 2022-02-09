@@ -542,7 +542,7 @@ namespace Barotrauma.Items.Components
 
         public bool HasPowerToShoot()
         {
-            return GetAvailableBatteryPower() >= GetPowerRequiredToShoot();
+            return GetAvailableInstantaneousBatteryPower() >= GetPowerRequiredToShoot();
         }
 
         private bool TryLaunch(float deltaTime, Character character = null, bool ignorePower = false)

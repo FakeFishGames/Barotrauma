@@ -929,6 +929,21 @@ namespace Barotrauma
                                     (int)structure.Prefab.ScaledSize.Y);
                             }
                         }
+                        else if (entity is Item item)
+                        {
+                            if (!item.ResizeHorizontal)
+                            {
+                                item.Rect = item.DefaultRect = new Rectangle(item.Rect.X, item.Rect.Y,
+                                    (int)(item.Prefab.Size.X * item.Prefab.Scale),
+                                    item.Rect.Height);
+                            }
+                            if (!item.ResizeVertical)
+                            {
+                                item.Rect = item.DefaultRect = new Rectangle(item.Rect.X, item.Rect.Y,
+                                    item.Rect.Width,
+                                    (int)(item.Prefab.Size.Y * item.Prefab.Scale));
+                            }
+                        }
                     }
 
                     if (entity.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))

@@ -381,17 +381,17 @@ namespace Barotrauma.Items.Components
                 if (deteriorationTimer > 0.0f)
                 {
                     GUI.DrawString(spriteBatch,
-                        new Vector2(item.WorldPosition.X, -item.WorldPosition.Y), "Deterioration delay " + ((int)deteriorationTimer) + (paused ? " [PAUSED]" : ""),
+                        new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), "Deterioration delay " + ((int)deteriorationTimer) + (paused ? " [PAUSED]" : ""),
                         paused ? Color.Cyan : Color.Lime, Color.Black * 0.5f);
                 }
                 else
                 {
                     GUI.DrawString(spriteBatch,
-                        new Vector2(item.WorldPosition.X, -item.WorldPosition.Y), "Deteriorating at " + (int)(DeteriorationSpeed * 60.0f) + " units/min" + (paused ? " [PAUSED]" : ""),
+                        new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), "Deteriorating at " + (int)(DeteriorationSpeed * 60.0f) + " units/min" + (paused ? " [PAUSED]" : ""),
                         paused ? Color.Cyan : GUI.Style.Red, Color.Black * 0.5f);
                 }
                 GUI.DrawString(spriteBatch,
-                    new Vector2(item.WorldPosition.X, -item.WorldPosition.Y + 20), "Condition: " + (int)item.Condition + "/" + (int)item.MaxCondition,
+                    new Vector2(item.DrawPosition.X, -item.DrawPosition.Y + 20), "Condition: " + (int)item.Condition + "/" + (int)item.MaxCondition,
                     GUI.Style.Orange);
             }
         }

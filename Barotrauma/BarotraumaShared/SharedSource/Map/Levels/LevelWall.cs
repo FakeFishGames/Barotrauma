@@ -57,7 +57,7 @@ namespace Barotrauma
             set { moveState = MathHelper.Clamp(value, 0.0f, MathHelper.TwoPi); }
         }
 
-        public LevelWall(List<Vector2> vertices, Color color, Level level, bool giftWrap = false)
+        public LevelWall(List<Vector2> vertices, Color color, Level level, bool giftWrap = false, bool createBody = true)
         {
             this.level = level;
             this.color = color;
@@ -74,14 +74,17 @@ namespace Barotrauma
                 wallCell.Edges[i].IsSolid = true;
             }
             Cells = new List<VoronoiCell>() { wallCell };
-            Body = CaveGenerator.GeneratePolygons(Cells, level, out triangles);
-            if (triangles.Count == 0)
+            if (createBody)
             {
-                throw new ArgumentException("Failed to generate a wall (not enough triangles). Original vertices: " + string.Join(", ", originalVertices.Select(v => v.ToString())));
-            }
+                Body = CaveGenerator.GeneratePolygons(Cells, level, out triangles);
+                if (triangles.Count == 0)
+                {
+                    throw new ArgumentException("Failed to generate a wall (not enough triangles). Original vertices: " + string.Join(", ", originalVertices.Select(v => v.ToString())));
+                }
 #if CLIENT
-            GenerateVertices();
+                GenerateVertices();
 #endif
+            }
         }
 
         public LevelWall(List<Vector2> edgePositions, Vector2 extendAmount, Color color, Level level)

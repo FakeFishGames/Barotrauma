@@ -19,6 +19,15 @@ namespace Barotrauma
 
         public virtual IEnumerable<Entity> HudIconTargets => Enumerable.Empty<Entity>();
 
+        /// <summary>
+        /// State at which the only thing left to do is to reach the end of the level. Use for UI references.
+        /// </summary>
+        public abstract bool IsAtCompletionState { get; }
+        /// <summary>
+        /// State at which the mission cannot be completed anymore. Use for UI references.
+        /// </summary>
+        public abstract bool IsAtFailureState { get; }
+
         public Color GetDifficultyColor()
         {
             int v = Difficulty ?? MissionPrefab.MinDifficulty;

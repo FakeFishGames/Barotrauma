@@ -246,7 +246,7 @@ namespace Barotrauma
                 if (huskPrefab.ControlHusk)
                 {
 #if SERVER
-                    var client = GameMain.Server?.ConnectedClients.FirstOrDefault(c => c.CharacterInfo.Character == character);
+                    var client = GameMain.Server?.ConnectedClients.FirstOrDefault(c => c.Character == character);
                     if (client != null)
                     {
                         GameMain.Server.SetClientCharacter(client, husk);

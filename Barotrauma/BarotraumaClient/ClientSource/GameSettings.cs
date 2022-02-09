@@ -565,6 +565,13 @@ namespace Barotrauma
             });
 #endif
 
+            foreach (var child in leftPanel.Children)
+            {
+                if (child is GUITextBlock textBlock)
+                {
+                    textBlock.RectTransform.MinSize = new Point(textBlock.RectTransform.MinSize.X, (int)Math.Max(textBlock.RectTransform.MinSize.Y, textBlock.TextSize.Y));
+                }
+            }
 
             // right panel --------------------------------------
 

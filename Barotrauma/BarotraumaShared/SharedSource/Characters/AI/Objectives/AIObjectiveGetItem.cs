@@ -401,6 +401,11 @@ namespace Barotrauma
                 {
                     if (!ownerItem.IsInteractable(character)) { continue; }
                     if (!(ownerItem.GetComponent<ItemContainer>()?.HasRequiredItems(character, addMessage: false) ?? true)) { continue; }
+                    //the item is inside an item inside an item (e.g. fuel tank in a welding tool in a cabinet -> reduce priority to prefer items that aren't inside a tool)
+                    if (ownerItem != item.Container)
+                    {
+                        itemPriority *= 0.1f;
+                    }
                 }
                 Vector2 itemPos = (rootInventoryOwner ?? item).WorldPosition;
                 float yDist = Math.Abs(character.WorldPosition.Y - itemPos.Y);

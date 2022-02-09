@@ -120,7 +120,7 @@ namespace Barotrauma
                 }
                 if (character.CanInteractWith(container.Item, checkLinked: false))
                 {
-                    if (RemoveExisting || (RemoveExistingWhenNecessary && !container.Inventory.CanBePut(item)))
+                    if (RemoveExisting || (RemoveExistingWhenNecessary && !container.Inventory.CanBePut(ItemToContain)))
                     {
                         HumanAIController.UnequipContainedItems(container.Item, predicate: RemoveExistingPredicate, unequipMax: RemoveMax);
                     }

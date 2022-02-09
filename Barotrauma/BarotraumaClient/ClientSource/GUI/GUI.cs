@@ -1356,7 +1356,7 @@ namespace Barotrauma
 
         #region Element drawing
 
-        private static List<float> usedIndicatorAngles = new List<float>();
+        private static readonly List<float> usedIndicatorAngles = new List<float>();
 
         /// <param name="createOffset">Should the indicator move based on the camera position?</param>
         /// <param name="overrideAlpha">Override the distance-based alpha value with the specified alpha value</param>

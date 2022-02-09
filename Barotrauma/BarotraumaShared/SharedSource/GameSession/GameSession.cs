@@ -440,6 +440,7 @@ namespace Barotrauma
                     GameAnalyticsManager.AddDesignEvent("FirstLaunch:" + eventId + tutorialMode.Tutorial.Identifier);
                 }
             }
+            GameAnalyticsManager.AddDesignEvent($"{eventId}HintManager:{(HintManager.Enabled ? "Enabled" : "Disabled")}");
 #endif
             if (GameMode is CampaignMode campaignMode) 
             { 

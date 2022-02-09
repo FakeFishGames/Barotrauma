@@ -18,7 +18,7 @@ namespace Barotrauma
 
         public void IncreaseSkill(float value, bool increasePastMax)
         {
-            level = MathHelper.Clamp(level + value, 0.0f, increasePastMax ? SkillSettings.Current.MaximumOlympianSkill : MaximumSkill);
+            level = MathHelper.Clamp(level + value, 0.0f, increasePastMax ? SkillSettings.Current.MaximumSkillWithTalents : MaximumSkill);
         }
 
         private Sprite icon;

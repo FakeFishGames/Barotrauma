@@ -115,7 +115,7 @@ namespace Barotrauma
 
 #if TEST_REMOTE_CONTENT
 
-            var doc = XMLExtensions.TryLoadXml("Content/UI/MenuTextTest.xml");
+            var doc = XMLExtensions.TryLoadXml("Content/UI/MenuContent.xml");
             if (doc?.Root != null)
             {
                 foreach (XElement subElement in doc?.Root.Elements())

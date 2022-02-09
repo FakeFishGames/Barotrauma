@@ -77,6 +77,9 @@ namespace Barotrauma
         // TODO: Currently we never check the visibility (to the end node), which is actually unintentional.
         // I don't think it has caused any issues so far, so let's keep defaulting to false for now, because the less we do raycasts the better.
         // However, if there are cases where the bots attempt to go through walls (select the end node that is behind an obstacle), we should set this true.
+
+        // NOTE: This seemes to have caused an issue now Regalis11/Barotrauma#8067: namely, the bot was trying to use a waypoint that was obstructed by a shuttle
+        // because obstruction was only checked when checking visibility in PathFinder. Changed that so that obstructed nodes are no longer used.
         public bool CheckVisibility { get; set; }
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }

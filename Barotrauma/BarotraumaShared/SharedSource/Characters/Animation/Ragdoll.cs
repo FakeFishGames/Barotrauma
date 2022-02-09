@@ -776,8 +776,8 @@ namespace Barotrauma
             if (limbDiff.LengthSquared() < 0.0001f) { limbDiff = Rand.Vector(1.0f); }
             limbDiff = Vector2.Normalize(limbDiff);
             float mass = limbJoint.BodyA.Mass + limbJoint.BodyB.Mass;
-            limbJoint.LimbA.body.ApplyLinearImpulse(limbDiff * mass, (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
-            limbJoint.LimbB.body.ApplyLinearImpulse(-limbDiff * mass, (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
+            limbJoint.LimbA.body.ApplyLinearImpulse(limbDiff * Math.Min(mass, limbJoint.BodyA.Mass * 500), (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
+            limbJoint.LimbB.body.ApplyLinearImpulse(-limbDiff * Math.Min(mass, limbJoint.BodyB.Mass * 500), (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
 
             connectedLimbs.Clear();
             checkedJoints.Clear();

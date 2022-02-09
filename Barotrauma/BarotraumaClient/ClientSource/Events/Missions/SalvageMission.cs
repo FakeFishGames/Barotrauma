@@ -5,6 +5,9 @@ namespace Barotrauma
 {
     partial class SalvageMission : Mission
     {
+        public override bool IsAtCompletionState => false;
+        public override bool IsAtFailureState => false;
+
         public override void ClientReadInitial(IReadMessage msg)
         {
             base.ClientReadInitial(msg);

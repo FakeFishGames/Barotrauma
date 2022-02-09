@@ -1019,8 +1019,10 @@ namespace Barotrauma
                 case "gridtext":
                     LoadGridText(element, parent);
                     return null;
+                case "conditional":
+                    break;
                 default:
-                    throw new NotImplementedException("Loading GUI component \""+element.Name+"\" from XML is not implemented.");
+                    throw new NotImplementedException("Loading GUI component \"" + element.Name + "\" from XML is not implemented.");
             }
 
             if (component != null)

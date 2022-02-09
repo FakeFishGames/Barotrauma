@@ -1693,13 +1693,12 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (iconIdentifier == null || !targetIcons.ContainsKey(iconIdentifier))
+            if (iconIdentifier == null || !targetIcons.TryGetValue(iconIdentifier, out var iconInfo) || iconInfo.Item1 == null)
             {
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X - 3, (int)markerPos.Y - 3, 6, 6), markerColor, thickness: 2);
             }
             else
             {
-                var iconInfo = targetIcons[iconIdentifier];
                 iconInfo.Item1.Draw(spriteBatch, markerPos, iconInfo.Item2);
             }
 
@@ -1712,7 +1711,10 @@ namespace Barotrauma.Items.Components
             Vector2 textSize = GUI.SmallFont.MeasureString(wrappedLabel);
 
             //flip the text to left side when the marker is on the left side or goes outside the right edge of the interface
-            if ((dir.X < 0.0f || labelPos.X + textSize.X + 10 > GuiFrame.Rect.X) && labelPos.X - textSize.X > 0) labelPos.X -= textSize.X + 10;
+            if (GuiFrame != null && (dir.X < 0.0f || labelPos.X + textSize.X + 10 > GuiFrame.Rect.X) && labelPos.X - textSize.X > 0) 
+            { 
+                labelPos.X -= textSize.X + 10; 
+            }
 
             GUI.DrawString(spriteBatch,
                 new Vector2(labelPos.X + 10, labelPos.Y),

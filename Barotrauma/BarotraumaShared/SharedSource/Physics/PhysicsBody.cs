@@ -315,14 +315,33 @@ namespace Barotrauma
             set { FarseerBody.BodyType = value; }
         }
 
+        private Category _collisionCategories;
+
         public Category CollisionCategories
         {
-            set { FarseerBody.CollisionCategories = value; }
+            set
+            {
+                _collisionCategories = value;
+                FarseerBody.CollisionCategories = value;
+            }
+            get
+            {
+                return _collisionCategories;
+            }
         }
 
+        private Category _collidesWith;
         public Category CollidesWith
         {
-            set { FarseerBody.CollidesWith = value; }
+            set
+            {
+                _collidesWith = value;
+                FarseerBody.CollidesWith = value;
+            }
+            get
+            {
+                return _collidesWith;
+            }
         }
 
         public PhysicsBody(XElement element, float scale = 1.0f) : this(element, Vector2.Zero, scale) { }
@@ -383,12 +402,12 @@ namespace Barotrauma
             list.Add(this);
         }
         
-        public PhysicsBody(XElement element, Vector2 position, float scale = 1.0f)
+        public PhysicsBody(XElement element, Vector2 position, float scale = 1.0f, float? forceDensity = null)
         {
             float radius = ConvertUnits.ToSimUnits(element.GetAttributeFloat("radius", 0.0f)) * scale;
             float height = ConvertUnits.ToSimUnits(element.GetAttributeFloat("height", 0.0f)) * scale;
             float width = ConvertUnits.ToSimUnits(element.GetAttributeFloat("width", 0.0f)) * scale;
-            density = Math.Max(element.GetAttributeFloat("density", 10.0f), MinDensity);
+            density = Math.Max(forceDensity ?? element.GetAttributeFloat("density", 10.0f), MinDensity);
             CreateBody(width, height, radius, density);
             Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
             FarseerBody.BodyType = bodyType;

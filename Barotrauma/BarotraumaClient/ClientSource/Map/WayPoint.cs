@@ -90,14 +90,14 @@ namespace Barotrauma
             {
                 GUI.DrawLine(spriteBatch,
                     drawPos,
-                    new Vector2(ConnectedGap.WorldPosition.X, -ConnectedGap.WorldPosition.Y),
+                    new Vector2(ConnectedGap.DrawPosition.X, -ConnectedGap.DrawPosition.Y),
                     GUI.Style.Green * 0.5f, width: 1);
             }
             if (Ladders != null)
             {
                 GUI.DrawLine(spriteBatch,
                     drawPos,
-                    new Vector2(Ladders.Item.WorldPosition.X, -Ladders.Item.WorldPosition.Y),
+                    new Vector2(Ladders.Item.DrawPosition.X, -Ladders.Item.DrawPosition.Y),
                     GUI.Style.Green * 0.5f, width: 1);
             }
 

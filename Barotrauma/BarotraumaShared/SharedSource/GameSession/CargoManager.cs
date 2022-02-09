@@ -16,11 +16,13 @@ namespace Barotrauma
     {
         public ItemPrefab ItemPrefab { get; }
         public int Quantity { get; set; }
+        public bool? IsStoreComponentEnabled { get; set; }
 
         public PurchasedItem(ItemPrefab itemPrefab, int quantity)
         {
             ItemPrefab = itemPrefab;
             Quantity = quantity;
+            IsStoreComponentEnabled = null;
         }
     }
 
@@ -425,11 +427,13 @@ namespace Barotrauma
                     }
 
                     var item = new Item(pi.ItemPrefab, position, wp.Submarine);
-                    itemContainer?.Inventory.TryPutItem(item, null);
-                    itemSpawned(item);
+                    itemContainer?.Inventory.TryPutItem(item, null);            
+
+                    itemSpawned(item);    
 #if SERVER
                     Entity.Spawner?.CreateNetworkEvent(item, false);
 #endif
+                    (itemContainer?.Item ?? item).CampaignInteractionType = CampaignMode.InteractionType.Cargo;    
                     static void itemSpawned(Item item)
                     {
                         Submarine sub = item.Submarine ?? item.GetRootContainer()?.Submarine;

@@ -312,11 +312,7 @@ namespace Barotrauma
                     }
                 }
 
-                cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (AnimController.CurrentHull?.Submarine != null)
-                {
-                    cursorPosition -= AnimController.CurrentHull.Submarine.Position;
-                }
+                UpdateLocalCursor(cam);
 
                 Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
                 if (GUI.PauseMenuOpen)
@@ -391,6 +387,15 @@ namespace Barotrauma
             }
 
             DisableControls = false;
+        }
+
+        public void UpdateLocalCursor(Camera cam)
+        {
+            cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
+            if (AnimController.CurrentHull?.Submarine != null)
+            {
+                cursorPosition -= AnimController.CurrentHull.Submarine.DrawPosition;
+            }
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam)

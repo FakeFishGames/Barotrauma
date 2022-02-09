@@ -648,6 +648,9 @@ namespace Barotrauma
             [Serialize(1f, true, description:"How much damage must be done by the attack in order to be able to cut off the limb. Note that it's evaluated after the damage modifiers."), Editable(DecimalCount = 0, MinValueFloat = 0, MaxValueFloat = 1000)]
             public float MinSeveranceDamage { get; set; }
 
+            [Serialize(true, true, description: "Disable if you don't want to allow severing this joint while the creature is alive. Note: Does nothing if the 'Severance Probability Modifier' in the joint settings is 0 (default). Also note that the setting doesn't override certain limitations, e.g. severing the main limb, or legs of a walking creature is not allowed."), Editable]
+            public bool CanBeSeveredAlive { get; set; }
+
             //how long it takes for severed limbs to fade out
             [Serialize(10f, true, "How long it takes for the severed limb to fade out"), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 1)]
             public float SeveredFadeOutTime { get; set; } = 10.0f;

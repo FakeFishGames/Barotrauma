@@ -251,7 +251,7 @@ namespace Barotrauma.CharacterEditor
             GUI.ForceMouseOn(null);
             if (isEndlessRunner)
             {
-                Submarine.MainSub.Remove();
+                Submarine.MainSub?.Remove();
                 GameMain.World.ProcessChanges();
                 isEndlessRunner = false;
                 Reset();

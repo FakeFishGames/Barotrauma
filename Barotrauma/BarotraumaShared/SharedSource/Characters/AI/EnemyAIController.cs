@@ -207,8 +207,10 @@ namespace Barotrauma
         } = new HashSet<Submarine>();
 
         public bool IsTargetingPlayerTeam => IsTargetInPlayerTeam(SelectedAiTarget);
-        public bool IsBeingChasedBy(Character c) => c.AIController is EnemyAIController enemyAI && enemyAI.SelectedAiTarget?.Entity is Character && (enemyAI.State == AIState.Aggressive || enemyAI.State == AIState.Attack);
-        private bool IsBeingChased => SelectedAiTarget?.Entity is Character targetCharacter && IsBeingChasedBy(targetCharacter);
+        public static bool IsTargetBeingChasedBy(Character target, Character character)
+            => character?.AIController is EnemyAIController enemyAI && enemyAI.SelectedAiTarget?.Entity == target && (enemyAI.State == AIState.Attack || enemyAI.State == AIState.Aggressive);
+        public bool IsBeingChasedBy(Character c) => IsTargetBeingChasedBy(Character, c);
+        private bool IsBeingChased => IsBeingChasedBy(SelectedAiTarget?.Entity as Character);
 
         private bool IsTargetInPlayerTeam(AITarget target) => target?.Entity?.Submarine != null && target.Entity.Submarine.Info.IsPlayer || target?.Entity is Character targetCharacter && targetCharacter.IsOnPlayerTeam;
 
@@ -1322,7 +1324,7 @@ namespace Barotrauma
                         Vector2 rayEnd = rayStart + dir.ClampLength(Character.AnimController.Collider.GetLocalFront().Length() * 2);
                         Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true);
                         if (Submarine.LastPickedFraction != 1.0f && closestBody != null &&
-                            (!AIParams.TargetOuterWalls || !canAttackWalls && closestBody.UserData is Structure s && s.Submarine != null || !canAttackDoors && closestBody.UserData is Item i && i.Submarine != null && i.GetComponent<Door>() != null))
+                            ((!AIParams.TargetOuterWalls || !canAttackWalls) && closestBody.UserData is Structure s && s.Submarine != null || !canAttackDoors && closestBody.UserData is Item i && i.Submarine != null && i.GetComponent<Door>() != null))
                         {
                             // Target is unreachable, there's a door or wall ahead
                             State = AIState.Idle;
@@ -2385,6 +2387,24 @@ namespace Barotrauma
         }
 
         #region Targeting
+        public static bool IsLatchedTo(Character target, Character character)
+        {
+            if (target.AIController is EnemyAIController enemyAI && enemyAI.LatchOntoAI != null)
+            {
+                return enemyAI.LatchOntoAI.IsAttached && enemyAI.LatchOntoAI.TargetCharacter == character;
+            }
+            return false;
+        }
+
+        public static bool IsLatchedToSomeoneElse(Character target, Character character)
+        {
+            if (target.AIController is EnemyAIController enemyAI && enemyAI.LatchOntoAI != null)
+            {
+                return enemyAI.LatchOntoAI.IsAttached && enemyAI.LatchOntoAI.TargetCharacter != null && enemyAI.LatchOntoAI.TargetCharacter != character;
+            }
+            return false;
+        }
+
         private bool IsLatchedOnSub => LatchOntoAI != null && LatchOntoAI.IsAttachedToSub;
 
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
@@ -2398,6 +2418,7 @@ namespace Barotrauma
             targetingParams = null;
             bool isAnyTargetClose = false;
             bool isBeingChased = IsBeingChased;
+            float maxModifier = 5;
             foreach (AITarget aiTarget in AITarget.List)
             {
                 if (aiTarget.InDetectable) { continue; }
@@ -2537,12 +2558,12 @@ namespace Barotrauma
                                 {
                                     if (CanPassThroughHole(s, i))
                                     {
-                                        valueModifier *= leadsInside ? (IsAggressiveBoarder ? 3 : 1) : 0;
+                                        valueModifier *= leadsInside ? (IsAggressiveBoarder ? maxModifier : 1) : 0;
                                     }
-                                    else if (IsAggressiveBoarder && leadsInside && canAttackWalls && AIParams.TargetOuterWalls)
+                                    else if (IsAggressiveBoarder && leadsInside && canAttackWalls)
                                     {
-                                        // Up to 25% priority increase for every gap in the wall when an aggressive boarder is outside
-                                        valueModifier *= 1 + section.gap.Open * 0.25f;
+                                        // Up to 100% priority increase for every gap in the wall when an aggressive boarder is outside
+                                        valueModifier *= 1 + section.gap.Open;
                                     }
                                 }
                                 else
@@ -2580,6 +2601,7 @@ namespace Barotrauma
                                         // We are actually interested in breaking things -> reduce the priority when the wall is already broken
                                         // (Terminalcells)
                                         valueModifier *= 1 - section.gap.Open * 0.25f;
+                                        valueModifier = Math.Max(valueModifier, 0.1f);
                                     }
                                 }
                             }
@@ -2599,6 +2621,7 @@ namespace Barotrauma
                                     valueModifier *= 1 + section.gap.Open;
                                 }
                             }
+                            valueModifier = Math.Clamp(valueModifier, 0, maxModifier);
                         }
                     }
                     if (door != null)
@@ -2610,7 +2633,7 @@ namespace Barotrauma
                         bool isOpen = door.CanBeTraversed;
                         if (!isOpen)
                         {
-                            if (!canAttackDoors || isOutdoor && !AIParams.TargetOuterWalls) { continue; }
+                            if (!canAttackDoors) { continue; }
                         }
                         else if (!Character.AnimController.CanEnterSubmarine)
                         {
@@ -2624,11 +2647,11 @@ namespace Barotrauma
                                 // Increase the priority if the character is outside and the door is from outside to inside
                                 if (door.CanBeTraversed)
                                 {
-                                    valueModifier = 3;
+                                    valueModifier = maxModifier;
                                 }
                                 else if (door.LinkedGap != null)
                                 {
-                                    valueModifier = 1 + door.LinkedGap.Open;
+                                    valueModifier = 1 + door.LinkedGap.Open * (maxModifier - 1);
                                 }
                             }
                             else
@@ -2727,6 +2750,37 @@ namespace Barotrauma
 
                 if (SelectedAiTarget == aiTarget)
                 {
+                    if (Character.Submarine == null && aiTarget.Entity is ISpatialEntity spatialEntity && spatialEntity.Submarine != null)
+                    {
+                        if (targetingTag == "door" || targetingTag == "wall")
+                        {
+                            Vector2 rayStart = Character.SimPosition;
+                            Vector2 rayEnd = aiTarget.SimPosition + spatialEntity.Submarine.SimPosition;
+                            Body closestBody = Submarine.PickBody(rayStart, rayEnd, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel, allowInsideFixture: true);
+                            if (closestBody != null && closestBody.UserData is ISpatialEntity hit)
+                            {
+                                Vector2 hitPos = hit.SimPosition;
+                                if (closestBody.UserData is Submarine)
+                                {
+                                    hitPos = Submarine.LastPickedPosition;
+                                }
+                                else if (hit.Submarine != null)
+                                {
+                                    hitPos += hit.Submarine.SimPosition;
+                                }
+                                float subHalfWidth = spatialEntity.Submarine.Borders.Width / 2;
+                                float subHalfHeight = spatialEntity.Submarine.Borders.Height / 2;
+                                Vector2 diff = ConvertUnits.ToDisplayUnits(rayEnd - hitPos);
+                                bool isOtherSideOfTheSub = Math.Abs(diff.X) > subHalfWidth || Math.Abs(diff.Y) > subHalfHeight;
+                                if (isOtherSideOfTheSub)
+                                {
+                                    IgnoreTarget(aiTarget);
+                                    ResetAITarget();
+                                    continue;
+                                }
+                            }
+                        }
+                    }
                     // Stick to the current target
                     valueModifier *= 1.1f;
                 }
@@ -2757,19 +2811,22 @@ namespace Barotrauma
                     }
                 }
 
-                if (targetParams.AttackPattern == AttackPattern.Circle)
+                if (Character.Submarine == null && aiTarget.Entity?.Submarine != null && targetCharacter == null)
                 {
-                    if (Character.Submarine == null && aiTarget.Entity?.Submarine != null && !isAnyTargetClose)
+                    if (targetParams.AttackPattern == AttackPattern.Circle || targetParams.AttackPattern == AttackPattern.Sweep)
                     {
-                        if (Submarine.MainSubs.Contains(aiTarget.Entity.Submarine))
+                        if (!isAnyTargetClose)
                         {
-                            // Prioritize targets that are near the horizontal center of the sub, but only when none of the targets is reachable.
-                            float horizontalDistanceToSubCenter = Math.Abs(aiTarget.WorldPosition.X - aiTarget.Entity.Submarine.WorldPosition.X);
-                            dist *= MathHelper.Lerp(1f, 5f, MathUtils.InverseLerp(0, 10000, horizontalDistanceToSubCenter));
-                        }
-                        else
-                        {
-                            dist *= 5;
+                            if (Submarine.MainSubs.Contains(aiTarget.Entity.Submarine))
+                            {
+                                // Prioritize targets that are near the horizontal center of the sub, but only when none of the targets is reachable.
+                                float horizontalDistanceToSubCenter = Math.Abs(aiTarget.WorldPosition.X - aiTarget.Entity.Submarine.WorldPosition.X);
+                                dist *= MathHelper.Lerp(1f, 5f, MathUtils.InverseLerp(0, 10000, horizontalDistanceToSubCenter));
+                            }
+                            else if (targetParams.AttackPattern == AttackPattern.Circle)
+                            {
+                                dist *= 5;
+                            }
                         }
                     }
                 }
@@ -2936,9 +2993,9 @@ namespace Barotrauma
             if (HasValidPath(requireNonDirty: true)) { return; }
             wallHits.Clear();
             Structure wall = null;
+            Vector2 rayStart = AttackingLimb != null ? AttackingLimb.SimPosition : SimPosition;
             if (AIParams.WallTargetingMethod.HasFlag(WallTargetingMethod.Target))
             {
-                Vector2 rayStart = SimPosition;
                 Vector2 rayEnd = SelectedAiTarget.SimPosition;
                 if (SelectedAiTarget.Entity.Submarine != null && Character.Submarine == null)
                 {
@@ -2952,7 +3009,6 @@ namespace Barotrauma
             }
             if (AIParams.WallTargetingMethod.HasFlag(WallTargetingMethod.Heading))
             {
-                Vector2 rayStart = SimPosition;
                 Vector2 rayEnd = rayStart + VectorExtensions.Forward(Character.AnimController.Collider.Rotation + MathHelper.PiOver2, avoidLookAheadDistance * 5);
                 if (SelectedAiTarget.Entity.Submarine != null && Character.Submarine == null)
                 {
@@ -2968,7 +3024,6 @@ namespace Barotrauma
             }
             if (AIParams.WallTargetingMethod.HasFlag(WallTargetingMethod.Steering))
             {
-                Vector2 rayStart = SimPosition;
                 Vector2 rayEnd = rayStart + Steering * 5;
                 if (SelectedAiTarget.Entity.Submarine != null && Character.Submarine == null)
                 {
@@ -3021,6 +3076,7 @@ namespace Barotrauma
                         // Blocked by a wall that shouldn't be targeted. The main intention here is to prevent monsters from entering the the tail and the nose pieces.
                         if (!isTargetingDoor)
                         {
+                            IgnoreTarget(SelectedAiTarget);
                             ResetAITarget();
                         }
                     }
@@ -3032,6 +3088,7 @@ namespace Barotrauma
                 else
                 {
                     // Blocked by a disabled wall.
+                    IgnoreTarget(SelectedAiTarget);
                     ResetAITarget();
                 }
             }
@@ -3082,8 +3139,17 @@ namespace Barotrauma
                 if (!(hit.UserData is Structure w)) { return false; }
                 if (w.Submarine == null) { return false; }
                 if (w.Submarine != SelectedAiTarget.Entity.Submarine) { return false; }
-                if (Character.Submarine == null && w.prefab.Tags.Contains("inner")) { return false; }
-                if (!AIParams.TargetOuterWalls && !w.prefab.Tags.Contains("inner")) { return false; }
+                if (Character.Submarine == null)
+                {
+                    if (w.prefab.Tags.Contains("inner"))
+                    {
+                        if (!Character.AnimController.CanEnterSubmarine) { return false; }
+                    }
+                    else if (!AIParams.TargetOuterWalls)
+                    {
+                        return false;
+                    }
+                }
                 wall = w;
                 return true;
             }
@@ -3120,7 +3186,8 @@ namespace Barotrauma
                         {
                             if (door.LinkedGap.Size > ConvertUnits.ToDisplayUnits(colliderWidth))
                             {
-                                return SteerThroughGap(door.LinkedGap, door.LinkedGap.FlowTargetHull.WorldPosition, deltaTime, maxDistance: 100);
+                                float maxDistance = Math.Max(ConvertUnits.ToDisplayUnits(colliderLength), 100);
+                                return SteerThroughGap(door.LinkedGap, door.LinkedGap.FlowTargetHull.WorldPosition, deltaTime, maxDistance: maxDistance);
                             }
                         }
                     }
@@ -3584,12 +3651,12 @@ namespace Barotrauma
 
         public override bool SteerThroughGap(Gap gap, Vector2 targetWorldPos, float deltaTime, float maxDistance = -1)
         {
-            wallTarget = null;
-            LatchOntoAI?.DeattachFromBody(reset: true, cooldown: 2);
-            Character.AnimController.ReleaseStuckLimbs();
             bool success = base.SteerThroughGap(gap, targetWorldPos, deltaTime, maxDistance);
             if (success)
             {
+                wallTarget = null;
+                LatchOntoAI?.DeattachFromBody(reset: true, cooldown: 2);
+                Character.AnimController.ReleaseStuckLimbs();
                 SteeringManager.SteeringAvoid(deltaTime, avoidLookAheadDistance, weight: 1);
             }
             IsSteeringThroughGap = success;

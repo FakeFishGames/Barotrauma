@@ -1723,7 +1723,7 @@ namespace Barotrauma
                     {
                         vertices[j] += position;
                     }
-                    var newChunk = new LevelWall(vertices, GenerationParams.WallColor, this);
+                    var newChunk = new LevelWall(vertices, GenerationParams.WallColor, this, createBody: false);
                     AbyssIslands.Add(new AbyssIsland(islandArea, newChunk.Cells));
                     continue;
                 }
@@ -1842,7 +1842,7 @@ namespace Barotrauma
                 Rectangle allowedArea = new Rectangle(padding, padding, Size.X - padding * 2, Size.Y - padding * 2);
 
                 int radius = Math.Max(caveSize.X, caveSize.Y) / 2;
-                var cavePos = FindPosAwayFromMainPath((parentTunnel.MinWidth + radius) * 1.5f, asCloseAsPossible: true, allowedArea);
+                var cavePos = FindPosAwayFromMainPath((parentTunnel.MinWidth + radius) * 1.25f, asCloseAsPossible: true, allowedArea);
 
                 GenerateCave(caveParams, parentTunnel, cavePos, caveSize);
 
@@ -2107,12 +2107,42 @@ namespace Barotrauma
 
         private Point FindPosAwayFromMainPath(double minDistance, bool asCloseAsPossible, Rectangle? limits = null)
         {
-            var validPoints = distanceField.FindAll(d => d.distance >= minDistance && (limits == null || limits.Value.Contains(d.point)));
-            validPoints.RemoveAll(d => d.point.Y < GetBottomPosition(d.point.X).Y + minDistance);
-            if (asCloseAsPossible || !validPoints.Any())
+            var pointsAboveBottom = distanceField.FindAll(d => d.point.Y > GetBottomPosition(d.point.X).Y + minDistance);
+            if (pointsAboveBottom.Count == 0)
+            {
+                DebugConsole.ThrowError("Error in FindPosAwayFromMainPath: no valid positions above the bottom of the sea floor. Has the position of the sea floor been set too high up?");
+                return distanceField[Rand.Int(distanceField.Count, Rand.RandSync.Server)].point;
+            }
+
+            var validPoints = pointsAboveBottom.FindAll(d => d.distance >= minDistance && (limits == null || limits.Value.Contains(d.point)));
+            if (!validPoints.Any())
+            {
+                DebugConsole.AddWarning("Failed to find a valid position far enough from the main path. Choosing the furthest possible position.\n" + Environment.StackTrace);
+                if (limits != null)
+                {
+                    //try choosing something within the specified limits
+                    validPoints = pointsAboveBottom.FindAll(d => limits.Value.Contains(d.point));
+                }
+                if (!validPoints.Any()) 
+                { 
+                    //couldn't find anything, let's just go with the furthest one
+                    validPoints = pointsAboveBottom; 
+                }
+                (Point position, double distance) furthestPoint = validPoints.First();
+                foreach (var point in validPoints)
+                {
+                    if (point.distance > furthestPoint.distance)
+                    {
+                        furthestPoint = point;
+                    }
+                }
+                return furthestPoint.position;
+            }
+                        
+            if (asCloseAsPossible)
             {
                 if (!validPoints.Any()) { validPoints = distanceField; }
-                (Point position, double distance) closestPoint = validPoints.First();
+                (Point position, double distance)  closestPoint = validPoints.First(); 
                 foreach (var point in validPoints)
                 {
                     if (point.distance < closestPoint.distance)
@@ -2172,7 +2202,7 @@ namespace Barotrauma
                     {
                         double xDiff = Math.Abs(point.X - ruinPos.X);
                         double yDiff = Math.Abs(point.Y - ruinPos.Y);
-                        if (xDiff < ruinSize || yDiff < ruinSize)
+                        if (xDiff < ruinSize && yDiff < ruinSize)
                         {
                             shortestDistSqr = 0.0f;
                         }

@@ -252,6 +252,7 @@ namespace Barotrauma
 
                 msg.Write(Position.X);
                 msg.Write(Position.Y);
+                msg.WriteRangedSingle(body == null ? 0.0f : MathUtils.WrapAngleTwoPi(body.Rotation), 0.0f, MathHelper.TwoPi, 8);
                 msg.Write(Submarine != null ? Submarine.ID : (ushort)0);
             }
             else

@@ -220,10 +220,10 @@ namespace Barotrauma
 
         private static readonly (int quality, float commonness)[] qualityCommonnesses = new (int quality, float commonness)[Quality.MaxQuality + 1]
         {
-            (0, 0.85f),
-            (1, 0.125f),
-            (2, 0.0225f),
-            (3, 0.0025f),
+            (0, 1.0f),
+            (1, 0.0f),
+            (2, 0.0f),
+            (3, 0.0f),
         };
 
         private static List<Item> SpawnItem(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer, float difficultyModifier)

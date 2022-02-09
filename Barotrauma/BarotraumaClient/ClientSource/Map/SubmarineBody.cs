@@ -55,9 +55,9 @@ namespace Barotrauma
             if (closestSub != null && subsToMove.Contains(closestSub))
             {
                 GameMain.GameScreen.Cam.Position += moveAmount;
-                if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += moveAmount;
+                if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) { GameMain.GameScreen.Cam.TargetPos += moveAmount; }
 
-                if (Character.Controlled != null) Character.Controlled.CursorPosition += moveAmount;
+                if (Character.Controlled != null) { Character.Controlled.CursorPosition += moveAmount; }
             }
         }
 

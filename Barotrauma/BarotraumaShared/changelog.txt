@@ -1,4 +1,82 @@
 ---------------------------------------------------------------------------------------------------------
+v0.16.3.0
+---------------------------------------------------------------------------------------------------------
+
+Changes and additions:
+- Optimized multiplayer store interface.
+- Set supercapacitors on subs to be charging by default (unstable only).
+- Added damage sounds to doors when they take 10 or more damage.
+- Made nav terminals output the position of the transducer instead of the sub when using the new "center on transducer" setting (unstable only).
+- Made outpost containers' sprite depths more consistent with other containers.
+- Added tags to outpost medical compartments and made them linkable.
+- Mission completion and failure icons are now displayed mid-round in the tab menu.
+- Monster mission reward and difficulty level adjustments.
+- Adjustments to the random monster spawn events.
+- The new monster variants now also spawn in the multiplayer single mission -mode rounds.
+- More polished monster variants (still WIP)
+- Added a ranged attack for Crawler Broodmother.
+- An overall balance and behavior fix pass on all monsters. Feedback is welcome.
+- Moloch Pupa and Hammerhead Matriarch now also drop some loot.
+- Adjusted the loot dropped by Crawler Broodmother, Giant Spineling, and Bonethresher.
+- Crawler Eggs now deconstruct into suplhuric acid (and adrenaline gland, if they are not the smallest variants).
+- Changed the small arms max stack sizes to either 6 or 12 when the clip size is 6. Makes it less tedious to use the extra ammunition.
+- Tigerthreshers can now target doors.
+- Monsters that try to get inside the sub, should now notice and priorize doors more overall. Affects e.g. Mudraptors, and to lesser extent Crawlers (and Tigerthreshers).
+- Reduced the range where the bots can spot enemies outside of the sub.
+- Improved bots' ability to return back to the submarine from caves.
+
+Talent nerfing:
+- Removed the special stat boosts from "Olympian" (now it only increases the skill cap to 200).
+- Halved the amount of damage "Still Kicking" heals (100 -> 50)
+- Reduced gunshot wounds inflicted by handcannon.
+- "True Potential" only has a chance of instakilling things smaller than a moloch.
+- Halved damage buff from "Quickdraw" (80% -> 40%).
+- Reduced skill gain from "Field Medic" (7 -> 3).
+- Nerfed "Warlord" (20% chance of doubling the damage -> 5% chance).
+- Reduced damage buff from "Expert Commando" (40% -> 20%).
+
+Fixes:
+- Misc fixes to Barsuk, Herja, Winterhalter and Orca 2.
+- Fixed crashing when dragging a docking port in the sub editor (unstable only).
+- Fixed turrets being able to pull power from supercapacitor's power_in connection (unstable only).
+- Fixed cursor position jittering when the sub is moving fast.
+- Fixed discharge coils in Berilia and Orca 2 being connected to junction boxes instead of supercapacitors.
+- Fixed wall bodies generating twice on abyss islands without caves, and the 1st generated wall not getting mirrored along with the level, leading to "invisible walls" in some areas of the abyss in mirrored levels.
+- Pirates that are outside or unconscious count as being dead in the pirate missions. Fixes pirate missions failing if e.g. one of the pirates gets stranded outside their sub.
+- Fixed some turrets being possible to power with batteries, even though the maximum power output of the batteries shouldn't be high enough.
+- Fixed bots dropping the syringe inside PUCS when replacing the oxygen tank.
+- Fixed spineling mission using "Giant Spineling" as the sonar label on all the spinelings (unstable only).
+- Fixed bots sometimes failing to find a path to a docked shuttle or drone.
+- Fixed sound effects not playing when a monster hits the sub's inner wall.
+- Fixed correct sprite not being used in the great sea on the campaign map.
+- Fixed "settings" text overlapping in the settings menu when using a very large text size.
+- EventManager doesn't consider monsters in a docked non-player sub (e.g. abandoned outpost) to be "inside the sub". Fixes intensity always being at 100% in monster-infested outposts.
+- Fixed outpost cabinet's sprite having empty space above it.
+- Fixed inability to put syringe guns, toy hammers, welding tools, plasma cutters and sprayers in weapon holders.
+- Fixed the SMG magazine recycle recipe requiring a full magazine instead of an empty one.
+- Fixed monsters being unable to target inner walls when they are technically outside of the sub (= when there's no hull where they are). Such places, between the outer and the inner walls, can be found e.g. in Humpback.
+- Fixed escort missions giving huge rewards in higher difficulty levels.
+- Fixed NPCs reacting to combat between other characters when they shouldn't (e.g. when they don't witness it).
+- Fixed the drug dealer in "heartofgold" fleeing from the other bandits.
+- Fixed bandits (and pirates?) fleeing from the player after being in a combat for a while (unstable only).
+- Fixed mudraptors being unable to hit the targets that are very near.
+- Fixed tigerthreshers getting stuck on doors instead of attacking them (unstable only).
+- Fixed monsters sometimes getting stuck near the Humpback's bottom railgun.
+- Fixed monsters getting stuck on trying to reach open gaps that are on the other side of the sub.
+- Fixed decapitating not working as it should.
+- Fixed being able to grab hostile NPCs.
+- Fixed bots not always reacting to monsters when they should be able to see them, while swimming outside.
+- Fixed bots accidentally damaging friendly characters while trying to hit Swarmfeeders latched on to them.
+- Fixed bots not using melee weapons when there's Swarmfeeders latched on to them.
+- Fixed bots being able to shoot without any delay if they already have a weapon equipped.
+- Fixed some monsters, like crawlers, trying to target walls with lots of gaps even though there are better targets closer to them.
+- Fixed bots taking battery cells from portable pumps without considering their condition when acting on the Recharge Battery Cells order.
+
+Modding:
+- Fixed crashing in multiplayer when there are spectators in the server and someone reaches the final stage of a modded husk affliction that allows remaining in control of the final form.
+- Fixed wearables that are equipped into multiple slots (e.g. InnerClothes+OuterClothes) not being visible when worn.
+
+---------------------------------------------------------------------------------------------------------
 v0.16.2.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -30,6 +108,8 @@ Fixes:
 - Fixed some hairs clipping through hats (unstable only).
 - Fixed bots returning to the sub even when they have an active wait order. Happened when the order was given inside and then when e.g. the character is controlled by the player, and then when the player changes the character, the bot falls to the "find safety objective", because it's not allowed to stay outside.
 - Fixed aggressive boarders not being aggressive enough inside the player sub, because they couldn't target things that were blocked by a wall.
+- Fixed Molochs not doing anything when there's babies around.
+- Fixed Mudraptors not staying together in swarms.
 - Adjusted threshers' targeting priorities. Tigerthreshers can now damage doors, but should do so only when they get inside.
 - Fixed crouching animation not appearing in MP when moving backwards while crouching (unstable only).
 - Fixed crashing when trying to send a messagebox to clients using console commands (unstable only).

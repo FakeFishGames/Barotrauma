@@ -1178,7 +1178,7 @@ namespace Barotrauma
                 if ((s.damageRange == Vector2.Zero ||
                     (damage >= s.damageRange.X && damage <= s.damageRange.Y)) &&
                     string.Equals(s.damageType, damageType, StringComparison.OrdinalIgnoreCase) &&
-                    (tags == null ? string.IsNullOrEmpty(s.requiredTag) : tags.Contains(s.requiredTag)))
+                    (string.IsNullOrEmpty(s.requiredTag) || (tags == null ? string.IsNullOrEmpty(s.requiredTag) : tags.Contains(s.requiredTag))))
                 {
                     tempList.Add(s);
                 }

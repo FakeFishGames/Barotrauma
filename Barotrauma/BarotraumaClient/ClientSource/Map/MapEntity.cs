@@ -772,7 +772,7 @@ namespace Barotrauma
                                     if (item.FlippedX && item.Prefab.CanSpriteFlipX) { spriteEffects ^= SpriteEffects.FlipHorizontally; }
                                     if (item.flippedY && item.Prefab.CanSpriteFlipY) { spriteEffects ^= SpriteEffects.FlipVertically; }
                                     var wire = item.GetComponent<Wire>();
-                                    if (wire != null && !wire.Item.body.Enabled)
+                                    if (wire != null && wire.Item.body != null && !wire.Item.body.Enabled)
                                     {
                                         wire.Draw(spriteBatch, editing: false, new Vector2(moveAmount.X, -moveAmount.Y));
                                         continue;

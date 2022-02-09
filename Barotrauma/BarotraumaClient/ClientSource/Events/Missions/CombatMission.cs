@@ -20,5 +20,8 @@ namespace Barotrauma
                 return descriptions[GameMain.Client.Character.TeamID == CharacterTeamType.Team1 ? 1 : 2];
             }
         }
+
+        public override bool IsAtCompletionState => false;
+        public override bool IsAtFailureState => false;
     }
 }

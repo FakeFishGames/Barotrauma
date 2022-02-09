@@ -196,6 +196,15 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        private float deactivationTimer;
+
+        [Serialize(0f, false)]
+        public float DeactivationTime
+        {
+            get;
+            set;
+        }
+
         public Body StickTarget 
         { 
             get; 
@@ -206,6 +215,9 @@ namespace Barotrauma.Items.Components
         {
             get { return StickTarget != null; }
         }
+
+        private Category originalCollisionCategories;
+        private Category originalCollisionTargets;
 
         public Projectile(Item item, XElement element) 
             : base (item, element)
@@ -223,21 +235,26 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
-            if (Attack != null && Attack.DamageRange <= 0.0f && item.body != null)
+            if (item.body != null)
             {
-                switch (item.body.BodyShape)
+                if (Attack != null && Attack.DamageRange <= 0.0f)
                 {
-                    case PhysicsBody.Shape.Circle:
-                        Attack.DamageRange = item.body.radius;
-                        break;
-                    case PhysicsBody.Shape.Capsule:
-                        Attack.DamageRange = item.body.height / 2 + item.body.radius;
-                        break;
-                    case PhysicsBody.Shape.Rectangle:
-                        Attack.DamageRange = new Vector2(item.body.width / 2.0f, item.body.height / 2.0f).Length();
-                        break;
+                    switch (item.body.BodyShape)
+                    {
+                        case PhysicsBody.Shape.Circle:
+                            Attack.DamageRange = item.body.radius;
+                            break;
+                        case PhysicsBody.Shape.Capsule:
+                            Attack.DamageRange = item.body.height / 2 + item.body.radius;
+                            break;
+                        case PhysicsBody.Shape.Rectangle:
+                            Attack.DamageRange = new Vector2(item.body.width / 2.0f, item.body.height / 2.0f).Length();
+                            break;
+                    }
+                    Attack.DamageRange = ConvertUnits.ToDisplayUnits(Attack.DamageRange);
                 }
-                Attack.DamageRange = ConvertUnits.ToDisplayUnits(Attack.DamageRange);
+                originalCollisionCategories = item.body.CollisionCategories;
+                originalCollisionTargets = item.body.CollidesWith;
             }
         }
 
@@ -259,6 +276,10 @@ namespace Barotrauma.Items.Components
             launchPos = simPosition;
             //set the rotation of the projectile again because dropping the projectile resets the rotation
             Item.SetTransform(simPosition, rotation + (Item.body.Dir * LaunchRotationRadians));
+            if (DeactivationTime > 0)
+            {
+                deactivationTimer = DeactivationTime;
+            }
         }
 
         public void Shoot(Character user, Vector2 weaponPos, Vector2 spawnPos, float rotation, List<Body> ignoredBodies, bool createNetworkEvent, float damageMultiplier = 1f)
@@ -585,7 +606,7 @@ namespace Barotrauma.Items.Components
         {
             if (dropper != null)
             {
-                Deactivate();
+                DisableProjectileCollisions();
                 Unstick();
             }
             base.Drop(dropper);
@@ -593,6 +614,14 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (DeactivationTime > 0)
+            {
+                deactivationTimer -= deltaTime;
+                if (deactivationTimer < 0)
+                {
+                    DisableProjectileCollisions();
+                }
+            }
             while (impactQueue.Count > 0)
             {
                 var impact = impactQueue.Dequeue();
@@ -614,8 +643,12 @@ namespace Barotrauma.Items.Components
             }
             //projectiles with a stickjoint don't become inactive until the stickjoint is detached
             if (stickJoint == null && !item.body.FarseerBody.IsBullet) 
-            { 
-                IsActive = false; 
+            {
+                IsActive = false;
+                if (DeactivationTime > 0 && deactivationTimer > 0)
+                {
+                    DisableProjectileCollisions();
+                }
             }
 
             if (stickJoint == null) { return; }
@@ -715,7 +748,7 @@ namespace Barotrauma.Items.Components
             }
             if (hits.Count() >= MaxTargetsToHit || target.Body.UserData is VoronoiCell)
             {
-                Deactivate();
+                DisableProjectileCollisions();
                 return true;
             }
             else
@@ -864,7 +897,7 @@ namespace Barotrauma.Items.Components
 
             if (hits.Count() >= MaxTargetsToHit || hits.LastOrDefault()?.UserData is VoronoiCell)
             {
-                Deactivate();
+                DisableProjectileCollisions();
             }
 
             if (attackResult.AppliedDamageModifiers != null &&
@@ -934,18 +967,26 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private void Deactivate()
+        private void DisableProjectileCollisions()
         {
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;
-            if ((item.Prefab.DamagedByProjectiles || item.Prefab.DamagedByMeleeWeapons) && item.Condition > 0)
+            if (originalCollisionCategories != Category.None && originalCollisionTargets != Category.None)
             {
-                item.body.CollisionCategories = Physics.CollisionCharacter;
-                item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
+                item.body.CollisionCategories = originalCollisionCategories;
+                item.body.CollidesWith = originalCollisionTargets;
             }
             else
             {
-                item.body.CollisionCategories = Physics.CollisionItem;
-                item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+                if ((item.Prefab.DamagedByProjectiles || item.Prefab.DamagedByMeleeWeapons) && item.Condition > 0)
+                {
+                    item.body.CollisionCategories = Physics.CollisionCharacter;
+                    item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
+                }
+                else
+                {
+                    item.body.CollisionCategories = Physics.CollisionItem;
+                    item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+                }
             }
             IgnoredBodies.Clear();
         }
@@ -996,7 +1037,14 @@ namespace Barotrauma.Items.Components
                 }
                 stickJoint = null;
             }
-            if (!item.body.FarseerBody.IsBullet) { IsActive = false; }
+            if (!item.body.FarseerBody.IsBullet)
+            {
+                IsActive = false;
+                if (DeactivationTime > 0 && deactivationTimer > 0)
+                {
+                    DisableProjectileCollisions();
+                }
+            }
             item.GetComponent<Rope>()?.Snap();
             if (stickTargetCharacter != null)
             {

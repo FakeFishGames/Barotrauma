@@ -1776,7 +1776,7 @@ namespace Barotrauma
                     if (connectedWp.isObstructed) { continue; }
                     Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition);
                     Vector2 end = ConvertUnits.ToSimUnits(connectedWp.WorldPosition);
-                    var body = Submarine.PickBody(start, end, null, Physics.CollisionLevel, allowInsideFixture: false);
+                    var body = PickBody(start, end, null, Physics.CollisionLevel, allowInsideFixture: false);
                     if (body != null)
                     {
                         connectedWp.isObstructed = true;
@@ -1803,7 +1803,7 @@ namespace Barotrauma
                 foreach (var connection in node.connections)
                 {
                     var connectedWp = connection.Waypoint;
-                    if (connectedWp.isObstructed) { continue; }
+                    if (connectedWp.isObstructed || connectedWp.Ladders != null) { continue; }
                     Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition) - otherSub.SimPosition;
                     Vector2 end = ConvertUnits.ToSimUnits(connectedWp.WorldPosition) - otherSub.SimPosition;
                     var body = PickBody(start, end, null, Physics.CollisionWall, allowInsideFixture: true);

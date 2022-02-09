@@ -1,5 +1,4 @@
 using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +21,9 @@ namespace Barotrauma
                 }
             }
         }
+
+        public override bool IsAtCompletionState => false;
+        public override bool IsAtFailureState => false;
 
         public override void ClientReadInitial(IReadMessage msg)
         {

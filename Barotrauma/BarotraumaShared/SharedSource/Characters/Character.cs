@@ -503,7 +503,7 @@ namespace Barotrauma
             get { return cursorPosition; }
             set
             {
-                if (!MathUtils.IsValid(value)) return;
+                if (!MathUtils.IsValid(value)) { return; }
                 cursorPosition = value;
             }
         }
@@ -853,7 +853,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    return IsKnockedDown || LockHands || IsBot && TeamID != CharacterTeamType.FriendlyNPC;
+                    return IsKnockedDown || LockHands || IsBot && IsOnPlayerTeam;
                 }
             }
             set { canInventoryBeAccessed = value; }
@@ -3596,8 +3596,12 @@ namespace Barotrauma
             foreach (LimbJoint joint in AnimController.LimbJoints)
             {
                 if (!joint.CanBeSevered) { continue; }
-                // Limb A is where we usually create the joints from. Let's not allow severing when the "parent" limb is hit, or the head can pop off when we hit the torso, for example.
-                if (joint.LimbB != targetLimb) { continue; }
+                // Limb A is where we start creating the joint and LimbB is where the joint ends.
+                // Normally the joints have been created starting from the body, in which case we'd want to use LimbB e.g. to severe a hand when it's hit.
+                // But heads are a different case, because many characters have been created so that the head is first and then comes the rest of the body.
+                // If this is the case, we'll have to use LimbA to decapitate the creature when it's hit on the head. Otherwise decapitation could happen only when we hit the body, not the head.
+                var referenceLimb = targetLimb.type == LimbType.Head && targetLimb.Params.ID == 0 ? joint.LimbA : joint.LimbB;
+                if (referenceLimb != targetLimb) { continue; }
                 float probability = severLimbsProbability;
                 if (!IsDead)
                 {

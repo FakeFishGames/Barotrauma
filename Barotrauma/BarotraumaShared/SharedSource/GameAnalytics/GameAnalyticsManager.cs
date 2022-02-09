@@ -149,9 +149,17 @@ namespace Barotrauma
             internal void ConfigureAvailableResourceCurrencies(params ResourceCurrency[] customDimensions)
                 => configureAvailableResourceCurrencies(customDimensions.Select(d => d.ToString()).ToArray());
 
+            private readonly Action<string[]> configureAvailableResourceItemTypes;
+            internal void ConfigureAvailableResourceItemTypes(params string[] resourceItemTypes)
+                => configureAvailableResourceItemTypes(resourceItemTypes);
+
             private readonly Action<bool> setEnabledInfoLog;
             internal void SetEnabledInfoLog(bool enabled)
                 => setEnabledInfoLog(enabled);
+
+            private readonly Action<bool> setEnabledVerboseLog;
+            internal void SetEnabledVerboseLog(bool enabled)
+                => setEnabledVerboseLog(enabled);
             #endregion
 
             #region Data required to fetch methods via reflection
@@ -292,9 +300,13 @@ namespace Barotrauma
 
                 configureAvailableResourceCurrencies = Call<string[]>(getMethod(nameof(ConfigureAvailableResourceCurrencies),
                     new Type[] { typeof(string[]) }));
+                configureAvailableResourceItemTypes = Call<string[]>(getMethod(nameof(ConfigureAvailableResourceItemTypes),
+                    new Type[] { typeof(string[]) }));
                 addResourceEvent = Call<ResourceFlowType, string, float, string, string>(getMethod(nameof(AddResourceEvent),
                     new Type[] { resourceFlowTypeEnumType, typeof(string), typeof(float), typeof(string), typeof(string) }));
                 setEnabledInfoLog = Call<bool>(getMethod(nameof(SetEnabledInfoLog),
+                    new Type[] { typeof(bool) }));
+                setEnabledVerboseLog = Call<bool>(getMethod(nameof(SetEnabledVerboseLog),
                     new Type[] { typeof(bool) }));
 
                 onQuit = Call(getMethod("OnQuit", Array.Empty<Type>()));
@@ -450,6 +462,7 @@ namespace Barotrauma
             try
             {
                 loadedImplementation?.SetEnabledInfoLog(true);
+                loadedImplementation?.SetEnabledVerboseLog(true);
             }
             catch (Exception e)
             {
@@ -489,7 +502,10 @@ namespace Barotrauma
                     + AssemblyInfo.GitRevision + ":"
                     + buildConfiguration);
                 loadedImplementation?.ConfigureAvailableCustomDimensions01(Enum.GetValues(typeof(CustomDimensions01)).Cast<CustomDimensions01>().ToArray());
+                loadedImplementation?.ConfigureAvailableCustomDimensions02(Enum.GetValues(typeof(CustomDimensions02)).Cast<CustomDimensions02>().ToArray());
                 loadedImplementation?.ConfigureAvailableResourceCurrencies(Enum.GetValues(typeof(ResourceCurrency)).Cast<ResourceCurrency>().ToArray());
+                loadedImplementation?.ConfigureAvailableResourceItemTypes(
+                    Enum.GetValues(typeof(MoneySink)).Cast<MoneySink>().Select(s => s.ToString()).Union(Enum.GetValues(typeof(MoneySource)).Cast<MoneySource>().Select(s => s.ToString())).ToArray());
 
                 InitKeys();
 
@@ -521,7 +537,7 @@ namespace Barotrauma
                         loadedImplementation?.AddDesignEvent("ContentPackage:" + sanitizedName);
                     }
                     packageNames.Sort();
-                    loadedImplementation?.AddDesignEvent("AllContentPackages:" + string.Join(", ", packageNames));
+                    loadedImplementation?.AddDesignEvent("AllContentPackages:" + string.Join(" ", packageNames));
                 }
                 loadedImplementation?.AddDesignEvent("Language:" + GameMain.Config.Language);
             }

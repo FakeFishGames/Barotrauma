@@ -431,7 +431,7 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.IconStyle is null || item.Submarine != character.Submarine) { continue; }
-                    if (Vector2.DistanceSquared(character.Position, item.Position) > 500f*500f) { continue; }
+                    if (Vector2.DistanceSquared(character.Position, item.Position) > 500f * 500f) { continue; }
                     var body = Submarine.CheckVisibility(character.SimPosition, item.SimPosition, ignoreLevel: true);
                     if (body != null && body.UserData as Item != item) { continue; }
                     GUI.DrawIndicator(spriteBatch, item.WorldPosition + new Vector2(0f, item.RectHeight * 0.65f), cam, new Range<float>(-100f, 500.0f), item.IconStyle.GetDefaultSprite(), item.IconStyle.Color, createOffset: false);

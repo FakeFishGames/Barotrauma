@@ -1683,8 +1683,9 @@ namespace Barotrauma
 
         private void SetItemFrameStatus(GUIComponent itemFrame, bool enabled)
         {
-            if (itemFrame == null || !(itemFrame.UserData is PurchasedItem pi)) { return; }
-
+            if (!(itemFrame?.UserData is PurchasedItem pi)) { return; }
+            bool refreshFrameStatus = !pi.IsStoreComponentEnabled.HasValue || pi.IsStoreComponentEnabled.Value != enabled;
+            if (!refreshFrameStatus) { return; }
             if (itemFrame.FindChild("icon", recursive: true) is GUIImage icon)
             {
                 if (pi.ItemPrefab?.InventoryIcon != null)
@@ -1696,14 +1697,11 @@ namespace Barotrauma
                     icon.Color = pi.ItemPrefab.SpriteColor * (enabled ? 1.0f : 0.5f);
                 }
             };
-
             var color = Color.White * (enabled ? 1.0f : 0.5f);
-
             if (itemFrame.FindChild("name", recursive: true) is GUITextBlock name)
             {
                 name.TextColor = color;
             }
-
             if (itemFrame.FindChild("quantitylabel", recursive: true) is GUITextBlock qty)
             {
                 qty.TextColor = color;
@@ -1712,25 +1710,21 @@ namespace Barotrauma
             {
                 numberInput.Enabled = enabled;
             }
-
             if (itemFrame.FindChild("owned", recursive: true) is GUITextBlock ownedBlock)
             {
                 ownedBlock.TextColor = color;
             }
-
-            var isDiscounted = false;
+            bool isDiscounted = false;
             if (itemFrame.FindChild("undiscountedprice", recursive: true) is GUITextBlock undiscountedPriceBlock)
             {
                 undiscountedPriceBlock.TextColor = color;
                 undiscountedPriceBlock.Strikethrough.Color = color;
                 isDiscounted = true;
             }
-
             if (itemFrame.FindChild("price", recursive: true) is GUITextBlock priceBlock)
             {
                 priceBlock.TextColor = isDiscounted ? storeSpecialColor * (enabled ? 1.0f : 0.5f) : color;
             }
-
             if (itemFrame.FindChild("addbutton", recursive: true) is GUIButton addButton)
             {
                 addButton.Enabled = enabled;
@@ -1739,6 +1733,8 @@ namespace Barotrauma
             {
                 removeButton.Enabled = enabled;
             }
+            pi.IsStoreComponentEnabled = enabled;
+            itemFrame.UserData = pi;
         }
 
         private void SetQuantityLabelText(StoreTab mode, GUIComponent itemFrame)

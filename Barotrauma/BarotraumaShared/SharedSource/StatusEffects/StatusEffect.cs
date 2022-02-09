@@ -133,7 +133,8 @@ namespace Barotrauma
                 Target,
                 Limb,
                 MainLimb,
-                Collider
+                Collider,
+                Random
             }
 
             public readonly ItemPrefab ItemPrefab;
@@ -1487,7 +1488,7 @@ namespace Barotrauma
 
                             if (giveTalentInfo.GiveRandom)
                             {
-                                targetCharacter.GiveTalent(viableTalents.GetRandom(), true);
+                                targetCharacter.GiveTalent(viableTalents.GetRandom(Rand.RandSync.Unsynced), true);
                             }
                             else
                             {
@@ -1542,7 +1543,7 @@ namespace Barotrauma
                     var characters = new List<Character>();
                     for (int i = 0; i < characterSpawnInfo.Count; i++)
                     {
-                        Entity.Spawner.AddToSpawnQueue(characterSpawnInfo.SpeciesName, position + Rand.Vector(characterSpawnInfo.Spread, Rand.RandSync.Server) + characterSpawnInfo.Offset, 
+                        Entity.Spawner.AddToSpawnQueue(characterSpawnInfo.SpeciesName, position + Rand.Vector(characterSpawnInfo.Spread, Rand.RandSync.Unsynced) + characterSpawnInfo.Offset, 
                             onSpawn: newCharacter =>
                             {
                                 if (newCharacter.AIController is EnemyAIController enemyAi &&
@@ -1563,7 +1564,7 @@ namespace Barotrauma
 
                 if (spawnItemRandomly)
                 {
-                    SpawnItem(spawnItems.GetRandom());
+                    SpawnItem(spawnItems.GetRandom(Rand.RandSync.Unsynced));
                 }
                 else
                 {
@@ -1582,7 +1583,7 @@ namespace Barotrauma
                     switch (chosenItemSpawnInfo.SpawnPosition)
                     {
                         case ItemSpawnInfo.SpawnPositionType.This:
-                            Entity.Spawner.AddToSpawnQueue(chosenItemSpawnInfo.ItemPrefab, position + Rand.Vector(chosenItemSpawnInfo.Spread, Rand.RandSync.Server), onSpawned: newItem =>
+                            Entity.Spawner.AddToSpawnQueue(chosenItemSpawnInfo.ItemPrefab, position + Rand.Vector(chosenItemSpawnInfo.Spread, Rand.RandSync.Unsynced), onSpawned: newItem =>
                             {
                                 Projectile projectile = newItem.GetComponent<Projectile>();
                                 if (projectile != null && user != null && sourceBody != null && entity != null)
@@ -1597,7 +1598,7 @@ namespace Barotrauma
                                     }
                                     float spread = MathHelper.ToRadians(Rand.Range(-chosenItemSpawnInfo.AimSpread, chosenItemSpawnInfo.AimSpread));
                                     var worldPos = sourceBody.Position;
-                                    float rotation = chosenItemSpawnInfo.Rotation;
+                                    float rotation = 0;
                                     if (user.Submarine != null)
                                     {
                                         worldPos += user.Submarine.Position;
@@ -1614,10 +1615,13 @@ namespace Barotrauma
                                             rotation = sourceBody.TransformedRotation;
                                             break;
                                         case ItemSpawnInfo.SpawnRotationType.Collider:
-                                            rotation = user.AnimController.Collider.Rotation;
+                                            rotation = user.AnimController.Collider.Rotation + MathHelper.PiOver2;
                                             break;
                                         case ItemSpawnInfo.SpawnRotationType.MainLimb:
                                             rotation = user.AnimController.MainLimb.body.TransformedRotation;
+                                            break;
+                                        case ItemSpawnInfo.SpawnRotationType.Random:
+                                            DebugConsole.ShowError("Random rotation is not supported for Projectiles.");
                                             break;
                                         default:
                                             throw new NotImplementedException("Not implemented: " + chosenItemSpawnInfo.RotationType);
@@ -1631,19 +1635,37 @@ namespace Barotrauma
                                     if (body != null)
                                     {
                                         float rotation = MathHelper.ToRadians(chosenItemSpawnInfo.Rotation);
-                                        if (chosenItemSpawnInfo.RotationType == ItemSpawnInfo.SpawnRotationType.Limb)
+                                        switch (chosenItemSpawnInfo.RotationType)
                                         {
-                                            if (sourceBody != null)
-                                            {
-                                                rotation += sourceBody.Rotation;
-                                            }
-                                        }
-                                        else if (chosenItemSpawnInfo.RotationType == ItemSpawnInfo.SpawnRotationType.Collider)
-                                        {
-                                            if (entity is Character character)
-                                            {
-                                                rotation += character.AnimController.Collider.Rotation;
-                                            }
+                                            case ItemSpawnInfo.SpawnRotationType.Fixed:
+                                                if (sourceBody != null)
+                                                {
+                                                    rotation = sourceBody.TransformRotation(chosenItemSpawnInfo.Rotation);
+                                                }
+                                                break;
+                                            case ItemSpawnInfo.SpawnRotationType.Limb:
+                                                if (sourceBody != null)
+                                                {
+                                                    rotation += sourceBody.Rotation;
+                                                }
+                                                break;
+                                            case ItemSpawnInfo.SpawnRotationType.Collider:
+                                                if (entity is Character character)
+                                                {
+                                                    rotation += character.AnimController.Collider.Rotation + MathHelper.PiOver2;
+                                                }
+                                                break;
+                                            case ItemSpawnInfo.SpawnRotationType.MainLimb:
+                                                if (entity is Character c)
+                                                {
+                                                    rotation = c.AnimController.MainLimb.body.TransformedRotation;
+                                                }
+                                                break;
+                                            case ItemSpawnInfo.SpawnRotationType.Random:
+                                                rotation = Rand.Range(0f, MathHelper.TwoPi, Rand.RandSync.Unsynced);
+                                                break;
+                                            default:
+                                                throw new NotImplementedException("Not implemented: " + chosenItemSpawnInfo.RotationType);
                                         }
                                         body.SetTransform(newItem.SimPosition, rotation);
                                         body.ApplyLinearImpulse(Rand.Vector(1) * chosenItemSpawnInfo.Speed);

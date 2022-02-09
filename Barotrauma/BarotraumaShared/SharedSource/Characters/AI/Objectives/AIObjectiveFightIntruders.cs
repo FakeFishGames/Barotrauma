@@ -70,6 +70,7 @@ namespace Barotrauma
             if (!targetCharactersInOtherSubs && character.Submarine.TeamID != target.Submarine.TeamID) { return false; }
             if (target.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI)) { return false; }
             if (target.IsArrested) { return false; }
+            if (EnemyAIController.IsLatchedToSomeoneElse(target, character)) { return false; }
             return true;
         }
 

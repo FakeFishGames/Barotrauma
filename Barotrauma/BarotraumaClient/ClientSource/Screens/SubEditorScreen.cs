@@ -144,7 +144,7 @@ namespace Barotrauma
         private GUIDropDown linkedSubBox;
 
         private static GUIComponent autoSaveLabel;
-        private static int maxAutoSaves = GameSettings.MaximumAutoSaves;
+        private readonly static int maxAutoSaves = GameSettings.MaximumAutoSaves;
 
         public static readonly object ItemAddMutex = new object(), ItemRemoveMutex = new object();
 
@@ -541,7 +541,7 @@ namespace Barotrauma
 
             //-----------------------------------------------
 
-            layerPanel = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.4f), GUI.Canvas))
+            layerPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.4f), GUI.Canvas, minSize: new Point(300, 320)))
             {
                 Visible = false
             };
@@ -604,10 +604,12 @@ namespace Barotrauma
                             RenameLayer(layer, newName);
                         });
                     }
-
                     return true;
                 }
             };
+
+            GUITextBlock.AutoScaleAndNormalize(layerAddButton.TextBlock, layerDeleteButton.TextBlock, layerRenameButton.TextBlock);
+
 
             Vector2 subPanelSize = new Vector2(0.925f, 0.9f);
 
@@ -4433,9 +4435,9 @@ namespace Barotrauma
             layerList.Deselect();
             GUILayoutGroup buttonHeaders = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.075f), layerList.Content.RectTransform), isHorizontal: true, childAnchor: Anchor.BottomLeft);
 
-            new GUIButton(new RectTransform(new Vector2(0.25f, 1f), buttonHeaders.RectTransform), TextManager.Get("editor.layer.headervisible"), style: "GUIButtonSmallFreeScale") { CanBeFocused = false, ForceUpperCase = true  };
-            new GUIButton(new RectTransform(new Vector2(0.15f, 1f), buttonHeaders.RectTransform), TextManager.Get("editor.layer.headerlink"), style: "GUIButtonSmallFreeScale") { CanBeFocused = false, ForceUpperCase = true  };
-            new GUIButton(new RectTransform(new Vector2(0.65f, 1f), buttonHeaders.RectTransform), TextManager.Get("name"), style: "GUIButtonSmallFreeScale") { CanBeFocused = false, ForceUpperCase = true };
+            new GUIButton(new RectTransform(new Vector2(0.25f, 1f), buttonHeaders.RectTransform), TextManager.Get("editor.layer.headervisible"), style: "GUIButtonSmallFreeScale") { ForceUpperCase = true  };
+            new GUIButton(new RectTransform(new Vector2(0.15f, 1f), buttonHeaders.RectTransform), TextManager.Get("editor.layer.headerlink"), style: "GUIButtonSmallFreeScale") { ForceUpperCase = true  };
+            new GUIButton(new RectTransform(new Vector2(0.6f, 1f), buttonHeaders.RectTransform), TextManager.Get("name"), style: "GUIButtonSmallFreeScale") { ForceUpperCase = true };
 
             foreach (var (layer, (visibility, linkage)) in Layers)
             {
@@ -4494,6 +4496,17 @@ namespace Barotrauma
 
             layerList.RecalculateChildren();
             buttonHeaders.Recalculate();
+            foreach (var child in buttonHeaders.Children)
+            {
+                var btn = child as GUIButton;
+                string originalBtnText = btn.Text;
+                btn.Text = ToolBox.LimitString(btn.Text, btn.Font, btn.Rect.Width);
+                if (originalBtnText != btn.Text)
+                {
+                    btn.ToolTip = originalBtnText;
+                }
+            }
+
         }
 
         public void UpdateUndoHistoryPanel()

@@ -30,6 +30,7 @@ namespace Barotrauma
                     GameMain.Server?.UpdateMissionState(this);
 #endif
                     ShowMessage(State);
+                    OnMissionStateChanged?.Invoke(this);
                 }
             }
         }
@@ -145,7 +146,9 @@ namespace Barotrauma
         }
 
         private List<DelayedTriggerEvent> delayedTriggerEvents = new List<DelayedTriggerEvent>();
-           
+
+        public Action<Mission> OnMissionStateChanged;
+
         public Mission(MissionPrefab prefab, Location[] locations, Submarine sub)
         {
             System.Diagnostics.Debug.Assert(locations.Length == 2);

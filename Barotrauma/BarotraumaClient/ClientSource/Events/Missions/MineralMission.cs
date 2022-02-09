@@ -1,15 +1,14 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
+﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
     partial class MineralMission : Mission
     {
+        public override bool IsAtCompletionState => false;
+        public override bool IsAtFailureState => false;
+
         public override void ClientReadInitial(IReadMessage msg)
         {
             base.ClientReadInitial(msg);

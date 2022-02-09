@@ -4,6 +4,9 @@ namespace Barotrauma
 {
     partial class PirateMission : Mission
     {
+        public override bool IsAtCompletionState => State > 1;
+        public override bool IsAtFailureState => false;
+
         public override void ClientReadInitial(IReadMessage msg)
         {
             base.ClientReadInitial(msg);

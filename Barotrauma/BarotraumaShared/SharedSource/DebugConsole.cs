@@ -978,7 +978,10 @@ namespace Barotrauma
                 else
                 {
                     NewMessage("Level seed: " + Level.Loaded.Seed);
-                    NewMessage("Level size: " + Level.Loaded.Size.X+"x"+ Level.Loaded.Size.Y);
+                    NewMessage("Level generation params: " + Level.Loaded.GenerationParams.Identifier);
+                    NewMessage("Adjacent locations: " + (Level.Loaded.StartLocation?.Type.Identifier ?? "none") + ", " + (Level.Loaded.StartLocation?.Type.Identifier ?? "none"));
+                    NewMessage("Mirrored: " + Level.Loaded.Mirrored);
+                    NewMessage("Level size: " + Level.Loaded.Size.X + "x" + Level.Loaded.Size.Y);
                     NewMessage("Minimum main path width: " + (Level.Loaded.LevelData?.MinMainPathWidth?.ToString() ?? "unknown"));
                 }
             },null));

@@ -5,6 +5,9 @@ namespace Barotrauma
 {
     partial class CargoMission : Mission
     {
+        public override bool IsAtCompletionState => false;
+        public override bool IsAtFailureState => false;
+
         public override string GetMissionRewardText(Submarine sub)
         {
             string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", GetReward(sub)));

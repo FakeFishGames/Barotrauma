@@ -505,6 +505,9 @@ namespace Barotrauma
         }
 
         [Serialize(0.0f, false)]
+        public float OnDamagedThreshold { get; set; }
+
+        [Serialize(0.0f, false)]
         public float SonarSize
         {
             get;

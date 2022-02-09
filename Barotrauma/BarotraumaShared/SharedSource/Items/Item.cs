@@ -98,6 +98,14 @@ namespace Barotrauma
         private readonly ItemInventory ownInventory;
 
         private Rectangle defaultRect;
+        /// <summary>
+        /// Unscaled rect
+        /// </summary>
+        public Rectangle DefaultRect
+        {
+            get { return defaultRect; }
+            set { defaultRect = value; }
+        }
 
         private Dictionary<string, Connection> connections;
 
@@ -645,10 +653,6 @@ namespace Barotrauma
             }
         }
 
-        private float buoyancySineMagnitude;
-        private float buoyancySineFrequency;
-        private float buoyancyRandomForce;
-
         public bool FireProof
         {
             get { return Prefab.FireProof; }
@@ -767,7 +771,7 @@ namespace Barotrauma
             get { return Position.X; }
             private set
             {
-                Move(new Vector2((value - Position.X) * Scale, 0.0f));
+                Move(new Vector2(value * Scale, 0.0f));
             }
         }
         /// <summary>
@@ -778,7 +782,7 @@ namespace Barotrauma
             get { return Position.Y; }
             private set
             {
-                Move(new Vector2(0.0f, (value - Position.Y) * Scale));
+                Move(new Vector2(0.0f, value * Scale));
             }
         }
 
@@ -851,7 +855,16 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "body":
-                        body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position), Scale);
+                        float density = subElement.GetAttributeFloat("density", 10.0f);
+                        float minDensity = subElement.GetAttributeFloat("mindensity", density);
+                        float maxDensity = subElement.GetAttributeFloat("maxdensity", density);
+                        if (minDensity < maxDensity)
+                        {
+                            var rand = new Random(ID);
+                            density = MathHelper.Lerp(minDensity, maxDensity, (float)rand.NextDouble());
+                        }
+                        body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position), Scale, density);
+
                         string collisionCategory = subElement.GetAttributeString("collisioncategory", null);
                         if ((Prefab.DamagedByProjectiles || Prefab.DamagedByMeleeWeapons) && Condition > 0)
                         {
@@ -879,9 +892,6 @@ namespace Barotrauma
                         }
                         body.FarseerBody.AngularDamping = subElement.GetAttributeFloat("angulardamping", 0.2f);
                         body.FarseerBody.LinearDamping = subElement.GetAttributeFloat("lineardamping", 0.1f);
-                        buoyancySineMagnitude = subElement.GetAttributeFloat("buoyancysinemagnitude", 0f);
-                        buoyancySineFrequency = subElement.GetAttributeFloat("buoyancysinefrequency", 0f);
-                        buoyancyRandomForce = subElement.GetAttributeFloat("buoyancyrandom", 0f);
                         body.UserData = this;
                         break;
                     case "trigger":
@@ -1600,7 +1610,7 @@ namespace Barotrauma
             float damageAmount = attack.GetItemDamage(deltaTime);
             Condition -= damageAmount;
 
-            if (damageAmount > 0)
+            if (damageAmount >= Prefab.OnDamagedThreshold)
             {
                 ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
             }
@@ -1729,7 +1739,7 @@ namespace Barotrauma
                 UpdateNetPosition(deltaTime);
                 if (inWater)
                 {
-                    ApplyWaterForces(deltaTime);
+                    ApplyWaterForces();
                     CurrentHull?.ApplyFlowForces(deltaTime, this);
                 }
             }
@@ -1818,24 +1828,16 @@ namespace Barotrauma
             transformDirty = false;
         }
 
-        private float sineTime;
         /// <summary>
         /// Applies buoyancy, drag and angular drag caused by water
         /// </summary>
-        private void ApplyWaterForces(float deltaTime)
+        private void ApplyWaterForces()
         {
             if (body.Mass <= 0.0f || body.Density <= 0.0f)
             {
                 return;
             }
-            if (buoyancySineFrequency > 0)
-            {
-                if (sineTime >= float.MaxValue)
-                {
-                    sineTime = float.MinValue;
-                }
-                sineTime += deltaTime * buoyancySineFrequency;
-            }
+
             float forceFactor = 1.0f;
             if (CurrentHull != null)
             {
@@ -1854,10 +1856,7 @@ namespace Barotrauma
 
             Vector2 drag = body.LinearVelocity * volume;
 
-            float sine = (float)Math.Sin(sineTime) * buoyancySineMagnitude;
-            Vector2 sineForce = Vector2.UnitY * sine * volume;
-            Vector2 randomForce = Vector2.UnitY * Rand.Range(-buoyancyRandomForce, buoyancyRandomForce, Rand.RandSync.Unsynced) * volume;
-            body.ApplyForce((uplift - drag) * 10.0f + sineForce + randomForce);
+            body.ApplyForce((uplift - drag) * 10.0f);
 
             //apply simple angular drag
             body.ApplyTorque(body.AngularVelocity * volume * -0.05f);
@@ -1869,9 +1868,17 @@ namespace Barotrauma
             if (transformDirty) { return false; }
 
             var projectile = GetComponent<Projectile>();
-            if (projectile?.IgnoredBodies != null)
+            if (projectile != null)
             {
-                if (projectile.IgnoredBodies.Contains(f2.Body)) { return false; }
+                //ignore character colliders (a projectile only hits limbs)
+                if (f2.CollisionCategories == Physics.CollisionCharacter && f2.Body.UserData is Character)
+                {
+                    return false;
+                }
+                if (projectile.IgnoredBodies != null)
+                {
+                    if (projectile.IgnoredBodies.Contains(f2.Body)) { return false; }
+                }
             }
 
             contact.GetWorldManifold(out Vector2 normal, out _);
@@ -2216,7 +2223,7 @@ namespace Barotrauma
             foreach (Rectangle trigger in Prefab.Triggers)
             {
                 transformedTrigger = TransformTrigger(trigger, true);
-                if (Submarine.RectContains(transformedTrigger, worldPosition)) return true;
+                if (Submarine.RectContains(transformedTrigger, worldPosition)) { return true; }
             }
 
             transformedTrigger = Rectangle.Empty;
@@ -2230,7 +2237,10 @@ namespace Barotrauma
 
         public bool TryInteract(Character user, bool ignoreRequiredItems = false, bool forceSelectKey = false, bool forceUseKey = false)
         {
-            if (CampaignInteractionType != CampaignMode.InteractionType.None) { return false; }
+            if (CampaignMode.BlocksInteraction(CampaignInteractionType)) 
+            { 
+                return false; 
+            }
 
             bool picked = false, selected = false;
 #if CLIENT

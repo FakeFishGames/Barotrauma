@@ -796,8 +796,9 @@ namespace Barotrauma
                     monsterStrength += enemyAI.CombatStrength;
                 }
 
-                if (character.CurrentHull?.Submarine != null && 
-                    (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine)))
+                if (character.CurrentHull?.Submarine?.Info != null && 
+                    (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine)) &&
+                    character.CurrentHull.Submarine.Info.Type == SubmarineType.Player)
                 {
                     // Enemy onboard -> Crawler inside the sub adds 0.2 to enemy danger, Mudraptor 0.42
                     enemyDanger += enemyAI.CombatStrength / 500.0f;

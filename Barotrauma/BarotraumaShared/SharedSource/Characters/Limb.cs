@@ -556,6 +556,7 @@ namespace Barotrauma
                 // TODO: We might need this or solve the cases where a limb is severed while holding on to an item
                 //if (character.Params.CanInteract) { return false; }
                 if (this == character.AnimController.MainLimb) { return false; }
+                bool canBeSevered = Params.CanBeSeveredAlive;
                 if (character.AnimController.CanWalk)
                 {
                     switch (type)
@@ -571,7 +572,7 @@ namespace Barotrauma
                             return false;
                     }
                 }
-                return true;
+                return canBeSevered;
             }
         }
 
@@ -1070,7 +1071,7 @@ namespace Barotrauma
 #endif
             if (damageTarget is Character targetCharacter && targetLimb != null)
             {
-                attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound, body);
+                attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound, body, this);
             }
             else
             {
@@ -1080,7 +1081,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound, body);
+                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound, body, this);
                 }
             }
             /*if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))

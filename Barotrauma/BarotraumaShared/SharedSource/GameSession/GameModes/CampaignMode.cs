@@ -81,7 +81,12 @@ namespace Barotrauma
         public double TotalPlayTime;
         public int TotalPassedLevels;
 
-        public enum InteractionType { None, Talk, Examine, Map, Crew, Store, Repair, Upgrade, PurchaseSub, MedicalClinic }
+        public enum InteractionType { None, Talk, Examine, Map, Crew, Store, Repair, Upgrade, PurchaseSub, MedicalClinic, Cargo }
+
+        public static bool BlocksInteraction(InteractionType interactionType)
+        {
+            return interactionType != InteractionType.None && interactionType != InteractionType.Cargo;
+        }
 
         public readonly CargoManager CargoManager;
         public UpgradeManager UpgradeManager;

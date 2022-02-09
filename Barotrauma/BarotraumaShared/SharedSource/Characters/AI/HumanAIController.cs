@@ -20,7 +20,6 @@ namespace Barotrauma
         private float reactTimer;
         private float unreachableClearTimer;
         private bool shouldCrouch;
-        public bool IsInsideCave { get; private set; }
         /// <summary>
         /// Resets each frame
         /// </summary>
@@ -58,14 +57,14 @@ namespace Barotrauma
         private float obstacleRaycastTimer;
 
         private readonly float enemyCheckInterval = 0.2f;
-        private readonly float enemySpotDistanceOutside = 1500;
+        private readonly float enemySpotDistanceOutside = 800;
         private readonly float enemySpotDistanceInside = 1000;
         private float enemycheckTimer;
 
         /// <summary>
-        /// How far other characters can hear reports done by this character (e.g. reports for fires, intruders). Defaults to infinity.
+        /// How far other characters can hear reports done by this character (e.g. reports for fires, intruders).
         /// </summary>
-        public float ReportRange { get; set; } = float.PositiveInfinity;
+        public float ReportRange { get; set; }
 
         private float _aimSpeed = 1;
         public float AimSpeed
@@ -167,6 +166,7 @@ namespace Barotrauma
             objectiveManager = new AIObjectiveManager(c);
             reactTimer = GetReactionTime();
             SortTimer = Rand.Range(0f, sortObjectiveInterval);
+            ReportRange = Character.IsOnPlayerTeam ? float.PositiveInfinity : 1000;
         }
 
         public override void Update(float deltaTime)
@@ -306,7 +306,7 @@ namespace Barotrauma
                 UseIndoorSteeringOutside = false;
             }
             
-            if (Character.Submarine == null || !IsOnFriendlyTeam(Character.TeamID, Character.Submarine.TeamID) && !Character.IsEscorted)
+            if (Character.Submarine == null || Character.IsOnPlayerTeam && !Character.IsEscorted && !IsOnFriendlyTeam(Character.TeamID, Character.Submarine.TeamID))
             {
                 // Spot enemies while staying outside or inside an enemy ship.
                 // does not apply for escorted characters, such as prisoners or terrorists who have their own behavior
@@ -327,9 +327,13 @@ namespace Barotrauma
                             float dist = toTarget.LengthSquared();
                             float maxDistance = Character.Submarine == null ? enemySpotDistanceOutside : enemySpotDistanceInside;
                             if (dist > maxDistance * maxDistance) { continue; }
-                            Vector2 forward = VectorExtensions.Forward(Character.AnimController.Collider.Rotation);
-                            forward.X *= Character.AnimController.Dir;
-                            if (Vector2.Dot(toTarget, forward) < 0.2f) { continue; }
+                            if (EnemyAIController.IsLatchedToSomeoneElse(c, Character)) { continue; }
+                            var head = Character.AnimController.GetLimb(LimbType.Head);
+                            if (head == null) { continue; }
+                            float rotation = head.body.TransformedRotation;
+                            Vector2 forward = VectorExtensions.Forward(rotation);
+                            float angle = MathHelper.ToDegrees(VectorExtensions.Angle(toTarget, forward));
+                            if (angle > 70) { continue; }
                             if (!Character.CanSeeCharacter(c)) { continue; }
                             if (dist < closestDistance || closestEnemy == null)
                             {
@@ -344,8 +348,6 @@ namespace Barotrauma
                     }
                 }
             }
-            
-            IsInsideCave = Character.CurrentHull == null && Level.Loaded?.Caves.FirstOrDefault(c => c.Area.Contains(Character.WorldPosition)) is Level.Cave;
 
             if (UseIndoorSteeringOutside || Character.CurrentHull?.Submarine != null || hasValidPath || IsCloseEnoughToTarget(steeringBuffer))
             {
@@ -1242,7 +1244,7 @@ namespace Barotrauma
                     { 
                         //if the other character did not witness the attack, and the character is not within report range (or capable of reporting)
                         //don't react to the attack
-                        if (Character.IsDead || Character.IsUnconscious || !CheckReportRange(Character, otherCharacter, ReportRange))
+                        if (Character.IsDead || Character.IsUnconscious || otherCharacter.TeamID != Character.TeamID || !CheckReportRange(Character, otherCharacter, ReportRange))
                         {
                             continue;
                         } 
@@ -1259,8 +1261,8 @@ namespace Barotrauma
                 {
                     if (Character.Submarine == null)
                     {
-                        // Outside -> don't react.
-                        return AIObjectiveCombat.CombatMode.None;
+                        // Outside
+                        return attacker.Submarine == null ? AIObjectiveCombat.CombatMode.Defensive : AIObjectiveCombat.CombatMode.Retreat;
                     }
                     if (!Character.Submarine.GetConnectedSubs().Contains(attacker.Submarine))
                     {
@@ -1852,7 +1854,7 @@ namespace Barotrauma
             bool ignoreFire = objectiveManager.CurrentOrder is AIObjectiveExtinguishFires extinguishOrder && extinguishOrder.Priority > 0 || objectiveManager.HasActiveObjective<AIObjectiveExtinguishFire>();
             bool ignoreWater = HasDivingSuit(character);
             bool ignoreOxygen = ignoreWater || HasDivingMask(character);
-            bool ignoreEnemies = ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || ObjectiveManager.GetActiveObjectives<AIObjectiveFightIntruders>().Any();
+            bool ignoreEnemies = ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || ObjectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>();
             float safety = CalculateHullSafety(hull, visibleHulls, character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies);
             if (isCurrentHull)
             {

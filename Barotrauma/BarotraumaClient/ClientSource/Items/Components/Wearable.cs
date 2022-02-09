@@ -10,7 +10,13 @@ namespace Barotrauma.Items.Components
             int roundedValue = (int)Math.Round((1 - damageModifier.DamageMultiplier * damageModifier.ProbabilityMultiplier) * 100);
             if (roundedValue == 0) { return; }
             string colorStr = XMLExtensions.ColorToString(GUI.Style.Green);
-            description += $"\n  ‖color:{colorStr}‖{roundedValue.ToString("-0;+#")}%‖color:end‖ {AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.Equals(afflictionIdentifier, StringComparison.OrdinalIgnoreCase))?.Name ?? afflictionIdentifier}";
+
+            string afflictionName =
+                AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.Equals(afflictionIdentifier, StringComparison.OrdinalIgnoreCase))?.Name ??
+                TextManager.Get($"afflictiontype.{afflictionIdentifier}", returnNull: true) ??
+                afflictionIdentifier;
+
+            description += $"\n  ‖color:{colorStr}‖{roundedValue.ToString("-0;+#")}%‖color:end‖ {afflictionName}";
         }
 
         public override void AddTooltipInfo(ref string name, ref string description)
@@ -33,9 +39,9 @@ namespace Barotrauma.Items.Components
                     {
                         GetDamageModifierText(ref description, damageModifier, afflictionIdentifier);
                     }
-                    foreach (string afflictionIdentifier in damageModifier.ParsedAfflictionTypes)
+                    foreach (string afflictionType in damageModifier.ParsedAfflictionTypes)
                     {
-                        GetDamageModifierText(ref description, damageModifier, afflictionIdentifier);
+                        GetDamageModifierText(ref description, damageModifier, afflictionType);
                     }
                 }
             }
