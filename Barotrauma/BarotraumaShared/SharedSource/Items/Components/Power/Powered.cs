@@ -384,7 +384,7 @@ namespace Barotrauma.Items.Components
                 foreach (Connection otherC in c.Recipients)
                 {
                     // Only add valid connections
-                    if (otherC.Grid != grid && (otherC.Grid == null || !Grids.ContainsKey(otherC.Grid.ID)) && otherC.IsPower)
+                    if (otherC.Grid != grid && (otherC.Grid == null || !Grids.ContainsKey(otherC.Grid.ID)) && ValidPowerConnection(c, otherC))
                     {
                         if (otherC.Item.Condition <= 0.0f)
                         {
@@ -679,6 +679,11 @@ namespace Barotrauma.Items.Components
 
         //Perform updates for the device after the connected grid has resolved its power calculations i.e. storing voltage for later ticks
         public virtual void GridResolved(Connection conn) { }
+
+        public static bool ValidPowerConnection(Connection conn1, Connection conn2)
+        {
+            return conn1.IsPower && conn2.IsPower && (conn1.Item.HasTag("junctionbox") || conn2.Item.HasTag("junctionbox") || conn1.IsOutput != conn2.IsOutput);
+        }
 
         /// <summary>
         /// Returns the amount of power that can be supplied by batteries directly connected to the item

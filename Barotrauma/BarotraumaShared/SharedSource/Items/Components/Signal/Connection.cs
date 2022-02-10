@@ -284,7 +284,7 @@ namespace Barotrauma.Items.Components
                 if (otherConnection != null)
                 {
                     //Set the other connection grid if a grid exists already
-                    if (IsPower && otherConnection.IsPower)
+                    if (Powered.ValidPowerConnection(this, otherConnection))
                     {
                         if (Grid == null && otherConnection.Grid != null)
                         {
