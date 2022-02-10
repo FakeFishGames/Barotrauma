@@ -229,6 +229,9 @@ namespace Barotrauma.Items.Components
                 {
                     minMaxPower.Y = -MaxOutPut;
                 }
+
+                //Limit max power out to not exceed the charge of the container
+                minMaxPower.Y = Math.Max(minMaxPower.Y, -charge * 60 / UpdateInterval);
             }
 
             return minMaxPower;
