@@ -50,6 +50,7 @@ namespace Barotrauma.Lights
         public bool LosEnabled = true;
         public float LosAlpha = 1f;
         public LosMode LosMode = LosMode.Transparent;
+        public LosRaycastSettings LoSRaycastSetting;
 
         public bool LightingEnabled = true;
 
@@ -100,6 +101,8 @@ namespace Barotrauma.Lights
                     };
                 }
             });
+
+            LoSRaycastSetting = new LosRaycastSettings();
         }
 
         private void CreateRenderTargets(GraphicsDevice graphics)

@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Tutorials;
 #endif
 using System;
+using System.Globalization;
 
 namespace Barotrauma
 {
@@ -23,7 +24,55 @@ namespace Barotrauma
     {
         None,
         Transparent,
-        Opaque
+        Opaque,
+        Raycast
+    }
+
+    // Using this storage class to load/save a bunch of settings at once may be cursed.
+    // One part I don't like is that the purpose of the values is not clear in the XML.
+    // Alternative would be to just make separate values like the other settings, but that seems inelegant too.
+    public class LosRaycastSettings
+    {
+        public int RayCount = 512;
+        public float RayLength = 0.75f;
+        public int RaySteps = 128;
+        public float RayStepNoise = 1.0f / 255;
+
+        public float InDepth = 0.05f;
+
+        public float PenumbraAngle = 0.002f;
+        public float PenumbraFalloff = 0.75f;
+        public float PenumbraAngularFalloff = 15.0f;
+        public float PenumbraAngleNoise = 0.2f / 25f;
+
+        public override string ToString()
+        {
+            string settingsString = $"{RayCount},{RayLength},{RaySteps},{RayStepNoise},";
+            settingsString += $"{InDepth},";
+            settingsString += $"{PenumbraAngle},{PenumbraFalloff},{PenumbraAngularFalloff},{PenumbraAngleNoise}";
+
+            return settingsString;
+        }
+        public bool FromString(string settingsString)
+        {
+            if (settingsString.Split(',').Any(s => !float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out _)) || settingsString.Split(',').Length < 9) return false;
+
+            float[] values = settingsString.Split(',').Select(s => { float v; float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out v); return v; }).ToArray();
+
+            RayCount = (int)values[0];
+            RayLength = values[1];
+            RaySteps = (int)values[2];
+            RayStepNoise = values[3];
+
+            InDepth = values[4];
+
+            PenumbraAngle = values[5];
+            PenumbraFalloff = values[6];
+            PenumbraAngularFalloff = values[7];
+            PenumbraAngleNoise = values[8];
+
+            return true;
+        }
     }
 
     public partial class GameSettings
@@ -81,6 +130,8 @@ namespace Barotrauma
         private WindowMode windowMode;
 
         private LosMode losMode;
+
+        private LosRaycastSettings losRaycastSetting;
 
         public List<Pair<string, int>> jobPreferences;
 
@@ -732,6 +783,12 @@ namespace Barotrauma
             set { losMode = value; }
         }
 
+        public LosRaycastSettings LosRaycastSetting
+        {
+            get { return losRaycastSetting; }
+            set { losRaycastSetting = value; }
+        }
+
         private const float MinHUDScale = 0.75f, MaxHUDScale = 1.25f;
         public static float HUDScale { get; set; }
 
@@ -1026,6 +1083,7 @@ namespace Barotrauma
                 new XAttribute("lightmapscale", LightMapScale),
                 new XAttribute("chromaticaberration", ChromaticAberrationEnabled),
                 new XAttribute("losmode", LosMode),
+                new XAttribute("losraycastsetting", LosRaycastSetting.ToString()),
                 new XAttribute("hudscale", HUDScale),
                 new XAttribute("inventoryscale", InventoryScale),
                 new XAttribute("textscale", TextScale));
@@ -1281,6 +1339,11 @@ namespace Barotrauma
             {
                 losMode = LosMode.Transparent;
             }
+            var losRaycastSettingString = graphicsSettings.GetAttributeString("losraycastsetting", "");
+            if (!losRaycastSetting.FromString(losRaycastSettingString))
+            {
+                losRaycastSetting = new LosRaycastSettings();
+            }
 #if CLIENT
             if (GraphicsWidth == 0 || GraphicsHeight == 0)
             {
@@ -1459,6 +1522,7 @@ namespace Barotrauma
             UseLocalVoiceByDefault = false;
             windowMode = WindowMode.BorderlessWindowed;
             losMode = LosMode.Transparent;
+            losRaycastSetting = new LosRaycastSettings();
             UseSteamMatchmaking = true;
             RequireSteamAuthentication = true;
             QuickStartSubmarineName = string.Empty;

@@ -720,24 +720,6 @@ namespace Barotrauma
             };
             particleScrollBar.OnMoved(particleScrollBar, particleScrollBar.BarScroll);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LosEffect"), font: GUI.SubHeadingFont, wrap: true);
-            var losModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform));
-            losModeDD.AddItem(TextManager.Get("LosModeNone"), LosMode.None);
-            losModeDD.AddItem(TextManager.Get("LosModeTransparent"), LosMode.Transparent);
-            losModeDD.AddItem(TextManager.Get("LosModeOpaque"), LosMode.Opaque);
-            losModeDD.SelectItem(GameMain.Config.LosMode);
-            losModeDD.OnSelected = (guiComponent, obj) =>
-            {
-                UnsavedSettings = true;
-                GameMain.Config.LosMode = (LosMode)guiComponent.UserData;
-                //don't allow changing los mode when playing as a client
-                if (GameMain.Client == null)
-                {
-                    GameMain.LightManager.LosMode = GameMain.Config.LosMode;
-                }
-                return true;
-            };
-
             GUITextBlock LightText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LightMapScale"), font: GUI.SubHeadingFont, wrap: true)
             {
                 ToolTip = TextManager.Get("LightMapScaleToolTip")
@@ -793,6 +775,59 @@ namespace Barotrauma
                     UnsavedSettings = true;
                     return true;
                 }
+            };
+
+            /// LoS
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LosEffect"), font: GUI.SubHeadingFont, wrap: true);
+            var losModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform));
+            losModeDD.AddItem(TextManager.Get("LosModeNone"), LosMode.None);
+            losModeDD.AddItem(TextManager.Get("LosModeTransparent"), LosMode.Transparent);
+            losModeDD.AddItem(TextManager.Get("LosModeOpaque"), LosMode.Opaque);
+            losModeDD.AddItem("Raycast", LosMode.Raycast); // TODO: Add to TextManager/add localised text
+            losModeDD.SelectItem(GameMain.Config.LosMode);
+
+            GUITextBlock LosRayLengthText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), "RaycastLength", font: GUI.SubHeadingFont, wrap: true) // TODO: Add to TextManager/add localised text
+            {
+                ToolTip = "Length of the raycast", // TODO: Add to TextManager/add localised text
+                Visible = LosMode == LosMode.Raycast
+            };
+            GUIScrollBar LosRayLengthScrollbar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
+    style: "GUISlider", barSize: 0.1f)
+            {
+                Visible = LosMode == LosMode.Raycast,
+                UserData = LosRayLengthText,
+                ToolTip = "Length of the raycast", // TODO: Add to TextManager/add localised text
+                BarScroll = MathUtils.InverseLerp(0.2f, 1.0f, LosRaycastSetting.RayLength),
+                OnMoved = (scrollBar, barScroll) =>
+                {
+                    ChangeSliderText(scrollBar, barScroll);
+                    LosRaycastSetting.RayLength = MathHelper.Lerp(0.2f, 1.0f, barScroll);
+                    UnsavedSettings = true;
+                    return true;
+                },
+                Step = 0.1f
+            };
+            LosRayLengthScrollbar.OnMoved(LosRayLengthScrollbar, LosRayLengthScrollbar.BarScroll);
+
+            losModeDD.OnSelected = (guiComponent, obj) =>
+            {
+                UnsavedSettings = true;
+                GameMain.Config.LosMode = (LosMode)guiComponent.UserData;
+                //don't allow changing los mode when playing as a client
+                if (GameMain.Client == null)
+                {
+                    GameMain.LightManager.LosMode = GameMain.Config.LosMode;
+                    GameMain.LightManager.LoSRaycastSetting = GameMain.Config.losRaycastSetting;
+                }
+                if (LosMode == LosMode.Raycast)
+                {
+                    // LosRayLengthText.Visible = true;
+                }
+
+                LosRayLengthText.Visible = (LosMode == LosMode.Raycast);
+                LosRayLengthScrollbar.Visible = (LosMode == LosMode.Raycast);
+                return true;
             };
 
             /// Audio tab ----------------------------------------------------------------
