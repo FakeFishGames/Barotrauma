@@ -682,7 +682,7 @@ namespace Barotrauma.Items.Components
 
         public static bool ValidPowerConnection(Connection conn1, Connection conn2)
         {
-            return conn1.IsPower && conn2.IsPower && (conn1.Item.HasTag("junctionbox") || conn2.Item.HasTag("junctionbox") || conn1.IsOutput != conn2.IsOutput);
+            return conn1.IsPower && conn2.IsPower && (conn1.Item.HasTag("junctionbox") || conn2.Item.HasTag("junctionbox") || conn1.IsOutput != conn2.IsOutput || (conn1.Item.HasTag("dock") && conn2.Item.HasTag("dock")));
         }
 
         /// <summary>
