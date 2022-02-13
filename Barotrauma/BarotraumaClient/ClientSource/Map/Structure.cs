@@ -253,9 +253,9 @@ namespace Barotrauma
             Draw(spriteBatch, editing, back, null);
         }
 
-        public void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect, bool editing)
+        public void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect, bool editing, bool excludeBroken = false)
         {
-            Draw(spriteBatch, editing, false, damageEffect);
+            Draw(spriteBatch, editing, false, damageEffect, excludeBroken);
         }
 
         private float GetRealDepth()
@@ -268,7 +268,7 @@ namespace Barotrauma
             return GetDrawDepth(GetRealDepth(), prefab.sprite);
         }
 
-        private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
+        private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null, bool excludeBroken = false)
         {
             if (prefab.sprite == null) { return; }
             if (editing)
@@ -372,6 +372,8 @@ namespace Barotrauma
 
                 for (int i = 0; i < Sections.Length; i++)
                 {
+                    if (excludeBroken && (MaxHealth - Sections[i].damage - float.Epsilon <= 0.0f)) continue;
+
                     Rectangle drawSection = Sections[i].rect;
                     if (damageEffect != null)
                     {

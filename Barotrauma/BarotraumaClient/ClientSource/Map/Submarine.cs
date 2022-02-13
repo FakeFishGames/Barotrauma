@@ -278,7 +278,7 @@ namespace Barotrauma
         public static Color DamageEffectColor;
 
         private static readonly List<Structure> depthSortedDamageable = new List<Structure>();
-        public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false, Predicate<MapEntity> predicate = null)
+        public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false, Predicate<MapEntity> predicate = null, bool excludeBroken = false)
         {
             var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
 
@@ -307,7 +307,7 @@ namespace Barotrauma
 
             foreach (Structure s in depthSortedDamageable)
             {
-                s.DrawDamage(spriteBatch, damageEffect, editing);
+                s.DrawDamage(spriteBatch, damageEffect, editing, excludeBroken);
             }
             if (damageEffect != null)
             {
