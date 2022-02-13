@@ -33,6 +33,7 @@ namespace Barotrauma
     // Alternative would be to just make separate values like the other settings, but that seems inelegant too.
     public class LosRaycastSettings
     {
+        public float losTexScale = 1.0f;
         public float occluderAlphaThreshold = 0.35f;
 
         public int RayCount = 512;
@@ -49,7 +50,7 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            string settingsString = $"{occluderAlphaThreshold},";
+            string settingsString = $"{losTexScale},{occluderAlphaThreshold},";
             settingsString += $"{RayCount},{RayLength},{RaySteps},{RayStepNoise},";
             settingsString += $"{InDepth},";
             settingsString += $"{PenumbraAngle},{PenumbraFalloff},{PenumbraAngularFalloff},{PenumbraAngleNoise}";
@@ -62,7 +63,7 @@ namespace Barotrauma
               .Select(s => { return (float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out float v), v); })
               .ToArray();
 
-            if (parsed.Length != 10f)
+            if (parsed.Length != 11f)
             {
                 DebugConsole.AddWarning("Warning: Unexpected number of LoSRaycastsettings. Default LoSRaycastsettings loaded.");
                 return false;
@@ -70,20 +71,20 @@ namespace Barotrauma
 
             float[] values = parsed.Select(tup => tup.Item2).ToArray();
 
+            losTexScale = values[0];
+            occluderAlphaThreshold = values[1];
 
-            occluderAlphaThreshold = values[0];
+            RayCount = (int)values[2];
+            RayLength = values[3];
+            RaySteps = (int)values[4];
+            RayStepNoise = values[5];
 
-            RayCount = (int)values[1];
-            RayLength = values[2];
-            RaySteps = (int)values[3];
-            RayStepNoise = values[4];
+            InDepth = values[6];
 
-            InDepth = values[5];
-
-            PenumbraAngle = values[6];
-            PenumbraFalloff = values[7];
-            PenumbraAngularFalloff = values[8];
-            PenumbraAngleNoise = values[9];
+            PenumbraAngle = values[7];
+            PenumbraFalloff = values[8];
+            PenumbraAngularFalloff = values[9];
+            PenumbraAngleNoise = values[10];
 
             return true;
         }

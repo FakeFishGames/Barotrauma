@@ -27,11 +27,22 @@ namespace Barotrauma.Lights
             get;
             private set;
         }
+
+        private float currLosTexScale;
+
+        private int currLosRayCount;
+
         public RenderTarget2D LosTexture
         {
             get;
             private set;
         }
+        public RenderTarget2D LosRaycastTexture
+        {
+            get;
+            private set;
+        }
+
         public RenderTarget2D HighlightMap
         {
             get;
@@ -104,6 +115,7 @@ namespace Barotrauma.Lights
 
         private void CreateRenderTargets(GraphicsDevice graphics)
         {
+
             var pp = graphics.PresentationParameters;
 
             currLightMapScale = GameMain.Config.LightMapScale;
@@ -124,11 +136,21 @@ namespace Barotrauma.Lights
                        pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
                        RenderTargetUsage.DiscardContents);
             }
+        }
+        private void CreateLosRendertargets(GraphicsDevice graphics)
+        {
+            currLosTexScale = GameMain.Config.LosRaycastSetting.losTexScale;
 
             LosTexture?.Dispose();
             LosTexture = new RenderTarget2D(graphics,
-                (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale),
-                (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false, SurfaceFormat.Color, DepthFormat.None);
+                (int)(GameMain.GraphicsWidth * GameMain.Config.LosRaycastSetting.losTexScale),
+                (int)(GameMain.GraphicsHeight * GameMain.Config.LosRaycastSetting.losTexScale), false, SurfaceFormat.Color, DepthFormat.None);
+
+            currLosTexScale = GameMain.Config.LosRaycastSetting.RayCount;
+
+            LosRaycastTexture?.Dispose();
+            LosRaycastTexture = new RenderTarget2D(graphics,
+                (int)(GameMain.Config.LosRaycastSetting.RayCount), 1, false, SurfaceFormat.Color, DepthFormat.None);
         }
 
         public void AddLight(LightSource light)
@@ -521,6 +543,17 @@ namespace Barotrauma.Lights
 
         public void UpdateObstructVision(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 lookAtPosition)
         {
+            if (Math.Abs(currLosTexScale - GameMain.Config.LosRaycastSetting.losTexScale) > float.Epsilon)
+            {
+                //los tex scale has changed -> recreate render targets
+                CreateLosRendertargets(graphics);
+            }
+            if(currLosRayCount != GameMain.Config.LosRaycastSetting.RayCount)
+            {
+                //los raycount has changed -> recreate render targets
+                CreateLosRendertargets(graphics);
+            }    
+
             if ((!LosEnabled || LosMode == LosMode.None) && !ObstructVision) return;
             if (ViewTarget == null) return;
 
@@ -537,7 +570,7 @@ namespace Barotrauma.Lights
                 Vector2 scale = new Vector2(
                     MathHelper.Clamp(losOffset.Length() / 256.0f, 4.0f, 5.0f), 3.0f);
 
-                spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f)));
+                spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LosRaycastSetting.losTexScale, GameMain.Config.LosRaycastSetting.losTexScale, 1.0f)));
                 spriteBatch.Draw(visionCircle, new Vector2(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y), null, Color.White, rotation,
                     new Vector2(visionCircle.Width * 0.2f, visionCircle.Height / 2), scale, SpriteEffects.None, 0.0f);
                 spriteBatch.End();
@@ -605,7 +638,7 @@ namespace Barotrauma.Lights
                 {
                     LosRaycastSettings losRaycastSetting = GameMain.Config.LosRaycastSetting;
                     // Set drawing settings
-                    Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f));
+                    Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LosRaycastSetting.losTexScale, GameMain.Config.LosRaycastSetting.losTexScale, 1.0f));
 
                     SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["solidColorThreshold"];
                     SolidColorEffect.Parameters["color"].SetValue(new Vector4(0.0f, 0.0f, 0.0f, 1.0f));

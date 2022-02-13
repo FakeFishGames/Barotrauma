@@ -734,6 +734,7 @@ namespace Barotrauma
                 {
                     ChangeSliderText(scrollBar, barScroll);
                     LightMapScale = MathHelper.Lerp(0.2f, 1.0f, barScroll);
+                    if (losMode != LosMode.Raycast) LosRaycastSetting.losTexScale = LightMapScale;
                     UnsavedSettings = true;
                     return true;
                 },
@@ -779,37 +780,65 @@ namespace Barotrauma
 
             /// LoS
 
+            // TODO: 
+            // -Replace strings with localised text
+            // -Allow server to choose between LoS mode or no LoS, allow clients to choose LoS type
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LosEffect"), font: GUI.SubHeadingFont, wrap: true);
             var losModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform));
             losModeDD.AddItem(TextManager.Get("LosModeNone"), LosMode.None);
             losModeDD.AddItem(TextManager.Get("LosModeTransparent"), LosMode.Transparent);
             losModeDD.AddItem(TextManager.Get("LosModeOpaque"), LosMode.Opaque);
-            losModeDD.AddItem("Raycast", LosMode.Raycast); // TODO: Add to TextManager/add localised text
+            losModeDD.AddItem("Raycast", LosMode.Raycast);
             losModeDD.SelectItem(GameMain.Config.LosMode);
 
-            GUITextBlock LosRayLengthText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), "RaycastLength", font: GUI.SubHeadingFont, wrap: true) // TODO: Add to TextManager/add localised text
+            GUITextBlock losTexScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), "Los Texture Scale", font: GUI.SubHeadingFont, wrap: true)
             {
-                ToolTip = "Length of the raycast", // TODO: Add to TextManager/add localised text
                 Visible = LosMode == LosMode.Raycast
             };
-            GUIScrollBar LosRayLengthScrollbar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
+            GUIScrollBar losTexScaleScrollbar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
     style: "GUISlider", barSize: 0.1f)
             {
                 Visible = LosMode == LosMode.Raycast,
-                UserData = LosRayLengthText,
-                ToolTip = "Length of the raycast", // TODO: Add to TextManager/add localised text
-                BarScroll = MathUtils.InverseLerp(0.0f, 1.0f, LosRaycastSetting.occluderAlphaThreshold),
+                UserData = losTexScaleText,
+                ToolTip = "Scaling factor for the LoS texture separate from the lightmap",
+                BarScroll = MathUtils.InverseLerp(0.2f, 1.0f, LosRaycastSetting.losTexScale),
                 OnMoved = (scrollBar, barScroll) =>
                 {
                     ChangeSliderText(scrollBar, barScroll);
-                    LosRaycastSetting.occluderAlphaThreshold = MathHelper.Lerp(0.0f, 1.0f, barScroll);
+                    LosRaycastSetting.losTexScale = MathHelper.Lerp(0.2f, 1.0f, barScroll);
 
                     UnsavedSettings = true;
                     return true;
                 },
-                Step = 0.05f
+                Step = 0.25f
             };
-            LosRayLengthScrollbar.OnMoved(LosRayLengthScrollbar, LosRayLengthScrollbar.BarScroll);
+            losTexScaleScrollbar.OnMoved(losTexScaleScrollbar, losTexScaleScrollbar.BarScroll);
+
+            GUITextBlock LosRayCountText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), "Ray Count", font: GUI.SubHeadingFont, wrap: true)
+            {
+                ToolTip = "Number of rays to be cast",
+                Visible = LosMode == LosMode.Raycast
+            };
+            GUIScrollBar LosRayCountScrollbar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
+style: "GUISlider", barSize: 0.1f)
+            {
+                Visible = LosMode == LosMode.Raycast,
+                UserData = losTexScaleText,
+                ToolTip = "Scaling factor for the LoS texture separate from the lightmap",
+                BarScroll = (MathF.Log2(LosRaycastSetting.RayCount)-7f)/4f, // 128, 256, 512, 1024, 2048 -> 0, .25, .5, .75, 1
+                OnMoved = (scrollBar, barScroll) =>
+                {
+                    ChangeSliderText(scrollBar, barScroll);
+
+                    LosRaycastSetting.RayCount = (int)MathF.Pow(2, 7 + MathF.Round(barScroll * 4)); // 0, .25, .5, .75, 1 -> 128, 256, 512, 1024, 2048
+
+                    UnsavedSettings = true;
+                    return true;
+                },
+                Step = 0.25f
+            };
+            LosRayCountScrollbar.OnMoved(LosRayCountScrollbar, LosRayCountScrollbar.BarScroll);
 
             losModeDD.OnSelected = (guiComponent, obj) =>
             {
@@ -820,13 +849,12 @@ namespace Barotrauma
                 {
                     GameMain.LightManager.LosMode = GameMain.Config.LosMode;
                 }
-                if (LosMode == LosMode.Raycast)
-                {
-                    // LosRayLengthText.Visible = true;
-                }
 
-                LosRayLengthText.Visible = (LosMode == LosMode.Raycast);
-                LosRayLengthScrollbar.Visible = (LosMode == LosMode.Raycast);
+                bool losVisible = (LosMode == LosMode.Raycast);
+                losTexScaleText.Visible = losVisible;
+                losTexScaleScrollbar.Visible = losVisible;
+                LosRayCountText.Visible = losVisible;
+                LosRayCountScrollbar.Visible = losVisible;
                 return true;
             };
 
