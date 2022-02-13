@@ -818,7 +818,7 @@ namespace Barotrauma
                 if (GameMain.Client == null)
                 {
                     GameMain.LightManager.LosMode = GameMain.Config.LosMode;
-                    GameMain.LightManager.LoSRaycastSetting = GameMain.Config.losRaycastSetting;
+                    GameMain.LightManager.LosRaycastSetting = GameMain.Config.losRaycastSetting;
                 }
                 if (LosMode == LosMode.Raycast)
                 {

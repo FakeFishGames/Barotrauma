@@ -55,9 +55,17 @@ namespace Barotrauma
         }
         public bool FromString(string settingsString)
         {
-            if (settingsString.Split(',').Any(s => !float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out _)) || settingsString.Split(',').Length < 9) return false;
+            //if (settingsString.Split(',').Any(s => !float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out _)) || settingsString.Split(',').Length < 9) return false;
 
-            float[] values = settingsString.Split(',').Select(s => { float v; float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out v); return v; }).ToArray();
+            //float[] values = settingsString.Split(',').Select(s => { float v; float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out v); return v; }).ToArray();
+
+            var parsed = settingsString.Split(',')
+              .Select(s => { return (float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out float v), v); })
+              .ToArray();
+
+            if (!parsed.Any(tup => tup.Item1)) return false;
+
+            float[] values = parsed.Select(tup => tup.Item2).ToArray();
 
             RayCount = (int)values[0];
             RayLength = values[1];
