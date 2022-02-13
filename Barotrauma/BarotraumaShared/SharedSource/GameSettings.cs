@@ -33,6 +33,8 @@ namespace Barotrauma
     // Alternative would be to just make separate values like the other settings, but that seems inelegant too.
     public class LosRaycastSettings
     {
+        public float occluderAlphaThreshold = 0.35f;
+
         public int RayCount = 512;
         public float RayLength = 0.75f;
         public int RaySteps = 128;
@@ -47,7 +49,8 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            string settingsString = $"{RayCount},{RayLength},{RaySteps},{RayStepNoise},";
+            string settingsString = $"{occluderAlphaThreshold},";
+            settingsString += $"{RayCount},{RayLength},{RaySteps},{RayStepNoise},";
             settingsString += $"{InDepth},";
             settingsString += $"{PenumbraAngle},{PenumbraFalloff},{PenumbraAngularFalloff},{PenumbraAngleNoise}";
 
@@ -55,29 +58,32 @@ namespace Barotrauma
         }
         public bool FromString(string settingsString)
         {
-            //if (settingsString.Split(',').Any(s => !float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out _)) || settingsString.Split(',').Length < 9) return false;
-
-            //float[] values = settingsString.Split(',').Select(s => { float v; float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out v); return v; }).ToArray();
-
             var parsed = settingsString.Split(',')
               .Select(s => { return (float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out float v), v); })
               .ToArray();
 
-            if (!parsed.Any(tup => tup.Item1)) return false;
+            if (parsed.Length != 10f)
+            {
+                DebugConsole.AddWarning("Warning: Unexpected number of LoSRaycastsettings. Default LoSRaycastsettings loaded.");
+                return false;
+            }
 
             float[] values = parsed.Select(tup => tup.Item2).ToArray();
 
-            RayCount = (int)values[0];
-            RayLength = values[1];
-            RaySteps = (int)values[2];
-            RayStepNoise = values[3];
 
-            InDepth = values[4];
+            occluderAlphaThreshold = values[0];
 
-            PenumbraAngle = values[5];
-            PenumbraFalloff = values[6];
-            PenumbraAngularFalloff = values[7];
-            PenumbraAngleNoise = values[8];
+            RayCount = (int)values[1];
+            RayLength = values[2];
+            RaySteps = (int)values[3];
+            RayStepNoise = values[4];
+
+            InDepth = values[5];
+
+            PenumbraAngle = values[6];
+            PenumbraFalloff = values[7];
+            PenumbraAngularFalloff = values[8];
+            PenumbraAngleNoise = values[9];
 
             return true;
         }

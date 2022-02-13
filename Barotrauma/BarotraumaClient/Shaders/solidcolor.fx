@@ -2,7 +2,8 @@ Texture2D xTexture;
 sampler TextureSampler = sampler_state { Texture = <xTexture>; };
 
 float blurDistance;
-float4 color; 
+float4 color;
+float threshold;
 
 float4 solidColor(float4 position : POSITION0, float4 clr : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
 {
@@ -28,6 +29,13 @@ float4 solidColorBlur(float4 position : POSITION0, float4 clr : COLOR0, float2 t
     return color * sample;
 }
 
+float4 solidColorThreshold(float4 position : POSITION0, float4 clr : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
+{
+    float a = tex2D(TextureSampler, texCoord).a;
+    clip(a - threshold);
+    return color;
+}
+
 technique SolidColor 
 {
     pass Pass1
@@ -47,5 +55,12 @@ technique SolidColorBlur
     pass Pass1
     {
         PixelShader = compile ps_4_0_level_9_1 solidColorBlur();
+    }
+}
+technique solidColorThreshold
+{
+    pass Pass1
+    {
+        PixelShader = compile ps_4_0_level_9_1 solidColorThreshold();
     }
 }

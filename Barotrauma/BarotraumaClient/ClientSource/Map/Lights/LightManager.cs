@@ -50,7 +50,6 @@ namespace Barotrauma.Lights
         public bool LosEnabled = true;
         public float LosAlpha = 1f;
         public LosMode LosMode = LosMode.Transparent;
-        public LosRaycastSettings LosRaycastSetting;
 
         public bool LightingEnabled = true;
 
@@ -101,8 +100,6 @@ namespace Barotrauma.Lights
                     };
                 }
             });
-
-            LosRaycastSetting = new LosRaycastSettings();
         }
 
         private void CreateRenderTargets(GraphicsDevice graphics)
@@ -606,11 +603,13 @@ namespace Barotrauma.Lights
                 }
                 else
                 {
+                    LosRaycastSettings losRaycastSetting = GameMain.Config.LosRaycastSetting;
                     // Set drawing settings
                     Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f));
 
-                    SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidColor"];
+                    SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["solidColorThreshold"];
                     SolidColorEffect.Parameters["color"].SetValue(new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+                    SolidColorEffect.Parameters["threshold"].SetValue(losRaycastSetting.occluderAlphaThreshold);
 
                     spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, transformMatrix: spriteBatchTransform, effect: SolidColorEffect);
 
@@ -622,10 +621,17 @@ namespace Barotrauma.Lights
                     {
                         //Technically means that structures not drawn with DrawDamageable are not drawn.
                         //However, these should not exist as all structures that have an occluding body should be drawn.
-
                         if (convexHull.ParentEntity is Item parent && parent.Condition - float.Epsilon > 0.0f)
                         {
-                            parent.Draw(spriteBatch, false);
+                            if (parent.GetComponent<Door>() is { } door)
+                            {
+                                // drawing doors directly omits drawing the decorative (background) sprite as occluder
+                                door.Draw(spriteBatch, false);
+                            }
+                            else
+                            {
+                                parent.Draw(spriteBatch, false);
+                            }
                         }
                     }
 

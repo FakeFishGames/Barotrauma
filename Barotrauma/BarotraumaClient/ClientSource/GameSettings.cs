@@ -798,15 +798,16 @@ namespace Barotrauma
                 Visible = LosMode == LosMode.Raycast,
                 UserData = LosRayLengthText,
                 ToolTip = "Length of the raycast", // TODO: Add to TextManager/add localised text
-                BarScroll = MathUtils.InverseLerp(0.2f, 1.0f, LosRaycastSetting.RayLength),
+                BarScroll = MathUtils.InverseLerp(0.0f, 1.0f, LosRaycastSetting.occluderAlphaThreshold),
                 OnMoved = (scrollBar, barScroll) =>
                 {
                     ChangeSliderText(scrollBar, barScroll);
-                    LosRaycastSetting.RayLength = MathHelper.Lerp(0.2f, 1.0f, barScroll);
+                    LosRaycastSetting.occluderAlphaThreshold = MathHelper.Lerp(0.0f, 1.0f, barScroll);
+
                     UnsavedSettings = true;
                     return true;
                 },
-                Step = 0.1f
+                Step = 0.05f
             };
             LosRayLengthScrollbar.OnMoved(LosRayLengthScrollbar, LosRayLengthScrollbar.BarScroll);
 
@@ -818,7 +819,6 @@ namespace Barotrauma
                 if (GameMain.Client == null)
                 {
                     GameMain.LightManager.LosMode = GameMain.Config.LosMode;
-                    GameMain.LightManager.LosRaycastSetting = GameMain.Config.losRaycastSetting;
                 }
                 if (LosMode == LosMode.Raycast)
                 {
