@@ -13,6 +13,8 @@ namespace Barotrauma.Lights
     {
         public static Entity ViewTarget { get; set; }
 
+        // Lighting
+
         private float currLightMapScale;
 
         public Color AmbientLight;
@@ -28,20 +30,48 @@ namespace Barotrauma.Lights
             private set;
         }
 
+        private BasicEffect lightEffect;
+        public Effect SolidColorEffect { get; private set; }
+
+        private readonly List<LightSource> lights;
+
+        public bool LightingEnabled = true;
+
+        public IEnumerable<LightSource> Lights
+        {
+            get { return lights; }
+        }
+
+        // LoS
+
+        public bool LosEnabled = true;
+        public float LosAlpha = 1f;
+        public LosMode LosMode = LosMode.Transparent;
+
+        public bool ObstructVision;
+
+        private readonly Texture2D visionCircle;
+
+        private Vector2 losOffset;
+
         private float currLosTexScale;
 
         private int currLosRayCount;
 
-        public RenderTarget2D LosTexture
+        public RenderTarget2D LosMap
         {
             get;
             private set;
         }
-        public RenderTarget2D LosRaycastTexture
+        public RenderTarget2D LosRaycastMap
         {
             get;
             private set;
         }
+        public Effect LosRaycastEffect { get; private set; }
+        public Effect LosEffect { get; private set; }
+
+        // Highlights
 
         public RenderTarget2D HighlightMap
         {
@@ -50,30 +80,6 @@ namespace Barotrauma.Lights
         }
 
         private readonly Texture2D highlightRaster;
-
-        private BasicEffect lightEffect;
-
-        public Effect LosEffect { get; private set; }
-        public Effect SolidColorEffect { get; private set; }
-
-        private readonly List<LightSource> lights;
-
-        public bool LosEnabled = true;
-        public float LosAlpha = 1f;
-        public LosMode LosMode = LosMode.Transparent;
-
-        public bool LightingEnabled = true;
-
-        public bool ObstructVision;
-
-        private readonly Texture2D visionCircle;
-
-        private Vector2 losOffset;
-
-        public IEnumerable<LightSource> Lights
-        {
-            get { return lights; }
-        }
 
         public LightManager(GraphicsDevice graphics, ContentManager content)
         {
@@ -141,15 +147,15 @@ namespace Barotrauma.Lights
         {
             currLosTexScale = GameMain.Config.LosRaycastSetting.losTexScale;
 
-            LosTexture?.Dispose();
-            LosTexture = new RenderTarget2D(graphics,
+            LosMap?.Dispose();
+            LosMap = new RenderTarget2D(graphics,
                 (int)(GameMain.GraphicsWidth * GameMain.Config.LosRaycastSetting.losTexScale),
                 (int)(GameMain.GraphicsHeight * GameMain.Config.LosRaycastSetting.losTexScale), false, SurfaceFormat.Color, DepthFormat.None);
 
-            currLosTexScale = GameMain.Config.LosRaycastSetting.RayCount;
+            currLosRayCount = GameMain.Config.LosRaycastSetting.RayCount;
 
-            LosRaycastTexture?.Dispose();
-            LosRaycastTexture = new RenderTarget2D(graphics,
+            LosRaycastMap?.Dispose();
+            LosRaycastMap = new RenderTarget2D(graphics,
                 (int)(GameMain.Config.LosRaycastSetting.RayCount), 1, false, SurfaceFormat.Color, DepthFormat.None);
         }
 
@@ -557,7 +563,7 @@ namespace Barotrauma.Lights
             if ((!LosEnabled || LosMode == LosMode.None) && !ObstructVision) return;
             if (ViewTarget == null) return;
 
-            graphics.SetRenderTarget(LosTexture);
+            graphics.SetRenderTarget(LosMap);
 
             if (ObstructVision)
             {
@@ -649,7 +655,6 @@ namespace Barotrauma.Lights
                     // Draw walls (done separarely to filter out broken segments)
                     Submarine.DrawDamageable(spriteBatch, null, predicate: (MapEntity e) => { return (e is Structure s) ? s.CastShadow : true; }, excludeBroken: true);
 
-                    // Draw colliders of other items, if they're not walls
                     foreach (ConvexHull convexHull in convexHulls)
                     {
                         //Technically means that structures not drawn with DrawDamageable are not drawn.
@@ -669,6 +674,7 @@ namespace Barotrauma.Lights
                     }
 
                     spriteBatch.End();
+
                 }
             }
             graphics.SetRenderTarget(null);

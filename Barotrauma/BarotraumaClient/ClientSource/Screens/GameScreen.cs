@@ -346,7 +346,7 @@ namespace Barotrauma
                 GameMain.LightManager.LosEffect.CurrentTechnique = GameMain.LightManager.LosEffect.Techniques["LosShader"];
 
                 GameMain.LightManager.LosEffect.Parameters["xTexture"].SetValue(renderTargetBackground);
-                GameMain.LightManager.LosEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.LosTexture);
+                GameMain.LightManager.LosEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.LosMap);
                 GameMain.LightManager.LosEffect.Parameters["xLosAlpha"].SetValue(GameMain.LightManager.LosAlpha);
 
                 Color losColor;
