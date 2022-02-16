@@ -2,7 +2,7 @@
 {
     partial class GoToMission : Mission
     {
-        public override bool IsAtCompletionState => false;
-        public override bool IsAtFailureState => false;
+        public override bool DisplayAsCompleted => false;
+        public override bool DisplayAsFailed => false;
     }
 }

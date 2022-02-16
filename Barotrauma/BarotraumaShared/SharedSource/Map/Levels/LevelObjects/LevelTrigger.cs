@@ -541,7 +541,9 @@ namespace Barotrauma
                     }
                 }
             }
-            
+
+            RemoveInActiveTriggerers(PhysicsBody, triggerers);
+
             if (stayTriggeredDelay > 0.0f)
             {
                 if (triggerers.Count == 0)

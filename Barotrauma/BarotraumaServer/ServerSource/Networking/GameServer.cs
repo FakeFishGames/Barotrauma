@@ -857,6 +857,12 @@ namespace Barotrauma.Networking
                 case ClientNetError.MISSING_ENTITY:
                     UInt16 eventID = inc.ReadUInt16();
                     UInt16 entityID = inc.ReadUInt16();
+                    byte subCount = inc.ReadByte();
+                    List<string> subNames = new List<string>();
+                    for (int i = 0; i < subCount; i++)
+                    {
+                        subNames.Add(inc.ReadString());
+                    }
                     Entity entity = Entity.FindEntityByID(entityID);
                     if (entity == null)
                     {
@@ -874,6 +880,13 @@ namespace Barotrauma.Networking
                     else
                     {
                         errorStr = errorStrNoName = $"Missing entity {entity}, sub: {entity.Submarine?.Info?.Name ?? "none"} (event id {eventID}, entity id {entityID}).";
+                    }
+                    var serverSubNames = Submarine.Loaded.Select(s => s.Info.Name);
+                    if (subCount != Submarine.Loaded.Count || !subNames.SequenceEqual(serverSubNames))
+                    {
+                        string subErrorStr =  $" Loaded submarines don't match (client: {string.Join(", ", subNames)}, server: {string.Join(", ", serverSubNames)}).";
+                        errorStr += subErrorStr;
+                        errorStrNoName += subErrorStr;
                     }
                     break;
             }
@@ -1850,9 +1863,10 @@ namespace Barotrauma.Networking
                 }
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.Name);
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.MD5Hash.ToString());
-                outmsg.Write(serverSettings.UseRespawnShuttle);
-                outmsg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
-                outmsg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.ToString());
+                outmsg.Write(serverSettings.UseRespawnShuttle || (gameStarted && respawnManager.UsingShuttle));
+                var selectedShuttle = gameStarted && respawnManager.UsingShuttle ? respawnManager.RespawnShuttle.Info : GameMain.NetLobbyScreen.SelectedShuttle;
+                outmsg.Write(selectedShuttle.Name);
+                outmsg.Write(selectedShuttle.MD5Hash.ToString());
 
                 outmsg.Write(serverSettings.Voting.AllowSubVoting);
                 outmsg.Write(serverSettings.Voting.AllowModeVoting);
@@ -2031,7 +2045,7 @@ namespace Barotrauma.Networking
                 msg.Write(selectedSub.Name);
                 msg.Write(selectedSub.MD5Hash.Hash);
 
-                msg.Write(serverSettings.UseRespawnShuttle);
+                msg.Write(serverSettings.UseRespawnShuttle || (gameStarted && respawnManager.UsingShuttle));
                 msg.Write(selectedShuttle.Name);
                 msg.Write(selectedShuttle.MD5Hash.Hash);
 
@@ -2468,8 +2482,9 @@ namespace Barotrauma.Networking
                 msg.Write(serverSettings.SelectedLevelDifficulty);
                 msg.Write(gameSession.SubmarineInfo.Name);
                 msg.Write(gameSession.SubmarineInfo.MD5Hash.Hash);
-                msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
-                msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
+                var selectedShuttle = gameStarted && respawnManager.UsingShuttle ? respawnManager.RespawnShuttle.Info : GameMain.NetLobbyScreen.SelectedShuttle;
+                msg.Write(selectedShuttle.Name);
+                msg.Write(selectedShuttle.MD5Hash.Hash);
                 msg.Write((byte)GameMain.GameSession.GameMode.Missions.Count());
                 foreach (Mission mission in GameMain.GameSession.GameMode.Missions)
                 {

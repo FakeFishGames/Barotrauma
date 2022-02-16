@@ -3557,6 +3557,11 @@ namespace Barotrauma.Networking
                 case ClientNetError.MISSING_ENTITY:
                     outMsg.Write(eventID);
                     outMsg.Write(entityID);
+                    outMsg.Write((byte)Submarine.Loaded.Count);
+                    foreach (Submarine sub in Submarine.Loaded)
+                    {
+                        outMsg.Write(sub.Info.Name);
+                    }
                     break;
             }
             clientPeer.Send(outMsg, DeliveryMethod.Reliable);

@@ -1624,7 +1624,7 @@ namespace Barotrauma
                                             DebugConsole.ShowError("Random rotation is not supported for Projectiles.");
                                             break;
                                         default:
-                                            throw new NotImplementedException("Not implemented: " + chosenItemSpawnInfo.RotationType);
+                                            throw new NotImplementedException("Projectile spawn rotation type not implemented: " + chosenItemSpawnInfo.RotationType);
                                     }
                                     rotation += MathHelper.ToRadians(chosenItemSpawnInfo.Rotation * user.AnimController.Dir);
                                     projectile.Shoot(user, ConvertUnits.ToSimUnits(worldPos), ConvertUnits.ToSimUnits(worldPos), rotation + spread, ignoredBodies: user.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: true);
@@ -1664,8 +1664,10 @@ namespace Barotrauma
                                             case ItemSpawnInfo.SpawnRotationType.Random:
                                                 rotation = Rand.Range(0f, MathHelper.TwoPi, Rand.RandSync.Unsynced);
                                                 break;
+                                            case ItemSpawnInfo.SpawnRotationType.Target:
+                                                break;
                                             default:
-                                                throw new NotImplementedException("Not implemented: " + chosenItemSpawnInfo.RotationType);
+                                                throw new NotImplementedException("Spawn rotation type not implemented: " + chosenItemSpawnInfo.RotationType);
                                         }
                                         body.SetTransform(newItem.SimPosition, rotation);
                                         body.ApplyLinearImpulse(Rand.Vector(1) * chosenItemSpawnInfo.Speed);

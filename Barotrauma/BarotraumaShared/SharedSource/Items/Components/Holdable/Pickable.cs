@@ -130,11 +130,6 @@ namespace Barotrauma.Items.Components
             }
             if (picker.Inventory.TryPutItemWithAutoEquipCheck(item, picker, allowedSlots))
             {
-                if (item.CampaignInteractionType == CampaignMode.InteractionType.Cargo)
-                {
-                    item.CampaignInteractionType = CampaignMode.InteractionType.None;
-                }
-
                 if (!picker.HeldItems.Contains(item) && item.body != null) { item.body.Enabled = false; }
                 this.picker = picker;
 

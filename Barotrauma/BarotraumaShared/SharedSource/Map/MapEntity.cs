@@ -472,7 +472,7 @@ namespace Barotrauma
                     cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], false);
                 }
 
-                if (cloneWire.Connections[0] == null || cloneWire.Connections[1] == null)
+                if ((cloneWire.Connections[0] == null || cloneWire.Connections[1] == null) && cloneItem.GetComponent<DockingPort>() == null)
                 {
                     if (!clones.Any(c => (c as Item)?.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(cloneWire) ?? false))
                     {

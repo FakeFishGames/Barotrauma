@@ -956,7 +956,7 @@ namespace Barotrauma
 
         public void DrawHUD(SpriteBatch spriteBatch)
         {
-            if (GUI.DisableHUD) { return; }
+            if (GUI.DisableHUD || Character.Removed) { return; }
             if (GameMain.GraphicsWidth != screenResolution.X ||
                 GameMain.GraphicsHeight != screenResolution.Y ||
                 Math.Abs(inventoryScale - Inventory.UIScale) > 0.01f ||
@@ -997,13 +997,15 @@ namespace Barotrauma
             {
                 healthBar.RectTransform.ScreenSpaceOffset = healthBarShadow.RectTransform.ScreenSpaceOffset = Point.Zero;
             }
-            
-            // If manning a turret the portrait doesn't get rendered so we push the health bar to remove the empty gap
-            healthBarHolder.RectTransform.ScreenSpaceOffset = Character.ShouldLockHud() ? new Point(0, HUDLayoutSettings.PortraitArea.Height) : Point.Zero;
+
+            if (healthBarHolder != null)
+            {
+                // If manning a turret the portrait doesn't get rendered so we push the health bar to remove the empty gap
+                healthBarHolder.RectTransform.ScreenSpaceOffset = Character.ShouldLockHud() ? new Point(0, HUDLayoutSettings.PortraitArea.Height) : Point.Zero;
+            }
 
             DrawStatusHUD(spriteBatch);
         }
-
 
         private (Affliction affliction, string text)? highlightedAfflictionIcon;
         public void DrawStatusHUD(SpriteBatch spriteBatch)

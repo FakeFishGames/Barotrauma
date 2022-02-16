@@ -4,8 +4,8 @@ namespace Barotrauma
 {
     partial class AlienRuinMission : Mission
     {
-        public override bool IsAtCompletionState => State > 0;
-        public override bool IsAtFailureState => false;
+        public override bool DisplayAsCompleted => State > 0;
+        public override bool DisplayAsFailed => false;
 
         public override void ClientReadInitial(IReadMessage msg)
         {

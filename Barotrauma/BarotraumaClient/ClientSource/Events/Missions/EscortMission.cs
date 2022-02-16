@@ -4,8 +4,8 @@ namespace Barotrauma
 {
     partial class EscortMission : Mission
     {
-        public override bool IsAtCompletionState => false;
-        public override bool IsAtFailureState => State == 1;
+        public override bool DisplayAsCompleted => false;
+        public override bool DisplayAsFailed => State == 1;
 
         public override void ClientReadInitial(IReadMessage msg)
         {

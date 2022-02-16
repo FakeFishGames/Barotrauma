@@ -1069,11 +1069,11 @@ namespace Barotrauma
         {
             if (mission == null || missionIcon == null) { return; }
             string style = string.Empty;
-            if (mission.IsAtFailureState)
+            if (mission.DisplayAsFailed)
             {
                 style = "MissionFailedIcon";
             }
-            else if (mission.IsAtCompletionState)
+            else if (mission.DisplayAsCompleted)
             {
                 style = "MissionCompletedIcon";
             }

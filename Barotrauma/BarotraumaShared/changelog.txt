@@ -1,4 +1,49 @@
 ---------------------------------------------------------------------------------------------------------
+v0.16.5.0
+---------------------------------------------------------------------------------------------------------
+
+- Misc fixes to Herja, Winterhalter, and Barsuk (unstable only).
+- Fixed certain talents (e.g. Bounty Hunter) not working if the target is killed "indirectly" (e.g. bloodloss caused by severing a limb).
+- Increased bandit and pirate aim speeds (unstable only).
+- Fixes character resetting in MP campaign if you join mid-round and don't get to spawn in before the next round in a campaign you've previously played in.
+- Increased handcannon round's max stack size to 12 (unstable only).
+- Fixed error in the medical clinic UI when trying to heal a character whose owner has disconnected (even if the character is still alive). Unstable only.
+
+---------------------------------------------------------------------------------------------------------
+v0.16.4.0
+---------------------------------------------------------------------------------------------------------
+
+Changes and additions:
+- Sounds for the new monster variants.
+- Adjusted animations ragdolls and animations for the variants.
+- Decreased the initial recharge rate of Dugong's supercapacitors a bit and slightly increased the reactor output (the supercapacitors were a bit too much for the reactor to handle).
+- Husked Crawler: Reduced the gunshotwound and stun resistances from 60% to 40%. Decreased the cooldown time when attacking walls.
+- Crawler Broodmother is resistant to stuns, like all the other bigger monsters.
+- Slightly adjusted the combat strengths of Hammerhead Matriarch, Mudraptor Hatchling and Mudraptor Veteran.
+- Increased Crawler Broodmother's health from 800 to 1000.
+- Increased Crawler's health from 65 to 80.
+- Increased Crawler Hatchling's health from 32 to 40.
+- Add vitality multipliers for all Crawlers: more damage at head, less at tail or legs/arms.
+- Increased revolver dmg from 30 to 35 and decreased bleeding from 40 to 30.
+- Handcannon: increase bleeding from 50 to 70 (unstable only).
+
+Fixes:
+- Fixed the Depleted Fuel SMG Magazine using the recycle recipe of the regular SMG Magazine.
+- Fixed SMG magazine recyle recipes not requiring the talent.
+- Fixed beacon missions not being displayed as completed mid-round in the tab menu after the beacon's been activated (unstable only).
+- Fixed bots not re-equipping body armor/ballistic helmet/something else when they drop the diving gear.
+- Waypoint fixes to Herja, Humpback, Orca, Orca2, R-29, and Remora.
+- Fixes to Herja, Winterhalter, and Barsuk (unstable only).
+- Fixed a nullref exception in CharacterHUD.Draw when an icon can't be found for a campaign interaction.
+- Upgrade supercapacitor max recharge speed in subs saved prior to v0.16.3.0 (unstable only).
+- Remove store icon from items when they're picked up by a bot (unstable only).
+- Fixed colliders being off on clothing items and ballistic helmets having a different scale when not worn (unstable only).
+- Fixed bots having issues with some stairs. Note: these changes might require alterations on stair waypoints. Currently the generator doesn't do perfect job there. Look for the examples on how to fix them manually in the vanilla subs.
+- Fixed inability to clone docking ports in the sub editor (unstable only).
+- Fixed LevelTriggers with multiple fixtures not deactivating when the triggerer leaves them (e.g. slowdown from spiky bushes not going away, unstable only).
+- Fixed crashing when a status effect tries to spawn a non-projectile using the "Target" rotation type (e.g. when a watcher emits acid, unstable only).
+
+---------------------------------------------------------------------------------------------------------
 v0.16.3.0
 ---------------------------------------------------------------------------------------------------------
 

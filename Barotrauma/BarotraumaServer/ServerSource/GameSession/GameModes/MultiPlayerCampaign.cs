@@ -212,7 +212,14 @@ namespace Barotrauma
                 }
                 //use the info of the character the client is currently controlling
                 // or the previously saved info if not (e.g. if the client has been spectating or died)
-                var characterInfo = c.Character?.Info ?? characterData.Find(d => d.MatchesClient(c))?.CharacterInfo;
+                var characterInfo = c.Character?.Info;
+                var matchingCharacterData = characterData.Find(d => d.MatchesClient(c));
+                if (matchingCharacterData != null)
+                {
+                    //hasn't spawned this round -> don't touch the data
+                    if (!matchingCharacterData.HasSpawned) { continue; }
+                    characterInfo ??= matchingCharacterData.CharacterInfo;
+                }
                 if (characterInfo == null) { continue; }
                 //reduce skills if the character has died
                 if (characterInfo.CauseOfDeath != null && characterInfo.CauseOfDeath.Type != CauseOfDeathType.Disconnected)

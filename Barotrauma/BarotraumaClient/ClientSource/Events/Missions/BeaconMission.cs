@@ -2,7 +2,7 @@
 {
     partial class BeaconMission : Mission
     {
-        public override bool IsAtCompletionState => false;
-        public override bool IsAtFailureState => false;
+        public override bool DisplayAsCompleted => State > 0;
+        public override bool DisplayAsFailed => false;
     }
 }

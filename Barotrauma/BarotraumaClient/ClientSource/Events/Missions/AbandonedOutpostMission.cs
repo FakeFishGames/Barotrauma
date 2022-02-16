@@ -21,8 +21,8 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsAtCompletionState => State > 0 && requireRescue.None();
-        public override bool IsAtFailureState => State == HostagesKilledState;
+        public override bool DisplayAsCompleted => State > 0 && requireRescue.None();
+        public override bool DisplayAsFailed => State == HostagesKilledState;
 
         public override void ClientReadInitial(IReadMessage msg)
         {

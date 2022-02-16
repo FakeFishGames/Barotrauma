@@ -117,8 +117,14 @@ namespace Barotrauma.Networking
         {
             GameMain.Server.VoipServer.UnregisterQueue(VoipQueue);
             VoipQueue.Dispose();
-            characterInfo?.Remove();
-            characterInfo = null;
+            if (characterInfo != null)
+            {
+                if (characterInfo.Character == null || characterInfo.Character.Removed)
+                {
+                    characterInfo?.Remove();
+                    characterInfo = null;
+                }
+            }
         }
 
         public void InitClientSync()

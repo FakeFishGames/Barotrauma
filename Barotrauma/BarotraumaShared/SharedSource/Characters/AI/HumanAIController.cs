@@ -632,6 +632,7 @@ namespace Barotrauma
                             {
                                 divingSuit.Drop(Character);
                                 HandleRelocation(divingSuit);
+                                ReequipUnequipped();
                             }
                             else if (findItemState == FindItemState.None || findItemState == FindItemState.DivingSuit)
                             {
@@ -659,6 +660,7 @@ namespace Barotrauma
                                     {
                                         divingSuit.Drop(Character);
                                         HandleRelocation(divingSuit);
+                                        ReequipUnequipped();
                                     }
                                 }
                             }
@@ -677,6 +679,7 @@ namespace Barotrauma
                                     {
                                         mask.Drop(Character);
                                         HandleRelocation(mask);
+                                        ReequipUnequipped();
                                     }
                                     else if (findItemState == FindItemState.None || findItemState == FindItemState.DivingMask)
                                     {
@@ -701,6 +704,7 @@ namespace Barotrauma
                                             {
                                                 mask.Drop(Character);
                                                 HandleRelocation(mask);
+                                                ReequipUnequipped();
                                             }
                                         }
                                     }
@@ -2075,10 +2079,12 @@ namespace Barotrauma
         public static bool IsItemTargetedBySomeone(ItemComponent target, CharacterTeamType team, out Character operatingCharacter)
         {
             operatingCharacter = null;
+            if (target?.Item == null) { return false; }
             float highestPriority = -1.0f;
             float highestPriorityModifier = -1.0f;
             foreach (Character c in Character.CharacterList)
             {
+                if (c == null) { continue; }
                 if (c.Removed) { continue; }
                 if (c.TeamID != team) { continue; }
                 if (c.IsIncapacitated) { continue; }
@@ -2087,12 +2093,12 @@ namespace Barotrauma
                     operatingCharacter = c;
                     return true;
                 }
-                if (c.AIController is HumanAIController humanAI)
+                if (c.AIController is HumanAIController humanAI && humanAI.ObjectiveManager is AIObjectiveManager objectiveManager)
                 {
-                    foreach (var objective in humanAI.ObjectiveManager.Objectives)
+                    foreach (var objective in objectiveManager.Objectives)
                     {
                         if (!(objective is AIObjectiveOperateItem operateObjective)) { continue; }
-                        if (operateObjective.Component.Item != target.Item) { continue; }
+                        if (operateObjective.Component?.Item != target.Item) { continue; }
                         if (operateObjective.Priority < highestPriority) { continue; }
                         if (operateObjective.PriorityModifier < highestPriorityModifier) { continue; }
                         operatingCharacter = c;

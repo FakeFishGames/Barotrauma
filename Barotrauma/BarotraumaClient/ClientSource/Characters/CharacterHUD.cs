@@ -406,6 +406,7 @@ namespace Barotrauma
                     if (npc.CampaignInteractionType == CampaignMode.InteractionType.None || npc.Submarine != character.Submarine || npc.IsDead || npc.IsIncapacitated) { continue; }
 
                     var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionIcon." + npc.CampaignInteractionType);
+                    if (iconStyle == null) { continue; }
                     Range<float> visibleRange = new Range<float>(npc.CurrentHull == Character.Controlled.CurrentHull ? 500.0f : 100.0f, float.PositiveInfinity);
                     if (npc.CampaignInteractionType == CampaignMode.InteractionType.Examine)
                     {

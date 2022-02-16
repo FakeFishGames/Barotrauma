@@ -457,12 +457,20 @@ namespace Barotrauma
                 // Cannot use the head position, because not all characters have head or it can be below the total height of the character
                 float characterHeight = Math.Max(colliderSize.Y + character.AnimController.ColliderHeightFromFloor, minHeight);
                 float horizontalDistance = Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X);
-                bool isAboveFeet = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
-                bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + characterHeight;
+                bool isTargetTooHigh = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y + characterHeight;
+                bool isTargetTooLow = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y;
                 var door = currentPath.CurrentNode.ConnectedDoor;
                 float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 5, 0, 1));
+                if (currentPath.CurrentNode.Stairs != null && currentPath.NextNode?.Stairs == null)
+                {
+                    margin = 1;
+                    if (currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + character.AnimController.ColliderHeightFromFloor * 0.25f)
+                    {
+                        isTargetTooLow = true;
+                    }
+                }
                 float targetDistance = Math.Max(colliderSize.X / 2 * margin, minWidth / 2);
-                if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh && (door == null || door.CanBeTraversed))
+                if (horizontalDistance < targetDistance && !isTargetTooHigh && !isTargetTooLow && (door == null || door.CanBeTraversed))
                 {
                     NextNode(!doorsChecked);
                 }

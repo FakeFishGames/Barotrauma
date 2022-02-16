@@ -629,7 +629,10 @@ namespace Barotrauma
             CharacterInfo? healInfo = crewMember.FindCharacterInfo(MedicalClinic.GetCrewCharacters());
             if (healInfo is null) { return; }
 
-            GUIFrame pendingHealBackground = new GUIFrame(new RectTransform(new Vector2(1f, 0.25f), parent.RectTransform));
+            GUIFrame pendingHealBackground = new GUIFrame(new RectTransform(new Vector2(1f, 0.25f), parent.RectTransform), style: "ListBoxElement")
+            {
+                CanBeFocused = false
+            };
             GUILayoutGroup pendingHealLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f), pendingHealBackground.RectTransform, Anchor.Center));
 
             GUILayoutGroup topHeaderLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.3f), pendingHealLayout.RectTransform), isHorizontal: true, Anchor.CenterLeft) { Stretch = true };
@@ -658,7 +661,10 @@ namespace Barotrauma
 
         private void CreatePendingAffliction(GUIListBox parent, MedicalClinic.NetCrewMember crewMember, MedicalClinic.NetAffliction affliction, PendingHealElement healElement)
         {
-            GUIFrame backgroundFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.33f), parent.Content.RectTransform), style: "ListBoxElement");
+            GUIFrame backgroundFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.33f), parent.Content.RectTransform), style: "ListBoxElement")
+            {
+                CanBeFocused = false
+            };
             GUILayoutGroup parentLayout = new GUILayoutGroup(new RectTransform(Vector2.One, backgroundFrame.RectTransform), isHorizontal: true) { Stretch = true };
 
             if (!(affliction.Prefab is { } prefab)) { return; }
@@ -760,7 +766,7 @@ namespace Barotrauma
                 mainFrame.RectTransform.ScreenSpaceOffset = new Point((int)location.X, GameMain.GraphicsHeight - mainFrame.Rect.Height);
             }
 
-            GUITextBlock feedbackBlock = new GUITextBlock(new RectTransform(Vector2.One, mainFrame.RectTransform), TextManager.Get("pleasewaitupnp"), textAlignment: Alignment.Center, font: GUI.LargeFont)
+            GUITextBlock feedbackBlock = new GUITextBlock(new RectTransform(Vector2.One, mainFrame.RectTransform), TextManager.Get("pleasewaitupnp"), textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true)
             {
                 Visible = true
             };

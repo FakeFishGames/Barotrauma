@@ -202,7 +202,7 @@ namespace Barotrauma
             get { return pressureAffliction; }
         }
 
-        public Character Character { get; private set; }
+        public readonly Character Character;
 
         public CharacterHealth(Character character)
         {

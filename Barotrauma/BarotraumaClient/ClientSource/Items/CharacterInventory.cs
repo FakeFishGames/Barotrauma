@@ -153,12 +153,6 @@ namespace Barotrauma
             return container.Inventory;
         }
 
-        protected override void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
-        {
-            base.PutItem(item, i, user, removeItem, createNetworkEvent);
-            CreateSlots();
-        }
-
         public override void CreateSlots()
         {
             visualSlots ??= new VisualSlot[capacity];

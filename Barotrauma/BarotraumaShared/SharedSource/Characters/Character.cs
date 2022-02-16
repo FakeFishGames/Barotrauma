@@ -3759,10 +3759,6 @@ namespace Barotrauma
                 if (!wasDead)
                 {
                     TryAdjustAttackerSkill(attacker, CharacterHealth.Vitality - prevVitality);
-                    if (IsDead)
-                    {
-                        attacker?.RecordKill(this);
-                    }
                 }
             };
             if (attackResult.Damage > 0)
@@ -4027,6 +4023,7 @@ namespace Barotrauma
 
             var abilityCharacterKiller = new AbilityCharacterKiller(CauseOfDeath.Killer);
             CheckTalents(AbilityEffectType.OnDieToCharacter, abilityCharacterKiller);
+            CauseOfDeath.Killer?.RecordKill(this);
 
             if (GameMain.GameSession != null && Screen.Selected == GameMain.GameScreen)
             {
@@ -4035,7 +4032,7 @@ namespace Barotrauma
 
             KillProjSpecific(causeOfDeath, causeOfDeathAffliction, log);
 
-            if (info != null) 
+            if (info != null)
             {
                 info.CauseOfDeath = CauseOfDeath;
                 info.MissionsCompletedSinceDeath = 0;
@@ -4549,6 +4546,8 @@ namespace Barotrauma
             if (addingFirstTime)
             {
                 OnTalentGiven(talentPrefab);
+                GameAnalyticsManager.AddDesignEvent("TalentUnlocked:" + (info.Job?.Prefab.Identifier ?? "None") + ":" + talentPrefab.Identifier,
+                    GameMain.GameSession?.Campaign?.TotalPlayTime ?? 0.0);
             }
             return true;
         }

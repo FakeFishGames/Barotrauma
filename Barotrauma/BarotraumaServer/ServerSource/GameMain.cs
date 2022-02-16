@@ -430,11 +430,14 @@ namespace Barotrauma
                         if (avgUpdateRate < Timing.FixedUpdateRate * 0.98 && GameSession != null && Timing.TotalTime > GameSession.RoundStartTime + 1.0)
                         {
                             DebugConsole.AddWarning($"Running slowly ({avgUpdateRate} updates/s)!");
-                            foreach (Client c in Server.ConnectedClients)
+                            if (Server != null)
                             {
-                                if (c.Connection == Server.OwnerConnection || c.Permissions != ClientPermissions.None)
+                                foreach (Client c in Server.ConnectedClients)
                                 {
-                                    Server.SendConsoleMessage($"Server running slowly ({avgUpdateRate} updates/s)!", c, Color.Orange);
+                                    if (c.Connection == Server.OwnerConnection || c.Permissions != ClientPermissions.None)
+                                    {
+                                        Server.SendConsoleMessage($"Server running slowly ({avgUpdateRate} updates/s)!", c, Color.Orange);
+                                    }
                                 }
                             }
                         }
