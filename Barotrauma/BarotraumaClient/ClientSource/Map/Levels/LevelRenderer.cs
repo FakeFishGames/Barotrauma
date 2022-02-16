@@ -340,52 +340,6 @@ namespace Barotrauma
                     ruin.DebugDraw(spriteBatch);
                 }
             }
-
-            Vector2 pos = new Vector2(0.0f, -level.Size.Y);
-            if (cam.WorldView.Y >= -pos.Y - 1024)
-            {
-                int topBarrierWidth = level.GenerationParams.WallEdgeSprite.Texture.Width;
-                int topBarrierHeight = level.GenerationParams.WallEdgeSprite.Texture.Height;
-
-                pos.X = cam.WorldView.X - topBarrierWidth;
-                int width = (int)(Math.Ceiling(cam.WorldView.Width / 1024 + 4.0f) * topBarrierWidth);
-
-                GUI.DrawRectangle(spriteBatch, new Rectangle(
-                    (int)MathUtils.Round(pos.X, topBarrierWidth),
-                    -cam.WorldView.Y,
-                    width,
-                    (int)(cam.WorldView.Y + pos.Y) - 60),
-                    Color.Black, true);
-
-                spriteBatch.Draw(level.GenerationParams.WallEdgeSprite.Texture,
-                    new Rectangle((int)MathUtils.Round(pos.X, topBarrierWidth), (int)(pos.Y - topBarrierHeight + level.GenerationParams.WallEdgeExpandOutwardsAmount), width, topBarrierHeight),
-                    new Rectangle(0, 0, width, -topBarrierHeight),
-                    GameMain.LightManager?.LightingEnabled ?? false ? GameMain.LightManager.AmbientLight : level.WallColor, 0.0f,
-                    Vector2.Zero,
-                    SpriteEffects.None, 0.0f);
-            }
-
-            if (cam.WorldView.Y - cam.WorldView.Height < level.SeaFloorTopPos + 1024)
-            {
-                int bottomBarrierWidth = level.GenerationParams.WallEdgeSprite.Texture.Width;
-                int bottomBarrierHeight = level.GenerationParams.WallEdgeSprite.Texture.Height;
-                pos = new Vector2(cam.WorldView.X - bottomBarrierWidth, -level.BottomPos);
-                int width = (int)(Math.Ceiling(cam.WorldView.Width / bottomBarrierWidth + 4.0f) * bottomBarrierWidth);
-
-                GUI.DrawRectangle(spriteBatch, new Rectangle(
-                    (int)(MathUtils.Round(pos.X, bottomBarrierWidth)),
-                    -(level.BottomPos - 60),
-                    width,
-                    level.BottomPos - (cam.WorldView.Y - cam.WorldView.Height)),
-                    Color.Black, true);
-
-                spriteBatch.Draw(level.GenerationParams.WallEdgeSprite.Texture,
-                    new Rectangle((int)MathUtils.Round(pos.X, bottomBarrierWidth), -level.BottomPos - (int)level.GenerationParams.WallEdgeExpandOutwardsAmount, width, bottomBarrierHeight),
-                    new Rectangle(0, 0, width, -bottomBarrierHeight),
-                    GameMain.LightManager?.LightingEnabled ?? false ? GameMain.LightManager.AmbientLight : level.WallColor, 0.0f,
-                    Vector2.Zero,
-                    SpriteEffects.FlipVertically, 0.0f);
-            }
         }
 
 
