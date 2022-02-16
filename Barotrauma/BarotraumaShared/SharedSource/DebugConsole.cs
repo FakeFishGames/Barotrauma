@@ -2341,10 +2341,11 @@ namespace Barotrauma
                 }
                 if (e.InnerException != null)
                 {
-                    error += "\n\nInner exception: " + e.InnerException.Message + "\n";
-                    if (e.InnerException.StackTrace != null)
+                    var innermost = e.GetInnermost();
+                    error += "\n\nInner exception: " + innermost.Message + "\n";
+                    if (innermost.StackTrace != null)
                     {
-                        error += e.InnerException.StackTrace.CleanupStackTrace(); ;
+                        error += innermost.StackTrace.CleanupStackTrace(); ;
                     }
                 }
             }

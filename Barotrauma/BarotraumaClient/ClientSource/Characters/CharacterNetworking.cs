@@ -323,9 +323,10 @@ namespace Barotrauma
                             }
                             break;
                         case 1: //NetEntityEvent.Type.Control
+                            bool myCharacter = msg.ReadBoolean();
                             byte ownerID = msg.ReadByte();
                             ResetNetState();
-                            if (ownerID == GameMain.Client.ID)
+                            if (myCharacter)
                             {
                                 if (controlled != null)
                                 {

@@ -1,8 +1,7 @@
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using Barotrauma.IO;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -13,7 +12,7 @@ namespace Barotrauma
             if (consentTextAvailable)
             {
                 var background = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
-                var frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.7f), background.RectTransform, Anchor.Center) { MaxSize = new Point(800, int.MaxValue) });
+                var frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.7f), background.RectTransform, Anchor.Center) { MinSize = new Point(800, 0), MaxSize = new Point(1500, int.MaxValue) });
 
                 var content = new GUILayoutGroup(new RectTransform(new Vector2(0.95f), frame.RectTransform, Anchor.Center))
                 {
@@ -89,18 +88,20 @@ namespace Barotrauma
                 buttonContainer.RectTransform.MinSize = new Point(0, yesBtn.RectTransform.MinSize.Y);
                 buttonContainer.RectTransform.MaxSize = new Point(int.MaxValue, yesBtn.RectTransform.MinSize.Y);
 
+                content.Recalculate();
                 foreach (var child in content.Children)
                 {
                     if (child is GUITextBlock textBlock)
                     {
+                        textBlock.TextScale = MathHelper.Min(1.0f, 1.0f / GameSettings.TextScale);
                         textBlock.RectTransform.MinSize = new Point(0, (int)textBlock.TextSize.Y);
-                        textBlock.RectTransform.MaxSize = new Point(int.MaxValue, (int)textBlock.TextSize.Y + GUI.IntScale(15));
+                        textBlock.RectTransform.MaxSize = new Point(int.MaxValue, (int)textBlock.TextSize.Y);
                     }
                 }
 
-                frame.RectTransform.MaxSize = new Point(
-                    frame.RectTransform.MaxSize.X,
-                    (int)(content.Children.Sum(c => c.RectTransform.MaxSize.Y + content.AbsoluteSpacing) / content.RectTransform.RelativeSize.Y));
+                int contentHeight = content.Children.Sum(c => c.RectTransform.MaxSize.Y + content.AbsoluteSpacing);
+                frame.RectTransform.MinSize = new Point(frame.RectTransform.MinSize.X, (int)(contentHeight / content.RectTransform.RelativeSize.Y));
+                frame.RectTransform.MaxSize = new Point(frame.RectTransform.MaxSize.X, (int)(contentHeight / content.RectTransform.RelativeSize.Y));
 
                 GUIMessageBox.MessageBoxes.Add(background);
             }

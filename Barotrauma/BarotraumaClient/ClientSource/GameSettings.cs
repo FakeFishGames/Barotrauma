@@ -660,16 +660,16 @@ namespace Barotrauma
             GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform), TextManager.Get("EnableVSync"))
             {
                 ToolTip = TextManager.Get("EnableVSyncToolTip"),
-                OnSelected = (GUITickBox box) =>
-                {
-                    VSyncEnabled = box.Selected;
-                    GameMain.GraphicsDeviceManager.SynchronizeWithVerticalRetrace = VSyncEnabled;
-                    GameMain.GraphicsDeviceManager.ApplyChanges();
-                    UnsavedSettings = true;
-
-                    return true;
-                },
                 Selected = VSyncEnabled
+            };
+            vsyncTickBox.OnSelected = (GUITickBox box) =>
+            {
+                VSyncEnabled = box.Selected;
+                GameMain.GraphicsDeviceManager.SynchronizeWithVerticalRetrace = VSyncEnabled;
+                GameMain.GraphicsDeviceManager.ApplyChanges();
+                UnsavedSettings = true;
+
+                return true;
             };
 
 
@@ -1456,6 +1456,7 @@ namespace Barotrauma
                 Step = 0.01f
             };
             textScaleScrollBar.OnMoved(textScaleScrollBar, textScaleScrollBar.BarScroll);
+            textScaleDirty = false;
 
             /// Bottom buttons -------------------------------------------------------------
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),

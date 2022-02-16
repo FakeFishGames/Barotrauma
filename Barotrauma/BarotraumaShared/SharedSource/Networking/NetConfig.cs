@@ -8,7 +8,7 @@ namespace Barotrauma.Networking
         public const int DefaultPort = 27015;
         public const int DefaultQueryPort = 27016;
 
-        public const int MaxPlayers = 30;
+        public const int MaxPlayers = 32;
 
         public const int ServerNameMaxLength = 60;
         public const int ServerMessageMaxLength = 2000;
@@ -98,7 +98,7 @@ namespace Barotrauma.Networking
         public static Vector2 Quantize(Vector2 value, float min, float max, int numberOfBits)
         {
             return new Vector2(
-                Quantize(value.X, min, max, numberOfBits), 
+                Quantize(value.X, min, max, numberOfBits),
                 Quantize(value.Y, min, max, numberOfBits));
         }
 
