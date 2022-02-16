@@ -817,15 +817,14 @@ namespace Barotrauma
 
             GUITextBlock LosRayCountText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), "Ray Count", font: GUI.SubHeadingFont, wrap: true)
             {
-                ToolTip = "Number of rays to be cast",
                 Visible = LosMode == LosMode.Raycast
             };
             GUIScrollBar LosRayCountScrollbar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
 style: "GUISlider", barSize: 0.1f)
             {
                 Visible = LosMode == LosMode.Raycast,
-                UserData = losTexScaleText,
-                ToolTip = "Scaling factor for the LoS texture separate from the lightmap",
+                UserData = LosRayCountText,
+                ToolTip = "Slider controlling the number of rays to be cast for the LoS",
                 BarScroll = (MathF.Log2(LosRaycastSetting.RayCount)-7f)/4f, // 128, 256, 512, 1024, 2048 -> 0, .25, .5, .75, 1
                 OnMoved = (scrollBar, barScroll) =>
                 {
@@ -840,6 +839,30 @@ style: "GUISlider", barSize: 0.1f)
             };
             LosRayCountScrollbar.OnMoved(LosRayCountScrollbar, LosRayCountScrollbar.BarScroll);
 
+            GUITextBlock LosRayStepsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), "Ray Step Count", font: GUI.SubHeadingFont, wrap: true)
+            {
+                Visible = LosMode == LosMode.Raycast
+            };
+            GUIScrollBar LosRayStepsScrollbar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
+style: "GUISlider", barSize: 0.1f)
+            {
+                Visible = LosMode == LosMode.Raycast,
+                UserData = LosRayStepsText,
+                ToolTip = "Slider controlling the number steps for each rays to be cast for the LoS",
+                BarScroll = MathUtils.InverseLerp(0f, 3f, LosRaycastSetting.RayStepIterations),
+                OnMoved = (scrollBar, barScroll) =>
+                {
+                    ChangeSliderText(scrollBar, barScroll);
+
+                    LosRaycastSetting.RayStepIterations = (int)Math.Round(MathHelper.Lerp(0f, 3f, barScroll));
+
+                    UnsavedSettings = true;
+                    return true;
+                },
+                Step = 1/3f
+            };
+            LosRayStepsScrollbar.OnMoved(LosRayStepsScrollbar, LosRayStepsScrollbar.BarScroll);
+
             losModeDD.OnSelected = (guiComponent, obj) =>
             {
                 UnsavedSettings = true;
@@ -853,6 +876,8 @@ style: "GUISlider", barSize: 0.1f)
                 bool losVisible = (LosMode == LosMode.Raycast);
                 losTexScaleText.Visible = losVisible;
                 losTexScaleScrollbar.Visible = losVisible;
+                LosRayCountText.Visible = losVisible;
+                LosRayCountScrollbar.Visible = losVisible;
                 LosRayCountText.Visible = losVisible;
                 LosRayCountScrollbar.Visible = losVisible;
                 return true;

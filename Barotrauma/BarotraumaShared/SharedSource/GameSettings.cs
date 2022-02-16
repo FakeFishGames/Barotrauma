@@ -38,7 +38,7 @@ namespace Barotrauma
 
         public int RayCount = 512;
         public float RayLength = 0.75f;
-        public int RaySteps = 128;
+        public int RayStepIterations = 2;
         public float RayStepNoise = 1.0f / 255;
 
         public float InDepth = 0.05f;
@@ -51,7 +51,7 @@ namespace Barotrauma
         public override string ToString()
         {
             string settingsString = $"{losTexScale},{occluderAlphaThreshold},";
-            settingsString += $"{RayCount},{RayLength},{RaySteps},{RayStepNoise},";
+            settingsString += $"{RayCount},{RayLength},{RayStepIterations},{RayStepNoise},";
             settingsString += $"{InDepth},";
             settingsString += $"{PenumbraAngle},{PenumbraFalloff},{PenumbraAngularFalloff},{PenumbraAngleNoise}";
 
@@ -76,7 +76,7 @@ namespace Barotrauma
 
             RayCount = (int)values[2];
             RayLength = values[3];
-            RaySteps = (int)values[4];
+            RayStepIterations = (int)values[4];
             RayStepNoise = values[5];
 
             InDepth = values[6];

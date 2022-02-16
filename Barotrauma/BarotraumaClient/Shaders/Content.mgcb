@@ -13,6 +13,12 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin blueprintshader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:blueprintshader.fx
+
 #begin blurshader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -37,11 +43,29 @@
 /processorParam:DebugMode=Auto
 /build:gradientshader.fx
 
+#begin grainshader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:grainshader.fx
+
+#begin losraycast.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:losraycast.fx
+
 #begin losshader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:losshader.fx
+
+#begin losshadow.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:losshadow.fx
 
 #begin postprocess.fx
 /importer:EffectImporter
@@ -55,27 +79,15 @@
 /processorParam:DebugMode=Auto
 /build:solidcolor.fx
 
-#begin watershader.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:watershader.fx
-
-#begin grainshader.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:grainshader.fx
-
 #begin thresholdtint.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:thresholdtint.fx
 
-#begin blueprintshader.fx
+#begin watershader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:blueprintshader.fx
+/build:watershader.fx
 
