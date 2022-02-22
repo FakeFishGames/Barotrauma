@@ -1192,13 +1192,13 @@ namespace Barotrauma
             {
                 headInWater = false;
                 inWater = false;
+                RefreshFloorY(ignoreStairs: Stairs == null);
                 if (currentHull.WaterVolume > currentHull.Volume * 0.95f)
                 {
                     inWater = true;
                 }
                 else
                 {
-                    RefreshFloorY(ignoreStairs: Stairs == null);
                     float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
                     if (targetMovement.Y < 0.0f)
                     {

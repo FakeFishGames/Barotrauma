@@ -71,7 +71,7 @@ namespace Barotrauma
             }
             // Status effects are often used to alter item condition so using the Containable Item Identifiers directly can lead to unwanted results
             // For example, placing welding fuel tanks inside oxygen tank shelves
-            bool defaultContainableItemIdentifiers = true;
+            bool useDefaultContainableItemIdentifiers = true;
             var potentialContainablePrefabs = MapEntityPrefab.List
                 .Where(mep => mep is ItemPrefab ip && ItemContainer.ContainableItemIdentifiers.Any(i => i == ip.Identifier || ip.Tags.Contains(i)))
                 .Cast<ItemPrefab>();
@@ -122,7 +122,7 @@ namespace Barotrauma
                                 default:
                                     continue;
                             }
-                            defaultContainableItemIdentifiers = false;
+                            useDefaultContainableItemIdentifiers = false;
                             if (statusEffect.TargetIdentifiers != null)
                             {
                                 foreach (string target in statusEffect.TargetIdentifiers)
@@ -150,9 +150,11 @@ namespace Barotrauma
                     }
                 }
             }
-            var newIdentifiers = defaultContainableItemIdentifiers ? ItemContainer.ContainableItemIdentifiers.ToImmutableHashSet() : validContainableItemIdentifiers.ToImmutableHashSet();
-            AllValidContainableItemIdentifiers.Add(Container.Prefab, newIdentifiers);
-            return newIdentifiers;
+            var identifiers = useDefaultContainableItemIdentifiers ?
+                potentialContainablePrefabs.Select(p => p.Identifier).ToImmutableHashSet() :
+                validContainableItemIdentifiers.ToImmutableHashSet();
+            AllValidContainableItemIdentifiers.Add(Container.Prefab, identifiers);
+            return identifiers;
         }
 
         protected override float GetPriority()

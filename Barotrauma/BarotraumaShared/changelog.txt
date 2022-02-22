@@ -1,283 +1,99 @@
 ---------------------------------------------------------------------------------------------------------
-v0.16.5.0
----------------------------------------------------------------------------------------------------------
-
-- Misc fixes to Herja, Winterhalter, and Barsuk (unstable only).
-- Fixed certain talents (e.g. Bounty Hunter) not working if the target is killed "indirectly" (e.g. bloodloss caused by severing a limb).
-- Increased bandit and pirate aim speeds (unstable only).
-- Fixes character resetting in MP campaign if you join mid-round and don't get to spawn in before the next round in a campaign you've previously played in.
-- Increased handcannon round's max stack size to 12 (unstable only).
-- Fixed error in the medical clinic UI when trying to heal a character whose owner has disconnected (even if the character is still alive). Unstable only.
-
----------------------------------------------------------------------------------------------------------
-v0.16.4.0
----------------------------------------------------------------------------------------------------------
-
-Changes and additions:
-- Sounds for the new monster variants.
-- Adjusted animations ragdolls and animations for the variants.
-- Decreased the initial recharge rate of Dugong's supercapacitors a bit and slightly increased the reactor output (the supercapacitors were a bit too much for the reactor to handle).
-- Husked Crawler: Reduced the gunshotwound and stun resistances from 60% to 40%. Decreased the cooldown time when attacking walls.
-- Crawler Broodmother is resistant to stuns, like all the other bigger monsters.
-- Slightly adjusted the combat strengths of Hammerhead Matriarch, Mudraptor Hatchling and Mudraptor Veteran.
-- Increased Crawler Broodmother's health from 800 to 1000.
-- Increased Crawler's health from 65 to 80.
-- Increased Crawler Hatchling's health from 32 to 40.
-- Add vitality multipliers for all Crawlers: more damage at head, less at tail or legs/arms.
-- Increased revolver dmg from 30 to 35 and decreased bleeding from 40 to 30.
-- Handcannon: increase bleeding from 50 to 70 (unstable only).
-
-Fixes:
-- Fixed the Depleted Fuel SMG Magazine using the recycle recipe of the regular SMG Magazine.
-- Fixed SMG magazine recyle recipes not requiring the talent.
-- Fixed beacon missions not being displayed as completed mid-round in the tab menu after the beacon's been activated (unstable only).
-- Fixed bots not re-equipping body armor/ballistic helmet/something else when they drop the diving gear.
-- Waypoint fixes to Herja, Humpback, Orca, Orca2, R-29, and Remora.
-- Fixes to Herja, Winterhalter, and Barsuk (unstable only).
-- Fixed a nullref exception in CharacterHUD.Draw when an icon can't be found for a campaign interaction.
-- Upgrade supercapacitor max recharge speed in subs saved prior to v0.16.3.0 (unstable only).
-- Remove store icon from items when they're picked up by a bot (unstable only).
-- Fixed colliders being off on clothing items and ballistic helmets having a different scale when not worn (unstable only).
-- Fixed bots having issues with some stairs. Note: these changes might require alterations on stair waypoints. Currently the generator doesn't do perfect job there. Look for the examples on how to fix them manually in the vanilla subs.
-- Fixed inability to clone docking ports in the sub editor (unstable only).
-- Fixed LevelTriggers with multiple fixtures not deactivating when the triggerer leaves them (e.g. slowdown from spiky bushes not going away, unstable only).
-- Fixed crashing when a status effect tries to spawn a non-projectile using the "Target" rotation type (e.g. when a watcher emits acid, unstable only).
-
----------------------------------------------------------------------------------------------------------
-v0.16.3.0
----------------------------------------------------------------------------------------------------------
-
-Changes and additions:
-- Optimized multiplayer store interface.
-- Set supercapacitors on subs to be charging by default (unstable only).
-- Added damage sounds to doors when they take 10 or more damage.
-- Made nav terminals output the position of the transducer instead of the sub when using the new "center on transducer" setting (unstable only).
-- Made outpost containers' sprite depths more consistent with other containers.
-- Added tags to outpost medical compartments and made them linkable.
-- Mission completion and failure icons are now displayed mid-round in the tab menu.
-- Monster mission reward and difficulty level adjustments.
-- Adjustments to the random monster spawn events.
-- The new monster variants now also spawn in the multiplayer single mission -mode rounds.
-- More polished monster variants (still WIP)
-- Added a ranged attack for Crawler Broodmother.
-- An overall balance and behavior fix pass on all monsters. Feedback is welcome.
-- Moloch Pupa and Hammerhead Matriarch now also drop some loot.
-- Adjusted the loot dropped by Crawler Broodmother, Giant Spineling, and Bonethresher.
-- Crawler Eggs now deconstruct into suplhuric acid (and adrenaline gland, if they are not the smallest variants).
-- Changed the small arms max stack sizes to either 6 or 12 when the clip size is 6. Makes it less tedious to use the extra ammunition.
-- Tigerthreshers can now target doors.
-- Monsters that try to get inside the sub, should now notice and priorize doors more overall. Affects e.g. Mudraptors, and to lesser extent Crawlers (and Tigerthreshers).
-- Reduced the range where the bots can spot enemies outside of the sub.
-- Improved bots' ability to return back to the submarine from caves.
-
-Talent nerfing:
-- Removed the special stat boosts from "Olympian" (now it only increases the skill cap to 200).
-- Halved the amount of damage "Still Kicking" heals (100 -> 50)
-- Reduced gunshot wounds inflicted by handcannon.
-- "True Potential" only has a chance of instakilling things smaller than a moloch.
-- Halved damage buff from "Quickdraw" (80% -> 40%).
-- Reduced skill gain from "Field Medic" (7 -> 3).
-- Nerfed "Warlord" (20% chance of doubling the damage -> 5% chance).
-- Reduced damage buff from "Expert Commando" (40% -> 20%).
-
-Fixes:
-- Misc fixes to Barsuk, Herja, Winterhalter and Orca 2.
-- Fixed crashing when dragging a docking port in the sub editor (unstable only).
-- Fixed turrets being able to pull power from supercapacitor's power_in connection (unstable only).
-- Fixed cursor position jittering when the sub is moving fast.
-- Fixed discharge coils in Berilia and Orca 2 being connected to junction boxes instead of supercapacitors.
-- Fixed wall bodies generating twice on abyss islands without caves, and the 1st generated wall not getting mirrored along with the level, leading to "invisible walls" in some areas of the abyss in mirrored levels.
-- Pirates that are outside or unconscious count as being dead in the pirate missions. Fixes pirate missions failing if e.g. one of the pirates gets stranded outside their sub.
-- Fixed some turrets being possible to power with batteries, even though the maximum power output of the batteries shouldn't be high enough.
-- Fixed bots dropping the syringe inside PUCS when replacing the oxygen tank.
-- Fixed spineling mission using "Giant Spineling" as the sonar label on all the spinelings (unstable only).
-- Fixed bots sometimes failing to find a path to a docked shuttle or drone.
-- Fixed sound effects not playing when a monster hits the sub's inner wall.
-- Fixed correct sprite not being used in the great sea on the campaign map.
-- Fixed "settings" text overlapping in the settings menu when using a very large text size.
-- EventManager doesn't consider monsters in a docked non-player sub (e.g. abandoned outpost) to be "inside the sub". Fixes intensity always being at 100% in monster-infested outposts.
-- Fixed outpost cabinet's sprite having empty space above it.
-- Fixed inability to put syringe guns, toy hammers, welding tools, plasma cutters and sprayers in weapon holders.
-- Fixed the SMG magazine recycle recipe requiring a full magazine instead of an empty one.
-- Fixed monsters being unable to target inner walls when they are technically outside of the sub (= when there's no hull where they are). Such places, between the outer and the inner walls, can be found e.g. in Humpback.
-- Fixed escort missions giving huge rewards in higher difficulty levels.
-- Fixed NPCs reacting to combat between other characters when they shouldn't (e.g. when they don't witness it).
-- Fixed the drug dealer in "heartofgold" fleeing from the other bandits.
-- Fixed bandits (and pirates?) fleeing from the player after being in a combat for a while (unstable only).
-- Fixed mudraptors being unable to hit the targets that are very near.
-- Fixed tigerthreshers getting stuck on doors instead of attacking them (unstable only).
-- Fixed monsters sometimes getting stuck near the Humpback's bottom railgun.
-- Fixed monsters getting stuck on trying to reach open gaps that are on the other side of the sub.
-- Fixed decapitating not working as it should.
-- Fixed being able to grab hostile NPCs.
-- Fixed bots not always reacting to monsters when they should be able to see them, while swimming outside.
-- Fixed bots accidentally damaging friendly characters while trying to hit Swarmfeeders latched on to them.
-- Fixed bots not using melee weapons when there's Swarmfeeders latched on to them.
-- Fixed bots being able to shoot without any delay if they already have a weapon equipped.
-- Fixed some monsters, like crawlers, trying to target walls with lots of gaps even though there are better targets closer to them.
-- Fixed bots taking battery cells from portable pumps without considering their condition when acting on the Recharge Battery Cells order.
-
-Modding:
-- Fixed crashing in multiplayer when there are spectators in the server and someone reaches the final stage of a modded husk affliction that allows remaining in control of the final form.
-- Fixed wearables that are equipped into multiple slots (e.g. InnerClothes+OuterClothes) not being visible when worn.
-
----------------------------------------------------------------------------------------------------------
-v0.16.2.0
----------------------------------------------------------------------------------------------------------
-
-Changes and additions:
-- Added 3 new monster variants: Giant Spineling, Crawler Broodmother and Veteran Mudraptor.
-- Added the Submarine tab to the multiplayer campaign store to allow selling items on the submarine.
-- Added new campaign store related client permissions: use campaign store, buy items, sell inventory items, and sell submarine items.
-- Fixed wall healths being half of what they should be on vanilla subs, increased structure damages to compensate.
-- Prevented selling items from submarine containers tagged with "donttakeitems", e.g. constructors, deconstructors.
-- Added a new "Assault Enemy" order: bots with the order will seek out and attack any hostile characters in any connected submarines or outposts.
-- Made the order quick-assigning logic prefer characters who don't have the order yet (among the characters with the appropriate job).
-- Made it possible to use the order quick-assignment to give the Fix Leaks order to all character (although mechanics, engineers, and assistants are still preferred).
-- Misc improvements and fixes to Winterhalter, Herja and Barsuk (unstable only).
-- Balanced mission rewards, commonness and difficulties.
-- Optimizations to gap logic.
-- Chaingun projectiles and canister shells cause lacerations instead of gunshot wounds.
-- Added recycle recipe to SMG magazines.
-- Significantly reduced the speed at which welding tools fix walls.
-- Bots can find buttons connected to a door using links made in the sub editor. Allows working around complex circuits that prevent the bots from figuring out which button controls a door.
-- Allow using cheats in editors.
-- Don't show "hidden in-game" docking ports on the sonar, option to disable the docking port's particle and sound effects.
-- The prompt about forbidden words in the server's name is only shown when trying to start a public server.
-- Show prices in the submarine specs window (previously there was no way to see a sub's price in the server lobby).
-- Allow wiring non-interactable items and accessing non-interactable containers in the sub editor.
-
-Fixes:
-- Fixed static lights being on even if turned off in the sub editor (unstable only).
-- Fixed bots sometimes getting stuck on ladders while swimming.
-- Fixed some hairs clipping through hats (unstable only).
-- Fixed bots returning to the sub even when they have an active wait order. Happened when the order was given inside and then when e.g. the character is controlled by the player, and then when the player changes the character, the bot falls to the "find safety objective", because it's not allowed to stay outside.
-- Fixed aggressive boarders not being aggressive enough inside the player sub, because they couldn't target things that were blocked by a wall.
-- Fixed Molochs not doing anything when there's babies around.
-- Fixed Mudraptors not staying together in swarms.
-- Adjusted threshers' targeting priorities. Tigerthreshers can now damage doors, but should do so only when they get inside.
-- Fixed crouching animation not appearing in MP when moving backwards while crouching (unstable only).
-- Fixed crashing when trying to send a messagebox to clients using console commands (unstable only).
-- Fixed some terminals not working in alien ruins (unstable only).
-- Fixed pumps not taking the volumes/shapes of the linked hulls into account when using "set_targetlevel", causing the neural level to be off in irregularly shaped multi-hull ballasts.
-- Fixed artifacts sometimes spawning outside the level when there's no artifact holder to place them in (e.g. when having 2 artifact missions active at the same time).
-- Fixed plasma cutter doing damage to all limbs, not just the one it hits (unstable only).
-- The electrical grid in beacon stations is turned indestructible after activating it. Should fix beacon missions sometimes failing for no apparent reason (if something happened to damage the beacon's walls during the round and flood it).
-- Fixed crashing when receiving a chat message when controlling a character with no inventory (unstable only).
-- Fixed monsters continuing to eat a characters who've been revived with console commands (leading to weird results, such as the character being able to run around after being dismembered)..
-- Attempt to fix a nullref exception in Map.RemoveFogOfWar (suspecting it was caused by a mod that didn't configure the campaign map's sprite for some biome).
-- Fixed console error when trying to make a legacy husk crouch.
-- Fixed the dialogue reserved for rearranging character orders not being used in multiplayer.
-- Fixed Operate orders not being dismissed automatically when another character is ordered to operate the same device.
-- Fixed WiFi components receiving non-radio chat messages in single player.
-- Fixed nav terminal's docking button staying visible if the terminal is disconnected from the docking port by deactivating a relay between them.
-
-Modding:
-- Fixed Rope component not attaching to the limb it's fired from in multiplayer (doesn't affect any vanilla content).
-
----------------------------------------------------------------------------------------------------------
-v0.16.1.0
----------------------------------------------------------------------------------------------------------
-
-Changes and additions:
-- Added 2 new subs: Herja and Winterhalter.
-- Improvements and fixes to Barsuk or Orca 2.
-- Improvements to clothing and headgear sprites.
-- Improvements to the human sprites.
-- Item update optimizations.
-- The order of the crew list is saved between rounds in single player.
-- Pulse laser ammo can be bought from outposts and cities.
-- Indicate when a bot is following someone else than you on the crew list's order icons.
-- Bots that follow a character who's going inside/outside stick closer to the character they're following. Helps the bots to get back inside Barsuk with you.
-- Wired Herja and Barsuk diving suit lockers (unstable only).
-- Chaingun tweaks: doubled turning speed when firing, reduced charging up time, reduced ammo consumption and made the ammo boxes more expensive.
-- Simplified Remora drone docking system.
-- Show notifications about reputation changes mid-round.
-- Escorted NPCs drop the items they took from the sub (like suits) at the end of the round.
-- Added some extra logging to diagnose the "did not receive STARTGAMEFINALIZE message from the server" errors.
-- Added warnings when the game fails to run the physics at the desired 60 updates per second (which would cause rubberbanding in multiplayer). The warnings are shown below the FPS when the client is running slowly, and in the debug console of the host/moderators/admins when the server is.
-- Additions to supercapacitors to make the new high recharge speed work better: warning indicators on the capacitor UI, high recharge speed makes the capacitors emit a red glow and smoke, show the current recharge speed (in kW, not just percentage) in the UI, made the recharge speed adjust more slowly (to make it less easy to wreck the electrical grid with rapid capacitor adjustments).
-- Adjusted supercapacitors: reduced the max power consumption, increased efficiency (less load, the time it takes to recharge is still the same). Unstable only.
-- Made turret icons on the minimap gray instead of red when not manned (easy to think there's something wrong with the turret when it's red).
-- Abandoned outpost's oxygen generators now consume power.
-- Adjusted affliction heal costs in the medical clinic (unstable only).
-- Made characters crouch a little lower (enough to make it possible to shoot while standing behind a crouching character).
-- Added a "sendchatmessage" console command with an option to configure the color of the message.
-- Added button to align selected items and wire nodes to grid to the sub editor.
-
-Fixes:
-- Misc localization fixes and improvements.
-- Fixed tab menu's character tab not refreshing when switching to another character.
-- Fixed ballast flora still being present when you replace an infested lost shuttle in an outpost.
-- Fixed occasional crashes and entity ID errors when entering a new level with a ballast flora infested sub.
-- Fixed inability to swap SMG magazines (or other items that go inside the held item) by double-clicking.
-- Fixed "atmos machine" not spawning psychosis artifacts.
-- Removed "periscopes determine which turret to focus on using the trigger_out connection instead of position_out" from the changelog (decided not to change this after all, because it causes problems and the position_out behavior can be worked around using relays). (unstable only)
-- Fixed "center on sonar transducer" setting working backwards (unstable only).
-- Fixed ability to remove tainted genetic materials' negative effects in the clinic (unstable only).
-- Fixed genetic materials being tainted by default (unstable only).
-- Fixed pets becoming hostile towards the crew and other pets if a human attacks the character they're protecting.
-- Fixed bots reacting (fleeing/attacking) to any amount of damage their crewmates do to them in multiplayer (unstable only).
-- Fixed security bots pointing their guns at you indefinitely when you inflict a small amount of damage on them (unstable only).
-- Fixed "failed to parse the string to Vector2" when loading bot orders that have been saved on a system that uses comma as a decimal separator.
-- Fixed sub editor's group list being empty when re-entering the editor.
-- Fixed rounding error in RespawnManager that caused it to require 1 extra dead player to trigger a respawn (e.g. 9 players and a minimum of 30% players to respawn required 3 players, but the client-side texts showed 2).
-- Fixed crashing when opening the head dropdown lists in the single player campaign's character customization menu (unstable only).
-- Fixed wikiimage_sub outputting an empty image (unstable only).
-- Fixed "stairs left" appearing mirrored in the status monitor's sub blueprint and in the sub editor's entity selection menu.
-- Fixed pirates not operating turrets when they have no power. 
-- Fixed Wifi Component's "set_channel" input not working when sending signals to it via chat in multiplayer.
-- Fixed autoshotgun not taking stacks into account in the ammo indicator below the inventory slot (= displaying it as being full when there's one shell in each slot, even though more could be stacked on the slots).
-- Fixed hitscan turrets sometimes hitting targets inside your own sub when there's linked subs present.
-- Fixed bots not unequipping diving suits when they have an order but not actively following it (i.e. they are on idle).
-- Fixed broken Outpost Wall 3 sprite (unstable only).
-- Fixed junction boxes' signal components not working (unstable only).
-- Fixed artifact's effects not working when the artifact is held by a character (unstable only).
-- Fixed faraday and nasonov artifacts' periodic explosions stopping if the round is ended during their 0.5s "reset" period.
-- Fixed oxygenite shards not exploding in depth charge shells.
-- Fixed endworm not having a burn damage modifier in the right tooth.
-- Fixed killer sometimes being determined incorrectly when a character gets killed by something else than another character: e.g. if a character got crushed by pressure, the character who last did damage to them was considered to be the killer, which could for example lead to achievements being unlocked in inappropriate situations.
-
-Modding:
-- If a mod makes a vanilla item movable/detachable and sets it as being attached by default, attach it to a wall when loading a sub that already had those items placed. I.e. making static devices movable doesn't cause them to deattach in existing subs.
-- Fixed monster AI's targeting priorities doing nothing if the threshold is 0 and the target hasn't done any damage.
-- Fixed custom ID card tags not working in wrecks.
-
----------------------------------------------------------------------------------------------------------
-v0.16.0.0
+v0.16.6.0
 ---------------------------------------------------------------------------------------------------------
 
 Changes and additions:
 - Added a medical clinic to outposts that allows you to heal your crew for a price.
-- Added Barsuk, a small beginner-level sub.
+- Added three new sub: Barsuk, Herja and Winterhalter.
+- Improvements and polish to the human sprites.
+- Improvements and polish to clothing and headgear sprites.
+- Added the Submarine tab to the multiplayer campaign store to allow selling items on the submarine.
+- Prevented selling items from submarine containers tagged with "donttakeitems", e.g. constructors, deconstructors.
+- Added new campaign store related client permissions: use campaign store, buy items, sell inventory items, and sell submarine items.
 - Entities can be grouped together and the groups selectively hidden in the submarine editor.
+- Balanced mission rewards, commonness and difficulties.
 - Added some new decorative items and structures.
 - Adjusted medical items' effects on bleeding and burns. Bandages, plastiseal and antibiotic glue are now much more effective at treating them, and morphine & fentanyl only heal them by a negligible amount.
 - Heavily increased supercapacitor's power consumption and made the recharge speed increase exponentially when the recharge rate is increased.
 - Optimizations to signal logic, status effects and property conditionals.
+- Item update optimizations.
+- Optimizations to gap logic.
+- Optimized multiplayer store interface.
 - Added "separator" property to Concat Component.
 - Added "power_value_out" and "load_value_out" connections to junction boxes.
 - Added "set_output" connection to Greater Than Component, Equals Component and Regex Component.
 - Made alien materials spawn in abyss islands.
 - Exposed wall healths in the sub editor.
-- Modified Orca2 and R-29 reactor values so they're more in line with other subs.
+- Modified Orca 2 and R-29 reactor values so they're more in line with other subs.
 - Made ballast flora toxins more visible and made them emit a sound.
-- Health scanner doesn't show buffs from talents.
 - Made impacts toss items around less effectively, especially when the item is heavy.
-- Gave spinelings and threshers inventories (+ added alien blood as loot) to make it possible for "gene harvester" and "deep sea slayer" to spawn loot.
-- Monsters' burns don't heal by themselves.
 - "Allow rewiring" server setting doesn't affect wrecks, pirate subs or ruins.
 - Added an option to disable all in-game hints to the hint message box.
 - Option to make sonar displays center on the connected sonar transducer.
 - Made the sizes of signal components consistent (32x32px, they also align to the grid now).
 - Don't allow fabricators to take items from linked containers the user doesn't have access to.
 - Connected diving suit lockers to oxygen in vanilla subs.
+- Pulse laser ammo can be bought from outposts and cities.
+- Chaingun tweaks: doubled turning speed when firing, reduced charging up time, reduced ammo consumption and made the ammo boxes more expensive.
+- Simplified Remora drone docking system.
+- Show notifications about reputation changes mid-round.
+- Escorted NPCs drop the items they took from the sub (like suits) at the end of the round.
+- Added warnings when the game fails to run the physics at the desired 60 updates per second (which would cause rubberbanding in multiplayer). The warnings are shown below the FPS when the client is running slowly, and in the debug console of the host/moderators/admins when the server is.
+- Made turret icons on the minimap gray instead of red when not manned (easy to think there's something wrong with the turret when it's red).
+- Abandoned outpost's oxygen generators now consume power.
+- Made characters crouch a little lower (enough to make it possible to shoot while standing behind a crouching character).
+- Added a "sendchatmessage" console command with an option to configure the color of the message.
+- Added button to align selected items and wire nodes to grid to the sub editor.
+- Allow using cheats in editors.
+- Don't show "hidden in-game" docking ports on the sonar, option to disable the docking port's particle and sound effects.
+- The prompt about forbidden words in the server's name is only shown when trying to start a public server.
+- Show prices in the submarine specs window (previously there was no way to see a sub's price in the server lobby).
+- Allow wiring non-interactable items and accessing non-interactable containers in the sub editor.
+- Chaingun projectiles and canister shells cause lacerations instead of gunshot wounds.
+- Added recycle recipe to SMG magazines.
+- Significantly reduced the speed at which welding tools fix walls.
+- Changed the small arms max stack sizes to either 6 or 12 when the clip size is 6. Makes it less tedious to use the extra ammunition.
+- Added damage sounds to doors when they take 10 or more damage.
+- Made outpost containers' sprite depths more consistent with other containers.
+- Added tags to outpost medical compartments and made them linkable.
+- Mission completion and failure icons are now displayed mid-round in the tab menu.
+
+Monsters:
+- Added 3 new monster variants: Giant Spineling, Crawler Broodmother and Veteran Mudraptor.
+- An overall balance and behavior fix pass on all monsters. Feedback is welcome.
+- Monster mission reward and difficulty level adjustments.
+- Adjustments to the random monster spawn events.
+- Adjusted the loot dropped by Crawler Broodmother, Giant Spineling, and Bonethresher.
+- Moloch Pupa and Hammerhead Matriarch now also drop some loot.
+- Crawler Eggs now deconstruct into suplhuric acid (and adrenaline gland, if they are not the smallest variants).
+- Fixed mudraptors being unable to hit the targets that are very near.
+- Fixed monsters sometimes getting stuck near the Humpback's bottom railgun.
+- Fixed monsters getting stuck on trying to reach open gaps that are on the other side of the sub.
+- Fixed aggressive boarders not being aggressive enough inside the player sub, because they couldn't target things that were blocked by a wall.
+- Fixed Molochs not doing anything when there's babies around.
+- Fixed Mudraptors not staying together in swarms.
+- Fixed monsters continuing to eat a characters who've been revived with console commands (leading to weird results, such as the character being able to run around after being dismembered)..
+- Fixed some monsters, like crawlers, trying to target walls with lots of gaps even though there are better targets closer to them.
+- Fixed monsters being unable to target inner walls when they are technically outside of the sub (= when there's no hull where they are). Such places, between the outer and the inner walls, can be found e.g. in Humpback.
+- Tigerthreshers can now target doors.
+- Monsters that try to get inside the sub, should now notice and priorize doors more overall. Affects e.g. Mudraptors, and to lesser extent Crawlers (and Tigerthreshers).
+- Monsters' burns don't heal by themselves.
+- Fixed hammerhead matriarchs sometimes spawning in low-difficulty levels.
+- Fixed endworm not having a burn damage modifier in the right tooth.
+- Changed Golden Hammerhead's behavior towards stronger monsters.
 
 AI:
+- The order of the crew list is saved between rounds in single player.
+- Indicate when a bot is following someone else than you on the crew list's order icons.
 - When quick-assigning orders, prioritize the characters with the same Operate order only when they are targeting the same item.
 - When quick-assigning orders, don't prioritize characters with the same Maintenance order. Otherwise, Maintenance orders will always be quick-assigned to characters who already have the samer order. This will prevent giving out multiple Maintenance orders of the same type to multiple characters using the quick-assignment logic.
 - Allow quick-assigning the same kind of Operate order to multiple characters. Previously, it would always be given to the character that already had the same kind of order.
+- Added a new "Assault Enemy" order: bots with the order will seek out and attack any hostile characters in any connected submarines or outposts.
+- Made the order quick-assigning logic prefer characters who don't have the order yet (among the characters with the appropriate job).
+- Made it possible to use the order quick-assignment to give the Fix Leaks order to all character (although mechanics, engineers, and assistants are still preferred).
 - Fixed bots sometimes getting stuck while trying to fix a leak that's not in the same sub (e.g. bot in Remora and the leak in the drone).
+- Reduced the range where the bots can spot enemies outside of the sub.
+- Improved bots' ability to return back to the submarine from caves.
 - Fixed oxygen shards from old saves still being used as oxygen sources by bots.
 - Fixed bots getting stuck in certain spots with ladders (e.g. Berilia's reactor room).
 - Fixed contextual "clean up" order not being visible for weapons.
@@ -292,21 +108,57 @@ AI:
 - Change how captains (and theoretically other bots with an autonomous fight intruders order) behave: instead of idling around, they'll flee to the safety. And if there's no security officers around, they should fight the enemy aggressively.
 - Fixed bots filling target containers with items that can't be refilled/recharged when given the Load Items order (e.g. putting welding fuel tanks in oxygen tank shelves).
 - Made bots prefer the same fuel rods or ammo as already loaded when they're operating a reactor or a turret and need to find new ones.
+- Bots that follow a character who's going inside/outside stick closer to the character they're following. Helps the bots to get back inside with you.
+- Fixed pets becoming hostile towards the crew and other pets if a human attacks the character they're protecting.
+- Fixed pirates not operating turrets when they have no power. 
+- Fixed bots not unequipping diving suits when they have an order but not actively following it (i.e. they are on idle).
+- Fixed Operate orders not being dismissed automatically when another character is ordered to operate the same device.
+- Fixed the dialogue reserved for rearranging character orders not being used in multiplayer.
+- Fixed bots sometimes getting stuck on ladders while swimming.
+- Fixed bots returning to the sub even when they have an active wait order. Happened when the order was given inside and then when e.g. the character is controlled by the player, and then when the player changes the character, the bot falls to the "find safety objective", because it's not allowed to stay outside.
+- Bots can find buttons connected to a door using links made in the sub editor. Allows working around complex circuits that prevent the bots from figuring out which button controls a door.
+- Fixed bots taking battery cells from portable pumps without considering their condition when acting on the Recharge Battery Cells order.
+- Fixed bots not always reacting to monsters when they should be able to see them, while swimming outside.
+- Fixed bots accidentally damaging friendly characters while trying to hit Swarmfeeders latched on to them.
+- Fixed bots not using melee weapons when there's Swarmfeeders latched on to them.
+- Fixed bots being able to shoot without any delay if they already have a weapon equipped.
+- Fixed bots dropping the syringe inside PUCS when replacing the oxygen tank.
+- Fixed bots sometimes failing to find a path to a docked shuttle or drone.
+- Fixed NPCs reacting to combat between other characters when they shouldn't (e.g. when they don't witness it).
+- Fixed bots not re-equipping body armor/ballistic helmet/something else when they drop the diving gear.
+- Fixed bots having issues with some stairs. Note: these changes might require alterations on stair waypoints. Currently the generator doesn't do perfect job there. Look for the examples on how to fix them manually in the vanilla subs.
+- Fixed bots sometimes trying to put items they're cleaning up into containers inside fabricators/deconstructors (e.g. an oxygen tank into a diving suit in a fabricator).
+- Fixed bots equipping gene splicers when cleaning them up, causing the genetic material to get destroyed when the bot puts the splicer in a container.
+
+Talents:
+- Removed the special stat boosts from "Olympian" (now it only increases the skill cap to 200).
+- Halved the amount of damage "Still Kicking" heals (100 -> 50)
+- Reduced gunshot wounds inflicted by handcannon.
+- "True Potential" only has a chance of instakilling things smaller than a moloch.
+- Halved damage buff from "Quickdraw" (80% -> 40%).
+- Reduced skill gain from "Field Medic" (7 -> 3).
+- Nerfed "Warlord" (20% chance of doubling the damage -> 5% chance).
+- Reduced damage buff from "Expert Commando" (40% -> 20%).
+- Health scanner doesn't show buffs from talents.
+- Fixed "unused talent points" indicator staying visible after all talents have been unlocked if the character's gained extra talent points from other talents.
+- Fixed incorrect talents sometimes unlocking server-side when unlocking "All-Seeing Eye". Happened because the server checked how many talents the client can unlock before applying All-Seeing Eye, which meant that the 3 extra talents would not be available, and the server would leave the last 3 talents unlocked.
+- Fixed "Inspired to Act" talent only giving a skill bonus of 9.98 instead of 10.
+- Fixed "Atmos Machine" talent not spawning psychosis artifacts or alien pistols.
+- Fixed "Hazardous Materials" considering any reactor outside the main sub (e.g. beacon station) a wreck reactor.
+- Fixed ranged weapons (including turrets) triggering "Electrochemist" talent's stun.
 
 Bugfixes:
+- Fixes character resetting in MP campaign if you join mid-round and don't get to spawn in before the next round in a campaign you've previously played in.
 - Fixed equipping two of the same genetic material and then unequipping one of them removing all the genetic effects.
 - Fixed "novice seafarer", "experienced seafarer" and "naval architect" achievements being possible to unlock even if cheats are enabled.
 - Fixed kills in multiplayer sessions not progressing the "xenocide" and "genocide" achievements, and kills being reported to Steam unreliably.
 - Fixed clients not spawning the respawn shuttle if they join after the server had disabled the shuttle mid-round, leading to an "entity not found" kick.
 - Fixed medical effects being different when the medical item is fired with a syringe gun.
+- Fixed wall healths being half of what they should be on vanilla subs, increased structure damages to compensate.
 - Fixed fabricator sometimes desyncing in MP when some of the ingredients are in the user's inventory.
 - Fixed clients trying to reconnect to SteamP2P indefinitely if establishing the initial connection fails, eventually leading to a crash.
 - Fixed "allow linking wifi to chat" server setting causing syncing problems with headsets. The setting wasn't synced with clients who don't have settings management permissions, which would cause them to get some of the wifi components' properties mixed up and sometimes prevent them from communicating using the headsets.
-- Fixed "unused talent points" indicator staying visible after all talents have been unlocked if the character's gained extra talent points from other talents.
 - Fixed motion detector requiring the target's velocity to be higher than the specified minimum velocity, instead of higher than or equal. As a result, a minimum velocity of 0 would not sometimes detect targets in range.
-- Fixed bots sometimes trying to put items they're cleaning up into containers inside fabricators/deconstructors (e.g. an oxygen tank into a diving suit in a fabricator).
-- Fixed hammerhead matriarchs sometimes spawning in low-difficulty levels.
-- Fixed bots equipping gene splicers when cleaning them up, causing the genetic material to get destroyed when the bot puts the splicer in a container.
 - Fixed an exploit that allowed combining genetic materials in deconstructors.
 - Fixed "fixitems" command setting genetic materials' condition to 100.
 - Fixed "reset to prefab" not resetting wall healths.
@@ -314,15 +166,13 @@ Bugfixes:
 - Orca 2: Fixed missing power wires to a couple small pumps, neutral ballast level, gunnery marked as wet room. Added a duct block between upper and lower deck. Some minor visual fixes.
 - Fixed voronoi sites sometimes getting placed outside the level's bounds, leading to messed up level geometry.
 - Fixed turrets always starting at rotation 0 at the beginning of the round (instead of halfway between the min/max angles like in the editor).
-- Fixed incorrect talents sometimes unlocking server-side when unlocking "All-Seeing Eye". Happened because the server checked how many talents the client can unlock before applying All-Seeing Eye, which meant that the 3 extra talents would not be available, and the server would leave the last 3 talents unlocked.
 - Fixed changing a delay component's delay using the editing hud not having an effect in-game when the component is receiving a continuous signal.
 - Take structures/items with a collider into account when calculating a sub's dimensions (as opposed to just hulls). Fixes dimensions being incorrect in the submarine's info if the sub includes structures that extend far outside the hulls.
 - Fixed crashing when swimming up from hull to another in a specific kind of hull configuration (two hulls side-by-side, with a gap leading up to another one).
 - Fixed oxygen shards from old saves still being used as oxygen sources by bots.
 - Fixed changes not being applied to all selected items when multi-editing a string field in the sub editor and deselecting the items without applying the changes by pressing enter.
 - The game doesn't try to save a campaign if an exception occurs at any point during the saving process (should fix rare occurrences of campaign saves getting corrupted).
-- Don't allow signals to deactivate ItemContainers. Fixes portable pumps' "toggle" input not working-
-- Fixed "inspired to act" talent only giving a skill bonus of 9.98 instead of 10.
+- Don't allow signals to deactivate ItemContainers. Fixes portable pumps' "toggle" input not working.
 - Fixed removed items staying visible on the status monitor's electrical tab.
 - Fixed plants still using the old values in old saves (i.e. dying too fast when not watered).
 - Outposts can't request the "psychosisartifact_event" item (an event-specific special artifact that looks identical to the normal ones).
@@ -331,9 +181,7 @@ Bugfixes:
 - Fixed motion detector's detect offset getting mirrored when copying a mirrored detector.
 - Fixed status monitor's submarine blueprint refreshing when initiating docking with a shuttle, instead of when the docking ports lock (sometimes causing the shuttle to appear slightly off from the docking port on the monito).
 - Fixed fabricator failing to stack oxygenite tanks.
-- Fixed "atmos machine" talent not spawning the alien pistol.
 - Fixed items in the player's inventory not getting highlighted as valid ingredients when using a fabricator.
-- Fixed fabricator failing to stack oxygenite tanks.
 - Attempt to fix a rare crash caused by ScalableFont.DrawStringWithColors.
 - Fixed freezing when trying to enable GameAnalytics from the settings menu on Mac.
 - Fixed locked connection panel and non-interactable lights in R-29.
@@ -343,17 +191,15 @@ Bugfixes:
 - Fixed oxygen tanks being misaligned in oxygen generators.
 - Fixed motion sensor not being able to detect subs in the sub editor test mode.
 - Fixed recycled volatile fulgurium rods incorrectly using mechanical instead of electrical skill.
-- Consider the character who severed a limb as the character who inflicted the afflictions caused by severing the limb. + Consider the character who caused bleeding as the character who caused the resulting bloodloss. Fixes achievements not unlocking if you kill a target by cutting its limbs off or by making it bleed to death.
+- Consider the character who severed a limb as the character who inflicted the afflictions caused by severing the limb. + Consider the character who caused bleeding as the character who caused the resulting bloodloss. Fixes achievements not unlocking and talents not triggering if you kill a target by cutting its limbs off or by making it bleed to death.
 - Fixed characters sometimes becoming momentarily unresponsive when swimming out from a hull.
 - Fixed speed penalty caused by the vegetation in caves sometimes not disappearing after passing through the vegetation.
 - Fixed links from a docking port to a linked sub not being considered valid in the sub editor (only a link from linked sub to a docking port). Now the order of the link doesn't matter.
 - Fixed repair window showing up if you use a periscope wired to a broken device.
 - Fixed sonar getting misaligned when switching to the docking mode (the amount of misalignment being relative to the distance of the docking port from the sub's center).
-- Fixed "hazardous materials" considering any reactor outside the main sub a wreck reactor.
 - Fixed light textures not rotating with the lamps in the sub editor.
 - Fixed elements in CustomInterface getting misaligned if the signal_out connections aren't used in sequential order (e.g. if you only connect a wire to outputs 2 and 3).
 - Fixed server including lines multiple times in the saved server logs (e.g. the 2nd saved log file would include some lines that were already saved to the 1st log file).
-- Fixed ranged weapons (including turrets) triggering electrochemist's stun.
 - Fixed initial husk infection message being displayed immediately after getting infected, not after the infection advances.
 - Fixed equip slots being misplaced if you open the health interface when the equip slots have been hidden.
 - Fixed wrecks sometimes not spawning in levels despite a wreck mission being selected.
@@ -367,6 +213,42 @@ Bugfixes:
 - Fixed monsters always eating the character they're grabbing, even when the monster is configured as not being able to eat (in practice only happened when a player controlled something like a fractal guardian and grabbed another character).
 - Fixed characters sometimes using the "priorities have changed" dialogue when giving a new order.
 - Fixed pumps' auto-controlled status not being updated correctly.
+- Added some extra logging to diagnose the "did not receive STARTGAMEFINALIZE message from the server" errors.
+- Misc localization fixes and improvements.
+- Fixed tab menu's character tab not refreshing when switching to another character.
+- Fixed ballast flora still being present when you replace an infested lost shuttle in an outpost.
+- Fixed occasional crashes and entity ID errors when entering a new level with a ballast flora infested sub.
+- Fixed inability to swap SMG magazines (or other items that go inside the held item) by double-clicking.
+- Fixed "failed to parse the string to Vector2" when loading bot orders that have been saved on a system that uses comma as a decimal separator.
+- Fixed rounding error in RespawnManager that caused it to require 1 extra dead player to trigger a respawn (e.g. 9 players and a minimum of 30% players to respawn required 3 players, but the client-side texts showed 2).
+- Fixed "stairs left" appearing mirrored in the status monitor's sub blueprint and in the sub editor's entity selection menu.
+- Fixed Wifi Component's "set_channel" input not working when sending signals to it via chat in multiplayer.
+- Fixed autoshotgun not taking stacks into account in the ammo indicator below the inventory slot (= displaying it as being full when there's one shell in each slot, even though more could be stacked on the slots).
+- Fixed hitscan turrets sometimes hitting targets inside your own sub when there's linked subs present.
+- Fixed faraday and nasonov artifacts' periodic explosions stopping if the round is ended during their 0.5s "reset" period.
+- Fixed oxygenite shards not exploding in depth charge shells.
+- Fixed killer sometimes being determined incorrectly when a character gets killed by something else than another character: e.g. if a character got crushed by pressure, the character who last did damage to them was considered to be the killer, which could for example lead to achievements being unlocked in inappropriate situations.
+- Fixed pumps not taking the volumes/shapes of the linked hulls into account when using "set_targetlevel", causing the neural level to be off in irregularly shaped multi-hull ballasts.
+- Fixed artifacts sometimes spawning outside the level when there's no artifact holder to place them in (e.g. when having 2 artifact missions active at the same time).
+- The electrical grid in beacon stations is turned indestructible after activating it. Should fix beacon missions sometimes failing for no apparent reason (if something happened to damage the beacon's walls during the round and flood it).
+- Attempt to fix a null reference exception in Map.RemoveFogOfWar (suspecting it was caused by a mod that didn't configure the campaign map's sprite for some biome).
+- Fixed nav terminal's docking button staying visible if the terminal is disconnected from the docking port by deactivating a relay between them.
+- Fixed cursor position jittering when the sub is moving fast.
+- Fixed discharge coils in Berilia and Orca 2 being connected to junction boxes instead of supercapacitors.
+- Fixed wall colliders generating twice on abyss islands without caves, and the 1st generated wall not getting mirrored along with the level, leading to "invisible walls" in some areas of the abyss in mirrored levels.
+- Pirates that are outside or unconscious count as being dead in the pirate missions. Fixes pirate missions failing if e.g. one of the pirates gets stranded outside their sub.
+- Fixed some turrets being possible to power with batteries, even though the maximum power output of the batteries shouldn't be high enough.
+- Fixed the drug dealer in the "heart of gold" event fleeing from the other bandits.
+- Fixed decapitating not working as it should.
+- Fixed being able to grab hostile NPCs.
+- Fixed sound effects not playing when a monster hits the sub's inner wall.
+- Fixed correct sprite not being used in the great sea on the campaign map.
+- Fixed "settings" text overlapping in the settings menu when using a very large text size.
+- EventManager doesn't consider monsters in a docked non-player sub (e.g. abandoned outpost) to be "inside the sub". Fixes intensity always being at 100% in monster-infested outposts.
+- Fixed outpost cabinet's sprite having empty space above it.
+- Fixed inability to put syringe guns, toy hammers, welding tools, plasma cutters and sprayers in weapon holders.
+- Fixed escort missions giving huge rewards in higher difficulty levels.
+- Fixed a nullref exception in CharacterHUD.Draw when an icon can't be found for a campaign interaction.
 
 Modding:
 - Added "HealCostMultiplier" attribute to AfflictionPrefabs that adjusts the heal cost in medical clinic.
@@ -377,6 +259,12 @@ Modding:
 - Don't allow setting an item's or limb's density to 0 (leads to "attempted to apply invalid force/torque" errors).
 - Fixed shields blocking projectiles from the user's weapon. Didn't affect any vanilla items, because all the shields are 2-hand items that prevent using a weapon at the same time.
 - Fixed ButtonTerminals without an ItemContainer component causing crashes.
+- If a mod makes a vanilla item movable/detachable and sets it as being attached by default, attach it to a wall when loading a sub that already had those items placed. I.e. making static devices movable doesn't cause them to deattach in existing subs.
+- Fixed monster AI's targeting priorities doing nothing if the threshold is 0 and the target hasn't done any damage.
+- Fixed custom ID card tags not working in wrecks.
+- Fixed Rope component not attaching to the limb it's fired from in multiplayer (doesn't affect any vanilla content).
+- Fixed crashing in multiplayer when there are spectators in the server and someone reaches the final stage of a modded husk affliction that allows remaining in control of the final form.
+- Fixed wearables that are equipped into multiple slots (e.g. InnerClothes+OuterClothes) not being visible when worn.
 
 ---------------------------------------------------------------------------------------------------------
 v0.15.23.0

@@ -24,11 +24,14 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch sb, bool editing, bool back = true)
         {
+            float depth = (ID % 255) * 0.000001f;
+
             if (GameMain.DebugDraw && Screen.Selected.Cam.Zoom > 0.1f)
             {
-                Vector2 center = new Vector2(WorldRect.X + rect.Width / 2.0f, -(WorldRect.Y - rect.Height / 2.0f));
-                GUI.DrawLine(sb, center, center + new Vector2(flowForce.X, -flowForce.Y) / 10.0f, GUI.Style.Red);
-                GUI.DrawLine(sb, center + Vector2.One * 5.0f, center + new Vector2(lerpedFlowForce.X, -lerpedFlowForce.Y) / 10.0f + Vector2.One * 5.0f, GUI.Style.Orange);
+                if (FlowTargetHull != null)
+                {
+                    DrawArrow(FlowTargetHull, IsHorizontal ? rect.Height: rect.Width, Math.Abs(lerpedFlowForce.Length()), Color.Red * 0.3f);
+                }
 
                 if (outsideCollisionBlocker.Enabled && Submarine != null)
                 {
@@ -44,9 +47,7 @@ namespace Barotrauma
             if (!editing || !ShowGaps || !SubEditorScreen.IsLayerVisible(this)) { return; }
 
             Color clr = (open == 0.0f) ? GUI.Style.Red : Color.Cyan;
-            if (IsHighlighted) clr = Color.Gold;
-
-            float depth = (ID % 255) * 0.000001f;
+            if (IsHighlighted) { clr = Color.Gold; }
 
             GUI.DrawRectangle(
                 sb, new Rectangle(WorldRect.X, -WorldRect.Y, rect.Width, rect.Height),
@@ -80,31 +81,36 @@ namespace Barotrauma
             {
                 for (int i = 0; i < linkedTo.Count; i++)
                 {
-                    Vector2 dir = IsHorizontal ?
-                        new Vector2(Math.Sign(linkedTo[i].Rect.Center.X - rect.Center.X), 0.0f)
-                        : new Vector2(0.0f, Math.Sign((rect.Y - rect.Height / 2.0f) - (linkedTo[i].Rect.Y - linkedTo[i].Rect.Height / 2.0f)));
-
-                    Vector2 arrowPos = new Vector2(WorldRect.Center.X, -(WorldRect.Y - WorldRect.Height / 2));
-                    arrowPos += new Vector2(dir.X * (WorldRect.Width / 2), dir.Y * (WorldRect.Height / 2));
-
-                    float arrowWidth = 32.0f;
-                    float arrowSize = 15.0f;
-
-                    bool invalidDir = false;
-                    if (dir == Vector2.Zero)
+                    if (linkedTo[i] is Hull hull)
                     {
-                        invalidDir = true;
-                        dir = IsHorizontal ? Vector2.UnitX : Vector2.UnitY;
+                        DrawArrow(hull, 32.0f, 15f, clr);
                     }
-
-                    GUI.Arrow.Draw(sb,
-                        arrowPos, invalidDir ? Color.Red : clr * 0.8f,
-                        GUI.Arrow.Origin, MathUtils.VectorToAngle(dir) + MathHelper.PiOver2,
-                        IsHorizontal ?
-                            new Vector2(Math.Min(rect.Height, arrowWidth) / GUI.Arrow.size.X, arrowSize / GUI.Arrow.size.Y) :
-                            new Vector2(Math.Min(rect.Width, arrowWidth) / GUI.Arrow.size.X, arrowSize / GUI.Arrow.size.Y),
-                        SpriteEffects.None, depth);
                 }
+            }
+
+            void DrawArrow(Hull targetHull, float arrowWidth, float arrowLength, Color clr)
+            {
+                Vector2 dir = IsHorizontal ?
+                    new Vector2(Math.Sign(targetHull.Rect.Center.X - rect.Center.X), 0.0f)
+                    : new Vector2(0.0f, Math.Sign((rect.Y - rect.Height / 2.0f) - (targetHull.Rect.Y - targetHull.Rect.Height / 2.0f)));
+
+                Vector2 arrowPos = new Vector2(WorldRect.Center.X, -(WorldRect.Y - WorldRect.Height / 2));
+                arrowPos += new Vector2(dir.X * (WorldRect.Width / 2), dir.Y * (WorldRect.Height / 2));
+
+                bool invalidDir = false;
+                if (dir == Vector2.Zero)
+                {
+                    invalidDir = true;
+                    dir = IsHorizontal ? Vector2.UnitX : Vector2.UnitY;
+                }
+
+                GUI.Arrow.Draw(sb,
+                    arrowPos, invalidDir ? Color.Red : clr * 0.8f,
+                    GUI.Arrow.Origin, MathUtils.VectorToAngle(dir) + MathHelper.PiOver2,
+                    IsHorizontal ?
+                        new Vector2(Math.Min(rect.Height, arrowWidth) / GUI.Arrow.size.X, arrowLength / GUI.Arrow.size.Y) :
+                        new Vector2(Math.Min(rect.Width, arrowWidth) / GUI.Arrow.size.X, arrowLength / GUI.Arrow.size.Y),
+                    SpriteEffects.None, depth);
             }
 
             if (IsSelected)
