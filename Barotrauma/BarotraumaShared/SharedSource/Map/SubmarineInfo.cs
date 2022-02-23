@@ -401,6 +401,7 @@ namespace Barotrauma
 
         public bool IsVanillaSubmarine()
         {
+            if (FilePath == null) { return false; }
             var vanilla = GameMain.VanillaContent;
             if (vanilla != null)
             {

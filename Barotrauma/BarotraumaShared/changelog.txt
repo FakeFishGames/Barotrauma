@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------------
+v0.16.6.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed captain tutorial being impossible to complete due to the docking button not activating on the nav terminal.
+- Fixed door lights appearing to be off in the tutorials.
+- Fixed crashing when you try to use the hotkeys or double-clicking to put an item inside another item you're holding in your left hand, but there's an item with no inventory in your right hand. 
+- Fixed inability to repair research stations.
+- Fixed status monitors crashing the game if the selected UI style doesn't define "IconOverflowIndicator".
+- Fixed crashing when trying to view the specs window of a sub that hasn't been saved yet (= if you create a new sub, go to the test mode and open the submarine tab in the tab menu).
+- Fixed some of Spineling's spikes getting hidden for 30 seconds instead of 15.
+
+---------------------------------------------------------------------------------------------------------
 v0.16.6.0
 ---------------------------------------------------------------------------------------------------------
 

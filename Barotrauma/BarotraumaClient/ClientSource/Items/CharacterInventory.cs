@@ -1131,8 +1131,8 @@ namespace Barotrauma
                 case QuickUseAction.PutToEquippedItem:
                     foreach (Item heldItem in character.HeldItems)
                     {
-                        if (heldItem.OwnInventory != null &&
-                            heldItem.OwnInventory.TryPutItem(item, Character.Controlled) || 
+                        if (heldItem.OwnInventory == null) { continue; }
+                        if (heldItem.OwnInventory.TryPutItem(item, Character.Controlled) || 
                             (heldItem.OwnInventory.Capacity == 1 && heldItem.OwnInventory.TryPutItem(item, 0, allowSwapping: true, allowCombine: false, user: Character.Controlled)))
                         {
                             success = true;

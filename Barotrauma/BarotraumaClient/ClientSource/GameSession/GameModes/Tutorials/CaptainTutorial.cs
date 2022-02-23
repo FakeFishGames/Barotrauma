@@ -220,12 +220,12 @@ namespace Barotrauma.Tutorials
             SetHighlight(captain_navConsole.Item, true);
             SetHighlight(captain_sonar.Item, true);
             SetHighlight(captain_statusMonitor, true);
-            captain_navConsole.UseAutoDocking = false;
             do
             {
                 //captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
                 yield return new WaitForSeconds(1.0f, false);
             } while (Submarine.MainSub.DockedTo.Any());
+            captain_navConsole.UseAutoDocking = false;
             RemoveCompletedObjective(segments[4]);
             yield return new WaitForSeconds(2f, false);
             TriggerTutorialSegment(5); // Navigate to destination

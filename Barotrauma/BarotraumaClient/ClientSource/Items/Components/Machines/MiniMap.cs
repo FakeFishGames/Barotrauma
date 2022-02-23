@@ -1420,10 +1420,11 @@ namespace Barotrauma.Items.Components
                         Vector2 drawPos = new Vector2(frame.Rect.Right - sizeX, frame.Rect.Y - sizeY / 2f);
 
                         UISprite icon = GUI.Style.IconOverflowIndicator;
-
-                        const int iconPadding = 4;
-                        icon.Draw(spriteBatch, new Rectangle((int) drawPos.X - iconPadding, (int) drawPos.Y - iconPadding, (int) maxWidth + iconPadding * 2, (int) maxWidth + iconPadding * 2), Color.White, SpriteEffects.None);
-
+                        if (icon != null)
+                        {
+                            const int iconPadding = 4;
+                            icon.Draw(spriteBatch, new Rectangle((int) drawPos.X - iconPadding, (int) drawPos.Y - iconPadding, (int) maxWidth + iconPadding * 2, (int) maxWidth + iconPadding * 2), Color.White, SpriteEffects.None);
+                        }
                         GUI.DrawString(spriteBatch, drawPos, text, GUI.Style.TextColor, font: GUI.SubHeadingFont);
                     }
                     break;
