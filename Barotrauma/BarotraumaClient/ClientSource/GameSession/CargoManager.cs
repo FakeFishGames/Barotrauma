@@ -170,7 +170,7 @@ namespace Barotrauma
                         var matchingItem = matchingItems.ElementAt(i);
                         SoldItems.Add(new SoldItem(matchingItem.Prefab, matchingItem.ID, canAddToRemoveQueue, sellerId, origin));
                         SoldEntities.Add(new SoldEntity(matchingItem, campaign.IsSinglePlayer ? SoldEntity.SellStatus.Confirmed : SoldEntity.SellStatus.Local));
-                        if (canAddToRemoveQueue) { Entity.Spawner.AddToRemoveQueue(matchingItem); }
+                        if (canAddToRemoveQueue) { Entity.Spawner.AddItemToRemoveQueue(matchingItem); }
                     }
                 }
                 else
@@ -185,7 +185,7 @@ namespace Barotrauma
                 // Exchange money
                 Location.StoreCurrentBalance -= itemValue;
                 campaign.Money += itemValue;
-                GameAnalyticsManager.AddMoneyGainedEvent(itemValue, GameAnalyticsManager.MoneySource.Store, item.ItemPrefab.Identifier);
+                GameAnalyticsManager.AddMoneyGainedEvent(itemValue, GameAnalyticsManager.MoneySource.Store, item.ItemPrefab.Identifier.Value);
 
                 // Remove from the sell crate
                 if ((sellingMode == Store.StoreTab.Sell ? ItemsInSellCrate : ItemsInSellFromSubCrate)?.Find(pi => pi.ItemPrefab == item.ItemPrefab) is { } itemToSell)

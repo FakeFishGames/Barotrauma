@@ -12,7 +12,7 @@ namespace Barotrauma
 
         public string Name => ToString();
 
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; set; }
 
         public float PendingAdditionStrength { get; set; }
         public float AdditionStrength { get; set; }
@@ -21,7 +21,7 @@ namespace Barotrauma
 
         protected float _strength;
 
-        [Serialize(0f, true), Editable]
+        [Serialize(0f, IsPropertySaveable.Yes), Editable]
         public virtual float Strength
         {
             get { return _strength; }
@@ -43,10 +43,10 @@ namespace Barotrauma
         private float _nonClampedStrength = -1;
         public float NonClampedStrength => _nonClampedStrength > 0 ? _nonClampedStrength : _strength;
 
-        [Serialize("", true), Editable]
-        public string Identifier { get; private set; }
+        [Serialize("", IsPropertySaveable.Yes), Editable]
+        public Identifier Identifier { get; private set; }
 
-        [Serialize(1.0f, true, description: "The probability for the affliction to be applied."), Editable(minValue: 0f, maxValue: 1f)]
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The probability for the affliction to be applied."), Editable(minValue: 0f, maxValue: 1f)]
         public float Probability { get; set; } = 1.0f;
 
         public float DamagePerSecond;
@@ -73,7 +73,7 @@ namespace Barotrauma
             Prefab = prefab;
             PendingAdditionStrength = Prefab.GrainBurst;
             _strength = strength;
-            Identifier = prefab?.Identifier;
+            Identifier = prefab.Identifier;
 
             foreach (var periodicEffect in prefab.PeriodicEffects)
             {
@@ -269,14 +269,15 @@ namespace Barotrauma
             }
         }
 
-        public float GetResistance(AfflictionPrefab affliction)
+        public float GetResistance(Identifier afflictionId)
         {
             if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
+            var affliction = AfflictionPrefab.Prefabs[afflictionId];
             AfflictionPrefab.Effect currentEffect = GetActiveEffect();
             if (currentEffect == null) { return 0.0f; }
             if (!currentEffect.ResistanceFor.Any(r =>
-                r.Equals(affliction.Identifier, StringComparison.OrdinalIgnoreCase) ||
-                r.Equals(affliction.AfflictionType, StringComparison.OrdinalIgnoreCase)))
+                r == affliction.Identifier ||
+                r == affliction.AfflictionType))
             {
                 return 0.0f;
             }

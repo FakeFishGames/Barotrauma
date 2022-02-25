@@ -162,7 +162,7 @@ namespace Barotrauma
             }
         }
 
-        public override ScalableFont Font
+        public override GUIFont Font
         {
             get
             {
@@ -225,7 +225,7 @@ namespace Barotrauma
 
             var buttonArea = new GUIFrame(new RectTransform(new Vector2(_relativeButtonAreaWidth, 1.0f), LayoutGroup.RectTransform, Anchor.CenterRight), style: null);
             PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), style: null);
-            GUI.Style.Apply(PlusButton, "PlusButton", this);
+            GUIStyle.Apply(PlusButton, "PlusButton", this);
             PlusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
@@ -246,7 +246,7 @@ namespace Barotrauma
             };
 
             MinusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform, Anchor.BottomRight), style: null);
-            GUI.Style.Apply(MinusButton, "MinusButton", this);
+            GUIStyle.Apply(MinusButton, "MinusButton", this);
             MinusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;

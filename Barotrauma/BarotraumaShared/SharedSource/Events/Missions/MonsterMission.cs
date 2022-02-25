@@ -36,8 +36,8 @@ namespace Barotrauma
         public MonsterMission(MissionPrefab prefab, Location[] locations, Submarine sub)
             : base(prefab, locations, sub)
         {
-            string speciesName = prefab.ConfigElement.GetAttributeString("monsterfile", null);
-            if (!string.IsNullOrEmpty(speciesName))
+            Identifier speciesName = prefab.ConfigElement.GetAttributeIdentifier("monsterfile", Identifier.Empty);
+            if (!speciesName.IsEmpty)
             {
                 var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
                 if (characterPrefab != null)
@@ -62,7 +62,7 @@ namespace Barotrauma
 
             foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))
             {
-                speciesName = monsterElement.GetAttributeString("character", string.Empty);
+                speciesName = monsterElement.GetAttributeIdentifier("character", Identifier.Empty);
                 int defaultCount = monsterElement.GetAttributeInt("count", -1);
                 if (defaultCount < 0)
                 {
@@ -83,10 +83,10 @@ namespace Barotrauma
 
             if (monsterPrefabs.Any())
             {
-                var characterParams = new CharacterParams(monsterPrefabs.First().character.FilePath);
+                var characterParams = new CharacterParams(monsterPrefabs.First().character.ContentFile as CharacterFile);
                 description = description.Replace("[monster]",
-                    TextManager.Get("character." + characterParams.SpeciesTranslationOverride, returnNull: true) ??
-                    TextManager.Get("character." + characterParams.SpeciesName));
+                    TextManager.Get("character." + characterParams.SpeciesTranslationOverride).Fallback(
+                    TextManager.Get("character." + characterParams.SpeciesName)));
             }
         }
 

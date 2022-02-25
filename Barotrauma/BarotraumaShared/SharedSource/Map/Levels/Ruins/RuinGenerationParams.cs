@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using System.Collections.Immutable;
+using Barotrauma.Extensions;
 #if DEBUG
 using System.Xml;
 #else
@@ -20,93 +22,34 @@ namespace Barotrauma.RuinGeneration
 
     class RuinGenerationParams : OutpostGenerationParams
     {
-        public static List<RuinGenerationParams> RuinParams
-        {
-            get
-            {
-                if (paramsList == null)
-                {
-                    LoadAll();
-                }
-                return paramsList;
-            }
-        }
+        public readonly static PrefabCollection<RuinGenerationParams> RuinParams =
+            new PrefabCollection<RuinGenerationParams>();
 
-        private static List<RuinGenerationParams> paramsList;
+        public override string Name => "RuinGenerationParams";
 
-        private readonly string filePath;
-
-        private RuinGenerationParams(XElement element, string filePath) : base(element, filePath)
-        {
-            this.filePath = filePath;
-        }
-
-        public static RuinGenerationParams GetRandom(Rand.RandSync randSync = Rand.RandSync.Server)
-        {
-            if (paramsList == null) { LoadAll(); }
-
-            if (paramsList.Count == 0)
-            {
-                DebugConsole.ThrowError("No ruin configuration files found in any content package.");
-                return new RuinGenerationParams(null, null);
-            }
-
-            return paramsList[Rand.Int(paramsList.Count, randSync)];
-        }
-
-        private static void LoadAll()
-        {
-            paramsList = new List<RuinGenerationParams>();
-            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.RuinConfig))
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
-                if (doc?.Root == null) { continue; }
-
-                foreach (XElement subElement in doc.Root.Elements())
-                {
-                    var mainElement = subElement;
-                    if (subElement.IsOverride())
-                    {
-                        mainElement = subElement.FirstElement();
-                        paramsList.Clear();
-                        DebugConsole.NewMessage($"Overriding all ruin generation parameters using the file {configFile.Path}.", Color.Yellow);
-                    }
-                    else if (paramsList.Any())
-                    {
-                        DebugConsole.NewMessage($"Adding additional ruin generation parameters from file '{configFile.Path}'");
-                    }
-                    var newParams = new RuinGenerationParams(mainElement, configFile.Path);
-                    paramsList.Add(newParams);
-                }
-            }
-        }
-
-        public static void ClearAll()
-        {
-            paramsList?.Clear();
-            paramsList = null;
-        }
+        public RuinGenerationParams(ContentXElement element, RuinConfigFile file) : base(element, file) { }
 
         public static void SaveAll()
         {
+            #warning TODO: revise
             System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {
                 Indent = true,
                 NewLineOnAttributes = true
             };
-
+            
             foreach (RuinGenerationParams generationParams in RuinParams)
             {
-                foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.RuinConfig))
+                foreach (RuinConfigFile configFile in ContentPackageManager.AllPackages.SelectMany(p => p.GetFiles<RuinConfigFile>()))
                 {
-                    if (configFile.Path != generationParams.filePath) { continue; }
+                    if (configFile.Path != generationParams.ContentFile.Path) { continue; }
 
                     XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                     if (doc == null) { continue; }
 
                     SerializableProperty.SerializeProperties(generationParams, doc.Root);
 
-                    using (var writer = XmlWriter.Create(configFile.Path, settings))
+                    using (var writer = XmlWriter.Create(configFile.Path.Value, settings))
                     {
                         doc.WriteTo(writer);
                         writer.Flush();
@@ -114,5 +57,7 @@ namespace Barotrauma.RuinGeneration
                 }
             }
         }
+
+        public override void Dispose() { }
     }
 }

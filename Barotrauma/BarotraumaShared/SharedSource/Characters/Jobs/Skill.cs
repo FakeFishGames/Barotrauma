@@ -4,11 +4,11 @@ namespace Barotrauma
 {
     class Skill
     {
-        private float level;
-
-        public string Identifier { get; }
+        public readonly Identifier Identifier;
 
         public const float MaximumSkill = 100.0f;
+
+        private float level;
 
         public float Level
         {
@@ -21,18 +21,11 @@ namespace Barotrauma
             level = MathHelper.Clamp(level + value, 0.0f, increasePastMax ? SkillSettings.Current.MaximumSkillWithTalents : MaximumSkill);
         }
 
-        private Sprite icon;
-        public Sprite Icon
-        {
-            get
-            {
-                if (icon == null)
-                {
-                    icon = GetIcon();
-                }
-                return icon;
-            }
-        }
+        private Identifier iconJobId;
+
+        public Sprite Icon => !iconJobId.IsEmpty && JobPrefab.Prefabs.TryGet(iconJobId, out var jobPrefab)
+            ? jobPrefab.Icon
+            : null;
 
         public readonly float PriceMultiplier = 1.0f;
 
@@ -40,39 +33,42 @@ namespace Barotrauma
         {
             Identifier = prefab.Identifier;
             level = Rand.Range(prefab.LevelRange.Start, prefab.LevelRange.End, randSync);
-            icon = GetIcon();
+            iconJobId = GetIconJobId();
             PriceMultiplier = prefab.PriceMultiplier;
         }
 
-        public Skill(string identifier, float level)
+        public Skill(Identifier identifier, float level)
         {
             Identifier = identifier;
             this.level = level;
-            icon = GetIcon();
+            iconJobId = GetIconJobId();
         }
 
-        private Sprite GetIcon()
+        private Identifier GetIconJobId()
         {
-            string jobId = null;
-            switch (Identifier.ToLowerInvariant())
+            Identifier jobId = Identifier.Empty;
+            if (Identifier == "electrical")
             {
-                case "electrical":
-                    jobId = "engineer";
-                    break;
-                case "helm":
-                    jobId = "captain";
-                    break;
-                case "mechanical":
-                    jobId = "mechanic";
-                    break;
-                case "medical":
-                    jobId = "medicaldoctor";
-                    break;
-                case "weapons":
-                    jobId = "securityofficer";
-                    break;
+                jobId = "engineer".ToIdentifier();
             }
-            return jobId != null && JobPrefab.Prefabs.ContainsKey(jobId) ? JobPrefab.Prefabs[jobId].IconSmall : null;
+            else if (Identifier == "helm")
+            {
+                jobId = "captain".ToIdentifier();
+            }
+            else if (Identifier == "mechanical")
+            {
+                jobId = "mechanic".ToIdentifier();
+            }
+            else if (Identifier == "medical")
+            {
+                jobId = "medicaldoctor".ToIdentifier();
+            }
+            else if (Identifier == "weapons")
+            {
+                jobId = "securityofficer".ToIdentifier();
+            }
+
+            return jobId;
         }
     }
 }

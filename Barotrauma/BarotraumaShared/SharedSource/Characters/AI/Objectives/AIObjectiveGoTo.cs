@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Barotrauma.Extensions;
 
@@ -8,7 +9,7 @@ namespace Barotrauma
 {
     class AIObjectiveGoTo : AIObjective
     {
-        public override string Identifier { get; set; } = "go to";
+        public override Identifier Identifier { get; set; } = "go to".ToIdentifier();
 
         private AIObjectiveFindDivingGear findDivingGear;
         private readonly bool repeat;
@@ -96,8 +97,8 @@ namespace Barotrauma
         public override bool AllowOutsideSubmarine => AllowGoingOutside;
         public override bool AllowInAnySub => true;
 
-        public string DialogueIdentifier { get; set; } = "dialogcannotreachtarget";
-        public string TargetName { get; set; }
+        public Identifier DialogueIdentifier { get; set; } = "dialogcannotreachtarget".ToIdentifier();
+        public LocalizedString TargetName { get; set; }
 
         public ISpatialEntity Target { get; private set; }
 
@@ -180,9 +181,11 @@ namespace Barotrauma
             if (DialogueIdentifier == null) { return; }
             if (!SpeakIfFails) { return; }
             if (SpeakCannotReachCondition != null && !SpeakCannotReachCondition()) { return; }
-            string msg = TargetName == null ? TextManager.Get(DialogueIdentifier, true) : TextManager.GetWithVariable(DialogueIdentifier, "[name]", TargetName, formatCapitals: !(Target is Character));
-            if (msg == null) { return; }
-            character.Speak(msg, identifier: DialogueIdentifier, minDurationBetweenSimilar: 20.0f);
+            LocalizedString msg = TargetName == null ?
+                TextManager.Get(DialogueIdentifier) :
+                TextManager.GetWithVariable(DialogueIdentifier, "[name]".ToIdentifier(), TargetName, formatCapitals: Target is Character ? FormatCapitals.No : FormatCapitals.Yes);
+            if (msg.IsNullOrEmpty() || !msg.Loaded) { return; }
+            character.Speak(msg.Value, identifier: DialogueIdentifier, minDurationBetweenSimilar: 20.0f);
         }
 
         public void ForceAct(float deltaTime) => Act(deltaTime);
@@ -382,13 +385,23 @@ namespace Barotrauma
                     {
                         useScooter = false;
                         checkScooterTimer = checkScooterTime * Rand.Range(0.75f, 1.25f);
-                        string scooterTag = "scooter";
-                        string batteryTag = "mobilebattery";
+                        Identifier scooterTag = "scooter".ToIdentifier();
+                        Identifier batteryTag = "mobilebattery".ToIdentifier();
                         Item scooter = null;
-                        float closeEnough = 250;
-                        float squaredDistance = Vector2.DistanceSquared(character.WorldPosition, Target.WorldPosition);
-                        bool shouldUseScooter = squaredDistance > closeEnough * closeEnough && (!Mimic ||
-                            (targetCharacter != null && targetCharacter.HasEquippedItem(scooterTag, allowBroken: false)) || squaredDistance > Math.Pow(closeEnough * 2, 2));
+                        bool shouldUseScooter = Mimic && targetCharacter != null && targetCharacter.HasEquippedItem(scooterTag, allowBroken: false);
+                        if (!shouldUseScooter)
+                        {
+                            float threshold = 500;
+                            if (isInside)
+                            {
+                                Vector2 diff = Target.WorldPosition - character.WorldPosition;
+                                shouldUseScooter = Math.Abs(diff.X) > threshold || Math.Abs(diff.Y) > 150;
+                            }
+                            else
+                            {
+                                shouldUseScooter = Vector2.DistanceSquared(character.WorldPosition, Target.WorldPosition) > threshold * threshold;
+                            }
+                        }
                         if (HumanAIController.HasItem(character, scooterTag, out IEnumerable<Item> equippedScooters, recursive: false, requireEquipped: true))
                         {
                             // Currently equipped scooter
@@ -424,8 +437,7 @@ namespace Barotrauma
                                 }
                             }
                         }
-                        bool isScooterEquipped = scooter != null && character.HasEquippedItem(scooter);
-                        if (scooter != null && isScooterEquipped)
+                        if (scooter != null && character.HasEquippedItem(scooter))
                         {
                             if (shouldUseScooter)
                             {
@@ -534,6 +546,7 @@ namespace Barotrauma
 
             void UseScooter(Vector2 targetWorldPos)
             {
+                if (!character.HasEquippedItem("scooter".ToIdentifier())) { return; }
                 SteeringManager.Reset();
                 character.CursorPosition = targetWorldPos;
                 if (character.Submarine != null)
@@ -542,19 +555,26 @@ namespace Barotrauma
                 }
                 Vector2 diff = character.CursorPosition - character.Position;
                 Vector2 dir = Vector2.Normalize(diff);
-                float sqrDist = diff.LengthSquared();
-                if (sqrDist > MathUtils.Pow2(CloseEnough * 1.5f))
+                if (character.CurrentHull == null && IsFollowOrderObjective)
                 {
-                    SteeringManager.SteeringManual(1.0f, dir);
-                }
-                else
-                {
-                    float dot = Vector2.Dot(dir, VectorExtensions.Forward(character.AnimController.Collider.Rotation + MathHelper.PiOver2));
-                    bool isFacing = dot > 0.9f;
-                    if (!isFacing && sqrDist > MathUtils.Pow2(CloseEnough))
+                    float sqrDist = diff.LengthSquared();
+                    if (sqrDist > MathUtils.Pow2(CloseEnough * 1.5f))
                     {
                         SteeringManager.SteeringManual(1.0f, dir);
                     }
+                    else
+                    {
+                        float dot = Vector2.Dot(dir, VectorExtensions.Forward(character.AnimController.Collider.Rotation + MathHelper.PiOver2));
+                        bool isFacing = dot > 0.9f;
+                        if (!isFacing && sqrDist > MathUtils.Pow2(CloseEnough))
+                        {
+                            SteeringManager.SteeringManual(1.0f, dir);
+                        }
+                    }
+                }
+                else
+                {
+                    SteeringManager.SteeringManual(1.0f, dir);
                 }
                 character.SetInput(InputType.Aim, false, true);
                 character.SetInput(InputType.Shoot, false, true);

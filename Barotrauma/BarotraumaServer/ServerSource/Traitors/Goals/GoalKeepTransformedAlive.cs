@@ -15,7 +15,7 @@ namespace Barotrauma
             private bool isCompleted;
 
             private const float gracePeriod = 1f;
-            private string speciesId;
+            private Identifier speciesId;
             private string targetCharacterName;
             private Character targetCharacter;
             private float timer;
@@ -52,7 +52,7 @@ namespace Barotrauma
                     {
                         continue;
                     }
-                    if (character.SpeciesName.Equals(speciesId, StringComparison.OrdinalIgnoreCase))
+                    if (character.SpeciesName == speciesId)
                     {
                         targetCharacter = character;
                         break;
@@ -64,9 +64,9 @@ namespace Barotrauma
                 return targetCharacter != null;
             }
 
-            public GoalKeepTransformedAlive(string speciesId) : base()
+            public GoalKeepTransformedAlive(Identifier speciesId) : base()
             {
-                this.speciesId = speciesId.ToLowerInvariant();
+                this.speciesId = speciesId;
             }
         }
     }

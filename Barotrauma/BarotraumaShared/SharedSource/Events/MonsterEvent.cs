@@ -9,8 +9,8 @@ namespace Barotrauma
 {
     class MonsterEvent : Event
     {
-        public readonly string speciesName;
-        public readonly int minAmount, maxAmount;
+        public readonly Identifier SpeciesName;
+        public readonly int MinAmount, MaxAmount;
         private List<Character> monsters;
 
         private readonly float scatter;
@@ -31,8 +31,6 @@ namespace Barotrauma
         public List<Character> Monsters => monsters;
         public Vector2? SpawnPos => spawnPos;
         public bool SpawnPending => spawnPending;
-        public int MinAmount => minAmount;
-        public int MaxAmount => maxAmount;
 
         public override Vector2 DebugDrawPos
         {
@@ -41,38 +39,42 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            if (maxAmount <= 1)
+            if (MaxAmount <= 1)
             {
-                return $"MonsterEvent ({speciesName}, {SpawnPosType})";
+                return $"MonsterEvent ({SpeciesName}, {SpawnPosType})";
             }
-            else if (minAmount < maxAmount)
+            else if (MinAmount < MaxAmount)
             {
-                return $"MonsterEvent ({speciesName} x{minAmount}-{maxAmount}, {SpawnPosType})";
+                return $"MonsterEvent ({SpeciesName} x{MinAmount}-{MaxAmount}, {SpawnPosType})";
             }
             else
             {
-                return $"MonsterEvent ({speciesName} x{maxAmount}, {SpawnPosType})";
+                return $"MonsterEvent ({SpeciesName} x{MaxAmount}, {SpawnPosType})";
             }
         }
 
         public MonsterEvent(EventPrefab prefab)
             : base (prefab)
         {
-            speciesName = prefab.ConfigElement.GetAttributeString("characterfile", "");
-            CharacterPrefab characterPrefab = CharacterPrefab.FindByFilePath(speciesName);
+            string speciesFile = prefab.ConfigElement.GetAttributeString("characterfile", "");
+            CharacterPrefab characterPrefab = CharacterPrefab.FindByFilePath(speciesFile);
             if (characterPrefab != null)
             {
-                speciesName = characterPrefab.Identifier;
+                SpeciesName = characterPrefab.Identifier;
+            }
+            else
+            {
+                SpeciesName = speciesFile.ToIdentifier();
             }
 
-            if (string.IsNullOrEmpty(speciesName))
+            if (SpeciesName.IsEmpty)
             {
                 throw new Exception("speciesname is null!");
             }
 
             int defaultAmount = prefab.ConfigElement.GetAttributeInt("amount", 1);
-            minAmount = prefab.ConfigElement.GetAttributeInt("minamount", defaultAmount);
-            maxAmount = Math.Max(prefab.ConfigElement.GetAttributeInt("maxamount", 1), minAmount);
+            MinAmount = prefab.ConfigElement.GetAttributeInt("minamount", defaultAmount);
+            MaxAmount = Math.Max(prefab.ConfigElement.GetAttributeInt("maxamount", 1), MinAmount);
 
             MaxAmountPerLevel = prefab.ConfigElement.GetAttributeInt("maxamountperlevel", int.MaxValue);
 
@@ -97,10 +99,10 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember != null)
             {
-                List<string> monsterNames = GameMain.NetworkMember.ServerSettings.MonsterEnabled.Keys.ToList();
-                string tryKey = monsterNames.Find(s => speciesName.ToLower() == s.ToLower());
+                List<Identifier> monsterNames = GameMain.NetworkMember.ServerSettings.MonsterEnabled.Keys.ToList();
+                Identifier tryKey = monsterNames.Find(s => SpeciesName == s);
 
-                if (!string.IsNullOrWhiteSpace(tryKey))
+                if (!tryKey.IsEmpty)
                 {
                     if (!GameMain.NetworkMember.ServerSettings.MonsterEnabled[tryKey])
                     {
@@ -117,15 +119,15 @@ namespace Barotrauma
 
         public override IEnumerable<ContentFile> GetFilesToPreload()
         {
-            string path = CharacterPrefab.FindBySpeciesName(speciesName)?.FilePath;
-            if (string.IsNullOrWhiteSpace(path))
+            var file = CharacterPrefab.FindBySpeciesName(SpeciesName)?.ContentFile;
+            if (file == null)
             {
-                DebugConsole.ThrowError($"Failed to find config file for species \"{speciesName}\"");
+                DebugConsole.ThrowError($"Failed to find config file for species \"{SpeciesName}\"");
                 yield break;
             }
             else
             {
-                yield return new ContentFile(path, ContentType.Character);
+                yield return file;
             }
         }
 
@@ -137,9 +139,9 @@ namespace Barotrauma
 
         public override void Init(bool affectSubImmediately)
         {
-            if (GameSettings.VerboseLogging)
+            if (GameSettings.CurrentConfig.VerboseLogging)
             {
-                DebugConsole.NewMessage("Initialized MonsterEvent (" + speciesName + ")", Color.White);
+                DebugConsole.NewMessage("Initialized MonsterEvent (" + SpeciesName + ")", Color.White);
             }
         }
 
@@ -283,7 +285,7 @@ namespace Barotrauma
                     Finished();
                     return;
                 }
-                chosenPosition = availablePositions.GetRandom();
+                chosenPosition = availablePositions.GetRandomUnsynced();
             }
             if (chosenPosition.IsValid)
             {
@@ -369,7 +371,7 @@ namespace Barotrauma
             {
                 if (MaxAmountPerLevel < int.MaxValue)
                 {
-                    if (Character.CharacterList.Count(c => c.SpeciesName == speciesName) >= MaxAmountPerLevel)
+                    if (Character.CharacterList.Count(c => c.SpeciesName == SpeciesName) >= MaxAmountPerLevel)
                     {
                         disallowed = true;
                         return;
@@ -456,7 +458,7 @@ namespace Barotrauma
                 spawnPending = false;
 
                 //+1 because Range returns an integer less than the max value
-                int amount = Rand.Range(minAmount, maxAmount + 1);
+                int amount = Rand.Range(MinAmount, MaxAmount + 1);
                 monsters = new List<Character>();
                 float scatterAmount = scatter;
                 if (SpawnPosType.HasFlag(Level.PositionType.SidePath))
@@ -501,7 +503,7 @@ namespace Barotrauma
                             }
                         }
 
-                        Character createdCharacter = Character.Create(speciesName, pos, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true);
+                        Character createdCharacter = Character.Create(SpeciesName, pos, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true);
                         var eventManager = GameMain.GameSession.EventManager;
                         if (eventManager != null)
                         {
@@ -545,7 +547,7 @@ namespace Barotrauma
                         if (GameMain.GameSession != null)
                         {
                             GameAnalyticsManager.AddDesignEvent(
-                                $"MonsterSpawn:{GameMain.GameSession.GameMode?.Preset?.Identifier ?? "none"}:{Level.Loaded?.LevelData?.Biome?.Identifier ?? "none"}:{SpawnPosType}:{speciesName}",
+                                $"MonsterSpawn:{GameMain.GameSession.GameMode?.Preset?.Identifier.Value ?? "none"}:{Level.Loaded?.LevelData?.Biome?.Identifier.Value ?? "none"}:{SpawnPosType}:{SpeciesName}",
                                 value: Timing.TotalTime - GameMain.GameSession.RoundStartTime);
                         }
                     }, delayBetweenSpawns * i);

@@ -22,15 +22,15 @@ namespace Barotrauma
 
         private Submarine? submarine;
         private Character? dummyCharacter;
-        public static Effect BlueprintEffect;
-        private GUIFrame container;
+        public static Effect BlueprintEffect = null!;
+        private GUIFrame container = null!;
 
-        private TabMenu tabMenu;
+        private TabMenu? tabMenu;
 
         public TestScreen()
         {
             Cam = new Camera();
-            BlueprintEffect = GameMain.GameScreen.BlueprintEffect;
+            BlueprintEffect = GameMain.GameScreen.BlueprintEffect!;
 
             new GUIButton(new RectTransform(new Point(256, 256), Frame.RectTransform), "Reload shader")
             {
@@ -38,7 +38,7 @@ namespace Barotrauma
                 {
                     BlueprintEffect.Dispose();
                     GameMain.Instance.Content.Unload();
-                    BlueprintEffect = GameMain.Instance.Content.Load<Effect>("Effects/blueprintshader_opengl");
+                    BlueprintEffect = GameMain.Instance.Content.Load<Effect>("Effects/blueprintshader_opengl")!;
                     GameMain.GameScreen.BlueprintEffect = BlueprintEffect;
                     return true;
                 }
@@ -47,7 +47,7 @@ namespace Barotrauma
         }
 
         public override void Select()
-        {
+        {   
             base.Select();
             container = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "InnerGlow", color: Color.Black);
             var tab = new GUIFrame(new RectTransform(Vector2.One, container.RectTransform), color: Color.Black * 0.9f);
@@ -79,7 +79,7 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
-            tabMenu.Update();
+            tabMenu!.Update();
 
             if (dummyCharacter is { } dummy)
             {

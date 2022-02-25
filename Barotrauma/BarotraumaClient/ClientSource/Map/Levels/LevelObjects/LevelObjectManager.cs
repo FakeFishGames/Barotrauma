@@ -206,7 +206,7 @@ namespace Barotrauma
                 
                 if (GameMain.DebugDraw)
                 {
-                    GUI.DrawRectangle(spriteBatch, new Vector2(obj.Position.X, -obj.Position.Y), new Vector2(10.0f, 10.0f), GUI.Style.Red, true);
+                    GUI.DrawRectangle(spriteBatch, new Vector2(obj.Position.X, -obj.Position.Y), new Vector2(10.0f, 10.0f), GUIStyle.Red, true);
 
                     if (obj.Triggers == null) { continue; }
                     foreach (LevelTrigger trigger in obj.Triggers)
@@ -218,7 +218,7 @@ namespace Barotrauma
                         if (flowForce.LengthSquared() > 1)
                         {
                             flowForce.Y = -flowForce.Y;
-                            GUI.DrawLine(spriteBatch, new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y), new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y) + flowForce * 10, GUI.Style.Orange, 0, 5);
+                            GUI.DrawLine(spriteBatch, new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y), new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y) + flowForce * 10, GUIStyle.Orange, 0, 5);
                         }
                         trigger.PhysicsBody.UpdateDrawPosition();
                         trigger.PhysicsBody.DebugDraw(spriteBatch, trigger.IsTriggered ? Color.Cyan : Color.DarkCyan);

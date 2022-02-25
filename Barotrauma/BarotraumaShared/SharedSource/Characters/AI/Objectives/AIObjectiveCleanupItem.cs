@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class AIObjectiveCleanupItem : AIObjective
     {
-        public override string Identifier { get; set; } = "cleanup item";
+        public override Identifier Identifier { get; set; } = "cleanup item".ToIdentifier();
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => false;
 
@@ -61,21 +61,6 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (item.IgnoreByAI(character))
-            {
-                Abandon = true;
-                return;
-            }
-            if (item.ParentInventory != null)
-            {
-                if (item.Container != null && !AIObjectiveCleanupItems.IsValidContainer(item.Container, character, allowUnloading: objectiveManager.HasOrder<AIObjectiveCleanupItems>()))
-                {
-                    // Target was picked up or moved by someone.
-                    Abandon = true;
-                    return;
-                }
-            }
-            // Only continue when the get item sub objectives have been completed.
             if (subObjectives.Any()) { return; }
             if (HumanAIController.FindSuitableContainer(character, item, ignoredContainers, ref itemIndex, out Item suitableContainer))
             {
@@ -133,7 +118,24 @@ namespace Barotrauma
             }
         }
 
-        protected override bool CheckObjectiveSpecific() => IsCompleted;
+        protected override bool CheckObjectiveSpecific()
+        {
+            if (item.IgnoreByAI(character))
+            {
+                Abandon = true;
+                return false;
+            }
+            if (item.ParentInventory != null)
+            {
+                if (item.Container != null && !AIObjectiveCleanupItems.IsValidContainer(item.Container, character, allowUnloading: objectiveManager.HasOrder<AIObjectiveCleanupItems>()))
+                {
+                    // Target was picked up or moved by someone.
+                    Abandon = true;
+                    return false;
+                }
+            }
+            return IsCompleted;
+        }
 
         public override void Reset()
         {

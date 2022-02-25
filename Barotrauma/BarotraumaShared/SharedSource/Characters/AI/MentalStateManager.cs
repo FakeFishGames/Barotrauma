@@ -128,7 +128,7 @@ namespace Barotrauma
                 possibleTarget => HumanAIController.IsActive(possibleTarget) && 
                 (possibleTarget.TeamID != character.TeamID || mentalType == MentalType.Berserk) && 
                 humanAIController.VisibleHulls.Contains(possibleTarget.CurrentHull) && 
-                possibleTarget != character).GetRandom();
+                possibleTarget != character).GetRandomUnsynced();
 
             if (mentalAttackTarget == null)
             {
@@ -154,8 +154,8 @@ namespace Barotrauma
             // using this as an explicit time-out for the behavior. it's possible it will never run out because of the manager being disabled, but combat objective has failsafes for that
             mentalBehaviorTimer = MentalBehaviorInterval;
             humanAIController.AddCombatObjective(combatMode, mentalAttackTarget, allowHoldFire: holdFire, abortCondition: obj => mentalBehaviorTimer <= 0f);
-            string textIdentifier = $"dialogmentalstatereaction{combatMode.ToString().ToLowerInvariant()}";
-            character.Speak(TextManager.Get(textIdentifier), delay: Rand.Range(0.5f, 1.0f), identifier: textIdentifier, minDurationBetweenSimilar: 25f);
+            Identifier textIdentifier = $"dialogmentalstatereaction{combatMode}".ToIdentifier();
+            character.Speak(TextManager.Get(textIdentifier).Value, delay: Rand.Range(0.5f, 1.0f), identifier: textIdentifier, minDurationBetweenSimilar: 25f);
 
             if (mentalType == MentalType.Berserk && !character.HasTeamChange(MentalTeamChange))
             {
@@ -169,8 +169,8 @@ namespace Barotrauma
         public void CreateDialogueBehavior(MentalType mentalType)
         {
             if (mentalType == MentalType.Normal) { return; }
-            string textIdentifier = $"dialogmentalstate{mentalType.ToString().ToLowerInvariant()}";
-            character.Speak(TextManager.Get(textIdentifier), delay: Rand.Range(0.5f, 1.0f), identifier: textIdentifier, minDurationBetweenSimilar: 35f);
+            Identifier textIdentifier = $"dialogmentalstate{mentalType}".ToIdentifier();
+            character.Speak(TextManager.Get(textIdentifier).Value, delay: Rand.Range(0.5f, 1.0f), identifier: textIdentifier, minDurationBetweenSimilar: 35f);
         }
     }
 }

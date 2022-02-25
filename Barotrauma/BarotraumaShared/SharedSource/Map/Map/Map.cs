@@ -88,7 +88,7 @@ namespace Barotrauma
 
             bool lairsFound = false;
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -112,11 +112,11 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(!Locations.Contains(null));
             for (int i = 0; i < Locations.Count; i++)
             {
-                Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, Locations[i], $"location.{i}", -100, 100, Rand.Range(-10, 11, Rand.RandSync.Server));
+                Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, Locations[i], $"location.{i}".ToIdentifier(), -100, 100, Rand.Range(-10, 11, Rand.RandSync.ServerAndClient));
             }
 
             List<XElement> connectionElements = new List<XElement>();
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -133,10 +133,10 @@ namespace Barotrauma
                         Locations[locationIndices.Y].Connections.Add(connection);
                         connection.LevelData = new LevelData(subElement.Element("Level"));
                         string biomeId = subElement.GetAttributeString("biome", "");
-                        connection.Biome = 
-                            LevelGenerationParams.GetBiomes().FirstOrDefault(b => b.Identifier == biomeId) ??
-                            LevelGenerationParams.GetBiomes().FirstOrDefault(b => b.OldIdentifier == biomeId) ??
-                            LevelGenerationParams.GetBiomes().First();
+                        connection.Biome =
+                            Biome.Prefabs.FirstOrDefault(b => b.Identifier == biomeId) ??
+                            Biome.Prefabs.FirstOrDefault(b => !b.OldIdentifier.IsEmpty && b.OldIdentifier == biomeId) ??
+                            Biome.Prefabs.First();
                         Connections.Add(connection);
                         connectionElements.Add(subElement);
                         break;
@@ -214,13 +214,13 @@ namespace Barotrauma
 
             for (int i = 0; i < Locations.Count; i++)
             {
-                Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, Locations[i], $"location.{i}", -100, 100, Rand.Range(-10, 11, Rand.RandSync.Server));
+                Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, Locations[i], $"location.{i}".ToIdentifier(), -100, 100, Rand.Range(-10, 11, Rand.RandSync.ServerAndClient));
             }
 
             foreach (Location location in Locations)
             {
-                if (!location.Type.Identifier.Equals("city", StringComparison.OrdinalIgnoreCase) &&
-                    !location.Type.Identifier.Equals("outpost", StringComparison.OrdinalIgnoreCase)) 
+                if (location.Type.Identifier != "city" &&
+                    location.Type.Identifier != "outpost") 
                 { 
                     continue; 
                 }
@@ -252,8 +252,8 @@ namespace Barotrauma
                 for (float y = 10.0f; y < Height - 10.0f; y += generationParams.VoronoiSiteInterval.Y)
                 {
                     voronoiSites.Add(new Vector2(
-                        x + generationParams.VoronoiSiteVariance.X * Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server),
-                        y + generationParams.VoronoiSiteVariance.Y * Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server)));
+                        x + generationParams.VoronoiSiteVariance.X * Rand.Range(-0.5f, 0.5f, Rand.RandSync.ServerAndClient),
+                        y + generationParams.VoronoiSiteVariance.Y * Rand.Range(-0.5f, 0.5f, Rand.RandSync.ServerAndClient)));
                 }
             }
 
@@ -297,12 +297,12 @@ namespace Barotrauma
 
                     Vector2[] points = new Vector2[] { edge.Point1, edge.Point2 };
 
-                    int positionIndex = Rand.Int(1, Rand.RandSync.Server);
+                    int positionIndex = Rand.Int(1, Rand.RandSync.ServerAndClient);
 
                     Vector2 position = points[positionIndex];
                     if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) { position = points[1 - positionIndex]; }
                     int zone = GetZoneIndex(position.X);
-                    newLocations[i] = Location.CreateRandom(position, zone, Rand.GetRNG(Rand.RandSync.Server), requireOutpost: false, existingLocations: Locations);
+                    newLocations[i] = Location.CreateRandom(position, zone, Rand.GetRNG(Rand.RandSync.ServerAndClient), requireOutpost: false, existingLocations: Locations);
                     Locations.Add(newLocations[i]);
                 }
 
@@ -394,7 +394,7 @@ namespace Barotrauma
                 connectionsBetweenZones[i] = new List<LocationConnection>();
             }
             var shuffledConnections = Connections.ToList();
-            shuffledConnections.Shuffle(Rand.RandSync.Server);
+            shuffledConnections.Shuffle(Rand.RandSync.ServerAndClient);
             foreach (var connection in shuffledConnections)
             {
                 int zone1 = GetZoneIndex(connection.Locations[0].MapPosition.X);
@@ -447,9 +447,10 @@ namespace Barotrauma
                         Connections[i].Locations[0].MapPosition.X < Connections[i].Locations[1].MapPosition.X ?
                         Connections[i].Locations[0] :
                         Connections[i].Locations[1];
-                    if (!leftMostLocation.Type.HasOutpost || leftMostLocation.Type.Identifier.Equals("abandoned", StringComparison.OrdinalIgnoreCase))
+                    if (!leftMostLocation.Type.HasOutpost || leftMostLocation.Type.Identifier == "abandoned")
                     {
-                        leftMostLocation.ChangeType(LocationType.List.First(lt => lt.HasOutpost && !lt.Identifier.Equals("abandoned", StringComparison.OrdinalIgnoreCase)));
+                        #warning TODO: determinism?
+                        leftMostLocation.ChangeType(LocationType.Prefabs.First(lt => lt.HasOutpost && lt.Identifier != "abandoned"));
                     }
                     leftMostLocation.IsGateBetweenBiomes = true;
                     Connections[i].Locked = true;
@@ -473,10 +474,10 @@ namespace Barotrauma
             foreach (LocationConnection connection in Connections)
             {
                 //float difficulty = GetLevelDifficulty(connection.CenterPos.X / Width);
-                //connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-10.0f, 0.0f, Rand.RandSync.Server), 1.2f, 100.0f);
+                //connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-10.0f, 0.0f, Rand.RandSync.ServerAndClient), 1.2f, 100.0f);
                 float difficulty = connection.CenterPos.X / Width * 100;
                 float random = difficulty > 10 ? 5 : 0;
-                connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-random, random, Rand.RandSync.Server), 1.0f, 100.0f);
+                connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-random, random, Rand.RandSync.ServerAndClient), 1.0f, 100.0f);
             }
 
             AssignBiomes();
@@ -522,21 +523,13 @@ namespace Barotrauma
         {
             float zoneWidth = Width / generationParams.DifficultyZones;
             int zoneIndex = (int)Math.Floor(xPos / zoneWidth) + 1;
-            if (zoneIndex < 1)
-            {
-                return LevelGenerationParams.GetBiomes().First();
-
-            }
-            else if (zoneIndex >= generationParams.DifficultyZones)
-            {
-                return LevelGenerationParams.GetBiomes().Last();
-            }
-            return LevelGenerationParams.GetBiomes().FirstOrDefault(b => b.AllowedZones.Contains(zoneIndex));
+            zoneIndex = Math.Clamp(zoneIndex, 1, generationParams.DifficultyZones - 1);
+            return Biome.Prefabs.FirstOrDefault(b => b.AllowedZones.Contains(zoneIndex));
         }
 
         private void AssignBiomes()
         {
-            var biomes = LevelGenerationParams.GetBiomes();
+            var biomes = Biome.Prefabs;
             float zoneWidth = Width / generationParams.DifficultyZones;
 
             List<Biome> allowedBiomes = new List<Biome>(10);
@@ -550,7 +543,7 @@ namespace Barotrauma
                 {
                     if (location.MapPosition.X < zoneX)
                     {
-                        location.Biome = allowedBiomes[Rand.Range(0, allowedBiomes.Count, Rand.RandSync.Server)];
+                        location.Biome = allowedBiomes[Rand.Range(0, allowedBiomes.Count, Rand.RandSync.ServerAndClient)];
                     }
                 }
             }
@@ -692,10 +685,10 @@ namespace Barotrauma
 
             if (GameMain.GameSession is { Campaign: { CampaignMetadata: { } metadata } })
             {
-                metadata.SetValue("campaign.location.id", CurrentLocationIndex);
-                metadata.SetValue("campaign.location.name", CurrentLocation.Name);
-                metadata.SetValue("campaign.location.biome", CurrentLocation.Biome?.Identifier ?? "null");
-                metadata.SetValue("campaign.location.type", CurrentLocation.Type?.Identifier ?? "null");
+                metadata.SetValue("campaign.location.id".ToIdentifier(), CurrentLocationIndex);
+                metadata.SetValue("campaign.location.name".ToIdentifier(), CurrentLocation.Name);
+                metadata.SetValue("campaign.location.biome".ToIdentifier(), CurrentLocation.Biome?.Identifier ?? "null".ToIdentifier());
+                metadata.SetValue("campaign.location.type".ToIdentifier(), CurrentLocation.Type?.Identifier ?? "null".ToIdentifier());
             }
         }
 
@@ -999,7 +992,7 @@ namespace Barotrauma
         {
             string prevName = location.Name;
 
-            var newType = LocationType.List.Find(lt => lt.Identifier.Equals(change.ChangeToType, StringComparison.OrdinalIgnoreCase));
+            var newType = LocationType.Prefabs[change.ChangeToType];
             if (newType == null)
             {
                 DebugConsole.ThrowError($"Failed to change the type of the location \"{location.Name}\". Location type \"{change.ChangeToType}\" not found.");
@@ -1053,7 +1046,7 @@ namespace Barotrauma
                 return;
             }
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -1083,14 +1076,14 @@ namespace Barotrauma
                             }
                         }
 
-                        string locationType = subElement.GetAttributeString("type", "");
+                        Identifier locationType = subElement.GetAttributeIdentifier("type", Identifier.Empty);
                         string prevLocationName = location.Name;
                         LocationType prevLocationType = location.Type;
-                        LocationType newLocationType = LocationType.List.Find(lt => lt.Identifier.Equals(locationType, StringComparison.OrdinalIgnoreCase)) ?? LocationType.List.First();
+                        LocationType newLocationType = LocationType.Prefabs.Find(lt => lt.Identifier == locationType) ?? LocationType.Prefabs.First();
                         location.ChangeType(newLocationType);
                         if (showNotifications && prevLocationType != location.Type)
                         {
-                            var change = prevLocationType.CanChangeTo.Find(c => c.ChangeToType.Equals(location.Type.Identifier, StringComparison.OrdinalIgnoreCase));
+                            var change = prevLocationType.CanChangeTo.Find(c => c.ChangeToType == location.Type.Identifier);
                             if (change != null)
                             {
                                 ChangeLocationTypeProjSpecific(location, prevLocationName, change);

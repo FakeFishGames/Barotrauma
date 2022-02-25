@@ -54,14 +54,14 @@ namespace Barotrauma
             }
         }
 
-        public string SelectedModeIdentifier
+        public Identifier SelectedModeIdentifier
         {
             get { return GameModes[SelectedModeIndex].Identifier; }
             set
             {
                 for (int i = 0; i < GameModes.Length; i++)
                 {
-                    if (GameModes[i].Identifier.ToLower() == value.ToLower())
+                    if (GameModes[i].Identifier == value)
                     {
                         SelectedModeIndex = i;
                         break;

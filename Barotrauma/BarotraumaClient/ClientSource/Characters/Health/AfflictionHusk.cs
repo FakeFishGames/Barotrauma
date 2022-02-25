@@ -16,15 +16,15 @@
                     {
                         return;
                     }
-                    GUI.AddMessage(TextManager.Get("HuskDormant"), GUI.Style.Red);
+                    GUI.AddMessage(TextManager.Get("HuskDormant"), GUIStyle.Red);
                     break;
                 case InfectionState.Transition:
-                    GUI.AddMessage(TextManager.Get("HuskCantSpeak"), GUI.Style.Red);
+                    GUI.AddMessage(TextManager.Get("HuskCantSpeak"), GUIStyle.Red);
                     break;
                 case InfectionState.Active:
                     if (character.Params.UseHuskAppendage)
                     {
-                        GUI.AddMessage(TextManager.GetWithVariable("HuskActivate", "[Attack]", GameMain.Config.KeyBindText(InputType.Attack)), GUI.Style.Red);
+                        GUI.AddMessage(TextManager.GetWithVariable("HuskActivate", "[Attack]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Attack)), GUIStyle.Red);
                     }
                     break;
                 case InfectionState.Final:

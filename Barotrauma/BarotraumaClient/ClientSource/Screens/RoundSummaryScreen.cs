@@ -9,7 +9,7 @@ namespace Barotrauma
     {
         private Sprite backgroundSprite;
         private RoundSummary roundSummary;
-        private string loadText;
+        private LocalizedString loadText;
 
         private RectTransform prevGuiElementParent;
 
@@ -47,9 +47,9 @@ namespace Barotrauma
 
             GUI.Draw(Cam, spriteBatch);
 
-            string loadingText = loadText + new string('.', (int)Timing.TotalTime % 3 + 1);
-            Vector2 textSize = GUI.LargeFont.MeasureString(loadText);
-            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight * 0.95f) - textSize / 2, loadingText, Color.White, font: GUI.LargeFont);
+            LocalizedString loadingText = loadText + new string('.', (int)Timing.TotalTime % 3 + 1);
+            Vector2 textSize = GUIStyle.LargeFont.MeasureString(loadText);
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight * 0.95f) - textSize / 2, loadingText, Color.White, font: GUIStyle.LargeFont);
 
             spriteBatch.End();
         }

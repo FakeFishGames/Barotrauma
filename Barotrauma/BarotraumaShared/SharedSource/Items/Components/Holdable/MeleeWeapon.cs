@@ -29,34 +29,34 @@ namespace Barotrauma.Items.Components
 
         public Character User { get; private set; }
 
-        [Serialize(0.0f, false, description: "An estimation of how close the item has to be to the target for it to hit. Used by AI characters to determine when they're close enough to hit a target.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "An estimation of how close the item has to be to the target for it to hit. Used by AI characters to determine when they're close enough to hit a target.")]
         public float Range
         {
             get { return ConvertUnits.ToDisplayUnits(range); }
             set { range = ConvertUnits.ToSimUnits(value); }
         }
 
-        [Serialize(0.5f, false, description: "How long the user has to wait before they can hit with the weapon again (in seconds).")]
+        [Serialize(0.5f, IsPropertySaveable.No, description: "How long the user has to wait before they can hit with the weapon again (in seconds).")]
         public float Reload
         {
             get { return reload; }
             set { reload = Math.Max(0.0f, value); }
         }
 
-        [Serialize(false, false, description: "Can the weapon hit multiple targets per swing.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the weapon hit multiple targets per swing.")]
         public bool AllowHitMultiple
         {
             get;
             set;
         }
 
-        [Editable, Serialize(true, false)]
+        [Editable, Serialize(true, IsPropertySaveable.No)]
         public bool Swing { get; set; }
 
-        [Editable, Serialize("2.0, 0.0", false)]
+        [Editable, Serialize("2.0, 0.0", IsPropertySaveable.No)]
         public Vector2 SwingPos { get; set; }
 
-        [Editable, Serialize("3.0, -1.0", false)]
+        [Editable, Serialize("3.0, -1.0", IsPropertySaveable.No)]
         public Vector2 SwingForce { get; set; }
 
         public bool Hitting { get { return hitting; } }
@@ -64,12 +64,12 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// Defines items that boost the weapon functionality, like battery cell for stun batons.
         /// </summary>
-        public readonly string[] PreferredContainedItems;
+        public readonly Identifier[] PreferredContainedItems;
 
-        public MeleeWeapon(Item item, XElement element)
+        public MeleeWeapon(Item item, ContentXElement element)
             : base(item, element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("attack", StringComparison.OrdinalIgnoreCase)) { continue; }
                 Attack = new Attack(subElement, item.Name + ", MeleeWeapon", item)
@@ -79,7 +79,7 @@ namespace Barotrauma.Items.Components
             }
             item.IsShootable = true;
             item.RequireAimToUse = element.Parent.GetAttributeBool("requireaimtouse", true);
-            PreferredContainedItems = element.GetAttributeStringArray("preferredcontaineditems", new string[0], convertToLowerInvariant: true);
+            PreferredContainedItems = element.GetAttributeIdentifierArray("preferredcontaineditems", Array.Empty<Identifier>());
         }
 
         public override void Equip(Character character)
@@ -461,7 +461,7 @@ namespace Barotrauma.Items.Components
 
             if (DeleteOnUse)
             {
-                Entity.Spawner.AddToRemoveQueue(item);
+                Entity.Spawner.AddItemToRemoveQueue(item);
             }
         }
     }

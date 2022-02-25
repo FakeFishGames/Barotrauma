@@ -120,7 +120,7 @@ namespace Barotrauma.Networking
                 unreceivedEntityEventCount = msg.ReadUInt16();
                 firstNewID = msg.ReadUInt16();
 
-                if (GameSettings.VerboseLogging)
+                if (GameSettings.CurrentConfig.VerboseLogging)
                 {
                     DebugConsole.NewMessage(
                         "received midround syncing msg, unreceived: " + unreceivedEntityEventCount +
@@ -132,7 +132,7 @@ namespace Barotrauma.Networking
                 MidRoundSyncingDone = true;
                 if (firstNewID != null)
                 {
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         DebugConsole.NewMessage("midround syncing complete, switching to ID " + (UInt16) (firstNewID - 1),
                             Microsoft.Xna.Framework.Color.Yellow);
@@ -167,7 +167,7 @@ namespace Barotrauma.Networking
 
                 if (entityID == Entity.NullEntityID)
                 {
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         DebugConsole.NewMessage("received msg " + thisEventID + " (null entity)",
                             Microsoft.Xna.Framework.Color.Orange);
@@ -188,12 +188,12 @@ namespace Barotrauma.Networking
                 {
                     if (thisEventID != (UInt16) (lastReceivedID + 1))
                     {
-                        if (GameSettings.VerboseLogging)
+                        if (GameSettings.CurrentConfig.VerboseLogging)
                         {
                             DebugConsole.NewMessage(
                                 "Received msg " + thisEventID + " (waiting for " + (lastReceivedID + 1) + ")",
                                 NetIdUtils.IdMoreRecent(thisEventID, (UInt16)(lastReceivedID + 1))
-                                    ? GUI.Style.Red
+                                    ? GUIStyle.Red
                                     : Microsoft.Xna.Framework.Color.Yellow);
                         }
                     }
@@ -201,7 +201,7 @@ namespace Barotrauma.Networking
                     {
                         DebugConsole.NewMessage(
                             "Received msg " + thisEventID + ", entity " + entityID + " not found",
-                            GUI.Style.Red);
+                            GUIStyle.Red);
                         GameMain.Client.ReportError(ClientNetError.MISSING_ENTITY, eventID: thisEventID, entityID: entityID);
                         return false;
                     }
@@ -212,7 +212,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     int msgPosition = msg.BitPosition;
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         DebugConsole.NewMessage("received msg " + thisEventID + " (" + entity.ToString() + ")",
                             Microsoft.Xna.Framework.Color.Green);

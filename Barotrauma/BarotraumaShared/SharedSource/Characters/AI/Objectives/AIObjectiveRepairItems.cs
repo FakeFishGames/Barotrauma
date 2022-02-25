@@ -9,12 +9,12 @@ namespace Barotrauma
 {
     class AIObjectiveRepairItems : AIObjectiveLoop<Item>
     {
-        public override string Identifier { get; set; } = "repair items";
+        public override Identifier Identifier { get; set; } = "repair items".ToIdentifier();
 
         /// <summary>
         /// If set, only fix items where required skill matches this.
         /// </summary>
-        public string RelevantSkill;
+        public Identifier RelevantSkill;
 
         public Item PrioritizedItem { get; private set; }
 
@@ -72,9 +72,9 @@ namespace Barotrauma
                     if (NearlyFullCondition(item)) { return false; }
                 }
             }
-            if (!string.IsNullOrWhiteSpace(RelevantSkill))
+            if (!RelevantSkill.IsEmpty)
             {
-                if (item.Repairables.None(r => r.requiredSkills.Any(s => s.Identifier.Equals(RelevantSkill, StringComparison.OrdinalIgnoreCase)))) { return false; }
+                if (item.Repairables.None(r => r.requiredSkills.Any(s => s.Identifier == RelevantSkill))) { return false; }
             }
             return !HumanAIController.IsItemRepairedByAnother(item, out _);
         }

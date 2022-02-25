@@ -36,7 +36,7 @@ namespace Barotrauma
         private readonly DelayTypes delayType;
         private readonly float delay;
 
-        public DelayedEffect(XElement element, string parentDebugName)
+        public DelayedEffect(ContentXElement element, string parentDebugName)
             : base(element, parentDebugName)
         {
             string delayTypeStr = element.GetAttributeString("delaytype", "timer");

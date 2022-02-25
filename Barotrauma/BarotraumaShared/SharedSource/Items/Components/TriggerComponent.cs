@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
 {
     partial class TriggerComponent : ItemComponent 
     {
-        [Editable, Serialize(0.0f, true, description: "The maximum amount of force applied to the triggering entitites.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(0.0f, IsPropertySaveable.Yes, description: "The maximum amount of force applied to the triggering entitites.", alwaysUseInstanceValues: true)]
         public float Force { get; set; }
 
         public PhysicsBody PhysicsBody { get; private set; }
@@ -54,7 +54,7 @@ namespace Barotrauma.Items.Components
         /// </summary>
         private readonly List<Attack> attacks = new List<Attack>();
 
-        public TriggerComponent(Item item, XElement element) : base(item, element)
+        public TriggerComponent(Item item, ContentXElement element) : base(item, element)
         {
             string triggeredByAttribute = element.GetAttributeString("triggeredby", "Character");
             if (!Enum.TryParse(triggeredByAttribute, out triggeredBy))
@@ -72,7 +72,7 @@ namespace Barotrauma.Items.Components
             forceFluctuationInterval = Math.Max(forceFluctuationInterval, 0.01f);
 
             string parentDebugName = $"TriggerComponent in {item.Name}";
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {

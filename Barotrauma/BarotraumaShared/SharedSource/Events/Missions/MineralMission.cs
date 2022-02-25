@@ -9,10 +9,23 @@ namespace Barotrauma
 {
     partial class MineralMission : Mission
     {
-        private readonly Dictionary<string, (int amount, float rotation)> resourceClusters  = new Dictionary<string, (int amount, float rotation)>();
-        private readonly Dictionary<string, List<Item>> spawnedResources = new Dictionary<string, List<Item>>();
-        private readonly Dictionary<string, Item[]> relevantLevelResources = new Dictionary<string, Item[]>();
-        private readonly List<Tuple<string, Vector2>> missionClusterPositions = new List<Tuple<string, Vector2>>();
+        private struct ResourceCluster
+        {
+            public int Amount;
+            public float Rotation;
+
+            public ResourceCluster(int amount, float rotation)
+            {
+                Amount = amount;
+                Rotation = rotation;
+            }
+            
+            public static implicit operator ResourceCluster((int amount, float rotation) tuple) => new ResourceCluster(tuple.amount, tuple.rotation);
+        }
+        private readonly Dictionary<Identifier, ResourceCluster> resourceClusters  = new Dictionary<Identifier, ResourceCluster>();
+        private readonly Dictionary<Identifier, List<Item>> spawnedResources = new Dictionary<Identifier, List<Item>>();
+        private readonly Dictionary<Identifier, Item[]> relevantLevelResources = new Dictionary<Identifier, Item[]>();
+        private readonly List<(Identifier Identifier, Vector2 Position)> missionClusterPositions = new List<(Identifier Identifier, Vector2 Position)>();
 
         private readonly HashSet<Level.Cave> caves = new HashSet<Level.Cave>();
 
@@ -28,14 +41,14 @@ namespace Barotrauma
 
         public MineralMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
-            var configElement = prefab.ConfigElement.Element("Items");
+            var configElement = prefab.ConfigElement.GetChildElement("Items");
             foreach (var c in configElement.GetChildElements("Item"))
             {
-                var identifier = c.GetAttributeString("identifier", null);
-                if (string.IsNullOrWhiteSpace(identifier)) { continue; }
+                var identifier = c.GetAttributeIdentifier("identifier", Identifier.Empty);
+                if (identifier.IsEmpty) { continue; }
                 if (resourceClusters.ContainsKey(identifier))
                 {
-                    resourceClusters[identifier] = (resourceClusters[identifier].amount + 1, resourceClusters[identifier].rotation);
+                    resourceClusters[identifier] = (resourceClusters[identifier].Amount + 1, resourceClusters[identifier].Rotation);
                 }
                 else
                 {
@@ -88,11 +101,11 @@ namespace Barotrauma
                         "couldn't find an item prefab with the identifier " + kvp.Key);
                     continue;
                 }
-                var spawnedResources = level.GenerateMissionResources(prefab, kvp.Value.amount, out float rotation);
-                if (spawnedResources.Count < kvp.Value.amount)
+                var spawnedResources = level.GenerateMissionResources(prefab, kvp.Value.Amount, out float rotation);
+                if (spawnedResources.Count < kvp.Value.Amount)
                 {
                     DebugConsole.ThrowError("Error in MineralMission - " +
-                        "spawned " + spawnedResources.Count + "/" + kvp.Value.amount + " of " + prefab.Name);
+                        "spawned " + spawnedResources.Count + "/" + kvp.Value.Amount + " of " + prefab.Name);
                 }
                 if (spawnedResources.None()) { continue; }
                 this.spawnedResources.Add(kvp.Key, spawnedResources);
@@ -176,8 +189,8 @@ namespace Barotrauma
             {
                 if (relevantLevelResources.TryGetValue(kvp.Key, out var availableResources))
                 {
-                    var collected = availableResources.Count(r => HasBeenCollected(r));
-                    var needed = kvp.Value.amount;
+                    var collected = availableResources.Count(HasBeenCollected);
+                    var needed = kvp.Value.Amount;
                     if (collected < needed) { return false; }
                 }
                 else
@@ -221,7 +234,7 @@ namespace Barotrauma
                     itemCount++;
                 }
                 pos /= itemCount;
-                missionClusterPositions.Add(new Tuple<string, Vector2>(kvp.Key, pos));
+                missionClusterPositions.Add((kvp.Key, pos));
             }
         }
     }    

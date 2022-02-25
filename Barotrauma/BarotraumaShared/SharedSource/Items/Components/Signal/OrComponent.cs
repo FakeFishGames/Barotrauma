@@ -4,7 +4,7 @@ namespace Barotrauma.Items.Components
 {
     class OrComponent : AndComponent
     {
-        public OrComponent(Item item, XElement element)
+        public OrComponent(Item item, ContentXElement element)
             : base(item, element)
         {
             IsActive = true;

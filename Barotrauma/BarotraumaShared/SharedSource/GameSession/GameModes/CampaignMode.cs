@@ -304,11 +304,11 @@ namespace Barotrauma
 
                 if (levelData.HasBeaconStation && !levelData.IsBeaconActive)
                 {
-                    var beaconMissionPrefabs = MissionPrefab.List.FindAll(m => m.Tags.Any(t => t.Equals("beaconnoreward", StringComparison.OrdinalIgnoreCase)));
+                    var beaconMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.Tags.Any(t => t.Equals("beaconnoreward", StringComparison.OrdinalIgnoreCase)));
                     if (beaconMissionPrefabs.Any())
                     {
                         Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
-                        var beaconMissionPrefab = ToolBox.SelectWeightedRandom(beaconMissionPrefabs, beaconMissionPrefabs.Select(p => (float)p.Commonness).ToList(), rand);
+                        var beaconMissionPrefab = ToolBox.SelectWeightedRandom(beaconMissionPrefabs, p => (float)p.Commonness, rand);
                         if (!Missions.Any(m => m.Prefab.Type == beaconMissionPrefab.Type))
                         {
                             extraMissions.Add(beaconMissionPrefab.Instantiate(Map.SelectedConnection.Locations, Submarine.MainSub));
@@ -317,7 +317,7 @@ namespace Barotrauma
                 }
                 if (levelData.HasHuntingGrounds)
                 {
-                    var huntingGroundsMissionPrefabs = MissionPrefab.List.FindAll(m => m.Tags.Any(t => t.Equals("huntinggroundsnoreward", StringComparison.OrdinalIgnoreCase)));
+                    var huntingGroundsMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.Tags.Any(t => t.Equals("huntinggroundsnoreward", StringComparison.OrdinalIgnoreCase)));
                     if (!huntingGroundsMissionPrefabs.Any())
                     {
                         DebugConsole.AddWarning("Could not find a hunting grounds mission for the level. No mission with the tag \"huntinggroundsnoreward\" found.");
@@ -325,7 +325,7 @@ namespace Barotrauma
                     else
                     {
                         Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
-                        var huntingGroundsMissionPrefab = ToolBox.SelectWeightedRandom(huntingGroundsMissionPrefabs, huntingGroundsMissionPrefabs.Select(p => (float)Math.Max(p.Commonness, 0.1f)).ToList(), rand);
+                        var huntingGroundsMissionPrefab = ToolBox.SelectWeightedRandom(huntingGroundsMissionPrefabs, p => (float)Math.Max(p.Commonness, 0.1f), rand);
                         if (!Missions.Any(m => m.Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase))))
                         {
                             extraMissions.Add(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations, Submarine.MainSub));
@@ -692,13 +692,13 @@ namespace Barotrauma
 
             if (CampaignMetadata != null)
             {
-                int loops = CampaignMetadata.GetInt("campaign.endings", 0);
-                CampaignMetadata.SetValue("campaign.endings",  loops + 1);
+                int loops = CampaignMetadata.GetInt("campaign.endings".ToIdentifier(), 0);
+                CampaignMetadata.SetValue("campaign.endings".ToIdentifier(),  loops + 1);
             }
 
             GameAnalyticsManager.AddProgressionEvent(
                 GameAnalyticsManager.ProgressionStatus.Complete,
-                Preset?.Identifier ?? "none");
+                Preset?.Identifier.Value ?? "none");
             string eventId = "FinishCampaign:";
             GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"));
             GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count() ?? 0));
@@ -717,7 +717,7 @@ namespace Barotrauma
             location.RemoveHireableCharacter(characterInfo);
             CrewManager.AddCharacterInfo(characterInfo);
             Money -= characterInfo.Salary;
-            GameAnalyticsManager.AddMoneySpentEvent(characterInfo.Salary, GameAnalyticsManager.MoneySink.Crew, characterInfo.Job?.Prefab.Identifier ?? "unknown");
+            GameAnalyticsManager.AddMoneySpentEvent(characterInfo.Salary, GameAnalyticsManager.MoneySink.Crew, characterInfo.Job?.Prefab.Identifier.Value ?? "unknown");
             return true;
         }
 
@@ -740,8 +740,9 @@ namespace Barotrauma
             HumanAIController humanAI = npc.AIController as HumanAIController;
             if (humanAI == null) { yield return CoroutineStatus.Success; }
 
-            var waitOrder = Order.PrefabList.Find(o => o.Identifier.Equals("wait", StringComparison.OrdinalIgnoreCase));
-            humanAI.SetForcedOrder(waitOrder, string.Empty, null);
+            var waitOrderPrefab = OrderPrefab.Prefabs["wait"];
+            var waitOrder = new Order(waitOrderPrefab, Identifier.Empty, null, orderGiver: null);
+            humanAI.SetForcedOrder(waitOrder);
             var waitObjective = humanAI.ObjectiveManager.ForcedOrder;
             humanAI.FaceTarget(interactor);
             
@@ -782,7 +783,7 @@ namespace Barotrauma
             character.SetCustomInteract(
                 NPCInteract,
 #if CLIENT
-                hudText: TextManager.GetWithVariable("CampaignInteraction." + interactionType, "[key]", GameMain.Config.KeyBindText(InputType.Use)));
+                hudText: TextManager.GetWithVariable("CampaignInteraction." + interactionType, "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Use)));
 #else
                 hudText: TextManager.Get("CampaignInteraction." + interactionType));
 #endif
@@ -855,8 +856,8 @@ namespace Barotrauma
                         {
                         
                             GameMain.Server.SendDirectChatMessage(Networking.ChatMessage.Create(
-                                TextManager.Get("RadioAnnouncerName"), 
-                                TextManager.Get("TooFarFromOutpostWarning"),  Networking.ChatMessageType.Default, null), c);
+                                TextManager.Get("RadioAnnouncerName").Value, 
+                                TextManager.Get("TooFarFromOutpostWarning").Value,  Networking.ChatMessageType.Default, null), c);
                         }
 #endif
                     }

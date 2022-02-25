@@ -10,27 +10,27 @@ namespace Barotrauma.Items.Components
 {
     partial class GeneticMaterial : ItemComponent, IServerSerializable
     {
-        private readonly string materialName;
+        private readonly LocalizedString materialName;
 
         private Character targetCharacter;
         private AfflictionPrefab selectedEffect, selectedTaintedEffect;
 
-        [Serialize("", true)]
+        [Serialize("", IsPropertySaveable.Yes)]
         public string Effect
         {
             get;
             set;
         }
 
-        [Serialize("geneticmaterialdebuff", true)]
-        public string TaintedEffect
+        [Serialize("geneticmaterialdebuff", IsPropertySaveable.Yes)]
+        public Identifier TaintedEffect
         {
             get;
             set;
         }
 
         private bool tainted;
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool Tainted
         {
             get { return tainted; }
@@ -39,28 +39,27 @@ namespace Barotrauma.Items.Components
                 if (!value) { return; }
                 tainted = true;
                 item.AllowDeconstruct = false;
-                if (!string.IsNullOrEmpty(TaintedEffect))
+                if (!TaintedEffect.IsEmpty)
                 {
                     selectedTaintedEffect = AfflictionPrefab.Prefabs.Where(a =>
-                        a.Identifier.Equals(TaintedEffect, StringComparison.OrdinalIgnoreCase) ||
-                        a.AfflictionType.Equals(TaintedEffect, StringComparison.OrdinalIgnoreCase)).GetRandom();
+                        a.Identifier == TaintedEffect ||
+                        a.AfflictionType == TaintedEffect).GetRandomUnsynced();
                 }
             }
         }
 
         //only for saving the selected tainted effect
-        [Serialize("", true)]
-        public string SelectedTaintedEffect
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier SelectedTaintedEffect
         {
-            get { return selectedTaintedEffect?.Identifier ?? string.Empty; }
+            get { return selectedTaintedEffect?.Identifier ?? Identifier.Empty; }
             private set
             {
-                if (string.IsNullOrEmpty(value)) { return; }
-                selectedTaintedEffect = AfflictionPrefab.Prefabs.Find(a => a.Identifier == value);
+                selectedTaintedEffect = !value.IsEmpty ? AfflictionPrefab.Prefabs.Find(a => a.Identifier == value) : null;
             }
         }
 
-        public GeneticMaterial(Item item, XElement element)
+        public GeneticMaterial(Item item, ContentXElement element)
             : base(item, element)
         {
             string nameId = element.GetAttributeString("nameidentifier", "");
@@ -71,15 +70,15 @@ namespace Barotrauma.Items.Components
             if (!string.IsNullOrEmpty(Effect))
             {
                 selectedEffect = AfflictionPrefab.Prefabs.Where(a =>
-                    a.Identifier.Equals(Effect, StringComparison.OrdinalIgnoreCase) ||
-                    a.AfflictionType.Equals(Effect, StringComparison.OrdinalIgnoreCase)).GetRandom();
+                    a.Identifier == Effect ||
+                    a.AfflictionType == Effect).GetRandomUnsynced();
             }
         }
 
-        [Serialize(3.0f, false)]
+        [Serialize(3.0f, IsPropertySaveable.No)]
         public float ConditionIncreaseOnCombineMin  { get; set; }
 
-        [Serialize(8.0f, false)]
+        [Serialize(8.0f, IsPropertySaveable.No)]
         public float ConditionIncreaseOnCombineMax { get; set; }
 
         public bool CanBeCombinedWith(GeneticMaterial otherGeneticMaterial)
@@ -230,16 +229,16 @@ namespace Barotrauma.Items.Components
 #endif            
         }
 
-        public static string TryCreateName(ItemPrefab prefab, XElement element)
+        public static LocalizedString TryCreateName(ItemPrefab prefab, XElement element)
         {
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().Equals(nameof(GeneticMaterial), StringComparison.OrdinalIgnoreCase))
+                if (subElement.NameAsIdentifier() == nameof(GeneticMaterial))
                 {
-                    string nameId = subElement.GetAttributeString("nameidentifier", "");
-                    if (!string.IsNullOrEmpty(nameId))
+                    Identifier nameId = subElement.GetAttributeIdentifier("nameidentifier", "");
+                    if (!nameId.IsEmpty)
                     {
-                        return prefab.Name.Replace("[type]", TextManager.Get(nameId, returnNull: true) ?? nameId);
+                        return prefab.Name.Replace("[type]", TextManager.Get(nameId).Fallback(nameId.Value));
                     }
                 }
             }

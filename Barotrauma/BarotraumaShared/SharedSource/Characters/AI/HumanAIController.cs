@@ -833,10 +833,9 @@ namespace Barotrauma
             suitableContainer = null;
             if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: ignoredItems, positionalReference: containableItem, customPriorityFunction: i =>
             {
-                if (i.IsThisOrAnyContainerIgnoredByAI(character)) { return 0; }
+                if (!i.HasAccess(character)) { return 0; }
                 var container = i.GetComponent<ItemContainer>();
                 if (container == null) { return 0; }
-                if (!container.HasAccess(character)) { return 0; }
                 if (!container.Inventory.CanBePut(containableItem)) { return 0; }
                 var rootContainer = container.Item.GetRootContainer();
                 if (rootContainer?.GetComponent<Fabricator>() != null || rootContainer?.GetComponent<Fabricator>() != null) { return 0; }
@@ -888,21 +887,21 @@ namespace Barotrauma
                         {
                             if (!target.IsArrested && AddTargets<AIObjectiveFightIntruders, Character>(Character, target) && newOrder == null)
                             {
-                                var orderPrefab = Order.GetPrefab("reportintruders");
+                                var orderPrefab = OrderPrefab.Prefabs["reportintruders"];
                                 newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                                 targetHull = hull;
                                 if (target.IsEscorted)
                                 {
                                     if (!Character.IsPrisoner && target.IsPrisoner)
                                     {
-                                        string msg = TextManager.GetWithVariables("orderdialog.prisonerescaped", new string[] { "[roomname]" }, new string[] { targetHull.DisplayName }, new bool[] { false, true }, true);
-                                        Character.Speak(msg, ChatMessageType.Order);
+                                        LocalizedString msg = TextManager.GetWithVariables("orderdialog.prisonerescaped", ("[roomname]", targetHull.DisplayName, FormatCapitals.No));
+                                        Character.Speak(msg.Value, ChatMessageType.Order);
                                         speak = false;
                                     }
                                     else if (!IsMentallyUnstable && target.AIController.IsMentallyUnstable)
                                     {
-                                        string msg = TextManager.GetWithVariables("orderdialog.mentalcase", new string[] { "[roomname]" }, new string[] { targetHull.DisplayName }, new bool[] { false, true }, true);
-                                        Character.Speak(msg, ChatMessageType.Order);
+                                        LocalizedString msg = TextManager.GetWithVariables("orderdialog.mentalcase", ("[roomname]", targetHull.DisplayName, FormatCapitals.No));
+                                        Character.Speak(msg.Value, ChatMessageType.Order);
                                         speak = false;
                                     }
                                 }
@@ -913,14 +912,14 @@ namespace Barotrauma
                     {
                         if (AddTargets<AIObjectiveExtinguishFires, Hull>(Character, hull) && newOrder == null)
                         {
-                            var orderPrefab = Order.GetPrefab("reportfire");
+                            var orderPrefab = OrderPrefab.Prefabs["reportfire"];
                             newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                             targetHull = hull;
                         }
                     }
                     if (IsBallastFloraNoticeable(Character, hull) && newOrder == null)
                     {
-                        var orderPrefab = Order.GetPrefab("reportballastflora");
+                        var orderPrefab = OrderPrefab.Prefabs["reportballastflora"];
                         newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                         targetHull = hull;
                     }
@@ -932,7 +931,7 @@ namespace Barotrauma
                             {
                                 if (AddTargets<AIObjectiveFixLeaks, Gap>(Character, gap) && newOrder == null && !gap.IsRoomToRoom)
                                 {
-                                    var orderPrefab = Order.GetPrefab("reportbreach");
+                                    var orderPrefab = OrderPrefab.Prefabs["reportbreach"];
                                     newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                                     targetHull = hull;
                                 }
@@ -947,7 +946,7 @@ namespace Barotrauma
                                 {
                                     if (AddTargets<AIObjectiveRescueAll, Character>(Character, target) && newOrder == null && !ObjectiveManager.HasActiveObjective<AIObjectiveRescue>())
                                     {
-                                        var orderPrefab = Order.GetPrefab("requestfirstaid");
+                                        var orderPrefab = OrderPrefab.Prefabs["requestfirstaid"];
                                         newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                                         targetHull = hull;
                                     }
@@ -961,7 +960,7 @@ namespace Barotrauma
                                     if (!item.Repairables.Any(r => r.IsBelowRepairIconThreshold)) { continue; }
                                     if (AddTargets<AIObjectiveRepairItems, Item>(Character, item) && newOrder == null && !ObjectiveManager.HasActiveObjective<AIObjectiveRepairItem>())
                                     {
-                                        var orderPrefab = Order.GetPrefab("reportbrokendevices");
+                                        var orderPrefab = OrderPrefab.Prefabs["reportbrokendevices"];
                                         newOrder = new Order(orderPrefab, hull, item.Repairables?.FirstOrDefault(), orderGiver: Character);
                                         targetHull = hull;
                                     }
@@ -978,15 +977,18 @@ namespace Barotrauma
                 {
                     if (Character.TeamID == CharacterTeamType.FriendlyNPC)
                     {
-                        Character.Speak(newOrder.GetChatMessage("", targetHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Default,
-                            identifier: newOrder.Prefab.Identifier + (targetHull?.DisplayName ?? "null"),
+                        Character.Speak(newOrder.GetChatMessage("", targetHull?.DisplayName?.Value ?? "", givingOrderToSelf: false), ChatMessageType.Default,
+                            identifier: $"{newOrder.Prefab.Identifier}{targetHull?.RoomName ?? "null"}".ToIdentifier(),
                             minDurationBetweenSimilar: 60.0f);
                     }
                     else if (Character.IsOnPlayerTeam && GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                     {
-                        Character.Speak(newOrder.GetChatMessage("", targetHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
+                        Character.Speak(newOrder.GetChatMessage("", targetHull?.DisplayName?.Value ?? "", givingOrderToSelf: false), ChatMessageType.Order);
 #if SERVER
-                        GameMain.Server.SendOrderChatMessage(new OrderChatMessage(newOrder, "", CharacterInfo.HighestManualOrderPriority, targetHull, null, Character));
+                        GameMain.Server.SendOrderChatMessage(new OrderChatMessage(newOrder
+                            .WithManualPriority(CharacterInfo.HighestManualOrderPriority)
+                            .WithTargetEntity(targetHull)
+                            .WithOrderGiver(Character), "", null, Character));
 #endif
                     }
                 }
@@ -1025,17 +1027,17 @@ namespace Barotrauma
 
             if (Character.Oxygen < 20.0f)
             {
-                Character.Speak(TextManager.Get("DialogLowOxygen"), null, Rand.Range(0.5f, 5.0f), "lowoxygen", 30.0f);
+                Character.Speak(TextManager.Get("DialogLowOxygen").Value, null, Rand.Range(0.5f, 5.0f), "lowoxygen".ToIdentifier(), 30.0f);
             }
 
             if (Character.Bleeding > 2.0f)
             {
-                Character.Speak(TextManager.Get("DialogBleeding"), null, Rand.Range(0.5f, 5.0f), "bleeding", 30.0f);
+                Character.Speak(TextManager.Get("DialogBleeding").Value, null, Rand.Range(0.5f, 5.0f), "bleeding".ToIdentifier(), 30.0f);
             }
 
             if (Character.PressureTimer > 50.0f && Character.CurrentHull?.DisplayName != null)
             {
-                Character.Speak(TextManager.GetWithVariable("DialogPressure", "[roomname]", Character.CurrentHull.DisplayName, true), null, Rand.Range(0.5f, 5.0f), "pressure", 30.0f);
+                Character.Speak(TextManager.GetWithVariable("DialogPressure", "[roomname]", Character.CurrentHull.DisplayName, FormatCapitals.Yes).Value, null, Rand.Range(0.5f, 5.0f), "pressure".ToIdentifier(), 30.0f);
             }
         }
 
@@ -1191,21 +1193,21 @@ namespace Barotrauma
                                 case AIObjectiveCombat.CombatMode.Retreat:
                                     if (Character.IsSecurity)
                                     {
-                                        Character.Speak(TextManager.Get("dialogattackedbyfriendlysecurityresponse"), null, 0.5f, "attackedbyfriendlysecurityresponse", minDurationBetweenSimilar: 10.0f);
+                                        Character.Speak(TextManager.Get("dialogattackedbyfriendlysecurityresponse").Value, null, 0.5f, "attackedbyfriendlysecurityresponse".ToIdentifier(), minDurationBetweenSimilar: 10.0f);
                                     }
                                     else
                                     {
-                                        Character.Speak(TextManager.Get("DialogAttackedByFriendly"), null, 0.5f, "attackedbyfriendly", minDurationBetweenSimilar: 10.0f);
+                                        Character.Speak(TextManager.Get("DialogAttackedByFriendly").Value, null, 0.5f, "attackedbyfriendly".ToIdentifier(), minDurationBetweenSimilar: 10.0f);
                                     }
                                     break;
                                 case AIObjectiveCombat.CombatMode.Offensive:
                                 case AIObjectiveCombat.CombatMode.Arrest:
-                                    Character.Speak(TextManager.Get("dialogattackedbyfriendlysecurityarrest"), null, 0.5f, "attackedbyfriendlysecurityarrest", minDurationBetweenSimilar: 10.0f);
+                                    Character.Speak(TextManager.Get("dialogattackedbyfriendlysecurityarrest").Value, null, 0.5f, "attackedbyfriendlysecurityarrest".ToIdentifier(), minDurationBetweenSimilar: 10.0f);
                                     break;
                                 case AIObjectiveCombat.CombatMode.None:
                                     if (Character.IsSecurity && realDamage > 1)
                                     {
-                                        Character.Speak(TextManager.Get("dialogattackedbyfriendlysecurityresponse"), null, 0.5f, "attackedbyfriendlysecurityresponse", minDurationBetweenSimilar: 10.0f);
+                                        Character.Speak(TextManager.Get("dialogattackedbyfriendlysecurityresponse").Value, null, 0.5f, "attackedbyfriendlysecurityresponse".ToIdentifier(), minDurationBetweenSimilar: 10.0f);
                                     }
                                     break;
                             }
@@ -1415,14 +1417,14 @@ namespace Barotrauma
             }
         }
 
-        public void SetOrder(Order order, string option, int priority, Character orderGiver, bool speak = true)
+        public void SetOrder(Order order, bool speak = true)
         {
-            objectiveManager.SetOrder(order, option, priority, orderGiver, speak);
+            objectiveManager.SetOrder(order, speak);
         }
 
-        public void SetForcedOrder(Order order, string option, Character orderGiver)
+        public void SetForcedOrder(Order order)
         {
-            var objective = ObjectiveManager.CreateObjective(order, option, orderGiver);
+            var objective = ObjectiveManager.CreateObjective(order);
             ObjectiveManager.SetForcedOrder(objective);
         }
 
@@ -1528,18 +1530,17 @@ namespace Barotrauma
         /// Note: uses a single list for matching items. The item is reused each time when the method is called. So if you use the method twice, and then refer to the first items, you'll actually get the second. 
         /// To solve this, create a copy of the collection or change the code so that you first handle the first items and only after that query for the next items.
         /// </summary>
-        public static bool HasItem(Character character, string tagOrIdentifier, out IEnumerable<Item> items, string containedTag = null, float conditionPercentage = 0, bool requireEquipped = false, bool recursive = true, Func<Item, bool> predicate = null)
+        public static bool HasItem(Character character, Identifier tagOrIdentifier, out IEnumerable<Item> items, Identifier containedTag = default, float conditionPercentage = 0, bool requireEquipped = false, bool recursive = true, Func<Item, bool> predicate = null)
         {
             matchingItems.Clear();
             items = matchingItems;
-            if (character == null) { return false; }
-            if (character.Inventory == null) { return false; }
+            if (character?.Inventory == null) { return false; }
             matchingItems = character.Inventory.FindAllItems(i => (i.Prefab.Identifier == tagOrIdentifier || i.HasTag(tagOrIdentifier)) &&
                 i.ConditionPercentage >= conditionPercentage &&
                 (!requireEquipped || character.HasEquippedItem(i)) &&
                 (predicate == null || predicate(i)), recursive, matchingItems);
             items = matchingItems;
-            return matchingItems.Any(i => i != null && (containedTag == null || i.ContainedItems.Any(it => it.HasTag(containedTag) && it.ConditionPercentage > conditionPercentage)));
+            return matchingItems.Any(i => i != null && (containedTag.IsEmpty || i.ContainedItems.Any(it => it.HasTag(containedTag) && it.ConditionPercentage > conditionPercentage)));
         }
 
         public static void StructureDamaged(Structure structure, float damageAmount, Character character)
@@ -1594,7 +1595,7 @@ namespace Barotrauma
                             (otherHumanAI.ObjectiveManager.CurrentObjective as AIObjectiveIdle)?.FaceTargetAndWait(character, 5.0f);
                         }
                     }
-                    otherCharacter.Speak(TextManager.Get("dialogdamagewallswarning"), null, Rand.Range(0.5f, 1.0f), "damageoutpostwalls", 10.0f);
+                    otherCharacter.Speak(TextManager.Get("dialogdamagewallswarning").Value, null, Rand.Range(0.5f, 1.0f), "damageoutpostwalls".ToIdentifier(), 10.0f);
                     someoneSpoke = true;
                 }
                 // React if we are security
@@ -1674,7 +1675,7 @@ namespace Barotrauma
                             GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation.AddReputation(-reputationLoss);
                         }
                         item.StolenDuringRound = true;
-                        otherCharacter.Speak(TextManager.Get("dialogstealwarning"), null, Rand.Range(0.5f, 1.0f), "thief", 10.0f);
+                        otherCharacter.Speak(TextManager.Get("dialogstealwarning").Value, null, Rand.Range(0.5f, 1.0f), "thief".ToIdentifier(), 10.0f);
                         someoneSpoke = true;
 #if CLIENT
                         HintManager.OnStoleItem(thief, item);
@@ -1749,7 +1750,7 @@ namespace Barotrauma
 
         public static void RefreshTargets(Character character, Order order, Hull hull)
         {
-            switch (order.Identifier)
+            switch (order.Identifier.Value.ToLowerInvariant())
             {
                 case "reportfire":
                     AddTargets<AIObjectiveExtinguishFires, Hull>(character, hull);

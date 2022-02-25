@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveOperateItem : AIObjective
     {
-        public override string Identifier { get; set; } = "operate item";
+        public override Identifier Identifier { get; set; } = "operate item".ToIdentifier();
         public override string DebugTag =>  $"{Identifier} {component.Name}";
 
         public override bool AllowAutomaticItemUnequipping => true;
@@ -79,7 +79,7 @@ namespace Barotrauma
                             return Priority;
                         }
                     }
-                    switch (Option)
+                    switch (Option.Value.ToLowerInvariant())
                     {
                         case "shutdown":
                             if (!reactor.PowerOn)
@@ -146,7 +146,7 @@ namespace Barotrauma
             return Priority;
         }
 
-        public AIObjectiveOperateItem(ItemComponent item, Character character, AIObjectiveManager objectiveManager, string option, bool requireEquip,
+        public AIObjectiveOperateItem(ItemComponent item, Character character, AIObjectiveManager objectiveManager, Identifier option, bool requireEquip,
             Entity operateTarget = null, bool useController = false, ItemComponent controller = null, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier, option)
         {
@@ -181,7 +181,7 @@ namespace Barotrauma
             {
                 if (character.IsOnPlayerTeam)
                 {
-                    character.Speak(TextManager.GetWithVariable("DialogCantFindController", "[item]", component.Item.Name, true), null, 2.0f, "cantfindcontroller", 30.0f);
+                    character.Speak(TextManager.GetWithVariable("DialogCantFindController", "[item]", component.Item.Name).Value, delay: 2.0f, identifier: "cantfindcontroller".ToIdentifier(), minDurationBetweenSimilar: 30.0f);
                 }
                 Abandon = true;
                 return;

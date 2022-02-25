@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
         private bool nonContinuousOutputSent;
 
         private int maxOutputLength;
-        [Editable, Serialize(200, false, description: "The maximum length of the output string. Warning: Large values can lead to large memory usage or networking issues.")]
+        [Editable, Serialize(200, IsPropertySaveable.No, description: "The maximum length of the output string. Warning: Large values can lead to large memory usage or networking issues.")]
         public int MaxOutputLength
         {
             get { return maxOutputLength; }
@@ -33,7 +33,7 @@ namespace Barotrauma.Items.Components
 
         private string output;
 
-        [InGameEditable, Serialize("1", true, description: "The signal this item outputs when the received signal matches the regular expression.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("1", IsPropertySaveable.Yes, description: "The signal this item outputs when the received signal matches the regular expression.", alwaysUseInstanceValues: true)]
         public string Output 
         {
             get { return output; }
@@ -48,16 +48,16 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize(false, true, description: "Should the component output a value of a capture group instead of a constant signal.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(false, IsPropertySaveable.Yes, description: "Should the component output a value of a capture group instead of a constant signal.", alwaysUseInstanceValues: true)]
         public bool UseCaptureGroup { get; set; }
 
-        [InGameEditable, Serialize("0", true, description: "The signal this item outputs when the received signal does not match the regular expression.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("0", IsPropertySaveable.Yes, description: "The signal this item outputs when the received signal does not match the regular expression.", alwaysUseInstanceValues: true)]
         public string FalseOutput { get; set; }
 
-        [InGameEditable, Serialize(true, true, description: "Should the component keep sending the output even after it stops receiving a signal, or only send an output when it receives a signal.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(true, IsPropertySaveable.Yes, description: "Should the component keep sending the output even after it stops receiving a signal, or only send an output when it receives a signal.", alwaysUseInstanceValues: true)]
         public bool ContinuousOutput { get; set; }
 
-        [InGameEditable, Serialize("", true, description: "The regular expression used to check the incoming signals.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("", IsPropertySaveable.Yes, description: "The regular expression used to check the incoming signals.", alwaysUseInstanceValues: true)]
         public string Expression
         {
             get { return expression; }
@@ -82,7 +82,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public RegExFindComponent(Item item, XElement element)
+        public RegExFindComponent(Item item, ContentXElement element)
             : base(item, element)
         {
             nonContinuousOutputSent = true;

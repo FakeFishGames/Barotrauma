@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -20,18 +21,17 @@ namespace Barotrauma
         private const string metadataDefinition = "metadata";
         private const string endDefinition = "end";
 
-        public static List<RichTextData> GetRichTextData(string text, out string sanitizedText)
+        public static ImmutableArray<RichTextData>? GetRichTextData(string text, out string sanitizedText)
         {
-            List<RichTextData> textColors = null;
             sanitizedText = text;
-            if (!string.IsNullOrEmpty(text) && text.Contains(definitionIndicator))
+            if (!string.IsNullOrEmpty(text) && text.Contains(definitionIndicator, System.StringComparison.Ordinal))
             {
                 text = text.Replace("\r", "");
                 string[] segments = text.Split(definitionIndicator);
 
                 sanitizedText = string.Empty;
 
-                textColors = new List<RichTextData>();
+                List<RichTextData> textColors = new List<RichTextData>();
                 RichTextData tempData = null;
 
                 int prevIndex = 0;
@@ -80,9 +80,9 @@ namespace Barotrauma
                         }
                     }
                 }
+                return textColors.ToImmutableArray();
             }
-
-            return textColors;
+            return null;
         }
     }
 }

@@ -68,7 +68,7 @@ namespace Barotrauma
                             "Attempted to access a potentially removed ragdoll. Character: " + character.SpeciesName + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this) + "\n" + Environment.StackTrace.CleanupStackTrace());
                         accessRemovedCharacterErrorShown = true;
                     }
-                    return new Limb[0];
+                    return Array.Empty<Limb>();
                 }
                 return limbs;
             }
@@ -423,13 +423,13 @@ namespace Barotrauma
 #endif
 
                 var characterPrefab = CharacterPrefab.FindByFilePath(character.ConfigPath);
-                if (characterPrefab?.XDocument != null)
+                if (characterPrefab?.ConfigElement != null)
                 {
-                    var mainElement = characterPrefab.XDocument.Root.IsOverride() ? characterPrefab.XDocument.Root.FirstElement() : characterPrefab.XDocument.Root;
+                    var mainElement = characterPrefab.ConfigElement;
                     foreach (var huskAppendage in mainElement.GetChildElements("huskappendage"))
                     {
                         if (!inEditor && huskAppendage.GetAttributeBool("onlyfromafflictions", false)) { continue; }
-                        AfflictionHusk.AttachHuskAppendage(character, huskAppendage.GetAttributeString("affliction", string.Empty), huskAppendage, ragdoll: this);
+                        AfflictionHusk.AttachHuskAppendage(character, huskAppendage.GetAttributeIdentifier("affliction", Identifier.Empty), huskAppendage, ragdoll: this);
                     }
                 }
             }
@@ -1408,7 +1408,7 @@ namespace Barotrauma
 #else
                 DebugConsole.NewMessage(errorMsg.Replace("[name]", Character.Name), Color.Red);
 #endif
-                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.CheckValidity:" + character.ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg.Replace("[name]", Character.SpeciesName));
+                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.CheckValidity:" + character.ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg.Replace("[name]", Character.SpeciesName.Value));
 
                 if (!MathUtils.IsValid(Collider.SimPosition) || Math.Abs(Collider.SimPosition.X) > 1e10f || Math.Abs(Collider.SimPosition.Y) > 1e10f)
                 {

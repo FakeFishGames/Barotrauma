@@ -95,7 +95,7 @@ namespace Barotrauma
 
         public static void ShipCommandLog(string text)
         {
-            if (GameSettings.VerboseLogging)
+            if (GameSettings.CurrentConfig.VerboseLogging)
             {
                 DebugConsole.NewMessage(text);
             }
@@ -251,14 +251,14 @@ namespace Barotrauma
 
             if (mostImportantIssue != null && mostImportantIssue.Importance > MinimumIssueThreshold)
             {
-                IEnumerable<Character> bestCharacters = CrewManager.GetCharactersSortedForOrder(mostImportantIssue.SuggestedOrderPrefab, AlliedCharacters, character, true);
+                IEnumerable<Character> bestCharacters = CrewManager.GetCharactersSortedForOrder(mostImportantIssue.SuggestedOrder, AlliedCharacters, character, true);
 
                 foreach (Character orderedCharacter in bestCharacters)
                 {
                     float issueApplicability = mostImportantIssue.Importance;
 
                     // prefer not to switch if not qualified
-                    issueApplicability *= mostImportantIssue.SuggestedOrderPrefab.AppropriateJobs.Contains(orderedCharacter.Info.Job.Prefab.Identifier) ? 1f : 0.75f;
+                    issueApplicability *= mostImportantIssue.SuggestedOrder.AppropriateJobs.Contains(orderedCharacter.Info.Job.Prefab.Identifier) ? 1f : 0.75f;
                     
                     ShipIssueWorker occupiedIssue = attendedIssues.FirstOrDefault(i => i.OrderedCharacter == orderedCharacter);
 
@@ -276,7 +276,7 @@ namespace Barotrauma
                         }
 
                         // give slight preference if not qualified for current job
-                        issueApplicability += occupiedIssue.SuggestedOrderPrefab.AppropriateJobs.Contains(orderedCharacter.Info.Job.Prefab.Identifier) ? 0 : 7.5f;
+                        issueApplicability += occupiedIssue.SuggestedOrder.AppropriateJobs.Contains(orderedCharacter.Info.Job.Prefab.Identifier) ? 0 : 7.5f;
 
                         // prefer not to switch orders unless considerably more important
                         issueApplicability -= IssueDevotionBuffer;
@@ -312,9 +312,9 @@ namespace Barotrauma
 #if DEBUG
                         ShipCommandLog("Dismissing " + shipIssueWorker + " for character " + shipIssueWorker.OrderedCharacter);
 #endif
-                        Order orderPrefab = Order.GetPrefab("dismissed");
+                        var order = new Order(OrderPrefab.Dismissal, null).WithManualPriority(3).WithOrderGiver(character);
                         //character.Speak(orderPrefab.GetChatMessage(shipIssueWorker.OrderedCharacter.Name, "", givingOrderToSelf: false));
-                        shipIssueWorker.OrderedCharacter.SetOrder(Order.GetPrefab("dismissed"), orderOption: null, priority: 3, character);
+                        shipIssueWorker.OrderedCharacter.SetOrder(order);
                         shipIssueWorker.RemoveOrder();
                         break;
                     }
@@ -346,18 +346,21 @@ namespace Barotrauma
 
             if (CommandedSubmarine.GetItems(false).Find(i => i.HasTag("reactor") && !i.NonInteractable)?.GetComponent<Reactor>() is Reactor reactor)
             {
-                ShipIssueWorkers.Add(new ShipIssueWorkerPowerUpReactor(this, Order.GetPrefab("operatereactor"), reactor.Item, reactor, "powerup"));
+                var order = new Order(OrderPrefab.Prefabs["operatereactor"], "powerup".ToIdentifier(), reactor.Item, reactor);
+                ShipIssueWorkers.Add(new ShipIssueWorkerPowerUpReactor(this, order));
             }
 
             if (CommandedSubmarine.GetItems(false).Find(i => i.HasTag("navterminal") && !i.NonInteractable) is Item nav && nav.GetComponent<Steering>() is Steering steeringComponent)
             {
                 steering = steeringComponent;
-                ShipIssueWorkers.Add(new ShipIssueWorkerSteer(this, Order.GetPrefab("steer"), nav, steeringComponent, "navigatetactical"));
+                var order = new Order(OrderPrefab.Prefabs["steer"], "navigatetactical".ToIdentifier(), nav, steeringComponent);
+                ShipIssueWorkers.Add(new ShipIssueWorkerSteer(this, order));
             }
 
             foreach (Item item in CommandedSubmarine.GetItems(true).FindAll(i => i.HasTag("turret")))
             {
-                ShipIssueWorkers.Add(new ShipIssueWorkerOperateWeapons(this, Order.GetPrefab("operateweapons"), item, item.GetComponent<Turret>()));
+                var order = new Order(OrderPrefab.Prefabs["operateweapons"], item, item.GetComponent<Turret>());
+                ShipIssueWorkers.Add(new ShipIssueWorkerOperateWeapons(this, order));
             }
 
             int crewSizeModifier = 2;
@@ -365,14 +368,16 @@ namespace Barotrauma
             ShipGlobalIssueFixLeaks shipGlobalIssueFixLeaks = new ShipGlobalIssueFixLeaks(this);
             for (int i = 0; i < crewSizeModifier; i++)
             {
-                ShipIssueWorkers.Add(new ShipIssueWorkerFixLeaks(this, Order.GetPrefab("fixleaks"), shipGlobalIssueFixLeaks));
+                var order = new Order(OrderPrefab.Prefabs["fixleaks"], null);
+                ShipIssueWorkers.Add(new ShipIssueWorkerFixLeaks(this, order, shipGlobalIssueFixLeaks));
             }
             shipGlobalIssues.Add(shipGlobalIssueFixLeaks);
 
             ShipGlobalIssueRepairSystems shipGlobalIssueRepairSystems = new ShipGlobalIssueRepairSystems(this);
             for (int i = 0; i < crewSizeModifier; i++)
             {
-                ShipIssueWorkers.Add(new ShipIssueWorkerRepairSystems(this, Order.GetPrefab("repairsystems"), shipGlobalIssueRepairSystems));
+                var order = new Order(OrderPrefab.Prefabs["repairsystems"], null);
+                ShipIssueWorkers.Add(new ShipIssueWorkerRepairSystems(this, order, shipGlobalIssueRepairSystems));
             }
             shipGlobalIssues.Add(shipGlobalIssueRepairSystems);
 

@@ -63,7 +63,7 @@ namespace Barotrauma
         public struct NetAffliction : INetSerializableStruct
         {
             [NetworkSerialize]
-            public string Identifier;
+            public Identifier Identifier;
 
             [NetworkSerialize]
             public ushort Strength;
@@ -116,7 +116,7 @@ namespace Barotrauma
 
                     foreach (AfflictionPrefab prefab in AfflictionPrefab.List)
                     {
-                        if (prefab.Identifier.Equals(Identifier, StringComparison.OrdinalIgnoreCase))
+                        if (prefab.Identifier == Identifier)
                         {
                             cachedPrefab = prefab;
                             return prefab;
@@ -128,7 +128,7 @@ namespace Barotrauma
                 set
                 {
                     cachedPrefab = value;
-                    Identifier = value?.Identifier ?? string.Empty;
+                    Identifier = value?.Identifier ?? Identifier.Empty;
                     Strength = 0;
                     Price = 0;
                 }
@@ -136,12 +136,12 @@ namespace Barotrauma
 
             public readonly bool AfflictionEquals(AfflictionPrefab prefab)
             {
-                return prefab.Identifier.Equals(Identifier, StringComparison.OrdinalIgnoreCase);
+                return prefab.Identifier == Identifier;
             }
 
             public readonly bool AfflictionEquals(NetAffliction affliction)
             {
-                return affliction.Identifier.Equals(Identifier, StringComparison.OrdinalIgnoreCase);
+                return affliction.Identifier == Identifier;
             }
         }
 
@@ -221,7 +221,7 @@ namespace Barotrauma
 
                 foreach (NetAffliction affliction in crewMember.Afflictions)
                 {
-                    health.ReduceAffliction(null, affliction.Identifier, affliction.Prefab?.MaxStrength ?? affliction.Strength);
+                    health.ReduceAfflictionOnAllLimbs(affliction.Identifier, affliction.Prefab?.MaxStrength ?? affliction.Strength);
                 }
             }
 
@@ -333,21 +333,21 @@ namespace Barotrauma
 #if DEBUG && CLIENT
         private static readonly CharacterInfo[] TestInfos =
         {
-            new CharacterInfo("human"),
-            new CharacterInfo("human"),
-            new CharacterInfo("human"),
-            new CharacterInfo("human"),
-            new CharacterInfo("human"),
-            new CharacterInfo("human"),
-            new CharacterInfo("human")
+            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
+            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
+            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
+            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
+            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
+            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
+            new CharacterInfo(CharacterPrefab.HumanSpeciesName)
         };
 
         private static readonly NetAffliction[] TestAfflictions =
         {
-            new NetAffliction { Identifier = "internaldamage", Strength = 80, Price = 10 },
-            new NetAffliction { Identifier = "blunttrauma", Strength = 50, Price = 10 },
-            new NetAffliction { Identifier = "lacerations", Strength = 20, Price = 10 },
-            new NetAffliction { Identifier = "burn", Strength = 10, Price = 10 }
+            new NetAffliction { Identifier = "internaldamage".ToIdentifier(), Strength = 80, Price = 10 },
+            new NetAffliction { Identifier = "blunttrauma".ToIdentifier(), Strength = 50, Price = 10 },
+            new NetAffliction { Identifier = "lacerations".ToIdentifier(), Strength = 20, Price = 10 },
+            new NetAffliction { Identifier = "burn".ToIdentifier(), Strength = 10, Price = 10 }
         };
 #endif
     }

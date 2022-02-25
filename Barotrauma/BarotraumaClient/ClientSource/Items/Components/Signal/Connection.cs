@@ -190,7 +190,7 @@ namespace Barotrauma.Items.Components
                 if (wire.HiddenInGame && Screen.Selected == GameMain.GameScreen) { continue; }
 
                 Connection recipient = wire.OtherConnection(null);
-                string label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
+                LocalizedString label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
                 if (wire.Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
                 DrawWire(spriteBatch, wire, new Vector2(x, y + height - 100 * GUI.Scale),
                     new Vector2(x, y + height),
@@ -208,17 +208,17 @@ namespace Barotrauma.Items.Components
 
         private void DrawConnection(SpriteBatch spriteBatch, ConnectionPanel panel, Vector2 position, Vector2 labelPos, Vector2 scale)
         {
-            string text = DisplayName.ToUpper();
+            string text = DisplayName.Value.ToUpper();
 
             //nasty
-            if (GUI.Style.GetComponentStyle("ConnectionPanelLabel")?.Sprites.Values.First().First() is UISprite labelSprite)
+            if (GUIStyle.GetComponentStyle("ConnectionPanelLabel")?.Sprites.Values.First().First() is UISprite labelSprite)
             {
                 Rectangle labelArea = GetLabelArea(labelPos, text, scale);
-                labelSprite.Draw(spriteBatch, labelArea, IsPower ? GUI.Style.Red : Color.SteelBlue);
+                labelSprite.Draw(spriteBatch, labelArea, IsPower ? GUIStyle.Red : Color.SteelBlue);
             }
 
-            GUI.DrawString(spriteBatch, labelPos + Vector2.UnitY, text, Color.Black * 0.8f, font: GUI.SmallFont);
-            GUI.DrawString(spriteBatch, labelPos, text, GUI.Style.TextColorBright, font: GUI.SmallFont);
+            GUI.DrawString(spriteBatch, labelPos + Vector2.UnitY, text, Color.Black * 0.8f, font: GUIStyle.SmallFont);
+            GUI.DrawString(spriteBatch, labelPos, text, GUIStyle.TextColorBright, font: GUIStyle.SmallFont);
 
             float connectorSpriteScale = (35.0f / connectionSprite.SourceRect.Width) * panel.Scale;
             connectionSprite.Draw(spriteBatch, position, scale: connectorSpriteScale);
@@ -234,7 +234,7 @@ namespace Barotrauma.Items.Components
                 if (wires[i].HiddenInGame && Screen.Selected == GameMain.GameScreen) { continue; }
 
                 Connection recipient = wires[i].OtherConnection(this);
-                string label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
+                LocalizedString label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
                 if (wires[i].Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
                 DrawWire(spriteBatch, wires[i], position, wirePosition, equippedWire, panel, label);
 
@@ -295,7 +295,7 @@ namespace Barotrauma.Items.Components
         {
             FlashTimer = flashDuration;
             this.flashDuration = flashDuration;
-            flashColor = (color == null) ? GUI.Style.Red : (Color)color;
+            flashColor = (color == null) ? GUIStyle.Red : (Color)color;
         }
 
         public void UpdateFlashTimer(float deltaTime)
@@ -304,7 +304,7 @@ namespace Barotrauma.Items.Components
             FlashTimer -= deltaTime;
         }
 
-        private static void DrawWire(SpriteBatch spriteBatch, Wire wire, Vector2 end, Vector2 start, Wire equippedWire, ConnectionPanel panel, string label)
+        private static void DrawWire(SpriteBatch spriteBatch, Wire wire, Vector2 end, Vector2 start, Wire equippedWire, ConnectionPanel panel, LocalizedString label)
         {
             int textX = (int)start.X;
             if (start.X < end.X)
@@ -324,20 +324,20 @@ namespace Barotrauma.Items.Components
                 Vector2.Distance(end, PlayerInput.MousePosition) < 20.0f ||
                 new Rectangle((start.X < end.X) ? textX - 100 : textX, (int)start.Y - 5, 100, 14).Contains(PlayerInput.MousePosition));
 
-            if (!string.IsNullOrEmpty(label))
+            if (!label.IsNullOrEmpty())
             {
                 if (start.Y > panel.GuiFrame.Rect.Bottom - 1.0f)
                 {
                     //wire at the bottom of the panel -> draw the text below the panel, tilted 45 degrees
-                    GUI.Font.DrawString(spriteBatch, label, start + Vector2.UnitY * 20 * GUI.Scale, Color.White, 45.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);
+                    GUIStyle.Font.DrawString(spriteBatch, label, start + Vector2.UnitY * 20 * GUI.Scale, Color.White, 45.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);
                 }
                 else
                 {
                     GUI.DrawString(spriteBatch,
-                        new Vector2(start.X < end.X ? textX - GUI.SmallFont.MeasureString(label).X : textX, start.Y - 5.0f),
+                        new Vector2(start.X < end.X ? textX - GUIStyle.SmallFont.MeasureString(label).X : textX, start.Y - 5.0f),
                         label,
-                        wire.Locked ? GUI.Style.TextColorDim : (mouseOn ? Wire.higlightColor : GUI.Style.TextColor), Color.Black * 0.9f,
-                        3, GUI.SmallFont);
+                        wire.Locked ? GUIStyle.TextColorDim : (mouseOn ? Wire.higlightColor : GUIStyle.TextColorNormal), Color.Black * 0.9f,
+                        3, GUIStyle.SmallFont);
                 }
             }
 
@@ -401,13 +401,13 @@ namespace Barotrauma.Items.Components
                 {
                     if (c.IsOutput)
                     {
-                        var labelArea = GetLabelArea(GetOutputLabelPosition(rightPos, panel, c), c.DisplayName.ToUpper(), scale);
+                        var labelArea = GetLabelArea(GetOutputLabelPosition(rightPos, panel, c), c.DisplayName.Value.ToUpper(), scale);
                         labelAreas.Add(labelArea);
                         rightPos.Y += connectorIntervalLeft;
                     }
                     else
                     {
-                        var labelArea = GetLabelArea(GetInputLabelPosition(leftPos, panel, c), c.DisplayName.ToUpper(), scale);
+                        var labelArea = GetLabelArea(GetInputLabelPosition(leftPos, panel, c), c.DisplayName.Value.ToUpper(), scale);
                         labelAreas.Add(labelArea);
                         leftPos.Y += connectorIntervalRight;
                     }
@@ -455,19 +455,19 @@ namespace Barotrauma.Items.Components
         {
             return new Vector2(
                 connectorPosition.X + 25 * panel.Scale,
-                connectorPosition.Y - 5 * panel.Scale - GUI.SmallFont.MeasureString(connection.DisplayName.ToUpper()).Y);
+                connectorPosition.Y - 5 * panel.Scale - GUIStyle.SmallFont.MeasureString(connection.DisplayName.ToUpper()).Y);
         }
 
         private static Vector2 GetOutputLabelPosition(Vector2 connectorPosition, ConnectionPanel panel, Connection connection)
         {
             return new Vector2(
-                connectorPosition.X - 25 * panel.Scale - GUI.SmallFont.MeasureString(connection.DisplayName.ToUpper()).X,
+                connectorPosition.X - 25 * panel.Scale - GUIStyle.SmallFont.MeasureString(connection.DisplayName.ToUpper()).X,
                 connectorPosition.Y + 5 * panel.Scale);
         }
 
         private static Rectangle GetLabelArea(Vector2 labelPos, string text, Vector2 scale)
         {
-            Vector2 textSize = GUI.SmallFont.MeasureString(text);
+            Vector2 textSize = GUIStyle.SmallFont.MeasureString(text);
             Rectangle labelArea = new Rectangle(labelPos.ToPoint(), textSize.ToPoint());
             labelArea.Inflate(10 * scale.X, 3 * scale.Y);
             return labelArea;

@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     class AIObjectiveIdle : AIObjective
     {
-        public override string Identifier { get; set; } = "idle";
+        public override Identifier Identifier { get; set; } = "idle".ToIdentifier();
         public override bool AllowAutomaticItemUnequipping => true;
         public override bool AllowInAnySub => true;
 
@@ -93,7 +93,7 @@ namespace Barotrauma
 
         public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + Environment.StackTrace.CleanupStackTrace()); }
 
-        public readonly HashSet<string> PreferredOutpostModuleTypes = new HashSet<string>();
+        public readonly HashSet<Identifier> PreferredOutpostModuleTypes = new HashSet<Identifier>();
 
         public void CalculatePriority(float max = 0)
         {
@@ -391,7 +391,7 @@ namespace Barotrauma
         {
             targetHulls.Clear();
             hullWeights.Clear();
-            foreach (var hull in Hull.hullList)
+            foreach (var hull in Hull.HullList)
             {
                 if (character.Submarine == null) { break; }
                 if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }

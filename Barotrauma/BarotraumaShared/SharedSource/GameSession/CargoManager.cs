@@ -217,7 +217,7 @@ namespace Barotrauma
                 // Exchange money
                 var itemValue = item.Quantity * buyValues[item.ItemPrefab];
                 campaign.Money -= itemValue;
-                GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier);
+                GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier.Value);
                 Location.StoreCurrentBalance += itemValue;
 
                 if (removeFromCrate)
@@ -367,7 +367,14 @@ namespace Barotrauma
             if (sub == Submarine.MainSub)
             {
 #if CLIENT
-                new GUIMessageBox("", TextManager.GetWithVariable("CargoSpawnNotification", "[roomname]", cargoRoom.DisplayName, true), new string[0], type: GUIMessageBox.Type.InGame, iconStyle: "StoreShoppingCrateIcon");
+                new GUIMessageBox("",
+                    TextManager.GetWithVariable("CargoSpawnNotification",
+                        "[roomname]",
+                        cargoRoom.DisplayName,
+                        FormatCapitals.Yes),
+                    Array.Empty<LocalizedString>(),
+                    type: GUIMessageBox.Type.InGame,
+                    iconStyle: "StoreShoppingCrateIcon");
 #else
                 foreach (Client client in GameMain.Server.ConnectedClients)
                 {

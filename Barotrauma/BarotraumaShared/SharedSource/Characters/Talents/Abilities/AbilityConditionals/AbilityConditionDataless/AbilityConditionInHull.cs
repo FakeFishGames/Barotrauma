@@ -5,7 +5,7 @@ namespace Barotrauma.Abilities
 {
     class AbilityConditionInHull : AbilityConditionDataless
     {
-        public AbilityConditionInHull(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) { }
+        public AbilityConditionInHull(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement) { }
 
         protected override bool MatchesConditionSpecific()
         {

@@ -6,9 +6,9 @@ namespace Barotrauma.SpriteDeformations
 {
     class InflateParams : SpriteDeformationParams
     {
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ValueStep = 1)]
+        [Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ValueStep = 1)]
         public override float Frequency { get; set; } = 1;
-        [Serialize(1.0f, true), Editable(MinValueFloat = 0.01f, MaxValueFloat = 10.0f, DecimalCount = 2, ValueStep = 0.1f)]
+        [Serialize(1.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.01f, MaxValueFloat = 10.0f, DecimalCount = 2, ValueStep = 0.1f)]
         public float Scale { get; set; }
 
         public InflateParams(XElement element) : base(element)

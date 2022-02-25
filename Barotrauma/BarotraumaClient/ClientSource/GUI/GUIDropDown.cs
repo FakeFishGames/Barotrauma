@@ -55,9 +55,8 @@ namespace Barotrauma
         {
             get { return listBox.SelectedComponent; }
         }
-        
-        // TODO: fix implicit hiding
-        public bool Selected
+
+        public override bool Selected
         {
             get
             {
@@ -97,7 +96,7 @@ namespace Barotrauma
             set { button.TextColor = value; }
         }
 
-        public override ScalableFont Font 
+        public override GUIFont Font 
         {
             get { return button?.Font ?? base.Font; }
             set 
@@ -142,13 +141,13 @@ namespace Barotrauma
             get { return selectedIndexMultiple; }
         }
 
-        public string Text
+        public LocalizedString Text
         {
             get { return button.Text; }
             set { button.Text = value; }
         }
 
-        public override string ToolTip
+        public override RichString ToolTip
         {
             get
             {
@@ -162,8 +161,10 @@ namespace Barotrauma
             }
         }
                 
-        public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 4, string style = "", bool selectMultiple = false, bool dropAbove = false) : base(style, rectT)
+        public GUIDropDown(RectTransform rectT, LocalizedString text = null, int elementCount = 4, string style = "", bool selectMultiple = false, bool dropAbove = false) : base(style, rectT)
         {
+            text ??= new RawLString("");
+
             HoverCursor = CursorState.Hand;
             CanBeFocused = true;
 
@@ -173,7 +174,7 @@ namespace Barotrauma
             {
                 OnClicked = OnClicked
             };
-            GUI.Style.Apply(button, "", this);
+            GUIStyle.Apply(button, "", this);
             button.TextBlock.SetTextPos();
 
             Anchor listAnchor = dropAbove ? Anchor.TopCenter : Anchor.BottomCenter;
@@ -184,13 +185,13 @@ namespace Barotrauma
                 Enabled = !selectMultiple
             };
             if (!selectMultiple) { listBox.OnSelected = SelectItem; }           
-            GUI.Style.Apply(listBox, "GUIListBox", this);
-            GUI.Style.Apply(listBox.ContentBackground, "GUIListBox", this);
+            GUIStyle.Apply(listBox, "GUIListBox", this);
+            GUIStyle.Apply(listBox.ContentBackground, "GUIListBox", this);
 
-            if (button.Style.ChildStyles.ContainsKey("dropdownicon"))
+            if (button.Style.ChildStyles.ContainsKey("dropdownicon".ToIdentifier()))
             {
                 icon = new GUIImage(new RectTransform(new Vector2(0.6f, 0.6f), button.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point(5, 0) }, null, scaleToFit: true);
-                icon.ApplyStyle(button.Style.ChildStyles["dropdownicon"]);
+                icon.ApplyStyle(button.Style.ChildStyles["dropdownicon".ToIdentifier()]);
             }
 
             currentHighestParent = FindHighestParent();
@@ -244,8 +245,9 @@ namespace Barotrauma
             return parentHierarchy.Last();
         }
                 
-        public void AddItem(string text, object userData = null, string toolTip = "")
+        public void AddItem(LocalizedString text, object userData = null, LocalizedString toolTip = null)
         {
+            toolTip ??= "";
             if (selectMultiple)
             {
                 var frame = new GUIFrame(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform)
@@ -261,7 +263,7 @@ namespace Barotrauma
                     ToolTip = toolTip,
                     OnSelected = (GUITickBox tb) =>
                     {
-                        List<string> texts = new List<string>();
+                        List<LocalizedString> texts = new List<LocalizedString>();
                         selectedDataMultiple.Clear();
                         selectedIndexMultiple.Clear();
                         int i = 0;
@@ -276,7 +278,7 @@ namespace Barotrauma
                             }
                             i++;
                         }
-                        button.Text = string.Join(", ", texts);
+                        button.Text = LocalizedString.Join(", ", texts);
                         // TODO: The callback is called at least twice, remove this?
                         OnSelected?.Invoke(tb.Parent, tb.Parent.UserData);
                         return true;
@@ -368,8 +370,9 @@ namespace Barotrauma
             Dropped = !Dropped;
             if (Dropped && Enabled)
             {
-                OnDropped?.Invoke(this, userData);
+                OnDropped?.Invoke(this, UserData);
                 listBox.UpdateScrollBarSize();
+                listBox.UpdateDimensions();
 
                 GUI.KeyboardDispatcher.Subscriber = this;
             }

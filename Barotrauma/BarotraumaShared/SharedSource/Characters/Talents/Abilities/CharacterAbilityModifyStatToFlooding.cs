@@ -10,7 +10,7 @@ namespace Barotrauma.Abilities
         private float lastValue = 0f;
         public override bool AllowClientSimulation => true;
 
-        public CharacterAbilityModifyStatToFlooding(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityModifyStatToFlooding(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statType = CharacterAbilityGroup.ParseStatType(abilityElement.GetAttributeString("stattype", ""), CharacterTalent.DebugIdentifier);
             maxValue = abilityElement.GetAttributeFloat("maxvalue", 0f);

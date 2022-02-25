@@ -68,7 +68,7 @@ namespace Barotrauma
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
                 {
                     var variant = Rand.Range(0, jobPrefab.Variants);
-                    CrewManager.AddCharacterInfo(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant));
+                    CrewManager.AddCharacterInfo(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: jobPrefab, variant: variant));
                 }
             }
             InitCampaignData();
@@ -82,7 +82,7 @@ namespace Barotrauma
         {
             IsFirstRound = false;
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -283,9 +283,9 @@ namespace Barotrauma
                 overlaySprite = Map.CurrentLocation.Type.GetPortrait(Map.CurrentLocation.PortraitId);
                 overlayTextColor = Color.Transparent;
                 overlayText = TextManager.GetWithVariables(showCampaignResetText ? "campaignend4" : "campaignstart",
-                        new string[] { "xxxx", "yyyy" },
-                        new string[] { Map.CurrentLocation.Name, TextManager.Get("submarineclass." + Submarine.MainSub.Info.SubmarineClass) });
-                string pressAnyKeyText = TextManager.Get("pressanykey");
+                        ("xxxx", Map.CurrentLocation.Name),
+                        ("yyyy", TextManager.Get("submarineclass." + Submarine.MainSub.Info.SubmarineClass)));
+                LocalizedString pressAnyKeyText = TextManager.Get("pressanykey");
                 float fadeInDuration = 2.0f;
                 float textDuration = 10.0f;
                 float timer = 0.0f;
@@ -385,7 +385,7 @@ namespace Barotrauma
         {
             NextLevel = newLevel;
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
-            SoundPlayer.OverrideMusicType = success ? "endround" : "crewdead";
+            SoundPlayer.OverrideMusicType = (success ? "endround" : "crewdead").ToIdentifier();
             SoundPlayer.OverrideMusicDuration = 18.0f;
             GUI.SetSavingIndicatorState(success);
             crewDead = false;
@@ -672,9 +672,9 @@ namespace Barotrauma
             var subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
             if (subsToLeaveBehind.Any())
             {
-                string msg = TextManager.Get(subsToLeaveBehind.Count == 1 ? "LeaveSubBehind" : "LeaveSubsBehind");
+                LocalizedString msg = TextManager.Get(subsToLeaveBehind.Count == 1 ? "LeaveSubBehind" : "LeaveSubsBehind");
 
-                var msgBox = new GUIMessageBox(TextManager.Get("Warning"), msg, new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                var msgBox = new GUIMessageBox(TextManager.Get("Warning"), msg, new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
                 msgBox.Buttons[0].OnClicked += (btn, userdata) => { LoadNewLevel(); return true; } ;
                 msgBox.Buttons[0].OnClicked += msgBox.Close;
                 msgBox.Buttons[0].UserData = Submarine.Loaded.FindAll(s => !subsToLeaveBehind.Contains(s));

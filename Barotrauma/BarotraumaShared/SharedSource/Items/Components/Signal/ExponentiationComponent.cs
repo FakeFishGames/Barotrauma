@@ -6,7 +6,7 @@ namespace Barotrauma.Items.Components
     class ExponentiationComponent : ItemComponent
     {
         private float exponent;
-        [InGameEditable, Serialize(1.0f, false, description: "The exponent of the operation.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(1.0f, IsPropertySaveable.No, description: "The exponent of the operation.", alwaysUseInstanceValues: true)]
         public float Exponent
         {
             get
@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public ExponentiationComponent(Item item, XElement element)
+        public ExponentiationComponent(Item item, ContentXElement element)
             : base(item, element)
         {
             IsActive = true;

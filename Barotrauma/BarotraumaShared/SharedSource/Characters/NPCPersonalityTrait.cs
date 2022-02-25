@@ -8,15 +8,7 @@ namespace Barotrauma
 {
     class NPCPersonalityTrait
     {
-        private static List<NPCPersonalityTrait> list = new List<NPCPersonalityTrait>();
-        public static List<NPCPersonalityTrait> List
-        {
-            get { return list; }
-        }
-
-        public readonly string FilePath;
-
-        public readonly string Name;
+        public readonly Identifier Name;
 
         public readonly List<string> AllowedDialogTags;
 
@@ -26,20 +18,32 @@ namespace Barotrauma
             get { return commonness; }
         }
 
-        public NPCPersonalityTrait(XElement element, string filePath)
+        public static IEnumerable<NPCPersonalityTrait> GetAll(LanguageIdentifier language)
         {
-            FilePath = filePath;
-            Name = element.GetAttributeString("name", "");
-            AllowedDialogTags = new List<string>(element.GetAttributeStringArray("alloweddialogtags", new string[0]));
-            commonness = element.GetAttributeFloat("commonness", 1.0f);
+            return NPCConversationCollection.Collections[language]
+                .SelectMany(cc => cc.PersonalityTraits.Values);
+        }
 
-            list.Add(this);
+        public static NPCPersonalityTrait Get(LanguageIdentifier language, Identifier traitName)
+        {
+            return NPCConversationCollection.Collections[language]
+                .FirstOrDefault(cc => cc.PersonalityTraits.ContainsKey(traitName))
+                .PersonalityTraits[traitName];
+        }
+
+        public NPCPersonalityTrait(XElement element)
+        {
+            Name = element.GetAttributeIdentifier("name", "");
+            AllowedDialogTags = new List<string>(element.GetAttributeStringArray("alloweddialogtags", Array.Empty<string>()));
+            commonness = element.GetAttributeFloat("commonness", 1.0f);
         }
 
         public static NPCPersonalityTrait GetRandom(string seed)
         {
+            #warning TODO: implement NPCPersonality content type and revise this for determinism
             var rand = new MTRandom(ToolBox.StringToInt(seed));
-            return ToolBox.SelectWeightedRandom(list, list.Select(t => t.commonness).ToList(), rand);
+            var list = GetAll(GameSettings.CurrentConfig.Language);
+            return ToolBox.SelectWeightedRandom(list, t => t.commonness, rand);
         }
 
     }

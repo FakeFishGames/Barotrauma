@@ -1,4 +1,4 @@
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -106,7 +106,7 @@ namespace Barotrauma.Items.Components
         }
 
         [Editable(0.0f, 1.0f, decimals: 4),
-        Serialize(0.5f, true, description: "How full the ballast tanks should be when the submarine is not being steered upwards/downwards."
+        Serialize(0.5f, IsPropertySaveable.Yes, description: "How full the ballast tanks should be when the submarine is not being steered upwards/downwards."
             + " Can be used to compensate if the ballast tanks are too large/small relative to the size of the submarine.")]
         public float NeutralBallastLevel
         {
@@ -117,7 +117,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(1000.0f, true, description: "How close the docking port has to be to another docking port for the docking mode to become active.")]
+        [Serialize(1000.0f, IsPropertySaveable.Yes, description: "How close the docking port has to be to another docking port for the docking mode to become active.")]
         public float DockingAssistThreshold
         {
             get;
@@ -231,14 +231,14 @@ namespace Barotrauma.Items.Components
         }
         #endregion
 
-        public Steering(Item item, XElement element)
+        public Steering(Item item, ContentXElement element)
             : base(item, element)
         {
             IsActive = true;
             InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
         public override void OnItemLoaded()
         {
@@ -291,8 +291,6 @@ namespace Barotrauma.Items.Components
             {
                 controlledSub = sonar.ConnectedTransducers.Any() ? sonar.ConnectedTransducers.First().Item.Submarine : null;
             }
-
-            currPowerConsumption = powerConsumption;
 
             if (Voltage < MinVoltage) { return; }
 
@@ -405,7 +403,7 @@ namespace Barotrauma.Items.Components
 
             float userSkill = Math.Max(user.GetSkillLevel("helm"), 1.0f) / 100.0f;
             user.Info.IncreaseSkillLevel(
-                "helm",
+                "helm".ToIdentifier(),
                 SkillSettings.Current.SkillIncreasePerSecondWhenSteering / userSkill * deltaTime);
         }
 
@@ -724,7 +722,7 @@ namespace Barotrauma.Items.Components
             {
                 if (user != character && user != null && user.SelectedConstruction == item && character.IsOnPlayerTeam)
                 {
-                    character.Speak(TextManager.Get("DialogSteeringTaken"), null, 0.0f, "steeringtaken", 10.0f);
+                    character.Speak(TextManager.Get("DialogSteeringTaken").Value, null, 0.0f, "steeringtaken".ToIdentifier(), 10.0f);
                 }
             }
             user = character;
@@ -738,7 +736,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    character.Speak(TextManager.Get("DialogNavTerminalIsBroken"), identifier: "navterminalisbroken", minDurationBetweenSimilar: 30.0f);
+                    character.Speak(TextManager.Get("DialogNavTerminalIsBroken").Value, identifier: "navterminalisbroken".ToIdentifier(), minDurationBetweenSimilar: 30.0f);
                 }
             }
 
@@ -748,64 +746,72 @@ namespace Barotrauma.Items.Components
                 AutoPilot = true;
             }
             IncreaseSkillLevel(user, deltaTime);
-            switch (objective.Option.ToLowerInvariant())
+            if (objective.Option == "maintainposition")
             {
-                case "maintainposition":
-                    if (objective.Override)
-                    {
-                        SetMaintainPosition();
-                    }
-                    break;
-                case "navigateback":
-                    if (Level.IsLoadedOutpost) { break; }
+                if (objective.Override)
+                {
+                    SetMaintainPosition();
+                }
+            }
+            else if (!Level.IsLoadedOutpost)
+            {
+                if (objective.Option == "navigateback")
+                {
                     if (DockingSources.Any(d => d.Docked))
                     {
                         item.SendSignal("1", "toggle_docking");
                     }
+
                     if (objective.Override)
                     {
                         if (MaintainPos || LevelEndSelected || !LevelStartSelected || navigateTactically)
                         {
                             unsentChanges = true;
                         }
+
                         SetDestinationLevelStart();
                     }
-                    break;
-                case "navigatetodestination":
-                    if (Level.IsLoadedOutpost) { break; }
+                }
+                else if (objective.Option == "navigatetodestination")
+                {
                     if (DockingSources.Any(d => d.Docked))
                     {
                         item.SendSignal("1", "toggle_docking");
                     }
+
                     if (objective.Override)
                     {
                         if (MaintainPos || !LevelEndSelected || LevelStartSelected || navigateTactically)
                         {
                             unsentChanges = true;
                         }
+
                         SetDestinationLevelEnd();
                     }
-                    break;
-                case "navigatetactical":
-                    if (Level.IsLoadedOutpost) { break; }
+                }
+                else if (objective.Option == "navigatetactical")
+                {
                     if (DockingSources.Any(d => d.Docked))
                     {
                         item.SendSignal("1", "toggle_docking");
                     }
+
                     if (objective.Override)
                     {
                         if (MaintainPos || LevelEndSelected || LevelStartSelected || !navigateTactically)
                         {
                             unsentChanges = true;
                         }
+
                         SetDestinationTactical();
                     }
-                    break;
+                }
             }
+
             sonar?.AIOperate(deltaTime, character, objective);
             if (!MaintainPos && showIceSpireWarning && character.IsOnPlayerTeam)
             {
-                character.Speak(TextManager.Get("dialogicespirespottedsonar"), null, 0.0f, "icespirespottedsonar", 60.0f);
+                character.Speak(TextManager.Get("dialogicespirespottedsonar").Value, null, 0.0f, "icespirespottedsonar".ToIdentifier(), 60.0f);
             }
             return false;
         }

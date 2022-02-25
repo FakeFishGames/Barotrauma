@@ -283,7 +283,7 @@ namespace Barotrauma
                 indexBuffer?.Dispose();
                 indexBuffer = new IndexBuffer(gfxDevice, IndexElementSize.SixteenBits, requiredIndexCount * 2, BufferUsage.WriteOnly);
                 ushort[] indices = new ushort[requiredIndexCount * 2];
-                for (int i=0;i<indices.Length;i+=6)
+                for (int i = 0; i < indices.Length; i += 6)
                 {
                     indices[i + 0] = (ushort)((i / 6) * 4 + 1);
                     indices[i + 1] = (ushort)((i / 6) * 4 + 0);
@@ -296,7 +296,7 @@ namespace Barotrauma
             }
 
             gfxDevice.Indices = indexBuffer;
-            for (int i=0;i<recordedBuffers.Count;i++)
+            for (int i = 0; i < recordedBuffers.Count; i++)
             {
                 gfxDevice.SetVertexBuffer(recordedBuffers[i].VertexBuffer);
                 BasicEffect.Texture = recordedBuffers[i].Texture;

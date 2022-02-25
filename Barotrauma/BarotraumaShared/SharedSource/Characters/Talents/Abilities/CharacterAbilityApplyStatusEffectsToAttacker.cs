@@ -5,7 +5,7 @@ namespace Barotrauma.Abilities
 {
     class CharacterAbilityApplyStatusEffectsToAttacker : CharacterAbilityApplyStatusEffects
     {
-        public CharacterAbilityApplyStatusEffectsToAttacker(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityApplyStatusEffectsToAttacker(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
         }
 

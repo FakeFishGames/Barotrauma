@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +8,7 @@ namespace Barotrauma.IO
 {
     static class Validation
     {
-        private static readonly string[] unwritableDirs = new string[] { "Content", "Data/ContentPackages" };
+        private static readonly string[] unwritableDirs = new string[] { "Content" };
         private static readonly string[] unwritableExtensions = new string[]
         {
             ".pdb", ".com", ".scr", ".dylib", ".so", ".a", ".app", //executables and libraries (.exe and .dll handled separately in CanWrite)
@@ -58,7 +60,11 @@ namespace Barotrauma.IO
 
     public static class SafeXML
     {
-        public static void SaveSafe(this System.Xml.Linq.XDocument doc, string path, bool throwExceptions = false)
+        public static void SaveSafe(
+            this System.Xml.Linq.XDocument doc,
+            string path,
+            System.Xml.Linq.SaveOptions saveOptions = System.Xml.Linq.SaveOptions.None,
+            bool throwExceptions = false)
         {
             if (!Validation.CanWrite(path, false))
             {
@@ -73,7 +79,7 @@ namespace Barotrauma.IO
                 }
                 return;
             }
-            doc.Save(path);
+            doc.Save(path, saveOptions);
         }
 
         public static void SaveSafe(this System.Xml.Linq.XElement element, string path, bool throwExceptions = false)
@@ -107,7 +113,7 @@ namespace Barotrauma.IO
 
     public class XmlWriter : IDisposable
     {
-        public readonly System.Xml.XmlWriter Writer;
+        public readonly System.Xml.XmlWriter? Writer;
 
         public XmlWriter(string path, System.Xml.XmlWriterSettings settings)
         {
@@ -156,65 +162,42 @@ namespace Barotrauma.IO
         }
     }
 
+    public static class XmlWriterExtensions
+    {
+        public static void Save(this System.Xml.Linq.XDocument doc, XmlWriter writer)
+        {
+            doc.Save(writer.Writer ?? throw new NullReferenceException("Unable to save XML document: XML writer is null."));
+        }
+    }
+
     public static class Path
     {
         public static readonly char DirectorySeparatorChar = System.IO.Path.DirectorySeparatorChar;
         public static readonly char AltDirectorySeparatorChar = System.IO.Path.AltDirectorySeparatorChar;
 
-        public static string GetExtension(string path)
-        {
-            return System.IO.Path.GetExtension(path);
-        }
+        public static string GetExtension(string path) => System.IO.Path.GetExtension(path);
 
-        public static string GetFileNameWithoutExtension(string path)
-        {
-            return System.IO.Path.GetFileNameWithoutExtension(path);
-        }
+        public static string GetFileNameWithoutExtension(string path) => System.IO.Path.GetFileNameWithoutExtension(path);
 
-        public static string GetPathRoot(string path)
-        {
-            return System.IO.Path.GetPathRoot(path);
-        }
+        public static string? GetPathRoot(string? path) => System.IO.Path.GetPathRoot(path);
 
-        public static string GetRelativePath(string relativeTo, string path)
-        {
-            return System.IO.Path.GetRelativePath(relativeTo, path);
-        }
+        public static string GetRelativePath(string relativeTo, string path) => System.IO.Path.GetRelativePath(relativeTo, path);
 
-        public static string GetDirectoryName(string path)
-        {
-            return System.IO.Path.GetDirectoryName(path);
-        }
+        public static string GetDirectoryName(ContentPath path) => GetDirectoryName(path.Value)!;
+        
+        public static string? GetDirectoryName(string path) => System.IO.Path.GetDirectoryName(path);
 
-        public static string GetFileName(string path)
-        {
-            return System.IO.Path.GetFileName(path);
-        }
+        public static string GetFileName(string path) => System.IO.Path.GetFileName(path);
 
-        public static string GetFullPath(string path)
-        {
-            return System.IO.Path.GetFullPath(path);
-        }
+        public static string GetFullPath(string path) => System.IO.Path.GetFullPath(path);
 
-        public static string Combine(params string[] s)
-        {
-            return System.IO.Path.Combine(s);
-        }
+        public static string Combine(params string[] s) => System.IO.Path.Combine(s);
 
-        public static string GetTempFileName()
-        {
-            return System.IO.Path.GetTempFileName();
-        }
+        public static string GetTempFileName() => System.IO.Path.GetTempFileName();
 
-        public static bool IsPathRooted(string path)
-        {
-            return System.IO.Path.IsPathRooted(path);
-        }
-        public static IEnumerable<char> GetInvalidFileNameChars()
-        {
-            return System.IO.Path.GetInvalidFileNameChars();
-        }
+        public static bool IsPathRooted(string path) => System.IO.Path.IsPathRooted(path);
 
+        public static IEnumerable<char> GetInvalidFileNameChars() => System.IO.Path.GetInvalidFileNameChars();
     }
 
     public static class Directory
@@ -229,22 +212,22 @@ namespace Barotrauma.IO
             System.IO.Directory.SetCurrentDirectory(path);
         }
 
-        public static IEnumerable<string> GetFiles(string path)
+        public static string[] GetFiles(string path)
         {
             return System.IO.Directory.GetFiles(path);
         }
 
-        public static IEnumerable<string> GetFiles(string path, string pattern, System.IO.SearchOption option = System.IO.SearchOption.AllDirectories)
+        public static string[] GetFiles(string path, string pattern, System.IO.SearchOption option = System.IO.SearchOption.AllDirectories)
         {
             return System.IO.Directory.GetFiles(path, pattern, option);
         }
 
-        public static IEnumerable<string> GetDirectories(string path)
+        public static string[] GetDirectories(string path, string searchPattern = "*", System.IO.SearchOption searchOption = System.IO.SearchOption.TopDirectoryOnly)
         {
-            return System.IO.Directory.GetDirectories(path);
+            return System.IO.Directory.GetDirectories(path, searchPattern, searchOption);
         }
 
-        public static IEnumerable<string> GetFileSystemEntries(string path)
+        public static string[] GetFileSystemEntries(string path)
         {
             return System.IO.Directory.GetFileSystemEntries(path);
         }
@@ -264,7 +247,7 @@ namespace Barotrauma.IO
             return System.IO.Directory.Exists(path);
         }
 
-        public static System.IO.DirectoryInfo CreateDirectory(string path)
+        public static System.IO.DirectoryInfo? CreateDirectory(string path)
         {
             if (!Validation.CanWrite(path, true))
             {
@@ -289,10 +272,9 @@ namespace Barotrauma.IO
 
     public static class File
     {
-        public static bool Exists(string path)
-        {
-            return System.IO.File.Exists(path);
-        }
+        public static bool Exists(ContentPath path) => Exists(path.Value);
+        
+        public static bool Exists(string path) => System.IO.File.Exists(path);
 
         public static void Copy(string src, string dest, bool overwrite=false)
         {
@@ -319,6 +301,8 @@ namespace Barotrauma.IO
             System.IO.File.Move(src, dest);
         }
 
+        public static void Delete(ContentPath path) => Delete(path.Value);
+        
         public static void Delete(string path)
         {
             if (!Validation.CanWrite(path, false))
@@ -334,7 +318,7 @@ namespace Barotrauma.IO
             return System.IO.File.GetLastWriteTime(path);
         }
 
-        public static FileStream Open(
+        public static FileStream? Open(
             string path,
             System.IO.FileMode mode,
             System.IO.FileAccess access = System.IO.FileAccess.ReadWrite,
@@ -362,17 +346,17 @@ namespace Barotrauma.IO
             return new FileStream(path, System.IO.File.Open(path, mode, access, shareVal));
         }
 
-        public static FileStream OpenRead(string path)
+        public static FileStream? OpenRead(string path)
         {
             return Open(path, System.IO.FileMode.Open, System.IO.FileAccess.Read);
         }
 
-        public static FileStream OpenWrite(string path)
+        public static FileStream? OpenWrite(string path)
         {
             return Open(path, System.IO.FileMode.OpenOrCreate, System.IO.FileAccess.Write);
         }
 
-        public static FileStream Create(string path)
+        public static FileStream? Create(string path)
         {
             return Open(path, System.IO.FileMode.Create, System.IO.FileAccess.Write);
         }

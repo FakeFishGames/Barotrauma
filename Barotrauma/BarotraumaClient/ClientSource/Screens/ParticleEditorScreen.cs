@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Barotrauma.Particles;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 using System.Text;
 using Barotrauma.Extensions;
@@ -110,7 +111,7 @@ namespace Barotrauma
             };
 
             var emitterListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.25f), paddedRightPanel.RectTransform));
-            new SerializableEntityEditor(emitterListBox.Content.RectTransform, emitterProperties, false, true, elementHeight: 20, titleFont: GUI.SubHeadingFont);
+            new SerializableEntityEditor(emitterListBox.Content.RectTransform, emitterProperties, false, true, elementHeight: 20, titleFont: GUIStyle.SubHeadingFont);
 
             var listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.6f), paddedRightPanel.RectTransform));
 
@@ -120,8 +121,8 @@ namespace Barotrauma
                 UserData = "filterarea"
             };
 
-            filterLabel = new GUITextBlock(new RectTransform(Vector2.One, filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.Font) { IgnoreLayoutGroups = true };
-            filterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font);
+            filterLabel = new GUITextBlock(new RectTransform(Vector2.One, filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUIStyle.Font) { IgnoreLayoutGroups = true };
+            filterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUIStyle.Font);
             filterBox.OnTextChanged += (textBox, text) => { FilterEmitters(text); return true; };
             new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUICancelButton")
             {
@@ -136,7 +137,7 @@ namespace Barotrauma
                 emitterPrefab = new ParticleEmitterPrefab(selectedPrefab, emitterProperties);
                 emitter = new ParticleEmitter(emitterPrefab);
                 listBox.ClearChildren();
-                new SerializableEntityEditor(listBox.Content.RectTransform, selectedPrefab, false, true, elementHeight: 20, titleFont: GUI.SubHeadingFont);
+                new SerializableEntityEditor(listBox.Content.RectTransform, selectedPrefab, false, true, elementHeight: 20, titleFont: GUIStyle.SubHeadingFont);
                 //listBox.Content.RectTransform.NonScaledSize = particlePrefabEditor.RectTransform.NonScaledSize;
                 //listBox.UpdateScrollBarSize();
                 return true;
@@ -167,7 +168,7 @@ namespace Barotrauma
             foreach (ParticlePrefab particlePrefab in particlePrefabs)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), prefabList.Content.RectTransform) { MinSize = new Point(0, 20) },
-                    particlePrefab.DisplayName)
+                    particlePrefab.Name)
                 {
                     Padding = Vector4.Zero,
                     UserData = particlePrefab
@@ -196,7 +197,7 @@ namespace Barotrauma
         private void SerializeAll()
         {
             Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
-            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
+            foreach (var configFile in ContentPackageManager.AllPackages.SelectMany(p => p.GetFiles<ParticlesFile>()))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                 if (doc == null) { continue; }
@@ -218,7 +219,7 @@ namespace Barotrauma
                     NewLineOnAttributes = true
                 };
 
-                using (var writer = XmlWriter.Create(configFile.Path, settings))
+                using (var writer = XmlWriter.Create(configFile.Path.Value, settings))
                 {
                     doc.WriteTo(writer);
                     writer.Flush();
@@ -265,7 +266,7 @@ namespace Barotrauma
             };
 
             XElement originalElement = null;
-            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
+            foreach (var configFile in ContentPackageManager.AllPackages.SelectMany(p => p.GetFiles<ParticlesFile>()))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                 if (doc == null) { continue; }
@@ -273,7 +274,7 @@ namespace Barotrauma
                 var prefabList = GameMain.ParticleManager.GetPrefabList();
                 foreach (ParticlePrefab otherPrefab in prefabList)
                 {
-                    foreach (XElement subElement in doc.Root.Elements())
+                    foreach (var subElement in doc.Root.Elements())
                     {
                         if (!subElement.Name.ToString().Equals(prefab.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
                         SerializableProperty.SerializeProperties(prefab, subElement, true);

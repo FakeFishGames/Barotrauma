@@ -120,7 +120,7 @@ namespace Barotrauma
 #endif
             }
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -192,7 +192,7 @@ namespace Barotrauma
             {
                 var characterDataDoc = XMLExtensions.TryLoadXml(characterDataPath);
                 if (characterDataDoc?.Root == null) { return; }
-                foreach (XElement subElement in characterDataDoc.Root.Elements())
+                foreach (var subElement in characterDataDoc.Root.Elements())
                 {
                     characterData.Add(new CharacterCampaignData(subElement));
                 }

@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class AIObjectiveRepairItem : AIObjective
     {
-        public override string Identifier { get; set; } = "repair item";
+        public override Identifier Identifier { get; set; } = "repair item".ToIdentifier();
 
         public override bool AllowInAnySub => true;
 
@@ -70,7 +70,7 @@ namespace Barotrauma
                 float reduction = isPriority ? 1 : isSelected ? 2 : 3;
                 float max = AIObjectiveManager.LowestOrderPriority - reduction;
                 float highestWeight = -1;
-                foreach (string tag in Item.Prefab.Tags)
+                foreach (Identifier tag in Item.Prefab.Tags)
                 {
                     if (JobPrefab.ItemRepairPriorities.TryGetValue(tag, out float weight) && weight > highestWeight)
                     {
@@ -92,7 +92,7 @@ namespace Barotrauma
             IsCompleted = Item.IsFullCondition;
             if (character.IsOnPlayerTeam && IsCompleted && IsRepairing())
             {
-                character.Speak(TextManager.GetWithVariable("DialogItemRepaired", "[itemname]", Item.Name, true), null, 0.0f, "itemrepaired", 10.0f);
+                character.Speak(TextManager.GetWithVariable("DialogItemRepaired", "[itemname]", Item.Name, FormatCapitals.Yes).Value, null, 0.0f, "itemrepaired".ToIdentifier(), 10.0f);
             }
             return IsCompleted;
         }
@@ -118,7 +118,7 @@ namespace Barotrauma
                             {
                                 if (character.IsOnPlayerTeam)
                                 {
-                                    getItemObjective.Abandoned += () => character.Speak(TextManager.Get("dialogcannotfindrequireditemtorepair"), null, 0.0f, "dialogcannotfindrequireditemtorepair", 10.0f);
+                                    getItemObjective.Abandoned += () => character.Speak(TextManager.Get("dialogcannotfindrequireditemtorepair").Value, null, 0.0f, "dialogcannotfindrequireditemtorepair".ToIdentifier(), 10.0f);
                                 }
                             }
                             subObjectives.Add(getItemObjective);
@@ -206,7 +206,7 @@ namespace Barotrauma
                     {
                         if (character.IsOnPlayerTeam && IsRepairing())
                         {
-                            character.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f);
+                            character.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, FormatCapitals.Yes).Value, null, 0.0f, "cannotrepair".ToIdentifier(), 10.0f);
                         }
                         repairable.StopRepairing(character);
                     }
@@ -243,7 +243,7 @@ namespace Barotrauma
                         Abandon = true;
                         if (character.IsOnPlayerTeam && IsRepairing())
                         {
-                            character.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f);
+                            character.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, FormatCapitals.Yes).Value, null, 0.0f, "cannotrepair".ToIdentifier(), 10.0f);
                         }
                     });
             }

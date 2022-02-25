@@ -18,56 +18,56 @@ namespace Barotrauma.Items.Components
         private float raycastTimer;
         private const float RayCastInterval = 0.2f;
 
-        [Serialize(0.0f, false, description: "How much force is applied to pull the projectile the rope is attached to.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "How much force is applied to pull the projectile the rope is attached to.")]
         public float ProjectilePullForce
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, false, description: "How much force is applied to pull the target the rope is attached to.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "How much force is applied to pull the target the rope is attached to.")]
         public float TargetPullForce
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, false, description: "How much force is applied to pull the source the rope is attached to.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "How much force is applied to pull the source the rope is attached to.")]
         public float SourcePullForce
         {
             get;
             set;
         }
 
-        [Serialize(1000.0f, false, description: "How far the source item can be from the projectile until the rope breaks.")]
+        [Serialize(1000.0f, IsPropertySaveable.No, description: "How far the source item can be from the projectile until the rope breaks.")]
         public float MaxLength
         {
             get;
             set;
         }
 
-        [Serialize(true, false, description: "Should the rope snap when it collides with a structure/submarine (if not, it will just go through it).")]
+        [Serialize(true, IsPropertySaveable.No, description: "Should the rope snap when it collides with a structure/submarine (if not, it will just go through it).")]
         public bool SnapOnCollision
         {
             get;
             set;
         }
 
-        [Serialize(true, false, description: "Should the rope snap when the character drops the aim?")]
+        [Serialize(true, IsPropertySaveable.No, description: "Should the rope snap when the character drops the aim?")]
         public bool SnapWhenNotAimed
         {
             get;
             set;
         }
 
-        [Serialize(30.0f, false, description: "How much mass is required for the target to pull the source towards it. Static and kinematic targets are always treated heavy enough.")]
+        [Serialize(30.0f, IsPropertySaveable.No, description: "How much mass is required for the target to pull the source towards it. Static and kinematic targets are always treated heavy enough.")]
         public float TargetMinMass
         {
             get;
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, IsPropertySaveable.No)]
         public bool LerpForces
         {
             get;
@@ -102,12 +102,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public Rope(Item item, XElement element) : base(item, element)
+        public Rope(Item item, ContentXElement element) : base(item, element)
         {
             InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
         public void Snap() => Snapped = true;
         

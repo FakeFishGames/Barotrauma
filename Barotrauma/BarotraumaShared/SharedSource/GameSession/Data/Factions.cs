@@ -18,16 +18,14 @@ namespace Barotrauma
         }
     }
 
-    internal class FactionPrefab : IDisposable
+    internal class FactionPrefab : Prefab
     {
-        public static List<FactionPrefab> Prefabs { get; set; }
+        public readonly static PrefabCollection<FactionPrefab> Prefabs = new PrefabCollection<FactionPrefab>();
 
-        public string Name { get; }
+        public LocalizedString Name { get; }
 
-        public string Description { get; }
-        public string ShortDescription { get; }
-
-        public string Identifier { get; }
+        public LocalizedString Description { get; }
+        public LocalizedString ShortDescription { get; }
 
         /// <summary>
         /// How low the reputation can drop on this faction
@@ -52,17 +50,16 @@ namespace Barotrauma
         public Color IconColor { get; }
 #endif
 
-        private FactionPrefab(XElement element)
+        public FactionPrefab(ContentXElement element, FactionsFile file) : base(file, element.GetAttributeIdentifier("identifier", string.Empty))
         {
-            Identifier = element.GetAttributeString("identifier", string.Empty);
             MinReputation = element.GetAttributeInt("minreputation", -100);
             MaxReputation = element.GetAttributeInt("maxreputation", 100);
             InitialReputation = element.GetAttributeInt("initialreputation", 0);
-            Name = element.GetAttributeString("name", null) ?? TextManager.Get($"faction.{Identifier}", returnNull: true) ?? "Unnamed";
-            Description = element.GetAttributeString("description", null) ?? TextManager.Get($"faction.{Identifier}.description", returnNull: true) ?? "";
-            ShortDescription = element.GetAttributeString("shortdescription", null) ?? TextManager.Get($"faction.{Identifier}.shortdescription", returnNull: true) ?? "";
+            Name = element.GetAttributeString("name", null) ?? TextManager.Get($"faction.{Identifier}").Fallback("Unnamed");
+            Description = element.GetAttributeString("description", null) ?? TextManager.Get($"faction.{Identifier}.description").Fallback("");
+            ShortDescription = element.GetAttributeString("shortdescription", null) ?? TextManager.Get($"faction.{Identifier}.shortdescription").Fallback("");
 #if CLIENT
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
 
                 if (subElement.Name.ToString().Equals("icon", StringComparison.OrdinalIgnoreCase))
@@ -78,64 +75,12 @@ namespace Barotrauma
 #endif
         }
 
-        public static void LoadFactions()
-        {
-            Prefabs?.ForEach(set => set.Dispose());
-            Prefabs = new List<FactionPrefab>();
-            IEnumerable<ContentFile> files = GameMain.Instance.GetFilesOfType(ContentType.Factions);
-            foreach (ContentFile file in files)
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                XElement? rootElement = doc?.Root;
-
-                if (doc == null || rootElement == null) { continue; }
-
-                if (doc.Root.IsOverride())
-                {
-                    Prefabs.Clear();
-                    DebugConsole.NewMessage($"Overriding all factions with '{file.Path}'", Color.Yellow);
-                }
-
-                foreach (XElement element in rootElement.Elements())
-                {
-                    bool isOverride = element.IsOverride();
-                    XElement sourceElement = isOverride ? element.FirstElement() : element;
-                    string elementName = sourceElement.Name.ToString().ToLowerInvariant();
-                    string identifier = sourceElement.GetAttributeString("identifier", null);
-
-                    if (string.IsNullOrWhiteSpace(identifier))
-                    {
-                        DebugConsole.ThrowError($"No identifier defined for the faction config '{elementName}' in file '{file.Path}'");
-                        continue;
-                    }
-
-                    var existingParams = Prefabs.Find(set => set.Identifier == identifier);
-                    if (existingParams != null)
-                    {
-                        if (isOverride)
-                        {
-                            DebugConsole.NewMessage($"Overriding faction config '{identifier}' using the file '{file.Path}'", Color.Yellow);
-                            Prefabs.Remove(existingParams);
-                        }
-                        else
-                        {
-                            DebugConsole.ThrowError($"Duplicate faction config: '{identifier}' defined in {elementName} of '{file.Path}'");
-                            continue;
-                        }
-                    }
-
-                    Prefabs.Add(new FactionPrefab(element));
-                }
-            }
-        }
-
-        public void Dispose()
+        public override void Dispose()
         {
 #if CLIENT
             Icon?.Remove();
             Icon = null;
 #endif
-            GC.SuppressFinalize(this);
         }
     }
 }

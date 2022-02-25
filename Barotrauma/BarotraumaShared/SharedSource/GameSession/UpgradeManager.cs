@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma
@@ -96,6 +97,8 @@ namespace Barotrauma
 
         public UpgradeManager(CampaignMode campaign)
         {
+            UpgradeCategory.Categories.ForEach(c => c.DeterminePrefabsThatAllowUpgrades());
+
             DebugConsole.Log("Created brand new upgrade manager.");
             Campaign = campaign;
         }
@@ -112,7 +115,7 @@ namespace Barotrauma
             }
             else
             {
-                foreach (XElement subElement in element.Elements())
+                foreach (var subElement in element.Elements())
                 {
                     switch (subElement.Name.ToString().ToLowerInvariant())
                     {
@@ -158,7 +161,7 @@ namespace Barotrauma
                     price += item.Prefab.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation);
                 }
                 //refund the current item
-                if (replacement != item.prefab)
+                if (replacement != ((MapEntity)item).Prefab)
                 {
                     price -= item.Prefab.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation);
                 }
@@ -219,18 +222,18 @@ namespace Barotrauma
                     // only make the NPC speak if more than 5 minutes have passed since the last purchased service
                     if (lastUpgradeSpeak == DateTime.MinValue || lastUpgradeSpeak.AddMinutes(5) < DateTime.Now)
                     {
-                        UpgradeNPCSpeak(TextManager.Get("Dialog.UpgradePurchased"), Campaign.IsSinglePlayer);
+                        UpgradeNPCSpeak(TextManager.Get("Dialog.UpgradePurchased").Value, Campaign.IsSinglePlayer);
                         lastUpgradeSpeak = DateTime.Now;
                     }
                 }
 
                 Campaign.Money -= price;
-                GameAnalyticsManager.AddMoneySpentEvent(price, GameAnalyticsManager.MoneySink.SubmarineUpgrade, prefab.Identifier);
+                GameAnalyticsManager.AddMoneySpentEvent(price, GameAnalyticsManager.MoneySink.SubmarineUpgrade, prefab.Identifier.Value);
 
                 PurchasedUpgrade? upgrade = FindMatchingUpgrade(prefab, category);
 
 #if CLIENT
-                DebugLog($"CLIENT: Purchased level {GetUpgradeLevel(prefab, category) + 1} {category.Name}.{prefab.Name} for {price}", GUI.Style.Orange);
+                DebugLog($"CLIENT: Purchased level {GetUpgradeLevel(prefab, category) + 1} {category.Name}.{prefab.Name} for {price}", GUIStyle.Orange);
 #endif
 
                 if (upgrade == null)
@@ -285,7 +288,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (itemToRemove.prefab == itemToInstall)
+            if (((MapEntity)itemToRemove).Prefab == itemToInstall)
             {
                 DebugConsole.ThrowError($"Failed to swap item \"{itemToRemove.Name}\" (trying to swap with the same item!).");
                 return;
@@ -318,13 +321,13 @@ namespace Barotrauma
                     // only make the NPC speak if more than 5 minutes have passed since the last purchased service
                     if (lastUpgradeSpeak == DateTime.MinValue || lastUpgradeSpeak.AddMinutes(5) < DateTime.Now)
                     {
-                        UpgradeNPCSpeak(TextManager.Get("Dialog.UpgradePurchased"), Campaign.IsSinglePlayer);
+                        UpgradeNPCSpeak(TextManager.Get("Dialog.UpgradePurchased").Value, Campaign.IsSinglePlayer);
                         lastUpgradeSpeak = DateTime.Now;
                     }
                 }
 
                 Campaign.Money -= price;
-                GameAnalyticsManager.AddMoneySpentEvent(price, GameAnalyticsManager.MoneySink.SubmarineWeapon, itemToInstall.Identifier);
+                GameAnalyticsManager.AddMoneySpentEvent(price, GameAnalyticsManager.MoneySink.SubmarineWeapon, itemToInstall.Identifier.Value);
 
                 foreach (Item itemToSwap in linkedItems)
                 {
@@ -367,7 +370,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (itemToRemove?.PendingItemSwap == null && string.IsNullOrEmpty(itemToRemove?.Prefab.SwappableItem?.ReplacementOnUninstall))
+            if (itemToRemove?.PendingItemSwap == null && (itemToRemove?.Prefab.SwappableItem?.ReplacementOnUninstall.IsEmpty ?? true))
             {
                 DebugConsole.ThrowError($"Cannot uninstall item \"{itemToRemove?.Name}\" (no replacement item configured).");
                 return;
@@ -385,7 +388,7 @@ namespace Barotrauma
                 // only make the NPC speak if more than 5 minutes have passed since the last purchased service
                 if (lastUpgradeSpeak == DateTime.MinValue || lastUpgradeSpeak.AddMinutes(5) < DateTime.Now)
                 {
-                    UpgradeNPCSpeak(TextManager.Get("Dialog.UpgradePurchased"), Campaign.IsSinglePlayer);
+                    UpgradeNPCSpeak(TextManager.Get("Dialog.UpgradePurchased").Value, Campaign.IsSinglePlayer);
                     lastUpgradeSpeak = DateTime.Now;
                 }
             }
@@ -429,7 +432,7 @@ namespace Barotrauma
                 {
                     if (!(secondLinkedEntity is Item linkedItem) || linkedItem == item) { continue; }
                     if (linkedItem.AllowSwapping &&
-                        linkedItem.Prefab.SwappableItem != null && (linkedItem.Prefab.SwappableItem.CanBeBought || item.Prefab.SwappableItem.ReplacementOnUninstall == linkedItem.prefab.Identifier) &&
+                        linkedItem.Prefab.SwappableItem != null && (linkedItem.Prefab.SwappableItem.CanBeBought || item.Prefab.SwappableItem.ReplacementOnUninstall == ((MapEntity)linkedItem).Prefab.Identifier) &&
                         linkedItem.Prefab.SwappableItem.SwapIdentifier.Equals(item.Prefab.SwappableItem.SwapIdentifier, StringComparison.OrdinalIgnoreCase))
                     {
                         linkedItems.Add(linkedItem);
@@ -543,7 +546,7 @@ namespace Barotrauma
 
                         if (upgrade == null || upgrade.Level != level || isOverMax)
                         {
-                            DebugLog($"{wall.prefab.Name} has incorrect \"{prefab.Name}\" level! Expected {level} but got {upgrade?.Level ?? 0}. Fixing...");
+                            DebugLog($"{((MapEntity)wall).Prefab.Name} has incorrect \"{prefab.Name}\" level! Expected {level} but got {upgrade?.Level ?? 0}. Fixing...");
                             FixUpgradeOnItem(wall, prefab, level);
                         }
                     }
@@ -572,7 +575,7 @@ namespace Barotrauma
 
                         if (upgrade == null || upgrade.Level != level || isOverMax)
                         {
-                            DebugLog($"{item.prefab.Name} has incorrect \"{prefab.Name}\" level! Expected {level} but got {upgrade?.Level ?? 0}{(isOverMax ? " (Over max level!)" : string.Empty)}. Fixing...");
+                            DebugLog($"{((MapEntity)item).Prefab.Name} has incorrect \"{prefab.Name}\" level! Expected {level} but got {upgrade?.Level ?? 0}{(isOverMax ? " (Over max level!)" : string.Empty)}. Fixing...");
                             FixUpgradeOnItem(item, prefab, level);
                         }
                     }
@@ -598,7 +601,7 @@ namespace Barotrauma
         /// <param name="submarine"></param>
         /// <param name="level"></param>
         /// <returns>New level that was applied, -1 if no upgrades were applied.</returns>
-        private static int BuyUpgrade(UpgradePrefab prefab, UpgradeCategory category, Submarine submarine, int level = 1, Submarine parentSub = null)
+        private static int BuyUpgrade(UpgradePrefab prefab, UpgradeCategory category, Submarine submarine, int level = 1, Submarine? parentSub = null)
         {
             int? newLevel = null;
             if (category.IsWallUpgrade)
@@ -753,13 +756,13 @@ namespace Barotrauma
             // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (XElement upgrade in element.Elements())
             {
-                string? categoryIdentifier = upgrade.GetAttributeString("category", null);
+                Identifier categoryIdentifier = upgrade.GetAttributeIdentifier("category", Identifier.Empty);
                 UpgradeCategory? category = UpgradeCategory.Find(categoryIdentifier);
-                if (string.IsNullOrWhiteSpace(categoryIdentifier) || category == null) { continue; }
+                if (categoryIdentifier.IsEmpty || category == null) { continue; }
 
-                string? prefabIdentifier = upgrade.GetAttributeString("prefab", null);
+                Identifier prefabIdentifier = upgrade.GetAttributeIdentifier("prefab", Identifier.Empty);
                 UpgradePrefab? prefab = UpgradePrefab.Find(prefabIdentifier);
-                if (string.IsNullOrWhiteSpace(prefabIdentifier) || prefab == null) { continue; }
+                if (prefabIdentifier.IsEmpty || prefab == null) { continue; }
 
                 int level = upgrade.GetAttributeInt("level", -1);
                 if (level < 0) { continue; }
@@ -814,6 +817,6 @@ namespace Barotrauma
 
         private PurchasedUpgrade? FindMatchingUpgrade(UpgradePrefab prefab, UpgradeCategory category) => PendingUpgrades.Find(u => u.Prefab == prefab && u.Category == category);
 
-        private static string FormatIdentifier(UpgradePrefab prefab, UpgradeCategory category) => $"upgrade.{category.Identifier}.{prefab.Identifier}";
+        private static Identifier FormatIdentifier(UpgradePrefab prefab, UpgradeCategory category) => $"upgrade.{category.Identifier}.{prefab.Identifier}".ToIdentifier();
     }
 }

@@ -44,7 +44,7 @@ namespace Barotrauma.Items.Components
                         UserData = ciElement
                     };
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), 
-                        TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label);
+                        TextManager.Get(ciElement.Label).Fallback(ciElement.Label));
                     if (!ciElement.IsIntegerInput)
                     {
                         var textBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), ciElement.Signal, style: "GUITextBoxNoIcon")
@@ -107,7 +107,7 @@ namespace Barotrauma.Items.Components
                     var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform)
                     {
                         MaxSize = ElementMaxSize
-                    }, TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label)
+                    }, TextManager.Get(ciElement.Label).Fallback(ciElement.Label))
                     {
                         UserData = ciElement
                     };
@@ -131,7 +131,7 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     var btn = new GUIButton(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform),
-                        TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label, style: "DeviceButton")
+                        TextManager.Get(ciElement.Label).Fallback(ciElement.Label), style: "DeviceButton")
                     {
                         UserData = ciElement
                     };
@@ -250,7 +250,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            string CreateLabelText(int elementIndex)
+            LocalizedString CreateLabelText(int elementIndex)
             {
                 return string.IsNullOrWhiteSpace(customInterfaceElementList[elementIndex].Label) ?
                     TextManager.GetWithVariable("connection.signaloutx", "[num]", (elementIndex + 1).ToString()) :

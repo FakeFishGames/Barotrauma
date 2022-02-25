@@ -25,7 +25,7 @@ namespace Barotrauma
                 {
                     if (_ragdollParams == null)
                     {
-                        _ragdollParams = RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(character.VariantOf ?? character.SpeciesName);
+                        _ragdollParams = RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(character.SpeciesName);
                     }
                     return _ragdollParams;
                 }
@@ -178,6 +178,14 @@ namespace Barotrauma
                 else if (Crouching)
                 {
                     shoulderHeight -= 0.15f;
+                    if (Crouching)
+                    {
+                        bool movingHorizontally = !MathUtils.NearlyEqual(TargetMovement.X, 0.0f);
+                        if (!movingHorizontally)
+                        {
+                            shoulderHeight -= HumanCrouchParams.MoveDownAmountWhenStationary;
+                        }
+                    }
                 }
 
                 return Collider.SimPosition + new Vector2(
@@ -1401,8 +1409,8 @@ namespace Barotrauma
                         else
                         {
                             //stabilize the oxygen level but don't allow it to go positive and revive the character yet
-                            float stabilizationAmount = skill * CPRSettings.StabilizationPerSkill;
-                            stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.StabilizationMin, CPRSettings.StabilizationMax);
+                            float stabilizationAmount = skill * CPRSettings.Active.StabilizationPerSkill;
+                            stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.Active.StabilizationMin, CPRSettings.Active.StabilizationMax);
                             character.Oxygen -= 1.0f / stabilizationAmount * deltaTime; //Worse skill = more oxygen required
                             if (character.Oxygen > 0.0f) { target.Oxygen += stabilizationAmount * deltaTime; } //we didn't suffocate yet did we
                         }
@@ -1426,23 +1434,23 @@ namespace Barotrauma
                     targetTorso.body.ApplyLinearImpulse(new Vector2(0, -20f), maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                     cprPump = 0;
 
-                    if (skill < CPRSettings.DamageSkillThreshold)
+                    if (skill < CPRSettings.Active.DamageSkillThreshold)
                     {
                         target.LastDamageSource = null;
                         target.DamageLimb(
                             targetTorso.WorldPosition, targetTorso, 
-                            new[] { CPRSettings.InsufficientSkillAffliction.Instantiate((CPRSettings.DamageSkillThreshold - skill) * CPRSettings.DamageSkillMultiplier, source: character) },
+                            new[] { CPRSettings.Active.InsufficientSkillAffliction.Instantiate((CPRSettings.Active.DamageSkillThreshold - skill) * CPRSettings.Active.DamageSkillMultiplier, source: character) },
                             0.0f, true, 0.0f, attacker: null);
                     }
                     if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) //Serverside code
                     {
-                        float reviveChance = skill * CPRSettings.ReviveChancePerSkill;
-                        reviveChance = (float)Math.Pow(reviveChance, CPRSettings.ReviveChanceExponent);
-                        reviveChance = MathHelper.Clamp(reviveChance, CPRSettings.ReviveChanceMin, CPRSettings.ReviveChanceMax);
+                        float reviveChance = skill * CPRSettings.Active.ReviveChancePerSkill;
+                        reviveChance = (float)Math.Pow(reviveChance, CPRSettings.Active.ReviveChanceExponent);
+                        reviveChance = MathHelper.Clamp(reviveChance, CPRSettings.Active.ReviveChanceMin, CPRSettings.Active.ReviveChanceMax);
 
                         if (powerfulCPR) { reviveChance *= 2.0f; }
 
-                        if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) <= reviveChance)
+                        if (Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient) <= reviveChance)
                         {
                             //increase oxygen and clamp it above zero 
                             // -> the character should be revived if there are no major afflictions in addition to lack of oxygen
@@ -1463,7 +1471,7 @@ namespace Barotrauma
                 target.CharacterHealth.CalculateVitality();
                 if (wasCritical && target.Vitality > 0.0f && Timing.TotalTime > lastReviveTime + 10.0f)
                 {
-                    character.Info?.IncreaseSkillLevel("medical", SkillSettings.Current.SkillIncreasePerCprRevive);
+                    character.Info?.IncreaseSkillLevel("medical".ToIdentifier(), SkillSettings.Current.SkillIncreasePerCprRevive);
                     SteamAchievementManager.OnCharacterRevived(target, character);
                     lastReviveTime = (float)Timing.TotalTime;
 #if SERVER

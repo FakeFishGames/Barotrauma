@@ -97,11 +97,8 @@ namespace Barotrauma.Networking
             private readonly SerializableProperty property;
             private readonly string typeString;
             private readonly object parentObject;
-            
-            public string Name
-            {
-                get { return property.Name; }
-            }
+
+            public Identifier Name => property.Name.ToIdentifier();
 
             public object Value
             {
@@ -266,7 +263,7 @@ namespace Barotrauma.Networking
             }
         };
 
-        public Dictionary<string, SerializableProperty> SerializableProperties
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties
         {
             get;
             private set;
@@ -313,7 +310,7 @@ namespace Barotrauma.Networking
                     if (typeName != null || property.PropertyType.IsEnum)
                     {
                         NetPropertyData netPropertyData = new NetPropertyData(this, property, typeName);
-                        UInt32 key = ToolBox.StringToUInt32Hash(property.Name, md5);
+                        UInt32 key = ToolBox.IdentifierToUint32Hash(netPropertyData.Name, md5);
                         if (key == 0) { key++; } //0 is reserved to indicate the end of the netproperties section of a message
                         if (netProperties.ContainsKey(key)){ throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " (" + key.ToString() + ")"); }
                         netProperties.Add(key, netPropertyData);
@@ -330,7 +327,7 @@ namespace Barotrauma.Networking
                     if (typeName != null || property.PropertyType.IsEnum)
                     {
                         NetPropertyData netPropertyData = new NetPropertyData(networkMember.KarmaManager, property, typeName);
-                        UInt32 key = ToolBox.StringToUInt32Hash(property.Name, md5);
+                        UInt32 key = ToolBox.IdentifierToUint32Hash(netPropertyData.Name, md5);
                         if (netProperties.ContainsKey(key)) { throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " (" + key.ToString() + ")"); }
                         netProperties.Add(key, netPropertyData);
                     }
@@ -382,7 +379,7 @@ namespace Barotrauma.Networking
 
         public Voting Voting;
 
-        public Dictionary<string, bool> MonsterEnabled { get; private set; }
+        public Dictionary<Identifier, bool> MonsterEnabled { get; private set; }
 
         public const int MaxExtraCargoItemsOfType = 10;
         public const int MaxExtraCargoItemTypes = 20;
@@ -405,63 +402,63 @@ namespace Barotrauma.Networking
 
         public WhiteList Whitelist { get; private set; }
 
-        [Serialize(20, true)]
+        [Serialize(20, IsPropertySaveable.Yes)]
         public int TickRate
         {
             get;
             set;
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool RandomizeSeed
         {
             get;
             set;
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool UseRespawnShuttle
         {
             get;
             private set;
         }
 
-        [Serialize(300.0f, true)]
+        [Serialize(300.0f, IsPropertySaveable.Yes)]
         public float RespawnInterval
         {
             get;
             private set;
         }
 
-        [Serialize(180.0f, true)]
+        [Serialize(180.0f, IsPropertySaveable.Yes)]
         public float MaxTransportTime
         {
             get;
             private set;
         }
 
-        [Serialize(0.2f, true)]
+        [Serialize(0.2f, IsPropertySaveable.Yes)]
         public float MinRespawnRatio
         {
             get;
             private set;
         }
 
-        [Serialize(60.0f, true)]
+        [Serialize(60.0f, IsPropertySaveable.Yes)]
         public float AutoRestartInterval
         {
             get;
             set;
         }
 
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool StartWhenClientsReady
         {
             get;
             set;
         }
 
-        [Serialize(0.8f, true)]
+        [Serialize(0.8f, IsPropertySaveable.Yes)]
         public float StartWhenClientsReadyRatio
         {
             get;
@@ -469,7 +466,7 @@ namespace Barotrauma.Networking
         }
 
         private bool allowSpectating;
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool AllowSpectating
         {
             get { return allowSpectating; }
@@ -481,21 +478,28 @@ namespace Barotrauma.Networking
             }
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool SaveServerLogs
         {
             get;
             private set;
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool AllowModDownloads
+        {
+            get;
+            private set;
+        } = true;
+
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool AllowRagdollButton
         {
             get;
             set;
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool AllowFileTransfers
         {
             get;
@@ -503,7 +507,7 @@ namespace Barotrauma.Networking
         }
 
         private bool voiceChatEnabled;
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool VoiceChatEnabled
         {
             get { return voiceChatEnabled; }
@@ -516,7 +520,7 @@ namespace Barotrauma.Networking
         }
 
         private PlayStyle playstyleSelection;
-        [Serialize(PlayStyle.Casual, true)]
+        [Serialize(PlayStyle.Casual, IsPropertySaveable.Yes)]
         public PlayStyle PlayStyle
         {
             get { return playstyleSelection; }
@@ -527,14 +531,14 @@ namespace Barotrauma.Networking
             }
         }
 
-        [Serialize(Barotrauma.LosMode.Opaque, true)]
+        [Serialize(Barotrauma.LosMode.Opaque, IsPropertySaveable.Yes)]
         public LosMode LosMode
         {
             get;
             set;
         }
 
-        [Serialize(800, true)]
+        [Serialize(800, IsPropertySaveable.Yes)]
         public int LinesPerLogFile
         {
             get
@@ -569,7 +573,7 @@ namespace Barotrauma.Networking
 #endif
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool AllowVoteKick
         {
             get
@@ -582,7 +586,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool AllowEndVoting
         {
             get
@@ -596,7 +600,7 @@ namespace Barotrauma.Networking
         }
 
         private bool allowRespawn;
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool AllowRespawn
         {
             get { return allowRespawn; ; }
@@ -608,28 +612,28 @@ namespace Barotrauma.Networking
             }
         }
 
-        [Serialize(0, true)]
+        [Serialize(0, IsPropertySaveable.Yes)]
         public int BotCount
         {
             get;
             set;
         }
 
-        [Serialize(16, true)]
+        [Serialize(16, IsPropertySaveable.Yes)]
         public int MaxBotCount
         {
             get;
             set;
         }
 
-        [Serialize(BotSpawnMode.Normal, true)]
+        [Serialize(BotSpawnMode.Normal, IsPropertySaveable.Yes)]
         public BotSpawnMode BotSpawnMode
         {
             get;
             set;
         }
 
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool DisableBotConversations
         {
             get;
@@ -642,76 +646,76 @@ namespace Barotrauma.Networking
             set { selectedLevelDifficulty = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool AllowDisguises
         {
             get;
             set;
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool AllowRewiring
         {
             get;
             set;
         }
 
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool LockAllDefaultWires
         {
             get;
             set;
         }
 
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool AllowLinkingWifiToChat
         {
             get;
             set;
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool AllowFriendlyFire
         {
             get;
             set;
         }
 
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool DestructibleOutposts
         {
             get;
             set;
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool KillableNPCs
         {
             get;
             set;
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool BanAfterWrongPassword
         {
             get;
             set;
         }
 
-        [Serialize(3, true)]
+        [Serialize(3, IsPropertySaveable.Yes)]
         public int MaxPasswordRetriesBeforeBan
         {
             get;
             private set;
         }
 
-        [Serialize("", true)]
+        [Serialize("", IsPropertySaveable.Yes)]
         public string SelectedSubmarine
         {
             get;
             set;
         }
-        [Serialize("", true)]
+        [Serialize("", IsPropertySaveable.Yes)]
         public string SelectedShuttle
         {
             get;
@@ -719,7 +723,7 @@ namespace Barotrauma.Networking
         }
 
         private YesNoMaybe traitorsEnabled;
-        [Serialize(YesNoMaybe.No, true)]
+        [Serialize(YesNoMaybe.No, IsPropertySaveable.Yes)]
         public YesNoMaybe TraitorsEnabled
         {
             get { return traitorsEnabled; }
@@ -731,35 +735,35 @@ namespace Barotrauma.Networking
             }
         }
 
-        [Serialize(defaultValue: 1, isSaveable: true)]
+        [Serialize(defaultValue: 1, isSaveable: IsPropertySaveable.Yes)]
         public int TraitorsMinPlayerCount
         {
             get;
             set;
         }
 
-        [Serialize(defaultValue: 90.0f, isSaveable: true)]
+        [Serialize(defaultValue: 90.0f, isSaveable: IsPropertySaveable.Yes)]
         public float TraitorsMinStartDelay
         {
             get;
             set;
         }
 
-        [Serialize(defaultValue: 180.0f, isSaveable: true)]
+        [Serialize(defaultValue: 180.0f, isSaveable: IsPropertySaveable.Yes)]
         public float TraitorsMaxStartDelay
         {
             get;
             set;
         }
 
-        [Serialize(defaultValue: 30.0f, isSaveable: true)]
+        [Serialize(defaultValue: 30.0f, isSaveable: IsPropertySaveable.Yes)]
         public float TraitorsMinRestartDelay
         {
             get;
             set;
         }
 
-        [Serialize(defaultValue: 90.0f, isSaveable: true)]
+        [Serialize(defaultValue: 90.0f, isSaveable: IsPropertySaveable.Yes)]
         public float TraitorsMaxRestartDelay
         {
             get;
@@ -767,7 +771,7 @@ namespace Barotrauma.Networking
         }
 
         private SelectionMode subSelectionMode;
-        [Serialize(SelectionMode.Manual, true)]
+        [Serialize(SelectionMode.Manual, IsPropertySaveable.Yes)]
         public SelectionMode SubSelectionMode
         {
             get { return subSelectionMode; }
@@ -780,7 +784,7 @@ namespace Barotrauma.Networking
         }
 
         private SelectionMode modeSelectionMode;
-        [Serialize(SelectionMode.Manual, true)]
+        [Serialize(SelectionMode.Manual, IsPropertySaveable.Yes)]
         public SelectionMode ModeSelectionMode
         {
             get { return modeSelectionMode; }
@@ -794,42 +798,42 @@ namespace Barotrauma.Networking
 
         public BanList BanList { get; private set; }
 
-        [Serialize(0.6f, true)]
+        [Serialize(0.6f, IsPropertySaveable.Yes)]
         public float EndVoteRequiredRatio
         {
             get;
             private set;
         }
 
-        [Serialize(0.6f, true)]
+        [Serialize(0.6f, IsPropertySaveable.Yes)]
         public float SubmarineVoteRequiredRatio
         {
             get;
             private set;
         }
 
-        [Serialize(30f, true)]
+        [Serialize(30f, IsPropertySaveable.Yes)]
         public float SubmarineVoteTimeout
         {
             get;
             private set;
         }
 
-        [Serialize(0.6f, true)]
+        [Serialize(0.6f, IsPropertySaveable.Yes)]
         public float KickVoteRequiredRatio
         {
             get;
             private set;
         }
 
-        [Serialize(300.0f, true)]
+        [Serialize(300.0f, IsPropertySaveable.Yes)]
         public float KillDisconnectedTime
         {
             get;
             private set;
         }
 
-        [Serialize(600.0f, true)]
+        [Serialize(600.0f, IsPropertySaveable.Yes)]
         public float KickAFKTime
         {
             get;
@@ -837,7 +841,7 @@ namespace Barotrauma.Networking
         }
 
         private bool karmaEnabled;
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool KarmaEnabled
         {
             get { return karmaEnabled; }
@@ -851,7 +855,7 @@ namespace Barotrauma.Networking
         }
 
         private string karmaPreset = "default";
-        [Serialize("default", true)]
+        [Serialize("default", IsPropertySaveable.Yes)]
         public string KarmaPreset
         {
             get { return karmaPreset; }
@@ -866,21 +870,21 @@ namespace Barotrauma.Networking
             }
         }
 
-        [Serialize("sandbox", true)]
-        public string GameModeIdentifier
+        [Serialize("sandbox", IsPropertySaveable.Yes)]
+        public Identifier GameModeIdentifier
         {
             get;
             set;
         }
 
-        [Serialize("All", true)]
+        [Serialize("All", IsPropertySaveable.Yes)]
         public string MissionType
         {
             get;
             set;
         }
 
-        [Serialize(8, true)]
+        [Serialize(8, IsPropertySaveable.Yes)]
         public int MaxPlayers
         {
             get { return maxPlayers; }
@@ -893,21 +897,21 @@ namespace Barotrauma.Networking
             set;
         }
 
-        [Serialize(60f * 60.0f, true)]
+        [Serialize(60f * 60.0f, IsPropertySaveable.Yes)]
         public float AutoBanTime
         {
             get;
             private set;
         }
 
-        [Serialize(60.0f * 60.0f * 24.0f, true)]
+        [Serialize(60.0f * 60.0f * 24.0f, IsPropertySaveable.Yes)]
         public float MaxAutoBanTime
         {
             get;
             private set;
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool RadiationEnabled
         {
             get;
@@ -916,7 +920,7 @@ namespace Barotrauma.Networking
 
         private int maxMissionCount = CampaignSettings.DefaultMaxMissionCount;
 
-        [Serialize(CampaignSettings.DefaultMaxMissionCount, true)]
+        [Serialize(CampaignSettings.DefaultMaxMissionCount, IsPropertySaveable.Yes)]
         public int MaxMissionCount 
         {
             get { return maxMissionCount; }
@@ -962,45 +966,40 @@ namespace Barotrauma.Networking
         /// <summary>
         /// A list of int pairs that represent the ranges of UTF-16 codes allowed in client names
         /// </summary>
-        public List<Pair<int, int>> AllowedClientNameChars
+        public List<Range<int>> AllowedClientNameChars
         {
             get;
             private set;
-        } = new List<Pair<int, int>>();
+        } = new List<Range<int>>();
 
         private void InitMonstersEnabled()
         {
             //monster spawn settings
-            if (MonsterEnabled == null)
-            {
-                List<string> monsterNames1 = CharacterPrefab.Prefabs.Select(p => p.Identifier).ToList();
-
-                MonsterEnabled = new Dictionary<string, bool>();
-                foreach (string s in monsterNames1)
-                {
-                    if (!MonsterEnabled.ContainsKey(s)) MonsterEnabled.Add(s, true);
-                }
-            }
+            MonsterEnabled ??= CharacterPrefab.Prefabs.Select(p => (p.Identifier, true)).ToDictionary();
         }
 
         public void ReadMonsterEnabled(IReadMessage inc)
         {
             InitMonstersEnabled();
-            List<string> monsterNames = MonsterEnabled.Keys.ToList();
-            foreach (string s in monsterNames)
+            List<Identifier> monsterNames = MonsterEnabled.Keys
+                .OrderBy(k => CharacterPrefab.Prefabs[k].UintIdentifier)
+                .ToList();
+            foreach (Identifier s in monsterNames)
             {
                 MonsterEnabled[s] = inc.ReadBoolean();
             }
             inc.ReadPadBits();
         }
 
-        public void WriteMonsterEnabled(IWriteMessage msg, Dictionary<string, bool> monsterEnabled = null)
+        public void WriteMonsterEnabled(IWriteMessage msg, Dictionary<Identifier, bool> monsterEnabled = null)
         {
             //monster spawn settings
-            if (monsterEnabled == null) monsterEnabled = MonsterEnabled;
+            if (monsterEnabled == null) { monsterEnabled = MonsterEnabled; }
 
-            List<string> monsterNames = monsterEnabled.Keys.ToList();
-            foreach (string s in monsterNames)
+            List<Identifier> monsterNames = monsterEnabled.Keys
+                .OrderBy(k => CharacterPrefab.Prefabs[k].UintIdentifier)
+                .ToList();
+            foreach (Identifier s in monsterNames)
             {
                 msg.Write(monsterEnabled[s]);
             }
@@ -1015,7 +1014,7 @@ namespace Barotrauma.Networking
             Dictionary<ItemPrefab, int> extraCargo = new Dictionary<ItemPrefab, int>();
             for (int i = 0; i < count; i++)
             {
-                string prefabIdentifier = msg.ReadString();
+                Identifier prefabIdentifier = msg.ReadIdentifier();
                 byte amount = msg.ReadByte();
 
                 if (MapEntityPrefab.Find(null, prefabIdentifier, showErrorMessages: false) is ItemPrefab itemPrefab && amount > 0)
@@ -1041,7 +1040,7 @@ namespace Barotrauma.Networking
             msg.Write((UInt32)ExtraCargo.Count);
             foreach (KeyValuePair<ItemPrefab, int> kvp in ExtraCargo)
             {
-                msg.Write(kvp.Key.Identifier ?? "");
+                msg.Write(kvp.Key.Identifier);
                 msg.Write((byte)kvp.Value);
             }
         }

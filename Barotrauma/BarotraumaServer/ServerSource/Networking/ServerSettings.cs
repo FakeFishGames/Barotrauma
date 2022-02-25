@@ -268,7 +268,7 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("HiddenSubs", string.Join(",", HiddenSubs));
             
             doc.Root.SetAttributeValue("AllowedRandomMissionTypes", string.Join(",", AllowedRandomMissionTypes));
-            doc.Root.SetAttributeValue("AllowedClientNameChars", string.Join(",", AllowedClientNameChars.Select(c => c.First + "-" + c.Second)));
+            doc.Root.SetAttributeValue("AllowedClientNameChars", string.Join(",", AllowedClientNameChars.Select(c => $"{c.Start}-{c.End}")));
 
             SerializableProperty.SerializeProperties(this, doc.Root, true);
 
@@ -307,7 +307,7 @@ namespace Barotrauma.Networking
 
             if (string.IsNullOrEmpty(doc.Root.GetAttributeString("losmode", "")))
             {
-                LosMode = GameMain.Config.LosMode;
+                LosMode = GameSettings.CurrentConfig.Graphics.LosMode;
             }
 
             AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
@@ -370,7 +370,12 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                if (min > -1 && max > -1) { AllowedClientNameChars.Add(new Pair<int, int>(min, max)); }
+                if (min > max)
+                {
+                    //swap min and max
+                    (min, max) = (max, min);
+                }
+                if (min > -1 && max > -1) { AllowedClientNameChars.Add(new Range<int>(min, max)); }
             }
 
             AllowedRandomMissionTypes = new List<MissionType>();
@@ -399,12 +404,7 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.SetBotSpawnMode(BotSpawnMode);
             GameMain.NetLobbyScreen.SetBotCount(BotCount);
 
-            List<string> monsterNames = CharacterPrefab.Prefabs.Select(p => p.Identifier).ToList();
-            MonsterEnabled = new Dictionary<string, bool>();
-            foreach (string s in monsterNames)
-            {
-                if (!MonsterEnabled.ContainsKey(s)) MonsterEnabled.Add(s, true);
-            }
+            MonsterEnabled ??= CharacterPrefab.Prefabs.Select(p => (p.Identifier, true)).ToDictionary();
         }
 
         public string SelectNonHiddenSubmarine(string current = null)

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    partial class JobPrefab : IPrefab, IDisposable
+    partial class JobPrefab : PrefabWithUintIdentifier
     {
         public GUIButton CreateInfoFrame(out GUIComponent buttonContainer)
         {
@@ -18,20 +18,20 @@ namespace Barotrauma
             GUIFrame frame = new GUIFrame(new RectTransform(new Point(width, height), frameHolder.RectTransform, Anchor.Center));
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), Name, font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), Name, font: GUIStyle.LargeFont);
 
             var descriptionBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.15f) },
-                Description, font: GUI.SmallFont, wrap: true);
+                Description, font: GUIStyle.SmallFont, wrap: true);
 
             var skillContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 0.5f), paddedFrame.RectTransform)
                 { RelativeOffset = new Vector2(0.0f, 0.2f + descriptionBlock.RectTransform.RelativeSize.Y) });
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillContainer.RectTransform),
-                TextManager.Get("Skills"), font: GUI.LargeFont);
+                TextManager.Get("Skills"), font: GUIStyle.LargeFont);
             foreach (SkillPrefab skill in Skills)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillContainer.RectTransform),
                     "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + skill.Identifier), (int)skill.LevelRange.Start + " - " + (int)skill.LevelRange.End), 
-                    font: GUI.SmallFont);
+                    font: GUIStyle.SmallFont);
             }
 
             buttonContainer = paddedFrame;
@@ -43,14 +43,14 @@ namespace Barotrauma
                 Stretch = true
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
-                TextManager.Get("Items", fallBackTag: "mapentitycategory.equipment"), font: GUI.LargeFont);
+                TextManager.Get("Items", "mapentitycategory.equipment"), font: GUIStyle.LargeFont);
             foreach (string identifier in itemIdentifiers.Distinct())
             {
                 if (!(MapEntityPrefab.Find(name: null, identifier: identifier) is ItemPrefab itemPrefab)) { continue; }
                 int count = itemIdentifiers.Count(i => i == identifier);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
                     "   - " + (count == 1 ? itemPrefab.Name : itemPrefab.Name + " x" + count),
-                    font: GUI.SmallFont);
+                    font: GUIStyle.SmallFont);
             }*/
 
             return frameHolder;
@@ -76,12 +76,12 @@ namespace Barotrauma
             }
         }
 
-        public List<OutfitPreview> GetJobOutfitSprites(Gender gender, bool useInventoryIcon, out Vector2 maxDimensions)
+        public List<OutfitPreview> GetJobOutfitSprites(CharacterInfoPrefab charInfoPrefab, bool useInventoryIcon, out Vector2 maxDimensions)
         {
             List<OutfitPreview> outfitPreviews = new List<OutfitPreview>();
             maxDimensions = Vector2.One;
 
-            var equipIdentifiers = Element.GetChildElements("ItemSet").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
+            var equipIdentifiers = Element.GetChildElements("ItemSet").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeIdentifier("identifier", ""));
 
             List<ItemPrefab> outfitPrefabs = new List<ItemPrefab>();
             foreach (var equipIdentifier in equipIdentifiers)
@@ -114,8 +114,8 @@ namespace Barotrauma
                 var children = previewElement.Elements().ToList();
                 for (int n = 0; n < children.Count; n++)
                 {
-                    XElement spriteElement = children[n];
-                    string spriteTexture = spriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (gender == Gender.Female) ? "female" : "male");
+                    var spriteElement = children[n];
+                    string spriteTexture = charInfoPrefab.ReplaceVars(spriteElement.GetAttributeString("texture", ""), charInfoPrefab.Heads.First());
                     var sprite = new Sprite(spriteElement, file: spriteTexture);
                     sprite.size = new Vector2(sprite.SourceRect.Width, sprite.SourceRect.Height);
                     outfitPreview.AddSprite(sprite, children[n].GetAttributeVector2("offset", Vector2.Zero));

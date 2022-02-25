@@ -130,12 +130,12 @@ namespace Barotrauma
             SoundTriggers = new LevelTrigger[Prefab.Sounds.Count];
             for (int i = 0; i < Prefab.Sounds.Count; i++)
             {
-                Sounds[i] = Submarine.LoadRoundSound(Prefab.Sounds[i].SoundElement, false);
+                Sounds[i] = RoundSound.Load(Prefab.Sounds[i].SoundElement, false);
                 SoundTriggers[i] = Prefab.Sounds[i].TriggerIndex > -1 ? Triggers[Prefab.Sounds[i].TriggerIndex] : null;
             }
 
             int j = 0;
-            foreach (XElement subElement in Prefab.Config.Elements())
+            foreach (var subElement in Prefab.Config.Elements())
             {
                 if (!subElement.Name.ToString().Equals("deformablesprite", StringComparison.OrdinalIgnoreCase)) { continue; }               
                 foreach (XElement animationElement in subElement.Elements())
@@ -151,7 +151,7 @@ namespace Barotrauma
             }
 
             VisibleOnSonar = Prefab.SonarDisruption > 0.0f || Prefab.OverrideProperties.Any(p => p != null && p.SonarDisruption > 0.0f) || 
-                (Triggers != null && Triggers.Any(t => !MathUtils.NearlyEqual(t.Force, Vector2.Zero) && t.ForceMode != LevelTrigger.TriggerForceMode.LimitVelocity || !string.IsNullOrWhiteSpace(t.InfectIdentifier)));
+                (Triggers != null && Triggers.Any(t => !MathUtils.NearlyEqual(t.Force, Vector2.Zero) && t.ForceMode != LevelTrigger.TriggerForceMode.LimitVelocity || !t.InfectIdentifier.IsEmpty));
             if (VisibleOnSonar && Triggers.Any())
             {
                 SonarRadius = Triggers.Select(t => t.ColliderRadius * 1.5f).Max();

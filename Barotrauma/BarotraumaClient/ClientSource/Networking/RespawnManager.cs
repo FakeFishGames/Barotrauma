@@ -52,7 +52,7 @@ namespace Barotrauma.Networking
                 if (Character.Controlled != null || (!(GameMain.GameSession?.IsRunning ?? false))) { return; }
                 var respawnPrompt = new GUIMessageBox(
                     TextManager.Get("tutorial.tryagainheader"), TextManager.Get("respawnquestionprompt"),
-                    new string[] { TextManager.Get("respawnquestionpromptrespawn"), TextManager.Get("respawnquestionpromptwait") })
+                    new LocalizedString[] { TextManager.Get("respawnquestionpromptrespawn"), TextManager.Get("respawnquestionpromptwait") })
                 {
                     UserData = "respawnquestionprompt"
                 };

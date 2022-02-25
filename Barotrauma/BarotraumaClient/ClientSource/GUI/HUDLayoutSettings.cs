@@ -90,7 +90,8 @@ namespace Barotrauma
             if (GameMain.Instance != null)
             {
                 GameMain.Instance.ResolutionChanged += CreateAreas;
-                GameMain.Config.OnHUDScaleChanged += CreateAreas;
+                #warning TODO: reimplement
+                //GameSettings.CurrentConfig.OnHUDScaleChanged += CreateAreas;
                 CreateAreas();
                 CharacterInfo.Init();
             }
@@ -163,7 +164,7 @@ namespace Barotrauma
         public static void Draw(SpriteBatch spriteBatch)
         {
             GUI.DrawRectangle(spriteBatch, ButtonAreaTop, Color.White * 0.5f);
-            GUI.DrawRectangle(spriteBatch, MessageAreaTop, GUI.Style.Orange * 0.5f);
+            GUI.DrawRectangle(spriteBatch, MessageAreaTop, GUIStyle.Orange * 0.5f);
             GUI.DrawRectangle(spriteBatch, CrewArea, Color.Blue * 0.5f);
             GUI.DrawRectangle(spriteBatch, ChatBoxArea, Color.Cyan * 0.5f);
             GUI.DrawRectangle(spriteBatch, HealthBarArea, Color.Red * 0.5f);

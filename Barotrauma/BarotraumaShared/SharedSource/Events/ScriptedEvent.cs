@@ -7,9 +7,9 @@ namespace Barotrauma
 {
     class ScriptedEvent : Event
     {
-        private readonly Dictionary<string, List<Predicate<Entity>>> targetPredicates = new Dictionary<string, List<Predicate<Entity>>>();
+        private readonly Dictionary<Identifier, List<Predicate<Entity>>> targetPredicates = new Dictionary<Identifier, List<Predicate<Entity>>>();
 
-        private readonly Dictionary<string, List<Entity>> cachedTargets = new Dictionary<string, List<Entity>>();
+        private readonly Dictionary<Identifier, List<Entity>> cachedTargets = new Dictionary<Identifier, List<Entity>>();
         private int prevEntityCount;
         private int prevPlayerCount, prevBotCount;
 
@@ -18,7 +18,7 @@ namespace Barotrauma
 
         public int CurrentActionIndex { get; private set; }
         public List<EventAction> Actions { get; } = new List<EventAction>();
-        public Dictionary<string, List<Entity>> Targets { get; } = new Dictionary<string, List<Entity>>();
+        public Dictionary<Identifier, List<Entity>> Targets { get; } = new Dictionary<Identifier, List<Entity>>();
 
         public override string ToString()
         {
@@ -27,7 +27,7 @@ namespace Barotrauma
         
         public ScriptedEvent(EventPrefab prefab) : base(prefab)
         {
-            foreach (XElement element in prefab.ConfigElement.Elements())
+            foreach (var element in prefab.ConfigElement.Elements())
             {
                 if (element.Name.ToString().Equals("statuseffect", StringComparison.OrdinalIgnoreCase))
                 {
@@ -49,7 +49,7 @@ namespace Barotrauma
             GameAnalyticsManager.AddDesignEvent($"ScriptedEvent:{prefab.Identifier}:Start");
         }
 
-        public void AddTarget(string tag, Entity target)
+        public void AddTarget(Identifier tag, Entity target)
         {
             if (target == null)
             {
@@ -74,7 +74,7 @@ namespace Barotrauma
             }
         }
 
-        public void AddTargetPredicate(string tag, Predicate<Entity> predicate)
+        public void AddTargetPredicate(Identifier tag, Predicate<Entity> predicate)
         {
             if (!targetPredicates.ContainsKey(tag))
             {
@@ -88,7 +88,7 @@ namespace Barotrauma
             }
         }
 
-        public IEnumerable<Entity> GetTargets(string tag)
+        public IEnumerable<Entity> GetTargets(Identifier tag)
         {
             if (cachedTargets.ContainsKey(tag))
             {
@@ -140,9 +140,9 @@ namespace Barotrauma
             return targetsToReturn;
         }
 
-        public void RemoveTag(string tag)
+        public void RemoveTag(Identifier tag)
         {
-            if (string.IsNullOrWhiteSpace(tag)) { return; }
+            if (tag.IsEmpty) { return; }
             if (Targets.ContainsKey(tag)) { Targets.Remove(tag); }
             if (cachedTargets.ContainsKey(tag)) { cachedTargets.Remove(tag); }
             if (targetPredicates.ContainsKey(tag)) { targetPredicates.Remove(tag);  }
@@ -224,7 +224,7 @@ namespace Barotrauma
             foreach (LocationConnection c in currLocation.Connections)
             {
                 if (RequireBeaconStation && !c.LevelData.HasBeaconStation) { continue; }
-                if (requiredDestinationTypes.Any(t => c.OtherLocation(currLocation).Type.Identifier.Equals(t, StringComparison.OrdinalIgnoreCase)))
+                if (requiredDestinationTypes.Any(t => c.OtherLocation(currLocation).Type.Identifier == t))
                 {
                     return true;
                 }

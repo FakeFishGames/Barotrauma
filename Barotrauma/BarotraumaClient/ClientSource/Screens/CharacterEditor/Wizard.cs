@@ -11,7 +11,7 @@ namespace Barotrauma.CharacterEditor
     class Wizard
     {
         // Ragdoll data
-        private string name;
+        private Identifier name;
         private bool isHumanoid;
         private bool canEnterSubmarine = true;
         private bool canWalk;
@@ -39,7 +39,7 @@ namespace Barotrauma.CharacterEditor
             canEnterSubmarine = ragdoll.CanEnterSubmarine;
             canWalk = ragdoll.CanWalk;
             texturePath = ragdoll.Texture;
-            if (string.IsNullOrEmpty(texturePath) && !name.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(texturePath) && name != CharacterPrefab.HumanSpeciesName)
             {
                 texturePath = ragdoll.Limbs.FirstOrDefault()?.GetSprite().Texture;
             }
@@ -58,7 +58,7 @@ namespace Barotrauma.CharacterEditor
             }
         }
 
-        public static string GetCharacterEditorTranslation(string text) => CharacterEditorScreen.GetCharacterEditorTranslation(text);
+        public static LocalizedString GetCharacterEditorTranslation(string text) => CharacterEditorScreen.GetCharacterEditorTranslation(text);
 
         public void Reset()
         {
@@ -97,11 +97,11 @@ namespace Barotrauma.CharacterEditor
 
         public void CreateCharacter(XElement ragdollElement, XElement characterElement = null, IEnumerable<AnimationParams> animations = null)
         {
-            if (CharacterPrefab.Find(p => p.Identifier.Equals(name, StringComparison.OrdinalIgnoreCase)) != null)
+            if (CharacterPrefab.Find(p => p.Identifier == name) != null)
             {
-                bool isSamePackage = contentPackage.GetFilesOfType(ContentType.Character).Any(c => Path.GetFileNameWithoutExtension(c).Equals(name, StringComparison.OrdinalIgnoreCase));
-                string verificationText = isSamePackage ? GetCharacterEditorTranslation("existingcharacterfoundreplaceverification") : GetCharacterEditorTranslation("existingcharacterfoundoverrideverification");
-                var msgBox = new GUIMessageBox("", verificationText, new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                bool isSamePackage = contentPackage.GetFiles<CharacterFile>().Any(f => Path.GetFileNameWithoutExtension(f.Path.Value) == name);
+                LocalizedString verificationText = isSamePackage ? GetCharacterEditorTranslation("existingcharacterfoundreplaceverification") : GetCharacterEditorTranslation("existingcharacterfoundoverrideverification");
+                var msgBox = new GUIMessageBox("", verificationText, new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") })
                 {
                     UserData = "verificationprompt"
                 };
@@ -110,7 +110,7 @@ namespace Barotrauma.CharacterEditor
                     msgBox.Close();
                     if (CharacterEditorScreen.Instance.CreateCharacter(name, Path.GetDirectoryName(xmlPath), isHumanoid, contentPackage, ragdollElement, characterElement, animations))
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", name), GUI.Style.Green, font: GUI.Font);
+                        GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", name.Value), GUIStyle.Green, font: GUIStyle.Font);
                     }
                     Wizard.Instance.SelectTab(Tab.None);
                     return true;
@@ -126,7 +126,7 @@ namespace Barotrauma.CharacterEditor
             {
                 if (CharacterEditorScreen.Instance.CreateCharacter(name, Path.GetDirectoryName(xmlPath), isHumanoid, contentPackage, ragdollElement, characterElement, animations))
                 {
-                    GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", name), GUI.Style.Green, font: GUI.Font);
+                    GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", name.Value), GUIStyle.Green, font: GUIStyle.Font);
                 }
                 Wizard.Instance.SelectTab(Tab.None);
             }
@@ -141,8 +141,8 @@ namespace Barotrauma.CharacterEditor
 
             protected override GUIMessageBox Create()
             {
-                var box = new GUIMessageBox(GetCharacterEditorTranslation("CreateNewCharacter"), string.Empty, new string[] { TextManager.Get("Cancel"), IsCopy ? TextManager.Get("Create") : TextManager.Get("Next") }, new Vector2(0.65f, 0.9f));
-                box.Header.Font = GUI.LargeFont;
+                var box = new GUIMessageBox(GetCharacterEditorTranslation("CreateNewCharacter"), string.Empty, new LocalizedString[] { TextManager.Get("Cancel"), IsCopy ? TextManager.Get("Create") : TextManager.Get("Next") }, new Vector2(0.65f, 0.9f));
+                box.Header.Font = GUIStyle.LargeFont;
                 box.Content.ChildAnchor = Anchor.TopCenter;
                 box.Content.AbsoluteSpacing = 20;
                 int elementSize = 30;
@@ -161,7 +161,7 @@ namespace Barotrauma.CharacterEditor
                 void UpdatePaths()
                 {
                     string pathBase = ContentPackage == GameMain.VanillaContent ? $"Content/Characters/{Name}/{Name}"
-                        : $"Mods/{(ContentPackage != null ? ContentPackage.Name + "/" : string.Empty)}Characters/{Name}/{Name}";
+                        : $"{ContentPath.ModDirStr}/Characters/{Name}/{Name}";
                     XMLPath = $"{pathBase}.xml";
                     xmlPathElement.Text = XMLPath;
                     if (updateTexturePath)
@@ -178,12 +178,12 @@ namespace Barotrauma.CharacterEditor
                     {
                         case 0:
                             new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.CenterLeft), TextManager.Get("Name"));
-                            var nameField = new GUITextBox(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), Name ?? GetCharacterEditorTranslation("DefaultName")) { CaretColor = Color.White };
+                            var nameField = new GUITextBox(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), Name.Value ?? GetCharacterEditorTranslation("DefaultName").Value) { CaretColor = Color.White };
                             string ProcessText(string text) => text.RemoveWhitespace().CapitaliseFirstInvariant();
-                            Name = ProcessText(nameField.Text);
+                            Name = ProcessText(nameField.Text).ToIdentifier();
                             nameField.OnTextChanged += (tb, text) =>
                             {
-                                Name = ProcessText(text);
+                                Name = ProcessText(text).ToIdentifier();
                                 UpdatePaths();
                                 return true;
                             };
@@ -255,7 +255,7 @@ namespace Barotrauma.CharacterEditor
                                     TexturePath = text;
                                     return true;
                                 };
-                                string title = GetCharacterEditorTranslation("SelectTexture");
+                                LocalizedString title = GetCharacterEditorTranslation("SelectTexture");
                                 new GUIButton(new RectTransform(new Vector2(0.3f / texturePathElement.RectTransform.RelativeSize.X, 1.0f), texturePathElement.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), title, style: "GUIButtonSmall")
                                 {
                                     OnClicked = (button, data) =>
@@ -305,12 +305,12 @@ namespace Barotrauma.CharacterEditor
                                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.CenterLeft), TextManager.Get("ContentPackage"));
                                 var rightContainer = new GUIFrame(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), style: null);
                                 contentPackageDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.5f), rightContainer.RectTransform, Anchor.TopRight));
-                                foreach (ContentPackage cp in GameMain.Config.AllEnabledPackages)
+                                foreach (ContentPackage contentPackage in ContentPackageManager.EnabledPackages.All)
                                 {
 #if !DEBUG
-                                if (cp == GameMain.VanillaContent) { continue; }
+                                    if (contentPackage == GameMain.VanillaContent) { continue; }
 #endif
-                                    contentPackageDropDown.AddItem(cp.Name, userData: cp, toolTip: cp.Path);
+                                    contentPackageDropDown.AddItem(contentPackage.Name, userData: contentPackage, toolTip: contentPackage.Path);
                                 }
                                 contentPackageDropDown.OnSelected = (obj, userdata) =>
                                 {
@@ -321,7 +321,7 @@ namespace Barotrauma.CharacterEditor
                                 };
                                 contentPackageDropDown.Select(0);
                                 var contentPackageNameElement = new GUITextBox(new RectTransform(new Vector2(0.7f, 0.5f), rightContainer.RectTransform, Anchor.BottomLeft),
-                                    GetCharacterEditorTranslation("NewContentPackage"))
+                                    GetCharacterEditorTranslation("NewContentPackage").Value)
                                 {
                                     CaretColor = Color.White,
                                 };
@@ -334,15 +334,16 @@ namespace Barotrauma.CharacterEditor
                                             contentPackageNameElement.Flash();
                                             return false;
                                         }
-                                        if (ContentPackage.AllPackages.Any(cp => cp.Name.ToLower() == contentPackageNameElement.Text.ToLower()))
+                                        if (ContentPackageManager.AllPackages.Any(cp => cp.Name.ToLower() == contentPackageNameElement.Text.ToLower()))
                                         {
-                                            new GUIMessageBox("", TextManager.Get("charactereditor.contentpackagenameinuse", fallBackTag: "leveleditorlevelobjnametaken"));
+                                            new GUIMessageBox("", TextManager.Get("charactereditor.contentpackagenameinuse", "leveleditorlevelobjnametaken"));
                                             return false;
                                         }
-                                        string modName = ToolBox.RemoveInvalidFileNameChars(contentPackageNameElement.Text);
-                                        ContentPackage = ContentPackage.CreatePackage(contentPackageNameElement.Text, Path.Combine("Mods", modName, Steam.SteamManager.MetadataFileName), false);
-                                        ContentPackage.AddPackage(ContentPackage);
-                                        GameMain.Config.EnableRegularPackage(ContentPackage);
+                                        string modName = contentPackageNameElement.Text;
+
+                                        var modProject = new ModProject { Name = modName };
+                                        ContentPackage = ContentPackageManager.LocalPackages.SaveAndEnableRegularMod(modProject);
+
                                         contentPackageDropDown.AddItem(ContentPackage.Name, ContentPackage, ContentPackage.Path);
                                         contentPackageDropDown.SelectItem(ContentPackage);
                                         contentPackageNameElement.Text = "";
@@ -389,15 +390,15 @@ namespace Barotrauma.CharacterEditor
                     }
                     if (!File.Exists(TexturePath))
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("TextureDoesNotExist"), GUI.Style.Red);
-                        texturePathElement.Flash(GUI.Style.Red);
+                        GUI.AddMessage(GetCharacterEditorTranslation("TextureDoesNotExist"), GUIStyle.Red);
+                        texturePathElement.Flash(GUIStyle.Red);
                         return false;
                     }
                     var path = Path.GetFileName(TexturePath);
                     if (!path.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
                     {
-                        GUI.AddMessage(TextManager.Get("WrongFileType"), GUI.Style.Red);
-                        texturePathElement.Flash(GUI.Style.Red);
+                        GUI.AddMessage(TextManager.Get("WrongFileType"), GUIStyle.Red);
+                        texturePathElement.Flash(GUIStyle.Red);
                         return false;
                     }
                     if (IsCopy)
@@ -427,8 +428,8 @@ namespace Barotrauma.CharacterEditor
 
             protected override GUIMessageBox Create()
             {
-                var box = new GUIMessageBox(GetCharacterEditorTranslation("DefineRagdoll"), string.Empty, new string[] { TextManager.Get("Previous"), TextManager.Get("Create") }, new Vector2(0.65f, 1f));
-                box.Header.Font = GUI.LargeFont;
+                var box = new GUIMessageBox(GetCharacterEditorTranslation("DefineRagdoll"), string.Empty, new LocalizedString[] { TextManager.Get("Previous"), TextManager.Get("Create") }, new Vector2(0.65f, 1f));
+                box.Header.Font = GUIStyle.LargeFont;
                 box.Content.ChildAnchor = Anchor.TopCenter;
                 box.Content.AbsoluteSpacing = (int)(20 * GUI.Scale);
                 int elementSize = (int)(40 * GUI.Scale);
@@ -453,7 +454,7 @@ namespace Barotrauma.CharacterEditor
                     Stretch = true,
                     RelativeSpacing = 0.02f
                 };
-                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), limbEditLayout.RectTransform), GetCharacterEditorTranslation("Limbs"), font: GUI.SubHeadingFont);
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), limbEditLayout.RectTransform), GetCharacterEditorTranslation("Limbs"), font: GUIStyle.SubHeadingFont);
                 var limbsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), content.RectTransform));
                 var removeLimbButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), limbEditLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton")
                 {
@@ -494,10 +495,10 @@ namespace Barotrauma.CharacterEditor
                 for (int i = 3; i >= 0; i--)
                 {
                     var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform) { MinSize = new Point(50, 0), MaxSize = new Point(150, 50) }, style: null);
-                    new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), GUI.rectComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
+                    new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), GUI.RectComponentLabels[i], font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft);
                     GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight), GUINumberInput.NumberType.Int)
                     {
-                        Font = GUI.SmallFont
+                        Font = GUIStyle.SmallFont
                     };
                     switch (i)
                     {
@@ -623,7 +624,7 @@ namespace Barotrauma.CharacterEditor
                 // Joints
                 new GUIFrame(new RectTransform(new Vector2(1, 0.05f), content.RectTransform), style: null) { CanBeFocused = false };
                 var jointsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), content.RectTransform), style: null) { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), jointsElement.RectTransform), GetCharacterEditorTranslation("Joints"), font: GUI.SubHeadingFont);
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), jointsElement.RectTransform), GetCharacterEditorTranslation("Joints"), font: GUIStyle.SubHeadingFont);
                 var jointButtonElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 1f), jointsElement.RectTransform)
                 { 
                     RelativeOffset = new Vector2(0.15f, 0) 
@@ -658,12 +659,12 @@ namespace Barotrauma.CharacterEditor
                 {
                     if (htmlBox == null)
                     {
-                        htmlBox = new GUIMessageBox(GetCharacterEditorTranslation("LoadHTML"), string.Empty, new string[] { TextManager.Get("Close"), TextManager.Get("Load") }, new Vector2(0.65f, 1f));
-                        htmlBox.Header.Font = GUI.LargeFont;
+                        htmlBox = new GUIMessageBox(GetCharacterEditorTranslation("LoadHTML"), string.Empty, new LocalizedString[] { TextManager.Get("Close"), TextManager.Get("Load") }, new Vector2(0.65f, 1f));
+                        htmlBox.Header.Font = GUIStyle.LargeFont;
                         var element = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.05f), htmlBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f);
                         //new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform), GetCharacterEditorTranslation("HTMLPath"));
-                        var htmlPathElement = new GUITextBox(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.TopRight), GetCharacterEditorTranslation("HTMLPath"));
-                        string title = GetCharacterEditorTranslation("SelectFile");
+                        var htmlPathElement = new GUITextBox(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.TopRight), GetCharacterEditorTranslation("HTMLPath").Value);
+                        LocalizedString title = GetCharacterEditorTranslation("SelectFile");
                         new GUIButton(new RectTransform(new Vector2(0.3f, 1), element.RectTransform), title)
                         {
                             OnClicked = (button, data) =>
@@ -732,14 +733,14 @@ namespace Barotrauma.CharacterEditor
                         LimbXElements.Values.Select(xe => xe.Attribute("type")).Where(a => a.Value.Equals("head", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
                     if (main == null)
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("MissingTorsoOrHead"), GUI.Style.Red);
+                        GUI.AddMessage(GetCharacterEditorTranslation("MissingTorsoOrHead"), GUIStyle.Red);
                         return false;
                     }
                     if (IsHumanoid)
                     {
                         if (!IsValid(LimbXElements.Values, true, out string missingType))
                         {
-                            GUI.AddMessage(GetCharacterEditorTranslation("MissingLimbType").Replace("[limbtype]", missingType.FormatCamelCaseWithSpaces()), GUI.Style.Red);
+                            GUI.AddMessage(GetCharacterEditorTranslation("MissingLimbType").Replace("[limbtype]", missingType.FormatCamelCaseWithSpaces()), GUIStyle.Red);
                             return false;
                         }
                     }
@@ -829,11 +830,11 @@ namespace Barotrauma.CharacterEditor
                     CanBeFocused = false
                 };
                 var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 16 };
-                var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), name, font: GUI.SubHeadingFont);
+                var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), name, font: GUIStyle.SubHeadingFont);
                 var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                 var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
-                var limbTypeField = GUI.CreateEnumField(limbType, elementSize, GetCharacterEditorTranslation("LimbType"), group.RectTransform, font: GUI.Font);
-                var sourceRectField = GUI.CreateRectangleField(sourceRect ?? new Rectangle(0, 100 * LimbGUIElements.Count, 100, 100), elementSize, GetCharacterEditorTranslation("SourceRectangle"), group.RectTransform, font: GUI.Font);
+                var limbTypeField = GUI.CreateEnumField(limbType, elementSize, GetCharacterEditorTranslation("LimbType"), group.RectTransform, font: GUIStyle.Font);
+                var sourceRectField = GUI.CreateRectangleField(sourceRect ?? new Rectangle(0, 100 * LimbGUIElements.Count, 100, 100), elementSize, GetCharacterEditorTranslation("SourceRectangle"), group.RectTransform, font: GUIStyle.Font);
                 new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopLeft), GetCharacterEditorTranslation("ID"));
                 new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
                 {
@@ -869,7 +870,7 @@ namespace Barotrauma.CharacterEditor
                     CanBeFocused = false
                 };
                 var group = new GUILayoutGroup(new RectTransform(Vector2.One, jointElement.RectTransform)) { AbsoluteSpacing = 2 };
-                var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), jointName, font: GUI.SubHeadingFont);
+                var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), jointName, font: GUIStyle.SubHeadingFont);
                 var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), TextManager.Get("Name"));
                 var nameInput = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), jointName)
@@ -898,8 +899,8 @@ namespace Barotrauma.CharacterEditor
                     MaxValueInt = byte.MaxValue,
                     IntValue = id2
                 };
-                GUI.CreateVector2Field(anchor1 ?? Vector2.Zero, elementSize, GetCharacterEditorTranslation("LimbWithIndexAnchor").Replace("[index]", "1"), group.RectTransform, font: GUI.Font, decimalsToDisplay: 2);
-                GUI.CreateVector2Field(anchor2 ?? Vector2.Zero, elementSize, GetCharacterEditorTranslation("LimbWithIndexAnchor").Replace("[index]", "2"), group.RectTransform, font: GUI.Font, decimalsToDisplay: 2);
+                GUI.CreateVector2Field(anchor1 ?? Vector2.Zero, elementSize, GetCharacterEditorTranslation("LimbWithIndexAnchor").Replace("[index]", "1"), group.RectTransform, font: GUIStyle.Font, decimalsToDisplay: 2);
+                GUI.CreateVector2Field(anchor2 ?? Vector2.Zero, elementSize, GetCharacterEditorTranslation("LimbWithIndexAnchor").Replace("[index]", "2"), group.RectTransform, font: GUIStyle.Font, decimalsToDisplay: 2);
                 label.Text = GetJointName(jointName);
                 limb1InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
                 limb2InputField.OnValueChanged += nInput => label.Text = GetJointName(jointName);
@@ -917,7 +918,7 @@ namespace Barotrauma.CharacterEditor
             public CharacterParams SourceCharacter => Instance.SourceCharacter;
             public RagdollParams SourceRagdoll => Instance.SourceRagdoll;
 
-            public string Name
+            public Identifier Name
             {
                 get => Instance.name;
                 set => Instance.name = value;
@@ -1005,7 +1006,7 @@ namespace Barotrauma.CharacterEditor
                 {
                     var limbGUIElement = LimbGUIElements[i];
                     var allChildren = limbGUIElement.GetAllChildren();
-                    GUITextBlock GetField(string n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
+                    GUITextBlock GetField(LocalizedString n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
                     int id = GetField(GetCharacterEditorTranslation("ID")).Parent.GetChild<GUINumberInput>().IntValue;
                     string limbName = GetField(TextManager.Get("Name")).Parent.GetChild<GUITextBox>().Text;
                     LimbType limbType = (LimbType)GetField(GetCharacterEditorTranslation("LimbType")).Parent.GetChild<GUIDropDown>().SelectedData;
@@ -1056,7 +1057,7 @@ namespace Barotrauma.CharacterEditor
                 {
                     var jointGUIElement = JointGUIElements[i];
                     var allChildren = jointGUIElement.GetAllChildren();
-                    GUITextBlock GetField(string n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
+                    GUITextBlock GetField(LocalizedString n) => allChildren.First(c => c is GUITextBlock textBlock && textBlock.Text == n) as GUITextBlock;
                     string jointName = GetField(TextManager.Get("Name")).Parent.GetChild<GUITextBox>().Text;
                     int limb1ID = GetField(GetCharacterEditorTranslation("LimbWithIndex").Replace("[index]", "1")).Parent.GetChild<GUINumberInput>().IntValue;
                     int limb2ID = GetField(GetCharacterEditorTranslation("LimbWithIndex").Replace("[index]", "2")).Parent.GetChild<GUINumberInput>().IntValue;

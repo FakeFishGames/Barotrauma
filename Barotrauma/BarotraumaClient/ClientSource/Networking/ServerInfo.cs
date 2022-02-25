@@ -51,7 +51,7 @@ namespace Barotrauma.Networking
         public bool? FriendlyFireEnabled;
         public bool? AllowRespawn;
         public YesNoMaybe? TraitorsEnabled;
-        public string GameMode;
+        public Identifier GameMode;
         public PlayStyle? PlayStyle;
 
         public bool Recent;
@@ -103,7 +103,7 @@ namespace Barotrauma.Networking
 
             frame.ClearChildren();
 
-            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform), ServerName, font: GUI.LargeFont)
+            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform), ServerName, font: GUIStyle.LargeFont)
             {
                 ToolTip = ServerName
             };
@@ -143,7 +143,7 @@ namespace Barotrauma.Networking
 
                 var playStyleName = new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.0f), playStyleBanner.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.06f) },
                     TextManager.AddPunctuation(':', TextManager.Get("serverplaystyle"), TextManager.Get("servertag."+ playStyle)), textColor: Color.White, 
-                    font: GUI.SmallFont, textAlignment: Alignment.Center, 
+                    font: GUIStyle.SmallFont, textAlignment: Alignment.Center, 
                     color: ServerListScreen.PlayStyleColors[(int)playStyle], style: "GUISlopedHeader");
                 playStyleName.RectTransform.NonScaledSize = (playStyleName.Font.MeasureString(playStyleName.Text) + new Vector2(20, 5) * GUI.Scale).ToPoint();
                 playStyleName.RectTransform.IsFixedSize = true;
@@ -188,7 +188,7 @@ namespace Barotrauma.Networking
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.025f), content.RectTransform), style: null);
 
             var serverMsg = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform)) { ScrollBarVisible = true };
-            var msgText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverMsg.Content.RectTransform), ServerMessage, font: GUI.SmallFont, wrap: true) 
+            var msgText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverMsg.Content.RectTransform), ServerMessage, font: GUIStyle.SmallFont, wrap: true) 
             { 
                 CanBeFocused = false 
             };
@@ -197,7 +197,7 @@ namespace Barotrauma.Networking
 
             var gameMode = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), content.RectTransform), TextManager.Get("GameMode"));
             new GUITextBlock(new RectTransform(Vector2.One, gameMode.RectTransform),
-                TextManager.Get(string.IsNullOrEmpty(GameMode) ? "Unknown" : "GameMode." + GameMode, returnNull: true) ?? GameMode,
+                TextManager.Get(GameMode.IsEmpty ? "Unknown" : "GameMode." + GameMode).Fallback(GameMode.Value),
                 textAlignment: Alignment.Right);
 
             GUITextBlock playStyleText = null;
@@ -218,11 +218,11 @@ namespace Barotrauma.Networking
                 subSelection.TextSize.X + subSelection.GetChild<GUITextBlock>().TextSize.X > subSelection.Rect.Width ||
                 modeSelection.TextSize.X + modeSelection.GetChild<GUITextBlock>().TextSize.X > modeSelection.Rect.Width)
             {
-                gameMode.Font = subSelection.Font = modeSelection.Font = GUI.SmallFont;
-                gameMode.GetChild<GUITextBlock>().Font = subSelection.GetChild<GUITextBlock>().Font = modeSelection.GetChild<GUITextBlock>().Font = GUI.SmallFont;
+                gameMode.Font = subSelection.Font = modeSelection.Font = GUIStyle.SmallFont;
+                gameMode.GetChild<GUITextBlock>().Font = subSelection.GetChild<GUITextBlock>().Font = modeSelection.GetChild<GUITextBlock>().Font = GUIStyle.SmallFont;
                 if (playStyleText != null)
                 {
-                    playStyleText.Font = playStyleText.GetChild<GUITextBlock>().Font = GUI.SmallFont;
+                    playStyleText.Font = playStyleText.GetChild<GUITextBlock>().Font = GUIStyle.SmallFont;
                 }
             }
 
@@ -268,7 +268,7 @@ namespace Barotrauma.Networking
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform),
-                TextManager.Get("ServerListContentPackages"), textAlignment: Alignment.Center, font: GUI.SubHeadingFont);
+                TextManager.Get("ServerListContentPackages"), textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
 
             var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), frame.RectTransform)) { ScrollBarVisible = true };
             if (ContentPackageNames.Count == 0)
@@ -289,7 +289,7 @@ namespace Barotrauma.Networking
                     };
                     if (i < ContentPackageHashes.Count)
                     {
-                        if (ContentPackage.AllPackages.Any(cp => cp.MD5hash.Hash == ContentPackageHashes[i]))
+                        if (ContentPackageManager.AllPackages.Any(contentPackage => contentPackage.Hash.StringRepresentation == ContentPackageHashes[i]))
                         {
                             packageText.Selected = true;
                             continue;
@@ -298,14 +298,14 @@ namespace Barotrauma.Networking
                         //workshop download link found
                         if (i < ContentPackageWorkshopIds.Count && ContentPackageWorkshopIds[i] != 0)
                         {
-                            packageText.TextColor = GUI.Style.Yellow;
+                            packageText.TextColor = GUIStyle.Yellow;
                             packageText.ToolTip = TextManager.GetWithVariable("ServerListIncompatibleContentPackageWorkshopAvailable", "[contentpackage]", ContentPackageNames[i]);
                         }
                         else //no package or workshop download link found, tough luck
                         {
-                            packageText.TextColor = GUI.Style.Red;
+                            packageText.TextColor = GUIStyle.Red;
                             packageText.ToolTip = TextManager.GetWithVariables("ServerListIncompatibleContentPackage",
-                                new string[2] { "[contentpackage]", "[hash]" }, new string[2] { ContentPackageNames[i], ContentPackageHashes[i] });
+                                ("[contentpackage]", ContentPackageNames[i]), ("[hash]", ContentPackageHashes[i]));
                         }
                     }
                 }
@@ -361,7 +361,7 @@ namespace Barotrauma.Networking
 
             info.RespondedToSteamQuery = null;
 
-            info.GameMode = element.GetAttributeString("GameMode", "");
+            info.GameMode = element.GetAttributeIdentifier("GameMode", Identifier.Empty);
             info.GameVersion = element.GetAttributeString("GameVersion", "");
 
             int maxPlayersElement = element.GetAttributeInt("MaxPlayers", 0);
@@ -515,7 +515,7 @@ namespace Barotrauma.Networking
                 element.SetAttributeValue("OwnerID", SteamManager.SteamIDUInt64ToString(OwnerID));
             }
 
-            element.SetAttributeValue("GameMode", GameMode ?? "");
+            element.SetAttributeValue("GameMode", GameMode);
             element.SetAttributeValue("GameVersion", GameVersion ?? "");
             element.SetAttributeValue("MaxPlayers", MaxPlayers);
             if (PlayStyle.HasValue) { element.SetAttributeValue("PlayStyle", PlayStyle.Value.ToString()); }

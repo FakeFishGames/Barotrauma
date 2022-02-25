@@ -12,58 +12,9 @@ using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
-using System.Globalization;
 
 namespace Barotrauma
 {
-    class RoundSound
-    {
-        public Sound Sound;
-        public readonly float Volume;
-        public readonly float Range;
-        public readonly Vector2 FrequencyMultiplierRange;
-        public readonly bool Stream;
-        public readonly bool IgnoreMuffling;
-
-        public readonly string Filename;
-
-        public RoundSound(XElement element, Sound sound)
-        {
-            Filename = sound?.Filename;
-            Sound = sound;
-            Stream = sound.Stream;
-            Range = element.GetAttributeFloat("range", 1000.0f);
-            Volume = element.GetAttributeFloat("volume", 1.0f);
-            FrequencyMultiplierRange = new Vector2(1.0f);
-            string freqMultAttr = element.GetAttributeString("frequencymultiplier", element.GetAttributeString("frequency", "1.0"));
-            if (!freqMultAttr.Contains(','))
-            {
-                if (float.TryParse(freqMultAttr, NumberStyles.Any, CultureInfo.InvariantCulture, out float freqMult))
-                {
-                    FrequencyMultiplierRange = new Vector2(freqMult);
-                }
-            }
-            else
-            {
-                var freqMult = XMLExtensions.ParseVector2(freqMultAttr, false);
-                if (freqMult.Y >= 0.25f)
-                {
-                    FrequencyMultiplierRange = freqMult;
-                }
-            }
-            if (FrequencyMultiplierRange.Y > 4.0f)
-            {
-                DebugConsole.ThrowError($"Loaded frequency range exceeds max value: {FrequencyMultiplierRange} (original string was \"{freqMultAttr}\")");
-            }
-            IgnoreMuffling = element.GetAttributeBool("dontmuffle", false);
-        }
-
-        public float GetRandomFrequencyMultiplier()
-        {
-            return Rand.Range(FrequencyMultiplierRange.X, FrequencyMultiplierRange.Y);
-        }
-    }
-
     partial class Submarine : Entity, IServerSerializable
     {
         public static Vector2 MouseToWorldGrid(Camera cam, Submarine sub)
@@ -80,97 +31,6 @@ namespace Barotrauma
             }
 
             return worldGridPos;
-        }
-
-
-        private static List<RoundSound> roundSounds = null;
-        public static RoundSound LoadRoundSound(XElement element, bool stream = false)
-        {
-            if (GameMain.SoundManager?.Disabled ?? true) { return null; }
-
-            string filename = element.GetAttributeString("file", "");
-            if (string.IsNullOrEmpty(filename)) filename = element.GetAttributeString("sound", "");
-
-            if (string.IsNullOrEmpty(filename))
-            {
-                string errorMsg = "Error when loading round sound (" + element + ") - file path not set";
-                DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FilePathEmpty" + element.ToString(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
-                return null;
-            }
-
-            filename = Path.GetFullPath(filename.CleanUpPath()).CleanUpPath();
-            Sound existingSound = null;
-            if (roundSounds == null)
-            {
-                roundSounds = new List<RoundSound>();
-            }
-            else
-            {
-                existingSound = roundSounds.Find(s => s.Filename == filename && s.Stream == stream && !s.Sound.Disposed)?.Sound;
-            }
-
-            if (existingSound == null)
-            {
-                try
-                {
-                    existingSound = GameMain.SoundManager.LoadSound(filename, stream);
-                    if (existingSound == null) { return null; }
-                }
-                catch (System.IO.FileNotFoundException e)
-                {
-                    string errorMsg = "Failed to load sound file \"" + filename + "\".";
-                    DebugConsole.ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FileNotFound" + filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
-                    return null;
-                }
-            }
-
-            RoundSound newSound = new RoundSound(element, existingSound);
-
-            roundSounds.Add(newSound);
-            return newSound;
-        }
-
-        public static void ReloadRoundSound(RoundSound roundSound)
-        {
-            Sound existingSound = roundSounds?.Find(s => s.Filename == roundSound.Filename && s.Stream == roundSound.Stream && !s.Sound.Disposed)?.Sound;
-            if (existingSound == null)
-            {
-                try
-                {
-                    existingSound = GameMain.SoundManager.LoadSound(roundSound.Filename, roundSound.Stream);
-                }
-                catch (System.IO.FileNotFoundException e)
-                {
-                    string errorMsg = "Failed to load sound file \"" + roundSound.Filename + "\".";
-                    DebugConsole.ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FileNotFound" + roundSound.Filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
-                    return;
-                }
-            }
-            roundSound.Sound = existingSound;
-        }
-
-        private static void RemoveRoundSound(RoundSound roundSound)
-        {
-            roundSound.Sound?.Dispose();
-            if (roundSounds == null) return;
-
-            if (roundSounds.Contains(roundSound)) roundSounds.Remove(roundSound);
-            foreach (RoundSound otherSound in roundSounds)
-            {
-                if (otherSound.Sound == roundSound.Sound) otherSound.Sound = null;
-            }
-        }
-
-        public static void RemoveAllRoundSounds()
-        {
-            if (roundSounds == null) return;
-            for (int i = roundSounds.Count - 1; i >= 0; i--)
-            {
-                RemoveRoundSound(roundSounds[i]);
-            }
         }
 
         //drawing ----------------------------------------------------
@@ -402,7 +262,7 @@ namespace Barotrauma
 
             var connectedSubs = GetConnectedSubs();
 
-            HashSet<Hull> hullList = Hull.hullList.Where(hull => hull.Submarine == this || connectedSubs.Contains(hull.Submarine)).Where(hull => !ignoreOutpost || IsEntityFoundOnThisSub(hull, true)).ToHashSet();
+            HashSet<Hull> hullList = Hull.HullList.Where(hull => hull.Submarine == this || connectedSubs.Contains(hull.Submarine)).Where(hull => !ignoreOutpost || IsEntityFoundOnThisSub(hull, true)).ToHashSet();
 
             Dictionary<Hull, HashSet<Hull>> combinedHulls = new Dictionary<Hull, HashSet<Hull>>();
 
@@ -592,23 +452,23 @@ namespace Barotrauma
             List<string> errorMsgs = new List<string>();
             List<SubEditorScreen.WarningType> warnings = new List<SubEditorScreen.WarningType>();
 
-            if (!Hull.hullList.Any())
+            if (!Hull.HullList.Any())
             {
                 if (!IsWarningSuppressed(SubEditorScreen.WarningType.NoWaypoints))
                 {
-                    errorMsgs.Add(TextManager.Get("NoHullsWarning"));
+                    errorMsgs.Add(TextManager.Get("NoHullsWarning").Value);
                     warnings.Add(SubEditorScreen.WarningType.NoHulls);
                 }
             }
 
-            if (Info.Type != SubmarineType.OutpostModule ||
-                (Info.OutpostModuleInfo?.ModuleFlags.Any(f => !f.Equals("hallwayvertical", StringComparison.OrdinalIgnoreCase) && !f.Equals("hallwayhorizontal", StringComparison.OrdinalIgnoreCase)) ?? true))
+            if (Info.Type != SubmarineType.OutpostModule || 
+                (Info.OutpostModuleInfo?.ModuleFlags.Any(f => f != "hallwayvertical" && f != "hallwayhorizontal") ?? true))
             {
                 if (!WayPoint.WayPointList.Any(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Path))
                 {
                     if (!IsWarningSuppressed(SubEditorScreen.WarningType.NoWaypoints))
                     {
-                        errorMsgs.Add(TextManager.Get("NoWaypointsWarning"));
+                        errorMsgs.Add(TextManager.Get("NoWaypointsWarning").Value);
                         warnings.Add(SubEditorScreen.WarningType.NoWaypoints);
                     }
                 }
@@ -623,7 +483,7 @@ namespace Barotrauma
                     {
                         if (!IsWarningSuppressed(SubEditorScreen.WarningType.DisconnectedVents))
                         {
-                            errorMsgs.Add(TextManager.Get("DisconnectedVentsWarning"));
+                            errorMsgs.Add(TextManager.Get("DisconnectedVentsWarning").Value);
                             warnings.Add(SubEditorScreen.WarningType.DisconnectedVents);
                         }
                         break;
@@ -634,7 +494,7 @@ namespace Barotrauma
                 {
                     if (!IsWarningSuppressed(SubEditorScreen.WarningType.NoHumanSpawnpoints))
                     {
-                        errorMsgs.Add(TextManager.Get("NoHumanSpawnpointWarning"));
+                        errorMsgs.Add(TextManager.Get("NoHumanSpawnpointWarning").Value);
                         warnings.Add(SubEditorScreen.WarningType.NoHumanSpawnpoints);
                     }
                 }
@@ -642,7 +502,7 @@ namespace Barotrauma
                 {
                     if (!IsWarningSuppressed(SubEditorScreen.WarningType.NoCargoSpawnpoints))
                     {
-                        errorMsgs.Add(TextManager.Get("NoCargoSpawnpointWarning"));
+                        errorMsgs.Add(TextManager.Get("NoCargoSpawnpointWarning").Value);
                         warnings.Add(SubEditorScreen.WarningType.NoCargoSpawnpoints);
                     }
                 }
@@ -650,7 +510,7 @@ namespace Barotrauma
                 {
                     if (!IsWarningSuppressed(SubEditorScreen.WarningType.NoBallastTag))
                     {
-                        errorMsgs.Add(TextManager.Get("NoBallastTagsWarning"));
+                        errorMsgs.Add(TextManager.Get("NoBallastTagsWarning").Value);
                         warnings.Add(SubEditorScreen.WarningType.NoBallastTag);
                     }
                 }
@@ -670,8 +530,8 @@ namespace Barotrauma
                         if (doorLinks + wireCount > item.Connections[i].MaxWires)
                         {
                             errorMsgs.Add(TextManager.GetWithVariables("InsufficientFreeConnectionsWarning",
-                                new string[] { "[doorcount]", "[freeconnectioncount]" },
-                                new string[] { doorLinks.ToString(), (item.Connections[i].MaxWires - wireCount).ToString() }));
+                                ("[doorcount]", doorLinks.ToString()),
+                                ("[freeconnectioncount]", (item.Connections[i].MaxWires - wireCount).ToString())).Value);
                             break;
                         }
                     }
@@ -682,7 +542,7 @@ namespace Barotrauma
             {
                 if (!IsWarningSuppressed(SubEditorScreen.WarningType.NonLinkedGaps))
                 {
-                    errorMsgs.Add(TextManager.Get("NonLinkedGapsWarning"));
+                    errorMsgs.Add(TextManager.Get("NonLinkedGapsWarning").Value);
                     warnings.Add(SubEditorScreen.WarningType.NonLinkedGaps);
                 }
             }
@@ -698,7 +558,7 @@ namespace Barotrauma
             {
                 if (!IsWarningSuppressed(SubEditorScreen.WarningType.TooManyLights))
                 {
-                    errorMsgs.Add(TextManager.Get("subeditor.shadowcastinglightswarning"));
+                    errorMsgs.Add(TextManager.Get("subeditor.shadowcastinglightswarning").Value);
                     warnings.Add(SubEditorScreen.WarningType.TooManyLights);
                 }
             }
@@ -746,7 +606,7 @@ namespace Barotrauma
                     var msgBox = new GUIMessageBox(
                         TextManager.Get("Warning"),
                         TextManager.Get("FarAwayEntitiesWarning"),
-                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                        new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
                     msgBox.Buttons[0].OnClicked += (btn, obj) =>
                     {

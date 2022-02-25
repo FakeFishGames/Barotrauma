@@ -26,12 +26,12 @@ namespace Barotrauma
         private class HullCollection
         {
             public readonly List<Rectangle> Rects;
-            public readonly string Name;
+            public readonly LocalizedString Name;
 
-            public HullCollection(string identifier)
+            public HullCollection(Identifier identifier)
             {
                 Rects = new List<Rectangle>();
-                Name = TextManager.Get(identifier, returnNull: true) ?? identifier;
+                Name = TextManager.Get(identifier).Fallback(identifier.Value);
             }
 
             public void AddRect(XElement element)
@@ -53,9 +53,8 @@ namespace Barotrauma
             }
         }
 
-        private readonly Dictionary<string, HullCollection> hullCollections;
+        private readonly Dictionary<Identifier,HullCollection> hullCollections;
         private readonly List<Door> doors;
-
 
         private static SubmarinePreview instance = null;
 
@@ -78,7 +77,7 @@ namespace Barotrauma
             isDisposed = false;
             loadTask = null;
 
-            hullCollections = new Dictionary<string, HullCollection>();
+            hullCollections = new Dictionary<Identifier, HullCollection>();
             doors = new List<Door>();
 
             previewFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null);
@@ -133,7 +132,7 @@ namespace Barotrauma
             };
             var topLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.97f, 5f / 7f), topContainer.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
-            titleText = new GUITextBlock(new RectTransform(new Vector2(0.95f, 1f), topLayout.RectTransform), subInfo.DisplayName, font: GUI.LargeFont);
+            titleText = new GUITextBlock(new RectTransform(new Vector2(0.95f, 1f), topLayout.RectTransform), subInfo.DisplayName, font: GUIStyle.LargeFont);
             new GUIButton(new RectTransform(new Vector2(0.05f, 1f), topLayout.RectTransform), TextManager.Get("Close"))
             {
                 OnClicked = (btn, obj) => { Dispose(); return false; }
@@ -146,7 +145,7 @@ namespace Barotrauma
                 ScrollBarVisible = false,
                 Spacing = 5
             };
-            subInfo.CreateSpecsWindow(specsContainer, GUI.Font, includeTitle: false, includeDescription: true);
+            subInfo.CreateSpecsWindow(specsContainer, GUIStyle.Font, includeTitle: false, includeDescription: true);
             int width = specsContainer.Rect.Width;
             void recalculateSpecsContainerHeight()
             {
@@ -242,8 +241,8 @@ namespace Barotrauma
                         BakeMapEntity(subElement);
                         break;
                     case "hull":
-                        string identifier = subElement.GetAttributeString("roomname", "").ToLowerInvariant();
-                        if (!string.IsNullOrEmpty(identifier))
+                        Identifier identifier = subElement.GetAttributeIdentifier("roomname", "");
+                        if (!identifier.IsEmpty)
                         {
                             if (!hullCollections.TryGetValue(identifier, out HullCollection hullCollection))
                             {
@@ -309,11 +308,11 @@ namespace Barotrauma
 
             float rotation = element.GetAttributeFloat("rotation", 0f);
 
-            MapEntityPrefab prefab = MapEntityPrefab.List.FirstOrDefault(p => p.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+            MapEntityPrefab prefab = MapEntityPrefab.List.FirstOrDefault(p => p.Identifier == identifier);
             if (prefab == null) { return; }
 
-            var texture = prefab.sprite.Texture;
-            var srcRect = prefab.sprite.SourceRect;
+            var texture = prefab.Sprite.Texture;
+            var srcRect = prefab.Sprite.SourceRect;
 
             SpriteEffects spriteEffects = SpriteEffects.None;
             if (flippedX && ((prefab as ItemPrefab)?.CanSpriteFlipX ?? true))
@@ -325,8 +324,8 @@ namespace Barotrauma
                 spriteEffects |= SpriteEffects.FlipVertically;
             }
 
-            var prevEffects = prefab.sprite.effects;
-            prefab.sprite.effects ^= spriteEffects;
+            var prevEffects = prefab.Sprite.effects;
+            prefab.Sprite.effects ^= spriteEffects;
 
             bool overrideSprite = false;
             ItemPrefab itemPrefab = prefab as ItemPrefab;
@@ -359,10 +358,10 @@ namespace Barotrauma
                     if (flippedY) { textureOffset.Y = -textureOffset.Y; }
 
                     backGroundOffset = new Vector2(
-                                MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width),
-                                MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height));
+                                MathUtils.PositiveModulo((int)-textureOffset.X, prefab.Sprite.SourceRect.Width),
+                                MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.Sprite.SourceRect.Height));
 
-                    prefab.sprite.DrawTiled(
+                    prefab.Sprite.DrawTiled(
                         spriteRecorder,
                         rect.Location.ToVector2() * new Vector2(1f, -1f),
                         rect.Size.ToVector2(),
@@ -385,17 +384,17 @@ namespace Barotrauma
                     {
                         if (!prefab.ResizeHorizontal)
                         {
-                            rect.Width = (int)(prefab.sprite.size.X * scale);
+                            rect.Width = (int)(prefab.Sprite.size.X * scale);
                         }
                         if (!prefab.ResizeVertical)
                         {
-                            rect.Height = (int)(prefab.sprite.size.Y * scale);
+                            rect.Height = (int)(prefab.Sprite.size.Y * scale);
                         }
 
                         var spritePos = rect.Center.ToVector2();
                         //spritePos.Y = rect.Height - spritePos.Y;
 
-                        prefab.sprite.DrawTiled(
+                        prefab.Sprite.DrawTiled(
                             spriteRecorder,
                             rect.Location.ToVector2() * new Vector2(1f, -1f),
                             rect.Size.ToVector2(),
@@ -413,7 +412,7 @@ namespace Barotrauma
                                 new Vector2(spritePos.X + offset.X - rect.Width / 2, -(spritePos.Y + offset.Y + rect.Height / 2)),
                                 rect.Size.ToVector2(), color: color,
                                 textureScale: Vector2.One * scale,
-                                depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.sprite.Depth), 0.999f));
+                                depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.Sprite.Depth), 0.999f));
                         }
                     }
                     else
@@ -425,14 +424,14 @@ namespace Barotrauma
                         spritePos.Y -= rect.Height;
                         //spritePos.Y = rect.Height - spritePos.Y;
 
-                        prefab.sprite.Draw(
+                        prefab.Sprite.Draw(
                             spriteRecorder,
                             spritePos * new Vector2(1f, -1f),
                             color,
-                            prefab.sprite.Origin,
+                            prefab.Sprite.Origin,
                             rotation,
                             scale,
-                            prefab.sprite.effects, depth);
+                            prefab.Sprite.effects, depth);
 
                         foreach (var decorativeSprite in itemPrefab.DecorativeSprites)
                         {
@@ -442,14 +441,14 @@ namespace Barotrauma
                             if (flippedX && itemPrefab.CanSpriteFlipX) { offset.X = -offset.X; }
                             if (flippedY && itemPrefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
                             decorativeSprite.Sprite.Draw(spriteRecorder, new Vector2(spritePos.X + offset.X, -(spritePos.Y + offset.Y)), color,
-                                MathHelper.ToRadians(rotation) + rot, decorativeSprite.GetScale(0f) * scale, prefab.sprite.effects,
-                                depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.sprite.Depth), 0.999f));
+                                MathHelper.ToRadians(rotation) + rot, decorativeSprite.GetScale(0f) * scale, prefab.Sprite.effects,
+                                depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.Sprite.Depth), 0.999f));
                         }
                     }
                 }
             }
 
-            prefab.sprite.effects = prevEffects;
+            prefab.Sprite.effects = prevEffects;
         }
 
         private void BakeItemComponents(
@@ -467,7 +466,7 @@ namespace Barotrauma
                     case "turret":
                         Sprite barrelSprite = null;
                         Sprite railSprite = null;
-                        foreach (XElement turretSubElem in subElement.Elements())
+                        foreach (var turretSubElem in subElement.Elements())
                         {
                             switch (turretSubElem.Name.ToString().ToLowerInvariant())
                             {
@@ -494,13 +493,13 @@ namespace Barotrauma
                             drawPos,
                             color,
                             rotation + MathHelper.PiOver2, scale,
-                            SpriteEffects.None, depth + (railSprite.Depth - prefab.sprite.Depth));
+                            SpriteEffects.None, depth + (railSprite.Depth - prefab.Sprite.Depth));
 
                         barrelSprite?.Draw(spriteRecorder,
                             drawPos,
                             color,
                             rotation + MathHelper.PiOver2, scale,
-                            SpriteEffects.None, depth + (barrelSprite.Depth - prefab.sprite.Depth));
+                            SpriteEffects.None, depth + (barrelSprite.Depth - prefab.Sprite.Depth));
 
                         break;
                     case "door":
@@ -578,13 +577,13 @@ namespace Barotrauma
             
             if (!spriteRecorder.ReadyToRender)
             {
-                string waitText = !loadTask.IsCompleted ?
-                    TextManager.Get("generatingsubmarinepreview", fallBackTag: "loading") :
+                LocalizedString waitText = !loadTask.IsCompleted ?
+                    TextManager.Get("generatingsubmarinepreview", "loading") :
                     (loadTask.Exception?.ToString() ?? "Task completed without marking as ready to render");
-                Vector2 origin = (GUI.Font.MeasureString(waitText) * 0.5f);
+                Vector2 origin = (GUIStyle.Font.MeasureString(waitText) * 0.5f);
                 origin.X = MathF.Round(origin.X);
                 origin.Y = MathF.Round(origin.Y);
-                GUI.Font.DrawString(
+                GUIStyle.Font.DrawString(
                     spriteBatch,
                     waitText,
                     scissorRectangle.Center.ToVector2(),
@@ -629,18 +628,18 @@ namespace Barotrauma
 
                 if (mouseOver)
                 {
-                    string str = hullCollection.Name;
-                    Vector2 strSize = GUI.Font.MeasureString(str) / camera.Zoom;
+                    LocalizedString str = hullCollection.Name;
+                    Vector2 strSize = GUIStyle.Font.MeasureString(str) / camera.Zoom;
                     Vector2 padding = new Vector2(30, 30) / camera.Zoom;
                     Vector2 shift = new Vector2(10, 0) / camera.Zoom;
 
                     GUI.DrawRectangle(spriteBatch, mousePos + shift, strSize + padding, Color.Black, isFilled: true, depth: 0.25f);
-                    GUI.Font.DrawString(spriteBatch, str, mousePos + shift + (strSize + padding) * 0.5f, Color.White, 0f, strSize * camera.Zoom * 0.5f, 1f / camera.Zoom, SpriteEffects.None, 0f);
+                    GUIStyle.Font.DrawString(spriteBatch, str, mousePos + shift + (strSize + padding) * 0.5f, Color.White, 0f, strSize * camera.Zoom * 0.5f, 1f / camera.Zoom, SpriteEffects.None, 0f);
                 }
             }
             foreach (var door in doors)
             {
-                GUI.DrawRectangle(spriteBatch, door.Rect, GUI.Style.Green * 0.5f, isFilled: true, depth: 0.4f);
+                GUI.DrawRectangle(spriteBatch, door.Rect, GUIStyle.Green * 0.5f, isFilled: true, depth: 0.4f);
             }
             spriteBatch.End();
 

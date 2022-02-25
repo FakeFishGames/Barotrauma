@@ -37,7 +37,7 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch, Vector2 drawPos)
         {
-            Color clr = CurrentHull == null ? Color.DodgerBlue : GUI.Style.Green;
+            Color clr = CurrentHull == null ? Color.DodgerBlue : GUIStyle.Green;
             if (spawnType != SpawnType.Path) { clr = Color.Gray; }
             if (isObstructed)
             {
@@ -54,7 +54,7 @@ namespace Barotrauma
             if (IsSelected || IsHighlighted)
             {
                 int glowSize = (int)(iconSize * 1.5f);
-                GUI.Style.UIGlowCircular.Draw(spriteBatch,
+                GUIStyle.UIGlowCircular.Draw(spriteBatch,
                     new Rectangle((int)(drawPos.X - glowSize / 2), (int)(drawPos.Y - glowSize / 2), glowSize, glowSize),
                     Color.White);
             }
@@ -84,21 +84,21 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch,
                     drawPos,
                     new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
-                    (isObstructed ? Color.Gray : GUI.Style.Green) * 0.7f, width: 5, depth: 0.002f);
+                    (isObstructed ? Color.Gray : GUIStyle.Green) * 0.7f, width: 5, depth: 0.002f);
             }
             if (ConnectedGap != null)
             {
                 GUI.DrawLine(spriteBatch,
                     drawPos,
                     new Vector2(ConnectedGap.DrawPosition.X, -ConnectedGap.DrawPosition.Y),
-                    GUI.Style.Green * 0.5f, width: 1);
+                    GUIStyle.Green * 0.5f, width: 1);
             }
             if (Ladders != null)
             {
                 GUI.DrawLine(spriteBatch,
                     drawPos,
                     new Vector2(Ladders.Item.DrawPosition.X, -Ladders.Item.DrawPosition.Y),
-                    GUI.Style.Green * 0.5f, width: 1);
+                    GUIStyle.Green * 0.5f, width: 1);
             }
 
             var color = Color.WhiteSmoke;
@@ -123,13 +123,13 @@ namespace Barotrauma
                     }
                 }
             }
-            GUI.SmallFont.DrawString(spriteBatch,
+            GUIStyle.SmallFont.DrawString(spriteBatch,
                 ID.ToString(),
                 new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 30),
                 color);
             if (Tunnel?.Type != null)
             {
-                GUI.SmallFont.DrawString(spriteBatch,
+                GUIStyle.SmallFont.DrawString(spriteBatch,
                 Tunnel.Type.ToString(),
                 new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 45),
                 color);
@@ -289,13 +289,13 @@ namespace Barotrauma
 
             if (spawnType == SpawnType.Path)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Waypoint"), font: GUI.LargeFont);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Waypoint"), font: GUIStyle.LargeFont);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("LinkWaypoint"));
             }
             else
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Spawnpoint"), font: GUI.LargeFont);
-
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Spawnpoint"), font: GUIStyle.LargeFont);
+                
                 var spawnTypeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), isHorizontal: true)
                 {
                     Stretch = true,
@@ -318,8 +318,8 @@ namespace Barotrauma
                     OnClicked = ChangeSpawnType
                 };
 
-                var descText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), 
-                    TextManager.Get("IDCardDescription"), font: GUI.SmallFont)
+                var descText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
+                    TextManager.Get("IDCardDescription"), font: GUIStyle.SmallFont)
                 {
                     ToolTip = TextManager.Get("IDCardDescriptionTooltip")
                 };
@@ -336,17 +336,17 @@ namespace Barotrauma
                 propertyBox.OnEnterPressed += (textBox, text) =>
                 {
                     IdCardDesc = text;
-                    textBox.Flash(GUI.Style.Green);
+                    textBox.Flash(GUIStyle.Green);
                     return true;
                 };
                 propertyBox.OnDeselected += (textBox, keys) =>
                 {
                     IdCardDesc = textBox.Text;
-                    textBox.Flash(GUI.Style.Green);
+                    textBox.Flash(GUIStyle.Green);
                 };
 
                 var idCardTagsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
-                    TextManager.Get("IDCardTags"), font: GUI.SmallFont)
+                    TextManager.Get("IDCardTags"), font: GUIStyle.SmallFont)
                 {
                     ToolTip = TextManager.Get("IDCardTagsTooltip")
                 };
@@ -363,17 +363,17 @@ namespace Barotrauma
                 propertyBox.OnEnterPressed += (textBox, text) =>
                 {
                     textBox.Text = string.Join(",", IdCardTags);
-                    textBox.Flash(GUI.Style.Green);
+                    textBox.Flash(GUIStyle.Green);
                     return true;
                 };
                 propertyBox.OnDeselected += (textBox, keys) =>
                 {
                     textBox.Text = string.Join(",", IdCardTags);
-                    textBox.Flash(GUI.Style.Green);
+                    textBox.Flash(GUIStyle.Green);
                 };
 
                 var jobsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
-                    TextManager.Get("SpawnpointJobs"), font: GUI.SmallFont)
+                    TextManager.Get("SpawnpointJobs"), font: GUIStyle.SmallFont)
                 {
                     ToolTip = TextManager.Get("SpawnpointJobsTooltip")
                 };
@@ -394,7 +394,7 @@ namespace Barotrauma
                 jobDropDown.SelectItem(AssignedJob);
 
                 var tagsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
-                    TextManager.Get("spawnpointtags"), font: GUI.SmallFont);
+                    TextManager.Get("spawnpointtags"), font: GUIStyle.SmallFont);
                 propertyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), tagsText.RectTransform, Anchor.CenterRight), string.Join(", ", tags))
                 {
                     MaxTextLength = 60,
@@ -402,19 +402,19 @@ namespace Barotrauma
                 };
                 propertyBox.OnTextChanged += (textBox, text) =>
                 {
-                    tags = text.Split(',').ToList();
+                    tags = text.Split(',').ToIdentifiers().ToHashSet();
                     return true;
                 };
                 propertyBox.OnEnterPressed += (textBox, text) =>
                 {
                     textBox.Text = string.Join(",", tags);
-                    textBox.Flash(GUI.Style.Green);
+                    textBox.Flash(GUIStyle.Green);
                     return true;
                 };
                 propertyBox.OnDeselected += (textBox, keys) =>
                 {
                     textBox.Text = string.Join(",", tags);
-                    textBox.Flash(GUI.Style.Green);
+                    textBox.Flash(GUIStyle.Green);
                 };
             }
 

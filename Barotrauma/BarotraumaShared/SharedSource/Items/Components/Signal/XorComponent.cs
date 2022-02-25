@@ -4,7 +4,7 @@ namespace Barotrauma.Items.Components
 {
     class XorComponent : AndComponent
     {
-        public XorComponent(Item item, XElement element)
+        public XorComponent(Item item, ContentXElement element)
             : base(item, element)
         {
             IsActive = true;

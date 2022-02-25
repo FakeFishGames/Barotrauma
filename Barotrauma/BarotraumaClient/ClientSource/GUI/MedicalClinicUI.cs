@@ -50,7 +50,7 @@ namespace Barotrauma
                 Afflictions = new List<PendingAfflictionElement>();
             }
 
-            public PendingAfflictionElement? FindAfflictionElement(MedicalClinic.NetAffliction target) => Afflictions.FirstOrNull(element => element.Target.Identifier.Equals(target.Identifier, StringComparison.OrdinalIgnoreCase));
+            public PendingAfflictionElement? FindAfflictionElement(MedicalClinic.NetAffliction target) => Afflictions.FirstOrNull(element => element.Target.Identifier == target.Identifier);
         }
 
         // Represents an affliction on the left side crew entry
@@ -269,11 +269,11 @@ namespace Barotrauma
 
             int totalCost = medicalClinic.GetTotalCost();
             healList.PriceBlock.Text = UpgradeStore.FormatCurrency(totalCost);
-            healList.PriceBlock.TextColor = GUI.Style.Red;
+            healList.PriceBlock.TextColor = GUIStyle.Red;
             healList.HealButton.Enabled = false;
             if (medicalClinic.GetMoney() > totalCost)
             {
-                healList.PriceBlock.TextColor = GUI.Style.TextColor;
+                healList.PriceBlock.TextColor = GUIStyle.TextColorNormal;
                 if (medicalClinic.PendingHeals.Any())
                 {
                     healList.HealButton.Enabled = true;
@@ -443,7 +443,7 @@ namespace Barotrauma
 
             GUILayoutGroup clinicLabelLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), clinicContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
             GUIImage clinicIcon = new GUIImage(new RectTransform(Vector2.One, clinicLabelLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "CrewManagementHeaderIcon", scaleToFit: true);
-            GUITextBlock clinicLabel = new GUITextBlock(new RectTransform(Vector2.One, clinicLabelLayout.RectTransform), TextManager.Get("medicalclinic.medicalclinic"), font: GUI.LargeFont);
+            GUITextBlock clinicLabel = new GUITextBlock(new RectTransform(Vector2.One, clinicLabelLayout.RectTransform), TextManager.Get("medicalclinic.medicalclinic"), font: GUIStyle.LargeFont);
 
             GUIFrame clinicBackground = new GUIFrame(new RectTransform(Vector2.One, clinicContent.RectTransform));
 
@@ -459,13 +459,13 @@ namespace Barotrauma
             };
 
             GUILayoutGroup balanceLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), crewContent.RectTransform));
-            GUITextBlock balanceLabel = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), balanceLayout.RectTransform), TextManager.Get("campaignstore.balance"), textAlignment: Alignment.BottomRight, font: GUI.Font)
+            GUITextBlock balanceLabel = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), balanceLayout.RectTransform), TextManager.Get("campaignstore.balance"), textAlignment: Alignment.BottomRight, font: GUIStyle.Font)
             {
                 AutoScaleVertical = true,
-                ForceUpperCase = true
+                ForceUpperCase = ForceUpperCase.Yes
             };
 
-            GUITextBlock moneyLabel = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), balanceLayout.RectTransform), string.Empty, textAlignment: Alignment.TopRight, font: GUI.Style.SubHeadingFont)
+            GUITextBlock moneyLabel = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), balanceLayout.RectTransform), string.Empty, textAlignment: Alignment.TopRight, font: GUIStyle.SubHeadingFont)
             {
                 TextGetter = () => UpgradeStore.FormatCurrency(medicalClinic.GetMoney()),
                 AutoScaleVertical = true,
@@ -519,18 +519,18 @@ namespace Barotrauma
 
             GUILayoutGroup healthLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.1f, 1f), crewLayout.RectTransform), isHorizontal: true, Anchor.Center);
 
-            new GUITextBlock(new RectTransform(Vector2.One, healthLayout.RectTransform), string.Empty, textAlignment: Alignment.Center, font: GUI.SubHeadingFont)
+            new GUITextBlock(new RectTransform(Vector2.One, healthLayout.RectTransform), string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont)
             {
                 TextGetter = () => $"{(int)(info.Character?.HealthPercentage ?? 100f)}%",
-                TextColor = GUI.Style.Green
+                TextColor = GUIStyle.Green
             };
 
             GUITextBlock overflowIndicator =
-                new GUITextBlock(new RectTransform(new Vector2(0.25f, 1f), afflictionList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), text: "+", textAlignment: Alignment.Center, font: GUI.LargeFont)
+                new GUITextBlock(new RectTransform(new Vector2(0.25f, 1f), afflictionList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), text: "+", textAlignment: Alignment.Center, font: GUIStyle.LargeFont)
                 {
                     Visible = false,
                     CanBeFocused = false,
-                    TextColor = GUI.Style.Red
+                    TextColor = GUIStyle.Red
                 };
 
             MedicalClinic.NetCrewMember member = new MedicalClinic.NetCrewMember { CharacterInfo = info, Afflictions = Array.Empty<MedicalClinic.NetAffliction>() };
@@ -552,13 +552,13 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1f, 0.05f), pendingHealContainer.RectTransform), TextManager.Get("medicalclinic.pendingheals"), font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1f, 0.05f), pendingHealContainer.RectTransform), TextManager.Get("medicalclinic.pendingheals"), font: GUIStyle.SubHeadingFont);
 
             GUIFrame healListContainer = new GUIFrame(new RectTransform(new Vector2(1f, 0.9f), pendingHealContainer.RectTransform), style: null);
             GUITextBlock? errorBlock = null;
             if (!GameMain.IsSingleplayer)
             {
-                errorBlock = new GUITextBlock(new RectTransform(Vector2.One, healListContainer.RectTransform), text: TextManager.Get("pleasewaitupnp"), font: GUI.LargeFont, textAlignment: Alignment.Center);
+                errorBlock = new GUITextBlock(new RectTransform(Vector2.One, healListContainer.RectTransform), text: TextManager.Get("pleasewaitupnp"), font: GUIStyle.LargeFont, textAlignment: Alignment.Center);
             }
 
             GUIListBox healList = new GUIListBox(new RectTransform(Vector2.One, healListContainer.RectTransform))
@@ -571,7 +571,7 @@ namespace Barotrauma
 
             GUILayoutGroup priceLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), footerLayout.RectTransform), isHorizontal: true);
             GUITextBlock priceLabelBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), priceLayout.RectTransform), TextManager.Get("campaignstore.total"));
-            GUITextBlock priceBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), priceLayout.RectTransform), UpgradeStore.FormatCurrency(medicalClinic.GetTotalCost()), font: GUI.SubHeadingFont,
+            GUITextBlock priceBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), priceLayout.RectTransform), UpgradeStore.FormatCurrency(medicalClinic.GetTotalCost()), font: GUIStyle.SubHeadingFont,
                 textAlignment: Alignment.Right);
 
             GUILayoutGroup buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), footerLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterRight);
@@ -679,12 +679,12 @@ namespace Barotrauma
 
             GUILayoutGroup textLayout = new GUILayoutGroup(new RectTransform(Vector2.One, parentLayout.RectTransform), isHorizontal: true);
 
-            string name = prefab.Name;
+            LocalizedString name = prefab.Name;
 
             GUIFrame textContainer = new GUIFrame(new RectTransform(new Vector2(0.6f, 1f), textLayout.RectTransform), style: null);
-            GUITextBlock afflictionName = new GUITextBlock(new RectTransform(Vector2.One, textContainer.RectTransform), name, font: GUI.SubHeadingFont);
+            GUITextBlock afflictionName = new GUITextBlock(new RectTransform(Vector2.One, textContainer.RectTransform), name, font: GUIStyle.SubHeadingFont);
 
-            GUITextBlock healCost = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), textLayout.RectTransform), UpgradeStore.FormatCurrency(affliction.Price), textAlignment: Alignment.Center, font: GUI.LargeFont)
+            GUITextBlock healCost = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), textLayout.RectTransform), UpgradeStore.FormatCurrency(affliction.Price), textAlignment: Alignment.Center, font: GUIStyle.LargeFont)
             {
                 Padding = Vector4.Zero
             };
@@ -702,7 +702,7 @@ namespace Barotrauma
                 }
             };
 
-            EnsureTextDoesntOverflow(name, afflictionName, textContainer.Rect, ImmutableArray.Create(textLayout, parentLayout));
+            EnsureTextDoesntOverflow(name.Value, afflictionName, textContainer.Rect, ImmutableArray.Create(textLayout, parentLayout));
 
             healElement.Afflictions.Add(new PendingAfflictionElement(affliction, backgroundFrame, healCost));
 
@@ -720,8 +720,8 @@ namespace Barotrauma
 
             GUILayoutGroup textGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.8f), parent.RectTransform));
 
-            string? characterName = info.Name,
-                    jobName = null;
+            string? characterName = info.Name;
+            LocalizedString? jobName = null;
 
             GUITextBlock? nameBlock = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), textGroup.RectTransform), characterName),
                           jobBlock = null;
@@ -741,7 +741,7 @@ namespace Barotrauma
 
                 if (jobBlock is null) { return; }
 
-                EnsureTextDoesntOverflow(jobName, jobBlock, parent.Rect, layoutGroups);
+                EnsureTextDoesntOverflow(jobName?.Value, jobBlock, parent.Rect, layoutGroups);
             }
         }
 
@@ -766,14 +766,14 @@ namespace Barotrauma
                 mainFrame.RectTransform.ScreenSpaceOffset = new Point((int)location.X, GameMain.GraphicsHeight - mainFrame.Rect.Height);
             }
 
-            GUITextBlock feedbackBlock = new GUITextBlock(new RectTransform(Vector2.One, mainFrame.RectTransform), TextManager.Get("pleasewaitupnp"), textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true)
+            GUITextBlock feedbackBlock = new GUITextBlock(new RectTransform(Vector2.One, mainFrame.RectTransform), TextManager.Get("pleasewaitupnp"), textAlignment: Alignment.Center, font: GUIStyle.LargeFont, wrap: true)
             {
                 Visible = true
             };
 
             GUIButton treatAllButton = new GUIButton(new RectTransform(new Vector2(1f, 0.2f), mainLayout.RectTransform), TextManager.Get("medicalclinic.treatall"))
             {
-                Font = GUI.SubHeadingFont,
+                Font = GUIStyle.SubHeadingFont,
                 Visible = false
             };
 
@@ -793,7 +793,7 @@ namespace Barotrauma
                 if (request.Result != MedicalClinic.RequestResult.Success)
                 {
                     feedbackBlock.Text = GetErrorText(request.Result);
-                    feedbackBlock.TextColor = GUI.Style.Red;
+                    feedbackBlock.TextColor = GUIStyle.Red;
                     return;
                 }
 
@@ -844,11 +844,11 @@ namespace Barotrauma
 
             GUILayoutGroup topTextLayout = new GUILayoutGroup(new RectTransform(Vector2.One, topLayout.RectTransform), isHorizontal: true);
 
-            GUITextBlock prefabBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), topTextLayout.RectTransform), prefab.Name, font: GUI.SubHeadingFont);
+            GUITextBlock prefabBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), topTextLayout.RectTransform), prefab.Name, font: GUIStyle.SubHeadingFont);
 
-            Color textColor = Color.Lerp(GUI.Style.Orange, GUI.Style.Red, (int)affliction.AfflictionSeverity / 2f);
+            Color textColor = Color.Lerp(GUIStyle.Orange, GUIStyle.Red, (int)affliction.AfflictionSeverity / 2f);
 
-            string vitalityText = TextManager.GetWithVariable("medicalclinic.vitalitydifference", "[amount]", (-affliction.Strength).ToString());
+            LocalizedString vitalityText = TextManager.GetWithVariable("medicalclinic.vitalitydifference", "[amount]", (-affliction.Strength).ToString());
             GUITextBlock vitalityBlock = new GUITextBlock(new RectTransform(new Vector2(0.25f, 1f), topTextLayout.RectTransform), vitalityText, textAlignment: Alignment.Center)
             {
                 TextColor = textColor,
@@ -857,8 +857,8 @@ namespace Barotrauma
                 AutoScaleHorizontal = true
             };
 
-            string severityText = TextManager.Get($"AfflictionStrength{affliction.AfflictionSeverity}");
-            GUITextBlock severityBlock = new GUITextBlock(new RectTransform(new Vector2(0.25f, 1f), topTextLayout.RectTransform), severityText, textAlignment: Alignment.Center, font: GUI.SubHeadingFont)
+            LocalizedString severityText = TextManager.Get($"AfflictionStrength{affliction.AfflictionSeverity}");
+            GUITextBlock severityBlock = new GUITextBlock(new RectTransform(new Vector2(0.25f, 1f), topTextLayout.RectTransform), severityText, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont)
             {
                 TextColor = textColor,
                 DisabledTextColor = textColor * 0.5f,
@@ -866,17 +866,17 @@ namespace Barotrauma
                 AutoScaleHorizontal = true
             };
 
-            EnsureTextDoesntOverflow(prefab.Name, prefabBlock, prefabBlock.Rect, ImmutableArray.Create(mainLayout, topLayout, topTextLayout));
+            EnsureTextDoesntOverflow(prefab.Name.Value, prefabBlock, prefabBlock.Rect, ImmutableArray.Create(mainLayout, topLayout, topTextLayout));
 
             GUILayoutGroup bottomLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.66f), mainLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
             GUILayoutGroup bottomTextLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1f), bottomLayout.RectTransform));
-            GUITextBlock descriptionBlock = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), bottomTextLayout.RectTransform), ToolBox.LimitString(prefab.Description, GUI.IntScale(64)), wrap: true)
+            GUITextBlock descriptionBlock = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), bottomTextLayout.RectTransform), ToolBox.LimitString(prefab.Description, GUIStyle.Font, GUI.IntScale(64)), wrap: true)
             {
                 ToolTip = prefab.Description
             };
 
-            GUITextBlock priceBlock = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), bottomTextLayout.RectTransform), UpgradeStore.FormatCurrency(affliction.Price), font: GUI.LargeFont);
+            GUITextBlock priceBlock = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), bottomTextLayout.RectTransform), UpgradeStore.FormatCurrency(affliction.Price), font: GUIStyle.LargeFont);
 
             GUIButton buyButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.75f), bottomLayout.RectTransform), style: "CrewManagementAddButton");
 
@@ -968,7 +968,7 @@ namespace Barotrauma
             if (GameMain.IsSingleplayer || !(pendingHealList is { ErrorBlock: { } errorBlock, HealList: { } healList })) { return; }
 
             errorBlock.Visible = true;
-            errorBlock.TextColor = GUI.Style.TextColor;
+            errorBlock.TextColor = GUIStyle.TextColorNormal;
             errorBlock.Text = TextManager.Get("pleasewaitupnp");
             healList.Visible = false;
 
@@ -983,7 +983,7 @@ namespace Barotrauma
                 if (request.Result != MedicalClinic.RequestResult.Success)
                 {
                     errorBlock.Text = GetErrorText(request.Result);
-                    errorBlock.TextColor = GUI.Style.Red;
+                    errorBlock.TextColor = GUIStyle.Red;
                     return;
                 }
 
@@ -1011,7 +1011,7 @@ namespace Barotrauma
             selectedCrewAfflictionList = null;
         }
 
-        private static string GetErrorText(MedicalClinic.RequestResult result)
+        private static LocalizedString GetErrorText(MedicalClinic.RequestResult result)
         {
             return result switch
             {

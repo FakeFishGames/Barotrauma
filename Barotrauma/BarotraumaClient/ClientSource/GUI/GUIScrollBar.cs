@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 
 namespace Barotrauma
@@ -29,7 +28,7 @@ namespace Barotrauma
 
         public bool IsBooleanSwitch;
 
-        public override string ToolTip
+        public override RichString ToolTip
         {
             get { return base.ToolTip; }
             set
@@ -203,7 +202,7 @@ namespace Barotrauma
             CanBeFocused = true;
             this.isHorizontal = isHorizontal ?? (Rect.Width > Rect.Height);
             Frame = new GUIFrame(new RectTransform(Vector2.One, rectT));
-            GUI.Style.Apply(Frame, IsHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
+            GUIStyle.Apply(Frame, IsHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
             this.barSize = barSize;
 
             Bar = new GUIButton(new RectTransform(Vector2.One, rectT, IsHorizontal ? Anchor.CenterLeft : Anchor.TopCenter), color: color, style: null);
@@ -224,7 +223,7 @@ namespace Barotrauma
                     break;
             }
 
-            GUI.Style.Apply(Bar, IsHorizontal ? "GUIButtonHorizontal" : "GUIButtonVertical", this);
+            GUIStyle.Apply(Bar, IsHorizontal ? "GUIButtonHorizontal" : "GUIButtonVertical", this);
             Bar.OnPressed = SelectBar;
             enabled = true;
             UpdateRect();

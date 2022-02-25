@@ -6,6 +6,10 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
+    #warning TODO: This class needs some changes:
+    // - We shouldn't be iterating over MapEntityPrefab.List. It has no guarantee of any sort of order and becomes entirely unpredictable once you start adding mods.
+    //   - Note: iterating over ItemPrefab.Prefabs would also be incorrect. Sorting by UintIdentifier is necessary for determinism.
+    // - SpawnItems and SpawnItem are named incorrectly.
     static class AutoItemPlacer
     {
         public static bool OutputDebugInfo = false;
@@ -76,8 +80,8 @@ namespace Barotrauma
 
             int itemCountApprox = MapEntityPrefab.List.Count() / 3;
             var containers = new List<ItemContainer>(70 + 30 * subs.Count());
-            var prefabsWithContainer = new List<ItemPrefab>(itemCountApprox / 3);
-            var prefabsWithoutContainer = new List<ItemPrefab>(itemCountApprox);
+            var prefabsItemsCanSpawnIn = new List<ItemPrefab>(itemCountApprox / 3);
+            var singlePrefabs = new List<ItemPrefab>(itemCountApprox);
             var removals = new List<ItemPrefab>();
 
             // generate loot only for a specific container if defined
@@ -93,42 +97,45 @@ namespace Barotrauma
                     if (item.GetRootInventoryOwner() is Character) { continue; }
                     containers.AddRange(item.GetComponents<ItemContainer>());
                 }
-                containers.Shuffle(Rand.RandSync.Server);
+                containers.Shuffle(Rand.RandSync.ServerAndClient);
             }
 
-            foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
+            foreach (ItemPrefab ip in ItemPrefab.Prefabs)
             {
-                if (!(prefab is ItemPrefab ip)) { continue; }
-
-                if (ip.ConfigElement.Elements().Any(e => string.Equals(e.Name.ToString(), typeof(ItemContainer).Name.ToString(), StringComparison.OrdinalIgnoreCase)))
+                if (!ip.PreferredContainers.Any()) { continue; }
+                if (ip.ConfigElement.Elements().Any(e => string.Equals(e.Name.ToString(), typeof(ItemContainer).Name.ToString(), StringComparison.OrdinalIgnoreCase)) &&
+                    ItemPrefab.Prefabs.Any(ip2 => CanSpawnIn(ip2, ip)))
                 {
-                    prefabsWithContainer.Add(ip);
+                    prefabsItemsCanSpawnIn.Add(ip);
                 }
                 else
                 {
-                    prefabsWithoutContainer.Add(ip);
+                    singlePrefabs.Add(ip);
                 }
             }
 
-            var validContainers = new Dictionary<ItemContainer, PreferredContainer>();
-            prefabsWithContainer.Shuffle(Rand.RandSync.Server);
-            // Spawn items that have an ItemContainer component first so we can fill them up with items if needed (oxygen tanks inside the spawned diving masks, etc)
-            for (int i = 0; i < prefabsWithContainer.Count; i++)
+            bool CanSpawnIn(ItemPrefab item, ItemPrefab container)
             {
-                var itemPrefab = prefabsWithContainer[i];
-                if (itemPrefab == null) { continue; }
-                if (SpawnItems(itemPrefab))
+                foreach (var preferredContainer in item.PreferredContainers)
                 {
-                    removals.Add(itemPrefab);
+                    if (ItemPrefab.IsContainerPreferred(preferredContainer.Primary, container.Identifier.ToEnumerable().Union(container.Tags))) { return true; }
                 }
+                return false;
             }
-            // Remove containers that we successfully spawned items into so that they are not counted in in the second pass.
-            removals.ForEach(i => prefabsWithContainer.Remove(i));
-            // Another pass for items with containers because also they can spawn inside other items (like smg magazine)
-            prefabsWithContainer.ForEach(i => SpawnItems(i));
-            // Spawn items that don't have containers last
-            prefabsWithoutContainer.Shuffle(Rand.RandSync.Server);
-            prefabsWithoutContainer.ForEach(i => SpawnItems(i));
+
+            var validContainers = new Dictionary<ItemContainer, PreferredContainer>();
+            prefabsItemsCanSpawnIn.Shuffle(Rand.RandSync.ServerAndClient);
+            // Spawn items that other items can spawn in first so we can fill them up with items if needed (oxygen tanks inside the spawned diving masks, etc)
+            for (int i = 0; i < prefabsItemsCanSpawnIn.Count; i++)
+            {
+                var itemPrefab = prefabsItemsCanSpawnIn[i];
+                if (itemPrefab == null) { continue; }
+                SpawnItems(itemPrefab);
+            }
+
+            // Spawn items that nothing can spawn in last
+            singlePrefabs.Shuffle(Rand.RandSync.ServerAndClient);
+            singlePrefabs.ForEach(i => SpawnItems(i));
 
             if (OutputDebugInfo)
             {
@@ -158,12 +165,17 @@ namespace Barotrauma
                     }
                 }
             }
-#if SERVER
             foreach (Item spawnedItem in spawnedItems)
             {
+#if SERVER
                 Entity.Spawner.CreateNetworkEvent(spawnedItem, remove: false);
-            }
 #endif
+                foreach (ItemComponent ic in spawnedItem.Components)
+                {
+                    ic.OnItemLoaded();
+                }
+            }
+
             bool SpawnItems(ItemPrefab itemPrefab)
             {
                 if (itemPrefab == null)
@@ -229,13 +241,13 @@ namespace Barotrauma
         private static List<Item> SpawnItem(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer, float difficultyModifier)
         {
             List<Item> spawnedItems = new List<Item>();
-            if (Rand.Value(Rand.RandSync.Server) > validContainer.Value.SpawnProbability * (1f + difficultyModifier)) { return spawnedItems; }
+            if (Rand.Value(Rand.RandSync.ServerAndClient) > validContainer.Value.SpawnProbability * (1f + difficultyModifier)) { return spawnedItems; }
             // Don't add dangerously reactive materials in thalamus wrecks 
             if (validContainer.Key.Item.Submarine.WreckAI != null && itemPrefab.Tags.Contains("explodesinwater"))
             {
                 return spawnedItems;
             }
-            int amount = Rand.Range(validContainer.Value.MinAmount, validContainer.Value.MaxAmount + 1, Rand.RandSync.Server);
+            int amount = Rand.Range(validContainer.Value.MinAmount, validContainer.Value.MaxAmount + 1, Rand.RandSync.ServerAndClient);
             for (int i = 0; i < amount; i++)
             {
                 if (validContainer.Key.Inventory.IsFull(takeStacksIntoAccount: true))
@@ -244,15 +256,15 @@ namespace Barotrauma
                     break;
                 }
 
-                var existingItem = validContainer.Key.Inventory.AllItems.FirstOrDefault(it => it.prefab == itemPrefab);
+                var existingItem = validContainer.Key.Inventory.AllItems.FirstOrDefault(it => it.Prefab == itemPrefab);
                 int quality = 
                     existingItem?.Quality ??
                     ToolBox.SelectWeightedRandom(
                         qualityCommonnesses.Select(q => q.quality).ToList(),
                         qualityCommonnesses.Select(q => q.commonness).ToList(),
-                        Rand.RandSync.Server);
+                        Rand.RandSync.ServerAndClient);
                 if (!validContainer.Key.Inventory.CanBePut(itemPrefab, quality: quality)) { break; }
-                var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine)
+                var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine, callOnItemLoaded: false)
                 {
                     SpawnedInCurrentOutpost = validContainer.Key.Item.SpawnedInCurrentOutpost,
                     AllowStealing = validContainer.Key.Item.AllowStealing,

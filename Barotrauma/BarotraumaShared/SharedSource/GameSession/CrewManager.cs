@@ -26,7 +26,17 @@ namespace Barotrauma
 
         public bool HasBots { get; set; }
 
-        public List<Pair<Order, float?>> ActiveOrders { get; } = new List<Pair<Order, float?>>();
+        public class ActiveOrder
+        {
+            public readonly Order Order;
+            public float? FadeOutTime;
+            public ActiveOrder(Order order, float? fadeOutTime)
+            {
+                Order = order;
+                FadeOutTime = fadeOutTime;
+            }
+        }
+        public List<ActiveOrder> ActiveOrders { get; } = new List<ActiveOrder>();
         public bool IsSinglePlayer { get; private set; }
 
         public ReadyCheck ActiveReadyCheck;
@@ -54,16 +64,16 @@ namespace Barotrauma
 
             // Ignore orders work a bit differently since the "unignore" order counters the "ignore" order
             var isUnignoreOrder = order.Identifier == "unignorethis";
-            var orderPrefab = !isUnignoreOrder ? order.Prefab : Order.GetPrefab("ignorethis");
-            Pair<Order, float?> existingOrder = ActiveOrders.Find(o =>
-                    o.First.Prefab == orderPrefab && MatchesTarget(o.First.TargetEntity, order.TargetEntity) &&
-                    (o.First.TargetType != Order.OrderTargetType.WallSection || o.First.WallSectionIndex == order.WallSectionIndex));
+            var orderPrefab = !isUnignoreOrder ? order.Prefab : OrderPrefab.Prefabs["ignorethis"];
+            ActiveOrder existingOrder = ActiveOrders.Find(o =>
+                    o.Order.Prefab == orderPrefab && MatchesTarget(o.Order.TargetEntity, order.TargetEntity) &&
+                    (o.Order.TargetType != Order.OrderTargetType.WallSection || o.Order.WallSectionIndex == order.WallSectionIndex));
 
             if (existingOrder != null)
             {
                 if (!isUnignoreOrder)
                 {
-                    existingOrder.Second = fadeOutTime;
+                    existingOrder.FadeOutTime = fadeOutTime;
                     return false;
                 }
                 else
@@ -74,7 +84,7 @@ namespace Barotrauma
             }
             else if (!isUnignoreOrder)
             {
-                ActiveOrders.Add(new Pair<Order, float?>(order, fadeOutTime));
+                ActiveOrders.Add(new ActiveOrder(order, fadeOutTime));
 #if CLIENT
                 HintManager.OnActiveOrderAdded(order);
 #endif
@@ -96,7 +106,7 @@ namespace Barotrauma
 
         public void AddCharacterElements(XElement element)
         {
-            foreach (XElement characterElement in element.Elements())
+            foreach (var characterElement in element.Elements())
             {
                 if (!characterElement.Name.ToString().Equals("character", StringComparison.OrdinalIgnoreCase)) { continue; }
                 CharacterInfo characterInfo = new CharacterInfo(characterElement);
@@ -105,7 +115,7 @@ namespace Barotrauma
                 characterInfo.CrewListIndex = characterElement.GetAttributeInt("crewlistindex", -1);
 #endif
                 characterInfos.Add(characterInfo);
-                foreach (XElement subElement in characterElement.Elements())
+                foreach (var subElement in characterElement.Elements())
                 {
                     switch (subElement.Name.ToString().ToLowerInvariant())
                     {
@@ -205,7 +215,7 @@ namespace Barotrauma
                     wp.SpawnType == SpawnType.Human &&
                     wp.Submarine == Level.Loaded.StartOutpost && 
                     wp.CurrentHull != null &&
-                    wp.CurrentHull.OutpostModuleTags.Contains("airlock"));
+                    wp.CurrentHull.OutpostModuleTags.Contains("airlock".ToIdentifier()));
                 while (spawnWaypoints.Count > characterInfos.Count)
                 {
                     spawnWaypoints.RemoveAt(Rand.Int(spawnWaypoints.Count));
@@ -236,7 +246,7 @@ namespace Barotrauma
                     }
                     if (character.Info.InventoryData != null)
                     {
-                        character.SpawnInventoryItems(character.Inventory, character.Info.InventoryData);
+                        character.SpawnInventoryItems(character.Inventory, character.Info.InventoryData.FromPackage(null));
                     }
                     else if (!character.Info.StartItemsGiven)
                     {
@@ -301,12 +311,12 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            foreach (Pair<Order, float?> order in ActiveOrders)
+            foreach (ActiveOrder order in ActiveOrders)
             {
-                if (order.Second.HasValue) { order.Second -= deltaTime; }
+                if (order.FadeOutTime.HasValue) { order.FadeOutTime -= deltaTime; }
             }
-            ActiveOrders.RemoveAll(o => (o.Second.HasValue && o.Second <= 0.0f) ||
-                (o.First.TargetEntity != null && o.First.TargetEntity.Removed));
+            ActiveOrders.RemoveAll(o => (o.FadeOutTime.HasValue && o.FadeOutTime <= 0.0f) ||
+                (o.Order.TargetEntity != null && o.Order.TargetEntity.Removed));
 
             UpdateConversations(deltaTime);
             UpdateProjectSpecific(deltaTime);
@@ -357,20 +367,20 @@ namespace Barotrauma
                         if (player.TeamID != npc.TeamID && !player.IsIncapacitated && player.CurrentHull == npc.CurrentHull)
                         {
                             List<Character> availableSpeakers = new List<Character>() { npc, player };
-                            List<string> dialogFlags = new List<string>() { "OutpostNPC", "EnterOutpost" };
+                            List<Identifier> dialogFlags = new List<Identifier>() { "OutpostNPC".ToIdentifier(), "EnterOutpost".ToIdentifier() };
                             if (GameMain.GameSession?.GameMode is CampaignMode campaignMode)
                             {
-                                if (campaignMode.Map?.CurrentLocation?.Type?.Identifier.Equals("abandoned", StringComparison.OrdinalIgnoreCase) ?? false)
+                                if (campaignMode.Map?.CurrentLocation?.Type?.Identifier == "abandoned")
                                 {
                                     if (npc.TeamID == CharacterTeamType.None)
                                     {
-                                        dialogFlags.Remove("OutpostNPC");
-                                        dialogFlags.Add("Bandit");
+                                        dialogFlags.Remove("OutpostNPC".ToIdentifier());
+                                        dialogFlags.Add("Bandit".ToIdentifier());
                                     }
                                     else if (npc.TeamID == CharacterTeamType.FriendlyNPC)
                                     {
-                                        dialogFlags.Remove("OutpostNPC");
-                                        dialogFlags.Add("Hostage");
+                                        dialogFlags.Remove("OutpostNPC".ToIdentifier());
+                                        dialogFlags.Add("Hostage".ToIdentifier());
                                     }
                                 }
                                 else if (campaignMode.Map?.CurrentLocation?.Reputation != null)
@@ -381,11 +391,11 @@ namespace Barotrauma
                                         campaignMode.Map.CurrentLocation.Reputation.Value);
                                     if (normalizedReputation < 0.2f)
                                     {
-                                        dialogFlags.Add("LowReputation");
+                                        dialogFlags.Add("LowReputation".ToIdentifier());
                                     }
                                     else if (normalizedReputation > 0.8f)
                                     {
-                                        dialogFlags.Add("HighReputation");
+                                        dialogFlags.Add("HighReputation".ToIdentifier());
                                     }
                                 }
                             }
@@ -451,13 +461,18 @@ namespace Barotrauma
                     // Prioritize those who are on the same submarine as the controlled character
                     .OrderByDescending(c => Character.Controlled == null || c.Submarine == Character.Controlled.Submarine)
                     // Prioritize those who are already ordered to operate the device
-                    .ThenByDescending(c => order.Category == OrderCategory.Operate && c.CurrentOrders.Any(o => o.Order != null && o.Order.Identifier == order.Identifier && o.Order.TargetEntity == order.TargetEntity))
+                    .ThenByDescending(c
+                        => order.Category == OrderCategory.Operate
+                           && c.CurrentOrders.Any(o
+                               => o != null
+                                  && o.Identifier == order.Identifier
+                                  && o.TargetEntity == order.TargetEntity))
                     // Prioritize those with the appropriate job for the order
-                    .ThenByDescending(c => order.HasAppropriateJob(c))
+                    .ThenByDescending(order.HasAppropriateJob)
                     // Prioritize those who don't yet have the same order (which allows quick-assigning the order to different characters)
-                    .ThenByDescending(c => c.CurrentOrders.None(o => o.Order != null && o.Order.Identifier == order.Identifier))
+                    .ThenByDescending(c => c.CurrentOrders.None(o => o != null && o.Identifier == order.Identifier))
                     // Prioritize those with the preferred job for the order
-                    .ThenByDescending(c => order.HasPreferredJob(c))
+                    .ThenByDescending(order.HasPreferredJob)
                     // Prioritize bots over player-controlled characters
                     .ThenByDescending(c => c.IsBot)
                     // Prioritize those with a lower current objective priority
@@ -472,12 +487,12 @@ namespace Barotrauma
         {
             ActiveOrdersElement = new XElement("activeorders");
             // Only save orders with no fade out time (e.g. ignore orders)
-            var ordersToSave = new List<OrderInfo>();
+            var ordersToSave = new List<Order>();
             foreach (var activeOrder in ActiveOrders)
             {
-                var order = activeOrder?.First;
-                if (order == null || activeOrder.Second.HasValue) { continue; }
-                ordersToSave.Add(new OrderInfo(order, null, CharacterInfo.HighestManualOrderPriority));
+                var order = activeOrder?.Order;
+                if (order == null || activeOrder.FadeOutTime.HasValue) { continue; }
+                ordersToSave.Add(order.WithManualPriority(CharacterInfo.HighestManualOrderPriority));
             }
             CharacterInfo.SaveOrders(ActiveOrdersElement, ordersToSave.ToArray());
             parentElement?.Add(ActiveOrdersElement);
@@ -489,22 +504,22 @@ namespace Barotrauma
             foreach (var orderInfo in CharacterInfo.LoadOrders(ActiveOrdersElement))
             {
                 IIgnorable ignoreTarget = null;
-                if (orderInfo.Order.IsIgnoreOrder)
+                if (orderInfo.IsIgnoreOrder)
                 {
-                    switch (orderInfo.Order.TargetType)
+                    switch (orderInfo.TargetType)
                     {
                         case Order.OrderTargetType.Entity:
-                            ignoreTarget = orderInfo.Order.TargetEntity as IIgnorable;
+                            ignoreTarget = orderInfo.TargetEntity as IIgnorable;
                             break;
-                        case Order.OrderTargetType.WallSection when orderInfo.Order.TargetEntity is Structure s && orderInfo.Order.WallSectionIndex.HasValue:
-                            ignoreTarget = s.GetSection(orderInfo.Order.WallSectionIndex.Value) as IIgnorable;
+                        case Order.OrderTargetType.WallSection when orderInfo.TargetEntity is Structure s && orderInfo.WallSectionIndex.HasValue:
+                            ignoreTarget = s.GetSection(orderInfo.WallSectionIndex.Value);
                             break;
                         default:
                             DebugConsole.ThrowError("Error loading an ignore order - can't find a proper ignore target");
                             continue;
                     }
                 }
-                if (orderInfo.Order.TargetEntity == null || (orderInfo.Order.IsIgnoreOrder && ignoreTarget == null))
+                if (orderInfo.TargetEntity == null || (orderInfo.IsIgnoreOrder && ignoreTarget == null))
                 {
                     // The order target doesn't exist anymore, just discard the loaded order
                     continue;
@@ -513,7 +528,7 @@ namespace Barotrauma
                 {
                     ignoreTarget.OrderedToBeIgnored = true;
                 }
-                AddOrder(orderInfo.Order, null);
+                AddOrder(orderInfo, null);
             }
         }
     }

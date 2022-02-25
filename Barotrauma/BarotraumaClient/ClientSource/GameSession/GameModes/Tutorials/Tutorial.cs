@@ -7,80 +7,91 @@ using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
+using System.Collections.Immutable;
 
 namespace Barotrauma.Tutorials
 {
+    enum TutorialContentType { None = 0, Video = 1, ManualVideo = 2, TextOnly = 3 };
+
+    /// <summary>
+    /// If you're seeing this and are currently working on improving the tutorials, consider
+    /// deleting this class and all that derive from it, and starting from scratch.
+    /// </summary>
     abstract class Tutorial
     {
-        #region Tutorial variables
-        public static bool Initialized = false;
-        public static bool ContentRunning = false;
-        public static List<Tutorial> Tutorials;
+        #region Constants
+        public const string PlayableContentPath = "Content/Tutorials/TutorialVideos/";
+        #endregion
 
-        protected bool started = false;
+        #region Tutorial variables
+        public static ImmutableHashSet<Type> Types;
+        static Tutorial()
+        {
+            Types = ReflectionUtils.GetDerivedNonAbstract<Tutorial>()
+                .ToImmutableHashSet();
+        }
+
+        public readonly Identifier Identifier;
+
+        public LocalizedString DisplayName { get; }
+
+        public bool ContentRunning { get; protected set; }
+
         protected GUIComponent infoBox;
         private Action infoBoxClosedCallback;
-        protected XElement configElement;
 
         protected VideoPlayer videoPlayer;
-        protected enum TutorialContentTypes { None = 0, Video = 1, ManualVideo = 2, TextOnly = 3 };
-        protected string playableContentPath;
         protected Point screenResolution;
         protected WindowMode windowMode;
         protected float prevUIScale;
 
         private GUIFrame holderFrame, objectiveFrame;
-        private List<TutorialSegment> activeObjectives = new List<TutorialSegment>();
-        private string objectiveTranslated;
+        private readonly List<Index> activeObjectives;
+        private readonly LocalizedString objectiveTranslated;
 
-        protected TutorialSegment activeContentSegment;
-        protected List<TutorialSegment> segments;
+        protected readonly ImmutableArray<Segment> segments;
+        protected Index activeContentSegmentIndex;
+        protected Segment activeContentSegment => segments[activeContentSegmentIndex];
 
-        protected class TutorialSegment
+        protected class Segment
         {
-            public string Id;
-            public string Objective;
-            public TutorialContentTypes ContentType;
-            public XElement TextContent;
-            public XElement VideoContent;
+            public struct Text
+            {
+                public Identifier Tag;
+                public int Width;
+                public int Height;
+                public Anchor Anchor;
+            }
+
+            public struct Video
+            {
+                public string File;
+                public Identifier TextTag;
+                public int Width;
+                public int Height;
+            }
+
             public bool IsTriggered;
             public GUIButton ReplayButton;
             public GUITextBlock LinkedTitle, LinkedText;
             public object[] Args;
+            public LocalizedString Objective;
 
-            public TutorialSegment(XElement config)
+            public readonly Identifier Id;
+            public readonly Text? TextContent;
+            public readonly Video? VideoContent;
+            public readonly TutorialContentType ContentType;
+
+            public Segment(Identifier id, Identifier objectiveTextTag, TutorialContentType contentType, Text? textContent = null, Video? videoContent = null)
             {
-                Id = config.GetAttributeString("id", "Missing ID");
-                Objective = TextManager.Get(config.GetAttributeString("objective", string.Empty), true);
-                Enum.TryParse(config.GetAttributeString("contenttype", "None"), true, out ContentType);
-                IsTriggered = config.GetAttributeBool("istriggered", false);
+                Id = id;
+                Objective = TextManager.ParseInputTypes(TextManager.Get(objectiveTextTag));
+                ContentType = contentType;
+                TextContent = textContent;
+                VideoContent = videoContent;
 
-                switch (ContentType)
-                {
-                    case TutorialContentTypes.None:
-                        break;
-                    case TutorialContentTypes.Video:
-                    case TutorialContentTypes.ManualVideo:
-                        VideoContent = config.Element("Video");
-                        TextContent = config.Element("Text");
-                        break;
-                    case TutorialContentTypes.TextOnly:
-                        TextContent = config.Element("Text");
-                        break;
-                }
+                IsTriggered = false;
             }
-        }
-
-        public string Identifier
-        {
-            get;
-            protected set;
-        }
-
-        public string DisplayName
-        {
-            get;
-            protected set;
         }
 
         private bool completed;
@@ -89,107 +100,35 @@ namespace Barotrauma.Tutorials
             get { return completed; }
             protected set
             {
-                if (completed == value) return;
+                if (completed == value) { return; }
                 completed = value;
-                GameMain.Config.SaveNewPlayerConfig();
+                if (value)
+                {
+                    CompletedTutorials.Instance.Add(Identifier);
+                }
+                GameSettings.SaveCurrentConfig();
             }
         }
         #endregion
 
         #region Tutorial Controls
-        public static void Init()
+        protected Tutorial(Identifier identifier, params Segment[] segments)
         {
-            Tutorials = new List<Tutorial>();
-            foreach (ContentFile file in GameMain.Instance.GetFilesOfType(ContentType.Tutorials))
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                if (doc?.Root == null) continue;
-
-                foreach (XElement element in doc.Root.Elements())
-                {
-                    Tutorial newTutorial = Load(element);
-                    if (newTutorial != null) Tutorials.Add(newTutorial);
-                }
-            }
-        }
-
-        private static Tutorial Load(XElement element)
-        {
-            Type t;
-            string type = element.Name.ToString().ToLowerInvariant();
-            try
-            {
-                // Get the type of a specified class.                
-                t = Type.GetType("Barotrauma.Tutorials." + type + "", false, true);
-                if (t == null)
-                {
-                    DebugConsole.ThrowError("Could not find tutorial type \"" + type + "\"");
-                    return null;
-                }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Could not find tutorial type \"" + type + "\"", e);
-                return null;
-            }
-
-            ConstructorInfo constructor;
-            try
-            {
-                if (!t.IsSubclassOf(typeof(Tutorial))) return null;
-                constructor = t.GetConstructor(new Type[] { typeof(XElement) });
-                if (constructor == null)
-                {
-                    DebugConsole.ThrowError("Could not find the constructor of tutorial type \"" + type + "\"");
-                    return null;
-                }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Could not find the constructor of tutorial type \"" + type + "\"", e);
-                return null;
-            }
-            Tutorial tutorial = null;
-            try
-            {
-                object component = constructor.Invoke(new object[] { element });
-                tutorial = (Tutorial)component;
-            }
-            catch (TargetInvocationException e)
-            {
-                DebugConsole.ThrowError("Error while loading tutorial of the type " + t + ".", e.InnerException);
-            }
-
-            return tutorial;
-        }
-
-        public Tutorial(XElement element)
-        {
-            configElement = element;
-            Identifier = element.GetAttributeString("identifier", "unknown");
+            Identifier = identifier;
+            this.segments = segments.ToImmutableArray();
             DisplayName = TextManager.Get(Identifier);
-            completed = GameMain.Config.CompletedTutorialNames.Contains(Identifier);
-            playableContentPath = element.GetAttributeString("playablecontentpath", "");
-
-            segments = new List<TutorialSegment>();
-
-            foreach (var segment in element.Elements("Segment"))
-            {
-                segments.Add(new TutorialSegment(segment));
-            }
-        }
-        
-        public virtual void Initialize()
-        {
-            if (Initialized) return;
-            Initialized = true;
-            videoPlayer = new VideoPlayer();
-        }
-
-        public virtual void Start()
-        {
-            activeObjectives.Clear();
+            activeObjectives = new List<Index>();
             objectiveTranslated = TextManager.Get("Tutorial.Objective");
+        }
+
+        protected abstract IEnumerable<CoroutineStatus> Loading();
+
+        public void Start()
+        {
+            videoPlayer = new VideoPlayer();
+            GameMain.Instance.ShowLoading(Loading());
+            
+            activeObjectives.Clear();
             CreateObjectiveFrame();
 
             // Setup doors:  Clear all requirements, unless the door is setup as locked.
@@ -208,7 +147,7 @@ namespace Barotrauma.Tutorials
 
         public virtual void AddToGUIUpdateList()
         {
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y || prevUIScale != GUI.Scale || GameMain.Config.WindowMode != windowMode)
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y || prevUIScale != GUI.Scale || GameSettings.CurrentConfig.Graphics.DisplayMode != windowMode)
             {
                 CreateObjectiveFrame();
             }
@@ -255,74 +194,69 @@ namespace Barotrauma.Tutorials
         protected bool Restart(GUIButton button, object obj)
         {
             GUI.PreventPauseMenuToggle = false;
-            TutorialMode.StartTutorial(this);
             return true;
         }
 
-        protected virtual void TriggerTutorialSegment(int index, params object[] args)
+        protected virtual void TriggerTutorialSegment(Index index, params object[] args)
         {
             Inventory.DraggingItems.Clear();
             ContentRunning = true;
-            activeContentSegment = segments[index];
+            activeContentSegmentIndex = index;
             segments[index].Args = args;
 
-            string tutorialText = TextManager.GetFormatted(activeContentSegment.TextContent.GetAttributeString("tag", ""), true, args);
+            LocalizedString tutorialText = TextManager.GetFormatted(segments[index].TextContent.Value.Tag, args);
             tutorialText = TextManager.ParseInputTypes(tutorialText);
-            string objectiveText = string.Empty;
+            LocalizedString objectiveText = string.Empty;
 
-            if (!string.IsNullOrEmpty(activeContentSegment.Objective))
+            if (!segments[index].Objective.IsNullOrEmpty())
             {
                 if (args.Length == 0)
                 {
-                    objectiveText = activeContentSegment.Objective;
+                    objectiveText = segments[index].Objective;
                 }
                 else
                 {
-                    objectiveText = string.Format(activeContentSegment.Objective, args);
+                    objectiveText = TextManager.GetFormatted(segments[index].Objective, args);
                 }
                 objectiveText = TextManager.ParseInputTypes(objectiveText);
-                activeContentSegment.Objective = objectiveText;
+                segments[index].Objective = objectiveText;
             }
             else
             {
-                activeContentSegment.IsTriggered = true; // Complete at this stage only if no related objective
+                segments[index].IsTriggered = true; // Complete at this stage only if no related objective
             }
 
 
-            switch (activeContentSegment.ContentType)
+            switch (segments[index].ContentType)
             {
-                case TutorialContentTypes.None:
+                case TutorialContentType.None:
                     break;
-                case TutorialContentTypes.Video:
+                case TutorialContentType.Video:
                     infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
-                              activeContentSegment.TextContent.GetAttributeInt("width", 300),
-                              activeContentSegment.TextContent.GetAttributeInt("height", 80),
-                              activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, () => LoadVideo(activeContentSegment));
+                              activeContentSegment.TextContent.Value.Width,
+                              activeContentSegment.TextContent.Value.Height,
+                              activeContentSegment.TextContent.Value.Anchor, true, () => LoadVideo(activeContentSegment));
                     break;
-                case TutorialContentTypes.ManualVideo:
+                case TutorialContentType.ManualVideo:
                     infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
-                            activeContentSegment.TextContent.GetAttributeInt("width", 300),
-                            activeContentSegment.TextContent.GetAttributeInt("height", 80),
-                        activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, StopCurrentContentSegment, () => LoadVideo(activeContentSegment));
+                            activeContentSegment.TextContent.Value.Width,
+                            activeContentSegment.TextContent.Value.Height,
+                        activeContentSegment.TextContent.Value.Anchor, true, StopCurrentContentSegment, () => LoadVideo(activeContentSegment));
                     break;
-                case TutorialContentTypes.TextOnly:
+                case TutorialContentType.TextOnly:
                     infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
-                            activeContentSegment.TextContent.GetAttributeInt("width", 300),
-                            activeContentSegment.TextContent.GetAttributeInt("height", 80),
-                            activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, StopCurrentContentSegment);
+                            activeContentSegment.TextContent.Value.Width,
+                            activeContentSegment.TextContent.Value.Height,
+                            activeContentSegment.TextContent.Value.Anchor, true, StopCurrentContentSegment);
                     break;
             }
         }
 
         public virtual void Stop()
         {
-            started = ContentRunning = Initialized = false;
+            ContentRunning = false;
             infoBox = null;
-            if (videoPlayer != null)
-            {
-                videoPlayer.Remove();
-                videoPlayer = null;
-            }
+            videoPlayer.Remove();
         }
         #endregion
 
@@ -334,50 +268,51 @@ namespace Barotrauma.Tutorials
 
             for (int i = 0; i < activeObjectives.Count; i++)
             {
-                CreateObjectiveGUI(activeObjectives[i], i, activeObjectives[i].ContentType);
+                CreateObjectiveGUI(activeObjectives[i], i, segments[activeObjectives[i]].ContentType);
             }
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            windowMode = GameMain.Config.WindowMode;
+            windowMode = GameSettings.CurrentConfig.Graphics.DisplayMode;
             prevUIScale = GUI.Scale;
         }
 
         protected void StopCurrentContentSegment()
         {
-            if (!string.IsNullOrEmpty(activeContentSegment.Objective))
+            if (!activeContentSegment.Objective.IsNullOrEmpty())
             {
-                AddNewObjective(activeContentSegment, activeContentSegment.ContentType);
+                AddNewObjective(activeContentSegmentIndex, activeContentSegment.ContentType);
             }
 
-            activeContentSegment = null;
             ContentRunning = false;
+            activeContentSegmentIndex = Index.End;
         }
 
-        protected virtual void CheckActiveObjectives(TutorialSegment objective, float deltaTime)
+        protected virtual void CheckActiveObjectives(Index objective, float deltaTime)
         {
 
         }
 
-        protected bool HasObjective(TutorialSegment segment)
+        protected bool HasObjective(Index segment)
         {
             return activeObjectives.Contains(segment);
         }
 
-        protected void AddNewObjective(TutorialSegment segment, TutorialContentTypes type)
+        protected void AddNewObjective(Index segment, TutorialContentType type)
         {
             activeObjectives.Add(segment);
             CreateObjectiveGUI(segment, activeObjectives.Count - 1, type);
         }
 
-        private void CreateObjectiveGUI(TutorialSegment segment, int index, TutorialContentTypes type)
+        private void CreateObjectiveGUI(Index segmentIndex, int index, TutorialContentType type)
         {
-            string objectiveText = TextManager.ParseInputTypes(segment.Objective);
-            Point replayButtonSize = new Point((int)(GUI.LargeFont.MeasureString(objectiveText).X), (int)(GUI.LargeFont.MeasureString(objectiveText).Y * 1.45f));
+            var segment = segments[segmentIndex];
+            LocalizedString objectiveText = TextManager.ParseInputTypes(segment.Objective);
+            Point replayButtonSize = new Point((int)(GUIStyle.LargeFont.MeasureString(objectiveText).X), (int)(GUIStyle.LargeFont.MeasureString(objectiveText).Y * 1.45f));
 
             segment.ReplayButton = new GUIButton(new RectTransform(replayButtonSize, objectiveFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(0, (replayButtonSize.Y + (int)(20f * GUI.Scale)) * index) }, style: null);
             segment.ReplayButton.OnClicked += (GUIButton btn, object userdata) =>
             {
-                if (type == TutorialContentTypes.Video)
+                if (type == TutorialContentType.Video)
                 {
                     ReplaySegmentVideo(segment);
                 }
@@ -388,23 +323,23 @@ namespace Barotrauma.Tutorials
                 return true;
             };
 
-            string objectiveTitleText = TextManager.ParseInputTypes(objectiveTranslated);
-            int yOffset = (int)((GUI.SubHeadingFont.MeasureString(objectiveTitleText).Y + 5));
-            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point((int)GUI.SubHeadingFont.MeasureString(objectiveTitleText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterLeft, Pivot.BottomLeft) /*{ AbsoluteOffset = new Point((int)(-10 * GUI.Scale), 0) }*/,
-                objectiveTitleText, textColor: Color.White, font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+            LocalizedString objectiveTitleText = TextManager.ParseInputTypes(objectiveTranslated);
+            int yOffset = (int)((GUIStyle.SubHeadingFont.MeasureString(objectiveTitleText).Y + 5));
+            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point((int)GUIStyle.SubHeadingFont.MeasureString(objectiveTitleText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterLeft, Pivot.BottomLeft) /*{ AbsoluteOffset = new Point((int)(-10 * GUI.Scale), 0) }*/,
+                objectiveTitleText, textColor: Color.White, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft)
             {
-                ForceUpperCase = true
+                ForceUpperCase = ForceUpperCase.Yes
             };
 
-            segment.LinkedText = new GUITextBlock(new RectTransform(new Point((int)GUI.LargeFont.MeasureString(objectiveText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterLeft, Pivot.TopLeft) /*{ AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) }*/,
-                objectiveText, textColor: new Color(4, 180, 108), font: GUI.LargeFont, textAlignment: Alignment.CenterLeft);
+            segment.LinkedText = new GUITextBlock(new RectTransform(new Point((int)GUIStyle.LargeFont.MeasureString(objectiveText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterLeft, Pivot.TopLeft) /*{ AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) }*/,
+                objectiveText, textColor: new Color(4, 180, 108), font: GUIStyle.LargeFont, textAlignment: Alignment.CenterLeft);
             
             segment.LinkedTitle.Color = segment.LinkedTitle.HoverColor = segment.LinkedTitle.PressedColor = segment.LinkedTitle.SelectedColor = Color.Transparent;
             segment.LinkedText.Color = segment.LinkedText.HoverColor = segment.LinkedText.PressedColor = segment.LinkedText.SelectedColor = Color.Transparent;
             segment.ReplayButton.Color = segment.ReplayButton.HoverColor = segment.ReplayButton.PressedColor = segment.ReplayButton.SelectedColor = Color.Transparent;
         }
 
-        private void ReplaySegmentVideo(TutorialSegment segment)
+        private void ReplaySegmentVideo(Segment segment)
         {
             if (ContentRunning) return;
             Inventory.DraggingItems.Clear();
@@ -413,30 +348,31 @@ namespace Barotrauma.Tutorials
             //videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, callback: () => ContentRunning = false);
         }
 
-        private void ShowSegmentText(TutorialSegment segment)
+        private void ShowSegmentText(Segment segment)
         {
             if (ContentRunning) return;
             Inventory.DraggingItems.Clear();
             ContentRunning = true;
 
-            string tutorialText = TextManager.GetFormatted(segment.TextContent.GetAttributeString("tag", ""), true, segment.Args);
+            LocalizedString tutorialText = TextManager.GetFormatted(segment.TextContent.Value.Tag, segment.Args);
 
             Action videoAction = null;
 
-            if (segment.ContentType != TutorialContentTypes.TextOnly)
+            if (segment.ContentType != TutorialContentType.TextOnly)
             {
                 videoAction = () => LoadVideo(segment);
             }
 
             infoBox = CreateInfoFrame(TextManager.Get(segment.Id), tutorialText,
-            segment.TextContent.GetAttributeInt("width", 300),
-            segment.TextContent.GetAttributeInt("height", 80),
-            segment.TextContent.GetAttributeString("anchor", "Center"), true, () => ContentRunning = false, videoAction);
+            segment.TextContent.Value.Width,
+            segment.TextContent.Value.Height,
+            segment.TextContent.Value.Anchor, true, () => ContentRunning = false, videoAction);
         }
 
-        protected void RemoveCompletedObjective(TutorialSegment segment)
+        protected void RemoveCompletedObjective(Index segmentIndex)
         {
-            if (!HasObjective(segment)) return;
+            if (!HasObjective(segmentIndex)) return;
+            var segment = segments[segmentIndex];
             segment.IsTriggered = true;
             segment.ReplayButton.OnClicked = null;
 
@@ -467,18 +403,20 @@ namespace Barotrauma.Tutorials
             GUIImage stroke = new GUIImage(rectTB, "Stroke");
             stroke.Color = stroke.SelectedColor = stroke.HoverColor = stroke.PressedColor = color;
 
-            CoroutineManager.StartCoroutine(WaitForObjectiveEnd(segment));
+            CoroutineManager.StartCoroutine(WaitForObjectiveEnd(segmentIndex));
         }
 
-        private IEnumerable<CoroutineStatus> WaitForObjectiveEnd(TutorialSegment objective)
+        private IEnumerable<CoroutineStatus> WaitForObjectiveEnd(Index objectiveIndex)
         {
+            var objective = segments[objectiveIndex];
             yield return new WaitForSeconds(2.0f);
             objectiveFrame.RemoveChild(objective.ReplayButton);
-            activeObjectives.Remove(objective);
+            activeObjectives.Remove(objectiveIndex);
 
             for (int i = 0; i < activeObjectives.Count; i++)
             {
-                activeObjectives[i].ReplayButton.RectTransform.AbsoluteOffset = new Point(0, (activeObjectives[i].ReplayButton.Rect.Height + 20) * i);
+                var activeObjective = segments[activeObjectives[i]];
+                activeObjective.ReplayButton.RectTransform.AbsoluteOffset = new Point(0, (activeObjective.ReplayButton.Rect.Height + 20) * i);
             }
         }
 
@@ -492,32 +430,25 @@ namespace Barotrauma.Tutorials
             return true;
         }
 
-        protected GUIComponent CreateInfoFrame(string title, string text, int width = 300, int height = 80, string anchorStr = "", bool hasButton = false, Action callback = null, Action showVideo = null)
+        protected GUIComponent CreateInfoFrame(LocalizedString title, LocalizedString text, int width = 300, int height = 80, Anchor anchor = Anchor.TopRight, bool hasButton = false, Action callback = null, Action showVideo = null)
         {
             if (hasButton) height += 60;
-
-            Anchor anchor = Anchor.TopRight;
-
-            if (anchorStr != string.Empty)
-            {
-                Enum.TryParse(anchorStr, out anchor);
-            }
 
             width = (int)(width * GUI.Scale);
             height = (int)(height * GUI.Scale);
 
-            string wrappedText = ToolBox.WrapText(text, width, GUI.Font);
-            height += (int)GUI.Font.MeasureString(wrappedText).Y;
+            LocalizedString wrappedText = ToolBox.WrapText(text, width, GUIStyle.Font);
+            height += (int)GUIStyle.Font.MeasureString(wrappedText).Y;
 
             if (title.Length > 0)
             {
-                height += (int)GUI.Font.MeasureString(title).Y + (int)(150 * GUI.Scale);
+                height += (int)GUIStyle.Font.MeasureString(title).Y + (int)(150 * GUI.Scale);
             }
 
             var background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), style: "GUIBackgroundBlocker");
 
             var infoBlock = new GUIFrame(new RectTransform(new Point(width, height), background.RectTransform, anchor));
-            infoBlock.Flash(GUI.Style.Green);
+            infoBlock.Flash(GUIStyle.Green);
 
             var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), infoBlock.RectTransform, Anchor.Center))
             {
@@ -528,20 +459,12 @@ namespace Barotrauma.Tutorials
             if (title.Length > 0)
             {
                 var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), 
-                    title, font: GUI.LargeFont, textAlignment: Alignment.Center, textColor: new Color(253, 174, 0));
+                    title, font: GUIStyle.LargeFont, textAlignment: Alignment.Center, textColor: new Color(253, 174, 0));
                 titleBlock.RectTransform.IsFixedSize = true;
             }
 
-            List<RichTextData> richTextData = RichTextData.GetRichTextData(" " + text, out text);
-            GUITextBlock textBlock;
-            if (richTextData == null)
-            {
-                textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), text, wrap: true);
-            }
-            else
-            {
-                textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), richTextData, text, wrap: true);
-            }
+            text = RichString.Rich(text);
+            GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), text, wrap: true);
 
             textBlock.RectTransform.IsFixedSize = true;
             infoBoxClosedCallback = callback;
@@ -589,22 +512,26 @@ namespace Barotrauma.Tutorials
         #endregion
 
         #region Video
-        protected void LoadVideo(TutorialSegment segment)
+        protected void LoadVideo(Segment segment)
         {
             if (videoPlayer == null) videoPlayer = new VideoPlayer();
-            if (segment.ContentType != TutorialContentTypes.ManualVideo)
+            if (segment.ContentType != TutorialContentType.ManualVideo)
             {
-                videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, segment.Objective, StopCurrentContentSegment);
+                videoPlayer.LoadContent(
+                    PlayableContentPath,
+                    new VideoPlayer.VideoSettings(segment.VideoContent.Value.File),
+                    new VideoPlayer.TextSettings(segment.VideoContent.Value.TextTag, segment.VideoContent.Value.Width),
+                    segment.Id, true, segment.Objective, StopCurrentContentSegment);
             }
             else
             {
-                videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), null, segment.Id, true, string.Empty, null);
+                videoPlayer.LoadContent(PlayableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent.Value.File), null, segment.Id, true, string.Empty, null);
             }
         }
         #endregion
 
         #region Highlights
-        protected void HighlightInventorySlot(Inventory inventory, string identifier, Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount)
+        protected void HighlightInventorySlot(Inventory inventory, Identifier identifier, Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount)
         {
             if (inventory.visualSlots == null) { return; }
             for (int i = 0; i < inventory.Capacity; i++)
@@ -616,7 +543,7 @@ namespace Barotrauma.Tutorials
             }
         }
 
-        protected void HighlightInventorySlotWithTag(Inventory inventory, string tag, Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount)
+        protected void HighlightInventorySlotWithTag(Inventory inventory, Identifier tag, Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount)
         {
             if (inventory.visualSlots == null) { return; }
             for (int i = 0; i < inventory.Capacity; i++)

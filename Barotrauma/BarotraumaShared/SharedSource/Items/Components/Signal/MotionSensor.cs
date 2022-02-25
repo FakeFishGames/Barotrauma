@@ -22,17 +22,17 @@ namespace Barotrauma.Items.Components
             Wall
         }
 
-        [Serialize(false, false, description: "Has the item currently detected movement. Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
+        [Serialize(false, IsPropertySaveable.No, description: "Has the item currently detected movement. Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
         public bool MotionDetected { get; set; }
 
-        [InGameEditable, Serialize(TargetType.Any, true, description: "Which kind of targets can trigger the sensor?", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(TargetType.Any, IsPropertySaveable.Yes, description: "Which kind of targets can trigger the sensor?", alwaysUseInstanceValues: true)]
         public TargetType Target
         {
             get;
             set;
         }
 
-        [InGameEditable, Serialize(false, true, description: "Should the sensor ignore the bodies of dead characters?", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(false, IsPropertySaveable.Yes, description: "Should the sensor ignore the bodies of dead characters?", alwaysUseInstanceValues: true)]
         public bool IgnoreDead
         {
             get;
@@ -40,7 +40,7 @@ namespace Barotrauma.Items.Components
         }
 
 
-        [InGameEditable, Serialize(0.0f, true, description: "Horizontal detection range.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(0.0f, IsPropertySaveable.Yes, description: "Horizontal detection range.", alwaysUseInstanceValues: true)]
         public float RangeX
         {
             get { return rangeX; }
@@ -52,7 +52,7 @@ namespace Barotrauma.Items.Components
 #endif
             }
         }
-        [InGameEditable, Serialize(0.0f, true, description: "Vertical movement detection range.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(0.0f, IsPropertySaveable.Yes, description: "Vertical movement detection range.", alwaysUseInstanceValues: true)]
         public float RangeY
         {
             get { return rangeY; }
@@ -62,7 +62,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize("0,0", true, description: "The position to detect the movement at relative to the item. For example, 0,100 would detect movement 100 units above the item.")]
+        [InGameEditable, Serialize("0,0", IsPropertySaveable.Yes, description: "The position to detect the movement at relative to the item. For example, 0,100 would detect movement 100 units above the item.")]
         public Vector2 DetectOffset
         {
             get { return detectOffset; }
@@ -85,7 +85,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(MinValueFloat = 0.1f, MaxValueFloat = 100.0f, DecimalCount = 2), Serialize(0.1f, true, description: "How often the sensor checks if there's something moving near it. Higher values are better for performance.", alwaysUseInstanceValues: true)]
+        [Editable(MinValueFloat = 0.1f, MaxValueFloat = 100.0f, DecimalCount = 2), Serialize(0.1f, IsPropertySaveable.Yes, description: "How often the sensor checks if there's something moving near it. Higher values are better for performance.", alwaysUseInstanceValues: true)]
         public float UpdateInterval
         {
             get;
@@ -93,7 +93,7 @@ namespace Barotrauma.Items.Components
         }
 
         private int maxOutputLength;
-        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
+        [Editable, Serialize(200, IsPropertySaveable.No, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
         public int MaxOutputLength
         {
             get { return maxOutputLength; }
@@ -104,7 +104,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string output;
-        [InGameEditable, Serialize("1", true, description: "The signal the item outputs when it has detected movement.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("1", IsPropertySaveable.Yes, description: "The signal the item outputs when it has detected movement.", alwaysUseInstanceValues: true)]
         public string Output
         {
             get { return output; }
@@ -120,7 +120,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string falseOutput;
-        [InGameEditable, Serialize("", true, description: "The signal the item outputs when it has not detected movement.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("", IsPropertySaveable.Yes, description: "The signal the item outputs when it has not detected movement.", alwaysUseInstanceValues: true)]
         public string FalseOutput
         {
             get { return falseOutput; }
@@ -135,21 +135,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(DecimalCount = 3), Serialize(0.01f, true, description: "How fast the objects within the detector's range have to be moving (in m/s).", alwaysUseInstanceValues: true)]
+        [Editable(DecimalCount = 3), Serialize(0.01f, IsPropertySaveable.Yes, description: "How fast the objects within the detector's range have to be moving (in m/s).", alwaysUseInstanceValues: true)]
         public float MinimumVelocity
         {
             get;
             set;
         }
 
-        [Serialize(true, true, description: "Should the sensor trigger when the item itself moves.")]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should the sensor trigger when the item itself moves.")]
         public bool DetectOwnMotion
         {
             get;
             set;
         }
 
-        public MotionSensor(Item item, XElement element)
+        public MotionSensor(Item item, ContentXElement element)
             : base(item, element)
         {
             IsActive = true;
@@ -164,7 +164,7 @@ namespace Barotrauma.Items.Components
             updateTimer = Rand.Range(0.0f, UpdateInterval);
         }
 
-        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
             base.Load(componentElement, usePrefabValues, idRemap);
             //backwards compatibility

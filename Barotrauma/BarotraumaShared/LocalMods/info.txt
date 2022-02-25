@@ -1,0 +1,86 @@
+﻿TODO: THIS IS VERY OUTDATED
+------------------------------------------------------------------------
+General
+------------------------------------------------------------------------
+
+	This folder is the place where mods installed from the Steam Workshop go.
+	You should also place your own mods in this folder, under a separate
+	subfolder (e.g. "Mods/MyMod").
+
+------------------------------------------------------------------------
+Content Packages:
+------------------------------------------------------------------------
+
+	Content packages determine which configuration files the game will be using.
+	This includes the configuration files for items, map structures, characters, 
+	monsters and jobs.
+
+	In the multiplayer mode, players are required to use the same content package
+	as the server or they won't be able to join.
+
+	All mods published in the Steam Workshop need a content package.
+
+	If you just want to publish a custom submarine in the workshop, you
+	don't need to worry about content packages - you can just select the 
+	submarine from the "Publish item" tab in the Workshop menu, and the
+	game automatically creates a folder and content package for your mod.
+
+Example
+
+	A very simple content package could be configured as follows:
+
+	<contentpackage name="BestModEver" path="Mods/BestModEver/filelist.xml" gameversion="0.9.1.0" corepackage="true">
+		<Item file="Mods/BestModEver/items.xml" />
+		<Character file="Mods/BestModEver/Human/Human.xml" />
+		<Character file="Mods/BestModEver/Cthulhu/cthulhu.xml" />
+		<Character file="Content/Characters/Crawler/crawler.xml" />
+		<Structure file="Content/Map/StructurePrefabs.xml" />
+		<Jobs file="Content/Jobs.xml" />
+		<RandomEvents file="Mods/BestModEver/randomevents.xml" />
+		<Executable file="Barotrauma.exe" />
+	</contentpackage>
+
+	Note that this mod has been configured as a "core package". Core packages are
+	packages that contain all the necessary files to make the game run, instead of
+	just adding some extra files on top of another content package. There can only
+	be one core package selected at a time.
+
+	This content package would replace all the items in the game with whatever items are
+	configured in the "Mods/BestModEver/items.xml" file. It would also use a modified
+	version of the human characters and have all the monsters in the game replaced with
+	crawlers and Cthulhus. The random events have also been changed - perhaps by adding
+	a new event that spawns Cthulhu and removing the events that spawn monsters/items
+	which aren't included in the mod. 
+
+	Note that the content package should be saved with the file name "filelist.xml" in
+	the Mods folder, in this case "Mods/BestModEver/filelist.xml".
+
+Non-core content packages
+
+	Most mods are usually not core content packages, but instead add things to or
+	modify things in the Vanilla content package (= the default content of the game).
+
+	Here's an example of a simple non-core package:
+
+	<contentpackage name="BestModEver" path="Mods/PotatoGun/filelist.xml" gameversion="0.9.1.0" corepackage="false">
+		<Item file="Mods/PotatoGun/potatogun.xml" />
+	</contentpackage>
+
+	This mod would simply add an extra item to the game (or items if there are multiple 
+	ones configured	in the potatogun.xml file).
+
+Overriding content
+
+	You can also set your mods to override vanilla content without having to modify the
+	Vanilla content package. This can be done by using Override-elements in the xml
+	configuration files. For example, the content of the potatogun.xml file could be
+	something like this:
+
+	<Override>
+		<Item name="Potato Gun" identifier="harpoongun">
+			...
+		</Item>
+	</Override>
+
+	This would mean that the item overrides an item that has the identifier "harpoongun",
+	i.e. replaces harpoon guns with the potato gun.

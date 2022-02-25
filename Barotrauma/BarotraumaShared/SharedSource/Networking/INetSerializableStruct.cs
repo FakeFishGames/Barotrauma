@@ -77,6 +77,7 @@ namespace Barotrauma
             { typeof(Single), new ReadWriteBehavior(ReadSingle, WriteSingle) },
             { typeof(Double), new ReadWriteBehavior(ReadDouble, WriteDynamic) },
             { typeof(String), new ReadWriteBehavior(ReadString, WriteDynamic) },
+            { typeof(Identifier), new ReadWriteBehavior(ReadIdentifier, WriteDynamic) },
             { typeof(Color), new ReadWriteBehavior(ReadColor, WriteColor) },
             { typeof(Vector2), new ReadWriteBehavior(ReadVector2, WriteVector2) }
         }.ToImmutableDictionary();
@@ -86,7 +87,7 @@ namespace Barotrauma
         private static readonly ImmutableDictionary<Predicate<Type>, ReadWriteBehavior> TypePredicates = new Dictionary<Predicate<Type>, ReadWriteBehavior>
         {
             // Arrays
-            { type => type.BaseType?.IsAssignableFrom(typeof(Array)) ?? false, new ReadWriteBehavior(ReadArray, WriteArray) },
+            { type => typeof(Array).IsAssignableFrom(type.BaseType), new ReadWriteBehavior(ReadArray, WriteArray) },
 
             // Nested INetSerializableStructs
             { type => typeof(INetSerializableStruct).IsAssignableFrom(type), new ReadWriteBehavior(ReadINetSerializableStruct, WriteINetSerializableStruct) },
@@ -94,13 +95,76 @@ namespace Barotrauma
             // Enums
             { type => type.IsEnum, new ReadWriteBehavior(ReadEnum, WriteEnum) },
 
-            // Nullable / Optional types
-            { type => Nullable.GetUnderlyingType(type) != null, new ReadWriteBehavior(ReadNullable, WriteNullable) }
+            // Nullable
+            { type => Nullable.GetUnderlyingType(type) != null, new ReadWriteBehavior(ReadNullable, WriteNullable) },
+
+            // Option
+            { type => type.GetGenericTypeDefinition() == typeof(Option<>), new ReadWriteBehavior(ReadOption, WriteOption) }
         }.ToImmutableDictionary();
+
+        private static readonly Dictionary<Type, MethodInfo> cachedSomeCreateMethods = new Dictionary<Type, MethodInfo>();
+        private static readonly Dictionary<Type, MethodInfo> cachedNoneCreateMethod = new Dictionary<Type, MethodInfo>();
 
         private static void WriteInvalid(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg) => throw new InvalidOperationException($"Type {obj?.GetType()} cannot be serialized. Did you forget to implement INetSerializableStruct?");
 
         private static dynamic ReadInvalid(IReadMessage inc, Type type, NetworkSerialize attribute) => throw new InvalidOperationException($"Type {type} cannot be deserialized. Did you forget to implement INetSerializableStruct?");
+
+        private static void WriteOption(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
+        {
+            if (obj is null) { throw new ArgumentNullException(nameof(obj), "Tried to write 'null' into a non-nullable type"); }
+
+            Type type = obj.GetType();
+            Type optionType = type.GetGenericTypeDefinition();
+            Type underlyingType = type.GetGenericArguments()[0];
+
+            if (optionType == typeof(None<>))
+            {
+                msg.Write(false);
+            }
+            else if (optionType == typeof(Some<>))
+            {
+                msg.Write(true);
+                if (TryFindBehavior(underlyingType, out ReadWriteBehavior behavior))
+                {
+                    behavior.WriteAction(obj.Value, attribute, msg);
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("Option type was neither None<> or Some<>");
+            }
+        }
+
+        private static dynamic? ReadOption(IReadMessage inc, Type type, NetworkSerialize attribute)
+        {
+            Type underlyingType = type.GetGenericArguments()[0];
+            bool hasValue = inc.ReadBoolean();
+            if (!hasValue)
+            {
+                return GetCreateMethod(typeof(None<>), underlyingType, cachedNoneCreateMethod).Invoke(null, null);
+            }
+
+            if (TryFindBehavior(underlyingType, out ReadWriteBehavior behavior))
+            {
+                dynamic? value = behavior.ReadAction(inc, underlyingType, attribute);
+                return GetCreateMethod(typeof(Some<>), underlyingType, cachedSomeCreateMethods).Invoke(null, new []{ value });
+            }
+
+            throw new InvalidOperationException($"Could not find suitable behavior for type {underlyingType} in {nameof(ReadOption)}");
+
+            static MethodInfo GetCreateMethod(Type optionType, Type type, Dictionary<Type, MethodInfo> cache)
+            {
+                if (cache.TryGetValue(type, out MethodInfo? foundInfo))
+                {
+                    return foundInfo;
+                }
+
+                Type genericType = optionType.MakeGenericType(type);
+                MethodInfo info = genericType.GetMethod("Create", BindingFlags.Static | BindingFlags.Public)!;
+                cache.Add(type, info);
+                return info;
+            }
+        }
 
         private static void WriteNullable(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
         {
@@ -152,9 +216,9 @@ namespace Barotrauma
             Range<int> range = GetEnumRange(type);
             int enumIndex = inc.ReadRangedInteger(range.Start, range.End);
 
-            foreach (dynamic e in Enum.GetValues(type))
+            foreach (dynamic? e in Enum.GetValues(type))
             {
-                if (Convert.ChangeType(e, e.GetTypeCode()) == enumIndex) { return e; }
+                if (Convert.ChangeType(e, e!.GetTypeCode()) == enumIndex) { return e; }
             }
 
             throw new InvalidOperationException($"An enum {type} with value {enumIndex} could not be found in {nameof(ReadEnum)}");
@@ -213,9 +277,9 @@ namespace Barotrauma
 
             msg.WriteRangedInteger(array.Length, 0, attribute.ArrayMaxSize);
 
-            foreach (dynamic o in array)
+            foreach (dynamic? o in array)
             {
-                if (TryFindBehavior(o.GetType(), out ReadWriteBehavior behavior))
+                if (TryFindBehavior(o!.GetType(), out ReadWriteBehavior behavior))
                 {
                     behavior.WriteAction(o, attribute, msg);
                 }
@@ -285,6 +349,8 @@ namespace Barotrauma
         private static dynamic ReadDouble(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadDouble();
 
         private static dynamic ReadString(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadString();
+        
+        private static dynamic ReadIdentifier(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadIdentifier();
 
         private static dynamic ReadColor(IReadMessage inc, Type type, NetworkSerialize attribute) => attribute.IncludeColorAlpha ? inc.ReadColorR8G8B8A8() : inc.ReadColorR8G8B8();
 
@@ -408,8 +474,8 @@ namespace Barotrauma
     /// <see cref="String">string</see><br/>
     /// <see cref="Microsoft.Xna.Framework.Color"/><br/>
     /// <see cref="Microsoft.Xna.Framework.Vector2"/><br/>
-    /// In addition arrays, enums and <see cref="Nullable{T}"/> are supported.<br/>
-    /// Using <see cref="Nullable{T}"/> will make the field or property optional
+    /// In addition arrays, enums, <see cref="Nullable{T}"/> and <see cref="Option{T}"/> are supported.<br/>
+    /// Using <see cref="Nullable{T}"/> or <see cref="Option{T}"/> will make the field or property optional.
     /// </remarks>
     /// <seealso cref="NetworkSerialize"/>
     public interface INetSerializableStruct

@@ -4,7 +4,7 @@ namespace Barotrauma.Abilities
 {
     abstract class AbilityConditionDataless : AbilityCondition
     {
-        public AbilityConditionDataless(CharacterTalent characterTalent, XElement conditionElement) : base (characterTalent, conditionElement) { }
+        public AbilityConditionDataless(CharacterTalent characterTalent, ContentXElement conditionElement) : base (characterTalent, conditionElement) { }
 
         protected abstract bool MatchesConditionSpecific();
         public override bool MatchesCondition()

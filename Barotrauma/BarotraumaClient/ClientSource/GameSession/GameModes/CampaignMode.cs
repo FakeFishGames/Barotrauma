@@ -14,7 +14,7 @@ namespace Barotrauma
         protected bool crewDead;
 
         protected Color overlayColor;
-        protected string overlayText, overlayTextBottom;
+        protected LocalizedString overlayText, overlayTextBottom;
         protected Color overlayTextColor;
         protected Sprite overlaySprite;
 
@@ -68,8 +68,8 @@ namespace Barotrauma
             foreach (Mission mission in Missions.ToList())
             {
                 new GUIMessageBox(
-                    mission.Prefab.IsSideObjective ? TextManager.AddPunctuation(':', TextManager.Get("sideobjective"), mission.Name) : mission.Name, 
-                    mission.Description, new string[0], type: GUIMessageBox.Type.InGame, icon: mission.Prefab.Icon, parseRichText: true)
+                    RichString.Rich(mission.Prefab.IsSideObjective ? TextManager.AddPunctuation(':', TextManager.Get("sideobjective"), mission.Name) : mission.Name), 
+                    RichString.Rich(mission.Description), Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: mission.Prefab.Icon)
                 {
                     IconColor = mission.Prefab.IconColor,
                     UserData = "missionstartmessage"
@@ -123,12 +123,12 @@ namespace Barotrauma
                 {
                     GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), overlayColor, isFilled: true);
                 }
-                if (!string.IsNullOrEmpty(overlayText) && overlayTextColor.A > 0)
+                if (!overlayText.IsNullOrEmpty() && overlayTextColor.A > 0)
                 {
-                    var backgroundSprite = GUI.Style.GetComponentStyle("CommandBackground").GetDefaultSprite();
+                    var backgroundSprite = GUIStyle.GetComponentStyle("CommandBackground").GetDefaultSprite();
                     Vector2 centerPos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2;
-                    string wrappedText = ToolBox.WrapText(overlayText, GameMain.GraphicsWidth / 3, GUI.Font);
-                    Vector2 textSize = GUI.Font.MeasureString(wrappedText);
+                    LocalizedString wrappedText = ToolBox.WrapText(overlayText, GameMain.GraphicsWidth / 3, GUIStyle.Font);
+                    Vector2 textSize = GUIStyle.Font.MeasureString(wrappedText);
                     Vector2 textPos = centerPos - textSize / 2;
                     backgroundSprite.Draw(spriteBatch, 
                         centerPos, 
@@ -140,11 +140,11 @@ namespace Barotrauma
                     GUI.DrawString(spriteBatch, textPos + Vector2.One, wrappedText, Color.Black * (overlayTextColor.A / 255.0f));
                     GUI.DrawString(spriteBatch, textPos, wrappedText, overlayTextColor);
 
-                    if (!string.IsNullOrEmpty(overlayTextBottom))
+                    if (!overlayTextBottom.IsNullOrEmpty())
                     {
-                        Vector2 bottomTextPos = centerPos + new Vector2(0.0f, textSize.Y / 2 + 40 * GUI.Scale) - GUI.Font.MeasureString(overlayTextBottom) / 2;
-                        GUI.DrawString(spriteBatch, bottomTextPos + Vector2.One, overlayTextBottom, Color.Black * (overlayTextColor.A / 255.0f));
-                        GUI.DrawString(spriteBatch, bottomTextPos, overlayTextBottom, overlayTextColor);
+                        Vector2 bottomTextPos = centerPos + new Vector2(0.0f, textSize.Y / 2 + 40 * GUI.Scale) - GUIStyle.Font.MeasureString(overlayTextBottom) / 2;
+                        GUI.DrawString(spriteBatch, bottomTextPos + Vector2.One, overlayTextBottom.Value, Color.Black * (overlayTextColor.A / 255.0f));
+                        GUI.DrawString(spriteBatch, bottomTextPos, overlayTextBottom.Value, overlayTextColor);
                     }
                 }
             }
@@ -159,7 +159,7 @@ namespace Barotrauma
 
             endRoundButton.Visible = false;
             var availableTransition = GetAvailableTransition(out _, out Submarine leavingSub);
-            string buttonText = "";
+            LocalizedString buttonText = "";
             switch (availableTransition)
             {
                 case TransitionType.ProgressToNextLocation:
@@ -188,7 +188,7 @@ namespace Barotrauma
                 case TransitionType.None:
                 default:
                     if (Level.Loaded.Type == LevelData.LevelType.Outpost &&
-                        (Character.Controlled?.Submarine?.Info.Type == SubmarineType.Player || (Character.Controlled?.CurrentHull?.OutpostModuleTags.Contains("airlock") ?? false)))
+                        (Character.Controlled?.Submarine?.Info.Type == SubmarineType.Player || (Character.Controlled?.CurrentHull?.OutpostModuleTags.Contains("airlock".ToIdentifier()) ?? false)))
                     {
                         buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
                         endRoundButton.Visible = !ForceMapUI && !ShowCampaignUI;
@@ -218,7 +218,7 @@ namespace Barotrauma
                     endRoundButton.OnClicked(EndRoundButton, null);
                     prevCampaignUIAutoOpenType = availableTransition;
                 }
-                endRoundButton.Text = ToolBox.LimitString(buttonText, endRoundButton.Font, endRoundButton.Rect.Width - 5);
+                endRoundButton.Text = ToolBox.LimitString(buttonText.Value, endRoundButton.Font, endRoundButton.Rect.Width - 5);
                 if (endRoundButton.Text != buttonText)
                 {
                     endRoundButton.ToolTip = buttonText;
@@ -244,7 +244,7 @@ namespace Barotrauma
                 if (ReadyCheck.ReadyCheckCooldown > DateTime.Now)
                 {
                     float progress = (ReadyCheck.ReadyCheckCooldown - DateTime.Now).Seconds / 60.0f;
-                    ReadyCheckButton.Color = ToolBox.GradientLerp(progress, Color.White, GUI.Style.Red);
+                    ReadyCheckButton.Color = ToolBox.GradientLerp(progress, Color.White, GUIStyle.Red);
                 }
             }
         }
@@ -289,7 +289,7 @@ namespace Barotrauma
                 case InteractionType.Examine:
                     return;
                 case InteractionType.Upgrade when !UpgradeManager.CanUpgradeSub():
-                    UpgradeManager.CreateUpgradeErrorMessage(TextManager.Get("Dialog.CantUpgrade"), IsSinglePlayer, npc);
+                    UpgradeManager.CreateUpgradeErrorMessage(TextManager.Get("Dialog.CantUpgrade").Value, IsSinglePlayer, npc);
                     return;
                 case InteractionType.Crew when GameMain.NetworkMember != null:
                     CampaignUI.CrewManagement.SendCrewState(false);

@@ -34,11 +34,11 @@ namespace Barotrauma
             : base(prefab, locations, sub)
         {
             missionSub = sub;
-            characterConfig = prefab.ConfigElement.Element("Characters");
+            characterConfig = prefab.ConfigElement.GetChildElement("Characters");
             baseEscortedCharacters = prefab.ConfigElement.GetAttributeInt("baseescortedcharacters", 1);
             scalingEscortedCharacters = prefab.ConfigElement.GetAttributeFloat("scalingescortedcharacters", 0);
             terroristChance = prefab.ConfigElement.GetAttributeFloat("terroristchance", 0);
-            itemConfig = prefab.ConfigElement.Element("TerroristItems");
+            itemConfig = prefab.ConfigElement.GetChildElement("TerroristItems");
             CalculateReward();
         }
 
@@ -87,7 +87,7 @@ namespace Barotrauma
             characterItems.Clear();
 
             WayPoint explicitStayInHullPos = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
-            Rand.RandSync randSync = Rand.RandSync.Server;
+            Rand.RandSync randSync = Rand.RandSync.ServerAndClient;
 
             if (terroristChance > 0f)
             {
@@ -226,8 +226,8 @@ namespace Barotrauma
                     if (IsAlive(character) && !character.IsIncapacitated && !character.LockHands)
                     {
                         character.TryAddNewTeamChange(TerroristTeamChangeIdentifier, new ActiveTeamChange(CharacterTeamType.None, ActiveTeamChange.TeamChangePriorities.Willful, aggressiveBehavior: true));
-                        character.Speak(TextManager.Get("dialogterroristannounce"), null, Rand.Range(0.5f, 3f));
-                        XElement randomElement = itemConfig.Elements().GetRandom(e => e.GetAttributeFloat(0f, "mindifficulty") <= Level.Loaded.Difficulty);
+                        character.Speak(TextManager.Get("dialogterroristannounce").Value, null, Rand.Range(0.5f, 3f));
+                        XElement randomElement = itemConfig.Elements().GetRandomUnsynced(e => e.GetAttributeFloat(0f, "mindifficulty") <= Level.Loaded.Difficulty);
                         if (randomElement != null)
                         {
                             HumanPrefab.InitializeItem(character, randomElement, character.Submarine, humanPrefab: null, createNetworkEvents: true);
@@ -286,7 +286,8 @@ namespace Barotrauma
 
         private bool Survived(Character character)
         {
-            return IsAlive(character) && character.CurrentHull != null && character.CurrentHull.Submarine == Submarine.MainSub;
+            return IsAlive(character) && character.CurrentHull?.Submarine != null && 
+                (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine));
         }
 
         private bool IsAlive(Character character)

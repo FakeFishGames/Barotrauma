@@ -28,7 +28,7 @@ namespace Barotrauma
 
             private enum EntityTypes { Character, Item }
 
-            private string[] entities;
+            private Identifier[] entities;
             private EntityTypes[] entityTypes;
 
             public override void Update(float deltaTime)
@@ -67,7 +67,7 @@ namespace Barotrauma
                                 {
                                     continue;
                                 }
-                                if (character.SpeciesName.Equals(entities[activeEntityIndex], StringComparison.OrdinalIgnoreCase) && Vector2.Distance(activeEntitySavedPosition, character.WorldPosition) < graceDistance)
+                                if (character.SpeciesName == entities[activeEntityIndex] && Vector2.Distance(activeEntitySavedPosition, character.WorldPosition) < graceDistance)
                                 {
                                     activeEntity = character;
                                     transformationTime = 0.0;
@@ -82,7 +82,7 @@ namespace Barotrauma
                                 {
                                     continue;
                                 }
-                                if (item.prefab.Identifier == entities[activeEntityIndex] && Vector2.Distance(activeEntitySavedPosition, item.WorldPosition) < graceDistance)
+                                if (((MapEntity)item).Prefab.Identifier == entities[activeEntityIndex] && Vector2.Distance(activeEntitySavedPosition, item.WorldPosition) < graceDistance)
                                 {
                                     activeEntity = item;
                                     transformationTime = 0.0;
@@ -117,7 +117,7 @@ namespace Barotrauma
                             {
                                 continue;
                             }
-                            if (character.SpeciesName.Equals(entities[activeEntityIndex], StringComparison.OrdinalIgnoreCase))
+                            if (character.SpeciesName == entities[activeEntityIndex])
                             {
                                 activeEntity = character;
                                 break;
@@ -131,7 +131,7 @@ namespace Barotrauma
                             {
                                 continue;
                             }
-                            if (item.prefab.Identifier.Equals(entities[0], StringComparison.OrdinalIgnoreCase))
+                            if (((MapEntity)item).Prefab.Identifier == entities[0])
                             {
                                 activeEntity = item;
                                 break;
@@ -146,7 +146,7 @@ namespace Barotrauma
 
             public GoalEntityTransformation(string[] entities, string[] entityTypes, string catalystItemIdentifier) : base()
             {
-                this.entities = entities;
+                this.entities = entities.ToIdentifiers().ToArray();
 
                 this.entityTypes = new EntityTypes[entityTypes.Length];
 

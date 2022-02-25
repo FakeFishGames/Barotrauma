@@ -122,7 +122,7 @@ namespace Barotrauma
                     enumPath = string.IsNullOrWhiteSpace(startPath) ? "./" : startPath;
                 }
                 
-                List<string> filePaths = Directory.GetFileSystemEntries(enumPath).Select(Path.GetFileName).ToList();
+                string[] filePaths = Directory.GetFileSystemEntries(enumPath).Select(Path.GetFileName).ToArray();
 
                 if (filePaths.Any(s => s.Equals(subDir, StringComparison.Ordinal)))
                 {
@@ -130,7 +130,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    List<string> correctedPaths = filePaths.Where(s => s.Equals(subDir, StringComparison.OrdinalIgnoreCase)).ToList();
+                    string[] correctedPaths = filePaths.Where(s => s.Equals(subDir, StringComparison.OrdinalIgnoreCase)).ToArray();
                     if (correctedPaths.Any())
                     {
                         corrected = true;
@@ -159,22 +159,13 @@ namespace Barotrauma
             return fileName;
         }
 
-        private static System.Text.RegularExpressions.Regex removeBBCodeRegex = 
+        private static readonly System.Text.RegularExpressions.Regex removeBBCodeRegex = 
             new System.Text.RegularExpressions.Regex(@"\[\/?(?:b|i|u|url|quote|code|img|color|size)*?.*?\]");
 
         public static string RemoveBBCodeTags(string str)
         {
             if (string.IsNullOrEmpty(str)) { return str; }
             return removeBBCodeRegex.Replace(str, "");
-        }
-
-        public static string LimitString(string str, int maxCharacters)
-        {
-            if (str == null || maxCharacters < 0) return null;
-
-            if (maxCharacters < 4 || str.Length <= maxCharacters) return str;
-
-            return str.Substring(0, maxCharacters - 3) + "...";
         }
 
         public static string RandomSeed(int length)
@@ -185,6 +176,8 @@ namespace Barotrauma
                           .Select(s => s[Rand.Int(s.Length)])
                           .ToArray());
         }
+
+        public static int IdentifierToInt(Identifier id) => StringToInt(id.Value.ToLowerInvariant());
 
         public static int StringToInt(string str)
         {
@@ -201,6 +194,7 @@ namespace Barotrauma
 
             return BitConverter.ToInt32(asciiBytes, 0);
         }
+
         /// <summary>
         /// a method for changing inputtypes with old names to the new ones to ensure backwards compatibility with older subs
         /// </summary>
@@ -264,16 +258,17 @@ namespace Barotrauma
         {
             string color = obj switch
             {
-                bool   b => b ? "80,250,123" : "255,85,85",
-                string _ => "241,250,140",
-                int    _ => "189,147,249",
-                float  _ => "189,147,249",
-                double _ => "189,147,249",
-                null     => "255,85,85",
+                bool       b => b ? "80,250,123" : "255,85,85",
+                string     _ => "241,250,140",
+                Identifier _ => "241,250,140",
+                int        _ => "189,147,249",
+                float      _ => "189,147,249",
+                double     _ => "189,147,249",
+                null         => "255,85,85",
                 _ => "139,233,253"
             };
 
-            return obj is string 
+            return obj is string || obj is Identifier
                 ? $"‖color:{color}‖\"{obj}\"‖color:end‖" 
                 : $"‖color:{color}‖{obj ?? "null"}‖color:end‖";
         }
@@ -352,7 +347,7 @@ namespace Barotrauma
             return d[n, m];
         }
 
-        public static string SecondsToReadableTime(float seconds)
+        public static LocalizedString SecondsToReadableTime(float seconds)
         {
             int s = (int)(seconds % 60.0f);
             if (seconds < 60.0f)
@@ -363,23 +358,23 @@ namespace Barotrauma
             int h = (int)(seconds / (60.0f * 60.0f));
             int m = (int)((seconds / 60.0f) % 60);
 
-            string text = "";
+            LocalizedString text = "";
             if (h != 0) { text = TextManager.GetWithVariable("timeformathours", "[hours]", h.ToString()); }
             if (m != 0)
             {
-                string minutesText = TextManager.GetWithVariable("timeformatminutes", "[minutes]", m.ToString());
-                text = string.IsNullOrEmpty(text) ? minutesText : string.Join(" ", text, minutesText);
+                LocalizedString minutesText = TextManager.GetWithVariable("timeformatminutes", "[minutes]", m.ToString());
+                text = text.IsNullOrEmpty() ? minutesText : LocalizedString.Join(" ", text, minutesText);
             }
             if (s != 0)
             {
-                string secondsText = TextManager.GetWithVariable("timeformatseconds", "[seconds]", s.ToString());
-                text = string.IsNullOrEmpty(text) ? secondsText : string.Join(" ", text, secondsText);
+                LocalizedString secondsText = TextManager.GetWithVariable("timeformatseconds", "[seconds]", s.ToString());
+                text = text.IsNullOrEmpty() ? secondsText : LocalizedString.Join(" ", text, secondsText);
             }
             return text;
         }
 
         private static Dictionary<string, List<string>> cachedLines = new Dictionary<string, List<string>>();
-        public static string GetRandomLine(string filePath, Rand.RandSync randSync = Rand.RandSync.Server)
+        public static string GetRandomLine(string filePath, Rand.RandSync randSync = Rand.RandSync.ServerAndClient)
         {
             List<string> lines;
             if (cachedLines.ContainsKey(filePath))
@@ -426,7 +421,20 @@ namespace Barotrauma
             return buffer;
         }
 
-        public static T SelectWeightedRandom<T>(IList<T> objects, IList<float> weights, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public static T SelectWeightedRandom<T>(IEnumerable<T> objects, Func<T, float> weightMethod, Rand.RandSync randSync)
+        {
+            return SelectWeightedRandom(objects, weightMethod, Rand.GetRNG(randSync));
+        }
+
+
+        public static T SelectWeightedRandom<T>(IEnumerable<T> objects, Func<T, float> weightMethod, Random random)
+        {
+            List<T> objectList = objects.ToList();
+            List<float> weights = objectList.Select(o => weightMethod(o)).ToList();
+            return SelectWeightedRandom(objectList, weights, random);
+        }
+
+        public static T SelectWeightedRandom<T>(IList<T> objects, IList<float> weights, Rand.RandSync randSync)
         {
             return SelectWeightedRandom(objects, weights, Rand.GetRNG(randSync));
         }
@@ -455,11 +463,14 @@ namespace Barotrauma
             return default(T);
         }
 
+        public static UInt32 IdentifierToUint32Hash(Identifier id, MD5 md5)
+            => StringToUInt32Hash(id.Value.ToLowerInvariant(), md5);
+
         public static UInt32 StringToUInt32Hash(string str, MD5 md5)
         {
             //calculate key based on MD5 hash instead of string.GetHashCode
             //to ensure consistent results across platforms
-            byte[] inputBytes = Encoding.ASCII.GetBytes(str);
+            byte[] inputBytes = Encoding.UTF8.GetBytes(str);
             byte[] hash = md5.ComputeHash(inputBytes);
 
             UInt32 key = (UInt32)((str.Length & 0xff) << 24); //could use more of the hash here instead?
@@ -607,16 +618,6 @@ namespace Barotrauma
             if (!string.IsNullOrWhiteSpace(piece)) commands.Add(piece); //add final piece
 
             return commands.ToArray();
-        }
-
-        public static void OpenFileWithShell(string filename)
-        {
-            ProcessStartInfo startInfo = new ProcessStartInfo()
-            {
-                FileName = filename,
-                UseShellExecute = true
-            };
-            Process.Start(startInfo);
         }
 
         /// <summary>

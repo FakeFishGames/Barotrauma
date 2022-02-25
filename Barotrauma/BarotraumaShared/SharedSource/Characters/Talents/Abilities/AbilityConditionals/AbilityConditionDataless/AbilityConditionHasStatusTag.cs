@@ -8,7 +8,7 @@ namespace Barotrauma.Abilities
         private readonly string tag;
 
 
-        public AbilityConditionHasStatusTag(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionHasStatusTag(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             tag = conditionElement.GetAttributeString("tag", "");
             if (string.IsNullOrEmpty(tag))

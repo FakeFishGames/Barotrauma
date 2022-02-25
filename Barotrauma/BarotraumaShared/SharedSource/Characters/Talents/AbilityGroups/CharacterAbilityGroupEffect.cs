@@ -8,7 +8,7 @@ namespace Barotrauma.Abilities
 {
     class CharacterAbilityGroupEffect : CharacterAbilityGroup
     {
-        public CharacterAbilityGroupEffect(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, XElement abilityElementGroup) : 
+        public CharacterAbilityGroupEffect(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, ContentXElement abilityElementGroup) : 
             base(abilityEffectType, characterTalent, abilityElementGroup) { }
 
         public void CheckAbilityGroup(AbilityObject abilityObject)

@@ -33,7 +33,7 @@ namespace Barotrauma.Networking
             protected set;
         }
 
-        public string Language
+        public LanguageIdentifier Language
         {
             get; set;
         }

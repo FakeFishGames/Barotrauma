@@ -28,12 +28,12 @@ namespace Barotrauma
                 }
             }
 
-            public SubactionGroup(ScriptedEvent scriptedEvent, XElement elem)
+            public SubactionGroup(ScriptedEvent scriptedEvent, ContentXElement elem)
             {
                 Text = elem.Attribute("text")?.Value ?? "";
                 Actions = new List<EventAction>();
                 EndConversation = elem.GetAttributeBool("endconversation", false);
-                foreach (XElement e in elem.Elements())
+                foreach (var e in elem.Elements())
                 {
                     if (e.Name.ToString().Equals("statuseffect", StringComparison.OrdinalIgnoreCase))
                     {
@@ -100,7 +100,7 @@ namespace Barotrauma
 
         public readonly ScriptedEvent ParentEvent;
 
-        public EventAction(ScriptedEvent parentEvent, XElement element)
+        public EventAction(ScriptedEvent parentEvent, ContentXElement element)
         {
             ParentEvent = parentEvent;
             SerializableProperty.DeserializeProperties(this, element);
@@ -132,7 +132,7 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime) { }
 
-        public static EventAction Instantiate(ScriptedEvent scriptedEvent, XElement element)
+        public static EventAction Instantiate(ScriptedEvent scriptedEvent, ContentXElement element)
         {
             Type actionType = null;
             try
@@ -146,7 +146,7 @@ namespace Barotrauma
                 return null;
             }
 
-            ConstructorInfo constructor = actionType.GetConstructor(new[] { typeof(ScriptedEvent), typeof(XElement) });
+            ConstructorInfo constructor = actionType.GetConstructor(new[] { typeof(ScriptedEvent), typeof(ContentXElement) });
             try
             {
                 return constructor.Invoke(new object[] { scriptedEvent, element }) as EventAction;

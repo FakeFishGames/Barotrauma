@@ -9,24 +9,25 @@ namespace Barotrauma
 {
     partial class CargoMission : Mission
     {
-        private readonly XElement itemConfig;
+        private readonly ContentXElement itemConfig;
 
         private readonly List<Item> items = new List<Item>();
         private readonly Dictionary<Item, UInt16> parentInventoryIDs = new Dictionary<Item, UInt16>();
+        private readonly Dictionary<Item, int> inventorySlotIndices = new Dictionary<Item, int>();
         private readonly Dictionary<Item, byte> parentItemContainerIndices = new Dictionary<Item, byte>();
 
         private float requiredDeliveryAmount;
 
-        private readonly List<(XElement element, ItemContainer container)> itemsToSpawn = new List<(XElement element, ItemContainer container)>();
+        private readonly List<(ContentXElement element, ItemContainer container)> itemsToSpawn = new List<(ContentXElement element, ItemContainer container)>();
         private int? rewardPerCrate;
         private int calculatedReward;
         private int maxItemCount;
 
         private Submarine sub;
-
+        
         private readonly List<CargoMission> previouslySelectedMissions = new List<CargoMission>();
 
-        public override string Description
+        public override LocalizedString Description
         {
             get
             {
@@ -43,7 +44,7 @@ namespace Barotrauma
             : base(prefab, locations, sub)
         {
             this.sub = sub;
-            itemConfig = prefab.ConfigElement.Element("Items");
+            itemConfig = prefab.ConfigElement.GetChildElement("Items");
             requiredDeliveryAmount = Math.Min(prefab.ConfigElement.GetAttributeFloat("requireddeliveryamount", 0.98f), 1.0f);
             //this can get called between rounds when the client receives a campaign save
             //don't attempt to determine cargo if the sub hasn't been fully loaded
@@ -91,7 +92,7 @@ namespace Barotrauma
             }
 
             maxItemCount = 0;
-            foreach (XElement subElement in itemConfig.Elements())
+            foreach (var subElement in itemConfig.Elements())
             {
                 int maxCount = subElement.GetAttributeInt("maxcount", 10);
                 maxItemCount += maxCount;
@@ -99,7 +100,7 @@ namespace Barotrauma
 
             for (int i = 0; i < containers.Count; i++)
             {
-                foreach (XElement subElement in itemConfig.Elements())
+                foreach (var subElement in itemConfig.Elements())
                 {
                     int maxCount = subElement.GetAttributeInt("maxcount", 10);
                     if (itemsToSpawn.Count(it => it.element == subElement) >= maxCount) { continue; }
@@ -183,6 +184,7 @@ namespace Barotrauma
             items.Clear();
             parentInventoryIDs.Clear();
             parentItemContainerIndices.Clear();
+            inventorySlotIndices.Clear();
 
             if (itemConfig == null)
             {
@@ -198,7 +200,7 @@ namespace Barotrauma
             if (requiredDeliveryAmount <= 0.0f) { requiredDeliveryAmount = 1.0f; }
         }
 
-        private void LoadItemAsChild(XElement element, Item parent)
+        private void LoadItemAsChild(ContentXElement element, Item parent)
         {
             ItemPrefab itemPrefab = FindItemPrefab(element);
 
@@ -218,9 +220,10 @@ namespace Barotrauma
                 parentInventoryIDs.Add(item, parent.ID);
                 parentItemContainerIndices.Add(item, (byte)parent.GetComponentIndex(parent.GetComponent<ItemContainer>()));
                 parent.Combine(item, user: null);
+                inventorySlotIndices.Add(item, item.ParentInventory?.FindIndex(item) ?? -1);
             }
             
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 int amount = subElement.GetAttributeInt("amount", 1);
                 for (int i = 0; i < amount; i++)

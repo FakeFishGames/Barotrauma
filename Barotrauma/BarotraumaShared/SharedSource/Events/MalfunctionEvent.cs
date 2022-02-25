@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class MalfunctionEvent : Event
     {
-        private string[] targetItemIdentifiers;
+        private Identifier[] targetItemIdentifiers;
 
         private List<Item> targetItems;
 
@@ -36,7 +36,7 @@ namespace Barotrauma
             decreaseConditionAmount = prefab.ConfigElement.GetAttributeFloat("decreaseconditionamount", 0.0f);
             duration = prefab.ConfigElement.GetAttributeFloat("duration", 0.0f);
 
-            targetItemIdentifiers = prefab.ConfigElement.GetAttributeStringArray("itemidentifiers", new string[0]);
+            targetItemIdentifiers = prefab.ConfigElement.GetAttributeIdentifierArray("itemidentifiers", Array.Empty<Identifier>());
         }
 
         public override bool CanAffectSubImmediately(Level level)
@@ -47,11 +47,11 @@ namespace Barotrauma
         public override void Init(bool affectSubImmediately)
         {
             var matchingItems = Item.ItemList.FindAll(i => i.Condition > 0.0f && targetItemIdentifiers.Contains(i.Prefab.Identifier));
-            int itemAmount = Rand.Range(minItemAmount, maxItemAmount, Rand.RandSync.Server);
+            int itemAmount = Rand.Range(minItemAmount, maxItemAmount, Rand.RandSync.ServerAndClient);
             for (int i = 0; i < itemAmount; i++)
             {
                 if (matchingItems.Count == 0) break;
-                targetItems.Add(matchingItems[Rand.Int(matchingItems.Count, Rand.RandSync.Server)]);
+                targetItems.Add(matchingItems[Rand.Int(matchingItems.Count, Rand.RandSync.ServerAndClient)]);
             }
         }
 

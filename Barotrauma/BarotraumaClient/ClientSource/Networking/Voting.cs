@@ -122,7 +122,7 @@ namespace Barotrauma
                     if (sub.EqualityCheckVal == 0)
                     {
                         //sub doesn't exist client-side, use hash to let the server know which one we voted for
-                        msg.Write(sub.MD5Hash.Hash);
+                        msg.Write(sub.MD5Hash.StringRepresentation);
                     }
                     break;
                 case VoteType.Mode:
@@ -302,7 +302,7 @@ namespace Barotrauma
                             }
                             else if (GameMain.Client.ConnectedClients.Count > 1)
                             {
-                                GameMain.NetworkMember.AddChatMessage(VotingInterface.GetSubmarineVoteResultMessage(subInfo, voteType, yesClientCount.ToString(), noClientCount.ToString(), passed), ChatMessageType.Server);
+                                GameMain.NetworkMember.AddChatMessage(VotingInterface.GetSubmarineVoteResultMessage(subInfo, voteType, yesClientCount.ToString(), noClientCount.ToString(), passed).Value, ChatMessageType.Server);
                             }
 
                             if (passed)

@@ -24,14 +24,14 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        [Editable, Serialize(400.0f, true, description: "How much oxygen the machine generates when operating at full power.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(400.0f, IsPropertySaveable.Yes, description: "How much oxygen the machine generates when operating at full power.", alwaysUseInstanceValues: true)]
         public float GeneratedAmount
         {
             get { return generatedAmount; }
             set { generatedAmount = MathHelper.Clamp(value, -10000.0f, 10000.0f); }
         }
 
-        public OxygenGenerator(Item item, XElement element)
+        public OxygenGenerator(Item item, ContentXElement element)
             : base(item, element)
         {
             //randomize update timer so all oxygen generators don't update at the same time
@@ -44,25 +44,15 @@ namespace Barotrauma.Items.Components
             UpdateOnActiveEffects(deltaTime);
 
             CurrFlow = 0.0f;
-            currPowerConsumption = powerConsumption;
-            //consume more power when in a bad condition
-            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
-
-            if (powerConsumption <= 0.0f)
-            {
-                Voltage = 1.0f;
-            }
 
             if (item.CurrentHull == null) { return; }
-
-            if (Voltage < MinVoltage)
+            
+            if (Voltage < MinVoltage && PowerConsumption > 0)
             {
                 return;
             }
-            
-            CurrFlow = Math.Min(Voltage, 1.0f) * generatedAmount * 100.0f;
 
-            //less effective when in bad condition
+            CurrFlow = Math.Min(PowerConsumption > 0 ? Voltage : 1.0f, 1.0f) * generatedAmount * 100.0f;
             float conditionMult = item.Condition / item.MaxCondition;
             //100% condition = 100% oxygen
             //50% condition = 25% oxygen
@@ -70,6 +60,23 @@ namespace Barotrauma.Items.Components
             CurrFlow *= conditionMult * conditionMult;
 
             UpdateVents(CurrFlow, deltaTime);
+        }
+
+        /// <summary>
+        /// Power consumption of the Oxygen Generator. Only consume power when active and adjust consumption based on condition.
+        /// </summary>
+        public override float GetCurrentPowerConsumption(Connection connection = null)
+        {
+            if (connection != this.powerIn)
+            {
+                return 0;
+            }
+
+            float consumption = powerConsumption;
+
+            //consume more power when in a bad condition
+            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref consumption);
+            return consumption;
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)

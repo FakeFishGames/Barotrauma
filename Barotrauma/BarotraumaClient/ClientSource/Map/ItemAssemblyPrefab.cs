@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class ItemAssemblyPrefab
+    partial class ItemAssemblyPrefab : MapEntityPrefab
     {
         public void DrawIcon(SpriteBatch spriteBatch, GUICustomComponent guiComponent)
         {
@@ -16,28 +16,28 @@ namespace Barotrauma
 
             float scale = Math.Min(drawArea.Width / (float)Bounds.Width, drawArea.Height / (float)Bounds.Height) * 0.9f;
 
-            foreach (Pair<MapEntityPrefab, Rectangle> entity in DisplayEntities)
+            foreach ((Identifier identifier, Rectangle rect) in DisplayEntities)
             {
-                if (entity.First is CoreEntityPrefab) { continue; }
-                Rectangle drawRect = entity.Second;
-                drawRect = new Rectangle(
-                    (int)(drawRect.X * scale) + drawArea.Center.X, (int)((drawRect.Y) * scale) - drawArea.Center.Y, 
-                    (int)(drawRect.Width * scale), (int)(drawRect.Height * scale));
-                entity.First.DrawPlacing(spriteBatch, drawRect, entity.First.Scale * scale);
+                var entityPrefab = MapEntityPrefab.FindByIdentifier(identifier);
+                if (entityPrefab is CoreEntityPrefab) { continue; }
+                var drawRect = new Rectangle(
+                    (int)(rect.X * scale) + drawArea.Center.X, (int)((rect.Y) * scale) - drawArea.Center.Y, 
+                    (int)(rect.Width * scale), (int)(rect.Height * scale));
+                entityPrefab.DrawPlacing(spriteBatch, drawRect, entityPrefab.Scale * scale);
             }
         }
-
 
         public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
         {
             base.DrawPlacing(spriteBatch, cam);
-            foreach (Pair<MapEntityPrefab, Rectangle> entity in DisplayEntities)
+            foreach ((Identifier identifier, Rectangle rect) in DisplayEntities)
             {
-                Rectangle drawRect = entity.Second;
+                var entityPrefab = MapEntityPrefab.Find(p => p.Identifier == identifier);
+                Rectangle drawRect = rect;
 
                 drawRect.Location += placePosition != Vector2.Zero ? placePosition.ToPoint() : Submarine.MouseToWorldGrid(cam, Submarine.MainSub).ToPoint();
                 
-                entity.First.DrawPlacing(spriteBatch, drawRect, entity.First.Scale);
+                entityPrefab.DrawPlacing(spriteBatch, drawRect, entityPrefab.Scale);
             }
         }
 

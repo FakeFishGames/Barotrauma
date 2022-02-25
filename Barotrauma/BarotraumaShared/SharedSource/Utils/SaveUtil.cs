@@ -150,7 +150,7 @@ namespace Barotrauma
             if (ownedSubsElement != null)
             {
                 ownedSubmarines = new List<SubmarineInfo>();
-                foreach (XElement subElement in ownedSubsElement.Elements())
+                foreach (var subElement in ownedSubsElement.Elements())
                 {
                     string subName = subElement.GetAttributeString("name", "");
                     string ownedSubPath = Path.Combine(TempPath, subName + ".sub");
@@ -271,7 +271,7 @@ namespace Barotrauma
             string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
             if (fileName == "Save_Default")
             {
-                fileName = TextManager.Get("SaveFile.DefaultName", true);
+                fileName = TextManager.Get("SaveFile.DefaultName").Value;
                 if (fileName.Length == 0) fileName = "Save";
             }
 
@@ -381,7 +381,7 @@ namespace Barotrauma
                 char c = BitConverter.ToChar(bytes, 0);
                 sb.Append(c);
             }
-            string sFileName = sb.ToString();
+            string sFileName = sb.ToString().Replace('\\', '/');
 
             fileName = sFileName;
             progress?.Invoke(sFileName);

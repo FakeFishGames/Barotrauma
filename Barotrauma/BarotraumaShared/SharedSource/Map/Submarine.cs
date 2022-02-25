@@ -291,7 +291,7 @@ namespace Barotrauma
         public int CalculateBasePrice()
         {
             int minPrice = 1000;
-            float volume = Hull.hullList.Where(h => h.Submarine == this).Sum(h => h.Volume);
+            float volume = Hull.HullList.Where(h => h.Submarine == this).Sum(h => h.Volume);
             float itemValue = Item.ItemList.Where(it => it.Submarine == this).Sum(it => it.Prefab.GetMinPrice() ?? 0);
             float price = volume / 500.0f + itemValue / 100.0f;
             System.Diagnostics.Debug.Assert(price >= 0);
@@ -300,7 +300,7 @@ namespace Barotrauma
 
         private float ballastFloraTimer;
         public bool ImmuneToBallastFlora { get; set; }
-        public void AttemptBallastFloraInfection(string identifier, float deltaTime, float probability)
+        public void AttemptBallastFloraInfection(Identifier identifier, float deltaTime, float probability)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (ImmuneToBallastFlora) { return; }
@@ -557,7 +557,7 @@ namespace Barotrauma
         public Rectangle CalculateDimensions(bool onlyHulls = true)
         {
             List<MapEntity> entities = onlyHulls ?
-                Hull.hullList.FindAll(h => h.Submarine == this).Cast<MapEntity>().ToList() :
+                Hull.HullList.FindAll(h => h.Submarine == this).Cast<MapEntity>().ToList() :
                 MapEntity.mapEntityList.FindAll(me => me.Submarine == this);
 
             //ignore items whose body is disabled (wires, items inside cabinets)
@@ -990,7 +990,7 @@ namespace Barotrauma
                 {
                     if (e.Submarine == this)
                     {
-                        Spawner.AddToRemoveQueue(e);
+                        Spawner.AddEntityToRemoveQueue(e);
                     }
                 }
 
@@ -1114,7 +1114,7 @@ namespace Barotrauma
             float waterVolume = 0.0f;
             float volume = 0.0f;
             float excessWater = 0.0f;
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in Hull.HullList)
             {
                 if (hull.Submarine != this) { continue; }
                 waterVolume += hull.WaterVolume;
@@ -1212,7 +1212,7 @@ namespace Barotrauma
         /// </summary>
         public bool IsConnectedTo(Submarine otherSub) => this == otherSub || GetConnectedSubs().Contains(otherSub);
 
-        public List<Hull> GetHulls(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Hull.hullList);
+        public List<Hull> GetHulls(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Hull.HullList);
         public List<Gap> GetGaps(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Gap.GapList);
         public List<Item> GetItems(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Item.ItemList);
         public List<WayPoint> GetWaypoints(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, WayPoint.WayPointList);
@@ -1285,7 +1285,7 @@ namespace Barotrauma
                 if (element.Name != "Structure") { continue; }
 
                 string name = element.GetAttributeString("name", "");
-                string identifier = element.GetAttributeString("identifier", "");
+                Identifier identifier = element.GetAttributeIdentifier("identifier", "");
                 StructurePrefab prefab = Structure.FindPrefab(name, identifier);
                 if (prefab == null || !prefab.Body) { continue; }
 
@@ -1348,7 +1348,7 @@ namespace Barotrauma
             }
 
             Vector2 center = Vector2.Zero;
-            var matchingHulls = Hull.hullList.FindAll(h => h.Submarine == this);
+            var matchingHulls = Hull.HullList.FindAll(h => h.Submarine == this);
 
             if (matchingHulls.Any())
             {
@@ -1538,7 +1538,16 @@ namespace Barotrauma
             Rectangle dimensions = VisibleBorders;
             element.Add(new XAttribute("dimensions", XMLExtensions.Vector2ToString(dimensions.Size.ToVector2())));
             var cargoContainers = GetCargoContainers();
-            element.Add(new XAttribute("cargocapacity", cargoContainers.Sum(c => c.container.Capacity)));
+            int cargoCapacity = cargoContainers.Sum(c => c.container.Capacity);
+            foreach (MapEntity me in MapEntity.mapEntityList)
+            {
+                if (me is LinkedSubmarine linkedSub && linkedSub.Submarine == this)
+                {
+                    cargoCapacity += linkedSub.CargoCapacity;
+                }
+            }
+
+            element.Add(new XAttribute("cargocapacity", cargoCapacity));
             element.Add(new XAttribute("recommendedcrewsizemin", Info.RecommendedCrewSizeMin));
             element.Add(new XAttribute("recommendedcrewsizemax", Info.RecommendedCrewSizeMax));
             element.Add(new XAttribute("recommendedcrewexperience", Info.RecommendedCrewExperience ?? ""));
@@ -1654,7 +1663,7 @@ namespace Barotrauma
             Unloading = true;
 
 #if CLIENT
-            RemoveAllRoundSounds();
+            RoundSound.RemoveAllRoundSounds();
             GameMain.LightManager?.ClearLights();
 #endif
 
@@ -1696,6 +1705,8 @@ namespace Barotrauma
 
             GameMain.World?.Clear();
             GameMain.World = null;
+
+            Powered.Grids.Clear();
 
             GC.Collect();
 

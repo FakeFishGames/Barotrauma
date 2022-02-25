@@ -13,7 +13,7 @@ using Directory = System.IO.Directory;
 
 namespace Barotrauma
 {
-    internal class EventEditorScreen : Screen
+    internal class EventEditorScreen : EditorScreen
     {
         private GUIFrame GuiFrame = null!;
 
@@ -68,7 +68,7 @@ namespace Barotrauma
             // === LOAD PREFAB === //
 
             GUILayoutGroup loadEventLayout = new GUILayoutGroup(RectTransform(1.0f, 0.125f, layoutGroup));
-            new GUITextBlock(RectTransform(1.0f, 0.5f, loadEventLayout), TextManager.Get("EventEditor.LoadEvent"), font: GUI.SubHeadingFont);
+            new GUITextBlock(RectTransform(1.0f, 0.5f, loadEventLayout), TextManager.Get("EventEditor.LoadEvent"), font: GUIStyle.SubHeadingFont);
 
             GUILayoutGroup loadDropdownLayout = new GUILayoutGroup(RectTransform(1.0f, 0.5f, loadEventLayout), isHorizontal: true, childAnchor: Anchor.CenterLeft);
             GUIDropDown loadDropdown = new GUIDropDown(RectTransform(0.8f, 1.0f, loadDropdownLayout), elementCount: 10);
@@ -77,7 +77,7 @@ namespace Barotrauma
             // === ADD ACTION === //
 
             GUILayoutGroup addActionLayout = new GUILayoutGroup(RectTransform(1.0f, 0.125f, layoutGroup));
-            new GUITextBlock(RectTransform(1.0f, 0.5f, addActionLayout), TextManager.Get("EventEditor.AddAction"), font: GUI.SubHeadingFont);
+            new GUITextBlock(RectTransform(1.0f, 0.5f, addActionLayout), TextManager.Get("EventEditor.AddAction"), font: GUIStyle.SubHeadingFont);
 
             GUILayoutGroup addActionDropdownLayout = new GUILayoutGroup(RectTransform(1.0f, 0.5f, addActionLayout), isHorizontal: true, childAnchor: Anchor.CenterLeft);
             GUIDropDown addActionDropdown = new GUIDropDown(RectTransform(0.8f, 1.0f, addActionDropdownLayout), elementCount: 10);
@@ -85,7 +85,7 @@ namespace Barotrauma
 
             // === ADD VALUE === //
             GUILayoutGroup addValueLayout = new GUILayoutGroup(RectTransform(1.0f, 0.125f, layoutGroup));
-            new GUITextBlock(RectTransform(1.0f, 0.5f, addValueLayout), TextManager.Get("EventEditor.AddValue"), font: GUI.SubHeadingFont);
+            new GUITextBlock(RectTransform(1.0f, 0.5f, addValueLayout), TextManager.Get("EventEditor.AddValue"), font: GUIStyle.SubHeadingFont);
 
             GUILayoutGroup addValueDropdownLayout = new GUILayoutGroup(RectTransform(1.0f, 0.5f, addValueLayout), isHorizontal: true, childAnchor: Anchor.CenterLeft);
             GUIDropDown addValueDropdown = new GUIDropDown(RectTransform(0.8f, 1.0f, addValueDropdownLayout), elementCount: 7);
@@ -93,15 +93,15 @@ namespace Barotrauma
             
             // === ADD SPECIAL === //
             GUILayoutGroup addSpecialLayout = new GUILayoutGroup(RectTransform(1.0f, 0.125f, layoutGroup));
-            new GUITextBlock(RectTransform(1.0f, 0.5f, addSpecialLayout), TextManager.Get("EventEditor.AddSpecial"), font: GUI.SubHeadingFont);
+            new GUITextBlock(RectTransform(1.0f, 0.5f, addSpecialLayout), TextManager.Get("EventEditor.AddSpecial"), font: GUIStyle.SubHeadingFont);
             GUILayoutGroup addSpecialDropdownLayout = new GUILayoutGroup(RectTransform(1.0f, 0.5f, addSpecialLayout), isHorizontal: true, childAnchor: Anchor.CenterLeft);
             GUIDropDown addSpecialDropdown = new GUIDropDown(RectTransform(0.8f, 1.0f, addSpecialDropdownLayout), elementCount: 1);
             GUIButton addSpecialButton = new GUIButton(RectTransform(0.2f, 1.0f, addSpecialDropdownLayout), TextManager.Get("EventEditor.Add"));
 
             // Add event prefabs with identifiers to the list
-            foreach (EventPrefab eventPrefab in EventSet.GetAllEventPrefabs().Where(prefab => !string.IsNullOrWhiteSpace(prefab.Identifier)).Distinct())
+            foreach (EventPrefab eventPrefab in EventSet.GetAllEventPrefabs().Where(prefab => !prefab.Identifier.IsEmpty).Distinct())
             {
-                loadDropdown.AddItem(eventPrefab.Identifier, eventPrefab);
+                loadDropdown.AddItem(eventPrefab.Identifier.Value!, eventPrefab);
             }
 
             // Add all types that inherit the EventAction class
@@ -183,7 +183,7 @@ namespace Barotrauma
                         {
                             if (!nameInput.Text.Contains(illegalChar)) { continue; }
 
-                            GUI.AddMessage(TextManager.GetWithVariable("SubNameIllegalCharsWarning", "[illegalchar]", illegalChar.ToString()), GUI.Style.Red);
+                            GUI.AddMessage(TextManager.GetWithVariable("SubNameIllegalCharsWarning", "[illegalchar]", illegalChar.ToString()), GUIStyle.Red);
                             return false;
                         }
 
@@ -195,7 +195,7 @@ namespace Barotrauma
                             ToolBox.OpenFileWithShell(path);
                             return true;
                         });
-                        GUI.AddMessage($"XML exported to {path}", GUI.Style.Green);
+                        GUI.AddMessage($"XML exported to {path}", GUIStyle.Green);
                         return true;
                     };
                 }
@@ -206,7 +206,7 @@ namespace Barotrauma
             }
             else
             {
-                GUI.AddMessage("Unable to export because the project contains errors", GUI.Style.Red);
+                GUI.AddMessage("Unable to export because the project contains errors", GUIStyle.Red);
             }
 
             return true;
@@ -219,15 +219,15 @@ namespace Barotrauma
                 nodeList.Clear();
                 markedNodes.Clear();
                 selectedNodes.Clear();
-                projectName = TextManager.Get("EventEditor.Unnamed");
+                projectName = TextManager.Get("EventEditor.Unnamed").Value;
                 return true;
             });
             return true;
         }
 
-        public static GUIMessageBox AskForConfirmation(string header, string body, Func<bool> onConfirm)
+        public static GUIMessageBox AskForConfirmation(LocalizedString header, LocalizedString body, Func<bool> onConfirm)
         {
-            string[] buttons = { TextManager.Get("Ok"), TextManager.Get("Cancel") };
+            LocalizedString[] buttons = { TextManager.Get("Ok"), TextManager.Get("Cancel") };
             GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons);
 
             // Cancel button
@@ -274,7 +274,7 @@ namespace Barotrauma
                 {
                     if (!nameInput.Text.Contains(illegalChar)) { continue; }
 
-                    GUI.AddMessage(TextManager.GetWithVariable("SubNameIllegalCharsWarning", "[illegalchar]", illegalChar.ToString()), GUI.Style.Red);
+                    GUI.AddMessage(TextManager.GetWithVariable("SubNameIllegalCharsWarning", "[illegalchar]", illegalChar.ToString()), GUIStyle.Red);
                     return false;
                 }
 
@@ -283,7 +283,7 @@ namespace Barotrauma
                 XElement save = SaveEvent(projectName);
                 string filePath = System.IO.Path.Combine(directory, $"{projectName}.sevproj");
                 File.WriteAllText(Path.Combine(directory, $"{projectName}.sevproj"), save.ToString());
-                GUI.AddMessage($"Project saved to {filePath}", GUI.Style.Green);
+                GUI.AddMessage($"Project saved to {filePath}", GUIStyle.Green);
 
                 AskForConfirmation(TextManager.Get("EventEditor.TestPromptHeader"), TextManager.Get("EventEditor.TestPromptBody"), CreateTestSetupMenu);
                 return true;
@@ -342,11 +342,11 @@ namespace Barotrauma
             Vector2 spawnPos = Cam.WorldViewCenter;
             spawnPos.Y = -spawnPos.Y;
     
-            ConstructorInfo? constructor = type.GetConstructor(new Type[0]);
+            ConstructorInfo? constructor = type.GetConstructor(Array.Empty<Type>());
             SpecialNode? newNode = null;
             if (constructor != null)
             { 
-                newNode = constructor.Invoke(new object[0]) as SpecialNode;
+                newNode = constructor.Invoke(Array.Empty<object>()) as SpecialNode;
             }
             if (newNode != null)
             {
@@ -358,10 +358,10 @@ namespace Barotrauma
             return false;
         }
 
-        private void CreateNodes(XElement element, ref bool hadNodes, EditorNode? parent = null, int ident = 0)
+        private void CreateNodes(ContentXElement element, ref bool hadNodes, EditorNode? parent = null, int ident = 0)
         {
             EditorNode? lastNode = null;
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 bool skip = true;
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -404,9 +404,9 @@ namespace Barotrauma
                         hadNodes = false;
                     }
 
-                    XElement? parentElement = subElement.Parent;
+                    var parentElement = subElement.Parent;
 
-                    foreach (XElement xElement in subElement.Elements())
+                    foreach (var xElement in subElement.Elements())
                     {
                         if (xElement.Name.ToString().ToLowerInvariant() == "option")
                         {
@@ -515,7 +515,7 @@ namespace Barotrauma
         public override void Select()
         {
             GUI.PreventPauseMenuToggle = false;
-            projectName = TextManager.Get("EventEditor.Unnamed");
+            projectName = TextManager.Get("EventEditor.Unnamed").Value;
             base.Select();
         }
 
@@ -627,14 +627,14 @@ namespace Barotrauma
         private void Load(XElement saveElement)
         {
             nodeList.Clear();
-            projectName = saveElement.GetAttributeString("name", TextManager.Get("EventEditor.Unnamed"));
+            projectName = saveElement.GetAttributeString("name", TextManager.Get("EventEditor.Unnamed").Value);
             foreach (XElement element in saveElement.Elements())
             {
                 switch (element.Name.ToString().ToLowerInvariant())
                 {
                     case "nodes":
                     {
-                        foreach (XElement subElement in element.Elements())
+                        foreach (var subElement in element.Elements())
                         {
                             EditorNode? node = EditorNode.Load(subElement);
                             if (node != null)
@@ -647,7 +647,7 @@ namespace Barotrauma
                     }
                     case "allconnections":
                     {
-                        foreach (XElement subElement in element.Elements())
+                        foreach (var subElement in element.Elements())
                         {
                             int id = subElement.GetAttributeInt("i", -1);
                             EditorNode? node = nodeList.Find(editorNode => editorNode.ID == id);
@@ -702,31 +702,31 @@ namespace Barotrauma
 
             var layout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), msgBox.Content.RectTransform));
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0.25f), layout.RectTransform), TextManager.Get("EventEditor.OutpostGenParams"), font: GUI.SubHeadingFont);
-            GUIDropDown paramInput = new GUIDropDown(new RectTransform(new Vector2(1, 0.25f), layout.RectTransform), string.Empty, OutpostGenerationParams.Params.Count);
-            foreach (OutpostGenerationParams param in OutpostGenerationParams.Params)
+            new GUITextBlock(new RectTransform(new Vector2(1, 0.25f), layout.RectTransform), TextManager.Get("EventEditor.OutpostGenParams"), font: GUIStyle.SubHeadingFont);
+            GUIDropDown paramInput = new GUIDropDown(new RectTransform(new Vector2(1, 0.25f), layout.RectTransform), string.Empty, OutpostGenerationParams.OutpostParams.Count());
+            foreach (OutpostGenerationParams param in OutpostGenerationParams.OutpostParams)
             {
-                paramInput.AddItem(param.Identifier, param);
+                paramInput.AddItem(param.Identifier.Value!, param);
             }
             paramInput.OnSelected = (_, param) =>
             {
                 lastTestParam = param as OutpostGenerationParams;
                 return true;
             };
-            paramInput.SelectItem(lastTestParam ?? OutpostGenerationParams.Params.FirstOrDefault());
+            paramInput.SelectItem(lastTestParam ?? OutpostGenerationParams.OutpostParams.FirstOrDefault());
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0.25f), layout.RectTransform), TextManager.Get("EventEditor.LocationType"), font: GUI.SubHeadingFont);
-            GUIDropDown typeInput = new GUIDropDown(new RectTransform(new Vector2(1, 0.25f), layout.RectTransform), string.Empty, LocationType.List.Count);
-            foreach (LocationType type in LocationType.List)
+            new GUITextBlock(new RectTransform(new Vector2(1, 0.25f), layout.RectTransform), TextManager.Get("EventEditor.LocationType"), font: GUIStyle.SubHeadingFont);
+            GUIDropDown typeInput = new GUIDropDown(new RectTransform(new Vector2(1, 0.25f), layout.RectTransform), string.Empty, LocationType.Prefabs.Count());
+            foreach (LocationType type in LocationType.Prefabs)
             {
-                typeInput.AddItem(type.Identifier, type);
+                typeInput.AddItem(type.Identifier.Value!, type);
             }
             typeInput.OnSelected = (_, type) =>
             {
                 lastTestType = type as LocationType;
                 return true;
             };
-            typeInput.SelectItem(lastTestType ?? LocationType.List.FirstOrDefault());
+            typeInput.SelectItem(lastTestType ?? LocationType.Prefabs.FirstOrDefault());
 
             // Cancel button
             msgBox.Buttons[0].OnClicked = (button, o) =>
@@ -783,8 +783,8 @@ namespace Barotrauma
             if (type.IsEnum)
             {
                 Array enums = Enum.GetValues(type);
-                GUIDropDown valueInput = new GUIDropDown(new RectTransform(Vector2.One, layout.RectTransform), newValue?.ToString(), enums.Length);
-                foreach (object? @enum in enums) { valueInput.AddItem(@enum?.ToString(), @enum); }
+                GUIDropDown valueInput = new GUIDropDown(new RectTransform(Vector2.One, layout.RectTransform), newValue?.ToString() ?? "", enums.Length);
+                foreach (object? @enum in enums) { valueInput.AddItem(@enum?.ToString() ?? "", @enum); }
 
                 valueInput.OnSelected += (component, o) =>
                 {
@@ -859,22 +859,22 @@ namespace Barotrauma
 
         private bool TestEvent(OutpostGenerationParams? param, LocationType? type)
         {
-            SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(info => info.HasTag(SubmarineTag.Shuttle));
+            SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(info => info.HasTag(SubmarineTag.Shuttle)) ?? throw new NullReferenceException("Could not test event: There are no shuttles available.");
 
             XElement? eventXml = ExportXML();
             EventPrefab? prefab;
             if (eventXml != null)
             { 
-                prefab = new EventPrefab(eventXml);
+                prefab = new EventPrefab(eventXml.FromPackage(null), null);
             }
             else
             {
-                GUI.AddMessage("Unable to open test enviroment because the event contains errors.", GUI.Style.Red);
+                GUI.AddMessage("Unable to open test enviroment because the event contains errors.", GUIStyle.Red);
                 return false;
             }
 
             GameSession gameSession = new GameSession(subInfo, "", GameModePreset.TestMode, CampaignSettings.Empty, null);
-            TestGameMode gameMode = (TestGameMode) gameSession.GameMode;
+            TestGameMode gameMode = ((TestGameMode?)gameSession.GameMode) ?? throw new InvalidCastException();
 
             gameMode.SpawnOutpost = true;
             gameMode.OutpostParams = param;
@@ -930,8 +930,8 @@ namespace Barotrauma
 
             if (!string.IsNullOrWhiteSpace(DrawnTooltip))
             {
-                string tooltip = ToolBox.WrapText(DrawnTooltip, 256.0f, GUI.SmallFont);
-                GUI.DrawString(spriteBatch, PlayerInput.MousePosition + new Vector2(32, 32), tooltip, Color.White, Color.Black * 0.8f, 4, GUI.SmallFont);
+                string tooltip = ToolBox.WrapText(DrawnTooltip, 256.0f, GUIStyle.SmallFont.Value);
+                GUI.DrawString(spriteBatch, PlayerInput.MousePosition + new Vector2(32, 32), tooltip, Color.White, Color.Black * 0.8f, 4, GUIStyle.SmallFont);
             }
 
             spriteBatch.End();

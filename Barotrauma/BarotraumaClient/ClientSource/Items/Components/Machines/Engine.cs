@@ -32,7 +32,7 @@ namespace Barotrauma.Items.Components
             get { return Vector2.Zero; }
         }
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.85f, 0.65f), GuiFrame.RectTransform, Anchor.Center)
             {
@@ -43,27 +43,27 @@ namespace Barotrauma.Items.Components
             powerIndicator = new GUITickBox(new RectTransform(new Vector2(0.45f, 0.8f), lightsArea.RectTransform, Anchor.Center, Pivot.CenterRight)
             {
                 RelativeOffset = new Vector2(-0.05f, 0)
-            }, TextManager.Get("EnginePowered"), font: GUI.SubHeadingFont, style: "IndicatorLightGreen")
+            }, TextManager.Get("EnginePowered"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightGreen")
             {
                 CanBeFocused = false
             };
             autoControlIndicator = new GUITickBox(new RectTransform(new Vector2(0.45f, 0.8f), lightsArea.RectTransform, Anchor.Center, Pivot.CenterLeft)
             {
                 RelativeOffset = new Vector2(0.05f, 0)
-            }, TextManager.Get("PumpAutoControl", fallBackTag: "ReactorAutoControl"), font: GUI.SubHeadingFont, style: "IndicatorLightYellow")
+            }, TextManager.Get("PumpAutoControl", "ReactorAutoControl"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightYellow")
             {
                 Selected = false,
                 Enabled = false,
                 ToolTip = TextManager.Get("AutoControlTip")
             };
             powerIndicator.TextBlock.Wrap = autoControlIndicator.TextBlock.Wrap = true;
-            powerIndicator.TextBlock.OverrideTextColor(GUI.Style.TextColor);
-            autoControlIndicator.TextBlock.OverrideTextColor(GUI.Style.TextColor);
+            powerIndicator.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal);
+            autoControlIndicator.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal);
             GUITextBlock.AutoScaleAndNormalize(powerIndicator.TextBlock, autoControlIndicator.TextBlock);
 
             var sliderArea = new GUIFrame(new RectTransform(new Vector2(1, 0.6f), paddedFrame.RectTransform, Anchor.BottomLeft), style: null);
-            string powerLabel = TextManager.Get("EngineForce");
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), sliderArea.RectTransform, Anchor.TopCenter), "", textColor: GUI.Style.TextColor, font: GUI.SubHeadingFont, textAlignment: Alignment.Center)
+            LocalizedString powerLabel = TextManager.Get("EngineForce");
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), sliderArea.RectTransform, Anchor.TopCenter), "", textColor: GUIStyle.TextColorNormal, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center)
             {
                 AutoScaleHorizontal = true,
                 TextGetter = () => { return TextManager.AddPunctuation(':', powerLabel, (int)(targetForce) + " %"); }
@@ -90,12 +90,12 @@ namespace Barotrauma.Items.Components
 
             var textsArea = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), sliderArea.RectTransform, Anchor.BottomCenter), style: null);
             var backwardsLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), textsArea.RectTransform, Anchor.CenterLeft), TextManager.Get("EngineBackwards"),
-                textColor: GUI.Style.TextColor, font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft);
+                textColor: GUIStyle.TextColorNormal, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
             var forwardsLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), textsArea.RectTransform, Anchor.CenterRight), TextManager.Get("EngineForwards"),
-                textColor: GUI.Style.TextColor, font: GUI.SubHeadingFont, textAlignment: Alignment.CenterRight);
+                textColor: GUIStyle.TextColorNormal, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterRight);
             GUITextBlock.AutoScaleAndNormalize(backwardsLabel, forwardsLabel);
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -152,7 +152,7 @@ namespace Barotrauma.Items.Components
                 Vector2 drawPos = item.DrawPosition;
                 drawPos += PropellerPos * item.Scale;
                 drawPos.Y = -drawPos.Y;
-                spriteBatch.DrawCircle(drawPos, propellerDamage.DamageRange * item.Scale, 16, GUI.Style.Red, thickness: 2);
+                spriteBatch.DrawCircle(drawPos, propellerDamage.DamageRange * item.Scale, 16, GUIStyle.Red, thickness: 2);
             }
         }
 

@@ -78,7 +78,7 @@ namespace Barotrauma
             base.Deselect();
 
 #if CLIENT
-            GameMain.Config.SaveNewPlayerConfig();
+            GameSettings.SaveCurrentConfig();
             GameMain.SoundManager.SetCategoryMuffle("default", false);
             GUI.ClearMessages();
 #endif
@@ -116,37 +116,6 @@ namespace Barotrauma
                     }
                 }
             }
-            
-#if LINUX
-            // disgusting
-            if (PlayerInput.KeyDown(Keys.RightShift) && Character.Controlled is { CharacterHealth: { } health } && PlayerInput.MouseSpeed != Vector2.Zero)
-            {
-                AfflictionPrefab radiationPrefab = AfflictionPrefab.RadiationSickness;
-                float afflictionAmount = (PlayerInput.MousePosition.X / GameMain.GraphicsWidth) * radiationPrefab.MaxStrength;
-                Affliction affliction = health.GetAffliction(radiationPrefab.Identifier, true);
-
-                if (affliction == null)
-                {
-                    health.ApplyAffliction(null, new Affliction(radiationPrefab, Math.Abs(afflictionAmount)));
-                }
-                else
-                {
-                    float diff = affliction.Strength - afflictionAmount;
-
-                    if (!MathUtils.NearlyEqual(diff, 0))
-                    {
-                        if (diff > 0)
-                        {
-                            health.ReduceAffliction(null, radiationPrefab.Identifier, Math.Abs(diff));
-                        }
-                        else if (diff < 0)
-                        {
-                            health.ApplyAffliction(null, new Affliction(radiationPrefab, Math.Abs(diff)));
-                        }
-                    }
-                }
-            }
-#endif
 #endif
 
 #if CLIENT

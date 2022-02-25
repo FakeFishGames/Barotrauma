@@ -24,7 +24,7 @@ namespace Barotrauma.Items.Components
         public readonly RoundSound RoundSound;
         public readonly ActionType Type;
 
-        public string VolumeProperty;
+        public Identifier VolumeProperty;
 
         public float VolumeMultiplier
         {
@@ -145,7 +145,7 @@ namespace Barotrauma.Items.Components
 
         public GUIFrame GuiFrame { get; set; }
 
-        [Serialize(false, false)]
+        [Serialize(false, IsPropertySaveable.No)]
         public bool AllowUIOverlap
         {
             get;
@@ -153,21 +153,21 @@ namespace Barotrauma.Items.Components
         }
 
         private ItemComponent linkToUIComponent;
-        [Serialize("", false)]
+        [Serialize("", IsPropertySaveable.No)]
         public string LinkUIToComponent
         {
             get;
             set;
         }
 
-        [Serialize(0, false)]
+        [Serialize(0, IsPropertySaveable.No)]
         public int HudPriority
         {
             get;
             private set;
         }
 
-        [Serialize(0, false)]
+        [Serialize(0, IsPropertySaveable.No)]
         public int HudLayer
         {
             get;
@@ -457,14 +457,14 @@ namespace Barotrauma.Items.Components
         {
         }
 
-        private bool LoadElemProjSpecific(XElement subElement)
+        private bool LoadElemProjSpecific(ContentXElement subElement)
         {
             switch (subElement.Name.ToString().ToLowerInvariant())
             {
                 case "guiframe":
                     if (subElement.Attribute("rect") != null)
                     {
-                        DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - GUIFrame defined as rect, use RectTransform instead.");
+                        DebugConsole.ThrowError($"Error in item config \"{item.ConfigFilePath}\" - GUIFrame defined as rect, use RectTransform instead.");
                         break;
                     }
                     GuiFrameSource = subElement;
@@ -475,19 +475,16 @@ namespace Barotrauma.Items.Components
                     break;
                 case "itemsound":
                 case "sound":
-                    string filePath = subElement.GetAttributeString("file", "");
+                    //TODO: this validation stuff should probably go somewhere else
+                    string filePath = subElement.GetAttributeStringUnrestricted("file", "");
 
-                    if (filePath == "") filePath = subElement.GetAttributeString("sound", "");
+                    if (filePath.IsNullOrEmpty()) { filePath = subElement.GetAttributeStringUnrestricted("sound", ""); }
 
-                    if (filePath == "")
+                    if (filePath.IsNullOrEmpty())
                     {
-                        DebugConsole.ThrowError("Error when instantiating item \"" + item.Name + "\" - sound with no file path set");
+                        DebugConsole.ThrowError(
+                            $"Error when instantiating item \"{item.Name}\" - sound with no file path set");
                         break;
-                    }
-
-                    if (!filePath.Contains("/") && !filePath.Contains("\\") && !filePath.Contains(Path.DirectorySeparatorChar))
-                    {
-                        filePath = Path.Combine(Path.GetDirectoryName(item.Prefab.FilePath), filePath);
                     }
 
                     ActionType type;
@@ -501,11 +498,11 @@ namespace Barotrauma.Items.Components
                         break;
                     }
                     
-                    RoundSound sound = Submarine.LoadRoundSound(subElement);
+                    RoundSound sound = RoundSound.Load(subElement);
                     if (sound == null) { break; }
                     ItemSound itemSound = new ItemSound(sound, type, subElement.GetAttributeBool("loop", false))
                     {
-                        VolumeProperty = subElement.GetAttributeString("volumeproperty", "").ToLowerInvariant()
+                        VolumeProperty = subElement.GetAttributeIdentifier("volumeproperty", "")
                     };
 
                     if (soundSelectionModes == null) soundSelectionModes = new Dictionary<ActionType, SoundSelectionMode>();
@@ -621,6 +618,7 @@ namespace Barotrauma.Items.Components
             }
             OnResolutionChanged();
         }
-        public virtual void AddTooltipInfo(ref string name, ref string description) { }
+
+        public virtual void AddTooltipInfo(ref LocalizedString name, ref LocalizedString description) { }
     }
 }

@@ -37,7 +37,8 @@ namespace Barotrauma
                     targetPos = attackWorldPos;
                 }
                 targetPos.Y = -targetPos.Y;
-                GUI.DrawLine(spriteBatch, pos, targetPos, GUI.Style.Red * 0.5f, 0, 4);
+
+                GUI.DrawLine(spriteBatch, pos, targetPos, GUIStyle.Red * 0.5f, 0, 4);
                 if (wallTarget != null)
                 {
                     Vector2 wallTargetPos = wallTarget.Position;
@@ -46,19 +47,19 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, wallTargetPos - new Vector2(10.0f, 10.0f), new Vector2(20.0f, 20.0f), Color.Orange, false);
                     GUI.DrawLine(spriteBatch, pos, wallTargetPos, Color.Orange * 0.5f, 0, 5);
                 }
-                GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 60.0f, $"{SelectedAiTarget.Entity} ({GetTargetMemory(SelectedAiTarget, false)?.Priority.FormatZeroDecimal()})", GUI.Style.Red, Color.Black);
-                GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 40.0f, $"({targetValue.FormatZeroDecimal()})", GUI.Style.Red, Color.Black);
+                GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 60.0f, $"{SelectedAiTarget.Entity} ({GetTargetMemory(SelectedAiTarget, false)?.Priority.FormatZeroDecimal()})", GUIStyle.Red, Color.Black);
+                GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 40.0f, $"({targetValue.FormatZeroDecimal()})", GUIStyle.Red, Color.Black);
             }
 
-            /*GUI.Font.DrawString(spriteBatch, targetValue.ToString(), pos - Vector2.UnitY * 80.0f, GUI.Style.Red);
-            GUI.Font.DrawString(spriteBatch, "updatetargets: " + MathUtils.Round(updateTargetsTimer, 0.1f), pos - Vector2.UnitY * 100.0f, GUI.Style.Red);
-            GUI.Font.DrawString(spriteBatch, "cooldown: " + MathUtils.Round(coolDownTimer, 0.1f), pos - Vector2.UnitY * 120.0f, GUI.Style.Red);*/
+            /*GUIStyle.Font.DrawString(spriteBatch, targetValue.ToString(), pos - Vector2.UnitY * 80.0f, GUIStyle.Red);
+            GUIStyle.Font.DrawString(spriteBatch, "updatetargets: " + MathUtils.Round(updateTargetsTimer, 0.1f), pos - Vector2.UnitY * 100.0f, GUIStyle.Red);
+            GUIStyle.Font.DrawString(spriteBatch, "cooldown: " + MathUtils.Round(coolDownTimer, 0.1f), pos - Vector2.UnitY * 120.0f, GUIStyle.Red);*/
 
             Color stateColor = Color.White;
             switch (State)
             {
                 case AIState.Attack:
-                    stateColor = IsCoolDownRunning ? Color.Orange : GUI.Style.Red;
+                    stateColor = IsCoolDownRunning ? Color.Orange : GUIStyle.Red;
                     break;
                 case AIState.Escape:
                     stateColor = Color.LightBlue;
@@ -78,13 +79,13 @@ namespace Barotrauma
                 {
                     GUI.DrawLine(spriteBatch,
                         ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorA.X, -attachJoint.WorldAnchorA.Y)),
-                        ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorB.X, -attachJoint.WorldAnchorB.Y)), GUI.Style.Green, 0, 4);
+                        ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorB.X, -attachJoint.WorldAnchorB.Y)), GUIStyle.Green, 0, 4);
                 }
 
                 if (LatchOntoAI.AttachPos.HasValue)
                 {
                     GUI.DrawLine(spriteBatch, pos,
-                        ConvertUnits.ToDisplayUnits(new Vector2(LatchOntoAI.AttachPos.Value.X, -LatchOntoAI.AttachPos.Value.Y)), GUI.Style.Green, 0, 3);
+                        ConvertUnits.ToDisplayUnits(new Vector2(LatchOntoAI.AttachPos.Value.X, -LatchOntoAI.AttachPos.Value.Y)), GUIStyle.Green, 0, 3);
                 }
             }
 
@@ -108,12 +109,12 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch,
                             new Vector2(currentNode.DrawPosition.X, -currentNode.DrawPosition.Y),
                             new Vector2(previousNode.DrawPosition.X, -previousNode.DrawPosition.Y),
-                            GUI.Style.Red * 0.5f, 0, 3);
+                            GUIStyle.Red * 0.5f, 0, 3);
 
-                        GUI.SmallFont.DrawString(spriteBatch,
+                        GUIStyle.SmallFont.DrawString(spriteBatch,
                             currentNode.ID.ToString(),
                             new Vector2(currentNode.DrawPosition.X - 10, -currentNode.DrawPosition.Y - 30),
-                            GUI.Style.Red);
+                            GUIStyle.Red);
                     }
                 }
             }
@@ -124,7 +125,7 @@ namespace Barotrauma
                     Vector2 hitPos = ConvertUnits.ToDisplayUnits(steeringManager.AvoidRayCastHitPosition);
                     hitPos.Y = -hitPos.Y;
 
-                    GUI.DrawLine(spriteBatch, hitPos, hitPos + new Vector2(steeringManager.AvoidDir.X, -steeringManager.AvoidDir.Y) * 100, GUI.Style.Red, width: 5);
+                    GUI.DrawLine(spriteBatch, hitPos, hitPos + new Vector2(steeringManager.AvoidDir.X, -steeringManager.AvoidDir.Y) * 100, GUIStyle.Red, width: 5);
                     //GUI.DrawLine(spriteBatch, pos, ConvertUnits.ToDisplayUnits(steeringManager.AvoidLookAheadPos.X, -steeringManager.AvoidLookAheadPos.Y), Color.Orange, width: 4);
                 }
             }

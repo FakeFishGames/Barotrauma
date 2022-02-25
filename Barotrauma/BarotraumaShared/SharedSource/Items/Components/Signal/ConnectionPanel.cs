@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using System;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,7 +40,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(false, true, description: "Locked connection panels cannot be rewired in-game.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Locked connection panels cannot be rewired in-game.", alwaysUseInstanceValues: true)]
         public bool Locked
         {
             get;
@@ -63,12 +64,12 @@ namespace Barotrauma.Items.Components
             get { return user; }
         }
 
-        public ConnectionPanel(Item item, XElement element)
+        public ConnectionPanel(Item item, ContentXElement element)
             : base(item, element)
         {
             Connections = new List<Connection>();
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString())
                 {
@@ -264,13 +265,13 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void Load(XElement element, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement element, bool usePrefabValues, IdRemap idRemap)
         {
             base.Load(element, usePrefabValues, idRemap);
 
             List<Connection> loadedConnections = new List<Connection>();
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString())
                 {
@@ -306,7 +307,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            disconnectedWireIds = element.GetAttributeUshortArray("disconnectedwires", new ushort[0]).ToList();
+            disconnectedWireIds = element.GetAttributeUshortArray("disconnectedwires", Array.Empty<ushort>()).ToList();
             for (int i = 0; i < disconnectedWireIds.Count; i++)
             {
                 disconnectedWireIds[i] = idRemap.GetOffsetId(disconnectedWireIds[i]);

@@ -3,6 +3,7 @@ using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
@@ -37,36 +38,33 @@ namespace Barotrauma
 
         protected bool IsClient => GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
 
-        public readonly List<string> Headers;
-        public readonly List<string> Messages;
-        
-        public string Name
-        {
-            get { return Prefab.Name; }
-        }
+        public readonly ImmutableArray<LocalizedString> Headers;
+        public readonly ImmutableArray<LocalizedString> Messages;
 
-        private readonly string successMessage;
-        public virtual string SuccessMessage
+        public LocalizedString Name => Prefab.Name;
+
+        private readonly LocalizedString successMessage;
+        public virtual LocalizedString SuccessMessage
         {
             get { return successMessage; }
             //private set { successMessage = value; }
         }
 
-        private readonly string failureMessage;
-        public virtual string FailureMessage
+        private readonly LocalizedString failureMessage;
+        public virtual LocalizedString FailureMessage
         {
             get { return failureMessage; }
             //private set { failureMessage = value; }
         }
 
-        protected string description;
-        public virtual string Description
+        protected LocalizedString description;
+        public virtual LocalizedString Description
         {
             get { return description; }
             //private set { description = value; }
         }
 
-        protected string descriptionWithoutReward;
+        protected LocalizedString descriptionWithoutReward;
 
         public virtual bool AllowUndocking
         {
@@ -81,7 +79,7 @@ namespace Barotrauma
             }
         }
 
-        public Dictionary<string, float> ReputationRewards
+        public Dictionary<Identifier, float> ReputationRewards
         {
             get { return Prefab.ReputationRewards; }
         }
@@ -116,15 +114,10 @@ namespace Barotrauma
         {
             get { return Enumerable.Empty<Vector2>(); }
         }
-        
-        public virtual string SonarLabel
-        {
-            get { return Prefab.SonarLabel; }
-        }
-        public string SonarIconIdentifier
-        {
-            get { return Prefab.SonarIconIdentifier; }
-        }
+
+        public virtual LocalizedString SonarLabel => Prefab.SonarLabel;
+
+        public Identifier SonarIconIdentifier => Prefab.SonarIconIdentifier;
 
         public readonly Location[] Locations;
 
@@ -155,11 +148,11 @@ namespace Barotrauma
 
             Prefab = prefab;
 
-            description = prefab.Description;
-            successMessage = prefab.SuccessMessage;
-            failureMessage = prefab.FailureMessage;
-            Headers = new List<string>(prefab.Headers);
-            Messages = new List<string>(prefab.Messages);
+            description = prefab.Description.Value;
+            successMessage = prefab.SuccessMessage.Value;
+            failureMessage = prefab.FailureMessage.Value;
+            Headers = prefab.Headers;
+            var messages = prefab.Messages.ToArray();
 
             Locations = locations;
 
@@ -169,9 +162,9 @@ namespace Barotrauma
                 if (description != null) { description = description.Replace("[location" + (n + 1) + "]", locationName); }
                 if (successMessage != null) { successMessage = successMessage.Replace("[location" + (n + 1) + "]", locationName); }
                 if (failureMessage != null) { failureMessage = failureMessage.Replace("[location" + (n + 1) + "]", locationName); }
-                for (int m = 0; m < Messages.Count; m++)
+                for (int m = 0; m < messages.Length; m++)
                 {
-                    Messages[m] = Messages[m].Replace("[location" + (n + 1) + "]", locationName);
+                    messages[m] = messages[m].Replace("[location" + (n + 1) + "]", locationName);
                 }
             }
             string rewardText = $"‖color:gui.orange‖{string.Format(CultureInfo.InvariantCulture, "{0:N0}", GetReward(sub))}‖end‖";
@@ -182,10 +175,12 @@ namespace Barotrauma
             }
             if (successMessage != null) { successMessage = successMessage.Replace("[reward]", rewardText); }
             if (failureMessage != null) { failureMessage = failureMessage.Replace("[reward]", rewardText); }
-            for (int m = 0; m < Messages.Count; m++)
+            for (int m = 0; m < messages.Length; m++)
             {
-                Messages[m] = Messages[m].Replace("[reward]", rewardText);
+                messages[m] = messages[m].Replace("[reward]", rewardText);
             }
+
+            Messages = messages.ToImmutableArray();
         }
 
         public virtual void SetLevel(LevelData level) { }
@@ -204,7 +199,7 @@ namespace Barotrauma
             }
             else
             {
-                allowedMissions.AddRange(MissionPrefab.List.Where(m => ((int)(missionType & m.Type)) != 0));
+                allowedMissions.AddRange(MissionPrefab.Prefabs.Where(m => ((int)(missionType & m.Type)) != 0));
             }
 
             allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);            
@@ -246,7 +241,7 @@ namespace Barotrauma
             delayedTriggerEvents.Clear();
             foreach (string categoryToShow in Prefab.UnhideEntitySubCategories)
             {
-                foreach (MapEntity entityToShow in MapEntity.mapEntityList.Where(me => me.prefab?.HasSubCategory(categoryToShow) ?? false))
+                foreach (MapEntity entityToShow in MapEntity.mapEntityList.Where(me => me.Prefab?.HasSubCategory(categoryToShow) ?? false))
                 {
                     entityToShow.HiddenInGame = false;
                 }
@@ -318,7 +313,7 @@ namespace Barotrauma
         private void TriggerEvent(MissionPrefab.TriggerEvent trigger)
         {
             if (trigger.CampaignOnly && GameMain.GameSession?.Campaign == null) { return; }
-            var eventPrefab = EventSet.GetAllEventPrefabs().Find(p => p.Identifier.Equals(trigger.EventIdentifier, StringComparison.OrdinalIgnoreCase));
+            var eventPrefab = EventSet.GetAllEventPrefabs().Find(p => p.Identifier == trigger.EventIdentifier);
             if (eventPrefab == null)
             {
                 DebugConsole.ThrowError($"Mission \"{Name}\" failed to trigger an event (couldn't find an event with the identifier \"{trigger.EventIdentifier}\").");
@@ -384,23 +379,23 @@ namespace Barotrauma
             int totalReward = (int)(reward * missionMoneyGainMultiplier.Value);
             campaign.Money += totalReward;
 
-            GameAnalyticsManager.AddMoneyGainedEvent(totalReward, GameAnalyticsManager.MoneySource.MissionReward, Prefab.Identifier);
+            GameAnalyticsManager.AddMoneyGainedEvent(totalReward, GameAnalyticsManager.MoneySource.MissionReward, Prefab.Identifier.Value);
 
             foreach (Character character in crewCharacters)
             {
                 character.Info.MissionsCompletedSinceDeath++;
             }
 
-            foreach (KeyValuePair<string, float> reputationReward in ReputationRewards)
+            foreach (KeyValuePair<Identifier, float> reputationReward in ReputationRewards)
             {
-                if (reputationReward.Key.Equals("location", StringComparison.OrdinalIgnoreCase))
+                if (reputationReward.Key == "location")
                 {
                     Locations[0].Reputation.AddReputation(reputationReward.Value);
                     Locations[1].Reputation.AddReputation(reputationReward.Value);
                 }
                 else
                 {
-                    Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier.Equals(reputationReward.Key, StringComparison.OrdinalIgnoreCase));
+                    Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == reputationReward.Key);
                     if (faction != null) { faction.Reputation.AddReputation(reputationReward.Value); }
                 }
             }
@@ -422,7 +417,7 @@ namespace Barotrauma
                 int srcIndex = -1;
                 for (int i = 0; i < Locations.Length; i++)
                 {
-                    if (Locations[i].Type.Identifier.Equals(change.CurrentType, StringComparison.OrdinalIgnoreCase))
+                    if (Locations[i].Type.Identifier == change.CurrentType)
                     {
                         srcIndex = i;
                         break;
@@ -437,7 +432,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    location.ChangeType(LocationType.List.Find(lt => lt.Identifier.Equals(change.ChangeToType, StringComparison.OrdinalIgnoreCase)));
+                    location.ChangeType(LocationType.Prefabs[change.ChangeToType]);
                     location.LocationTypeChangeCooldown = change.CooldownAfterChange;
                 }
             }
@@ -455,8 +450,8 @@ namespace Barotrauma
                 return null;
             }
 
-            string characterIdentifier = element.GetAttributeString("identifier", "");
-            string characterFrom = element.GetAttributeString("from", "");
+            Identifier characterIdentifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
+            Identifier characterFrom = element.GetAttributeIdentifier("from", Identifier.Empty);
             HumanPrefab humanPrefab = NPCSet.Get(characterFrom, characterIdentifier);
             if (humanPrefab == null)
             {
@@ -467,9 +462,9 @@ namespace Barotrauma
             return humanPrefab;
         }
 
-        protected Character CreateHuman(HumanPrefab humanPrefab, List<Character> characters, Dictionary<Character, List<Item>> characterItems, Submarine submarine, CharacterTeamType teamType, ISpatialEntity positionToStayIn = null, Rand.RandSync humanPrefabRandSync = Rand.RandSync.Server, bool giveTags = true)
+        protected Character CreateHuman(HumanPrefab humanPrefab, List<Character> characters, Dictionary<Character, List<Item>> characterItems, Submarine submarine, CharacterTeamType teamType, ISpatialEntity positionToStayIn = null, Rand.RandSync humanPrefabRandSync = Rand.RandSync.ServerAndClient, bool giveTags = true)
         {
-            var characterInfo = humanPrefab.GetCharacterInfo(Rand.RandSync.Server) ?? new CharacterInfo(CharacterPrefab.HumanSpeciesName, npcIdentifier: humanPrefab.Identifier, jobPrefab: humanPrefab.GetJobPrefab(humanPrefabRandSync), randSync: humanPrefabRandSync);
+            var characterInfo = humanPrefab.GetCharacterInfo(Rand.RandSync.ServerAndClient) ?? new CharacterInfo(CharacterPrefab.HumanSpeciesName, npcIdentifier: humanPrefab.Identifier, jobOrJobPrefab: humanPrefab.GetJobPrefab(humanPrefabRandSync), randSync: humanPrefabRandSync);
             characterInfo.TeamID = teamType;
 
             if (positionToStayIn == null) 
@@ -480,9 +475,9 @@ namespace Barotrauma
             }
 
             Character spawnedCharacter = Character.Create(characterInfo.SpeciesName, positionToStayIn.WorldPosition, ToolBox.RandomSeed(8), characterInfo, createNetworkEvent: false);
-            spawnedCharacter.Prefab = humanPrefab;
+            spawnedCharacter.HumanPrefab = humanPrefab;
             humanPrefab.InitializeCharacter(spawnedCharacter, positionToStayIn);
-            humanPrefab.GiveItems(spawnedCharacter, submarine, Rand.RandSync.Server, createNetworkEvents: false);
+            humanPrefab.GiveItems(spawnedCharacter, submarine, Rand.RandSync.ServerAndClient, createNetworkEvents: false);
 
             characters.Add(spawnedCharacter);
             characterItems.Add(spawnedCharacter, spawnedCharacter.Inventory.FindAllItems(recursive: true));
@@ -536,7 +531,7 @@ namespace Barotrauma
             cargoRoomSub = cargoRoom.Submarine;
 
             return new Vector2(
-                cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, Rand.RandSync.Server),
+                cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, Rand.RandSync.ServerAndClient),
                 cargoRoom.Rect.Y - cargoRoom.Rect.Height + itemPrefab.Size.Y / 2);
         }
     }

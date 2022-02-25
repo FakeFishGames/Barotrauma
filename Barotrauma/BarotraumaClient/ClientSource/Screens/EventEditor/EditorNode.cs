@@ -63,10 +63,10 @@ namespace Barotrauma
                     connectionElement.Add(new XAttribute("optiontext", connection.OptionText));
                 }
 
-                if (!string.IsNullOrWhiteSpace(connection.OverrideValue?.ToString()))
+                if (connection.OverrideValue is { } overrideValue && !string.IsNullOrWhiteSpace(connection.OverrideValue?.ToString()))
                 {
-                    connectionElement.Add(new XAttribute("overridevalue", connection.OverrideValue?.ToString()));
-                    connectionElement.Add(new XAttribute("valuetype", connection.OverrideValue?.GetType().ToString()));
+                    connectionElement.Add(new XAttribute("overridevalue", overrideValue.ToString() ?? string.Empty));
+                    connectionElement.Add(new XAttribute("valuetype", overrideValue.GetType().ToString()));
                 }
 
                 foreach (var nodeConnection in connection.ConnectedTo)
@@ -85,7 +85,7 @@ namespace Barotrauma
 
         public void LoadConnections(XElement element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 int id = subElement.GetAttributeInt("i", -1);
                 string? connectionType = subElement.GetAttributeString("type", null);
@@ -170,9 +170,9 @@ namespace Barotrauma
             {
                 if (connection.Type == NodeConnectionType.Value)
                 {
-                    if (connection.GetValue() != null)
+                    if (connection.GetValue() is { } connValue)
                     {
-                        newElement.Add(new XAttribute(connection.Attribute?.ToLowerInvariant(), connection.GetValue()));
+                        newElement.Add(new XAttribute(connection.Attribute.ToLowerInvariant(), connValue));
                     }
                 }
             }
@@ -269,8 +269,8 @@ namespace Barotrauma
                 }
             }
 
-            Vector2 headerSize = GUI.SubHeadingFont.MeasureString(Name);
-            GUI.SubHeadingFont.DrawString(spriteBatch, Name, HeaderRectangle.Location.ToVector2() + (HeaderRectangle.Size.ToVector2() / 2) - (headerSize / 2), fontColor);
+            Vector2 headerSize = GUIStyle.SubHeadingFont.MeasureString(Name);
+            GUIStyle.SubHeadingFont.DrawString(spriteBatch, Name, HeaderRectangle.Location.ToVector2() + (HeaderRectangle.Size.ToVector2() / 2) - (headerSize / 2), fontColor);
         }
 
         public virtual void AddOption()
@@ -445,13 +445,13 @@ namespace Barotrauma
                 nodeValue = value;
                 if (value is string str)
                 {
-                    WrappedText = TextManager.Get(str, true) is { } translated ? translated : str;
+                    WrappedText = TextManager.Get(str) is { Loaded:true } translated ? translated.Value : str;
                 }
                 else
                 {
                     WrappedText = value?.ToString() ?? string.Empty;
                 }
-                valueTextSize = GUI.SubHeadingFont.MeasureString(WrappedText);
+                valueTextSize = GUIStyle.SubHeadingFont.MeasureString(WrappedText);
             }
         }
 
@@ -545,7 +545,7 @@ namespace Barotrauma
                     width -= 16;
                 }
 
-                valueText = ToolBox.WrapText(valueText, width, GUI.SubHeadingFont);
+                valueText = ToolBox.WrapText(valueText, width, GUIStyle.SubHeadingFont.Value);
                 wrappedText = valueText;
             }
         }
@@ -553,7 +553,7 @@ namespace Barotrauma
         public override Rectangle GetDrawRectangle()
         {
             Rectangle drawRectangle = Rectangle;
-            Vector2 size = GUI.SubHeadingFont.MeasureString(WrappedText);
+            Vector2 size = GUIStyle.SubHeadingFont.MeasureString(WrappedText ?? "");
             drawRectangle.Height = (int) Math.Max(size.Y + 16, drawRectangle.Height);
             return drawRectangle;
         }
@@ -564,7 +564,7 @@ namespace Barotrauma
             Vector2 pos = GetDrawRectangle().Location.ToVector2() + (GetDrawRectangle().Size.ToVector2() / 2) - (valueTextSize / 2);
             Rectangle drawRect = Rectangle;
             drawRect.Inflate(-1, -1);
-            GUI.DrawString(spriteBatch, pos, WrappedText, NodeConnection.GetPropertyColor(Type), font: GUI.SubHeadingFont);
+            GUI.DrawString(spriteBatch, pos, WrappedText, NodeConnection.GetPropertyColor(Type), font: GUIStyle.SubHeadingFont);
         }
     }
 

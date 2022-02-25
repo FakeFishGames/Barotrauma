@@ -7,25 +7,25 @@ namespace Barotrauma
 {
     class CombatAction : EventAction
     {
-        [Serialize(AIObjectiveCombat.CombatMode.Offensive, true)]
+        [Serialize(AIObjectiveCombat.CombatMode.Offensive, IsPropertySaveable.Yes)]
         public AIObjectiveCombat.CombatMode CombatMode { get; set; }
 
-        [Serialize(false, true, description: "Did this NPC start the fight (as an aggressor)?")]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Did this NPC start the fight (as an aggressor)?")]
         public bool IsInstigator { get; set; }
 
-        [Serialize(AIObjectiveCombat.CombatMode.None, true)]
+        [Serialize(AIObjectiveCombat.CombatMode.None, IsPropertySaveable.Yes)]
         public AIObjectiveCombat.CombatMode GuardReaction { get; set; }
 
-        [Serialize(AIObjectiveCombat.CombatMode.None, true)]
+        [Serialize(AIObjectiveCombat.CombatMode.None, IsPropertySaveable.Yes)]
         public AIObjectiveCombat.CombatMode WitnessReaction { get; set; }
 
-        [Serialize("", true)]
-        public string NPCTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier NPCTag { get; set; }
 
-        [Serialize("", true)]
-        public string EnemyTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier EnemyTag { get; set; }
 
-        [Serialize(120.0f, true)]
+        [Serialize(120.0f, IsPropertySaveable.Yes)]
         public float CoolDown { get; set; }
 
         private bool isFinished = false;
@@ -33,7 +33,7 @@ namespace Barotrauma
 
         private IEnumerable<Character> affectedNpcs = null;
 
-        public CombatAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public CombatAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         public override void Update(float deltaTime)
         {

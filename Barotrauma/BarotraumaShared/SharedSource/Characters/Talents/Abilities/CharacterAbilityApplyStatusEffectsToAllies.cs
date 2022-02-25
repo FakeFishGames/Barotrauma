@@ -10,7 +10,7 @@ namespace Barotrauma.Abilities
         private readonly bool allowSelf;
         private readonly float maxDistance = float.MaxValue;
 
-        public CharacterAbilityApplyStatusEffectsToAllies(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityApplyStatusEffectsToAllies(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             allowSelf = abilityElement.GetAttributeBool("allowself", true);
             maxDistance = abilityElement.GetAttributeFloat("maxdistance", float.MaxValue);

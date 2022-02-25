@@ -55,7 +55,14 @@ namespace Barotrauma
             set
             {
                 optionText = value;
-                actualValue = WrappedValue = TextManager.Get(value, true) is { } translated ? translated : value;
+                if (value is string)
+                {
+                    actualValue = WrappedValue = TextManager.Get(value).Fallback(value).Value;
+                }
+                else
+                {
+                    actualValue = WrappedValue = value;
+                }
             }
         }
 
@@ -74,7 +81,7 @@ namespace Barotrauma
                 overrideValue = value;
                 if (value is string str)
                 {
-                    actualValue = WrappedValue = TextManager.Get(str, true) is { } translated ? translated : str;
+                    actualValue = WrappedValue = TextManager.Get(str).Fallback(str).Value;
                 }
                 else
                 {
@@ -96,13 +103,13 @@ namespace Barotrauma
                     wrappedValue = null;
                     return;
                 }
-                Vector2 textSize = GUI.SmallFont.MeasureString(valueText);
+                Vector2 textSize = GUIStyle.SmallFont.MeasureString(valueText);
                 bool wasWrapped = false;
                 while (textSize.X > 96)
                 {
                     wasWrapped = true;
                     valueText = $"{valueText}...".Substring(0, valueText.Length - 4);
-                    textSize = GUI.SmallFont.MeasureString($"{valueText}...");
+                    textSize = GUIStyle.SmallFont.MeasureString($"{valueText}...");
                 }
 
                 if (wasWrapped)
@@ -178,20 +185,20 @@ namespace Barotrauma
             Point pos = GetRenderPos(parentRectangle, yOffset);
             DrawRectangle = new Rectangle(pos, new Point(16, 16));
             GUI.DrawRectangle(spriteBatch, DrawRectangle, bgColor, isFilled: true);
-            GUI.DrawRectangle(spriteBatch, DrawRectangle, EndConversation ? GUI.Style.Red : outlineColor, isFilled: false, thickness: (int)Math.Max(1, 1.25f / camZoom));
+            GUI.DrawRectangle(spriteBatch, DrawRectangle, EndConversation ? GUIStyle.Red : outlineColor, isFilled: false, thickness: (int)Math.Max(1, 1.25f / camZoom));
 
             string label = string.IsNullOrWhiteSpace(Attribute) ? Type.Label : Attribute;
-            float xPos = parentRectangle.Center.X > pos.X ? 24 : -8 - GUI.SmallFont.MeasureString(label).X;
+            float xPos = parentRectangle.Center.X > pos.X ? 24 : -8 - GUIStyle.SmallFont.MeasureString(label).X;
 
             if (Type != NodeConnectionType.Out)
             {
-                Vector2 size = GUI.SmallFont.MeasureString(label);
+                Vector2 size = GUIStyle.SmallFont.MeasureString(label);
                 Vector2 positon = new Vector2(pos.X + xPos, pos.Y);
                 Rectangle bgRect = new Rectangle(positon.ToPoint(), size.ToPoint());
                 bgRect.Inflate(4, 4);
 
                 GUI.DrawRectangle(spriteBatch, bgRect, Color.Black * 0.6f, isFilled: true);
-                GUI.DrawString(spriteBatch, positon, label, GetPropertyColor(ValueType), font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, positon, label, GetPropertyColor(ValueType), font: GUIStyle.SmallFont);
 
                 Vector2 mousePos = Screen.Selected.Cam.ScreenToWorld(PlayerInput.MousePosition);
                 mousePos.Y = -mousePos.Y;
@@ -250,13 +257,13 @@ namespace Barotrauma
         {
             float camZoom = Screen.Selected is EventEditorScreen eventEditor ? eventEditor.Cam.Zoom : 1.0f;
             Rectangle valueRect = new Rectangle((int)pos.X, (int)pos.Y, 96, 20);
-            Vector2 textSize = GUI.SmallFont.MeasureString(text);
+            Vector2 textSize = GUIStyle.SmallFont.MeasureString(text);
             Vector2 position = valueRect.Location.ToVector2() + valueRect.Size.ToVector2() / 2 - textSize / 2;
             Rectangle drawRect = valueRect;
             drawRect.Inflate(4, 4);
             GUI.DrawRectangle(spriteBatch, drawRect, new Color(50, 50, 50), isFilled: true);
-            GUI.DrawRectangle(spriteBatch, drawRect, EndConversation ? GUI.Style.Red : outlineColor, isFilled: false, thickness: (int)Math.Max(1, 1.25f / camZoom));
-            GUI.DrawString(spriteBatch, position, text, GetPropertyColor(ValueType), font: GUI.SmallFont);
+            GUI.DrawRectangle(spriteBatch, drawRect, EndConversation ? GUIStyle.Red : outlineColor, isFilled: false, thickness: (int)Math.Max(1, 1.25f / camZoom));
+            GUI.DrawString(spriteBatch, position, text, GetPropertyColor(ValueType), font: GUIStyle.SmallFont);
             DrawRectangle = Rectangle.Union(DrawRectangle, drawRect);
 
             if (!string.IsNullOrWhiteSpace(fullText))
@@ -304,7 +311,7 @@ namespace Barotrauma
                 points[2].Y -= points[2].Y - points[1].Y;
             }
 
-            Color drawColor = Parent is ValueNode ? GetPropertyColor(ValueType) : GUI.Style.Red;
+            Color drawColor = Parent is ValueNode ? GetPropertyColor(ValueType) : GUIStyle.Red;
 
             if (overrideColor != null)
             {

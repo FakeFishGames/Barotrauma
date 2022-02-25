@@ -64,12 +64,12 @@ namespace Barotrauma
                 GameMain.Instance.ResolutionChanged -= CreateTopLeftButtons;
             };
             int buttonHeight = GUI.IntScale(40);
-            Vector2 buttonSpriteSize = GUI.Style.GetComponentStyle("CrewListToggleButton").GetDefaultSprite().size;
+            Vector2 buttonSpriteSize = GUIStyle.GetComponentStyle("CrewListToggleButton").GetDefaultSprite().size;
             int buttonWidth = (int)((buttonHeight / buttonSpriteSize.Y) * buttonSpriteSize.X);
             Point buttonSize = new Point(buttonWidth, buttonHeight);
             crewListButton = new GUIButton(new RectTransform(buttonSize, parent: topLeftButtonGroup.RectTransform), style: "CrewListToggleButton")
             {
-                ToolTip = TextManager.GetWithVariable("hudbutton.crewlist", "[key]", GameMain.Config.KeyBindText(InputType.CrewOrders)),
+                ToolTip = TextManager.GetWithVariable("hudbutton.crewlist", "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.CrewOrders)),
                 OnClicked = (GUIButton btn, object userdata) =>
                 {
                     if (CrewManager == null) { return false; }
@@ -79,7 +79,7 @@ namespace Barotrauma
             };
             commandButton = new GUIButton(new RectTransform(buttonSize, parent: topLeftButtonGroup.RectTransform), style: "CommandButton")
             {
-                ToolTip = TextManager.GetWithVariable("hudbutton.commandinterface", "[key]", GameMain.Config.KeyBindText(InputType.Command)),
+                ToolTip = TextManager.GetWithVariable("hudbutton.commandinterface", "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Command)),
                 OnClicked = (button, userData) =>
                 {
                     if (CrewManager == null) { return false; }
@@ -89,7 +89,7 @@ namespace Barotrauma
             };
             tabMenuButton = new GUIButton(new RectTransform(buttonSize, parent: topLeftButtonGroup.RectTransform), style: "TabMenuButton")
             {
-                ToolTip = TextManager.GetWithVariable("hudbutton.tabmenu", "[key]", GameMain.Config.KeyBindText(InputType.InfoTab)),
+                ToolTip = TextManager.GetWithVariable("hudbutton.tabmenu", "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.InfoTab)),
                 OnClicked = (button, userData) => ToggleTabMenu()
             };
 

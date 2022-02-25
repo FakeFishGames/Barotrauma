@@ -17,7 +17,7 @@ namespace Barotrauma.Particles
         public float AngleMinRad { get; private set; }
         public float AngleMaxRad { get; private set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 360, MinValueFloat = -360f), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 360, MinValueFloat = -360f), Serialize(0f, IsPropertySaveable.Yes)]
         public float AngleMin
         {
             get => angleMin;
@@ -28,7 +28,7 @@ namespace Barotrauma.Particles
             }
         }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 360, MinValueFloat = -360f), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 360, MinValueFloat = -360f), Serialize(0f, IsPropertySaveable.Yes)]
         public float AngleMax
         {
             get => angleMax;
@@ -39,77 +39,77 @@ namespace Barotrauma.Particles
             }
         }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, IsPropertySaveable.Yes)]
         public float DistanceMin { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, IsPropertySaveable.Yes)]
         public float DistanceMax { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, IsPropertySaveable.Yes)]
         public float VelocityMin { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, IsPropertySaveable.Yes)]
         public float VelocityMax { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(1f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(1f, IsPropertySaveable.Yes)]
         public float ScaleMin { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(1f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(1f, IsPropertySaveable.Yes)]
         public float ScaleMax { get; set; }
 
 
-        [Editable(), Serialize("1,1", true)]
+        [Editable(), Serialize("1,1", IsPropertySaveable.Yes)]
         public Vector2 ScaleMultiplier { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(0f, IsPropertySaveable.Yes)]
         public float EmitInterval { get; set; }
 
-        [Editable(ValueStep = 1, MinValueInt = 0, MaxValueInt = 1000), Serialize(0, true, description: "The number of particles to spawn per frame, or every x seconds if EmitInterval is set.")]
+        [Editable(ValueStep = 1, MinValueInt = 0, MaxValueInt = 1000), Serialize(0, IsPropertySaveable.Yes, description: "The number of particles to spawn per frame, or every x seconds if EmitInterval is set.")]
         public int ParticleAmount { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 1000.0f, MinValueFloat = 0.0f), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 1000.0f, MinValueFloat = 0.0f), Serialize(0f, IsPropertySaveable.Yes)]
         public float ParticlesPerSecond { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 10.0f, MinValueFloat = 0.0f), Serialize(0f, true, description: "If larger than 0, a particle is spawned every x pixels across the ray cast by a hitscan weapon.")]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 10.0f, MinValueFloat = 0.0f), Serialize(0f, IsPropertySaveable.Yes, description: "If larger than 0, a particle is spawned every x pixels across the ray cast by a hitscan weapon.")]
         public float EmitAcrossRayInterval { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(0f, true, description: "Delay before the emitter becomes active after being created.")]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(0f, IsPropertySaveable.Yes, description: "Delay before the emitter becomes active after being created.")]
         public float InitialDelay { get; set; }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes)]
         public bool HighQualityCollisionDetection { get; set; }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes)]
         public bool CopyEntityAngle { get; set; }
 
-        [Editable, Serialize("1,1,1,1", true)]
+        [Editable, Serialize("1,1,1,1", IsPropertySaveable.Yes)]
         public Color ColorMultiplier { get; set; }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes)]
         public bool DrawOnTop { get; set; }
 
-        [Serialize(0f, true)]
+        [Serialize(0f, IsPropertySaveable.Yes)]
         public float Angle
         {
             get => AngleMin;
             set => AngleMin = AngleMax = value;
         }
 
-        [Serialize(0f, true)]
+        [Serialize(0f, IsPropertySaveable.Yes)]
         public float Distance
         {
             get => DistanceMin;
             set => DistanceMin = DistanceMax = value;
         }
 
-        [Serialize(0f, true)]
+        [Serialize(0f, IsPropertySaveable.Yes)]
         public float Velocity
         {
             get => VelocityMin;
             set => VelocityMin = VelocityMax = value;
         }
 
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; }
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; }
 
         public ParticleEmitterProperties(XElement element)
         {
@@ -125,7 +125,7 @@ namespace Barotrauma.Particles
 
         public readonly ParticleEmitterPrefab Prefab;
 
-        public ParticleEmitter(XElement element)
+        public ParticleEmitter(ContentXElement element)
         {
             Prefab = new ParticleEmitterPrefab(element);
         }
@@ -253,40 +253,24 @@ namespace Barotrauma.Particles
 
     class ParticleEmitterPrefab
     {
-        private string particlePrefabName;
+        private readonly Identifier particlePrefabName;
 
-        private ParticlePrefab particlePrefab;
-        public ParticlePrefab ParticlePrefab
-        {
-            get
-            {
-                if (particlePrefab == null && particlePrefabName != null)
-                {
-                    particlePrefab = GameMain.ParticleManager?.FindPrefab(particlePrefabName);
-                    if (particlePrefab == null) 
-                    {
-                        DebugConsole.ThrowError($"Failed to find particle prefab \"{particlePrefabName}\".");
-                        particlePrefabName = null; 
-                    }
-                }
-                return particlePrefab;
-            }
-        }
+        public ParticlePrefab ParticlePrefab => ParticlePrefab.Prefabs[particlePrefabName];
 
         public readonly ParticleEmitterProperties Properties;
 
         public bool DrawOnTop => Properties.DrawOnTop || ParticlePrefab.DrawOnTop;
 
-        public ParticleEmitterPrefab(XElement element)
+        public ParticleEmitterPrefab(ContentXElement element)
         {
             Properties = new ParticleEmitterProperties(element);
-            particlePrefabName = element.GetAttributeString("particle", "");
+            particlePrefabName = element.GetAttributeIdentifier("particle", "");
         }
 
         public ParticleEmitterPrefab(ParticlePrefab prefab, ParticleEmitterProperties properties)
         {
             Properties = properties;
-            particlePrefab = prefab;
+            particlePrefabName = prefab.Identifier;
         }
     }
 }

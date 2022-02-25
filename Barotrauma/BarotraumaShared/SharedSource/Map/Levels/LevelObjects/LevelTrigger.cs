@@ -184,7 +184,7 @@ namespace Barotrauma
             set;
         }
 
-        public string InfectIdentifier
+        public Identifier InfectIdentifier
         {
             get;
             set;
@@ -199,7 +199,7 @@ namespace Barotrauma
         private bool triggeredOnce;
         private readonly bool triggerOnce;
                 
-        public LevelTrigger(XElement element, Vector2 position, float rotation, float scale = 1.0f, string parentDebugName = "")
+        public LevelTrigger(ContentXElement element, Vector2 position, float rotation, float scale = 1.0f, string parentDebugName = "")
         {
             TriggererPosition = new Dictionary<Entity, Vector2>();
 
@@ -223,7 +223,7 @@ namespace Barotrauma
 
             cameraShake = element.GetAttributeFloat("camerashake", 0.0f);
             
-            InfectIdentifier = element.GetAttributeString("infectidentifier", null);
+            InfectIdentifier = element.GetAttributeIdentifier("infectidentifier", Identifier.Empty);
             InfectionChance = element.GetAttributeFloat("infectionchance", 0.05f);
 
             triggerOnce = element.GetAttributeBool("triggeronce", false);
@@ -264,7 +264,7 @@ namespace Barotrauma
             
             TriggerOthersDistance = element.GetAttributeFloat("triggerothersdistance", 0.0f);
 
-            var tagsArray = element.GetAttributeStringArray("tags", new string[0]);
+            var tagsArray = element.GetAttributeStringArray("tags", Array.Empty<string>());
             foreach (string tag in tagsArray)
             {
                 tags.Add(tag.ToLowerInvariant());
@@ -272,7 +272,7 @@ namespace Barotrauma
 
             if (triggeredBy.HasFlag(TriggererType.OtherTrigger))
             {
-                var otherTagsArray = element.GetAttributeStringArray("allowedothertriggertags", new string[0]);
+                var otherTagsArray = element.GetAttributeStringArray("allowedothertriggertags", Array.Empty<string>());
                 foreach (string tag in otherTagsArray)
                 {
                     allowedOtherTriggerTags.Add(tag.ToLowerInvariant());
@@ -280,7 +280,7 @@ namespace Barotrauma
             }
 
             string debugName = string.IsNullOrEmpty(parentDebugName) ? "LevelTrigger" : $"LevelTrigger in {parentDebugName}";
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -317,12 +317,12 @@ namespace Barotrauma
                 -sa * unrotatedForce.X + ca * unrotatedForce.Y);      
         }
 
-        public static void LoadStatusEffect(List<StatusEffect> statusEffects, XElement element, string parentDebugName)
+        public static void LoadStatusEffect(List<StatusEffect> statusEffects, ContentXElement element, string parentDebugName)
         {
             statusEffects.Add(StatusEffect.Load(element, parentDebugName));
         }
 
-        public static void LoadAttack(XElement element, string parentDebugName, bool triggerOnce, List<Attack> attacks)
+        public static void LoadAttack(ContentXElement element, string parentDebugName, bool triggerOnce, List<Attack> attacks)
         {
             var attack = new Attack(element, parentDebugName);
             if (!triggerOnce)
@@ -574,7 +574,7 @@ namespace Barotrauma
                 else if (triggerer is Submarine submarine)
                 {
                     ApplyAttacks(attacks, worldPosition, deltaTime);
-                    if (!string.IsNullOrWhiteSpace(InfectIdentifier))
+                    if (!InfectIdentifier.IsEmpty)
                     {
                         submarine.AttemptBallastFloraInfection(InfectIdentifier, deltaTime, InfectionChance);
                     }

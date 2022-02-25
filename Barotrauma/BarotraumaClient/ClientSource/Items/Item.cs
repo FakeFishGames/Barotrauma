@@ -11,6 +11,7 @@ using Barotrauma.Extensions;
 using Barotrauma.MapCreatures.Behavior;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -33,7 +34,7 @@ namespace Barotrauma
             }
             else
             {
-                IconStyle = GUI.Style.GetComponentStyle($"CampaignInteractionIcon.{interactionType}");
+                IconStyle = GUIStyle.GetComponentStyle($"CampaignInteractionIcon.{interactionType}");
             }
         }
 
@@ -47,6 +48,8 @@ namespace Barotrauma
         private ContainedItemSprite activeContainedSprite;
 
         private readonly Dictionary<DecorativeSprite, DecorativeSprite.State> spriteAnimState = new Dictionary<DecorativeSprite, DecorativeSprite.State>();
+
+        public float DrawDepthOffset;
 
         private bool fakeBroken;
         public bool FakeBroken
@@ -90,7 +93,7 @@ namespace Barotrauma
                 if (itemInUseWarning == null)
                 {
                     itemInUseWarning = new GUITextBlock(new RectTransform(new Point(10), GUI.Canvas), "",
-                        textColor: GUI.Style.Orange, color: Color.Black,
+                        textColor: GUIStyle.Orange, color: Color.Black,
                         textAlignment: Alignment.Center, style: "OuterGlow");
                 }
                 return itemInUseWarning;
@@ -101,7 +104,7 @@ namespace Barotrauma
         {
             get
             {
-                if (GameMain.SubEditorScreen.IsSubcategoryHidden(prefab.Subcategory))
+                if (GameMain.SubEditorScreen.IsSubcategoryHidden(Prefab.Subcategory))
                 {
                     return false;
                 }
@@ -114,7 +117,7 @@ namespace Barotrauma
 
         public float GetDrawDepth()
         {
-            return GetDrawDepth(SpriteDepth, Sprite);
+            return GetDrawDepth(SpriteDepth + DrawDepthOffset, Sprite);
         }
 
         public Color GetSpriteColor()
@@ -147,7 +150,7 @@ namespace Barotrauma
 
         partial void SetActiveSpriteProjSpecific()
         {
-            activeSprite = prefab.sprite;
+            activeSprite = Prefab.Sprite;
             activeContainedSprite = null;
             Holdable holdable = GetComponent<Holdable>();
             if (holdable != null && holdable.Attached)
@@ -179,7 +182,7 @@ namespace Barotrauma
             }
 
             float displayCondition = FakeBroken ? 0.0f : ConditionPercentage;
-            for (int i = 0; i < Prefab.BrokenSprites.Count;i++)
+            for (int i = 0; i < Prefab.BrokenSprites.Length;i++)
             {
                 if (Prefab.BrokenSprites[i].FadeIn) { continue; }
                 float minCondition = i > 0 ? Prefab.BrokenSprites[i - i].MaxConditionPercentage : 0.0f;
@@ -193,14 +196,14 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
-            Prefab.sprite?.EnsureLazyLoaded();
+            Prefab.Sprite?.EnsureLazyLoaded();
             Prefab.InventoryIcon?.EnsureLazyLoaded();
             foreach (BrokenItemSprite brokenSprite in Prefab.BrokenSprites)
             {
                 brokenSprite.Sprite.EnsureLazyLoaded();
             }
 
-            foreach (var decorativeSprite in ((ItemPrefab)prefab).DecorativeSprites)
+            foreach (var decorativeSprite in Prefab.DecorativeSprites)
             {
                 decorativeSprite.Sprite.EnsureLazyLoaded();
                 spriteAnimState.Add(decorativeSprite, new DecorativeSprite.State());
@@ -269,7 +272,7 @@ namespace Barotrauma
                 else if (!ShowItems) { return; }
             }
 
-            Color color = IsIncludedInSelection && editing ? GUI.Style.Blue : IsHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen ? GUI.Style.Orange * Math.Max(GetSpriteColor().A / (float) byte.MaxValue, 0.1f) : GetSpriteColor();
+            Color color = IsIncludedInSelection && editing ? GUIStyle.Blue : IsHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen ? GUIStyle.Orange * Math.Max(GetSpriteColor().A / (float) byte.MaxValue, 0.1f) : GetSpriteColor();
 
             //if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
 
@@ -283,7 +286,7 @@ namespace Barotrauma
             Vector2 drawOffset = Vector2.Zero;
             if (displayCondition < MaxCondition)
             {
-                for (int i = 0; i < Prefab.BrokenSprites.Count; i++)
+                for (int i = 0; i < Prefab.BrokenSprites.Length; i++)
                 {
                     if (Prefab.BrokenSprites[i].FadeIn)
                     {
@@ -320,7 +323,7 @@ namespace Barotrauma
 
                 if (body == null)
                 {
-                    if (prefab.ResizeHorizontal || prefab.ResizeVertical)
+                    if (Prefab.ResizeHorizontal || Prefab.ResizeVertical)
                     {
                         Vector2 size = new Vector2(rect.Width, rect.Height);
                         if (color.A > 0)
@@ -380,9 +383,11 @@ namespace Barotrauma
                         {
                             if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
                             float rot = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
-                            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, flippedX && Prefab.CanSpriteFlipX ? rotationRad : -rotationRad) * Scale;
-                            if (flippedX && Prefab.CanSpriteFlipX) { offset.X = -offset.X; }
-                            if (flippedY && Prefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
+                            bool flipX = flippedX && Prefab.CanSpriteFlipX;
+                            bool flipY = flippedY && Prefab.CanSpriteFlipY;
+                            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, flipX ^ flipY ? rotationRad : -rotationRad) * Scale;
+                            if (flipX) { offset.X = -offset.X; }
+                            if (flipY) { offset.Y = -offset.Y; }
                             decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
                                 rotationRad + rot, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, activeSprite.effects,
                                 depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth), 0.999f));
@@ -518,7 +523,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch,
                         rectWorldPos,
                         new Vector2(transformedTrigger.Width, transformedTrigger.Height),
-                        GUI.Style.Green,
+                        GUIStyle.Green,
                         false,
                         0,
                         (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
@@ -529,8 +534,8 @@ namespace Barotrauma
 
             foreach (MapEntity e in linkedTo)
             {
-                bool isLinkAllowed = prefab.IsLinkAllowed(e.prefab);
-                Color lineColor = GUI.Style.Red * 0.5f;
+                bool isLinkAllowed = Prefab.IsLinkAllowed(e.Prefab);
+                Color lineColor = GUIStyle.Red * 0.5f;
                 if (isLinkAllowed)
                 {
                     lineColor = e is Item i && (DisplaySideBySideWhenLinked || i.DisplaySideBySideWhenLinked) ? Color.Purple * 0.5f : Color.LightGreen * 0.5f;
@@ -685,7 +690,7 @@ namespace Barotrauma
                 Spacing = (int)(25 * GUI.Scale)
             };
 
-            var itemEditor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUI.LargeFont) { UserData = this };
+            var itemEditor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUIStyle.LargeFont) { UserData = this };
             activeEditors.Add(itemEditor);
             itemEditor.Children.First().Color = Color.Black * 0.7f;
             if (!inGame)
@@ -694,21 +699,17 @@ namespace Barotrauma
                 var itemContainer = GetComponent<ItemContainer>();
                 if (itemContainer != null)
                 {
-                    var tagsField = itemEditor.Fields["Tags"].First().Parent;
+                    var tagsField = itemEditor.Fields["Tags".ToIdentifier()].First().Parent;
 
                     //find all the items that can be put inside the container and add their PreferredContainer identifiers/tags to the available tags
-                    HashSet<string> availableTags = new HashSet<string>();
-                    foreach (MapEntityPrefab me in MapEntityPrefab.List)
-                    {
-                        if (!(me is ItemPrefab ip)) { continue; }
-                        if (!itemContainer.CanBeContained(ip)) { continue; }
-                        foreach (string tag in ip.PreferredContainers.SelectMany(pc => pc.Primary)) { availableTags.Add(tag); }
-                        foreach (string tag in ip.PreferredContainers.SelectMany(pc => pc.Secondary)) { availableTags.Add(tag); }
-                    }
-                    //remove identifiers from the available container tags
-                    //(otherwise the list will include many irrelevant options,
-                    //e.g. "weldingtool" because a welding fuel tank can be placed inside the container, etc)
-                    availableTags.RemoveWhere(t => MapEntityPrefab.List.Any(me => me.Identifier == t));
+                    ImmutableHashSet<Identifier> availableTags = ItemPrefab.Prefabs
+                        .Where(ip => itemContainer.CanBeContained(ip))
+                        .SelectMany(ip => ip.PreferredContainers.SelectMany(pc => pc.Primary.Union(pc.Secondary)))
+                        //remove identifiers from the available container tags
+                        //(otherwise the list will include many irrelevant options,
+                        //e.g. "weldingtool" because a welding fuel tank can be placed inside the container, etc)
+                        .Where(t => !ItemPrefab.Prefabs.Any(ip => ip.Identifier == t))
+                        .ToImmutableHashSet();
                     new GUIButton(new RectTransform(new Vector2(0.1f, 1), tagsField.RectTransform, Anchor.TopRight), "...")
                     {
                         OnClicked = (bt, userData) => { CreateTagPicker(tagsField.GetChild<GUITextBox>(), availableTags); return true; }
@@ -717,14 +718,14 @@ namespace Barotrauma
 
                 if (Linkable)
                 {
-                    var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled), isFixedSize: true), TextManager.Get("HoldToLink"), font: GUI.SmallFont);
-                    var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled), isFixedSize: true), TextManager.Get("AllowedLinks"), font: GUI.SmallFont);
-                    string allowedItems = AllowedLinks.None() ?  TextManager.Get("None") :string.Join(", ", AllowedLinks);
+                    var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled), isFixedSize: true), TextManager.Get("HoldToLink"), font: GUIStyle.SmallFont);
+                    var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled), isFixedSize: true), TextManager.Get("AllowedLinks"), font: GUIStyle.SmallFont);
+                    LocalizedString allowedItems = AllowedLinks.None() ? TextManager.Get("None") : string.Join(", ", AllowedLinks);
                     itemsText.Text = TextManager.AddPunctuation(':', itemsText.Text, allowedItems);
                     itemEditor.AddCustomContent(linkText, 1);
                     itemEditor.AddCustomContent(itemsText, 2);
-                    linkText.TextColor = GUI.Style.Orange;
-                    itemsText.TextColor = GUI.Style.Orange;
+                    linkText.TextColor = GUIStyle.Orange;
+                    itemsText.TextColor = GUIStyle.Orange;
                 }
 
                 var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)), isHorizontal: true)
@@ -795,7 +796,7 @@ namespace Barotrauma
                 {
                     GUITickBox tickBox = new GUITickBox(new RectTransform(new Point(listBox.Content.Rect.Width, 10)), TextManager.Get("sp.structure.removeiflinkedoutpostdoorinuse.name"))
                     {
-                        Font = GUI.SmallFont,
+                        Font = GUIStyle.SmallFont,
                         Selected = RemoveIfLinkedOutpostDoorInUse,
                         ToolTip = TextManager.Get("sp.structure.removeiflinkedoutpostdoorinuse.description"),
                         OnSelected = (tickBox) =>
@@ -826,7 +827,7 @@ namespace Barotrauma
 
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), listBox.Content.RectTransform), style: "HorizontalLine");
 
-                var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame, titleFont: GUI.SubHeadingFont) { UserData = ic };
+                var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame, titleFont: GUIStyle.SubHeadingFont) { UserData = ic };
                 componentEditor.Children.First().Color = Color.Black * 0.7f;
                 activeEditors.Add(componentEditor);
 
@@ -851,7 +852,7 @@ namespace Barotrauma
                 {
                     //TODO: add to localization
                     var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)),
-                        relatedItem.Type.ToString() + " required", font: GUI.SmallFont)
+                        relatedItem.Type.ToString() + " required", font: GUIStyle.SmallFont)
                     {
                         Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f)
                     };
@@ -860,7 +861,7 @@ namespace Barotrauma
 
                     GUITextBox namesBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight))
                     {
-                        Font = GUI.SmallFont,
+                        Font = GUIStyle.SmallFont,
                         Text = relatedItem.JoinedIdentifiers,
                         OverflowClip = true
                     };
@@ -890,7 +891,7 @@ namespace Barotrauma
             return editingHUD;
         }
 
-        private List<DecorativeSprite> GetUpgradeSprites(Upgrade upgrade)
+        private ImmutableArray<DecorativeSprite> GetUpgradeSprites(Upgrade upgrade)
         {
             var upgradeSprites = upgrade.Prefab.DecorativeSprites;
 
@@ -908,7 +909,7 @@ namespace Barotrauma
             bool result = base.AddUpgrade(upgrade, createNetworkEvent);
             if (result && !upgrade.Disposed)
             {
-                List<DecorativeSprite> upgradeSprites = GetUpgradeSprites(upgrade);
+                var upgradeSprites = GetUpgradeSprites(upgrade);
 
                 if (upgradeSprites.Any())
                 {
@@ -923,9 +924,9 @@ namespace Barotrauma
             return result;
         }
 
-        private void CreateTagPicker(GUITextBox textBox, IEnumerable<string> availableTags)
+        private void CreateTagPicker(GUITextBox textBox, IEnumerable<Identifier> availableTags)
         {
-            var msgBox = new GUIMessageBox("", "", new string[] { TextManager.Get("Cancel") }, new Vector2(0.2f, 0.5f), new Point(300, 400));
+            var msgBox = new GUIMessageBox("", "", new LocalizedString[] { TextManager.Get("Cancel") }, new Vector2(0.2f, 0.5f), new Point(300, 400));
             msgBox.Buttons[0].OnClicked = msgBox.Close;
 
             var textList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), msgBox.Content.RectTransform, Anchor.TopCenter))
@@ -940,10 +941,10 @@ namespace Barotrauma
                 }
             };
 
-            foreach (string availableTag in availableTags.ToList().OrderBy(t => t))
+            foreach (var availableTag in availableTags.ToList().OrderBy(t => t))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), textList.Content.RectTransform) { MinSize = new Point(0, 20) },
-                    ToolBox.LimitString(availableTag, GUI.Font, textList.Content.Rect.Width))
+                    ToolBox.LimitString(availableTag.Value, GUIStyle.Font, textList.Content.Rect.Width))
                 {
                     UserData = availableTag
                 };
@@ -998,10 +999,10 @@ namespace Barotrauma
                     GameMain.GraphicsWidth,
                     HUDLayoutSettings.InventoryTopY > 0 ? HUDLayoutSettings.InventoryTopY - 40 : GameMain.GraphicsHeight - 80));
 
+            //System.Diagnostics.Debug.WriteLine("after: " + elementsToMove[0].Rect.ToString() + "   " + elementsToMove[1].Rect.ToString());
             foreach (ItemComponent ic in activeHUDs)
             {
                 if (ic.GuiFrame == null) { continue; }
-
 
                 var linkUIToComponent = ic.GetLinkUIToComponent();
                 if (linkUIToComponent == null) { continue; }
@@ -1041,7 +1042,7 @@ namespace Barotrauma
 
             foreach (MapEntity entity in linkedTo)
             {
-                if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i)
+                if (Prefab.IsLinkAllowed(entity.Prefab) && entity is Item i)
                 {
                     if (!i.DisplaySideBySideWhenLinked) { continue; }
                     activeComponents.AddRange(i.components);
@@ -1179,17 +1180,17 @@ namespace Barotrauma
                     nameText += $" ({idName})";
                 }
             }
-            texts.Add(new ColoredText(nameText, GUI.Style.TextColor, false, false));
+            texts.Add(new ColoredText(nameText, GUIStyle.TextColorNormal, false, false));
 
             if (CampaignMode.BlocksInteraction(CampaignInteractionType))
             {
-                texts.Add(new ColoredText(TextManager.GetWithVariable($"CampaignInteraction.{CampaignInteractionType}", "[key]", GameMain.Config.KeyBindText(InputType.Use)), Color.Cyan, false, false));
+                texts.Add(new ColoredText(TextManager.GetWithVariable($"CampaignInteraction.{CampaignInteractionType}", "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Use)).Value, Color.Cyan, false, false));
             }
             else
             {
                 foreach (ItemComponent ic in components)
                 {
-                    if (string.IsNullOrEmpty(ic.DisplayMsg)) { continue; }
+                    if (ic.DisplayMsg.IsNullOrEmpty()) { continue; }
                     if (!ic.CanBePicked && !ic.CanBeSelected) { continue; }
                     if (ic is Holdable holdable && !holdable.CanBeDeattached()) { continue; }
 
@@ -1205,12 +1206,12 @@ namespace Barotrauma
                             color = Color.Cyan;
                         }
                     }
-                    texts.Add(new ColoredText(ic.DisplayMsg, color, false, false));
+                    texts.Add(new ColoredText(ic.DisplayMsg.Value, color, false, false));
                 }
             }
             if (PlayerInput.IsShiftDown() && CrewManager.DoesItemHaveContextualOrders(this))
             {
-                texts.Add(new ColoredText(TextManager.ParseInputTypes(TextManager.Get("itemmsgcontextualorders")), Color.Cyan, false, false));
+                texts.Add(new ColoredText(TextManager.ParseInputTypes(TextManager.Get("itemmsgcontextualorders")).Value, Color.Cyan, false, false));
             }
             return texts;
         }
@@ -1350,7 +1351,7 @@ namespace Barotrauma
                     ReadPropertyChange(msg, false);
                     break;
                 case NetEntityEvent.Type.Upgrade:
-                    string identifier = msg.ReadString();
+                    Identifier identifier = msg.ReadIdentifier();
                     byte level = msg.ReadByte();
                     if (UpgradePrefab.Find(identifier) is { } upgradePrefab)
                     {
@@ -1458,7 +1459,7 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #else
-                if (GameSettings.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
+                if (GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
 #endif
                 GameAnalyticsManager.AddErrorEventOnce("Item.ClientReadPosition:nophysicsbody", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
@@ -1490,10 +1491,10 @@ namespace Barotrauma
                 catch (Exception e)
                 {
                     DebugConsole.ThrowError("Exception in PhysicsBody.Enabled = false (" + body.PhysEnabled + ")", e);
-                    if (body.UserData != null) DebugConsole.NewMessage("PhysicsBody UserData: " + body.UserData.GetType().ToString(), GUI.Style.Red);
-                    if (GameMain.World.ContactManager == null) DebugConsole.NewMessage("ContactManager is null!", GUI.Style.Red);
-                    else if (GameMain.World.ContactManager.BroadPhase == null) DebugConsole.NewMessage("Broadphase is null!", GUI.Style.Red);
-                    if (body.FarseerBody.FixtureList == null) DebugConsole.NewMessage("FixtureList is null!", GUI.Style.Red);
+                    if (body.UserData != null) DebugConsole.NewMessage("PhysicsBody UserData: " + body.UserData.GetType().ToString(), GUIStyle.Red);
+                    if (GameMain.World.ContactManager == null) DebugConsole.NewMessage("ContactManager is null!", GUIStyle.Red);
+                    else if (GameMain.World.ContactManager.BroadPhase == null) DebugConsole.NewMessage("Broadphase is null!", GUIStyle.Red);
+                    if (body.FarseerBody.FixtureList == null) DebugConsole.NewMessage("FixtureList is null!", GUIStyle.Red);
                 }
             }
 
@@ -1579,8 +1580,8 @@ namespace Barotrauma
             string tags = "";
             if (tagsChanged)
             {
-                string[] addedTags = msg.ReadString().Split(',');
-                string[] removedTags = msg.ReadString().Split(',');
+                HashSet<Identifier> addedTags = msg.ReadString().Split(',').ToIdentifiers().ToHashSet();
+                HashSet<Identifier> removedTags = msg.ReadString().Split(',').ToIdentifiers().ToHashSet();
                 if (itemPrefab != null)
                 {
                     tags = string.Join(',',itemPrefab.Tags.Where(t => !removedTags.Contains(t)).Concat(addedTags));
@@ -1600,7 +1601,7 @@ namespace Barotrauma
             if (itemPrefab == null)
             {
                 string errorMsg = "Failed to spawn item, prefab not found (name: " + (itemName ?? "null") + ", identifier: " + (itemIdentifier ?? "null") + ")";
-                errorMsg += "\n" + string.Join(", ", GameMain.Config.AllEnabledPackages.Select(cp => cp.Name));
+                errorMsg += "\n" + string.Join(", ", ContentPackageManager.EnabledPackages.All.Select(cp => cp.Name));
                 GameAnalyticsManager.AddErrorEventOnce("Item.ReadSpawnData:PrefabNotFound" + (itemName ?? "null") + (itemIdentifier ?? "null"),
                     GameAnalyticsManager.ErrorSeverity.Critical,
                     errorMsg);
@@ -1621,7 +1622,7 @@ namespace Barotrauma
                     if (itemContainerIndex < 0 || itemContainerIndex >= parentItem.components.Count)
                     {
                         string errorMsg =
-                            $"Failed to spawn item \"{(itemIdentifier ?? "null")}\" in the inventory of \"{parentItem.prefab.Identifier} ({parentItem.ID})\" (component index out of range). Index: {itemContainerIndex}, components: {parentItem.components.Count}.";
+                            $"Failed to spawn item \"{(itemIdentifier ?? "null")}\" in the inventory of \"{parentItem.Prefab.Identifier} ({parentItem.ID})\" (component index out of range). Index: {itemContainerIndex}, components: {parentItem.components.Count}.";
                         GameAnalyticsManager.AddErrorEventOnce("Item.ReadSpawnData:ContainerIndexOutOfRange" + (itemName ?? "null") + (itemIdentifier ?? "null"),
                             GameAnalyticsManager.ErrorSeverity.Error,
                             errorMsg);

@@ -22,13 +22,13 @@ namespace Barotrauma
             };
 
             // New game
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), verticalLayout.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SaveName"), font: GUI.SubHeadingFont, textAlignment: Alignment.BottomLeft);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), verticalLayout.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SaveName"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
             saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.03f), verticalLayout.RectTransform) { MinSize = new Point(0, 20) }, string.Empty)
             {
                 textFilterFunction = (string str) => { return ToolBox.RemoveInvalidFileNameChars(str); }
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), verticalLayout.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed"), font: GUI.SubHeadingFont, textAlignment: Alignment.BottomLeft);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), verticalLayout.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
             seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.03f), verticalLayout.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8));
 
             GUIFrame radiationBoxContainer
@@ -36,7 +36,7 @@ namespace Barotrauma
             GUITickBox radiationEnabledTickBox = null;
             if (MapGenerationParams.Instance.RadiationParams != null)
             {
-                radiationEnabledTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.5f), radiationBoxContainer.RectTransform, Anchor.Center), TextManager.Get("CampaignOption.EnableRadiation"), font: GUI.Style.Font)
+                radiationEnabledTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.5f), radiationBoxContainer.RectTransform, Anchor.Center), TextManager.Get("CampaignOption.EnableRadiation"), font: GUIStyle.Font)
                 {
                     Selected = true,
                     OnSelected = box => true
@@ -44,8 +44,8 @@ namespace Barotrauma
             }
 
             var maxMissionCountSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), verticalLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
-            var maxMissionCountDescription = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), maxMissionCountSettingHolder.RectTransform), TextManager.Get("maxmissioncount", fallBackTag: "missions"), wrap: true)
-            {
+            var maxMissionCountDescription = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), maxMissionCountSettingHolder.RectTransform), TextManager.Get("maxmissioncount", "missions"), wrap: true)
+                {
                 ToolTip = TextManager.Get("maxmissioncounttooltip")
             };
             int maxMissionCount = GameMain.NetworkMember.ServerSettings.MaxMissionCount;
@@ -91,7 +91,7 @@ namespace Barotrauma
                 {
                     if (string.IsNullOrWhiteSpace(saveNameBox.Text))
                     {
-                        saveNameBox.Flash(GUI.Style.Red);
+                        saveNameBox.Flash(GUIStyle.Red);
                         return false;
                     }
 
@@ -106,7 +106,7 @@ namespace Barotrauma
                         return false;
                     }
 
-                    if (string.IsNullOrEmpty(selectedSub.MD5Hash.Hash))
+                    if (string.IsNullOrEmpty(selectedSub.MD5Hash.StringRepresentation))
                     {
                         new GUIMessageBox(TextManager.Get("error"), TextManager.Get("nohashsubmarineselected"));
                         return false;
@@ -127,7 +127,7 @@ namespace Barotrauma
                         {
                             var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
                                 TextManager.GetWithVariable("ContentPackageMismatchWarning", "[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)),
-                                new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                                new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
                             msgBox.Buttons[0].OnClicked = msgBox.Close;
                             msgBox.Buttons[0].OnClicked += (button, obj) =>
@@ -147,7 +147,7 @@ namespace Barotrauma
                         {
                             var msgBox = new GUIMessageBox(TextManager.Get("ShuttleSelected"),
                                 TextManager.Get("ShuttleWarning"),
-                                new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                                new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
                             msgBox.Buttons[0].OnClicked = (button, obj) => 
                             {
@@ -173,7 +173,7 @@ namespace Barotrauma
             StartButton.RectTransform.MaxSize = RectTransform.MaxPoint;
             StartButton.Children.ForEach(c => c.RectTransform.MaxSize = RectTransform.MaxPoint);
             
-            InitialMoneyText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1f), buttonContainer.RectTransform), "", font: GUI.Style.SmallFont, textColor: GUI.Style.Green)
+            InitialMoneyText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1f), buttonContainer.RectTransform), "", font: GUIStyle.SmallFont, textColor: GUIStyle.Green)
             {
                 TextGetter = () =>
                 {
@@ -195,8 +195,8 @@ namespace Barotrauma
         private IEnumerable<CoroutineStatus> WaitForCampaignSetup()
         {
             GUI.SetCursorWaiting();
-            string headerText = TextManager.Get("CampaignStartingPleaseWait");
-            var msgBox = new GUIMessageBox(headerText, TextManager.Get("CampaignStarting"), new string[] { TextManager.Get("Cancel") });
+            var headerText = TextManager.Get("CampaignStartingPleaseWait");
+            var msgBox = new GUIMessageBox(headerText, TextManager.Get("CampaignStarting"), new LocalizedString[] { TextManager.Get("Cancel") });
 
             msgBox.Buttons[0].OnClicked = (btn, userdata) =>
             {
@@ -270,7 +270,8 @@ namespace Barotrauma
                 prevSaveFiles?.Add(saveFile);
                 string[] splitSaveFile = saveFile.Split(';');
                 saveFrame.UserData = splitSaveFile[0];
-                fileName = nameText.Text = Path.GetFileNameWithoutExtension(splitSaveFile[0]);
+                fileName = Path.GetFileNameWithoutExtension(splitSaveFile[0]);
+                nameText.Text = fileName;
                 if (splitSaveFile.Length > 1) { subName = splitSaveFile[1]; }
                 if (splitSaveFile.Length > 2) { saveTime = splitSaveFile[2]; }
                 if (splitSaveFile.Length > 3) { contentPackageStr = splitSaveFile[3]; }
@@ -283,27 +284,27 @@ namespace Barotrauma
                 if (!string.IsNullOrEmpty(contentPackageStr))
                 {
                     List<string> contentPackagePaths = contentPackageStr.Split('|').ToList();
-                    if (!GameSession.IsCompatibleWithEnabledContentPackages(contentPackagePaths, out string errorMsg))
+                    if (!GameSession.IsCompatibleWithEnabledContentPackages(contentPackagePaths, out LocalizedString errorMsg))
                     {
-                        nameText.TextColor = GUI.Style.Red;
+                        nameText.TextColor = GUIStyle.Red;
                         saveFrame.ToolTip = string.Join("\n", errorMsg, TextManager.Get("campaignmode.contentpackagemismatchwarning"));
                     }
                 }
                 if (!isCompatible)
                 {
-                    nameText.TextColor = GUI.Style.Red;
+                    nameText.TextColor = GUIStyle.Red;
                     saveFrame.ToolTip = TextManager.Get("campaignmode.incompatiblesave");
                 }
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),
-                    text: subName, font: GUI.SmallFont)
+                    text: subName, font: GUIStyle.SmallFont)
                 {
                     CanBeFocused = false,
                     UserData = fileName
                 };
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), saveFrame.RectTransform),
-                    text: saveTime, textAlignment: Alignment.Right, font: GUI.SmallFont)
+                    text: saveTime, textAlignment: Alignment.Right, font: GUIStyle.SmallFont)
                 {
                     CanBeFocused = false,
                     UserData = fileName
@@ -373,8 +374,8 @@ namespace Barotrauma
             string saveFile = obj as string;
             if (obj == null) { return false; }
 
-            string header = TextManager.Get("deletedialoglabel");
-            string body = TextManager.GetWithVariable("deletedialogquestion", "[file]", Path.GetFileNameWithoutExtension(saveFile));
+            var header = TextManager.Get("deletedialoglabel");
+            var body = TextManager.GetWithVariable("deletedialogquestion", "[file]", Path.GetFileNameWithoutExtension(saveFile));
 
             EventEditorScreen.AskForConfirmation(header, body, () =>
             {

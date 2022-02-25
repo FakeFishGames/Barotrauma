@@ -29,9 +29,9 @@ namespace Barotrauma.Items.Components
 
         private SoundChannel repairSoundChannel;
 
-        private string repairButtonText, repairingText;
-        private string sabotageButtonText, sabotagingText;
-        private string tinkerButtonText, tinkeringText;
+        private LocalizedString repairButtonText, repairingText;
+        private LocalizedString sabotageButtonText, sabotagingText;
+        private LocalizedString tinkerButtonText, tinkeringText;
 
         private FixActions requestStartFixAction;
 
@@ -44,7 +44,7 @@ namespace Barotrauma.Items.Components
 
         public float FakeBrokenTimer;
 
-        [Serialize("", false, description: "An optional description of the needed repairs displayed in the repair interface.")]
+        [Serialize("", IsPropertySaveable.No, description: "An optional description of the needed repairs displayed in the repair interface.")]
         public string Description
         {
             get;
@@ -78,10 +78,10 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             CreateGUI();
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -124,18 +124,18 @@ namespace Barotrauma.Items.Components
             };
             
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
-                header, textAlignment: Alignment.TopCenter, font: GUI.LargeFont);
+                header, textAlignment: Alignment.TopCenter, font: GUIStyle.LargeFont);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
-                Description, font: GUI.SmallFont, wrap: true);
+                Description, font: GUIStyle.SmallFont, wrap: true);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
-                TextManager.Get("RequiredRepairSkills"), font: GUI.SubHeadingFont);
+                TextManager.Get("RequiredRepairSkills"), font: GUIStyle.SubHeadingFont);
             for (int i = 0; i < requiredSkills.Count; i++)
             {
                 var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                     "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + requiredSkills[i].Identifier), ((int) Math.Round(requiredSkills[i].Level * SkillRequirementMultiplier)).ToString()),
-                    font: GUI.SmallFont)
+                    font: GUIStyle.SmallFont)
                 {
                     UserData = requiredSkills[i]
                 };
@@ -148,9 +148,9 @@ namespace Barotrauma.Items.Components
             };
 
             progressBar = new GUIProgressBar(new RectTransform(new Vector2(0.6f, 1.0f), progressBarHolder.RectTransform),
-                color: GUI.Style.Green, barSize: 0.0f, style: "DeviceProgressBar");
+                color: GUIStyle.Green, barSize: 0.0f, style: "DeviceProgressBar");
 
-            progressBarOverlayText = new GUITextBlock(new RectTransform(Vector2.One, progressBar.RectTransform), string.Empty, font: GUI.SubHeadingFont, textAlignment: Alignment.Center)
+            progressBarOverlayText = new GUITextBlock(new RectTransform(Vector2.One, progressBar.RectTransform), string.Empty, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center)
             {
                 IgnoreLayoutGroups = true
             };
@@ -203,8 +203,8 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            tinkerButtonText = TextManager.Get("TinkerButton", returnNull: true) ?? "Tinker";
-            tinkeringText = TextManager.Get("Tinkering", returnNull: true) ?? "Tinkering";
+            tinkerButtonText = TextManager.Get("TinkerButton").Fallback("Tinker");
+            tinkeringText = TextManager.Get("Tinkering").Fallback("Tinkering");
             TinkerButton = new GUIButton(new RectTransform(Vector2.One, extraButtonContainer.RectTransform), tinkerButtonText, style: "GUIButtonSmall")
             {
                 IgnoreLayoutGroups = true,
@@ -295,24 +295,24 @@ namespace Barotrauma.Items.Components
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             IsActive = true;
-
+            
             float defaultMaxCondition = (item.MaxCondition / item.MaxRepairConditionMultiplier);
 
             progressBar.BarSize = item.Condition / defaultMaxCondition;
-            progressBar.Color = ToolBox.GradientLerp(progressBar.BarSize, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green);
+            progressBar.Color = ToolBox.GradientLerp(progressBar.BarSize, GUIStyle.Red, GUIStyle.Orange, GUIStyle.Green);
 
             Rectangle sliderRect = progressBar.GetSliderRect(1.0f);
             Color qteSliderColor = Color.White;
             if (qteCooldown > 0.0f)
             {
-                qteSliderColor = qteSuccess ? GUI.Style.Green : GUI.Style.Red * 0.5f;
+                qteSliderColor = qteSuccess ? GUIStyle.Green : GUIStyle.Red * 0.5f;
                 progressBar.Color = ToolBox.GradientLerp(qteCooldown / QteCooldownDuration, progressBar.Color, qteSliderColor, Color.White);
             }
             else
             {
                 if (qteTimer / QteDuration <= item.Condition / item.MaxCondition)
                 {
-                    qteSliderColor = Color.Lerp(qteSliderColor, GUI.Style.Green, 0.5f);
+                    qteSliderColor = Color.Lerp(qteSliderColor, GUIStyle.Green, 0.5f);
                 }
             }
 
@@ -324,7 +324,7 @@ namespace Barotrauma.Items.Components
             if (item.Condition > defaultMaxCondition)
             {
                 float extraCondition = item.MaxCondition * (item.MaxRepairConditionMultiplier - 1.0f);
-                progressBar.Color = ToolBox.GradientLerp((item.Condition - defaultMaxCondition) / extraCondition, GUI.Style.ColorReputationHigh, GUI.Style.ColorReputationVeryHigh);
+                progressBar.Color = ToolBox.GradientLerp((item.Condition - defaultMaxCondition) / extraCondition, GUIStyle.ColorReputationHigh, GUIStyle.ColorReputationVeryHigh);
                 progressBarOverlayText.Visible = true;
                 progressBarOverlayText.Text = $"{(int)Math.Round((item.Condition / defaultMaxCondition) * 100)}%";
             }
@@ -364,7 +364,7 @@ namespace Barotrauma.Items.Components
                 GUITextBlock textBlock = (GUITextBlock)c;
                 if (character.GetSkillLevel(skill.Identifier) < (skill.Level * SkillRequirementMultiplier))
                 {
-                    textBlock.TextColor = GUI.Style.Red;
+                    textBlock.TextColor = GUIStyle.Red;
                 }
                 else
                 {
@@ -388,11 +388,11 @@ namespace Barotrauma.Items.Components
                 {
                     GUI.DrawString(spriteBatch,
                         new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), "Deteriorating at " + (int)(DeteriorationSpeed * 60.0f) + " units/min" + (paused ? " [PAUSED]" : ""),
-                        paused ? Color.Cyan : GUI.Style.Red, Color.Black * 0.5f);
+                        paused ? Color.Cyan : GUIStyle.Red, Color.Black * 0.5f);
                 }
                 GUI.DrawString(spriteBatch,
                     new Vector2(item.DrawPosition.X, -item.DrawPosition.Y + 20), "Condition: " + (int)item.Condition + "/" + (int)item.MaxCondition,
-                    GUI.Style.Orange);
+                    GUIStyle.Orange);
             }
         }
 

@@ -7,9 +7,11 @@ namespace Barotrauma.MapCreatures.Behavior
 {
     partial class BallastFloraBehavior
     {
-        partial void LoadPrefab(XElement element)
+        private float damageUpdateTimer;
+
+        partial void LoadPrefab(ContentXElement element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -29,7 +31,24 @@ namespace Barotrauma.MapCreatures.Behavior
             }
         }
 
-        
+
+        partial void UpdateDamage(float deltaTime)
+        {
+            if (damageUpdateTimer <= 0)
+            {
+                foreach (BallastFloraBranch branch in Branches)
+                {
+                    if (Math.Abs(branch.AccumulatedDamage) > 1.0f)
+                    {
+                        SendNetworkMessage(this, NetworkHeader.BranchDamage, branch);
+                        branch.AccumulatedDamage = 0f;
+                    }
+                }
+                damageUpdateTimer = 1f;
+            }
+            damageUpdateTimer -= deltaTime;
+        }
+
         public void ServerWriteSpawn(IWriteMessage msg)
         {
             msg.Write(Prefab.Identifier);
@@ -49,12 +68,12 @@ namespace Barotrauma.MapCreatures.Behavior
             msg.Write((ushort)branch.MaxHealth);
             msg.Write((int)(x / VineTile.Size));
             msg.Write((int)(y / VineTile.Size));
+            msg.Write(branch.ParentBranch == null ? -1 : Branches.IndexOf(branch.ParentBranch));
         }
 
-        public void ServerWriteBranchDamage(IWriteMessage msg, BallastFloraBranch branch, float damage)
+        public void ServerWriteBranchDamage(IWriteMessage msg, BallastFloraBranch branch)
         {
             msg.Write((int)branch.ID);
-            msg.Write(damage);
             msg.Write(branch.Health);
         }
         

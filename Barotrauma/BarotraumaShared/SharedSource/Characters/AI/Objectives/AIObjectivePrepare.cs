@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectivePrepare : AIObjective
     {
-        public override string Identifier { get; set; } = "prepare";
+        public override Identifier Identifier { get; set; } = "prepare".ToIdentifier();
         public override string DebugTag => $"{Identifier}";
         public override bool KeepDivingGearOn => true;
         public override bool KeepDivingGearOnAlsoWhenInactive => true;
@@ -19,8 +19,8 @@ namespace Barotrauma
         private AIObjectiveGetItems getMultipleItemsObjective;
         private bool subObjectivesCreated;
         private readonly Item targetItem;
-        private readonly ImmutableArray<string> requiredItems;
-        private readonly ImmutableArray<string> optionalItems;
+        private readonly ImmutableArray<Identifier> requiredItems;
+        private readonly ImmutableArray<Identifier> optionalItems;
         private readonly HashSet<Item> items = new HashSet<Item>();
         public bool KeepActiveWhenReady { get; set; }
         public bool CheckInventory { get; set; }
@@ -43,7 +43,7 @@ namespace Barotrauma
             this.targetItem = targetItem;
         }
 
-        public AIObjectivePrepare(Character character, AIObjectiveManager objectiveManager, IEnumerable<string> optionalItems, IEnumerable<string> requiredItems = null, float priorityModifier = 1)
+        public AIObjectivePrepare(Character character, AIObjectiveManager objectiveManager, IEnumerable<Identifier> optionalItems, IEnumerable<Identifier> requiredItems = null, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier)
         {
             this.optionalItems = optionalItems.ToImmutableArray();
@@ -98,7 +98,7 @@ namespace Barotrauma
                     {
                         getAllItemsObjective = CreateObjectives(requiredItems, requireAll: true);
                     }
-                    AIObjectiveGetItems CreateObjectives(IEnumerable<string> itemTags, bool requireAll)
+                    AIObjectiveGetItems CreateObjectives(IEnumerable<Identifier> itemTags, bool requireAll)
                     {
                         AIObjectiveGetItems objectiveReference = null;
                         if (!TryAddSubObjective(ref objectiveReference, () => new AIObjectiveGetItems(character, objectiveManager, itemTags)
@@ -148,7 +148,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        IEnumerable<string> allItems = optionalItems;
+                        IEnumerable<Identifier> allItems = optionalItems;
                         if (requiredItems != null && requiredItems.Any())
                         {
                             allItems = requiredItems;

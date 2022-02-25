@@ -207,7 +207,7 @@ namespace Barotrauma.Sounds
             playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SOURCE_COUNT];
             playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[16];
 
-            string deviceName = GameMain.Config.AudioOutputDevice;
+            string deviceName = GameSettings.CurrentConfig.Audio.AudioOutputDevice;
 
             if (string.IsNullOrEmpty(deviceName))
             {
@@ -221,7 +221,10 @@ namespace Barotrauma.Sounds
                 deviceName = audioDeviceNames[0];
             }
 #endif
-            GameMain.Config.AudioOutputDevice = deviceName;
+            if (GameSettings.CurrentConfig.Audio.AudioOutputDevice != deviceName)
+            {
+                SetAudioOutputDevice(deviceName);
+            }
 
             InitializeAlcDevice(deviceName);
 
@@ -232,6 +235,13 @@ namespace Barotrauma.Sounds
             CompressionDynamicRangeGain = 1.0f;
         }
 
+        private void SetAudioOutputDevice(string deviceName)
+        {
+            var config = GameSettings.CurrentConfig;
+            config.Audio.AudioOutputDevice = deviceName;
+            GameSettings.SetCurrentConfig(config);
+        }
+        
         public bool InitializeAlcDevice(string deviceName)
         {
             ReleaseResources(true);
@@ -351,11 +361,11 @@ namespace Barotrauma.Sounds
             return newSound;
         }
 
-        public Sound LoadSound(XElement element, bool stream = false, string overrideFilePath = null)
+        public Sound LoadSound(ContentXElement element, bool stream = false, string overrideFilePath = null)
         {
             if (Disabled) { return null; }
 
-            string filePath = overrideFilePath ?? element.GetAttributeString("file", "");
+            string filePath = overrideFilePath ?? element.GetAttributeContentPath("file")?.Value ?? "";
             if (!File.Exists(filePath))
             {
                 throw new System.IO.FileNotFoundException("Sound file \"" + filePath + "\" doesn't exist!");
@@ -631,13 +641,13 @@ namespace Barotrauma.Sounds
                 if (isConnected == 0)
                 {
                     DebugConsole.ThrowError("Playback device has been disconnected. You can select another available device in the settings.");
-                    GameMain.Config.AudioOutputDevice = "<disconnected>";
+                    SetAudioOutputDevice("<disconnected>");
                     Disconnected = true;
                     return;
                 }
             }
 
-            if (GameMain.Client != null && GameMain.Config.VoipAttenuationEnabled)
+            if (GameMain.Client != null && GameSettings.CurrentConfig.Audio.VoipAttenuationEnabled)
             {
                 if (Timing.TotalTime > lastAttenuationTime+0.2)
                 {
@@ -653,7 +663,7 @@ namespace Barotrauma.Sounds
             SetCategoryGainMultiplier("waterambience", VoipAttenuatedGain, 1);
             SetCategoryGainMultiplier("music", VoipAttenuatedGain, 1);
 
-            if (GameMain.Config.DynamicRangeCompressionEnabled)
+            if (GameSettings.CurrentConfig.Audio.DynamicRangeCompressionEnabled)
             {
                 float targetGain = (Math.Min(1.0f, 1.0f / PlaybackAmplitude) - 1.0f) * 0.5f + 1.0f;
                 if (targetGain < CompressionDynamicRangeGain)
@@ -695,6 +705,15 @@ namespace Barotrauma.Sounds
             }
         }
 
+        public void ApplySettings()
+        {
+            SetCategoryGainMultiplier("default", GameSettings.CurrentConfig.Audio.SoundVolume, 0);
+            SetCategoryGainMultiplier("ui", GameSettings.CurrentConfig.Audio.SoundVolume, 0);
+            SetCategoryGainMultiplier("waterambience", GameSettings.CurrentConfig.Audio.SoundVolume, 0);
+            SetCategoryGainMultiplier("music", GameSettings.CurrentConfig.Audio.MusicVolume, 0);
+            SetCategoryGainMultiplier("voip", Math.Min(GameSettings.CurrentConfig.Audio.VoiceChatVolume, 1.0f), 0);
+        }
+        
         public void InitStreamThread()
         {
             if (Disabled) { return; }

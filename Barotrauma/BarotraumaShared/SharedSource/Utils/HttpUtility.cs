@@ -35,9 +35,9 @@ namespace Barotrauma
 {
     public sealed class HttpUtility
     {
-        public static Dictionary<string, string> ParseQueryString(string query)
+        public static Dictionary<Identifier, string> ParseQueryString(string query)
         {
-            Dictionary<string, string> collection = new Dictionary<string, string>();
+            Dictionary<Identifier, string> collection = new Dictionary<Identifier, string>();
             var splitGet = query.Split('?');
             if (splitGet.Length > 1)
             {
@@ -47,7 +47,7 @@ namespace Barotrauma
                     var splitKeyValue = kvp.Split('=');
                     if (splitKeyValue.Length > 1)
                     {
-                        collection.Add(splitKeyValue[0], splitKeyValue[1]);
+                        collection.Add(splitKeyValue[0].ToIdentifier(), splitKeyValue[1]);
                     }
                 }
             }

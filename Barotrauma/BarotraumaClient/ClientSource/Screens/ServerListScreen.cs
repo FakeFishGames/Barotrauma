@@ -44,34 +44,6 @@ namespace Barotrauma
         private GUIButton friendsDropdownButton;
         private GUIListBox friendsDropdown;
 
-        //Workshop downloads
-        public struct PendingWorkshopDownload
-        {
-            public readonly string ExpectedHash;
-            public readonly ulong Id;
-            public readonly Steamworks.Ugc.Item? Item;
-            
-            public PendingWorkshopDownload(string expectedHash, Steamworks.Ugc.Item item)
-            {
-                ExpectedHash = expectedHash;
-                Item = item;
-                Id = item.Id;
-            }
-
-            public PendingWorkshopDownload(string expectedHash, ulong id)
-            {
-                ExpectedHash = expectedHash;
-                Item = null;
-                Id = id;
-            }
-        }
-
-        private GUIFrame workshopDownloadsFrame = null;
-        private Steamworks.Ugc.Item? currentlyDownloadingWorkshopItem = null;
-        private Dictionary<ulong, PendingWorkshopDownload> pendingWorkshopDownloads = null;
-        private string autoConnectName;
-        private string autoConnectEndpoint;
-
         private enum TernaryOption
         {
             Any,
@@ -84,7 +56,7 @@ namespace Barotrauma
             public UInt64 SteamID;
             public string Name;
             public Sprite Sprite;
-            public string StatusText;
+            public LocalizedString StatusText;
             public bool PlayingThisGame;
             public bool PlayingAnotherGame;
             public string ConnectName;
@@ -95,7 +67,7 @@ namespace Barotrauma
             {
                 get
                 {
-                    return PlayingThisGame && !string.IsNullOrWhiteSpace(StatusText) && (!string.IsNullOrWhiteSpace(ConnectEndpoint) || ConnectLobby != 0);
+                    return PlayingThisGame && !StatusText.IsNullOrWhiteSpace() && (!string.IsNullOrWhiteSpace(ConnectEndpoint) || ConnectLobby != 0);
                 }
             }
         }
@@ -182,10 +154,10 @@ namespace Barotrauma
         private GUITickBox filterFull;
         private GUITickBox filterEmpty;
         private GUITickBox filterWhitelisted;
-        private Dictionary<string, GUIDropDown> ternaryFilters;
-        private Dictionary<string, GUITickBox> filterTickBoxes;
-        private Dictionary<string, GUITickBox> playStyleTickBoxes;
-        private Dictionary<string, GUITickBox> gameModeTickBoxes;
+        private Dictionary<Identifier, GUIDropDown> ternaryFilters;
+        private Dictionary<Identifier, GUITickBox> filterTickBoxes;
+        private Dictionary<Identifier, GUITickBox> playStyleTickBoxes;
+        private Dictionary<Identifier, GUITickBox> gameModeTickBoxes;
         private GUITickBox filterOffensive;
 
         //GUIDropDown sends the OnSelected event before SelectedData is set, so we have to cache it manually.
@@ -212,7 +184,7 @@ namespace Barotrauma
             CreateUI();
         }
 
-        private void AddTernaryFilter(RectTransform parent, float elementHeight, string tag, Action<TernaryOption> valueSetter)
+        private void AddTernaryFilter(RectTransform parent, float elementHeight, Identifier tag, Action<TernaryOption> valueSetter)
         {
             var filterLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, elementHeight), parent), isHorizontal: true)
             {
@@ -239,7 +211,7 @@ namespace Barotrauma
             {
                 UserData = TextManager.Get("servertag." + tag + ".label")
             };
-            GUI.Style.Apply(filterLabel, "GUITextBlock", null);
+            GUIStyle.Apply(filterLabel, "GUITextBlock", null);
 
             var dropDown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1.0f) * textBlockScale, filterLayoutGroup.RectTransform, Anchor.CenterLeft), elementCount: 3);
             dropDown.AddItem(TextManager.Get("any"), TernaryOption.Any);
@@ -249,6 +221,7 @@ namespace Barotrauma
             dropDown.OnSelected = (_, data) => {
                 valueSetter((TernaryOption)data);
                 FilterServers();
+                StoreServerFilters();
                 return true;
             };
 
@@ -271,10 +244,10 @@ namespace Barotrauma
 
             var topRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform)) { Stretch = true };
 
-            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), TextManager.Get("JoinServer"), font: GUI.LargeFont)
+            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), TextManager.Get("JoinServer"), font: GUIStyle.LargeFont)
             {
                 Padding = Vector4.Zero,
-                ForceUpperCase = true,
+                ForceUpperCase = ForceUpperCase.Yes,
                 AutoScaleHorizontal = true
             };
 
@@ -282,10 +255,10 @@ namespace Barotrauma
 
             var clientNameHolder = new GUILayoutGroup(new RectTransform(new Vector2(sidebarWidth, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), clientNameHolder.RectTransform), TextManager.Get("YourName"), font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), clientNameHolder.RectTransform), TextManager.Get("YourName"), font: GUIStyle.SubHeadingFont);
             ClientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), clientNameHolder.RectTransform), "")
             {
-                Text = GameMain.Config.PlayerName,
+                Text = MultiplayerPreferences.Instance.PlayerName,
                 MaxTextLength = Client.MaxNameLength,
                 OverflowClip = true
             };
@@ -296,7 +269,7 @@ namespace Barotrauma
             }
             ClientNameBox.OnTextChanged += (textbox, text) =>
             {
-                GameMain.Config.PlayerName = text;
+                MultiplayerPreferences.Instance.PlayerName = text;
                 return true;
             };
 
@@ -366,7 +339,7 @@ namespace Barotrauma
             };
 
             float elementHeight = 0.05f;
-            var filterTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), filtersHolder.RectTransform), TextManager.Get("FilterServers"), font: GUI.SubHeadingFont)
+            var filterTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), filtersHolder.RectTransform), TextManager.Get("FilterServers"), font: GUIStyle.SubHeadingFont)
             {
                 Padding = Vector4.Zero,
                 AutoScaleHorizontal = true,
@@ -405,115 +378,79 @@ namespace Barotrauma
             };
             filterToggle.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
 
-            ternaryFilters = new Dictionary<string, GUIDropDown>();
-            filterTickBoxes = new Dictionary<string, GUITickBox>();
+            ternaryFilters = new Dictionary<Identifier, GUIDropDown>();
+            filterTickBoxes = new Dictionary<Identifier, GUITickBox>();
 
-            filterSameVersion = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("FilterSameVersion"))
+            GUITickBox addTickBox(Identifier key, LocalizedString text = null, bool defaultState = false, bool addTooltip = false)
             {
-                UserData = TextManager.Get("FilterSameVersion"),
-                Selected = true,
-                OnSelected = (tickBox) => { FilterServers(); return true; }
-            };
-            filterTickBoxes.Add("FilterSameVersion", filterSameVersion);
+                text ??= TextManager.Get(key);
+                var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), text)
+                {
+                    UserData = text,
+                    Selected = defaultState,
+                    ToolTip = addTooltip ? text : null,
+                    OnSelected = (tickBox) =>
+                    {
+                        FilterServers();
+                        StoreServerFilters();
+                        return true;
+                    }
+                };
+                filterTickBoxes.Add(key, tickBox);
+                return tickBox;
+            }
 
-            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("FilterPassword"))
-            {
-                UserData = TextManager.Get("FilterPassword"),
-                OnSelected = (tickBox) => { FilterServers(); return true; }
-            };
-            filterTickBoxes.Add("FilterPassword", filterPassword);
-
-            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("FilterIncompatibleServers"))
-            {
-                UserData = TextManager.Get("FilterIncompatibleServers"),
-                OnSelected = (tickBox) => { FilterServers(); return true; }
-            };
-            filterTickBoxes.Add("FilterIncompatibleServers", filterIncompatible);
-
-            filterFull = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("FilterFullServers"))
-            {
-                UserData = TextManager.Get("FilterFullServers"),
-                OnSelected = (tickBox) => { FilterServers(); return true; }
-            };
-            filterTickBoxes.Add("FilterFullServers", filterFull);
-
-            filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("FilterEmptyServers"))
-            {
-                UserData = TextManager.Get("FilterEmptyServers"),
-                OnSelected = (tickBox) => { FilterServers(); return true; }
-            };
-            filterTickBoxes.Add("FilterEmptyServers", filterEmpty);
-
-            filterWhitelisted = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("FilterWhitelistedServers"))
-            {
-                UserData = TextManager.Get("FilterWhitelistedServers"),
-                OnSelected = (tickBox) => { FilterServers(); return true; }
-            };
-            filterTickBoxes.Add("FilterWhitelistedServers", filterWhitelisted);
-
-            filterOffensive = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("FilterOffensiveServers"))
-            {
-                UserData = TextManager.Get("FilterOffensiveServers"),
-                ToolTip = TextManager.Get("FilterOffensiveServersToolTip"),
-                OnSelected = (tickBox) => { FilterServers(); return true; }
-            };
-            filterTickBoxes.Add("FilterOffensiveServers", filterOffensive);
+            filterSameVersion = addTickBox("FilterSameVersion".ToIdentifier(), defaultState: true);
+            filterPassword = addTickBox("FilterPassword".ToIdentifier());
+            filterIncompatible = addTickBox("FilterIncompatibleServers".ToIdentifier());
+            filterFull = addTickBox("FilterFullServers".ToIdentifier());
+            filterEmpty = addTickBox("FilterEmptyServers".ToIdentifier());
+            filterWhitelisted = addTickBox("FilterWhitelistedServers".ToIdentifier());
+            filterOffensive = addTickBox("FilterOffensiveServers".ToIdentifier());
 
             // Filter Tags
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("servertags"), font: GUI.SubHeadingFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("servertags"), font: GUIStyle.SubHeadingFont)
             {
                 CanBeFocused = false
             };
 
-            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "karma", (value) => { filterKarmaValue = value; });
-            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "traitors", (value) => { filterTraitorValue = value; });
-            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "friendlyfire", (value) => { filterFriendlyFireValue = value; });
-            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "voip", (value) => { filterVoipValue = value; });
-            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "modded", (value) => { filterModdedValue = value; });
+            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "karma".ToIdentifier(), (value) => { filterKarmaValue = value; });
+            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "traitors".ToIdentifier(), (value) => { filterTraitorValue = value; });
+            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "friendlyfire".ToIdentifier(), (value) => { filterFriendlyFireValue = value; });
+            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "voip".ToIdentifier(), (value) => { filterVoipValue = value; });
+            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "modded".ToIdentifier(), (value) => { filterModdedValue = value; });
 
             // Play Style Selection
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("ServerSettingsPlayStyle"), font: GUI.SubHeadingFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("ServerSettingsPlayStyle"), font: GUIStyle.SubHeadingFont)
             {
                 CanBeFocused = false
             };
 
-            playStyleTickBoxes = new Dictionary<string, GUITickBox>();
+            playStyleTickBoxes = new Dictionary<Identifier, GUITickBox>();
             foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("servertag." + playStyle))
-                {
-                    ToolTip = TextManager.Get("servertag." + playStyle),
-                    Selected = true,
-                    OnSelected = (tickBox) => { FilterServers(); return true; },
-                    UserData = playStyle
-                };
-                playStyleTickBoxes.Add("servertag." + playStyle, selectionTick);
-                filterTickBoxes.Add("servertag." + playStyle, selectionTick);
+                var selectionTick = addTickBox($"servertag.{playStyle}".ToIdentifier(), defaultState: true, addTooltip: true);
+                selectionTick.UserData = playStyle;
+                playStyleTickBoxes.Add($"servertag.{playStyle}".ToIdentifier(), selectionTick);
             }
 
             // Game mode Selection
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("gamemode"), font: GUI.SubHeadingFont) { CanBeFocused = false };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("gamemode"), font: GUIStyle.SubHeadingFont) { CanBeFocused = false };
 
-            gameModeTickBoxes = new Dictionary<string, GUITickBox>();
+            gameModeTickBoxes = new Dictionary<Identifier, GUITickBox>();
             foreach (GameModePreset mode in GameModePreset.List)
             {
-                if (mode.IsSinglePlayer) continue;
+                if (mode.IsSinglePlayer) { continue; }
 
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), mode.Name)
-                {
-                    ToolTip = mode.Name,
-                    Selected = true,
-                    OnSelected = (tickBox) => { FilterServers(); return true; },
-                    UserData = mode.Identifier
-                };
+                var selectionTick = addTickBox(mode.Identifier, mode.Name, defaultState: true, addTooltip: true);
+                selectionTick.UserData = mode.Identifier;
                 gameModeTickBoxes.Add(mode.Identifier, selectionTick);
-                filterTickBoxes.Add(mode.Identifier, selectionTick);
             }
 
             filters.Content.RectTransform.SizeChanged += () =>
             {
                 filters.Content.RectTransform.RecalculateChildren(true, true);
-                filterTickBoxes.ForEach(t => t.Value.Text = t.Value.UserData as string);
+                filterTickBoxes.ForEach(t => t.Value.Text = t.Value.UserData is LocalizedString lStr ? lStr : t.Value.UserData.ToString());
                 gameModeTickBoxes.ForEach(tb => tb.Value.Text = tb.Value.ToolTip);
                 playStyleTickBoxes.ForEach(tb => tb.Value.Text = tb.Value.ToolTip);
                 GUITextBlock.AutoScaleAndNormalize(
@@ -543,7 +480,7 @@ namespace Barotrauma
                     text: TextManager.Get(columnLabel[i]), textAlignment: Alignment.Center, style: "GUIButtonSmall")
                 {
                     ToolTip = TextManager.Get(columnLabel[i]),
-                    ForceUpperCase = true,
+                    ForceUpperCase = ForceUpperCase.Yes,
                     UserData = columnLabel[i],
                     OnClicked = SortList
                 };
@@ -734,7 +671,7 @@ namespace Barotrauma
 
             XDocument playStylesDoc = XMLExtensions.TryLoadXml("Content/UI/Server/PlayStyles.xml");
 
-            XElement rootElement = playStylesDoc.Root;
+            var rootElement = playStylesDoc.Root.FromPackage(ContentPackageManager.VanillaCorePackage);
             foreach (var element in rootElement.Elements())
             {
                 switch (element.Name.ToString().ToLowerInvariant())
@@ -839,7 +776,7 @@ namespace Barotrauma
             info.LobbyID = SteamManager.CurrentLobbyID;
             info.IP = ip;
             info.Port = port;
-            info.GameMode = GameMain.NetLobbyScreen.SelectedMode?.Identifier ?? "";
+            info.GameMode = GameMain.NetLobbyScreen.SelectedMode?.Identifier ?? Identifier.Empty;
             info.GameStarted = Screen.Selected != GameMain.NetLobbyScreen;
             info.GameVersion = GameMain.Version.ToString();
             info.MaxPlayers = serverSettings.MaxPlayers;
@@ -1018,21 +955,21 @@ namespace Barotrauma
         {
             base.Select();
 
-            ContentPackagesByWorkshopId = ContentPackage.AllPackages
+            ContentPackagesByWorkshopId = ContentPackageManager.AllPackages
                 .Select(p => new KeyValuePair<UInt64, ContentPackage>(p.SteamWorkshopId, p))
                 .Where(p => p.Key != 0)
                 .GroupBy(x => x.Key).Select(g => g.First())
                 .ToImmutableDictionary();
-            ContentPackagesByHash = ContentPackage.AllPackages
-                .Select(p => new KeyValuePair<string, ContentPackage>(p.MD5hash.Hash, p))
+            ContentPackagesByHash = ContentPackageManager.AllPackages
+                .Select(p => new KeyValuePair<string, ContentPackage>(p.Hash.StringRepresentation, p))
                 .GroupBy(x => x.Key).Select(g => g.First())
                 .ToImmutableDictionary();
 
             SelectedTab = ServerListTab.All;
-            LoadServerFilters(GameMain.Config.ServerFilterElement);
-            if (GameSettings.ShowOffensiveServerPrompt)
+            GameMain.ServerListScreen.LoadServerFilters();
+            if (GameSettings.CurrentConfig.ShowOffensiveServerPrompt)
             {
-                var filterOffensivePrompt = new GUIMessageBox(string.Empty, TextManager.Get("filteroffensiveserversprompt"), new string[] { TextManager.Get("yes"), TextManager.Get("no") });
+                var filterOffensivePrompt = new GUIMessageBox(string.Empty, TextManager.Get("filteroffensiveserversprompt"), new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
                 filterOffensivePrompt.Buttons[0].OnClicked = (btn, userData) =>
                 {
                     filterOffensive.Selected = true;
@@ -1040,7 +977,10 @@ namespace Barotrauma
                     return true;
                 };
                 filterOffensivePrompt.Buttons[1].OnClicked = filterOffensivePrompt.Close;
-                GameSettings.ShowOffensiveServerPrompt = false;
+
+                var config = GameSettings.CurrentConfig;
+                config.ShowOffensiveServerPrompt = false;
+                GameSettings.SetCurrentConfig(config);
             }
 
             Steamworks.SteamMatchmaking.ResetActions();
@@ -1060,10 +1000,7 @@ namespace Barotrauma
             ContentPackagesByHash = ImmutableDictionary<string, ContentPackage>.Empty;
             base.Deselect();
 
-            GameMain.Config.SaveNewPlayerConfig();
-
-            pendingWorkshopDownloads?.Clear();
-            workshopDownloadsFrame = null;
+            GameSettings.SaveCurrentConfig();
         }
 
         public override void Update(double deltaTime)
@@ -1081,62 +1018,6 @@ namespace Barotrauma
                     !friendsDropdownButton.Rect.Contains(PlayerInput.MousePosition))
                 {
                     friendsDropdown.Visible = false;
-                }
-            }
-
-            if (currentlyDownloadingWorkshopItem == null)
-            {
-                if (pendingWorkshopDownloads?.Any() ?? false)
-                {
-                    Steamworks.Ugc.Item? item = pendingWorkshopDownloads.Values.FirstOrDefault(it => it.Item != null).Item;
-                    if (item != null)
-                    {
-                        ulong itemId = item.Value.Id;
-                        currentlyDownloadingWorkshopItem = item;
-                        SteamManager.ForceRedownload(item.Value.Id, () =>
-                        {
-                            if (!(item?.IsSubscribed ?? false))
-                            {
-                                TaskPool.Add("SubscribeToServerMod", item?.Subscribe(), (t) => { });
-                            }
-                            PendingWorkshopDownload clearedDownload = pendingWorkshopDownloads[itemId];
-                            pendingWorkshopDownloads.Remove(itemId);
-                            currentlyDownloadingWorkshopItem = null;
-
-                            void onInstall(ContentPackage resultingPackage)
-                            {
-                                if (!resultingPackage.MD5hash.Hash.Equals(clearedDownload.ExpectedHash))
-                                {
-                                    workshopDownloadsFrame?.FindChild((c) => c.UserData is ulong l && l == itemId, true)?.Flash(GUI.Style.Red);
-                                    CancelWorkshopDownloads();
-                                    GameMain.Client?.Disconnect();
-                                    GameMain.Client = null;
-                                    new GUIMessageBox(
-                                        TextManager.Get("ConnectionLost"),
-                                        TextManager.GetWithVariable("DisconnectMessage.MismatchedWorkshopMod", "[incompatiblecontentpackage]", $"\"{resultingPackage.Name}\" (hash {resultingPackage.MD5hash.ShortHash})"));
-                                }
-                            }
-
-                            if (SteamManager.CheckWorkshopItemInstalled(item))
-                            {
-                                SteamManager.UninstallWorkshopItem(item, false, out _);
-                            }
-                            if (SteamManager.InstallWorkshopItem(item, out string errorMsg, enableContentPackage: false, suppressInstallNotif: true, onInstall: onInstall))
-                            {
-                                workshopDownloadsFrame?.FindChild((c) => c.UserData is ulong l && l == itemId, true)?.Flash(GUI.Style.Green);
-                            }
-                            else
-                            {
-                                workshopDownloadsFrame?.FindChild((c) => c.UserData is ulong l && l == itemId, true)?.Flash(GUI.Style.Red);
-                                DebugConsole.ThrowError(errorMsg);
-                            }
-                        });
-                    }
-                }
-                else if (!string.IsNullOrEmpty(autoConnectEndpoint))
-                {
-                    JoinServer(autoConnectEndpoint, autoConnectName);
-                    autoConnectEndpoint = null;
                 }
             }
         }
@@ -1207,8 +1088,8 @@ namespace Barotrauma
 
                 foreach (GUITickBox tickBox in gameModeTickBoxes.Values)
                 {
-                    var gameMode = (string)tickBox.UserData;
-                    if (!tickBox.Selected && serverInfo.GameMode != null && serverInfo.GameMode.Equals(gameMode, StringComparison.OrdinalIgnoreCase))
+                    var gameMode = (Identifier)tickBox.UserData;
+                    if (!tickBox.Selected && serverInfo.GameMode != null && serverInfo.GameMode == gameMode)
                     {
                         child.Visible = false;
                         break;
@@ -1253,7 +1134,7 @@ namespace Barotrauma
         private void ShowDirectJoinPrompt()
         {
             var msgBox = new GUIMessageBox(TextManager.Get("ServerListDirectJoin"), "",
-                new string[] { TextManager.Get("ServerListJoin"), TextManager.Get("AddToFavorites"), TextManager.Get("Cancel") },
+                new LocalizedString[] { TextManager.Get("ServerListJoin"), TextManager.Get("AddToFavorites"), TextManager.Get("Cancel") },
                 relativeSize: new Vector2(0.25f, 0.2f), minSize: new Point(400, 150));
             msgBox.Content.ChildAnchor = Anchor.TopCenter;
 
@@ -1597,7 +1478,7 @@ namespace Barotrauma
             {
                 friendsDropdownButton = new GUIButton(new RectTransform(Vector2.One, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), "\u2022 \u2022 \u2022", style: "GUIButtonFriendsDropdown")
                 {
-                    Font = GUI.GlobalFont,
+                    Font = GUIStyle.GlobalFont,
                     OnClicked = (button, udt) =>
                     {
                         friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5 * 166 / 100, friendsButtonHolder.Rect.Height * 4 * 166 / 100);
@@ -1680,10 +1561,10 @@ namespace Barotrauma
 
                 var textBlock = new GUITextBlock(new RectTransform(Vector2.One * 0.8f, friendFrame.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.BothHeight) { RelativeOffset = new Vector2(1.0f / 7.7f, 0.0f) }, friend.Name + "\n" + friend.StatusText)
                 {
-                    Font = GUI.SmallFont
+                    Font = GUIStyle.SmallFont
                 };
-                if (friend.PlayingThisGame) { textBlock.TextColor = GUI.Style.Green; }
-                if (friend.PlayingAnotherGame) { textBlock.TextColor = GUI.Style.Blue; }
+                if (friend.PlayingThisGame) { textBlock.TextColor = GUIStyle.Green; }
+                if (friend.PlayingAnotherGame) { textBlock.TextColor = GUIStyle.Blue; }
 
                 if (friend.InServer)
                 {
@@ -1744,7 +1625,7 @@ namespace Barotrauma
             }
 
             recentServers.Concat(favoriteServers).ForEach(si => si.OwnerVerified = false);
-            if (GameMain.Config.UseSteamMatchmaking)
+            if (GameSettings.CurrentConfig.UseSteamMatchmaking)
             {
                 serverList.ClearChildren();
                 if (!SteamManager.GetServers(AddToServerList, ServerQueryFinished))
@@ -1767,11 +1648,6 @@ namespace Barotrauma
                     }
                     scanServersButton.Enabled = true;
                 }
-            }
-            else
-            {
-                CoroutineManager.StartCoroutine(SendMasterServerRequest());
-                waitingForRefresh = false;
             }
 
             refreshDisableTimer = DateTime.Now + AllowedRefreshInterval;
@@ -1998,14 +1874,14 @@ namespace Barotrauma
 
             if (serverInfo.LobbyID == 0 && (string.IsNullOrWhiteSpace(serverInfo.IP) || string.IsNullOrWhiteSpace(serverInfo.Port)))
             {
-                string toolTip = TextManager.Get("ServerOffline");
+                LocalizedString toolTip = TextManager.Get("ServerOffline");
                 serverContent.Children.ForEach(c => c.ToolTip = toolTip);
                 serverName.TextColor *= 0.8f;
                 serverPlayers.TextColor *= 0.8f;
             }
-            else if (GameMain.Config.UseSteamMatchmaking && serverInfo.RespondedToSteamQuery.HasValue && serverInfo.RespondedToSteamQuery.Value == false)
+            else if (GameSettings.CurrentConfig.UseSteamMatchmaking && serverInfo.RespondedToSteamQuery.HasValue && serverInfo.RespondedToSteamQuery.Value == false)
             {
-                string toolTip = TextManager.Get("ServerListNoSteamQueryResponse");
+                LocalizedString toolTip = TextManager.Get("ServerListNoSteamQueryResponse");
                 compatibleBox.Selected = false;
                 serverContent.Children.ForEach(c => c.ToolTip = toolTip);
                 serverName.TextColor *= 0.8f;
@@ -2014,7 +1890,7 @@ namespace Barotrauma
             else if (string.IsNullOrEmpty(serverInfo.GameVersion) || !serverInfo.ContentPackageHashes.Any())
             {
                 compatibleBox.Selected = false;
-                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), compatibleBox.Box.RectTransform, Anchor.Center), " ? ", GUI.Style.Orange * 0.85f, textAlignment: Alignment.Center)
+                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), compatibleBox.Box.RectTransform, Anchor.Center), " ? ", GUIStyle.Orange * 0.85f, textAlignment: Alignment.Center)
                 {
                     ToolTip = TextManager.Get(string.IsNullOrEmpty(serverInfo.GameVersion) ?
                         "ServerListUnknownVersion" :
@@ -2023,27 +1899,30 @@ namespace Barotrauma
             }
             else if (!compatibleBox.Selected)
             {
-                string toolTip = "";
+                LocalizedString toolTip = "";
                 if (serverInfo.GameVersion != GameMain.Version.ToString())
+                {
                     toolTip = TextManager.GetWithVariable("ServerListIncompatibleVersion", "[version]", serverInfo.GameVersion);
+                }
 
                 for (int i = 0; i < serverInfo.ContentPackageNames.Count; i++)
                 {
                     bool listAsIncompatible = false;
                     if (serverInfo.ContentPackageWorkshopIds[i] == 0)
                     {
-                        listAsIncompatible = !GameMain.Config.AllEnabledPackages.Any(cp => cp.MD5hash.Hash == serverInfo.ContentPackageHashes[i]);
+                        listAsIncompatible = !ContentPackageManager.EnabledPackages.All.Any(contentPackage => contentPackage.Hash.StringRepresentation == serverInfo.ContentPackageHashes[i]);
                     }
                     else
                     {
-                        listAsIncompatible = GameMain.Config.AllEnabledPackages.Any(cp => cp.MD5hash.Hash != serverInfo.ContentPackageHashes[i] &&
-                                                                                          cp.SteamWorkshopId == serverInfo.ContentPackageWorkshopIds[i]);
+                        listAsIncompatible = ContentPackageManager.EnabledPackages.All.Any(contentPackage => contentPackage.Hash.StringRepresentation != serverInfo.ContentPackageHashes[i] &&
+                                                                                          contentPackage.SteamWorkshopId == serverInfo.ContentPackageWorkshopIds[i]);
                     }
                     if (listAsIncompatible)
                     {
                         if (toolTip != "") toolTip += "\n";
-                        toolTip += TextManager.GetWithVariables("ServerListIncompatibleContentPackage", new string[2] { "[contentpackage]", "[hash]" },
-                            new string[2] { serverInfo.ContentPackageNames[i], Md5Hash.GetShortHash(serverInfo.ContentPackageHashes[i]) });
+                        toolTip += TextManager.GetWithVariables("ServerListIncompatibleContentPackage",
+                            ("[contentpackage]", serverInfo.ContentPackageNames[i]),
+                            ("[hash]", Md5Hash.GetShortHash(serverInfo.ContentPackageHashes[i])));
                     }
                 }
 
@@ -2054,12 +1933,12 @@ namespace Barotrauma
             }
             else
             {
-                string toolTip = "";
+                LocalizedString toolTip = "";
                 for (int i = 0; i < serverInfo.ContentPackageNames.Count; i++)
                 {
-                    if (!GameMain.Config.AllEnabledPackages.Any(cp => cp.MD5hash.Hash == serverInfo.ContentPackageHashes[i]))
+                    if (!ContentPackageManager.EnabledPackages.All.Any(contentPackage => contentPackage.Hash.StringRepresentation == serverInfo.ContentPackageHashes[i]))
                     {
-                        if (toolTip != "") toolTip += "\n";
+                        if (toolTip != "") { toolTip += "\n"; }
                         toolTip += TextManager.GetWithVariable("ServerListIncompatibleContentPackageWorkshopAvailable", "[contentpackage]", serverInfo.ContentPackageNames[i]);
                         break;
                     }
@@ -2116,161 +1995,10 @@ namespace Barotrauma
             waitingForRefresh = false;
         }
 
-        private IEnumerable<CoroutineStatus> SendMasterServerRequest()
-        {
-            RestClient client = null;
-            try
-            {
-                client = new RestClient(NetConfig.MasterServerUrl);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Error while connecting to master server", e);                
-            }
-
-            if (client == null) yield return CoroutineStatus.Success;
-
-            var request = new RestRequest("masterserver2.php", Method.GET);
-            request.AddParameter("gamename", "barotrauma");
-            request.AddParameter("action", "listservers");
-            
-            // execute the request
-            masterServerResponded = false;
-            var restRequestHandle = client.ExecuteAsync(request, response => MasterServerCallBack(response));
-
-            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 8);
-            while (!masterServerResponded)
-            {
-                if (DateTime.Now > timeOut)
-                {
-                    serverList.ClearChildren();
-                    restRequestHandle.Abort();
-                    new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), TextManager.Get("MasterServerTimeOutError"));
-                    yield return CoroutineStatus.Success;
-                }
-                yield return CoroutineStatus.Running;
-            }
-
-            if (masterServerResponse.ErrorException != null)
-            {
-                serverList.ClearChildren();
-                new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), TextManager.GetWithVariable("MasterServerErrorException", "[error]", masterServerResponse.ErrorException.ToString()));
-            }
-            else if (masterServerResponse.StatusCode != HttpStatusCode.OK)
-            {
-                serverList.ClearChildren();
-                
-                switch (masterServerResponse.StatusCode)
-                {
-                    case HttpStatusCode.NotFound:
-                        new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"),
-                           TextManager.GetWithVariable("MasterServerError404", "[masterserverurl]", NetConfig.MasterServerUrl));
-                        break;
-                    case HttpStatusCode.ServiceUnavailable:
-                        new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), 
-                            TextManager.Get("MasterServerErrorUnavailable"));
-                        break;
-                    default:
-                        new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"),
-                            TextManager.GetWithVariables("MasterServerErrorDefault", new string[2] { "[statuscode]", "[statusdescription]" }, 
-                            new string[2] { masterServerResponse.StatusCode.ToString(), masterServerResponse.StatusDescription }));
-                        break;
-                }
-                
-            }
-            else
-            {
-                UpdateServerList(masterServerResponse.Content);
-            }
-
-            yield return CoroutineStatus.Success;
-
-        }
-
         private void MasterServerCallBack(IRestResponse response)
         {
             masterServerResponse = response;
             masterServerResponded = true;
-        }
-
-        public void DownloadWorkshopItems(IEnumerable<PendingWorkshopDownload> downloads, string serverName, string endPointString)
-        {
-            if (workshopDownloadsFrame != null) { return; }
-            int rowCount = downloads.Count() + 2;
-
-            autoConnectName = serverName; autoConnectEndpoint = endPointString;
-
-            workshopDownloadsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), null, Color.Black * 0.5f);
-            currentlyDownloadingWorkshopItem = null;
-            pendingWorkshopDownloads = new Dictionary<ulong, PendingWorkshopDownload>();
-
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f + 0.03f * rowCount), workshopDownloadsFrame.RectTransform, Anchor.Center, Pivot.Center));
-            var innerLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, (float)rowCount / (float)(rowCount + 3)), innerFrame.RectTransform, Anchor.Center, Pivot.Center));
-
-            foreach (PendingWorkshopDownload entry in downloads)
-            {
-                pendingWorkshopDownloads.Add(entry.Id, entry);
-
-                var itemLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f / rowCount), innerLayout.RectTransform), true, Anchor.CenterLeft)
-                {
-                    UserData = entry.Id
-                };
-                TaskPool.Add("RetrieveWorkshopItemData", Steamworks.SteamUGC.QueryFileAsync(entry.Id), (t) =>
-                {
-                    if (t.IsFaulted)
-                    {
-                        TaskPool.PrintTaskExceptions(t, $"Failed to retrieve Workshop item info (ID {entry.Id})");
-                        return;
-                    }
-                    t.TryGetResult(out Steamworks.Ugc.Item? item);
-
-                    if (!item.HasValue)
-                    {
-                        DebugConsole.ThrowError($"Failed to find a Steam Workshop item with the ID {entry.Id}.");
-                        return;
-                    }
-
-                    if (pendingWorkshopDownloads.ContainsKey(entry.Id))
-                    {
-                        pendingWorkshopDownloads[entry.Id] = new PendingWorkshopDownload(entry.ExpectedHash, item.Value);
-
-                        new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.67f), itemLayout.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), item.Value.Title);
-
-                        new GUIProgressBar(new RectTransform(new Vector2(0.6f, 0.67f), itemLayout.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), 0f, Color.Lime)
-                        {
-                            ProgressGetter = () =>
-                            {
-                                if (item.Value.IsInstalled) { return 1.0f; }
-                                else if (!item.Value.IsDownloading) { return 0.0f; }
-                                return item.Value.DownloadAmount;
-                            }
-                        };
-                    }
-                });
-            }
-
-            var buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 2.0f / rowCount), innerLayout.RectTransform), true, Anchor.CenterLeft)
-            {
-                UserData = "buttons"
-            };
-
-            new GUIButton(new RectTransform(new Vector2(0.3f, 0.67f), buttonLayout.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), TextManager.Get("Cancel"))
-            {
-                OnClicked = (btn, obj) =>
-                {
-                    CancelWorkshopDownloads();
-                    return true;
-                }
-            };
-        }
-
-        public void CancelWorkshopDownloads()
-        {
-            autoConnectEndpoint = null;
-            autoConnectName = null;
-            pendingWorkshopDownloads.Clear();
-            currentlyDownloadingWorkshopItem = null;
-            workshopDownloadsFrame = null;
         }
 
         private bool JoinServer(string endpoint, string serverName)
@@ -2283,8 +2011,8 @@ namespace Barotrauma
                 return false;
             }
 
-            GameMain.Config.PlayerName = ClientNameBox.Text;
-            GameMain.Config.SaveNewPlayerConfig();
+            MultiplayerPreferences.Instance.PlayerName = ClientNameBox.Text;
+            GameSettings.SaveCurrentConfig();
 
             CoroutineManager.StartCoroutine(ConnectToServer(endpoint, serverName), "ConnectToServer");
 
@@ -2301,7 +2029,7 @@ namespace Barotrauma
             try
             {
 #endif
-                GameMain.Client = new GameClient(GameMain.Config.PlayerName, serverIP, serverSteamID, serverName);
+                GameMain.Client = new GameClient(MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty(SteamManager.GetUsername()), serverIP, serverSteamID, serverName);
 #if !DEBUG
             }
             catch (Exception e)
@@ -2345,7 +2073,7 @@ namespace Barotrauma
         private Color GetPingTextColor(int ping)
         {
             if (ping < 0) { return Color.DarkRed; }
-            return ToolBox.GradientLerp(ping / 200.0f, GUI.Style.Green, GUI.Style.Orange, GUI.Style.Red);
+            return ToolBox.GradientLerp(ping / 200.0f, GUIStyle.Green, GUIStyle.Orange, GUIStyle.Red);
         }
 
         public async Task<int> PingServerAsync(string ip, int timeOut)
@@ -2425,35 +2153,35 @@ namespace Barotrauma
             menu.AddToGUIUpdateList();
             friendPopup?.AddToGUIUpdateList();
             friendsDropdown?.AddToGUIUpdateList();
-            workshopDownloadsFrame?.AddToGUIUpdateList();
         }
 
-        public void SaveServerFilters(XElement element)
+        public void StoreServerFilters()
         {
-            element.RemoveAttributes();
-            foreach (KeyValuePair<string, GUITickBox> filterBox in filterTickBoxes)
+            foreach (KeyValuePair<Identifier, GUITickBox> filterBox in filterTickBoxes)
             {
-                element.Add(new XAttribute(filterBox.Key, filterBox.Value.Selected.ToString()));
+                ServerListFilters.Instance.SetAttribute(filterBox.Key, filterBox.Value.Selected.ToString());
             }
-            foreach (KeyValuePair<string, GUIDropDown> ternaryFilter in ternaryFilters)
+            foreach (KeyValuePair<Identifier, GUIDropDown> ternaryFilter in ternaryFilters)
             {
-                element.Add(new XAttribute(ternaryFilter.Key, ternaryFilter.Value.SelectedData.ToString()));
+                ServerListFilters.Instance.SetAttribute(ternaryFilter.Key, ternaryFilter.Value.SelectedData.ToString());
             }
         }
 
-        public void LoadServerFilters(XElement element)
+        public void LoadServerFilters()
         {
-            if (element == null) { return; }
-
-            foreach (KeyValuePair<string, GUITickBox> filterBox in filterTickBoxes)
+            XDocument currentConfigDoc = XMLExtensions.TryLoadXml(GameSettings.PlayerConfigPath);
+            ServerListFilters.Init(currentConfigDoc.Root.GetChildElement("serverfilters"));
+            foreach (KeyValuePair<Identifier, GUITickBox> filterBox in filterTickBoxes)
             {
-                filterBox.Value.Selected = element.GetAttributeBool(filterBox.Key, filterBox.Value.Selected);
+                filterBox.Value.Selected =
+                    ServerListFilters.Instance.GetAttributeBool(filterBox.Key, filterBox.Value.Selected);
             }
-            foreach (KeyValuePair<string, GUIDropDown> ternaryFilter in ternaryFilters)
+            foreach (KeyValuePair<Identifier, GUIDropDown> ternaryFilter in ternaryFilters)
             {
-                string valueStr = element.GetAttributeString(ternaryFilter.Key, "");
-                TernaryOption ternaryOption = (TernaryOption)ternaryFilter.Value.SelectedData;
-                Enum.TryParse<TernaryOption>(valueStr, true, out ternaryOption);
+                TernaryOption ternaryOption =
+                    ServerListFilters.Instance.GetAttributeEnum(
+                        ternaryFilter.Key,
+                        (TernaryOption)ternaryFilter.Value.SelectedData);
 
                 var child = ternaryFilter.Value.ListBox.Content.GetChildByUserData(ternaryOption);
                 ternaryFilter.Value.Select(ternaryFilter.Value.ListBox.Content.GetChildIndex(child));

@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
 
         private Vector4 padding;
 
-        [Serialize("0,0,0,0", true, description: "The amount of padding around the text in pixels (left,top,right,bottom).")]
+        [Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "The amount of padding around the text in pixels (left,top,right,bottom).")]
         public Vector4 Padding
         {
             get { return padding; }
@@ -39,7 +39,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string text;
-        [Serialize("", true, translationTextTag: "Label.", description: "The text displayed in the label.", alwaysUseInstanceValues: true), Editable(100)]
+        [Serialize("", IsPropertySaveable.Yes, translationTextTag: "Label.", description: "The text displayed in the label.", alwaysUseInstanceValues: true), Editable(100)]
         public string Text
         {
             get { return text; }
@@ -60,7 +60,7 @@ namespace Barotrauma.Items.Components
 
         private bool ignoreLocalization;
 
-        [Editable, Serialize(false, true, "Whether or not to skip localization and always display the raw value.")]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, "Whether or not to skip localization and always display the raw value.")]
         public bool IgnoreLocalization
         {
             get => ignoreLocalization;
@@ -71,13 +71,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public string DisplayText
+        public LocalizedString DisplayText
         {
             get;
             private set;
         }
 
-        [Editable, Serialize("0,0,0,255", true, description: "The color of the text displayed on the label (R,G,B,A).", alwaysUseInstanceValues: true)]
+        [Editable, Serialize("0,0,0,255", IsPropertySaveable.Yes, description: "The color of the text displayed on the label (R,G,B,A).", alwaysUseInstanceValues: true)]
         public Color TextColor
         {
             get { return textColor; }
@@ -88,7 +88,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(0.0f, 10.0f), Serialize(1.0f, true, description: "The scale of the text displayed on the label.", alwaysUseInstanceValues: true)]
+        [Editable(0.0f, 10.0f), Serialize(1.0f, IsPropertySaveable.Yes, description: "The scale of the text displayed on the label.", alwaysUseInstanceValues: true)]
         public float TextScale
         {
             get { return textBlock == null ? 1.0f : textBlock.TextScale; }
@@ -99,7 +99,7 @@ namespace Barotrauma.Items.Components
         }
 
         private bool scrollable;
-        [Serialize(false, true, description: "Should the text scroll horizontally across the item if it's too long to be displayed all at once.")]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the text scroll horizontally across the item if it's too long to be displayed all at once.")]
         public bool Scrollable
         {
             get { return scrollable; }
@@ -112,7 +112,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(20.0f, true, description: "How fast the text scrolls across the item (only valid if Scrollable is set to true).")]
+        [Serialize(20.0f, IsPropertySaveable.Yes, description: "How fast the text scrolls across the item (only valid if Scrollable is set to true).")]
         public float ScrollSpeed
         {
             get;
@@ -131,7 +131,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public ItemLabel(Item item, XElement element)
+        public ItemLabel(Item item, ContentXElement element)
             : base(item, element)
         {            
         }
@@ -148,13 +148,13 @@ namespace Barotrauma.Items.Components
                 //(so the text can scroll entirely out of view before we reset it back to start)
                 needsScrolling = true;
                 float spaceWidth = textBlock.Font.MeasureChar(' ').X;
-                scrollingText = new string(' ', (int)Math.Ceiling(textAreaWidth / spaceWidth)) + DisplayText;
+                scrollingText = new string(' ', (int)Math.Ceiling(textAreaWidth / spaceWidth)) + DisplayText.Value;
             }
             else
             {
                 //whole text can fit in the textblock, no need to scroll
                 needsScrolling = false;
-                scrollingText = DisplayText;
+                scrollingText = DisplayText.Value;
                 scrollPadding = 0;
                 scrollAmount = 0.0f;
                 scrollIndex = 0;
@@ -176,7 +176,7 @@ namespace Barotrauma.Items.Components
 
         private void SetDisplayText(string value)
         {
-            DisplayText = IgnoreLocalization ? value : TextManager.Get(value, returnNull: true) ?? value;
+            DisplayText = IgnoreLocalization ? value : TextManager.Get(value).Fallback(value);
             TextBlock.Text = DisplayText;
             if (Screen.Selected == GameMain.SubEditorScreen && Scrollable)
             {
@@ -189,7 +189,7 @@ namespace Barotrauma.Items.Components
         private void RecreateTextBlock()
         {
             textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "",
-                textColor: textColor, font: GUI.UnscaledSmallFont, textAlignment: scrollable ? Alignment.CenterLeft : Alignment.Center, wrap: !scrollable, style: null)
+                textColor: textColor, font: GUIStyle.UnscaledSmallFont, textAlignment: scrollable ? Alignment.CenterLeft : Alignment.Center, wrap: !scrollable, style: null)
             {
                 TextDepth = item.SpriteDepth - 0.00001f,
                 RoundToNearestPixel = false,
@@ -261,6 +261,7 @@ namespace Barotrauma.Items.Components
         
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
+            if (item.ParentInventory != null) { return; }
             if (editing)
             {
                 if (!MathUtils.NearlyEqual(prevScale, item.Scale) || prevRect != item.Rect)

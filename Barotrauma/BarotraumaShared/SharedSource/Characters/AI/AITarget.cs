@@ -89,8 +89,8 @@ namespace Barotrauma
             set;
         }
 
-        public string SonarLabel;
-        public string SonarIconIdentifier;
+        public LocalizedString SonarLabel;
+        public Identifier SonarIconIdentifier;
 
         private bool inDetectable;
 
@@ -172,13 +172,9 @@ namespace Barotrauma
             }
             SonarDisruption     = element.GetAttributeFloat("sonardisruption", 0.0f);
             string label        = element.GetAttributeString("sonarlabel", "");
-            SonarLabel          = TextManager.Get(label, returnNull: true) ?? label;
-            SonarIconIdentifier = element.GetAttributeString("sonaricon", "");
-            string typeString   = element.GetAttributeString("type", "Any");
-            if (Enum.TryParse(typeString, out TargetType t))
-            {
-                Type = t;
-            }
+            SonarLabel          = TextManager.Get(label).Fallback(label);
+            SonarIconIdentifier = element.GetAttributeIdentifier("sonaricon", Identifier.Empty);
+            Type                = element.GetAttributeEnum("type", TargetType.Any);
             Reset();
         }
 

@@ -27,7 +27,7 @@ namespace Barotrauma
         public Ladder Ladders;
         public Structure Stairs;
 
-        private List<string> tags;
+        private HashSet<Identifier> tags;
 
         public bool isObstructed;
 
@@ -78,10 +78,7 @@ namespace Barotrauma
             }
         }
 
-        public IEnumerable<string> Tags
-        {
-            get { return tags; }
-        }
+        public IEnumerable<Identifier> Tags => tags;
 
         public JobPrefab AssignedJob { get; private set; }
 
@@ -114,7 +111,7 @@ namespace Barotrauma
 
 
         public WayPoint(Rectangle newRect, Submarine submarine)
-            : this (MapEntityPrefab.Find(null, "waypoint"), newRect, submarine)
+            : this (MapEntityPrefab.FindByIdentifier("waypoint".ToIdentifier()), newRect, submarine)
         {
         }
 
@@ -122,8 +119,8 @@ namespace Barotrauma
             : base (prefab, submarine, id)
         {
             rect = newRect;
-            idCardTags = new string[0];
-            tags = new List<string>();
+            idCardTags = Array.Empty<string>();
+            tags = new HashSet<Identifier>();
 
 #if CLIENT
             if (iconSprites == null)
@@ -165,7 +162,7 @@ namespace Barotrauma
 
         public static bool GenerateSubWaypoints(Submarine submarine)
         {
-            if (!Hull.hullList.Any())
+            if (!Hull.HullList.Any())
             {
                 DebugConsole.ThrowError("Couldn't generate waypoints: no hulls found.");
                 return false;
@@ -189,13 +186,14 @@ namespace Barotrauma
                     door.Body.Enabled = true;
                 }
             }
-            bool isFlooded = submarine.Info.IsRuin || submarine.Info.Type == SubmarineType.OutpostModule && submarine.Info.OutpostModuleInfo.ModuleFlags.Contains("ruin");
+            bool isFlooded = submarine.Info.IsRuin || submarine.Info.Type == SubmarineType.OutpostModule && submarine.Info.OutpostModuleInfo.ModuleFlags.Contains("ruin".ToIdentifier());
             float diffFromHullEdge = 50;
             float minDist = 100.0f;
             float heightFromFloor = 110.0f;
             float hullMinHeight = 100;
+
             var removals = new HashSet<WayPoint>();
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in Hull.HullList)
             {
                 if (isFlooded)
                 {
@@ -587,7 +585,7 @@ namespace Barotrauma
                     Body pickedBody = Submarine.PickBody(
                         ConvertUnits.ToSimUnits(new Vector2(startPoint.Position.X, y)),
                         prevPos, ignoredBodies, Physics.CollisionWall, false,
-                        (Fixture f) => f.Body.UserData is Item && ((Item)f.Body.UserData).GetComponent<Door>() != null);
+                        (Fixture f) => f.Body.UserData is Item pickedItem && pickedItem.GetComponent<Door>() != null);
 
                     Door pickedDoor = null;
                     if (pickedBody != null)
@@ -876,9 +874,9 @@ namespace Barotrauma
             return WayPointList.GetRandom(wp =>
                 (ignoreSubmarine || wp.Submarine == sub) && 
                 wp.spawnType == spawnType &&
-                (string.IsNullOrEmpty(spawnPointTag) || wp.Tags.Any(t => t.Equals(spawnPointTag, StringComparison.OrdinalIgnoreCase))) &&
+                (spawnPointTag.IsNullOrEmpty() || wp.Tags.Any(t => t == spawnPointTag)) &&
                 (assignedJob == null || (assignedJob != null && wp.AssignedJob == assignedJob)), 
-                useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced);
+                useSyncedRand ? Rand.RandSync.ServerAndClient : Rand.RandSync.Unsynced);
         }
 
         public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew, Submarine submarine)
@@ -922,7 +920,7 @@ namespace Barotrauma
                 var nonJobSpecificPoints = subWayPoints.FindAll(wp => wp.spawnType == SpawnType.Human && wp.AssignedJob == null);
                 if (nonJobSpecificPoints.Any())
                 {
-                    assignedWayPoints[i] = nonJobSpecificPoints[Rand.Int(nonJobSpecificPoints.Count, Rand.RandSync.Server)];
+                    assignedWayPoints[i] = nonJobSpecificPoints[Rand.Int(nonJobSpecificPoints.Count, Rand.RandSync.ServerAndClient)];
                 }
 
                 if (assignedWayPoints[i] != null) { continue; }
@@ -966,13 +964,9 @@ namespace Barotrauma
         {
             Stairs = null;
             Body pickedBody = Submarine.PickBody(SimPosition, SimPosition - Vector2.UnitY * 2.0f, null, Physics.CollisionStairs);
-            if (pickedBody != null && pickedBody.UserData is Structure)
+            if (pickedBody != null && pickedBody.UserData is Structure structure && structure.StairDirection != Direction.None)
             {
-                Structure structure = (Structure)pickedBody.UserData;
-                if (structure != null && structure.StairDirection != Direction.None)
-                {
-                    Stairs = structure;
-                }
+                Stairs = structure;                
             }
         }
 
@@ -985,13 +979,12 @@ namespace Barotrauma
             }
             if (ladderId > 0)
             {
-                Item ladderItem = FindEntityByID(ladderId) as Item;
-                if (ladderItem != null) { Ladders = ladderItem.GetComponent<Ladder>(); }
+                if (FindEntityByID(ladderId) is Item ladderItem) { Ladders = ladderItem.GetComponent<Ladder>(); }
                 ladderId = 0;
             }
         }
 
-        public static WayPoint Load(XElement element, Submarine submarine, IdRemap idRemap)
+        public static WayPoint Load(ContentXElement element, Submarine submarine, IdRemap idRemap)
         {
             Rectangle rect = new Rectangle(
                 int.Parse(element.Attribute("x").Value),
@@ -1000,8 +993,10 @@ namespace Barotrauma
 
 
             Enum.TryParse(element.GetAttributeString("spawn", "Path"), out SpawnType spawnType);
-            WayPoint w = new WayPoint(MapEntityPrefab.Find(null, spawnType == SpawnType.Path ? "waypoint" : "spawnpoint"), rect, submarine, idRemap.GetOffsetId(element));
-            w.spawnType = spawnType;
+            WayPoint w = new WayPoint(MapEntityPrefab.FindByIdentifier((spawnType == SpawnType.Path ? "waypoint" : "spawnpoint").ToIdentifier()), rect, submarine, idRemap.GetOffsetId(element))
+            {
+                spawnType = spawnType
+            };
 
             string idCardDescString = element.GetAttributeString("idcarddesc", "");
             if (!string.IsNullOrWhiteSpace(idCardDescString))
@@ -1014,7 +1009,7 @@ namespace Barotrauma
                 w.IdCardTags = idCardTagString.Split(',');
             }
 
-            w.tags = element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true).ToList();
+            w.tags = element.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToHashSet();
 
             string jobIdentifier = element.GetAttributeString("job", "").ToLowerInvariant();
             if (!string.IsNullOrWhiteSpace(jobIdentifier))

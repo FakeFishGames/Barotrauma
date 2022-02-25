@@ -33,16 +33,16 @@ namespace Barotrauma.Networking
     {
         public static List<PermissionPreset> List = new List<PermissionPreset>();
            
-        public readonly string Name;
-        public readonly string Description;
+        public readonly LocalizedString Name;
+        public readonly LocalizedString Description;
         public readonly ClientPermissions Permissions;
         public readonly List<DebugConsole.Command> PermittedCommands;
         
         public PermissionPreset(XElement element)
         {
             string name = element.GetAttributeString("name", "");
-            Name = TextManager.Get("permissionpresetname." + name, true) ?? name;
-            Description = TextManager.Get("permissionpresetdescription." + name, true) ?? element.GetAttributeString("description", "");
+            Name = TextManager.Get("permissionpresetname." + name).Fallback(name);
+            Description = TextManager.Get("permissionpresetdescription." + name) .Fallback(element.GetAttributeString("description", ""));
 
             string permissionsStr = element.GetAttributeString("permissions", "");
             if (!Enum.TryParse(permissionsStr, out Permissions))
@@ -53,7 +53,7 @@ namespace Barotrauma.Networking
             PermittedCommands = new List<DebugConsole.Command>();
             if (Permissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
-                foreach (XElement subElement in element.Elements())
+                foreach (var subElement in element.Elements())
                 {
                     if (!subElement.Name.ToString().Equals("command", StringComparison.OrdinalIgnoreCase)) { continue; }
                     string commandName = subElement.GetAttributeString("name", "");

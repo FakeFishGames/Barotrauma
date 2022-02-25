@@ -107,7 +107,7 @@ namespace Barotrauma.Items.Components
             HighlightedWire = null;
             Connection.DrawConnections(spriteBatch, this, user);
 
-            foreach (UISprite sprite in GUI.Style.GetComponentStyle("ConnectionPanelFront").Sprites[GUIComponent.ComponentState.None])
+            foreach (UISprite sprite in GUIStyle.GetComponentStyle("ConnectionPanelFront").Sprites[GUIComponent.ComponentState.None])
             {
                 sprite.Draw(spriteBatch, GuiFrame.Rect, Color.White, SpriteEffects.None);
             }

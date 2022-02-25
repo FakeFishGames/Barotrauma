@@ -16,55 +16,55 @@ namespace Barotrauma.Items.Components
             Circle
         }
 
-        [Editable, Serialize("", true, "Identifier of the item to spawn, does nothing if SpeciesName is set. Separate by comma to have multiple items spawn at random.")]
+        [Editable, Serialize("", IsPropertySaveable.Yes, "Identifier of the item to spawn, does nothing if SpeciesName is set. Separate by comma to have multiple items spawn at random.")]
         public string? ItemIdentifier { get; set; }
 
-        [Editable, Serialize("", true, "Species name of the creature to spawn, takes priority if ItemIdentifier is set. Separate by comma to have multiple creatures spawn at random.")]
+        [Editable, Serialize("", IsPropertySaveable.Yes, "Species name of the creature to spawn, takes priority if ItemIdentifier is set. Separate by comma to have multiple creatures spawn at random.")]
         public string? SpeciesName { get; set; }
 
-        [Editable, Serialize(true, true, "Only spawn if crew members are within certain area")]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, "Only spawn if crew members are within certain area")]
         public bool OnlySpawnWhenCrewInRange { get; set; }
 
-        [Editable, Serialize(AreaShape.Rectangle, true, "Shape of the area where crew members need to stay")]
+        [Editable, Serialize(AreaShape.Rectangle, IsPropertySaveable.Yes, "Shape of the area where crew members need to stay")]
         public AreaShape CrewAreaShape { get; set; }
 
-        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 0, ValueStep = 10f), Serialize("500,500", true, "Size of the rectangle where crew members need to stay. Does nothing if CrewAreaShape is set to Circle")]
+        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 0, ValueStep = 10f), Serialize("500,500", IsPropertySaveable.Yes, "Size of the rectangle where crew members need to stay. Does nothing if CrewAreaShape is set to Circle")]
         public Vector2 CrewAreaBounds { get; set; }
 
-        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 0, ValueStep = 10f), Serialize(500f, true, "Radius of the circle to spawn stuff in. Does nothing if CrewAreaShape is set to Rectangle")]
+        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 0, ValueStep = 10f), Serialize(500f, IsPropertySaveable.Yes, "Radius of the circle to spawn stuff in. Does nothing if CrewAreaShape is set to Rectangle")]
         public float CrewAreaRadius { get; set; }
 
-        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = int.MinValue, ValueStep = 10f), Serialize("0,0", true, "Offset of the crew area from the center of the item")]
+        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = int.MinValue, ValueStep = 10f), Serialize("0,0", IsPropertySaveable.Yes, "Offset of the crew area from the center of the item")]
         public Vector2 CrewAreaOffset { get; set; }
 
-        [Editable, Serialize(AreaShape.Rectangle, true, "Shape of the area where enemies or items are spawned")]
+        [Editable, Serialize(AreaShape.Rectangle, IsPropertySaveable.Yes, "Shape of the area where enemies or items are spawned")]
         public AreaShape SpawnAreaShape { get; set; }
 
-        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 0, ValueStep = 10f), Serialize("500,500", true, "Size of the rectangle where items or creatures will be spawned. Does nothing if SpawnAreaShape is set to Circle")]
+        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 0, ValueStep = 10f), Serialize("500,500", IsPropertySaveable.Yes, "Size of the rectangle where items or creatures will be spawned. Does nothing if SpawnAreaShape is set to Circle")]
         public Vector2 SpawnAreaBounds { get; set; }
 
-        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 0, ValueStep = 10f), Serialize(500f, true, "Radius of the circle where items or creatures will be spawned. Does nothing if SpawnAreaShape is set to Rectangle")]
+        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 0, ValueStep = 10f), Serialize(500f, IsPropertySaveable.Yes, "Radius of the circle where items or creatures will be spawned. Does nothing if SpawnAreaShape is set to Rectangle")]
         public float SpawnAreaRadius { get; set; }
 
-        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = int.MinValue, ValueStep = 10f), Serialize("0,0", true, "Offset of the spawn area from the center of the item")]
+        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = int.MinValue, ValueStep = 10f), Serialize("0,0", IsPropertySaveable.Yes, "Offset of the spawn area from the center of the item")]
         public Vector2 SpawnAreaOffset { get; set; }
 
-        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = int.MinValue, ValueStep = 1f), Serialize("10,40", true, "Time range between spawn attempts in seconds. Set both to a negative value to disable automatic spawning.")]
+        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = int.MinValue, ValueStep = 1f), Serialize("10,40", IsPropertySaveable.Yes, "Time range between spawn attempts in seconds. Set both to a negative value to disable automatic spawning.")]
         public Vector2 SpawnTimerRange { get; set; }
 
-        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 1f, ValueStep = 1f, DecimalCount = 0), Serialize("1,3", true, "Minumum and maximum amount of items or creatures to spawn in one attempt")]
+        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 1f, ValueStep = 1f, DecimalCount = 0), Serialize("1,3", IsPropertySaveable.Yes, "Minumum and maximum amount of items or creatures to spawn in one attempt")]
         public Vector2 SpawnAmountRange { get; set; }
 
-        [Editable(MinValueInt = 0, MaxValueInt = int.MaxValue), Serialize(8, true, "Total maximum amount of items or creatures that can be spawned. 0 = unrestricted.")]
+        [Editable(MinValueInt = 0, MaxValueInt = int.MaxValue), Serialize(8, IsPropertySaveable.Yes, "Total maximum amount of items or creatures that can be spawned. 0 = unrestricted.")]
         public int MaximumAmount { get; set; }
 
-        [Editable(MinValueInt = 0, MaxValueInt = int.MaxValue), Serialize(8, true, "Amount of items or creatures in the spawn area that will prevent further items or creatures from being spawned. 0 = unrestricted.")]
+        [Editable(MinValueInt = 0, MaxValueInt = int.MaxValue), Serialize(8, IsPropertySaveable.Yes, "Amount of items or creatures in the spawn area that will prevent further items or creatures from being spawned. 0 = unrestricted.")]
         public int MaximumAmountInArea { get; set; }
 
-        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 0, ValueStep = 10f), Serialize(500f, true, "Inflate the circle of rectangle by this value to extend the area that counts towards the maximum amount of items or enemies to be spawned")]
+        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 0, ValueStep = 10f), Serialize(500f, IsPropertySaveable.Yes, "Inflate the circle of rectangle by this value to extend the area that counts towards the maximum amount of items or enemies to be spawned")]
         public float MaximumAmountRangePadding { get; set; }
 
-        [Serialize(true, true, "")]
+        [Serialize(true, IsPropertySaveable.Yes, "")]
         public bool CanSpawn { get; set; } = true;
 
         private float spawnTimer;
@@ -72,7 +72,7 @@ namespace Barotrauma.Items.Components
 
         private int spawnedAmount = 0;
 
-        public EntitySpawnerComponent(Item item, XElement element) : base(item, element)
+        public EntitySpawnerComponent(Item item, ContentXElement element) : base(item, element)
         {
             IsActive = true;
         }
@@ -90,7 +90,7 @@ namespace Barotrauma.Items.Components
 
                     foreach (ItemPrefab prefab in ItemPrefab.Prefabs)
                     {
-                        if (string.Equals(trimmedString, prefab.Identifier, StringComparison.OrdinalIgnoreCase))
+                        if (trimmedString == prefab.Identifier)
                         {
                             found = true;
                             break;
@@ -182,11 +182,11 @@ namespace Barotrauma.Items.Components
             int amount;
             if (!string.IsNullOrWhiteSpace(SpeciesName))
             {
-                amount = Character.CharacterList.Count(c => !c.IsDead && c.SpeciesName.Equals(SpeciesName, StringComparison.OrdinalIgnoreCase) && IsInRange(c.WorldPosition, crewArea: false, rangePad: true));
+                amount = Character.CharacterList.Count(c => !c.IsDead && c.SpeciesName == SpeciesName && IsInRange(c.WorldPosition, crewArea: false, rangePad: true));
             }
             else if (!string.IsNullOrWhiteSpace(ItemIdentifier))
             {
-                amount = Item.ItemList.Count(it => it.Submarine == item.Submarine && it.Prefab.Identifier.Equals(ItemIdentifier, StringComparison.OrdinalIgnoreCase) && IsInRange(it.WorldPosition, crewArea: false, rangePad: true));
+                amount = Item.ItemList.Count(it => it.Submarine == item.Submarine && it.Prefab.Identifier == ItemIdentifier && IsInRange(it.WorldPosition, crewArea: false, rangePad: true));
             }
             else
             {
@@ -270,15 +270,15 @@ namespace Barotrauma.Items.Components
             {
                 if (!string.IsNullOrWhiteSpace(SpeciesName))
                 {
-                    string[] allSpecies = SpeciesName.Split(',');
-                    string species = allSpecies.GetRandom().Trim();
-                    Entity.Spawner?.AddToSpawnQueue(species, pos);
+                    Identifier[] allSpecies = SpeciesName.Split(',').Select(s => s.Trim()).ToIdentifiers().ToArray();
+                    Identifier species = allSpecies.GetRandomUnsynced();
+                    Entity.Spawner?.AddCharacterToSpawnQueue(species, pos);
                     spawnedAmount++;
                 }
                 else if (!string.IsNullOrWhiteSpace(ItemIdentifier))
                 {
-                    string[] allItems = ItemIdentifier.Split(',');
-                    string itemIdentifier = allItems.GetRandom().Trim();
+                    Identifier[] allItems = ItemIdentifier.Split(',').Select(s => s.Trim()).ToIdentifiers().ToArray();
+                    Identifier itemIdentifier = allItems.GetRandomUnsynced();
                     ItemPrefab? prefab = ItemPrefab.Find(null, itemIdentifier);
                     if (prefab is null) { return; }
 
@@ -287,7 +287,7 @@ namespace Barotrauma.Items.Components
                         pos -= sub.Position;
                     }
 
-                    Entity.Spawner?.AddToSpawnQueue(prefab, pos, item.Submarine);
+                    Entity.Spawner?.AddItemToSpawnQueue(prefab, pos, item.Submarine);
                     spawnedAmount++;
                 }
             }

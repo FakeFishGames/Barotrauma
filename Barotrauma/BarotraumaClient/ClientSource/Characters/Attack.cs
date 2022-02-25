@@ -6,14 +6,14 @@ namespace Barotrauma
 {
     partial class Attack
     {
-        [Serialize("StructureBlunt", true), Editable()]
+        [Serialize("StructureBlunt", IsPropertySaveable.Yes), Editable()]
         public string StructureSoundType { get; private set; }
 
         private RoundSound sound;
 
         private ParticleEmitter particleEmitter;
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             if (element.Attribute("sound") != null)
             {
@@ -21,7 +21,7 @@ namespace Barotrauma
                 return;
             }
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -29,7 +29,7 @@ namespace Barotrauma
                         particleEmitter = new ParticleEmitter(subElement);
                         break;
                     case "sound":
-                        sound = Submarine.LoadRoundSound(subElement);
+                        sound = RoundSound.Load(subElement);
                         break;
                 }
 

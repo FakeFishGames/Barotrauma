@@ -100,7 +100,7 @@ namespace Barotrauma.Items.Components
         public bool CanBeWelded = true;
 
         private float stuck;
-        [Serialize(0.0f, false, description: "How badly stuck the door is (in percentages). If the percentage reaches 100, the door needs to be cut open to make it usable again.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "How badly stuck the door is (in percentages). If the percentage reaches 100, the door needs to be cut open to make it usable again.")]
         public float Stuck
         {
             get { return stuck; }
@@ -115,13 +115,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(3.0f, true, description: "How quickly the door opens."), Editable]
+        [Serialize(3.0f, IsPropertySaveable.Yes, description: "How quickly the door opens."), Editable]
         public float OpeningSpeed { get; private set; }
 
-        [Serialize(3.0f, true, description: "How quickly the door closes."), Editable]
+        [Serialize(3.0f, IsPropertySaveable.Yes, description: "How quickly the door closes."), Editable]
         public float ClosingSpeed { get; private set; }
 
-        [Serialize(1.0f, true, description: "The door cannot be opened/closed during this time after it has been opened/closed by another character."), Editable]
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The door cannot be opened/closed during this time after it has been opened/closed by another character."), Editable]
         public float ToggleCoolDown { get; private set; }
 
         public bool? PredictedState { get; private set; }
@@ -155,10 +155,10 @@ namespace Barotrauma.Items.Components
 
         public bool IsHorizontal { get; private set; }
 
-        [Serialize("0.0,0.0,0.0,0.0", false, description: "Position and size of the window on the door. The upper left corner is 0,0. Set the width and height to 0 if you don't want the door to have a window.")]
+        [Serialize("0.0,0.0,0.0,0.0", IsPropertySaveable.No, description: "Position and size of the window on the door. The upper left corner is 0,0. Set the width and height to 0 if you don't want the door to have a window.")]
         public Rectangle Window { get; set; }
 
-        [Editable, Serialize(false, true, description: "Is the door currently open.")]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Is the door currently open.")]
         public bool IsOpen
         {
             get { return isOpen; }
@@ -169,7 +169,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(false, false, description: "If the door has integrated buttons, it can be opened by interacting with it directly (instead of using buttons wired to it).")]
+        [Serialize(false, IsPropertySaveable.No, description: "If the door has integrated buttons, it can be opened by interacting with it directly (instead of using buttons wired to it).")]
         public bool HasIntegratedButtons { get; private set; }
                 
         public float OpenState
@@ -187,39 +187,39 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(false, false, description: "Characters and items cannot pass through impassable doors. Useful for things such as ducts that should only let water and air through.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Characters and items cannot pass through impassable doors. Useful for things such as ducts that should only let water and air through.")]
         public bool Impassable
         {
             get;
             set;
         }
 
-        [Editable, Serialize(true, true, description: "", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "", alwaysUseInstanceValues: true)]
         public bool UseBetweenOutpostModules { get; private set; }
 
-        [Editable, Serialize(false, false, description: "If true, bots won't try to close this door behind them.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "If true, bots won't try to close this door behind them.", alwaysUseInstanceValues: true)]
         public bool BotsShouldKeepOpen { get; private set; }
 
-        public Door(Item item, XElement element)
+        public Door(Item item, ContentXElement element)
             : base(item, element)
         {
             IsHorizontal = element.GetAttributeBool("horizontal", false);
             canBePicked = element.GetAttributeBool("canbepicked", false);
             autoOrientGap = element.GetAttributeBool("autoorientgap", false);
             
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
-                string texturePath = subElement.GetAttributeString("texture", "");
+                string textureDir = GetTextureDirectory(subElement);
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
-                        doorSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));
+                        doorSprite = new Sprite(subElement, path: textureDir);
                         break;
                     case "weldedsprite":
-                        weldedSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));
+                        weldedSprite = new Sprite(subElement, path: textureDir);
                         break;
                     case "brokensprite":
-                        brokenSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));
+                        brokenSprite = new Sprite(subElement, path: textureDir);
                         scaleBrokenSprite = subElement.GetAttributeBool("scale", false);
                         fadeBrokenSprite = subElement.GetAttributeBool("fade", false);
                         break;
@@ -269,15 +269,15 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        private readonly string accessDeniedTxt = TextManager.Get("AccessDenied");
-        private readonly string cannotOpenText = TextManager.Get("DoorMsgCannotOpen");
-        public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
+        private readonly LocalizedString accessDeniedTxt = TextManager.Get("AccessDenied");
+        private readonly LocalizedString cannotOpenText = TextManager.Get("DoorMsgCannotOpen");
+        public override bool HasRequiredItems(Character character, bool addMessage, LocalizedString msg = null)
         {
             Msg = HasAccess(character) ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
             ParseMsg();
             if (addMessage)
             {
-                msg = msg ?? (HasIntegratedButtons ? accessDeniedTxt : cannotOpenText);
+                msg = msg ?? (HasIntegratedButtons ? accessDeniedTxt : cannotOpenText).Value;
             }
             return isBroken || base.HasRequiredItems(character, addMessage, msg);
         }
@@ -337,7 +337,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             else if (hasRequiredItems && character != null && character == Character.Controlled)
             {
-                GUI.AddMessage(accessDeniedTxt, GUI.Style.Red);
+                GUI.AddMessage(accessDeniedTxt, GUIStyle.Red);
             }
 #endif
             return false;
@@ -561,7 +561,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (!characterPosErrorShown.Contains(c))
                     {
-                        if (GameSettings.VerboseLogging) { DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")"); }
+                        if (GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")"); }
                         GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:CharacterPosInvalid", GameAnalyticsManager.ErrorSeverity.Error,
                             "Failed to push a character out of a doorway - position of the character \"" + c.SpeciesName + "\" is not valid (" + c.SimPosition + ")." +
                             " Removed: " + c.Removed +

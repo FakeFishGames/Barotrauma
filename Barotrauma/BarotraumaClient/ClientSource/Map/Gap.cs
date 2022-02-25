@@ -46,7 +46,7 @@ namespace Barotrauma
 
             if (!editing || !ShowGaps || !SubEditorScreen.IsLayerVisible(this)) { return; }
 
-            Color clr = (open == 0.0f) ? GUI.Style.Red : Color.Cyan;
+            Color clr = (open == 0.0f) ? GUIStyle.Red : Color.Cyan;
             if (IsHighlighted) { clr = Color.Gold; }
 
             GUI.DrawRectangle(
@@ -118,7 +118,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(sb,
                     new Vector2(WorldRect.X - 5, -WorldRect.Y - 5),
                     new Vector2(rect.Width + 10, rect.Height + 10),
-                    GUI.Style.Red,
+                    GUIStyle.Red,
                     false,
                     depth,
                     (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));

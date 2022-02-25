@@ -11,6 +11,8 @@ namespace Barotrauma
 {
     partial class GameScreen : Screen
     {
+        public override bool IsEditor => GameMain.GameSession?.GameMode is TestGameMode;
+
         private RenderTarget2D renderTargetBackground;
         private RenderTarget2D renderTarget;
         private RenderTarget2D renderTargetWater;
@@ -142,11 +144,11 @@ namespace Barotrauma
 
                     Vector2 position = Submarine.MainSubs[i].SubBody != null ? Submarine.MainSubs[i].WorldPosition : Submarine.MainSubs[i].HiddenSubPosition;
 
-                    Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : GUI.Style.Red * 0.5f;
+                    Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : GUIStyle.Red * 0.5f;
                     GUI.DrawIndicator(
                         spriteBatch, position, cam, 
                         Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height), 
-                        GUI.SubmarineIcon, indicatorColor); 
+                        GUIStyle.SubmarineLocationIcon.Value.Sprite, indicatorColor); 
                 }
             }
 
@@ -390,14 +392,14 @@ namespace Barotrauma
 
             float BlurStrength = 0.0f;
             float DistortStrength = 0.0f;
-            Vector3 chromaticAberrationStrength = GameMain.Config.ChromaticAberrationEnabled ?
+            Vector3 chromaticAberrationStrength = GameSettings.CurrentConfig.Graphics.ChromaticAberration ?
                 new Vector3(-0.02f, -0.01f, 0.0f) : Vector3.Zero;
 
             if (Character.Controlled != null)
             {
                 BlurStrength = Character.Controlled.BlurStrength * 0.005f;
                 DistortStrength = Character.Controlled.DistortStrength;
-                if (GameMain.Config.EnableRadialDistortion)
+                if (GameSettings.CurrentConfig.Graphics.RadialDistortion)
                 {
                     chromaticAberrationStrength -= Vector3.One * Character.Controlled.RadialDistortStrength;
                 }

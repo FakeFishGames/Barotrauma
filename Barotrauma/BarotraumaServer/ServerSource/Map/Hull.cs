@@ -82,12 +82,13 @@ namespace Barotrauma
                         behavior.ServerWriteSpawn(message);
                         break;
                     case BallastFloraBehavior.NetworkHeader.Kill:
+                    case BallastFloraBehavior.NetworkHeader.Remove:
                         break;
                     case BallastFloraBehavior.NetworkHeader.BranchCreate when extraData.Length >= 4 && extraData[2] is BallastFloraBranch branch && extraData[3] is int parentId:
                         behavior.ServerWriteBranchGrowth(message, branch, parentId);
                         break;
-                    case BallastFloraBehavior.NetworkHeader.BranchDamage when extraData.Length >= 4 && extraData[2] is BallastFloraBranch branch && extraData[3] is float damage:
-                        behavior.ServerWriteBranchDamage(message, branch, damage);
+                    case BallastFloraBehavior.NetworkHeader.BranchDamage when extraData.Length >= 4 && extraData[2] is BallastFloraBranch branch:
+                        behavior.ServerWriteBranchDamage(message, branch);
                         break;
                     case BallastFloraBehavior.NetworkHeader.BranchRemove when extraData.Length >= 3 && extraData[2] is BallastFloraBranch branch:
                         behavior.ServerWriteBranchRemove(message, branch);
@@ -147,7 +148,7 @@ namespace Barotrauma
                     message.WriteRangedInteger(decals.Count, 0, MaxDecalsPerHull);
                     foreach (Decal decal in decals)
                     {
-                        message.Write(decal.Prefab.UIntIdentifier);
+                        message.Write(decal.Prefab.UintIdentifier);
                         message.Write((byte)decal.SpriteIndex);
                         float normalizedXPos = MathHelper.Clamp(MathUtils.InverseLerp(0.0f, rect.Width, decal.CenterPosition.X), 0.0f, 1.0f);
                         float normalizedYPos = MathHelper.Clamp(MathUtils.InverseLerp(-rect.Height, 0.0f, decal.CenterPosition.Y), 0.0f, 1.0f);

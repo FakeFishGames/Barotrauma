@@ -7,7 +7,7 @@ namespace Barotrauma.Abilities
     class AbilityConditionLevelsBehindHighest : AbilityConditionDataless
     {
         private readonly int levelsBehind;
-        public AbilityConditionLevelsBehindHighest(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionLevelsBehindHighest(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             levelsBehind = conditionElement.GetAttributeInt("levelsbehind", 0);
         }

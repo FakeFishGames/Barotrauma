@@ -17,15 +17,15 @@ namespace Barotrauma.Items.Components
 
         private float useState;
 
-        [Serialize(UseEnvironment.Both, false, description: "Can the item be used in air, underwater or both.")]
+        [Serialize(UseEnvironment.Both, IsPropertySaveable.No, description: "Can the item be used in air, underwater or both.")]
         public UseEnvironment UsableIn { get; set; }
 
-        [Serialize(0.0f, false, description: "The force to apply to the user's body."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "The force to apply to the user's body."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Force { get; set; }
 
 #if CLIENT
         private string particles;
-        [Serialize("", false, description: "The name of the particle prefab the item emits when used.")]
+        [Serialize("", IsPropertySaveable.No, description: "The name of the particle prefab the item emits when used.")]
         public string Particles
         {
             get { return particles; }
@@ -33,7 +33,7 @@ namespace Barotrauma.Items.Components
         }
 #endif
 
-        public Propulsion(Item item, XElement element)
+        public Propulsion(Item item, ContentXElement element)
             : base(item,element)
         {
         }

@@ -230,7 +230,7 @@ namespace Barotrauma
 
             private string GetAssemblyPath(string assemblyName)
                 => Path.Combine(
-                        Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+                        Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!,
                         $"{assemblyName}.dll");
 
             private bool resolvingDependency;
@@ -361,12 +361,9 @@ namespace Barotrauma
             if (!SendUserStatistics) { return; }
             if (sentEventIdentifiers.Contains(identifier)) { return; }
 
-            if (GameMain.Config.AllEnabledPackages != null)
+            if (GameMain.VanillaContent == null || ContentPackageManager.EnabledPackages.All.Any(p => p.HasMultiplayerIncompatibleContent && p != GameMain.VanillaContent))
             {
-                if (GameMain.VanillaContent == null || GameMain.Config.AllEnabledPackages.Any(p => p.HasMultiplayerIncompatibleContent && p != GameMain.VanillaContent))
-                {
-                    message = "[MODDED] " + message;
-                }
+                message = "[MODDED] " + message;
             }
 
             loadedImplementation?.AddErrorEvent(errorSeverity, message);
@@ -480,10 +477,7 @@ namespace Barotrauma
             Md5Hash? exeHash = null;
             try
             {
-                using (var stream = File.OpenRead(exePath))
-                {
-                    exeHash = new Md5Hash(stream);
-                }
+                exeHash = Md5Hash.CalculateForFile(exePath, Md5Hash.StringHashOptions.BytePerfect);
             }
             catch (Exception e)
             {
@@ -512,7 +506,7 @@ namespace Barotrauma
                 loadedImplementation?.AddDesignEvent("Executable:"
                     + GameMain.Version.ToString()
                     + exeName + ":"
-                    + ((exeHash?.ShortHash == null) ? "Unknown" : exeHash.ShortHash) + ":"
+                    + (exeHash?.ShortRepresentation ?? "Unknown") + ":"
                     + AssemblyInfo.GitRevision + ":"
                     + buildConfiguration);
             }
@@ -523,24 +517,21 @@ namespace Barotrauma
                 return;
             }
 
-            if (GameMain.Config != null)
+            var allPackages = ContentPackageManager.EnabledPackages.All.ToList();
+            if (allPackages?.Count > 0)
             {
-                var allPackages = GameMain.Config.AllEnabledPackages.ToList();
-                if (allPackages?.Count > 0)
+                List<string> packageNames = new List<string>();
+                foreach (ContentPackage cp in allPackages)
                 {
-                    List<string> packageNames = new List<string>();
-                    foreach (ContentPackage cp in allPackages)
-                    {
-                        string sanitizedName = cp.Name.Replace(":", "").Replace(" ", "");
-                        sanitizedName = sanitizedName.Substring(0, Math.Min(32, sanitizedName.Length));
-                        packageNames.Add(sanitizedName);
-                        loadedImplementation?.AddDesignEvent("ContentPackage:" + sanitizedName);
-                    }
-                    packageNames.Sort();
-                    loadedImplementation?.AddDesignEvent("AllContentPackages:" + string.Join(" ", packageNames));
+                    string sanitizedName = cp.Name.Replace(":", "").Replace(" ", "");
+                    sanitizedName = sanitizedName.Substring(0, Math.Min(32, sanitizedName.Length));
+                    packageNames.Add(sanitizedName);
+                    loadedImplementation?.AddDesignEvent("ContentPackage:" + sanitizedName);
                 }
-                loadedImplementation?.AddDesignEvent("Language:" + GameMain.Config.Language);
+                packageNames.Sort();
+                loadedImplementation?.AddDesignEvent("AllContentPackages:" + string.Join(" ", packageNames));
             }
+            loadedImplementation?.AddDesignEvent("Language:" + GameSettings.CurrentConfig.Language);
 
         }
 

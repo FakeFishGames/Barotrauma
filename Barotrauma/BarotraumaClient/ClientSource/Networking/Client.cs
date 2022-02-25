@@ -9,7 +9,7 @@ namespace Barotrauma.Networking
     struct TempClient
     {
         public string Name;
-        public string PreferredJob;
+        public Identifier PreferredJob;
         public CharacterTeamType PreferredTeam;
         public UInt16 NameID;
         public UInt64 SteamID;
@@ -66,7 +66,7 @@ namespace Barotrauma.Networking
 
             if (character != null)
             {
-                if (GameMain.Config.UseDirectionalVoiceChat)
+                if (GameSettings.CurrentConfig.Audio.UseDirectionalVoiceChat)
                 {
                     VoipSound.SetPosition(new Vector3(character.WorldPosition.X, character.WorldPosition.Y, 0.0f));
                 }

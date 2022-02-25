@@ -6,7 +6,7 @@ namespace Barotrauma.Abilities
 {
     class AbilityConditionNoCrewDied : AbilityConditionDataless
     {
-        public AbilityConditionNoCrewDied(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionNoCrewDied(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
         }
 

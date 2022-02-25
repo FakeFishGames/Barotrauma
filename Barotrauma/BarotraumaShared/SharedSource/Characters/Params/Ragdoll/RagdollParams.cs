@@ -14,13 +14,13 @@ namespace Barotrauma
 {
     class HumanRagdollParams : RagdollParams
     {
-        public static HumanRagdollParams GetRagdollParams(string speciesName, string fileName = null) => GetRagdollParams<HumanRagdollParams>(speciesName, fileName);
-        public static HumanRagdollParams GetDefaultRagdollParams(string speciesName) => GetDefaultRagdollParams<HumanRagdollParams>(speciesName);
+        public static HumanRagdollParams GetRagdollParams(Identifier speciesName, string fileName = null) => GetRagdollParams<HumanRagdollParams>(speciesName, fileName);
+        public static HumanRagdollParams GetDefaultRagdollParams(Identifier speciesName) => GetDefaultRagdollParams<HumanRagdollParams>(speciesName);
     }
 
     class FishRagdollParams : RagdollParams
     {
-        public static FishRagdollParams GetDefaultRagdollParams(string speciesName) => GetDefaultRagdollParams<FishRagdollParams>(speciesName);
+        public static FishRagdollParams GetDefaultRagdollParams(Identifier speciesName) => GetDefaultRagdollParams<FishRagdollParams>(speciesName);
     }
 
     class RagdollParams : EditableParams, IMemorizable<RagdollParams>
@@ -29,15 +29,15 @@ namespace Barotrauma
         public const float MIN_SCALE = 0.1f;
         public const float MAX_SCALE = 2;
 
-        public string SpeciesName { get; private set; }
+        public Identifier SpeciesName { get; private set; }
 
-        [Serialize("", true, description: "Default path for the limb sprite textures. Used only if the limb specific path for the limb is not defined"), Editable]
+        [Serialize("", IsPropertySaveable.Yes, description: "Default path for the limb sprite textures. Used only if the limb specific path for the limb is not defined"), Editable]
         public string Texture { get; set; }
-
-        [Serialize("1.0,1.0,1.0,1.0", true), Editable()]
+        
+        [Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes), Editable()]
         public Color Color { get; set; }
-
-        [Serialize(0.0f, true, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'."), Editable(-360, 360)]
+        
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "The orientation of the sprites as drawn on the sprite sheet. Can be overridden by setting a value for Limb's 'Sprite Orientation'."), Editable(-360, 360)]
         public float SpritesheetOrientation { get; set; }
 
         public bool IsSpritesheetOrientationHorizontal
@@ -51,85 +51,85 @@ namespace Barotrauma
         }
 
         private float limbScale;
-        [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 3)]
+        [Serialize(1.0f, IsPropertySaveable.Yes), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 3)]
         public float LimbScale { get { return limbScale; } set { limbScale = MathHelper.Clamp(value, MIN_SCALE, MAX_SCALE); } }
 
         private float jointScale;
-        [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 3)]
+        [Serialize(1.0f, IsPropertySaveable.Yes), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 3)]
         public float JointScale { get { return jointScale; } set { jointScale = MathHelper.Clamp(value, MIN_SCALE, MAX_SCALE); } }
 
         // Don't show in the editor, because shouldn't be edited in runtime.  Requires that the limb scale and the collider sizes are adjusted. TODO: automatize?
-        [Serialize(1f, false)]
+        [Serialize(1f, IsPropertySaveable.No)]
         public float TextureScale { get; set; }
 
-        [Serialize(45f, true, description: "How high from the ground the main collider levitates when the character is standing? Doesn't affect swimming."), Editable(0f, 1000f)]
+        [Serialize(45f, IsPropertySaveable.Yes, description: "How high from the ground the main collider levitates when the character is standing? Doesn't affect swimming."), Editable(0f, 1000f)]
         public float ColliderHeightFromFloor { get; set; }
 
-        [Serialize(50f, true, description: "How much impact is required before the character takes impact damage?"), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+        [Serialize(50f, IsPropertySaveable.Yes, description: "How much impact is required before the character takes impact damage?"), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
         public float ImpactTolerance { get; set; }
 
-        [Serialize(true, true, description: "Can the creature enter submarine. Creatures that cannot enter submarines, always collide with it, even when there is a gap."), Editable()]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Can the creature enter submarine. Creatures that cannot enter submarines, always collide with it, even when there is a gap."), Editable()]
         public bool CanEnterSubmarine { get; set; }
 
-        [Serialize(true, true), Editable]
+        [Serialize(true, IsPropertySaveable.Yes), Editable]
         public bool CanWalk { get; set; }
 
-        [Serialize(true, true, description: "Can the character be dragged around by other creatures?"), Editable()]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Can the character be dragged around by other creatures?"), Editable()]
         public bool Draggable { get; set; }
 
-        [Serialize(LimbType.Torso, true), Editable]
+        [Serialize(LimbType.Torso, IsPropertySaveable.Yes), Editable]
         public LimbType MainLimb { get; set; }
 
-        private readonly static Dictionary<string, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<string, Dictionary<string, RagdollParams>>();
+        /// <summary>
+        /// key1: Species name
+        /// key2: File path
+        /// value: Ragdoll parameters
+        /// </summary>
+        private readonly static Dictionary<Identifier, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<Identifier, Dictionary<string, RagdollParams>>();
 
         public List<ColliderParams> Colliders { get; private set; } = new List<ColliderParams>();
         public List<LimbParams> Limbs { get; private set; } = new List<LimbParams>();
         public List<JointParams> Joints { get; private set; } = new List<JointParams>();
 
         protected IEnumerable<SubParam> GetAllSubParams() =>
-            Colliders.Select(c => c as SubParam)
-            .Concat(Limbs.Select(j => j as SubParam)
-            .Concat(Joints.Select(j => j as SubParam)));
+            Colliders
+                .Concat<SubParam>(Limbs)
+                .Concat(Joints);
 
-        public static string GetDefaultFileName(string speciesName) => $"{speciesName.CapitaliseFirstInvariant()}DefaultRagdoll";
-        public static string GetDefaultFile(string speciesName, ContentPackage contentPackage = null)
-            => Path.Combine(GetFolder(speciesName, contentPackage), $"{GetDefaultFileName(speciesName)}.xml");
+        public static string GetDefaultFileName(Identifier speciesName) => $"{speciesName.Value.CapitaliseFirstInvariant()}DefaultRagdoll";
+        public static string GetDefaultFile(Identifier speciesName, ContentPackage contentPackage = null)
+            => IO.Path.Combine(GetFolder(speciesName, contentPackage), $"{GetDefaultFileName(speciesName)}.xml");
 
-        public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
+        public static string GetFolder(Identifier speciesName, ContentPackage contentPackage = null)
         {
-            CharacterPrefab prefab = CharacterPrefab.Find(p => p.Identifier.Equals(speciesName, StringComparison.OrdinalIgnoreCase) && (contentPackage == null || p.ContentPackage == contentPackage));
-            if (prefab?.XDocument == null)
+            CharacterPrefab prefab = CharacterPrefab.Find(p => p.Identifier == speciesName && (contentPackage == null || p.ContentFile.ContentPackage == contentPackage));
+            if (prefab?.ConfigElement == null)
             {
                 DebugConsole.ThrowError($"Failed to find config file for '{speciesName}' (content package {contentPackage?.Name ?? "null"})");
                 return string.Empty;
             }
-            return GetFolder(prefab.XDocument, prefab.FilePath);
+            return GetFolder(prefab.ConfigElement, prefab.ContentFile.Path.Value);
         }
 
-        public static string GetFolder(XDocument doc, string filePath)
+        private static string GetFolder(ContentXElement root, string filePath)
         {
-            var root = doc.Root;
-            if (root?.IsOverride() ?? false)
+            var folder = root?.GetChildElement("ragdolls")?.GetAttributeContentPath("folder")?.Value;
+            if (folder.IsNullOrEmpty() || folder.Equals("default", StringComparison.OrdinalIgnoreCase))
             {
-                root = root.FirstElement();
-            }
-            var folder = root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
-            if (string.IsNullOrEmpty(folder) || folder.Equals("default", StringComparison.OrdinalIgnoreCase))
-            {
-                folder = Path.Combine(Path.GetDirectoryName(filePath), "Ragdolls") + Path.DirectorySeparatorChar;
+                folder = IO.Path.Combine(IO.Path.GetDirectoryName(filePath), "Ragdolls") + IO.Path.DirectorySeparatorChar;
             }
             return folder.CleanUpPathCrossPlatform(correctFilenameCase: true);
         }
 
-        public static T GetDefaultRagdollParams<T>(string speciesName) where T : RagdollParams, new() => GetRagdollParams<T>(speciesName, GetDefaultFileName(speciesName));
+        public static T GetDefaultRagdollParams<T>(Identifier speciesName) where T : RagdollParams, new() => GetRagdollParams<T>(speciesName, GetDefaultFileName(speciesName));
 
         /// <summary>
         /// If the file name is left null, default file is selected. If fails, will select the default file.  Note: Use the filename without the extensions, don't use the full path!
         /// If a custom folder is used, it's defined in the character info file.
         /// </summary>
-        public static T GetRagdollParams<T>(string speciesName, string fileName = null) where T : RagdollParams, new()
+        public static T GetRagdollParams<T>(Identifier speciesName, string fileName = null) where T : RagdollParams, new()
         {
-            if (string.IsNullOrWhiteSpace(speciesName))
+            if (speciesName.IsEmpty)
             {
                 throw new Exception($"Species name null or empty!");
             }
@@ -138,66 +138,88 @@ namespace Barotrauma
                 ragdolls = new Dictionary<string, RagdollParams>();
                 allRagdolls.Add(speciesName, ragdolls);
             }
-            if (string.IsNullOrEmpty(fileName) || !ragdolls.TryGetValue(fileName, out RagdollParams ragdoll))
+
+            if (!string.IsNullOrEmpty(fileName) && ragdolls.TryGetValue(fileName, out RagdollParams ragdoll))
             {
-                string selectedFile = null;
-                string folder = GetFolder(speciesName);
-                if (Directory.Exists(folder))
+                return (T)ragdoll;
+            }
+
+            string selectedFile = null;
+
+            void tryFolderForSpecies(Identifier species, out string err)
+            {
+                err = null;
+                string folder = GetFolder(species);
+                if (!Directory.Exists(folder))
                 {
-                    List<string> files = Directory.GetFiles(folder).ToList();
-                    if (files.None())
-                    {
-                        DebugConsole.ThrowError($"[RagdollParams] Could not find any ragdoll files from the folder: {folder}. Using the default ragdoll.");
-                        selectedFile = GetDefaultFile(speciesName);
-                    }
-                    else if (string.IsNullOrEmpty(fileName))
-                    {
-                        // Files found, but none specified
-                        selectedFile = GetDefaultFile(speciesName);
-                    }
-                    else
-                    {
-                        selectedFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).Equals(fileName, StringComparison.OrdinalIgnoreCase));
-                        if (selectedFile == null)
-                        {
-                            DebugConsole.ThrowError($"[RagdollParams] Could not find a ragdoll file that matches the name {fileName}. Using the default ragdoll.");
-                            selectedFile = GetDefaultFile(speciesName);
-                        }
-                    }
+                    err = $"[RagdollParams] Invalid directory: {folder}. Using the default ragdoll.";
+                    selectedFile = GetDefaultFile(species);
+                    return;
+                }
+
+                string[] files = Directory.GetFiles(folder);
+                if (files.None())
+                {
+                    err = $"[RagdollParams] Could not find any ragdoll files from the folder: {folder}. Using the default ragdoll.";
+                    selectedFile = GetDefaultFile(species);
+                }
+                else if (string.IsNullOrEmpty(fileName))
+                {
+                    // Files found, but none specified
+                    selectedFile = GetDefaultFile(species);
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"[RagdollParams] Invalid directory: {folder}. Using the default ragdoll.");
-                    selectedFile = GetDefaultFile(speciesName);
-                }
-                if (selectedFile == null)
-                {
-                    throw new Exception("[RagdollParams] Selected file null!");
-                }
-                DebugConsole.Log($"[RagdollParams] Loading ragdoll from {selectedFile}.");
-                T r = new T();
-                if (r.Load(selectedFile, speciesName))
-                {
-                    if (!ragdolls.ContainsKey(r.Name))
+                    selectedFile = files.FirstOrDefault(f => IO.Path.GetFileNameWithoutExtension(f).Equals(fileName, StringComparison.OrdinalIgnoreCase));
+                    if (selectedFile == null)
                     {
-                        ragdolls.Add(r.Name, r);
+                        err = $"[RagdollParams] Could not find a ragdoll file that matches the name {fileName}. Using the default ragdoll.";
+                        selectedFile = GetDefaultFile(species);
                     }
-                    return r;
-                }
-                else
-                {
-                   // Failing to create a ragdoll causes so many issues that cannot be handled. Dummy ragdoll just seems to make things harded to debug. It's better to fail early.
-                   throw new Exception($"[RagdollParams] Failed to load ragdoll {r.Name} from {selectedFile} for the character {speciesName}.");
                 }
             }
-            return (T)ragdoll;
+
+            tryFolderForSpecies(speciesName, out var error);
+            Identifier parentSpeciesName = CharacterPrefab.Prefabs.TryGet(speciesName, out var prefab)
+                ? prefab.VariantOf
+                : Identifier.Empty;
+            if (!error.IsNullOrEmpty() && !parentSpeciesName.IsEmpty)
+            {
+                tryFolderForSpecies(parentSpeciesName, out error);
+            }
+
+            if (!error.IsNullOrEmpty())
+            {
+                DebugConsole.ThrowError(error);
+            }
+
+            if (selectedFile == null)
+            {
+                throw new Exception("[RagdollParams] Selected file null!");
+            }
+            DebugConsole.Log($"[RagdollParams] Loading ragdoll from {selectedFile}.");
+            var characterPrefab = CharacterPrefab.Prefabs[speciesName];
+            T r = new T();
+            if (r.Load(ContentPath.FromRaw(characterPrefab.ContentPackage, selectedFile), speciesName))
+            {
+                if (!ragdolls.ContainsKey(r.Name))
+                {
+                    ragdolls.Add(r.Name, r);
+                }
+                return r;
+            }
+            else
+            {
+                // Failing to create a ragdoll causes so many issues that cannot be handled. Dummy ragdoll just seems to make things harded to debug. It's better to fail early.
+                throw new Exception($"[RagdollParams] Failed to load ragdoll {r.Name} from {selectedFile} for the character {speciesName}.");
+            }
         }
 
         /// <summary>
         /// Creates a default ragdoll for the species using a predefined configuration.
         /// Note: Use only to create ragdolls for new characters, because this overrides the old ragdoll!
         /// </summary>
-        public static T CreateDefault<T>(string fullPath, string speciesName, XElement mainElement) where T : RagdollParams, new()
+        public static T CreateDefault<T>(string fullPath, Identifier speciesName, XElement mainElement) where T : RagdollParams, new()
         {
             // Remove the old ragdolls, if found.
             if (allRagdolls.ContainsKey(speciesName))
@@ -211,10 +233,12 @@ namespace Barotrauma
             {
                 doc = new XDocument(mainElement)
             };
-            instance.UpdatePath(fullPath);
+            var characterPrefab = CharacterPrefab.Prefabs[speciesName];
+            var contentPath = ContentPath.FromRaw(characterPrefab.ContentPackage, fullPath);
+            instance.UpdatePath(contentPath);
             instance.IsLoaded = instance.Deserialize(mainElement);
             instance.Save();
-            instance.Load(fullPath, speciesName);
+            instance.Load(contentPath, speciesName);
             ragdolls.Add(instance.Name, instance);
             DebugConsole.NewMessage("[RagdollParams] New default ragdoll params successfully created at " + fullPath, Color.NavajoWhite);
             return instance as T;
@@ -222,7 +246,7 @@ namespace Barotrauma
 
         public static void ClearCache() => allRagdolls.Clear();
 
-        protected override void UpdatePath(string fullPath)
+        protected override void UpdatePath(ContentPath fullPath)
         {
             if (SpeciesName == null)
             {
@@ -259,7 +283,7 @@ namespace Barotrauma
             });
         }
 
-        protected bool Load(string file, string speciesName)
+        protected bool Load(ContentPath file, Identifier speciesName)
         {
             if (Load(file))
             {
@@ -287,7 +311,7 @@ namespace Barotrauma
         {
             if (forceReload)
             {
-                return Load(FullPath, SpeciesName);
+                return Load(Path, SpeciesName);
             }
             // Don't use recursion, because the reset method might be overriden
             Deserialize(OriginalElement, alsoChildren: false, recursive: false);
@@ -401,8 +425,10 @@ namespace Barotrauma
             }
             var copy = new RagdollParams
             {
+                SpeciesName = SpeciesName,
                 IsLoaded = true,
-                doc = new XDocument(doc)
+                doc = new XDocument(doc),
+                Path = Path
             };
             copy.CreateColliders();
             copy.CreateLimbs();
@@ -453,7 +479,7 @@ namespace Barotrauma
         public class JointParams : SubParam
         {
             private string name;
-            [Serialize("", true), Editable]
+            [Serialize("", IsPropertySaveable.Yes), Editable]
             public override string Name
             {
                 get
@@ -472,61 +498,61 @@ namespace Barotrauma
 
             public override string GenerateName() => $"Joint {Limb1} - {Limb2}";
 
-            [Serialize(-1, true), Editable]
+            [Serialize(-1, IsPropertySaveable.Yes), Editable]
             public int Limb1 { get; set; }
 
-            [Serialize(-1, true), Editable]
+            [Serialize(-1, IsPropertySaveable.Yes), Editable]
             public int Limb2 { get; set; }
 
             /// <summary>
             /// Should be converted to sim units.
             /// </summary>
-            [Serialize("1.0, 1.0", true, description: "Local position of the joint in the Limb1."), Editable()]
+            [Serialize("1.0, 1.0", IsPropertySaveable.Yes, description: "Local position of the joint in the Limb1."), Editable()]
             public Vector2 Limb1Anchor { get; set; }
 
             /// <summary>
             /// Should be converted to sim units.
             /// </summary>
-            [Serialize("1.0, 1.0", true, description: "Local position of the joint in the Limb2."), Editable()]
+            [Serialize("1.0, 1.0", IsPropertySaveable.Yes, description: "Local position of the joint in the Limb2."), Editable()]
             public Vector2 Limb2Anchor { get; set; }
 
-            [Serialize(true, true), Editable]
+            [Serialize(true, IsPropertySaveable.Yes), Editable]
             public bool CanBeSevered { get; set; }
 
-            [Serialize(0f, true, description:"Default 0 (Can't be severed when the creature is alive). Modifies the severance probability (defined per item/attack) when the character is alive. Currently only affects non-humanoid ragdolls. Also note that if CanBeSevered is false, this property doesn't have any effect."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f, DecimalCount = 2)]
+            [Serialize(0f, IsPropertySaveable.Yes, description:"Default 0 (Can't be severed when the creature is alive). Modifies the severance probability (defined per item/attack) when the character is alive. Currently only affects non-humanoid ragdolls. Also note that if CanBeSevered is false, this property doesn't have any effect."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f, DecimalCount = 2)]
             public float SeveranceProbabilityModifier { get; set; }
 
-            [Serialize("gore", true), Editable]
+            [Serialize("gore", IsPropertySaveable.Yes), Editable]
             public string BreakSound { get; set; }
 
-            [Serialize(true, true), Editable]
+            [Serialize(true, IsPropertySaveable.Yes), Editable]
             public bool LimitEnabled { get; set; }
 
             /// <summary>
             /// In degrees.
             /// </summary>
-            [Serialize(0f, true), Editable]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable]
             public float UpperLimit { get; set; }
 
             /// <summary>
             /// In degrees.
             /// </summary>
-            [Serialize(0f, true), Editable]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable]
             public float LowerLimit { get; set; }
 
-            [Serialize(0.25f, true), Editable]
+            [Serialize(0.25f, IsPropertySaveable.Yes), Editable]
             public float Stiffness { get; set; }
 
-            [Serialize(1f, true, description: "CAUTION: Not fully implemented. Only use for limb joints that connect non-animated limbs!"), Editable]
+            [Serialize(1f, IsPropertySaveable.Yes, description: "CAUTION: Not fully implemented. Only use for limb joints that connect non-animated limbs!"), Editable]
             public float Scale { get; set; }
 
-            [Serialize(false, false), Editable(ReadOnly = true)]
+            [Serialize(false, IsPropertySaveable.No), Editable(ReadOnly = true)]
             public bool WeldJoint { get; set; }
 
-            [Serialize(false, true), Editable]
+            [Serialize(false, IsPropertySaveable.Yes), Editable]
             public bool ClockWiseRotation { get; set; }
 
-            public JointParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
+            public JointParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
         }
 
         public class LimbParams : SubParam
@@ -542,7 +568,7 @@ namespace Barotrauma
             public List<DamageModifierParams> DamageModifiers { get; private set; } = new List<DamageModifierParams>();
 
             private string name;
-            [Serialize("", true), Editable]
+            [Serialize("", IsPropertySaveable.Yes), Editable]
             public override string Name
             {
                 get
@@ -563,10 +589,10 @@ namespace Barotrauma
 
             public SpriteParams GetSprite() => deformSpriteParams ?? normalSpriteParams;
 
-            [Serialize(-1, true), Editable(ReadOnly = true)]
+            [Serialize(-1, IsPropertySaveable.Yes), Editable(ReadOnly = true)]
             public int ID { get; set; }
 
-            [Serialize(LimbType.None, true, description: "The limb type affects many things, like the animations. Torso or Head are considered as the main limbs. Every character should have at least one Torso or Head."), Editable()]
+            [Serialize(LimbType.None, IsPropertySaveable.Yes, description: "The limb type affects many things, like the animations. Torso or Head are considered as the main limbs. Every character should have at least one Torso or Head."), Editable()]
             public LimbType Type { get; set; }
 
             /// <summary>
@@ -576,136 +602,136 @@ namespace Barotrauma
 
             public float GetSpriteOrientationInDegrees() => float.IsNaN(SpriteOrientation) ? Ragdoll.SpritesheetOrientation : SpriteOrientation;
 
-            [Serialize("", true), Editable]
+            [Serialize("", IsPropertySaveable.Yes), Editable]
             public string Notes { get; set; }
 
-            [Serialize(1f, true), Editable(DecimalCount = 2)]
+            [Serialize(1f, IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
             public float Scale { get; set; }
 
-            [Serialize(true, true, description: "Does the limb flip when the character flips?"), Editable()]
+            [Serialize(true, IsPropertySaveable.Yes, description: "Does the limb flip when the character flips?"), Editable()]
             public bool Flip { get; set; }
 
-            [Serialize(false, true, description: "Currently only works with non-deformable (normal) sprites."), Editable()]
+            [Serialize(false, IsPropertySaveable.Yes, description: "Currently only works with non-deformable (normal) sprites."), Editable()]
             public bool MirrorVertically { get; set; }
 
-            [Serialize(false, true), Editable]
+            [Serialize(false, IsPropertySaveable.Yes), Editable]
             public bool MirrorHorizontally { get; set; }
 
-            [Serialize(false, true, description: "Disable drawing for this limb."), Editable()]
+            [Serialize(false, IsPropertySaveable.Yes, description: "Disable drawing for this limb."), Editable()]
             public bool Hide { get; set; }
 
-            [Serialize(float.NaN, true, description: "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings."), Editable(-360, 360, ValueStep = 90, DecimalCount = 0)]
+            [Serialize(float.NaN, IsPropertySaveable.Yes, description: "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings."), Editable(-360, 360, ValueStep = 90, DecimalCount = 0)]
             public float SpriteOrientation { get; set; }
 
-            [Serialize(LimbType.None, true, description: "If set, the limb sprite will use the same sprite depth as the specified limb. Generally only useful for limbs that get added on the ragdoll on the fly (e.g. extra limbs added via gene splicing).")]
+            [Serialize(LimbType.None, IsPropertySaveable.Yes, description: "If set, the limb sprite will use the same sprite depth as the specified limb. Generally only useful for limbs that get added on the ragdoll on the fly (e.g. extra limbs added via gene splicing).")]
             public LimbType InheritLimbDepth { get; set; }
 
-            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
             public float SteerForce { get; set; }
 
-            [Serialize(0f, true, description: "Radius of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            [Serialize(0f, IsPropertySaveable.Yes, description: "Radius of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Radius { get; set; }
 
-            [Serialize(0f, true, description: "Height of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            [Serialize(0f, IsPropertySaveable.Yes, description: "Height of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Height { get; set; }
 
-            [Serialize(0f, true, description: "Width of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            [Serialize(0f, IsPropertySaveable.Yes, description: "Width of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Width { get; set; }
 
-            [Serialize(10f, true, description: "The more the density the heavier the limb is."), Editable(MinValueFloat = 0.01f, MaxValueFloat = 100, DecimalCount = 2)]
+            [Serialize(10f, IsPropertySaveable.Yes, description: "The more the density the heavier the limb is."), Editable(MinValueFloat = 0.01f, MaxValueFloat = 100, DecimalCount = 2)]
             public float Density { get; set; }
 
-            [Serialize(false, true), Editable]
+            [Serialize(false, IsPropertySaveable.Yes), Editable]
             public bool IgnoreCollisions { get; set; }
 
-            [Serialize(7f, true, description: "Increasing the damping makes the limb stop rotating more quickly."), Editable]
+            [Serialize(7f, IsPropertySaveable.Yes, description: "Increasing the damping makes the limb stop rotating more quickly."), Editable]
             public float AngularDamping { get; set; }
 
-            [Serialize(1f, true, description: "Higher values make AI characters prefer attacking this limb."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 10)]
+            [Serialize(1f, IsPropertySaveable.Yes, description: "Higher values make AI characters prefer attacking this limb."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 10)]
             public float AttackPriority { get; set; }
 
-            [Serialize("0, 0", true, description: "The position which is used to lead the IK chain to the IK goal. Only applicable if the limb is hand or foot."), Editable()]
+            [Serialize("0, 0", IsPropertySaveable.Yes, description: "The position which is used to lead the IK chain to the IK goal. Only applicable if the limb is hand or foot."), Editable()]
             public Vector2 PullPos { get; set; }
 
-            [Serialize("0, 0", true, description: "Only applicable if this limb is a foot. Determines the \"neutral position\" of the foot relative to a joint determined by the \"RefJoint\" parameter. For example, a value of {-100, 0} would mean that the foot is positioned on the floor, 100 units behind the reference joint."), Editable()]
+            [Serialize("0, 0", IsPropertySaveable.Yes, description: "Only applicable if this limb is a foot. Determines the \"neutral position\" of the foot relative to a joint determined by the \"RefJoint\" parameter. For example, a value of {-100, 0} would mean that the foot is positioned on the floor, 100 units behind the reference joint."), Editable()]
             public Vector2 StepOffset { get; set; }
 
-            [Serialize(-1, true, description: "The id of the refecence joint. Determines which joint is used as the \"neutral x-position\" for the foot movement. For example in the case of a humanoid-shaped characters this would usually be the waist. The position can be offset using the StepOffset parameter. Only applicable if this limb is a foot."), Editable()]
+            [Serialize(-1, IsPropertySaveable.Yes, description: "The id of the refecence joint. Determines which joint is used as the \"neutral x-position\" for the foot movement. For example in the case of a humanoid-shaped characters this would usually be the waist. The position can be offset using the StepOffset parameter. Only applicable if this limb is a foot."), Editable()]
             public int RefJoint { get; set; }
 
-            [Serialize("0, 0", true, description: "Relative offset for the mouth position (starting from the center). Only applicable for LimbType.Head. Used for eating."), Editable(DecimalCount = 2, MinValueFloat = -10f, MaxValueFloat = 10f)]
+            [Serialize("0, 0", IsPropertySaveable.Yes, description: "Relative offset for the mouth position (starting from the center). Only applicable for LimbType.Head. Used for eating."), Editable(DecimalCount = 2, MinValueFloat = -10f, MaxValueFloat = 10f)]
             public Vector2 MouthPos { get; set; }
 
-            [Serialize(0f, true), Editable]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable]
             public float ConstantTorque { get; set; }
 
-            [Serialize(0f, true), Editable]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable]
             public float ConstantAngle { get; set; }
 
-            [Serialize(1f, true), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = 10)]
+            [Serialize(1f, IsPropertySaveable.Yes), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = 10)]
             public float AttackForceMultiplier { get; set; }
 
-            [Serialize(1f, true, description:"How much damage must be done by the attack in order to be able to cut off the limb. Note that it's evaluated after the damage modifiers."), Editable(DecimalCount = 0, MinValueFloat = 0, MaxValueFloat = 1000)]
+            [Serialize(1f, IsPropertySaveable.Yes, description:"How much damage must be done by the attack in order to be able to cut off the limb. Note that it's evaluated after the damage modifiers."), Editable(DecimalCount = 0, MinValueFloat = 0, MaxValueFloat = 1000)]
             public float MinSeveranceDamage { get; set; }
 
-            [Serialize(true, true, description: "Disable if you don't want to allow severing this joint while the creature is alive. Note: Does nothing if the 'Severance Probability Modifier' in the joint settings is 0 (default). Also note that the setting doesn't override certain limitations, e.g. severing the main limb, or legs of a walking creature is not allowed."), Editable]
+            [Serialize(true, IsPropertySaveable.Yes, description: "Disable if you don't want to allow severing this joint while the creature is alive. Note: Does nothing if the 'Severance Probability Modifier' in the joint settings is 0 (default). Also note that the setting doesn't override certain limitations, e.g. severing the main limb, or legs of a walking creature is not allowed."), Editable]
             public bool CanBeSeveredAlive { get; set; }
 
             //how long it takes for severed limbs to fade out
-            [Serialize(10f, true, "How long it takes for the severed limb to fade out"), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 1)]
+            [Serialize(10f, IsPropertySaveable.Yes, "How long it takes for the severed limb to fade out"), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 1)]
             public float SeveredFadeOutTime { get; set; } = 10.0f;
 
-            [Serialize(false, true, description: "Only applied when the limb is of type Tail. If none of the tails have been defined to use the angle and an angle is defined in the animation parameters, the first tail limb is used."), Editable]
+            [Serialize(false, IsPropertySaveable.Yes, description: "Only applied when the limb is of type Tail. If none of the tails have been defined to use the angle and an angle is defined in the animation parameters, the first tail limb is used."), Editable]
             public bool ApplyTailAngle { get; set; }
 
-            [Serialize(1f, true), Editable(ValueStep = 0.1f, DecimalCount = 2)]
+            [Serialize(1f, IsPropertySaveable.Yes), Editable(ValueStep = 0.1f, DecimalCount = 2)]
             public float SineFrequencyMultiplier { get; set; }
 
-            [Serialize(1f, true), Editable(ValueStep = 0.1f, DecimalCount = 2)]
+            [Serialize(1f, IsPropertySaveable.Yes), Editable(ValueStep = 0.1f, DecimalCount = 2)]
             public float SineAmplitudeMultiplier { get; set; }
 
-            [Serialize(0f, true), Editable(0, 100, ValueStep = 1, DecimalCount = 1)]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable(0, 100, ValueStep = 1, DecimalCount = 1)]
             public float BlinkFrequency { get; set; }
 
-            [Serialize(0.2f, true), Editable(0.01f, 10, ValueStep = 1, DecimalCount = 2)]
+            [Serialize(0.2f, IsPropertySaveable.Yes), Editable(0.01f, 10, ValueStep = 1, DecimalCount = 2)]
             public float BlinkDurationIn { get; set; }
 
-            [Serialize(0.5f, true), Editable(0.01f, 10, ValueStep = 1, DecimalCount = 2)]
+            [Serialize(0.5f, IsPropertySaveable.Yes), Editable(0.01f, 10, ValueStep = 1, DecimalCount = 2)]
             public float BlinkDurationOut { get; set; }
 
-            [Serialize(0f, true), Editable(0, 10, ValueStep = 1, DecimalCount = 2)]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable(0, 10, ValueStep = 1, DecimalCount = 2)]
             public float BlinkHoldTime { get; set; }
 
-            [Serialize(0f, true), Editable(-360, 360, ValueStep = 1, DecimalCount = 0)]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable(-360, 360, ValueStep = 1, DecimalCount = 0)]
             public float BlinkRotationIn { get; set; }
 
-            [Serialize(45f, true), Editable(-360, 360, ValueStep = 1, DecimalCount = 0)]
+            [Serialize(45f, IsPropertySaveable.Yes), Editable(-360, 360, ValueStep = 1, DecimalCount = 0)]
             public float BlinkRotationOut { get; set; }
 
-            [Serialize(50f, true), Editable]
+            [Serialize(50f, IsPropertySaveable.Yes), Editable]
             public float BlinkForce { get; set; }
 
-            [Serialize(false, true), Editable]
+            [Serialize(false, IsPropertySaveable.Yes), Editable]
             public bool OnlyBlinkInWater { get; set; }
 
-            [Serialize(TransitionMode.Linear, true), Editable]
+            [Serialize(TransitionMode.Linear, IsPropertySaveable.Yes), Editable]
             public TransitionMode BlinkTransitionIn { get; private set; }
 
-            [Serialize(TransitionMode.Linear, true), Editable]
+            [Serialize(TransitionMode.Linear, IsPropertySaveable.Yes), Editable]
             public TransitionMode BlinkTransitionOut { get; private set; }
 
             // Non-editable ->
             // TODO: make read-only
-            [Serialize(0, true)]
+            [Serialize(0, IsPropertySaveable.Yes)]
             public int HealthIndex { get; set; }
 
-            [Serialize(0.3f, true)]
+            [Serialize(0.3f, IsPropertySaveable.Yes)]
             public float Friction { get; set; }
 
-            [Serialize(0.05f, true)]
+            [Serialize(0.05f, IsPropertySaveable.Yes)]
             public float Restitution { get; set; }
 
-            public LimbParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            public LimbParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll)
             {
                 var spriteElement = element.GetChildElement("sprite");
                 if (spriteElement != null)
@@ -761,7 +787,7 @@ namespace Barotrauma
             public bool AddAttack()
             {
                 if (Attack != null) { return false; }
-                TryAddSubParam(new XElement("attack"), (e, c) => new AttackParams(e, c), out AttackParams newAttack);
+                TryAddSubParam(CreateElement("attack"), (e, c) => new AttackParams(e, c), out AttackParams newAttack);
                 Attack = newAttack;
                 return Attack != null;
             }
@@ -770,7 +796,7 @@ namespace Barotrauma
             public bool AddSound()
             {
                 if (Sound != null) { return false; }
-                TryAddSubParam(new XElement("sound"), (e, c) => new SoundParams(e, c), out SoundParams newSound);
+                TryAddSubParam(CreateElement("sound"), (e, c) => new SoundParams(e, c), out SoundParams newSound);
                 Sound = newSound;
                 return Sound != null;
             }
@@ -778,14 +804,14 @@ namespace Barotrauma
             public bool AddLight()
             {
                 if (LightSource != null) { return false; }
-                var lightSourceElement = new XElement("lightsource",
+                var lightSourceElement = CreateElement("lightsource",
                     new XElement("lighttexture", new XAttribute("texture", "Content/Lights/pointlight_bright.png")));
                 TryAddSubParam(lightSourceElement, (e, c) => new LightSourceParams(e, c), out LightSourceParams newLightSource);
                 LightSource = newLightSource;
                 return LightSource != null;
             }
 
-            public bool AddDamageModifier() => TryAddSubParam(new XElement("damagemodifier"), (e, c) => new DamageModifierParams(e, c), out _, DamageModifiers);
+            public bool AddDamageModifier() => TryAddSubParam(CreateElement("damagemodifier"), (e, c) => new DamageModifierParams(e, c), out _, DamageModifiers);
 
             public bool RemoveAttack()
             {
@@ -819,7 +845,7 @@ namespace Barotrauma
 
             public bool RemoveDamageModifier(DamageModifierParams damageModifier) => RemoveSubParam(damageModifier, DamageModifiers);
 
-            protected bool TryAddSubParam<T>(XElement element, Func<XElement, RagdollParams, T> constructor, out T subParam, IList<T> collection = null, Func<IList<T>, bool> filter = null) where T : SubParam
+            protected bool TryAddSubParam<T>(ContentXElement element, Func<ContentXElement, RagdollParams, T> constructor, out T subParam, IList<T> collection = null, Func<IList<T>, bool> filter = null) where T : SubParam
             {
                 subParam = constructor(element, Ragdoll);
                 if (collection != null && filter != null)
@@ -846,7 +872,7 @@ namespace Barotrauma
 
         public class DecorativeSpriteParams : SpriteParams
         {
-            public DecorativeSpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            public DecorativeSpriteParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll)
             {
 #if CLIENT
                 DecorativeSprite = new DecorativeSprite(element);
@@ -882,7 +908,7 @@ namespace Barotrauma
         {
             public DeformationParams Deformation { get; private set; }
 
-            public DeformSpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            public DeformSpriteParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll)
             {
                 Deformation = new DeformationParams(element, ragdoll);
                 SubParams.Add(Deformation);
@@ -891,40 +917,40 @@ namespace Barotrauma
 
         public class SpriteParams : SubParam
         {
-            [Serialize("0, 0, 0, 0", true), Editable]
+            [Serialize("0, 0, 0, 0", IsPropertySaveable.Yes), Editable]
             public Rectangle SourceRect { get; set; }
 
-            [Serialize("0.5, 0.5", true, description: "The origin of the sprite relative to the collider."), Editable(DecimalCount = 3)]
+            [Serialize("0.5, 0.5", IsPropertySaveable.Yes, description: "The origin of the sprite relative to the collider."), Editable(DecimalCount = 3)]
             public Vector2 Origin { get; set; }
 
-            [Serialize(0f, true, description: "The Z-depth of the limb relative to other limbs of the same character. 1 is front, 0 is behind."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 3)]
+            [Serialize(0f, IsPropertySaveable.Yes, description: "The Z-depth of the limb relative to other limbs of the same character. 1 is front, 0 is behind."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 3)]
             public float Depth { get; set; }
 
-            [Serialize("", true), Editable()]
+            [Serialize("", IsPropertySaveable.Yes), Editable()]
             public string Texture { get; set; }
 
-            [Serialize(false, true), Editable()]
+            [Serialize(false, IsPropertySaveable.Yes), Editable()]
             public bool IgnoreTint { get; set; }
 
-            [Serialize("1.0,1.0,1.0,1.0", true), Editable()]
+            [Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes), Editable()]
             public Color Color { get; set; }
 
-            [Serialize("1.0,1.0,1.0,1.0", true, description: "Target color when the character is dead."), Editable()]
+            [Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes, description: "Target color when the character is dead."), Editable()]
             public Color DeadColor { get; set; }
 
-            [Serialize(0f, true, "How long it takes to fade into the dead color? 0 = Not applied."), Editable(DecimalCount = 1, MinValueFloat = 0, MaxValueFloat = 10)]
+            [Serialize(0f, IsPropertySaveable.Yes, "How long it takes to fade into the dead color? 0 = Not applied."), Editable(DecimalCount = 1, MinValueFloat = 0, MaxValueFloat = 10)]
             public float DeadColorTime { get; set; }
 
             public override string Name => "Sprite";
 
-            public SpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
+            public SpriteParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
 
             public string GetTexturePath() => string.IsNullOrWhiteSpace(Texture) ? Ragdoll.Texture : Texture;
         }
 
         public class DeformationParams : SubParam
         {
-            public DeformationParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            public DeformationParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll)
             {
 #if CLIENT
                 Deformations = new Dictionary<SpriteDeformationParams, XElement>();
@@ -991,7 +1017,7 @@ namespace Barotrauma
         public class ColliderParams : SubParam
         {
             private string name;
-            [Serialize("", true), Editable]
+            [Serialize("", IsPropertySaveable.Yes), Editable]
             public override string Name
             {
                 get
@@ -1008,16 +1034,16 @@ namespace Barotrauma
                 }
             }
 
-            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Radius { get; set; }
 
-            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Height { get; set; }
 
-            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Width { get; set; }
 
-            public ColliderParams(XElement element, RagdollParams ragdoll, string name = null) : base(element, ragdoll)
+            public ColliderParams(ContentXElement element, RagdollParams ragdoll, string name = null) : base(element, ragdoll)
             {
                 Name = name;
             }
@@ -1029,16 +1055,16 @@ namespace Barotrauma
             {
                 public override string Name => "Light Texture";
 
-                [Serialize("Content/Lights/pointlight_bright.png", true), Editable]
+                [Serialize("Content/Lights/pointlight_bright.png", IsPropertySaveable.Yes), Editable]
                 public string Texture { get; private set; }
 
-                [Serialize("0.5, 0.5", true), Editable(DecimalCount = 2)]
+                [Serialize("0.5, 0.5", IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
                 public Vector2 Origin { get; set; }
 
-                [Serialize("1.0, 1.0", true), Editable(DecimalCount = 2)]
+                [Serialize("1.0, 1.0", IsPropertySaveable.Yes), Editable(DecimalCount = 2)]
                 public Vector2 Size { get; set; }
 
-                public LightTexture(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
+                public LightTexture(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
             }
 
             public LightTexture Texture { get; private set; }
@@ -1047,7 +1073,7 @@ namespace Barotrauma
             public Lights.LightSourceParams LightSource { get; private set; }
 #endif
 
-            public LightSourceParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            public LightSourceParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll)
             {
 #if CLIENT
                 LightSource = new Lights.LightSourceParams(element);
@@ -1088,9 +1114,10 @@ namespace Barotrauma
         {
             public Attack Attack { get; private set; }
 
-            public AttackParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            public AttackParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll)
             {
-                Attack = new Attack(element, ragdoll.SpeciesName);
+                var prefab = CharacterPrefab.Prefabs[ragdoll.SpeciesName];
+                Attack = new Attack(element, ragdoll.SpeciesName.Value);
             }
 
             public override bool Deserialize(XElement element = null, bool recursive = true)
@@ -1117,7 +1144,7 @@ namespace Barotrauma
             public bool AddNewAffliction()
             {
                 Serialize();
-                var subElement = new XElement("affliction",
+                var subElement = CreateElement("affliction",
                     new XAttribute("identifier", "internaldamage"),
                     new XAttribute("strength", 0f),
                     new XAttribute("probability", 1.0f));
@@ -1140,9 +1167,9 @@ namespace Barotrauma
         {
             public DamageModifier DamageModifier { get; private set; }
 
-            public DamageModifierParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
+            public DamageModifierParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll)
             {
-                DamageModifier = new DamageModifier(element, ragdoll.SpeciesName);
+                DamageModifier = new DamageModifier(element, ragdoll.SpeciesName.Value);
             }
 
             public override bool Deserialize(XElement element = null, bool recursive = true)
@@ -1170,24 +1197,27 @@ namespace Barotrauma
         {
             public override string Name => "Sound";
 
-            [Serialize("", true), Editable]
+            [Serialize("", IsPropertySaveable.Yes), Editable]
             public string Tag { get; private set; }
 
-            public SoundParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
+            public SoundParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
         }
 
         public abstract class SubParam : ISerializableEntity
         {
             public virtual string Name { get; set; }
-            public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
-            public XElement Element { get; set; }
+            public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; }
+            public ContentXElement Element { get; set; }
             public XElement OriginalElement { get; protected set; }
             public List<SubParam> SubParams { get; set; } = new List<SubParam>();
             public RagdollParams Ragdoll { get; private set; }
 
             public virtual string GenerateName() => Element.Name.ToString();
 
-            public SubParam(XElement element, RagdollParams ragdoll)
+            protected ContentXElement CreateElement(string name, params object[] attrs)
+                => new XElement(name, attrs).FromPackage(Element.ContentPackage);
+            
+            public SubParam(ContentXElement element, RagdollParams ragdoll)
             {
                 Element = element;
                 OriginalElement = new XElement(element);
@@ -1226,7 +1256,7 @@ namespace Barotrauma
             public virtual void Reset()
             {
                 // Don't use recursion, because the reset method might be overriden
-                Deserialize(OriginalElement, false);
+                Deserialize(OriginalElement, recursive: false);
                 SubParams.ForEach(sp => sp.Reset());
             }
 
@@ -1235,21 +1265,21 @@ namespace Barotrauma
             public Dictionary<Affliction, SerializableEntityEditor> AfflictionEditors { get; private set; }
             public virtual void AddToEditor(ParamsEditor editor, bool recursive = true, int space = 0)
             {
-                SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: GUI.LargeFont);
+                SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, inGame: false, showName: true, titleFont: GUIStyle.LargeFont);
                 if (this is DecorativeSpriteParams decSpriteParams)
                 {
-                    new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, decSpriteParams.DecorativeSprite, inGame: false, showName: true, titleFont: GUI.LargeFont);
+                    new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, decSpriteParams.DecorativeSprite, inGame: false, showName: true, titleFont: GUIStyle.LargeFont);
                 }
                 else if (this is DeformSpriteParams deformSpriteParams)
                 {
                     foreach (var deformation in deformSpriteParams.Deformation.Deformations.Keys)
                     {
-                        new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, deformation, inGame: false, showName: true, titleFont: GUI.LargeFont);
+                        new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, deformation, inGame: false, showName: true, titleFont: GUIStyle.LargeFont);
                     }
                 }
                 else if (this is AttackParams attackParams)
                 {
-                    SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, attackParams.Attack, inGame: false, showName: true, titleFont: GUI.LargeFont);
+                    SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, attackParams.Attack, inGame: false, showName: true, titleFont: GUIStyle.LargeFont);
                     if (AfflictionEditors == null)
                     {
                         AfflictionEditors = new Dictionary<Affliction, SerializableEntityEditor>();
@@ -1267,11 +1297,11 @@ namespace Barotrauma
                 }
                 else if (this is LightSourceParams lightParams)
                 {
-                    SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, lightParams.LightSource, inGame: false, showName: true, titleFont: GUI.LargeFont);
+                    SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, lightParams.LightSource, inGame: false, showName: true, titleFont: GUIStyle.LargeFont);
                 }
                 else if (this is DamageModifierParams damageModifierParams)
                 {
-                    SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true, titleFont: GUI.LargeFont);
+                    SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, damageModifierParams.DamageModifier, inGame: false, showName: true, titleFont: GUIStyle.LargeFont);
                 }
                 if (recursive)
                 {

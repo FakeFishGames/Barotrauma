@@ -26,13 +26,13 @@ namespace Barotrauma.Abilities
         // separate dictionaries for each type of characterability?
         protected readonly List<CharacterAbility> characterAbilities = new List<CharacterAbility>();
 
-        public CharacterAbilityGroup(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, XElement abilityElementGroup)
+        public CharacterAbilityGroup(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, ContentXElement abilityElementGroup)
         {
             AbilityEffectType = abilityEffectType;
             CharacterTalent = characterTalent;
             Character = CharacterTalent.Character;
             maxTriggerCount = abilityElementGroup.GetAttributeInt("maxtriggercount", int.MaxValue);
-            foreach (XElement subElement in abilityElementGroup.Elements())
+            foreach (var subElement in abilityElementGroup.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -54,9 +54,9 @@ namespace Barotrauma.Abilities
             }
         }
 
-        public void LoadConditions(XElement conditionElements)
+        public void LoadConditions(ContentXElement conditionElements)
         {
-            foreach (XElement conditionElement in conditionElements.Elements())
+            foreach (ContentXElement conditionElement in conditionElements.Elements())
             {
                 AbilityCondition newCondition = ConstructCondition(CharacterTalent, conditionElement);
 
@@ -87,7 +87,7 @@ namespace Barotrauma.Abilities
         }
 
         // XML
-        private AbilityCondition ConstructCondition(CharacterTalent characterTalent, XElement conditionElement, bool errorMessages = true)
+        private AbilityCondition ConstructCondition(CharacterTalent characterTalent, ContentXElement conditionElement, bool errorMessages = true)
         {
             AbilityCondition newCondition = null;
 
@@ -129,15 +129,15 @@ namespace Barotrauma.Abilities
             return newCondition;
         }
 
-        private void LoadAbilities(XElement abilityElements)
+        private void LoadAbilities(ContentXElement abilityElements)
         {
-            foreach (XElement abilityElementGroup in abilityElements.Elements())
+            foreach (var abilityElementGroup in abilityElements.Elements())
             {
                 AddAbility(ConstructAbility(abilityElementGroup, CharacterTalent));
             }
         }
 
-        private CharacterAbility ConstructAbility(XElement abilityElement, CharacterTalent characterTalent)
+        private CharacterAbility ConstructAbility(ContentXElement abilityElement, CharacterTalent characterTalent)
         {
             CharacterAbility newAbility = CharacterAbility.Load(abilityElement, this);
 
@@ -150,7 +150,7 @@ namespace Barotrauma.Abilities
             return newAbility;
         }
 
-        public static List<StatusEffect> ParseStatusEffects(CharacterTalent characterTalent, XElement statusEffectElements)
+        public static List<StatusEffect> ParseStatusEffects(CharacterTalent characterTalent, ContentXElement statusEffectElements)
         {
             if (statusEffectElements == null)
             {
@@ -160,7 +160,7 @@ namespace Barotrauma.Abilities
 
             List<StatusEffect> statusEffects = new List<StatusEffect>();
 
-            foreach (XElement statusEffectElement in statusEffectElements.Elements())
+            foreach (var statusEffectElement in statusEffectElements.Elements())
             {
                 var statusEffect = StatusEffect.Load(statusEffectElement, characterTalent.DebugIdentifier);
                 statusEffects.Add(statusEffect);
@@ -178,7 +178,7 @@ namespace Barotrauma.Abilities
             return statType;
         }
 
-        public static List<Affliction> ParseAfflictions(CharacterTalent characterTalent, XElement afflictionElements)
+        public static List<Affliction> ParseAfflictions(CharacterTalent characterTalent, ContentXElement afflictionElements)
         {
             if (afflictionElements == null)
             {
@@ -191,10 +191,10 @@ namespace Barotrauma.Abilities
             // similar logic to affliction creation in statuseffects
             // might be worth unifying
 
-            foreach (XElement afflictionElement in afflictionElements.Elements())
+            foreach (var afflictionElement in afflictionElements.Elements())
             {
-                string afflictionIdentifier = afflictionElement.GetAttributeString("identifier", "").ToLowerInvariant();
-                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
+                Identifier afflictionIdentifier = afflictionElement.GetAttributeIdentifier("identifier", "");
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier == afflictionIdentifier);
                 if (afflictionPrefab == null)
                 {
                     DebugConsole.ThrowError("Error in CharacterTalent (" + characterTalent.DebugIdentifier + ") - Affliction prefab with the identifier \"" + afflictionIdentifier + "\" not found.");

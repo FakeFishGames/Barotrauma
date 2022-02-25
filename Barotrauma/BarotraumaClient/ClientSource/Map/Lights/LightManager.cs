@@ -106,7 +106,7 @@ namespace Barotrauma.Lights
         {
             var pp = graphics.PresentationParameters;
 
-            currLightMapScale = GameMain.Config.LightMapScale;
+            currLightMapScale = GameSettings.CurrentConfig.Graphics.LightMapScale;
 
             LightMap?.Dispose();
             LightMap = CreateRenderTarget();
@@ -120,15 +120,15 @@ namespace Barotrauma.Lights
             RenderTarget2D CreateRenderTarget()
             {
                return new RenderTarget2D(graphics,
-                       (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false,
+                       (int)(GameMain.GraphicsWidth * GameSettings.CurrentConfig.Graphics.LightMapScale), (int)(GameMain.GraphicsHeight * GameSettings.CurrentConfig.Graphics.LightMapScale), false,
                        pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
                        RenderTargetUsage.DiscardContents);
             }
 
             LosTexture?.Dispose();
             LosTexture = new RenderTarget2D(graphics,
-                (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale),
-                (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false, SurfaceFormat.Color, DepthFormat.None);
+                (int)(GameMain.GraphicsWidth * GameSettings.CurrentConfig.Graphics.LightMapScale),
+                (int)(GameMain.GraphicsHeight * GameSettings.CurrentConfig.Graphics.LightMapScale), false, SurfaceFormat.Color, DepthFormat.None);
         }
 
         public void AddLight(LightSource light)
@@ -165,13 +165,13 @@ namespace Barotrauma.Lights
         {
             if (!LightingEnabled) { return; }
 
-            if (Math.Abs(currLightMapScale - GameMain.Config.LightMapScale) > 0.01f)
+            if (Math.Abs(currLightMapScale - GameSettings.CurrentConfig.Graphics.LightMapScale) > 0.01f)
             {
                 //lightmap scale has changed -> recreate render targets
                 CreateRenderTargets(graphics);
             }
 
-            Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f));
+            Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(GameSettings.CurrentConfig.Graphics.LightMapScale, GameSettings.CurrentConfig.Graphics.LightMapScale, 1.0f));
             Matrix transform = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
@@ -187,6 +187,7 @@ namespace Barotrauma.Lights
                 if ((light.Color.A < 1 || light.Range < 1.0f) && !light.LightSourceParams.OverrideLightSpriteAlpha.HasValue) { continue; }
                 if (light.ParentBody != null)
                 {
+                    light.ParentBody.UpdateDrawPosition();
                     light.Position = light.ParentBody.DrawPosition;
                     if (light.ParentSub != null) { light.Position -= light.ParentSub.DrawPosition; }
                 }
@@ -501,7 +502,7 @@ namespace Barotrauma.Lights
         private Dictionary<Hull, Rectangle> GetVisibleHulls(Camera cam)
         {
             visibleHulls.Clear();
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in Hull.HullList)
             {
                 if (hull.HiddenInGame) { continue; }
                 var drawRect =
@@ -537,7 +538,7 @@ namespace Barotrauma.Lights
                 Vector2 scale = new Vector2(
                     MathHelper.Clamp(losOffset.Length() / 256.0f, 4.0f, 5.0f), 3.0f);
 
-                spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f)));
+                spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameSettings.CurrentConfig.Graphics.LightMapScale, GameSettings.CurrentConfig.Graphics.LightMapScale, 1.0f)));
                 spriteBatch.Draw(visionCircle, new Vector2(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y), null, Color.White, rotation,
                     new Vector2(visionCircle.Width * 0.2f, visionCircle.Height / 2), scale, SpriteEffects.None, 0.0f);
                 spriteBatch.End();

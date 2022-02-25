@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class AIObjectiveFixLeak : AIObjective
     {
-        public override string Identifier { get; set; } = "fix leak";
+        public override Identifier Identifier { get; set; } = "fix leak".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         public override bool AllowInAnySub => true;
@@ -64,15 +64,15 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            var weldingTool = character.Inventory.FindItemByTag("weldingequipment", true);
+            var weldingTool = character.Inventory.FindItemByTag("weldingequipment".ToIdentifier(), true);
             if (weldingTool == null)
             {
-                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingequipment", objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
+                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingequipment".ToIdentifier(), objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
                     onAbandon: () =>
                     {
                         if (character.IsOnPlayerTeam && objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>())
                         {
-                            character.Speak(TextManager.Get("dialogcannotfindweldingequipment"), null, 0.0f, "dialogcannotfindweldingequipment", 10.0f);
+                            character.Speak(TextManager.Get("dialogcannotfindweldingequipment").Value, null, 0.0f, "dialogcannotfindweldingequipment".ToIdentifier(), 10.0f);
                         }
                         Abandon = true;
                     },
@@ -91,7 +91,7 @@ namespace Barotrauma
                 }
                 if (weldingTool.OwnInventory != null && weldingTool.OwnInventory.AllItems.None(i => i.HasTag("weldingfuel") && i.Condition > 0.0f))
                 {
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel".ToIdentifier(), weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
                     {
                         RemoveExisting = true
                     },
@@ -112,11 +112,11 @@ namespace Barotrauma
                         int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag("weldingfuel") && i.Condition > 1);
                         if (remainingOxygenTanks == 0)
                         {
-                            character.Speak(TextManager.Get("DialogOutOfWeldingFuel"), null, 0.0f, "outofweldingfuel", 30.0f);
+                            character.Speak(TextManager.Get("DialogOutOfWeldingFuel").Value, null, 0.0f, "outofweldingfuel".ToIdentifier(), 30.0f);
                         }
                         else if (remainingOxygenTanks < 4)
                         {
-                            character.Speak(TextManager.Get("DialogLowOnWeldingFuel"), null, 0.0f, "lowonweldingfuel", 30.0f);
+                            character.Speak(TextManager.Get("DialogLowOnWeldingFuel").Value, null, 0.0f, "lowonweldingfuel".ToIdentifier(), 30.0f);
                         }
                     }
                     return;
@@ -142,7 +142,7 @@ namespace Barotrauma
             bool canOperate = toLeak.LengthSquared() < reach * reach;
             if (canOperate)
             {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak), 
+                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: Identifier.Empty, requireEquip: true, operateTarget: Leak), 
                     onAbandon: () => Abandon = true,
                     onCompleted: () =>
                     {
@@ -160,7 +160,7 @@ namespace Barotrauma
                 {
                     UseDistanceRelativeToAimSourcePos = true,
                     CloseEnough = reach,
-                    DialogueIdentifier = Leak.FlowTargetHull != null ? "dialogcannotreachleak" : null,
+                    DialogueIdentifier = Leak.FlowTargetHull != null ? "dialogcannotreachleak".ToIdentifier() : Identifier.Empty,
                     TargetName = Leak.FlowTargetHull?.DisplayName,
                     CheckVisibility = false,
                     requiredCondition = () => Leak.Submarine == character.Submarine,

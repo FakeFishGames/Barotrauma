@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
@@ -10,15 +11,15 @@ namespace Barotrauma.Items.Components
 {
     internal class VineSprite
     {
-        [Serialize("0,0,0,0", false)]
+        [Serialize("0,0,0,0", IsPropertySaveable.No)]
         public Rectangle SourceRect { get; private set; }
 
-        [Serialize("0.5,0.5", false)]
+        [Serialize("0.5,0.5", IsPropertySaveable.No)]
         public Vector2 Origin { get; private set; }
 
         public Vector2 AbsoluteOrigin;
 
-        public VineSprite(XElement element)
+        public VineSprite(ContentXElement element)
         {
             SerializableProperty.DeserializeProperties(this, element);
             AbsoluteOrigin = new Vector2(SourceRect.Width * Origin.X, SourceRect.Height * Origin.Y);
@@ -109,28 +110,27 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        partial void LoadVines(XElement element)
+        partial void LoadVines(ContentXElement element)
         {
-            string? vineAtlasPath = element.GetAttributeString("vineatlas", null);
-            string? decayAtlasPath = element.GetAttributeString("decayatlas", null);
+            ContentPath vineAtlasPath = element.GetAttributeContentPath("vineatlas") ?? ContentPath.Empty;
+            ContentPath decayAtlasPath = element.GetAttributeContentPath("decayatlas") ?? ContentPath.Empty;
 
-            if (vineAtlasPath != null)
+            if (!vineAtlasPath.IsNullOrEmpty())
             {
-                VineAtlas = new Sprite(vineAtlasPath, Rectangle.Empty);
+                VineAtlas = new Sprite(vineAtlasPath.Value, Rectangle.Empty);
             }
 
-            if (decayAtlasPath != null)
+            if (!decayAtlasPath.IsNullOrEmpty())
             {
-                DecayAtlas = new Sprite(decayAtlasPath, Rectangle.Empty);
+                DecayAtlas = new Sprite(decayAtlasPath.Value, Rectangle.Empty);
             }
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "vinesprite":
-                        var tileType = subElement.GetAttributeString("type", null);
-                        VineTileType type = Enum.Parse<VineTileType>(tileType);
+                        VineTileType type = subElement.GetAttributeEnum("type", VineTileType.Stem);
                         VineSprites.Add(type, new VineSprite(subElement));
                         break;
                     case "flowersprite":
@@ -145,11 +145,11 @@ namespace Barotrauma.Items.Components
                 leafVariants = LeafSprites.Count;
             }
 
-            foreach (VineTileType type in Enum.GetValues(typeof(VineTileType)))
+            foreach (VineTileType type in Enum.GetValues(typeof(VineTileType)).Cast<VineTileType>())
             {
                 if (!VineSprites.ContainsKey(type))
                 {
-                    DebugConsole.ThrowError($"Vine sprite missing from {item.prefab.Identifier}: {type}");
+                    DebugConsole.ThrowError($"Vine sprite missing from {item.Prefab.Identifier}: {type}");
                 }
             }
         }

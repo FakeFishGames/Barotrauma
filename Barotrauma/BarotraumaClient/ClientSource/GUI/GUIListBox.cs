@@ -148,7 +148,11 @@ namespace Barotrauma
         }
 
         // TODO: fix implicit hiding
-        public bool Selected { get; set; }
+        public override bool Selected
+        {
+            get { return isSelected; }
+            set { isSelected = value; }
+        }
 
         public IReadOnlyList<GUIComponent> AllSelected => selected;
 
@@ -328,7 +332,7 @@ namespace Barotrauma
             };
             if (style != null)
             {
-                GUI.Style.Apply(ContentBackground, "", this);
+                GUIStyle.Apply(ContentBackground, "", this);
             }
             if (color.HasValue)
             {
@@ -435,7 +439,7 @@ namespace Barotrauma
             Vector2 topOffset = CalculateTopOffset();
             int x = (int)topOffset.X;
             int y = (int)topOffset.Y;
-            
+
             for (int i = 0; i < Content.CountChildren; i++)
             {
                 GUIComponent child = Content.GetChild(i);

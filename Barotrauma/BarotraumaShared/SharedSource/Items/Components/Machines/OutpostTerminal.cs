@@ -6,7 +6,7 @@ namespace Barotrauma.Items.Components
 {
     partial class OutpostTerminal : ItemComponent
     {
-        public OutpostTerminal(Item item, XElement element) : base(item, element)
+        public OutpostTerminal(Item item, ContentXElement element) : base(item, element)
         {
             InitProjSpecific(element);
         }

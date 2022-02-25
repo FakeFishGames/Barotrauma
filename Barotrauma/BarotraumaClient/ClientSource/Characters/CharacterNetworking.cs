@@ -134,7 +134,7 @@ namespace Barotrauma
                         msg.Write((ushort)characterTalents.Count);
                         foreach (var unlockedTalent in characterTalents)
                         {
-                            msg.Write(unlockedTalent.Prefab.UIntIdentifier);
+                            msg.Write(unlockedTalent.Prefab.UintIdentifier);
                         }
                         break;
                 }
@@ -307,7 +307,7 @@ namespace Barotrauma
                             {
                                 string errorMsg = "Received an inventory update message for an entity with no inventory ([name], removed: " + Removed + ")";
                                 DebugConsole.ThrowError(errorMsg.Replace("[name]", Name));
-                                GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ClientRead:NoInventory" + ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg.Replace("[name]", SpeciesName));
+                                GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ClientRead:NoInventory" + ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg.Replace("[name]", SpeciesName.Value));
 
                                 //read anyway to prevent messing up reading the rest of the message
                                 _ = msg.ReadUInt16();
@@ -357,7 +357,7 @@ namespace Barotrauma
                             int skillCount = msg.ReadByte();
                             for (int i = 0; i < skillCount; i++)
                             {
-                                string skillIdentifier = msg.ReadString();
+                                Identifier skillIdentifier = msg.ReadIdentifier();
                                 float skillLevel = msg.ReadSingle();
                                 info?.SetSkillLevel(skillIdentifier, skillLevel);
                             }
@@ -419,9 +419,9 @@ namespace Barotrauma
                             if (!validData) { break; }
                             if (msgType == 1)
                             {
-                                int orderIndex = msg.ReadRangedInteger(0, Order.PrefabList.Count);
-                                var orderPrefab = Order.PrefabList[orderIndex];
-                                string option = null;
+                                UInt32 orderPrefabUintIdentifier = msg.ReadUInt32();
+                                var orderPrefab = OrderPrefab.Prefabs.Find(p => p.UintIdentifier == orderPrefabUintIdentifier);
+                                Identifier option = Identifier.Empty;
                                 if (orderPrefab.HasOptions)
                                 {
                                     int optionIndex = msg.ReadRangedInteger(-1, orderPrefab.AllOptions.Length);
@@ -434,8 +434,8 @@ namespace Barotrauma
                             }
                             else if (msgType == 2)
                             {
-                                string identifier = msg.ReadString();
-                                string option = msg.ReadString();
+                                Identifier identifier = msg.ReadIdentifier();
+                                Identifier option = msg.ReadIdentifier();
                                 ushort objectiveTargetEntityId = msg.ReadUInt16();
                                 var objectiveTargetEntity = FindEntityByID(objectiveTargetEntityId);
                                 GameMain.GameSession?.CrewManager?.CreateObjectiveIcon(this, identifier, option, objectiveTargetEntity);
@@ -486,8 +486,8 @@ namespace Barotrauma
                             break;
                         case 13: //NetEntityEvent.Type.UpdatePermanentStats:
                             byte savedStatValueCount = msg.ReadByte();
-                            StatTypes statType = (StatTypes)msg.ReadByte();                       
-                            info?.ClearSavedStatValues(statType);                        
+                            StatTypes statType = (StatTypes)msg.ReadByte();
+                            info?.ClearSavedStatValues(statType);
                             for (int i = 0; i < savedStatValueCount; i++)
                             {
                                 string statIdentifier = msg.ReadString();
@@ -544,7 +544,7 @@ namespace Barotrauma
                 int ownerId = hasOwner ? inc.ReadByte() : -1;
                 byte teamID = inc.ReadByte();
                 bool hasAi = inc.ReadBoolean();
-                string infoSpeciesName = inc.ReadString();
+                Identifier infoSpeciesName = inc.ReadIdentifier();
 
                 CharacterInfo info = CharacterInfo.ClientRead(infoSpeciesName, inc);
                 try
@@ -567,7 +567,7 @@ namespace Barotrauma
                 int orderCount = inc.ReadByte();
                 for (int i = 0; i < orderCount; i++)
                 {
-                    int orderPrefabIndex = inc.ReadByte();
+                    UInt32 orderPrefabUintIdentifier = inc.ReadUInt32();
                     Entity targetEntity = FindEntityByID(inc.ReadUInt16());
                     Character orderGiver = inc.ReadBoolean() ? FindEntityByID(inc.ReadUInt16()) as Character : null;
                     int orderOptionIndex = inc.ReadByte();
@@ -581,18 +581,23 @@ namespace Barotrauma
                         targetPosition = new OrderTarget(new Vector2(x, y), hull, creatingFromExistingData: true);
                     }
 
-                    if (orderPrefabIndex >= 0 && orderPrefabIndex < Order.PrefabList.Count)
+                    OrderPrefab orderPrefab =
+                        OrderPrefab.Prefabs.Find(p => p.UintIdentifier == orderPrefabUintIdentifier);
+                    if (orderPrefab != null)
                     {
-                        var orderPrefab = Order.PrefabList[orderPrefabIndex];
                         var component = orderPrefab.GetTargetItemComponent(targetEntity as Item);
                         if (!orderPrefab.MustSetTarget || (targetEntity != null && component != null) || targetPosition != null)
                         {
                             var order = targetPosition == null ?
                                 new Order(orderPrefab, targetEntity, component, orderGiver: orderGiver) :
                                 new Order(orderPrefab, targetPosition, orderGiver: orderGiver);
-                            character.SetOrder(order,
-                                orderOptionIndex >= 0 && orderOptionIndex < orderPrefab.Options.Length ? orderPrefab.Options[orderOptionIndex] : null,
-                                orderPriority, orderGiver, speak: false, force: true);
+                            order = order.WithOption(
+                                orderOptionIndex >= 0 && orderOptionIndex < orderPrefab.Options.Length
+                                    ? orderPrefab.Options[orderOptionIndex]
+                                    : Identifier.Empty)
+                                .WithManualPriority(orderPriority)
+                                .WithOrderGiver(orderGiver);
+                            character.SetOrder(order, speak: false, force: true);
                         }
                         else
                         {
@@ -601,7 +606,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        DebugConsole.ThrowError("Invalid order prefab index - index (" + orderPrefabIndex + ") out of bounds.");
+                        DebugConsole.ThrowError("Invalid order prefab index - index (" + orderPrefabUintIdentifier + ") out of bounds.");
                     }
                 }
 

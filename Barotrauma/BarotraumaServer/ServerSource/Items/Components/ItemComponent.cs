@@ -4,7 +4,7 @@ namespace Barotrauma.Items.Components
 {
     partial class ItemComponent : ISerializableEntity
     {
-        private bool LoadElemProjSpecific(XElement subElement)
+        private bool LoadElemProjSpecific(ContentXElement subElement)
         {
             switch (subElement.Name.ToString().ToLowerInvariant())
             {

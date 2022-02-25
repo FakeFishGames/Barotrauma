@@ -1,4 +1,5 @@
-﻿using Barotrauma.Extensions;
+﻿using System;
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,131 +7,97 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class WreckAIConfig : ISerializableEntity
+    class WreckAIConfig : PrefabWithUintIdentifier, ISerializableEntity
     {
+        public readonly static PrefabCollection<WreckAIConfig> Prefabs = new PrefabCollection<WreckAIConfig>();
+
         public string Name => "Wreck AI Config";
 
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; }
 
-        [Serialize("", false)]
-        public string Entity { get; private set; }
+        public Identifier Entity => Identifier;
 
-        [Serialize("", false)]
-        public string DefensiveAgent { get; private set; }
+        [Serialize("", IsPropertySaveable.No)]
+        public Identifier DefensiveAgent { get; private set; }
 
-        [Serialize("", false)]
+        [Serialize("", IsPropertySaveable.No)]
         public string OffensiveAgent { get; private set; }
 
-        [Serialize("", false)]
+        [Serialize("", IsPropertySaveable.No)]
         public string Brain { get; private set; }
 
-        [Serialize("", false)]
+        [Serialize("", IsPropertySaveable.No)]
         public string Spawner { get; private set; }
 
-        [Serialize("", false)]
+        [Serialize("", IsPropertySaveable.No)]
         public string BrainRoomBackground { get; private set; }
 
-        [Serialize("", false)]
+        [Serialize("", IsPropertySaveable.No)]
         public string BrainRoomVerticalWall { get; private set; }
 
-        [Serialize("", false)]
+        [Serialize("", IsPropertySaveable.No)]
         public string BrainRoomHorizontalWall { get; private set; }
 
-        [Serialize(60f, false)]
+        [Serialize(60f, IsPropertySaveable.No)]
         public float AgentSpawnDelay { get; private set; }
 
-        [Serialize(0.5f, false)]
+        [Serialize(0.5f, IsPropertySaveable.No)]
         public float AgentSpawnDelayRandomFactor { get; private set; }
 
-        [Serialize(1f, false)]
+        [Serialize(1f, IsPropertySaveable.No)]
         public float AgentSpawnDelayDifficultyMultiplier { get; private set; }
 
-        [Serialize(1f, false)]
+        [Serialize(1f, IsPropertySaveable.No)]
         public float AgentSpawnCountDifficultyMultiplier { get; private set; }
 
-        [Serialize(0, false)]
+        [Serialize(0, IsPropertySaveable.No)]
         public int MinAgentsPerBrainRoom { get; private set; }
 
-        [Serialize(3, false)]
+        [Serialize(3, IsPropertySaveable.No)]
         public int MaxAgentsPerRoom { get; private set; }
 
-        [Serialize(2, false)]
+        [Serialize(2, IsPropertySaveable.No)]
         public int MinAgentsOutside { get; private set; }
 
-        [Serialize(5, false)]
+        [Serialize(5, IsPropertySaveable.No)]
         public int MaxAgentsOutside { get; private set; }
 
-        [Serialize(3, false)]
+        [Serialize(3, IsPropertySaveable.No)]
         public int MinAgentsInside { get; private set; }
 
-        [Serialize(10, false)]
+        [Serialize(10, IsPropertySaveable.No)]
         public int MaxAgentsInside { get; private set; }
 
-        [Serialize(15, false)]
+        [Serialize(15, IsPropertySaveable.No)]
         public int MaxAgentCount { get; private set; }
 
-        [Serialize(100f, false)]
+        [Serialize(100f, IsPropertySaveable.No)]
         public float MinWaterLevel { get; private set; }
 
-        [Serialize(true, false)]
+        [Serialize(true, IsPropertySaveable.No)]
         public bool KillAgentsWhenEntityDies { get; private set; }
 
-        [Serialize(1f, false)]
+        [Serialize(1f, IsPropertySaveable.No)]
         public float DeadEntityColorMultiplier { get; private set; }
 
-        [Serialize(1f, false)]
+        [Serialize(1f, IsPropertySaveable.No)]
         public float DeadEntityColorFadeOutTime { get; private set; }
 
-        public readonly string[] ForbiddenAmmunition;
+        public readonly Identifier[] ForbiddenAmmunition;
 
-        public static List<WreckAIConfig> List
+        public static WreckAIConfig GetRandom() => Prefabs.GetRandom(Rand.RandSync.ServerAndClient);
+
+        protected override Identifier DetermineIdentifier(XElement element)
         {
-            get
-            {
-                if (paramsList == null)
-                {
-                    LoadAll();
-                }
-                return paramsList;
-            }
+            return element.GetAttributeIdentifier("Entity", base.DetermineIdentifier(element));
         }
 
-        private static List<WreckAIConfig> paramsList;
-
-        public static WreckAIConfig GetRandom() => List.GetRandom(Rand.RandSync.Server);
-
-        public WreckAIConfig(XElement element)
+        public WreckAIConfig(ContentXElement element, WreckAIConfigFile file) : base(file, element)
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
-            ForbiddenAmmunition = XMLExtensions.GetAttributeStringArray(element, "ForbiddenAmmunition", new string[0], convertToLowerInvariant: true);
+            ForbiddenAmmunition = XMLExtensions.GetAttributeIdentifierArray(element, "ForbiddenAmmunition", Array.Empty<Identifier>());
         }
 
-        public static void LoadAll()
-        {
-            paramsList = new List<WreckAIConfig>();
-            var files = GameMain.Instance.GetFilesOfType(ContentType.WreckAIConfig);
-            if (files.None())
-            {
-                DebugConsole.ThrowError("Cannot find any Wreck AI config!");
-                return;
-            }
-            foreach (ContentFile file in files)
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                if (doc == null) { continue; }
-                var mainElement = doc.Root;
-                if (mainElement.IsOverride())
-                {
-                    mainElement = doc.Root.FirstElement();
-                    paramsList.Clear();
-                    DebugConsole.NewMessage($"Overriding the wreck ai config with '{file.Path}'", Color.Yellow);
-                }
-                else if (paramsList.Any())
-                {
-                    DebugConsole.NewMessage($"Adding additional wreck ai config from file '{file.Path}'");
-                }
-                paramsList.Add(new WreckAIConfig(mainElement));
-            }
-        }
+        public override void Dispose() { }
     }
 }

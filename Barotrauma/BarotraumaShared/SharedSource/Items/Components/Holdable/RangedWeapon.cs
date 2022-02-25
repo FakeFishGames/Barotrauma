@@ -18,49 +18,49 @@ namespace Barotrauma.Items.Components
 
         private Vector2 barrelPos;
 
-        [Serialize("0.0,0.0", false, description: "The position of the barrel as an offset from the item's center (in pixels). Determines where the projectiles spawn.")]
+        [Serialize("0.0,0.0", IsPropertySaveable.No, description: "The position of the barrel as an offset from the item's center (in pixels). Determines where the projectiles spawn.")]
         public string BarrelPos
         {
             get { return XMLExtensions.Vector2ToString(ConvertUnits.ToDisplayUnits(barrelPos)); }
             set { barrelPos = ConvertUnits.ToSimUnits(XMLExtensions.ParseVector2(value)); }
         }
 
-        [Serialize(1.0f, false, description: "How long the user has to wait before they can fire the weapon again (in seconds).")]
+        [Serialize(1.0f, IsPropertySaveable.No, description: "How long the user has to wait before they can fire the weapon again (in seconds).")]
         public float Reload
         {
             get { return reload; }
             set { reload = Math.Max(value, 0.0f); }
         }
 
-        [Serialize(false, false, description: "Tells the AI to hold the trigger down when it uses this weapon")]
+        [Serialize(false, IsPropertySaveable.No, description: "Tells the AI to hold the trigger down when it uses this weapon")]
         public bool HoldTrigger
         {
             get;
             set;
         }
 
-        [Serialize(1, false, description: "How projectiles the weapon launches when fired once.")]
+        [Serialize(1, IsPropertySaveable.No, description: "How projectiles the weapon launches when fired once.")]
         public int ProjectileCount
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, false, description: "Random spread applied to the firing angle of the projectiles when used by a character with sufficient skills to use the weapon (in degrees).")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Random spread applied to the firing angle of the projectiles when used by a character with sufficient skills to use the weapon (in degrees).")]
         public float Spread
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, false, description: "Random spread applied to the firing angle of the projectiles when used by a character with insufficient skills to use the weapon (in degrees).")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Random spread applied to the firing angle of the projectiles when used by a character with insufficient skills to use the weapon (in degrees).")]
         public float UnskilledSpread
         {
             get;
             set;
         }
 
-        [Serialize(0f, true, description: "The time required for a charge-type turret to charge up before able to fire.")]
+        [Serialize(0f, IsPropertySaveable.Yes, description: "The time required for a charge-type turret to charge up before able to fire.")]
         public float MaxChargeTime
         {
             get;
@@ -92,7 +92,7 @@ namespace Barotrauma.Items.Components
         private float currentChargeTime;
         private bool tryingToCharge;
 
-        public RangedWeapon(Item item, XElement element)
+        public RangedWeapon(Item item, ContentXElement element)
             : base(item, element)
         {
             item.IsShootable = true;
@@ -102,7 +102,7 @@ namespace Barotrauma.Items.Components
             InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
         public override void Equip(Character character)
         {

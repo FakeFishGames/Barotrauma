@@ -63,7 +63,7 @@ namespace Barotrauma
                 string itemIdentifier = prefab.ConfigElement.GetAttributeString("itemidentifier", null);
                 if (itemIdentifier != null)
                 {
-                    itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                    itemPrefab = MapEntityPrefab.FindByIdentifier(itemIdentifier.ToIdentifier()) as ItemPrefab;
                 }
                 if (itemPrefab == null)
                 {
@@ -86,22 +86,22 @@ namespace Barotrauma
                 spawnPositionType = Level.PositionType.Cave | Level.PositionType.Ruin;
             }
 
-            foreach (XElement element in prefab.ConfigElement.Elements())
+            foreach (var element in prefab.ConfigElement.Elements())
             {
                 switch (element.Name.ToString().ToLowerInvariant())
                 {
                     case "statuseffect":
                         {
-                            var newEffect = StatusEffect.Load(element, parentDebugName: prefab.Name);
+                            var newEffect = StatusEffect.Load(element, parentDebugName: prefab.Name.Value);
                             if (newEffect == null) { continue; }
                             statusEffects.Add(new List<StatusEffect> { newEffect });
                             break;
                         }
                     case "chooserandom":
                         statusEffects.Add(new List<StatusEffect>());
-                        foreach (XElement subElement in element.Elements())
+                        foreach (var subElement in element.Elements())
                         {
-                            var newEffect = StatusEffect.Load(subElement, parentDebugName: prefab.Name);
+                            var newEffect = StatusEffect.Load(subElement, parentDebugName: prefab.Name.Value);
                             if (newEffect == null) { continue; }
                             statusEffects.Last().Add(newEffect);
                         }
@@ -200,12 +200,13 @@ namespace Barotrauma
                     }
                     if (validContainers.Any())
                     {
-                        var selectedContainer = validContainers.GetRandom(Rand.RandSync.Unsynced);
+                        var selectedContainer = validContainers.GetRandomUnsynced();
                         if (selectedContainer.Combine(item, user: null))
                         {
 #if SERVER
                             originalInventoryID = selectedContainer.Item.ID;
                             originalItemContainerIndex = (byte)selectedContainer.Item.GetComponentIndex(selectedContainer);
+                            originalSlotIndex = item.ParentInventory?.FindIndex(item) ?? -1;
 #endif
                         } // Placement successful
                     }

@@ -15,11 +15,11 @@ namespace Barotrauma.Networking
         public UInt64 SteamID;
         public UInt64 OwnerSteamID;
 
-        public string Language;
+        public LanguageIdentifier Language;
 
         public UInt16 Ping;
 
-        public string PreferredJob;
+        public Identifier PreferredJob;
 
         public CharacterTeamType TeamID;
 
@@ -148,7 +148,7 @@ namespace Barotrauma.Networking
         
         private List<Client> kickVoters;
 
-        public HashSet<string> GivenAchievements = new HashSet<string>();
+        public HashSet<Identifier> GivenAchievements = new HashSet<Identifier>();
 
         public ClientPermissions Permissions = ClientPermissions.None;
         public List<DebugConsole.Command> PermittedConsoleCommands

@@ -11,11 +11,11 @@ namespace Barotrauma
 
         private bool initialized = false;
 
-        public override string Description
+        public override LocalizedString Description
         {
             get
             {
-                if (descriptions == null) return "";
+                if (descriptions == null) { return ""; }
                 
                 //non-team-specific description
                 return descriptions[0];

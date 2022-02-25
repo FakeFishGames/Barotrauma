@@ -242,7 +242,7 @@ namespace Barotrauma.Networking
             incomingDataMessages.Clear();
         }
 
-        public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
+        public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod, bool compressPastThreshold = true)
         {
             if (!isActive) { return; }
 
@@ -250,7 +250,7 @@ namespace Barotrauma.Networking
             buf[0] = (byte)deliveryMethod;
 
             byte[] bufAux = new byte[msg.LengthBytes];
-            msg.PrepareForSending(ref bufAux, out bool isCompressed, out int length);
+            msg.PrepareForSending(ref bufAux, compressPastThreshold, out bool isCompressed, out int length);
 
             buf[1] = (byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None);
 

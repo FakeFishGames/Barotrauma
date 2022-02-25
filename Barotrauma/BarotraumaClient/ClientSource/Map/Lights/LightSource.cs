@@ -15,9 +15,9 @@ namespace Barotrauma.Lights
 
         public bool Persistent;
 
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; } = new Dictionary<string, SerializableProperty>();
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; } = new Dictionary<Identifier, SerializableProperty>();
 
-        [Serialize("1.0,1.0,1.0,1.0", true, alwaysUseInstanceValues: true), Editable]
+        [Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes, alwaysUseInstanceValues: true), Editable]
         public Color Color
         {
             get;
@@ -26,7 +26,7 @@ namespace Barotrauma.Lights
 
         private float range;
 
-        [Serialize(100.0f, true, alwaysUseInstanceValues: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
+        [Serialize(100.0f, IsPropertySaveable.Yes, alwaysUseInstanceValues: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
         public float Range
         {
             get { return range; }
@@ -43,19 +43,19 @@ namespace Barotrauma.Lights
             }
         }
 
-        [Serialize(1f, true), Editable(minValue: 0.01f, maxValue: 100f, ValueStep = 0.1f, DecimalCount = 2)]
+        [Serialize(1f, IsPropertySaveable.Yes), Editable(minValue: 0.01f, maxValue: 100f, ValueStep = 0.1f, DecimalCount = 2)]
         public float Scale { get; set; }
 
-        [Serialize("0, 0", true), Editable(ValueStep = 1, DecimalCount = 1, MinValueFloat = -1000f, MaxValueFloat = 1000f)]
+        [Serialize("0, 0", IsPropertySaveable.Yes), Editable(ValueStep = 1, DecimalCount = 1, MinValueFloat = -1000f, MaxValueFloat = 1000f)]
         public Vector2 Offset { get; set; }
 
-        [Serialize(0f, true), Editable(MinValueFloat = -360, MaxValueFloat = 360, ValueStep = 1, DecimalCount = 0)]
+        [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = -360, MaxValueFloat = 360, ValueStep = 1, DecimalCount = 0)]
         public float Rotation { get; set; }
 
         public Vector2 GetOffset() => Vector2.Transform(Offset, Matrix.CreateRotationZ(Rotation));
 
         private float flicker;
-        [Editable, Serialize(0.0f, false, description: "How heavily the light flickers. 0 = no flickering, 1 = the light will alternate between completely dark and full brightness.")]
+        [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "How heavily the light flickers. 0 = no flickering, 1 = the light will alternate between completely dark and full brightness.")]
         public float Flicker
         {
             get { return flicker; }
@@ -65,7 +65,7 @@ namespace Barotrauma.Lights
             }
         }
 
-        [Editable, Serialize(1.0f, false, description: "How fast the light flickers.")]
+        [Editable, Serialize(1.0f, IsPropertySaveable.No, description: "How fast the light flickers.")]
         public float FlickerSpeed
         {
             get;
@@ -73,7 +73,7 @@ namespace Barotrauma.Lights
         }
 
         private float pulseFrequency;
-        [Editable, Serialize(0.0f, true, description: "How rapidly the light pulsates (in Hz). 0 = no blinking.")]
+        [Editable, Serialize(0.0f, IsPropertySaveable.Yes, description: "How rapidly the light pulsates (in Hz). 0 = no blinking.")]
         public float PulseFrequency
         {
             get { return pulseFrequency; }
@@ -84,7 +84,7 @@ namespace Barotrauma.Lights
         }
 
         private float pulseAmount;
-        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.0f, true, description: "How much light pulsates (in Hz). 0 = not at all, 1 = alternates between full brightness and off.")]
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.0f, IsPropertySaveable.Yes, description: "How much light pulsates (in Hz). 0 = not at all, 1 = alternates between full brightness and off.")]
         public float PulseAmount
         {
             get { return pulseAmount; }
@@ -95,7 +95,7 @@ namespace Barotrauma.Lights
         }
 
         private float blinkFrequency;
-        [Editable, Serialize(0.0f, true, description: "How rapidly the light blinks on and off (in Hz). 0 = no blinking.")]
+        [Editable, Serialize(0.0f, IsPropertySaveable.Yes, description: "How rapidly the light blinks on and off (in Hz). 0 = no blinking.")]
         public float BlinkFrequency
         {
             get { return blinkFrequency; }
@@ -124,7 +124,7 @@ namespace Barotrauma.Lights
             private set;
         }
 
-        public XElement DeformableLightSpriteElement
+        public ContentXElement DeformableLightSpriteElement
         {
             get;
             private set;
@@ -134,11 +134,11 @@ namespace Barotrauma.Lights
         //Can be used to make lamp sprites glow at full brightness even if the light itself is dim.
         public float? OverrideLightSpriteAlpha;
 
-        public LightSourceParams(XElement element)
+        public LightSourceParams(ContentXElement element)
         {
             Deserialize(element);
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -427,7 +427,7 @@ namespace Barotrauma.Lights
         private readonly PropertyConditional.Comparison comparison;
         private readonly List<PropertyConditional> conditionals = new List<PropertyConditional>();
 
-        public LightSource (XElement element, ISerializableEntity conditionalTarget = null)
+        public LightSource(ContentXElement element, ISerializableEntity conditionalTarget = null)
             : this(Vector2.Zero, 100.0f, Color.White, null)
         {
             lightSourceParams = new LightSourceParams(element);
@@ -444,7 +444,7 @@ namespace Barotrauma.Lights
             }
 
             this.conditionalTarget = conditionalTarget;
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -1211,7 +1211,7 @@ namespace Barotrauma.Lights
                     new SegmentPoint(new Vector2(drawPos.X - bounds, drawPos.Y + bounds), null)
                 };
 
-                for (int i=0;i<4;i++)
+                for (int i = 0; i < 4; i++)
                 {
                     GUI.DrawLine(spriteBatch, boundaryCorners[i].Pos, boundaryCorners[(i + 1) % 4].Pos, Color.White, 0, 3);
                 }
@@ -1283,16 +1283,16 @@ namespace Barotrauma.Lights
 
                 if (CastShadows && Screen.Selected == GameMain.SubEditorScreen)
                 {
-                    GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 20, Vector2.One * 40, GUI.Style.Orange, isFilled: false);
-                    GUI.DrawLine(spriteBatch, drawPos - Vector2.One * 20, drawPos + Vector2.One * 20, GUI.Style.Orange);
-                    GUI.DrawLine(spriteBatch, drawPos - new Vector2(1.0f, -1.0f) * 20, drawPos + new Vector2(1.0f, -1.0f) * 20, GUI.Style.Orange);
+                    GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 20, Vector2.One * 40, GUIStyle.Orange, isFilled: false);
+                    GUI.DrawLine(spriteBatch, drawPos - Vector2.One * 20, drawPos + Vector2.One * 20, GUIStyle.Orange);
+                    GUI.DrawLine(spriteBatch, drawPos - new Vector2(1.0f, -1.0f) * 20, drawPos + new Vector2(1.0f, -1.0f) * 20, GUIStyle.Orange);
                 }
 
                 //visualize light recalculations
                 float timeSinceRecalculation = (float)Timing.TotalTime - lastRecalculationTime;
                 if (timeSinceRecalculation < 0.1f)
                 {
-                    GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 10, Vector2.One * 20, GUI.Style.Red * (1.0f - timeSinceRecalculation * 10.0f), isFilled: true);
+                    GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 10, Vector2.One * 20, GUIStyle.Red * (1.0f - timeSinceRecalculation * 10.0f), isFilled: true);
                     GUI.DrawLine(spriteBatch, drawPos - Vector2.One * Range, drawPos + Vector2.One * Range, Color);
                     GUI.DrawLine(spriteBatch, drawPos - new Vector2(1.0f, -1.0f) * Range, drawPos + new Vector2(1.0f, -1.0f) * Range, Color);
                 }

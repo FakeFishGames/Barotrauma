@@ -19,9 +19,9 @@ namespace Barotrauma.Items.Components
         private readonly List<(Vector2 position, ParticleEmitter emitter)> pumpOutEmitters = new List<(Vector2 position, ParticleEmitter emitter)>(); 
         private readonly List<(Vector2 position, ParticleEmitter emitter)> pumpInEmitters = new List<(Vector2 position, ParticleEmitter emitter)>();
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -47,12 +47,12 @@ namespace Barotrauma.Items.Components
             var paddedPowerArea = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), powerArea.RectTransform, Anchor.Center), style: "PowerButtonFrame");
             var powerLightArea = new GUIFrame(new RectTransform(new Vector2(0.87f, 0.2f), powerArea.RectTransform, Anchor.TopRight), style: null);
             powerLight = new GUITickBox(new RectTransform(Vector2.One, powerLightArea.RectTransform, Anchor.Center),
-                TextManager.Get("PowerLabel"), font: GUI.SubHeadingFont, style: "IndicatorLightPower")
+                TextManager.Get("PowerLabel"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightPower")
             {
                 CanBeFocused = false
             };
             powerLight.TextBlock.AutoScaleHorizontal = true;
-            powerLight.TextBlock.OverrideTextColor(GUI.Style.TextColor);
+            powerLight.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal);
             PowerButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.75f), paddedPowerArea.RectTransform, Anchor.TopCenter)
             {
                 RelativeOffset = new Vector2(0, 0.1f)
@@ -75,23 +75,23 @@ namespace Barotrauma.Items.Components
             var rightArea = new GUIFrame(new RectTransform(new Vector2(0.65f, 1), paddedFrame.RectTransform, Anchor.CenterRight), style: null);
             
             autoControlIndicator = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.25f), rightArea.RectTransform, Anchor.TopLeft), 
-                TextManager.Get("PumpAutoControl", fallBackTag: "ReactorAutoControl"), font: GUI.SubHeadingFont, style: "IndicatorLightYellow")
+                TextManager.Get("PumpAutoControl", "ReactorAutoControl"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightYellow")
             {
                 Selected = false,
                 Enabled = false,
                 ToolTip = TextManager.Get("AutoControlTip")
             };
             autoControlIndicator.TextBlock.AutoScaleHorizontal = true;
-            autoControlIndicator.TextBlock.OverrideTextColor(GUI.Style.TextColor);
+            autoControlIndicator.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal);
 
             var sliderArea = new GUIFrame(new RectTransform(new Vector2(1, 0.65f), rightArea.RectTransform, Anchor.BottomLeft), style: null);
             var pumpSpeedText = new GUITextBlock(new RectTransform(new Vector2(1, 0.3f), sliderArea.RectTransform, Anchor.TopLeft), "", 
-                textColor: GUI.Style.TextColor, textAlignment: Alignment.CenterLeft, wrap: false, font: GUI.SubHeadingFont)
+                textColor: GUIStyle.TextColorNormal, textAlignment: Alignment.CenterLeft, wrap: false, font: GUIStyle.SubHeadingFont)
             {
                 AutoScaleHorizontal = true
             };
-            string pumpSpeedStr = TextManager.Get("PumpSpeed");
-            pumpSpeedText.TextGetter = () => { return TextManager.AddPunctuation(':', pumpSpeedStr, (int)flowPercentage + " %"); };
+            LocalizedString pumpSpeedStr = TextManager.Get("PumpSpeed");
+            pumpSpeedText.TextGetter = () => { return TextManager.AddPunctuation(':', pumpSpeedStr, (int)Math.Round(flowPercentage) + " %"); };
             pumpSpeedSlider = new GUIScrollBar(new RectTransform(new Vector2(1, 0.35f), sliderArea.RectTransform, Anchor.Center), barSize: 0.1f, style: "DeviceSlider")
             {
                 Step = 0.05f,
@@ -116,9 +116,9 @@ namespace Barotrauma.Items.Components
             };
             var textsArea = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), sliderArea.RectTransform, Anchor.BottomCenter), style: null);
             var outLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), textsArea.RectTransform, Anchor.CenterLeft), TextManager.Get("PumpOut"), 
-                textColor: GUI.Style.TextColor, textAlignment: Alignment.CenterLeft, wrap: false, font: GUI.SubHeadingFont);
+                textColor: GUIStyle.TextColorNormal, textAlignment: Alignment.CenterLeft, wrap: false, font: GUIStyle.SubHeadingFont);
             var inLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), textsArea.RectTransform, Anchor.CenterRight), TextManager.Get("PumpIn"), 
-                textColor: GUI.Style.TextColor, textAlignment: Alignment.CenterRight, wrap: false, font: GUI.SubHeadingFont);
+                textColor: GUIStyle.TextColorNormal, textAlignment: Alignment.CenterRight, wrap: false, font: GUIStyle.SubHeadingFont);
             GUITextBlock.AutoScaleAndNormalize(outLabel, inLabel);
         }
 

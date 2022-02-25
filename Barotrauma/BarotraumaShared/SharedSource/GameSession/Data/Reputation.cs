@@ -13,13 +13,13 @@ namespace Barotrauma
         public const float MinReputationLossPerStolenItem = 0.5f;
         public const float MaxReputationLossPerStolenItem = 10.0f;
 
-        public string Identifier { get; }
+        public Identifier Identifier { get; }
         public int MinReputation { get; }
         public int MaxReputation { get; }
         public int InitialReputation { get; }
         public CampaignMetadata Metadata { get; }
 
-        private readonly string metaDataIdentifier;
+        private readonly Identifier metaDataIdentifier;
 
         /// <summary>
         /// Reputation value normalized to the range of 0-1
@@ -46,8 +46,8 @@ namespace Barotrauma
                 if (increase != 0 && Character.Controlled != null)
                 {
                     Character.Controlled.AddMessage(
-                        TextManager.GetWithVariable("reputationgainnotification", "[reputationname]", Location?.Name ?? Faction.Prefab.Name),
-                        increase > 0 ? GUI.Style.Green : GUI.Style.Red,
+                        TextManager.GetWithVariable("reputationgainnotification", "[reputationname]", Location?.Name ?? Faction.Prefab.Name).Value,
+                        increase > 0 ? GUIStyle.Green : GUIStyle.Red,
                         playSound: true, Identifier, increase, lifetime: 5.0f);                    
                 }
 #endif
@@ -80,23 +80,23 @@ namespace Barotrauma
         public readonly Location Location;
 
 
-        public Reputation(CampaignMetadata metadata, Location location, string identifier, int minReputation, int maxReputation, int initialReputation)
+        public Reputation(CampaignMetadata metadata, Location location, Identifier identifier, int minReputation, int maxReputation, int initialReputation)
             : this(metadata, null, location, identifier, minReputation, maxReputation, initialReputation)
         {
         }
 
         public Reputation(CampaignMetadata metadata, Faction faction, int minReputation, int maxReputation, int initialReputation)
-            : this(metadata, faction, null, $"faction.{faction.Prefab.Identifier}", minReputation, maxReputation, initialReputation)
+            : this(metadata, faction, null, $"faction.{faction.Prefab.Identifier}".ToIdentifier(), minReputation, maxReputation, initialReputation)
         {
         }
 
-        private Reputation(CampaignMetadata metadata, Faction faction, Location location, string identifier, int minReputation, int maxReputation, int initialReputation)
+        private Reputation(CampaignMetadata metadata, Faction faction, Location location, Identifier identifier, int minReputation, int maxReputation, int initialReputation)
         {
             System.Diagnostics.Debug.Assert(metadata != null);
             System.Diagnostics.Debug.Assert(faction != null || location != null);
             Metadata = metadata;
-            Identifier = identifier.ToLowerInvariant();
-            metaDataIdentifier = $"reputation.{Identifier}";
+            Identifier = identifier;
+            metaDataIdentifier = $"reputation.{Identifier}".ToIdentifier();
             MinReputation = minReputation;
             MaxReputation = maxReputation;
             InitialReputation = initialReputation;
@@ -104,12 +104,12 @@ namespace Barotrauma
             Location = location;
         }
 
-        public string GetReputationName()
+        public LocalizedString GetReputationName()
         {
             return GetReputationName(NormalizedValue);
         }
 
-        public static string GetReputationName(float normalizedValue)
+        public static LocalizedString GetReputationName(float normalizedValue)
         {
             if (normalizedValue < HostileThreshold)
             {
@@ -135,36 +135,36 @@ namespace Barotrauma
         {
             if (normalizedValue < HostileThreshold)
             {
-                return GUI.Style.ColorReputationVeryLow;
+                return GUIStyle.ColorReputationVeryLow;
             }
             else if (normalizedValue < 0.4f)
             {
-                return GUI.Style.ColorReputationLow;
+                return GUIStyle.ColorReputationLow;
             }
             else if (normalizedValue < 0.6f)
             {
-                return GUI.Style.ColorReputationNeutral;
+                return GUIStyle.ColorReputationNeutral;
             }
             else if (normalizedValue < 0.8f)
             {
-                return GUI.Style.ColorReputationHigh;
+                return GUIStyle.ColorReputationHigh;
             }
-            return GUI.Style.ColorReputationVeryHigh;
+            return GUIStyle.ColorReputationVeryHigh;
         }
-        public string GetFormattedReputationText(bool addColorTags = false)
+        public LocalizedString GetFormattedReputationText(bool addColorTags = false)
         {
             return GetFormattedReputationText(NormalizedValue, Value, addColorTags);
         }
 
-        public static string GetFormattedReputationText(float normalizedValue, float value, bool addColorTags = false)
+        public static LocalizedString GetFormattedReputationText(float normalizedValue, float value, bool addColorTags = false)
         {
-            string reputationName = GetReputationName(normalizedValue);
-            string formattedReputation = TextManager.GetWithVariables("reputationformat",
-                new string[] { "[reputationname]", "[reputationvalue]" },
-                new string[] { reputationName, ((int)Math.Round(value)).ToString() });
+            LocalizedString reputationName = GetReputationName(normalizedValue);
+            LocalizedString formattedReputation = TextManager.GetWithVariables("reputationformat",
+                ("[reputationname]", reputationName),
+                ("[reputationvalue]", ((int)Math.Round(value)).ToString()));
             if (addColorTags)
             {
-                formattedReputation = $"‖color:{XMLExtensions.ColorToString(GetReputationColor(normalizedValue))}‖{formattedReputation}‖end‖";
+                formattedReputation = $"‖color:{XMLExtensions.ColorToString(GetReputationColor(normalizedValue))}‖"+ formattedReputation+"‖end‖";
             }
             return formattedReputation;
         }

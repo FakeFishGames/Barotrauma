@@ -46,14 +46,14 @@ namespace Barotrauma
 
         public void ServerWriteActiveOrders(IWriteMessage msg)
         {
-            ushort count = (ushort)ActiveOrders.Count(o => o.First != null && !o.Second.HasValue);
+            ushort count = (ushort)ActiveOrders.Count(o => o.Order != null && !o.FadeOutTime.HasValue);
             msg.Write(count);
             if (count > 0)
             {
                 foreach (var activeOrder in ActiveOrders)
                 {
-                    if (!(activeOrder?.First is Order order) || activeOrder.Second.HasValue) { continue; }
-                    OrderChatMessage.WriteOrder(msg, order, targetCharacter: null, order.TargetSpatialEntity, orderOption: null, orderPriority: 0, order.WallSectionIndex, isNewOrder: true);
+                    if (!(activeOrder?.Order is Order order) || activeOrder.FadeOutTime.HasValue) { continue; }
+                    OrderChatMessage.WriteOrder(msg, order, null, isNewOrder: true);
                     bool hasOrderGiver = order.OrderGiver != null;
                     msg.Write(hasOrderGiver);
                     if (hasOrderGiver)

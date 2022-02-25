@@ -20,18 +20,18 @@ namespace Barotrauma
 
         public override bool Selected
         {
-            get { return selected; }
+            get { return isSelected; }
             set 
             {
-                if (value == selected) { return; } 
+                if (value == isSelected) { return; } 
                 if (radioButtonGroup != null && radioButtonGroup.SelectedRadioButton == this)
                 {
-                    selected = true;
+                    isSelected = true;
                     return;
                 }
                 
-                selected = value;
-                State = selected ? ComponentState.Selected : ComponentState.None;
+                isSelected = value;
+                State = isSelected ? ComponentState.Selected : ComponentState.None;
                 if (value && radioButtonGroup != null)
                 {
                     radioButtonGroup.SelectRadioButton(this);
@@ -88,7 +88,7 @@ namespace Barotrauma
             }
         }*/
 
-        public override ScalableFont Font
+        public override GUIFont Font
         {
             get
             {
@@ -112,7 +112,7 @@ namespace Barotrauma
             get { return text; }
         }
 
-        public override string ToolTip
+        public override RichString ToolTip
         {
             get { return base.ToolTip; }
             set
@@ -123,13 +123,13 @@ namespace Barotrauma
             }
         }
 
-        public string Text
+        public LocalizedString Text
         {
             get { return text.Text; }
             set { text.Text = value; }
         }
 
-        public GUITickBox(RectTransform rectT, string label, ScalableFont font = null, string style = "") : base(null, rectT)
+        public GUITickBox(RectTransform rectT, LocalizedString label, GUIFont font = null, string style = "") : base(null, rectT)
         {
             CanBeFocused = true;
             HoverCursor = CursorState.Hand;
@@ -145,7 +145,7 @@ namespace Barotrauma
                 SelectedColor = Color.DarkGray,
                 CanBeFocused = false
             };
-            GUI.Style.Apply(box, style == "" ? "GUITickBox" : style);
+            GUIStyle.Apply(box, style == "" ? "GUITickBox" : style);
             if (box.RectTransform.MinSize.Y > 0)
             {
                 RectTransform.MinSize = box.RectTransform.MinSize;
@@ -159,7 +159,7 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
-            GUI.Style.Apply(text, "GUITextBlock", this);
+            GUIStyle.Apply(text, "GUITextBlock", this);
             Enabled = true;
 
             ResizeBox();
@@ -205,13 +205,13 @@ namespace Barotrauma
                     {
                         Selected = !Selected;
                     }
-                    else if (!selected)
+                    else if (!isSelected)
                     {
                         Selected = true;
                     }
                 }
             }
-            else if (selected)
+            else if (isSelected)
             {
                 State = ComponentState.Selected;
             }

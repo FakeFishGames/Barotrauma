@@ -5,9 +5,9 @@ namespace Barotrauma
 {
     class MoneyAction : EventAction
     {
-        public MoneyAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public MoneyAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
-        [Serialize(0, true)]
+        [Serialize(0, IsPropertySaveable.Yes)]
         public int Amount { get; set; }
 
         private bool isFinished;
@@ -28,7 +28,7 @@ namespace Barotrauma
             if (GameMain.GameSession?.GameMode is CampaignMode campaign)
             {
                 campaign.Money += Amount;
-                GameAnalyticsManager.AddMoneyGainedEvent(Amount, GameAnalyticsManager.MoneySource.Event, ParentEvent.Prefab.Identifier);
+                GameAnalyticsManager.AddMoneyGainedEvent(Amount, GameAnalyticsManager.MoneySource.Event, ParentEvent.Prefab.Identifier.Value);
 #if SERVER
                 (campaign as MultiPlayerCampaign).LastUpdateID++;
 #endif

@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveFindSafety : AIObjective
     {
-        public override string Identifier { get; set; } = "find safety";
+        public override Identifier Identifier { get; set; } = "find safety".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         public override bool IgnoreUnsafeHulls => true;
@@ -317,7 +317,7 @@ namespace Barotrauma
             Hull bestHull = null;
             float bestValue = 0;
             bool bestIsAirlock = false;
-            foreach (Hull hull in Hull.hullList.OrderByDescending(h => EstimateHullSuitability(h)))
+            foreach (Hull hull in Hull.HullList.OrderByDescending(h => EstimateHullSuitability(h)))
             {
                 if (hull.Submarine == null) { continue; }
                 // Ruins are mazes filled with water. There's no safe hulls and we don't want to use the resources on it.
@@ -342,7 +342,7 @@ namespace Barotrauma
                     //(no need to do the expensive pathfinding if we already know we're not going to choose this hull)
                     if (hullSafety < bestValue) { continue; }
                     //avoid airlock modules if not allowed to change the sub
-                    if (!allowChangingTheSubmarine && hull.OutpostModuleTags.Any(t => t.Equals("airlock", StringComparison.OrdinalIgnoreCase)))
+                    if (!allowChangingTheSubmarine && hull.OutpostModuleTags.Any(t => t == "airlock"))
                     {
                         continue;
                     }

@@ -136,7 +136,7 @@ namespace Barotrauma
         { }
 
         public Gap(Rectangle rect, bool isHorizontal, Submarine submarine, ushort id = Entity.NullEntityID)
-            : base(MapEntityPrefab.Find(null, "gap"), submarine, id)
+            : base(MapEntityPrefab.FindByIdentifier("gap".ToIdentifier()), submarine, id)
         {
             this.rect = rect;
             flowForce = Vector2.Zero;
@@ -706,7 +706,7 @@ namespace Barotrauma
             base.ShallowRemove();
             GapList.Remove(this);
 
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in Hull.HullList)
             {
                 hull.ConnectedGaps.Remove(this);
             }
@@ -717,7 +717,7 @@ namespace Barotrauma
             base.Remove();
             GapList.Remove(this);
 
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in Hull.HullList)
             {
                 hull.ConnectedGaps.Remove(this);
             }
@@ -734,7 +734,7 @@ namespace Barotrauma
             if (!DisableHullRechecks) FindHulls();
         }
 
-        public static Gap Load(XElement element, Submarine submarine, IdRemap idRemap)
+        public static Gap Load(ContentXElement element, Submarine submarine, IdRemap idRemap)
         {
             Rectangle rect = Rectangle.Empty;
 

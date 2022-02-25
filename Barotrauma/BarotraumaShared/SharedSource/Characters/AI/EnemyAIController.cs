@@ -239,7 +239,7 @@ namespace Barotrauma
             {
                 throw new Exception($"Tried to create an enemy ai controller for human!");
             }
-            if (Character.Params.Group.Equals("human", StringComparison.OrdinalIgnoreCase))
+            if (Character.Params.Group == "human")
             {
                 // Pet
                 Character.TeamID = CharacterTeamType.FriendlyNPC;
@@ -252,7 +252,7 @@ namespace Barotrauma
 
             List<XElement> aiElements = new List<XElement>();
             List<float> aiCommonness = new List<float>();
-            foreach (XElement element in mainElement.Elements())
+            foreach (var element in mainElement.Elements())
             {
                 if (!element.Name.ToString().Equals("ai", StringComparison.OrdinalIgnoreCase)) { continue; }                
                 aiElements.Add(element);
@@ -270,12 +270,12 @@ namespace Barotrauma
             //choose a random ai element
             MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
             XElement aiElement = aiElements.Count == 1 ? aiElements[0] : ToolBox.SelectWeightedRandom(aiElements, aiCommonness, random);
-            foreach (XElement subElement in aiElement.Elements())
+            foreach (var subElement in aiElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "chooserandom":
-                        LoadSubElement(subElement.Elements().GetRandom(random));
+                        LoadSubElement(subElement.Elements().ToArray().GetRandom(random));
                         break;
                     default:
                         LoadSubElement(subElement);
@@ -330,12 +330,13 @@ namespace Barotrauma
                 return _aiParams;
             }
         }
-        private CharacterParams.TargetParams GetTargetParams(string targetTag) => AIParams.GetTarget(targetTag, false);
+        private CharacterParams.TargetParams GetTargetParams(string targetTag) => GetTargetParams(targetTag.ToIdentifier());
+        private CharacterParams.TargetParams GetTargetParams(Identifier targetTag) => AIParams.GetTarget(targetTag, false);
         private CharacterParams.TargetParams GetTargetParams(AITarget aiTarget) => GetTargetParams(GetTargetingTag(aiTarget));
-        private string GetTargetingTag(AITarget aiTarget)
+        private Identifier GetTargetingTag(AITarget aiTarget)
         {
-            if (aiTarget?.Entity == null) { return null; }
-            string targetingTag = null;
+            if (aiTarget?.Entity == null) { return Identifier.Empty; }
+            string targetingTag = string.Empty;
             if (aiTarget.Entity is Character targetCharacter)
             {
                 if (targetCharacter.IsDead)
@@ -407,7 +408,7 @@ namespace Barotrauma
             {
                 targetingTag = "room";
             }
-            return targetingTag;
+            return targetingTag.ToIdentifier();
         }
 
         public override void SelectTarget(AITarget target) => SelectTarget(target, 100);
@@ -683,7 +684,7 @@ namespace Barotrauma
                             //if the attacker has the same targeting tag as the character we're protecting, we can't change the TargetState
                             //otherwise e.g. a pet that's set to follow humans would start attacking all humans (and other pets, since they're considered part of the same group) when a hostile human attacks it
                             //TODO: a way for pets to differentiate hostile and friendly humans?
-                            if (attacker?.AiTarget != null && !targetCharacter.SpeciesName.Equals(GetTargetingTag(attacker.AiTarget), StringComparison.OrdinalIgnoreCase))
+                            if (attacker?.AiTarget != null && targetCharacter.SpeciesName != GetTargetingTag(attacker.AiTarget))
                             {
                                 // Attack the character that attacked the target we are protecting
                                 ChangeTargetState(attacker, AIState.Attack, selectedTargetingParams.Priority * 2);
@@ -999,7 +1000,7 @@ namespace Barotrauma
             hullWeights.Clear();
             float hullMinSize = ConvertUnits.ToDisplayUnits(Math.Max(colliderLength, colliderWidth) * 2);
             bool checkWaterLevel = !AIParams.PatrolFlooded || !AIParams.PatrolDry;
-            foreach (var hull in Hull.hullList)
+            foreach (var hull in Hull.HullList)
             {
                 if (hull.Submarine == null) { continue; }
                 if (hull.Submarine.TeamID != Character.Submarine.TeamID) { continue; }
@@ -2004,7 +2005,7 @@ namespace Barotrauma
             bool retaliate = !isFriendly && SelectedAiTarget != attacker.AiTarget && attacker.Submarine == Character.Submarine;
             bool avoidGunFire = AIParams.AvoidGunfire && attacker.Submarine != Character.Submarine;
 
-            if (State == AIState.Attack && !IsAttackRunning && !IsCoolDownRunning)
+            if (State == AIState.Attack && (IsAttackRunning || IsCoolDownRunning))
             {
                 // Don't retaliate or escape while performing an attack/under cooldown
                 retaliate = false;
@@ -2324,7 +2325,7 @@ namespace Barotrauma
                                 if (item.Condition <= 0.0f)
                                 {
                                     if (!wasBroken) { PetBehavior?.OnEat(item); }
-                                    Entity.Spawner.AddToRemoveQueue(item);
+                                    Entity.Spawner.AddItemToRemoveQueue(item);
                                 }
                             }
                         }
@@ -2438,7 +2439,7 @@ namespace Barotrauma
                 if (targetCharacter == Character) { continue; }
 
                 float valueModifier = 1;
-                string targetingTag = GetTargetingTag(aiTarget);
+                Identifier targetingTag = GetTargetingTag(aiTarget);
                 if (targetCharacter != null)
                 {
                     // ignore if target is tagged to be explicitly ignored (Feign Death)
@@ -2535,7 +2536,7 @@ namespace Barotrauma
                         if (s.Submarine == null) { continue; }
                         if (s.Submarine.Info.IsRuin) { continue; }
                         bool isCharacterInside = Character.CurrentHull != null;
-                        bool isInnerWall = s.prefab.Tags.Contains("inner");
+                        bool isInnerWall = s.Prefab.Tags.Contains("inner");
                         if (isInnerWall && !isCharacterInside)
                         {
                             // Ignore inner walls when outside (walltargets still work)
@@ -3141,7 +3142,7 @@ namespace Barotrauma
                 if (w.Submarine != SelectedAiTarget.Entity.Submarine) { return false; }
                 if (Character.Submarine == null)
                 {
-                    if (w.prefab.Tags.Contains("inner"))
+                    if (w.Prefab.Tags.Contains("inner"))
                     {
                         if (!Character.AnimController.CanEnterSubmarine) { return false; }
                     }
@@ -3321,10 +3322,13 @@ namespace Barotrauma
             inactiveTriggers.Clear();
         }
 
+        private bool TryResetOriginalState(string tag) =>
+            TryResetOriginalState(tag.ToIdentifier());
+
         /// <summary>
         /// Resets the target's state to the original value defined in the xml.
         /// </summary>
-        private bool TryResetOriginalState(string tag)
+        private bool TryResetOriginalState(Identifier tag)
         {
             if (!modifiedParams.ContainsKey(tag)) { return false; }
             if (AIParams.TryGetTarget(tag, out CharacterParams.TargetParams targetParams))
@@ -3344,8 +3348,8 @@ namespace Barotrauma
             }
         }
 
-        private readonly Dictionary<string, CharacterParams.TargetParams> modifiedParams = new Dictionary<string, CharacterParams.TargetParams>();
-        private readonly Dictionary<string, CharacterParams.TargetParams> tempParams = new Dictionary<string, CharacterParams.TargetParams>();
+        private readonly Dictionary<Identifier, CharacterParams.TargetParams> modifiedParams = new Dictionary<Identifier, CharacterParams.TargetParams>();
+        private readonly Dictionary<Identifier, CharacterParams.TargetParams> tempParams = new Dictionary<Identifier, CharacterParams.TargetParams>();
 
         private void ChangeParams(CharacterParams.TargetParams targetParams, AIState state, float? priority = null)
         {
@@ -3369,6 +3373,9 @@ namespace Barotrauma
         }
 
         private void ChangeParams(string tag, AIState state, float? priority = null, bool onlyExisting = false)
+            => ChangeParams(tag.ToIdentifier(), state, priority, onlyExisting);
+        
+        private void ChangeParams(Identifier tag, AIState state, float? priority = null, bool onlyExisting = false)
         {
             if (!AIParams.TryGetTarget(tag, out CharacterParams.TargetParams targetParams))
             {

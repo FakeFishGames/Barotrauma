@@ -10,6 +10,25 @@ namespace Barotrauma
 {
     class Store
     {
+        class ItemQuantity
+        {
+            public int Total { get; private set; }
+            public int NonEmpty { get; private set; }
+            public bool AllNonEmpty => NonEmpty == Total;
+
+            public ItemQuantity(int total, bool areNonEmpty = true)
+            {
+                Total = total;
+                NonEmpty = areNonEmpty ? total : 0;
+            }
+
+            public void Add(int amount, bool areNonEmpty)
+            {
+                Total += amount;
+                if (areNonEmpty) { NonEmpty += amount; }
+            }
+        }
+
         private readonly CampaignUI campaignUI;
         private readonly GUIComponent parentComponent;
         private readonly List<GUIButton> storeTabButtons = new List<GUIButton>();
@@ -44,7 +63,7 @@ namespace Barotrauma
 
         private Point resolutionWhenCreated;
 
-        private Dictionary<ItemPrefab, int> OwnedItems { get; } = new Dictionary<ItemPrefab, int>();
+        private Dictionary<ItemPrefab, ItemQuantity> OwnedItems { get; } = new Dictionary<ItemPrefab, ItemQuantity>();
 
         private CargoManager CargoManager => campaignUI.Campaign.CargoManager;
         private Location CurrentLocation => campaignUI.Campaign.Map?.CurrentLocation;
@@ -302,10 +321,10 @@ namespace Barotrauma
             };
             var imageWidth = (float)headerGroup.Rect.Height / headerGroup.Rect.Width;
             new GUIImage(new RectTransform(new Vector2(imageWidth, 1.0f), headerGroup.RectTransform), "StoreTradingIcon");
-            new GUITextBlock(new RectTransform(new Vector2(1.0f - imageWidth, 1.0f), headerGroup.RectTransform), TextManager.Get("store"), font: GUI.LargeFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f - imageWidth, 1.0f), headerGroup.RectTransform), TextManager.Get("store"), font: GUIStyle.LargeFont)
             {
                 CanBeFocused = false,
-                ForceUpperCase = true
+                ForceUpperCase = ForceUpperCase.Yes
             };
 
             // Merchant balance ------------------------------------------------
@@ -319,13 +338,13 @@ namespace Barotrauma
                 RelativeSpacing = 0.005f
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), merchantBalanceContainer.RectTransform),
-                TextManager.Get("campaignstore.storebalance"), font: GUI.Font, textAlignment: Alignment.BottomLeft)
+                TextManager.Get("campaignstore.storebalance"), font: GUIStyle.Font, textAlignment: Alignment.BottomLeft)
             {
                 AutoScaleVertical = true,
-                ForceUpperCase = true
+                ForceUpperCase = ForceUpperCase.Yes
             };
             merchantBalanceBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), merchantBalanceContainer.RectTransform),
-                "", font: GUI.SubHeadingFont)
+                "", font: GUIStyle.SubHeadingFont)
             {
                 AutoScaleVertical = true,
                 TextScale = 1.1f,
@@ -343,11 +362,11 @@ namespace Barotrauma
                 RelativeSpacing = 0.005f
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), sellValueContainer.RectTransform),
-                TextManager.Get("campaignstore.sellvalue"), font: GUI.Font, textAlignment: Alignment.BottomLeft)
+                TextManager.Get("campaignstore.sellvalue"), font: GUIStyle.Font, textAlignment: Alignment.BottomLeft)
             {
                 AutoScaleVertical = true,
                 CanBeFocused = false,
-                ForceUpperCase = true
+                ForceUpperCase = ForceUpperCase.Yes
             };
 
             var valueChangeGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), sellValueContainer.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
@@ -356,9 +375,9 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
             float blockWidth = GUI.IsFourByThree() ? 0.32f : 0.28f;
-            Point blockMaxSize = new Point((int)(GameSettings.TextScale * 60), valueChangeGroup.Rect.Height);
+            Point blockMaxSize = new Point((int)(GameSettings.CurrentConfig.Graphics.TextScale * 60), valueChangeGroup.Rect.Height);
             currentSellValueBlock = new GUITextBlock(new RectTransform(new Vector2(blockWidth, 1.0f), valueChangeGroup.RectTransform) { MaxSize = blockMaxSize },
-                "", font: GUI.SubHeadingFont)
+                "", font: GUIStyle.SubHeadingFont)
             {
                 AutoScaleVertical = true,
                 CanBeFocused = false,
@@ -416,7 +435,7 @@ namespace Barotrauma
                 Visible = false
             };
             newSellValueBlock = new GUITextBlock(new RectTransform(new Vector2(blockWidth, 1.0f), valueChangeGroup.RectTransform) { MaxSize = blockMaxSize },
-                "", font: GUI.SubHeadingFont)
+                "", font: GUIStyle.SubHeadingFont)
             {
                 AutoScaleVertical = true,
                 CanBeFocused = false,
@@ -435,7 +454,7 @@ namespace Barotrauma
             tabSortingMethods.Clear();
             foreach (StoreTab tab in tabs)
             {
-                string text = tab switch
+                LocalizedString text = tab switch
                 {
                     StoreTab.SellSub => TextManager.Get("submarine"),
                     _ => TextManager.Get("campaignstoretab." + tab)
@@ -591,10 +610,10 @@ namespace Barotrauma
             };
             imageWidth = (float)headerGroup.Rect.Height / headerGroup.Rect.Width;
             new GUIImage(new RectTransform(new Vector2(imageWidth, 1.0f), headerGroup.RectTransform), "StoreShoppingCrateIcon");
-            new GUITextBlock(new RectTransform(new Vector2(1.0f - imageWidth, 1.0f), headerGroup.RectTransform), TextManager.Get("campaignstore.shoppingcrate"), font: GUI.LargeFont, textAlignment: Alignment.Right)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f - imageWidth, 1.0f), headerGroup.RectTransform), TextManager.Get("campaignstore.shoppingcrate"), font: GUIStyle.LargeFont, textAlignment: Alignment.Right)
             {
                 CanBeFocused = false,
-                ForceUpperCase = true
+                ForceUpperCase = ForceUpperCase.Yes
             };
 
             // Player balance ------------------------------------------------
@@ -603,13 +622,13 @@ namespace Barotrauma
                 RelativeSpacing = 0.005f
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), playerBalanceContainer.RectTransform),
-                TextManager.Get("campaignstore.balance"), font: GUI.Font, textAlignment: Alignment.BottomRight)
+                TextManager.Get("campaignstore.balance"), font: GUIStyle.Font, textAlignment: Alignment.BottomRight)
             {
                 AutoScaleVertical = true,
-                ForceUpperCase = true
+                ForceUpperCase = ForceUpperCase.Yes
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), playerBalanceContainer.RectTransform),
-                "", textColor: Color.White, font: GUI.SubHeadingFont, textAlignment: Alignment.TopRight)
+                "", textColor: Color.White, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.TopRight)
             {
                 AutoScaleVertical = true,
                 TextScale = 1.1f,
@@ -638,11 +657,11 @@ namespace Barotrauma
             {
                 Stretch = true
             };
-            relevantBalanceName = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), relevantBalanceContainer.RectTransform), "", font: GUI.Font)
+            relevantBalanceName = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), relevantBalanceContainer.RectTransform), "", font: GUIStyle.Font)
             {
                 CanBeFocused = false
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), relevantBalanceContainer.RectTransform), "", textColor: Color.White, font: GUI.SubHeadingFont, textAlignment: Alignment.Right)
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), relevantBalanceContainer.RectTransform), "", textColor: Color.White, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right)
             {
                 CanBeFocused = false,
                 TextScale = 1.1f,
@@ -653,11 +672,11 @@ namespace Barotrauma
             {
                 Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), totalContainer.RectTransform), TextManager.Get("campaignstore.total"), font: GUI.Font)
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), totalContainer.RectTransform), TextManager.Get("campaignstore.total"), font: GUIStyle.Font)
             {
                 CanBeFocused = false
             };
-            shoppingCrateTotal = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), totalContainer.RectTransform), "", font: GUI.SubHeadingFont, textAlignment: Alignment.Right)
+            shoppingCrateTotal = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), totalContainer.RectTransform), "", font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right)
             {
                 CanBeFocused = false,
                 TextScale = 1.1f
@@ -666,14 +685,14 @@ namespace Barotrauma
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), shoppingCrateInventoryContainer.RectTransform), isHorizontal: true, childAnchor: Anchor.TopRight);
             confirmButton = new GUIButton(new RectTransform(new Vector2(0.35f, 1.0f), buttonContainer.RectTransform))
             {
-                ForceUpperCase = true
+                ForceUpperCase = ForceUpperCase.Yes
             };
             SetConfirmButtonBehavior();
             clearAllButton = new GUIButton(new RectTransform(new Vector2(0.35f, 1.0f), buttonContainer.RectTransform), TextManager.Get("campaignstore.clearall"))
             {
                 ClickSound = GUISoundType.DecreaseQuantity,
                 Enabled = HasActiveTabPermissions(),
-                ForceUpperCase = true,
+                ForceUpperCase = ForceUpperCase.Yes,
                 OnClicked = (button, userData) =>
                 {
                     if (!HasActiveTabPermissions()) { return false; }
@@ -694,9 +713,9 @@ namespace Barotrauma
             resolutionWhenCreated = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
-        private string GetMerchantBalanceText() => GetCurrencyFormatted(CurrentLocation?.StoreCurrentBalance ?? 0);
+        private LocalizedString GetMerchantBalanceText() => GetCurrencyFormatted(CurrentLocation?.StoreCurrentBalance ?? 0);
 
-        private string GetPlayerBalanceText() => GetCurrencyFormatted(PlayerMoney);
+        private LocalizedString GetPlayerBalanceText() => GetCurrencyFormatted(PlayerMoney);
 
         private GUILayoutGroup CreateDealsGroup(GUIListBox parentList, int elementCount = 4)
         {
@@ -709,7 +728,7 @@ namespace Barotrauma
             var iconWidth = (0.9f * dealsHeader.Rect.Height) / dealsHeader.Rect.Width;
             var dealsIcon = new GUIImage(new RectTransform(new Vector2(iconWidth, 0.9f), dealsHeader.RectTransform), "StoreDealIcon", scaleToFit: true);
             var text = TextManager.Get(parentList == storeBuyList ? "campaignstore.dailyspecials" : "campaignstore.requestedgoods");
-            var dealsText = new GUITextBlock(new RectTransform(new Vector2(1.0f - iconWidth, 0.9f), dealsHeader.RectTransform), text, font: GUI.LargeFont);
+            var dealsText = new GUITextBlock(new RectTransform(new Vector2(1.0f - iconWidth, 0.9f), dealsHeader.RectTransform), text, font: GUIStyle.LargeFont);
             storeSpecialColor = dealsIcon.Color;
             dealsText.TextColor = storeSpecialColor;
             var divider = new GUIImage(new RectTransform(new Point(dealsGroup.Rect.Width, 3), dealsGroup.RectTransform), "HorizontalLine");
@@ -811,7 +830,7 @@ namespace Barotrauma
                 child.Visible =
                     (IsBuying || item.Quantity > 0) &&
                     (!category.HasValue || item.ItemPrefab.Category.HasFlag(category.Value)) &&
-                    (string.IsNullOrEmpty(filter) || item.ItemPrefab.Name.ToLower().Contains(filter));
+                    (string.IsNullOrEmpty(filter) || item.ItemPrefab.Name.Contains(filter, StringComparison.OrdinalIgnoreCase));
             }
             foreach (GUIButton btn in itemCategoryButtons)
             {
@@ -892,7 +911,7 @@ namespace Barotrauma
                     {
                         (itemFrame.UserData as PurchasedItem).Quantity = quantity;
                         SetQuantityLabelText(StoreTab.Buy, itemFrame);
-                        SetOwnedLabelText(itemFrame);
+                        SetOwnedText(itemFrame);
                         SetPriceGetters(itemFrame, true);
                     }
                     SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0);
@@ -967,7 +986,7 @@ namespace Barotrauma
                 {
                     (itemFrame.UserData as PurchasedItem).Quantity = itemQuantity;
                     SetQuantityLabelText(StoreTab.Sell, itemFrame);
-                    SetOwnedLabelText(itemFrame);
+                    SetOwnedText(itemFrame);
                     SetPriceGetters(itemFrame, false);
                 }
                 SetItemFrameStatus(itemFrame, hasPermissions && itemQuantity > 0);
@@ -1045,7 +1064,7 @@ namespace Barotrauma
                 {
                     (itemFrame.UserData as PurchasedItem).Quantity = itemQuantity;
                     SetQuantityLabelText(StoreTab.SellSub, itemFrame);
-                    SetOwnedLabelText(itemFrame);
+                    SetOwnedText(itemFrame);
                     SetPriceGetters(itemFrame, false);
                 }
                 SetItemFrameStatus(itemFrame, hasPermissions && itemQuantity > 0);
@@ -1185,7 +1204,7 @@ namespace Barotrauma
                         numInput.Enabled = hasPermissions;
                         numInput.MaxValueInt = GetMaxAvailable(item.ItemPrefab, tab);
                     }
-                    SetOwnedLabelText(itemFrame);
+                    SetOwnedText(itemFrame);
                     SetItemFrameStatus(itemFrame, hasPermissions);
                 }
                 existingItemFrames.Add(itemFrame);
@@ -1193,7 +1212,7 @@ namespace Barotrauma
                 suppressBuySell = true;
                 if (numInput != null)
                 {
-                    if (numInput.IntValue != item.Quantity) { itemFrame.Flash(GUI.Style.Green); }
+                    if (numInput.IntValue != item.Quantity) { itemFrame.Flash(GUIStyle.Green); }
                     numInput.IntValue = item.Quantity;
                 }
                 suppressBuySell = false;
@@ -1421,14 +1440,8 @@ namespace Barotrauma
                 width = parentComponent.Rect.Width;
                 parent = parentComponent.RectTransform;
             }
-            string tooltip = pi.ItemPrefab.Name;
-            if (!string.IsNullOrWhiteSpace(pi.ItemPrefab.Description))
-            {
-                tooltip += $"\n{pi.ItemPrefab.Description}";
-            }
             GUIFrame frame = new GUIFrame(new RectTransform(new Point(width, (int)(GUI.yScale * 80)), parent: parent), style: "ListBoxElement")
             {
-                ToolTip = tooltip,
                 UserData = pi
             };
 
@@ -1443,7 +1456,7 @@ namespace Barotrauma
             var iconRelativeWidth = 0.0f;
             var priceAndButtonRelativeWidth = 1.0f - nameAndIconRelativeWidth;
 
-            if ((pi.ItemPrefab.InventoryIcon ?? pi.ItemPrefab.sprite) is { } itemIcon)
+            if ((pi.ItemPrefab.InventoryIcon ?? pi.ItemPrefab.Sprite) is { } itemIcon)
             {
                 iconRelativeWidth = (0.9f * mainGroup.Rect.Height) / mainGroup.Rect.Width;
                 GUIImage img = new GUIImage(new RectTransform(new Vector2(iconRelativeWidth, 0.9f), mainGroup.RectTransform), itemIcon, scaleToFit: true)
@@ -1468,7 +1481,7 @@ namespace Barotrauma
             bool locationHasDealOnItem = isSellingRelatedList ?
                 CurrentLocation.RequestedGoods.Contains(pi.ItemPrefab) : CurrentLocation.DailySpecials.Contains(pi.ItemPrefab);
             GUITextBlock nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), nameAndQuantityGroup.RectTransform),
-                pi.ItemPrefab.Name, font: GUI.SubHeadingFont, textAlignment: Alignment.BottomLeft)
+                pi.ItemPrefab.Name, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft)
             {
                 CanBeFocused = false,
                 Shadow = locationHasDealOnItem,
@@ -1498,7 +1511,7 @@ namespace Barotrauma
             if (isParentOnLeftSideOfInterface)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), nameAndQuantityGroup.RectTransform),
-                    CreateQuantityLabelText(containingTab, pi.Quantity), font: GUI.Font, textAlignment: Alignment.BottomLeft)
+                    CreateQuantityLabelText(containingTab, pi.Quantity), font: GUIStyle.Font, textAlignment: Alignment.BottomLeft)
                 {
                     CanBeFocused = false,
                     Shadow = locationHasDealOnItem,
@@ -1545,8 +1558,7 @@ namespace Barotrauma
             var rectTransform = shoppingCrateAmountGroup == null ?
                 new RectTransform(new Vector2(1.0f, 0.3f), nameAndQuantityGroup.RectTransform) :
                 new RectTransform(new Vector2(0.6f, 1.0f), shoppingCrateAmountGroup.RectTransform);
-            new GUITextBlock(rectTransform, CreateOwnedLabelText(OwnedItems.GetValueOrDefault(pi.ItemPrefab, 0)), font: GUI.Font,
-                textAlignment: shoppingCrateAmountGroup == null ? Alignment.TopLeft : Alignment.CenterLeft)
+            var ownedLabel = new GUITextBlock(rectTransform, string.Empty, font: GUIStyle.Font, textAlignment: shoppingCrateAmountGroup == null ? Alignment.TopLeft : Alignment.CenterLeft)
             {
                 CanBeFocused = false,
                 Shadow = locationHasDealOnItem,
@@ -1554,6 +1566,7 @@ namespace Barotrauma
                 TextScale = 0.85f,
                 UserData = "owned"
             };
+            SetOwnedText(frame, ownedLabel);
             shoppingCrateAmountGroup?.Recalculate();
 
             var buttonRelativeWidth = (0.9f * mainGroup.Rect.Height) / mainGroup.Rect.Width;
@@ -1563,7 +1576,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
             var priceBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), priceFrame.RectTransform, anchor: Anchor.Center),
-                "0 MK", font: GUI.SubHeadingFont, textAlignment: Alignment.Right)
+                "0 MK", font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right)
             {
                 CanBeFocused = false,
                 TextColor = locationHasDealOnItem ? storeSpecialColor : Color.White,
@@ -1577,7 +1590,7 @@ namespace Barotrauma
                     new RectTransform(new Vector2(1.0f, 0.25f), priceFrame.RectTransform, anchor: Anchor.Center)
                     {
                         AbsoluteOffset = new Point(0, priceBlock.RectTransform.ScaledSize.Y)
-                    }, "", font: GUI.SmallFont, textAlignment: Alignment.Center)
+                    }, "", font: GUIStyle.SmallFont, textAlignment: Alignment.Center)
                 {
                     CanBeFocused = false,
                     Strikethrough = new GUITextBlock.StrikethroughSettings(color: priceBlock.TextColor, expand: 1),
@@ -1593,7 +1606,7 @@ namespace Barotrauma
                 {
                     ClickSound = GUISoundType.IncreaseQuantity,
                     Enabled = !forceDisable && pi.Quantity > 0,
-                    ForceUpperCase = true,
+                    ForceUpperCase = ForceUpperCase.Yes,
                     UserData = "addbutton",
                     OnClicked = (button, userData) => AddToShoppingCrate(pi)
                 };
@@ -1604,7 +1617,7 @@ namespace Barotrauma
                 {
                     ClickSound = GUISoundType.DecreaseQuantity,
                     Enabled = !forceDisable,
-                    ForceUpperCase = true,
+                    ForceUpperCase = ForceUpperCase.Yes,
                     UserData = "removebutton",
                     OnClicked = (button, userData) => ClearFromShoppingCrate(pi)
                 };
@@ -1639,7 +1652,7 @@ namespace Barotrauma
                     if (!subItem.Components.All(c => !(c is Holdable h) || !h.Attachable || !h.Attached)) { continue; }
                     if (!subItem.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null))) { continue; }
                     if (!ItemAndAllContainersInteractable(subItem)) { continue; }
-                    AddToOwnedItems(subItem.Prefab);
+                    AddOwnedItem(subItem);
                 }
             }
 
@@ -1650,11 +1663,11 @@ namespace Barotrauma
                 var rootInventoryOwner = item.GetRootInventoryOwner();
                 var ownedByCrewMember = GameMain.GameSession.CrewManager.GetCharacters().Any(c => c == rootInventoryOwner);
                 if (!ownedByCrewMember) { continue; }
-                AddToOwnedItems(item.Prefab);
+                AddOwnedItem(item);
             }
 
             // Add items already purchased
-            CargoManager?.PurchasedItems?.ForEach(pi => AddToOwnedItems(pi.ItemPrefab, amount: pi.Quantity));
+            CargoManager?.PurchasedItems?.ForEach(pi => AddNonEmptyOwnedItems(pi));
 
             ownedItemsUpdateTimer = 0.0f;
 
@@ -1668,15 +1681,30 @@ namespace Barotrauma
                 return true;
             }
 
-            void AddToOwnedItems(ItemPrefab itemPrefab, int amount = 1)
+            void AddOwnedItem(Item item)
             {
-                if (OwnedItems.ContainsKey(itemPrefab))
+                if (!(item?.Prefab.GetPriceInfo(CurrentLocation) is PriceInfo priceInfo)) { return; }
+                bool isNonEmpty = !priceInfo.DisplayNonEmpty || item.ConditionPercentage > 5.0f;
+                if (OwnedItems.TryGetValue(item.Prefab, out ItemQuantity itemQuantity))
                 {
-                    OwnedItems[itemPrefab] += amount;
+                    OwnedItems[item.Prefab].Add(1, isNonEmpty);
                 }
                 else
                 {
-                    OwnedItems.Add(itemPrefab, amount);
+                    OwnedItems.Add(item.Prefab, new ItemQuantity(1, areNonEmpty: isNonEmpty));
+                }
+            }
+
+            void AddNonEmptyOwnedItems(PurchasedItem purchasedItem)
+            {
+                if (purchasedItem == null) { return; }
+                if (OwnedItems.TryGetValue(purchasedItem.ItemPrefab, out ItemQuantity itemQuantity))
+                {
+                    OwnedItems[purchasedItem.ItemPrefab].Add(purchasedItem.Quantity, true);
+                }
+                else
+                {
+                    OwnedItems.Add(purchasedItem.ItemPrefab, new ItemQuantity(purchasedItem.Quantity));
                 }
             }
         }
@@ -1692,7 +1720,7 @@ namespace Barotrauma
                 {
                     icon.Color = pi.ItemPrefab.InventoryIconColor * (enabled ? 1.0f: 0.5f);
                 }
-                else if (pi.ItemPrefab?.sprite != null)
+                else if (pi.ItemPrefab?.Sprite != null)
                 {
                     icon.Color = pi.ItemPrefab.SpriteColor * (enabled ? 1.0f : 0.5f);
                 }
@@ -1737,35 +1765,89 @@ namespace Barotrauma
             itemFrame.UserData = pi;
         }
 
-        private void SetQuantityLabelText(StoreTab mode, GUIComponent itemFrame)
+        private static void SetQuantityLabelText(StoreTab mode, GUIComponent itemFrame)
         {
-            if (itemFrame == null) { return; }
-            if (itemFrame.FindChild("quantitylabel", recursive: true) is GUITextBlock label)
+            if (itemFrame?.FindChild("quantitylabel", recursive: true) is GUITextBlock label)
             {
                 label.Text = CreateQuantityLabelText(mode, (itemFrame.UserData as PurchasedItem).Quantity);
             }
         }
 
-        private string CreateQuantityLabelText(StoreTab mode, int quantity) => mode != StoreTab.Buy ?
-            TextManager.GetWithVariable("campaignstore.quantity", "[amount]", quantity.ToString()) :
-            TextManager.GetWithVariable("campaignstore.instock", "[amount]", quantity.ToString());
-
-        private void SetOwnedLabelText(GUIComponent itemComponent)
+        private static LocalizedString CreateQuantityLabelText(StoreTab mode, int quantity)
         {
-            if (itemComponent == null) { return; }
-            var itemCount = 0;
-            if (itemComponent.UserData is PurchasedItem pi)
+            try
             {
-                itemCount = OwnedItems.GetValueOrDefault(pi.ItemPrefab, itemCount);
+                string textTag = mode switch
+                {
+                    StoreTab.Buy => "campaignstore.instock",
+                    StoreTab.Sell => "campaignstore.ownedinventory",
+                    StoreTab.SellSub => "campaignstore.ownedsub",
+                    _ => throw new NotImplementedException()
+                };
+                return TextManager.GetWithVariable(textTag, "[amount]", quantity.ToString());
             }
-            if (itemComponent.FindChild("owned", recursive: true) is GUITextBlock label)
+            catch (NotImplementedException e)
             {
-                label.Text = CreateOwnedLabelText(itemCount);
+                string errorMsg = $"Error creating a store quantity label text: unknown store tab.\n{e.StackTrace.CleanupStackTrace()}";
+#if DEBUG
+                DebugConsole.ShowError(errorMsg);
+#else
+                DebugConsole.AddWarning(errorMsg);
+#endif
             }
+            return string.Empty;
         }
 
-        private string CreateOwnedLabelText(int itemCount) => itemCount > 0 ?
-            TextManager.GetWithVariable("campaignstore.owned", "[amount]", itemCount.ToString()) : "";
+        private void SetOwnedText(GUIComponent itemComponent, GUITextBlock ownedLabel = null)
+        {
+            ownedLabel ??= itemComponent?.FindChild("owned", recursive: true) as GUITextBlock;
+            if (itemComponent == null && ownedLabel == null) { return; } 
+            PurchasedItem purchasedItem = itemComponent?.UserData as PurchasedItem;
+            ItemQuantity itemQuantity = null;
+            LocalizedString ownedLabelText = string.Empty;
+            if (purchasedItem != null && OwnedItems.TryGetValue(purchasedItem.ItemPrefab, out itemQuantity) && itemQuantity.Total > 0)
+            {
+                if (itemQuantity.AllNonEmpty)
+                {
+                    ownedLabelText = TextManager.GetWithVariable("campaignstore.owned", "[amount]", itemQuantity.Total.ToString());
+                }
+                else
+                {
+                    ownedLabelText = TextManager.GetWithVariables("campaignstore.ownedspecific",
+                        ("[nonempty]", itemQuantity.NonEmpty.ToString()),
+                        ("[total]", itemQuantity.Total.ToString()));
+                }
+            }
+            if (itemComponent != null)
+            {
+                LocalizedString toolTip = string.Empty;
+                if (purchasedItem.ItemPrefab != null)
+                {
+                    toolTip = purchasedItem.ItemPrefab.Name;
+                    if (!purchasedItem.ItemPrefab.Description.IsNullOrEmpty())
+                    {
+                        toolTip += $"\n{purchasedItem.ItemPrefab.Description}";
+                    }
+                    if (itemQuantity != null)
+                    {
+                        if (itemQuantity.AllNonEmpty)
+                        {
+                            toolTip += $"\n\n{ownedLabelText}";
+                        }
+                        else
+                        {
+                            toolTip += $"\n\n{TextManager.GetWithVariable("campaignstore.ownednonempty", "[amount]", itemQuantity.NonEmpty.ToString())}";
+                            toolTip += $"\n{TextManager.GetWithVariable("campaignstore.ownedtotal", "[amount]", itemQuantity.Total.ToString())}";
+                        }
+                    }
+                }
+                itemComponent.ToolTip = toolTip;
+            }
+            if (ownedLabel != null)
+            {
+                ownedLabel.Text = ownedLabelText;
+            }
+        }
 
         private int GetMaxAvailable(ItemPrefab itemPrefab, StoreTab mode)
         {
@@ -1799,7 +1881,7 @@ namespace Barotrauma
             }
         }
 
-        private string GetCurrencyFormatted(int amount) =>
+        private LocalizedString GetCurrencyFormatted(int amount) =>
             TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", amount));
 
         private bool ModifyBuyQuantity(PurchasedItem item, int quantity)
@@ -1916,7 +1998,7 @@ namespace Barotrauma
             var dialog = new GUIMessageBox(
                 TextManager.Get("newsupplies"),
                 TextManager.GetWithVariable("suppliespurchasedmessage", "[location]", campaignUI?.Campaign?.Map?.CurrentLocation?.Name),
-                new string[] { TextManager.Get("Ok") });
+                new LocalizedString[] { TextManager.Get("Ok") });
             dialog.Buttons[0].OnClicked += dialog.Close;
 
             return false;
@@ -1995,7 +2077,7 @@ namespace Barotrauma
                     var confirmDialog = new GUIMessageBox(
                         TextManager.Get("FireWarningHeader"),
                         TextManager.Get("CampaignStore.SellWarningText"),
-                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                        new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
                     confirmDialog.Buttons[0].OnClicked = (b, o) => SellItems();
                     confirmDialog.Buttons[0].OnClicked += confirmDialog.Close;
                     confirmDialog.Buttons[1].OnClicked = confirmDialog.Close;
@@ -2040,12 +2122,12 @@ namespace Barotrauma
                 ownedItemsUpdateTimer += deltaTime;
                 if (ownedItemsUpdateTimer >= timerUpdateInterval)
                 {
-                    var prevOwnedItems = new Dictionary<ItemPrefab, int>(OwnedItems);
+                    var prevOwnedItems = new Dictionary<ItemPrefab, ItemQuantity>(OwnedItems);
                     UpdateOwnedItems();
                     var refresh = (prevOwnedItems.Count != OwnedItems.Count) ||
-                        (prevOwnedItems.Select(kvp => kvp.Value).Sum() != OwnedItems.Select(kvp => kvp.Value).Sum()) ||
-                        (OwnedItems.Any(kvp => kvp.Value > 0 && !prevOwnedItems.ContainsKey(kvp.Key)) ||
-                         prevOwnedItems.Any(kvp => !OwnedItems.TryGetValue(kvp.Key, out var itemCount) || kvp.Value != itemCount));
+                        (prevOwnedItems.Select(kvp => kvp.Value.Total).Sum() != OwnedItems.Select(kvp => kvp.Value.Total).Sum()) ||
+                        (OwnedItems.Any(kvp => kvp.Value.Total > 0 && !prevOwnedItems.ContainsKey(kvp.Key)) ||
+                         prevOwnedItems.Any(kvp => !OwnedItems.TryGetValue(kvp.Key, out ItemQuantity itemQuantity) || kvp.Value.Total != itemQuantity.Total));
                     if (refresh)
                     {
                         needsItemsToSellRefresh = true;

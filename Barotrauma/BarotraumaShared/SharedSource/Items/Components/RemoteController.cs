@@ -5,21 +5,21 @@ namespace Barotrauma.Items.Components
 {
     partial class RemoteController : ItemComponent
     {
-        [Serialize("", false, description: "Tag or identifier of the item that should be controlled.")]
+        [Serialize("", IsPropertySaveable.No, description: "Tag or identifier of the item that should be controlled.")]
         public string Target
         {
             get;
             private set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, IsPropertySaveable.No)]
         public bool OnlyInOwnSub
         {
             get;
             private set;
         }
 
-        [Serialize(10000.0f, false)]
+        [Serialize(10000.0f, IsPropertySaveable.No)]
         public float Range
         {
             get;
@@ -32,7 +32,7 @@ namespace Barotrauma.Items.Components
         private Character currentUser;
         private Submarine currentSub;
 
-        public RemoteController(Item item, XElement element)
+        public RemoteController(Item item, ContentXElement element)
             : base(item, element)
         {
         }
@@ -81,7 +81,7 @@ namespace Barotrauma.Items.Components
                     if (targetItem.Submarine != item.Submarine) { continue; }
                     if (targetItem.Submarine.TeamID != user.TeamID) { continue; }
                 }
-                if (!targetItem.HasTag(Target) && targetItem.prefab.Identifier != Target) { continue; }
+                if (!targetItem.HasTag(Target) && ((MapEntity)targetItem).Prefab.Identifier != Target) { continue; }
 
                 float distSqr = Vector2.DistanceSquared(item.WorldPosition, targetItem.WorldPosition);
                 if (distSqr > Range * Range || distSqr > closestDist) { continue; }

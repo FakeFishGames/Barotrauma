@@ -1,102 +1,92 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    class DecalManager
+    public class GrimeSprite : Prefab
     {
-        public PrefabCollection<DecalPrefab> Prefabs { get; private set; }
-
-        public readonly List<Sprite> GrimeSprites = new List<Sprite>();
-        private Dictionary<string, List<Sprite>> grimeSpritesByFile = new Dictionary<string, List<Sprite>>();
-
-        public DecalManager()
+        public GrimeSprite(Sprite spr, DecalsFile file, int indexInFile) : base(file, $"{nameof(GrimeSprite)}{indexInFile}".ToIdentifier())
         {
-            Prefabs = new PrefabCollection<DecalPrefab>();
-            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.Decals))
-            {
-                LoadFromFile(configFile);
-            }
+            Sprite = spr;
+            IndexInFile = indexInFile;
         }
 
-        public void LoadFromFile(ContentFile configFile)
+        public readonly int IndexInFile;
+        
+        public Sprite Sprite { get; private set; }
+
+        public override void Dispose()
+        {
+            Sprite?.Remove(); Sprite = null;
+        }
+    }
+
+    static class DecalManager
+    {
+        public static readonly PrefabCollection<DecalPrefab> Prefabs = new PrefabCollection<DecalPrefab>();
+
+        public static int GrimeSpriteCount { get; private set; } = 0;
+
+        public static readonly PrefabCollection<GrimeSprite> GrimeSprites = new PrefabCollection<GrimeSprite>(
+            onAdd: (sprite, b) => GrimeSpriteCount = Math.Max(GrimeSpriteCount, sprite.IndexInFile+1),
+            onRemove: (s) =>
+                GrimeSpriteCount = GrimeSprites.AllPrefabs
+                    .SelectMany(kvp => kvp.Value)
+                    .Where(p => p != s).Select(p => p.IndexInFile+1).MaxOrNull() ?? 0,
+            onSort: null, onAddOverrideFile: null, onRemoveOverrideFile: null);
+
+        public static void LoadFromFile(DecalsFile configFile)
         {
             XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
             if (doc == null) { return; }
 
-            if (grimeSpritesByFile.ContainsKey(configFile.Path))
-            {
-                foreach (Sprite sprite in grimeSpritesByFile[configFile.Path])
-                {
-                    sprite.Remove();
-                    GrimeSprites.Remove(sprite);
-                }
-                grimeSpritesByFile.Remove(configFile.Path);
-            }
-
             bool allowOverriding = false;
-            var mainElement = doc.Root;
+            var mainElement = doc.Root.FromPackage(configFile.ContentPackage);
             if (doc.Root.IsOverride())
             {
-                mainElement = doc.Root.FirstElement();
+                mainElement = mainElement.FirstElement();
                 allowOverriding = true;
             }
 
-            foreach (XElement sourceElement in mainElement.Elements())
+            int grimeIndex = 0;
+            foreach (var sourceElement in mainElement.Elements())
             {
                 var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
+                bool isOverride = allowOverriding || sourceElement.IsOverride();
                 string name = element.Name.ToString().ToLowerInvariant();
 
                 switch (name)
                 {
                     case "grime":
-                        if (!grimeSpritesByFile.ContainsKey(configFile.Path))
-                        {
-                            grimeSpritesByFile.Add(configFile.Path, new List<Sprite>());
-                        }
-                        var grimeSprite = new Sprite(element);
-                        GrimeSprites.Add(grimeSprite);
-                        grimeSpritesByFile[configFile.Path].Add(grimeSprite);
+                        GrimeSprites.Add(new GrimeSprite(new Sprite(element), configFile, grimeIndex), isOverride);
+                        grimeIndex++;
                         break;
                     default:
-                        if (Prefabs.ContainsKey(name))
-                        {
-                            if (allowOverriding || sourceElement.IsOverride())
-                            {
-                                DebugConsole.NewMessage($"Overriding the existing decal prefab '{name}' using the file '{configFile.Path}'", Color.Yellow);
-                            }
-                            else
-                            {
-                                DebugConsole.ThrowError($"Error in '{configFile.Path}': Duplicate decal prefab '{name}' found in '{configFile.Path}'! Each decal prefab must have a unique name. " +
-                                    "Use <override></override> tags to override prefabs.");
-                                continue;
-                            }
-                        }
-                        var newPrefab = new DecalPrefab(element, configFile);
-                        Prefabs.Add(newPrefab, allowOverriding || sourceElement.IsOverride());
-                        newPrefab.CalculatePrefabUIntIdentifier(Prefabs);
+                        var prefab = new DecalPrefab(element, configFile);
+                        Prefabs.Add(prefab, isOverride);
                         break;
                 }
             }
         }
 
-        public void RemoveByFile(string filePath)
+        public static void RemoveByFile(DecalsFile configFile)
         {
-            Prefabs.RemoveByFile(filePath);
-            if (grimeSpritesByFile.ContainsKey(filePath))
-            {
-                foreach (Sprite sprite in grimeSpritesByFile[filePath])
-                {
-                    sprite.Remove();
-                    GrimeSprites.Remove(sprite);
-                }
-                grimeSpritesByFile.Remove(filePath);
-            }
+            Prefabs.RemoveByFile(configFile);
+            GrimeSprites.RemoveByFile(configFile);
         }
 
-        public Decal CreateDecal(string decalName, float scale, Vector2 worldPosition, Hull hull, int? spriteIndex = null)
+        public static void SortAll()
+        {
+            Prefabs.SortAll();
+            GrimeSprites.SortAll();
+        }
+
+        public static Decal CreateDecal(string decalName, float scale, Vector2 worldPosition, Hull hull, int? spriteIndex = null)
         {
             string lowerCaseDecalName = decalName.ToLowerInvariant();
             if (!Prefabs.ContainsKey(lowerCaseDecalName))

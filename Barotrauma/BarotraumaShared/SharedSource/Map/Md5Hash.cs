@@ -1,233 +1,209 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Barotrauma.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
-using System.Linq;
 
 namespace Barotrauma
 {
     public class Md5Hash
     {
-        private static readonly Regex removeWhitespaceRegex = new Regex(@"\s+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-        private const string cachePath = "Data/hashcache.txt";
-        private static readonly Dictionary<string, Tuple<Md5Hash, long>> cache = new Dictionary<string, Tuple<Md5Hash, long>>();
-
-        public static void LoadCache()
+        public static class Cache
         {
-            try
+            private const string cachePath = "Data/hashcache.txt";
+
+            private readonly static List<(string Path, Md5Hash Hash, DateTime DateTime)> Entries
+                = new List<(string Path, Md5Hash Hash, DateTime DateTime)>();
+
+            public static void Load()
             {
                 if (!File.Exists(cachePath)) { return; }
-                string[] lines = File.ReadAllLines(cachePath, Encoding.UTF8);
-                if (lines.Length <= 0 || lines[0] != GameMain.Version.ToString()) { return; }
-                foreach (string line in lines.Skip(1))
+                var lines = File.ReadAllLines(cachePath);
+                if (Version.TryParse(lines[0], out var cacheVersion) && cacheVersion == GameMain.Version)
                 {
-                    if (string.IsNullOrWhiteSpace(line)) { continue; }
-                    string[] parts = line.Split('|');
-                    if (parts.Length < 3) { continue; }
-
-                    string path = parts[0].CleanUpPath();
-                    string hashStr = parts[1];
-                    long timeLong = long.Parse(parts[2]);
-
-                    Md5Hash hash = new Md5Hash(hashStr);
-                    DateTime time = DateTime.FromBinary(timeLong);
-
-                    if (File.GetLastWriteTime(path) == time && !cache.ContainsKey(path))
+                    for (int i = 1; i < lines.Length; i++)
                     {
-                        cache.Add(path, new Tuple<Md5Hash, long>(hash, timeLong));
+                        string[] split = lines[i].Split('|');
+                        string path = split[0].CleanUpPathCrossPlatform();
+                        Md5Hash hash = Md5Hash.StringAsHash(split[1]);
+                        DateTime? dateTime = null;
+                        if (long.TryParse(split[2], out long dateTimeUlong))
+                        {
+                            dateTime = DateTime.FromBinary(dateTimeUlong);
+                        }
+
+                        if (File.Exists(path) && dateTime.HasValue && dateTime >= File.GetLastWriteTime(path))
+                        {
+                            Entries.Add((path, hash, dateTime.Value));
+                        }
                     }
                 }
             }
-            catch (Exception e)
+
+            public static void Add(string path, Md5Hash hash, DateTime dateTime)
             {
-                DebugConsole.NewMessage($"Failed to load hash cache: {e.Message}\n{e.StackTrace.CleanupStackTrace()}", Microsoft.Xna.Framework.Color.Orange);
-                cache.Clear();
+                path = path.CleanUpPathCrossPlatform();
+                Remove(path);
+                Entries.Add((path, hash, dateTime));
+            }
+
+            public static void Remove(string path)
+            {
+                path = path.CleanUpPathCrossPlatform();
+                Entries.RemoveAll(e => e.Path == path);
             }
         }
 
-        public static void SaveCache()
-        {
-#if SERVER
-            //don't save to the cache if the server is owned by a client,
-            //since this suggests that they're running concurrently and
-            //will interfere with each other here
-            if (GameMain.Server?.OwnerConnection != null) { return; }
-#endif
+        public static readonly Md5Hash Blank = new Md5Hash(new string('0', 32));
+        
+        private static readonly Regex removeWhitespaceRegex = new Regex(@"\s+", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        //thanks to Jlobblet for this regex
+        private static readonly Regex stringHashRegex = new Regex(@"^[0-9a-fA-F]{7,32}$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-            string[] lines = new string[cache.Count + 1];
-            lines[0] = GameMain.Version.ToString();
-            int i = 1;
-            foreach (KeyValuePair<string, Tuple<Md5Hash, long>> kpv in cache)
-            {
-                lines[i] = kpv.Key + "|" + kpv.Value.Item1 + "|" + kpv.Value.Item2;
-                i++;
-            }
-            File.WriteAllLines(cachePath, lines, Encoding.UTF8);
-        }
+        public readonly byte[] ByteRepresentation;
+        public readonly string StringRepresentation;
+        public readonly string ShortRepresentation;
 
-        private bool LoadFromCache(string filename)
-        {
-            if (!string.IsNullOrWhiteSpace(filename))
-            {
-                filename = filename.CleanUpPath();
-                lock (cache)
-                {
-                    if (cache.ContainsKey(filename))
-                    {
-                        Hash = cache[filename].Item1.Hash;
-                        ShortHash = cache[filename].Item1.ShortHash;
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        public void SaveToCache(string filename, long? time = null)
-        {
-            if (string.IsNullOrWhiteSpace(filename)) { return; }
-            
-            lock (cache)
-            {
-                filename = filename.CleanUpPath();
-                Tuple<Md5Hash, long> cacheVal = new Tuple<Md5Hash, long>(this, time ?? File.GetLastWriteTime(filename).ToBinary());
-                if (cache.ContainsKey(filename))
-                {
-                    cache[filename] = cacheVal;
-                }
-                else
-                {
-                    cache.Add(filename, cacheVal);
-                }
-                SaveCache();
-            }            
-        }
-
-        public static Md5Hash FetchFromCache(string filename)
-        {
-            Md5Hash newHash = new Md5Hash();
-            if (newHash.LoadFromCache(filename)) { return newHash; }
-            return null;
-        }
-
-        public string Hash { get; private set; }
-
-        public string ShortHash { get; private set; }
-
-        private Md5Hash()
-        {
-            this.Hash = null;
-            ShortHash = null;
-        }
-
-        public Md5Hash(string md5Hash)
-        {
-            this.Hash = md5Hash;
-            ShortHash = GetShortHash(md5Hash);
-        }
-
-        public Md5Hash(byte[] bytes)
-        {
-            Hash = CalculateHash(bytes);
-
-            ShortHash = GetShortHash(Hash);
-        }
-
-        public Md5Hash(FileStream fileStream, string filename = null, bool tryLoadFromCache = true)
-        {
-            if (tryLoadFromCache)
-            {
-                if (LoadFromCache(filename)) { return; }
-            }
-
-            Hash = CalculateHash(fileStream);
-
-            ShortHash = GetShortHash(Hash);
-
-            SaveToCache(filename);
-        }
-
-        public Md5Hash(XDocument doc, string filename = null, bool tryLoadFromCache = true)
-        {
-            if (tryLoadFromCache)
-            {
-                if (LoadFromCache(filename)) { return; }
-            }
-
-            if (doc == null) { return; }
-            
-            string docString = removeWhitespaceRegex.Replace(doc.ToString(), "");
-            
-            byte[] inputBytes = Encoding.ASCII.GetBytes(docString);
-            
-            Hash = CalculateHash(inputBytes);
-            ShortHash = GetShortHash(Hash);
-
-            SaveToCache(filename);
-        }
-
-        public override string ToString()
-        {
-            return Hash;
-        }
-
-        private string CalculateHash(FileStream stream)
-        {
-            using (MD5 md5 = MD5.Create())
-            {
-                byte[] byteHash = md5.ComputeHash(stream);
-                // step 2, convert byte array to hex string
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < byteHash.Length; i++)
-                {
-                    sb.Append(byteHash[i].ToString("X2"));
-                }
-
-                return sb.ToString();
-            }
-        }
-
-        private string CalculateHash(byte[] bytes)
+        private static void CalculateHash(byte[] bytes, out string stringRepresentation, out byte[] byteRepresentation)
         {
             using (MD5 md5 = MD5.Create())
             {
                 byte[] byteHash = md5.ComputeHash(bytes);
-                // step 2, convert byte array to hex string
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < byteHash.Length; i++)
-                {
-                    sb.Append(byteHash[i].ToString("X2"));
-                }
 
-                return sb.ToString();
+                byteRepresentation = byteHash;
+                stringRepresentation = ByteRepresentationToStringRepresentation(byteHash);
             }
+        }
+
+        private static string ByteRepresentationToStringRepresentation(byte[] byteHash)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < byteHash.Length; i++)
+            {
+                sb.Append(byteHash[i].ToString("X2"));
+            }
+
+            return sb.ToString();
+        }
+
+        private static byte[] StringRepresentationToByteRepresentation(string strHash)
+        {
+            var byteRepresentation = new byte[strHash.Length / 2];
+            for (int i = 0; i < byteRepresentation.Length; i++)
+            {
+                byteRepresentation[i] = Convert.ToByte(strHash.Substring(i * 2, 2), 16);
+            }
+
+            return byteRepresentation;
         }
 
         public static string GetShortHash(string fullHash)
         {
-            if (string.IsNullOrEmpty(fullHash)) { return ""; }
             return fullHash.Length < 7 ? fullHash : fullHash.Substring(0, 7);
         }
 
-        public static bool RemoveFromCache(string filename)
+        private Md5Hash(string md5Hash)
         {
-            if (!string.IsNullOrWhiteSpace(filename))
+            StringRepresentation = md5Hash;
+            ByteRepresentation = StringRepresentationToByteRepresentation(StringRepresentation);
+    
+            ShortRepresentation = GetShortHash(md5Hash);
+        }
+
+        private Md5Hash(byte[] bytes, bool calculate)
+        {
+            if (calculate)
             {
-                filename = filename.CleanUpPath();
-                lock (cache)
-                {
-                    if (cache.ContainsKey(filename))
-                    {
-                        cache.Remove(filename);
-                        return true;
-                    }
-                }
+                CalculateHash(bytes, out StringRepresentation, out ByteRepresentation);
+            }
+            else
+            {
+                StringRepresentation = ByteRepresentationToStringRepresentation(bytes);
+                ByteRepresentation = bytes;
+            }
+
+            ShortRepresentation = GetShortHash(StringRepresentation);
+        }
+
+        public static Md5Hash StringAsHash(string hash)
+        {
+            if (!stringHashRegex.IsMatch(hash)) { throw new ArgumentException($"{hash} is not a valid hash"); }
+            return new Md5Hash(hash);
+        }
+
+        public static Md5Hash CalculateForBytes(byte[] bytes)
+        {
+            return new Md5Hash(bytes, calculate: true);
+        }
+
+        public static Md5Hash BytesAsHash(byte[] bytes)
+        {
+            return new Md5Hash(bytes, calculate: false);
+        }
+
+        [Flags]
+        public enum StringHashOptions
+        {
+            BytePerfect = 0,
+            IgnoreCase = 0x1,
+            IgnoreWhitespace = 0x2
+        }
+
+        public static Md5Hash CalculateForFile(string path, StringHashOptions options)
+        {
+            if (options.HasFlag(StringHashOptions.IgnoreWhitespace) || options.HasFlag(StringHashOptions.IgnoreCase))
+            {
+                string str = File.ReadAllText(path, Encoding.UTF8);
+                return CalculateForString(str, options);
+            }
+            else
+            {
+                byte[] bytes = File.ReadAllBytes(path);
+                return CalculateForBytes(bytes);
+            }
+        }
+
+        public static Md5Hash CalculateForString(string str, StringHashOptions options)
+        {
+            if (options.HasFlag(StringHashOptions.IgnoreCase))
+            {
+                str = str.ToLowerInvariant();
+            }
+            if (options.HasFlag(StringHashOptions.IgnoreWhitespace))
+            {
+                str = removeWhitespaceRegex.Replace(str, "");
+            }
+            byte[] bytes = Encoding.UTF8.GetBytes(str);
+            return CalculateForBytes(bytes);
+        }
+
+        public override string ToString()
+        {
+            return StringRepresentation;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is Md5Hash { StringRepresentation: { } otherStr })
+            {
+                string selfStr = otherStr.Length < StringRepresentation.Length
+                       ? StringRepresentation[..otherStr.Length]
+                       : StringRepresentation;
+                otherStr = StringRepresentation.Length < otherStr.Length
+                       ? otherStr[..StringRepresentation.Length]
+                       : otherStr;
+                return selfStr.Equals(otherStr, StringComparison.OrdinalIgnoreCase);
             }
             return false;
         }
+
+        public static bool operator ==(Md5Hash? a, Md5Hash? b)
+            => (a is null == b is null) && (a?.Equals(b) ?? true);
+
+        public static bool operator !=(Md5Hash? a, Md5Hash? b) => !(a == b);
     }
 }

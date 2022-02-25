@@ -388,7 +388,7 @@ namespace Barotrauma.Lights
             if (!BoundingBox.Contains(point)) { return false; }
 
             Vector2 center = (vertices[0].Pos + vertices[1].Pos + vertices[2].Pos + vertices[3].Pos) * 0.25f;
-            for (int i=0;i<4;i++)
+            for (int i = 0; i < 4; i++)
             {
                 Vector2 segmentVector = vertices[(i + 1) % 4].Pos - vertices[i].Pos;
                 Vector2 centerToVertex = center - vertices[i].Pos;
@@ -695,7 +695,7 @@ namespace Barotrauma.Lights
             }
 
             ShadowVertexCount = 0;
-            for (int i=0;i<4;i++)
+            for (int i = 0; i < 4; i++)
             {
                 if (!backFacing[i]) { continue; }
                 int currentIndex = i;

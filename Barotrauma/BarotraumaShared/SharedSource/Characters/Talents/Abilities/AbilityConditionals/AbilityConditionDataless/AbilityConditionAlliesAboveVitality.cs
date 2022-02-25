@@ -7,7 +7,7 @@ namespace Barotrauma.Abilities
     {
         float vitalityPercentage;
 
-        public AbilityConditionAlliesAboveVitality(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionAlliesAboveVitality(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             vitalityPercentage = conditionElement.GetAttributeFloat("vitalitypercentage", 0f);
         }

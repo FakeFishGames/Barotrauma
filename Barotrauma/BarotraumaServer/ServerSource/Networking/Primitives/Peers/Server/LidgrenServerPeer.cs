@@ -129,7 +129,7 @@ namespace Barotrauma.Networking
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #else
-                if (GameSettings.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
+                if (GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
 #endif
             }
 
@@ -326,7 +326,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod)
+        public override void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod, bool compressPastThreshold = true)
         {
             if (netServer == null) { return; }
 
@@ -353,7 +353,7 @@ namespace Barotrauma.Networking
 
             NetOutgoingMessage lidgrenMsg = netServer.CreateMessage();
             byte[] msgData = new byte[msg.LengthBytes];
-            msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);
+            msg.PrepareForSending(ref msgData, compressPastThreshold, out bool isCompressed, out int length);
             lidgrenMsg.Write((byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None));
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
@@ -422,7 +422,7 @@ namespace Barotrauma.Networking
         {
             if (pendingClient.SteamID == null)
             {
-                bool requireSteamAuth = GameMain.Config.RequireSteamAuthentication;
+                bool requireSteamAuth = GameSettings.CurrentConfig.RequireSteamAuthentication;
 #if DEBUG
                 requireSteamAuth = false;
 #endif

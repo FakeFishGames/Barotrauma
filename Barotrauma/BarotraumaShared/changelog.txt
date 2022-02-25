@@ -1,4 +1,77 @@
 ---------------------------------------------------------------------------------------------------------
+v0.17.0.0
+---------------------------------------------------------------------------------------------------------
+
+Modding:
+- An extensive rewrite of how the game handles content packages and loading content. Addresses a ton of issues, inconsistencies and usability issues regarding modding.
+- The Mods folder has been replaced by folders called "WorkshopMods" and "LocalMods". "WorkshopMods" is used to store mods installed from the Workshop, and any mods stored in it should never need to be modified manually. "LocalMods" is used for developing mods: installing/updating mods never modifies the contents of this folder to prevent any work from being lost.
+- Submarines are no longer saved in the Submarines folder, because it made it easy to get vanilla and custom subs mixed up. The sub editor now automatically creates a new local mod for each saved submarine.
+- Remade the Workshop menu and made it a tab of the settings menu.
+- More robust handling of mod load order, overrides and variants. 
+- Clients now download the mods a server is using directly from the server, fixing content mismatches when for example trying to join a server that uses outdated mods.
+- Mods now have version numbers to make it easier to determine which of the players are out of date.
+- The Workshop preview images are no longer saved into the game folder, fixing the folder gradually growing in size as you use browse mods in the Workshop menu.
+- Switching languages no longer requires restarting the game.
+- Music can be overridden by identifiers.
+- Character gender and ethnicity are no longer hard-coded: modders can use any kind of arbitrary tags to categorize character sprites.- Option to set the condition of an item spawned with status effects.
+- Added new "accessiblebyowner" property to inventories. Allows making a character able to access their inventory even when "accessiblewhenalive" is false.
+
+Changes and additions:
+- Reworked the power distribution logic. Should fix unstability and inconsistencies in power grids involving relays and batteries.
+- Ballast flora improvements: improved damage visuals, branches die when cut from the root, the flora regenerates health at a rate relative to it's size.
+- Made text displays and terminals craftable/attachable/detachable.
+- Made Concat component's separator field editable mid-round.
+- Made Deadeye Carbine fire in bursts.
+- Characters spawn at a spawnpoint appopriate for their job when using the console command "spawn [job] inside".
+- Added "low_oxygen" output to oxygen detectors.
+- Beacon missions can spawn other types of monsters than just crawlers.
+
+Balance:
+- Increased the price of calyxanide to make it more in line with the price of husk eggs.
+- Fixed wrecked supply cabinets being treated as normal supply cabinets. Reduces the amount of loot spawned in them.
+- Adjust the medical item spawns in wreck and abandoned  med cabinets: less powerful medicines. Basic ingredients and consumables are more common, but come in low quantities.
+- Increased the amount of scrap in wrecks.
+- Increased Gene Splicer's price from 200 to 500.
+- Increase the commonness of Esperite and Galena, which are sources of lead.
+
+AI:
+- Fixed bots accidentally shooting with a weapon if they have it equipped when they try to use the underwater scooter.
+- Fixed bots still sometimes getting stuck when trying to get something from or put something to secure lockers.
+- Fixed bots acting weird while trying to use underwater scooters inside.
+- Fixed bots failing to heal characters in a docked sub/shuttle.
+
+Talents:
+- Fix to yet another issue that sometimes prevented unlocking additional talents after unlocking "All-seeing Eye".
+- Fixed "Curiosity" talent not giving experience to allies.
+- Removing or changing order priority doesn't trigger the "Commander" talent buff.
+- Fixed "Mass Production" talent allowing you to power devices by tinkering.
+- Fixed "Pyromaniac" giving 39.9% damage resistance instead of 40%.
+- Fixed ability to tinker indefinitely by interrupting the tinkering by switching to repairing the item.
+
+Fixes:
+- Fixed monsters being able to attack with practically no cooldown when they're taking constant damage from a player.
+- Fixed crawler eggs not being displayed on the sonar.
+- Fixed aiming being slightly off when crouching and not moving.
+- Fixed item interfaces getting misaligned when there's several linked item UIs visible at the same time.
+- Fixed inability to interact with doors/hatches through docking ports.
+- Fixed escort missions failing if the escorted characters are in a shuttle docked to the main sub.
+- Fixed pumps rounding the pumping rate value to -39 instead of -40.
+- Fixed shell shields dropping from moloch's inventories when they spawn (because they could only be placed in hand slots which the molochs don't have).
+- Fixed linked subs not being taken into account in the cargo capacity displayed in the sub's info panel.
+- Fixed ID card descriptions disappearing between rounds.
+- Fixed ID card description not being added if the ID card tags are empty.
+- Fixed "error" text in the medical clinic UI when trying to heal a character who's disconnected.
+- Fixed texts overlapping on health scanner hud when using a text scale above 100%.
+- Fixed "snap to grid" not working on structures.
+- Update items' hulls after creating the hulls between docking ports. Fixes e.g. water detectors between docking ports still thinking they're outside after the ports lock and the area between them drains.
+- Fixed decorative sprites rotating incorrectly on vertically mirrored items.
+- Disable collisions between subs when "locking" the docking ports between them. Fixes the ports leaving a gap between them if some structures of the sub prevent them from aligning exactly.
+- Fixed wifi components ignoring signals to the "signal_in" connection if the signal originated from another wifi component that can't transmit to this one (i.e. if a wifi component passes a signal through a wire to another wifi component that uses a different channel).
+- Fixed dropped signal components being drawn behind devices (now they're only drawn behind devices when attached to a wall).
+- Fixed SMGs autofilled into the subs sometimes spawning without magazines.
+- Fixed misaligned "Label Number 6" decal.
+
+---------------------------------------------------------------------------------------------------------
 v0.16.7.0
 ---------------------------------------------------------------------------------------------------------
 

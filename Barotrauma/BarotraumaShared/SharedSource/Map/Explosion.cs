@@ -59,10 +59,10 @@ namespace Barotrauma
             smoke = true;
             flames = true;
             underwaterBubble = true;
-            ignoreFireEffectsForTags = new string[0];
+            ignoreFireEffectsForTags = Array.Empty<string>();
         }
         
-        public Explosion(XElement element, string parentDebugName)
+        public Explosion(ContentXElement element, string parentDebugName)
         {
             Attack = new Attack(element, parentDebugName + ", Explosion");
 
@@ -80,7 +80,7 @@ namespace Barotrauma
             playTinnitus = element.GetAttributeBool("playtinnitus", showEffects);
 
             applyFireEffects = element.GetAttributeBool("applyfireeffects", flames && showEffects);
-            ignoreFireEffectsForTags = element.GetAttributeStringArray("ignorefireeffectsfortags", new string[0], convertToLowerInvariant: true);
+            ignoreFireEffectsForTags = element.GetAttributeStringArray("ignorefireeffectsfortags", Array.Empty<string>(), convertToLowerInvariant: true);
 
             ignoreCover = element.GetAttributeBool("ignorecover", false);
             onlyInside = element.GetAttributeBool("onlyinside", false);
@@ -482,7 +482,7 @@ namespace Barotrauma
         {
             List<BallastFloraBehavior> ballastFlorae = new List<BallastFloraBehavior>();
 
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in Hull.HullList)
             {
                 if (hull.BallastFlora != null) { ballastFlorae.Add(hull.BallastFlora); }
             }

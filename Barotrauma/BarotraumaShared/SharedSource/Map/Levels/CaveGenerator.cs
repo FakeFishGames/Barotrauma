@@ -279,7 +279,7 @@ namespace Barotrauma
                     {
 
                         float centerF = 0.5f - Math.Abs(0.5f - (i / (float)pointCount));
-                        float randomVariance = Rand.Range(0, irregularity, Rand.RandSync.Server);
+                        float randomVariance = Rand.Range(0, irregularity, Rand.RandSync.ServerAndClient);
                         Vector2 extrudedPoint = 
                             edge.Point1 +
                             edgeDir * (i / (float)pointCount) +
@@ -469,7 +469,7 @@ namespace Barotrauma
             for (int i = 0; i < vertexCount; i++)
             {
                 Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
-                verts.Add(new Vector2(dir.X * width / 2, dir.Y * height / 2) + dir * Rand.Range(-radiusVariance, radiusVariance, Rand.RandSync.Server));
+                verts.Add(new Vector2(dir.X * width / 2, dir.Y * height / 2) + dir * Rand.Range(-radiusVariance, radiusVariance, Rand.RandSync.ServerAndClient));
                 angle += angleStep;
             }
             return verts;

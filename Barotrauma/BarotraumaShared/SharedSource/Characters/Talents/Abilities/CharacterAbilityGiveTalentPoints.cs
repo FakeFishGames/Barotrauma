@@ -7,7 +7,7 @@ namespace Barotrauma.Abilities
     {
         private readonly int amount;
 
-        public CharacterAbilityGiveTalentPoints(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityGiveTalentPoints(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             amount = abilityElement.GetAttributeInt("amount", 0);
         }

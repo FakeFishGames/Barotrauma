@@ -57,8 +57,8 @@ namespace Barotrauma.Networking
 
         public bool ReadyToStart;
 
-        public List<Pair<JobPrefab, int>> JobPreferences;
-        public Pair<JobPrefab, int> AssignedJob;
+        public List<JobVariant> JobPreferences;
+        public JobVariant AssignedJob;
 
         public float DeleteDisconnectedTimer;
 
@@ -104,7 +104,7 @@ namespace Barotrauma.Networking
 
         partial void InitProjSpecific()
         {
-            JobPreferences = new List<Pair<JobPrefab, int>>();
+            JobPreferences = new List<JobVariant>();
 
             VoipQueue = new VoipQueue(ID, true, true);
             GameMain.Server.VoipServer.RegisterQueue(VoipQueue);
@@ -149,7 +149,7 @@ namespace Barotrauma.Networking
 
             foreach (char character in name)
             {
-                if (!serverSettings.AllowedClientNameChars.Any(charRange => (int)character >= charRange.First && (int)character <= charRange.Second)) { return false; }
+                if (!serverSettings.AllowedClientNameChars.Any(charRange => (int)character >= charRange.Start && (int)character <= charRange.End)) { return false; }
             }
 
             return true;

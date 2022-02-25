@@ -9,16 +9,18 @@ namespace Barotrauma
 {
     internal partial class ReadyCheck
     {
-        private static string readyCheckBody(string name) => string.IsNullOrWhiteSpace(name) ? TextManager.Get("readycheck.serverbody") : TextManager.GetWithVariable("readycheck.body", "[player]", name);
+        private static LocalizedString readyCheckBody(string name) => string.IsNullOrWhiteSpace(name) ? TextManager.Get("readycheck.serverbody") : TextManager.GetWithVariable("readycheck.body", "[player]", name);
 
-        private static string readyCheckStatus(int ready, int total) => TextManager.GetWithVariables("readycheck.readycount", new[] { "[ready]", "[total]" }, new[] { ready.ToString(), total.ToString() });
-        private static string readyCheckPleaseWait(int seconds) => TextManager.GetWithVariable("readycheck.pleasewait", "[seconds]", seconds.ToString());
+        private static LocalizedString readyCheckStatus(int ready, int total) => TextManager.GetWithVariables("readycheck.readycount",
+            ("[ready]", ready.ToString()),
+            ("[total]", total.ToString()));
+        private static LocalizedString readyCheckPleaseWait(int seconds) => TextManager.GetWithVariable("readycheck.pleasewait", "[seconds]", seconds.ToString());
 
-        private static readonly string readyCheckHeader = TextManager.Get("ReadyCheck.Title");
+        private static readonly LocalizedString readyCheckHeader = TextManager.Get("ReadyCheck.Title");
 
-        private static readonly string noButton = TextManager.Get("No"),
-                                       yesButton = TextManager.Get("Yes"),
-                                       closeButton = TextManager.Get("Close");
+        private static readonly LocalizedString noButton = TextManager.Get("No"),
+                                                yesButton = TextManager.Get("Yes"),
+                                                closeButton = TextManager.Get("Close");
 
         private const string TimerData = "Timer",
                              PromptData = "ReadyCheck",
@@ -42,7 +44,7 @@ namespace Barotrauma
             msgBox = new GUIMessageBox(readyCheckHeader, readyCheckBody(author), new[] { yesButton, noButton }, relativeSize, minSize, type: GUIMessageBox.Type.Vote) { UserData = PromptData, Draggable = true };
 
             GUILayoutGroup contentLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.125f), msgBox.Content.RectTransform), childAnchor: Anchor.Center);
-            new GUIProgressBar(new RectTransform(new Vector2(0.8f, 1f), contentLayout.RectTransform), time / endTime, GUI.Style.Orange) { UserData = TimerData };
+            new GUIProgressBar(new RectTransform(new Vector2(0.8f, 1f), contentLayout.RectTransform), time / endTime, GUIStyle.Orange) { UserData = TimerData };
 
             // Yes
             msgBox.Buttons[0].OnClicked = delegate
@@ -222,7 +224,7 @@ namespace Barotrauma
 
             int readyCount = Clients.Count(pair => pair.Value == ReadyStatus.Yes);
             int totalCount = Clients.Count;
-            GameMain.Client.AddChatMessage(ChatMessage.Create(string.Empty, readyCheckStatus(readyCount, totalCount), ChatMessageType.Server, null));
+            GameMain.Client.AddChatMessage(ChatMessage.Create(string.Empty, readyCheckStatus(readyCount, totalCount).Value, ChatMessageType.Server, null));
         }
 
         private void UpdateState(byte id, ReadyStatus status)
@@ -256,7 +258,7 @@ namespace Barotrauma
                                 return;
                         }
 
-                        image.ApplyStyle(GUI.Style.GetComponentStyle(style));
+                        image.ApplyStyle(GUIStyle.GetComponentStyle(style));
                     }
                 }
             }

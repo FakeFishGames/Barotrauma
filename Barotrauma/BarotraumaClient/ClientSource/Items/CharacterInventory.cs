@@ -109,7 +109,7 @@ namespace Barotrauma
 
             indicatorGroup = new GUILayoutGroup(new RectTransform(Point.Zero, hideButton.RectTransform)) { IsHorizontal = false };
             indicatorGroup.ChildAnchor = Anchor.TopCenter;
-            indicatorSpriteSize = GUI.Style.GetComponentStyle("EquipmentIndicatorDivingSuit").GetDefaultSprite().size;
+            indicatorSpriteSize = GUIStyle.GetComponentStyle("EquipmentIndicatorDivingSuit").GetDefaultSprite().size;
 
             indicators[0] = new GUIImage(new RectTransform(Point.Zero, indicatorGroup.RectTransform), "EquipmentIndicatorDivingSuit");
             indicators[1] = new GUIImage(new RectTransform(Point.Zero, indicatorGroup.RectTransform), "EquipmentIndicatorID");
@@ -522,7 +522,7 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam, bool isSubInventory = false)
         {
-            if (!AccessibleWhenAlive && !character.IsDead)
+            if (!AccessibleWhenAlive && !character.IsDead && !AccessibleByOwner)
             {
                 syncItemsDelay = Math.Max(syncItemsDelay - deltaTime, 0.0f);
                 return;
@@ -814,21 +814,21 @@ namespace Barotrauma
                         
                         if (conditionPercentage != -1)
                         {
-                            indicators[i].Color = ToolBox.GradientLerp(conditionPercentage, GUI.Style.EquipmentIndicatorRunningOut, GUI.Style.EquipmentIndicatorEquipped);
+                            indicators[i].Color = ToolBox.GradientLerp(conditionPercentage, GUIStyle.EquipmentIndicatorRunningOut, GUIStyle.EquipmentIndicatorEquipped);
                         }
                         else
                         {
-                            indicators[i].Color = GUI.Style.EquipmentIndicatorRunningOut;
+                            indicators[i].Color = GUIStyle.EquipmentIndicatorRunningOut;
                         }
                     }
                     else
                     {
-                        indicators[i].Color = GUI.Style.EquipmentIndicatorEquipped;
+                        indicators[i].Color = GUIStyle.EquipmentIndicatorEquipped;
                     }
                 }
                 else
                 {
-                    indicators[i].Color = GUI.Style.EquipmentIndicatorNotEquipped;
+                    indicators[i].Color = GUIStyle.EquipmentIndicatorNotEquipped;
                 }
             }
         }
@@ -1007,7 +1007,7 @@ namespace Barotrauma
                         var slot = invSlots[i];
                         if (item.ParentInventory.GetItemAt(i) == item)
                         {
-                            slot.ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.4f);
+                            slot.ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.4f);
                             SoundPlayer.PlayUISound(GUISoundType.PickItem);
                             break;
                         }
@@ -1033,7 +1033,7 @@ namespace Barotrauma
                     {
                         if (GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "equipconfirmation")) { return; }
                         var equipConfirmation = new GUIMessageBox(string.Empty, TextManager.Get(item.Prefab.EquipConfirmationText),
-                            new string[] { TextManager.Get("yes"), TextManager.Get("no") })
+                            new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") })
                         {
                             UserData = "equipconfirmation"
                         };
@@ -1138,7 +1138,7 @@ namespace Barotrauma
                             success = true;
                             for (int j = 0; j < capacity; j++)
                             {
-                                if (slots[j].Contains(heldItem)) { visualSlots[j].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.4f); }
+                                if (slots[j].Contains(heldItem)) { visualSlots[j].ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.4f); }
                             }
                             break;
                         }
@@ -1150,7 +1150,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (slots[i].Contains(item)) { visualSlots[i].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.4f); }
+                    if (slots[i].Contains(item)) { visualSlots[i].ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.4f); }
                 }
             }
 
@@ -1163,7 +1163,7 @@ namespace Barotrauma
         
         public void DrawOwn(SpriteBatch spriteBatch)
         {
-            if (!AccessibleWhenAlive && !character.IsDead) { return; }
+            if (!AccessibleWhenAlive && !character.IsDead && !AccessibleByOwner) { return; }
             if (capacity == 0) { return; }
             if (visualSlots == null) { CreateSlots(); }
             if (GameMain.GraphicsWidth != screenResolution.X ||
@@ -1182,7 +1182,7 @@ namespace Barotrauma
                 CalculateBackgroundFrame();
                 GUI.DrawRectangle(spriteBatch, BackgroundFrame, Color.Black * 0.8f, true);
                 GUI.DrawString(spriteBatch,
-                    new Vector2((int)(BackgroundFrame.Center.X - GUI.Font.MeasureString(character.Name).X / 2), (int)BackgroundFrame.Y + 5),
+                    new Vector2((int)(BackgroundFrame.Center.X - GUIStyle.Font.MeasureString(character.Name).X / 2), (int)BackgroundFrame.Y + 5),
                     character.Name, Color.White * 0.9f);
             }
 
@@ -1218,7 +1218,7 @@ namespace Barotrauma
                     if (LimbSlotIcons.ContainsKey(SlotTypes[i]))
                     {
                         var icon = LimbSlotIcons[SlotTypes[i]];
-                        icon.Draw(spriteBatch, visualSlots[i].Rect.Center.ToVector2() + visualSlots[i].DrawOffset, GUI.Style.EquipmentSlotIconColor, origin: icon.size / 2, scale: visualSlots[i].Rect.Width / icon.size.X);
+                        icon.Draw(spriteBatch, visualSlots[i].Rect.Center.ToVector2() + visualSlots[i].DrawOffset, GUIStyle.EquipmentSlotIconColor, origin: icon.size / 2, scale: visualSlots[i].Rect.Width / icon.size.X);
                     }
                     continue;
                 }
@@ -1292,14 +1292,14 @@ namespace Barotrauma
             if (Locked)
             {
                 GUI.DrawRectangle(spriteBatch, inventoryArea, new Color(30,30,30,100), isFilled: true);
-                var lockIcon = GUI.Style.GetComponentStyle("LockIcon")?.GetDefaultSprite();
+                var lockIcon = GUIStyle.GetComponentStyle("LockIcon")?.GetDefaultSprite();
                 lockIcon?.Draw(spriteBatch, inventoryArea.Center.ToVector2(), scale: Math.Min(inventoryArea.Height / lockIcon.size.Y * 0.7f, 1.0f));
                 if (inventoryArea.Contains(PlayerInput.MousePosition))
                 {
                     GUIComponent.DrawToolTip(spriteBatch, TextManager.Get("handcuffed"), new Rectangle(inventoryArea.Center - new Point(inventoryArea.Height / 2), new Point(inventoryArea.Height)));
                 }
             }
-            else if (highlightedQuickUseSlot != null && !string.IsNullOrEmpty(highlightedQuickUseSlot.QuickUseButtonToolTip))
+            else if (highlightedQuickUseSlot != null && !highlightedQuickUseSlot.QuickUseButtonToolTip.IsNullOrEmpty())
             {
                 GUIComponent.DrawToolTip(spriteBatch, highlightedQuickUseSlot.QuickUseButtonToolTip, highlightedQuickUseSlot.EquipButtonRect);
             }

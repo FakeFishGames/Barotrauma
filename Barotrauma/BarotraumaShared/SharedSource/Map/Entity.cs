@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Barotrauma.IO;
 using System.Linq;
 using System.Text;
@@ -70,6 +71,14 @@ namespace Barotrauma
         public double SpawnTime => spawnTime;
         private readonly double spawnTime;
 
+        private static UInt64 creationCounter = 0;
+        private readonly static object creationCounterMutex = new object();
+        
+        public readonly string CreationStackTrace;
+        public readonly UInt64 CreationIndex;
+        public string ErrorLine
+            => $"-   {ID}: {this} ({Submarine?.Info?.Name ?? "[null]"} {Submarine?.ID ?? 0}) {CreationStackTrace}";
+        
         public Entity(Submarine submarine, ushort id)
         {
             this.Submarine = submarine;
@@ -84,6 +93,31 @@ namespace Barotrauma
             }
 
             dictionary.Add(ID, this);
+
+            CreationStackTrace = "";
+#if DEBUG
+            var st = new StackTrace(skipFrames: 2, fNeedFileInfo: true);
+            var frames = st.GetFrames();
+            int frameCount = 0;
+            foreach (var frame in frames)
+            {
+                string fileName = frame.GetFileName();
+                if ((fileName?.Contains("BarotraumaClient") ?? false) || (fileName?.Contains("BarotraumaServer") ?? false)) { break; }
+
+                fileName = Path.GetFileNameWithoutExtension(fileName);
+                int fileLineNumber = frame.GetFileLineNumber();
+                
+                if (fileName.IsNullOrEmpty() || fileLineNumber <= 0) { continue; }
+                
+                CreationStackTrace += $"{fileName}@{fileLineNumber}; ";
+            }
+#endif
+            #warning TODO: consider removing this mutex, entity creation probably shouldn't be multithreaded
+            lock (creationCounterMutex)
+            {
+                CreationIndex = creationCounter;
+                creationCounter++;
+            }
         }
 
         protected virtual ushort DetermineID(ushort id, Submarine submarine)

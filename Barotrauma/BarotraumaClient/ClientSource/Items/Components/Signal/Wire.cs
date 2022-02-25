@@ -62,7 +62,7 @@ namespace Barotrauma.Items.Components
                 if (width <= 0f) { return; }
                 RecalculateVertices(wire, width);
 
-                for (int i=0;i<vertices.Length;i++)
+                for (int i = 0; i < vertices.Length; i++)
                 {
                     shiftedVertices[i].Color = color;
                     shiftedVertices[i].Position = vertices[i].Position;
@@ -96,7 +96,7 @@ namespace Barotrauma.Items.Components
         private static int? selectedNodeIndex;
         private static int? highlightedNodeIndex;
 
-        [Serialize(0.3f, false)]
+        [Serialize(0.3f, IsPropertySaveable.No)]
         public float Width
         {
             get;
@@ -113,7 +113,7 @@ namespace Barotrauma.Items.Components
             get => draggingWire;
         }
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             if (defaultWireSprite == null)
             {
@@ -123,7 +123,7 @@ namespace Barotrauma.Items.Components
                 };
             }
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (subElement.Name.ToString().Equals("wiresprite", StringComparison.OrdinalIgnoreCase))
                 {
@@ -286,7 +286,7 @@ namespace Barotrauma.Items.Components
             WireSection.Draw(
                 spriteBatch, this,
                 start, endPos,
-                GUI.Style.Orange, depth + 0.00001f, 0.2f);
+                GUIStyle.Orange, depth + 0.00001f, 0.2f);
 
             WireSection.Draw(
                 spriteBatch, this,

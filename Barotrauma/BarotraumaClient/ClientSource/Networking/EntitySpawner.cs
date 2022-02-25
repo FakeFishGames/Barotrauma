@@ -19,7 +19,7 @@ namespace Barotrauma
                     DebugConsole.Log($"Received entity removal message for \"{entity}\".");
                     if (entity is Item item && item.Container?.GetComponent<Deconstructor>() != null)
                     {
-                        GameAnalyticsManager.AddDesignEvent("ItemDeconstructed:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none") + ":" + item.prefab.Identifier);
+                        GameAnalyticsManager.AddDesignEvent("ItemDeconstructed:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none".ToIdentifier()) + ":" + item.Prefab.Identifier);
                     }
                     entity.Remove();
                 }
@@ -36,7 +36,7 @@ namespace Barotrauma
                         var newItem = Item.ReadSpawnData(message, true);
                         if (newItem is Item item && item.Container?.GetComponent<Fabricator>() != null)
                         {
-                            GameAnalyticsManager.AddDesignEvent("ItemFabricated:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none") + ":" + item.prefab.Identifier);
+                            GameAnalyticsManager.AddDesignEvent("ItemFabricated:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none".ToIdentifier()) + ":" + item.Prefab.Identifier);
                         }
                         break;
                     case (byte)SpawnableType.Character:

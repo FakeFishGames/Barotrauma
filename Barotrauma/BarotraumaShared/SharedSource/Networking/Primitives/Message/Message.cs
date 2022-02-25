@@ -454,6 +454,7 @@ namespace Barotrauma.Networking
             {
                 lengthBits = value;
                 seekPos = seekPos > lengthBits ? lengthBits : seekPos;
+                MsgWriter.EnsureBufferSize(ref buf, lengthBits);
             }
         }
 
@@ -540,6 +541,11 @@ namespace Barotrauma.Networking
             MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
+        public void Write(Identifier val)
+        {
+            Write(val.Value);
+        }
+
         public void WriteRangedInteger(int val, int min, int max)
         {
             MsgWriter.WriteRangedInteger(ref buf, ref seekPos, val, min, max);
@@ -555,9 +561,9 @@ namespace Barotrauma.Networking
             MsgWriter.WriteBytes(ref buf, ref seekPos, val, startPos, length);
         }
         
-        public void PrepareForSending(ref byte[] outBuf, out bool isCompressed, out int length)
+        public void PrepareForSending(ref byte[] outBuf, bool compressPastThreshold, out bool isCompressed, out int length)
         {
-            if (LengthBytes <= MsgConstants.CompressionThreshold)
+            if (LengthBytes <= MsgConstants.CompressionThreshold || !compressPastThreshold)
             {
                 isCompressed = false;
                 if (LengthBytes > outBuf.Length) { Array.Resize(ref outBuf, LengthBytes); }
@@ -764,6 +770,11 @@ namespace Barotrauma.Networking
             return MsgReader.ReadString(buf, ref seekPos);
         }
 
+        public Identifier ReadIdentifier()
+        {
+            return ReadString().ToIdentifier();
+        }
+
         public Color ReadColorR8G8B8()
         {
             return MsgReader.ReadColorR8G8B8(buf, ref seekPos);
@@ -773,7 +784,6 @@ namespace Barotrauma.Networking
         {
             return MsgReader.ReadColorR8G8B8A8(buf, ref seekPos);
         }
-        
 
         public int ReadRangedInteger(int min, int max)
         {
@@ -938,6 +948,10 @@ namespace Barotrauma.Networking
             MsgWriter.Write(ref buf, ref seekPos, val);
         }
 
+        public void Write(Identifier val)
+        {
+            Write(val.Value);
+        }
 
         public void WriteRangedInteger(int val, int min, int max)
         {
@@ -1019,6 +1033,11 @@ namespace Barotrauma.Networking
             return MsgReader.ReadString(buf, ref seekPos);
         }
 
+        public Identifier ReadIdentifier()
+        {
+            return ReadString().ToIdentifier();
+        }
+
         public Color ReadColorR8G8B8()
         {
             return MsgReader.ReadColorR8G8B8(buf, ref seekPos);
@@ -1044,7 +1063,7 @@ namespace Barotrauma.Networking
             return MsgReader.ReadBytes(buf, ref seekPos, numberOfBytes);
         }
 
-        public void PrepareForSending(ref byte[] outBuf, out bool isCompressed, out int outLength)
+        public void PrepareForSending(ref byte[] outBuf, bool compressPastThreshold, out bool isCompressed, out int outLength)
         {
             throw new InvalidOperationException("ReadWriteMessages are not to be sent");
         }

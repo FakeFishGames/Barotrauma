@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
 
         public string Name => LimbType.ToString();
 
-        public Dictionary<string, SerializableProperty> SerializableProperties => null;
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties => null;
 
         public LimbPos(LimbType limbType, Vector2 position, bool allowUsingLimb)
         {
@@ -61,21 +61,21 @@ namespace Barotrauma.Items.Components
 
         public IEnumerable<LimbPos> LimbPositions { get { return limbPositions; } }
 
-        [Editable, Serialize(false, false, description: "When enabled, the item will continuously send out a 0/1 signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out 1 when interacted with.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "When enabled, the item will continuously send out a 0/1 signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out 1 when interacted with.", alwaysUseInstanceValues: true)]
         public bool IsToggle
         {
             get;
             set;
         }
 
-        [Editable, Serialize(false, false, description: "Whether the item is toggled on/off. Only valid if IsToggle is set to true.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "Whether the item is toggled on/off. Only valid if IsToggle is set to true.", alwaysUseInstanceValues: true)]
         public bool State
         {
             get;
             set;
         }
 
-        [Serialize(true, false, description: "Should the HUD (inventory, health bar, etc) be hidden when this item is selected.")]
+        [Serialize(true, IsPropertySaveable.No, description: "Should the HUD (inventory, health bar, etc) be hidden when this item is selected.")]
         public bool HideHUD
         {
             get;
@@ -87,10 +87,10 @@ namespace Barotrauma.Items.Components
             Air, Water, Both
         };
 
-        [Serialize(UseEnvironment.Both, false, description: "Can the item be selected in air, underwater or both.")]
+        [Serialize(UseEnvironment.Both, IsPropertySaveable.No, description: "Can the item be selected in air, underwater or both.")]
         public UseEnvironment UsableIn { get; set; }
 
-        [Serialize(false, false, description: "Should the character using the item be drawn behind the item.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Should the character using the item be drawn behind the item.")]
         public bool DrawUserBehind
         {
             get;
@@ -114,7 +114,7 @@ namespace Barotrauma.Items.Components
             private set;
         } = true;
 
-        public Controller(Item item, XElement element)
+        public Controller(Item item, ContentXElement element)
             : base(item, element)
         {
             limbPositions = new List<LimbPos>();
@@ -123,7 +123,7 @@ namespace Barotrauma.Items.Components
 
             Enum.TryParse(element.GetAttributeString("direction", "None"), out dir);
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (subElement.Name != "limbposition") { continue; }
                 string limbStr = subElement.GetAttributeString("limb", "");

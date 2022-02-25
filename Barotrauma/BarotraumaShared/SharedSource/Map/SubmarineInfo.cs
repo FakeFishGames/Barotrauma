@@ -31,10 +31,7 @@ namespace Barotrauma
         public const string SavePath = "Submarines";
 
         private static List<SubmarineInfo> savedSubmarines = new List<SubmarineInfo>();
-        public static IEnumerable<SubmarineInfo> SavedSubmarines
-        {
-            get { return savedSubmarines; }
-        }
+        public static IEnumerable<SubmarineInfo> SavedSubmarines => savedSubmarines;
 
         private Task hashTask;
         private Md5Hash hash;
@@ -59,13 +56,13 @@ namespace Barotrauma
             set;
         }
 
-        public string DisplayName
+        public LocalizedString DisplayName
         {
             get;
             set;
         }
 
-        public string Description
+        public LocalizedString Description
         {
             get;
             set;
@@ -170,7 +167,7 @@ namespace Barotrauma
             get
             {
                 if (requiredContentPackagesInstalled.HasValue) { return requiredContentPackagesInstalled.Value; }
-                return RequiredContentPackages.All(cp => GameMain.Config.AllEnabledPackages.Any(cp2 => cp2.Name == cp));
+                return RequiredContentPackages.All(reqName => ContentPackageManager.EnabledPackages.All.Any(contentPackage => contentPackage.NameMatches(reqName)));
             }
             set
             {
@@ -199,13 +196,14 @@ namespace Barotrauma
 
         public OutpostGenerationParams OutpostGenerationParams;
 
-        public readonly Dictionary<string, List<Character>> OutpostNPCs = new Dictionary<string, List<Character>>();
+        public readonly Dictionary<Identifier, List<Character>> OutpostNPCs = new Dictionary<Identifier, List<Character>>();
 
         //constructors & generation ----------------------------------------------------
         public SubmarineInfo()
         {
             FilePath = null;
-            Name = DisplayName = TextManager.Get("UnspecifiedSubFileName");
+            DisplayName = TextManager.Get("UnspecifiedSubFileName");
+            Name = DisplayName.Value;
             IsFileCorrupted = false;
             RequiredContentPackages = new HashSet<string>();
         }
@@ -219,7 +217,8 @@ namespace Barotrauma
             }
             try
             {
-                Name = DisplayName = Path.GetFileNameWithoutExtension(filePath);
+                DisplayName = Path.GetFileNameWithoutExtension(filePath);
+                Name = DisplayName.Value;
             }
             catch (Exception e)
             {
@@ -228,7 +227,7 @@ namespace Barotrauma
 
             if (!string.IsNullOrWhiteSpace(hash))
             {
-                this.hash = new Md5Hash(hash);
+                this.hash = Md5Hash.StringAsHash(hash);
             }
 
             IsFileCorrupted = false;
@@ -314,11 +313,9 @@ namespace Barotrauma
 
         private void Init()
         {
-            DisplayName = TextManager.Get("Submarine.Name." + Name, true);
-            if (string.IsNullOrEmpty(DisplayName)) { DisplayName = Name; }
+            DisplayName = TextManager.Get("Submarine.Name." + Name).Fallback(Name);
 
-            Description = TextManager.Get("Submarine.Description." + Name, true);
-            if (string.IsNullOrEmpty(Description)) { Description = SubmarineElement.GetAttributeString("description", ""); }
+            Description = TextManager.Get("Submarine.Description." + Name).Fallback(SubmarineElement.GetAttributeString("description", ""));
 
             EqualityCheckVal = SubmarineElement.GetAttributeInt("checkval", 0);
 
@@ -379,7 +376,7 @@ namespace Barotrauma
             }
 
             RequiredContentPackages.Clear();
-            string[] contentPackageNames = SubmarineElement.GetAttributeStringArray("requiredcontentpackages", new string[0]);
+            string[] contentPackageNames = SubmarineElement.GetAttributeStringArray("requiredcontentpackages", Array.Empty<string>());
             foreach (string contentPackageName in contentPackageNames)
             {
                 RequiredContentPackages.Add(contentPackageName);
@@ -405,14 +402,9 @@ namespace Barotrauma
             var vanilla = GameMain.VanillaContent;
             if (vanilla != null)
             {
-                var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine)
-                    .Concat(vanilla.GetFilesOfType(ContentType.Wreck))
-                    .Concat(vanilla.GetFilesOfType(ContentType.BeaconStation))
-                    .Concat(vanilla.GetFilesOfType(ContentType.EnemySubmarine))
-                    .Concat(vanilla.GetFilesOfType(ContentType.Outpost))
-                    .Concat(vanilla.GetFilesOfType(ContentType.OutpostModule));
-                string pathToCompare = FilePath.Replace(@"\", @"/").ToLowerInvariant();
-                if (vanillaSubs.Any(sub => sub.Replace(@"\", @"/").ToLowerInvariant() == pathToCompare))
+                var vanillaSubs = vanilla.GetFiles<BaseSubFile>();
+                string pathToCompare = FilePath.CleanUpPath();
+                if (vanillaSubs.Any(sub => sub.Path == pathToCompare))
                 {
                     return true;
                 }
@@ -427,7 +419,8 @@ namespace Barotrauma
 
             hashTask = new Task(() =>
             {
-                hash = new Md5Hash(doc, FilePath);
+                hash = Md5Hash.CalculateForString(doc.ToString(), Md5Hash.StringHashOptions.IgnoreWhitespace);
+                Md5Hash.Cache.Add(FilePath, hash, DateTime.UtcNow);
             });
             hashTask.Start();
         }
@@ -459,7 +452,7 @@ namespace Barotrauma
             LeftBehindSubDockingPortOccupied = false;
             LeftBehindDockingPortIDs.Clear();
             BlockedDockingPortIDs.Clear();
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("linkedsubmarine", StringComparison.OrdinalIgnoreCase)) { continue; }
                 if (subElement.Attribute("location") == null) { continue; }
@@ -469,7 +462,7 @@ namespace Barotrauma
                 LeftBehindDockingPortIDs.Add(targetDockingPortID);
                 XElement targetPortElement = targetDockingPortID == 0 ? null :
                     element.Elements().FirstOrDefault(e => e.GetAttributeInt("ID", 0) == targetDockingPortID);
-                if (targetPortElement != null && targetPortElement.GetAttributeIntArray("linked", new int[0]).Length > 0)
+                if (targetPortElement != null && targetPortElement.GetAttributeIntArray("linked", Array.Empty<int>()).Length > 0)
                 {
                     BlockedDockingPortIDs.Add(targetDockingPortID);
                     LeftBehindSubDockingPortOccupied = true;
@@ -488,7 +481,7 @@ namespace Barotrauma
             foreach (var structureElement in SubmarineElement.GetChildElements("structure"))
             {
                 string name = structureElement.Attribute("name")?.Value ?? "";
-                string identifier = structureElement.GetAttributeString("identifier", "");
+                Identifier identifier = structureElement.GetAttributeIdentifier("identifier", "");
                 var structurePrefab = Structure.FindPrefab(name, identifier);
                 if (structurePrefab == null || !structurePrefab.Body) { continue; }
                 if (!structureCrushDepthsDefined && structureElement.Attribute("crushdepth") != null)
@@ -546,7 +539,7 @@ namespace Barotrauma
             }
 
             SaveUtil.CompressStringToFile(filePath, doc.ToString());
-            Md5Hash.RemoveFromCache(filePath);
+            Md5Hash.Cache.Remove(filePath);
         }
 
         public static void AddToSavedSubs(SubmarineInfo subInfo)
@@ -578,10 +571,7 @@ namespace Barotrauma
 
         public static void RefreshSavedSubs()
         {
-            var contentPackageSubs = ContentPackage.GetFilesOfType(
-                GameMain.Config.AllEnabledPackages, 
-                ContentType.Submarine, ContentType.Outpost, ContentType.OutpostModule,
-                ContentType.Wreck, ContentType.BeaconStation, ContentType.EnemySubmarine);
+            var contentPackageSubs = ContentPackageManager.EnabledPackages.All.SelectMany(c => c.GetFiles<BaseSubFile>());
 
             for (int i = savedSubmarines.Count - 1; i >= 0; i--)
             {
@@ -589,7 +579,7 @@ namespace Barotrauma
                 {
                     bool isDownloadedSub = Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
                     bool isInSubmarinesFolder = Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SavePath);
-                    bool isInContentPackage = contentPackageSubs.Any(fp => Path.GetFullPath(fp.Path).CleanUpPath() == Path.GetFullPath(savedSubmarines[i].FilePath).CleanUpPath());
+                    bool isInContentPackage = contentPackageSubs.Any(f => f.Path == savedSubmarines[i].FilePath);
                     if (isDownloadedSub) { continue; }
                     if (savedSubmarines[i].LastModifiedTime == File.GetLastWriteTime(savedSubmarines[i].FilePath) && (isInSubmarinesFolder || isInContentPackage)) { continue; }
                 }
@@ -640,11 +630,11 @@ namespace Barotrauma
                 }
             }
 
-            foreach (ContentFile subFile in contentPackageSubs)
+            foreach (BaseSubFile subFile in contentPackageSubs)
             {
-                if (!filePaths.Any(fp => Path.GetFullPath(fp) == Path.GetFullPath(subFile.Path)))
+                if (!filePaths.Any(fp => fp == subFile.Path))
                 {
-                    filePaths.Add(subFile.Path);
+                    filePaths.Add(subFile.Path.Value);
                 }
             }
 
@@ -661,7 +651,7 @@ namespace Barotrauma
                         TextManager.Get("Error"),
                         TextManager.GetWithVariable("SubLoadError", "[subname]", subInfo.Name) + "\n" +
                         TextManager.GetWithVariable("DeleteFileVerification", "[filename]", subInfo.Name),
-                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                        new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
                     string filePath = path;
                     deleteSubPrompt.Buttons[0].OnClicked += (btn, userdata) =>

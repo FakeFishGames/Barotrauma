@@ -15,7 +15,7 @@ namespace Barotrauma.Abilities
         private float effectDelayTimer;
 
 
-        public CharacterAbilityGroupInterval(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, XElement abilityElementGroup) : 
+        public CharacterAbilityGroupInterval(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, ContentXElement abilityElementGroup) : 
             base(abilityEffectType, characterTalent, abilityElementGroup)
         {            
             // too many overlapping intervals could cause hitching? maybe randomize a little

@@ -346,7 +346,7 @@ namespace Barotrauma
             }
             Ladder nextLadder = GetNextLadder();
             var ladders = currentLadder ?? nextLadder;
-            bool useLadders = canClimb && ladders != null && (!isDiving || Math.Abs(steering.X) < 0.1f && Math.Abs(steering.Y) > 1);
+            bool useLadders = canClimb && ladders != null && (!isDiving || Math.Abs(steering.X) < 0.1f && steering.Y > 1);
             if (useLadders && character.SelectedConstruction != ladders.Item)
             {
                 if (character.CanInteractWith(ladders.Item))

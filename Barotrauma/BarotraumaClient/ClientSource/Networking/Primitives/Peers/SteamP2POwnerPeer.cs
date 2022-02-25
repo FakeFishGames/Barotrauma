@@ -429,13 +429,13 @@ namespace Barotrauma.Networking
             Steamworks.SteamUser.OnValidateAuthTicketResponse -= OnAuthChange;
         }
 
-        public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
+        public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod, bool compressPastThreshold = true)
         {
             if (!isActive) { return; }
 
             IWriteMessage msgToSend = new WriteOnlyMessage();
             byte[] msgData = new byte[msg.LengthBytes];
-            msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);
+            msg.PrepareForSending(ref msgData, compressPastThreshold, out bool isCompressed, out int length);
             msgToSend.Write(selfSteamID);
             msgToSend.Write(selfSteamID);
             msgToSend.Write((byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None));

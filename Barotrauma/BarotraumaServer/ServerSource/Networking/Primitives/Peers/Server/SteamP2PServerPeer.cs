@@ -106,7 +106,7 @@ namespace Barotrauma.Networking
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #else
-                if (GameSettings.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
+                if (GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
 #endif
             }
 
@@ -223,7 +223,7 @@ namespace Barotrauma.Networking
                         string ownerName = inc.ReadString();
                         OwnerConnection = new SteamP2PConnection(ownerName, OwnerSteamID)
                         {
-                            Language = GameMain.Config.Language
+                            Language = GameSettings.CurrentConfig.Language
                         };
                         OwnerConnection.SetOwnerSteamIDIfUnknown(OwnerSteamID);
 
@@ -250,7 +250,7 @@ namespace Barotrauma.Networking
             throw new InvalidOperationException("Called InitializeSteamServerCallbacks on SteamP2PServerPeer!");
         }
         
-        public override void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod)
+        public override void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod, bool compressPastThreshold = true)
         {
             if (!started) { return; }
 
@@ -263,7 +263,7 @@ namespace Barotrauma.Networking
 
             IWriteMessage msgToSend = new WriteOnlyMessage();
             byte[] msgData = new byte[16];
-            msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);
+            msg.PrepareForSending(ref msgData, compressPastThreshold, out bool isCompressed, out int length);
             msgToSend.Write(conn.SteamID);
             msgToSend.Write((byte)deliveryMethod);
             msgToSend.Write((byte)((isCompressed ? PacketHeader.IsCompressed : PacketHeader.None) | PacketHeader.IsServerMessage));

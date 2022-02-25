@@ -28,6 +28,7 @@ namespace Barotrauma
         /// The cost of item when sold by the store. Higher modifier means the item costs more to buy from the store.
         /// </summary>
         public readonly float BuyingPriceMultiplier = 1f;
+        public bool DisplayNonEmpty { get; } = false;
 
 
         /// <summary>
@@ -48,7 +49,7 @@ namespace Barotrauma
             MaxAvailableAmount = Math.Max(maxAmount, MinAvailableAmount);
         }
 
-        public PriceInfo(int price, bool canBeBought, int minAmount = 0, int maxAmount = 0, bool canBeSpecial = true, int minLevelDifficulty = 0, float buyingPriceMultiplier = 1f)
+        public PriceInfo(int price, bool canBeBought, int minAmount = 0, int maxAmount = 0, bool canBeSpecial = true, int minLevelDifficulty = 0, float buyingPriceMultiplier = 1f, bool displayNonEmpty = false)
         {
             Price = price;
             CanBeBought = canBeBought;
@@ -58,38 +59,41 @@ namespace Barotrauma
             MaxAvailableAmount = Math.Max(maxAmount, minAmount);
             MinLevelDifficulty = minLevelDifficulty;
             CanBeSpecial = canBeSpecial;
+            DisplayNonEmpty = displayNonEmpty;
         }
 
-        public static List<Tuple<string, PriceInfo>> CreatePriceInfos(XElement element, out PriceInfo defaultPrice)
+        public static List<Tuple<Identifier, PriceInfo>> CreatePriceInfos(XElement element, out PriceInfo defaultPrice)
         {
             defaultPrice = null;
-            var basePrice = element.GetAttributeInt("baseprice", 0);
-            var soldByDefault = element.GetAttributeBool("soldbydefault", true);
-            var minAmount = GetMinAmount(element);
-            var maxAmount = GetMaxAmount(element);
-            var minLevelDifficulty = element.GetAttributeInt("minleveldifficulty", 0);
-            var canBeSpecial = element.GetAttributeBool("canbespecial", true);
-            var buyingPriceMultiplier = element.GetAttributeFloat("buyingpricemultiplier", 1f);
-            var priceInfos = new List<Tuple<string, PriceInfo>>();
+            int basePrice = element.GetAttributeInt("baseprice", 0);
+            bool soldByDefault = element.GetAttributeBool("soldbydefault", true);
+            int minAmount = GetMinAmount(element);
+            int maxAmount = GetMaxAmount(element);
+            int minLevelDifficulty = element.GetAttributeInt("minleveldifficulty", 0);
+            bool canBeSpecial = element.GetAttributeBool("canbespecial", true);
+            float buyingPriceMultiplier = element.GetAttributeFloat("buyingpricemultiplier", 1f);
+            bool displayNonEmpty = element.GetAttributeBool("displaynonempty", false);
+            var priceInfos = new List<Tuple<Identifier, PriceInfo>>();
 
             foreach (XElement childElement in element.GetChildElements("price"))
             {
-                var priceMultiplier = childElement.GetAttributeFloat("multiplier", 1.0f);
-                var sold = childElement.GetAttributeBool("sold", soldByDefault);
-                priceInfos.Add(new Tuple<string, PriceInfo>(childElement.GetAttributeString("locationtype", "").ToLowerInvariant(),
-                    new PriceInfo(price: (int)(priceMultiplier * basePrice), canBeBought: sold,
-                        minAmount: sold ? GetMinAmount(childElement, minAmount) : 0,
-                        maxAmount: sold ? GetMaxAmount(childElement, maxAmount) : 0,
+                float priceMultiplier = childElement.GetAttributeFloat("multiplier", 1.0f);
+                bool sold = childElement.GetAttributeBool("sold", soldByDefault);
+                priceInfos.Add(new Tuple<Identifier, PriceInfo>(childElement.GetAttributeIdentifier("locationtype", ""),
+                    new PriceInfo((int)(priceMultiplier * basePrice), sold,
+                        sold ? GetMinAmount(childElement, minAmount) : 0,
+                        sold ? GetMaxAmount(childElement, maxAmount) : 0,
                         canBeSpecial,
-                        childElement.GetAttributeInt("minleveldifficulty", minLevelDifficulty), childElement.GetAttributeFloat("buyingpricemultiplier", buyingPriceMultiplier))));
+                        childElement.GetAttributeInt("minleveldifficulty", minLevelDifficulty),
+                        childElement.GetAttributeFloat("buyingpricemultiplier", buyingPriceMultiplier),
+                        displayNonEmpty)));
             }
 
-            var canBeBoughtAtOtherLocations = soldByDefault && element.GetAttributeBool("soldeverywhere", true);
+            bool canBeBoughtAtOtherLocations = soldByDefault && element.GetAttributeBool("soldeverywhere", true);
             defaultPrice = new PriceInfo(basePrice, canBeBoughtAtOtherLocations,
-                minAmount: canBeBoughtAtOtherLocations ? minAmount : 0,
-                maxAmount: canBeBoughtAtOtherLocations ? maxAmount : 0,
-                canBeSpecial, 
-                minLevelDifficulty, buyingPriceMultiplier);
+                canBeBoughtAtOtherLocations ? minAmount : 0,
+                canBeBoughtAtOtherLocations ? maxAmount : 0,
+                canBeSpecial, minLevelDifficulty, buyingPriceMultiplier, displayNonEmpty);
             
             return priceInfos;
         }

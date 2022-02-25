@@ -85,7 +85,7 @@ namespace Barotrauma
                     string hash = equalityCheckVal > 0 ? string.Empty : inc.ReadString();
                     SubmarineInfo sub = equalityCheckVal > 0 ?
                         SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Type == SubmarineType.Player && s.EqualityCheckVal == equalityCheckVal) :
-                        SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Type == SubmarineType.Player && s.MD5Hash.Hash == hash);
+                        SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Type == SubmarineType.Player && s.MD5Hash.StringRepresentation == hash);
                     sender.SetVote(voteType, sub);
                     break;
                 case VoteType.Mode:

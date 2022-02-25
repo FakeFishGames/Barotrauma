@@ -9,16 +9,23 @@ namespace Barotrauma
 {
     struct ContextMenuOption
     {
-        public string Label;
+        public LocalizedString Label;
         public Action OnSelected;
         public ContextMenuOption[]? SubOptions;
         public bool IsEnabled;
-        public string Tooltip;
+        public LocalizedString Tooltip;
 
+
+        public ContextMenuOption(string labelTag, bool isEnabled, Action onSelected)
+            : this(TextManager.Get(labelTag), isEnabled, onSelected) { }
+        
+        public ContextMenuOption(Identifier labelTag, bool isEnabled, Action onSelected)
+            : this(TextManager.Get(labelTag), isEnabled, onSelected) { }
+        
         // Creates a regular context menu
-        public ContextMenuOption(string label, bool isEnabled, Action onSelected)
+        public ContextMenuOption(LocalizedString label, bool isEnabled, Action onSelected)
         {
-            Label = TextManager.Get(label, returnNull: true) ?? label;
+            Label = label;
             OnSelected = onSelected;
             IsEnabled = isEnabled;
             SubOptions = null;
@@ -49,14 +56,14 @@ namespace Barotrauma
         /// <param name="header">Header text</param>
         /// <param name="style">Background style</param>
         /// <param name="options">list of context menu options</param>
-        public GUIContextMenu(Vector2? position, string header, string style, params ContextMenuOption[] options) : base(style, new RectTransform(Point.Zero, GUI.Canvas))
+        public GUIContextMenu(Vector2? position, LocalizedString header, string style, params ContextMenuOption[] options) : base(style, new RectTransform(Point.Zero, GUI.Canvas))
         {
             Vector2 pos = position ?? PlayerInput.MousePosition;
-            ScalableFont headerFont = GUI.SubHeadingFont;
-            ScalableFont font = GUI.SmallFont; // font the context menu options use
+            GUIFont headerFont = GUIStyle.SubHeadingFont;
+            GUIFont font = GUIStyle.SmallFont; // font the context menu options use
             Vector4 padding = new Vector4(4), headerPadding = new Vector4(8);
             int horizontalPadding = (int) (padding.X + padding.Z), verticalPadding = (int) (padding.Y + padding.W);
-            bool hasHeader = !string.IsNullOrWhiteSpace(header);
+            bool hasHeader = !header.IsNullOrWhiteSpace();
 
             //----------------------------------------------------------------------------------
             // Estimate the size of the context menu
@@ -111,7 +118,7 @@ namespace Barotrauma
                 };
                 Options.Add(option, optionElement);
 
-                if (!string.IsNullOrWhiteSpace(option.Tooltip) && optionElement.Enabled)
+                if (!option.Tooltip.IsNullOrWhiteSpace() && optionElement.Enabled)
                 {
                     optionElement.ToolTip = option.Tooltip;
                 }
@@ -179,7 +186,7 @@ namespace Barotrauma
 
         public static GUIContextMenu CreateContextMenu(params ContextMenuOption[] options) => CreateContextMenu(PlayerInput.MousePosition, string.Empty, null, options);
 
-        public static GUIContextMenu CreateContextMenu(Vector2? pos, string header, Color? headerColor, params ContextMenuOption[] options)
+        public static GUIContextMenu CreateContextMenu(Vector2? pos, LocalizedString header, Color? headerColor, params ContextMenuOption[] options)
         {
             GUIContextMenu menu = new GUIContextMenu(pos,header, "GUIToolTip", options);
             if (headerColor != null)
@@ -209,7 +216,7 @@ namespace Barotrauma
         /// <param name="label">String whose size to inflate by</param>
         /// <param name="font">What font to use</param>
         /// <returns>The size of the text</returns>
-        private Vector2 InflateSize(ref Point size, string label, ScalableFont font)
+        private Vector2 InflateSize(ref Point size, LocalizedString label, ScalableFont font)
         {
             Vector2 textSize = font.MeasureString(label);
             size.X = Math.Max((int) Math.Ceiling(textSize.X), size.X);

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 
@@ -19,12 +18,11 @@ namespace Barotrauma
         private Func<int> getYesVotes, getNoVotes, getMaxVotes;
         private bool votePassed;
 
-        private string votingOnText;
-        private List<RichTextData> votingOnTextData;
+        private RichString votingOnText;
         private float votingTime = 100f;
         private float timer;
         private VoteType currentVoteType;
-        private Color submarineColor => GUI.Style.Orange;
+        private Color submarineColor => GUIStyle.Orange;
         private Point createdForResolution;
 
         public VotingInterface(Client starter, SubmarineInfo info, VoteType type, float votingTime)
@@ -60,14 +58,14 @@ namespace Barotrauma
             int yOffset = padding;
             int paddedWidth = frame.Rect.Width - padding * 2;
 
-            votingTextBlock = new GUITextBlock(new RectTransform(new Point(paddedWidth, 0), frame.RectTransform), votingOnTextData, votingOnText, wrap: true);
+            votingTextBlock = new GUITextBlock(new RectTransform(new Point(paddedWidth, 0), frame.RectTransform), votingOnText, wrap: true);
             votingTextBlock.RectTransform.NonScaledSize = votingTextBlock.RectTransform.MinSize = votingTextBlock.RectTransform.MaxSize = new Point(votingTextBlock.Rect.Width, votingTextBlock.Rect.Height);
             votingTextBlock.RectTransform.IsFixedSize = true;
             votingTextBlock.RectTransform.AbsoluteOffset = new Point(padding, yOffset);
 
             yOffset += votingTextBlock.Rect.Height + spacing;
 
-            voteCounter = new GUITextBlock(new RectTransform(new Point(paddedWidth, 0), frame.RectTransform), "(0/0)", GUI.Style.Green, textAlignment: Alignment.Center);
+            voteCounter = new GUITextBlock(new RectTransform(new Point(paddedWidth, 0), frame.RectTransform), "(0/0)", GUIStyle.Green, textAlignment: Alignment.Center);
             voteCounter.RectTransform.NonScaledSize = voteCounter.RectTransform.MinSize = voteCounter.RectTransform.MaxSize = new Point(voteCounter.Rect.Width, voteCounter.Rect.Height);
             voteCounter.RectTransform.IsFixedSize = true;
             voteCounter.RectTransform.AbsoluteOffset = new Point(padding, yOffset);
@@ -150,26 +148,41 @@ namespace Barotrauma
             switch (type)
             {
                 case VoteType.PurchaseAndSwitchSub:
-                    votingOnText = TextManager.GetWithVariables("submarinepurchaseandswitchvote", new string[] { "[playername]", "[submarinename]", "[amount]", "[currencyname]" }, new string[] { characterRichString, submarineRichString, info.Price.ToString(), TextManager.Get("credit").ToLower() });
+                    votingOnText = TextManager.GetWithVariables("submarinepurchaseandswitchvote",
+                        ("[playername]", characterRichString),
+                        ("[submarinename]", submarineRichString),
+                        ("[amount]", info.Price.ToString()),
+                        ("[currencyname]", TextManager.Get("credit").ToLower()));
                     break;
                 case VoteType.PurchaseSub:
-                    votingOnText = TextManager.GetWithVariables("submarinepurchasevote", new string[] { "[playername]", "[submarinename]", "[amount]", "[currencyname]" }, new string[] { characterRichString, submarineRichString, info.Price.ToString(), TextManager.Get("credit").ToLower() });
+                    votingOnText = TextManager.GetWithVariables("submarinepurchasevote",
+                        ("[playername]", characterRichString),
+                        ("[submarinename]", submarineRichString),
+                        ("[amount]", info.Price.ToString()),
+                        ("[currencyname]", TextManager.Get("credit").ToLower()));
                     break;
                 case VoteType.SwitchSub:
                     int deliveryFee = SubmarineSelection.DeliveryFeePerDistanceTravelled * GameMain.GameSession.Map.DistanceToClosestLocationWithOutpost(GameMain.GameSession.Map.CurrentLocation, out Location endLocation);
 
                     if (deliveryFee > 0)
                     {
-                        votingOnText = TextManager.GetWithVariables("submarineswitchfeevote", new string[] { "[playername]", "[submarinename]", "[locationname]", "[amount]", "[currencyname]" }, new string[] { characterRichString, submarineRichString, endLocation.Name, deliveryFee.ToString(), TextManager.Get("credit").ToLower() });
+                        votingOnText = TextManager.GetWithVariables("submarineswitchfeevote",
+                            ("[playername]", characterRichString),
+                            ("[submarinename]", submarineRichString),
+                            ("[locationname]", endLocation.Name),
+                            ("[amount]", deliveryFee.ToString()),
+                            ("[currencyname]", TextManager.Get("credit").ToLower()));
                     }
                     else
                     {
-                        votingOnText = TextManager.GetWithVariables("submarineswitchnofeevote", new string[] { "[playername]", "[submarinename]" }, new string[] { characterRichString, submarineRichString });
+                        votingOnText = TextManager.GetWithVariables("submarineswitchnofeevote",
+                            ("[playername]", characterRichString),
+                            ("[submarinename]", submarineRichString));
                     }
                     break;
             }
 
-            votingOnTextData = RichTextData.GetRichTextData(votingOnText, out votingOnText);
+            votingOnText = RichString.Rich(votingOnText);
         }
 
         private int SubmarineYesVotes()
@@ -189,31 +202,50 @@ namespace Barotrauma
 
         private void SendSubmarineVoteEndMessage(SubmarineInfo info, VoteType type)
         {
-            GameMain.NetworkMember.AddChatMessage(GetSubmarineVoteResultMessage(info, type, yesVotes.ToString(), noVotes.ToString(), votePassed), ChatMessageType.Server);
+            GameMain.NetworkMember.AddChatMessage(GetSubmarineVoteResultMessage(info, type, yesVotes.ToString(), noVotes.ToString(), votePassed).Value, ChatMessageType.Server);
         }
 
-        public static string GetSubmarineVoteResultMessage(SubmarineInfo info, VoteType type, string yesVoteString, string noVoteString, bool votePassed)
+        public static LocalizedString GetSubmarineVoteResultMessage(SubmarineInfo info, VoteType type, string yesVoteString, string noVoteString, bool votePassed)
         {
-            string result = string.Empty;
+            LocalizedString result = string.Empty;
 
             switch (type)
             {
                 case VoteType.PurchaseAndSwitchSub:
-                    result = TextManager.GetWithVariables(votePassed ? "submarinepurchaseandswitchvotepassed" : "submarinepurchaseandswitchvotefailed", new string[] { "[submarinename]", "[amount]", "[currencyname]", "[yesvotecount]", "[novotecount]" }, new string[] { info.DisplayName, info.Price.ToString(), TextManager.Get("credit").ToLower(), yesVoteString, noVoteString });
+                    result = TextManager.GetWithVariables(votePassed ? "submarinepurchaseandswitchvotepassed" : "submarinepurchaseandswitchvotefailed",
+                        ("[submarinename]", info.DisplayName),
+                        ("[amount]", info.Price.ToString()),
+                        ("[currencyname]", TextManager.Get("credit").ToLower()),
+                        ("[yesvotecount]", yesVoteString),
+                        ("[novotecount]" , noVoteString));
                     break;
                 case VoteType.PurchaseSub:
-                    result = TextManager.GetWithVariables(votePassed ? "submarinepurchasevotepassed" : "submarinepurchasevotefailed", new string[] { "[submarinename]", "[amount]", "[currencyname]", "[yesvotecount]", "[novotecount]" }, new string[] { info.DisplayName, info.Price.ToString(), TextManager.Get("credit").ToLower(), yesVoteString, noVoteString });
+                    result = TextManager.GetWithVariables(votePassed ? "submarinepurchasevotepassed" : "submarinepurchasevotefailed",
+                        ("[submarinename]", info.DisplayName),
+                        ("[amount]", info.Price.ToString()),
+                        ("[currencyname]", TextManager.Get("credit").ToLower()),
+                        ("[yesvotecount]", yesVoteString),
+                        ("[novotecount]", noVoteString));
                     break;
                 case VoteType.SwitchSub:
                     int deliveryFee = SubmarineSelection.DeliveryFeePerDistanceTravelled * GameMain.GameSession.Map.DistanceToClosestLocationWithOutpost(GameMain.GameSession.Map.CurrentLocation, out Location endLocation);
 
                     if (deliveryFee > 0)
                     {
-                        result = TextManager.GetWithVariables(votePassed ? "submarineswitchfeevotepassed" : "submarineswitchfeevotefailed", new string[] { "[submarinename]", "[locationname]", "[amount]", "[currencyname]", "[yesvotecount]", "[novotecount]" }, new string[] { info.DisplayName, endLocation.Name, deliveryFee.ToString(), TextManager.Get("credit").ToLower(), yesVoteString, noVoteString });
+                        result = TextManager.GetWithVariables(votePassed ? "submarineswitchfeevotepassed" : "submarineswitchfeevotefailed",
+                            ("[submarinename]", info.DisplayName),
+                            ("[locationname]", endLocation.Name),
+                            ("[amount]", deliveryFee.ToString()),
+                            ("[currencyname]", TextManager.Get("credit").ToLower()),
+                            ("[yesvotecount]", yesVoteString),
+                            ("[novotecount]", noVoteString));
                     }
                     else
                     {
-                        result = TextManager.GetWithVariables(votePassed ? "submarineswitchnofeevotepassed" : "submarineswitchnofeevotefailed", new string[] { "[submarinename]", "[yesvotecount]", "[novotecount]" }, new string[] { info.DisplayName, yesVoteString, noVoteString });
+                        result = TextManager.GetWithVariables(votePassed ? "submarineswitchnofeevotepassed" : "submarineswitchnofeevotefailed",
+                            ("[submarinename]", info.DisplayName),
+                            ("[yesvotecount]", yesVoteString),
+                            ("[novotecount]", noVoteString));
                     }
                     break;
                 default:

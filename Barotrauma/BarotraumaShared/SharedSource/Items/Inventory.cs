@@ -287,7 +287,7 @@ namespace Barotrauma
 
             if (DraggableIndicator == null)
             {
-                DraggableIndicator = GUI.Style.GetComponentStyle("GUIDragIndicator").GetDefaultSprite();
+                DraggableIndicator = GUIStyle.GetComponentStyle("GUIDragIndicator").GetDefaultSprite();
 
                 slotHotkeySprite = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(258, 7, 120, 120), null, 0);
 
@@ -479,15 +479,15 @@ namespace Barotrauma
         {
             if (i < 0 || i >= slots.Length)
             {
-                string thisItemStr = item?.prefab.Identifier ?? "null";
+                string thisItemStr = item?.Prefab.Identifier.Value ?? "null";
                 string ownerStr = "null";
                 if (Owner is Item ownerItem)
                 {
-                    ownerStr = ownerItem.prefab.Identifier;
+                    ownerStr = ownerItem.Prefab.Identifier.Value;
                 }
                 else if (Owner is Character ownerCharacter)
                 {
-                    ownerStr = ownerCharacter.SpeciesName;
+                    ownerStr = ownerCharacter.SpeciesName.Value;
                 }
                 string errorMsg = $"Inventory.TryPutItem failed: index was out of range (item: {thisItemStr}, inventory: {ownerStr}).";
                 GameAnalyticsManager.AddErrorEventOnce("Inventory.TryPutItem:IndexOutOfRange", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
@@ -533,7 +533,7 @@ namespace Barotrauma
             else
             {
 #if CLIENT
-                if (visualSlots != null && createNetworkEvent) { visualSlots[i].ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.9f); }
+                if (visualSlots != null && createNetworkEvent) { visualSlots[i].ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f); }
 #endif
                 return false;
             }
@@ -766,11 +766,11 @@ namespace Barotrauma
                 {
                     for (int j = 0; j < capacity; j++)
                     {
-                        if (slots[j].Contains(item)) { visualSlots[j].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.9f); }                       
+                        if (slots[j].Contains(item)) { visualSlots[j].ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.9f); }                       
                     }
                     for (int j = 0; j < otherInventory.capacity; j++)
                     {
-                        if (otherInventory.slots[j].Contains(existingItems.FirstOrDefault())) { otherInventory.visualSlots[j].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.9f); }                          
+                        if (otherInventory.slots[j].Contains(existingItems.FirstOrDefault())) { otherInventory.visualSlots[j].ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.9f); }                          
                     }
                 }
 #endif
@@ -831,7 +831,7 @@ namespace Barotrauma
                     {
                         if (slots[j].Contains(existingItems.FirstOrDefault()))
                         {
-                            visualSlots[j].ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.9f);
+                            visualSlots[j].ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f);
                         }
                     }
                 }
@@ -890,15 +890,15 @@ namespace Barotrauma
             return list;
         }
 
-        public Item FindItemByTag(string tag, bool recursive = false)
+        public Item FindItemByTag(Identifier tag, bool recursive = false)
         {
-            if (tag == null) { return null; }
+            if (tag.IsEmpty) { return null; }
             return FindItem(i => i.HasTag(tag), recursive);
         }
 
-        public Item FindItemByIdentifier(string identifier, bool recursive = false)
+        public Item FindItemByIdentifier(Identifier identifier, bool recursive = false)
         {
-            if (identifier == null) { return null; }
+            if (identifier.IsEmpty) { return null; }
             return FindItem(i => i.Prefab.Identifier == identifier, recursive);
         }
 

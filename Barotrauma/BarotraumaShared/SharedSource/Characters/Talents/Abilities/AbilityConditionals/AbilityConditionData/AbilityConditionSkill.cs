@@ -6,19 +6,19 @@ namespace Barotrauma.Abilities
     {
         private readonly string skillIdentifier;
 
-        public AbilityConditionSkill(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionSkill(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             skillIdentifier = conditionElement.GetAttributeString("skillidentifier", "").ToLowerInvariant();
         }
 
-        private bool MatchesConditionSpecific(string skillIdentifier)
+        private bool MatchesConditionSpecific(Identifier skillIdentifier)
         {
             return this.skillIdentifier == skillIdentifier;
         }
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
-            if ((abilityObject as IAbilitySkillIdentifier)?.SkillIdentifier is string skillIdentifier)
+            if (abilityObject is IAbilitySkillIdentifier { SkillIdentifier: Identifier skillIdentifier })
             {
                 return MatchesConditionSpecific(skillIdentifier);
             }

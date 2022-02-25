@@ -63,7 +63,7 @@ namespace Barotrauma.Items.Components
             "ReactorWarningOverheating", "ReactorWarningHighOutput", "ReactorWarningFuelOut", "ReactorWarningSCRAM"
         };
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             // TODO: need to recreate the gui when the resolution changes
 
@@ -115,7 +115,7 @@ namespace Barotrauma.Items.Components
             };
 
             /*new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), inventoryContent.RectTransform), "", 
-                textAlignment: Alignment.Center, font: GUI.SubHeadingFont, wrap: true);*/
+                textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont, wrap: true);*/
             inventoryContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), inventoryContent.RectTransform), style: null);
 
             //----------------------------------------------------------
@@ -131,28 +131,28 @@ namespace Barotrauma.Items.Components
 
             Point maxIndicatorSize = new Point(int.MaxValue, (int)(40 * GUI.Scale));
             criticalHeatWarning = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
-                TextManager.Get("ReactorWarningCriticalTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
+                TextManager.Get("ReactorWarningCriticalTemp"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightRed")
             {
                 Selected = false,
                 Enabled = false,
                 ToolTip = TextManager.Get("ReactorHeatTip")
             };
             criticalOutputWarning = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
-                TextManager.Get("ReactorWarningCriticalOutput"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
+                TextManager.Get("ReactorWarningCriticalOutput"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightRed")
             {
                 Selected = false,
                 Enabled = false,
                 ToolTip = TextManager.Get("ReactorOutputTip")
             };
             lowTemperatureWarning = new GUITickBox(new RectTransform(new Vector2(0.4f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
-                TextManager.Get("ReactorWarningCriticalLowTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
+                TextManager.Get("ReactorWarningCriticalLowTemp"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightRed")
             {
                 Selected = false,
                 Enabled = false,
                 ToolTip = TextManager.Get("ReactorTempTip")
             };
             List<GUITickBox> indicatorLights = new List<GUITickBox>() { criticalHeatWarning, lowTemperatureWarning, criticalOutputWarning };
-            indicatorLights.ForEach(l => l.TextBlock.OverrideTextColor(GUI.Style.TextColor));
+            indicatorLights.ForEach(l => l.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal));
             topLeftArea.Recalculate();
 
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), columnLeft.RectTransform), style: "HorizontalLine");
@@ -167,7 +167,7 @@ namespace Barotrauma.Items.Components
             var rightArea = new GUIFrame(new RectTransform(new Vector2(0.49f, 1), meterArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft), style: null);
 
             var fissionRateTextBox = new GUITextBlock(new RectTransform(relativeTextSize, leftArea.RectTransform, Anchor.TopCenter),
-                TextManager.Get("ReactorFissionRate"), textColor: GUI.Style.TextColor, textAlignment: Alignment.Center, font: GUI.SubHeadingFont)
+                TextManager.Get("ReactorFissionRate"), textColor: GUIStyle.TextColorNormal, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont)
             {
                 AutoScaleHorizontal = true
             };
@@ -181,7 +181,7 @@ namespace Barotrauma.Items.Components
             };
 
             var turbineOutputTextBox = new GUITextBlock(new RectTransform(relativeTextSize, rightArea.RectTransform, Anchor.TopCenter), 
-                TextManager.Get("ReactorTurbineOutput"), textColor: GUI.Style.TextColor, textAlignment: Alignment.Center, font: GUI.SubHeadingFont)
+                TextManager.Get("ReactorTurbineOutput"), textColor: GUIStyle.TextColorNormal, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont)
             {
                 AutoScaleHorizontal = true
             };
@@ -254,7 +254,7 @@ namespace Barotrauma.Items.Components
                 var b = new GUIButton(new RectTransform(Vector2.One, (i < 4) ? upperButtons.RectTransform : lowerButtons.RectTransform), 
                     TextManager.Get(text), style: "IndicatorButton")
                 {
-                    Font = GUI.SubHeadingFont,
+                    Font = GUIStyle.SubHeadingFont,
                     CanBeFocused = false
                 };
                 warningButtons.Add(text, b);
@@ -298,14 +298,14 @@ namespace Barotrauma.Items.Components
             AutoTempSwitch.RectTransform.MaxSize = new Point((int)(AutoTempSwitch.Rect.Height * 0.4f), int.MaxValue);
             
             autoTempLight = new GUITickBox(new RectTransform(new Vector2(0.4f, 1.0f), topRightArea.RectTransform),
-                TextManager.Get("ReactorAutoTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightYellow")
+                TextManager.Get("ReactorAutoTemp"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightYellow")
                 {
                     ToolTip = TextManager.Get("ReactorTipAutoTemp"),
                     CanBeFocused = false,
                     Selected = AutoTemp
                 };
             autoTempLight.RectTransform.MaxSize = new Point(int.MaxValue, criticalHeatWarning.Rect.Height);
-            autoTempLight.TextBlock.OverrideTextColor(GUI.Style.TextColor);
+            autoTempLight.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal);
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 1.0f), topRightArea.RectTransform), style: "VerticalLine");
 
@@ -313,14 +313,14 @@ namespace Barotrauma.Items.Components
             var powerArea = new GUIFrame(new RectTransform(new Vector2(0.4f, 1.0f), topRightArea.RectTransform), style: null);
             var paddedPowerArea = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), powerArea.RectTransform, Anchor.Center, scaleBasis: ScaleBasis.BothHeight), style: "PowerButtonFrame");
             powerLight = new GUITickBox(new RectTransform(new Vector2(0.87f, 0.3f), paddedPowerArea.RectTransform, Anchor.TopCenter, Pivot.Center), 
-                TextManager.Get("PowerLabel"), font: GUI.SubHeadingFont, style: "IndicatorLightPower")
+                TextManager.Get("PowerLabel"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightPower")
                 {
                     CanBeFocused = false,
                     Selected = _powerOn
                 };
             powerLight.TextBlock.Padding = new Vector4(5.0f, 0.0f, 0.0f, 0.0f);
             powerLight.TextBlock.AutoScaleHorizontal = true;
-            powerLight.TextBlock.OverrideTextColor(GUI.Style.TextColor);
+            powerLight.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal);
             PowerButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.75f), paddedPowerArea.RectTransform, Anchor.BottomCenter)
             {
                 RelativeOffset = new Vector2(0, 0.1f)
@@ -337,7 +337,7 @@ namespace Barotrauma.Items.Components
 
             topRightArea.Recalculate();
             autoTempLight.TextBlock.Padding = new Vector4(autoTempLight.TextBlock.Padding.X, 0.0f, 0.0f, 0.0f);
-            autoTempLight.TextBlock.Text = autoTempLight.TextBlock.Text.Replace(' ', '\n');
+            autoTempLight.TextBlock.Text = autoTempLight.TextBlock.Text.Replace(" ", "\n");
             autoTempLight.TextBlock.AutoScaleHorizontal = true;
             GUITextBlock.AutoScaleAndNormalize(indicatorLights.Select(l => l.TextBlock));
 
@@ -364,23 +364,23 @@ namespace Barotrauma.Items.Components
 
             relativeTextSize = new Vector2(1.0f, 0.15f);
             var loadText = new GUITextBlock(new RectTransform(relativeTextSize, graphArea.RectTransform),
-                "Load", textColor: loadColor, font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+                "Load", textColor: loadColor, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft)
             {
                 ToolTip = TextManager.Get("ReactorTipLoad")
             };
-            string loadStr = TextManager.Get("ReactorLoad");
-            string kW = TextManager.Get("kilowatt");
+            LocalizedString loadStr = TextManager.Get("ReactorLoad");
+            LocalizedString kW = TextManager.Get("kilowatt");
             loadText.TextGetter += () => $"{loadStr.Replace("[kw]", ((int)Load).ToString())} {kW}";
-            
+
             var graph = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), graphArea.RectTransform), style: "InnerFrameRed");
             new GUICustomComponent(new RectTransform(new Vector2(0.9f, 0.98f), graph.RectTransform, Anchor.Center), DrawGraph, null);
 
             var outputText = new GUITextBlock(new RectTransform(relativeTextSize, graphArea.RectTransform),
-                "Output", textColor: outputColor, font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+                "Output", textColor: outputColor, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft)
             {
                 ToolTip = TextManager.Get("ReactorTipPower")
             };
-            string outputStr = TextManager.Get("ReactorOutput");
+            LocalizedString outputStr = TextManager.Get("ReactorOutput");
             outputText.TextGetter += () => $"{outputStr.Replace("[kw]", ((int)-currPowerConsumption).ToString())} {kW}";
         }
 
@@ -610,7 +610,7 @@ namespace Barotrauma.Items.Components
 
             if (optimalRangeNormalized.X == optimalRangeNormalized.Y)
             {
-                sectorSprite.Draw(spriteBatch, pointerPos, GUI.Style.Red, MathHelper.PiOver2, scale);
+                sectorSprite.Draw(spriteBatch, pointerPos, GUIStyle.Red, MathHelper.PiOver2, scale);
             }
             else
             {

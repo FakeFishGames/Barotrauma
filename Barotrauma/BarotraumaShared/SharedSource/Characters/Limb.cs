@@ -576,7 +576,7 @@ namespace Barotrauma
             }
         }
 
-        public Dictionary<string, SerializableProperty> SerializableProperties
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties
         {
             get;
             private set;
@@ -622,7 +622,7 @@ namespace Barotrauma
 
             body.BodyType = BodyType.Dynamic;
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -644,9 +644,10 @@ namespace Barotrauma
                             }
                             attack.DamageRange = ConvertUnits.ToDisplayUnits(attack.DamageRange);
                         }
-                        if (character.VariantOf != null && character.Params.VariantFile != null)
+                        if (!character.VariantOf.IsEmpty)
                         {
-                            var attackElement = character.Params.VariantFile.Root.GetChildElement("attack");
+                            var attackElement = CharacterPrefab.Prefabs.TryGet(character.VariantOf, out var basePrefab)
+                                ? basePrefab.ConfigElement.GetChildElement("attack") : null;
                             if (attackElement != null)
                             {
                                 attack.DamageMultiplier = attackElement.GetAttributeFloat("damagemultiplier", 1f);
@@ -668,7 +669,7 @@ namespace Barotrauma
 
             InitProjSpecific(element);
         }
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
         public void MoveToPos(Vector2 pos, float force, bool pullFromCenter = false)
         {
@@ -1084,7 +1085,7 @@ namespace Barotrauma
                     attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound, body, this);
                 }
             }
-            /*if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
+            /*if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient))
             {
                 // TODO: use the hit pos?
                 var localFront = body.GetLocalFront(Params.GetSpriteOrientation());

@@ -3,7 +3,9 @@ using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace Barotrauma
 {
@@ -26,7 +28,7 @@ namespace Barotrauma
 
             public OutpostModuleInfo.GapPosition UsedGapPositions = 0;
 
-            public readonly HashSet<string> FulfilledModuleTypes = new HashSet<string>();
+            public readonly HashSet<Identifier> FulfilledModuleTypes = new HashSet<Identifier>();
 
             public Vector2 Offset;
 
@@ -67,10 +69,18 @@ namespace Barotrauma
 
         private static Submarine Generate(OutpostGenerationParams generationParams, LocationType locationType, Location location, bool onlyEntrance = false)
         {
-            var outpostModuleFiles = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.OutpostModule);
+            var outpostModuleFiles = ContentPackageManager.EnabledPackages.All
+                .SelectMany(p => p.GetFiles<OutpostModuleFile>())
+                .OrderBy(f => f.UintIdentifier).ToArray();
+            var uintIdDupes = outpostModuleFiles.Where(f1 =>
+                outpostModuleFiles.Any(f2 => f1 != f2 && f1.UintIdentifier == f2.UintIdentifier)).ToArray();
+            if (uintIdDupes.Any())
+            {
+                throw new Exception($"OutpostModuleFile UintIdentifier duplicates found: {uintIdDupes.Select(f => f.Path)}");
+            }
             if (location != null)
             {
-                if (location.IsCriticallyRadiated() && OutpostGenerationParams.Params.FirstOrDefault(p => p.Identifier.Equals(generationParams.ReplaceInRadiation, StringComparison.OrdinalIgnoreCase)) is { } newParams)
+                if (location.IsCriticallyRadiated() && OutpostGenerationParams.OutpostParams.FirstOrDefault(p => p.Identifier == generationParams.ReplaceInRadiation) is { } newParams)
                 {
                     generationParams = newParams;
                 }
@@ -80,21 +90,21 @@ namespace Barotrauma
 
             //load the infos of the outpost module files
             List<SubmarineInfo> outpostModules = new List<SubmarineInfo>();
-            foreach (ContentFile outpostModuleFile in outpostModuleFiles)
+            foreach (var outpostModuleFile in outpostModuleFiles)
             {
-                var subInfo = new SubmarineInfo(outpostModuleFile.Path);
+                var subInfo = new SubmarineInfo(outpostModuleFile.Path.Value);
                 if (subInfo.OutpostModuleInfo != null)
                 {
                     if (generationParams is RuinGeneration.RuinGenerationParams)
                     {
                         //if the module doesn't have the ruin flag or any other flag used in the generation params, don't use it in ruins
-                        if (!subInfo.OutpostModuleInfo.ModuleFlags.Contains("ruin") &&
+                        if (!subInfo.OutpostModuleInfo.ModuleFlags.Contains("ruin".ToIdentifier()) &&
                             !generationParams.ModuleCounts.Any(m => subInfo.OutpostModuleInfo.ModuleFlags.Contains(m.Key)))
                         {
                             continue;
                         }
                     }
-                    else if (subInfo.OutpostModuleInfo.ModuleFlags.Contains("ruin"))
+                    else if (subInfo.OutpostModuleInfo.ModuleFlags.Contains("ruin".ToIdentifier()))
                     {
                         continue;
                     }
@@ -131,14 +141,23 @@ namespace Barotrauma
 
                 selectedModules.Clear();
                 //select which module types the outpost should consist of
-                var pendingModuleFlags = onlyEntrance ? new List<string>() { generationParams.ModuleCounts.First().Key } : SelectModules(outpostModules, generationParams);
-                foreach (string flag in pendingModuleFlags.Distinct().ToList())
+                List<Identifier> pendingModuleFlags;
+                using (var md5 = MD5.Create())
                 {
-                    if (flag.Equals("none", StringComparison.OrdinalIgnoreCase)) { continue; }
+                    #warning TODO: cursed
+                    pendingModuleFlags = onlyEntrance
+                        ? generationParams.ModuleCounts
+                                .Keys.OrderBy(k => ToolBox.IdentifierToUint32Hash(k, md5))
+                                .First().ToEnumerable().ToList()
+                        : SelectModules(outpostModules, generationParams);
+                }
+                foreach (Identifier flag in pendingModuleFlags)
+                {
+                    if (flag == "none") { continue; }
                     int pendingCount = pendingModuleFlags.Count(f => f == flag);
                     int availableModuleCount =
                         outpostModules
-                            .Where(m => m.OutpostModuleInfo.ModuleFlags.Any(f => f.Equals(flag, StringComparison.OrdinalIgnoreCase)))
+                            .Where(m => m.OutpostModuleInfo.ModuleFlags.Any(f => f == flag))
                             .Select(m => m.OutpostModuleInfo.MaxCount)
                             .DefaultIfEmpty(0)
                             .Sum();
@@ -154,7 +173,7 @@ namespace Barotrauma
                 }
 
                 //the first module is spawned separately, remove it from the list of pending modules
-                string initialModuleFlag = pendingModuleFlags.FirstOrDefault() ?? "airlock";
+                Identifier initialModuleFlag = pendingModuleFlags.FirstOrDefault().IfEmpty("airlock".ToIdentifier());
                 pendingModuleFlags.Remove(initialModuleFlag);                
 
                 var initialModule = GetRandomModule(outpostModules, initialModuleFlag, locationType);
@@ -162,9 +181,9 @@ namespace Barotrauma
                 {
                     throw new Exception("Failed to generate an outpost (no airlock modules found).");
                 }
-                foreach (string initialFlag in initialModule.OutpostModuleInfo.ModuleFlags)
+                foreach (Identifier initialFlag in initialModule.OutpostModuleInfo.ModuleFlags)
                 {
-                    if (pendingModuleFlags.Contains("initialFlag")) { pendingModuleFlags.Remove(initialFlag); }
+                    if (pendingModuleFlags.Contains("initialFlag".ToIdentifier())) { pendingModuleFlags.Remove(initialFlag); }
                 }
 
                 if (remainingTries == 1)
@@ -176,7 +195,7 @@ namespace Barotrauma
                 selectedModules.Add(new PlacedModule(initialModule, null, OutpostModuleInfo.GapPosition.None));
                 selectedModules.Last().FulfilledModuleTypes.Add(initialModuleFlag);
                 AppendToModule(selectedModules.Last(), outpostModules.ToList(), pendingModuleFlags, selectedModules, locationType, allowExtendBelowInitialModule: generationParams is RuinGeneration.RuinGenerationParams);
-                if (pendingModuleFlags.Any(flag => !flag.Equals("none", StringComparison.OrdinalIgnoreCase)))
+                if (pendingModuleFlags.Any(flag => flag != "none"))
                 {
                     remainingTries--;
                     if (remainingTries <= 0)
@@ -196,7 +215,7 @@ namespace Barotrauma
                 sub.Info.OutpostGenerationParams = generationParams;
                 if (!generationFailed)
                 {
-                    foreach (Hull hull in Hull.hullList)
+                    foreach (Hull hull in Hull.HullList)
                     {
                         if (hull.Submarine != sub) { continue; }
                         if (string.IsNullOrEmpty(hull.RoomName) || 
@@ -223,12 +242,14 @@ namespace Barotrauma
 
             DebugConsole.NewMessage("Failed to generate an outpost without overlapping modules. Trying to use a pre-built outpost instead...");
 
-            var outpostFiles = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.Outpost);
+            var outpostFiles = ContentPackageManager.EnabledPackages.All
+                .SelectMany(p => p.GetFiles<OutpostFile>())
+                .OrderBy(f => f.UintIdentifier).ToArray();
             if (!outpostFiles.Any())
             {
                 throw new Exception("Failed to generate an outpost. Could not generate an outpost from the available outpost modules and there are no pre-built outposts available.");
             }
-            var prebuiltOutpostInfo = new SubmarineInfo(outpostFiles.GetRandom(Rand.RandSync.Server).Path)
+            var prebuiltOutpostInfo = new SubmarineInfo(outpostFiles.GetRandom(Rand.RandSync.ServerAndClient).Path.Value)
             {
                 Type = SubmarineType.Outpost
             };
@@ -386,7 +407,7 @@ namespace Barotrauma
                                 }
                                 else
                                 {
-                                    hull.WaterVolume = hull.Volume * Rand.Range(generationParams.MinWaterPercentage, generationParams.MaxWaterPercentage, Rand.RandSync.Server) * 0.01f;
+                                    hull.WaterVolume = hull.Volume * Rand.Range(generationParams.MinWaterPercentage, generationParams.MaxWaterPercentage, Rand.RandSync.ServerAndClient) * 0.01f;
                                 }
                             }
                         }
@@ -400,13 +421,13 @@ namespace Barotrauma
         /// <summary>
         /// Select the number and types of the modules to use in the outpost
         /// </summary>
-        private static List<string> SelectModules(IEnumerable<SubmarineInfo> modules, OutpostGenerationParams generationParams)
+        private static List<Identifier> SelectModules(IEnumerable<SubmarineInfo> modules, OutpostGenerationParams generationParams)
         {
             int totalModuleCount = generationParams.TotalModuleCount;
-            var pendingModuleFlags = new List<string>();
+            var pendingModuleFlags = new List<Identifier>();
             bool availableModulesFound = true;
 
-            string initialModuleFlag = generationParams.ModuleCounts.FirstOrDefault().Key;
+            Identifier initialModuleFlag = generationParams.ModuleCounts.FirstOrDefault().Key;
             pendingModuleFlags.Add(initialModuleFlag);
             while (pendingModuleFlags.Count < totalModuleCount && availableModulesFound)
             {
@@ -426,13 +447,17 @@ namespace Barotrauma
                     pendingModuleFlags.Add(moduleFlag.Key);
                 }
             }
-            pendingModuleFlags.Shuffle(Rand.RandSync.Server);
+            using (MD5 md5 = MD5.Create())
+            {
+                pendingModuleFlags.Sort((i1, i2) => (int)ToolBox.StringToUInt32Hash(i1.Value.ToLowerInvariant(), md5) - (int)ToolBox.StringToUInt32Hash(i2.Value.ToLowerInvariant(), md5));
+            }
+            pendingModuleFlags.Shuffle(Rand.RandSync.ServerAndClient);
             while (pendingModuleFlags.Count < totalModuleCount)
             {
                 //don't place "none" modules at the end because
                 // a. "filler rooms" at the end of a hallway are pointless
                 // b. placing the unnecessary filler rooms first give more options for the placement of the more important modules 
-                pendingModuleFlags.Insert(Rand.Int(pendingModuleFlags.Count - 1, Rand.RandSync.Server), "none");
+                pendingModuleFlags.Insert(Rand.Int(pendingModuleFlags.Count - 1, Rand.RandSync.ServerAndClient), "none".ToIdentifier());
             }
 
             //make sure the initial module is inserted first
@@ -452,7 +477,7 @@ namespace Barotrauma
         /// <param name="selectedModules">The modules we've already selected to be used in the outpost.</param>
         private static bool AppendToModule(PlacedModule currentModule,
             List<SubmarineInfo> availableModules,
-            List<string> pendingModuleFlags,
+            List<Identifier> pendingModuleFlags,
             List<PlacedModule> selectedModules, 
             LocationType locationType,
             bool retry = true,
@@ -461,7 +486,7 @@ namespace Barotrauma
             if (pendingModuleFlags.Count == 0) { return true; }
 
             List<PlacedModule> placedModules = new List<PlacedModule>();
-            foreach (OutpostModuleInfo.GapPosition gapPosition in GapPositions().Randomize(Rand.RandSync.Server))
+            foreach (OutpostModuleInfo.GapPosition gapPosition in GapPositions.Randomize(Rand.RandSync.ServerAndClient))
             {
                 if (currentModule.UsedGapPositions.HasFlag(gapPosition)) { continue; }
                 if (!allowExtendBelowInitialModule)
@@ -526,15 +551,15 @@ namespace Barotrauma
             PlacedModule currentModule,
             OutpostModuleInfo.GapPosition gapPosition,
             List<SubmarineInfo> availableModules,
-            List<string> pendingModuleFlags,
+            List<Identifier> pendingModuleFlags,
             List<PlacedModule> selectedModules,
             LocationType locationType)
         {
             if (pendingModuleFlags.Count == 0) { return null; }
 
-            string flagToPlace = "none";
+            Identifier flagToPlace = "none".ToIdentifier();
             SubmarineInfo nextModule = null;
-            foreach (string moduleFlag in pendingModuleFlags)
+            foreach (Identifier moduleFlag in pendingModuleFlags)
             {
                 flagToPlace = moduleFlag;
                 nextModule = GetRandomModule(currentModule?.Info?.OutpostModuleInfo, availableModules, flagToPlace, gapPosition, locationType);
@@ -547,7 +572,7 @@ namespace Barotrauma
                 {
                     Offset = currentModule.Offset + GetMoveDir(gapPosition),
                 };
-                foreach (string moduleFlag in nextModule.OutpostModuleInfo.ModuleFlags)
+                foreach (Identifier moduleFlag in nextModule.OutpostModuleInfo.ModuleFlags)
                 {
                     if (!pendingModuleFlags.Contains(moduleFlag)) { continue; }
                     if (moduleFlag != "none" || flagToPlace == "none")
@@ -711,19 +736,19 @@ namespace Barotrauma
             return solutionFound;
         }
 
-        private static SubmarineInfo GetRandomModule(IEnumerable<SubmarineInfo> modules, string moduleFlag, LocationType locationType)
+        private static SubmarineInfo GetRandomModule(IEnumerable<SubmarineInfo> modules, Identifier moduleFlag, LocationType locationType)
         {
             IEnumerable<SubmarineInfo> availableModules = null;
-            if (string.IsNullOrEmpty(moduleFlag) || moduleFlag.Equals("none"))
+            if (moduleFlag.IsEmpty || moduleFlag == "none")
             {
-                availableModules = modules.Where(m => !m.OutpostModuleInfo.ModuleFlags.Any() || m.OutpostModuleInfo.ModuleFlags.Contains("none"));
+                availableModules = modules.Where(m => !m.OutpostModuleInfo.ModuleFlags.Any() || m.OutpostModuleInfo.ModuleFlags.Contains("none".ToIdentifier()));
             }
             else
             {
                 availableModules = modules.Where(m => m.OutpostModuleInfo.ModuleFlags.Contains(moduleFlag));
                 if (moduleFlag != "hallwayhorizontal" && moduleFlag != "hallwayvertical")
                 {
-                    availableModules = availableModules.Where(m => !m.OutpostModuleInfo.ModuleFlags.Contains("hallwayhorizontal") && !m.OutpostModuleInfo.ModuleFlags.Contains("hallwayvertical"));
+                    availableModules = availableModules.Where(m => !m.OutpostModuleInfo.ModuleFlags.Contains("hallwayhorizontal".ToIdentifier()) && !m.OutpostModuleInfo.ModuleFlags.Contains("hallwayvertical".ToIdentifier()));
                 }
             }
 
@@ -731,7 +756,7 @@ namespace Barotrauma
 
             //try to search for modules made specifically for this location type first
             var modulesSuitableForLocationType =
-                availableModules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier.ToLowerInvariant()));
+                availableModules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier));
 
             //if not found, search for modules suitable for any location type
             if (!modulesSuitableForLocationType.Any())
@@ -742,21 +767,21 @@ namespace Barotrauma
             if (!modulesSuitableForLocationType.Any())
             {
                 DebugConsole.NewMessage($"Could not find a suitable module for the location type {locationType}. Module flag: {moduleFlag}.", Color.Orange);
-                return ToolBox.SelectWeightedRandom(availableModules.ToList(), availableModules.Select(m => m.OutpostModuleInfo.Commonness).ToList(), Rand.RandSync.Server);
+                return ToolBox.SelectWeightedRandom(availableModules.ToList(), availableModules.Select(m => m.OutpostModuleInfo.Commonness).ToList(), Rand.RandSync.ServerAndClient);
             }
             else
             {
-                return ToolBox.SelectWeightedRandom(modulesSuitableForLocationType.ToList(), modulesSuitableForLocationType.Select(m => m.OutpostModuleInfo.Commonness).ToList(), Rand.RandSync.Server);
+                return ToolBox.SelectWeightedRandom(modulesSuitableForLocationType.ToList(), modulesSuitableForLocationType.Select(m => m.OutpostModuleInfo.Commonness).ToList(), Rand.RandSync.ServerAndClient);
             }
         }
 
-        private static SubmarineInfo GetRandomModule(OutpostModuleInfo prevModule, IEnumerable<SubmarineInfo> modules, string moduleFlag, OutpostModuleInfo.GapPosition gapPosition, LocationType locationType)
+        private static SubmarineInfo GetRandomModule(OutpostModuleInfo prevModule, IEnumerable<SubmarineInfo> modules, Identifier moduleFlag, OutpostModuleInfo.GapPosition gapPosition, LocationType locationType)
         {
             IEnumerable<SubmarineInfo> availableModules = null;
-            if (string.IsNullOrEmpty(moduleFlag) || moduleFlag.Equals("none"))
+            if (moduleFlag.IsEmpty || moduleFlag.Equals("none"))
             {
                 availableModules = modules
-                    .Where(m => !m.OutpostModuleInfo.ModuleFlags.Any() || (m.OutpostModuleInfo.ModuleFlags.Count() == 1 && m.OutpostModuleInfo.ModuleFlags.Contains("none")) && m.OutpostModuleInfo.GapPositions.HasFlag(gapPosition));
+                    .Where(m => !m.OutpostModuleInfo.ModuleFlags.Any() || (m.OutpostModuleInfo.ModuleFlags.Count() == 1 && m.OutpostModuleInfo.ModuleFlags.Contains("none".ToIdentifier())) && m.OutpostModuleInfo.GapPositions.HasFlag(gapPosition));
             }
             else
             {
@@ -772,7 +797,7 @@ namespace Barotrauma
 
             //try to search for modules made specifically for this location type first
             var modulesSuitableForLocationType =
-                availableModules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier.ToLowerInvariant()));
+                availableModules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier));
 
             //if not found, search for modules suitable for any location type
             if (!modulesSuitableForLocationType.Any())
@@ -783,11 +808,11 @@ namespace Barotrauma
             if (!modulesSuitableForLocationType.Any())
             {
                 DebugConsole.NewMessage($"Could not find a suitable module for the location type {locationType}. Module flag: {moduleFlag}.", Color.Orange);
-                return ToolBox.SelectWeightedRandom(availableModules.ToList(), availableModules.Select(m => m.OutpostModuleInfo.Commonness).ToList(), Rand.RandSync.Server);
+                return ToolBox.SelectWeightedRandom(availableModules.ToList(), availableModules.Select(m => m.OutpostModuleInfo.Commonness).ToList(), Rand.RandSync.ServerAndClient);
             }
             else
             {
-                return ToolBox.SelectWeightedRandom(modulesSuitableForLocationType.ToList(), modulesSuitableForLocationType.Select(m => m.OutpostModuleInfo.Commonness).ToList(), Rand.RandSync.Server);
+                return ToolBox.SelectWeightedRandom(modulesSuitableForLocationType.ToList(), modulesSuitableForLocationType.Select(m => m.OutpostModuleInfo.Commonness).ToList(), Rand.RandSync.ServerAndClient);
             }
         }
 
@@ -807,13 +832,13 @@ namespace Barotrauma
             }
         }
 
-        private static IEnumerable<OutpostModuleInfo.GapPosition> GapPositions()
+        private readonly static OutpostModuleInfo.GapPosition[] GapPositions = new[]
         {
-            yield return OutpostModuleInfo.GapPosition.Right;
-            yield return OutpostModuleInfo.GapPosition.Left;
-            yield return OutpostModuleInfo.GapPosition.Top;
-            yield return OutpostModuleInfo.GapPosition.Bottom;
-        }
+            OutpostModuleInfo.GapPosition.Right,
+            OutpostModuleInfo.GapPosition.Left,
+            OutpostModuleInfo.GapPosition.Top,
+            OutpostModuleInfo.GapPosition.Bottom
+        };
 
         private static OutpostModuleInfo.GapPosition GetOpposingGapPosition(OutpostModuleInfo.GapPosition thisGapPosition)
         {
@@ -824,7 +849,7 @@ namespace Barotrauma
                 OutpostModuleInfo.GapPosition.Bottom => OutpostModuleInfo.GapPosition.Top,
                 OutpostModuleInfo.GapPosition.Top => OutpostModuleInfo.GapPosition.Bottom,
                 OutpostModuleInfo.GapPosition.None => OutpostModuleInfo.GapPosition.None,
-                _ => throw new InvalidOperationException()
+                _ => throw new ArgumentException()
             };
         }
 
@@ -837,7 +862,7 @@ namespace Barotrauma
                 OutpostModuleInfo.GapPosition.Bottom => Vector2.UnitY,
                 OutpostModuleInfo.GapPosition.Top => -Vector2.UnitY,
                 OutpostModuleInfo.GapPosition.None => Vector2.Zero,
-                _ => throw new InvalidOperationException()
+                _ => throw new ArgumentException()
             };
         }
 
@@ -885,7 +910,7 @@ namespace Barotrauma
 
         private static bool CanAttachTo(OutpostModuleInfo from, OutpostModuleInfo to)
         {
-            if (!from.AllowAttachToModules.Any() || from.AllowAttachToModules.All(s => s.Equals("any", StringComparison.OrdinalIgnoreCase))) { return true; }                
+            if (!from.AllowAttachToModules.Any() || from.AllowAttachToModules.All(s => s == "any")) { return true; }                
             return from.AllowAttachToModules.Any(s => to.ModuleFlags.Contains(s));
         }
 
@@ -915,7 +940,7 @@ namespace Barotrauma
                 {
                     for (int i = 0; i < thisJunctionBox.Connections.Count && i < previousJunctionBox.Connections.Count; i++)
                     {
-                        var wirePrefab = MapEntityPrefab.Find(name: null, identifier: thisJunctionBox.Connections[i].IsPower ? "redwire" : "bluewire") as ItemPrefab;
+                        var wirePrefab = MapEntityPrefab.FindByIdentifier((thisJunctionBox.Connections[i].IsPower ? "redwire" : "bluewire").ToIdentifier()) as ItemPrefab;
                         var wire = new Item(wirePrefab, thisJunctionBox.Item.Position, sub).GetComponent<Wire>();
 
                         if (!thisJunctionBox.Connections[i].TryAddLink(wire))
@@ -1021,9 +1046,9 @@ namespace Barotrauma
                 {
                     suitableModules = availableModules.Where(m =>
                                         !m.OutpostModuleInfo.AllowAttachToModules.Any() ||
-                                        m.OutpostModuleInfo.AllowAttachToModules.All(s => s.Equals("any", StringComparison.OrdinalIgnoreCase)));
+                                        m.OutpostModuleInfo.AllowAttachToModules.All(s => s == "any"));
                 }
-                var hallwayInfo = GetRandomModule(suitableModules, isHorizontal ? "hallwayhorizontal" : "hallwayvertical", locationType);
+                var hallwayInfo = GetRandomModule(suitableModules, (isHorizontal ? "hallwayhorizontal" : "hallwayvertical").ToIdentifier(), locationType);
                 if (hallwayInfo == null)
                 {
                     DebugConsole.ThrowError($"Generating hallways between outpost modules failed. No {(isHorizontal ? "horizontal" : "vertical")} hallway modules suitable for use between the modules \"{module.Info.DisplayName}\" and \"{module.PreviousModule.Info.DisplayName}\".");
@@ -1442,50 +1467,47 @@ namespace Barotrauma
             if (outpost?.Info?.OutpostGenerationParams == null) { return; }
 
             List<HumanPrefab> killedCharacters = new List<HumanPrefab>();
-            Dictionary<HumanPrefab, CharacterInfo> selectedCharacters = new Dictionary<HumanPrefab, CharacterInfo>();
-            foreach (HumanPrefab humanPrefab in outpost.Info.OutpostGenerationParams.GetHumanPrefabs(Rand.RandSync.Server))
+            List<(HumanPrefab HumanPrefab, CharacterInfo CharacterInfo)> selectedCharacters
+                = new List<(HumanPrefab HumanPrefab, CharacterInfo CharacterInfo)>();
+            foreach (HumanPrefab humanPrefab in outpost.Info.OutpostGenerationParams.GetHumanPrefabs(Rand.RandSync.ServerAndClient))
             {
-                var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: humanPrefab.GetJobPrefab(Rand.RandSync.Server), randSync: Rand.RandSync.Server);
+                var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: humanPrefab.GetJobPrefab(Rand.RandSync.ServerAndClient), randSync: Rand.RandSync.ServerAndClient);
                 if (location != null && location.KilledCharacterIdentifiers.Contains(characterInfo.GetIdentifier())) 
                 {
                     killedCharacters.Add(humanPrefab);
                     continue; 
                 }
-                selectedCharacters.Add(humanPrefab, characterInfo);
+                selectedCharacters.Add((humanPrefab, characterInfo));
             }
 
             //replace killed characters with new ones
             foreach (HumanPrefab killedCharacter in killedCharacters)
             {
-                int tries = 0;
-                while (tries < 100)
+                for (int tries = 0; tries < 100; tries++)
                 {
-                    var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: killedCharacter.GetJobPrefab(Rand.RandSync.Server), randSync: Rand.RandSync.Server);
+                    var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: killedCharacter.GetJobPrefab(Rand.RandSync.ServerAndClient), randSync: Rand.RandSync.ServerAndClient);
                     if (!location.KilledCharacterIdentifiers.Contains(characterInfo.GetIdentifier()))
                     {
-                        selectedCharacters.Add(killedCharacter, characterInfo);
+                        selectedCharacters.Add((killedCharacter, characterInfo));
                         break;
                     }
                 }
             }
 
-            foreach (var selectedCharacter in selectedCharacters)
+            foreach ((var humanPrefab, var characterInfo) in selectedCharacters)
             {
-                HumanPrefab humanPrefab = selectedCharacter.Key;
-                CharacterInfo characterInfo = selectedCharacter.Value;
-
                 Rand.SetSyncedSeed(ToolBox.StringToInt(characterInfo.Name));
 
                 ISpatialEntity gotoTarget = SpawnAction.GetSpawnPos(SpawnAction.SpawnLocationType.Outpost, SpawnType.Human, humanPrefab.GetModuleFlags(), humanPrefab.GetSpawnPointTags());
                 if (gotoTarget == null)
                 {
-                    gotoTarget = outpost.GetHulls(true).GetRandom(Rand.RandSync.Server);
+                    gotoTarget = outpost.GetHulls(true).GetRandom(Rand.RandSync.ServerAndClient);
                 }
                 characterInfo.TeamID = CharacterTeamType.FriendlyNPC;
-                var npc = Character.Create(CharacterPrefab.HumanConfigFile, SpawnAction.OffsetSpawnPos(gotoTarget.WorldPosition, 100.0f), ToolBox.RandomSeed(8), characterInfo, hasAi: true, createNetworkEvent: true);
+                var npc = Character.Create(CharacterPrefab.HumanSpeciesName, SpawnAction.OffsetSpawnPos(gotoTarget.WorldPosition, 100.0f), ToolBox.RandomSeed(8), characterInfo, hasAi: true, createNetworkEvent: true);
                 npc.AnimController.FindHull(gotoTarget.WorldPosition, setSubmarine: true);
                 npc.TeamID = CharacterTeamType.FriendlyNPC;
-                npc.Prefab = humanPrefab;
+                npc.HumanPrefab = humanPrefab;
                 if (!outpost.Info.OutpostNPCs.ContainsKey(humanPrefab.Identifier))
                 {
                     outpost.Info.OutpostNPCs.Add(humanPrefab.Identifier, new List<Character>());
@@ -1499,7 +1521,7 @@ namespace Barotrauma
                 {
                     npc.AddStaticHealthMultiplier(humanPrefab.HealthMultiplier);
                 }
-                humanPrefab.GiveItems(npc, outpost, Rand.RandSync.Server);
+                humanPrefab.GiveItems(npc, outpost, Rand.RandSync.ServerAndClient);
                 foreach (Item item in npc.Inventory.FindAllItems(it => it != null, recursive: true))
                 {
                     item.AllowStealing = outpost.Info.OutpostGenerationParams.AllowStealing;

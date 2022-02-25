@@ -17,7 +17,7 @@ namespace Barotrauma.Items.Components
 
 
         [InGameEditable(DecimalCount = 2),
-            Serialize(0.0f, true, description: "The item must have received signals to both inputs within this timeframe to output the result." +
+            Serialize(0.0f, IsPropertySaveable.Yes, description: "The item must have received signals to both inputs within this timeframe to output the result." +
             " If set to 0, the inputs must be received at the same time.", alwaysUseInstanceValues: true)]
         public float TimeFrame
         {
@@ -32,7 +32,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public StringComponent(Item item, XElement element)
+        public StringComponent(Item item, ContentXElement element)
             : base(item, element)
         {
             timeSinceReceived = new float[] { Math.Max(timeFrame * 2.0f, 0.1f), Math.Max(timeFrame * 2.0f, 0.1f) };

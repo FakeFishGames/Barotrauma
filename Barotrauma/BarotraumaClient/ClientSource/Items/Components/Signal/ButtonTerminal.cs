@@ -14,7 +14,7 @@ namespace Barotrauma.Items.Components
         private GUIImage containerIndicator;
         private GUIComponentStyle indicatorStyleRed, indicatorStyleGreen;
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             terminalButtonStyles = new string[RequiredSignalCount];
             int i = 0;
@@ -24,8 +24,8 @@ namespace Barotrauma.Items.Components
                 if (style == null) { continue; }
                 terminalButtonStyles[i++] = style;
             }
-            indicatorStyleRed = GUI.Style.GetComponentStyle("IndicatorLightRed");
-            indicatorStyleGreen = GUI.Style.GetComponentStyle("IndicatorLightGreen");
+            indicatorStyleRed = GUIStyle.GetComponentStyle("IndicatorLightRed");
+            indicatorStyleGreen = GUIStyle.GetComponentStyle("IndicatorLightGreen");
             CreateGUI();
         }
 

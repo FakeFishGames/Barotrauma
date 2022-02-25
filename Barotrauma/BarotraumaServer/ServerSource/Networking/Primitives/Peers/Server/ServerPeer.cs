@@ -123,7 +123,7 @@ namespace Barotrauma.Networking
                         return;
                     }
 
-                    string language = inc.ReadString();
+                    LanguageIdentifier language = inc.ReadIdentifier().ToLanguageIdentifier();
                     pendingClient.Connection.Language = language;
 
                     Client nameTaken = GameMain.Server.ConnectedClients.Find(c => Homoglyphs.Compare(c.Name.ToLower(), name.ToLower()));
@@ -246,12 +246,14 @@ namespace Barotrauma.Networking
                 case ConnectionInitialization.ContentPackageOrder:
                     outMsg.Write(GameMain.Server.ServerName);
 
-                    var mpContentPackages = GameMain.Config.AllEnabledPackages.Where(cp => cp.HasMultiplayerIncompatibleContent).ToList();
+                    var mpContentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerIncompatibleContent).ToList();
                     outMsg.WriteVariableUInt32((UInt32)mpContentPackages.Count);
                     for (int i = 0; i < mpContentPackages.Count; i++)
                     {
                         outMsg.Write(mpContentPackages[i].Name);
-                        outMsg.Write(mpContentPackages[i].MD5hash.Hash);
+                        byte[] hashBytes = mpContentPackages[i].Hash.ByteRepresentation;
+                        outMsg.WriteVariableUInt32((UInt32)hashBytes.Length);
+                        outMsg.Write(hashBytes, 0, hashBytes.Length);
                         outMsg.Write(mpContentPackages[i].SteamWorkshopId);
                         UInt32 installTimeDiffSeconds = (UInt32)((mpContentPackages[i].InstallTime ?? DateTime.UtcNow) - DateTime.UtcNow).TotalSeconds;
                         outMsg.Write(installTimeDiffSeconds);
@@ -294,7 +296,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public abstract void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod);
+        public abstract void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod, bool compressPastThreshold = true);
         public abstract void Disconnect(NetworkConnection conn, string msg = null);
     }
 }

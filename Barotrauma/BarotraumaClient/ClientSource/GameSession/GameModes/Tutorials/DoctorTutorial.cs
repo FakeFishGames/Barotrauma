@@ -15,7 +15,7 @@ namespace Barotrauma.Tutorials
         private float shakeTimer = 1f;
         private float shakeAmount = 20f;
 
-        private string radioSpeakerName;
+        private LocalizedString radioSpeakerName;
         private Character doctor;
 
         private ItemContainer doctor_suppliesCabinet;
@@ -40,14 +40,66 @@ namespace Barotrauma.Tutorials
         private Sprite doctor_firstAidIcon;
         private Color doctor_firstAidIconColor;
 
-        public DoctorTutorial(XElement element) : base(element)
-        {
-        }
-        public override void Start()
-        {
-            base.Start();
 
-            var firstAidOrder = Order.GetPrefab("requestfirstaid");
+        public DoctorTutorial() : base("tutorial.medicaldoctortraining".ToIdentifier(),
+            new Segment(
+                "Doctor.Supplies".ToIdentifier(),
+                "Doctor.SuppliesObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Doctor.SuppliesText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Doctor.OpenMedicalInterface".ToIdentifier(),
+                "Doctor.OpenMedicalInterfaceObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Doctor.OpenMedicalInterfaceText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_medinterface1.webm", TextTag = "Doctor.OpenMedicalInterfaceText".ToIdentifier(), Width = 450, Height = 80 }),
+            new Segment(
+                "Doctor.FirstAidSelf".ToIdentifier(),
+                "Doctor.FirstAidSelfObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Doctor.FirstAidSelfText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_medinterface1.webm", TextTag = "Doctor.FirstAidSelfText".ToIdentifier(), Width = 450, Height = 80 }),
+            new Segment(
+                "Doctor.Medbay".ToIdentifier(),
+                "Doctor.MedbayObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Doctor.MedbayText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_command.webm", TextTag = "Doctor.MedbayText".ToIdentifier(), Width = 450, Height = 80 }),
+            new Segment(
+                "Doctor.TreatBurns".ToIdentifier(),
+                "Doctor.TreatBurnsObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Doctor.TreatBurnsText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_medinterface2.webm", TextTag = "Doctor.TreatBurnsText".ToIdentifier(), Width = 450, Height = 80 }),
+            new Segment(
+                "Doctor.CPR".ToIdentifier(),
+                "Doctor.CPRObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Doctor.CPRText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_cpr.webm", TextTag = "Doctor.CPRText".ToIdentifier(), Width = 450, Height = 80 }),
+            new Segment(
+                "Doctor.Submarine".ToIdentifier(),
+                "Doctor.SubmarineObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Doctor.SubmarineText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }))
+        { }
+
+        protected override CharacterInfo GetCharacterInfo()
+        {
+            return new CharacterInfo(
+                CharacterPrefab.HumanSpeciesName,
+                jobOrJobPrefab: new Job(
+                    JobPrefab.Prefabs["medicaldoctor"], Rand.RandSync.Unsynced, 0,
+                    new Skill("medical".ToIdentifier(), 70),
+                    new Skill("weapons".ToIdentifier(), 20),
+                    new Skill("mechanical".ToIdentifier(), 20),
+                    new Skill("electrical".ToIdentifier(), 20),
+                    new Skill("helm".ToIdentifier(), 20)));
+        }
+
+        protected override void Initialize()
+        {
+            var firstAidOrder = OrderPrefab.Prefabs["requestfirstaid"];
             doctor_firstAidIcon = firstAidOrder.SymbolSprite;
             doctor_firstAidIconColor = firstAidOrder.Color;
 
@@ -55,19 +107,19 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             doctor = Character.Controlled;
 
-            var bandages = FindOrGiveItem(doctor, "antibleeding1");
+            var bandages = FindOrGiveItem(doctor, "antibleeding1".ToIdentifier());
             bandages.Unequip(doctor);
             doctor.Inventory.RemoveItem(bandages);
 
-            var syringegun = FindOrGiveItem(doctor, "syringegun");
+            var syringegun = FindOrGiveItem(doctor, "syringegun".ToIdentifier());
             syringegun.Unequip(doctor);
             doctor.Inventory.RemoveItem(syringegun);
 
-            var antibiotics = FindOrGiveItem(doctor, "antibiotics");
+            var antibiotics = FindOrGiveItem(doctor, "antibiotics".ToIdentifier());
             antibiotics.Unequip(doctor);
             doctor.Inventory.RemoveItem(antibiotics);
 
-            var morphine = FindOrGiveItem(doctor, "antidama1");
+            var morphine = FindOrGiveItem(doctor, "antidama1".ToIdentifier());
             morphine.Unequip(doctor);
             doctor.Inventory.RemoveItem(morphine);
 
@@ -78,7 +130,7 @@ namespace Barotrauma.Tutorials
             var patientHull2 = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "airlock").CurrentHull;
             medBay = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "medbay").CurrentHull;
 
-            var assistantInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("assistant"));
+            var assistantInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("assistant"));
             patient1 = Character.Create(assistantInfo, patientHull1.WorldPosition, "1");
             patient1.TeamID = CharacterTeamType.Team1;
             patient1.GiveJobItems(null);
@@ -86,26 +138,26 @@ namespace Barotrauma.Tutorials
             patient1.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 15.0f) }, stun: 0, playSound: false);
             patient1.AIController.Enabled = false;
 
-            assistantInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("assistant"));
+            assistantInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("assistant"));
             patient2 = Character.Create(assistantInfo, patientHull2.WorldPosition, "2");
             patient2.TeamID = CharacterTeamType.Team1;
             patient2.GiveJobItems(null);
             patient2.CanSpeak = false;
             patient2.AIController.Enabled = false;
 
-            var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("engineer"));
+            var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("engineer"));
             var subPatient1 = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "3");
             subPatient1.TeamID = CharacterTeamType.Team1;
             subPatient1.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 40.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient1);
 
-            var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("securityofficer"));
+            var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("securityofficer"));
             var subPatient2 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "3");
             subPatient2.TeamID = CharacterTeamType.Team1;
             subPatient2.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.InternalDamage, 40.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient2);
 
-            var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("engineer"));
+            var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("engineer"));
             var subPatient3 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, engineerInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "3");
             subPatient3.TeamID = CharacterTeamType.Team1;
             subPatient3.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 20.0f) }, stun: 0, playSound: false);
@@ -196,7 +248,7 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(2.0f);
             }*/
 
-            TriggerTutorialSegment(0, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Deselect), GameMain.Config.KeyBindText(InputType.ToggleInventory)); // Medical supplies objective
+            TriggerTutorialSegment(0, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.ToggleInventory)); // Medical supplies objective
 
             do
             {
@@ -215,24 +267,24 @@ namespace Barotrauma.Tutorials
                     }
                 }
                 yield return null;
-            } while (doctor.Inventory.FindItemByIdentifier("antidama1") == null); // Wait until looted
+            } while (doctor.Inventory.FindItemByIdentifier("antidama1".ToIdentifier()) == null); // Wait until looted
             yield return new WaitForSeconds(1.0f, false);
 
             SetHighlight(doctor_suppliesCabinet.Item, false);
-            RemoveCompletedObjective(segments[0]);
+            RemoveCompletedObjective(0);
 
             yield return new WaitForSeconds(1.0f, false);
 
             // 2nd tutorial segment, treat self -------------------------------------------------------------------------
 
-            TriggerTutorialSegment(1, GameMain.Config.KeyBindText(InputType.Health)); // Open health interface
+            TriggerTutorialSegment(1, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Health)); // Open health interface
             while (CharacterHealth.OpenHealthWindow == null)
             {
                 doctor.CharacterHealth.HealthBarPulsateTimer = 1.0f;
                 yield return null;
             }
             yield return null;
-            RemoveCompletedObjective(segments[1]);
+            RemoveCompletedObjective(1);
             yield return new WaitForSeconds(1.0f, false);
             TriggerTutorialSegment(2); //Treat self
             while (doctor.CharacterHealth.GetAfflictionStrength("damage") > 0.01f)
@@ -243,13 +295,13 @@ namespace Barotrauma.Tutorials
                 }
                 else
                 {
-                    HighlightInventorySlot(doctor.Inventory, "antidama1", highlightColor, .5f, .5f, 0f);
+                    HighlightInventorySlot(doctor.Inventory, "antidama1".ToIdentifier(), highlightColor, .5f, .5f, 0f);
                 }
 
                 yield return null;
             }
 
-            RemoveCompletedObjective(segments[2]);
+            RemoveCompletedObjective(2);
             SetDoorAccess(doctor_firstDoor, doctor_firstDoorLight, true);
 
             while (CharacterHealth.OpenHealthWindow != null)
@@ -260,10 +312,10 @@ namespace Barotrauma.Tutorials
             // treat patient --------------------------------------------------------------------------------------------
 
             //patient 1 requests first aid
-            var newOrder = new Order(Order.GetPrefab("requestfirstaid"), patient1.CurrentHull, null, orderGiver: patient1);
+            var newOrder = new Order(OrderPrefab.Prefabs["requestfirstaid"], patient1.CurrentHull, null, orderGiver: patient1);
             doctor.AddActiveObjectiveEntity(patient1, doctor_firstAidIcon, doctor_firstAidIconColor);
             //GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(patient1.Name, newOrder.GetChatMessage("", patient1.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order, null);
+            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(patient1.Name, newOrder.GetChatMessage("", patient1.CurrentHull?.DisplayName?.Value, givingOrderToSelf: false), ChatMessageType.Order, null);
 
             while (doctor.CurrentHull != patient1.CurrentHull)
             {
@@ -281,9 +333,9 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(3.0f, false);
             patient1.AIController.Enabled = true;
             doctor.RemoveActiveObjectiveEntity(patient1);
-            TriggerTutorialSegment(3, GameMain.Config.KeyBindText(InputType.Command)); // Get the patient to medbay
+            TriggerTutorialSegment(3, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Command)); // Get the patient to medbay
 
-            while (patient1.GetCurrentOrderWithTopPriority()?.Order?.Identifier != "follow")
+            while (patient1.GetCurrentOrderWithTopPriority()?.Identifier != "follow")
             {
                 // TODO: Rework order highlighting for new command UI
                 // GameMain.GameSession.CrewManager.HighlightOrderButton(patient1, "follow", highlightColor, new Vector2(5, 5));
@@ -296,14 +348,14 @@ namespace Barotrauma.Tutorials
             {
                 yield return new WaitForSeconds(1.0f, false);
             }
-            RemoveCompletedObjective(segments[3]);
+            RemoveCompletedObjective(3);
             SetHighlight(doctor_medBayCabinet.Item, true);
             SetDoorAccess(doctor_thirdDoor, doctor_thirdDoorLight, true);
             patient1.CharacterHealth.UseHealthWindow = true;
 
             yield return new WaitForSeconds(2.0f, false);
 
-            TriggerTutorialSegment(4, GameMain.Config.KeyBindText(InputType.Health)); // treat burns
+            TriggerTutorialSegment(4, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Health)); // treat burns
 
             do
             {
@@ -322,7 +374,7 @@ namespace Barotrauma.Tutorials
                     }
                 }
                 yield return null;
-            } while (doctor.Inventory.FindItemByIdentifier("antibleeding1") == null); // Wait until looted
+            } while (doctor.Inventory.FindItemByIdentifier("antibleeding1".ToIdentifier()) == null); // Wait until looted
             SetHighlight(doctor_medBayCabinet.Item, false);
             SetHighlight(patient1, true);
 
@@ -334,12 +386,12 @@ namespace Barotrauma.Tutorials
                 }
                 else
                 {
-                    HighlightInventorySlot(doctor.Inventory, "antibleeding1", highlightColor, .5f, .5f, 0f);
+                    HighlightInventorySlot(doctor.Inventory, "antibleeding1".ToIdentifier(), highlightColor, .5f, .5f, 0f);
                 }
                 yield return null;
 
             }
-            RemoveCompletedObjective(segments[4]);
+            RemoveCompletedObjective(4);
             SetHighlight(patient1, false);
             yield return new WaitForSeconds(1.0f, false);
 
@@ -350,10 +402,10 @@ namespace Barotrauma.Tutorials
             //patient calls for help
             //patient2.CanSpeak = true;
             yield return new WaitForSeconds(2.0f, false);
-            newOrder = new Order(Order.GetPrefab("requestfirstaid"), patient2.CurrentHull, null, orderGiver: patient2);
+            newOrder = new Order(OrderPrefab.Prefabs["requestfirstaid"], patient2.CurrentHull, null, orderGiver: patient2);
             doctor.AddActiveObjectiveEntity(patient2, doctor_firstAidIcon, doctor_firstAidIconColor);
             //GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(patient2.Name, newOrder.GetChatMessage("", patient1.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order, null);
+            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(patient2.Name, newOrder.GetChatMessage("", patient1.CurrentHull?.DisplayName?.Value, givingOrderToSelf: false), ChatMessageType.Order, null);
             patient2.AIController.Enabled = true;
             patient2.Oxygen = -50;
             CoroutineManager.StartCoroutine(KeepPatientAlive(patient2), "KeepPatient2Alive");
@@ -365,7 +417,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!tutorial_upperFinalDoor.IsOpen);
             yield return new WaitForSeconds(2.0f, false);
 
-            TriggerTutorialSegment(5, GameMain.Config.KeyBindText(InputType.Health)); // perform CPR
+            TriggerTutorialSegment(5, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Health)); // perform CPR
             SetHighlight(patient2, true);
             while (patient2.IsUnconscious)
             {
@@ -380,7 +432,7 @@ namespace Barotrauma.Tutorials
                 }
                 yield return null;
             }
-            RemoveCompletedObjective(segments[5]);
+            RemoveCompletedObjective(5);
             SetHighlight(patient2, false);
             doctor.RemoveActiveObjectiveEntity(patient2);
             CoroutineManager.StopCoroutines("KeepPatient2Alive");
@@ -399,7 +451,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Doctor.Radio.EnteredSub"), ChatMessageType.Radio, null);
 
             yield return new WaitForSeconds(3.0f, false);
-            TriggerTutorialSegment(6, GameMain.Config.KeyBindText(InputType.Health)); // give treatment to anyone in need
+            TriggerTutorialSegment(6, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Health)); // give treatment to anyone in need
 
             foreach (var patient in subPatients)
             {
@@ -421,8 +473,8 @@ namespace Barotrauma.Tutorials
                     if (!patientCalledHelp[i] && Timing.TotalTime > subEnterTime + 60 * (i + 1))
                     {
                         doctor.AddActiveObjectiveEntity(subPatients[i], doctor_firstAidIcon, doctor_firstAidIconColor);
-                        newOrder = new Order(Order.GetPrefab("requestfirstaid"), subPatients[i].CurrentHull, null, orderGiver: subPatients[i]);
-                        string message = newOrder.GetChatMessage("", subPatients[i].CurrentHull?.DisplayName, givingOrderToSelf: false);
+                        newOrder = new Order(OrderPrefab.Prefabs["requestfirstaid"], subPatients[i].CurrentHull, null, orderGiver: subPatients[i]);
+                        string message = newOrder.GetChatMessage("", subPatients[i].CurrentHull?.DisplayName?.Value, givingOrderToSelf: false);
                         GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(subPatients[i].Name, message, ChatMessageType.Order, null);
                         patientCalledHelp[i] = true;
                     }
@@ -435,7 +487,7 @@ namespace Barotrauma.Tutorials
                 }
                 yield return new WaitForSeconds(1.0f, false);
             }
-            RemoveCompletedObjective(segments[6]);
+            RemoveCompletedObjective(6);
             foreach (var patient in subPatients)
             {
                 SetHighlight(patient, false);

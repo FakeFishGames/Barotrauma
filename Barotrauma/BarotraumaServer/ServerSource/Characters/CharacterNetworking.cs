@@ -283,12 +283,12 @@ namespace Barotrauma
                             // get the full list of talents from the player, only give the ones
                             // that are not already given (or otherwise not viable)
                             ushort talentCount = msg.ReadUInt16();
-                            List<string> talentSelection = new List<string>();
+                            List<Identifier> talentSelection = new List<Identifier>();
                             for (int i = 0; i < talentCount; i++)
                             {
                                 UInt32 talentIdentifier = msg.ReadUInt32();
-                                var prefab = TalentPrefab.TalentPrefabs.Find(p => p.UIntIdentifier == talentIdentifier);
-                                if (prefab == null) { continue; }     
+                                var prefab = TalentPrefab.TalentPrefabs.Find(p => p.UintIdentifier == talentIdentifier);
+                                if (prefab == null) { continue; }
                                 
                                 if (TalentTree.IsViableTalentForCharacter(this, prefab.Identifier, talentSelection))
                                 {
@@ -381,28 +381,27 @@ namespace Barotrauma
                         if (type == 1)
                         {
                             var currentOrderInfo = controller.ObjectiveManager.GetCurrentOrderInfo();
-                            bool validOrder = currentOrderInfo.HasValue;
+                            bool validOrder = currentOrderInfo != null;
                             msg.Write(validOrder);
                             if (!validOrder) { break; }
-                            var orderPrefab = currentOrderInfo.Value.Order.Prefab;
-                            int orderIndex = Order.PrefabList.IndexOf(orderPrefab);
-                            msg.WriteRangedInteger(orderIndex, 0, Order.PrefabList.Count);
+                            var orderPrefab = currentOrderInfo.Prefab;
+                            msg.Write(orderPrefab.UintIdentifier);
                             if (!orderPrefab.HasOptions) { break; }
-                            int optionIndex = orderPrefab.AllOptions.IndexOf(currentOrderInfo.Value.OrderOption);
+                            int optionIndex = orderPrefab.AllOptions.IndexOf(currentOrderInfo.Option);
                             if (optionIndex == -1)
                             {
-                                DebugConsole.AddWarning($"Error while writing order data. Order option \"{(currentOrderInfo.Value.OrderOption ?? null)}\" not found in the order prefab \"{orderPrefab.Name}\".");
+                                DebugConsole.AddWarning($"Error while writing order data. Order option \"{currentOrderInfo.Option}\" not found in the order prefab \"{orderPrefab.Name}\".");
                             }
                             msg.WriteRangedInteger(optionIndex, -1, orderPrefab.AllOptions.Length);
                         }
                         else if (type == 2)
                         {
                             var objective = controller.ObjectiveManager.CurrentObjective;
-                            bool validObjective = !string.IsNullOrEmpty(objective?.Identifier);
+                            bool validObjective = objective != null && objective.Identifier != Identifier.Empty;
                             msg.Write(validObjective);
                             if (!validObjective) { break; }
                             msg.Write(objective.Identifier);
-                            msg.Write(objective.Option ?? "");
+                            msg.Write(objective.Option);
                             UInt16 targetEntityId = 0;
                             if (objective is AIObjectiveOperateItem operateObjective && operateObjective.OperateTarget != null)
                             {
@@ -435,7 +434,7 @@ namespace Barotrauma
                         foreach (var unlockedTalent in characterTalents)
                         {
                             msg.Write(unlockedTalent.AddedThisRound);
-                            msg.Write(unlockedTalent.Prefab.UIntIdentifier);
+                            msg.Write(unlockedTalent.Prefab.UintIdentifier);
                         }
                         break;
                     case NetEntityEvent.Type.UpdateMoney:
@@ -623,9 +622,9 @@ namespace Barotrauma
 
         public void WriteSpawnData(IWriteMessage msg, UInt16 entityId, bool restrictMessageSize)
         {
-            if (GameMain.Server == null) return;
+            if (GameMain.Server == null) { return; }
             
-            int msgLength = msg.LengthBytes;
+            int initialMsgLength = msg.LengthBytes;
 
             msg.Write(Info == null);
             msg.Write(entityId);
@@ -671,43 +670,60 @@ namespace Barotrauma
             msg.Write((byte)TeamID);
             msg.Write(this is AICharacter);
             msg.Write(info.SpeciesName);
+            int msgLengthBeforeInfo = msg.LengthBytes;
             info.ServerWrite(msg);
+            int infoLength = msg.LengthBytes - msgLengthBeforeInfo;
 
             msg.Write((byte)CampaignInteractionType);
 
-            
+            int msgLengthBeforeOrders = msg.LengthBytes;
             // Current orders
-            msg.Write((byte)info.CurrentOrders.Count(o => o.Order != null));
+            msg.Write((byte)info.CurrentOrders.Count(o => o != null));
             foreach (var orderInfo in info.CurrentOrders)
             {
-                if (orderInfo.Order == null) { continue; }
-                msg.Write((byte)Order.PrefabList.IndexOf(orderInfo.Order.Prefab));
-                msg.Write(orderInfo.Order.TargetEntity == null ? (UInt16)0 : orderInfo.Order.TargetEntity.ID);
-                var hasOrderGiver = orderInfo.Order.OrderGiver != null;
+                if (orderInfo == null) { continue; }
+                msg.Write(orderInfo.Prefab.UintIdentifier);
+                msg.Write(orderInfo.TargetEntity == null ? (UInt16)0 : orderInfo.TargetEntity.ID);
+                var hasOrderGiver = orderInfo.OrderGiver != null;
                 msg.Write(hasOrderGiver);
-                if (hasOrderGiver) { msg.Write(orderInfo.Order.OrderGiver.ID); }
-                msg.Write((byte)(string.IsNullOrWhiteSpace(orderInfo.OrderOption) ? 0 : Array.IndexOf(orderInfo.Order.Prefab.Options, orderInfo.OrderOption)));
+                if (hasOrderGiver) { msg.Write(orderInfo.OrderGiver.ID); }
+                msg.Write((byte)(orderInfo.Option == Identifier.Empty ? 0 : orderInfo.Prefab.Options.IndexOf(orderInfo.Option)));
                 msg.Write((byte)orderInfo.ManualPriority);
-                var hasTargetPosition = orderInfo.Order.TargetPosition != null;
+                var hasTargetPosition = orderInfo.TargetPosition != null;
                 msg.Write(hasTargetPosition);
                 if (hasTargetPosition)
                 {
-                    msg.Write(orderInfo.Order.TargetPosition.Position.X);
-                    msg.Write(orderInfo.Order.TargetPosition.Position.Y);
-                    msg.Write(orderInfo.Order.TargetPosition.Hull == null ? (UInt16)0 : orderInfo.Order.TargetPosition.Hull.ID);
+                    msg.Write(orderInfo.TargetPosition.Position.X);
+                    msg.Write(orderInfo.TargetPosition.Position.Y);
+                    msg.Write(orderInfo.TargetPosition.Hull == null ? (UInt16)0 : orderInfo.TargetPosition.Hull.ID);
                 }
+            }
+            int ordersLength = msg.LengthBytes - msgLengthBeforeOrders;
+
+            if (msg.LengthBytes - initialMsgLength >= 255 && restrictMessageSize)
+            {
+                string errorMsg = $"Error when writing character spawn data: data exceeded 255 bytes (info: {infoLength}, orders: {ordersLength}, total: {msg.LengthBytes - initialMsgLength})";
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Character.WriteSpawnData:TooMuchData", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
             }
 
             TryWriteStatus(msg);
 
             void TryWriteStatus(IWriteMessage msg)
             {
+                int msgLengthBeforeStatus = msg.LengthBytes - initialMsgLength;
+
                 var tempBuffer = new ReadWriteMessage();
                 WriteStatus(tempBuffer);
-                if (msg.LengthBytes + tempBuffer.LengthBytes >= 255 && restrictMessageSize)
+                if (msgLengthBeforeStatus + tempBuffer.LengthBytes >= 255 && restrictMessageSize)
                 { 
                     msg.Write(false);
-                    DebugConsole.ThrowError($"Error when writing character spawn data: status data caused the length of the message to exceed 255 bytes ({msg.LengthBytes} + {tempBuffer.LengthBytes})");
+                    if (msgLengthBeforeStatus < 255)
+                    {
+                        string errorMsg = $"Error when writing character spawn data: status data caused the length of the message to exceed 255 bytes ({msgLengthBeforeStatus} + {tempBuffer.LengthBytes})";
+                        DebugConsole.ThrowError(errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("Character.WriteSpawnData:TooMuchDataForStatus", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                    }
                 }
                 else
                 {
@@ -716,7 +732,7 @@ namespace Barotrauma
                 }
             }
 
-            DebugConsole.Log("Character spawn message length: " + (msg.LengthBytes - msgLength));
+            DebugConsole.Log("Character spawn message length: " + (msg.LengthBytes - initialMsgLength));
         }
     }
 }

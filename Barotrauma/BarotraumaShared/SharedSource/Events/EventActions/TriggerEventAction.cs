@@ -4,12 +4,12 @@ namespace Barotrauma
 {
     class TriggerEventAction : EventAction
     {
-        [Serialize("", true)] 
-        public string Identifier { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)] 
+        public Identifier Identifier { get; set; }
 
         private bool isFinished;
 
-        public TriggerEventAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public TriggerEventAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         public override bool IsFinished(ref string goTo)
         {

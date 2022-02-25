@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Color = Microsoft.Xna.Framework.Color;
@@ -394,6 +395,14 @@ namespace Barotrauma
                 sourceColor.A - color.A);
         }
 
+        public static LocalizedString LimitString(LocalizedString str, GUIFont font, int maxWidth)
+        {
+            return new LimitLString(str, font, maxWidth);
+        }
+
+        public static LocalizedString LimitString(string str, GUIFont font, int maxWidth)
+            => LimitString((LocalizedString)str, font, maxWidth);
+
         public static string LimitString(string str, ScalableFont font, int maxWidth)
         {
             if (maxWidth <= 0 || string.IsNullOrWhiteSpace(str)) return "";
@@ -434,6 +443,11 @@ namespace Barotrauma
             return Color.Lerp(gradient[(int)scaledT], gradient[(int)Math.Min(scaledT + 1, gradient.Length - 1)], (scaledT - (int)scaledT));
         }
 
+        public static LocalizedString WrapText(LocalizedString text, float lineLength, GUIFont font, float textScale = 1.0f)
+        {
+            return new WrappedLString(text, lineLength, font, textScale);
+        }
+
         public static string WrapText(string text, float lineLength, ScalableFont font, float textScale = 1.0f)
             => font.WrapText(text, lineLength / textScale);
 
@@ -463,6 +477,16 @@ namespace Barotrauma
             if (b.Build > a.Build) { return true; }
             if (b.Build < a.Build) { return false; }
             return false;
+        }
+        
+        public static void OpenFileWithShell(string filename)
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo()
+            {
+                FileName = filename,
+                UseShellExecute = true
+            };
+            Process.Start(startInfo);
         }
     }
 }

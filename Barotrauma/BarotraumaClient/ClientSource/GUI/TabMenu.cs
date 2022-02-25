@@ -99,15 +99,15 @@ namespace Barotrauma
             {
                 if (currentPing < lowPingThreshold)
                 {
-                    return GUI.Style.Green;
+                    return GUIStyle.Green;
                 }
                 else if (currentPing < mediumPingThreshold)
                 {
-                    return GUI.Style.Yellow;
+                    return GUIStyle.Yellow;
                 }
                 else
                 {
-                    return GUI.Style.Red;
+                    return GUIStyle.Red;
                 }
             }
 
@@ -119,10 +119,10 @@ namespace Barotrauma
 
         public void Initialize()
         {
-            spectateIcon = GUI.Style.GetComponentStyle("SpectateIcon").Sprites[GUIComponent.ComponentState.None][0];
-            disconnectedIcon = GUI.Style.GetComponentStyle("DisconnectedIcon").Sprites[GUIComponent.ComponentState.None][0];
-            ownerIcon = GUI.Style.GetComponentStyle("OwnerIcon").GetDefaultSprite();
-            moderatorIcon = GUI.Style.GetComponentStyle("ModeratorIcon").GetDefaultSprite();
+            spectateIcon = GUIStyle.GetComponentStyle("SpectateIcon").Sprites[GUIComponent.ComponentState.None][0];
+            disconnectedIcon = GUIStyle.GetComponentStyle("DisconnectedIcon").Sprites[GUIComponent.ComponentState.None][0];
+            ownerIcon = GUIStyle.GetComponentStyle("OwnerIcon").GetDefaultSprite();
+            moderatorIcon = GUIStyle.GetComponentStyle("ModeratorIcon").GetDefaultSprite();
             initialized = true;
         }
 
@@ -142,7 +142,7 @@ namespace Barotrauma
                 talentResetButton.Enabled = talentApplyButton.Enabled = talentCount > 0;
                 if (talentApplyButton.Enabled && talentApplyButton.FlashTimer <= 0.0f)
                 {
-                    talentApplyButton.Flash(GUI.Style.Orange);
+                    talentApplyButton.Flash(GUIStyle.Orange);
                 }
             }
 
@@ -243,7 +243,7 @@ namespace Barotrauma
                 var reputationButton = createTabButton(InfoFrameTab.Reputation, "reputation");
 
                 var balanceFrame = new GUIFrame(new RectTransform(new Point(innerLayoutGroup.Rect.Width, innerLayoutGroup.Rect.Height - infoFrameHolderHeight), parent: innerLayoutGroup.RectTransform), style: "InnerFrame");
-                new GUITextBlock(new RectTransform(Vector2.One, balanceFrame.RectTransform), "", textAlignment: Alignment.Right, parseRichText: true)
+                new GUITextBlock(new RectTransform(Vector2.One, balanceFrame.RectTransform), "", textAlignment: Alignment.Right)
                 {
                     TextGetter = () => TextManager.GetWithVariable("campaignmoney", "[money]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", campaignMode.Money))
                 };
@@ -353,7 +353,7 @@ namespace Barotrauma
             {
                 if (teamIDs.Count > 1)
                 {
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, nameHeight), content.RectTransform), CombatMission.GetTeamName(teamIDs[i]), textColor: i == 0 ? GUI.Style.Green : GUI.Style.Orange) { ForceUpperCase = true };
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, nameHeight), content.RectTransform), CombatMission.GetTeamName(teamIDs[i]), textColor: i == 0 ? GUIStyle.Green : GUIStyle.Orange) { ForceUpperCase = ForceUpperCase.Yes };
                 }
 
                 headerFrames[i] = new GUILayoutGroup(new RectTransform(Vector2.Zero, content.RectTransform, Anchor.TopLeft, Pivot.BottomLeft) { AbsoluteOffset = new Point(2, -1) }, isHorizontal: true)
@@ -396,7 +396,7 @@ namespace Barotrauma
 
             for (int i = 0; i < teamIDs.Count; i++)
             {
-                headerFrames[i].RectTransform.RelativeSize = new Vector2(1f - crewListArray[i].ScrollBar.Rect.Width / (float)crewListArray[i].Rect.Width, GUI.HotkeyFont.Size / (float)crewFrame.RectTransform.Rect.Height * 1.5f);
+                headerFrames[i].RectTransform.RelativeSize = new Vector2(1f - crewListArray[i].ScrollBar.Rect.Width / (float)crewListArray[i].Rect.Width, GUIStyle.HotkeyFont.Size / (float)crewFrame.RectTransform.Rect.Height * 1.5f);
 
                 if (!GameMain.IsMultiplayer)
                 {
@@ -446,9 +446,9 @@ namespace Barotrauma
             jobButton.RectTransform.RelativeSize = new Vector2(jobColumnWidthPercentage * sizeMultiplier, 1f);
             characterButton.RectTransform.RelativeSize = new Vector2((1f - jobColumnWidthPercentage * sizeMultiplier) * sizeMultiplier, 1f);
 
-            jobButton.TextBlock.Font = characterButton.TextBlock.Font = GUI.HotkeyFont;
+            jobButton.TextBlock.Font = characterButton.TextBlock.Font = GUIStyle.HotkeyFont;
             jobButton.CanBeFocused = characterButton.CanBeFocused = false;
-            jobButton.TextBlock.ForceUpperCase = characterButton.TextBlock.ForceUpperCase = true;
+            jobButton.TextBlock.ForceUpperCase = characterButton.TextBlock.ForceUpperCase = ForceUpperCase.Yes;
 
             jobColumnWidth = jobButton.Rect.Width;
             characterColumnWidth = characterButton.Rect.Width;
@@ -493,7 +493,7 @@ namespace Barotrauma
             };
 
             GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
-                ToolBox.LimitString(character.Info.Name, GUI.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: character.Info.Job.Prefab.UIColor);
+                ToolBox.LimitString(character.Info.Name, GUIStyle.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: character.Info.Job.Prefab.UIColor);
 
             linkedGUIList.Add(new LinkedGUI(character, frame, !character.IsDead, null));
         }
@@ -510,9 +510,9 @@ namespace Barotrauma
             characterButton.RectTransform.RelativeSize = new Vector2(characterColumnWidthPercentage * sizeMultiplier, 1f);
             pingButton.RectTransform.RelativeSize = new Vector2(pingColumnWidthPercentage * sizeMultiplier, 1f);
 
-            jobButton.TextBlock.Font = characterButton.TextBlock.Font = pingButton.TextBlock.Font = GUI.HotkeyFont;
+            jobButton.TextBlock.Font = characterButton.TextBlock.Font = pingButton.TextBlock.Font = GUIStyle.HotkeyFont;
             jobButton.CanBeFocused = characterButton.CanBeFocused = pingButton.CanBeFocused = false;
-            jobButton.TextBlock.ForceUpperCase = characterButton.TextBlock.ForceUpperCase = pingButton.ForceUpperCase = true;
+            jobButton.TextBlock.ForceUpperCase = characterButton.TextBlock.ForceUpperCase = pingButton.ForceUpperCase = ForceUpperCase.Yes;
 
             jobColumnWidth = jobButton.Rect.Width;
             characterColumnWidth = characterButton.Rect.Width;
@@ -583,11 +583,11 @@ namespace Barotrauma
             else
             {
                 GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
-                    ToolBox.LimitString(character.Info.Name, GUI.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: character.Info.Job.Prefab.UIColor);
+                    ToolBox.LimitString(character.Info.Name, GUIStyle.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: character.Info.Job.Prefab.UIColor);
 
                 if (character is AICharacter)
                 {
-                    linkedGUIList.Add(new LinkedGUI(character, frame, !character.IsDead, new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), TextManager.Get("tabmenu.bot"), textAlignment: Alignment.Center) { ForceUpperCase = true }));
+                    linkedGUIList.Add(new LinkedGUI(character, frame, !character.IsDead, new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), TextManager.Get("tabmenu.bot"), textAlignment: Alignment.Center) { ForceUpperCase = ForceUpperCase.Yes }));
                 }
                 else
                 {
@@ -677,16 +677,16 @@ namespace Barotrauma
                 float characterNameWidthAdjustment = (iconSize.X + paddedFrame.AbsoluteSpacing) / characterColumnWidth;
 
                 characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
-                    ToolBox.LimitString(client.Name, GUI.Font, (int)(characterColumnWidth - paddedFrame.Rect.Width * characterNameWidthAdjustment)), textAlignment: Alignment.Center, textColor: nameColor);
+                    ToolBox.LimitString(client.Name, GUIStyle.Font, (int)(characterColumnWidth - paddedFrame.Rect.Width * characterNameWidthAdjustment)), textAlignment: Alignment.Center, textColor: nameColor);
 
                 float iconWidth = iconSize.X / (float)characterColumnWidth;
-                int xOffset = (int)(jobColumnWidth + characterNameBlock.TextPos.X - GUI.Font.MeasureString(characterNameBlock.Text).X / 2f - paddedFrame.AbsoluteSpacing - iconWidth * paddedFrame.Rect.Width);
+                int xOffset = (int)(jobColumnWidth + characterNameBlock.TextPos.X - GUIStyle.Font.MeasureString(characterNameBlock.Text).X / 2f - paddedFrame.AbsoluteSpacing - iconWidth * paddedFrame.Rect.Width);
                 new GUIImage(new RectTransform(new Vector2(iconWidth, 1f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(xOffset + 2, 0) }, permissionIcon) { IgnoreLayoutGroups = true };
             }
             else
             {
                 characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
-                    ToolBox.LimitString(client.Name, GUI.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: nameColor);
+                    ToolBox.LimitString(client.Name, GUIStyle.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: nameColor);
             }
 
             if (client.Character != null && client.Character.IsDead)
@@ -724,14 +724,14 @@ namespace Barotrauma
             }
             else
             {
-                Vector2 stringOffset = GUI.GlobalFont.MeasureString(inLobbyString) / 2f;
-                GUI.GlobalFont.DrawString(spriteBatch, inLobbyString, area.Center.ToVector2() - stringOffset, Color.White);
+                Vector2 stringOffset = GUIStyle.GlobalFont.MeasureString(inLobbyString) / 2f;
+                GUIStyle.GlobalFont.DrawString(spriteBatch, inLobbyString, area.Center.ToVector2() - stringOffset, Color.White);
             }
         }
 
         private void DrawDisconnectedIcon(SpriteBatch spriteBatch, Rectangle area)
         {
-            disconnectedIcon.Draw(spriteBatch, area, GUI.Style.Red);
+            disconnectedIcon.Draw(spriteBatch, area, GUIStyle.Red);
         }
 
         /// <summary>
@@ -788,7 +788,7 @@ namespace Barotrauma
                 new GUICustomComponent(new RectTransform(new Vector2(0.425f, 1.0f), headerArea.RectTransform),
                     onDraw: (sb, component) => DrawNotInGameIcon(sb, component.Rect, client));
 
-                ScalableFont font = paddedFrame.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
+                GUIFont font = paddedFrame.Rect.Width < 280 ? GUIStyle.SmallFont : GUIStyle.Font;
 
                 var headerTextArea = new GUILayoutGroup(new RectTransform(new Vector2(0.575f, 1.0f), headerArea.RectTransform))
                 {
@@ -796,9 +796,9 @@ namespace Barotrauma
                     Stretch = true
                 };
 
-                GUITextBlock clientNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform), ToolBox.LimitString(client.Name, GUI.Font, headerTextArea.Rect.Width), textColor: Color.White, font: GUI.Font)
+                GUITextBlock clientNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform), ToolBox.LimitString(client.Name, GUIStyle.Font, headerTextArea.Rect.Width), textColor: Color.White, font: GUIStyle.Font)
                 {
-                    ForceUpperCase = true,
+                    ForceUpperCase = ForceUpperCase.Yes,
                     Padding = Vector4.Zero
                 };
 
@@ -885,22 +885,22 @@ namespace Barotrauma
             switch (type)
             {
                 case PlayerConnectionChangeType.Joined:
-                    textColor = GUI.Style.Green;
+                    textColor = GUIStyle.Green;
                     break;
                 case PlayerConnectionChangeType.Kicked:
-                    textColor = GUI.Style.Orange;
+                    textColor = GUIStyle.Orange;
                     break;
                 case PlayerConnectionChangeType.Disconnected:
-                    textColor = GUI.Style.Yellow;
+                    textColor = GUIStyle.Yellow;
                     break;
                 case PlayerConnectionChangeType.Banned:
-                    textColor = GUI.Style.Red;
+                    textColor = GUIStyle.Red;
                     break;
             }
 
             if (logList != null)
             {
-                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), logList.Content.RectTransform), line, wrap: true, font: GUI.SmallFont, parseRichText: true)
+                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), logList.Content.RectTransform), RichString.Rich(line), wrap: true, font: GUIStyle.SmallFont)
                 {
                     TextColor = textColor,
                     CanBeFocused = false,
@@ -935,14 +935,14 @@ namespace Barotrauma
                 AbsoluteSpacing = GUI.IntScale(10)
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.Name, font: GUI.LargeFont);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.Type.Name, font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.Name, font: GUIStyle.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.Type.Name, font: GUIStyle.SubHeadingFont);
 
             var biomeLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), locationInfoContainer.RectTransform),
-                TextManager.Get("Biome", fallBackTag: "location"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft);
+                TextManager.Get("Biome", "location"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), biomeLabel.RectTransform), Level.Loaded.LevelData.Biome.DisplayName, textAlignment: Alignment.CenterRight);
             var difficultyLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), locationInfoContainer.RectTransform),
-                TextManager.Get("LevelDifficulty"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft);
+                TextManager.Get("LevelDifficulty"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), difficultyLabel.RectTransform), ((int)Level.Loaded.LevelData.Difficulty) + " %", textAlignment: Alignment.CenterRight);
 
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), missionFrameContent.RectTransform) { AbsoluteOffset = new Point(0, locationInfoContainer.Rect.Height + padding) }, style: "HorizontalLine")
@@ -974,7 +974,7 @@ namespace Barotrauma
             if (GameMain.GameSession?.Missions != null)
             {
                 int spacing = GUI.IntScale(5);
-                int iconSize = (int)(GUI.LargeFont.MeasureChar('T').Y + GUI.Font.MeasureChar('T').Y * 4 + spacing * 4);
+                int iconSize = (int)(GUIStyle.LargeFont.MeasureChar('T').Y + GUIStyle.Font.MeasureChar('T').Y * 4 + spacing * 4);
 
                 foreach (Mission mission in GameMain.GameSession.Missions)
                 {
@@ -983,28 +983,27 @@ namespace Barotrauma
                     {
                         AbsoluteSpacing = spacing
                     };
-                    string descriptionText = mission.Description;
-                    foreach (string missionMessage in mission.ShownMessages)
+                    LocalizedString descriptionText = mission.Description;
+                    foreach (LocalizedString missionMessage in mission.ShownMessages)
                     {
                         descriptionText += "\n\n" + missionMessage;
                     }
-                    string rewardText = mission.GetMissionRewardText(Submarine.MainSub);
-                    string reputationText = mission.GetReputationRewardText(mission.Locations[0]);
+                    RichString rewardText = mission.GetMissionRewardText(Submarine.MainSub);
+                    RichString reputationText = mission.GetReputationRewardText(mission.Locations[0]);
 
-                    var missionNameRichTextData = RichTextData.GetRichTextData(mission.Name, out string missionNameString);
-                    var missionRewardRichTextData = RichTextData.GetRichTextData(rewardText, out string missionRewardString);
-                    var missionReputationRichTextData = RichTextData.GetRichTextData(reputationText, out string missionReputationString);
-                    var missionDescriptionRichTextData = RichTextData.GetRichTextData(descriptionText, out string missionDescriptionString);
+                    Func<string, string> wrapMissionText(GUIFont font)
+                    {
+                        return (str) => ToolBox.WrapText(str, missionTextGroup.Rect.Width, font.Value);
+                    }
+                    RichString missionNameString = RichString.Rich(mission.Name, wrapMissionText(GUIStyle.LargeFont));
+                    RichString missionRewardString = RichString.Rich(rewardText, wrapMissionText(GUIStyle.Font));
+                    RichString missionReputationString = RichString.Rich(reputationText, wrapMissionText(GUIStyle.Font));
+                    RichString missionDescriptionString = RichString.Rich(descriptionText, wrapMissionText(GUIStyle.Font));
 
-                    missionNameString = ToolBox.WrapText(missionNameString, missionTextGroup.Rect.Width, GUI.LargeFont);
-                    missionRewardString = ToolBox.WrapText(missionRewardString, missionTextGroup.Rect.Width, GUI.Font);
-                    missionReputationString = ToolBox.WrapText(missionReputationString, missionTextGroup.Rect.Width, GUI.Font);
-                    missionDescriptionString = ToolBox.WrapText(missionDescriptionString, missionTextGroup.Rect.Width, GUI.Font);
-
-                    Vector2 missionNameSize = GUI.LargeFont.MeasureString(missionNameString);
-                    Vector2 missionDescriptionSize = GUI.Font.MeasureString(missionDescriptionString);
-                    Vector2 missionRewardSize = GUI.Font.MeasureString(missionRewardString);
-                    Vector2 missionReputationSize = GUI.Font.MeasureString(missionReputationString);
+                    Vector2 missionNameSize = GUIStyle.LargeFont.MeasureString(missionNameString);
+                    Vector2 missionDescriptionSize = GUIStyle.Font.MeasureString(missionDescriptionString);
+                    Vector2 missionRewardSize = GUIStyle.Font.MeasureString(missionRewardString);
+                    Vector2 missionReputationSize = GUIStyle.Font.MeasureString(missionReputationString);
 
                     float ySize = missionNameSize.Y + missionDescriptionSize.Y + missionRewardSize.Y + missionReputationSize.Y + missionTextGroup.AbsoluteSpacing * 4;
                     bool displayDifficulty = mission.Difficulty.HasValue;
@@ -1030,7 +1029,7 @@ namespace Barotrauma
                         UpdateMissionStateIcon(mission, icon);
                         mission.OnMissionStateChanged += (mission) => UpdateMissionStateIcon(mission, icon);
                     }
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionNameRichTextData, missionNameString, font: GUI.LargeFont);
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionNameString, font: GUIStyle.LargeFont);
                     GUILayoutGroup difficultyIndicatorGroup = null;
                     if (displayDifficulty)
                     {
@@ -1048,20 +1047,20 @@ namespace Barotrauma
                             };
                         }
                     }
-                    var rewardTextBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionRewardRichTextData, missionRewardString);
+                    var rewardTextBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionRewardString);
                     if (difficultyIndicatorGroup != null)
                     {
                         difficultyIndicatorGroup.RectTransform.Resize(new Point((int)(difficultyIndicatorGroup.Rect.Width - rewardTextBlock.Padding.X - rewardTextBlock.Padding.Z), difficultyIndicatorGroup.Rect.Height));
                         difficultyIndicatorGroup.RectTransform.AbsoluteOffset = new Point((int)rewardTextBlock.Padding.X, 0);
                     }
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionReputationRichTextData, missionReputationString);
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionDescriptionRichTextData, missionDescriptionString);
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionReputationString);
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionDescriptionString);
                 }
             }
             else
             {
                 GUILayoutGroup missionTextGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0f), missionList.RectTransform, Anchor.CenterLeft), false, childAnchor: Anchor.TopLeft);
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), TextManager.Get("NoMission"), font: GUI.LargeFont);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), TextManager.Get("NoMission"), font: GUIStyle.LargeFont);
             }
         }
 
@@ -1101,11 +1100,11 @@ namespace Barotrauma
             GUIFrame missionDescriptionHolder = new GUIFrame(new RectTransform(new Point(missionFrame.Rect.Width - padding * 2, 0), missionFrame.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, padding) }, style: null);
             GUILayoutGroup missionTextGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.65f, 0f), missionDescriptionHolder.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.319f, 0f) }, false, childAnchor: Anchor.TopLeft);
 
-            string missionNameString = ToolBox.WrapText(TextManager.Get("tabmenu.traitor"), missionTextGroup.Rect.Width, GUI.LargeFont);
-            string missionDescriptionString = ToolBox.WrapText(traitor.TraitorCurrentObjective, missionTextGroup.Rect.Width, GUI.Font);
+            LocalizedString missionNameString = ToolBox.WrapText(TextManager.Get("tabmenu.traitor"), missionTextGroup.Rect.Width, GUIStyle.LargeFont);
+            LocalizedString missionDescriptionString = ToolBox.WrapText(traitor.TraitorCurrentObjective, missionTextGroup.Rect.Width, GUIStyle.Font);
 
-            Vector2 missionNameSize = GUI.LargeFont.MeasureString(missionNameString);
-            Vector2 missionDescriptionSize = GUI.Font.MeasureString(missionDescriptionString);
+            Vector2 missionNameSize = GUIStyle.LargeFont.MeasureString(missionNameString);
+            Vector2 missionDescriptionSize = GUIStyle.Font.MeasureString(missionDescriptionString);
 
             missionDescriptionHolder.RectTransform.NonScaledSize = new Point(missionDescriptionHolder.RectTransform.NonScaledSize.X, (int)(missionNameSize.Y + missionDescriptionSize.Y));
             missionTextGroup.RectTransform.NonScaledSize = new Point(missionTextGroup.RectTransform.NonScaledSize.X, missionDescriptionHolder.RectTransform.NonScaledSize.Y);
@@ -1118,7 +1117,7 @@ namespace Barotrauma
 
             new GUIImage(new RectTransform(iconSize, missionDescriptionHolder.RectTransform), traitorMission.Icon, null, true) { Color = traitorMission.IconColor };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionNameString, font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionNameString, font: GUIStyle.LargeFont);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionDescriptionString);
         }
 
@@ -1164,21 +1163,21 @@ namespace Barotrauma
 
             var subInfoTextLayout = new GUILayoutGroup(new RectTransform(Vector2.One, paddedFrame.RectTransform));
 
-            string className = !sub.Info.HasTag(SubmarineTag.Shuttle) ? TextManager.Get($"submarineclass.{sub.Info.SubmarineClass}") : TextManager.Get("shuttle");
+            LocalizedString className = !sub.Info.HasTag(SubmarineTag.Shuttle) ? TextManager.Get($"submarineclass.{sub.Info.SubmarineClass}") : TextManager.Get("shuttle");
 
-            int nameHeight = (int)GUI.LargeFont.MeasureString(sub.Info.DisplayName, true).Y;
-            int classHeight = (int)GUI.SubHeadingFont.MeasureString(className).Y;
+            int nameHeight = (int)GUIStyle.LargeFont.MeasureString(sub.Info.DisplayName, true).Y;
+            int classHeight = (int)GUIStyle.SubHeadingFont.MeasureString(className).Y;
 
-            var submarineNameText = new GUITextBlock(new RectTransform(new Point(subInfoTextLayout.Rect.Width, nameHeight + HUDLayoutSettings.Padding / 2), subInfoTextLayout.RectTransform), sub.Info.DisplayName, textAlignment: Alignment.CenterLeft, font: GUI.LargeFont) { CanBeFocused = false };
+            var submarineNameText = new GUITextBlock(new RectTransform(new Point(subInfoTextLayout.Rect.Width, nameHeight + HUDLayoutSettings.Padding / 2), subInfoTextLayout.RectTransform), sub.Info.DisplayName, textAlignment: Alignment.CenterLeft, font: GUIStyle.LargeFont) { CanBeFocused = false };
             submarineNameText.RectTransform.MinSize = new Point(0, (int)submarineNameText.TextSize.Y);
-            var submarineClassText = new GUITextBlock(new RectTransform(new Point(subInfoTextLayout.Rect.Width, classHeight), subInfoTextLayout.RectTransform), className, textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont) { CanBeFocused = false };
+            var submarineClassText = new GUITextBlock(new RectTransform(new Point(subInfoTextLayout.Rect.Width, classHeight), subInfoTextLayout.RectTransform), className, textAlignment: Alignment.CenterLeft, font: GUIStyle.SubHeadingFont) { CanBeFocused = false };
             submarineClassText.RectTransform.MinSize = new Point(0, (int)submarineClassText.TextSize.Y);
 
             if (GameMain.GameSession?.GameMode is CampaignMode campaign)
             {
                 GUILayoutGroup headerLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.09f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0f, 0.43f) }, isHorizontal: true) { Stretch = true };
                 GUIImage headerIcon = new GUIImage(new RectTransform(Vector2.One, headerLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "SubmarineIcon");
-                new GUITextBlock(new RectTransform(Vector2.One, headerLayout.RectTransform), TextManager.Get("uicategory.upgrades"), font: GUI.LargeFont);
+                new GUITextBlock(new RectTransform(Vector2.One, headerLayout.RectTransform), TextManager.Get("uicategory.upgrades"), font: GUIStyle.LargeFont);
 
                 var upgradeRootLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.48f), paddedFrame.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), isHorizontal: true);
 
@@ -1206,7 +1205,7 @@ namespace Barotrauma
             else
             {
                 var specsListBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.57f), paddedFrame.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft));
-                sub.Info.CreateSpecsWindow(specsListBox, GUI.Font, includeTitle: false, includeClass: false, includeDescription: true);
+                sub.Info.CreateSpecsWindow(specsListBox, GUIStyle.Font, includeTitle: false, includeClass: false, includeDescription: true);
             }
         }
         private Color unselectedColor = new Color(240, 255, 255, 225);
@@ -1216,8 +1215,8 @@ namespace Barotrauma
         private Color pressedColor = new Color(60, 60, 60, 225);
 
         private readonly List<(GUIButton button, GUIComponent icon)> talentButtons = new List<(GUIButton button, GUIComponent icon)>();
-        private readonly List<(string talentTree, int index, GUIImage icon, GUIFrame background, GUIFrame backgroundGlow)> talentCornerIcons = new List<(string talentTree, int index, GUIImage icon, GUIFrame background, GUIFrame backgroundGlow)>();
-        private List<string> selectedTalents = new List<string>();
+        private readonly List<(Identifier talentTree, int index, GUIImage icon, GUIFrame background, GUIFrame backgroundGlow)> talentCornerIcons = new List<(Identifier talentTree, int index, GUIImage icon, GUIFrame background, GUIFrame backgroundGlow)>();
+        private List<Identifier> selectedTalents = new List<Identifier>();
 
         private GUITextBlock experienceText;
         private GUIProgressBar experienceBar;
@@ -1231,11 +1230,11 @@ namespace Barotrauma
 
         private readonly ImmutableDictionary<TalentTree.TalentTreeStageState, GUIComponentStyle> talentStageStyles = new Dictionary<TalentTree.TalentTreeStageState, GUIComponentStyle>
         {
-            { TalentTree.TalentTreeStageState.Invalid, GUI.Style.GetComponentStyle("TalentTreeLocked") },
-            { TalentTree.TalentTreeStageState.Locked, GUI.Style.GetComponentStyle("TalentTreeLocked") },
-            { TalentTree.TalentTreeStageState.Unlocked, GUI.Style.GetComponentStyle("TalentTreePurchased") },
-            { TalentTree.TalentTreeStageState.Available, GUI.Style.GetComponentStyle("TalentTreeUnlocked") },
-            { TalentTree.TalentTreeStageState.Highlighted, GUI.Style.GetComponentStyle("TalentTreeAvailable") },
+            { TalentTree.TalentTreeStageState.Invalid, GUIStyle.GetComponentStyle("TalentTreeLocked") },
+            { TalentTree.TalentTreeStageState.Locked, GUIStyle.GetComponentStyle("TalentTreeLocked") },
+            { TalentTree.TalentTreeStageState.Unlocked, GUIStyle.GetComponentStyle("TalentTreePurchased") },
+            { TalentTree.TalentTreeStageState.Available, GUIStyle.GetComponentStyle("TalentTreeUnlocked") },
+            { TalentTree.TalentTreeStageState.Highlighted, GUIStyle.GetComponentStyle("TalentTreeAvailable") },
         }.ToImmutableDictionary();
 
         private readonly ImmutableDictionary<TalentTree.TalentTreeStageState, Color> talentStageBackgroundColors = new Dictionary<TalentTree.TalentTreeStageState, Color>
@@ -1287,7 +1286,7 @@ namespace Barotrauma
             {
                 AbsoluteSpacing = GUI.IntScale(5)
             };
-
+            
             GUILayoutGroup talentInfoLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), talentFrameLayoutGroup.RectTransform, Anchor.Center), isHorizontal: true);
 
             CharacterInfo info = controlledCharacter.Info;
@@ -1300,18 +1299,18 @@ namespace Barotrauma
             });
 
             GUILayoutGroup nameLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1f), talentInfoLayoutGroup.RectTransform)) { RelativeSpacing = 0.05f };
-
-            Vector2 nameSize = GUI.SubHeadingFont.MeasureString(info.Name);
-            GUITextBlock nameBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), info.Name, font: GUI.SubHeadingFont) { TextColor = job.Prefab.UIColor };
+            
+            Vector2 nameSize = GUIStyle.SubHeadingFont.MeasureString(info.Name);
+            GUITextBlock nameBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), info.Name, font: GUIStyle.SubHeadingFont) { TextColor = job.Prefab.UIColor };
             nameBlock.RectTransform.NonScaledSize = nameSize.Pad(nameBlock.Padding).ToPoint();
 
-            Vector2 jobSize = GUI.SmallFont.MeasureString(job.Name);
-            GUITextBlock jobBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), job.Name, font: GUI.SmallFont) { TextColor = job.Prefab.UIColor };
+            Vector2 jobSize = GUIStyle.SmallFont.MeasureString(job.Name);
+            GUITextBlock jobBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), job.Name, font: GUIStyle.SmallFont) { TextColor = job.Prefab.UIColor };
             jobBlock.RectTransform.NonScaledSize = jobSize.Pad(jobBlock.Padding).ToPoint();
 
-            string traitString = TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), TextManager.Get("personalitytrait." + info.PersonalityTrait.Name.Replace(" ", "")));
-            Vector2 traitSize = GUI.SmallFont.MeasureString(traitString);
-            GUITextBlock traitBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), traitString, font: GUI.SmallFont);
+            LocalizedString traitString = TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), TextManager.Get("personalitytrait." + info.PersonalityTrait.Name.Replace(" ", "")));
+            Vector2 traitSize = GUIStyle.SmallFont.MeasureString(traitString);
+            GUITextBlock traitBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), traitString, font: GUIStyle.SmallFont);
             traitBlock.RectTransform.NonScaledSize = traitSize.Pad(traitBlock.Padding).ToPoint();
 
             GUIFrame endocrineFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.35f), nameLayout.RectTransform, Anchor.BottomCenter), style: null);
@@ -1365,7 +1364,7 @@ namespace Barotrauma
                 }
             }
 
-            IEnumerable<TalentPrefab> endocrineTalents = info.GetEndocrineTalents().Select(e => TalentPrefab.TalentPrefabs.Find(c => c.Identifier.Equals(e, StringComparison.OrdinalIgnoreCase)));
+            IEnumerable<TalentPrefab> endocrineTalents = info.GetEndocrineTalents().Select(e => TalentPrefab.TalentPrefabs.Find(c => c.Identifier == e));
 
             if (endocrineTalents.Count() > 0)
             {
@@ -1377,15 +1376,15 @@ namespace Barotrauma
 
             GUILayoutGroup skillLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 1f), talentInfoLayoutGroup.RectTransform)) { Stretch = true };
 
-            string skillString = TextManager.Get("skills");
-            Vector2 skillSize = GUI.SubHeadingFont.MeasureString(skillString);
-            GUITextBlock skillBlock = new GUITextBlock(new RectTransform(Vector2.One, skillLayout.RectTransform), skillString, font: GUI.SubHeadingFont);
+            LocalizedString skillString = TextManager.Get("skills");
+            Vector2 skillSize = GUIStyle.SubHeadingFont.MeasureString(skillString);
+            GUITextBlock skillBlock = new GUITextBlock(new RectTransform(Vector2.One, skillLayout.RectTransform), skillString, font: GUIStyle.SubHeadingFont);
             skillBlock.RectTransform.NonScaledSize = skillSize.Pad(skillBlock.Padding).ToPoint();
 
             skillListBox = new GUIListBox(new RectTransform(new Vector2(1f, 1f - skillBlock.RectTransform.RelativeSize.Y), skillLayout.RectTransform), style: null);
             CreateTalentSkillList(controlledCharacter, skillListBox);
 
-            if (!TalentTree.JobTalentTrees.TryGetValue(controlledCharacter.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return; }
+            if (!TalentTree.JobTalentTrees.TryGet(controlledCharacter.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return; }
 
             new GUIFrame(new RectTransform(new Vector2(1f, 1f), talentFrameLayoutGroup.RectTransform), style: "HorizontalLine");
 
@@ -1401,7 +1400,7 @@ namespace Barotrauma
                 int elementPadding = GUI.IntScale(8);
                 Point headerSize = subtreeTitleFrame.RectTransform.NonScaledSize;
                 GUIFrame subTreeTitleBackground = new GUIFrame(new RectTransform(new Point(headerSize.X - elementPadding, headerSize.Y), subtreeTitleFrame.RectTransform, anchor: Anchor.Center), style: "SubtreeHeader");
-                subTreeNames.Add(new GUITextBlock(new RectTransform(Vector2.One, subTreeTitleBackground.RectTransform, anchor: Anchor.TopCenter), subTree.DisplayName, font: GUI.SubHeadingFont, textAlignment: Alignment.Center));
+                subTreeNames.Add(new GUITextBlock(new RectTransform(Vector2.One, subTreeTitleBackground.RectTransform, anchor: Anchor.TopCenter), subTree.DisplayName, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center));
 
                 for (int i = 0; i < 4; i++)
                 {
@@ -1439,7 +1438,7 @@ namespace Barotrauma
 
                             GUIButton talentButton = new GUIButton(new RectTransform(Vector2.One, croppedTalentFrame.RectTransform, anchor: Anchor.Center), style: null)
                             {
-                                ToolTip = $"{talent.DisplayName}\n\n{talent.Description}",
+                                ToolTip = RichString.Rich(talent.DisplayName + "\n\n" + talent.Description),
                                 UserData = talent.Identifier,
                                 PressedColor = pressedColor,
                                 OnClicked = (button, userData) =>
@@ -1447,7 +1446,7 @@ namespace Barotrauma
                                     // deselect other buttons in tier by removing their selected talents from pool
                                     foreach (GUIButton guiButton in talentOptionLayoutGroup.GetAllChildren<GUIButton>())
                                     {
-                                        if (guiButton.UserData is string otherTalentIdentifier && guiButton != button)
+                                        if (guiButton.UserData is Identifier otherTalentIdentifier && guiButton != button)
                                         {
                                             if (!controlledCharacter.HasTalent(otherTalentIdentifier))
                                             {
@@ -1455,7 +1454,7 @@ namespace Barotrauma
                                             }
                                         }
                                     }
-                                    string talentIdentifier = userData as string;
+                                    Identifier talentIdentifier = (Identifier)userData;
 
                                     if (TalentTree.IsViableTalentForCharacter(controlledCharacter, talentIdentifier, selectedTalents))
                                     {
@@ -1479,10 +1478,10 @@ namespace Barotrauma
                             GUIComponent iconImage;
                             if (talent.Icon is null)
                             {
-                                iconImage = new GUITextBlock(new RectTransform(Vector2.One, talentButton.RectTransform, anchor: Anchor.Center), text: "???", font: GUI.LargeFont, textAlignment: Alignment.Center, style: null)
+                                iconImage = new GUITextBlock(new RectTransform(Vector2.One, talentButton.RectTransform, anchor: Anchor.Center), text: "???", font: GUIStyle.LargeFont, textAlignment: Alignment.Center, style: null)
                                 {
-                                    OutlineColor = GUI.Style.Red,
-                                    TextColor = GUI.Style.Red,
+                                    OutlineColor = GUIStyle.Red,
+                                    TextColor = GUIStyle.Red,
                                     PressedColor = unselectableColor,
                                     CanBeFocused = false,
                                 };
@@ -1511,18 +1510,18 @@ namespace Barotrauma
             GUIFrame experienceBarFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.5f), experienceLayout.RectTransform), style: null);
 
             experienceBar = new GUIProgressBar(new RectTransform(new Vector2(1f, 1f), experienceBarFrame.RectTransform, Anchor.CenterLeft),
-                barSize: controlledCharacter.Info.GetProgressTowardsNextLevel(), color: GUI.Style.Green)
+                barSize: controlledCharacter.Info.GetProgressTowardsNextLevel(), color: GUIStyle.Green)
             {
                 IsHorizontal = true,
             };
-
-            experienceText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), experienceBarFrame.RectTransform, anchor: Anchor.Center), "", font: GUI.Font, textAlignment: Alignment.CenterRight)
+            
+            experienceText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), experienceBarFrame.RectTransform, anchor: Anchor.Center), "", font: GUIStyle.Font, textAlignment: Alignment.CenterRight)
             {
                 Shadow = true,
                 ToolTip = TextManager.Get("experiencetooltip")
             };
 
-            talentPointText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), experienceLayout.RectTransform, anchor: Anchor.Center), "", font: GUI.SubHeadingFont, parseRichText: true, textAlignment: Alignment.CenterRight) { AutoScaleVertical = true };
+            talentPointText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), experienceLayout.RectTransform, anchor: Anchor.Center), "", font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterRight) { AutoScaleVertical = true };
 
             talentResetButton = new GUIButton(new RectTransform(new Vector2(0.19f, 1f), talentBottomFrame.RectTransform), text: TextManager.Get("reset"), style: "GUIButtonFreeScale")
             {
@@ -1545,22 +1544,23 @@ namespace Barotrauma
             {
                 GUILayoutGroup skillContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.2f), parent.Content.RectTransform), isHorizontal: true) { CanBeFocused = false };
 
-                skillNames.Add(new GUITextBlock(new RectTransform(new Vector2(0.7f, 1f), skillContainer.RectTransform), TextManager.Get($"skillname.{skill.Identifier}", returnNull: true) ?? skill.Identifier));
+                skillNames.Add(new GUITextBlock(new RectTransform(new Vector2(0.7f, 1f), skillContainer.RectTransform), TextManager.Get($"skillname.{skill.Identifier}").Fallback(skill.Identifier.Value)));
                 new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), skillContainer.RectTransform), Math.Floor(skill.Level).ToString("F0"), textAlignment: Alignment.CenterRight) { Padding = new Vector4(0, 0, 4, 0) };
 
                 float modifiedSkillLevel = character.GetSkillLevel(skill.Identifier);
                 if (!MathUtils.NearlyEqual(MathF.Floor(modifiedSkillLevel), MathF.Floor(skill.Level)))
                 {
                     int skillChange = (int)MathF.Floor(modifiedSkillLevel - skill.Level);
+                    //TODO: if/when we upgrade to C# 9, do neater pattern matching here
                     string stringColor = true switch
                     {
-                        true when skillChange > 0 => XMLExtensions.ColorToString(GUI.Style.Green),
-                        true when skillChange < 0 => XMLExtensions.ColorToString(GUI.Style.Red),
-                        _ => XMLExtensions.ColorToString(GUI.Style.TextColor)
+                        true when skillChange > 0 => XMLExtensions.ColorToString(GUIStyle.Green),
+                        true when skillChange < 0 => XMLExtensions.ColorToString(GUIStyle.Red),
+                        _ => XMLExtensions.ColorToString(GUIStyle.TextColorNormal)
                     };
 
-                    string changeText = $"(‖color:{stringColor}‖{(skillChange > 0 ? "+" : string.Empty) + skillChange}‖color:end‖)";
-                    new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), skillContainer.RectTransform), changeText, parseRichText: true) { Padding = Vector4.Zero };
+                    RichString changeText = RichString.Rich($"(‖color:{stringColor}‖{(skillChange > 0 ? "+" : string.Empty) + skillChange}‖color:end‖)");
+                    new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), skillContainer.RectTransform), changeText) { Padding = Vector4.Zero };
                 }
                 skillContainer.Recalculate();
             }
@@ -1601,8 +1601,8 @@ namespace Barotrauma
             }
             else if (talentCount > 0)
             {
-                string pointsUsed = $"‖color:{XMLExtensions.ColorToString(GUI.Style.Red)}‖{-talentCount}‖color:end‖";
-                string localizedString = TextManager.GetWithVariables("talentmenu.points.spending", new []{ "[amount]", "[used]" }, new []{ pointsLeft, pointsUsed});
+                string pointsUsed = $"‖color:{XMLExtensions.ColorToString(GUIStyle.Red)}‖{-talentCount}‖color:end‖";
+                LocalizedString localizedString = TextManager.GetWithVariables("talentmenu.points.spending", ("[amount]", pointsLeft), ("[used]", pointsUsed));
                 talentPointText.SetRichText(localizedString);
             }
             else
@@ -1622,19 +1622,19 @@ namespace Barotrauma
 
             foreach (var talentButton in talentButtons)
             {
-                string talentIdentifier = talentButton.button.UserData as string;
+                Identifier talentIdentifier = (Identifier)talentButton.button.UserData;
                 bool unselectable = !TalentTree.IsViableTalentForCharacter(controlledCharacter, talentIdentifier, selectedTalents) || controlledCharacter.HasTalent(talentIdentifier);
                 Color newTalentColor = unselectable ? unselectableColor : unselectedColor;
                 Color hoverColor = Color.White;
 
                 if (controlledCharacter.HasTalent(talentIdentifier))
                 {
-                    newTalentColor = GUI.Style.Green;
+                    newTalentColor = GUIStyle.Green;
                 }
                 else if (selectedTalents.Contains(talentIdentifier))
                 {
-                    newTalentColor = GUI.Style.Orange;
-                    hoverColor = Color.Lerp(GUI.Style.Orange, Color.White, 0.7f);
+                    newTalentColor = GUIStyle.Orange;
+                    hoverColor = Color.Lerp(GUIStyle.Orange, Color.White, 0.7f);
                 }
 
                 talentButton.icon.Color = newTalentColor;
@@ -1647,7 +1647,7 @@ namespace Barotrauma
         private void ApplyTalents(Character controlledCharacter)
         {
             selectedTalents = TalentTree.CheckTalentSelection(controlledCharacter, selectedTalents);
-            foreach (string talent in selectedTalents)
+            foreach (Identifier talent in selectedTalents)
             {
                 controlledCharacter.GiveTalent(talent);
                 if (GameMain.Client != null)

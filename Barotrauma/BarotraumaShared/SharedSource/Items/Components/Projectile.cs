@@ -88,13 +88,13 @@ namespace Barotrauma.Items.Components
 
         private float persistentStickJointTimer;
 
-        [Serialize(10.0f, false, description: "The impulse applied to the physics body of the item when it's launched. Higher values make the projectile faster.")]
+        [Serialize(10.0f, IsPropertySaveable.No, description: "The impulse applied to the physics body of the item when it's launched. Higher values make the projectile faster.")]
         public float LaunchImpulse { get; set; }
 
-        [Serialize(0.0f, false, description: "The random percentage modifier used to add variance to the launch impulse.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "The random percentage modifier used to add variance to the launch impulse.")]
         public float ImpulseSpread { get; set; }
 
-        [Serialize(0.0f, false, description: "The rotation of the item relative to the rotation of the weapon when launched (in degrees).")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "The rotation of the item relative to the rotation of the weapon when launched (in degrees).")]
 
         public float LaunchRotation
         {
@@ -108,7 +108,7 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        [Serialize(false, false, description: "When set to true, the item can stick to any target it hits.")]
+        [Serialize(false, IsPropertySaveable.No, description: "When set to true, the item can stick to any target it hits.")]
         //backwards compatibility, can stick to anything
         public bool DoesStick
         {
@@ -116,50 +116,50 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, false, description: "When set to true, the item won't fall of a target it's stuck to unless removed.")]
+        [Serialize(false, IsPropertySaveable.No, description: "When set to true, the item won't fall of a target it's stuck to unless removed.")]
         public bool StickPermanently
         {
             get;
             set;
         }
 
-        [Serialize(false, false, description: "Can the item stick to the character it hits.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the item stick to the character it hits.")]
         public bool StickToCharacters
         {
             get;
             set;
         }
 
-        [Serialize(false, false, description: "Can the item stick to the structure it hits.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the item stick to the structure it hits.")]
         public bool StickToStructures
         {
             get;
             set;
         }
 
-        [Serialize(false, false, description: "Can the item stick to the item it hits.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the item stick to the item it hits.")]
         public bool StickToItems
         {
             get;
             set;
         }
 
-        [Serialize(false, false, description: "Can the item stick even to deflective targets.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the item stick even to deflective targets.")]
         public bool StickToDeflective
         {
             get;
             set;
         }
 
-        [Serialize(false, false, description: "Hitscan projectiles cast a ray forwards and immediately hit whatever the ray hits. "+
-            "It is recommended to use hitscans for very fast-moving projectiles such as bullets, because using extremely fast launch velocities may cause physics glitches.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Hitscan projectiles cast a ray forwards and immediately hit whatever the ray hits. "+
+                                                              "It is recommended to use hitscans for very fast-moving projectiles such as bullets, because using extremely fast launch velocities may cause physics glitches.")]
         public bool Hitscan
         {
             get;
             set;
         }
 
-        [Serialize(1, false, description: "How many hitscans should be done when the projectile is launched. "
+        [Serialize(1, IsPropertySaveable.No, description: "How many hitscans should be done when the projectile is launched. "
             + "Multiple hitscans can be used to simulate weapons that fire multiple projectiles at the same time" +
             " without having to actually use multiple projectile items, for example shotguns.")]
         public int HitScanCount
@@ -168,28 +168,28 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(1, false, description: "How many targets the projectile can hit before it stops.")]
+        [Serialize(1, IsPropertySaveable.No, description: "How many targets the projectile can hit before it stops.")]
         public int MaxTargetsToHit
         {
             get;
             set;
         }
 
-        [Serialize(false, false, description: "Should the item be deleted when it hits something.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Should the item be deleted when it hits something.")]
         public bool RemoveOnHit
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, false, description: "Random spread applied to the launch angle of the projectile (in degrees).")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Random spread applied to the launch angle of the projectile (in degrees).")]
         public float Spread
         {
             get;
             set;
         }
 
-        [Serialize(false, false, description: "Override random spread with static spread; hitscan are launched with an equal amount of angle between them. Only applies when firing multiple hitscan.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Override random spread with static spread; hitscan are launched with an equal amount of angle between them. Only applies when firing multiple hitscan.")]
         public bool StaticSpread
         {
             get;
@@ -198,7 +198,7 @@ namespace Barotrauma.Items.Components
 
         private float deactivationTimer;
 
-        [Serialize(0f, false)]
+        [Serialize(0f, IsPropertySaveable.No)]
         public float DeactivationTime
         {
             get;
@@ -219,19 +219,19 @@ namespace Barotrauma.Items.Components
         private Category originalCollisionCategories;
         private Category originalCollisionTargets;
 
-        public Projectile(Item item, XElement element) 
+        public Projectile(Item item, ContentXElement element)
             : base (item, element)
         {
             IgnoredBodies = new List<Body>();
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("attack", StringComparison.OrdinalIgnoreCase)) { continue; }
                 Attack = new Attack(subElement, item.Name + ", Projectile", item);
             }
             InitProjSpecific(element);
         }
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
         public override void OnItemLoaded()
         {
@@ -484,7 +484,7 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        Entity.Spawner.AddToRemoveQueue(item);
+                        Entity.Spawner.AddItemToRemoveQueue(item);
                     }
                 }
             }
@@ -697,27 +697,9 @@ namespace Barotrauma.Items.Components
                 return false;
             }
             if (hits.Contains(target.Body)) { return false; }
-            if (target.Body.UserData is Submarine sub)
+            if (ShouldIgnoreSubmarineCollision(target, contact))
             {
-                Vector2 dir = item.body.LinearVelocity.LengthSquared() < 0.001f ?
-                    contact.Manifold.LocalNormal : Vector2.Normalize(item.body.LinearVelocity);
-
-                //do a raycast in the sub's coordinate space to see if it hit a structure
-                var wallBody = Submarine.PickBody(
-                    item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) - dir,
-                    item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) + dir,
-                    collisionCategory: Physics.CollisionWall);
-                if (wallBody?.FixtureList?.First() != null && (wallBody.UserData is Structure || wallBody.UserData is Item) &&
-                    //ignore the hit if it's behind the position the item was launched from, and the projectile is travelling in the opposite direction
-                    Vector2.Dot(item.body.SimPosition - launchPos, dir) > 0) 
-                {
-                    target = wallBody.FixtureList.First();
-                    if (hits.Contains(target.Body)) { return false; }
-                }
-                else
-                {
-                    return false;
-                }
+                return false;                
             }
             else if (target.Body.UserData is Limb limb)
             {
@@ -755,6 +737,44 @@ namespace Barotrauma.Items.Components
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Should the collision with the target submarine be ignored (e.g. did the projectile collide with the wall behind the turret when being launched)
+        /// </summary>
+        /// <param name="target">Fixture the projectile hit</param>
+        /// <param name="contact">Contact between the projectile and the target</param>
+        /// <returns>True if the target isn't a submarine or if the collision happened behind the launch position of the projectile</returns>
+        public bool ShouldIgnoreSubmarineCollision(Fixture target, Contact contact)
+        {
+            return ShouldIgnoreSubmarineCollision(ref target, contact);
+        }
+
+        private bool ShouldIgnoreSubmarineCollision(ref Fixture target, Contact contact)
+        {
+            if (target.Body.UserData is Submarine sub)
+            {
+                Vector2 dir = item.body.LinearVelocity.LengthSquared() < 0.001f ?
+                contact.Manifold.LocalNormal : Vector2.Normalize(item.body.LinearVelocity);
+
+                //do a raycast in the sub's coordinate space to see if it hit a structure
+                var wallBody = Submarine.PickBody(
+                    item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) - dir,
+                    item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) + dir,
+                    collisionCategory: Physics.CollisionWall);
+                if (wallBody?.FixtureList?.First() != null && (wallBody.UserData is Structure || wallBody.UserData is Item) &&
+                    //ignore the hit if it's behind the position the item was launched from, and the projectile is travelling in the opposite direction
+                    Vector2.Dot(item.body.SimPosition - launchPos, dir) > 0)
+                {
+                    target = wallBody.FixtureList.First();
+                    if (hits.Contains(target.Body)) { return true; }
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
@@ -961,7 +981,7 @@ namespace Barotrauma.Items.Components
                 removePending = true;
                 item.HiddenInGame = true;
                 item.body.FarseerBody.Enabled = false;
-                Entity.Spawner?.AddToRemoveQueue(item);                
+                Entity.Spawner?.AddItemToRemoveQueue(item);                
             }
 
             return true;

@@ -4,7 +4,7 @@ namespace Barotrauma
 {
     partial class CombatMission : Mission
     {
-        public override string Description
+        public override LocalizedString Description
         {
             get
             {

@@ -15,15 +15,15 @@ namespace Barotrauma
             Faction
         }
 
-        public ReputationAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public ReputationAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
         public float Increase { get; set; }
 
-        [Serialize("", true)]
-        public string Identifier { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier Identifier { get; set; }
 
-        [Serialize(ReputationType.None, true)]
+        [Serialize(ReputationType.None, IsPropertySaveable.Yes)]
         public ReputationType TargetType { get; set; }
 
         private bool isFinished;
@@ -47,7 +47,7 @@ namespace Barotrauma
                 {
                     case ReputationType.Faction:
                     {
-                        Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier.Equals(Identifier, StringComparison.OrdinalIgnoreCase));
+                        Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == Identifier);
                         if (faction != null)
                         {
                             faction.Reputation.AddReputation(Increase);

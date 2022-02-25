@@ -17,7 +17,7 @@ namespace Barotrauma
             protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values)
             {
                 var infoText = base.GetInfoText(traitor, textId, keys, values);
-                return !string.IsNullOrEmpty(timeLimitInfoTextId) ? TextManager.FormatServerMessage(timeLimitInfoTextId, new[] { "[infotext]", "[timelimit]" }, new[] { infoText, $"{TimeSpan.FromSeconds(timeLimit):g}" }) : infoText;
+                return !string.IsNullOrEmpty(timeLimitInfoTextId) ? TextManager.FormatServerMessage(timeLimitInfoTextId, ("[infotext]", infoText), ("[timelimit]", $"{TimeSpan.FromSeconds(timeLimit):g}")) : infoText;
             }
 
             public override bool CanBeCompleted(ICollection<Traitor> traitors) => base.CanBeCompleted(traitors) && (!Traitors.Any(IsStarted) || timeRemaining > 0.0f);

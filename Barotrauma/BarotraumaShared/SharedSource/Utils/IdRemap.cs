@@ -22,12 +22,12 @@ namespace Barotrauma
             if (parentElement is { HasElements: true })
             {
                 srcRanges = new List<Range<int>>();
-                foreach (XElement subElement in parentElement.Elements())
+                foreach (var subElement in parentElement.Elements())
                 {
                     int id = subElement.GetAttributeInt("ID", -1);
                     if (id > 0) { InsertId(id); }
                 }
-                maxId = GetOffsetId(srcRanges.Last().End);
+                maxId = GetOffsetId(srcRanges.Any() ? srcRanges.Last().End : offset);
             }
             else
             {

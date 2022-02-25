@@ -22,8 +22,9 @@ namespace Barotrauma
             {
                 if (_ragdollParams == null)
                 {
-                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character.VariantOf ?? character.SpeciesName);
-                    if (character.VariantOf != null)
+                    #warning TODO: this is kinda janky, this should probably be done better
+                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character.VariantOf.IfEmpty(character.SpeciesName));
+                    if (!character.VariantOf.IsEmpty)
                     {
                         _ragdollParams.ApplyVariantScale(character.Params.VariantFile);
                     }
@@ -421,7 +422,7 @@ namespace Barotrauma
                             }
 
                             //only one limb left, the character is now full eaten
-                            Entity.Spawner?.AddToRemoveQueue(target);
+                            Entity.Spawner?.AddEntityToRemoveQueue(target);
 
                             if (Character.AIController is EnemyAIController enemyAi)
                             {
@@ -432,10 +433,10 @@ namespace Barotrauma
                         }
                         else //sever a random joint
                         {
-                            target.AnimController.SeverLimbJoint(nonSeveredJoints.GetRandom());
+                            target.AnimController.SeverLimbJoint(nonSeveredJoints.GetRandomUnsynced());
                         }
                     }
-                }                
+                }
             }
         }
 

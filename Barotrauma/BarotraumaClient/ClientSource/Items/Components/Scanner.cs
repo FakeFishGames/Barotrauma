@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
                 Character.Controlled?.UpdateHUDProgressBar(this,
                     item.WorldPosition,
                     ScanTimer / ScanDuration,
-                    GUI.Style.Red, GUI.Style.Green,
+                    GUIStyle.Red, GUIStyle.Green,
                     textTag: "progressbar.scanning");
             }
         }

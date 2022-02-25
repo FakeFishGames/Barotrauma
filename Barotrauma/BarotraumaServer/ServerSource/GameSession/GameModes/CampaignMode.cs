@@ -14,8 +14,8 @@ namespace Barotrauma
         {
             foreach (Mission mission in Missions)
             {
-                GameServer.Log(TextManager.Get("Mission") + ": " + mission.Name, ServerLog.MessageType.ServerMessage);
-                GameServer.Log(mission.Description, ServerLog.MessageType.ServerMessage);
+                GameServer.Log($"{TextManager.Get("Mission")}: {mission.Name}", ServerLog.MessageType.ServerMessage);
+                GameServer.Log(mission.Description.Value, ServerLog.MessageType.ServerMessage);
             }
         }
     }

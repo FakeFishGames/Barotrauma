@@ -4,7 +4,8 @@ namespace Barotrauma
 {
     class EditorScreen : Screen
     {
-        public static Color BackgroundColor = GameSettings.SubEditorBackgroundColor;
+        public static Color BackgroundColor = GameSettings.CurrentConfig.SubEditorBackground;
+        public override bool IsEditor => true;
 
         public void CreateBackgroundColorPicker()
         {
@@ -17,7 +18,7 @@ namespace Barotrauma
             for (int i = 0; i < 3; i++)
             {
                 var colorContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.33f, 1), rgbLayout.RectTransform), isHorizontal: true) { Stretch = true };
-                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), colorContainer.RectTransform, Anchor.CenterLeft) { MinSize = new Point(15, 0) }, GUI.colorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.Center);
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), colorContainer.RectTransform, Anchor.CenterLeft) { MinSize = new Point(15, 0) }, GUI.ColorComponentLabels[i], font: GUIStyle.SmallFont, textAlignment: Alignment.Center);
                 layoutParents[i] = colorContainer;
             }
 
@@ -33,7 +34,9 @@ namespace Barotrauma
             {
                 var color = new Color(rInput.IntValue, gInput.IntValue, bInput.IntValue);
                 BackgroundColor = color;
-                GameSettings.SubEditorBackgroundColor = color;
+                var config = GameSettings.CurrentConfig;
+                config.SubEditorBackground = color;
+                GameSettings.SetCurrentConfig(config);
             };
             
             // Reset button
@@ -49,7 +52,7 @@ namespace Barotrauma
             msgBox.Buttons[1].OnClicked = (button, o) => 
             { 
                 msgBox.Close();
-                GameMain.Config.SaveNewPlayerConfig();
+                GameSettings.SaveCurrentConfig();
                 return true;
             };
         }

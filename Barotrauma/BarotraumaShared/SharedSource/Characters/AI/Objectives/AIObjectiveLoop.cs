@@ -36,7 +36,7 @@ namespace Barotrauma
             return false;
         }
 
-        public AIObjectiveLoop(Character character, AIObjectiveManager objectiveManager, float priorityModifier, string option = null) 
+        public AIObjectiveLoop(Character character, AIObjectiveManager objectiveManager, float priorityModifier, Identifier option = default) 
             : base(character, objectiveManager, priorityModifier, option) { }
 
         protected override void Act(float deltaTime) { }

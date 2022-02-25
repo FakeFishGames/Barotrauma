@@ -7,7 +7,7 @@ namespace Barotrauma.Abilities
     class CharacterAbilityApplyStatusEffectsToNearestAlly : CharacterAbilityApplyStatusEffects
     {
         protected float squaredMaxDistance;
-        public CharacterAbilityApplyStatusEffectsToNearestAlly(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityApplyStatusEffectsToNearestAlly(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             squaredMaxDistance = MathF.Pow(abilityElement.GetAttributeFloat("maxdistance", float.MaxValue), 2);
         }

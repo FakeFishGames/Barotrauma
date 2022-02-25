@@ -4,7 +4,10 @@ namespace Barotrauma.Items.Components
 {
     partial class Repairable : ItemComponent, IServerSerializable, IClientSerializable
     {
-        void InitProjSpecific()
+        private Character prevLoggedFixer;
+        private FixActions prevLoggedFixAction;
+
+        partial void InitProjSpecific(ContentXElement _)
         {
             //let the clients know the initial deterioration delay
             item.CreateServerEvent(this);
@@ -19,7 +22,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!c.Character.IsTraitor && requestedFixAction == FixActions.Sabotage)
                 {
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         DebugConsole.Log($"Non traitor \"{c.Character.Name}\" attempted to sabotage item.");
                     }

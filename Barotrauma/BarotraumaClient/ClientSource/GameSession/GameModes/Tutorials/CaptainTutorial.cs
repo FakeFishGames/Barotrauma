@@ -41,30 +41,79 @@ namespace Barotrauma.Tutorials
 
         // Variables
         private Character captain;
-        private string radioSpeakerName;
+        private LocalizedString radioSpeakerName;
         private Sprite captain_steerIcon;
         private Color captain_steerIconColor;
 
-        public CaptainTutorial(XElement element) : base(element)
+        public CaptainTutorial() : base("tutorial.captaintraining".ToIdentifier(),
+            new Segment(
+                "Captain.CommandMedic".ToIdentifier(),
+                "Captain.CommandMedicObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Captain.CommandMedicText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_command.webm", TextTag = "Captain.CommandMedicText".ToIdentifier(), Width = 450, Height = 80 }),
+            new Segment(
+                "Captain.CommandMechanic".ToIdentifier(),
+                "Captain.CommandMechanicObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Captain.CommandMechanicText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Captain.CommandSecurity".ToIdentifier(),
+                "Captain.CommandSecurityObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Captain.CommandSecurityText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Captain.CommandEngineer".ToIdentifier(),
+                "Captain.CommandEngineerObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Captain.CommandEngineerText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Captain.Undock".ToIdentifier(),
+                "Captain.UndockObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Captain.UndockText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_undock.webm", TextTag = "Captain.UndockText".ToIdentifier(), Width = 450, Height = 80 }),
+            new Segment(
+                "Captain.Navigate".ToIdentifier(),
+                "Captain.NavigateObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Captain.NavigateText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_navigation.webm", TextTag = "Captain.NavigateText".ToIdentifier(), Width = 450, Height = 80 }),
+            new Segment(
+                "Captain.Dock".ToIdentifier(),
+                "Captain.DockObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Captain.DockText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_docking.webm", TextTag = "Captain.DockText".ToIdentifier(), Width = 450, Height = 80 }))
+        { }
+
+        protected override CharacterInfo GetCharacterInfo()
         {
+            return new CharacterInfo(
+                CharacterPrefab.HumanSpeciesName,
+                jobOrJobPrefab: new Job(
+                    JobPrefab.Prefabs["captain"], Rand.RandSync.Unsynced, 0,
+                    new Skill("medical".ToIdentifier(), 20),
+                    new Skill("weapons".ToIdentifier(), 20),
+                    new Skill("mechanical".ToIdentifier(), 20),
+                    new Skill("electrical".ToIdentifier(), 20),
+                    new Skill("helm".ToIdentifier(), 70)));
         }
 
-        public override void Start()
+        protected override void Initialize()
         {
-            base.Start();
-
             captain = Character.Controlled;
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Watchman");
             GameMain.GameSession.CrewManager.AllowCharacterSwitch = false;
 
-            var revolver = FindOrGiveItem(captain, "revolver");
+            var revolver = FindOrGiveItem(captain, "revolver".ToIdentifier());
             revolver.Unequip(captain);
             captain.Inventory.RemoveItem(revolver);
 
             var captainscap = 
-                captain.Inventory.FindItemByIdentifier("captainscap1") ??
-                captain.Inventory.FindItemByIdentifier("captainscap2") ??
-                captain.Inventory.FindItemByIdentifier("captainscap3");
+                captain.Inventory.FindItemByIdentifier("captainscap1".ToIdentifier()) ??
+                captain.Inventory.FindItemByIdentifier("captainscap2".ToIdentifier()) ??
+                captain.Inventory.FindItemByIdentifier("captainscap3".ToIdentifier());
 
             if (captainscap != null)
             {
@@ -73,16 +122,16 @@ namespace Barotrauma.Tutorials
             }
 
             var captainsuniform = 
-                captain.Inventory.FindItemByIdentifier("captainsuniform1") ??
-                captain.Inventory.FindItemByIdentifier("captainsuniform2") ??
-                captain.Inventory.FindItemByIdentifier("captainsuniform3");
+                captain.Inventory.FindItemByIdentifier("captainsuniform1".ToIdentifier()) ??
+                captain.Inventory.FindItemByIdentifier("captainsuniform2".ToIdentifier()) ??
+                captain.Inventory.FindItemByIdentifier("captainsuniform3".ToIdentifier());
             if (captainsuniform != null)
             {
                 captainsuniform.Unequip(captain);
                 captain.Inventory.RemoveItem(captainsuniform);
             }
 
-            var steerOrder = Order.GetPrefab("steer");
+            var steerOrder = OrderPrefab.Prefabs["steer"];
             captain_steerIcon = steerOrder.SymbolSprite;
             captain_steerIconColor = steerOrder.Color;
 
@@ -99,7 +148,7 @@ namespace Barotrauma.Tutorials
             captain_medicSpawnPos = Item.ItemList.Find(i => i.HasTag("captain_medicspawnpos")).WorldPosition;
             tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
             tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
-            var medicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("medicaldoctor"));
+            var medicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("medicaldoctor"));
             captain_medic = Character.Create(medicInfo, captain_medicSpawnPos, "medicaldoctor");
             captain_medic.TeamID = CharacterTeamType.Team1;
             captain_medic.GiveJobItems(null);
@@ -122,17 +171,17 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(tutorial_lockedDoor_1, null, false);
             SetDoorAccess(tutorial_lockedDoor_2, null, false);
 
-            var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("mechanic"));
+            var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("mechanic"));
             captain_mechanic = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "mechanic");
             captain_mechanic.TeamID = CharacterTeamType.Team1;
             captain_mechanic.GiveJobItems();
 
-            var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("securityofficer"));
+            var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("securityofficer"));
             captain_security = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "securityofficer");
             captain_security.TeamID = CharacterTeamType.Team1;
             captain_security.GiveJobItems();
 
-            var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("engineer"));
+            var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("engineer"));
             captain_engineer = Character.Create(engineerInfo, WayPoint.GetRandom(SpawnType.Human, engineerInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "engineer");
             captain_engineer.TeamID = CharacterTeamType.Team1;
             captain_engineer.GiveJobItems();
@@ -163,7 +212,7 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(2f, false);
             GameMain.GameSession.CrewManager.AutoShowCrewList();
             GameMain.GameSession.CrewManager.AddCharacter(captain_medic);
-            TriggerTutorialSegment(0, GameMain.Config.KeyBindText(InputType.Command));
+            TriggerTutorialSegment(0, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Command));
             do
             {
                 yield return null;
@@ -172,13 +221,13 @@ namespace Barotrauma.Tutorials
             }
             while (!HasOrder(captain_medic, "follow"));
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
-            RemoveCompletedObjective(segments[0]);
+            RemoveCompletedObjective(0);
 
             // Submarine
             do { yield return null; } while (!captain_enteredSubmarineSensor.MotionDetected);
             yield return new WaitForSeconds(3f, false);
             captain_mechanic.AIController.Enabled = captain_security.AIController.Enabled = captain_engineer.AIController.Enabled = true;
-            TriggerTutorialSegment(1, GameMain.Config.KeyBindText(InputType.Command));
+            TriggerTutorialSegment(1, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Command));
             GameMain.GameSession.CrewManager.AddCharacter(captain_mechanic);
             do
             {
@@ -187,9 +236,9 @@ namespace Barotrauma.Tutorials
                 // GameMain.GameSession.CrewManager.HighlightOrderButton(captain_mechanic, "repairsystems", highlightColor, new Vector2(5, 5));
                 //HighlightOrderOption("jobspecific");
             } while (!HasOrder(captain_mechanic, "repairsystems") && !HasOrder(captain_mechanic, "repairmechanical") && !HasOrder(captain_mechanic, "repairelectrical"));
-            RemoveCompletedObjective(segments[1]);
+            RemoveCompletedObjective(1);
             yield return new WaitForSeconds(2f, false);
-            TriggerTutorialSegment(2, GameMain.Config.KeyBindText(InputType.Command));
+            TriggerTutorialSegment(2, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Command));
             GameMain.GameSession.CrewManager.AddCharacter(captain_security);
             do
             {
@@ -199,9 +248,9 @@ namespace Barotrauma.Tutorials
                 HighlightOrderOption("fireatwill");
             }
             while (!HasOrder(captain_security, "operateweapons"));
-            RemoveCompletedObjective(segments[2]);
+            RemoveCompletedObjective(2);
             yield return new WaitForSeconds(4f, false);
-            TriggerTutorialSegment(3, GameMain.Config.KeyBindText(InputType.Command));
+            TriggerTutorialSegment(3, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Command));
             GameMain.GameSession.CrewManager.AddCharacter(captain_engineer);
             do
             {
@@ -211,7 +260,7 @@ namespace Barotrauma.Tutorials
                 HighlightOrderOption("powerup");
             }
             while (!HasOrder(captain_engineer, "operatereactor", "powerup"));
-            RemoveCompletedObjective(segments[3]);
+            RemoveCompletedObjective(3);
             tutorial_submarineReactor.CanBeSelected = true;
             do { yield return null; } while (!tutorial_submarineReactor.IsActive); // Wait until reactor on      
             TriggerTutorialSegment(4);
@@ -226,7 +275,7 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(1.0f, false);
             } while (Submarine.MainSub.DockedTo.Any());
             captain_navConsole.UseAutoDocking = false;
-            RemoveCompletedObjective(segments[4]);
+            RemoveCompletedObjective(4);
             yield return new WaitForSeconds(2f, false);
             TriggerTutorialSegment(5); // Navigate to destination
             do
@@ -241,7 +290,7 @@ namespace Barotrauma.Tutorials
                 yield return null;
             } while (captain_sonar.CurrentMode != Sonar.Mode.Active);
             do { yield return null; } while (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 4000f);
-            RemoveCompletedObjective(segments[5]);
+            RemoveCompletedObjective(5);
             captain_navConsole.UseAutoDocking = true;
             yield return new WaitForSeconds(4f, false);
             TriggerTutorialSegment(6); // Docking
@@ -250,7 +299,7 @@ namespace Barotrauma.Tutorials
                 //captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
                 yield return new WaitForSeconds(1.0f, false);
             } while (!Submarine.MainSub.AtEndExit || !Submarine.MainSub.DockedTo.Any());
-            RemoveCompletedObjective(segments[6]);
+            RemoveCompletedObjective(6);
             yield return new WaitForSeconds(3f, false);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.GetWithVariable("Captain.Radio.Complete", "[OUTPOSTNAME]", GameMain.GameSession.EndLocation.Name), ChatMessageType.Radio, null);
             SetHighlight(captain_navConsole.Item, false);

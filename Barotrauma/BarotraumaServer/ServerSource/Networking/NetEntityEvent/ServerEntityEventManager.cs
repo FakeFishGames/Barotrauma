@@ -179,7 +179,7 @@ namespace Barotrauma.Networking
                 catch (Exception e)
                 {
                     string entityName = bufferedEvent.TargetEntity == null ? "null" : bufferedEvent.TargetEntity.ToString();
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         string errorMsg = "Failed to read server event for entity \"" + entityName + "\"!";
                         GameServer.Log(errorMsg + "\n" + e.StackTrace.CleanupStackTrace(), ServerLog.MessageType.Error);
@@ -347,7 +347,7 @@ namespace Barotrauma.Networking
                         count++;
                         if (count > 3) { break; }
                     }
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         GameServer.Log(warningMsg, ServerLog.MessageType.Error);
                     }
@@ -482,7 +482,7 @@ namespace Barotrauma.Networking
                 //skip the event if we've already received it
                 if (thisEventID != (UInt16)(sender.LastSentEntityEventID + 1))
                 {
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         DebugConsole.NewMessage("Received msg " + thisEventID + ", expecting " + sender.LastSentEntityEventID, Color.Red);
                     }
@@ -493,7 +493,7 @@ namespace Barotrauma.Networking
                     //entity not found -> consider the even read and skip over it
                     //(can happen, for example, when a client uses a medical item repeatedly 
                     //and creates an event for it before receiving the event about it being removed)
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         DebugConsole.NewMessage(
                             "Received msg " + thisEventID + ", entity " + entityID + " not found",
@@ -504,7 +504,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         DebugConsole.NewMessage("Received msg " + thisEventID, Microsoft.Xna.Framework.Color.Green);
                     }

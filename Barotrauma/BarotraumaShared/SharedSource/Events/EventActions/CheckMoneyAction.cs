@@ -4,10 +4,10 @@ namespace Barotrauma
 {
     class CheckMoneyAction : BinaryOptionAction
     {
-        [Serialize(0, true)]
+        [Serialize(0, IsPropertySaveable.Yes)]
         public int Amount { get; set; }
 
-        public CheckMoneyAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element)
+        public CheckMoneyAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
         }
 

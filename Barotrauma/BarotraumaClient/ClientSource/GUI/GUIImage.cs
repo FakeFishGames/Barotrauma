@@ -177,6 +177,7 @@ namespace Barotrauma
                 spriteBatch.Begin(blendState: BlendState, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
+            var style = Style;
             if (style != null)
             {
                 foreach (UISprite uiSprite in style.Sprites[State])
@@ -193,7 +194,7 @@ namespace Barotrauma
                     }
                 }
             }
-            else if (sprite?.Texture != null)
+            else if (sprite?.Texture is { IsDisposed: false })
             {
                 spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currentColor * (currentColor.A / 255.0f), Rotation, origin,
                     Scale, SpriteEffects, 0.0f);

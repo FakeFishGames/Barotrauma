@@ -57,42 +57,42 @@ namespace Barotrauma.Items.Components
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
         private readonly List<ParticleEmitter> particleEmitterCharges = new List<ParticleEmitter>();
 
-        [Editable, Serialize("0,0,0,0", true, description: "Optional screen tint color when the item is being operated (R,G,B,A).")]
+        [Editable, Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "Optional screen tint color when the item is being operated (R,G,B,A).")]
         public Color HudTint
         {
             get;
             private set;
         }
 
-        [Serialize(false, false, description: "Should the charge of the connected batteries/supercapacitors be shown at the top of the screen when operating the item.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Should the charge of the connected batteries/supercapacitors be shown at the top of the screen when operating the item.")]
         public bool ShowChargeIndicator
         {
             get;
             private set;
         }
 
-        [Serialize(false, false, description: "Should the available ammunition be shown at the top of the screen when operating the item.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Should the available ammunition be shown at the top of the screen when operating the item.")]
         public bool ShowProjectileIndicator
         {
             get;
             private set;
         }
 
-        [Serialize(0.0f, false, description: "How far the barrel \"recoils back\" when the turret is fired (in pixels).")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "How far the barrel \"recoils back\" when the turret is fired (in pixels).")]
         public float RecoilDistance
         {
             get;
             private set;
         }
 
-        [Serialize(0.0f, false, description: "The distance in which the spinning barrels rotate. Only used if spinning barrels are created.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "The distance in which the spinning barrels rotate. Only used if spinning barrels are created.")]
         public float SpinningBarrelDistance
         {
             get;
             private set;
         }
 
-        [Serialize(false, false, description: "Use firing offset for muzzleflash? This field shouldn't be needed but I'm using it for prototyping")]
+        [Serialize(false, IsPropertySaveable.No, description: "Use firing offset for muzzleflash? This field shouldn't be needed but I'm using it for prototyping")]
         public bool UseFiringOffsetForMuzzleFlash
         {
             get;
@@ -125,33 +125,33 @@ namespace Barotrauma.Items.Components
             get { return barrelSprite; }
         }
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
-                string texturePath = subElement.GetAttributeString("texture", "");
+                string textureDir = GetTextureDirectory(subElement);
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "crosshair":
-                        crosshairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));
+                        crosshairSprite = new Sprite(subElement, path: textureDir);
                         break;
                     case "weaponindicator":
-                        WeaponIndicatorSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));
+                        WeaponIndicatorSprite = new Sprite(subElement, path: textureDir);
                         break;
                     case "crosshairpointer":
-                        crosshairPointerSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));
+                        crosshairPointerSprite = new Sprite(subElement, path: textureDir);
                         break;
                     case "startmovesound":
-                        startMoveSound = Submarine.LoadRoundSound(subElement, false);
+                        startMoveSound = RoundSound.Load(subElement, false);
                         break;
                     case "endmovesound":
-                        endMoveSound = Submarine.LoadRoundSound(subElement, false);
+                        endMoveSound = RoundSound.Load(subElement, false);
                         break;
                     case "movesound":
-                        moveSound = Submarine.LoadRoundSound(subElement, false);
+                        moveSound = RoundSound.Load(subElement, false);
                         break;
                     case "chargesound":
-                        chargeSound = Submarine.LoadRoundSound(subElement, false);
+                        chargeSound = RoundSound.Load(subElement, false);
                         break;
                     case "particleemitter":
                         particleEmitters.Add(new ParticleEmitter(subElement));
@@ -437,15 +437,15 @@ namespace Barotrauma.Items.Components
 
             if (Math.Abs(minRotation - maxRotation) < 0.02f)
             {
-                spriteBatch.DrawLine(drawPos, drawPos + center * circleRadius, GUI.Style.Green, thickness: lineThickness);
+                spriteBatch.DrawLine(drawPos, drawPos + center * circleRadius, GUIStyle.Green, thickness: lineThickness);
             }
             else if (radians > Math.PI * 2)
             {
-                spriteBatch.DrawCircle(drawPos, circleRadius, 180, GUI.Style.Red, thickness: lineThickness);
+                spriteBatch.DrawCircle(drawPos, circleRadius, 180, GUIStyle.Red, thickness: lineThickness);
             }
             else
             {
-                spriteBatch.DrawSector(drawPos, circleRadius, radians, (int)Math.Abs(90 * radians), GUI.Style.Green, offset: minRotation, thickness: lineThickness);
+                spriteBatch.DrawSector(drawPos, circleRadius, radians, (int)Math.Abs(90 * radians), GUIStyle.Green, offset: minRotation, thickness: lineThickness);
             }
 
             int baseWidgetScale = GUI.IntScale(16);
@@ -459,7 +459,7 @@ namespace Barotrauma.Items.Components
                 };
                 widget.MouseDown += () =>
                 {
-                    widget.color = GUI.Style.Green;
+                    widget.color = GUIStyle.Green;
                     prevAngle = minRotation;
                 };
                 widget.Deselected += () =>
@@ -469,7 +469,7 @@ namespace Barotrauma.Items.Components
                     RotationLimits = RotationLimits;
                     if (SubEditorScreen.IsSubEditor())
                     {
-                        SubEditorScreen.StoreCommand(new PropertyCommand(this, "RotationLimits", RotationLimits, oldRotation));
+                        SubEditorScreen.StoreCommand(new PropertyCommand(this, "RotationLimits".ToIdentifier(), RotationLimits, oldRotation));
                     }
                 };
                 widget.MouseHeld += (deltaTime) =>
@@ -503,7 +503,7 @@ namespace Barotrauma.Items.Components
                 };
                 widget.MouseDown += () =>
                 {
-                    widget.color = GUI.Style.Green;
+                    widget.color = GUIStyle.Green;
                     prevAngle = maxRotation;
                 };
                 widget.Deselected += () =>
@@ -513,7 +513,7 @@ namespace Barotrauma.Items.Components
                     RotationLimits = RotationLimits;
                     if (SubEditorScreen.IsSubEditor())
                     {
-                        SubEditorScreen.StoreCommand(new PropertyCommand(this, "RotationLimits", RotationLimits, oldRotation));
+                        SubEditorScreen.StoreCommand(new PropertyCommand(this, "RotationLimits".ToIdentifier(), RotationLimits, oldRotation));
                     }
                 };
                 widget.MouseHeld += (deltaTime) =>
@@ -654,8 +654,8 @@ namespace Barotrauma.Items.Components
             if (ShowChargeIndicator && PowerConsumption > 0.0f)
             {
                 powerIndicator.Color = charged ? 
-                    (HasPowerToShoot() ? GUI.Style.Green : GUI.Style.Orange) : 
-                    GUI.Style.Red;
+                    (HasPowerToShoot() ? GUIStyle.Green : GUIStyle.Orange) : 
+                    GUIStyle.Red;
                 if (flashLowPower)
                 {
                     powerIndicator.BarSize = 1;
@@ -693,7 +693,7 @@ namespace Barotrauma.Items.Components
                 Rectangle rect = new Rectangle(invSlotPos.X, invSlotPos.Y, totalWidth, slotSize.Y);
                 float inflate = MathHelper.Lerp(3, 8, (float)Math.Abs(Math.Sin(flashTimer * 5)));
                 rect.Inflate(inflate, inflate);
-                Color color = GUI.Style.Red * Math.Max(0.5f, (float)Math.Sin(flashTimer * 12));
+                Color color = GUIStyle.Red * Math.Max(0.5f, (float)Math.Sin(flashTimer * 12));
                 if (flashNoAmmo)
                 {
                     GUI.DrawRectangle(spriteBatch, rect, color, thickness: 3);
@@ -701,7 +701,7 @@ namespace Barotrauma.Items.Components
                 else if (flashLoaderBroken)
                 {
                     GUI.DrawRectangle(spriteBatch, rect, color, thickness: 3);
-                    GUI.BrokenIcon.Draw(spriteBatch, rect.Center.ToVector2(), color, scale: rect.Height / GUI.BrokenIcon.size.Y);
+                    GUIStyle.BrokenIcon.Value.Sprite.Draw(spriteBatch, rect.Center.ToVector2(), color, scale: rect.Height / GUIStyle.BrokenIcon.Value.Sprite.size.Y);
                     GUIComponent.DrawToolTip(spriteBatch, TextManager.Get("turretloaderbroken"), new Rectangle(invSlotPos.X + totalWidth + GUI.IntScale(10), invSlotPos.Y + slotSize.Y / 2 - GUI.IntScale(9), 0, 0));
                 }
             }

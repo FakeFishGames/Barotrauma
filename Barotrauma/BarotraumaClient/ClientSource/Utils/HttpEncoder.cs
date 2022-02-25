@@ -36,26 +36,15 @@ using System.Configuration;
 using System.Globalization;
 using Barotrauma.IO;
 using System.Text;
-#if NET_4_0
-using System.Web.Configuration;
-#endif
 
 namespace RestSharp.Contrib
 {
-#if NET_4_0
-	public
-#endif
     class HttpEncoder
     {
         static char[] hexChars = "0123456789abcdef".ToCharArray();
         static object entitiesLock = new object();
         static SortedDictionary<string, char> entities;
-#if NET_4_0
-		static Lazy <HttpEncoder> defaultEncoder;
-		static Lazy <HttpEncoder> currentEncoderLazy;
-#else
         static HttpEncoder defaultEncoder;
-#endif
         static HttpEncoder currentEncoder;
 
         static IDictionary<string, char> Entities
@@ -76,53 +65,29 @@ namespace RestSharp.Contrib
         {
             get
             {
-#if NET_4_0
-				if (currentEncoder == null)
-					currentEncoder = currentEncoderLazy.Value;
-#endif
                 return currentEncoder;
             }
-#if NET_4_0
-			set {
-				if (value == null)
-					throw new ArgumentNullException ("value");
-				currentEncoder = value;
-			}
-#endif
         }
 
         public static HttpEncoder Default
         {
             get
             {
-#if NET_4_0
-				return defaultEncoder.Value;
-#else
                 return defaultEncoder;
-#endif
             }
         }
 
         static HttpEncoder()
         {
-#if NET_4_0
-			defaultEncoder = new Lazy <HttpEncoder> (() => new HttpEncoder ());
-			currentEncoderLazy = new Lazy <HttpEncoder> (new Func <HttpEncoder> (GetCustomEncoderFromConfig));
-#else
             defaultEncoder = new HttpEncoder();
             currentEncoder = defaultEncoder;
-#endif
         }
 
         public HttpEncoder()
         {
         }
-#if NET_4_0
-		protected internal virtual
-#else
-        internal static
-#endif
- void HeaderNameValueEncode(string headerName, string headerValue, out string encodedHeaderName, out string encodedHeaderValue)
+
+        internal static void HeaderNameValueEncode(string headerName, string headerValue, out string encodedHeaderName, out string encodedHeaderValue)
         {
             if (String.IsNullOrEmpty(headerName))
                 encodedHeaderName = headerName;
@@ -161,66 +126,8 @@ namespace RestSharp.Contrib
 
             return input;
         }
-#if NET_4_0
-		protected internal virtual void HtmlAttributeEncode (string value, TextWriter output)
-		{
 
-			if (output == null)
-				throw new ArgumentNullException ("output");
-
-			if (String.IsNullOrEmpty (value))
-				return;
-
-			output.Write (HtmlAttributeEncode (value));
-		}
-
-		protected internal virtual void HtmlDecode (string value, TextWriter output)
-		{
-			if (output == null)
-				throw new ArgumentNullException ("output");
-
-			output.Write (HtmlDecode (value));
-		}
-
-		protected internal virtual void HtmlEncode (string value, TextWriter output)
-		{
-			if (output == null)
-				throw new ArgumentNullException ("output");
-
-			output.Write (HtmlEncode (value));
-		}
-
-		protected internal virtual byte[] UrlEncode (byte[] bytes, int offset, int count)
-		{
-			return UrlEncodeToBytes (bytes, offset, count);
-		}
-
-		static HttpEncoder GetCustomEncoderFromConfig ()
-		{
-			var cfg = WebConfigurationManager.GetSection ("system.web/httpRuntime") as HttpRuntimeSection;
-			string typeName = cfg.EncoderType;
-
-			if (String.Compare (typeName, "System.Web.Util.HttpEncoder", StringComparison.OrdinalIgnoreCase) == 0)
-				return Default;
-			
-			Type t = Type.GetType (typeName, false);
-			if (t == null)
-				throw new ConfigurationErrorsException (String.Format ("Could not load type '{0}'.", typeName));
-			
-			if (!typeof (HttpEncoder).IsAssignableFrom (t))
-				throw new ConfigurationErrorsException (
-					String.Format ("'{0}' is not allowed here because it does not extend class 'System.Web.Util.HttpEncoder'.", typeName)
-				);
-
-			return Activator.CreateInstance (t, false) as HttpEncoder;
-		}
-#endif
-#if NET_4_0
-		protected internal virtual
-#else
-        internal static
-#endif
- string UrlPathEncode(string value)
+        internal static string UrlPathEncode(string value)
         {
             if (String.IsNullOrEmpty(value))
                 return value;
@@ -240,7 +147,7 @@ namespace RestSharp.Contrib
 
             int blen = bytes.Length;
             if (blen == 0)
-                return new byte[0];
+                return Array.Empty<byte>();
 
             if (offset < 0 || offset >= blen)
                 throw new ArgumentOutOfRangeException("offset");
@@ -268,11 +175,7 @@ namespace RestSharp.Contrib
             for (int i = 0; i < s.Length; i++)
             {
                 char c = s[i];
-                if (c == '&' || c == '"' || c == '<' || c == '>' || c > 159
-#if NET_4_0
-				    || c == '\''
-#endif
-)
+                if (c == '&' || c == '"' || c == '<' || c == '>' || c > 159)
                 {
                     needEncode = true;
                     break;
@@ -302,11 +205,6 @@ namespace RestSharp.Contrib
                     case '"':
                         output.Append("&quot;");
                         break;
-#if NET_4_0
-					case '\'':
-						output.Append ("&#39;");
-						break;
-#endif
                     case '\uff1c':
                         output.Append("&#65308;");
                         break;
@@ -334,25 +232,17 @@ namespace RestSharp.Contrib
 
         internal static string HtmlAttributeEncode(string s)
         {
-#if NET_4_0
-			if (String.IsNullOrEmpty (s))
-				return String.Empty;
-#else
             if (s == null)
                 return null;
 
             if (s.Length == 0)
                 return String.Empty;
-#endif
+
             bool needEncode = false;
             for (int i = 0; i < s.Length; i++)
             {
                 char c = s[i];
-                if (c == '&' || c == '"' || c == '<'
-#if NET_4_0
-				    || c == '\''
-#endif
-)
+                if (c == '&' || c == '"' || c == '<')
                 {
                     needEncode = true;
                     break;
@@ -376,11 +266,6 @@ namespace RestSharp.Contrib
                     case '<':
                         output.Append("&lt;");
                         break;
-#if NET_4_0
-				case '\'':
-					output.Append ("&#39;");
-					break;
-#endif
                     default:
                         output.Append(s[i]);
                         break;
@@ -399,9 +284,7 @@ namespace RestSharp.Contrib
 
             if (s.IndexOf('&') == -1)
                 return s;
-#if NET_4_0
-			StringBuilder rawEntity = new StringBuilder ();
-#endif
+
             StringBuilder entity = new StringBuilder();
             StringBuilder output = new StringBuilder();
             int len = s.Length;
@@ -422,9 +305,6 @@ namespace RestSharp.Contrib
                     if (c == '&')
                     {
                         entity.Append(c);
-#if NET_4_0
-						rawEntity.Append (c);
-#endif
                         state = 1;
                     }
                     else
@@ -471,9 +351,6 @@ namespace RestSharp.Contrib
                             state = 3;
                         }
                         entity.Append(c);
-#if NET_4_0
-						rawEntity.Append (c);
-#endif
                     }
                 }
                 else if (state == 2)
@@ -488,20 +365,12 @@ namespace RestSharp.Contrib
                         output.Append(key);
                         state = 0;
                         entity.Length = 0;
-#if NET_4_0
-						rawEntity.Length = 0;
-#endif
                     }
                 }
                 else if (state == 3)
                 {
                     if (c == ';')
                     {
-#if NET_4_0
-						if (number == 0)
-							output.Append (rawEntity.ToString () + ";");
-						else
-#endif
                         if (number > 65535)
                         {
                             output.Append("&#");
@@ -514,33 +383,21 @@ namespace RestSharp.Contrib
                         }
                         state = 0;
                         entity.Length = 0;
-#if NET_4_0
-						rawEntity.Length = 0;
-#endif
                         have_trailing_digits = false;
                     }
                     else if (is_hex_value && Uri.IsHexDigit(c))
                     {
                         number = number * 16 + Uri.FromHex(c);
                         have_trailing_digits = true;
-#if NET_4_0
-						rawEntity.Append (c);
-#endif
                     }
                     else if (Char.IsDigit(c))
                     {
                         number = number * 10 + ((int)c - '0');
                         have_trailing_digits = true;
-#if NET_4_0
-						rawEntity.Append (c);
-#endif
                     }
                     else if (number == 0 && (c == 'x' || c == 'X'))
                     {
                         is_hex_value = true;
-#if NET_4_0
-						rawEntity.Append (c);
-#endif
                     }
                     else
                     {
@@ -568,11 +425,7 @@ namespace RestSharp.Contrib
 
         internal static bool NotEncoded(char c)
         {
-            return (c == '!' || c == '(' || c == ')' || c == '*' || c == '-' || c == '.' || c == '_'
-#if !NET_4_0
- || c == '\''
-#endif
-);
+            return (c == '!' || c == '(' || c == ')' || c == '*' || c == '-' || c == '.' || c == '_');
         }
 
         internal static void UrlEncodeChar(char c, System.IO.Stream result, bool isUnicode)

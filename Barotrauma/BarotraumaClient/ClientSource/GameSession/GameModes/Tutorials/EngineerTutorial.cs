@@ -62,7 +62,7 @@ namespace Barotrauma.Tutorials
         private Reactor engineer_submarineReactor;
 
         // Variables
-        private string radioSpeakerName;
+        private LocalizedString radioSpeakerName;
         private Character engineer;
         private int[] reactorLoads = new int[5] { 1500, 3000, 2000, 5000, 3500 };
         private float reactorLoadChangeTime = 2f;
@@ -75,27 +75,74 @@ namespace Barotrauma.Tutorials
         private Color engineer_reactorIconColor;
         private bool wiringActive = false;
 
-        public EngineerTutorial(XElement element) : base(element)
-        {
+        public EngineerTutorial() : base("tutorial.engineertraining".ToIdentifier(),
+            new Segment(
+                "Mechanic.Equipment".ToIdentifier(),
+                "Mechanic.EquipmentObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Mechanic.EquipmentText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Engineer.Reactor".ToIdentifier(),
+                "Engineer.ReactorObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Engineer.ReactorText".ToIdentifier(), Width = 700, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_reactor.webm", TextTag = "Engineer.ReactorText".ToIdentifier(), Width = 700, Height = 80 }),
+            new Segment(
+                "Engineer.OperateReactor".ToIdentifier(),
+                "Engineer.OperateReactorObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Engineer.OperateReactorText".ToIdentifier(), Width = 700, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_reactor.webm", TextTag = "Engineer.ReactorText".ToIdentifier(), Width = 700, Height = 80 }),
+            new Segment(
+                "Engineer.RepairJunctionBox".ToIdentifier(),
+                "Engineer.RepairJunctionBoxObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Engineer.RepairJunctionBoxText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Engineer.WireJunctionBoxes".ToIdentifier(),
+                "Engineer.WireJunctionBoxesObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Engineer.WireJunctionBoxesText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_wiring.webm", TextTag = "Engineer.WireJunctionBoxesText".ToIdentifier(), Width = 450, Height = 80 }),
+            new Segment(
+                "Engineer.RepairElectricalRoom".ToIdentifier(),
+                "Engineer.RepairElectricalRoomObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Engineer.RepairElectricalRoomText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Engineer.PowerUpReactor".ToIdentifier(),
+                "Engineer.PowerUpReactorObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Engineer.PowerUpReactorText".ToIdentifier(), Width = 700, Height = 80, Anchor = Anchor.Center }))
+        { }
 
+        protected override CharacterInfo GetCharacterInfo()
+        {
+            return new CharacterInfo(
+                CharacterPrefab.HumanSpeciesName,
+                jobOrJobPrefab: new Job(
+                    JobPrefab.Prefabs["medicaldoctor"], Rand.RandSync.Unsynced, 0,
+                    new Skill("medical".ToIdentifier(), 0),
+                    new Skill("weapons".ToIdentifier(), 0),
+                    new Skill("mechanical".ToIdentifier(), 20),
+                    new Skill("electrical".ToIdentifier(), 60),
+                    new Skill("helm".ToIdentifier(), 0)));
         }
 
-        public override void Start()
+        protected override void Initialize()
         {
-            base.Start();
-
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             engineer = Character.Controlled;
 
-            var toolbelt = FindOrGiveItem(engineer, "toolbelt");
+            var toolbelt = FindOrGiveItem(engineer, "toolbelt".ToIdentifier());
             toolbelt.Unequip(engineer);
             engineer.Inventory.RemoveItem(toolbelt);
 
-            var repairOrder = Order.GetPrefab("repairsystems");
+            var repairOrder = OrderPrefab.Prefabs["repairsystems"];
             engineer_repairIcon = repairOrder.SymbolSprite;
             engineer_repairIconColor = repairOrder.Color;
 
-            var reactorOrder = Order.GetPrefab("operatereactor");
+            var reactorOrder = OrderPrefab.Prefabs["operatereactor"];
             engineer_reactorIcon = reactorOrder.SymbolSprite;
             engineer_reactorIconColor = reactorOrder.Color;
 
@@ -235,7 +282,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!engineer_equipmentObjectiveSensor.MotionDetected);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Equipment"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(0.5f, false);
-            TriggerTutorialSegment(0, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Deselect), GameMain.Config.KeyBindText(InputType.ToggleInventory)); // Retrieve equipment
+            TriggerTutorialSegment(0, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.ToggleInventory)); // Retrieve equipment
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
             bool thirdSlotRemoved = false;
@@ -276,7 +323,7 @@ namespace Barotrauma.Tutorials
 
                 yield return null;
             } while (!engineer_equipmentCabinet.Inventory.IsEmpty()); // Wait until looted
-            RemoveCompletedObjective(segments[0]);
+            RemoveCompletedObjective(0);
             SetHighlight(engineer_equipmentCabinet.Item, false);
             SetHighlight(engineer_reactor.Item, true);
             SetDoorAccess(engineer_firstDoor, engineer_firstDoorLight, true);
@@ -302,7 +349,7 @@ namespace Barotrauma.Tutorials
                 if (IsSelectedItem(engineer_reactor.Item) && engineer_reactor.Item.OwnInventory.visualSlots != null)
                 {
                     engineer_reactor.AutoTemp = false;
-                    HighlightInventorySlot(engineer.Inventory, "fuelrod", highlightColor, 0.5f, 0.5f, 0f);
+                    HighlightInventorySlot(engineer.Inventory, "fuelrod".ToIdentifier(), highlightColor, 0.5f, 0.5f, 0f);
 
                     for (int i = 0; i < engineer_reactor.Item.OwnInventory.visualSlots.Length; i++)
                     {
@@ -311,7 +358,7 @@ namespace Barotrauma.Tutorials
                 }
                 yield return null;
             } while (engineer_reactor.AvailableFuel == 0);
-            RemoveCompletedObjective(segments[1]);
+            RemoveCompletedObjective(1);
             TriggerTutorialSegment(2);
             CoroutineManager.StartCoroutine(ReactorOperatedProperly());
             do
@@ -354,7 +401,7 @@ namespace Barotrauma.Tutorials
             } while (wait > 0.0f);
             engineer.SelectedConstruction = null;
             engineer_reactor.CanBeSelected = false;
-            RemoveCompletedObjective(segments[2]);
+            RemoveCompletedObjective(2);
             SetHighlight(engineer_reactor.Item, false);
             SetHighlight(engineer_brokenJunctionBox, true);
             SetDoorAccess(engineer_secondDoor, engineer_secondDoorLight, true);
@@ -363,12 +410,12 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!engineer_secondDoor.IsOpen);
             yield return new WaitForSeconds(1f, false);
             Repairable repairableJunctionBoxComponent = engineer_brokenJunctionBox.GetComponent<Repairable>();
-            TriggerTutorialSegment(3, GameMain.Config.KeyBindText(InputType.Select)); // Repair the junction box
+            TriggerTutorialSegment(3, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select)); // Repair the junction box
             do
             {
-                if (!engineer.HasEquippedItem("screwdriver"))
+                if (!engineer.HasEquippedItem("screwdriver".ToIdentifier()))
                 {
-                    HighlightInventorySlot(engineer.Inventory, "screwdriver", highlightColor, .5f, .5f, 0f);
+                    HighlightInventorySlot(engineer.Inventory, "screwdriver".ToIdentifier(), highlightColor, .5f, .5f, 0f);
                 }
                 else if (IsSelectedItem(engineer_brokenJunctionBox) && repairableJunctionBoxComponent.CurrentFixer == null)
                 {
@@ -380,7 +427,7 @@ namespace Barotrauma.Tutorials
                 yield return null;
             } while (repairableJunctionBoxComponent.IsBelowRepairThreshold); // Wait until repaired
             SetHighlight(engineer_brokenJunctionBox, false);
-            RemoveCompletedObjective(segments[3]);
+            RemoveCompletedObjective(3);
             SetDoorAccess(engineer_thirdDoor, engineer_thirdDoorLight, true);
             for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)
             {
@@ -391,14 +438,14 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!engineer_thirdDoor.IsOpen);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.FaultyWiring"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(2f, false);
-            TriggerTutorialSegment(4, GameMain.Config.KeyBindText(InputType.Use), GameMain.Config.KeyBindText(InputType.Deselect)); // Connect the junction boxes
+            TriggerTutorialSegment(4, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Use), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect)); // Connect the junction boxes
             do { CheckGhostWires(); HandleJunctionBoxWiringHighlights(); yield return null; } while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage); // Wait until connected all the way to the pump
             CheckGhostWires();
             for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)
             {
                 SetHighlight(engineer_disconnectedJunctionBoxes[i].Item, false);
             }
-            RemoveCompletedObjective(segments[4]);
+            RemoveCompletedObjective(4);
             do { yield return null; } while (engineer_workingPump.Item.CurrentHull.WaterPercentage > waterVolumeBeforeOpening); // Wait until drained
             wiringActive = false;
             SetDoorAccess(engineer_fourthDoor, engineer_fourthDoorLight, true);
@@ -424,7 +471,7 @@ namespace Barotrauma.Tutorials
             // Remove highlights when each individual machine is repaired
             do { CheckJunctionBoxHighlights(repairableJunctionBoxComponent1, repairableJunctionBoxComponent2, repairableJunctionBoxComponent3); yield return null; } while (repairableJunctionBoxComponent1.IsBelowRepairThreshold || repairableJunctionBoxComponent2.IsBelowRepairThreshold || repairableJunctionBoxComponent3.IsBelowRepairThreshold);
             CheckJunctionBoxHighlights(repairableJunctionBoxComponent1, repairableJunctionBoxComponent2, repairableJunctionBoxComponent3);
-            RemoveCompletedObjective(segments[5]);
+            RemoveCompletedObjective(5);
             yield return new WaitForSeconds(2f, false);
 
             TriggerTutorialSegment(6); // Powerup reactor
@@ -433,7 +480,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!IsReactorPoweredUp(engineer_submarineReactor)); // Wait until ~matches load
             engineer.RemoveActiveObjectiveEntity(engineer_submarineReactor.Item);
             SetHighlight(engineer_submarineReactor.Item, false);
-            RemoveCompletedObjective(segments[6]);
+            RemoveCompletedObjective(6);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Complete"), ChatMessageType.Radio, null);
 
             yield return new WaitForSeconds(4f, false);
@@ -516,9 +563,9 @@ namespace Barotrauma.Tutorials
         {
             Item selected = engineer.SelectedConstruction;
 
-            if (!engineer.HasEquippedItem("screwdriver"))
+            if (!engineer.HasEquippedItem("screwdriver".ToIdentifier()))
             {
-                HighlightInventorySlot(engineer.Inventory, "screwdriver", highlightColor, 0.5f, 0.5f, 0f);
+                HighlightInventorySlot(engineer.Inventory, "screwdriver".ToIdentifier(), highlightColor, 0.5f, 0.5f, 0f);
             }
 
             int selectedIndex = -1;
@@ -537,9 +584,9 @@ namespace Barotrauma.Tutorials
 
             wiringActive = selectedIndex != -1;
 
-            if (!engineer.HasEquippedItem("wire"))
+            if (!engineer.HasEquippedItem("wire".ToIdentifier()))
             {
-                HighlightInventorySlotWithTag(engineer.Inventory, "wire", highlightColor, 0.5f, 0.5f, 0f);
+                HighlightInventorySlotWithTag(engineer.Inventory, "wire".ToIdentifier(), highlightColor, 0.5f, 0.5f, 0f);
             }
             else
             {

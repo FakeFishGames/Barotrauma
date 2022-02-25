@@ -27,7 +27,19 @@ namespace Barotrauma
 
         protected bool[] IsEquipped;
 
+        /// <summary>
+        /// Can the inventory be accessed when the character is still alive
+        /// </summary>
         public bool AccessibleWhenAlive
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Can the inventory be accessed by the character itself when the character is still alive (only has an effect if AccessibleWhenAlive false)
+        /// </summary>
+        public bool AccessibleByOwner
         {
             get;
             private set;
@@ -36,7 +48,7 @@ namespace Barotrauma
         private static string[] ParseSlotTypes(XElement element)
         {
             string slotString = element.GetAttributeString("slots", null);
-            return slotString == null ? new string[0] : slotString.Split(',');
+            return slotString == null ? Array.Empty<string>() : slotString.Split(',');
         }
 
         public CharacterInventory(XElement element, Character character)
@@ -47,6 +59,7 @@ namespace Barotrauma
             SlotTypes = new InvSlotType[capacity];
 
             AccessibleWhenAlive = element.GetAttributeBool("accessiblewhenalive", true);
+            AccessibleByOwner = element.GetAttributeBool("accessiblebyowner", AccessibleWhenAlive);
 
             string[] slotTypeNames = ParseSlotTypes(element);
             System.Diagnostics.Debug.Assert(slotTypeNames.Length == capacity);
@@ -76,7 +89,7 @@ namespace Barotrauma
             if (GameMain.Client != null) { return; }
 #endif
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("item", StringComparison.OrdinalIgnoreCase)) { continue; }
                 
@@ -89,7 +102,15 @@ namespace Barotrauma
 
                 string slotString = subElement.GetAttributeString("slot", "None");
                 InvSlotType slot = Enum.TryParse(slotString, ignoreCase: true, out InvSlotType s) ? s : InvSlotType.None;
-                Entity.Spawner?.AddToSpawnQueue(itemPrefab, this, ignoreLimbSlots: subElement.GetAttributeBool("forcetoslot", false), slot: slot);
+                Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, this, ignoreLimbSlots: subElement.GetAttributeBool("forcetoslot", false), slot: slot, onSpawned: (Item item) =>
+                {
+                    if (item != null && item.ParentInventory != this)
+                    {
+                        string errorMsg = $"Failed to spawn the initial item \"{item.Prefab.Identifier}\" in the inventory of \"{character.SpeciesName}\".";
+                        DebugConsole.ThrowError(errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("CharacterInventory:FailedToSpawnInitialItem", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                    }
+                });
             }
         }
 
@@ -191,7 +212,7 @@ namespace Barotrauma
                         if (TryPutItem(itemInSameSlot, limbSlot, allowSwapping: false, allowCombine: false, character))
                         {
 #if CLIENT
-                            visualSlots[i].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.412f);
+                            visualSlots[i].ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.412f);
 #endif
                         }
                         break;
@@ -348,7 +369,7 @@ namespace Barotrauma
 #if CLIENT
                             for (int j = 0; j < capacity; j++)
                             {
-                                if (visualSlots != null && slots[j] == slots[i]) { visualSlots[j].ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.9f); }
+                                if (visualSlots != null && slots[j] == slots[i]) { visualSlots[j].ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f); }
                             }
 #endif
                         }

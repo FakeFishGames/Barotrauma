@@ -7,14 +7,14 @@ namespace Barotrauma.Items.Components
         private bool signalReceived;
 
         private bool continuousOutput;
-        [Editable, Serialize(false, true, description: "When enabled, the component continuously outputs \"1\" when it's not receiving a signal.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "When enabled, the component continuously outputs \"1\" when it's not receiving a signal.", alwaysUseInstanceValues: true)]
         public bool ContinuousOutput
         {
             get { return continuousOutput; }
             set { continuousOutput = IsActive = value; }
         }
 
-        public NotComponent(Item item, XElement element)
+        public NotComponent(Item item, ContentXElement element)
             : base (item, element)
         {
         }

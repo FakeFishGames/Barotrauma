@@ -50,39 +50,39 @@ namespace Barotrauma.Items.Components
 
         public int DockingDir { get; set; }
 
-        [Serialize("32.0,32.0", false, description: "How close the docking port has to be to another port to dock.")]
+        [Serialize("32.0,32.0", IsPropertySaveable.No, description: "How close the docking port has to be to another port to dock.")]
         public Vector2 DistanceTolerance { get; set; }
 
-        [Serialize(32.0f, false, description: "How close together the docking ports are forced when docked.")]
+        [Serialize(32.0f, IsPropertySaveable.No, description: "How close together the docking ports are forced when docked.")]
         public float DockedDistance
         {
             get;
             set;
         }
 
-        [Serialize(true, false, description: "Is the port horizontal.")]
+        [Serialize(true, IsPropertySaveable.No, description: "Is the port horizontal.")]
         public bool IsHorizontal
         {
             get;
             set;
         }
 
-        [Editable, Serialize(false, true, description: "If set to true, this docking port is used when spawning the submarine docked to an outpost (if possible).")]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "If set to true, this docking port is used when spawning the submarine docked to an outpost (if possible).")]
         public bool MainDockingPort
         {
             get;
             set;
         }
 
-        [Serialize(true, false, description: "Should the OnUse StatusEffects trigger when docking (on vanilla docking ports these effects emit particles and play a sound).)")]
+        [Serialize(true, IsPropertySaveable.No, description: "Should the OnUse StatusEffects trigger when docking (on vanilla docking ports these effects emit particles and play a sound).)")]
         public bool ApplyEffectsOnDocking
         {
             get;
             set;
         }
 
-        [Editable, Serialize(DirectionType.None, false, description: "Which direction the port is allowed to dock in. For example, \"Top\" would mean the port can dock to another port above it.\n"+
-            "Normally there's no need to touch this setting, but if you notice the docking position is incorrect (for example due to some unusual docking port configuration without hulls or doors), you can use this to enforce the direction.")]
+        [Editable, Serialize(DirectionType.None, IsPropertySaveable.No, description: "Which direction the port is allowed to dock in. For example, \"Top\" would mean the port can dock to another port above it.\n"+
+             "Normally there's no need to touch this setting, but if you notice the docking position is incorrect (for example due to some unusual docking port configuration without hulls or doors), you can use this to enforce the direction.")]
         public DirectionType ForceDockingDirection { get; set; }
         
         public DockingPort DockingTarget { get; private set; }
@@ -126,11 +126,11 @@ namespace Barotrauma.Items.Components
         /// </summary>
         public event Action OnUnDocked;
 
-        public DockingPort(Item item, XElement element)
+        public DockingPort(Item item, ContentXElement element)
             : base(item, element)
         {
             // isOpen = false;
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 string texturePath = subElement.GetAttributeString("texture", "");
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -338,33 +338,32 @@ namespace Barotrauma.Items.Components
                 Vector2.UnitX * DockingDir :
                 Vector2.UnitY * DockingDir;
             offset *= DockedDistance * 0.5f * item.Scale;
-            
-            Vector2 pos1 = item.WorldPosition + offset;
 
+            Vector2 pos1 = item.WorldPosition + offset;
             Vector2 pos2 = DockingTarget.item.WorldPosition - offset;
 
             if (useWeldJoint)
             {
                 joint = JointFactory.CreateWeldJoint(GameMain.World,
                     item.Submarine.PhysicsBody.FarseerBody, DockingTarget.item.Submarine.PhysicsBody.FarseerBody,
-                    ConvertUnits.ToSimUnits(pos1), FarseerPhysics.ConvertUnits.ToSimUnits(pos2), true);
+                    ConvertUnits.ToSimUnits(pos1), ConvertUnits.ToSimUnits(pos2), true);
 
                 ((WeldJoint)joint).FrequencyHz = 1.0f;
+                joint.CollideConnected = false;
             }
             else
             {
                 var distanceJoint = JointFactory.CreateDistanceJoint(GameMain.World,
                     item.Submarine.PhysicsBody.FarseerBody, DockingTarget.item.Submarine.PhysicsBody.FarseerBody,
-                    ConvertUnits.ToSimUnits(pos1), FarseerPhysics.ConvertUnits.ToSimUnits(pos2), true);
+                    ConvertUnits.ToSimUnits(pos1), ConvertUnits.ToSimUnits(pos2), true);
 
                 distanceJoint.Length = 0.01f;
                 distanceJoint.Frequency = 1.0f;
                 distanceJoint.DampingRatio = 0.8f;
 
                 joint = distanceJoint;
+                joint.CollideConnected = true;
             }
-
-            joint.CollideConnected = true;
         }
 
         public int GetDir(DockingPort dockingTarget = null)
@@ -476,6 +475,10 @@ namespace Barotrauma.Items.Components
             wire.Connect(powerConnection, false, false);
             recipient.TryAddLink(wire);
             wire.Connect(recipient, false, false);
+
+            //Flag connections to be updated
+            Powered.ChangedConnections.Add(powerConnection);
+            Powered.ChangedConnections.Add(recipient);
         }
 
         private void CreateDoorBody()
@@ -545,7 +548,7 @@ namespace Barotrauma.Items.Components
 
                 //expand hulls if needed, so there's no empty space between the sub's hulls and docking port hulls
                 int leftSubRightSide = int.MinValue, rightSubLeftSide = int.MaxValue;
-                foreach (Hull hull in Hull.hullList)
+                foreach (Hull hull in Hull.HullList)
                 {
                     for (int i = 0; i < 2; i++)
                     {
@@ -649,7 +652,7 @@ namespace Barotrauma.Items.Components
 
                 //expand hulls if needed, so there's no empty space between the sub's hulls and docking port hulls
                 int upperSubBottom = int.MaxValue, lowerSubTop = int.MinValue;
-                foreach (Hull hull in Hull.hullList)
+                foreach (Hull hull in Hull.HullList)
                 {
                     for (int i = 0; i < 2; i++)
                     {
@@ -757,7 +760,9 @@ namespace Barotrauma.Items.Components
             }
 
             LinkHullsToGaps();
-            
+
+            Item.UpdateHulls();
+
             hulls[0].ShouldBeSaved = false;
             hulls[1].ShouldBeSaved = false;
             item.linkedTo.Add(hulls[0]);
@@ -907,6 +912,13 @@ namespace Barotrauma.Items.Components
             DockingTarget.Undock();
             DockingTarget = null;
 
+            //Flag power connection
+            Connection powerConnection = Item.Connections.Find(c => c.IsPower);
+            if (powerConnection != null)
+            {
+                Powered.ChangedConnections.Add(powerConnection);
+            }
+
             if (doorBody != null)
             {
                 GameMain.World.Remove(doorBody);
@@ -1048,8 +1060,8 @@ namespace Barotrauma.Items.Components
             if (initialized) { return; }
             initialized = true;
 
-            float maxXDist = (item.Prefab.sprite.size.X * item.Prefab.Scale) / 2;
-            float closestYDist = (item.Prefab.sprite.size.Y * item.Prefab.Scale) / 2;
+            float maxXDist = (item.Prefab.Sprite.size.X * item.Prefab.Scale) / 2;
+            float closestYDist = (item.Prefab.Sprite.size.Y * item.Prefab.Scale) / 2;
             foreach (Item it in Item.ItemList)
             {
                 if (it.Submarine != item.Submarine) { continue; }

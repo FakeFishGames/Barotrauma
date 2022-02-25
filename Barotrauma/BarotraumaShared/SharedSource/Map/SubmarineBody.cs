@@ -118,7 +118,7 @@ namespace Barotrauma
             Vector2 minExtents = Vector2.Zero, maxExtents = Vector2.Zero;
             Vector2 visibleMinExtents = Vector2.Zero, visibleMaxExtents = Vector2.Zero;
             Body farseerBody = null;
-            if (!Hull.hullList.Any(h => h.Submarine == sub))
+            if (!Hull.HullList.Any(h => h.Submarine == sub))
             {
                 farseerBody = GameMain.World.CreateRectangle(1.0f, 1.0f, 1.0f);
                 if (showWarningMessages)
@@ -156,7 +156,7 @@ namespace Barotrauma
                     }
                 }
 
-                foreach (Hull hull in Hull.hullList)
+                foreach (Hull hull in Hull.HullList)
                 {
                     if (hull.Submarine != submarine || hull.IdFreed) { continue; }
 
@@ -446,7 +446,7 @@ namespace Barotrauma
         {
             float waterVolume = 0.0f;
             float volume = 0.0f;
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in Hull.HullList)
             {
                 if (hull.Submarine != submarine) continue;
 
@@ -850,7 +850,7 @@ namespace Barotrauma
                 {
                     errorMsg += GameMain.NetworkMember.IsClient ? " Playing as a client." : " Hosting a server.";
                 }
-                if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
+                if (GameSettings.CurrentConfig.VerboseLogging) DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "SubmarineBody.ApplyImpact:InvalidImpulse",
                     GameAnalyticsManager.ErrorSeverity.Error,

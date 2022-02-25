@@ -36,8 +36,8 @@ namespace Barotrauma.Items.Components
                 return picker; 
             }
         }
-        
-        public Pickable(Item item, XElement element)
+
+        public Pickable(Item item, ContentXElement element)
             : base(item, element)
         {
             allowedSlots = new List<InvSlotType>();
@@ -181,7 +181,7 @@ namespace Barotrauma.Items.Components
                     this,
                     item.WorldPosition,
                     pickTimer / requiredTime,
-                    GUI.Style.Red, GUI.Style.Green,
+                    GUIStyle.Red, GUIStyle.Green,
                     !string.IsNullOrWhiteSpace(PickingMsg) ? PickingMsg : this is Door ? "progressbar.opening" : "progressbar.deattaching");
 #endif
                 

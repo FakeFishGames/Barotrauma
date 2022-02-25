@@ -16,10 +16,10 @@ namespace Barotrauma
         {
             public readonly ushort OriginalID;
             public readonly ushort ModuleIndex;
-            public readonly string Identifier;
+            public readonly Identifier Identifier;
             public readonly int OriginalContainerIndex;
 
-            public TakenItem(string identifier, UInt16 originalID, int originalContainerIndex, ushort moduleIndex)
+            public TakenItem(Identifier identifier, UInt16 originalID, int originalContainerIndex, ushort moduleIndex)
             {
                 OriginalID = originalID;
                 OriginalContainerIndex = originalContainerIndex;
@@ -34,7 +34,7 @@ namespace Barotrauma
                 OriginalContainerIndex = item.OriginalContainerIndex;
                 OriginalID = item.ID;
                 ModuleIndex = (ushort) item.OriginalModuleIndex;
-                Identifier = item.prefab.Identifier;
+                Identifier = ((MapEntity)item).Prefab.Identifier;
             }
 
             public bool IsEqual(TakenItem obj)
@@ -46,11 +46,11 @@ namespace Barotrauma
             {
                 if (item.OriginalContainerIndex != Entity.NullEntityID)
                 {
-                    return item.OriginalContainerIndex == OriginalContainerIndex && item.OriginalModuleIndex == ModuleIndex && item.prefab.Identifier == Identifier;
+                    return item.OriginalContainerIndex == OriginalContainerIndex && item.OriginalModuleIndex == ModuleIndex && ((MapEntity)item).Prefab.Identifier == Identifier;
                 }
                 else
                 {
-                    return item.ID == OriginalID && item.OriginalModuleIndex == ModuleIndex && item.prefab.Identifier == Identifier;
+                    return item.ID == OriginalID && item.OriginalModuleIndex == ModuleIndex && ((MapEntity)item).Prefab.Identifier == Identifier;
                 }
             }
         }
@@ -252,7 +252,7 @@ namespace Barotrauma
             return $"Location ({Name ?? "null"})";
         }
 
-        public Location(Vector2 mapPosition, int? zone, Random rand, bool requireOutpost = false, LocationType? forceLocationType = null, IEnumerable<Location> existingLocations = null)
+        public Location(Vector2 mapPosition, int? zone, Random rand, bool requireOutpost = false, LocationType forceLocationType = null, IEnumerable<Location> existingLocations = null)
         {
             Type = OriginalType = forceLocationType ?? LocationType.Random(rand, zone, requireOutpost);
             Name = RandomName(Type, rand, existingLocations);
@@ -263,22 +263,21 @@ namespace Barotrauma
 
         public Location(XElement element)
         {
-            string locationType = element.GetAttributeString("type", "");
-            Type = LocationType.List.Find(lt => lt.Identifier.Equals(locationType, StringComparison.OrdinalIgnoreCase));
+            Identifier locationType = element.GetAttributeIdentifier("type", "");
+            Type = LocationType.Prefabs[locationType];
             bool typeNotFound = false;
             if (Type == null)
             {
                 //turn lairs into abandoned outposts
-                if (locationType.Equals("lair", StringComparison.OrdinalIgnoreCase))
+                if (locationType == "lair")
                 {
-                    Type ??= LocationType.List.Find(lt => lt.Identifier.Equals("Abandoned", StringComparison.OrdinalIgnoreCase));
+                    Type ??= LocationType.Prefabs["Abandoned"];
                     addInitialMissionsForType = Type;                    
                 }
                 if (Type == null)
                 {
                     DebugConsole.AddWarning($"Could not find location type \"{locationType}\". Using location type \"None\" instead.");
-                    Type ??= LocationType.List.Find(lt => lt.Identifier.Equals("None", StringComparison.OrdinalIgnoreCase));
-                    Type ??= LocationType.List.First();
+                    Type ??= LocationType.Prefabs["None"] ?? LocationType.Prefabs.First();
                 }
                 if (Type != null)
                 {
@@ -287,8 +286,8 @@ namespace Barotrauma
                 typeNotFound = true;
             }
 
-            string originalLocationType = element.GetAttributeString("originaltype", locationType);
-            OriginalType = LocationType.List.Find(lt => lt.Identifier.Equals(locationType, StringComparison.OrdinalIgnoreCase));
+            Identifier originalLocationType = element.GetAttributeIdentifier("originaltype", locationType);
+            OriginalType = LocationType.Prefabs[locationType];
 
             baseName        = element.GetAttributeString("basename", "");
             Name            = element.GetAttributeString("name", "");
@@ -312,7 +311,7 @@ namespace Barotrauma
                 LoadLocationTypeChange(element);
             }
 
-            string[] takenItemStr = element.GetAttributeStringArray("takenitems", new string[0]);
+            string[] takenItemStr = element.GetAttributeStringArray("takenitems", Array.Empty<string>());
             foreach (string takenItem in takenItemStr)
             {
                 string[] takenItemSplit = takenItem.Split(';');
@@ -336,15 +335,15 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"Error in saved location: could not parse taken item module index \"{takenItemSplit[3]}\"");
                     continue;
                 }
-                takenItems.Add(new TakenItem(takenItemSplit[0], id, containerIndex, moduleIndex));
+                takenItems.Add(new TakenItem(takenItemSplit[0].ToIdentifier(), id, containerIndex, moduleIndex));
             }
 
-            killedCharacterIdentifiers = element.GetAttributeIntArray("killedcharacters", new int[0]).ToHashSet();
+            killedCharacterIdentifiers = element.GetAttributeIntArray("killedcharacters", Array.Empty<int>()).ToHashSet();
 
             System.Diagnostics.Debug.Assert(Type != null, $"Could not find the location type \"{locationType}\"!");
             if (Type == null)
             {
-                Type = LocationType.List.First();
+                Type = LocationType.Prefabs.First();
             }
 
             LevelData = new LevelData(element.Element("Level"));
@@ -359,7 +358,7 @@ namespace Barotrauma
         {
             TimeSinceLastTypeChange = locationElement.GetAttributeInt("timesincelasttypechange", 0);
             LocationTypeChangeCooldown = locationElement.GetAttributeInt("locationtypechangecooldown", 0);
-            foreach (XElement subElement in locationElement.Elements())
+            foreach (var subElement in locationElement.Elements())
             {
                 switch (subElement.Name.ToString())
                 {
@@ -377,8 +376,8 @@ namespace Barotrauma
                         }
                         else
                         {
-                            string missionIdentifier = subElement.GetAttributeString("missionidentifier", "");
-                            var mission = MissionPrefab.List.Find(mp => mp.Identifier.Equals(missionIdentifier, StringComparison.OrdinalIgnoreCase));
+                            Identifier missionIdentifier = subElement.GetAttributeIdentifier("missionidentifier", "");
+                            var mission = MissionPrefab.Prefabs[missionIdentifier];
                             if (mission == null)
                             {
                                 DebugConsole.AddWarning($"Failed to activate a location type change from the mission \"{missionIdentifier}\" in location \"{Name}\". Matching mission not found.");
@@ -400,7 +399,7 @@ namespace Barotrauma
                 {
                     var id = childElement.GetAttributeString("prefabid", null);
                     if (string.IsNullOrWhiteSpace(id)) { continue; }
-                    var prefab = MissionPrefab.List.Find(p => p.Identifier.Equals(id, StringComparison.OrdinalIgnoreCase));
+                    var prefab = MissionPrefab.Prefabs.Find(p => p.Identifier == id);
                     if (prefab == null) { continue; }
                     var destination = childElement.GetAttributeInt("destinationindex", -1);
                     var selected = childElement.GetAttributeBool("selected", false);
@@ -410,7 +409,7 @@ namespace Barotrauma
         }
 
 
-        public static Location CreateRandom(Vector2 position, int? zone, Random rand, bool requireOutpost, LocationType? forceLocationType = null, IEnumerable<Location> existingLocations = null)
+        public static Location CreateRandom(Vector2 position, int? zone, Random rand, bool requireOutpost, LocationType forceLocationType = null, IEnumerable<Location> existingLocations = null)
         {
             return new Location(position, zone, rand, requireOutpost, forceLocationType, existingLocations);
         }
@@ -432,11 +431,11 @@ namespace Barotrauma
 
             if (Type.MissionIdentifiers.Any())
             {
-                UnlockMissionByIdentifier(Type.MissionIdentifiers.GetRandom());
+                UnlockMissionByIdentifier(Type.MissionIdentifiers.GetRandomUnsynced());
             }
             if (Type.MissionTags.Any())
             {
-                UnlockMissionByTag(Type.MissionTags.GetRandom());
+                UnlockMissionByTag(Type.MissionTags.GetRandomUnsynced());
             }
 
             CreateStore(force: true);
@@ -446,11 +445,11 @@ namespace Barotrauma
         {
             if (Type.MissionIdentifiers.Any())
             {
-                UnlockMissionByIdentifier(Type.MissionIdentifiers.GetRandom(Rand.RandSync.Server));
+                UnlockMissionByIdentifier(Type.MissionIdentifiers.GetRandom(Rand.RandSync.ServerAndClient));
             }
             if (Type.MissionTags.Any())
             {
-                UnlockMissionByTag(Type.MissionTags.GetRandom(Rand.RandSync.Server));
+                UnlockMissionByTag(Type.MissionTags.GetRandom(Rand.RandSync.ServerAndClient));
             }
         }
 
@@ -474,11 +473,11 @@ namespace Barotrauma
 #endif
         }
 
-        public MissionPrefab UnlockMissionByIdentifier(string identifier)
+        public MissionPrefab UnlockMissionByIdentifier(Identifier identifier)
         {
-            if (AvailableMissions.Any(m => m.Prefab.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase))) { return null; }
+            if (AvailableMissions.Any(m => m.Prefab.Identifier == identifier)) { return null; }
 
-            var missionPrefab = MissionPrefab.List.Find(mp => mp.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+            var missionPrefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == identifier);
             if (missionPrefab == null)
             {
                 DebugConsole.ThrowError($"Failed to unlock a mission with the identifier \"{identifier}\": matching mission not found.");
@@ -500,9 +499,9 @@ namespace Barotrauma
             return null;
         }
 
-        public MissionPrefab UnlockMissionByTag(string tag)
+        public MissionPrefab UnlockMissionByTag(Identifier tag)
         {
-            var matchingMissions = MissionPrefab.List.FindAll(mp => mp.Tags.Any(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase)));
+            var matchingMissions = MissionPrefab.Prefabs.Where(mp => mp.Tags.Any(t => t == tag));
             if (!matchingMissions.Any())
             {
                 DebugConsole.ThrowError($"Failed to unlock a mission with the tag \"{tag}\": no matching missions not found.");
@@ -623,11 +622,11 @@ namespace Barotrauma
             {
                 if (addInitialMissionsForType.MissionIdentifiers.Any())
                 {
-                    UnlockMissionByIdentifier(addInitialMissionsForType.MissionIdentifiers.GetRandom());
+                    UnlockMissionByIdentifier(addInitialMissionsForType.MissionIdentifiers.GetRandomUnsynced());
                 }
                 if (addInitialMissionsForType.MissionTags.Any())
                 {
-                    UnlockMissionByTag(addInitialMissionsForType.MissionTags.GetRandom());
+                    UnlockMissionByTag(addInitialMissionsForType.MissionTags.GetRandomUnsynced());
                 }
                 addInitialMissionsForType = null;
             }
@@ -661,7 +660,7 @@ namespace Barotrauma
 
         public LocationType GetLocationType()
         {
-            if (IsCriticallyRadiated() && LocationType.List.FirstOrDefault(lt => lt.Identifier.Equals(Type.ReplaceInRadiation, StringComparison.OrdinalIgnoreCase)) is { } newLocationType)
+            if (IsCriticallyRadiated() && LocationType.Prefabs[Type.ReplaceInRadiation] is { } newLocationType)
             {
                 return newLocationType;
             }
@@ -757,8 +756,8 @@ namespace Barotrauma
                     List<ItemPrefab> specials = new List<ItemPrefab>();
                     foreach (var childElement in element.GetChildElements("item"))
                     {
-                        var id = childElement.GetAttributeString("id", null);
-                        if (string.IsNullOrWhiteSpace(id)) { continue; }
+                        var id = childElement.GetAttributeIdentifier("id", Identifier.Empty);
+                        if (id.IsEmpty) { continue; }
                         var prefab = ItemPrefab.Find(null, id);
                         if (prefab == null) { continue; }
                         specials.Add(prefab);
@@ -1045,9 +1044,9 @@ namespace Barotrauma
             RequestedGoods.Clear();
             for (int i = 0; i < RequestedGoodsCount; i++)
             {
-                var item = ItemPrefab.Prefabs.GetRandom(p =>
+                var item = ItemPrefab.Prefabs.GetRandom<ItemPrefab>(p =>
                     p.CanBeSold && !RequestedGoods.Contains(p) &&
-                    p.GetPriceInfo(this) is PriceInfo pi && pi.CanBeSpecial);
+                    p.GetPriceInfo(this) is PriceInfo pi && pi.CanBeSpecial, Rand.RandSync.Unsynced);
                 if (item == null) { break; }
                 RequestedGoods.Add(item);
             }

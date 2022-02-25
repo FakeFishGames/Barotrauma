@@ -10,28 +10,28 @@ namespace Barotrauma.Items.Components
     {
         private Sprite sprite, startSprite, endSprite;
 
-        [Serialize(5, false)]
+        [Serialize(5, IsPropertySaveable.No)]
         public int SpriteWidth
         {
             get;
             set;
         }
 
-        [Serialize("255,255,255,255", false)]
+        [Serialize("255,255,255,255", IsPropertySaveable.No)]
         public Color SpriteColor
         {
             get;
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, IsPropertySaveable.No)]
         public bool Tile
         {
             get;
             set;
         }
 
-        [Serialize("0.5,0.5)", false)]
+        [Serialize("0.5,0.5)", IsPropertySaveable.No)]
         public Vector2 Origin { get; set; } = new Vector2(0.5f, 0.5f);
 
         public Vector2 DrawSize
@@ -62,9 +62,9 @@ namespace Barotrauma.Items.Components
             return sourcePos;
         }
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {

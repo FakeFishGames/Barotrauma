@@ -7,14 +7,14 @@ namespace Barotrauma.Items.Components
     {
         public static List<Ladder> List { get; } = new List<Ladder>();
 
-        public Ladder(Item item, XElement element)
+        public Ladder(Item item, ContentXElement element)
             : base(item, element)
         {
             InitProjSpecific(element);
             List.Add(this);
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
         public override bool Select(Character character)
         {

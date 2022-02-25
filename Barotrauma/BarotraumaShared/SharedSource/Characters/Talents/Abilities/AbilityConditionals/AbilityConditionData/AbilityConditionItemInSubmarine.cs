@@ -6,7 +6,7 @@ namespace Barotrauma.Abilities
     {
         private readonly SubmarineType? submarineType;
 
-        public AbilityConditionItemInSubmarine(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) 
+        public AbilityConditionItemInSubmarine(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement) 
         { 
             if (conditionElement.Attribute("submarinetype") != null)
             {

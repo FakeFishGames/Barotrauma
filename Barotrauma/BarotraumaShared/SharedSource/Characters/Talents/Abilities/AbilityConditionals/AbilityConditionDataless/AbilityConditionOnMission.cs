@@ -5,7 +5,7 @@ namespace Barotrauma.Abilities
 {
     class AbilityConditionOnMission : AbilityConditionDataless
     {
-        public AbilityConditionOnMission(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionOnMission(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
         }
 

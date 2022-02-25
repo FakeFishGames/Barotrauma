@@ -56,9 +56,9 @@ namespace Barotrauma.Networking
             {
                 if (Type.HasFlag(ChatMessageType.Server) || Type.HasFlag(ChatMessageType.Error) || Type.HasFlag(ChatMessageType.ServerLog))
                 {
-                    if (translatedText == null || translatedText.Length == 0)
+                    if (translatedText.IsNullOrEmpty())
                     {
-                        translatedText = TextManager.GetServerMessage(Text);
+                        translatedText = TextManager.GetServerMessage(Text).Value;
                     }
 
                     return translatedText;

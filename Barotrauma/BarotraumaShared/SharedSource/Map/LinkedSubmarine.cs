@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.IO;
+using Barotrauma.Extensions;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -21,10 +23,26 @@ namespace Barotrauma
         }
 
         public readonly SubmarineInfo subInfo;
-        
-        public LinkedSubmarinePrefab(SubmarineInfo subInfo)
+
+        public override Sprite Sprite => null;
+
+        public override string OriginalName => Name.Value;
+
+        public override LocalizedString Name => subInfo.Name;
+
+        public override ImmutableHashSet<Identifier> Tags => null;
+
+        public override ImmutableHashSet<Identifier> AllowedLinks => null;
+
+        public override MapEntityCategory Category => MapEntityCategory.Misc;
+
+        public override ImmutableHashSet<string> Aliases { get; }
+
+        public LinkedSubmarinePrefab(SubmarineInfo subInfo) : base(subInfo.Name.ToIdentifier())
         {
             this.subInfo = subInfo;
+
+            Aliases = Name.Value.ToEnumerable().ToImmutableHashSet();
         }
 
         protected override void CreateInstance(Rectangle rect)
@@ -71,6 +89,8 @@ namespace Barotrauma
                 return true;
             }
         }
+
+        public int CargoCapacity { get; private set; }
         
         public LinkedSubmarine(Submarine submarine, ushort id = Entity.NullEntityID)
             : base(null, submarine, id)
@@ -110,6 +130,7 @@ namespace Barotrauma
         {
             LinkedSubmarine sl = new LinkedSubmarine(mainSub, id);
             sl.GenerateWallVertices(element);
+            sl.CargoCapacity = element.GetAttributeInt("cargocapacity", 0);
             if (sl.wallVertices.Any())
             {
                 sl.Rect = new Rectangle(
@@ -152,7 +173,7 @@ namespace Barotrauma
                 if (element.Name != "Structure") { continue; }
 
                 string name = element.GetAttributeString("name", "");
-                string identifier = element.GetAttributeString("identifier", "");
+                Identifier identifier = element.GetAttributeIdentifier("identifier", "");
 
                 StructurePrefab prefab = Structure.FindPrefab(name, identifier);
                 if (prefab == null) { continue; }
@@ -173,7 +194,7 @@ namespace Barotrauma
         }
 
         // LinkedSubmarine.Load() is called from MapEntity.LoadAll()
-        public static LinkedSubmarine Load(XElement element, Submarine submarine, IdRemap idRemap)
+        public static LinkedSubmarine Load(ContentXElement element, Submarine submarine, IdRemap idRemap)
         {
             Vector2 pos = element.GetAttributeVector2("pos", Vector2.Zero);
             LinkedSubmarine linkedSub;
@@ -206,14 +227,16 @@ namespace Barotrauma
                 }
             }
 
-            linkedSub.filePath = element.GetAttributeString("filepath", "");
-            int[] linkedToIds = element.GetAttributeIntArray("linkedto", new int[0]);
+            #warning TODO: revise
+            linkedSub.filePath = element.GetAttributeContentPath("filepath")?.Value ?? string.Empty;
+            int[] linkedToIds = element.GetAttributeIntArray("linkedto", Array.Empty<int>());
             for (int i = 0; i < linkedToIds.Length; i++)
             {
                 linkedSub.linkedToID.Add(idRemap.GetOffsetId(linkedToIds[i]));
             }
             linkedSub.originalLinkedToID = idRemap.GetOffsetId(element.GetAttributeInt("originallinkedto", 0));
             linkedSub.originalMyPortID = (ushort)element.GetAttributeInt("originalmyport", 0);
+            linkedSub.CargoCapacity = element.GetAttributeInt("cargocapacity", 0);
 
             return linkedSub.loadSub ? linkedSub : null;
         }
@@ -269,7 +292,7 @@ namespace Barotrauma
             DockingPort linkedPort = null;
             DockingPort myPort = null;
             
-            MapEntity linkedItem = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
+            MapEntity linkedItem = linkedTo.FirstOrDefault(lt => (lt as Item)?.GetComponent<DockingPort>() != null);
             if (linkedItem == null)
             {
                 linkedPort = DockingPort.List.FirstOrDefault(dp => dp.DockingTarget != null && dp.DockingTarget.Item.Submarine == sub);
@@ -349,7 +372,7 @@ namespace Barotrauma
                         wall.SetDamage(i, 0, createNetworkEvent: false);
                     }                    
                 }
-                foreach (Hull hull in Hull.hullList)
+                foreach (Hull hull in Hull.HullList)
                 {
                     if (hull.Submarine != sub) { continue; }
                     hull.WaterVolume = 0.0f;

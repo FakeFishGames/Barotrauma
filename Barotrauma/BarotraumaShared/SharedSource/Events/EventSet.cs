@@ -7,13 +7,29 @@ using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma
-{ 
-    class EventSet
+{
+#if CLIENT
+    class EventSprite : Prefab
+    {
+        public readonly static PrefabCollection<EventSprite> Prefabs = new PrefabCollection<EventSprite>();
+
+        public readonly Sprite Sprite;
+
+        public EventSprite(ContentXElement element, RandomEventsFile file) : base(file, element.GetAttributeIdentifier("identifier", Identifier.Empty))
+        {
+            Sprite = new Sprite(element);
+        }
+
+        public override void Dispose() { Sprite?.Remove(); }
+    }
+#endif
+
+    class EventSet : Prefab
     {
         internal class EventDebugStats
         {
             public readonly EventSet RootSet;
-            public readonly Dictionary<string, int> MonsterCounts = new Dictionary<string, int>();
+            public readonly Dictionary<Identifier, int> MonsterCounts = new Dictionary<Identifier, int>();
             public float MonsterStrength;
 
             public EventDebugStats(EventSet rootSet)
@@ -22,13 +38,7 @@ namespace Barotrauma
             }
         }
 
-        public static List<EventSet> List
-        {
-            get;
-            private set;
-        }
-        
-        public static readonly List<EventPrefab> PrefabList = new List<EventPrefab>();
+        public readonly static PrefabCollection<EventSet> Prefabs = new PrefabCollection<EventSet>();
 #if CLIENT
         private static readonly Dictionary<string, Sprite> EventSprites = new Dictionary<string, Sprite>();
 
@@ -47,21 +57,23 @@ namespace Barotrauma
 
         public static List<EventPrefab> GetAllEventPrefabs()
         {
-            List<EventPrefab> eventPrefabs = new List<EventPrefab>(PrefabList);
-            foreach (var eventSet in List)
+            List<EventPrefab> eventPrefabs = EventPrefab.Prefabs.ToList();
+            foreach (var eventSet in Prefabs)
             {
-                eventPrefabs.AddRange(eventSet.EventPrefabs.SelectMany(ep => ep.Prefabs));
-                foreach (var childSet in eventSet.ChildSets)
-                {
-                    eventPrefabs.AddRange(childSet.EventPrefabs.SelectMany(ep => ep.Prefabs));
-                }
+                AddSetEventPrefabsToList(eventPrefabs, eventSet);
             }
             return eventPrefabs;
         }
 
-        public static EventPrefab GetEventPrefab(string identifer)
+        public static void AddSetEventPrefabsToList(List<EventPrefab> list, EventSet set)
         {
-            return GetAllEventPrefabs().Find(prefab => string.Equals(prefab.Identifier, identifer, StringComparison.Ordinal));
+            list.AddRange(set.EventPrefabs.SelectMany(ep => ep.EventPrefabs));
+            foreach (var childSet in set.ChildSets) { AddSetEventPrefabsToList(list, childSet); }
+        }
+
+        public static EventPrefab GetEventPrefab(Identifier identifier)
+        {
+            return GetAllEventPrefabs().Find(prefab => prefab.Identifier == identifier);
         }
 
         public readonly bool IsCampaignSet;
@@ -69,11 +81,11 @@ namespace Barotrauma
         //0-100
         public readonly float MinLevelDifficulty, MaxLevelDifficulty;
 
-        public readonly string BiomeIdentifier;
+        public readonly Identifier BiomeIdentifier;
 
         public readonly LevelData.LevelType LevelType;
 
-        public readonly string[] LocationTypeIdentifiers;
+        public readonly ImmutableArray<Identifier> LocationTypeIdentifiers;
         
         public readonly bool ChooseRandom;
 
@@ -99,68 +111,100 @@ namespace Barotrauma
         public readonly bool TriggerEventCooldown;
 
         public readonly bool Additive;
+            
+        public readonly float DefaultCommonness;
+        public readonly ImmutableDictionary<Identifier, float> OverrideCommonness;
 
-        public readonly Dictionary<string, float> Commonness;
-
-        public struct SubEventPrefab
+        public readonly struct SubEventPrefab
         {
-            public SubEventPrefab(string debugIdentifier, string[] prefabIdentifiers, float? commonness, float? probability)
+            public SubEventPrefab(Either<Identifier[], EventPrefab> prefabOrIdentifiers, float? commonness, float? probability)
             {
-                EventPrefab tryFindPrefab(string id)
+                PrefabOrIdentifier = prefabOrIdentifiers;
+                SelfCommonness = commonness;
+                SelfProbability = probability;
+            }
+
+            public readonly Either<Identifier[], EventPrefab> PrefabOrIdentifier;
+            public IEnumerable<EventPrefab> EventPrefabs
+            {
+                get
                 {
-                    var prefab = PrefabList.Find(p => p.Identifier.Equals(id, StringComparison.OrdinalIgnoreCase));
-                    if (prefab is null)
+                    if (PrefabOrIdentifier.TryGet(out EventPrefab p))
                     {
-                        DebugConsole.ThrowError($"Error in event set \"{debugIdentifier}\" - could not find the event prefab \"{id}\".");
+                        yield return p;
                     }
-                    return prefab;
+                    else
+                    {
+                        foreach (var id in (Identifier[])PrefabOrIdentifier)
+                        {
+                            yield return EventPrefab.Prefabs[id];
+                        }
+                    }
                 }
-
-                this.Prefabs = prefabIdentifiers
-                    .Select(tryFindPrefab)
-                    .Where(p => p != null)
-                    .ToImmutableArray();
-                this.Commonness = commonness ?? this.Prefabs.Select(p => p.Commonness).MaxOrNull() ?? 0.0f;
-                this.Probability = probability ?? this.Prefabs.Select(p => p.Probability).MaxOrNull() ?? 0.0f;
             }
+            public readonly float? SelfCommonness;
+            public float Commonness => SelfCommonness ?? EventPrefabs.MaxOrNull(p => p.Commonness) ?? 0.0f;
 
-            public SubEventPrefab(EventPrefab prefab, float commonness, float probability)
+            public readonly float? SelfProbability;
+            public float Probability => SelfProbability ?? EventPrefabs.MaxOrNull(p => p.Probability) ?? 0.0f;
+
+            public void Deconstruct(out IEnumerable<EventPrefab> eventPrefabs, out float commonness, out float probability)
             {
-                Prefabs = prefab.ToEnumerable().ToImmutableArray();
-                Commonness = commonness;
-                Probability = probability;
-            }
-
-            public readonly ImmutableArray<EventPrefab> Prefabs;
-            public readonly float Commonness;
-            public readonly float Probability;
-
-            public void Deconstruct(out IEnumerable<EventPrefab> prefabs, out float commonness, out float probability)
-            {
-                prefabs = Prefabs;
+                eventPrefabs = EventPrefabs;
                 commonness = Commonness;
                 probability = Probability;
             }
         }
-        
-        public readonly List<SubEventPrefab> EventPrefabs;
+        public readonly ImmutableArray<SubEventPrefab> EventPrefabs;
 
-        public readonly List<EventSet> ChildSets;
+        public readonly ImmutableArray<EventSet> ChildSets;
 
-        public string DebugIdentifier
+        private static Identifier DetermineIdentifier(EventSet parent, XElement element, RandomEventsFile file)
         {
-            get;
-            private set;
-        } = "";
+            Identifier retVal = element.GetAttributeIdentifier("identifier", Identifier.Empty);
 
-        private EventSet(XElement element, string debugIdentifier, EventSet parentSet = null)
+            if (retVal.IsEmpty)
+            {
+                if (parent is null)
+                {
+                    if (file.ContentPackage is CorePackage)
+                    {
+                        throw new Exception($"Error in {file.Path}: All root EventSets in a core package must have identifiers");
+                    }
+                    else
+                    {
+                        DebugConsole.AddWarning($"{file.Path}: All root EventSets should have an identifier");
+                    }
+                }
+
+                XElement currElement = element;
+                string siblingIndices = "";
+                while (currElement.Parent != null)
+                {
+                    int siblingIndex = currElement.ElementsBeforeSelf().Count();
+                    siblingIndices = $"-{siblingIndex}{siblingIndices}";
+                    if (parent != null) { break; }
+                    currElement = currElement.Parent;
+                }
+
+                retVal =
+                    ((parent != null
+                        ? parent.Identifier.Value
+                        : $"{file.ContentPackage.Name}-{file.Path}")
+                    + siblingIndices)
+                        .ToIdentifier();
+            }
+            return retVal;
+        }
+
+        public EventSet(ContentXElement element, RandomEventsFile file, EventSet parentSet = null)
+            : base(file, DetermineIdentifier(parentSet, element, file))
         {
-            DebugIdentifier = element.GetAttributeString("identifier", null) ?? debugIdentifier;
-            Commonness = new Dictionary<string, float>();
-            EventPrefabs =  new List<SubEventPrefab>();
-            ChildSets = new List<EventSet>();
+            var eventPrefabs = new List<SubEventPrefab>();
+            var childSets = new List<EventSet>();
+            var overrideCommonness = new Dictionary<Identifier, float>();
 
-            BiomeIdentifier = element.GetAttributeString("biome", string.Empty);
+            BiomeIdentifier = element.GetAttributeIdentifier("biome", Barotrauma.Identifier.Empty);
             MinLevelDifficulty = element.GetAttributeFloat("minleveldifficulty", 0);
             MaxLevelDifficulty = Math.Max(element.GetAttributeFloat("maxleveldifficulty", 100), MinLevelDifficulty);
 
@@ -169,14 +213,14 @@ namespace Barotrauma
             string levelTypeStr = element.GetAttributeString("leveltype", "LocationConnection");
             if (!Enum.TryParse(levelTypeStr, true, out LevelType))
             {
-                DebugConsole.ThrowError($"Error in event set \"{debugIdentifier}\". \"{levelTypeStr}\" is not a valid level type.");
+                DebugConsole.ThrowError($"Error in event set \"{Identifier}\". \"{levelTypeStr}\" is not a valid level type.");
             }
 
-            string[] locationTypeStr = element.GetAttributeStringArray("locationtype", null);
+            Identifier[] locationTypeStr = element.GetAttributeIdentifierArray("locationtype", null);
             if (locationTypeStr != null)
             {
-                LocationTypeIdentifiers = locationTypeStr;
-                if (LocationType.List.Any()) { CheckLocationTypeErrors(); }
+                LocationTypeIdentifiers = locationTypeStr.ToImmutableArray();
+                //if (LocationType.List.Any()) { CheckLocationTypeErrors(); } //TODO: perform validation elsewhere
             }
 
             MinIntensity = element.GetAttributeFloat("minintensity", 0.0f);
@@ -198,164 +242,77 @@ namespace Barotrauma
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
             IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
 
-            Commonness[""] = element.GetAttributeFloat("commonness", 1.0f);
-            foreach (XElement subElement in element.Elements())
+            DefaultCommonness = 1.0f;
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "commonness":
-                        Commonness[""] = subElement.GetAttributeFloat("commonness", 0.0f);
+                        DefaultCommonness = subElement.GetAttributeFloat("commonness", 0.0f);
                         foreach (XElement overrideElement in subElement.Elements())
                         {
-                            if (overrideElement.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase))
+                            if (overrideElement.NameAsIdentifier() == "override")
                             {
-                                string levelType = overrideElement.GetAttributeString("leveltype", "").ToLowerInvariant();
-                                if (!Commonness.ContainsKey(levelType))
+                                Identifier levelType = overrideElement.GetAttributeIdentifier("leveltype", "");
+                                if (!overrideCommonness.ContainsKey(levelType))
                                 {
-                                    Commonness.Add(levelType, overrideElement.GetAttributeFloat("commonness", 0.0f));
+                                    overrideCommonness.Add(levelType, overrideElement.GetAttributeFloat("commonness", 0.0f));
                                 }
                             }
                         }
                         break;
                     case "eventset":
-                        ChildSets.Add(new EventSet(subElement, this.DebugIdentifier + "-" + ChildSets.Count, this));
+                        childSets.Add(new EventSet(subElement, file, this));
                         break;
                     default:
                         //an element with just an identifier = reference to an event prefab
                         if (!subElement.HasElements && subElement.Attributes().First().Name.ToString().Equals("identifier", StringComparison.OrdinalIgnoreCase))
                         {
-                            string[] identifiers = subElement.GetAttributeStringArray("identifier", Array.Empty<string>());
-                        
+                            Identifier[] identifiers = subElement.GetAttributeIdentifierArray("identifier", Array.Empty<Identifier>());
                             float commonness = subElement.GetAttributeFloat("commonness", -1f);
                             float probability = subElement.GetAttributeFloat("probability", -1f);
-                            EventPrefabs.Add(new SubEventPrefab(
-                                debugIdentifier,
+                            eventPrefabs.Add(new SubEventPrefab(
                                 identifiers,
                                 commonness >= 0f ? commonness : (float?)null,
                                 probability >= 0f ? probability : (float?)null));
                         }
                         else
                         {
-                            var prefab = new EventPrefab(subElement);
-                            EventPrefabs.Add(new SubEventPrefab(prefab, prefab.Commonness, prefab.Probability));
+                            var prefab = new EventPrefab(subElement, file, $"{Identifier}-{subElement.ElementsBeforeSelf().Count()}".ToIdentifier());
+                            eventPrefabs.Add(new SubEventPrefab(prefab, prefab.Commonness, prefab.Probability));
                         }
                         break;
                 }
             }
+
+            EventPrefabs = eventPrefabs.ToImmutableArray();
+            ChildSets = childSets.ToImmutableArray();
+            OverrideCommonness = overrideCommonness.ToImmutableDictionary();
         }
 
         public void CheckLocationTypeErrors()
         {
             if (LocationTypeIdentifiers == null) { return; }
-            foreach (string locationTypeId in LocationTypeIdentifiers)
+            foreach (Identifier locationTypeId in LocationTypeIdentifiers)
             {
-                if (!LocationType.List.Any(lt => lt.Identifier.Equals(locationTypeId, StringComparison.OrdinalIgnoreCase)))
+                if (!LocationType.Prefabs.ContainsKey(locationTypeId))
                 {
-                    DebugConsole.ThrowError($"Error in event set \"{DebugIdentifier}\". Location type \"{locationTypeId}\" not found.");
+                    DebugConsole.ThrowError($"Error in event set \"{Identifier}\". Location type \"{locationTypeId}\" not found.");
                 }
             }
         }
 
         public float GetCommonness(Level level)
         {
-            string key = level.GenerationParams?.Identifier ?? "";
-            return Commonness.ContainsKey(key) ? Commonness[key] : Commonness[""];
-        }
-
-        public static void LoadPrefabs()
-        {
-#if CLIENT
-            EventSprites.ForEach(pair => pair.Value?.Remove());
-            EventSprites.Clear();
-#endif
-            List = new List<EventSet>();
-            var configFiles = GameMain.Instance.GetFilesOfType(ContentType.RandomEvents);
-
-            if (!configFiles.Any())
-            {
-                DebugConsole.ThrowError("No config files for random events found in the selected content package");
-                return;
-            }
-
-            List<XElement> configElements = new List<XElement>();
-            Dictionary<XElement, string> filePaths = new Dictionary<XElement, string>();
-
-            foreach (ContentFile configFile in configFiles)
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
-                if (doc == null) { continue; }
-
-                var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
-                if (doc.Root.IsOverride())
-                {
-                    DebugConsole.NewMessage($"Overriding all random events using the file {configFile.Path}", Color.Yellow);
-                    List.Clear();
-                }
-
-                foreach (XElement element in doc.Root.Elements())
-                {
-                    configElements.Add(element);
-                    filePaths[element] = configFile.Path;
-                }
-            }
-
-            //load event prefabs first so we can link to them when loading event sets
-            foreach (XElement element in configElements)
-            {
-                switch (element.Name.ToString().ToLowerInvariant())
-                {
-                    case "eventprefabs":                        
-                        foreach (var subElement in element.Elements())
-                        {
-                            // Warn if an event prefab has no identifier as this would make it impossible to refer to
-                            if (!element.GetAttributeBool("suppresswarnings", false) && string.IsNullOrWhiteSpace(subElement.GetAttributeString("identifier", string.Empty)))
-                            {
-                                DebugConsole.AddWarning($"An event prefab {subElement.Name} in {filePaths[element]} is missing an identifier.");
-                            }
-
-                            PrefabList.Add(new EventPrefab(subElement));
-                        }
-                        break;
-                    case "eventsprites":
-#if CLIENT
-                        foreach (var subElement in element.Elements())
-                        {
-                            string identifier = subElement.GetAttributeString("identifier", string.Empty);
-
-                            if (EventSprites.ContainsKey(identifier))
-                            {
-                                EventSprites[identifier]?.Remove();
-                                EventSprites[identifier] = new Sprite(subElement);
-                                continue;
-                            }
-                            else
-                            {
-                                EventSprites.Add(identifier, new Sprite(subElement));
-                            }
-                        }
-#endif
-                        break;                        
-                }
-            }
-
-            int i = 0;
-            foreach (XElement element in configElements)
-            {
-                switch (element.Name.ToString().ToLowerInvariant())
-                {
-                    case "eventset":
-                        List.Add(new EventSet(element, i.ToString()));
-                        i++;
-                        break;
-                }
-            }
+            Identifier key = level.GenerationParams?.Identifier ?? Identifier.Empty;
+            return OverrideCommonness.ContainsKey(key) ? OverrideCommonness[key] : DefaultCommonness;
         }
 
         public static List<string> GetDebugStatistics(int simulatedRoundCount = 100, Func<MonsterEvent, bool> filter = null, bool fullLog = false)
         {
             List<string> debugLines = new List<string>();
 
-            foreach (var eventSet in List)
+            foreach (var eventSet in Prefabs)
             {
                 List<EventDebugStats> stats = new List<EventDebugStats>();
                 for (int i = 0; i < simulatedRoundCount; i++)
@@ -364,7 +321,7 @@ namespace Barotrauma
                     CheckEventSet(newStats, eventSet, filter);
                     stats.Add(newStats);
                 }
-                debugLines.Add($"Event stats ({eventSet.DebugIdentifier}): ");
+                debugLines.Add($"Event stats ({eventSet.Identifier}): ");
                 LogEventStats(stats, debugLines, fullLog);
             }
 
@@ -379,16 +336,18 @@ namespace Barotrauma
                     {
                         for (int i = 0; i < thisSet.EventCount; i++)
                         {
-                            var eventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => e.Commonness).ToList());
-                            if (eventPrefab.Prefabs.Any(p => p != null))
+                            var eventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => e.Commonness).ToList(), Rand.RandSync.Unsynced);
+                            if (eventPrefab.EventPrefabs.Any(p => p != null))
                             {
-                                AddEvents(stats, eventPrefab.Prefabs, filter);
+                                AddEvents(stats, eventPrefab.EventPrefabs, filter);
                                 unusedEvents.Remove(eventPrefab);
                             }
                         }
                     }
-                    List<float> values = thisSet.ChildSets.SelectMany(s => s.Commonness.Values).ToList();
-                    EventSet childSet = ToolBox.SelectWeightedRandom(thisSet.ChildSets, values);
+                    List<float> values = thisSet.ChildSets
+                        .SelectMany(s => s.DefaultCommonness.ToEnumerable().Concat(s.OverrideCommonness.Values))
+                        .ToList();
+                    EventSet childSet = ToolBox.SelectWeightedRandom(thisSet.ChildSets, values, Rand.RandSync.Unsynced);
                     if (childSet != null)
                     {
                         CheckEventSet(stats, childSet, filter);
@@ -398,7 +357,7 @@ namespace Barotrauma
                 {
                     foreach (var eventPrefab in thisSet.EventPrefabs)
                     {
-                        AddEvents(stats, eventPrefab.Prefabs, filter);
+                        AddEvents(stats, eventPrefab.EventPrefabs, filter);
                     }
                     foreach (var childSet in thisSet.ChildSets)
                     {
@@ -419,7 +378,7 @@ namespace Barotrauma
                     if (Rand.Value() > spawnProbability) { return; }
                     int count = Rand.Range(monsterEvent.MinAmount, monsterEvent.MaxAmount + 1);
                     if (count <= 0) { return; }
-                    string character = monsterEvent.speciesName;
+                    Identifier character = monsterEvent.SpeciesName;
                     if (stats.MonsterCounts.TryGetValue(character, out int currentCount))
                     {
                         if (currentCount >= monsterEvent.MaxAmountPerLevel) { return; }
@@ -430,7 +389,7 @@ namespace Barotrauma
                     }
                     stats.MonsterCounts[character] += count;
                     
-                    var aiElement = CharacterPrefab.FindBySpeciesName(character)?.XDocument?.Root?.GetChildElement("ai");
+                    var aiElement = CharacterPrefab.FindBySpeciesName(character)?.ConfigElement?.GetChildElement("ai");
                     if (aiElement != null)
                     {
                         stats.MonsterStrength += aiElement.GetAttributeFloat("combatstrength", 0) * count;
@@ -447,7 +406,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    var allMonsters = new Dictionary<string, int>();
+                    var allMonsters = new Dictionary<Identifier, int>();
                     foreach (var stat in stats)
                     {
                         foreach (var monster in stat.MonsterCounts)
@@ -473,7 +432,7 @@ namespace Barotrauma
                 }
             }
 
-            static string LogMonsterCounts(Dictionary<string, int> stats, float divider = 0)
+            static string LogMonsterCounts(Dictionary<Identifier, int> stats, float divider = 0)
             {
                 if (divider > 0)
                 {
@@ -484,6 +443,15 @@ namespace Barotrauma
                     return string.Join(", ", stats.Select(mc => mc.Key + " x " + mc.Value));
                 }      
             }
+        }
+
+        public override void Dispose()
+        {
+            foreach (var childSet in ChildSets)
+            {
+                childSet.Dispose();
+            }
+
         }
     }
 }

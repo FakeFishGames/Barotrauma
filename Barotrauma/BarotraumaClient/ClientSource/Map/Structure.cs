@@ -26,7 +26,7 @@ namespace Barotrauma
         {
             get
             {
-                if (GameMain.SubEditorScreen.IsSubcategoryHidden(prefab.Subcategory))
+                if (GameMain.SubEditorScreen.IsSubcategoryHidden(Prefab.Subcategory))
                 {
                     return false;
                 }
@@ -38,9 +38,9 @@ namespace Barotrauma
         }
 
 #if DEBUG
-        [Editable, Serialize("", true)]
+        [Editable, Serialize("", IsPropertySaveable.Yes)]
 #else
-        [Serialize("", true)]
+        [Serialize("", IsPropertySaveable.Yes)]
 #endif
         public string SpecialTag
         {
@@ -50,7 +50,7 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
-            Prefab.sprite?.EnsureLazyLoaded();
+            Prefab.Sprite?.EnsureLazyLoaded();
             Prefab.BackgroundSprite?.EnsureLazyLoaded();
 
             foreach (var decorativeSprite in Prefab.DecorativeSprites)
@@ -120,13 +120,13 @@ namespace Barotrauma
             {
                 CanTakeKeyBoardFocus = false
             };
-            var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUI.LargeFont) { UserData = this };
+            var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUIStyle.LargeFont) { UserData = this };
 
             if (Submarine.MainSub?.Info?.Type == SubmarineType.OutpostModule)
             {
                 GUITickBox tickBox = new GUITickBox(new RectTransform(new Point(listBox.Content.Rect.Width, 10)), TextManager.Get("sp.structure.removeiflinkedoutpostdoorinuse.name"))
                 {
-                    Font = GUI.SmallFont,
+                    Font = GUIStyle.SmallFont,
                     Selected = RemoveIfLinkedOutpostDoorInUse,
                     ToolTip = TextManager.Get("sp.structure.removeiflinkedoutpostdoorinuse.description"),
                     OnSelected = (tickBox) =>
@@ -246,7 +246,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (prefab.sprite == null) { return; }
+            if (Prefab.Sprite == null) { return; }
 
             if (editing)
             {
@@ -265,17 +265,17 @@ namespace Barotrauma
 
         private float GetRealDepth()
         {
-            return SpriteDepthOverrideIsSet ? SpriteOverrideDepth : prefab.sprite.Depth;
+            return SpriteDepthOverrideIsSet ? SpriteOverrideDepth : Prefab.Sprite.Depth;
         }
 
         public float GetDrawDepth()
         {
-            return GetDrawDepth(GetRealDepth(), prefab.sprite);
+            return GetDrawDepth(GetRealDepth(), Prefab.Sprite);
         }
 
         private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
         {
-            if (prefab.sprite == null) { return; }
+            if (Prefab.Sprite == null) { return; }
             if (editing)
             {
                 if (!SubEditorScreen.IsLayerVisible(this)) { return; }
@@ -284,7 +284,7 @@ namespace Barotrauma
             }
             else if (HiddenInGame) { return; }
 
-            Color color = IsIncludedInSelection && editing ? GUI.Style.Blue : IsHighlighted ? GUI.Style.Orange * Math.Max(spriteColor.A / (float) byte.MaxValue, 0.1f) : spriteColor;
+            Color color = IsIncludedInSelection && editing ? GUIStyle.Blue : IsHighlighted ? GUIStyle.Orange * Math.Max(spriteColor.A / (float) byte.MaxValue, 0.1f) : spriteColor;
 
             if (IsSelected && editing)
             {
@@ -371,8 +371,8 @@ namespace Barotrauma
 
             if (back == GetRealDepth() > 0.5f)
             {
-                SpriteEffects oldEffects = prefab.sprite.effects;
-                prefab.sprite.effects ^= SpriteEffects;
+                SpriteEffects oldEffects = Prefab.Sprite.effects;
+                Prefab.Sprite.effects ^= SpriteEffects;
 
                 for (int i = 0; i < Sections.Length; i++)
                 {
@@ -410,10 +410,10 @@ namespace Barotrauma
                     if (FlippedX && IsHorizontal) { sectionOffset.X = drawSection.Right - rect.Right; }
                     if (FlippedY && !IsHorizontal) { sectionOffset.Y = (rect.Y - rect.Height) - (drawSection.Y - drawSection.Height); }
 
-                    sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width);
-                    sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height);
+                    sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, Prefab.Sprite.SourceRect.Width);
+                    sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, Prefab.Sprite.SourceRect.Height);
 
-                    prefab.sprite.DrawTiled(
+                    Prefab.Sprite.DrawTiled(
                         spriteBatch,
                         new Vector2(drawSection.X + drawOffset.X, -(drawSection.Y + drawOffset.Y)),
                         new Vector2(drawSection.Width, drawSection.Height),
@@ -429,10 +429,10 @@ namespace Barotrauma
                     float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
                     Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier) * Scale;
                     decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
-                        rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, prefab.sprite.effects,
-                        depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.sprite.Depth), 0.999f));
+                        rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, Prefab.Sprite.effects,
+                        depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - Prefab.Sprite.Depth), 0.999f));
                 }
-                prefab.sprite.effects = oldEffects;
+                Prefab.Sprite.effects = oldEffects;
             }
 
             if (GameMain.DebugDraw && Screen.Selected.Cam.Zoom > 0.5f)
@@ -473,13 +473,13 @@ namespace Barotrauma
             DecorativeSprite.UpdateSpriteStates(Prefab.DecorativeSpriteGroups, spriteAnimState, ID, deltaTime, ConditionalMatches);            
             foreach (int spriteGroup in Prefab.DecorativeSpriteGroups.Keys)
             {
-                for (int i = 0; i < Prefab.DecorativeSpriteGroups[spriteGroup].Count; i++)
+                for (int i = 0; i < Prefab.DecorativeSpriteGroups[spriteGroup].Length; i++)
                 {
                     var decorativeSprite = Prefab.DecorativeSpriteGroups[spriteGroup][i];
                     if (decorativeSprite == null) { continue; }
                     if (spriteGroup > 0)
                     {
-                        int activeSpriteIndex = ID % Prefab.DecorativeSpriteGroups[spriteGroup].Count;
+                        int activeSpriteIndex = ID % Prefab.DecorativeSpriteGroups[spriteGroup].Length;
                         if (i != activeSpriteIndex)
                         {
                             spriteAnimState[decorativeSprite].IsActive = false;

@@ -2,6 +2,7 @@
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -14,7 +15,7 @@ namespace Barotrauma
 
         public override Sprite Sprite
         {
-            get { return prefab?.sprite; }
+            get { return base.Prefab?.Sprite; }
         }
 
         partial void AssignCampaignInteractionTypeProjSpecific(CampaignMode.InteractionType interactionType)
@@ -232,14 +233,14 @@ namespace Barotrauma
             }
         }
 
-        public void WriteSpawnData(IWriteMessage msg, UInt16 entityID, UInt16 originalInventoryID, byte originalItemContainerIndex)
+        public void WriteSpawnData(IWriteMessage msg, UInt16 entityID, UInt16 originalInventoryID, byte originalItemContainerIndex, int originalSlotIndex)
         {
             if (GameMain.Server == null) { return; }
 
             msg.Write(Prefab.OriginalName);
             msg.Write(Prefab.Identifier);
-            msg.Write(Description != prefab.Description);
-            if (Description != prefab.Description)
+            msg.Write(Description != base.Prefab.Description);
+            if (Description != base.Prefab.Description)
             {
                 msg.Write(Description);
             }
@@ -259,9 +260,7 @@ namespace Barotrauma
             {
                 msg.Write(originalInventoryID);
                 msg.Write(originalItemContainerIndex);
-
-                int slotIndex = ParentInventory.FindIndex(this);
-                msg.Write(slotIndex < 0 ? (byte)255 : (byte)slotIndex);
+                msg.Write(originalSlotIndex < 0 ? (byte)255 : (byte)originalSlotIndex);
             }
 
             msg.Write(body == null ? (byte)0 : (byte)body.BodyType);
@@ -285,13 +284,13 @@ namespace Barotrauma
             }
 
             msg.Write(teamID);
-            bool tagsChanged = tags.Count != prefab.Tags.Count || !tags.All(t => prefab.Tags.Contains(t));
+            bool tagsChanged = tags.Count != base.Prefab.Tags.Count || !tags.All(t => base.Prefab.Tags.Contains(t));
             msg.Write(tagsChanged);
             if (tagsChanged)
             {
-                string[] splitTags = Tags.Split(',');
-                msg.Write(string.Join(',', splitTags.Where(t => !prefab.Tags.Contains(t))));
-                msg.Write(string.Join(',', prefab.Tags.Where(t => !splitTags.Contains(t))));
+                IEnumerable<Identifier> splitTags = Tags.Split(',').ToIdentifiers();
+                msg.Write(string.Join(',', splitTags.Where(t => !base.Prefab.Tags.Contains(t))));
+                msg.Write(string.Join(',', base.Prefab.Tags.Where(t => !splitTags.Contains(t))));
             }
             var nameTag = GetComponent<NameTag>();
             msg.Write(nameTag != null);
@@ -386,7 +385,7 @@ namespace Barotrauma
             if (!ItemList.Contains(this))
             {
                 string errorMsg = "Attempted to create a network event for an item (" + Name + ") that hasn't been fully initialized yet.\n" + Environment.StackTrace.CleanupStackTrace();
-                DebugConsole.ThrowError(errorMsg);
+                DebugConsole.AddWarning(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }

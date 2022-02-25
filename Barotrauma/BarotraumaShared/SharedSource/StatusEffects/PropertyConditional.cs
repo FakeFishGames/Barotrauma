@@ -15,12 +15,14 @@ namespace Barotrauma
     {
         public enum ConditionType
         {
+            Uncertain,
             PropertyValue,
             Name,
             SpeciesName,
             SpeciesGroup,
             HasTag,
             HasStatusTag,
+            HasSpecifierTag,
             Affliction,
             EntityType,
             LimbType
@@ -34,18 +36,18 @@ namespace Barotrauma
 
         public enum OperatorType
         {
+            None,
             Equals,
             NotEquals,
             LessThan,
             LessThanEquals,
             GreaterThan,
-            GreaterThanEquals,
-            None
+            GreaterThanEquals
         }
 
         public readonly ConditionType Type;
         public readonly OperatorType Operator;
-        public readonly string AttributeName;
+        public readonly Identifier AttributeName;
         public readonly string AttributeValue;
         public readonly string[] SplitAttributeValue;
         public readonly float? FloatValue;
@@ -79,35 +81,22 @@ namespace Barotrauma
         // TODO: use XElement instead of XAttribute (how to do without breaking the existing content?)
         public PropertyConditional(XAttribute attribute)
         {
-            AttributeName = attribute.Name.ToString().ToLowerInvariant();
-            string attributeValueString = attribute.Value.ToString();
+            AttributeName = attribute.NameAsIdentifier();
+            string attributeValueString = attribute.Value;
             if (string.IsNullOrWhiteSpace(attributeValueString))
             {
-                DebugConsole.ThrowError($"Conditional attribute value is empty: {attribute.Parent.ToString()}");
+                DebugConsole.ThrowError($"Conditional attribute value is empty: {attribute.Parent}");
                 return;
             }
             string valueString = attributeValueString;
-            string[] splitString = valueString.Split(' ');
-            if (splitString.Length > 0)
-            {
-                for (int i = 1; i < splitString.Length; i++)
-                {
-                    valueString = splitString[i] + (i > 1 && i < splitString.Length ? " " : "");
-                }
-            }
-            string op = splitString[0];
-            OperatorType operatorType = GetOperatorType(op);
+            string[] splitString = valueString.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (splitString.Length > 1) { valueString = string.Join(' ', splitString.Skip(1)); }
+            Operator = GetOperatorType(splitString[0]);
 
-            if (operatorType != OperatorType.None)
+            if (Operator == OperatorType.None)
             {
-                Operator = operatorType;
-            }
-            else
-            {
-                if (op != "==" && op != "!=" && op != ">" && op != "<" && op != ">=" && op != "<=") //Didn't use escape strings or anything
-                {
-                    valueString = attributeValueString; //We probably don't even have an operator
-                }
+                Operator = OperatorType.Equals;
+                valueString = attributeValueString;
             }
 
             TargetItemComponentName = attribute.Parent.GetAttributeString("targetitemcomponent", "");
@@ -116,16 +105,9 @@ namespace Barotrauma
             TargetGrandParent = attribute.Parent.GetAttributeBool("targetgrandparent", false);
             TargetContainedItem = attribute.Parent.GetAttributeBool("targetcontaineditem", false);
 
-            if (!Enum.TryParse(AttributeName, true, out Type))
+            if (!Enum.TryParse(AttributeName.Value, true, out Type))
             {
-                if (AfflictionPrefab.Prefabs.Any(p => p.Identifier.Equals(AttributeName, StringComparison.OrdinalIgnoreCase)))
-                {
-                    Type = ConditionType.Affliction;
-                }
-                else
-                {
-                    Type = ConditionType.PropertyValue;
-                }
+                Type = ConditionType.Uncertain;
             }
             
             AttributeValue = valueString;
@@ -172,15 +154,36 @@ namespace Barotrauma
             }
         }
 
+
         public bool Matches(ISerializableEntity target)
-        {          
-            if (TargetContainedItem)
+        {
+            return Matches(target, TargetContainedItem);
+        }
+
+        public bool Matches(ISerializableEntity target, bool checkContained)
+        {
+            var type = Type;
+            if (type == ConditionType.Uncertain)
+            {
+                if (AfflictionPrefab.Prefabs.ContainsKey(AttributeName))
+                {
+                    type = ConditionType.Affliction;
+                }
+                else
+                {
+                    type = (target?.SerializableProperties?.ContainsKey(AttributeName) ?? false)
+                        ? ConditionType.PropertyValue
+                        : ConditionType.HasSpecifierTag;
+                }
+            }
+            
+            if (checkContained)
             {
                 if (target is Item item)
                 {
                     foreach (var containedItem in item.ContainedItems)
                     {
-                        if (Matches(containedItem)) { return true; }
+                        if (Matches(containedItem, checkContained: false)) { return true; }
                     }
                     return false;
                 }
@@ -188,7 +191,7 @@ namespace Barotrauma
                 {
                     foreach (var containedItem in ic.Item.ContainedItems)
                     {
-                        if (Matches(containedItem)) { return true; }
+                        if (Matches(containedItem, checkContained: false)) { return true; }
                     }
                     return false;
                 }
@@ -197,13 +200,13 @@ namespace Barotrauma
                     if (character.Inventory == null) { return false; }
                     foreach (var containedItem in character.Inventory.AllItems)
                     {
-                        if (Matches(containedItem)) { return true; }
+                        if (Matches(containedItem, checkContained: false)) { return true; }
                     }
                     return false;
                 }
             }
 
-            switch (Type)
+            switch (type)
             {
                 case ConditionType.PropertyValue:
                     SerializableProperty property;
@@ -244,18 +247,18 @@ namespace Barotrauma
                             }
                         }
                     }
-                    return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;                   
+                    return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
                 case ConditionType.SpeciesName:
                     {
                         if (target == null) { return Operator == OperatorType.NotEquals; }
                         if (!(target is Character targetCharacter)) { return false; }
-                        return Operator == OperatorType.Equals == targetCharacter.SpeciesName.Equals(AttributeValue, StringComparison.OrdinalIgnoreCase);
+                        return (Operator == OperatorType.Equals) == (targetCharacter.SpeciesName == AttributeValue);
                     }
                 case ConditionType.SpeciesGroup:
                     {
                         if (target == null) { return Operator == OperatorType.NotEquals; }
                         if (!(target is Character targetCharacter)) { return false; }
-                        return Operator == OperatorType.Equals == targetCharacter.Params.CompareGroup(AttributeValue);
+                        return (Operator == OperatorType.Equals) == targetCharacter.Params.CompareGroup(AttributeValue.ToIdentifier());
                     }
                 case ConditionType.EntityType:
                     switch (AttributeValue)
@@ -298,7 +301,7 @@ namespace Barotrauma
                         {
                             var health = targetChar.CharacterHealth;
                             if (health == null) { return false; }
-                            var affliction = health.GetAffliction(AttributeName);
+                            var affliction = health.GetAffliction(AttributeName.ToIdentifier());
                             float afflictionStrength = affliction == null ? 0.0f : affliction.Strength;
                             if (FloatValue.HasValue)
                             {
@@ -343,14 +346,14 @@ namespace Barotrauma
             return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
         }
 
-        public bool MatchesTagCondition(string targetTag)
+        public bool MatchesTagCondition(Identifier targetTag)
         {
-            if (string.IsNullOrEmpty(targetTag) || Type != ConditionType.HasTag) { return false; }
+            if (targetTag.IsEmpty || Type != ConditionType.HasTag) { return false; }
 
             int matches = 0;
             foreach (string tag in SplitAttributeValue)
             {
-                if (targetTag.Equals(tag, StringComparison.OrdinalIgnoreCase))
+                if (targetTag == tag)
                 {
                     matches++;
                 }
@@ -358,7 +361,7 @@ namespace Barotrauma
             //If operator is == then it needs to match everything, otherwise if its != there must be zero matches.
             return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
         }
-        
+
         // TODO: refactor and add tests
         private bool Matches(ISerializableEntity target, SerializableProperty property)
         {

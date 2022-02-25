@@ -10,9 +10,9 @@ namespace Barotrauma.Abilities
 
         private List<PropertyConditional> conditionals = new List<PropertyConditional>();
 
-        public AbilityConditionCharacter(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionCharacter(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            targetTypes = ParseTargetTypes(conditionElement.GetAttributeStringArray("targettypes", new string[0], convertToLowerInvariant: true));
+            targetTypes = ParseTargetTypes(conditionElement.GetAttributeStringArray("targettypes", Array.Empty<string>(), convertToLowerInvariant: true));
 
             foreach (XElement subElement in conditionElement.Elements())
             {

@@ -20,12 +20,13 @@ namespace Barotrauma.Networking
             OrderTarget orderTargetPosition = null;
             Order.OrderTargetType orderTargetType = Order.OrderTargetType.Entity;
             int? wallSectionIndex = null;
+            Order order = null;
             if (type == ChatMessageType.Order)
             {
                 var orderMessageInfo = OrderChatMessage.ReadOrder(msg);
-                if (orderMessageInfo.OrderIndex < 0 || orderMessageInfo.OrderIndex >= Order.PrefabList.Count)
+                if (orderMessageInfo.OrderIdentifier == Identifier.Empty)
                 {
-                    DebugConsole.ThrowError($"Invalid order message from client \"{c.Name}\" - order index out of bounds ({orderMessageInfo.OrderIndex}).");
+                    DebugConsole.ThrowError($"Invalid order message from client \"{c.Name}\" - order identifier is empty.");
                     if (NetIdUtils.IdMoreRecent(ID, c.LastSentChatMsgID)) { c.LastSentChatMsgID = ID; }
                     return;
                 }
@@ -34,14 +35,29 @@ namespace Barotrauma.Networking
                 orderTargetPosition = orderMessageInfo.TargetPosition;
                 orderTargetType = orderMessageInfo.TargetType;
                 wallSectionIndex = orderMessageInfo.WallSectionIndex;
-                var orderPrefab = orderMessageInfo.OrderPrefab ?? Order.PrefabList[orderMessageInfo.OrderIndex];
-                string orderOption = orderMessageInfo.OrderOption ??
-                    (orderMessageInfo.OrderOptionIndex == null || orderMessageInfo.OrderOptionIndex < 0 || orderMessageInfo.OrderOptionIndex >= orderPrefab.Options.Length ?
-                        "" : orderPrefab.Options[orderMessageInfo.OrderOptionIndex.Value]);
-                orderMsg = new OrderChatMessage(orderPrefab, orderOption, orderMessageInfo.Priority, orderTargetPosition ?? orderTargetEntity as ISpatialEntity, orderTargetCharacter, c.Character, isNewOrder: orderMessageInfo.IsNewOrder)
+                var orderPrefab = orderMessageInfo.OrderPrefab ?? OrderPrefab.Prefabs[orderMessageInfo.OrderIdentifier];
+                Identifier orderOption = orderMessageInfo.OrderOption;
+                if (orderOption.IsEmpty)
                 {
-                    WallSectionIndex = wallSectionIndex
-                };
+                    orderOption = orderMessageInfo.OrderOptionIndex == null || orderMessageInfo.OrderOptionIndex < 0 || orderMessageInfo.OrderOptionIndex >= orderPrefab.Options.Length ?
+                        Identifier.Empty : orderPrefab.Options[orderMessageInfo.OrderOptionIndex.Value];
+                }
+                if (orderTargetType == Order.OrderTargetType.Position)
+                {
+                    order = new Order(orderPrefab, orderOption, orderTargetPosition, orderGiver: c.Character)
+                        .WithManualPriority(orderMessageInfo.Priority);
+                }
+                else if (orderTargetType == Order.OrderTargetType.WallSection)
+                {
+                    order = new Order(orderPrefab, orderOption, orderTargetEntity as Structure, wallSectionIndex, orderGiver: c.Character)
+                        .WithManualPriority(orderMessageInfo.Priority);
+                }
+                else
+                {
+                    order = new Order(orderPrefab, orderOption, orderTargetEntity, orderPrefab.GetTargetItemComponent(orderTargetEntity as Item), orderGiver: c.Character)
+                        .WithManualPriority(orderMessageInfo.Priority);
+                }
+                orderMsg = new OrderChatMessage(order, orderTargetCharacter, c.Character);
                 txt = orderMsg.Text;
             }
             else
@@ -95,11 +111,11 @@ namespace Barotrauma.Networking
                 if (c.ChatSpamCount > 3)
                 {
                     //kick for spamming too much
-                    GameMain.Server.KickClient(c, TextManager.Get("SpamFilterKicked"));
+                    GameMain.Server.KickClient(c, TextManager.Get("SpamFilterKicked").Value);
                 }
                 else
                 {
-                    ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked"), ChatMessageType.Server, null);
+                    ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked").Value, ChatMessageType.Server, null);
                     c.ChatSpamTimer = 10.0f;
                     GameMain.Server.SendDirectChatMessage(denyMsg, c);
                 }
@@ -110,7 +126,7 @@ namespace Barotrauma.Networking
 
             if (c.ChatSpamTimer > 0.0f && !isOwner)
             {
-                ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked"), ChatMessageType.Server, null);
+                ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked").Value, ChatMessageType.Server, null);
                 c.ChatSpamTimer = 10.0f;
                 GameMain.Server.SendDirectChatMessage(denyMsg, c);
                 return;
@@ -123,16 +139,6 @@ namespace Barotrauma.Networking
                 {
                     HumanAIController.ReportProblem(orderMsg.Sender, orderMsg.Order);
                 }
-                Order order = orderTargetType switch
-                {
-                    Order.OrderTargetType.Entity =>
-                        new Order(orderMsg.Order, orderTargetEntity, orderMsg.Order?.GetTargetItemComponent(orderTargetEntity as Item), orderGiver: orderMsg.Sender),
-                    Order.OrderTargetType.Position =>
-                        new Order(orderMsg.Order, orderTargetPosition, orderGiver: orderMsg.Sender),
-                    Order.OrderTargetType.WallSection when orderTargetEntity is Structure s && wallSectionIndex.HasValue =>
-                        new Order(orderMsg.Order, s, wallSectionIndex, orderGiver: orderMsg.Sender),
-                    _ => throw new NotImplementedException()
-                };
                 if (order != null)
                 {
                     if (order.TargetAllCharacters)
@@ -159,7 +165,7 @@ namespace Barotrauma.Networking
                     }
                     else if (orderTargetCharacter != null)
                     {
-                        orderTargetCharacter.SetOrder(order, orderMsg.OrderOption, orderMsg.OrderPriority, orderMsg.Sender);
+                        orderTargetCharacter.SetOrder(order);
                     }
                 }
                 GameMain.Server.SendOrderChatMessage(orderMsg);

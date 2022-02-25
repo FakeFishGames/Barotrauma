@@ -13,7 +13,7 @@ namespace Barotrauma
         private float? defaultZoom;
         public float DefaultZoom
         {
-            get { return defaultZoom ?? (GameMain.Config == null || GameMain.Config.EnableMouseLook ? 1.3f : 1.0f); }
+            get { return defaultZoom ?? (GameSettings.CurrentConfig.EnableMouseLook ? 1.3f : 1.0f); }
             set
             {
                 defaultZoom = MathHelper.Clamp(value, 0.5f, 2.0f);
@@ -269,10 +269,10 @@ namespace Barotrauma
                         if (PlayerInput.KeyDown(Keys.LeftShift)) { moveSpeed *= 2.0f; }
                         if (PlayerInput.KeyDown(Keys.LeftControl)) { moveSpeed *= 0.5f; }
 
-                        if (GameMain.Config.KeyBind(InputType.Left).IsDown()) { moveInput.X -= 1.0f; }
-                        if (GameMain.Config.KeyBind(InputType.Right).IsDown()) { moveInput.X += 1.0f; }
-                        if (GameMain.Config.KeyBind(InputType.Down).IsDown()) { moveInput.Y -= 1.0f; }
-                        if (GameMain.Config.KeyBind(InputType.Up).IsDown()) { moveInput.Y += 1.0f; }
+                        if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Left].IsDown()) { moveInput.X -= 1.0f; }
+                        if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Right].IsDown()) { moveInput.X += 1.0f; }
+                        if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Down].IsDown()) { moveInput.Y -= 1.0f; }
+                        if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Up].IsDown()) { moveInput.Y += 1.0f; }
                     }
 
                     velocity = Vector2.Lerp(velocity, moveInput, deltaTime * 10.0f);
@@ -346,7 +346,7 @@ namespace Barotrauma
                     float scaledZoom = MathHelper.Lerp(DefaultZoom, MinZoom, zoomOutAmount) * globalZoomScale;
                     //zoom in further if zoomOutAmount is low and resolution is lower than reference
                     float newZoom = scaledZoom * (MathHelper.Lerp(0.3f * (1f - Math.Min(globalZoomScale, 1f)), 0f,
-                        (GameMain.Config == null || GameMain.Config.EnableMouseLook) ? (float)Math.Sqrt(offsetUnscaledLen) : 0.3f) + 1f);
+                        (GameSettings.CurrentConfig.EnableMouseLook) ? (float)Math.Sqrt(offsetUnscaledLen) : 0.3f) + 1f);
 
                     Zoom += (newZoom - zoom) / ZoomSmoothness;
                 }

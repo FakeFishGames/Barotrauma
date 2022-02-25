@@ -30,7 +30,7 @@ namespace Barotrauma
             }
 
             public override IEnumerable<string> StatusTextKeys => Goal.StatusTextKeys;
-            public override IEnumerable<string> StatusTextValues(Traitor traitor) => new [] { InfoText(traitor), TextManager.FormatServerMessage(StatusValueTextId) };
+            public override IEnumerable<string> StatusTextValues(Traitor traitor) => new string[] { InfoText(traitor), TextManager.FormatServerMessage(StatusValueTextId) };
 
             public override IEnumerable<string> InfoTextKeys => Goal.InfoTextKeys;
             public override IEnumerable<string> InfoTextValues(Traitor traitor) => Goal.InfoTextValues(traitor);

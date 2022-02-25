@@ -6,6 +6,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
+using System.Collections.Immutable;
 using Barotrauma.Abilities;
 
 namespace Barotrauma
@@ -24,16 +25,16 @@ namespace Barotrauma
 
     class WearableSprite
     {
-        public string UnassignedSpritePath { get; private set; }
+        public ContentPath UnassignedSpritePath { get; private set; }
         public string SpritePath { get; private set; }
-        public XElement SourceElement { get; private set; }
+        public ContentXElement SourceElement { get; private set; }
 
         public WearableType Type { get; private set; }
         private Sprite _sprite;
         public Sprite Sprite
         {
             get { return _sprite; }
-            set
+            private set
             {
                 if (value == _sprite) { return; }
                 if (_sprite != null)
@@ -85,29 +86,29 @@ namespace Barotrauma
 
         public int Variant { get; set; }
 
-        private Gender _gender;
+        private Character _picker;
         /// <summary>
         /// None = Any/Not Defined -> no effect.
         /// Changing the gender forces re-initialization, because the textures can be different for male and female characters.
         /// </summary>
-        public Gender Gender
+        public Character Picker
         {
-            get { return _gender; }
+            get { return _picker; }
             set
             {
-                if (value == _gender) { return; }
-                _gender = value;
+                if (value == _picker) { return; }
+                _picker = value;
                 IsInitialized = false;
-                UnassignedSpritePath = ParseSpritePath(SourceElement.GetAttributeString("texture", string.Empty));
-                Init(_gender);
+                UnassignedSpritePath = ParseSpritePath(SourceElement);
+                Init(_picker);
             }
         }
 
-        public WearableSprite(XElement subElement, WearableType type)
+        public WearableSprite(ContentXElement subElement, WearableType type)
         {
             Type = type;
             SourceElement = subElement;
-            UnassignedSpritePath = subElement.GetAttributeString("texture", string.Empty);
+            UnassignedSpritePath = subElement.GetAttributeContentPath("texture") ?? ContentPath.Empty;
             Init();
             switch (type)
             {
@@ -131,34 +132,48 @@ namespace Barotrauma
         /// <summary>
         /// Note: this constructor cannot initialize automatically, because the gender is unknown at this point. We only know it when the item is equipped.
         /// </summary>
-        public WearableSprite(XElement subElement, Wearable wearable, int variant = 0)
+        public WearableSprite(ContentXElement subElement, Wearable wearable, int variant = 0)
         {
             Type = WearableType.Item;
             WearableComponent = wearable;
             Variant = Math.Max(variant, 0);
-            UnassignedSpritePath = ParseSpritePath(subElement.GetAttributeString("texture", string.Empty));
+            UnassignedSpritePath = ParseSpritePath(subElement);
             SourceElement = subElement;
         }
 
-        private string ParseSpritePath(string texturePath) => texturePath.Contains("/") ? texturePath : $"{Path.GetDirectoryName(WearableComponent.Item.Prefab.FilePath)}/{texturePath}";
+        private ContentPath ParseSpritePath(ContentXElement element)
+        {
+            if (element.DoesAttributeReferenceFileNameAlone("texture"))
+            {
+                string textureName = element.GetAttributeString("texture", "");
+                return ContentPath.FromRaw(
+                    element.ContentPackage,
+                    $"{Path.GetDirectoryName(WearableComponent.Item.Prefab.FilePath)}/{textureName}");
+            }
+            else
+            {
+                return element.GetAttributeContentPath("texture") ?? ContentPath.Empty;
+            }
+        }
 
         public void ParsePath(bool parseSpritePath)
         {
-            string tempPath = UnassignedSpritePath;
-            if (_gender != Gender.None)
+            SpritePath = UnassignedSpritePath.Value;
+            if (_picker?.Info != null)
             {
-                tempPath = tempPath.Replace("[GENDER]", (_gender == Gender.Female) ? "female" : "male");
+                SpritePath = _picker.Info.ReplaceVars(SpritePath);
             }
-            SpritePath = tempPath.Replace("[VARIANT]", Variant.ToString());
+            SpritePath = SpritePath.Replace("[VARIANT]", Variant.ToString());
             if (!File.Exists(SpritePath))
             {
                 // If the variant does not exist, parse the path so that it uses first variant.
-                SpritePath = tempPath.Replace("[VARIANT]", "1");
+                SpritePath = SpritePath.Replace("[VARIANT]", "1");
             }
-            if (!File.Exists(SpritePath) && _gender == Gender.None)
+            if (!File.Exists(SpritePath) && _picker?.Info == null)
             {
-                // If there's no sprite for Gender.None does not exist, try to use male sprite
-                SpritePath = tempPath.Replace("[GENDER]", "male");
+                // If there's no character info is defined, try to use first tagset from CharacterInfoPrefab
+                var charInfoPrefab = CharacterPrefab.HumanPrefab.CharacterInfoPrefab;
+                SpritePath = charInfoPrefab.ReplaceVars(SpritePath, charInfoPrefab.Heads.First());
             }
             if (parseSpritePath)
             {
@@ -167,10 +182,11 @@ namespace Barotrauma
         }
 
         public bool IsInitialized { get; private set; }
-        public void Init(Gender gender = Gender.None)
+        public void Init(Character picker = null)
         {
             if (IsInitialized) { return; }
-            _gender = UnassignedSpritePath.Contains("[GENDER]") ? gender : Gender.None;
+
+            _picker = picker;
             ParsePath(false);
             Sprite?.Remove();
             Sprite = new Sprite(SourceElement, file: SpritePath);
@@ -226,13 +242,13 @@ namespace Barotrauma.Items.Components
 {
     partial class Wearable : Pickable, IServerSerializable
     {
-        private readonly XElement[] wearableElements;
+        private readonly ContentXElement[] wearableElements;
         private readonly WearableSprite[] wearableSprites;
         private readonly LimbType[] limbType;
         private readonly Limb[] limb;
 
         private readonly List<DamageModifier> damageModifiers;
-        public readonly Dictionary<string, float> SkillModifiers = new Dictionary<string, float>();
+        public readonly Dictionary<Identifier, float> SkillModifiers;
 
         public readonly Dictionary<StatTypes, float> WearableStatValues = new Dictionary<StatTypes, float>();
 
@@ -285,23 +301,24 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public Wearable(Item item, XElement element) : base(item, element)
+        public Wearable(Item item, ContentXElement element) : base(item, element)
         {
             this.item = item;
 
             damageModifiers = new List<DamageModifier>();
+            SkillModifiers = new Dictionary<Identifier, float>();
 
             int spriteCount = element.Elements().Count(x => x.Name.ToString() == "sprite");
             Variants = element.GetAttributeInt("variants", 0);
-            variant = Rand.Range(1, Variants + 1, Rand.RandSync.Server);
+            variant = Rand.Range(1, Variants + 1, Rand.RandSync.ServerAndClient);
             wearableSprites = new WearableSprite[spriteCount];
-            wearableElements = new XElement[spriteCount];
+            wearableElements = new ContentXElement[spriteCount];
             limbType    = new LimbType[spriteCount];
             limb        = new Limb[spriteCount];
             AutoEquipWhenFull = element.GetAttributeBool("autoequipwhenfull", true);
             DisplayContainedStatus = element.GetAttributeBool("displaycontainedstatus", false);
             int i = 0;
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -318,7 +335,7 @@ namespace Barotrauma.Items.Components
                         wearableSprites[i] = new WearableSprite(subElement, this, variant);
                         wearableElements[i] = subElement;
 
-                        foreach (XElement lightElement in subElement.Elements())
+                        foreach (var lightElement in subElement.Elements())
                         {
                             if (!lightElement.Name.ToString().Equals("lightcomponent", StringComparison.OrdinalIgnoreCase)) { continue; }
                             wearableSprites[i].LightComponent = new LightComponent(item, lightElement)
@@ -334,7 +351,7 @@ namespace Barotrauma.Items.Components
                         damageModifiers.Add(new DamageModifier(subElement, item.Name + ", Wearable"));
                         break;
                     case "skillmodifier":
-                        string skillIdentifier = subElement.GetAttributeString("skillidentifier", string.Empty);
+                        Identifier skillIdentifier = subElement.GetAttributeIdentifier("skillidentifier", Identifier.Empty);
                         float skillValue = subElement.GetAttributeFloat("skillvalue", 0f);
                         if (SkillModifiers.ContainsKey(skillIdentifier))
                         {
@@ -382,12 +399,9 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < wearableSprites.Length; i++ )
             {
                 var wearableSprite = wearableSprites[i];
-                if (!wearableSprite.IsInitialized) { wearableSprite.Init(picker.Info?.Gender ?? Gender.None); }
-                if (picker.Info != null && picker.Info?.Gender != Gender.None && (wearableSprite.Gender != Gender.None))
-                {
-                    // If the item is gender specific (it has a different textures for male and female), we have to change the gender here so that the texture is updated.
-                    wearableSprite.Gender = picker.Info.Gender;
-                }
+                if (!wearableSprite.IsInitialized) { wearableSprite.Init(picker); }
+                // If the item is gender specific (it has a different textures for male and female), we have to change the gender here so that the texture is updated.
+                wearableSprite.Picker = picker;
 
                 Limb equipLimb  = character.AnimController.GetLimb(limbType[i]);
                 if (equipLimb == null) { continue; }
@@ -512,7 +526,7 @@ namespace Barotrauma.Items.Components
         }
 
         private int loadedVariant = -1;
-        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
             base.Load(componentElement, usePrefabValues, idRemap);
             loadedVariant = componentElement.GetAttributeInt("variant", -1);

@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
             set { oxygenFlow = Math.Max(value, 0.0f); }
         }
 
-        public Vent (Item item, XElement element) : base(item, element)  { }
+        public Vent (Item item, ContentXElement element) : base(item, element)  { }
 
         public override void Update(float deltaTime, Camera cam)
         {

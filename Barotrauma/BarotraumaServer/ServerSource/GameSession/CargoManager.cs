@@ -63,12 +63,12 @@ namespace Barotrauma
                 if (!item.Removed && canAddToRemoveQueue && Entity.FindEntityByID(item.ID) is Item entity)
                 {
                     item.Removed = true;
-                    Entity.Spawner.AddToRemoveQueue(entity);
+                    Entity.Spawner.AddItemToRemoveQueue(entity);
                 }
                 SoldItems.Add(item);
                 Location.StoreCurrentBalance -= itemValue;
                 campaign.Money += itemValue;
-                GameAnalyticsManager.AddMoneyGainedEvent(itemValue, GameAnalyticsManager.MoneySource.Store, item.ItemPrefab.Identifier);
+                GameAnalyticsManager.AddMoneyGainedEvent(itemValue, GameAnalyticsManager.MoneySource.Store, item.ItemPrefab.Identifier.Value);
             }
             OnSoldItemsChanged?.Invoke();
         }

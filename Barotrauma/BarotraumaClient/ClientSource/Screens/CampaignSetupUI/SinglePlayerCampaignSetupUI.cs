@@ -134,16 +134,16 @@ namespace Barotrauma
             columnContainer.Recalculate();
 
             // New game left side
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SaveName"), font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SaveName"), font: GUIStyle.SubHeadingFont);
             saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, string.Empty)
             {
                 textFilterFunction = (string str) => { return ToolBox.RemoveInvalidFileNameChars(str); }
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed"), font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed"), font: GUIStyle.SubHeadingFont);
             seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8));
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub"), font: GUI.SubHeadingFont);
+            
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub"), font: GUIStyle.SubHeadingFont);
 
             var moddedDropdown = new GUIDropDown(new RectTransform(new Vector2(1f, 0.02f), leftColumn.RectTransform), "", 3);
             moddedDropdown.AddItem(TextManager.Get("clientpermission.all"), CategoryFilter.All);
@@ -155,11 +155,11 @@ namespace Barotrauma
             {
                 Stretch = true
             };
-
+            
             subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform)) { ScrollBarVisible = true };
 
-            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
-            var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font, createClearButton: true);
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUIStyle.Font);
+            var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUIStyle.Font, createClearButton: true);
             filterContainer.RectTransform.MinSize = searchBox.RectTransform.MinSize;
             searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
@@ -187,7 +187,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.025f
             };
 
-            InitialMoneyText = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1f), firstPageButtonContainer.RectTransform), "", font: GUI.Style.Font, textColor: GUI.Style.Green, textAlignment: Alignment.CenterLeft)
+            InitialMoneyText = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1f), firstPageButtonContainer.RectTransform), "", font: GUIStyle.Font, textColor: GUIStyle.Green, textAlignment: Alignment.CenterLeft)
             {
                 TextGetter = () =>
                 {
@@ -200,7 +200,7 @@ namespace Barotrauma
                     return TextManager.GetWithVariable("campaignstartingmoney", "[money]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", initialMoney));
                 }
             };
-
+            
             CampaignCustomizeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1f), firstPageButtonContainer.RectTransform, Anchor.CenterLeft), TextManager.Get("SettingsButton"))
             {
                 OnClicked = (tb, userdata) =>
@@ -218,7 +218,7 @@ namespace Barotrauma
                     return false;
                 }
             };
-
+            
             var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(5) }, style: "GUINotificationButton")
             {
                 IgnoreLayoutGroups = true,
@@ -238,8 +238,8 @@ namespace Barotrauma
             secondPageLayout.RelativeSpacing = 0.01f;
             
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.04f), secondPageLayout.RectTransform),
-                TextManager.Get("Crew"), font: GUI.Style.SubHeadingFont, textAlignment: Alignment.TopLeft);
-
+                TextManager.Get("Crew"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.TopLeft);
+            
             characterInfoColumns = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.86f), secondPageLayout.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
@@ -266,7 +266,7 @@ namespace Barotrauma
                 OnClicked = FinishSetup
             };
         }
-
+        
         public void RandomizeCrew()
         {
             var characterInfos = new List<(CharacterInfo Info, JobPrefab Job)>();
@@ -275,9 +275,10 @@ namespace Barotrauma
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
                 {
                     var variant = Rand.Range(0, jobPrefab.Variants);
-                    characterInfos.Add((new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant), jobPrefab));
+                    characterInfos.Add((new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: jobPrefab, variant: variant), jobPrefab));
                 }
             }
+            characterInfos.Sort((a, b) => Math.Sign(b.Job.MinKarma - a.Job.MinKarma));
 
             characterInfoColumns.ClearChildren();
             CharacterMenus?.ForEach(m => m.Dispose());
@@ -344,7 +345,7 @@ namespace Barotrauma
         
         private void CreateCustomizeWindow()
         {
-            CampaignCustomizeSettings = new GUIMessageBox("", "", new string[] { TextManager.Get("OK") }, new Vector2(0.2f, 0.2f));
+            CampaignCustomizeSettings = new GUIMessageBox("", "", new LocalizedString[] { TextManager.Get("OK") }, new Vector2(0.2f, 0.2f));
             CampaignCustomizeSettings.Buttons[0].OnClicked += CampaignCustomizeSettings.Close;
 
             CampaignSettingsContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), CampaignCustomizeSettings.Content.RectTransform, Anchor.TopCenter))
@@ -355,7 +356,7 @@ namespace Barotrauma
             if (MapGenerationParams.Instance.RadiationParams != null)
             {
                 bool prevRadiationToggleEnabled = EnableRadiationToggle?.Selected ?? true;
-                EnableRadiationToggle = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), CampaignSettingsContent.RectTransform), TextManager.Get("CampaignOption.EnableRadiation"), font: GUI.Style.Font)
+                EnableRadiationToggle = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), CampaignSettingsContent.RectTransform), TextManager.Get("CampaignOption.EnableRadiation"), font: GUIStyle.Font)
                 {
                     Selected = prevRadiationToggleEnabled,
                     ToolTip = TextManager.Get("campaignoption.enableradiation.tooltip")
@@ -366,25 +367,25 @@ namespace Barotrauma
                 Stretch = true,
                 ToolTip = TextManager.Get("maxmissioncounttooltip")
             };
-            var maxMissionCountDescription = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), maxMissionCountSettingHolder.RectTransform), TextManager.Get("maxmissioncount", fallBackTag: "missions"), wrap: true);
+            var maxMissionCountDescription = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), maxMissionCountSettingHolder.RectTransform), TextManager.Get("maxmissioncount", "missions"), wrap: true);
             var maxMissionCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), maxMissionCountSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
             var maxMissionCountButtons = new GUIButton[2];
             maxMissionCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 0.8f), maxMissionCountContainer.RectTransform), style: "GUIButtonToggleLeft")
             {
                 OnClicked = (button, obj) =>
                 {
-                    MaxMissionCountText.Text = Math.Clamp(Int32.Parse(MaxMissionCountText.Text) - 1, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit).ToString();
+                    MaxMissionCountText.Text = Math.Clamp(Int32.Parse(MaxMissionCountText.Text.SanitizedValue) - 1, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit).ToString();
                     return true;
                 }
             };
 
-            string prevMaxMissionCountText = MaxMissionCountText?.Text ?? CampaignSettings.DefaultMaxMissionCount.ToString();
+            RichString prevMaxMissionCountText = MaxMissionCountText?.Text ?? CampaignSettings.DefaultMaxMissionCount.ToString();
             MaxMissionCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), maxMissionCountContainer.RectTransform), prevMaxMissionCountText, textAlignment: Alignment.Center, style: "GUITextBox");
             maxMissionCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 0.8f), maxMissionCountContainer.RectTransform), style: "GUIButtonToggleRight")
             {
                 OnClicked = (button, obj) =>
                 {
-                    MaxMissionCountText.Text = Math.Clamp(Int32.Parse(MaxMissionCountText.Text) + 1, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit).ToString();
+                    MaxMissionCountText.Text = Math.Clamp(Int32.Parse(MaxMissionCountText.Text.SanitizedValue) + 1, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit).ToString();
                     return true;
                 }
             };
@@ -405,10 +406,10 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(saveNameBox.Text))
             {
-                saveNameBox.Flash(GUI.Style.Red);
+                saveNameBox.Flash(GUIStyle.Red);
                 return false;
             }
-
+            
             SubmarineInfo selectedSub = null;
 
             if (!(subList.SelectedData is SubmarineInfo)) { return false; }
@@ -420,7 +421,7 @@ namespace Barotrauma
                 return false;
             }
 
-            if (string.IsNullOrEmpty(selectedSub.MD5Hash.Hash))
+            if (string.IsNullOrEmpty(selectedSub.MD5Hash.StringRepresentation))
             {
                 ((GUITextBlock)subList.SelectedComponent).TextColor = Color.DarkRed * 0.8f;
                 subList.SelectedComponent.CanBeFocused = false;
@@ -433,7 +434,7 @@ namespace Barotrauma
 
             CampaignSettings settings = new CampaignSettings();
             settings.RadiationEnabled = EnableRadiationToggle?.Selected ?? false;
-            if (MaxMissionCountText != null && Int32.TryParse(MaxMissionCountText.Text, out int missionCount))
+            if (MaxMissionCountText != null && Int32.TryParse(MaxMissionCountText.Text.SanitizedValue, out int missionCount))
             {
                 settings.MaxMissionCount = missionCount;
             }
@@ -448,8 +449,8 @@ namespace Barotrauma
                 {
                     var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
                         TextManager.GetWithVariable("ContentPackageMismatchWarning", "[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)),
-                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-
+                        new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                    
                     msgBox.Buttons[0].OnClicked = msgBox.Close;
                     msgBox.Buttons[0].OnClicked += (button, obj) =>
                     {
@@ -467,7 +468,7 @@ namespace Barotrauma
                 {
                     var msgBox = new GUIMessageBox(TextManager.Get("ShuttleSelected"),
                         TextManager.Get("ShuttleWarning"),
-                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                        new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
                     msgBox.Buttons[0].OnClicked = (button, obj) => 
                     {
@@ -499,7 +500,7 @@ namespace Barotrauma
             {
                 var sub = child.UserData as SubmarineInfo;
                 if (sub == null) { return; }
-                child.Visible = string.IsNullOrEmpty(filter) || sub.DisplayName.ToLower().Contains(filter.ToLower());
+                child.Visible = string.IsNullOrEmpty(filter) || sub.DisplayName.Contains(filter.ToLower(), StringComparison.OrdinalIgnoreCase);
             }
         }
 
@@ -522,7 +523,7 @@ namespace Barotrauma
             sub.CreatePreviewWindow(subPreviewContainer);
             return true;
         }
-
+        
         public void CreateDefaultSaveName()
         {
             string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Singleplayer);
@@ -555,7 +556,7 @@ namespace Barotrauma
             {
                 var textBlock = new GUITextBlock(
                     new RectTransform(new Vector2(1, 0.1f), subList.Content.RectTransform) { MinSize = new Point(0, 30) },
-                    ToolBox.LimitString(sub.DisplayName, GUI.Font, subList.Rect.Width - 65), style: "ListBoxElement")
+                    ToolBox.LimitString(sub.DisplayName.Value, GUIStyle.Font, subList.Rect.Width - 65), style: "ListBoxElement")
                     {
                         ToolTip = sub.Description,
                         UserData = sub
@@ -564,13 +565,13 @@ namespace Barotrauma
                 if (!sub.RequiredContentPackagesInstalled)
                 {
                     textBlock.TextColor = Color.Lerp(textBlock.TextColor, Color.DarkRed, .5f);
-                    textBlock.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + textBlock.RawToolTip;
+                    textBlock.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + textBlock.ToolTip.SanitizedString;
                 }
 
                 var priceText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight),
-                    TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", sub.Price)), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
+                    TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", sub.Price)), textAlignment: Alignment.CenterRight, font: GUIStyle.SmallFont)
                 {
-                    TextColor = sub.Price > CampaignMode.InitialMoney ? GUI.Style.Red : textBlock.TextColor * 0.8f,
+                    TextColor = sub.Price > CampaignMode.InitialMoney ? GUIStyle.Red : textBlock.TextColor * 0.8f,
                     ToolTip = textBlock.ToolTip
                 };
 #if !DEBUG
@@ -629,7 +630,7 @@ namespace Barotrauma
                     {
                         new GUIMessageBox(
                             TextManager.Get("error"), 
-                            TextManager.GetWithVariables("showinfoldererror", new string[] { "[folder]", "[errormessage]" }, new string[] { SaveUtil.SaveFolder, e.Message }));
+                            TextManager.GetWithVariables("showinfoldererror", ("[folder]", SaveUtil.SaveFolder), ("[errormessage]", e.Message)));
                     }
                     return true;
                 }
@@ -653,14 +654,14 @@ namespace Barotrauma
 
                 bool isCompatible = true;
                 prevSaveFiles ??= new List<string>();
-
+                
                 nameText.Text = Path.GetFileNameWithoutExtension(saveFile);
                 XDocument doc = SaveUtil.LoadGameSessionDoc(saveFile);
 
                 if (doc?.Root == null)
                 {
                     DebugConsole.ThrowError("Error loading save file \"" + saveFile + "\". The file may be corrupted.");
-                    nameText.TextColor = GUI.Style.Red;
+                    nameText.TextColor = GUIStyle.Red;
                     continue;
                 }
                 if (doc.Root.GetChildElement("multiplayercampaign") != null)
@@ -672,7 +673,7 @@ namespace Barotrauma
                 subName             = doc.Root.GetAttributeString("submarine", "");
                 saveTime            = doc.Root.GetAttributeString("savetime", "");
                 isCompatible        = SaveUtil.IsSaveFileCompatible(doc);
-                contentPackageStr   = doc.Root.GetAttributeString("selectedcontentpackages", "");
+                contentPackageStr   = doc.Root.GetAttributeStringUnrestricted("selectedcontentpackages", "");
                 prevSaveFiles?.Add(saveFile);
                 if (!string.IsNullOrEmpty(saveTime) && long.TryParse(saveTime, out long unixTime))
                 {
@@ -682,27 +683,27 @@ namespace Barotrauma
                 if (!string.IsNullOrEmpty(contentPackageStr))
                 {
                     List<string> contentPackagePaths = contentPackageStr.Split('|').ToList();
-                    if (!GameSession.IsCompatibleWithEnabledContentPackages(contentPackagePaths, out string errorMsg))
+                    if (!GameSession.IsCompatibleWithEnabledContentPackages(contentPackagePaths, out LocalizedString errorMsg))
                     {
-                        nameText.TextColor = GUI.Style.Red;
+                        nameText.TextColor = GUIStyle.Red;
                         saveFrame.ToolTip = string.Join("\n", errorMsg, TextManager.Get("campaignmode.contentpackagemismatchwarning"));
                     }
                 }
                 if (!isCompatible)
                 {
-                    nameText.TextColor = GUI.Style.Red;
+                    nameText.TextColor = GUIStyle.Red;
                     saveFrame.ToolTip = TextManager.Get("campaignmode.incompatiblesave");
                 }
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),
-                    text: subName, font: GUI.SmallFont)
+                    text: subName, font: GUIStyle.SmallFont)
                 {
                     CanBeFocused = false,
                     UserData = fileName
                 };
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), saveFrame.RectTransform),
-                    text: saveTime, textAlignment: Alignment.Right, font: GUI.SmallFont)
+                    text: saveTime, textAlignment: Alignment.Right, font: GUIStyle.SmallFont)
                 {
                     CanBeFocused = false,
                     UserData = fileName
@@ -782,8 +783,8 @@ namespace Barotrauma
             var titleText = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.2f), saveFileFrame.RectTransform, Anchor.TopCenter)
             {
                 RelativeOffset = new Vector2(0, 0.05f)
-            }, 
-            Path.GetFileNameWithoutExtension(fileName), font: GUI.LargeFont, textAlignment: Alignment.Center);
+            },
+                Path.GetFileNameWithoutExtension(fileName), font: GUIStyle.LargeFont, textAlignment: Alignment.Center);
             titleText.Text = ToolBox.LimitString(titleText.Text, titleText.Font, titleText.Rect.Width);
 
             var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.5f), saveFileFrame.RectTransform, Anchor.Center)
@@ -791,9 +792,9 @@ namespace Barotrauma
                 RelativeOffset = new Vector2(0, 0.1f)
             });
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), $"{TextManager.Get("Submarine")} : {subName}", font: GUI.SmallFont);
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), $"{TextManager.Get("LastSaved")} : {saveTime}", font: GUI.SmallFont);
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), $"{TextManager.Get("MapSeed")} : {mapseed}", font: GUI.SmallFont);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), $"{TextManager.Get("Submarine")} : {subName}", font: GUIStyle.SmallFont);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), $"{TextManager.Get("LastSaved")} : {saveTime}", font: GUIStyle.SmallFont);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), $"{TextManager.Get("MapSeed")} : {mapseed}", font: GUIStyle.SmallFont);
 
             new GUIButton(new RectTransform(new Vector2(0.4f, 0.15f), saveFileFrame.RectTransform, Anchor.BottomCenter)
             {
@@ -812,8 +813,8 @@ namespace Barotrauma
             string saveFile = obj as string;
             if (obj == null) { return false; }
 
-            string header = TextManager.Get("deletedialoglabel");
-            string body = TextManager.GetWithVariable("deletedialogquestion", "[file]", Path.GetFileNameWithoutExtension(saveFile));
+            LocalizedString header = TextManager.Get("deletedialoglabel");
+            LocalizedString body = TextManager.GetWithVariable("deletedialogquestion", "[file]", Path.GetFileNameWithoutExtension(saveFile));
 
             EventEditorScreen.AskForConfirmation(header, body, () =>
             {

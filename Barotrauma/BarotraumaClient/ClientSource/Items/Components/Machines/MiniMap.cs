@@ -146,7 +146,7 @@ namespace Barotrauma.Items.Components
     {
         private GUIFrame submarineContainer;
 
-        private GUIFrame hullInfoFrame;
+        private GUIFrame? hullInfoFrame;
         private GUIScissorComponent? scissorComponent;
         private GUIComponent? miniMapContainer;
         private GUIComponent miniMapFrame;
@@ -160,7 +160,7 @@ namespace Barotrauma.Items.Components
 
         private GUITextBlock tooltipHeader, tooltipFirstLine, tooltipSecondLine, tooltipThirdLine;
 
-        private string noPowerTip = string.Empty;
+        private LocalizedString noPowerTip = string.Empty;
 
         private readonly List<Submarine> displayedSubs = new List<Submarine>();
 
@@ -213,7 +213,7 @@ namespace Barotrauma.Items.Components
         public static readonly Color MiniMapBaseColor = new Color(15, 178, 107);
 
         private static readonly Color WetHullColor = new Color(11, 122, 205),
-                                      DoorIndicatorColor = GUI.Style.Green,
+                                      DoorIndicatorColor = GUIStyle.Green,
                                       NoPowerDoorColor = DoorIndicatorColor * 0.1f,
                                       DefaultNeutralColor = MiniMapBaseColor * 0.8f,
                                       HoverColor = Color.White,
@@ -221,7 +221,7 @@ namespace Barotrauma.Items.Components
                                       HullWaterColor = new Color(17, 173, 179) * 0.5f,
                                       HullWaterLineColor = Color.LightBlue * 0.5f,
                                       NoPowerColor = MiniMapBaseColor * 0.1f,
-                                      ElectricalBaseColor = GUI.Style.Orange,
+                                      ElectricalBaseColor = GUIStyle.Orange,
                                       NoPowerElectricalColor = ElectricalBaseColor * 0.1f;
 
         partial void InitProjSpecific()
@@ -292,7 +292,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            List<Order> reports = Order.PrefabList.FindAll(o => o.IsReport && o.SymbolSprite != null && !o.Hidden);
+            OrderPrefab[] reports = OrderPrefab.Prefabs.Where(o => o.IsReport && o.SymbolSprite != null && !o.Hidden).ToArray();
 
             GUIFrame bottomFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.15f), paddedContainer.RectTransform, Anchor.BottomCenter) { MaxSize = new Point(int.MaxValue, GUI.IntScale(40)) }, style: null)
             {
@@ -414,7 +414,7 @@ namespace Barotrauma.Items.Components
         public override void AddToGUIUpdateList(int order = 0)
         {
             base.AddToGUIUpdateList(order);
-            hullInfoFrame.AddToGUIUpdateList(order: order + 1);
+            hullInfoFrame?.AddToGUIUpdateList(order: order + 1);
             if (currentMode == MiniMapMode.ItemFinder && searchBar.Selected)
             {
                 searchAutoComplete?.AddToGUIUpdateList(order: order + 1);
@@ -507,7 +507,7 @@ namespace Barotrauma.Items.Components
                         {
                             Vector2 origin = weaponSprite.Origin;
                             float scale = parentWidth / Math.Max(weaponSprite.size.X, weaponSprite.size.Y);
-                            Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? Color.DimGray : GUI.Style.Green;
+                            Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? Color.DimGray : GUIStyle.Green;
                             weaponSprite.Draw(batch, center, color, origin, rotation, scale, it.SpriteEffects);
                         }
                     });
@@ -556,7 +556,7 @@ namespace Barotrauma.Items.Components
                         dragMapStart = PlayerInput.MousePosition;
                     }
                 }
-
+                
                 if (currentMode != MiniMapMode.HullStatus && Math.Abs(PlayerInput.ScrollWheelSpeed) > 0 && (GUI.MouseOn == scissorComponent || scissorComponent.IsParentOf(GUI.MouseOn)))
                 {
                     float newZoom = Math.Clamp(Zoom + PlayerInput.ScrollWheelSpeed / 1000.0f * Zoom, minZoom, maxZoom);
@@ -664,11 +664,11 @@ namespace Barotrauma.Items.Components
         {
             if (Voltage < MinVoltage)
             {
-                Vector2 textSize = GUI.Font.MeasureString(noPowerTip);
+                Vector2 textSize = GUIStyle.Font.MeasureString(noPowerTip);
                 Vector2 textPos = GuiFrame.Rect.Center.ToVector2();
-                Color noPowerColor = GUI.Style.Orange * (float)Math.Abs(Math.Sin(Timing.TotalTime));
+                Color noPowerColor = GUIStyle.Orange * (float)Math.Abs(Math.Sin(Timing.TotalTime));
 
-                GUI.DrawString(spriteBatch, textPos - textSize / 2, noPowerTip, noPowerColor, Color.Black * 0.8f, font: GUI.SubHeadingFont);
+                GUI.DrawString(spriteBatch, textPos - textSize / 2, noPowerTip, noPowerColor, Color.Black * 0.8f, font: GUIStyle.SubHeadingFont);
                 return;
             }
 
@@ -679,7 +679,7 @@ namespace Barotrauma.Items.Components
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
                 spriteBatch.GraphicsDevice.ScissorRectangle = submarineContainer.Rect;
 
-                var sprite = GUI.Style.UIGlowSolidCircular?.Sprite;
+                var sprite = GUIStyle.UIGlowSolidCircular.Value?.Sprite;
                 float alpha = (MathF.Sin(blipState / maxBlipState * MathHelper.TwoPi) + 1.5f) * 0.5f;
                 if (sprite != null)
                 {
@@ -693,7 +693,7 @@ namespace Barotrauma.Items.Components
 
                         Vector2 scale = new Vector2(entityRect.Size.X / spriteSize.X, entityRect.Size.Y / spriteSize.Y) * 2.0f;
 
-                        Color color = ToolBox.GradientLerp(gap.Open, GUI.Style.HealthBarColorMedium, GUI.Style.HealthBarColorLow) * alpha;
+                        Color color = ToolBox.GradientLerp(gap.Open, GUIStyle.HealthBarColorMedium, GUIStyle.HealthBarColorLow) * alpha;
                         sprite.Draw(spriteBatch,
                             miniMapFrame.Rect.Location.ToVector2() + entityRect.Center,
                             color, origin: sprite.Origin, rotate: 0.0f, scale: scale);
@@ -710,7 +710,7 @@ namespace Barotrauma.Items.Components
 
                         if (item.CurrentHull is { } currentHull && currentHull == hull)
                         {
-                            Sprite? pingCircle = GUI.Style.YouAreHereCircle?.Sprite;
+                            Sprite pingCircle = GUIStyle.YouAreHereCircle.Value.Sprite;
                             if (pingCircle is null) { continue; }
 
                             Vector2 charPos = item.WorldPosition;
@@ -725,7 +725,7 @@ namespace Barotrauma.Items.Components
                             Vector2 drawPos = component.RectComponent.Rect.Location.ToVector2() + relativePos;
                             drawPos -= new Vector2(spriteSize, spriteSize) / 2f;
 
-                            pingCircle.Draw(spriteBatch, drawPos, GUI.Style.Red * 0.8f, Vector2.Zero, 0f, parentWidth / pingCircle.size.X);
+                            pingCircle.Draw(spriteBatch, drawPos, GUIStyle.Red * 0.8f, Vector2.Zero, 0f, parentWidth / pingCircle.size.X);
                         }
                     }
                 }
@@ -805,7 +805,7 @@ namespace Barotrauma.Items.Components
 
         private void CreateItemFrame(ItemPrefab prefab, RectTransform parent)
         {
-            Sprite sprite = prefab.InventoryIcon ?? prefab.sprite;
+            Sprite sprite = prefab.InventoryIcon ?? prefab.Sprite;
             if (sprite is null) { return; }
             GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1f, 0.25f), parent), style: "ListBoxElement")
             {
@@ -821,7 +821,7 @@ namespace Barotrauma.Items.Components
                 Color = prefab.InventoryIconColor,
                 UserData = prefab
             };
-
+            
             var nameText = new GUITextBlock(new RectTransform(Vector2.One, layout.RectTransform), prefab.Name);
             nameText.RectTransform.SizeChanged += () =>
             {
@@ -837,7 +837,7 @@ namespace Barotrauma.Items.Components
 
                 if (first is null)
                 {
-                    searchBar.Flash(GUI.Style.Red);
+                    searchBar.Flash(GUIStyle.Red);
                     return;
                 }
                 searchedPrefab = first;
@@ -890,7 +890,7 @@ namespace Barotrauma.Items.Components
         {
             if (item.Submarine == null) { return; }
 
-            hullInfoFrame.Visible = false;
+            if (hullInfoFrame != null) { hullInfoFrame.Visible = false; }
             reportFrame.Visible = false;
             searchBarFrame.Visible = false;
             electricalFrame.Visible = false;
@@ -1029,7 +1029,7 @@ namespace Barotrauma.Items.Components
                 {
                     float amount = 1f + hullData.LinkedHulls.Count;
                     gapOpenSum = hull.ConnectedGaps.Concat(hullData.LinkedHulls.SelectMany(h => h.ConnectedGaps)).Where(g => !g.IsRoomToRoom && !g.HiddenInGame).Sum(g => g.Open) / amount;
-                    borderColor = Color.Lerp(neutralColor, GUI.Style.Red, Math.Min(gapOpenSum, 1.0f));
+                    borderColor = Color.Lerp(neutralColor, GUIStyle.Red, Math.Min(gapOpenSum, 1.0f));
                 }
 
                 bool isHoveringOver = canHoverOverHull && GUI.MouseOn == component;
@@ -1037,28 +1037,28 @@ namespace Barotrauma.Items.Components
                 // When drawing tooltip we are only interested in the component we are hovering over
                 if (isHoveringOver)
                 {
-                    string header = hull.DisplayName;
+                    LocalizedString header = hull.DisplayName;
 
                     float? oxygenAmount = hullData.HullOxygenAmount,
                            waterAmount = hullData.HullWaterAmount;
 
-                    string line1 = gapOpenSum > 0.1f ? TextManager.Get("MiniMapHullBreach") : string.Empty;
-                    Color line1Color = GUI.Style.Red;
+                    LocalizedString line1 = gapOpenSum > 0.1f ? TextManager.Get("MiniMapHullBreach") : string.Empty;
+                    Color line1Color = GUIStyle.Red;
 
-                    string line2 = oxygenAmount == null ?
+                    LocalizedString line2 = oxygenAmount == null ?
                         TextManager.Get("MiniMapAirQualityUnavailable") :
                         TextManager.AddPunctuation(':', TextManager.Get("MiniMapAirQuality"), (int)Math.Round(oxygenAmount.Value) + "%");
-                    Color line2Color = oxygenAmount == null ? GUI.Style.Red : Color.Lerp(GUI.Style.Red, Color.LightGreen, (float)oxygenAmount / 100.0f);
+                    Color line2Color = oxygenAmount == null ? GUIStyle.Red : Color.Lerp(GUIStyle.Red, Color.LightGreen, (float)oxygenAmount / 100.0f);
 
-                    string line3 = waterAmount == null ?
+                    LocalizedString line3 = waterAmount == null ?
                         TextManager.Get("MiniMapWaterLevelUnavailable") :
                         TextManager.AddPunctuation(':', TextManager.Get("MiniMapWaterLevel"), (int)Math.Round(waterAmount.Value * 100.0f) + "%");
-                    Color line3Color = waterAmount == null ? GUI.Style.Red : Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)waterAmount);
+                    Color line3Color = waterAmount == null ? GUIStyle.Red : Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)waterAmount);
 
                     SetTooltip(borderComponent.Rect.Center, header, line1, line2, line3, line1Color, line2Color, line3Color);
                 }
 
-                bool draggingReport = GameMain.GameSession?.CrewManager?.DraggedOrder != null;
+                bool draggingReport = GameMain.GameSession?.CrewManager?.DraggedOrderPrefab != null;
                 // When setting the colors we want to know the linked hulls too or else the linked hull will not realize its being hovered over and reset the border color
                 foreach (Hull linkedHull in hullData.LinkedHulls)
                 {
@@ -1090,7 +1090,7 @@ namespace Barotrauma.Items.Components
             foreach (var (entity, miniMapGuiComponent) in electricalMapComponents)
             {
                 if (!(entity is Item it)) { continue; }
-                if (!electricalChildren.TryGetValue(miniMapGuiComponent, out GUIComponent component)) { continue; }
+                if (!electricalChildren.TryGetValue(miniMapGuiComponent, out GUIComponent? component)) { continue; }
 
                 if (entity.Removed)
                 {
@@ -1106,12 +1106,12 @@ namespace Barotrauma.Items.Components
                 if (Voltage < MinVoltage || !miniMapGuiComponent.RectComponent.Visible) { continue; }
 
                 int durability = (int)(it.Condition / (it.MaxCondition / it.MaxRepairConditionMultiplier) * 100f);
-                Color color = ToolBox.GradientLerp(durability / 100f, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green, GUI.Style.Green);
+                Color color = ToolBox.GradientLerp(durability / 100f, GUIStyle.Red, GUIStyle.Orange, GUIStyle.Green, GUIStyle.Green);
 
                 if (GUI.MouseOn == component)
                 {
-                    string line1 = string.Empty;
-                    string line2 = string.Empty;
+                    LocalizedString line1 = string.Empty;
+                    LocalizedString line2 = string.Empty;
 
                     if (it.GetComponent<PowerContainer>() is { } battery)
                     {
@@ -1120,13 +1120,21 @@ namespace Barotrauma.Items.Components
                     }
                     else if (it.GetComponent<PowerTransfer>() is { } powerTransfer)
                     {
-                        int current = (int)-powerTransfer.CurrPowerConsumption, load = (int)powerTransfer.PowerLoad;
+                        int current = 0, load = 0;
+                        if (powerTransfer.PowerConnections.Count > 0 && powerTransfer.PowerConnections[0].Grid != null)
+                        {
+                            current = (int)powerTransfer.PowerConnections[0].Grid.Power;
+                            load = (int)powerTransfer.PowerConnections[0].Grid.Load;
+                        }
 
-                        line1 = TextManager.GetWithVariable("statusmonitor.junctionpower.tooltip", "[amount]", current.ToString(), fallBackTag: "statusmonitor.junctioncurrent.tooltip");
-                        line2 = TextManager.GetWithVariables("statusmonitor.junctionload.tooltip", new string[] { "[amount]", "[load]" }, new string[] { load.ToString(), load.ToString() });
+                        line1 = TextManager.GetWithVariable("statusmonitor.junctionpower.tooltip", "[amount]", current.ToString())
+                            .Fallback(TextManager.GetWithVariable("statusmonitor.junctioncurrent.tooltip", "[amount]", current.ToString()));
+                        line2 = TextManager.GetWithVariables("statusmonitor.junctionload.tooltip",
+                                ("[amount]", load.ToString()),
+                                ("[load]", load.ToString()));
                     }
 
-                    string line3 = TextManager.GetWithVariable("statusmonitor.durability.tooltip", "[amount]", durability.ToString());
+                    LocalizedString line3 = TextManager.GetWithVariable("statusmonitor.durability.tooltip", "[amount]", durability.ToString());
                     SetTooltip(component.Rect.Center, it.Prefab.Name, line1, line2,  line3, line3Color: color);
                     color = HoverColor;
                 }
@@ -1154,12 +1162,12 @@ namespace Barotrauma.Items.Components
                     foreach (Vector2 blip in MiniMapBlips)
                     {
                         Vector2 parentSize = miniMapFrame.Rect.Size.ToVector2();
-                        Sprite pingCircle = GUI.Style.PingCircle.Sprite;
+                        Sprite pingCircle = GUIStyle.PingCircle.Value.Sprite;
                         Vector2 targetSize = new Vector2(parentSize.X / 4f);
                         Vector2 spriteScale = targetSize / pingCircle.size;
                         float scale = Math.Min(blipState, maxBlipState / 2f);
                         float alpha = 1.0f - Math.Clamp((blipState - maxBlipState * 0.25f) * 2f, 0f, 1f);
-                        pingCircle.Draw(spriteBatch, electricalFrame.Rect.Location.ToVector2() + blip * Zoom, GUI.Style.Red * alpha, pingCircle.Origin, 0f, spriteScale * scale, SpriteEffects.None);
+                        pingCircle.Draw(spriteBatch, electricalFrame.Rect.Location.ToVector2() + blip * Zoom, GUIStyle.Red * alpha, pingCircle.Origin, 0f, spriteScale * scale, SpriteEffects.None);
                     }
                 }
             }
@@ -1199,7 +1207,7 @@ namespace Barotrauma.Items.Components
 
                         if (hullsVisible && hullData.HullOxygenAmount is { } oxygenAmount)
                         {
-                            GUI.DrawRectangle(spriteBatch, hullFrame.Rect, Color.Lerp(GUI.Style.Red * 0.5f, GUI.Style.Green * 0.3f, oxygenAmount / 100.0f), true);
+                            GUI.DrawRectangle(spriteBatch, hullFrame.Rect, Color.Lerp(GUIStyle.Red * 0.5f, GUIStyle.Green * 0.3f, oxygenAmount / 100.0f), true);
                         }
                     }
                 }
@@ -1210,8 +1218,9 @@ namespace Barotrauma.Items.Components
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
         }
 
-        private void SetTooltip(Point pos, string header, string line1, string line2, string line3, Color? line1Color = null, Color? line2Color = null, Color? line3Color = null)
+        private void SetTooltip(Point pos, LocalizedString header, LocalizedString line1, LocalizedString line2, LocalizedString line3, Color? line1Color = null, Color? line2Color = null, Color? line3Color = null)
         {
+            if (hullInfoFrame == null) { return; }
             hullInfoFrame.RectTransform.ScreenSpaceOffset = pos;
 
             if (hullInfoFrame.Rect.Left > submarineContainer.Rect.Right) { hullInfoFrame.RectTransform.ScreenSpaceOffset = new Point(submarineContainer.Rect.Right, hullInfoFrame.RectTransform.ScreenSpaceOffset.Y); }
@@ -1224,13 +1233,13 @@ namespace Barotrauma.Items.Components
             tooltipHeader.Text = header;
 
             tooltipFirstLine.Text = line1;
-            tooltipFirstLine.TextColor = line1Color ?? GUI.Style.TextColor;
+            tooltipFirstLine.TextColor = line1Color ?? GUIStyle.TextColorNormal;
 
             tooltipSecondLine.Text = line2;
-            tooltipSecondLine.TextColor = line2Color ?? GUI.Style.TextColor;
+            tooltipSecondLine.TextColor = line2Color ?? GUIStyle.TextColorNormal;
 
             tooltipThirdLine.Text = line3;
-            tooltipThirdLine.TextColor = line3Color ?? GUI.Style.TextColor;
+            tooltipThirdLine.TextColor = line3Color ?? GUIStyle.TextColorNormal;
         }
 
         private void BakeSubmarine(Submarine sub, Rectangle container)
@@ -1355,9 +1364,9 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.GameSession?.CrewManager is { ActiveOrders: { } orders })
             {
-                foreach (var pair in orders)
+                foreach (var activeOrder in orders)
                 {
-                    Order order = pair.First;
+                    Order order = activeOrder.Order;
                     if (order is { SymbolSprite: { }, TargetEntity: Hull _ } && order.TargetEntity == hull)
                     {
                         cardsToDraw.Add(new MiniMapSprite(order));
@@ -1367,7 +1376,7 @@ namespace Barotrauma.Items.Components
 
             foreach (IdCard card in data.Cards)
             {
-                if (card.GetJob() is { Icon: { }} job)
+                if (card.OwnerJob is { Icon: { }} job)
                 {
                     cardsToDraw.Add(new MiniMapSprite(job));
                 }
@@ -1415,17 +1424,17 @@ namespace Barotrauma.Items.Components
                     if (amountLeft > 0)
                     {
                         string text = $"+{amountLeft}"; // TODO localization
-                        var (sizeX, sizeY) = GUI.SubHeadingFont.MeasureString(text); // TODO expensive, move to a global variable
+                        var (sizeX, sizeY) = GUIStyle.SubHeadingFont.MeasureString(text); // TODO expensive, move to a global variable
                         float maxWidth = Math.Max(sizeX, sizeY);
                         Vector2 drawPos = new Vector2(frame.Rect.Right - sizeX, frame.Rect.Y - sizeY / 2f);
 
-                        UISprite icon = GUI.Style.IconOverflowIndicator;
+                        UISprite icon = GUIStyle.IconOverflowIndicator;
                         if (icon != null)
                         {
                             const int iconPadding = 4;
-                            icon.Draw(spriteBatch, new Rectangle((int) drawPos.X - iconPadding, (int) drawPos.Y - iconPadding, (int) maxWidth + iconPadding * 2, (int) maxWidth + iconPadding * 2), Color.White, SpriteEffects.None);
+                            icon.Draw(spriteBatch, new Rectangle((int)drawPos.X - iconPadding, (int)drawPos.Y - iconPadding, (int)maxWidth + iconPadding * 2, (int)maxWidth + iconPadding * 2), Color.White, SpriteEffects.None);
                         }
-                        GUI.DrawString(spriteBatch, drawPos, text, GUI.Style.TextColor, font: GUI.SubHeadingFont);
+                        GUI.DrawString(spriteBatch, drawPos, text, GUIStyle.TextColorNormal, font: GUIStyle.SubHeadingFont);
                     }
                     break;
                 }
@@ -1485,7 +1494,7 @@ namespace Barotrauma.Items.Components
 
             if (settings.CreateHullElements)
             {
-                hullList = Hull.hullList.Where(IsPartofSub).ToImmutableArray();
+                hullList = Hull.HullList.Where(IsPartofSub).ToImmutableArray();
                 combinedHulls = CombinedHulls(hullList);
             }
 

@@ -9,9 +9,9 @@ namespace Barotrauma.Items.Components
         private const int serverHealthUpdateDelay = 10;
         private int serverHealthUpdateTimer;
 
-        partial void LoadVines(XElement element)
+        partial void LoadVines(ContentXElement element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
