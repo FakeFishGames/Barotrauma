@@ -2984,6 +2984,8 @@ namespace Barotrauma.Networking
 
         public void SetupLoadCampaign(string saveName)
         {
+            if (clientPeer == null) { return; }
+
             GameMain.NetLobbyScreen.CampaignSetupFrame.Visible = false;
             GameMain.NetLobbyScreen.CampaignFrame.Visible = false;
 

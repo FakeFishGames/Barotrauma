@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------------
+v0.16.7.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed excessive loading times when playing in Chinese, Japanese or Korean.
+- Fixed certain logic components (and/or/xor with an empty output and non-empty false output) stopping to work altogether when they stop sending a signal.
+- Fixes to crashes when trying to interact with certain elements in the server lobby while getting disconnected.
+
+---------------------------------------------------------------------------------------------------------
 v0.16.6.1
 ---------------------------------------------------------------------------------------------------------
 

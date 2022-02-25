@@ -1299,7 +1299,7 @@ namespace Barotrauma
 
         private bool CreateOrder(Order order, Hull targetHull = null)
         {
-            var sub = Character.Controlled.Submarine;
+            var sub = Character.Controlled?.Submarine;
 
             if (sub == null || sub.TeamID != Character.Controlled.TeamID || sub.Info.IsWreck) { return false; }
 

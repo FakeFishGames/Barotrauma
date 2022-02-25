@@ -1743,6 +1743,7 @@ namespace Barotrauma
 
         public void SetSpectate(bool spectate)
         {
+            if (GameMain.Client == null) { return; }
             this.spectateBox.Selected = spectate;
             if (spectate)
             {

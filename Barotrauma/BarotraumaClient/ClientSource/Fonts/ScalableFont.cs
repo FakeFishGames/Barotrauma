@@ -13,7 +13,7 @@ namespace Barotrauma
     {
         private static List<ScalableFont> FontList = new List<ScalableFont>();
         private static Library Lib = null;
-        private static object mutex = new object();
+        private readonly object mutex = new object();
 
         private string filename;
         private Face face;
@@ -256,10 +256,33 @@ namespace Barotrauma
         }
 
         private void DynamicRenderAtlas(GraphicsDevice gd, uint character, int texDims = 1024, uint baseChar = 0x54)
-            => DynamicRenderAtlas(gd, character.ToEnumerable(), texDims, baseChar);
+        {
+            bool missingCharacterFound = false;
+            lock (mutex)
+            {
+                missingCharacterFound = !texCoords.ContainsKey(character);
+            }
+            if (!missingCharacterFound) { return; }
+            DynamicRenderAtlas(gd, character.ToEnumerable(), texDims, baseChar);
+        }
 
         private void DynamicRenderAtlas(GraphicsDevice gd, string str, int texDims = 1024, uint baseChar = 0x54)
-            => DynamicRenderAtlas(gd, str.Distinct().Select(c => (uint)c), texDims, baseChar);
+        {
+            bool missingCharacterFound = false;
+            var distinctChrs = str.Distinct().Select(c => (uint)c).ToArray();
+            lock (mutex)
+            {
+                foreach (var character in distinctChrs)
+                {
+                    if (texCoords.ContainsKey(character)) { continue; }
+
+                    missingCharacterFound = true; 
+                    break;
+                }
+            }
+            if (!missingCharacterFound) { return; }
+            DynamicRenderAtlas(gd, distinctChrs, texDims, baseChar);
+        }
 
         private void DynamicRenderAtlas(GraphicsDevice gd, IEnumerable<uint> characters, int texDims = 1024, uint baseChar = 0x54)
         {
@@ -268,7 +291,7 @@ namespace Barotrauma
                 CrossThread.RequestExecutionOnMainThread(() =>
                 {
                     DynamicRenderAtlas(gd, characters, texDims, baseChar);
-                });
+                });                
                 return;
             }
 

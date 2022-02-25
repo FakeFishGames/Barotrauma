@@ -1030,7 +1030,7 @@ namespace Barotrauma
 
             const int maxDist = 1000;
 
-            if (level != null)
+            if (level != null && !level.Removed)
             {
                 foreach (var ruin in level.Ruins)
                 {
