@@ -418,7 +418,7 @@ namespace Barotrauma.Items.Components
             {
                 float idealLoad = MaxPowerOutput / minMaxPower.ReactorMaxOutput * loadLeft;
                 float loadAdjust = MathHelper.Clamp((ratio - 0.5f) * 25 + idealLoad - (turbineOutput / 100 * MaxPowerOutput), -MaxPowerOutput / 100, MaxPowerOutput / 100);
-                newLoad = MathHelper.Clamp(loadLeft - (expectedPower + output) + loadAdjust, 0, loadLeft);
+                newLoad = MathHelper.Clamp(loadLeft - (expectedPower - output) + loadAdjust, 0, loadLeft);
             }
 
             if (float.IsNegative(newLoad))

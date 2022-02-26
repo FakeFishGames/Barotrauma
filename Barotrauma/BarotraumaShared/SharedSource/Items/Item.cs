@@ -573,7 +573,7 @@ namespace Barotrauma
                     if (connections == null) { return; }                    
                     foreach (Connection c in connections.Values)
                     {
-                        if (c.IsPower && c.Grid != null)
+                        if (c.IsPower)
                         {
                             Powered.ChangedConnections.Add(c);
                             foreach (Connection conn in c.Recipients)

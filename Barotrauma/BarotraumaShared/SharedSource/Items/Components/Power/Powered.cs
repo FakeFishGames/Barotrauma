@@ -238,7 +238,11 @@ namespace Barotrauma.Items.Components
                     else if (c.Name == "power_out")
                     {
                         powerOut = c;
-                        powerOut.Priority = Priority;
+                        // Connection takes the lowest priority
+                        if (Priority > powerOut.Priority)
+                        {
+                            powerOut.Priority = Priority;
+                        }
                     }
                     else if (c.Name == "power")
                     {
@@ -258,7 +262,11 @@ namespace Barotrauma.Items.Components
 #endif
                         }
                         powerOut = c;
-                        powerOut.Priority = Priority;
+                        // Connection takes the lowest priority
+                        if (Priority > powerOut.Priority)
+                        {
+                            powerOut.Priority = Priority;
+                        }
                     }
                     else
                     {
