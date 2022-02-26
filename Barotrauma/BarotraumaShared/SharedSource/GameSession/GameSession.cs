@@ -411,9 +411,6 @@ namespace Barotrauma
                 }
             }
 
-            //Clear out the stored grids
-            Powered.Grids.Clear();
-
             Level? level = null;
             if (levelData != null)
             {
@@ -421,6 +418,9 @@ namespace Barotrauma
             }
 
             InitializeLevel(level);
+
+            //Clear out the cached grids and force update
+            Powered.Grids.Clear();
 
             GameAnalyticsManager.AddProgressionEvent(
                 GameAnalyticsManager.ProgressionStatus.Start,
