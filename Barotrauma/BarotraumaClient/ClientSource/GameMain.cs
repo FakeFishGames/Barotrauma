@@ -774,8 +774,7 @@ namespace Barotrauma
                         SoundPlayer.Update((float)Timing.Step);
                     }
 
-                    if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen &&
-                        (!waitForKeyHit || ((PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0 || PlayerInput.PrimaryMouseButtonClicked()) && WindowActive)))
+                    if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen)
                     {
                         loadingScreenOpen = false;
                     }
@@ -1231,10 +1230,8 @@ namespace Barotrauma
                 msgBox.InnerFrame.Rect.Height + linkHolder.Rect.Height + msgBox.Content.AbsoluteSpacing * 2 + (int)(50 * GUI.Scale));
         }
 
-        static bool waitForKeyHit = true;
         public CoroutineHandle ShowLoading(IEnumerable<CoroutineStatus> loader, bool waitKeyHit = true)
         {
-            waitForKeyHit = waitKeyHit;
             loadingScreenOpen = true;
             TitleScreen.LoadState = null;
             return CoroutineManager.StartCoroutine(TitleScreen.DoLoading(loader));
