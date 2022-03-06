@@ -54,9 +54,7 @@ namespace Barotrauma.Lights
 
         private Vector2 losOffset;
 
-        private float currLosTexScale;
-
-        private int currLosRayCount;
+        private LosRaycastSettings currLosRaycastSettings;
 
         public RenderTarget2D LosMap
         {
@@ -74,10 +72,20 @@ namespace Barotrauma.Lights
             get;
             private set;
         }
+        public RenderTarget2D LosShadownMap
+        {
+            get;
+            private set;
+        }
 
-        public Effect LosRaycastEffect { get; private set; }
-        public Effect LosShadowEffect { get; private set; }
-        public Effect LosEffect { get; private set; }
+        private readonly Texture2D penumbraLut;
+
+        // A bunch more shaders are used. Might be useful to add these to the same effect?
+
+        public Effect LosRaycastEffect { get; private set; } // Effect for raycasting from a screen position
+        public Effect LosShadowEffect { get; private set; } // Effect for adding the shadows back to carthesian coordinates with light
+        public Effect LosPenumbraEffect { get; private set; } // Effect for adding the shadows back to carthesian coordinates with light
+        public Effect LosEffect { get; private set; } // Effect for combining the LoS texture with the game screen
 
         // Highlights
 
@@ -96,6 +104,7 @@ namespace Barotrauma.Lights
             AmbientLight = new Color(20, 20, 20, 255);
 
             visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png");
+            penumbraLut = Sprite.LoadTexture("Content/Lights/penumbra_lut.png");
             highlightRaster = Sprite.LoadTexture("Content/UI/HighlightRaster.png");
 
             GameMain.Instance.ResolutionChanged += () =>
@@ -111,6 +120,7 @@ namespace Barotrauma.Lights
                 LosEffect = content.Load<Effect>("Effects/losshader");
                 LosRaycastEffect = content.Load<Effect>("Effects/losraycast");
                 LosShadowEffect = content.Load<Effect>("Effects/losshadow");
+                LosPenumbraEffect = content.Load<Effect>("Effects/lospenumbra");
                 SolidColorEffect = content.Load<Effect>("Effects/solidcolor");
 #else
                 LosEffect = content.Load<Effect>("Effects/losshader_opengl");
@@ -129,6 +139,9 @@ namespace Barotrauma.Lights
             });
 
             LosRaycastMap = new RenderTarget2D[2];
+
+            currLosRaycastSettings = new LosRaycastSettings();
+            CreateLosRendertargets(graphics);
         }
 
         private void CreateRenderTargets(GraphicsDevice graphics)
@@ -157,7 +170,9 @@ namespace Barotrauma.Lights
         }
         private void CreateLosRendertargets(GraphicsDevice graphics)
         {
-            currLosTexScale = GameMain.Config.LosRaycastSetting.losTexScale;
+            currLosRaycastSettings.losTexScale = GameMain.Config.LosRaycastSetting.losTexScale;
+            currLosRaycastSettings.RayStepIterations = GameMain.Config.LosRaycastSetting.RayStepIterations;
+            currLosRaycastSettings.RayCount = GameMain.Config.LosRaycastSetting.RayCount;
 
             LosMap?.Dispose();
             LosMap = new RenderTarget2D(graphics,
@@ -167,18 +182,22 @@ namespace Barotrauma.Lights
             // TODO: Disposal/creation of these RTs based on LoS mode to save memory (though it's already very limited)
 
             LosOcclusionMap?.Dispose();
+            LosRaycastMap[0]?.Dispose();
+            LosRaycastMap[1]?.Dispose();
+            LosShadownMap?.Dispose();
+
             LosOcclusionMap = new RenderTarget2D(graphics,
                 (int)(GameMain.GraphicsWidth * GameMain.Config.LosRaycastSetting.losTexScale),
                 (int)(GameMain.GraphicsHeight * GameMain.Config.LosRaycastSetting.losTexScale), false, SurfaceFormat.Color, DepthFormat.None);
 
-            currLosRayCount = GameMain.Config.LosRaycastSetting.RayCount;
-
-            LosRaycastMap[0]?.Dispose();
             LosRaycastMap[0] = new RenderTarget2D(graphics,
                 (int)(GameMain.Config.LosRaycastSetting.RayCount), 1, false, SurfaceFormat.Color, DepthFormat.None);
-            LosRaycastMap[1]?.Dispose();
             LosRaycastMap[1] = new RenderTarget2D(graphics,
                 (int)(GameMain.Config.LosRaycastSetting.RayCount), 1, false, SurfaceFormat.Color, DepthFormat.None);
+
+            LosShadownMap = new RenderTarget2D(graphics,
+                (int)(GameMain.Config.LosRaycastSetting.RayCount),
+                (int)(GameMain.Config.LosRaycastSetting.RayStepIterations * 64), false, SurfaceFormat.Color, DepthFormat.None);
         }
 
         public void AddLight(LightSource light)
@@ -571,48 +590,43 @@ namespace Barotrauma.Lights
 
         public void UpdateObstructVision(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 lookAtPosition)
         {
-            if (Math.Abs(currLosTexScale - GameMain.Config.LosRaycastSetting.losTexScale) > float.Epsilon)
+            if (currLosRaycastSettings.losTexScale != GameMain.Config.LosRaycastSetting.losTexScale ||
+                currLosRaycastSettings.RayStepIterations != GameMain.Config.LosRaycastSetting.RayStepIterations ||
+                currLosRaycastSettings.RayCount != GameMain.Config.LosRaycastSetting.RayCount)
             {
-                //los tex scale has changed -> recreate render targets
+                //los settings changed -> recreate render targets
                 CreateLosRendertargets(graphics);
             }
-            if(currLosRayCount != GameMain.Config.LosRaycastSetting.RayCount)
-            {
-                //los raycount has changed -> recreate render targets
-                CreateLosRendertargets(graphics);
-            }    
-
             if ((!LosEnabled || LosMode == LosMode.None) && !ObstructVision) return;
             if (ViewTarget == null) return;
-
-            graphics.SetRenderTarget(LosMap);
-
-            if (ObstructVision)
-            {
-                graphics.Clear(Color.Black);
-                Vector2 diff = lookAtPosition - ViewTarget.WorldPosition;
-                diff.Y = -diff.Y;
-                if (diff.LengthSquared() > 20.0f * 20.0f) { losOffset = diff; }
-                float rotation = MathUtils.VectorToAngle(losOffset);
-
-                Vector2 scale = new Vector2(
-                    MathHelper.Clamp(losOffset.Length() / 256.0f, 4.0f, 5.0f), 3.0f);
-
-                spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LosRaycastSetting.losTexScale, GameMain.Config.LosRaycastSetting.losTexScale, 1.0f)));
-                spriteBatch.Draw(visionCircle, new Vector2(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y), null, Color.White, rotation,
-                    new Vector2(visionCircle.Width * 0.2f, visionCircle.Height / 2), scale, SpriteEffects.None, 0.0f);
-                spriteBatch.End();
-            }
-            else
-            {
-                graphics.Clear(Color.White);
-            }
-
 
             //--------------------------------------
 
             if (LosEnabled && LosMode != LosMode.None && ViewTarget != null)
             {
+                graphics.SetRenderTarget(LosMap);
+
+                if (ObstructVision)
+                {
+                    graphics.Clear(Color.Black);
+                    Vector2 diff = lookAtPosition - ViewTarget.WorldPosition;
+                    diff.Y = -diff.Y;
+                    if (diff.LengthSquared() > 20.0f * 20.0f) { losOffset = diff; }
+                    float rotation = MathUtils.VectorToAngle(losOffset);
+
+                    Vector2 scale = new Vector2(
+                        MathHelper.Clamp(losOffset.Length() / 256.0f, 4.0f, 5.0f), 3.0f);
+
+                    spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f)));
+                    spriteBatch.Draw(visionCircle, new Vector2(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y), null, Color.White, rotation,
+                        new Vector2(visionCircle.Width * 0.2f, visionCircle.Height / 2), scale, SpriteEffects.None, 0.0f);
+                    spriteBatch.End();
+                }
+                else
+                {
+                    graphics.Clear(Color.White);
+                }
+
                 Vector2 pos = ViewTarget.DrawPosition;
 
                 Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
@@ -620,7 +634,7 @@ namespace Barotrauma.Lights
                 Matrix shadowTransform = cam.ShaderTransform
                     * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
-                var convexHulls = ConvexHull.GetHullsInRange(ViewTarget.Position, cam.WorldView.Width*0.75f, ViewTarget.Submarine);
+                var convexHulls = ConvexHull.GetHullsInRange(ViewTarget.Position, cam.WorldView.Width * 0.75f, ViewTarget.Submarine);
 
                 if (LosMode != LosMode.Raycast)
                 {
@@ -662,7 +676,6 @@ namespace Barotrauma.Lights
                             }
                         }
                     }
-                    graphics.SetRenderTarget(null);
                 }
                 else
                 {
@@ -675,6 +688,7 @@ namespace Barotrauma.Lights
                     LosRaycastSettings losRaycastSetting = GameMain.Config.LosRaycastSetting;
 
                     Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LosRaycastSetting.losTexScale, GameMain.Config.LosRaycastSetting.losTexScale, 1.0f));
+
 
                     SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["solidColorThreshold"];
                     SolidColorEffect.Parameters["color"].SetValue(new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
@@ -705,63 +719,125 @@ namespace Barotrauma.Lights
 
                     spriteBatch.End();
 
-                    //graphics.SetRenderTarget(null);
-
                     // Do the raycasting
 
-                    // To draw 
                     graphics.SetRenderTarget(LosRaycastMap[0]);
 
                     graphics.Clear(Color.Black); // init texture as black (all rays start at 0)
 
-                    LosRaycastEffect.CurrentTechnique = LosRaycastEffect.Techniques["rayCast64"];
+                    LosRaycastEffect.CurrentTechnique = LosRaycastEffect.Techniques["losRaycast64"];
 
                     LosRaycastEffect.Parameters["occlusionMap"].SetValue(LosOcclusionMap);
                     LosRaycastEffect.Parameters["center"].SetValue(new Vector2(0.5f, 0.5f));
                     LosRaycastEffect.Parameters["bias"].SetValue(0.5f);
-                    LosRaycastEffect.Parameters["rayStepSize"].SetValue(0.005f);
+                    LosRaycastEffect.Parameters["rayStepSize"].SetValue(0.75f / (64.0f * GameMain.Config.LosRaycastSetting.RayStepIterations));
+                    LosRaycastEffect.Parameters["rayLength"].SetValue(0.75f);
+                    LosRaycastEffect.Parameters["iaspect"].SetValue((float)GameMain.GraphicsHeight / GameMain.GraphicsWidth);
 
                     graphics.BlendState = BlendState.Opaque;
                     graphics.SamplerStates[0] = SamplerState.LinearWrap;
 
-                    DebugConsole.AddWarning($"{losRaycastSetting.RayStepIterations} ray iterations of 64 steps");
                     for (int i = 0; i < losRaycastSetting.RayStepIterations; i++)
                     {
                         // swap buffers
+                        // swap first, then draw so that end result is always drawn to LosRaycastMap[0]
                         RenderTarget2D temp = LosRaycastMap[0];
                         LosRaycastMap[0] = LosRaycastMap[1];
                         LosRaycastMap[1] = temp;
 
                         graphics.SetRenderTarget(LosRaycastMap[0]);
-                        LosRaycastEffect.Parameters["xTexture"].SetValue(LosRaycastMap[1]);
+                        LosRaycastEffect.Parameters["raycastMap"].SetValue(LosRaycastMap[1]);
                         LosRaycastEffect.CurrentTechnique.Passes[0].Apply();
                         Quad.Render();
 
                     }
 
-                    // graphics.SetRenderTarget(null);
+                    // Blur the raycast onto the second texture to smoothen out the shading on colliders
+
+                    if (GameMain.Config.LosRaycastSetting.RayBlurSteps > 0.0f)
+                    {
+                        graphics.SetRenderTarget(LosRaycastMap[1]);
+
+                        if (GameMain.Config.LosRaycastSetting.RayBlurSteps > 4.0f)
+                            LosRaycastEffect.CurrentTechnique = LosRaycastEffect.Techniques["losBlurRaycast8"];
+                        else
+                            LosRaycastEffect.CurrentTechnique = LosRaycastEffect.Techniques["losBlurRaycast4"];
+
+                        LosRaycastEffect.Parameters["rayBlurDistWeight"].SetValue(5.0f);
+
+                        LosRaycastEffect.Parameters["raycastMap"].SetValue(LosRaycastMap[0]);
+
+                        LosRaycastEffect.CurrentTechnique.Passes[0].Apply();
+                        Quad.Render();
+                    }
+
+                    // Render penumbra in polar coords
+
+                    if (GameMain.Config.LosRaycastSetting.PenumbraSteps > 0.0f)
+                    {
+                        graphics.SetRenderTarget(LosShadownMap);
+
+                        if (GameMain.Config.LosRaycastSetting.PenumbraSteps > 4.0f)
+                            LosPenumbraEffect.CurrentTechnique = LosPenumbraEffect.Techniques["losPenumbra8"];
+                        else
+                            LosPenumbraEffect.CurrentTechnique = LosPenumbraEffect.Techniques["losPenumbra4"];
+
+                        LosPenumbraEffect.Parameters["penumbraAngle"].SetValue(.15f);
+                        LosPenumbraEffect.Parameters["rayLength"].SetValue(.75f);
+                        LosPenumbraEffect.Parameters["margin"].SetValue(1f / 255f);
+
+                        LosPenumbraEffect.Parameters["raycastMap"].SetValue(LosRaycastMap[0]);
+                        LosPenumbraEffect.Parameters["penumbraLut"].SetValue(penumbraLut);
+
+                        LosPenumbraEffect.CurrentTechnique.Passes[0].Apply();
+                        Quad.Render();
+
+                    }
 
                     // Use raycasting output to cast shadow
 
                     graphics.SetRenderTarget(LosMap);
 
-                    LosShadowEffect.CurrentTechnique = LosShadowEffect.Techniques["losShadow"];
+                    if (GameMain.Config.LosRaycastSetting.PenumbraSteps > 0.0f)
+                    {
+                        LosShadowEffect.CurrentTechnique = LosShadowEffect.Techniques["losShadowMapped"];
+                        LosShadowEffect.Parameters["occlusionMap"].SetValue(LosOcclusionMap);
+                        LosShadowEffect.Parameters["shadowMap"].SetValue(LosShadownMap);
 
-                    LosShadowEffect.Parameters["occlusionMap"].SetValue(LosOcclusionMap);
-                    LosShadowEffect.Parameters["raycastMap"].SetValue(LosRaycastMap[0]);
+                        if (GameMain.Config.LosRaycastSetting.RayBlurSteps > 0.0f)
+                            LosShadowEffect.Parameters["raycastMap"].SetValue(LosRaycastMap[1]);
+                        else
+                            LosShadowEffect.Parameters["raycastMap"].SetValue(LosRaycastMap[0]);
+                    }
+                    else if (GameMain.Config.LosRaycastSetting.RayBlurSteps > 0.0f)
+                    {
+                        LosShadowEffect.CurrentTechnique = LosShadowEffect.Techniques["losShadowBlurred"];
+                        LosShadowEffect.Parameters["occlusionMap"].SetValue(LosOcclusionMap);
+                        LosShadowEffect.Parameters["raycastMap"].SetValue(LosRaycastMap[0]);
+                        LosShadowEffect.Parameters["shadowMap"].SetValue(LosRaycastMap[1]);
+                    }
+                    else
+                    {
+                        LosShadowEffect.CurrentTechnique = LosShadowEffect.Techniques["losShadow"];
+                        LosShadowEffect.Parameters["occlusionMap"].SetValue(LosOcclusionMap);
+                        LosShadowEffect.Parameters["raycastMap"].SetValue(LosRaycastMap[0]);
+                    }
+
                     LosShadowEffect.Parameters["center"].SetValue(new Vector2(0.5f, 0.5f));
                     LosShadowEffect.Parameters["bias"].SetValue(0.5f);
                     LosShadowEffect.Parameters["inDist"].SetValue(0.05f);
+                    LosShadowEffect.Parameters["rayLength"].SetValue(0.75f);
+                    LosShadowEffect.Parameters["aspect"].SetValue((float)GameMain.GraphicsWidth / (float)GameMain.GraphicsHeight);
 
                     graphics.BlendState = BlendState.Opaque;
                     graphics.SamplerStates[0] = SamplerState.LinearWrap;
 
                     LosShadowEffect.CurrentTechnique.Passes[0].Apply();
                     Quad.Render();
-
-                    graphics.SetRenderTarget(null);
                 }
             }
+
+            graphics.SetRenderTarget(null);
         }
 
         public void ClearLights()

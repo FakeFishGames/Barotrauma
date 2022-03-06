@@ -49,6 +49,12 @@
 /processorParam:DebugMode=Auto
 /build:grainshader.fx
 
+#begin lospenumbra.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:lospenumbra.fx
+
 #begin losraycast.fx
 /importer:EffectImporter
 /processor:EffectProcessor

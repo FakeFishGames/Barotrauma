@@ -34,36 +34,37 @@ namespace Barotrauma
     public class LosRaycastSettings
     {
         public float losTexScale = 1.0f;
-        public float occluderAlphaThreshold = 0.35f;
+        public float occluderAlphaThreshold = 0.35f; // Should not be setting
 
         public int RayCount = 512;
-        public float RayLength = 0.75f;
+        public float RayLength = 0.75f; // Should not be setting
         public int RayStepIterations = 2;
-        public float RayStepNoise = 1.0f / 255;
 
-        public float InDepth = 0.05f;
+        public int RayBlurSteps = 4;
 
-        public float PenumbraAngle = 0.002f;
-        public float PenumbraFalloff = 0.75f;
-        public float PenumbraAngularFalloff = 15.0f;
-        public float PenumbraAngleNoise = 0.2f / 25f;
+        public int PenumbraSteps = 4;
+        public float PenumbraAngle = 0.002f; // Should not be setting
+
+        public float InDepth = 0.05f; // Should not be setting
+
 
         public override string ToString()
         {
             string settingsString = $"{losTexScale},{occluderAlphaThreshold},";
-            settingsString += $"{RayCount},{RayLength},{RayStepIterations},{RayStepNoise},";
-            settingsString += $"{InDepth},";
-            settingsString += $"{PenumbraAngle},{PenumbraFalloff},{PenumbraAngularFalloff},{PenumbraAngleNoise}";
+            settingsString += $"{RayCount},{RayLength},{RayStepIterations},";
+            settingsString += $"{RayBlurSteps},";
+            settingsString += $"{PenumbraSteps},{PenumbraAngle},";
+            settingsString += $"{InDepth}";
 
             return settingsString;
         }
-        public bool FromString(string settingsString)
+        public bool SetFromString(string settingsString)
         {
             var parsed = settingsString.Split(',')
               .Select(s => { return (float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out float v), v); })
               .ToArray();
 
-            if (parsed.Length != 11f)
+            if (parsed.Length != 9f)
             {
                 DebugConsole.AddWarning("Warning: Unexpected number of LoSRaycastsettings. Default LoSRaycastsettings loaded.");
                 return false;
@@ -77,17 +78,40 @@ namespace Barotrauma
             RayCount = (int)values[2];
             RayLength = values[3];
             RayStepIterations = (int)values[4];
-            RayStepNoise = values[5];
+            RayBlurSteps = (int)values[5];
 
-            InDepth = values[6];
-
+            PenumbraSteps = (int)values[6];
             PenumbraAngle = values[7];
-            PenumbraFalloff = values[8];
-            PenumbraAngularFalloff = values[9];
-            PenumbraAngleNoise = values[10];
+
+            InDepth = values[8];
 
             return true;
         }
+
+        // Not used as only vars that require texture size changes are compared
+        //public override bool Equals(Object obj)
+        //{
+        //    //Check for null and compare run-time types.
+        //    if ((obj == null) || !this.GetType().Equals(obj.GetType()))
+        //    {
+        //        return false;
+        //    }
+        //    else
+        //    {
+        //        LosRaycastSettings compareSettings = (LosRaycastSettings) obj;
+        //        if (Math.Abs(losTexScale - compareSettings.losTexScale) > float.Epsilon ||
+        //            Math.Abs(occluderAlphaThreshold - compareSettings.occluderAlphaThreshold) > float.Epsilon ||
+        //            RayCount != compareSettings.RayCount ||
+        //            Math.Abs(RayLength - compareSettings.RayLength) > float.Epsilon ||
+        //            RayStepIterations != compareSettings.RayStepIterations ||
+        //            RayBlurSteps != compareSettings.RayBlurSteps ||
+        //            PenumbraSteps != compareSettings.PenumbraSteps ||
+        //            Math.Abs(PenumbraAngle - compareSettings.PenumbraAngle) > float.Epsilon ||
+        //            Math.Abs(InDepth - compareSettings.InDepth) > float.Epsilon)
+        //            return false;
+        //        return true;
+        //    }
+        //}
     }
 
     public partial class GameSettings
@@ -1355,7 +1379,7 @@ namespace Barotrauma
                 losMode = LosMode.Transparent;
             }
             var losRaycastSettingString = graphicsSettings.GetAttributeString("losraycastsetting", "");
-            if (!losRaycastSetting.FromString(losRaycastSettingString))
+            if (!losRaycastSetting.SetFromString(losRaycastSettingString))
             {
                 losRaycastSetting = new LosRaycastSettings();
             }
