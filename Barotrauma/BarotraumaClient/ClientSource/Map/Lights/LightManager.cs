@@ -725,10 +725,13 @@ namespace Barotrauma.Lights
 
                     graphics.Clear(Color.Black); // init texture as black (all rays start at 0)
 
+                    // Screen UVs of view target
+                    Vector2 center = new Vector2((ViewTarget.WorldPosition.X - cam.WorldView.X) /cam.WorldView.Width, (-ViewTarget.WorldPosition.Y + cam.WorldView.Y) / cam.WorldView.Height);
+
                     LosRaycastEffect.CurrentTechnique = LosRaycastEffect.Techniques["losRaycast64"];
 
                     LosRaycastEffect.Parameters["occlusionMap"].SetValue(LosOcclusionMap);
-                    LosRaycastEffect.Parameters["center"].SetValue(new Vector2(0.5f, 0.5f));
+                    LosRaycastEffect.Parameters["center"].SetValue(center);
                     LosRaycastEffect.Parameters["bias"].SetValue(0.5f);
                     LosRaycastEffect.Parameters["rayStepSize"].SetValue(0.75f / (64.0f * GameMain.Config.LosRaycastSetting.RayStepIterations));
                     LosRaycastEffect.Parameters["rayLength"].SetValue(0.75f);
@@ -823,7 +826,7 @@ namespace Barotrauma.Lights
                         LosShadowEffect.Parameters["raycastMap"].SetValue(LosRaycastMap[0]);
                     }
 
-                    LosShadowEffect.Parameters["center"].SetValue(new Vector2(0.5f, 0.5f));
+                    LosShadowEffect.Parameters["center"].SetValue(center);
                     LosShadowEffect.Parameters["bias"].SetValue(0.5f);
                     LosShadowEffect.Parameters["inDist"].SetValue(0.05f);
                     LosShadowEffect.Parameters["rayLength"].SetValue(0.75f);
