@@ -183,9 +183,6 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            //if the item can't be fixed, don't allow it to break
-            if (!item.Repairables.Any() || !CanBeOverloaded) { return; }
-
             if (prevSentPowerValue != (int)-CurrPowerConsumption || powerSignal == null)
             {
                 prevSentPowerValue = (int)Math.Round(-CurrPowerConsumption);
@@ -198,6 +195,9 @@ namespace Barotrauma.Items.Components
             }
             item.SendSignal(powerSignal, "power_value_out");
             item.SendSignal(loadSignal, "load_value_out");
+
+            //if the item can't be fixed, don't allow it to break
+            if (!item.Repairables.Any() || !CanBeOverloaded) { return; }
 
             float maxOverVoltage = Math.Max(OverloadVoltage, 1.0f);
             Overload = -currPowerConsumption > Math.Max(powerLoad, 200.0f) * maxOverVoltage;
