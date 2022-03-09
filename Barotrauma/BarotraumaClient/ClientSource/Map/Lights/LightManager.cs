@@ -800,7 +800,7 @@ namespace Barotrauma.Lights
 
                     if (GameMain.Config.LosRaycastSetting.PenumbraSteps > 0.0f)
                     {
-                        LosShadowEffect.CurrentTechnique = LosShadowEffect.Techniques["losShadowMapped"];
+                        LosShadowEffect.CurrentTechnique = ObstructVision ? LosShadowEffect.Techniques["losShadowMappedObstruct"] : LosShadowEffect.Techniques["losShadowMapped"];
                         LosShadowEffect.Parameters["occlusionMap"].SetValue(LosOcclusionMap);
                         LosShadowEffect.Parameters["shadowMap"].SetValue(LosShadownMap);
 
@@ -811,14 +811,14 @@ namespace Barotrauma.Lights
                     }
                     else if (GameMain.Config.LosRaycastSetting.RayBlurSteps > 0.0f)
                     {
-                        LosShadowEffect.CurrentTechnique = LosShadowEffect.Techniques["losShadowBlurred"];
+                        LosShadowEffect.CurrentTechnique = ObstructVision ? LosShadowEffect.Techniques["losShadowBlurredObstruct"] : LosShadowEffect.Techniques["losShadowBlurred"];
                         LosShadowEffect.Parameters["occlusionMap"].SetValue(LosOcclusionMap);
                         LosShadowEffect.Parameters["raycastMap"].SetValue(LosRaycastMap[0]);
                         LosShadowEffect.Parameters["shadowMap"].SetValue(LosRaycastMap[1]);
                     }
                     else
                     {
-                        LosShadowEffect.CurrentTechnique = LosShadowEffect.Techniques["losShadow"];
+                        LosShadowEffect.CurrentTechnique = ObstructVision ? LosShadowEffect.Techniques["losShadowObstruct"] : LosShadowEffect.Techniques["losShadow"];
                         LosShadowEffect.Parameters["occlusionMap"].SetValue(LosOcclusionMap);
                         LosShadowEffect.Parameters["raycastMap"].SetValue(LosRaycastMap[0]);
                     }
@@ -828,6 +828,39 @@ namespace Barotrauma.Lights
                     LosShadowEffect.Parameters["inDist"].SetValue(0.05f);
                     LosShadowEffect.Parameters["rayLength"].SetValue(0.75f);
                     LosShadowEffect.Parameters["aspect"].SetValue((float)GameMain.GraphicsWidth / (float)GameMain.GraphicsHeight);
+
+                    // ObstructVision
+
+                    Vector4 visionCoords = new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+
+                    if (ObstructVision)
+                    {
+                        Vector2 diff = lookAtPosition - ViewTarget.WorldPosition;
+                        diff.Y = -diff.Y;
+                        if (diff.LengthSquared() > 20.0f * 20.0f) { losOffset = diff; }
+                        float rotation = MathUtils.VectorToAngle(losOffset);
+
+                        Vector2 scale = new Vector2(
+                            MathHelper.Clamp(losOffset.Length() / 256.0f, 4.0f, 5.0f), 3.0f);
+
+                        // Camera world position
+                        Matrix camTransform = Matrix.CreateScale(new Vector3(cam.WorldView.Width, cam.WorldView.Height, 1.0f)) *
+                            Matrix.CreateTranslation(new Vector3(cam.WorldView.X, -cam.WorldView.Y, 0.0f));
+
+                        // Target sprite position
+                        // Order Translate origin, Scale, Rotate, Translate
+                        Matrix visionSpriteTransform = Matrix.CreateTranslation(new Vector3(-0.2f, -1.0f / 2.0f, 0.0f)) *
+                            Matrix.CreateScale(new Vector3(scale*new Vector2(visionCircle.Width, visionCircle.Height), 1.0f)) *
+                            Matrix.CreateRotationZ(rotation) *
+                            Matrix.CreateTranslation(new Vector3(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y, 0.0f));
+
+                        // Matrix for converting screen UVs to sprite UVs
+                        // First cam transform (UVs to world), then inverse sprite transform (world back to UV)
+                        Matrix visionTransform = camTransform * Matrix.Invert(visionSpriteTransform);
+
+                        LosShadowEffect.Parameters["visionTransform"].SetValue(visionTransform);
+                        LosShadowEffect.Parameters["visionCirlce"].SetValue(visionCircle);
+                    }
 
                     graphics.BlendState = BlendState.Opaque;
                     graphics.SamplerStates[0] = SamplerState.LinearWrap;

@@ -50,12 +50,13 @@ sampler visionSampler = sampler_state {
 	AddressV = CLAMP;
 };
 
-float3x3 visionTransform;
 float2 center;
 float bias;
 float inDist;
 float rayLength;
 float aspect;
+
+float4x4 visionTransform;
 
 // Create shadow from polar raycast map 
 float4 losShadowMapped(VertexShaderOutput input) : COLOR0
@@ -74,9 +75,6 @@ float4 losShadowMapped(VertexShaderOutput input) : COLOR0
 	if (tex2D(occlusionSampler, input.TexCoords).r < bias) { shadow = max(0., dist_occluder) / inDist; }
 
 	shadow = 1.0f - shadow;
-
-	shadow *= tex2D(visionSampler, mul(float3(input.TexCoords, 1.), visionTransform).xy).r;
-	shadow *= tex2D(visionSampler, mul(float3(input.TexCoords, 1.), visionTransform).xy).r;
 
 	return float4(shadow.rrr, 1.0f);
 }
@@ -127,6 +125,33 @@ float4 losShadow(VertexShaderOutput input) : COLOR0
 	return float4(shadow.rrr, 1.0f);
 }
 
+float4 losShadowMappedObstruct(VertexShaderOutput input) : COLOR0
+{
+	float shadow = losShadowMapped(input).r;
+
+	shadow = min(shadow, tex2D(visionSampler, mul(float4(input.TexCoords.xy, 0.0f, 1.0f), visionTransform).xy).r);
+
+	return float4(shadow.rrr, 1.0f);
+}
+
+float4 losShadowBlurredObstruct(VertexShaderOutput input) : COLOR0
+{
+	float shadow = losShadowBlurred(input).r;
+
+	shadow = min(shadow, tex2D(visionSampler, mul(float4(input.TexCoords.xy, 0.0f, 1.0f), visionTransform).xy).r);
+
+	return float4(shadow.rrr, 1.0f);
+}
+
+float4 losShadowObstruct(VertexShaderOutput input) : COLOR0
+{
+	float shadow = losShadow(input).r;
+
+	shadow = min(shadow, tex2D(visionSampler, mul(float4(input.TexCoords.xy, 0.0f, 1.0f), visionTransform).xy).r);
+
+	return float4(shadow.rrr, 1.0f);
+}
+
 technique losShadowMapped
 {
 	pass Pass1
@@ -151,5 +176,32 @@ technique losShadow
 	{
 		VertexShader = compile vs_4_0_level_9_1 mainVS();
 		PixelShader = compile ps_4_0_level_9_1 losShadow();
+	}
+}
+
+technique losShadowMappedObstruct
+{
+	pass Pass1
+	{
+		VertexShader = compile vs_4_0_level_9_1 mainVS();
+		PixelShader = compile ps_4_0_level_9_1 losShadowMappedObstruct();
+	}
+}
+
+technique losShadowBlurredObstruct
+{
+	pass Pass1
+	{
+		VertexShader = compile vs_4_0_level_9_1 mainVS();
+		PixelShader = compile ps_4_0_level_9_1 losShadowBlurredObstruct();
+	}
+}
+
+technique losShadowObstruct
+{
+	pass Pass1
+	{
+		VertexShader = compile vs_4_0_level_9_1 mainVS();
+		PixelShader = compile ps_4_0_level_9_1 losShadowObstruct();
 	}
 }
