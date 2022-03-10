@@ -77,8 +77,8 @@
   <Character file="Content/Characters/Coelanth/Coelanth.xml" />
   <Character file="Content/Characters/Crawler/Crawler.xml" />
   <Character file="Content/Characters/Crawlerhusk/Crawlerhusk.xml" />
+  <Character file="Content/Characters/Crawlerbroodmother/Crawlerbroodmother.xml" />
   <Character file="Content/Characters/Endworm/Endworm.xml" />
-  <Character file="Content/Characters/Variants/Doomworm.xml" />
   <Character file="Content/Characters/Fractalguardian/Fractalguardian.xml" />
   <Character file="Content/Characters/Fractalguardian2/Fractalguardian2.xml" />
   <Character file="Content/Characters/Swarmfeeder/Swarmfeeder.xml" />
@@ -113,6 +113,7 @@
   <Character file="Content/Characters/Terminalcell/Terminalcell.xml" />
   <Character file="Content/Characters/Watcher/Watcher.xml" />
   <Character file="Content/Characters/Spineling/Spineling.xml" />
+  <Character file="Content/Characters/Spineling_giant/Spineling_giant.xml" />
   <Character file="Content/Characters/Variants/Swarmcrawler.xml" />
   <Character file="Content/Characters/Variants/Moloch_m.xml" />
   <Character file="Content/Characters/Variants/Molochblack_m.xml" />
@@ -121,7 +122,9 @@
   <Character file="Content/Characters/Variants/Crawler_hatchling/Crawler_hatchling.xml" />
   <Character file="Content/Characters/Variants/Mudraptor_hatchling/Mudraptor_hatchling.xml" />
   <Character file="Content/Characters/Variants/Mudraptor_passive/Mudraptor_passive.xml" />
+  <Character file="Content/Characters/Variants/Mudraptor_veteran/Mudraptor_veteran.xml" />
   <Character file="Content/Characters/Variants/Tigerthresher_hatchling/Tigerthresher_hatchling.xml" />
+  <Character file="Content/Characters/Variants/Doomworm.xml" />
   <MapCreature file="Content/Items/Gardening/ballastflora.xml" />
   <Wreck file="Content/Map/Wrecks/Dugong_Wrecked.sub" />
   <Wreck file="Content/Map/Wrecks/Kastrull_Wrecked.sub" />
@@ -144,6 +147,9 @@
   <Submarine file="Submarines/Venture.sub" />
   <Submarine file="Submarines/Azimuth.sub" />
   <Submarine file="Submarines/R-29.sub" />
+  <Submarine file="Submarines/Barsuk.sub" />
+  <Submarine file="Submarines/Herja.sub" />
+  <Submarine file="Submarines/Winterhalter.sub" />
   <Text file="Content/Texts/English/EnglishVanilla.xml" />
   <Text file="Content/Texts/German/GermanVanilla.xml" />
   <Text file="Content/Texts/French/FrenchVanilla.xml" />

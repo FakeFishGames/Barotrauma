@@ -172,7 +172,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    indicator.Visible = Character.Controlled.Info.GetAvailableTalentPoints() > 0;
+                    indicator.Visible = Character.Controlled.Info.GetAvailableTalentPoints() > 0 && !Character.Controlled.HasUnlockedAllTalents();
                 }
             }
         }

@@ -535,16 +535,6 @@ namespace Barotrauma
             }
         }
 
-        // Enum.HasFlag() sucks
-        public static bool IsBitSet<T>(this T self, T bit) where T : struct, Enum
-        {
-            // This uses Unsafe.As for performance reasons, as
-            // C# will otherwise not allow a T -> int cast
-            // without first casting to object, which would make
-            // this not any better than Enum.HasFlag
-            return (Unsafe.As<T, int>(ref self) & Unsafe.As<T, int>(ref bit)) != 0;
-        }
-
         public static string ByteArrayToString(byte[] ba)
         {
             StringBuilder hex = new StringBuilder(ba.Length * 2);

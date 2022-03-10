@@ -115,6 +115,8 @@ namespace Barotrauma
         {
             this.submarine = sub;
 
+            Vector2 minExtents = Vector2.Zero, maxExtents = Vector2.Zero;
+            Vector2 visibleMinExtents = Vector2.Zero, visibleMaxExtents = Vector2.Zero;
             Body farseerBody = null;
             if (!Hull.hullList.Any(h => h.Submarine == sub))
             {
@@ -133,8 +135,6 @@ namespace Barotrauma
                 }
                 HullVertices = convexHull;
 
-                Vector2 minExtents = Vector2.Zero, maxExtents = Vector2.Zero;
-                Vector2 visibleMinExtents = Vector2.Zero, visibleMaxExtents = Vector2.Zero;
 
                 farseerBody = GameMain.World.CreateBody();
                 farseerBody.UserData = this;
@@ -142,25 +142,18 @@ namespace Barotrauma
                 {
                     if (mapEntity.Submarine != submarine || !(mapEntity is Structure wall)) { continue; }
 
+                    bool hasCollider = wall.HasBody && !wall.IsPlatform && wall.StairDirection == Direction.None;
                     Rectangle rect = wall.Rect;
-                    visibleMinExtents.X = Math.Min(rect.X, visibleMinExtents.X);
-                    visibleMinExtents.Y = Math.Min(rect.Y - rect.Height, visibleMinExtents.Y);
-                    visibleMaxExtents.X = Math.Max(rect.Right, visibleMaxExtents.X);
-                    visibleMaxExtents.Y = Math.Max(rect.Y, visibleMaxExtents.Y);
-
-                    if (!wall.HasBody || wall.IsPlatform || wall.StairDirection != Direction.None) { continue; }
-
-                    farseerBody.CreateRectangle(
-                          ConvertUnits.ToSimUnits(wall.BodyWidth),
-                          ConvertUnits.ToSimUnits(wall.BodyHeight),
-                          50.0f,
-                          -wall.BodyRotation,
-                          ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + wall.BodyOffset)).UserData = wall;
-
-                    minExtents.X = Math.Min(visibleMinExtents.X, minExtents.X);
-                    minExtents.Y = Math.Min(visibleMinExtents.Y, minExtents.Y);
-                    maxExtents.X = Math.Max(visibleMaxExtents.X, maxExtents.X);
-                    maxExtents.Y = Math.Max(visibleMaxExtents.Y, maxExtents.Y);
+                    SetExtents(new Vector2(rect.X, rect.Y - rect.Height), new Vector2(rect.Right, rect.Y), hasCollider);
+                    if (hasCollider)
+                    {
+                        farseerBody.CreateRectangle(
+                              ConvertUnits.ToSimUnits(wall.BodyWidth),
+                              ConvertUnits.ToSimUnits(wall.BodyHeight),
+                              50.0f,
+                              -wall.BodyRotation,
+                              ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + wall.BodyOffset)).UserData = wall;
+                    }
                 }
 
                 foreach (Hull hull in Hull.hullList)
@@ -168,21 +161,13 @@ namespace Barotrauma
                     if (hull.Submarine != submarine || hull.IdFreed) { continue; }
 
                     Rectangle rect = hull.Rect;
+                    SetExtents(new Vector2(rect.X, rect.Y - rect.Height), new Vector2(rect.Right, rect.Y), hasCollider: true);
+
                     farseerBody.CreateRectangle(
                         ConvertUnits.ToSimUnits(rect.Width),
                         ConvertUnits.ToSimUnits(rect.Height),
                         100.0f,
                         ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2))).UserData = hull;
-
-                    visibleMinExtents.X = Math.Min(rect.X, visibleMinExtents.X);
-                    visibleMinExtents.Y = Math.Min(rect.Y - rect.Height, visibleMinExtents.Y);
-                    visibleMaxExtents.X = Math.Max(rect.Right, visibleMaxExtents.X);
-                    visibleMaxExtents.Y = Math.Max(rect.Y, visibleMaxExtents.Y);
-
-                    minExtents.X = Math.Min(visibleMinExtents.X, minExtents.X);
-                    minExtents.Y = Math.Min(visibleMinExtents.Y, minExtents.Y);
-                    maxExtents.X = Math.Max(visibleMaxExtents.X, maxExtents.X);
-                    maxExtents.Y = Math.Max(visibleMaxExtents.Y, maxExtents.Y);
                 }
 
                 foreach (Item item in Item.ItemList)
@@ -207,31 +192,21 @@ namespace Barotrauma
                     if (width > 0.0f && height > 0.0f)
                     {
                         item.StaticFixtures.Add(farseerBody.CreateRectangle(simWidth, simHeight, 5.0f, simPos));
-
-                        visibleMinExtents.X = Math.Min(item.Position.X - width / 2, visibleMinExtents.X);
-                        visibleMinExtents.Y = Math.Min(item.Position.Y - height / 2, visibleMinExtents.Y);
-                        visibleMaxExtents.X = Math.Max(item.Position.X + width / 2, visibleMaxExtents.X);
-                        visibleMaxExtents.Y = Math.Max(item.Position.Y + height / 2, visibleMaxExtents.Y);
+                        SetExtents(item.Position - new Vector2(width, height) / 2, item.Position + new Vector2(width, height) / 2, hasCollider: true);
                     }
                     else if (radius > 0.0f && width > 0.0f)
                     {
                         item.StaticFixtures.Add(farseerBody.CreateRectangle(simWidth, simRadius * 2, 5.0f, simPos));
                         item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitX * simWidth / 2));
                         item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simWidth / 2));
-                        visibleMinExtents.X = Math.Min(item.Position.X - width / 2 - radius, visibleMinExtents.X);
-                        visibleMinExtents.Y = Math.Min(item.Position.Y - radius, visibleMinExtents.Y);
-                        visibleMaxExtents.X = Math.Max(item.Position.X + width / 2 + radius, visibleMaxExtents.X);
-                        visibleMaxExtents.Y = Math.Max(item.Position.Y + radius, visibleMaxExtents.Y);
+                        SetExtents(item.Position - new Vector2(width / 2 + radius, height / 2), item.Position + new Vector2(width / 2 + radius, height / 2), hasCollider: true);
                     }
                     else if (radius > 0.0f && height > 0.0f)
                     {
                         item.StaticFixtures.Add(farseerBody.CreateRectangle(simRadius * 2, height, 5.0f, simPos));
                         item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitY * simHeight / 2));
                         item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simHeight / 2));
-                        visibleMinExtents.X = Math.Min(item.Position.X - radius, visibleMinExtents.X);
-                        visibleMinExtents.Y = Math.Min(item.Position.Y - height / 2 - radius, visibleMinExtents.Y);
-                        visibleMaxExtents.X = Math.Max(item.Position.X + radius, visibleMaxExtents.X);
-                        visibleMaxExtents.Y = Math.Max(item.Position.Y + height / 2 + radius, visibleMaxExtents.Y);
+                        SetExtents(item.Position - new Vector2(width / 2, height / 2 + radius), item.Position + new Vector2(width / 2, height / 2 + radius), hasCollider: true);
                     }
                     else if (radius > 0.0f)
                     {
@@ -240,12 +215,8 @@ namespace Barotrauma
                         visibleMinExtents.Y = Math.Min(item.Position.Y - radius, visibleMinExtents.Y);
                         visibleMaxExtents.X = Math.Max(item.Position.X + radius, visibleMaxExtents.X);
                         visibleMaxExtents.Y = Math.Max(item.Position.Y + radius, visibleMaxExtents.Y);
+                        SetExtents(item.Position - new Vector2(radius, radius), item.Position + new Vector2(radius, radius), hasCollider: true);
                     }
-                    item.StaticFixtures.ForEach(f => f.UserData = item);
-                    minExtents.X = Math.Min(visibleMinExtents.X, minExtents.X);
-                    minExtents.Y = Math.Min(visibleMinExtents.Y, minExtents.Y);
-                    maxExtents.X = Math.Max(visibleMaxExtents.X, maxExtents.X);
-                    maxExtents.Y = Math.Max(visibleMaxExtents.Y, maxExtents.Y);
                 }
 
                 Borders = new Rectangle((int)minExtents.X, (int)maxExtents.Y, (int)(maxExtents.X - minExtents.X), (int)(maxExtents.Y - minExtents.Y));
@@ -271,6 +242,21 @@ namespace Barotrauma
             farseerBody.UserData = submarine;
 
             Body = new PhysicsBody(farseerBody);
+
+            void SetExtents(Vector2 min, Vector2 max, bool hasCollider)
+            {
+                visibleMinExtents.X = Math.Min(min.X, visibleMinExtents.X);
+                visibleMinExtents.Y = Math.Min(min.Y, visibleMinExtents.Y);
+                visibleMaxExtents.X = Math.Max(max.X, visibleMaxExtents.X);
+                visibleMaxExtents.Y = Math.Max(max.Y, visibleMaxExtents.Y);
+                if (hasCollider)
+                {
+                    minExtents.X = Math.Min(min.X, minExtents.X);
+                    minExtents.Y = Math.Min(min.Y, minExtents.Y);
+                    maxExtents.X = Math.Max(max.X, maxExtents.X);
+                    maxExtents.Y = Math.Max(max.Y, maxExtents.Y);
+                }
+            }
         }
 
         private List<Vector2> GenerateConvexHull()
@@ -853,6 +839,8 @@ namespace Barotrauma
             Vector2 impulse = direction * impact * 0.5f;            
             impulse = impulse.ClampLength(MaxCollisionImpact);
 
+            float impulseMagnitude = impulse.Length();
+
             if (!MathUtils.IsValid(impulse))
             {
                 string errorMsg =
@@ -919,8 +907,9 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 if (item.Submarine != submarine || item.CurrentHull == null || item.body == null || !item.body.Enabled) { continue; }
+                if (item.body.Mass > impulseMagnitude) { continue; }
 
-                item.body.ApplyLinearImpulse(item.body.Mass * impulse, 10.0f);
+                item.body.ApplyLinearImpulse(impulse, 10.0f);
                 item.PositionUpdateInterval = 0.0f;
             }
 

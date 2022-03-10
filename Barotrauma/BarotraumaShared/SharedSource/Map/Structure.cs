@@ -115,7 +115,7 @@ namespace Barotrauma
 
         private float? maxHealth;
 
-        [Serialize(100.0f, true)]
+        [Serialize(100.0f, true), Editable(MinValueFloat = 0)]
         public float MaxHealth
         {
             get => maxHealth ?? Prefab.Health;
@@ -704,7 +704,7 @@ namespace Barotrauma
                 if (BodyWidth > 0.0f) { rectSize.X = BodyWidth; }
                 if (BodyHeight > 0.0f) { rectSize.Y = BodyHeight; }
 
-                Vector2 bodyPos = WorldPosition + BodyOffset;
+                Vector2 bodyPos = WorldPosition + BodyOffset * Scale;
 
                 Vector2 transformedMousePos = MathUtils.RotatePointAroundTarget(position, bodyPos, BodyRotation);
 
@@ -876,7 +876,7 @@ namespace Barotrauma
             return true;
         }
 
-        public void AddDamage(int sectionIndex, float damage, Character attacker = null)
+        public void AddDamage(int sectionIndex, float damage, Character attacker = null, bool emitParticles = true)
         {
             if (!Prefab.Body || Prefab.Platform || Indestructible) { return; }
 
@@ -885,7 +885,7 @@ namespace Barotrauma
             var section = Sections[sectionIndex];
 
 #if CLIENT
-            if (damage > 0)
+            if (damage > 0 && emitParticles)
             {
                 float dmg = Math.Min(MaxHealth - section.damage, damage);
                 float particleAmount = MathHelper.Lerp(0, 25, MathUtils.InverseLerp(0, 100, dmg * Rand.Range(0.75f, 1.25f)));
@@ -898,8 +898,8 @@ namespace Barotrauma
                 {
                     var worldRect = section.WorldRect;
                     Vector2 particlePos = new Vector2(
-                        Rand.Range(worldRect.X, worldRect.Right),
-                        Rand.Range(worldRect.Y - worldRect.Height, worldRect.Y));
+                        Rand.Range(worldRect.X, worldRect.Right + 1),
+                        Rand.Range(worldRect.Y - worldRect.Height, worldRect.Y + 1));
 
                     var particle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, Rand.Vector(Rand.Range(1.0f, 50.0f)), collisionIgnoreTimer: 1f);
                     if (particle == null) break;
@@ -1016,7 +1016,10 @@ namespace Barotrauma
                     damageAmount = attack.GetStructureDamage(deltaTime);
                     AddDamage(i, damageAmount, attacker);
 #if CLIENT
-                    GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
+                    if (attack.EmitStructureDamageParticles)
+                    {
+                        GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
+                    }
 #endif
                 }
             }
@@ -1034,7 +1037,7 @@ namespace Barotrauma
 
             if (Submarine != null && damageAmount > 0 && attacker != null)
             {
-                var abilityAttackerSubmarine = new AbilityCharacterSubmarine(attacker, Submarine);
+                var abilityAttackerSubmarine = new AbilityAttackerSubmarine(attacker, Submarine);
                 foreach (Character character in Character.CharacterList)
                 {
                     character.CheckTalents(AbilityEffectType.AfterSubmarineAttacked, abilityAttackerSubmarine);
@@ -1529,6 +1532,7 @@ namespace Barotrauma
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
+            MaxHealth = Prefab.Health;
             Sprite.ReloadXML();
             SpriteDepth = Sprite.Depth;
             NoAITarget = Prefab.NoAITarget;
@@ -1541,5 +1545,16 @@ namespace Barotrauma
                 aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : MathHelper.Lerp(aiTarget.MinSightRange, aiTarget.MaxSightRange, Submarine.Velocity.Length() / 10);
             }
         }
+    }
+
+    class AbilityAttackerSubmarine : AbilityObject, IAbilityCharacter, IAbilitySubmarine
+    {
+        public AbilityAttackerSubmarine(Character character, Submarine submarine)
+        {
+            Character = character;
+            Submarine = submarine;
+        }
+        public Character Character { get; set; }
+        public Submarine Submarine { get; set; }
     }
 }

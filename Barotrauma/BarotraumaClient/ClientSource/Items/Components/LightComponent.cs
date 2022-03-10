@@ -40,7 +40,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        partial void SetLightSourceTransform()
+        partial void SetLightSourceTransformProjSpecific()
         {
             if (ParentBody != null)
             {

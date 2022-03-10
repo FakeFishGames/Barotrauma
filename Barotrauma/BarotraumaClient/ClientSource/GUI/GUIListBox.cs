@@ -362,6 +362,14 @@ namespace Barotrauma
             RectTransform.ScaleChanged += () => dimensionsNeedsRecalculation = true;
             RectTransform.SizeChanged += () => dimensionsNeedsRecalculation = true;
             UpdateDimensions();
+
+            rectT.ChildrenChanged += CheckForChildren;
+        }
+
+        private void CheckForChildren(RectTransform rectT)
+        {
+            if (rectT == ScrollBar.RectTransform || rectT == Content.RectTransform || rectT == ContentBackground.RectTransform) { return; }
+            throw new InvalidOperationException($"Children were added to {nameof(GUIListBox)}, Add them to {nameof(GUIListBox)}.{nameof(Content)} instead.");
         }
 
         public void UpdateDimensions()
@@ -431,7 +439,7 @@ namespace Barotrauma
             for (int i = 0; i < Content.CountChildren; i++)
             {
                 GUIComponent child = Content.GetChild(i);
-                if (!child.Visible) { continue; }
+                if (child == null || !child.Visible) { continue; }
                 if (RectTransform != null)
                 {
                     callback(i, new Point(x, y));
@@ -836,7 +844,6 @@ namespace Barotrauma
             {
                 UpdateScrollBarSize();
             }
-
 
             if (FadeElements)
             {

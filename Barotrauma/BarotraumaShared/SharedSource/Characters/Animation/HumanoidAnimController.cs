@@ -533,6 +533,8 @@ namespace Barotrauma
             
             bool onSlope = Math.Abs(movement.X) > 0.01f && Math.Abs(floorNormal.X) > 0.1f && Math.Sign(floorNormal.X) != Math.Sign(movement.X);
 
+            bool movingHorizontally = !MathUtils.NearlyEqual(TargetMovement.X, 0.0f);
+
             if (Stairs != null || onSlope)
             {
                 torso.PullJointWorldAnchorB = new Vector2(
@@ -562,10 +564,8 @@ namespace Barotrauma
 
                 if (!torso.Disabled)
                 {
-                    if (TorsoPosition.HasValue)
-                    {
-                        y += TorsoPosition.Value;
-                    }
+                    if (TorsoPosition.HasValue)  { y += TorsoPosition.Value;  }
+                    if (Crouching && !movingHorizontally) { y -= HumanCrouchParams.MoveDownAmountWhenStationary; }
                     torso.PullJointWorldAnchorB =
                         MathUtils.SmoothStep(torso.SimPosition,
                         new Vector2(footMid + movement.X * TorsoLeanAmount, y), getUpForce);
@@ -574,10 +574,8 @@ namespace Barotrauma
                 if (!head.Disabled)
                 {
                     y = colliderPos.Y + stepLift * CurrentGroundedParams.StepLiftHeadMultiplier;
-                    if (HeadPosition.HasValue)
-                    {
-                        y += HeadPosition.Value;
-                    }
+                    if (HeadPosition.HasValue) { y += HeadPosition.Value; }
+                    if (Crouching && !movingHorizontally) { y -= HumanCrouchParams.MoveDownAmountWhenStationary; }
                     head.PullJointWorldAnchorB =
                         MathUtils.SmoothStep(head.SimPosition,
                         new Vector2(footMid + movement.X * HeadLeanAmount, y), getUpForce * 1.2f);
@@ -593,12 +591,15 @@ namespace Barotrauma
             {
                 float torsoAngle = TorsoAngle.Value;
                 float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
+                if (Crouching && !movingHorizontally) { torsoAngle -= HumanCrouchParams.ExtraTorsoAngleWhenStationary; }
                 torsoAngle -= herpesStrength / 150.0f;
                 torso.body.SmoothRotate(torsoAngle * Dir, CurrentGroundedParams.TorsoTorque);
             }
             if (HeadAngle.HasValue)
             {
-                head.body.SmoothRotate(HeadAngle.Value * Dir, CurrentGroundedParams.HeadTorque);
+                float headAngle = HeadAngle.Value;
+                if (Crouching && !movingHorizontally) { headAngle -= HumanCrouchParams.ExtraHeadAngleWhenStationary; }
+                head.body.SmoothRotate(headAngle * Dir, CurrentGroundedParams.HeadTorque);
             }
 
             if (!onGround)
@@ -616,8 +617,7 @@ namespace Barotrauma
 
             Vector2 waistPos = waist != null ? waist.SimPosition : torso.SimPosition;
 
-            //moving horizontally
-            if (TargetMovement.X != 0.0f)
+            if (movingHorizontally)
             {
                 //progress the walking animation
                 WalkPos -= MathHelper.ToRadians(CurrentAnimationParams.CycleSpeed) * walkCycleMultiplier * movement.X;
@@ -808,7 +808,8 @@ namespace Barotrauma
             if (head == null) { return; }
             if (torso == null) { return; }
             
-            if (currentHull != null)
+            //check both hulls: the hull whose coordinate space the ragdoll is in, and the hull whose bounds the character's origin actually is inside
+            if (currentHull != null && character.CurrentHull != null)
             {
                 float surfacePos = currentHull.Surface;
                 float surfaceThreshold = ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 1.0f);
@@ -816,7 +817,7 @@ namespace Barotrauma
                 //and use its water surface instead of the current hull's 
                 if (currentHull.Rect.Y - currentHull.Surface < 5.0f)
                 {
-                    GetSurfacePos(CurrentHull, ref surfacePos);
+                    GetSurfacePos(currentHull, ref surfacePos);
                     void GetSurfacePos(Hull hull, ref float prevSurfacePos)
                     {
                         if (prevSurfacePos > surfaceThreshold) { return; }
@@ -834,7 +835,7 @@ namespace Barotrauma
 
                             foreach (var linkedTo in gap.linkedTo)
                             {
-                                if (linkedTo is Hull otherHull && otherHull != hull)
+                                if (linkedTo is Hull otherHull && otherHull != hull && otherHull != currentHull)
                                 {
                                     prevSurfacePos = Math.Max(surfacePos, otherHull.Surface);
                                     GetSurfacePos(otherHull, ref prevSurfacePos);
@@ -888,7 +889,6 @@ namespace Barotrauma
                 {
                     Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
                     Vector2 diff = (mousePos - torso.SimPosition) * Dir;
-                    TargetMovement = new Vector2(0.0f, -0.1f);
                     float newRotation = MathUtils.VectorToAngle(diff);
                     Collider.SmoothRotate(newRotation, CurrentSwimParams.SteerTorque * character.SpeedMultiplier);
                 }

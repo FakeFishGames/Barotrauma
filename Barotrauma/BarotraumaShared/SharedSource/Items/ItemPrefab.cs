@@ -105,6 +105,10 @@ namespace Barotrauma
             RequiredSkills = new List<Skill>();
             RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
             OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
+            if (OutCondition > 1.0f)
+            {
+                DebugConsole.AddWarning($"Error in \"{itemPrefab.Name}\"'s fabrication recipe: out condition is above 100% ({OutCondition * 100}).");
+            }
             RequiredItems = new List<RequiredItem>();
             RequiresRecipe = element.GetAttributeBool("requiresrecipe", false);
             Amount = element.GetAttributeInt("amount", 1);
@@ -499,6 +503,9 @@ namespace Barotrauma
             get { return impactTolerance; }
             set { impactTolerance = Math.Max(value, 0.0f); }
         }
+
+        [Serialize(0.0f, false)]
+        public float OnDamagedThreshold { get; set; }
 
         [Serialize(0.0f, false)]
         public float SonarSize
@@ -1256,13 +1263,18 @@ namespace Barotrauma
 
         public static ItemPrefab Find(string name, string identifier)
         {
+            if (string.IsNullOrEmpty(name) && string.IsNullOrEmpty(identifier))
+            {
+                throw new ArgumentException("Both name and identifier cannot be null.");
+            }
+
             ItemPrefab prefab;
             if (string.IsNullOrEmpty(identifier))
             {
                 //legacy support
                 identifier = GenerateLegacyIdentifier(name);
             }
-            prefab = Find(p => p is ItemPrefab && p.Identifier==identifier) as ItemPrefab;
+            prefab = Find(p => p is ItemPrefab && p.Identifier == identifier) as ItemPrefab;
 
             //not found, see if we can find a prefab with a matching alias
             if (prefab == null && !string.IsNullOrEmpty(name))
@@ -1477,6 +1489,11 @@ namespace Barotrauma
             }
 
             return newElement;
+        }
+
+        public override string ToString()
+        {
+            return $"{Name} (identifier: {Identifier})";
         }
     }
 }

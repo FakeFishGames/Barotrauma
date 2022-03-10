@@ -11,7 +11,7 @@ namespace Barotrauma
         public override string Identifier { get; set; } = "cleanup items";
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => false;
-        public override bool ForceOrderPriority => false;
+        protected override bool ForceOrderPriority => false;
 
         public readonly List<Item> prioritizedItems = new List<Item>();
 
@@ -52,7 +52,7 @@ namespace Barotrauma
             // The validity changes when a character picks the item up.
             if (!IsValidTarget(target, character, checkInventory: true)) { return Objectives.ContainsKey(target) && IsItemInsideValidSubmarine(target, character); }
             if (target.CurrentHull.FireSources.Count > 0) { return false; }
-            // Don't repair items in rooms that have enemies inside.
+            // Don't clean up items in rooms that have enemies inside.
             if (Character.CharacterList.Any(c => c.CurrentHull == target.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
             return true;
         }

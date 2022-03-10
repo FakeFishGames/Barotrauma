@@ -20,7 +20,7 @@ namespace Barotrauma
         private static Sprite ownerIcon, moderatorIcon;
 
         public enum InfoFrameTab { Crew, Mission, Reputation, Traitor, Submarine, Talents };
-        public static InfoFrameTab selectedTab;
+        public static InfoFrameTab SelectedTab { get; private set; }
         private GUIFrame infoFrame, contentFrame;
 
         private readonly List<GUIButton> tabButtons = new List<GUIButton>();
@@ -129,9 +129,8 @@ namespace Barotrauma
         public TabMenu()
         {
             if (!initialized) { Initialize(); }
-
-            CreateInfoFrame(selectedTab);
-            SelectInfoFrameTab(null, selectedTab);
+            CreateInfoFrame(SelectedTab);
+            SelectInfoFrameTab(SelectedTab);
         }
 
         public void Update()
@@ -147,8 +146,8 @@ namespace Barotrauma
                 }
             }
 
-            if (selectedTab != InfoFrameTab.Crew) return;
-            if (linkedGUIList == null) return;
+            if (SelectedTab != InfoFrameTab.Crew) { return; }
+            if (linkedGUIList == null) { return; }
 
             if (GameMain.IsMultiplayer)
             {
@@ -226,7 +225,7 @@ namespace Barotrauma
                 {
                     UserData = tab,
                     ToolTip = TextManager.Get(textTag),
-                    OnClicked = SelectInfoFrameTab
+                    OnClicked = (btn, userData) => { SelectInfoFrameTab((InfoFrameTab)userData); return true; }
                 };
                 tabButtons.Add(newButton);
                 return newButton;
@@ -277,16 +276,16 @@ namespace Barotrauma
                 talentsButton.Enabled = Character.Controlled?.Info != null;
                 if (!talentsButton.Enabled && selectedTab == InfoFrameTab.Talents)
                 {
-                    SelectInfoFrameTab(null, InfoFrameTab.Crew);
+                    SelectInfoFrameTab(InfoFrameTab.Crew);
                 }
             };
 
             talentPointNotification = GameSession.CreateTalentIconNotification(talentsButton);
         }
 
-        private bool SelectInfoFrameTab(GUIButton button, object userData)
+        public void SelectInfoFrameTab(InfoFrameTab selectedTab)
         {
-            selectedTab = (InfoFrameTab)userData;
+            SelectedTab = selectedTab;
 
             CreateInfoFrame(selectedTab);
             tabButtons.ForEach(tb => tb.Selected = (InfoFrameTab)tb.UserData == selectedTab);
@@ -300,7 +299,7 @@ namespace Barotrauma
                     CreateMissionInfo(infoFrameHolder);
                     break;
                 case InfoFrameTab.Reputation:
-                    if (GameMain.GameSession.RoundSummary != null && GameMain.GameSession.GameMode is CampaignMode campaignMode)
+                    if (GameMain.GameSession?.RoundSummary != null && GameMain.GameSession?.GameMode is CampaignMode campaignMode)
                     {
                         infoFrameHolder.ClearChildren();
                         GUIFrame reputationFrame = new GUIFrame(new RectTransform(Vector2.One, infoFrameHolder.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
@@ -308,9 +307,9 @@ namespace Barotrauma
                     }
                     break;
                 case InfoFrameTab.Traitor:
-                    TraitorMissionPrefab traitorMission = GameMain.Client.TraitorMission;
-                    Character traitor = GameMain.Client.Character;
-                    if (traitor == null || traitorMission == null) return false;
+                    TraitorMissionPrefab traitorMission = GameMain.Client?.TraitorMission;
+                    Character traitor = GameMain.Client?.Character;
+                    if (traitor == null || traitorMission == null) { return; }
                     CreateTraitorInfo(infoFrameHolder, traitorMission, traitor);
                     break;
                 case InfoFrameTab.Submarine:
@@ -320,8 +319,6 @@ namespace Barotrauma
                     CreateTalentInfo(infoFrameHolder);
                     break;
             }
-
-            return true;
         }
 
         private const float jobColumnWidthPercentage = 0.138f;
@@ -755,7 +752,7 @@ namespace Barotrauma
 
             if (character != null)
             {
-                if (GameMain.NetworkMember == null)
+                if (GameMain.Client == null)
                 {
                     GUIComponent preview = character.Info.CreateInfoFrame(background, false, null);
                 }
@@ -859,7 +856,7 @@ namespace Barotrauma
             string msg = ChatMessage.GetTimeStamp() + message.TextWithSender;
             storedMessages.Add(new Pair<string, PlayerConnectionChangeType>(msg, message.ChangeType));
 
-            if (GameSession.IsTabMenuOpen && selectedTab == InfoFrameTab.Crew)
+            if (GameSession.IsTabMenuOpen && SelectedTab == InfoFrameTab.Crew)
             {
                 TabMenu instance = GameSession.TabMenuInstance;
                 instance.AddLineToLog(msg, message.ChangeType);
@@ -1023,13 +1020,15 @@ namespace Barotrauma
                         int iconHeight = Math.Max(missionTextGroup.RectTransform.NonScaledSize.Y, (int)(iconWidth * iconAspectRatio));
                         Point iconSize = new Point(iconWidth, iconHeight);*/
 
-                        new GUIImage(new RectTransform(new Point(iconSize), missionDescriptionHolder.RectTransform), mission.Prefab.Icon, null, true)
+                        var icon = new GUIImage(new RectTransform(new Point(iconSize), missionDescriptionHolder.RectTransform), mission.Prefab.Icon, null, true)
                         {
                             Color = mission.Prefab.IconColor,
                             HoverColor = mission.Prefab.IconColor,
                             SelectedColor = mission.Prefab.IconColor,
                             CanBeFocused = false
                         };
+                        UpdateMissionStateIcon(mission, icon);
+                        mission.OnMissionStateChanged += (mission) => UpdateMissionStateIcon(mission, icon);
                     }
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionNameRichTextData, missionNameString, font: GUI.LargeFont);
                     GUILayoutGroup difficultyIndicatorGroup = null;
@@ -1063,6 +1062,33 @@ namespace Barotrauma
             {
                 GUILayoutGroup missionTextGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0f), missionList.RectTransform, Anchor.CenterLeft), false, childAnchor: Anchor.TopLeft);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), TextManager.Get("NoMission"), font: GUI.LargeFont);
+            }
+        }
+
+        private void UpdateMissionStateIcon(Mission mission, GUIImage missionIcon)
+        {
+            if (mission == null || missionIcon == null) { return; }
+            string style = string.Empty;
+            if (mission.DisplayAsFailed)
+            {
+                style = "MissionFailedIcon";
+            }
+            else if (mission.DisplayAsCompleted)
+            {
+                style = "MissionCompletedIcon";
+            }
+            GUIImage stateIcon = missionIcon.GetChild<GUIImage>();
+            if (string.IsNullOrEmpty(style))
+            {
+                if (stateIcon != null)
+                {
+                    stateIcon.Visible = false;
+                }
+            }
+            else
+            {
+                stateIcon ??= new GUIImage(new RectTransform(Vector2.One, missionIcon.RectTransform), style, scaleToFit: true);
+                stateIcon.Visible = true;
             }
         }
 
@@ -1443,7 +1469,7 @@ namespace Barotrauma
                                         selectedTalents.Remove(talentIdentifier);
                                     }
 
-                                    UpdateTalentButtons();
+                                    UpdateTalentInfo();
                                     return true;
                                 },
                             };
@@ -1508,7 +1534,7 @@ namespace Barotrauma
             };
             GUITextBlock.AutoScaleAndNormalize(talentResetButton.TextBlock, talentApplyButton.TextBlock);
 
-            UpdateTalentButtons();
+            UpdateTalentInfo();
         }
 
         private void CreateTalentSkillList(Character character, GUIListBox parent)
@@ -1543,30 +1569,14 @@ namespace Barotrauma
             GUITextBlock.AutoScaleAndNormalize(skillNames);
         }
 
-        private bool HasUnlockedAllTalents(Character controlledCharacter)
-        {
-            if (TalentTree.JobTalentTrees.TryGetValue(controlledCharacter.Info.Job.Prefab.Identifier, out TalentTree talentTree))
-            {
-                foreach (TalentSubTree talentSubTree in talentTree.TalentSubTrees)
-                {
-                    foreach (TalentOption talentOption in talentSubTree.TalentOptionStages)
-                    {
-                        if (talentOption.Talents.None(t => controlledCharacter.HasTalent(t.Identifier)))
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-            return true;
-        }
-
-        private void UpdateTalentButtons()
+        private void UpdateTalentInfo()
         {
             Character controlledCharacter = Character.Controlled;
             if (controlledCharacter?.Info == null) { return; }
 
-            bool unlockedAllTalents = HasUnlockedAllTalents(controlledCharacter);
+            if (SelectedTab != InfoFrameTab.Talents) { return; }
+
+            bool unlockedAllTalents = controlledCharacter.HasUnlockedAllTalents();
 
             if (unlockedAllTalents)
             {
@@ -1646,7 +1656,7 @@ namespace Barotrauma
                 }
             }
             selectedTalents = controlledCharacter.Info.GetUnlockedTalentsInTree().ToList();
-            UpdateTalentButtons();
+            UpdateTalentInfo();
         }
 
         private bool ApplyTalentSelection(GUIButton guiButton, object userData)
@@ -1660,63 +1670,14 @@ namespace Barotrauma
         {
             Character controlledCharacter = Character.Controlled;
             selectedTalents = controlledCharacter.Info.GetUnlockedTalentsInTree().ToList();
-            UpdateTalentButtons();
+            UpdateTalentInfo();
             return true;
         }
 
         public void OnExperienceChanged(Character character)
         {
             if (character != Character.Controlled) { return; }
-            UpdateTalentButtons();
-        }
-
-        private readonly StatTypes[] basicStats = new StatTypes[]
-        {
-            StatTypes.MaximumHealthMultiplier,
-            StatTypes.MovementSpeed,
-            StatTypes.SwimmingSpeed,
-            StatTypes.RepairSpeed,
-        };
-
-        private readonly StatTypes[] combatStats = new StatTypes[]
-        {
-            StatTypes.MeleeAttackMultiplier,
-            StatTypes.MeleeAttackSpeed,
-            StatTypes.RangedAttackSpeed,
-            StatTypes.TurretAttackSpeed,
-        };
-
-        private readonly StatTypes[] miscStats = new StatTypes[]
-        {
-            StatTypes.ReputationGainMultiplier,
-            StatTypes.MissionMoneyGainMultiplier,
-            StatTypes.ExperienceGainMultiplier,
-            StatTypes.MissionExperienceGainMultiplier,
-        };
-
-        private void CreateCharacterSheet(GUILayoutGroup characterInfoColumn)
-        {
-            Character controlledCharacter = Character.Controlled;
-
-            CreateRow(basicStats);
-            CreateRow(combatStats);
-            CreateRow(miscStats);
-
-            void CreateRow(StatTypes[] statTypes)
-            {
-                GUILayoutGroup characterInfoRow = new GUILayoutGroup(new RectTransform(new Vector2(0.33f, 1.0f), characterInfoColumn.RectTransform, anchor: Anchor.TopLeft), childAnchor: Anchor.TopCenter);
-                foreach (StatTypes statType in statTypes)
-                {
-                    ShowStat(statType, characterInfoRow);
-                }
-            }
-
-            void ShowStat(StatTypes statType, GUILayoutGroup characterInfoRow)
-            {
-                GUIFrame textInfoFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.33f), characterInfoRow.RectTransform, Anchor.TopCenter), style: null);
-                new GUITextBlock(new RectTransform(new Vector2(1f, 1f), textInfoFrame.RectTransform, Anchor.TopLeft), statType.ToString(), font: GUI.SmallFont, textAlignment: Alignment.TopLeft);
-                new GUITextBlock(new RectTransform(new Vector2(1f, 1f), textInfoFrame.RectTransform, Anchor.TopLeft), (int)(100f * (1 + controlledCharacter.GetStatValue(statType))) + "%", font: GUI.Font, textAlignment: Alignment.TopRight);
-            }
+            UpdateTalentInfo();
         }
     }
 }

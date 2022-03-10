@@ -87,7 +87,7 @@ namespace Barotrauma.Abilities
             DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not take a parameter for ApplyEffect in talent {CharacterTalent.DebugIdentifier}");
         }
 
-        protected void LogabilityObjectMismatch()
+        protected void LogAbilityObjectMismatch()
         {
             DebugConsole.ThrowError($"Incompatible ability! Ability {this} is incompatitible with this type of ability effect type in talent {CharacterTalent.DebugIdentifier}");
         }

@@ -90,14 +90,14 @@ namespace Barotrauma
             {
                 GUI.DrawLine(spriteBatch,
                     drawPos,
-                    new Vector2(ConnectedGap.WorldPosition.X, -ConnectedGap.WorldPosition.Y),
+                    new Vector2(ConnectedGap.DrawPosition.X, -ConnectedGap.DrawPosition.Y),
                     GUI.Style.Green * 0.5f, width: 1);
             }
             if (Ladders != null)
             {
                 GUI.DrawLine(spriteBatch,
                     drawPos,
-                    new Vector2(Ladders.Item.WorldPosition.X, -Ladders.Item.WorldPosition.Y),
+                    new Vector2(Ladders.Item.DrawPosition.X, -Ladders.Item.DrawPosition.Y),
                     GUI.Style.Green * 0.5f, width: 1);
             }
 
@@ -146,6 +146,7 @@ namespace Barotrauma
 
         private bool IsHidden()
         {
+            if (!SubEditorScreen.IsLayerVisible(this)) { return false; }
             if (spawnType == SpawnType.Path)
             {
                 return (!GameMain.DebugDraw && !ShowWayPoints);
@@ -294,7 +295,7 @@ namespace Barotrauma
             else
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Spawnpoint"), font: GUI.LargeFont);
-                
+
                 var spawnTypeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), isHorizontal: true)
                 {
                     Stretch = true,
@@ -318,7 +319,10 @@ namespace Barotrauma
                 };
 
                 var descText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), 
-                    TextManager.Get("IDCardDescription"), font: GUI.SmallFont);
+                    TextManager.Get("IDCardDescription"), font: GUI.SmallFont)
+                {
+                    ToolTip = TextManager.Get("IDCardDescriptionTooltip")
+                };
                 GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), descText.RectTransform, Anchor.CenterRight), IdCardDesc)
                 {
                     MaxTextLength = 150,
@@ -342,7 +346,10 @@ namespace Barotrauma
                 };
 
                 var idCardTagsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
-                    TextManager.Get("IDCardTags"), font: GUI.SmallFont);
+                    TextManager.Get("IDCardTags"), font: GUI.SmallFont)
+                {
+                    ToolTip = TextManager.Get("IDCardTagsTooltip")
+                };
                 propertyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), idCardTagsText.RectTransform, Anchor.CenterRight), string.Join(", ", idCardTags))
                 {
                     MaxTextLength = 60,
@@ -414,6 +421,6 @@ namespace Barotrauma
             PositionEditingHUD();
 
             return editingHUD;
-        }        
+        }
     }
 }

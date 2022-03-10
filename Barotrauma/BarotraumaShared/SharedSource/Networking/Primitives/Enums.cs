@@ -38,19 +38,19 @@ namespace Barotrauma.Networking
     public static class NetworkEnumExtensions
     {
         public static bool IsCompressed(this PacketHeader h)
-            => h.IsBitSet(PacketHeader.IsCompressed);
+            => h.HasFlag(PacketHeader.IsCompressed);
 
         public static bool IsConnectionInitializationStep(this PacketHeader h)
-            => h.IsBitSet(PacketHeader.IsConnectionInitializationStep);
+            => h.HasFlag(PacketHeader.IsConnectionInitializationStep);
 
         public static bool IsDisconnectMessage(this PacketHeader h)
-            => h.IsBitSet(PacketHeader.IsDisconnectMessage);
+            => h.HasFlag(PacketHeader.IsDisconnectMessage);
 
         public static bool IsServerMessage(this PacketHeader h)
-            => h.IsBitSet(PacketHeader.IsServerMessage);
+            => h.HasFlag(PacketHeader.IsServerMessage);
 
         public static bool IsHeartbeatMessage(this PacketHeader h)
-            => h.IsBitSet(PacketHeader.IsHeartbeatMessage);
+            => h.HasFlag(PacketHeader.IsHeartbeatMessage);
     }
 }
 

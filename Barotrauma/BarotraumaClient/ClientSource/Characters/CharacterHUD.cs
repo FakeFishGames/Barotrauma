@@ -113,7 +113,7 @@ namespace Barotrauma
 
             return 
                 character?.Inventory != null && 
-                character.AllowInput &&
+                !character.Removed && !character.IsKnockedDown &&
                 (controller?.User != character || !controller.HideHUD) &&
                 !IsCampaignInterfaceOpen &&
                 !ConversationAction.FadeScreenToBlack;
@@ -406,6 +406,7 @@ namespace Barotrauma
                     if (npc.CampaignInteractionType == CampaignMode.InteractionType.None || npc.Submarine != character.Submarine || npc.IsDead || npc.IsIncapacitated) { continue; }
 
                     var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionIcon." + npc.CampaignInteractionType);
+                    if (iconStyle == null) { continue; }
                     Range<float> visibleRange = new Range<float>(npc.CurrentHull == Character.Controlled.CurrentHull ? 500.0f : 100.0f, float.PositiveInfinity);
                     if (npc.CampaignInteractionType == CampaignMode.InteractionType.Examine)
                     {
@@ -431,7 +432,7 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.IconStyle is null || item.Submarine != character.Submarine) { continue; }
-                    if (Vector2.DistanceSquared(character.Position, item.Position) > 500f*500f) { continue; }
+                    if (Vector2.DistanceSquared(character.Position, item.Position) > 500f * 500f) { continue; }
                     var body = Submarine.CheckVisibility(character.SimPosition, item.SimPosition, ignoreLevel: true);
                     if (body != null && body.UserData as Item != item) { continue; }
                     GUI.DrawIndicator(spriteBatch, item.WorldPosition + new Vector2(0f, item.RectHeight * 0.65f), cam, new Range<float>(-100f, 500.0f), item.IconStyle.GetDefaultSprite(), item.IconStyle.Color, createOffset: false);

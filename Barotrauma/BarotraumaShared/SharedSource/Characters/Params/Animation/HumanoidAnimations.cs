@@ -26,6 +26,15 @@ namespace Barotrauma
 
     class HumanCrouchParams : HumanGroundedParams
     {
+        [Serialize(0.0f, true, description: "How much lower the character's head and torso move when stationary."), Editable(MinValueFloat = 0, MaxValueFloat = 2, DecimalCount = 2)]
+        public float MoveDownAmountWhenStationary { get; set; }
+
+        [Serialize(0.0f, true), Editable(-360f, 360f)]
+        public float ExtraHeadAngleWhenStationary { get; set; }
+
+        [Serialize(0.0f, true), Editable(-360f, 360f)]
+        public float ExtraTorsoAngleWhenStationary { get; set; }
+
         public static HumanCrouchParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanCrouchParams>(character, AnimationType.Crouch);
         public static HumanCrouchParams GetAnimParams(Character character, string fileName = null)
         {

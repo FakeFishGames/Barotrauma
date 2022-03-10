@@ -141,8 +141,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            triggerers.RemoveWhere(t => t.Removed);
-            LevelTrigger.RemoveDistantTriggerers(PhysicsBody, triggerers, item.WorldPosition);
+            LevelTrigger.RemoveInActiveTriggerers(PhysicsBody, triggerers);
 
             if (triggerOnce)
             {

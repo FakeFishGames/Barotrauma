@@ -517,7 +517,7 @@ namespace Barotrauma.Lights
         private void RefreshConvexHullList(ConvexHullList chList, Vector2 lightPos, Submarine sub)
         {
             var fullChList = ConvexHull.HullLists.Find(x => x.Submarine == sub);
-            if (fullChList == null) return;
+            if (fullChList == null) { return; }
 
             chList.List = fullChList.List.FindAll(ch => ch.Enabled && MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, ch.BoundingBox));
 
@@ -530,105 +530,121 @@ namespace Barotrauma.Lights
         /// </summary>
         private void CheckHullsInRange()
         {
-            List<Submarine> subs = new List<Submarine>(Submarine.Loaded);
-            subs.Add(null);
-
-            foreach (Submarine sub in subs)
+            foreach (Submarine sub in Submarine.Loaded)
             {
-                //find the list of convexhulls that belong to the sub
-                var chList = hullsInRange.Find(x => x.Submarine == sub);
+                CheckHullsInRange(sub);
+            }
+            //check convex hulls that aren't in any sub
+            CheckHullsInRange(null);
+        }
 
-                //not found -> create one
-                if (chList == null)
+        private void CheckHullsInRange(Submarine sub)
+        {
+            //find the list of convexhulls that belong to the sub
+            ConvexHullList chList = null; 
+            foreach (var ch in hullsInRange)
+            {
+                if (ch.Submarine == sub)
                 {
-                    chList = new ConvexHullList(sub);
-                    hullsInRange.Add(chList);
-                    NeedsRecalculation = true;
-                }
-
-                if (chList.List.Any(ch => ch.LastVertexChangeTime > lastRecalculationTime && !chList.IsHidden.Contains(ch)))
-                {
-                    NeedsRecalculation = true;
-                }
-
-                Vector2 lightPos = position;
-                if (ParentSub == null)
-                {
-                    //light and the convexhulls are both outside
-                    if (sub == null)
-                    {
-                        if (NeedsHullCheck)
-                        {
-                            RefreshConvexHullList(chList, lightPos, null);
-                        }
-                    }
-                    //light is outside, convexhulls inside a sub
-                    else
-                    {
-                        lightPos -= sub.Position;
-
-                        Rectangle subBorders = sub.Borders;
-                        subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
-
-                        //only draw if the light overlaps with the sub
-                        if (!MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, subBorders))
-                        {
-                            if (chList.List.Count > 0) NeedsRecalculation = true;
-                            chList.List.Clear();
-                            continue;
-                        }
-
-                        RefreshConvexHullList(chList, lightPos, sub);
-                    }
-                }
-                else
-                {
-                    //light is inside, convexhull outside
-                    if (sub == null) continue;
-
-                    //light and convexhull are both inside the same sub
-                    if (sub == ParentSub)
-                    {
-                        if (NeedsHullCheck)
-                        {
-                            RefreshConvexHullList(chList, lightPos, sub);
-                        }
-                    }
-                    //light and convexhull are inside different subs
-                    else
-                    {
-                        if (sub.DockedTo.Contains(ParentSub) && !NeedsHullCheck) continue;
-
-                        lightPos -= (sub.Position - ParentSub.Position);
-
-                        Rectangle subBorders = sub.Borders;
-                        subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
-
-                        //don't draw any shadows if the light doesn't overlap with the borders of the sub
-                        if (!MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, subBorders))
-                        {
-                            if (chList.List.Count > 0) NeedsRecalculation = true;
-                            chList.List.Clear();
-                            continue;
-                        }
-
-                        //recalculate vertices if the subs have moved > 5 px relative to each other
-                        Vector2 diff = ParentSub.WorldPosition - sub.WorldPosition;
-                        if (!diffToSub.TryGetValue(sub, out Vector2 prevDiff))
-                        {
-                            diffToSub.Add(sub, diff);
-                            NeedsRecalculation = true;
-                        }
-                        else if (Vector2.DistanceSquared(diff, prevDiff) > 5.0f * 5.0f)
-                        {
-                            diffToSub[sub] = diff;
-                            NeedsRecalculation = true;
-                        }
-
-                        RefreshConvexHullList(chList, lightPos, sub);
-                    }
+                    chList = ch;
+                    break;
                 }
             }
+                
+            //not found -> create one
+            if (chList == null)
+            {
+                chList = new ConvexHullList(sub);
+                hullsInRange.Add(chList);
+                NeedsRecalculation = true;
+            }
+
+            foreach (var ch in chList.List)
+            {
+                if (ch.LastVertexChangeTime > lastRecalculationTime && !chList.IsHidden.Contains(ch))
+                {
+                    NeedsRecalculation = true;
+                    break;
+                }
+            }
+
+            Vector2 lightPos = position;
+            if (ParentSub == null)
+            {
+                //light and the convexhulls are both outside
+                if (sub == null)
+                {
+                    if (NeedsHullCheck)
+                    {
+                        RefreshConvexHullList(chList, lightPos, null);
+                    }
+                }
+                //light is outside, convexhulls inside a sub
+                else
+                {
+                    lightPos -= sub.Position;
+
+                    Rectangle subBorders = sub.Borders;
+                    subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
+
+                    //only draw if the light overlaps with the sub
+                    if (!MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, subBorders))
+                    {
+                        if (chList.List.Count > 0) { NeedsRecalculation = true; }
+                        chList.List.Clear();
+                        return;
+                    }
+
+                    RefreshConvexHullList(chList, lightPos, sub);
+                }
+            }
+            else
+            {
+                //light is inside, convexhull outside
+                if (sub == null) { return; }
+
+                //light and convexhull are both inside the same sub
+                if (sub == ParentSub)
+                {
+                    if (NeedsHullCheck)
+                    {
+                        RefreshConvexHullList(chList, lightPos, sub);
+                    }
+                }
+                //light and convexhull are inside different subs
+                else
+                {
+                    if (sub.DockedTo.Contains(ParentSub) && !NeedsHullCheck) { return; }
+
+                    lightPos -= (sub.Position - ParentSub.Position);
+
+                    Rectangle subBorders = sub.Borders;
+                    subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
+
+                    //don't draw any shadows if the light doesn't overlap with the borders of the sub
+                    if (!MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, subBorders))
+                    {
+                        if (chList.List.Count > 0) { NeedsRecalculation = true; }
+                        chList.List.Clear();
+                        return;
+                    }
+
+                    //recalculate vertices if the subs have moved > 5 px relative to each other
+                    Vector2 diff = ParentSub.WorldPosition - sub.WorldPosition;
+                    if (!diffToSub.TryGetValue(sub, out Vector2 prevDiff))
+                    {
+                        diffToSub.Add(sub, diff);
+                        NeedsRecalculation = true;
+                    }
+                    else if (Vector2.DistanceSquared(diff, prevDiff) > 5.0f * 5.0f)
+                    {
+                        diffToSub[sub] = diff;
+                        NeedsRecalculation = true;
+                    }
+
+                    RefreshConvexHullList(chList, lightPos, sub);
+                }
+            }            
         }
 
         private List<Vector2> FindRaycastHits()

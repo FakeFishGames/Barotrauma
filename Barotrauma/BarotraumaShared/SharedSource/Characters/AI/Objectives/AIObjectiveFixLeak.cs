@@ -162,7 +162,10 @@ namespace Barotrauma
                     CloseEnough = reach,
                     DialogueIdentifier = Leak.FlowTargetHull != null ? "dialogcannotreachleak" : null,
                     TargetName = Leak.FlowTargetHull?.DisplayName,
-                    CheckVisibility = false
+                    CheckVisibility = false,
+                    requiredCondition = () => Leak.Submarine == character.Submarine,
+                    // The Go To objective can be abandoned if the leak is fixed (in which case we don't want to use the dialogue)
+                    SpeakCannotReachCondition = () => !CheckObjectiveSpecific()
                 },
                 onAbandon: () =>
                 {

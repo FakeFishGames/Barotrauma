@@ -22,7 +22,13 @@ namespace Barotrauma
 
         public override void CalculateImportanceSpecific()
         {
-            if (TargetItemComponent is Turret turret && !turret.HasPowerToShoot()) { return; }
+            if (TargetItemComponent is Turret turret && !turret.HasPowerToShoot())
+            {
+                //operate (= recharge the turrets) with low priority if they're out of power
+                //if something else (issues with reactor or the electrical grid) is preventing them from being charged, fixing those issues should take priority
+                Importance = ShipCommandManager.MinimumIssueThreshold * 1.05f;
+                return;
+            }
 
             targetingImportances.Clear();
             foreach (Character character in shipCommandManager.EnemyCharacters)

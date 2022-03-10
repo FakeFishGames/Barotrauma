@@ -76,6 +76,9 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, false, description: "If true, the contained state indicator calculates how full the item is based on the total amount of items that can be stacked inside it, as opposed to how many of the inventory slots are occupied.")]
+        public bool ShowTotalStackCapacityInContainedStateIndicator { get; set; }
+
         [Serialize(false, false, description: "Should the inventory of this item be kept open when the item is equipped by a character.")]
         public bool KeepOpenWhenEquipped { get; set; }
 

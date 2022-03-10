@@ -38,7 +38,7 @@ namespace Barotrauma.Networking
                 string orderOption = orderMessageInfo.OrderOption ??
                     (orderMessageInfo.OrderOptionIndex == null || orderMessageInfo.OrderOptionIndex < 0 || orderMessageInfo.OrderOptionIndex >= orderPrefab.Options.Length ?
                         "" : orderPrefab.Options[orderMessageInfo.OrderOptionIndex.Value]);
-                orderMsg = new OrderChatMessage(orderPrefab, orderOption, orderMessageInfo.Priority, orderTargetPosition ?? orderTargetEntity as ISpatialEntity, orderTargetCharacter, c.Character)
+                orderMsg = new OrderChatMessage(orderPrefab, orderOption, orderMessageInfo.Priority, orderTargetPosition ?? orderTargetEntity as ISpatialEntity, orderTargetCharacter, c.Character, isNewOrder: orderMessageInfo.IsNewOrder)
                 {
                     WallSectionIndex = wallSectionIndex
                 };
@@ -211,6 +211,11 @@ namespace Barotrauma.Networking
             if (Sender != null && c.InGame)
             {
                 msg.Write(Sender.ID);
+            }
+            msg.Write(customTextColor != null);
+            if (customTextColor != null)
+            {
+                msg.WriteColorR8G8B8A8(customTextColor.Value);
             }
             msg.WritePadBits();
             if (Type == ChatMessageType.ServerMessageBoxInGame)

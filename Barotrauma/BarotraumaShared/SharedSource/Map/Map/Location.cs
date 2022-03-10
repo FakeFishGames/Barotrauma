@@ -1,4 +1,5 @@
-﻿using Barotrauma.Extensions;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -132,6 +133,7 @@ namespace Barotrauma
         #endregion
 
         private const float MechanicalMaxDiscountPercentage = 50.0f;
+        private const float HealMaxDiscountPercentage = 10.0f;
 
         private readonly List<TakenItem> takenItems = new List<TakenItem>();
         public IEnumerable<TakenItem> TakenItems
@@ -780,7 +782,7 @@ namespace Barotrauma
                     {
                         if (priceInfo.MaxAvailableAmount > priceInfo.MinAvailableAmount)
                         {
-                            quantity = Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount);
+                            quantity = Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount + 1);
                         }
                         else
                         {
@@ -908,6 +910,12 @@ namespace Barotrauma
             return (int) Math.Ceiling((1.0f - discount) * cost * MechanicalPriceMultiplier);
         }
 
+        public int GetAdjustedHealCost(int cost)
+        {
+            float discount = Reputation.Value / Reputation.MaxReputation * (HealMaxDiscountPercentage / 100.0f);
+            return (int) Math.Ceiling((1.0f - discount) * cost * PriceMultiplier);
+        }
+
         /// <param name="force">If true, the store will be recreated if it already exists.</param>
         public void CreateStore(bool force = false)
         {
@@ -1002,7 +1010,7 @@ namespace Barotrauma
 
         private void GenerateRandomPriceModifier()
         {
-            StorePriceModifier = Rand.Range(-StorePriceModifierRange, StorePriceModifierRange);
+            StorePriceModifier = Rand.Range(-StorePriceModifierRange, StorePriceModifierRange + 1);
         }
 
         private void CreateStoreSpecials()
@@ -1110,7 +1118,7 @@ namespace Barotrauma
             Discovered = true;
             if (checkTalents)
             {
-                GameSession.GetSessionCrewCharacters().ForEach(c => c.CheckTalents(AbilityEffectType.OnLocationDiscovered, new Abilities.AbilityLocation(this)));
+                GameSession.GetSessionCrewCharacters().ForEach(c => c.CheckTalents(AbilityEffectType.OnLocationDiscovered, new AbilityLocation(this)));
             }
         }
 
@@ -1262,6 +1270,16 @@ namespace Barotrauma
         public void RemoveProjSpecific()
         {
             HireManager?.Remove();
+        }
+
+        class AbilityLocation : AbilityObject, IAbilityLocation
+        {
+            public AbilityLocation(Location location)
+            {
+                Location = location;
+            }
+
+            public Location Location { get; set; }
         }
     }
 }

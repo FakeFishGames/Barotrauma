@@ -94,10 +94,10 @@ namespace Barotrauma.Networking
 
         public void ClientAdminRead(IReadMessage incMsg)
         {
-            int count = incMsg.ReadUInt16();
-            for (int i = 0; i < count; i++)
+            while (true)
             {
                 UInt32 key = incMsg.ReadUInt32();
+                if (key == 0) { break; }
                 if (netProperties.ContainsKey(key))
                 {
                     bool changedLocally = netProperties[key].ChangedLocally;
@@ -153,8 +153,11 @@ namespace Barotrauma.Networking
             {
                 ReadExtraCargo(incMsg);
             }
-            
-            ReadHiddenSubs(incMsg);
+
+            if (requiredFlags.HasFlag(NetFlags.HiddenSubs))
+            {
+                ReadHiddenSubs(incMsg);
+            }
             GameMain.NetLobbyScreen.UpdateSubVisibility();
 
             bool isAdmin = incMsg.ReadBoolean();

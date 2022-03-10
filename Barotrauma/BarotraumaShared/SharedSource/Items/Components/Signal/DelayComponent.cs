@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 namespace Barotrauma.Items.Components
@@ -24,7 +25,7 @@ namespace Barotrauma.Items.Components
         private int signalQueueSize;
         private int delayTicks;
 
-        private readonly Queue<DelayedSignal> signalQueue;
+        private readonly Queue<DelayedSignal> signalQueue = new Queue<DelayedSignal>();
 
         private DelayedSignal prevQueuedSignal;
         
@@ -39,6 +40,7 @@ namespace Barotrauma.Items.Components
                 delay = value;
                 delayTicks = (int)(delay / Timing.Step);
                 signalQueueSize = Math.Max(delayTicks, 1) * 2;
+                signalQueue.Clear();
             }
         }
 
@@ -59,22 +61,26 @@ namespace Barotrauma.Items.Components
         public DelayComponent(Item item, XElement element)
             : base (item, element)
         {
-            signalQueue = new Queue<DelayedSignal>();
             IsActive = true;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (signalQueue.Count == 0)
+            {
+                IsActive = false;
+                return;
+            }
+
             foreach (var val in signalQueue)
             {
                 val.SendTimer -= 1;
             }
-
             while (signalQueue.Count > 0 && signalQueue.Peek().SendTimer <= 0)
             {
                 var signalOut = signalQueue.Peek();
                 signalOut.SendDuration -= 1;
-                item.SendSignal(new Signal(signalOut.Signal.value, strength: signalOut.Signal.strength), "signal_out");
+                item.SendSignal(new Signal(signalOut.Signal.value, sender: signalOut.Signal.sender, strength: signalOut.Signal.strength), "signal_out");
                 if (signalOut.SendDuration <= 0) 
                 { 
                     signalQueue.Dequeue(); 
@@ -113,9 +119,10 @@ namespace Barotrauma.Items.Components
                         SendDuration = 1
                     };
                     signalQueue.Enqueue(prevQueuedSignal);
+                    IsActive = true;
                     break;
                 case "set_delay":
-                    if (float.TryParse(signal.value, out float newDelay))
+                    if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float newDelay))
                     {
 						newDelay = MathHelper.Clamp(newDelay, 0, 60);
                         if (signalQueue.Count > 0 && newDelay != Delay)

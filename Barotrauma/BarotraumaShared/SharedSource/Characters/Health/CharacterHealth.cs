@@ -111,6 +111,7 @@ namespace Barotrauma
         private Affliction oxygenLowAffliction;
         private Affliction pressureAffliction;
         private Affliction stunAffliction;
+        public Affliction BloodlossAffliction { get => bloodlossAffliction; }
 
         public bool IsUnconscious
         {
@@ -181,7 +182,7 @@ namespace Barotrauma
         public float BloodlossAmount
         {
             get { return bloodlossAffliction.Strength; }
-            set { bloodlossAffliction.Strength = MathHelper.Clamp(value, 0.0f, 100.0f); }
+            set { bloodlossAffliction.Strength = MathHelper.Clamp(value, 0, bloodlossAffliction.Prefab.MaxStrength); }
         }
 
         public float Stun
@@ -201,7 +202,7 @@ namespace Barotrauma
             get { return pressureAffliction; }
         }
 
-        public Character Character { get; private set; }
+        public readonly Character Character;
 
         public CharacterHealth(Character character)
         {
@@ -324,7 +325,11 @@ namespace Barotrauma
                 if (kvp.Key == affliction) 
                 {
                     int limbHealthIndex = limbHealths.IndexOf(kvp.Value);
-                    return Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == limbHealthIndex); 
+                    foreach (Limb limb in Character.AnimController.Limbs)
+                    {
+                        if (limb.HealthIndex == limbHealthIndex) { return limb; }
+                    }
+                    return null;
                 }
             }
             return null;
@@ -658,7 +663,7 @@ namespace Barotrauma
                 newStrength = Math.Min(existingAffliction.Prefab.MaxStrength, newStrength);
                 if (existingAffliction == stunAffliction) { Character.SetStun(newStrength, true, true); }
                 existingAffliction.Strength = newStrength;
-                existingAffliction.Source = newAffliction.Source;
+                if (newAffliction.Source != null) { existingAffliction.Source = newAffliction.Source; }
                 CalculateVitality();
                 if (Vitality <= MinVitality)
                 {
@@ -744,7 +749,6 @@ namespace Barotrauma
 
             Character.StackSpeedMultiplier(1f + Character.GetStatValue(StatTypes.MovementSpeed));
 
-            // maybe a bit of a hacky way to do this. should inquire if there is a better way. M61T
             if (Character.InWater)
             {
                 Character.StackSpeedMultiplier(1f + Character.GetStatValue(StatTypes.SwimmingSpeed));

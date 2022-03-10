@@ -11,6 +11,7 @@ namespace Barotrauma
         public override string Identifier { get; set; } = "prepare";
         public override string DebugTag => $"{Identifier}";
         public override bool KeepDivingGearOn => true;
+        public override bool KeepDivingGearOnAlsoWhenInactive => true;
         public override bool PrioritizeIfSubObjectivesActive => true;
 
         private AIObjectiveGetItem getSingleItemObjective;

@@ -45,6 +45,8 @@ namespace Barotrauma
 
             requiredDestinationTypes = prefab.ConfigElement.GetAttributeStringArray("requireddestinationtypes", null);
             RequireBeaconStation = prefab.ConfigElement.GetAttributeBool("requirebeaconstation", false);
+
+            GameAnalyticsManager.AddDesignEvent($"ScriptedEvent:{prefab.Identifier}:Start");
         }
 
         public void AddTarget(string tag, Entity target)
@@ -228,6 +230,12 @@ namespace Barotrauma
                 }
             }
             return false;
+        }
+
+        public override void Finished()
+        {
+            base.Finished();
+            GameAnalyticsManager.AddDesignEvent($"ScriptedEvent:{prefab.Identifier}:Finished:{CurrentActionIndex}");
         }
     }
 }

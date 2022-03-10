@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -7,14 +8,18 @@ namespace Barotrauma.Abilities
 {
     class AbilityConditionAttackData : AbilityConditionData
     {
+        [Flags]
         private enum WeaponType
         {
             Any = 0, 
             Melee = 1, 
             Ranged = 2,
-            HandheldRanged = 3,
-            Turret = 4
+            HandheldRanged = 4,
+            Turret = 8,
+            NoWeapon = 16
         };
+
+        private static readonly List<WeaponType> WeaponTypeValues = Enum.GetValues(typeof(WeaponType)).Cast<WeaponType>().ToList();
 
         private readonly string itemIdentifier;
         private readonly string[] tags;
@@ -65,27 +70,39 @@ namespace Barotrauma.Abilities
 
                 if (weapontype != WeaponType.Any)
                 {
-                    switch (weapontype)
+                    foreach (WeaponType wt in WeaponTypeValues)
                     {
-                        // it is possible that an item that has both a melee and a projectile component will return true
-                        // even when not used as a melee/ranged weapon respectively
-                        // attackdata should contain data regarding whether the attack is melee or not
-                        case WeaponType.Melee:
-                            return item?.GetComponent<MeleeWeapon>() != null;
-                        case WeaponType.Ranged:
-                            return item?.GetComponent<Projectile>() != null;
-                        case WeaponType.HandheldRanged:
-                            {
-                                var projectile = item?.GetComponent<Projectile>();
-                                return projectile?.Launcher?.GetComponent<Holdable>() != null;
-                            }
-                        case WeaponType.Turret:
-                            {
-                                var projectile = item?.GetComponent<Projectile>();
-                                return projectile?.Launcher?.GetComponent<Turret>() != null;
-                            }
+                        if (wt == WeaponType.Any || !weapontype.HasFlag(wt)) { continue; }
+                        switch (wt)
+                        {
+                            // it is possible that an item that has both a melee and a projectile component will return true
+                            // even when not used as a melee/ranged weapon respectively
+                            // attackdata should contain data regarding whether the attack is melee or not
+                            case WeaponType.Melee:
+                                if (item?.GetComponent<MeleeWeapon>() != null) { return true; }
+                                break;
+                            case WeaponType.Ranged:
+                                if (item?.GetComponent<Projectile>() != null) { return true; }
+                                break;
+                            case WeaponType.HandheldRanged:
+                                {
+                                    var projectile = item?.GetComponent<Projectile>();
+                                    if (projectile?.Launcher?.GetComponent<Holdable>() != null) { return true; }
+                                }
+                                break;
+                            case WeaponType.Turret:
+                                {
+                                    var projectile = item?.GetComponent<Projectile>();
+                                    if (projectile?.Launcher?.GetComponent<Turret>() != null) { return true; }
+                                }
+                                break;
+                            case WeaponType.NoWeapon:
+                                if (item == null) { return true; }
+                                break;
+                        }
                     }
-                }
+                    return false;
+                }                
 
                 return true;
             }

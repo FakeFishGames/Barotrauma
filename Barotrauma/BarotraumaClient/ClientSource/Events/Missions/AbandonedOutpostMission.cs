@@ -1,3 +1,4 @@
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 
 namespace Barotrauma
@@ -19,6 +20,9 @@ namespace Barotrauma
                 }
             }
         }
+
+        public override bool DisplayAsCompleted => State > 0 && requireRescue.None();
+        public override bool DisplayAsFailed => State == HostagesKilledState;
 
         public override void ClientReadInitial(IReadMessage msg)
         {

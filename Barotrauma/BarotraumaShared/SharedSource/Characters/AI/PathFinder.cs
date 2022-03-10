@@ -333,7 +333,6 @@ namespace Barotrauma
                 //if searching for a path inside the sub, make sure the waypoint is visible
                 if (checkVisibility && isCharacter)
                 {
-                    if (node.Waypoint.isObstructed) { return false; }
                     var body = Submarine.PickBody(rayStart, node.TempPosition,
                         collisionCategory: Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs);
                     if (body != null)
@@ -350,6 +349,7 @@ namespace Barotrauma
             {
                 if (nodeFilter != null && !nodeFilter(node)) { return false; }
                 if (startNodeFilter != null && !startNodeFilter(node)) { return false; }
+                if (node.Waypoint.isObstructed) { return false; }
                 // Always check the visibility for the start node
                 if (!IsWaypointVisible(node, start)) { return false; }
                 if (node.IsBlocked()) { return false; }
@@ -364,6 +364,7 @@ namespace Barotrauma
             {
                 if (nodeFilter != null && !nodeFilter(node)) { return false; }
                 if (endNodeFilter != null && !endNodeFilter(node)) { return false; }
+                if (node.Waypoint.isObstructed) { return false; }
                 // Only check the visibility for the end node when allowed (fix leaks)
                 if (!IsWaypointVisible(node, end, checkVisibility: checkVisibility)) { return false; }
                 if (node.IsBlocked()) { return false; }

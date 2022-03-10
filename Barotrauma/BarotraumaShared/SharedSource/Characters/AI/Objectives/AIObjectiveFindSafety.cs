@@ -76,6 +76,10 @@ namespace Barotrauma
                     // -> ignore find safety unless we need to find a diving gear
                     Priority = 0;
                 }
+                else if (objectiveManager.Objectives.Any(o => o is AIObjectiveCombat && o.Priority > 0))
+                {
+                    Priority = 0;
+                }
                 Priority = MathHelper.Clamp(Priority, 0, 100);
                 if (divingGearObjective != null && !divingGearObjective.IsCompleted && divingGearObjective.CanBeCompleted)
                 {

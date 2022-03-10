@@ -401,6 +401,7 @@ namespace Barotrauma
 
         public bool IsVanillaSubmarine()
         {
+            if (FilePath == null) { return false; }
             var vanilla = GameMain.VanillaContent;
             if (vanilla != null)
             {
@@ -521,7 +522,7 @@ namespace Barotrauma
         }
 
         //saving/loading ----------------------------------------------------
-        public bool SaveAs(string filePath, System.IO.MemoryStream previewImage = null)
+        public void SaveAs(string filePath, System.IO.MemoryStream previewImage = null)
         {
             var newElement = new XElement(
                 SubmarineElement.Name, 
@@ -543,18 +544,9 @@ namespace Barotrauma
             {
                 doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
             }
-            try
-            {
-                SaveUtil.CompressStringToFile(filePath, doc.ToString());
-                Md5Hash.RemoveFromCache(filePath);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Saving submarine \"" + filePath + "\" failed!", e);
-                return false;
-            }
 
-            return true;
+            SaveUtil.CompressStringToFile(filePath, doc.ToString());
+            Md5Hash.RemoveFromCache(filePath);
         }
 
         public static void AddToSavedSubs(SubmarineInfo subInfo)

@@ -97,17 +97,16 @@ namespace Barotrauma
         /// <summary>
         /// There is a server-side implementation of the method in <see cref="MultiPlayerCampaign"/>
         /// </summary>
-        public bool AllowedToManageCampaign()
+        public bool AllowedToManageCampaign(ClientPermissions permissions = ClientPermissions.ManageCampaign)
         {
-            //allow ending the round if the client has permissions, is the owner, the only client in the server,
+            //allow managing the round if the client has permissions, is the owner, the only client in the server,
             //or if no-one has management permissions
             if (GameMain.Client == null) { return true; }
             return
-                GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) ||
+                GameMain.Client.HasPermission(permissions) ||
                 GameMain.Client.ConnectedClients.Count == 1 ||
                 GameMain.Client.IsServerOwner ||
-                GameMain.Client.ConnectedClients.None(c =>
-                    c.InGame && (c.IsOwner || c.HasPermission(ClientPermissions.ManageCampaign)));
+                GameMain.Client.ConnectedClients.None(c => c.InGame && (c.IsOwner || c.HasPermission(permissions)));
         }
 
         public override void Draw(SpriteBatch spriteBatch)
@@ -242,6 +241,11 @@ namespace Barotrauma
             {
                 ReadyCheckButton.RectTransform.ScreenSpaceOffset = endRoundButton.RectTransform.ScreenSpaceOffset;
                 ReadyCheckButton.DrawManually(spriteBatch);
+                if (ReadyCheck.ReadyCheckCooldown > DateTime.Now)
+                {
+                    float progress = (ReadyCheck.ReadyCheckCooldown - DateTime.Now).Seconds / 60.0f;
+                    ReadyCheckButton.Color = ToolBox.GradientLerp(progress, Color.White, GUI.Style.Red);
+                }
             }
         }
 
@@ -290,6 +294,9 @@ namespace Barotrauma
                 case InteractionType.Crew when GameMain.NetworkMember != null:
                     CampaignUI.CrewManagement.SendCrewState(false);
                     goto default;
+                case InteractionType.MedicalClinic:
+                    CampaignUI.MedicalClinic.RequestLatestPending();
+                    goto default;
                 default:
                     ShowCampaignUI = true;
                     CampaignUI.SelectTab(npc.CampaignInteractionType);
@@ -318,6 +325,8 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
+
+            MedicalClinic?.Update(deltaTime);
 
             if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
             {

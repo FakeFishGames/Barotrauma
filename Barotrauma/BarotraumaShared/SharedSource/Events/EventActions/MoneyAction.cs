@@ -28,6 +28,7 @@ namespace Barotrauma
             if (GameMain.GameSession?.GameMode is CampaignMode campaign)
             {
                 campaign.Money += Amount;
+                GameAnalyticsManager.AddMoneyGainedEvent(Amount, GameAnalyticsManager.MoneySource.Event, ParentEvent.Prefab.Identifier);
 #if SERVER
                 (campaign as MultiPlayerCampaign).LastUpdateID++;
 #endif

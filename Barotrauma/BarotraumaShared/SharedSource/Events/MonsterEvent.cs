@@ -15,6 +15,7 @@ namespace Barotrauma
 
         private readonly float scatter;
         private readonly float offset;
+        private readonly float delayBetweenSpawns;
 
         private Vector2? spawnPos;
 
@@ -25,7 +26,7 @@ namespace Barotrauma
 
         private bool spawnPending;
 
-        private readonly int maxAmountPerLevel = int.MaxValue;
+        public readonly int MaxAmountPerLevel = int.MaxValue;
 
         public List<Character> Monsters => monsters;
         public Vector2? SpawnPos => spawnPos;
@@ -73,7 +74,7 @@ namespace Barotrauma
             minAmount = prefab.ConfigElement.GetAttributeInt("minamount", defaultAmount);
             maxAmount = Math.Max(prefab.ConfigElement.GetAttributeInt("maxamount", 1), minAmount);
 
-            maxAmountPerLevel = prefab.ConfigElement.GetAttributeInt("maxamountperlevel", int.MaxValue);
+            MaxAmountPerLevel = prefab.ConfigElement.GetAttributeInt("maxamountperlevel", int.MaxValue);
 
             var spawnPosTypeStr = prefab.ConfigElement.GetAttributeString("spawntype", "");
             if (string.IsNullOrWhiteSpace(spawnPosTypeStr) ||
@@ -92,6 +93,7 @@ namespace Barotrauma
 
             offset = prefab.ConfigElement.GetAttributeFloat("offset", 0);
             scatter = Math.Clamp(prefab.ConfigElement.GetAttributeFloat("scatter", 500), 0, 3000);
+            delayBetweenSpawns = prefab.ConfigElement.GetAttributeFloat("delaybetweenspawns", 0.1f);
 
             if (GameMain.NetworkMember != null)
             {
@@ -326,7 +328,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            dir = new Vector2(1, Rand.Range(-1, 1));
+                            dir = new Vector2(1, Rand.Range(-1f, 1f));
                         }
                         Vector2 targetPos = spawnPos.Value + dir * offset;
                         var targetWaypoint = waypoints.OrderBy(wp => Vector2.DistanceSquared(wp.WorldPosition, targetPos)).FirstOrDefault();
@@ -365,9 +367,9 @@ namespace Barotrauma
 
             if (spawnPos == null)
             {
-                if (maxAmountPerLevel < int.MaxValue)
+                if (MaxAmountPerLevel < int.MaxValue)
                 {
-                    if (Character.CharacterList.Count(c => c.SpeciesName == speciesName) >= maxAmountPerLevel)
+                    if (Character.CharacterList.Count(c => c.SpeciesName == speciesName) >= MaxAmountPerLevel)
                     {
                         disallowed = true;
                         return;
@@ -473,6 +475,7 @@ namespace Barotrauma
                 {
                     scatterAmount = 0;
                 }
+
                 for (int i = 0; i < amount; i++)
                 {
                     string seed = Level.Loaded.Seed + i.ToString();
@@ -538,7 +541,14 @@ namespace Barotrauma
                             SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
                             DebugConsole.NewMessage($"Spawned: {ToString()}. Strength: {StringFormatter.FormatZeroDecimal(monsters.Sum(m => m.Params.AI.CombatStrength))}.", Color.LightBlue, debugOnly: true);
                         }
-                    }, Rand.Range(0f, amount / 2f));
+
+                        if (GameMain.GameSession != null)
+                        {
+                            GameAnalyticsManager.AddDesignEvent(
+                                $"MonsterSpawn:{GameMain.GameSession.GameMode?.Preset?.Identifier ?? "none"}:{Level.Loaded?.LevelData?.Biome?.Identifier ?? "none"}:{SpawnPosType}:{speciesName}",
+                                value: Timing.TotalTime - GameMain.GameSession.RoundStartTime);
+                        }
+                    }, delayBetweenSpawns * i);
                 }
             }
 

@@ -155,6 +155,9 @@ namespace Barotrauma
         public OrderCategory? Category { get; private set; }
 
         //legacy support
+        /// <summary>
+        /// If defined, the order can only be quick-assigned to characters with these jobs. Or if it's a report, the icon will only be displayed to characters with these jobs.
+        /// </summary>
         public readonly string[] AppropriateJobs;
         public readonly string[] Options;
         public readonly string[] HiddenOptions;
@@ -177,6 +180,10 @@ namespace Barotrauma
         public bool IsPrefab { get; private set; }
         public readonly bool MustManuallyAssign;
         public readonly bool AutoDismiss;
+        /// <summary>
+        /// If defined, the order will be quick-assigned to characters with these jobs before characters with other jobs.
+        /// </summary>
+        public string[] PreferredJobs { get; }
 
         public readonly OrderTarget TargetPosition;
 
@@ -220,6 +227,9 @@ namespace Barotrauma
         /// Manually rearranging orders will override this priority.
         /// </summary>
         public int AssignmentPriority { get; }
+
+        public bool ColoredWhenControllingGiver { get; }
+        public bool DisplayGiverInTooltip { get; }
 
         public static void Init()
         {
@@ -324,6 +334,7 @@ namespace Barotrauma
             ControllerTags = orderElement.GetAttributeStringArray("controllertags", new string[0]);
             TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
             AppropriateJobs = orderElement.GetAttributeStringArray("appropriatejobs", new string[0]);
+            PreferredJobs = orderElement.GetAttributeStringArray("preferredjobs", new string[0]);
             Options = orderElement.GetAttributeStringArray("options", new string[0]);
             HiddenOptions = orderElement.GetAttributeStringArray("hiddenoptions", new string[0]);
             AllOptions = Options.Concat(HiddenOptions).ToArray();
@@ -374,7 +385,7 @@ namespace Barotrauma
             }
             if (OptionNames.Count != Options.Length)
             {
-                DebugConsole.ThrowError("Error in Order " + Name + " - the number of option names doesn't match the number of options.");
+                DebugConsole.AddWarning("Error in Order " + Name + " - the number of option names doesn't match the number of options.");
                 OptionNames.Clear();
                 Options.ForEach(o => OptionNames.Add(o, o));
             }
@@ -404,8 +415,10 @@ namespace Barotrauma
             MustManuallyAssign = orderElement.GetAttributeBool("mustmanuallyassign", false);
             IsIgnoreOrder = Identifier == "ignorethis" || Identifier == "unignorethis";
             DrawIconWhenContained = orderElement.GetAttributeBool("displayiconwhencontained", false);
-            AutoDismiss = orderElement.GetAttributeBool("autodismiss", Category == OrderCategory.Movement);
+            AutoDismiss = orderElement.GetAttributeBool("autodismiss", Category == OrderCategory.Operate || Category == OrderCategory.Movement);
             AssignmentPriority = Math.Clamp(orderElement.GetAttributeInt("assignmentpriority", 100), 0, 100);
+            ColoredWhenControllingGiver = orderElement.GetAttributeBool("coloredwhencontrollinggiver", false);
+            DisplayGiverInTooltip = orderElement.GetAttributeBool("displaygiverintooltip", false);
         }
 
         /// <summary>
@@ -430,6 +443,7 @@ namespace Barotrauma
             ControllerTags        = prefab.ControllerTags;
             TargetAllCharacters   = prefab.TargetAllCharacters;
             AppropriateJobs       = prefab.AppropriateJobs;
+            PreferredJobs         = prefab.PreferredJobs;
             FadeOutTime           = prefab.FadeOutTime;
             MustSetTarget         = prefab.MustSetTarget;
             CanBeGeneralized      = prefab.CanBeGeneralized;
@@ -441,6 +455,9 @@ namespace Barotrauma
             Hidden                = prefab.Hidden;
             IgnoreAtOutpost       = prefab.IgnoreAtOutpost;
             AssignmentPriority    = prefab.AssignmentPriority;
+            AutoDismiss           = prefab.AutoDismiss;
+            DisplayGiverInTooltip = prefab.DisplayGiverInTooltip;
+            ColoredWhenControllingGiver = prefab.ColoredWhenControllingGiver;
 
             OrderGiver = orderGiver;
             TargetEntity = targetEntity;
@@ -481,34 +498,39 @@ namespace Barotrauma
             WallSectionIndex = sectionIndex;
             TargetType = OrderTargetType.WallSection;
         }
-        
-        public bool HasAppropriateJob(Character character)
-        {
-            if (character.Info == null || character.Info.Job == null) { return false; }
-            if (character.Info.Job.Prefab.AppropriateOrders.Any(appropriateOrderId => Identifier == appropriateOrderId)) { return true; }
 
-            if (!JobPrefab.Prefabs.Any(jp => jp.AppropriateOrders.Contains(Identifier)) &&
-                (AppropriateJobs == null || AppropriateJobs.Length == 0))
+        private bool HasSpecifiedJob(Character character, string[] jobs)
+        {
+            if (jobs == null || jobs.Length == 0) { return false; }
+            string jobIdentifier = character?.Info?.Job?.Prefab?.Identifier;
+            if (string.IsNullOrEmpty(jobIdentifier)) { return false; }
+            for (int i = 0; i < jobs.Length; i++)
             {
-                return true;
-            }
-            for (int i = 0; i < AppropriateJobs.Length; i++)
-            {
-                if (character.Info.Job.Prefab.Identifier.Equals(AppropriateJobs[i], StringComparison.OrdinalIgnoreCase)) { return true; }
+                if (jobIdentifier.Equals(jobs[i], StringComparison.OrdinalIgnoreCase)) { return true; }
             }
             return false;
         }
 
-        public string GetChatMessage(string targetCharacterName, string targetRoomName, bool givingOrderToSelf, string orderOption = "", int? priority = null)
+        public bool HasAppropriateJob(Character character) => HasSpecifiedJob(character, AppropriateJobs);
+
+        public bool HasPreferredJob(Character character) => HasSpecifiedJob(character, PreferredJobs);
+
+        public string GetChatMessage(string targetCharacterName, string targetRoomName, bool givingOrderToSelf, string orderOption = "", bool isNewOrder = true)
         {
-            priority ??= CharacterInfo.HighestManualOrderPriority;
-            // If the order has a lesser priority, it means we are rearranging character orders
-            if (!TargetAllCharacters && priority != CharacterInfo.HighestManualOrderPriority && Identifier != "dismissed")
+            if (!TargetAllCharacters && !isNewOrder && Identifier != "dismissed")
             {
-                return TextManager.GetWithVariable("rearrangedorders", "[name]", targetCharacterName ?? string.Empty, returnNull: true) ?? string.Empty;
+                // Use special dialogue when we're rearranging character orders
+                if (!givingOrderToSelf)
+                {
+                    return TextManager.GetWithVariable("rearrangedorders", "[name]", targetCharacterName ?? string.Empty, returnNull: true) ?? string.Empty;
+                }
+                else
+                {
+                    // Say nothing when rearranging the orders of the character you're controlling
+                    return string.Empty;
+                }
             }
-            string messageTag = $"{(givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf" : "OrderDialog")}";
-            messageTag += $".{Identifier}";
+            string messageTag = $"{(givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf" : "OrderDialog")}.{Identifier}";
             if (!string.IsNullOrEmpty(orderOption))
             {
                 if (Identifier != "dismissed")

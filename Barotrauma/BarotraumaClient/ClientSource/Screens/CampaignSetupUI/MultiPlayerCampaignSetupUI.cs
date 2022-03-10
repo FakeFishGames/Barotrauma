@@ -1,13 +1,10 @@
-using Barotrauma.Tutorials;
+using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
-using System.Linq;
-using System.Xml.Linq;
 using System.Globalization;
-using Barotrauma.Extensions;
-using Barotrauma.Networking;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -64,6 +61,7 @@ namespace Barotrauma
                 maxMissionCount = MathHelper.Clamp(maxMissionCount,
                     CampaignSettings.MinMissionCountLimit,
                     CampaignSettings.MaxMissionCountLimit);
+
                 maxMissionCountText.Text = maxMissionCount.ToString(CultureInfo.InvariantCulture);
             }
             maxMissionCountButtons[1]
@@ -246,6 +244,12 @@ namespace Barotrauma
 
             foreach (string saveFile in saveFiles)
             {
+                if (string.IsNullOrEmpty(saveFile))
+                {
+                    DebugConsole.AddWarning("Error when updating campaign load menu: path to a save file was empty.\n" + Environment.StackTrace);
+                    continue;
+                }
+
                 string fileName = saveFile;
                 string subName = "";
                 string saveTime = "";

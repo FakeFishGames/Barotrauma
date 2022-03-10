@@ -133,7 +133,7 @@ namespace Barotrauma.Extensions
                 return source.Count(predicate) > 1;
             }
         }
-        
+
         public static IEnumerable<T> ToEnumerable<T>(this T item)
         {
             yield return item;
@@ -195,6 +195,29 @@ namespace Barotrauma.Extensions
                 if (predicate(list[i])) { return i; }
             }
             return -1;
+        }
+
+        /// <summary>
+        /// Same as FirstOrDefault but will always return null instead of default(T) when no element is found
+        /// </summary>
+        public static T? FirstOrNull<T>(this IEnumerable<T> source, Func<T, bool> predicate) where T : struct
+        {
+            if (source.FirstOrDefault(predicate) is var first && !first.Equals(default(T)))
+            {
+                return first;
+            }
+
+            return null;
+        }
+
+        public static T? FirstOrNull<T>(this IEnumerable<T> source) where T : struct
+        {
+            if (source.FirstOrDefault() is var first && !first.Equals(default(T)))
+            {
+                return first;
+            }
+
+            return null;
         }
     }
 }

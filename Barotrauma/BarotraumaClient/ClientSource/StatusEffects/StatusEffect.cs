@@ -14,9 +14,10 @@ namespace Barotrauma
     {
         private List<ParticleEmitter> particleEmitters;
 
-        private static HashSet<StatusEffect> ActiveLoopingSounds = new HashSet<StatusEffect>();
+        private readonly static HashSet<StatusEffect> ActiveLoopingSounds = new HashSet<StatusEffect>();
         private static double LastMuffleCheckTime;
         private readonly List<RoundSound> sounds = new List<RoundSound>();
+        public IEnumerable<RoundSound> Sounds { get { return sounds; } }
         private SoundSelectionMode soundSelectionMode;
         private SoundChannel soundChannel;
         private Entity soundEmitter;
@@ -53,7 +54,7 @@ namespace Barotrauma
             }
         }
 
-        partial void ApplyProjSpecific(float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Hull hull, Vector2 worldPosition, bool playSound)
+        partial void ApplyProjSpecific(float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Hull hull, Vector2 worldPosition, bool playSound)
         {
             if (playSound)
             {
@@ -84,7 +85,14 @@ namespace Barotrauma
                     }
                     else
                     {
-                        targetLimb = targets.FirstOrDefault(t => t is Limb) as Limb;
+                        for (int i = 0; i < targets.Count; i++)
+                        {
+                            if (targets[i] is Limb limb)
+                            {
+                                targetLimb = limb;
+                                break;
+                            }
+                        }
                     }
                     if (targetLimb != null && !targetLimb.Removed)
                     {
@@ -146,10 +154,6 @@ namespace Barotrauma
                         string errorMsg = $"Error in StatusEffect.ApplyProjSpecific2 (sound \"{selectedSound?.Filename ?? "unknown"}\" was null)\n" + Environment.StackTrace.CleanupStackTrace();
                         GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull2" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                         return;
-                    }
-                    if (selectedSound.Sound.Disposed)
-                    {
-                        Submarine.ReloadRoundSound(selectedSound);
                     }
                     soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull, ignoreMuffling: selectedSound.IgnoreMuffling);
                     ignoreMuffling = selectedSound.IgnoreMuffling;

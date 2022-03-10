@@ -32,26 +32,6 @@ namespace Barotrauma
             set { selectedShuttle = value; lastUpdateID++; }
         }
 
-        [Obsolete("TODO: this list shouldn't exist, the client should just use the visible subs list instead")]
-        public List<SubmarineInfo> CampaignSubmarines
-        {
-            get
-            {
-                return campaignSubmarines;
-            }
-            set
-            {
-                campaignSubmarines = value;
-                lastUpdateID++;
-                if (GameMain.NetworkMember?.ServerSettings != null)
-                {
-                    GameMain.NetworkMember.ServerSettings.ServerDetailsChanged = true;
-                }
-            }
-        }
-
-        private List<SubmarineInfo> campaignSubmarines;       
-
         public GameModePreset[] GameModes { get; }
 
         private int selectedModeIndex;

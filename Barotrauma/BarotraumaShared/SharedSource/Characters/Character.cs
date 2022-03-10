@@ -261,9 +261,16 @@ namespace Barotrauma
 
         public AttackResult LastDamage;
 
+        public Dictionary<ItemPrefab, double> ItemSelectedDurations
+        {
+            get { return itemSelectedDurations; }
+        }
+        private readonly Dictionary<ItemPrefab, double> itemSelectedDurations = new Dictionary<ItemPrefab, double>();
+        private double itemSelectedTime;
+
         public float InvisibleTimer;
 
-        private CharacterPrefab prefab;
+        private readonly CharacterPrefab prefab;
 
         public readonly CharacterParams Params;
         public string SpeciesName => Params?.SpeciesName ?? "null";
@@ -496,7 +503,7 @@ namespace Barotrauma
             get { return cursorPosition; }
             set
             {
-                if (!MathUtils.IsValid(value)) return;
+                if (!MathUtils.IsValid(value)) { return; }
                 cursorPosition = value;
             }
         }
@@ -682,8 +689,8 @@ namespace Barotrauma
             get { return CharacterHealth.BloodlossAmount; }
             set
             {
-                if (!MathUtils.IsValid(value)) return;
-                CharacterHealth.BloodlossAmount = MathHelper.Clamp(value, 0.0f, 100.0f);
+                if (!MathUtils.IsValid(value)) { return; }
+                CharacterHealth.BloodlossAmount = value;
             }
         }
 
@@ -700,7 +707,7 @@ namespace Barotrauma
         {
             get
             {
-                if (!CanSpeak || IsUnconscious || Stun > 0.0f || IsDead) { return 100.0f; }
+                if (!CanSpeak || IsUnconscious || IsKnockedDown) { return 100.0f; }
                 return speechImpediment;
             }
             set
@@ -737,9 +744,7 @@ namespace Barotrauma
             get => _selectedConstruction;
             set
             {
-#if CLIENT
                 var prevSelectedConstruction = _selectedConstruction;
-#endif
                 _selectedConstruction = value;
 #if CLIENT
                 HintManager.OnSetSelectedConstruction(this, prevSelectedConstruction, _selectedConstruction);
@@ -755,6 +760,19 @@ namespace Barotrauma
                     }
                 }
 #endif
+                if (prevSelectedConstruction == null && _selectedConstruction != null)
+                {
+                    itemSelectedTime = Timing.TotalTime;
+                }
+                else if (prevSelectedConstruction != null && _selectedConstruction == null && itemSelectedTime > 0)
+                {
+                    if (!itemSelectedDurations.ContainsKey(prevSelectedConstruction.Prefab))
+                    {
+                        itemSelectedDurations.Add(prevSelectedConstruction.Prefab, 0);
+                    }
+                    itemSelectedDurations[prevSelectedConstruction.Prefab] += Timing.TotalTime - itemSelectedTime;
+                    itemSelectedTime = 0;
+                }
             }
         }
 
@@ -835,7 +853,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    return IsKnockedDown || LockHands || IsBot && TeamID != CharacterTeamType.FriendlyNPC;
+                    return IsKnockedDown || LockHands || IsBot && IsOnPlayerTeam;
                 }
             }
             set { canInventoryBeAccessed = value; }
@@ -1231,6 +1249,10 @@ namespace Barotrauma
             Info.HairElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Hair)));
 
 #if CLIENT
+            if (info.Head?.HairWithHatElement != null)
+            {
+                head.HairWithHatSprite = new WearableSprite(info.Head?.HairWithHatElement.Element("sprite"), WearableType.Hair);
+            }
             head.EnableHuskSprite = Params.Husk;
             head.LoadHerpesSprite();
             head.UpdateWearableTypesToHide();
@@ -1830,7 +1852,7 @@ namespace Barotrauma
                             if (!attack.IsValidTarget(attackTarget)) { return false; }
                             if (attackTarget is ISerializableEntity se && attackTarget is Character)
                             {
-                                if (attack.Conditionals.Any(c => !c.Matches(se))) { return false; }
+                                if (attack.Conditionals.Any(c => !c.TargetSelf && !c.Matches(se))) { return false; }
                             }
                         }
                         if (attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(this))) { return false; }
@@ -2270,16 +2292,17 @@ namespace Barotrauma
                 }
             }
 
-            if (SelectedConstruction?.GetComponent<RemoteController>()?.TargetItem == item ||
-                HeldItems.Any(it => it.GetComponent<RemoteController>()?.TargetItem == item))
-            {
-                return true;
-            }
-
             if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) { return false; }
 
             Pickable pickableComponent = item.GetComponent<Pickable>();
             if (pickableComponent != null && pickableComponent.Picker != this && pickableComponent.Picker != null && !pickableComponent.Picker.IsDead) { return false; }
+
+            if (SelectedConstruction?.GetComponent<RemoteController>()?.TargetItem == item) { return true; }
+            //optimization: don't use HeldItems because it allocates memory and this method is executed very frequently
+            var heldItem1 = Inventory?.GetItemInLimbSlot(InvSlotType.RightHand);
+            if (heldItem1?.GetComponent<RemoteController>()?.TargetItem == item) { return true; }
+            var heldItem2 = Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand);
+            if (heldItem2?.GetComponent<RemoteController>()?.TargetItem == item) { return true; }
 
             Vector2 characterDirection = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(AnimController.Collider.Rotation));
 
@@ -3225,7 +3248,7 @@ namespace Barotrauma
 
             if (orderGiver != null)
             {
-                var abilityOrderedCharacter = new AbilityCharacter(this);
+                var abilityOrderedCharacter = new AbilityOrderedCharacter(this);
                 orderGiver.CheckTalents(AbilityEffectType.OnGiveOrder, abilityOrderedCharacter);
 
                 if (orderGiver.LastOrderedCharacter != this)
@@ -3480,7 +3503,7 @@ namespace Barotrauma
 
             Limb limbHit = targetLimb;
 
-            float attackImpulse = attack.TargetImpulse + attack.TargetForce * deltaTime;
+            float attackImpulse = attack.TargetImpulse + attack.TargetForce  * attack.ImpactMultiplier * deltaTime;
 
             AbilityAttackData attackData = new AbilityAttackData(attack, this);
             if (attacker != null)
@@ -3518,7 +3541,7 @@ namespace Barotrauma
             }
 
             if (limbHit == null) { return new AttackResult(); }
-            Vector2 forceWorld = attack.TargetImpulseWorld + attack.TargetForceWorld;
+            Vector2 forceWorld = attack.TargetImpulseWorld + attack.TargetForceWorld * attack.ImpactMultiplier;
             if (attacker != null)
             {
                 forceWorld.X *= attacker.AnimController.Dir;
@@ -3547,12 +3570,12 @@ namespace Barotrauma
             }
 #endif
             // Don't allow beheading for monster attacks, because it happens too frequently (crawlers/tigerthreshers etc attacking each other -> they will most often target to the head)
-            TrySeverLimbJoints(limbHit, attack.SeverLimbsProbability, attackResult.Damage, allowBeheading: attacker == null || attacker.IsHuman || attacker.IsPlayer);
+            TrySeverLimbJoints(limbHit, attack.SeverLimbsProbability, attackResult.Damage, allowBeheading: attacker == null || attacker.IsHuman || attacker.IsPlayer, attacker: attacker);
 
             return attackResult;
         }
 
-        public void TrySeverLimbJoints(Limb targetLimb, float severLimbsProbability, float damage, bool allowBeheading)
+        public void TrySeverLimbJoints(Limb targetLimb, float severLimbsProbability, float damage, bool allowBeheading, Character attacker = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 #if DEBUG
@@ -3573,8 +3596,12 @@ namespace Barotrauma
             foreach (LimbJoint joint in AnimController.LimbJoints)
             {
                 if (!joint.CanBeSevered) { continue; }
-                // Limb A is where we usually create the joints from. Let's not allow severing when the "parent" limb is hit, or the head can pop off when we hit the torso, for example.
-                if (joint.LimbB != targetLimb) { continue; }
+                // Limb A is where we start creating the joint and LimbB is where the joint ends.
+                // Normally the joints have been created starting from the body, in which case we'd want to use LimbB e.g. to severe a hand when it's hit.
+                // But heads are a different case, because many characters have been created so that the head is first and then comes the rest of the body.
+                // If this is the case, we'll have to use LimbA to decapitate the creature when it's hit on the head. Otherwise decapitation could happen only when we hit the body, not the head.
+                var referenceLimb = targetLimb.type == LimbType.Head && targetLimb.Params.ID == 0 ? joint.LimbA : joint.LimbB;
+                if (referenceLimb != targetLimb) { continue; }
                 float probability = severLimbsProbability;
                 if (!IsDead)
                 {
@@ -3590,9 +3617,20 @@ namespace Barotrauma
                 if (severed)
                 {       
                     Limb otherLimb = joint.LimbA == targetLimb ? joint.LimbB : joint.LimbA;
-                    otherLimb.body.ApplyLinearImpulse(targetLimb.LinearVelocity * targetLimb.Mass, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);             
+                    otherLimb.body.ApplyLinearImpulse(targetLimb.LinearVelocity * targetLimb.Mass, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
+                    if (attacker != null)
+                    {
+                        foreach (var statusEffect in statusEffects)
+                        {
+                            if (statusEffect.type == ActionType.OnSevered) { statusEffect.SetUser(attacker); }
+                        }
+                        foreach (var statusEffect in targetLimb.StatusEffects)
+                        {
+                            if (statusEffect.type == ActionType.OnSevered) { statusEffect.SetUser(attacker); }
+                        }
+                    }
                     ApplyStatusEffects(ActionType.OnSevered, 1.0f);
-                    targetLimb.ApplyStatusEffects(ActionType.OnSevered, 1.0f);
+                    targetLimb.ApplyStatusEffects(ActionType.OnSevered, 1.0f); 
                 }
             }
             if (wasSevered && targetLimb.character.AIController is EnemyAIController enemyAI)
@@ -3721,10 +3759,6 @@ namespace Barotrauma
                 if (!wasDead)
                 {
                     TryAdjustAttackerSkill(attacker, CharacterHealth.Vitality - prevVitality);
-                    if (IsDead)
-                    {
-                        attacker?.RecordKill(this);
-                    }
                 }
             };
             if (attackResult.Damage > 0)
@@ -3815,39 +3849,48 @@ namespace Barotrauma
                     targets.AddRange(statusEffect.GetNearbyTargets(WorldPosition, targets));
                     statusEffect.Apply(actionType, deltaTime, this, targets);
                 }
-                else
+                else if (statusEffect.targetLimbs != null)
                 {
-                    statusEffect.Apply(actionType, deltaTime, this, this);
-                    if (statusEffect.targetLimbs != null)
+                    foreach (var limbType in statusEffect.targetLimbs)
                     {
-                        foreach (var limbType in statusEffect.targetLimbs)
+                        if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                         {
-                            if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+                            // Target all matching limbs
+                            foreach (var limb in AnimController.Limbs)
                             {
-                                // Target all matching limbs
-                                foreach (var limb in AnimController.Limbs)
+                                if (limb.IsSevered) { continue; }
+                                if (limb.type == limbType)
                                 {
-                                    if (limb.IsSevered) { continue; }
-                                    if (limb.type == limbType)
-                                    {
-                                        statusEffect.Apply(actionType, deltaTime, this, limb);
-                                    }
+                                    statusEffect.sourceBody = limb.body;
+                                    statusEffect.Apply(actionType, deltaTime, this, limb);
                                 }
                             }
-                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
+                        }
+                        else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
+                        {
+                            // Target just the first matching limb
+                            Limb limb = AnimController.GetLimb(limbType);
+                            if (limb != null)
                             {
-                                // Target just the first matching limb
-                                Limb limb = AnimController.GetLimb(limbType);
+                                statusEffect.sourceBody = limb.body;
                                 statusEffect.Apply(actionType, deltaTime, this, limb);
                             }
-                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.LastLimb))
+                        }
+                        else if (statusEffect.HasTargetType(StatusEffect.TargetType.LastLimb))
+                        {
+                            // Target just the last matching limb
+                            Limb limb = AnimController.Limbs.LastOrDefault(l => l.type == limbType && !l.IsSevered && !l.Hidden);
+                            if (limb != null)
                             {
-                                // Target just the last matching limb
-                                Limb limb = AnimController.Limbs.LastOrDefault(l => l.type == limbType && !l.IsSevered && !l.Hidden);
+                                statusEffect.sourceBody = limb.body;
                                 statusEffect.Apply(actionType, deltaTime, this, limb);
                             }
                         }
                     }
+                }
+                if (statusEffect.HasTargetType(StatusEffect.TargetType.This) || statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+                {
+                    statusEffect.Apply(actionType, deltaTime, this, this);
                 }
             }
             if (actionType != ActionType.OnDamaged && actionType != ActionType.OnSevered)
@@ -3938,31 +3981,49 @@ namespace Barotrauma
 
             AnimController.Frozen = false;
 
-            if (GameAnalyticsManager.SendUserStatistics)
-            {
-                string characterType = "Unknown";
-
-                if (this == Controlled)
-                    characterType = "Player";
-                else if (IsRemotePlayer)
-                    characterType = "RemotePlayer";
-                else if (AIController is EnemyAIController)
-                    characterType = "Enemy";
-                else if (AIController is HumanAIController)
-                    characterType = "AICrew";
-
-                string causeOfDeathStr = causeOfDeathAffliction == null ?
-                    causeOfDeath.ToString() : causeOfDeathAffliction.Prefab.Name.Replace(" ", "");
-                GameAnalyticsManager.AddDesignEvent("Kill:" + characterType + ":" + SpeciesName + ":" + causeOfDeathStr);
-            }
-
             CauseOfDeath = new CauseOfDeath(
                 causeOfDeath, causeOfDeathAffliction?.Prefab,
-                causeOfDeathAffliction?.Source ?? LastAttacker, LastDamageSource);
+                causeOfDeathAffliction?.Source, LastDamageSource);
+
+            if (GameAnalyticsManager.SendUserStatistics)
+            {
+                string causeOfDeathStr = causeOfDeathAffliction == null ?
+                    causeOfDeath.ToString() : causeOfDeathAffliction.Prefab.Identifier.Replace(" ", "");
+
+                string characterType = GetCharacterType(this);
+                GameAnalyticsManager.AddDesignEvent("Kill:" + characterType + ":" + causeOfDeathStr);
+                if (CauseOfDeath.Killer != null)
+                {
+                    GameAnalyticsManager.AddDesignEvent("Kill:" + characterType + ":Killer:" + GetCharacterType(CauseOfDeath.Killer));
+                }
+                if (CauseOfDeath.DamageSource != null)
+                {
+                    string damageSourceStr = CauseOfDeath.DamageSource.ToString();
+                    if (CauseOfDeath.DamageSource is Item damageSourceItem) { damageSourceStr = damageSourceItem.ToString(); }
+                    GameAnalyticsManager.AddDesignEvent("Kill:" + characterType + ":DamageSource:" + damageSourceStr);
+                }
+
+                static string GetCharacterType(Character character)
+                {
+                    if (character.IsPlayer)
+                        return "Player";
+                    else if (character.AIController is EnemyAIController)
+                        return "Enemy" + character.SpeciesName;
+                    else if (character.AIController is HumanAIController && character.TeamID == CharacterTeamType.Team2)
+                        return "EnemyHuman";
+                    else if (character.Info != null && character.TeamID == CharacterTeamType.Team1)
+                        return "AICrew";
+                    else if (character.Info != null && character.TeamID == CharacterTeamType.FriendlyNPC)
+                        return "FriendlyNPC";
+                    return "Unknown";
+                }
+            }
+
             OnDeath?.Invoke(this, CauseOfDeath);
 
-            var abilityKiller = new AbilityCharacter(CauseOfDeath.Killer);
-            CheckTalents(AbilityEffectType.OnDieToCharacter, abilityKiller);
+            var abilityCharacterKiller = new AbilityCharacterKiller(CauseOfDeath.Killer);
+            CheckTalents(AbilityEffectType.OnDieToCharacter, abilityCharacterKiller);
+            CauseOfDeath.Killer?.RecordKill(this);
 
             if (GameMain.GameSession != null && Screen.Selected == GameMain.GameScreen)
             {
@@ -3971,7 +4032,7 @@ namespace Barotrauma
 
             KillProjSpecific(causeOfDeath, causeOfDeathAffliction, log);
 
-            if (info != null) 
+            if (info != null)
             {
                 info.CauseOfDeath = CauseOfDeath;
                 info.MissionsCompletedSinceDeath = 0;
@@ -4085,7 +4146,7 @@ namespace Barotrauma
             info?.Remove();
 
 #if CLIENT
-            GameMain.GameSession?.CrewManager?.KillCharacter(this);
+            GameMain.GameSession?.CrewManager?.KillCharacter(this, resetCrewListIndex: false);
 #endif
 
             CharacterList.Remove(this);
@@ -4099,6 +4160,8 @@ namespace Barotrauma
                     Spawner?.AddToRemoveQueue(item);
                 }
             }
+
+            itemSelectedDurations.Clear();
 
             DisposeProjSpecific();
 
@@ -4472,18 +4535,19 @@ namespace Barotrauma
             if (info == null) { return false; }
             info.UnlockedTalents.Add(talentPrefab.Identifier);
             if (characterTalents.Any(t => t.Prefab == talentPrefab)) { return false; }
-
 #if SERVER
             GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.UpdateTalents });
 #endif
             CharacterTalent characterTalent = new CharacterTalent(talentPrefab, this);
-            characterTalent.ActivateTalent(addingFirstTime);
             characterTalents.Add(characterTalent);
+            characterTalent.ActivateTalent(addingFirstTime);
             characterTalent.AddedThisRound = addingFirstTime;
 
             if (addingFirstTime)
             {
-                OnTalentGiven(talentPrefab.Identifier);
+                OnTalentGiven(talentPrefab);
+                GameAnalyticsManager.AddDesignEvent("TalentUnlocked:" + (info.Job?.Prefab.Identifier ?? "None") + ":" + talentPrefab.Identifier,
+                    GameMain.GameSession?.Campaign?.TotalPlayTime ?? 0.0);
             }
             return true;
         }
@@ -4491,6 +4555,24 @@ namespace Barotrauma
         public bool HasTalent(string identifier)
         {
             return info.UnlockedTalents.Contains(identifier);
+        }
+
+        public bool HasUnlockedAllTalents()
+        {
+            if (TalentTree.JobTalentTrees.TryGetValue(Info.Job.Prefab.Identifier, out TalentTree talentTree))
+            {
+                foreach (TalentSubTree talentSubTree in talentTree.TalentSubTrees)
+                {
+                    foreach (TalentOption talentOption in talentSubTree.TalentOptionStages)
+                    {
+                        if (talentOption.Talents.None(t => HasTalent(t.Identifier)))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
         }
 
         public static IEnumerable<Character> GetFriendlyCrew(Character character)
@@ -4552,7 +4634,7 @@ namespace Barotrauma
         }
 
         partial void OnMoneyChanged(int prevAmount, int newAmount);
-        partial void OnTalentGiven(string talentIdentifier);
+        partial void OnTalentGiven(TalentPrefab talentPrefab);
 
         /// <summary>
         /// This dictionary is used for stats that are required very frequently. Not very performant, but easier to develop with for now.
@@ -4722,6 +4804,51 @@ namespace Barotrauma
         }
         public Character Character { get; set; }
         public Character Killer { get; set; }
+    }
+
+    class AbilityAttackData : AbilityObject, IAbilityCharacter
+    {
+        public float DamageMultiplier { get; set; } = 1f;
+        public float AddedPenetration { get; set; } = 0f;
+        public List<Affliction> Afflictions { get; set; }
+        public bool ShouldImplode { get; set; } = false;
+        public Attack SourceAttack { get; }
+        public Character Character { get; set; }
+        public Character Attacker { get; set; }
+
+        public AbilityAttackData(Attack sourceAttack, Character character)
+        {
+            SourceAttack = sourceAttack;
+            Character = character;
+        }
+    }
+
+    class AbilityAttackResult : AbilityObject, IAbilityAttackResult
+    {
+        public AttackResult AttackResult { get; set; }
+
+        public AbilityAttackResult(AttackResult attackResult)
+        {
+            AttackResult = attackResult;
+        }
+    }
+
+    class AbilityCharacterKiller : AbilityObject, IAbilityCharacter
+    {
+        public AbilityCharacterKiller(Character character)
+        {
+            Character = character;
+        }
+        public Character Character { get; set; }
+    }
+
+    class AbilityOrderedCharacter : AbilityObject, IAbilityCharacter
+    {
+        public AbilityOrderedCharacter(Character character)
+        {
+            Character = character;
+        }
+        public Character Character { get; set; }
     }
 
 }

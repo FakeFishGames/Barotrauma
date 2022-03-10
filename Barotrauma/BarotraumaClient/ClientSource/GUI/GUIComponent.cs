@@ -317,7 +317,10 @@ namespace Barotrauma
             set
             {
                 selected = value;
-                Children.ForEach(c => c.Selected = value);
+                foreach (var child in Children)
+                {
+                    child.Selected = value;
+                }
             }
         }
         public virtual ComponentState State
@@ -537,7 +540,10 @@ namespace Barotrauma
             //would be real nice to un-jank this some day
             ForceUpdate();
             ForceUpdate();
-            foreach (var child in Children) { child.ForceLayoutRecalculation(); }
+            foreach (var child in Children) 
+            { 
+                child.ForceLayoutRecalculation(); 
+            }
         }
 
         public void ForceUpdate() => Update((float)Timing.Step);
@@ -547,7 +553,10 @@ namespace Barotrauma
         /// </summary>
         public void UpdateChildren(float deltaTime, bool recursive)
         {
-            RectTransform.Children.ForEach(c => c.GUIComponent.UpdateManually(deltaTime, recursive, recursive));
+            foreach (var child in RectTransform.Children)
+            {
+                child.GUIComponent.UpdateManually(deltaTime, recursive, recursive);
+            }
         }
         #endregion
 
@@ -583,7 +592,10 @@ namespace Barotrauma
         /// </summary>
         public virtual void DrawChildren(SpriteBatch spriteBatch, bool recursive)
         {
-            RectTransform.Children.ForEach(c => c.GUIComponent.DrawManually(spriteBatch, recursive, recursive));
+            foreach (RectTransform child in RectTransform.Children)
+            {
+                child.GUIComponent.DrawManually(spriteBatch, recursive, recursive);
+            }
         }
 
         protected Color _currentColor;
@@ -764,8 +776,8 @@ namespace Barotrauma
             {
                 toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), richTextData, toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
                 toolTipBlock.RectTransform.NonScaledSize = new Point(
-                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + padding.X + toolTipBlock.Padding.X + toolTipBlock.Padding.Z),
-                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).Y + padding.Y + toolTipBlock.Padding.Y + toolTipBlock.Padding.W));
+                    (int)(toolTipBlock.Font.MeasureString(toolTipBlock.WrappedText).X + padding.X + toolTipBlock.Padding.X + toolTipBlock.Padding.Z),
+                    (int)(toolTipBlock.Font.MeasureString(toolTipBlock.WrappedText).Y + padding.Y + toolTipBlock.Padding.Y + toolTipBlock.Padding.W));
                 toolTipBlock.userData = toolTip;
             }
 
@@ -1007,8 +1019,10 @@ namespace Barotrauma
                 case "gridtext":
                     LoadGridText(element, parent);
                     return null;
+                case "conditional":
+                    break;
                 default:
-                    throw new NotImplementedException("Loading GUI component \""+element.Name+"\" from XML is not implemented.");
+                    throw new NotImplementedException("Loading GUI component \"" + element.Name + "\" from XML is not implemented.");
             }
 
             if (component != null)
@@ -1079,6 +1093,29 @@ namespace Barotrauma
                         var maxVersion = new Version(attribute.Value);
                         if (GameMain.Version > maxVersion) { return false; }
                         break;
+                    case "buildconfiguration":
+                        switch (attribute.Value.ToString().ToLowerInvariant())
+                        {
+                            case "debug":
+#if DEBUG
+                                return true;
+#else
+                                break;
+#endif
+                            case "unstable":
+#if UNSTABLE
+                                return true;
+#else
+                                break;
+#endif
+                            case "release":
+#if !DEBUG && !UNSTABLE
+                                return true;
+#else
+                                break;
+#endif
+                        }
+                        return false;
                 }
             }
 

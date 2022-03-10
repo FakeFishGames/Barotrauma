@@ -94,37 +94,28 @@ namespace Barotrauma.Items.Components
 
             if (targetCharacter != null) { return; }
 
-            if (tainted)
-            {
-                if (selectedTaintedEffect != null)
-                {
-                    float selectedTaintedEffectStrength = item.ConditionPercentage / 100.0f * selectedTaintedEffect.MaxStrength;
-                    character.CharacterHealth.ApplyAffliction(null, selectedTaintedEffect.Instantiate(selectedTaintedEffectStrength));
-                    var existingAffliction = character.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedTaintedEffect);
-                    if (existingAffliction != null)
-                    {
-                        existingAffliction.Strength = selectedTaintedEffectStrength;
-                    }
-                    targetCharacter = character;
-#if SERVER
-                    item.CreateServerEvent(this);
-#endif      
-                }
-            }
             if (selectedEffect != null)
             {
-                ApplyStatusEffects(ActionType.OnWearing, 1.0f);
-                float selectedEffectStrength = item.ConditionPercentage / 100.0f * selectedEffect.MaxStrength;
-                character.CharacterHealth.ApplyAffliction(null, selectedEffect.Instantiate(selectedEffectStrength));
-                var existingAffliction = character.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedEffect);
-                if (existingAffliction != null)
-                {
-                    existingAffliction.Strength = selectedEffectStrength;
-                }
                 targetCharacter = character;
+                ApplyStatusEffects(ActionType.OnWearing, 1.0f);
+                float selectedEffectStrength = GetCombinedEffectStrength();
+                character.CharacterHealth.ApplyAffliction(null, selectedEffect.Instantiate(selectedEffectStrength));
+                var affliction = character.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedEffect);
+                if (affliction != null) { affliction.Strength = selectedEffectStrength; }
 #if SERVER
                 item.CreateServerEvent(this);
 #endif      
+            }
+            if (tainted && selectedTaintedEffect != null)
+            {
+                float selectedTaintedEffectStrength = GetCombinedTaintedEffectStrength();
+                character.CharacterHealth.ApplyAffliction(null, selectedTaintedEffect.Instantiate(selectedTaintedEffectStrength));
+                var affliction = character.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedTaintedEffect);
+                if (affliction != null) { affliction.Strength = selectedTaintedEffectStrength; }
+                targetCharacter = character;
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
             }
             foreach (Item containedItem in item.ContainedItems)
             {
@@ -142,13 +133,14 @@ namespace Barotrauma.Items.Components
                     (rootContainer == null || !targetCharacter.HasEquippedItem(rootContainer) || !targetCharacter.Inventory.IsInLimbSlot(rootContainer, InvSlotType.HealthInterface)))
                 {
                     item.ApplyStatusEffects(ActionType.OnSevered, 1.0f, targetCharacter);
-                    targetCharacter.CharacterHealth.ReduceAffliction(null, selectedEffect.Identifier, selectedEffect.MaxStrength);
-                    if (tainted)
-                    {
-                        targetCharacter.CharacterHealth.ReduceAffliction(null, selectedTaintedEffect.Identifier, selectedTaintedEffect.MaxStrength);
-                    }
-                    targetCharacter = null;
                     IsActive = false;
+
+                    var affliction = targetCharacter.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedEffect);
+                    if (affliction != null) { affliction.Strength = GetCombinedEffectStrength(); }
+                    var taintedAffliction = targetCharacter.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedTaintedEffect);
+                    if (taintedAffliction != null) { taintedAffliction.Strength = GetCombinedTaintedEffectStrength(); }
+
+                    targetCharacter = null;
                 }
             }
         }
@@ -182,6 +174,36 @@ namespace Barotrauma.Items.Components
                 }
                 return false;
             }
+        }
+
+        private float GetCombinedEffectStrength()
+        {
+            float effectStrength = 0.0f;
+            foreach (Item otherItem in targetCharacter.Inventory.FindAllItems(recursive: true))
+            {
+                var geneticMaterial = otherItem.GetComponent<GeneticMaterial>();
+                if (geneticMaterial == null || !geneticMaterial.IsActive) { continue; }
+                if (geneticMaterial.selectedEffect == selectedEffect)
+                {
+                    effectStrength += otherItem.ConditionPercentage / 100.0f * selectedEffect.MaxStrength;
+                }
+            }
+            return effectStrength;
+        }
+
+        private float GetCombinedTaintedEffectStrength()
+        {
+            float taintedEffectStrength = 0.0f;
+            foreach (Item otherItem in targetCharacter.Inventory.FindAllItems(recursive: true))
+            {
+                var geneticMaterial = otherItem.GetComponent<GeneticMaterial>();
+                if (geneticMaterial == null || !geneticMaterial.IsActive) { continue; }
+                if (selectedTaintedEffect != null && geneticMaterial.selectedTaintedEffect == selectedTaintedEffect)
+                {
+                    taintedEffectStrength += otherItem.ConditionPercentage / 100.0f * selectedTaintedEffect.MaxStrength;
+                }
+            }
+            return taintedEffectStrength;
         }
 
         private float GetTaintedProbabilityOnRefine(Character user)

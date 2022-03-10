@@ -132,7 +132,7 @@ namespace Barotrauma.Items.Components
                     Stretch = true, 
                     RelativeSpacing = 0.03f
                 };
-                    var inputLabel = new GUITextBlock(new RectTransform(Vector2.One, separatorArea.RectTransform), TextManager.Get("uilabel.input"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
+                    var inputLabel = new GUITextBlock(new RectTransform(Vector2.One, separatorArea.RectTransform), TextManager.Get("fabricator.input", fallBackTag: "uilabel.input"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
                     inputLabel.RectTransform.Resize(new Point((int) inputLabel.Font.MeasureString(inputLabel.Text).X, inputLabel.RectTransform.Rect.Height));
                     new GUIFrame(new RectTransform(Vector2.One, separatorArea.RectTransform), style: "HorizontalLine");
 
@@ -302,6 +302,12 @@ namespace Barotrauma.Items.Components
             }
 
             HideEmptyItemListCategories();
+
+            if (selectedItem != null)
+            {
+                //reselect to recreate the info based on the new user's skills
+                SelectItem(character, selectedItem);
+            }
         }
 
         private void DrawInputOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
@@ -343,13 +349,14 @@ namespace Barotrauma.Items.Components
                             foreach (Item it in availableItems)
                             {
                                 if (it.ParentInventory == inputContainer.Inventory) { continue; }
-                                var rootContainer = it.GetRootContainer();
-                                if (rootContainer?.OwnInventory?.visualSlots == null) { continue; }
-                                int availableSlotIndex = rootContainer.OwnInventory.FindIndex(it.Container == rootContainer ? it : it.Container);
+                                var rootInventoryOwner = it.GetRootInventoryOwner();
+                                Inventory rootInventory = (rootInventoryOwner as Item)?.OwnInventory as Inventory ?? (rootInventoryOwner as Character)?.Inventory;
+                                if (rootInventory?.visualSlots == null) { continue; }                                
+                                int availableSlotIndex = rootInventory.FindIndex((it.Container != rootInventoryOwner ? it.Container : it) ?? it);
                                 if (availableSlotIndex < 0) { continue; }
-                                if (rootContainer.OwnInventory.visualSlots[availableSlotIndex].HighlightTimer <= 0.0f)
+                                if (rootInventory.visualSlots[availableSlotIndex].HighlightTimer <= 0.0f)
                                 {
-                                    rootContainer.OwnInventory.visualSlots[availableSlotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
+                                    rootInventory.visualSlots[availableSlotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
                                     if (slotIndex < inputContainer.Capacity)
                                     {
                                         inputContainer.Inventory.visualSlots[slotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
@@ -406,9 +413,16 @@ namespace Barotrauma.Items.Components
                         {
                             toolTipText += " " + (int)Math.Round(requiredItem.MinCondition * 100) + "%";
                         }
-                        else if(requiredItem.MaxCondition < 1.0f)
+                        else if (requiredItem.MaxCondition < 1.0f)
                         {
-                            toolTipText += " 0-" + (int)Math.Round(requiredItem.MaxCondition * 100) + "%";
+                            if (requiredItem.MaxCondition <= 0.0f)
+                            {
+                                toolTipText += " " + (int)Math.Round(requiredItem.MaxCondition * 100) + "%";
+                            }
+                            else
+                            {
+                                toolTipText += " 0-" + (int)Math.Round(requiredItem.MaxCondition * 100) + "%";
+                            }
                         }
                         else if (requiredItem.MaxCondition <= 0.0f)
                         {
@@ -523,16 +537,6 @@ namespace Barotrauma.Items.Components
             
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.9f), selectedItemFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f };
             var paddedReqFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.9f), selectedItemReqsFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f };
-
-            /*var itemIcon = selectedItem.TargetItem.InventoryIcon ?? selectedItem.TargetItem.sprite;
-            if (itemIcon != null)
-            {
-                GUIImage img = new GUIImage(new RectTransform(new Point(40, 40), paddedFrame.RectTransform),
-                    itemIcon, scaleToFit: true)
-                {
-                    Color = selectedItem.TargetItem.InventoryIconColor
-                };
-            }*/
 
             string itemName = GetRecipeNameAndAmount(selectedItem);
             string name = itemName;
@@ -732,8 +736,6 @@ namespace Barotrauma.Items.Components
             Character user = Entity.FindEntityByID(userID) as Character;
 
             State = newState;
-            timeUntilReady = newTimeUntilReady;
-
             if (newState == FabricatorState.Stopped || itemIndex == -1)
             {
                 CancelFabricating();
@@ -747,6 +749,7 @@ namespace Barotrauma.Items.Components
                 SelectItem(user, fabricationRecipes[itemIndex]);
                 StartFabricating(fabricationRecipes[itemIndex], user);
             }
+            timeUntilReady = newTimeUntilReady;
         }
     }
 }

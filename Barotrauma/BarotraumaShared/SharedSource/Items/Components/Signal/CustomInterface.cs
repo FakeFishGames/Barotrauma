@@ -236,6 +236,13 @@ namespace Barotrauma.Items.Components
             {
                 ciElement.Connection = item.Connections?.FirstOrDefault(c => c.Name == ciElement.ConnectionName);
             }
+#if SERVER
+            //make sure the clients know about the states of the checkboxes and text fields
+            if (item.Submarine == null || !item.Submarine.Loading)
+            {
+                item.CreateServerEvent(this);
+            }
+#endif
         }
 
         partial void UpdateLabelsProjSpecific();
@@ -301,7 +308,6 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            UpdateProjSpecific();
             foreach (CustomInterfaceElement ciElement in customInterfaceElementList)
             {
                 if (!ciElement.ContinuousSignal) { continue; }
@@ -317,8 +323,6 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-
-        partial void UpdateProjSpecific();
 
         public override XElement Save(XElement parentElement)
         {

@@ -17,7 +17,7 @@ namespace Barotrauma
 
         public NPCWaitAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
 
-        private List<Character> affectedNpcs = null;
+        private IEnumerable<Character> affectedNpcs;
 
         private AIObjectiveGoTo gotoObjective;
 
@@ -25,7 +25,7 @@ namespace Barotrauma
         {
             if (isFinished) { return; }
 
-            affectedNpcs = ParentEvent.GetTargets(NPCTag).Where(c => c is Character).Select(c => c as Character).ToList();
+            affectedNpcs = ParentEvent.GetTargets(NPCTag).Where(c => c is Character).Select(c => c as Character);
 
             foreach (var npc in affectedNpcs)
             {
@@ -62,7 +62,7 @@ namespace Barotrauma
             {
                 foreach (var npc in affectedNpcs)
                 {
-                    if (npc.Removed || !(npc.AIController is HumanAIController humanAiController)) { continue; }
+                    if (npc.Removed || !(npc.AIController is HumanAIController)) { continue; }
                     if (gotoObjective != null)
                     {
                         gotoObjective.Abandon = true;

@@ -1584,6 +1584,10 @@ namespace Barotrauma
                         {
                             containedState = item.Condition / item.MaxCondition;
                         }
+                        else if (itemContainer.ShowTotalStackCapacityInContainedStateIndicator)
+                        {
+                            containedState = itemContainer.Inventory.AllItems.Count() / (float)(itemContainer.GetMaxStackSize(0) * itemContainer.Capacity);
+                        }
                         else
                         {
                             var containedItem = itemContainer.Inventory.slots[Math.Max(itemContainer.ContainedStateIndicatorSlot, 0)].FirstOrDefault();

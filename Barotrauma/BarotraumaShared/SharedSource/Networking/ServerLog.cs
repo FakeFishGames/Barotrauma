@@ -81,8 +81,7 @@ namespace Barotrauma.Networking
         public const string SavePath = "ServerLogs";
         
         private readonly Queue<LogMessage> lines;
-
-        private int unsavedLineCount;
+        private readonly Queue<LogMessage> unsavedLines;
 
         private readonly bool[] msgTypeHidden = new bool[Enum.GetValues(typeof(MessageType)).Length];
 
@@ -98,6 +97,7 @@ namespace Barotrauma.Networking
         {
             ServerName = serverName;
             lines = new Queue<LogMessage>();
+            unsavedLines = new Queue<LogMessage>();
 
             foreach (MessageType messageType in Enum.GetValues(typeof(MessageType)))
             {
@@ -117,22 +117,19 @@ namespace Barotrauma.Networking
 #endif
 
             lines.Enqueue(newText);
+            unsavedLines.Enqueue(newText);
 
 #if CLIENT
             if (listBox != null)
             {
                 AddLine(newText);
-
                 listBox.UpdateScrollBarSize();
             }
 #endif
-            
-            unsavedLineCount++;
-
-            if (unsavedLineCount >= LinesPerFile)
+            if (unsavedLines.Count() >= LinesPerFile)
             {
                 Save();
-                unsavedLineCount = 0;
+                unsavedLines.Clear();
             }
 
             while (lines.Count > LinesPerFile)
@@ -176,7 +173,7 @@ namespace Barotrauma.Networking
 
             try
             {
-                File.WriteAllLines(filePath, lines.Select(l => l.SanitizedText));
+                File.WriteAllLines(filePath, unsavedLines.Select(l => l.SanitizedText));
             }
             catch (Exception e)
             {

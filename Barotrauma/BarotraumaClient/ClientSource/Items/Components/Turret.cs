@@ -580,14 +580,20 @@ namespace Barotrauma.Items.Components
 
         private void GetAvailablePower(out float availableCharge, out float availableCapacity)
         {
-            var batteries = item.GetConnectedComponents<PowerContainer>();
-
             availableCharge = 0.0f;
             availableCapacity = 0.0f;
-            foreach (PowerContainer battery in batteries)
+            if (item.Connections == null) { return; }
+            foreach (Connection c in item.Connections)
             {
-                availableCharge += battery.Charge;
-                availableCapacity += battery.Capacity;
+                var recipients = c.Recipients;
+                foreach (Connection recipient in recipients)
+                {
+                    if (!recipient.IsPower || !recipient.IsOutput) { continue; }
+                    var battery = recipient.Item?.GetComponent<PowerContainer>();
+                    if (battery == null) { continue; }
+                    availableCharge += battery.Charge;
+                    availableCapacity += battery.Capacity;
+                }
             }
         }
 
@@ -647,7 +653,9 @@ namespace Barotrauma.Items.Components
             bool readyToFire = reload <= 0.0f && charged && availableAmmo.Any(p => p != null);
             if (ShowChargeIndicator && PowerConsumption > 0.0f)
             {
-                powerIndicator.Color = charged ? GUI.Style.Green : GUI.Style.Red;
+                powerIndicator.Color = charged ? 
+                    (HasPowerToShoot() ? GUI.Style.Green : GUI.Style.Orange) : 
+                    GUI.Style.Red;
                 if (flashLowPower)
                 {
                     powerIndicator.BarSize = 1;

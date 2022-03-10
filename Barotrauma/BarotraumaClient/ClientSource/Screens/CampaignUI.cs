@@ -45,6 +45,8 @@ namespace Barotrauma
 
         public UpgradeStore UpgradeStore { get; set; }
 
+        public MedicalClinicUI MedicalClinic { get; set; }
+
         public CampaignUI(CampaignMode campaign, GUIComponent container)
         {
             Campaign = campaign;
@@ -149,6 +151,7 @@ namespace Barotrauma
                         if (Campaign.Money >= CampaignMode.HullRepairCost)
                         {
                             Campaign.Money -= CampaignMode.HullRepairCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(CampaignMode.HullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
                             Campaign.PurchasedHullRepairs = true;
                         }
                     }
@@ -194,6 +197,7 @@ namespace Barotrauma
                         if (Campaign.Money >= CampaignMode.ItemRepairCost)
                         {
                             Campaign.Money -= CampaignMode.ItemRepairCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(CampaignMode.ItemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
                             Campaign.PurchasedItemRepairs = true;
                         }
                     }
@@ -246,6 +250,7 @@ namespace Barotrauma
                         if (Campaign.Money >= CampaignMode.ShuttleReplaceCost)
                         {
                             Campaign.Money -= CampaignMode.ShuttleReplaceCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(CampaignMode.ShuttleReplaceCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
                             Campaign.PurchasedLostShuttles = true;
                         }
                     }
@@ -269,6 +274,9 @@ namespace Barotrauma
 
             // Submarine buying tab
             tabs[(int)CampaignMode.InteractionType.PurchaseSub] = new GUIFrame(new RectTransform(Vector2.One, container.RectTransform, Anchor.TopLeft), color: Color.Black * 0.9f);
+
+            tabs[(int)CampaignMode.InteractionType.MedicalClinic] = new GUIFrame(new RectTransform(Vector2.One, container.RectTransform), color: Color.Black * 0.9f);
+            MedicalClinic = new MedicalClinicUI(Campaign.MedicalClinic, GetTabContainer(CampaignMode.InteractionType.MedicalClinic));
 
             // mission info -------------------------------------------------------------------------
 
@@ -354,6 +362,10 @@ namespace Barotrauma
 
                 case CampaignMode.InteractionType.Store:
                     Store?.Update(deltaTime);
+                    break;
+                
+                case CampaignMode.InteractionType.MedicalClinic:
+                    MedicalClinic?.Update(deltaTime);
                     break;
             }
         }

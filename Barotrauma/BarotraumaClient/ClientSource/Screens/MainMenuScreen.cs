@@ -115,7 +115,7 @@ namespace Barotrauma
 
 #if TEST_REMOTE_CONTENT
 
-            var doc = XMLExtensions.TryLoadXml("Content/UI/MenuTextTest.xml");
+            var doc = XMLExtensions.TryLoadXml("Content/UI/MenuContent.xml");
             if (doc?.Root != null)
             {
                 foreach (XElement subElement in doc?.Root.Elements())
@@ -501,8 +501,6 @@ namespace Barotrauma
             
             ResetButtonStates(null);
 
-            GameAnalyticsManager.SetCustomDimension01("");
-
             if (GameMain.SteamWorkshopScreen != null)
             {
                 CoroutineManager.StartCoroutine(GameMain.SteamWorkshopScreen.RefreshDownloadState());
@@ -719,7 +717,7 @@ namespace Barotrauma
         }
 #endregion
 
-        public void QuickStart(bool fixedSeed = false, string sub = null, float difficulty = 40, LevelGenerationParams levelGenerationParams = null)
+        public void QuickStart(bool fixedSeed = false, string sub = null, float difficulty = 50, LevelGenerationParams levelGenerationParams = null)
         {
             if (fixedSeed)
             {
@@ -1019,7 +1017,10 @@ namespace Barotrauma
 
             if (backgroundSprite == null)
             {
-                backgroundSprite = (LocationType.List.Where(l => l.UseInMainMenu).GetRandom())?.GetPortrait(0);
+#if UNSTABLE
+                backgroundSprite = new Sprite("Content/UnstableBackground.png", sourceRectangle: null);
+#endif
+                backgroundSprite ??= LocationType.List.Where(l => l.UseInMainMenu).GetRandom()?.GetPortrait(0);
             }
 
             if (backgroundSprite != null)
@@ -1159,7 +1160,7 @@ namespace Barotrauma
             //GameMain.LobbyScreen.Select();
         }
 
-        #region UI Methods
+#region UI Methods
         private void CreateCampaignSetupUI()
         {
             menuTabs[(int)Tab.NewGame].ClearChildren();
@@ -1395,7 +1396,7 @@ namespace Barotrauma
                         return false;
                     }
 
-                    if (ForbiddenWordFilter.IsForbidden(name, out string forbiddenWord))
+                    if (isPublicBox.Selected && ForbiddenWordFilter.IsForbidden(name, out string forbiddenWord))
                     {
                         var msgBox = new GUIMessageBox("", 
                             TextManager.GetWithVariables("forbiddenservernameverification", new string[] { "[forbiddenword]", "[servername]" }, new string[] { forbiddenWord, name }), 
@@ -1432,7 +1433,7 @@ namespace Barotrauma
             playstyleDescription.TextAlignment = playstyleDescription.WrappedText.Contains('\n') ?
                Alignment.CenterLeft : Alignment.Center;
         }
-        #endregion
+#endregion
 
         private void FetchRemoteContent()
         {

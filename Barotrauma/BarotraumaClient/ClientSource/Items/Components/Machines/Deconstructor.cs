@@ -63,7 +63,7 @@ namespace Barotrauma.Items.Components
                     Stretch = true, 
                     RelativeSpacing = 0.05f
                 };
-                    var inputLabel = new GUITextBlock(new RectTransform(Vector2.One, inputLabelArea.RectTransform), TextManager.Get("uilabel.input"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
+                    var inputLabel = new GUITextBlock(new RectTransform(Vector2.One, inputLabelArea.RectTransform), TextManager.Get("deconstructor.input", fallBackTag: "uilabel.input"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
                     inputLabel.RectTransform.Resize(new Point((int) inputLabel.Font.MeasureString(inputLabel.Text).X, inputLabel.RectTransform.Rect.Height));
                     new GUIFrame(new RectTransform(Vector2.One, inputLabelArea.RectTransform), style: "HorizontalLine");
 

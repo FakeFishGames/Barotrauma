@@ -521,6 +521,7 @@ namespace Barotrauma
                 if (targetCharacter == null) { return; }
 
                 targetCharacter.GodMode = !targetCharacter.GodMode;
+                NewMessage((targetCharacter.GodMode ? "Enabled godmode on " : "Disabled godmode on " + targetCharacter.Name), Color.White);
             },
             () =>
             {
@@ -977,15 +978,18 @@ namespace Barotrauma
                 else
                 {
                     NewMessage("Level seed: " + Level.Loaded.Seed);
-                    NewMessage("Level size: " + Level.Loaded.Size.X+"x"+ Level.Loaded.Size.Y);
+                    NewMessage("Level generation params: " + Level.Loaded.GenerationParams.Identifier);
+                    NewMessage("Adjacent locations: " + (Level.Loaded.StartLocation?.Type.Identifier ?? "none") + ", " + (Level.Loaded.StartLocation?.Type.Identifier ?? "none"));
+                    NewMessage("Mirrored: " + Level.Loaded.Mirrored);
+                    NewMessage("Level size: " + Level.Loaded.Size.X + "x" + Level.Loaded.Size.Y);
                     NewMessage("Minimum main path width: " + (Level.Loaded.LevelData?.MinMainPathWidth?.ToString() ?? "unknown"));
                 }
             },null));
             
             commands.Add(new Command("teleportsub", "teleportsub [start/end/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
             {
-                if (Submarine.MainSub == null || Level.Loaded == null) return;
-                if (Level.Loaded.Type == LevelData.LevelType.Outpost)
+                if (Submarine.MainSub == null) { return; }
+                if (Level.Loaded?.Type == LevelData.LevelType.Outpost && GameMain.GameSession != null)
                 {
                     NewMessage("The teleportsub command is unavailable in outpost levels!", Color.Red);
                     return;
@@ -1001,6 +1005,11 @@ namespace Barotrauma
                 }
                 else if (args[0].Equals("start", StringComparison.OrdinalIgnoreCase))
                 {
+                    if (Level.Loaded == null)
+                    {
+                        NewMessage("Can't teleport the sub to the start of the level (no level loaded).", Color.Red);
+                        return;
+                    }
                     Vector2 pos = Level.Loaded.StartPosition;
                     if (Level.Loaded.StartOutpost != null)
                     {
@@ -1010,6 +1019,11 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (Level.Loaded == null)
+                    {
+                        NewMessage("Can't teleport the sub to the end of the level (no level loaded).", Color.Red);
+                        return;
+                    }
                     Vector2 pos = Level.Loaded.EndPosition;
                     if (Level.Loaded.EndOutpost != null)
                     {
@@ -1030,6 +1044,20 @@ namespace Barotrauma
             commands.Add(new Command("crash", "crash: Crashes the game.", (string[] args) =>
             {
                 throw new Exception("crash command issued");
+            }));
+
+            commands.Add(new Command("fastforward", "fastforward [seconds]: Fast forwards the game by x seconds. Note that large numbers may cause a long freeze.", (string[] args) =>
+            {
+                float seconds = 0;
+                if (args.Length > 0) { float.TryParse(args[0], out seconds); }
+                System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+                sw.Start();
+                for (int i = 0; i < seconds * Timing.FixedUpdateRate; i++)
+                {
+                    Screen.Selected?.Update(Timing.Step);
+                }
+                sw.Stop();
+                NewMessage($"Fast-forwarded by {seconds} seconds (took {sw.ElapsedMilliseconds / 1000.0f} s).");
             }));
 
             commands.Add(new Command("removecharacter", "removecharacter [character name]: Immediately deletes the specified character.", (string[] args) =>
@@ -1189,6 +1217,7 @@ namespace Barotrauma
             {
                 foreach (Item it in Item.ItemList)
                 {
+                    if (it.GetComponent<GeneticMaterial>() != null) { continue; }
                     it.Condition = it.MaxCondition;
                 }
             }, null, true));
@@ -1523,6 +1552,7 @@ namespace Barotrauma
                     if (int.TryParse(args[0], out int money))
                     {
                         campaign.Money += money;
+                        GameAnalyticsManager.AddMoneyGainedEvent(money, GameAnalyticsManager.MoneySource.Cheat, "console");
                     }
                     else
                     {

@@ -74,6 +74,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(true, false, description: "Should the OnUse StatusEffects trigger when docking (on vanilla docking ports these effects emit particles and play a sound).)")]
+        public bool ApplyEffectsOnDocking
+        {
+            get;
+            set;
+        }
+
         [Editable, Serialize(DirectionType.None, false, description: "Which direction the port is allowed to dock in. For example, \"Top\" would mean the port can dock to another port above it.\n"+
             "Normally there's no need to touch this setting, but if you notice the docking position is incorrect (for example due to some unusual docking port configuration without hulls or doors), you can use this to enforce the direction.")]
         public DirectionType ForceDockingDirection { get; set; }
@@ -261,7 +268,7 @@ namespace Barotrauma.Items.Components
                 DockingDir = GetDir(DockingTarget);
                 DockingTarget.DockingDir = -DockingDir;
 
-                if (applyEffects)
+                if (applyEffects && ApplyEffectsOnDocking)
                 {
                     ApplyStatusEffects(ActionType.OnUse, 1.0f);
                 }

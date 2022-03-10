@@ -26,6 +26,8 @@ namespace Barotrauma.Items.Components
 
         public PhysicsBody ParentBody;
 
+        private bool isOn;
+
         private Turret turret;
 
         [Serialize(100.0f, true, description: "The range of the emitted light. Higher values are more performance-intensive.", alwaysUseInstanceValues: true),
@@ -50,7 +52,7 @@ namespace Barotrauma.Items.Components
             set 
             { 
                 rotation = value;
-                SetLightSourceTransform();
+                SetLightSourceTransformProjSpecific();
             }
         }
 
@@ -85,12 +87,13 @@ namespace Barotrauma.Items.Components
         [Editable, Serialize(false, true, description: "Is the light currently on.", alwaysUseInstanceValues: true)]
         public bool IsOn
         {
-            get { return IsActive; }
+            get { return isOn; }
             set
             {
-                if (IsActive == value) { return; }
+                if (isOn == value && IsActive == value) { return; }
 
-                IsActive = value;
+                IsActive = isOn = value;
+                SetLightSourceState(value, value ? lightBrightness : 0.0f);
                 OnStateChanged();
             }
         }
@@ -170,7 +173,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (Light != null)
                 {
-                    Light.Color = IsActive ? lightColor : Color.Transparent;
+                    Light.Color = IsOn ? lightColor : Color.Transparent;
                 }
 #endif
             }
@@ -200,9 +203,8 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (base.IsActive == value) { return; }
-                base.IsActive = value;
-
-                SetLightSourceState(value, value ? lightBrightness : 0.0f);
+                base.IsActive = isOn = value;
+                SetLightSourceState(value, value ? lightBrightness : 0.0f);                
             }
         }
 
@@ -237,6 +239,23 @@ namespace Barotrauma.Items.Components
             turret = item.GetComponent<Turret>();
         }
 
+        public override void OnMapLoaded()
+        {
+            if (item.body == null && powerConsumption <= 0.0f && Parent == null && turret == null && IsOn &&
+                (statusEffectLists == null || !statusEffectLists.ContainsKey(ActionType.OnActive)) && 
+                (IsActiveConditionals == null || IsActiveConditionals.Count == 0))
+            {
+                lightBrightness = 1.0f;
+                SetLightSourceState(true, lightBrightness);
+                SetLightSourceTransformProjSpecific();
+                base.IsActive = false;
+                isOn = true;
+#if CLIENT
+                Light.ParentSub = item.Submarine;
+#endif
+            }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             if (item.AiTarget != null)
@@ -256,7 +275,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            SetLightSourceTransform();
+            SetLightSourceTransformProjSpecific();
 
             PhysicsBody body = ParentBody ?? item.body;
             if (body != null && !body.Enabled)
@@ -338,7 +357,11 @@ namespace Barotrauma.Items.Components
 
         partial void SetLightSourceState(bool enabled, float brightness);
 
-        partial void SetLightSourceTransform();
+        public void SetLightSourceTransform()
+        {
+            SetLightSourceTransformProjSpecific();
+        }
 
+        partial void SetLightSourceTransformProjSpecific();
     }
 }

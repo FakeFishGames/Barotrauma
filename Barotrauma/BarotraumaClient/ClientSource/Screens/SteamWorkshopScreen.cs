@@ -854,7 +854,7 @@ namespace Barotrauma
                         (var it, var lb) = tuple;
                         if (lb.Content.FindChild(item)?.GetChildByUserData("previewimage") is GUIImage previewImage)
                         {
-                            previewImage.Sprite = ((Task<Sprite>)task).Result;
+                            if (task.TryGetResult(out Sprite sprite)) { previewImage.Sprite = sprite; }
                         }
                         else
                         {

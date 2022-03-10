@@ -581,7 +581,11 @@ namespace Barotrauma
             var sortedSelected = enabledRegularPackages
                     .OrderBy(p => -ContentPackage.RegularPackages.IndexOf(p))
                     .ToList();
-            if (previousEnabledRegularPackages.SequenceEqual(sortedSelected)) { return; }
+            if (previousEnabledRegularPackages.SequenceEqual(sortedSelected)) 
+            {
+                CheckModded();
+                return; 
+            }
             enabledRegularPackages.Clear(); enabledRegularPackages.AddRange(sortedSelected);
 
             CharacterPrefab.Prefabs.SortAll();
@@ -600,6 +604,20 @@ namespace Barotrauma
             if (refreshAll)
             {
                 RefreshContentPackageItems(AllEnabledPackages.SelectMany(p => p.Files));
+            }
+
+            CheckModded();
+
+            void CheckModded()
+            {
+                if (AllEnabledPackages.Any(p => p != GameMain.VanillaContent && p.HasMultiplayerIncompatibleContent))
+                {
+                    GameAnalyticsManager.SetCustomDimension01(GameAnalyticsManager.CustomDimensions01.Modded);
+                }
+                else
+                {
+                    GameAnalyticsManager.SetCustomDimension01(GameAnalyticsManager.CustomDimensions01.Vanilla);
+                }
             }
         }
 

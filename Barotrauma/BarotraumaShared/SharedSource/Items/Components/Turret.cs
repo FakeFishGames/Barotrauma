@@ -333,6 +333,7 @@ namespace Barotrauma.Items.Components
             FindLightComponent();
             if (loadedRotationLimits.HasValue) { RotationLimits = loadedRotationLimits.Value; }
             if (loadedBaseRotation.HasValue) { BaseRotation = loadedBaseRotation.Value; }
+            targetRotation = rotation;
             UpdateTransformedBarrelPos();
         }
 
@@ -541,7 +542,7 @@ namespace Barotrauma.Items.Components
 
         public bool HasPowerToShoot()
         {
-            return GetAvailableBatteryPower() >= GetPowerRequiredToShoot();
+            return GetAvailableInstantaneousBatteryPower() >= GetPowerRequiredToShoot();
         }
 
         private bool TryLaunch(float deltaTime, Character character = null, bool ignorePower = false)
@@ -1441,6 +1442,11 @@ namespace Barotrauma.Items.Components
             crosshairPointerSprite?.Remove(); crosshairPointerSprite = null;
             moveSoundChannel?.Dispose(); moveSoundChannel = null;
             WeaponIndicatorSprite?.Remove(); WeaponIndicatorSprite = null;
+            if (powerIndicator != null)
+            {
+                powerIndicator.RectTransform.Parent = null;
+                powerIndicator = null;
+            }
 #endif
         }
 
@@ -1516,7 +1522,7 @@ namespace Barotrauma.Items.Components
                 minRotation += MathHelper.TwoPi;
                 maxRotation += MathHelper.TwoPi;
             }
-            rotation = (minRotation + maxRotation) / 2;
+            targetRotation = rotation = (minRotation + maxRotation) / 2;
 
             UpdateTransformedBarrelPos();
         }
@@ -1537,7 +1543,7 @@ namespace Barotrauma.Items.Components
                 minRotation += MathHelper.TwoPi;
                 maxRotation += MathHelper.TwoPi;
             }
-            rotation = (minRotation + maxRotation) / 2;
+            targetRotation = rotation = (minRotation + maxRotation) / 2;
 
             UpdateTransformedBarrelPos();
         }
@@ -1607,6 +1613,7 @@ namespace Barotrauma.Items.Components
         {
             base.OnItemLoaded();
             FindLightComponent();
+            targetRotation = rotation;
             if (!loadedBaseRotation.HasValue)
             {
                 if (item.FlippedX) { FlipX(relativeToSub: false); }

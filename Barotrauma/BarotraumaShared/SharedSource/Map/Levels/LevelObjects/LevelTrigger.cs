@@ -433,6 +433,32 @@ namespace Barotrauma
             return false;
         }
 
+        /// <summary>
+        /// Are there any active contacts between the physics body and the target entity
+        /// </summary>
+        public static bool CheckContactsForEntity(PhysicsBody triggerBody, Entity targetEntity)
+        {
+            foreach (Fixture fixture in triggerBody.FarseerBody.FixtureList)
+            {
+                ContactEdge contactEdge = fixture.Body.ContactList;
+                while (contactEdge != null)
+                {
+                    if (contactEdge.Contact != null &&
+                        contactEdge.Contact.Enabled &&
+                        contactEdge.Contact.IsTouching)
+                    {
+                        if ((contactEdge.Contact.FixtureA.Body == triggerBody.FarseerBody && GetEntity(contactEdge.Contact.FixtureB) == targetEntity) ||
+                            (contactEdge.Contact.FixtureB.Body == triggerBody.FarseerBody && GetEntity(contactEdge.Contact.FixtureA) == targetEntity))
+                        { 
+                            return true; 
+                        }                        
+                    }
+                    contactEdge = contactEdge.Next;
+                }
+            }
+            return false;
+        }
+
         public static Entity GetEntity(Fixture fixture)
         {
             if (fixture.Body == null || fixture.Body.UserData == null) { return null; }
@@ -472,9 +498,6 @@ namespace Barotrauma
         {
             if (ParentTrigger != null && !ParentTrigger.IsTriggered) { return; }
 
-            triggerers.RemoveWhere(t => t.Removed);
-
-            RemoveDistantTriggerers(PhysicsBody, triggerers, WorldPosition);        
 
             bool isNotClient = true;
 #if CLIENT
@@ -518,7 +541,9 @@ namespace Barotrauma
                     }
                 }
             }
-            
+
+            RemoveInActiveTriggerers(PhysicsBody, triggerers);
+
             if (stayTriggeredDelay > 0.0f)
             {
                 if (triggerers.Count == 0)
@@ -538,6 +563,8 @@ namespace Barotrauma
 
             foreach (Entity triggerer in triggerers)
             {
+                if (triggerer.Removed) { continue; }
+
                 ApplyStatusEffects(statusEffects, worldPosition, triggerer, deltaTime, targets);
 
                 if (triggerer is IDamageable damageable)
@@ -583,15 +610,27 @@ namespace Barotrauma
             }
         }
 
-        public static void RemoveDistantTriggerers(PhysicsBody physicsBody, HashSet<Entity> triggerers, Vector2 calculateDistanceTo)
+        private static readonly List<Entity> triggerersToRemove = new List<Entity>();
+        public static void RemoveInActiveTriggerers(PhysicsBody physicsBody, HashSet<Entity> triggerers)
         {
-            //failsafe to ensure triggerers get removed when they're far from the trigger
             if (physicsBody == null) { return; }
-            float maxExtent = Math.Max(ConvertUnits.ToDisplayUnits(physicsBody.GetMaxExtent() * 5), 5000.0f);
-            triggerers.RemoveWhere(t =>
+
+            triggerersToRemove.Clear();
+            foreach (var triggerer in triggerers)
             {
-                return Vector2.Distance(t.WorldPosition, calculateDistanceTo) > maxExtent;
-            });
+                if (triggerer.Removed)
+                {
+                    triggerersToRemove.Add(triggerer);
+                }
+                else if (!CheckContactsForEntity(physicsBody, triggerer))
+                {
+                    triggerersToRemove.Add(triggerer);
+                }
+            }
+            foreach (var triggerer in triggerersToRemove)
+            {
+                triggerers.Remove(triggerer);
+            }
         }
 
         public static void ApplyStatusEffects(List<StatusEffect> statusEffects, Vector2 worldPosition, Entity triggerer, float deltaTime, List<ISerializableEntity> targets)
@@ -650,13 +689,15 @@ namespace Barotrauma
                 float structureDamage = attack.GetStructureDamage(deltaTime);
                 if (structureDamage > 0.0f)
                 {
-                    Explosion.RangedStructureDamage(worldPosition, attack.DamageRange, structureDamage, levelWallDamage: 0.0f);
+                    Explosion.RangedStructureDamage(worldPosition, attack.DamageRange, structureDamage, levelWallDamage: 0.0f, emitWallDamageParticles: attack.EmitStructureDamageParticles);
                 }
             }
         }
 
         private void ApplyForce(PhysicsBody body)
         {
+            if (body == null) { return; }
+
             float distFactor = 1.0f;
             if (ForceFalloff)
             {

@@ -489,7 +489,7 @@ namespace Barotrauma
             return Priority;
         }
 
-        public static IEnumerable<Affliction> GetSortedAfflictions(Character character) => CharacterHealth.SortAfflictionsBySeverity(character.CharacterHealth.GetAllAfflictions());
+        public static IEnumerable<Affliction> GetSortedAfflictions(Character character, bool excludeBuffs = true) => CharacterHealth.SortAfflictionsBySeverity(character.CharacterHealth.GetAllAfflictions(), excludeBuffs);
 
         public static IEnumerable<Affliction> GetTreatableAfflictions(Character character)
         {

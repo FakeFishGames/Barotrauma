@@ -1,20 +1,16 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Networking;
+using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Steam;
 
 namespace Barotrauma
 {
     partial class NetLobbyScreen : Screen
     {
-        //private readonly List<Sprite> jobPreferenceSprites = new List<Sprite>();
-
         private readonly GUIFrame infoFrame, modeFrame;
         private readonly GUILayoutGroup infoFrameContent;
         private readonly GUIFrame myCharacterFrame;
@@ -221,7 +217,6 @@ namespace Barotrauma
         public SubmarineInfo SelectedShuttle => ShuttleList.SelectedData as SubmarineInfo;
 
         public MultiPlayerCampaignSetupUI CampaignSetupUI;
-        public List<SubmarineInfo> CampaignSubmarines = new List<SubmarineInfo>();
 
         // Passed onto the gamesession when created
         public List<SubmarineInfo> ServerOwnedSubmarines = new List<SubmarineInfo>();
@@ -611,6 +606,7 @@ namespace Barotrauma
             {
                 OnClicked = (btn, obj) =>
                 {
+                    if (GameMain.Client == null) { return true; }
                     GameMain.Client.RequestStartRound();
                     CoroutineManager.StartCoroutine(WaitForStartRound(StartButton), "WaitForStartRound");
                     return true;
@@ -628,7 +624,7 @@ namespace Barotrauma
             {
                 OnSelected = (tickBox) =>
                 {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, autoRestart: tickBox.Selected);
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, autoRestart: tickBox.Selected);
                     return true;
                 }
             };
@@ -655,6 +651,7 @@ namespace Barotrauma
             };
             ServerName.OnDeselected += (textBox, key) =>
             {
+                if (GameMain.Client == null) { return; }
                 if (!textBox.Readonly)
                 {
                     GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Name);
@@ -669,6 +666,7 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("addtofavorites"),
                 OnSelected = (tickbox) =>
                 {
+                    if (GameMain.Client == null) { return true; }
                     ServerInfo info = GameMain.Client.ServerSettings.GetServerListInfo();
                     if (tickbox.Selected)
                     {
@@ -766,6 +764,7 @@ namespace Barotrauma
             };
             ServerMessage.OnDeselected += (textBox, key) =>
             {
+                if (GameMain.Client == null) { return; }
                 if (!textBox.Readonly)
                 {
                     GameMain.Client?.ServerSettings?.ClientAdminWrite(ServerSettings.NetFlags.Message);
@@ -849,7 +848,7 @@ namespace Barotrauma
                 Selected = true,
                 OnSelected = (GUITickBox box) =>
                 {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, useRespawnShuttle: box.Selected);
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, useRespawnShuttle: box.Selected);
                     return true;
                 }
             };
@@ -868,7 +867,7 @@ namespace Barotrauma
             {
                 OnSelected = (component, obj) =>
                 {
-                    GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: true);
+                    GameMain.Client?.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: true);
                     return true;
                 }
             };
@@ -970,7 +969,7 @@ namespace Barotrauma
             {
                 OnClicked = (_, __) =>
                 {
-                    GameMain.Client.RequestSelectMode(ModeList.Content.GetChildIndex(ModeList.Content.GetChildByUserData(GameModePreset.Sandbox)));
+                    GameMain.Client?.RequestSelectMode(ModeList.Content.GetChildIndex(ModeList.Content.GetChildByUserData(GameModePreset.Sandbox)));
                     return true;
                 }
             };
@@ -1026,7 +1025,7 @@ namespace Barotrauma
                         {
                             int missionTypeOr = tickbox.Selected ? (int)tickbox.UserData : (int)MissionType.None;
                             int missionTypeAnd = (int)MissionType.All & (!tickbox.Selected ? (~(int)tickbox.UserData) : (int)MissionType.All);
-                            GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, (int)missionTypeOr, (int)missionTypeAnd);
+                            GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, (int)missionTypeOr, (int)missionTypeAnd);
                             return true;
                         }
                     };
@@ -1059,7 +1058,7 @@ namespace Barotrauma
             SeedBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), seedLabel.RectTransform, Anchor.CenterRight));
             SeedBox.OnDeselected += (textBox, key) =>
             {
-                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.LevelSeed);
+                GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.LevelSeed);
             };
             clientDisabledElements.Add(SeedBox);
             LevelSeed = ToolBox.RandomSeed(8);
@@ -1080,7 +1079,7 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("leveldifficultyexplanation"),
                 OnReleased = (scrollbar, value) =>
                 {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, levelDifficulty: scrollbar.BarScrollValue);
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, levelDifficulty: scrollbar.BarScrollValue);
                     return true;
                 }
             };
@@ -1112,8 +1111,7 @@ namespace Barotrauma
             {
                 OnClicked = (button, obj) =>
                 {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, traitorSetting: -1);
-
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, traitorSetting: -1);
                     return true;
                 }
             };
@@ -1124,8 +1122,7 @@ namespace Barotrauma
             {
                 OnClicked = (button, obj) =>
                 {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, traitorSetting: 1);
-
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, traitorSetting: 1);
                     return true;
                 }
             };
@@ -1143,7 +1140,7 @@ namespace Barotrauma
             {
                 OnClicked = (button, obj) =>
                 {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botCount: -1);
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botCount: -1);
                     return true;
                 }
             };
@@ -1153,7 +1150,7 @@ namespace Barotrauma
             {
                 OnClicked = (button, obj) =>
                 {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botCount: 1);
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botCount: 1);
                     return true;
                 }
             };
@@ -1169,7 +1166,7 @@ namespace Barotrauma
             {
                 OnClicked = (button, obj) =>
                 {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botSpawnMode: -1);
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botSpawnMode: -1);
                     return true;
                 }
             };
@@ -1179,7 +1176,7 @@ namespace Barotrauma
             {
                 OnClicked = (button, obj) =>
                 {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botSpawnMode: 1);
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, botSpawnMode: 1);
                     return true;
                 }
             };
@@ -1345,9 +1342,9 @@ namespace Barotrauma
             StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !GameMain.Client.GameStarted && !CampaignSetupFrame.Visible && !CampaignFrame.Visible;
             ServerName.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             ServerMessage.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            shuttleTickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            shuttleTickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings) && !GameMain.Client.GameStarted;
             SubList.Enabled = !CampaignFrame.Visible && (GameMain.Client.ServerSettings.Voting.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub));
-            ShuttleList.Enabled = ShuttleList.ButtonEnabled = GameMain.Client.HasPermission(ClientPermissions.SelectSub);
+            ShuttleList.Enabled = ShuttleList.ButtonEnabled = GameMain.Client.HasPermission(ClientPermissions.SelectSub) && !GameMain.Client.GameStarted;
             ModeList.Enabled = GameMain.Client.ServerSettings.Voting.AllowModeVoting || GameMain.Client.HasPermission(ClientPermissions.SelectMode);
             LogButtons.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
             GameMain.Client.ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
@@ -1746,6 +1743,7 @@ namespace Barotrauma
 
         public void SetSpectate(bool spectate)
         {
+            if (GameMain.Client == null) { return; }
             this.spectateBox.Selected = spectate;
             if (spectate)
             {
@@ -3576,7 +3574,13 @@ namespace Barotrauma
             return false;
         }
 
-        public bool CheckIfCampaignSubMatches(SubmarineInfo serverSubmarine, string deliveryData)
+        public enum SubmarineDeliveryData
+        {
+            Owned,
+            Campaign
+        }
+        
+        public bool CheckIfCampaignSubMatches(SubmarineInfo serverSubmarine, SubmarineDeliveryData deliveryData)
         {
             if (GameMain.Client == null) return false;
 
@@ -3630,11 +3634,11 @@ namespace Barotrauma
             {
                 FailedSubInfo fileInfo = (FailedSubInfo)userdata;
 
-                if (deliveryData == "owned") //owned!!!!
+                if (deliveryData == SubmarineDeliveryData.Owned)
                 {
                     FailedOwnedSubs.Add(fileInfo);
                 }
-                else if (deliveryData == "campaign")
+                else if (deliveryData == SubmarineDeliveryData.Campaign)
                 {
                     FailedCampaignSubs.Add(fileInfo);
                 }

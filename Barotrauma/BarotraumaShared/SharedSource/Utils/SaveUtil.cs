@@ -7,7 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Xml.Linq;
-using Microsoft.Xna.Framework;
+using Steamworks.Data;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace Barotrauma
 {
@@ -66,6 +67,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Failed to clear folder", e);
+                return;
             }
 
             try
@@ -75,6 +77,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Error saving gamesession", e);
+                return;
             }
 
             try
@@ -107,6 +110,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Error saving submarine", e);
+                return;
             }
 
             try
@@ -356,10 +360,10 @@ namespace Barotrauma
         private static bool DecompressFile(bool writeFile, string sDir, GZipStream zipStream, ProgressDelegate progress, out string fileName)
         {
             fileName = null;
-            
+
             //Decompress file name
             byte[] bytes = new byte[sizeof(int)];
-            int Readed = zipStream.Read(bytes, 0, sizeof(int));
+            int Readed = Read(zipStream, bytes, sizeof(int));
             if (Readed < sizeof(int))
                 return false;
 
@@ -373,29 +377,29 @@ namespace Barotrauma
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < iNameLen; i++)
             {
-                zipStream.Read(bytes, 0, sizeof(char));
+                Read(zipStream, bytes, sizeof(char));
                 char c = BitConverter.ToChar(bytes, 0);
                 sb.Append(c);
             }
             string sFileName = sb.ToString();
-            
+
             fileName = sFileName;
             progress?.Invoke(sFileName);
 
             //Decompress file content
             bytes = new byte[sizeof(int)];
-            zipStream.Read(bytes, 0, sizeof(int));
+            Read(zipStream, bytes, sizeof(int));
             int iFileLen = BitConverter.ToInt32(bytes, 0);
 
             bytes = new byte[iFileLen];
-            zipStream.Read(bytes, 0, bytes.Length);
+            Read(zipStream, bytes, bytes.Length);
 
             string sFilePath = Path.Combine(sDir, sFileName);
             string sFinalDir = Path.GetDirectoryName(sFilePath);
 
             string sDirFull = (string.IsNullOrEmpty(sDir) ? Directory.GetCurrentDirectory() : Path.GetFullPath(sDir)).CleanUpPathCrossPlatform(correctFilenameCase: false);
             string sFinalDirFull = (string.IsNullOrEmpty(sFinalDir) ? Directory.GetCurrentDirectory() : Path.GetFullPath(sFinalDir)).CleanUpPathCrossPlatform(correctFilenameCase: false);
-            
+
             if (!sFinalDirFull.StartsWith(sDirFull, StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidOperationException(
@@ -425,6 +429,26 @@ namespace Barotrauma
                 }
             }
             return true;
+        }
+
+        private static int Read(GZipStream zipStream, byte[] bytes, int amount)
+        {
+            int read = 0;
+
+            // FIXME workaround for .NET6 causing save decompression to fail
+#if NET6_0 && LINUX
+            for (int i = 0; i < amount; i++)
+            {
+                int result = zipStream.ReadByte();
+                if (result < 0) { break; }
+
+                bytes[i] = (byte) result;
+                read++;
+            }
+#else
+            read = zipStream.Read(bytes, 0, amount);
+#endif
+            return read;
         }
 
         public static void DecompressToDirectory(string sCompressedFile, string sDir, ProgressDelegate progress)

@@ -98,22 +98,6 @@ namespace Barotrauma
                 case NetEntityEvent.Type.AssignCampaignInteraction:
                     msg.Write((byte)CampaignInteractionType);
                     break;
-                case NetEntityEvent.Type.Treatment:
-                    {
-                        ItemComponent targetComponent = (ItemComponent)extraData[1];
-                        ActionType actionType = (ActionType)extraData[2];
-                        ushort targetID = (ushort)extraData[3];
-                        Limb targetLimb = (Limb)extraData[4];
-
-                        Character targetCharacter = FindEntityByID(targetID) as Character;
-                        byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
-
-                        msg.Write((byte)components.IndexOf(targetComponent));
-                        msg.WriteRangedInteger((int)actionType, 0, Enum.GetValues(typeof(ActionType)).Length - 1);
-                        msg.Write(targetID);
-                        msg.Write(targetLimbIndex);
-                    }
-                    break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     {
                         ActionType actionType = (ActionType)extraData[1];
@@ -268,6 +252,7 @@ namespace Barotrauma
 
                 msg.Write(Position.X);
                 msg.Write(Position.Y);
+                msg.WriteRangedSingle(body == null ? 0.0f : MathUtils.WrapAngleTwoPi(body.Rotation), 0.0f, MathHelper.TwoPi, 8);
                 msg.Write(Submarine != null ? Submarine.ID : (ushort)0);
             }
             else

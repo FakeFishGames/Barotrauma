@@ -153,12 +153,6 @@ namespace Barotrauma
             return container.Inventory;
         }
 
-        protected override void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
-        {
-            base.PutItem(item, i, user, removeItem, createNetworkEvent);
-            CreateSlots();
-        }
-
         public override void CreateSlots()
         {
             visualSlots ??= new VisualSlot[capacity];
@@ -504,6 +498,13 @@ namespace Barotrauma
             {
                 HUDLayoutSettings.InventoryTopY = visualSlots[0].EquipButtonRect.Y - (int)(15 * GUI.Scale);
             }
+            else
+            {
+                for (int i = 0; i < capacity; i++)
+                {
+                    visualSlots[i].DrawOffset = Vector2.Zero;
+                }
+            }
         }
 
         protected override void ControlInput(Camera cam)
@@ -789,7 +790,7 @@ namespace Barotrauma
             if (quickUseAction != QuickUseAction.Drop)
             {
                 slot.QuickUseButtonToolTip = quickUseAction == QuickUseAction.None ?
-                    "" : TextManager.GetWithVariable("QuickUseAction." + quickUseAction.ToString(), "[equippeditem]", item?.Name);
+                    "" : TextManager.GetWithVariable("QuickUseAction." + quickUseAction.ToString(), "[equippeditem]", character.HeldItems.FirstOrDefault()?.Name ?? item?.Name);
                 if (PlayerInput.PrimaryMouseButtonDown()) { slot.EquipButtonState = GUIComponent.ComponentState.Pressed; }
                 if (PlayerInput.PrimaryMouseButtonClicked())
                 {
@@ -963,7 +964,9 @@ namespace Barotrauma
                 {
                     return QuickUseAction.TakeFromCharacter;
                 }
-                else if (character.HeldItems.Any(i => i.OwnInventory != null && i.OwnInventory.CanBePut(item)) && allowInventorySwap)
+                else if (character.HeldItems.Any(i => 
+                    i.OwnInventory != null && 
+                    (i.OwnInventory.CanBePut(item) || (i.OwnInventory.Capacity == 1 && i.OwnInventory.AllowSwappingContainedItems && i.OwnInventory.Container.CanBeContained(item)))))
                 {
                     return QuickUseAction.PutToEquippedItem;
                 }
@@ -1128,8 +1131,9 @@ namespace Barotrauma
                 case QuickUseAction.PutToEquippedItem:
                     foreach (Item heldItem in character.HeldItems)
                     {
-                        if (heldItem.OwnInventory != null &&
-                            heldItem.OwnInventory.TryPutItem(item, Character.Controlled))
+                        if (heldItem.OwnInventory == null) { continue; }
+                        if (heldItem.OwnInventory.TryPutItem(item, Character.Controlled) || 
+                            (heldItem.OwnInventory.Capacity == 1 && heldItem.OwnInventory.TryPutItem(item, 0, allowSwapping: true, allowCombine: false, user: Character.Controlled)))
                         {
                             success = true;
                             for (int j = 0; j < capacity; j++)

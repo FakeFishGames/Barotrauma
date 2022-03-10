@@ -251,7 +251,7 @@ namespace Barotrauma.CharacterEditor
             GUI.ForceMouseOn(null);
             if (isEndlessRunner)
             {
-                Submarine.MainSub.Remove();
+                Submarine.MainSub?.Remove();
                 GameMain.World.ProcessChanges();
                 isEndlessRunner = false;
                 Reset();
@@ -500,29 +500,34 @@ namespace Barotrauma.CharacterEditor
                     int index = 0;
                     bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
                     bool isMovingFast = character.AnimController.ForceSelectAnimationType == AnimationType.Run || character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast;
-                    if (isMovingFast)
+                    if (character.AnimController.CanWalk)
                     {
-                        if (isSwimming || !character.AnimController.CanWalk)
+                        if (isMovingFast)
                         {
-                            index = !character.AnimController.CanWalk ? (int)AnimationType.SwimFast : (int)AnimationType.SwimSlow;
+                            if (isSwimming)
+                            {
+                                index = 2;
+                            }
+                            else
+                            {
+                                index = 0;
+                            }
                         }
                         else
                         {
-                            index = (int)AnimationType.Walk;
+                            if (isSwimming)
+                            {
+                                index = 3;
+                            }
+                            else
+                            {
+                                index = 1;
+                            }
                         }
-                        index -= 1;
                     }
                     else
                     {
-                        if (isSwimming || !character.AnimController.CanWalk)
-                        {
-                            index = !character.AnimController.CanWalk ? (int)AnimationType.SwimSlow : (int)AnimationType.SwimFast;
-                        }
-                        else
-                        {
-                            index = (int)AnimationType.Run;
-                        }
-                        index -= 1;
+                        index = isMovingFast ? 0 : 1;
                     }
                     if (animSelection.SelectedIndex != index)
                     {
@@ -536,16 +541,12 @@ namespace Barotrauma.CharacterEditor
                     bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
                     if (isSwimming)
                     {
-                        animSelection.Select((int)AnimationType.Walk - 1);
+                        animSelection.Select(0);
                     }
                     else
                     {
-                        animSelection.Select((int)AnimationType.SwimSlow - 1);
+                        animSelection.Select(2);
                     }
-                }
-                if (PlayerInput.KeyHit(Keys.F))
-                {
-                    SetToggle(freezeToggle, !freezeToggle.Selected);
                 }
                 if (PlayerInput.SecondaryMouseButtonClicked() || PlayerInput.KeyHit(Keys.Escape))
                 {
@@ -852,6 +853,16 @@ namespace Barotrauma.CharacterEditor
             if (drawSkeleton || editRagdoll || editJoints || editLimbs || editIK)
             {
                 DrawRagdoll(spriteBatch, (float)deltaTime);
+            }
+            // Mouth
+            Limb head = character.AnimController.GetLimb(LimbType.Head);
+            if (head != null && character.CanEat && selectedLimbs.Contains(head))
+            {
+                var mouthPos = character.AnimController.GetMouthPosition();
+                if (mouthPos.HasValue)
+                {
+                    ShapeExtensions.DrawPoint(spriteBatch, SimToScreen(mouthPos.Value), GUI.Style.Red, size: 8);
+                }
             }
             if (showSpritesheet)
             {
@@ -2606,13 +2617,13 @@ namespace Barotrauma.CharacterEditor
             {
                 animSelection.AddItem(AnimationType.Walk.ToString(), AnimationType.Walk);
                 animSelection.AddItem(AnimationType.Run.ToString(), AnimationType.Run);
-                if (character.IsHumanoid)
-                {
-                    animSelection.AddItem(AnimationType.Crouch.ToString(), AnimationType.Crouch);
-                }
             }
             animSelection.AddItem(AnimationType.SwimSlow.ToString(), AnimationType.SwimSlow);
             animSelection.AddItem(AnimationType.SwimFast.ToString(), AnimationType.SwimFast);
+            if (character.AnimController.CanWalk && character.IsHumanoid)
+            {
+                animSelection.AddItem(AnimationType.Crouch.ToString(), AnimationType.Crouch);
+            }
             if (character.AnimController.ForceSelectAnimationType == AnimationType.NotDefined)
             {
                 animSelection.SelectItem(character.AnimController.CanWalk ? AnimationType.Walk : AnimationType.SwimSlow);

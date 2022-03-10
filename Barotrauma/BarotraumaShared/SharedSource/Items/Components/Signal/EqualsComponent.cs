@@ -12,6 +12,8 @@ namespace Barotrauma.Items.Components
 
         protected string[] receivedSignal;
 
+        private readonly Character[] signalSender = new Character[2];
+
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
 
@@ -90,9 +92,8 @@ namespace Barotrauma.Items.Components
             if (sendOutput)
             {
                 string signalOut = receivedSignal[0] == receivedSignal[1] ? output : falseOutput;
-                if (string.IsNullOrEmpty(signalOut)) return;
-
-                item.SendSignal(signalOut, "signal_out");
+                if (string.IsNullOrEmpty(signalOut)) { return; }
+                item.SendSignal(new Signal(signalOut, sender: signalSender[0] ?? signalSender[1]), "signal_out");
             }
         }
 
@@ -103,10 +104,15 @@ namespace Barotrauma.Items.Components
                 case "signal_in1":
                     receivedSignal[0] = signal.value;
                     timeSinceReceived[0] = 0.0f;
+                    signalSender[0] = signal.sender;
                     break;
                 case "signal_in2":
                     receivedSignal[1] = signal.value;
                     timeSinceReceived[1] = 0.0f;
+                    signalSender[1] = signal.sender;
+                    break;
+                case "set_output":
+                    output = signal.value;
                     break;
             }
         }

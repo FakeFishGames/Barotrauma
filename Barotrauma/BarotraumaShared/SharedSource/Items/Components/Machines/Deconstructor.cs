@@ -170,7 +170,7 @@ namespace Barotrauma.Items.Components
                     character.CheckTalents(AbilityEffectType.OnItemDeconstructedByAlly, abilityTargetItem);
                 }
 
-                var itemCreationMultiplier = new AbilityValueItem(amountMultiplier, targetItem.Prefab);
+                var itemCreationMultiplier = new AbilityItemCreationMultiplier(targetItem.Prefab, amountMultiplier);
                 user.CheckTalents(AbilityEffectType.OnItemDeconstructedMaterial, itemCreationMultiplier);
                 amountMultiplier = (int)itemCreationMultiplier.Value;
             }
@@ -261,8 +261,8 @@ namespace Barotrauma.Items.Components
                 if (user != null && !user.Removed)
                 {
                     // used to spawn items directly into the deconstructor
-                    var itemContainer = new AbilityItemPrefabItem(item, targetItem.Prefab);
-                    user.CheckTalents(AbilityEffectType.OnItemDeconstructedInventory, itemContainer);
+                    var itemDeconstructedInventory = new AbilityItemDeconstructedInventory(targetItem.Prefab, item);
+                    user.CheckTalents(AbilityEffectType.OnItemDeconstructedInventory, itemDeconstructedInventory);
                 }
 
                 int amount = (int)amountMultiplier;
@@ -300,6 +300,8 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            GameAnalyticsManager.AddDesignEvent("ItemDeconstructed:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none") + ":" + targetItem.prefab.Identifier);
+
             if (targetItem.AllowDeconstruct && allowRemove)
             {
                 //drop all items that are inside the deconstructed item
@@ -333,7 +335,7 @@ namespace Barotrauma.Items.Components
                 for (int i = 0; i < outputContainer.Capacity; i++)
                 {
                     var containedItem = outputContainer.Inventory.GetItemAt(i);
-                    if (containedItem?.OwnInventory != null && containedItem.OwnInventory.TryPutItem(item, user: null))
+                    if (containedItem?.OwnInventory != null && containedItem.GetComponent<GeneticMaterial>() == null && containedItem.OwnInventory.TryPutItem(item, user: null))
                     {
                         return;
                     }
@@ -452,6 +454,28 @@ namespace Barotrauma.Items.Components
         }
         public Item Item { get; set; }
         public Character Character { get; set; }
+    }
+
+    class AbilityItemCreationMultiplier : AbilityObject, IAbilityValue, IAbilityItemPrefab
+    {
+        public AbilityItemCreationMultiplier(ItemPrefab itemPrefab, float itemAmountMultiplier)
+        {
+            ItemPrefab = itemPrefab;
+            Value = itemAmountMultiplier;
+        }
+        public ItemPrefab ItemPrefab { get; set; }
+        public float Value { get; set; }
+    }
+
+    class AbilityItemDeconstructedInventory : AbilityObject, IAbilityItem, IAbilityItemPrefab
+    {
+        public AbilityItemDeconstructedInventory(ItemPrefab itemPrefab, Item item)
+        {
+            ItemPrefab = itemPrefab;
+            Item = item;
+        }
+        public ItemPrefab ItemPrefab { get; set; }
+        public Item Item { get; set; }
     }
 
 }

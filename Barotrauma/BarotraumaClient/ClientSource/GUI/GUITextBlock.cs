@@ -204,6 +204,12 @@ namespace Barotrauma
             set { textColor = value; }
         }
 
+        public Color DisabledTextColor
+        {
+            get => disabledTextColor;
+            set => disabledTextColor = value;
+        }
+
         private Color? hoverTextColor;
         public Color HoverTextColor
         {
@@ -303,6 +309,10 @@ namespace Barotrauma
             if (parseRichText)
             {
                 RichTextData = Barotrauma.RichTextData.GetRichTextData(text, out text);
+                if (RichTextData != null && RichTextData.Count == 0)
+                {
+                    RichTextData = null;
+                }
             }
 
             //if the text is in chinese/korean/japanese and we're not using a CJK-compatible font,
@@ -457,7 +467,7 @@ namespace Barotrauma
             while (size == Vector2.Zero)
             {
                 try { size = Font.MeasureString(string.IsNullOrEmpty(text) ? " " : text); }
-                catch { text = text.Substring(0, text.Length - 1); }
+                catch { text = text.Length > 0 ? text.Substring(0, text.Length - 1) : ""; }
             }
 
             return size;

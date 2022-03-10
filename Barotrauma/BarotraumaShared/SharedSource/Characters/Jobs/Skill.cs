@@ -18,7 +18,7 @@ namespace Barotrauma
 
         public void IncreaseSkill(float value, bool increasePastMax)
         {
-            level = MathHelper.Clamp(level + value, 0.0f, increasePastMax ? SkillSettings.Current.MaximumOlympianSkill : MaximumSkill);
+            level = MathHelper.Clamp(level + value, 0.0f, increasePastMax ? SkillSettings.Current.MaximumSkillWithTalents : MaximumSkill);
         }
 
         private Sprite icon;
@@ -36,10 +36,10 @@ namespace Barotrauma
 
         public readonly float PriceMultiplier = 1.0f;
 
-        public Skill(SkillPrefab prefab)
+        public Skill(SkillPrefab prefab, Rand.RandSync randSync)
         {
             Identifier = prefab.Identifier;
-            level = Rand.Range(prefab.LevelRange.Start, prefab.LevelRange.End, Rand.RandSync.Server);
+            level = Rand.Range(prefab.LevelRange.Start, prefab.LevelRange.End, randSync);
             icon = GetIcon();
             PriceMultiplier = prefab.PriceMultiplier;
         }

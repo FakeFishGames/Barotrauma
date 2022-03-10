@@ -108,6 +108,9 @@ namespace Barotrauma
                     case "pets":
                         petsElement = subElement;
                         break;
+                    case "stats":
+                        LoadStats(subElement);
+                        break;
                 }
             }
 
@@ -167,7 +170,7 @@ namespace Barotrauma
             int buttonHeight = (int)(GUI.Scale * 40);
             int buttonWidth = GUI.IntScale(450);
 
-            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle((GameMain.GraphicsWidth / 2) - (buttonWidth / 2), HUDLayoutSettings.ButtonAreaTop.Center.Y - (buttonHeight / 2), buttonWidth, buttonHeight), GUICanvas.Instance),
+            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle((GameMain.GraphicsWidth / 2) - (buttonWidth / 2), HUDLayoutSettings.ButtonAreaTop.Center.Y - (buttonHeight / 2), buttonWidth, buttonHeight), GUI.Canvas),
                 TextManager.Get("EndRound"), textAlignment: Alignment.Center, style: "EndRoundButton")
             {
                 Pulse = true,
@@ -412,6 +415,10 @@ namespace Barotrauma
                     break;
                 case TransitionType.ProgressToNextLocation:
                     Map.MoveToNextLocation();
+                    TotalPassedLevels++;
+                    break;
+                case TransitionType.ProgressToNextEmptyLocation:
+                    TotalPassedLevels++;
                     break;
             }
 
@@ -728,6 +735,7 @@ namespace Barotrauma
                 new XAttribute("purchaseditemrepairs", PurchasedItemRepairs),
                 new XAttribute("cheatsenabled", CheatsEnabled));
             modeElement.Add(Settings.Save());
+            modeElement.Add(SaveStats());
 
             //save and remove all items that are in someone's inventory so they don't get included in the sub file as well
             foreach (Character c in Character.CharacterList)
