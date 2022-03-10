@@ -52,7 +52,7 @@ sampler visionSampler = sampler_state {
 
 float2 center;
 float bias;
-float inDist;
+float inDepth;
 float rayLength;
 float aspect;
 
@@ -72,7 +72,7 @@ float4 losShadowMapped(VertexShaderOutput input) : COLOR0
 
 	// shadow on occluder from 0 at edge to 1 at in dist
 	float dist_occluder = dist - tex2D(raycastSampler, float2(theta, 0.0f)).r * rayLength;
-	if (tex2D(occlusionSampler, input.TexCoords).r < bias) { shadow = max(0., dist_occluder) / inDist; }
+	if (tex2D(occlusionSampler, input.TexCoords).r < bias) { shadow = max(0., dist_occluder) / inDepth; }
 
 	shadow = 1.0f - shadow;
 
@@ -96,7 +96,7 @@ float4 losShadowBlurred(VertexShaderOutput input) : COLOR0
 	// shadow on occluder from 0 at edge to 1 at in dist
 	if (tex2D(occlusionSampler, input.TexCoords).r < bias) {
 		dist_occluder = tex2D(shadowSampler, float2(theta, 0.0f)).r * rayLength;
-		shadow = max(0., dist - dist_occluder) / inDist;
+		shadow = max(0., dist - dist_occluder) / inDepth;
 	}
 
 	shadow = 1.0f - shadow;
@@ -118,7 +118,7 @@ float4 losShadow(VertexShaderOutput input) : COLOR0
 	float shadow = float(dist_occluder < dist);
 
 	// shadow on occluder from 0 at edge to 1 at in dist
-	if (tex2D(occlusionSampler, input.TexCoords).r < bias) { shadow = max(0., dist - dist_occluder) / inDist; }
+	if (tex2D(occlusionSampler, input.TexCoords).r < bias) { shadow = max(0., dist - dist_occluder) / inDepth; }
 
 	shadow = 1.0f - shadow;
 

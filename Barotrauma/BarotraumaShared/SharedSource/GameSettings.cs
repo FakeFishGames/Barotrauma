@@ -34,25 +34,26 @@ namespace Barotrauma
     public class LosRaycastSettings
     {
         public float losTexScale = 1.0f;
-        public float occluderAlphaThreshold = 0.35f; // Should not be setting
+        public float OccluderAlphaThreshold = 0.35f; // Should not be setting
 
         public int RayCount = 512;
-        public float RayLength = 0.75f; // Should not be setting
+        public float RayLength = 1.3f; // Should not be setting
         public int RayStepIterations = 2;
 
         public int RayBlurSteps = 4;
+        public float RayBlurDistWeight = 5.0f;
 
         public int PenumbraSteps = 4;
         public float PenumbraAngle = 0.002f; // Should not be setting
 
-        public float InDepth = 0.05f; // Should not be setting
+        public float InDepth = 0.1f; // Should not be setting
 
 
         public override string ToString()
         {
-            string settingsString = $"{losTexScale},{occluderAlphaThreshold},";
+            string settingsString = $"{losTexScale},{OccluderAlphaThreshold},";
             settingsString += $"{RayCount},{RayLength},{RayStepIterations},";
-            settingsString += $"{RayBlurSteps},";
+            settingsString += $"{RayBlurSteps},{RayBlurDistWeight},";
             settingsString += $"{PenumbraSteps},{PenumbraAngle},";
             settingsString += $"{InDepth}";
 
@@ -64,7 +65,7 @@ namespace Barotrauma
               .Select(s => { return (float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out float v), v); })
               .ToArray();
 
-            if (parsed.Length != 9f)
+            if (parsed.Length != 10)
             {
                 DebugConsole.AddWarning("Warning: Unexpected number of LoSRaycastsettings. Default LoSRaycastsettings loaded.");
                 return false;
@@ -73,17 +74,20 @@ namespace Barotrauma
             float[] values = parsed.Select(tup => tup.Item2).ToArray();
 
             losTexScale = values[0];
-            occluderAlphaThreshold = values[1];
+            OccluderAlphaThreshold = values[1];
 
             RayCount = (int)values[2];
             RayLength = values[3];
             RayStepIterations = (int)values[4];
+
             RayBlurSteps = (int)values[5];
 
-            PenumbraSteps = (int)values[6];
-            PenumbraAngle = values[7];
+            RayBlurDistWeight = values[6];
 
-            InDepth = values[8];
+            PenumbraSteps = (int)values[7];
+            PenumbraAngle = values[8];
+
+            InDepth = values[9];
 
             return true;
         }

@@ -692,7 +692,7 @@ namespace Barotrauma.Lights
 
                     SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["solidColorThreshold"];
                     SolidColorEffect.Parameters["color"].SetValue(new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
-                    SolidColorEffect.Parameters["threshold"].SetValue(losRaycastSetting.occluderAlphaThreshold);
+                    SolidColorEffect.Parameters["threshold"].SetValue(GameMain.Config.LosRaycastSetting.OccluderAlphaThreshold);
 
                     spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, transformMatrix: spriteBatchTransform, effect: SolidColorEffect);
 
@@ -732,9 +732,9 @@ namespace Barotrauma.Lights
 
                     LosRaycastEffect.Parameters["occlusionMap"].SetValue(LosOcclusionMap);
                     LosRaycastEffect.Parameters["center"].SetValue(center);
-                    LosRaycastEffect.Parameters["bias"].SetValue(0.5f);
-                    LosRaycastEffect.Parameters["rayStepSize"].SetValue(0.75f / (64.0f * GameMain.Config.LosRaycastSetting.RayStepIterations));
-                    LosRaycastEffect.Parameters["rayLength"].SetValue(0.75f);
+                    LosRaycastEffect.Parameters["bias"].SetValue(GameMain.Config.LosRaycastSetting.OccluderAlphaThreshold);
+                    LosRaycastEffect.Parameters["rayStepSize"].SetValue(GameMain.Config.LosRaycastSetting.RayLength / (64.0f * GameMain.Config.LosRaycastSetting.RayStepIterations));
+                    LosRaycastEffect.Parameters["rayLength"].SetValue(GameMain.Config.LosRaycastSetting.RayLength);
                     LosRaycastEffect.Parameters["iaspect"].SetValue((float)GameMain.GraphicsHeight / GameMain.GraphicsWidth);
 
                     graphics.BlendState = BlendState.Opaque;
@@ -766,7 +766,7 @@ namespace Barotrauma.Lights
                         else
                             LosRaycastEffect.CurrentTechnique = LosRaycastEffect.Techniques["losBlurRaycast4"];
 
-                        LosRaycastEffect.Parameters["rayBlurDistWeight"].SetValue(5.0f);
+                        LosRaycastEffect.Parameters["rayBlurDistWeight"].SetValue(GameMain.Config.LosRaycastSetting.RayBlurDistWeight);
 
                         LosRaycastEffect.Parameters["raycastMap"].SetValue(LosRaycastMap[0]);
 
@@ -785,8 +785,8 @@ namespace Barotrauma.Lights
                         else
                             LosPenumbraEffect.CurrentTechnique = LosPenumbraEffect.Techniques["losPenumbra4"];
 
-                        LosPenumbraEffect.Parameters["penumbraAngle"].SetValue(.15f);
-                        LosPenumbraEffect.Parameters["rayLength"].SetValue(.75f);
+                        LosPenumbraEffect.Parameters["penumbraAngle"].SetValue(GameMain.Config.LosRaycastSetting.PenumbraAngle);
+                        LosPenumbraEffect.Parameters["rayLength"].SetValue(GameMain.Config.LosRaycastSetting.RayLength);
                         LosPenumbraEffect.Parameters["margin"].SetValue(1f / 255f);
 
                         LosPenumbraEffect.Parameters["raycastMap"].SetValue(LosRaycastMap[0]);
@@ -827,9 +827,9 @@ namespace Barotrauma.Lights
                     }
 
                     LosShadowEffect.Parameters["center"].SetValue(center);
-                    LosShadowEffect.Parameters["bias"].SetValue(0.5f);
-                    LosShadowEffect.Parameters["inDist"].SetValue(0.05f);
-                    LosShadowEffect.Parameters["rayLength"].SetValue(0.75f);
+                    LosShadowEffect.Parameters["bias"].SetValue(GameMain.Config.LosRaycastSetting.OccluderAlphaThreshold);
+                    LosShadowEffect.Parameters["inDepth"].SetValue(GameMain.Config.LosRaycastSetting.InDepth);
+                    LosShadowEffect.Parameters["rayLength"].SetValue(GameMain.Config.LosRaycastSetting.RayLength);
                     LosShadowEffect.Parameters["aspect"].SetValue((float)GameMain.GraphicsWidth / (float)GameMain.GraphicsHeight);
 
                     // ObstructVision
