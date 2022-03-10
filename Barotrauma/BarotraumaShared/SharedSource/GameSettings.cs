@@ -37,7 +37,7 @@ namespace Barotrauma
         public float OccluderAlphaThreshold = 0.35f; // Should not be setting
 
         public int RayCount = 512;
-        public float RayLength = 1.3f; // Should not be setting
+        public float RayLength = 1.0f; // Should not be setting
         public int RayStepIterations = 2;
 
         public int RayBlurSteps = 4;
@@ -67,7 +67,6 @@ namespace Barotrauma
 
             if (parsed.Length != 10)
             {
-                DebugConsole.AddWarning("Warning: Unexpected number of LoSRaycastsettings. Default LoSRaycastsettings loaded.");
                 return false;
             }
 
