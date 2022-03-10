@@ -46,7 +46,7 @@ namespace Barotrauma
         public int PenumbraSteps = 4;
         public float PenumbraAngle = 0.002f; // Should not be setting
 
-        public float InDepth = 0.1f; // Should not be setting
+        public float InDepth = 0.04f; // Should not be setting
 
 
         public override string ToString()

@@ -847,7 +847,7 @@ namespace Barotrauma.Lights
 
                     LosShadowEffect.Parameters["center"].SetValue(center);
                     LosShadowEffect.Parameters["bias"].SetValue(GameMain.Config.LosRaycastSetting.OccluderAlphaThreshold);
-                    LosShadowEffect.Parameters["inDepth"].SetValue(GameMain.Config.LosRaycastSetting.InDepth);
+                    LosShadowEffect.Parameters["inDepth"].SetValue(GameMain.Config.LosRaycastSetting.InDepth*cam.Zoom);
                     LosShadowEffect.Parameters["rayLength"].SetValue(rayLength);
                     LosShadowEffect.Parameters["aspect"].SetValue((float)GameMain.GraphicsWidth / (float)GameMain.GraphicsHeight);
 
