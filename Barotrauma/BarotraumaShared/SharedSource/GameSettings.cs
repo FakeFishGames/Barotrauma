@@ -44,7 +44,7 @@ namespace Barotrauma
         public float RayBlurDistWeight = 5.0f;
 
         public int PenumbraSteps = 4;
-        public float PenumbraAngle = 0.002f; // Should not be setting
+        public float PenumbraAngle = 0.15f; // Should not be setting
 
         public float InDepth = 0.04f; // Should not be setting
 
