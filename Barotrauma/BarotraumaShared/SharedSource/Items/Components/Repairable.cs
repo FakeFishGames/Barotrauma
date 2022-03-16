@@ -230,7 +230,7 @@ namespace Barotrauma.Items.Components
             {
                 ApplyStatusEffects(ActionType.OnFailure, 1.0f, CurrentFixer);
 #if SERVER
-                GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, CurrentFixer.ID });
+                GameMain.Server?.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnFailure, this, CurrentFixer));
 #endif
             }
         }
@@ -256,10 +256,10 @@ namespace Barotrauma.Items.Components
                     if (!CheckCharacterSuccess(character, bestRepairItem))
                     {
                         GameServer.Log($"{GameServer.CharacterLogName(character)} failed to {(action == FixActions.Sabotage ? "sabotage" : "repair")} {item.Name}", ServerLog.MessageType.ItemInteraction);
-                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, character.ID });
+                        GameMain.Server?.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnFailure, this, character));
                         if (bestRepairItem != null && bestRepairItem.GetComponent<Holdable>() is Holdable h)
                         {
-                            GameMain.Server?.CreateEntityEvent(bestRepairItem, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, h, character.ID });
+                            GameMain.Server?.CreateEntityEvent(bestRepairItem, new Item.ApplyStatusEffectEventData(ActionType.OnFailure, h, character));
                         }
 
                         return false;

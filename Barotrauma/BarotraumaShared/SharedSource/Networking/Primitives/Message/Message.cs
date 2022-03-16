@@ -654,7 +654,7 @@ namespace Barotrauma.Networking
         {
             get
             {
-                return lengthBits / 8;
+                return (LengthBits + 7) / 8;
             }
         }
 
@@ -867,7 +867,7 @@ namespace Barotrauma.Networking
         {
             get
             {
-                return (LengthBits + ((8 - (LengthBits % 8)) % 8)) / 8;
+                return (LengthBits + 7) / 8;
             }
         }
 

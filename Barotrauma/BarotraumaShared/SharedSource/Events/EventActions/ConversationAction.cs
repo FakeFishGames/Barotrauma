@@ -182,7 +182,7 @@ namespace Barotrauma
             speaker.ActiveConversation = null;
             speaker.SetCustomInteract(null, null);
 #if SERVER
-            GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
+            GameMain.NetworkMember.CreateEntityEvent(speaker, new Character.AssignCampaignInteractionEventData());
 #endif
             var humanAI = speaker.AIController as HumanAIController;
             if (humanAI != null && !speaker.IsDead && !speaker.Removed)
@@ -259,7 +259,7 @@ namespace Barotrauma
                         speaker.SetCustomInteract( 
                             TryStartConversation, 
                             TextManager.Get("CampaignInteraction.Talk"));
-                        GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });   
+                        GameMain.NetworkMember.CreateEntityEvent(speaker, new Character.AssignCampaignInteractionEventData());   
 #endif
                     }
                     return;
@@ -369,7 +369,7 @@ namespace Barotrauma
                 speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
                 speaker.SetCustomInteract(null, null);
 #if SERVER
-                GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
+                GameMain.NetworkMember.CreateEntityEvent(speaker, new Character.AssignCampaignInteractionEventData());
 #endif
             }
         }

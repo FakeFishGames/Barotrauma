@@ -216,14 +216,14 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
             msg.WriteRangedInteger((int)(flowPercentage / 10.0f), -10, 10);
             msg.Write(IsActive);
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             int msgStartPos = msg.BitPosition;
 
@@ -244,7 +244,7 @@ namespace Barotrauma.Items.Components
             {
                 int msgLength = msg.BitPosition - msgStartPos;
                 msg.BitPosition = msgStartPos;
-                StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime);
+                StartDelayedCorrection(msg.ExtractBits(msgLength), sendingTime);
                 return;
             }
 

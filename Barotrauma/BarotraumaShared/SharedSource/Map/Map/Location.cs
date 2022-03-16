@@ -734,7 +734,7 @@ namespace Barotrauma
                     if (prefab == null) { continue; }
                     var qty = stockElement.GetAttributeInt("qty", 0);
                     if (qty < 1) { continue; }
-                    StoreStock.Add(new PurchasedItem(prefab, qty));
+                    StoreStock.Add(new PurchasedItem(prefab, qty, buyer: null));
                 }
 
                 StepsSinceSpecialsUpdated = storeElement.GetAttributeInt("stepssincespecialsupdated", 0);
@@ -792,7 +792,7 @@ namespace Barotrauma
                     {
                         quantity = priceInfo.MinAvailableAmount;
                     }
-                    stock.Add(new PurchasedItem(prefab, quantity));
+                    stock.Add(new PurchasedItem(prefab, quantity, buyer: null));
                 }
             }
             return stock;

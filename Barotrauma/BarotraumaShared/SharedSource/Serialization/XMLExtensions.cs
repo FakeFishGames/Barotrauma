@@ -143,8 +143,9 @@ namespace Barotrauma
 
         public static string GetAttributeString(this XElement element, string name, string defaultValue)
         {
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
-            string str = GetAttributeString(element.GetAttribute(name), defaultValue);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            string str = GetAttributeString(attribute, defaultValue);
 #if DEBUG
             if (!str.IsNullOrEmpty() &&
                 (str.Contains("%ModDir", StringComparison.OrdinalIgnoreCase)
@@ -160,8 +161,9 @@ namespace Barotrauma
         public static string GetAttributeStringUnrestricted(this XElement element, string name, string defaultValue)
         {
             #warning TODO: remove?
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
-            return GetAttributeString(element.GetAttribute(name), defaultValue);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return GetAttributeString(attribute, defaultValue);
         }
 
         public static bool DoesAttributeReferenceFileNameAlone(this XElement element, string name)
@@ -190,14 +192,15 @@ namespace Barotrauma
         private static string GetAttributeString(XAttribute attribute, string defaultValue)
         {
             string value = attribute.Value;
-            return String.IsNullOrEmpty(value) ? defaultValue : value;
+            return string.IsNullOrEmpty(value) ? defaultValue : value;
         }
 
         public static string[] GetAttributeStringArray(this XElement element, string name, string[] defaultValue, bool trim = true, bool convertToLowerInvariant = false)
         {
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
-            string stringValue = element.GetAttribute(name).Value;
+            string stringValue = attribute.Value;
             if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
 
             string[] splitValue = stringValue.Split(',', '，');
@@ -224,50 +227,15 @@ namespace Barotrauma
 
             foreach (string name in matchingAttributeName)
             {
-                if (element.GetAttribute(name) == null) { continue; }
-
-                float val;
-                try
-                {
-                    string strVal = element.GetAttribute(name).Value;
-                    if (strVal.LastOrDefault() == 'f')
-                    {
-                        strVal = strVal.Substring(0, strVal.Length - 1);
-                    }
-                    val = float.Parse(strVal, CultureInfo.InvariantCulture);
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Error in " + element + "!", e);
-                    continue;
-                }
-                return val;
+                var attribute = element.GetAttribute(name);
+                if (attribute == null) { continue; }
+                return GetAttributeFloat(attribute, defaultValue);
             }
 
             return defaultValue;
         }
 
-        public static float GetAttributeFloat(this XElement element, string name, float defaultValue)
-        {
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
-
-            float val = defaultValue;
-            try
-            {
-                string strVal = element.GetAttribute(name).Value;
-                if (strVal.LastOrDefault() == 'f')
-                {
-                    strVal = strVal.Substring(0, strVal.Length - 1);
-                }
-                val = float.Parse(strVal, CultureInfo.InvariantCulture);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Error in " + element + "!", e);
-            }
-
-            return val;
-        }
+        public static float GetAttributeFloat(this XElement element, string name, float defaultValue) => GetAttributeFloat(element?.GetAttribute(name), defaultValue);
 
         public static float GetAttributeFloat(this XAttribute attribute, float defaultValue)
         {
@@ -292,14 +260,16 @@ namespace Barotrauma
             return val;
         }
 
-        public static double GetAttributeDouble(this XElement element, string name, double defaultValue)
+        public static double GetAttributeDouble(this XElement element, string name, double defaultValue) => GetAttributeDouble(element?.GetAttribute(name), defaultValue);
+
+        public static double GetAttributeDouble(this XAttribute attribute, double defaultValue)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
+            if (attribute == null) { return defaultValue; }
 
             double val = defaultValue;
             try
             {
-                string strVal = element.Attribute(name).Value;
+                string strVal = attribute.Value;
                 if (strVal.LastOrDefault() == 'f')
                 {
                     strVal = strVal.Substring(0, strVal.Length - 1);
@@ -308,17 +278,19 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "!", e);
+                DebugConsole.ThrowError("Error in " + attribute + "!", e);
             }
 
             return val;
         }
 
+
         public static float[] GetAttributeFloatArray(this XElement element, string name, float[] defaultValue)
         {
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
-            string stringValue = element.GetAttribute(name).Value;
+            string stringValue = attribute.Value;
             if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
 
             string[] splitValue = stringValue.Split(',');
@@ -345,13 +317,14 @@ namespace Barotrauma
 
         public static int GetAttributeInt(this XElement element, string name, int defaultValue)
         {
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
             int val = defaultValue;
 
             try
             {
-                if (!Int32.TryParse(element.GetAttribute(name).Value, NumberStyles.Any, CultureInfo.InvariantCulture, out val))
+                if (!Int32.TryParse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out val))
                 {
                     val = (int)float.Parse(element.GetAttribute(name).Value, CultureInfo.InvariantCulture);
                 }
@@ -366,13 +339,14 @@ namespace Barotrauma
 
         public static uint GetAttributeUInt(this XElement element, string name, uint defaultValue)
         {
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
             uint val = defaultValue;
 
             try
             {
-                val = UInt32.Parse(element.GetAttribute(name).Value);
+                val = UInt32.Parse(attribute.Value);
             }
             catch (Exception e)
             {
@@ -384,13 +358,14 @@ namespace Barotrauma
 
         public static UInt64 GetAttributeUInt64(this XElement element, string name, UInt64 defaultValue)
         {
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
             UInt64 val = defaultValue;
 
             try
             {
-                val = UInt64.Parse(element.GetAttribute(name).Value, NumberStyles.Any, CultureInfo.InvariantCulture);
+                val = UInt64.Parse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture);
             }
             catch (Exception e)
             {
@@ -402,13 +377,14 @@ namespace Barotrauma
 
         public static Version GetAttributeVersion(this XElement element, string name, Version defaultValue)
         {
-            if (element?.GetAttribute(name) == null) return defaultValue;
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
             Version val = defaultValue;
 
             try
             {
-                val = Version.Parse(element.GetAttribute(name).Value);
+                val = Version.Parse(attribute.Value);
             }
             catch (Exception e)
             {
@@ -420,13 +396,14 @@ namespace Barotrauma
 
         public static UInt64 GetAttributeSteamID(this XElement element, string name, UInt64 defaultValue)
         {
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
             UInt64 val = defaultValue;
 
             try
             {
-                val = Steam.SteamManager.SteamIDStringToUInt64(element.GetAttribute(name).Value);
+                val = Steam.SteamManager.SteamIDStringToUInt64(attribute.Value);
             }
             catch (Exception e)
             {
@@ -438,9 +415,10 @@ namespace Barotrauma
 
         public static int[] GetAttributeIntArray(this XElement element, string name, int[] defaultValue)
         {
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
-            string stringValue = element.GetAttribute(name).Value;
+            string stringValue = attribute.Value;
             if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
 
             string[] splitValue = stringValue.Split(',');
@@ -462,9 +440,10 @@ namespace Barotrauma
         }
         public static ushort[] GetAttributeUshortArray(this XElement element, string name, ushort[] defaultValue)
         {
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
-            string stringValue = element.GetAttribute(name).Value;
+            string stringValue = attribute.Value;
             if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
 
             string[] splitValue = stringValue.Split(',');
@@ -496,8 +475,9 @@ namespace Barotrauma
 
         public static bool GetAttributeBool(this XElement element, string name, bool defaultValue)
         {
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
-            return element.GetAttribute(name).GetAttributeBool(defaultValue);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return attribute.GetAttributeBool(defaultValue);
         }
 
         public static bool GetAttributeBool(this XAttribute attribute, bool defaultValue)
@@ -520,45 +500,52 @@ namespace Barotrauma
 
         public static Point GetAttributePoint(this XElement element, string name, Point defaultValue)
         {
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
-            return ParsePoint(element.GetAttribute(name).Value);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return ParsePoint(attribute.Value);
         }
 
         public static Vector2 GetAttributeVector2(this XElement element, string name, Vector2 defaultValue)
         {
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
-            return ParseVector2(element.GetAttribute(name).Value);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return ParseVector2(attribute.Value);
         }
 
         public static Vector3 GetAttributeVector3(this XElement element, string name, Vector3 defaultValue)
         {
-            if (element == null || element.GetAttribute(name) == null) { return defaultValue; }
-            return ParseVector3(element.GetAttribute(name).Value);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return ParseVector3(attribute.Value);
         }
 
         public static Vector4 GetAttributeVector4(this XElement element, string name, Vector4 defaultValue)
         {
-            if (element == null || element.GetAttribute(name) == null) { return defaultValue; }
-            return ParseVector4(element.GetAttribute(name).Value);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return ParseVector4(attribute.Value);
         }
 
         public static Color GetAttributeColor(this XElement element, string name, Color defaultValue)
         {
-            if (element == null || element.GetAttribute(name) == null) { return defaultValue; }
-            return ParseColor(element.GetAttribute(name).Value);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return ParseColor(attribute.Value);
         }
 
         public static Color? GetAttributeColor(this XElement element, string name)
         {
-            if (element == null || element.GetAttribute(name) == null) { return null; }
-            return ParseColor(element.GetAttribute(name).Value);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return null; }
+            return ParseColor(attribute.Value);
         }
 
         public static Color[] GetAttributeColorArray(this XElement element, string name, Color[] defaultValue)
         {
-            if (element?.GetAttribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
-            string stringValue = element.GetAttribute(name).Value;
+            string stringValue = attribute.Value;
             if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
 
             string[] splitValue = stringValue.Split(';');
@@ -602,8 +589,9 @@ namespace Barotrauma
 
         public static Rectangle GetAttributeRect(this XElement element, string name, Rectangle defaultValue)
         {
-            if (element == null || element.GetAttribute(name) == null) { return defaultValue; }
-            return ParseRect(element.GetAttribute(name).Value, false);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return ParseRect(attribute.Value, false);
         }
 
         //TODO: nested tuples and and n-uples where n!=2 are unsupported
@@ -617,9 +605,10 @@ namespace Barotrauma
         public static (T1, T2)[] GetAttributeTupleArray<T1, T2>(this XElement element, string name,
             (T1, T2)[] defaultValue)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
-            string stringValue = element.Attribute(name).Value;
+            string stringValue = attribute.Value;
             if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
 
             return stringValue.Split(';').Select(s => ParseTuple<T1, T2>(s, default)).ToArray();
@@ -917,6 +906,8 @@ namespace Barotrauma
         public static XElement FirstElement(this XElement element) => element.Elements().FirstOrDefault();
 
         public static XAttribute GetAttribute(this XElement element, string name, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => element.GetAttribute(a => a.Name.ToString().Equals(name, comparisonMethod));
+
+        public static void SetAttributeValue(this XElement element, string name, object value, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => GetAttribute(element, name, comparisonMethod)?.SetValue(value);
 
         public static XAttribute GetAttribute(this XElement element, Identifier name) => element.GetAttribute(name.Value, StringComparison.OrdinalIgnoreCase);
 

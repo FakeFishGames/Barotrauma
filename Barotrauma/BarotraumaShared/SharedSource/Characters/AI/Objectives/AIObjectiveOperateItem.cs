@@ -67,6 +67,11 @@ namespace Barotrauma
                     Priority = 0;
                     return Priority;
                 }
+                else if (targetItem.IsClaimedByBallastFlora)
+                {
+                    Priority = 0;
+                    return Priority;
+                }
                 var reactor = component?.Item.GetComponent<Reactor>();
                 if (reactor != null)
                 {

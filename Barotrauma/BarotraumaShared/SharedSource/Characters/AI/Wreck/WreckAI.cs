@@ -442,7 +442,7 @@ namespace Barotrauma
         }
 
 #if SERVER
-        public void ServerWrite(IWriteMessage msg, Client client, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client client, NetEntityEvent.IData extraData = null)
         {
             msg.Write(IsAlive);
         }

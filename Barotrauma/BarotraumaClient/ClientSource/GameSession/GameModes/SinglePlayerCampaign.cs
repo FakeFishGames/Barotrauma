@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -108,6 +109,9 @@ namespace Barotrauma
                     case "pets":
                         petsElement = subElement;
                         break;
+                    case Wallet.LowerCaseSaveElementName:
+                        Bank = new Wallet(subElement);
+                        break;
                     case "stats":
                         LoadStats(subElement);
                         break;
@@ -121,7 +125,15 @@ namespace Barotrauma
 
             InitUI();
 
-            Money = element.GetAttributeInt("money", 0);
+            int oldMoney = element.GetAttributeInt("money", 0);
+            if (oldMoney > 0)
+            {
+                Bank = new Wallet
+                {
+                    Balance = oldMoney
+                };
+            }
+
             PurchasedLostShuttles = element.GetAttributeBool("purchasedlostshuttles", false);
             PurchasedHullRepairs = element.GetAttributeBool("purchasedhullrepairs", false);
             PurchasedItemRepairs = element.GetAttributeBool("purchaseditemrepairs", false);
@@ -729,7 +741,6 @@ namespace Barotrauma
         public override void Save(XElement element)
         {
             XElement modeElement = new XElement("SinglePlayerCampaign",
-                new XAttribute("money", Money),
                 new XAttribute("purchasedlostshuttles", PurchasedLostShuttles),
                 new XAttribute("purchasedhullrepairs", PurchasedHullRepairs),
                 new XAttribute("purchaseditemrepairs", PurchasedItemRepairs),
@@ -756,13 +767,14 @@ namespace Barotrauma
 
             petsElement = new XElement("pets");
             PetBehavior.SavePets(petsElement);
-            modeElement.Add(petsElement);            
+            modeElement.Add(petsElement);
 
             CrewManager.Save(modeElement);
             CampaignMetadata.Save(modeElement);
             Map.Save(modeElement);
             CargoManager?.SavePurchasedItems(modeElement);
             UpgradeManager?.Save(modeElement);
+            modeElement.Add(Bank.Save());
             element.Add(modeElement);
         }
     }

@@ -151,6 +151,7 @@ namespace Barotrauma
             if (!item.IsInteractable(character)) { return false; }
             if (item.IsFullCondition) { return false; }
             if (item.Submarine == null || character.Submarine == null) { return false; }
+            if (item.IsClaimedByBallastFlora) { return false; } 
             //player crew ignores items in outposts
             if (character.IsOnPlayerTeam && item.Submarine.Info.IsOutpost) { return false; }
             if (!character.Submarine.IsEntityFoundOnThisSub(item, includingConnectedSubs: true)) { return false; }

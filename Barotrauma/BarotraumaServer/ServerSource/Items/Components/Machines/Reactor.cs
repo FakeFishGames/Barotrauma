@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
         private float? nextServerLogWriteTime;
         private float lastServerLogWriteTime;
 
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             bool autoTemp = msg.ReadBoolean();
             bool powerOn = msg.ReadBoolean();
@@ -43,7 +43,7 @@ namespace Barotrauma.Items.Components
             unsentChanges = true;
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.Write(autoTemp);
             msg.Write(_powerOn);

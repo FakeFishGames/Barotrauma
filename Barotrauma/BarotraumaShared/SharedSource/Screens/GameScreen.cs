@@ -133,10 +133,17 @@ namespace Barotrauma
                 e.IsHighlighted = false;
             }
 
-            if (GameMain.GameSession != null) GameMain.GameSession.Update((float)deltaTime);
 #if CLIENT
             var sw = new System.Diagnostics.Stopwatch();
             sw.Start();
+#endif
+
+            GameMain.GameSession?.Update((float)deltaTime);
+
+#if CLIENT
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("GameSessionUpdate", sw.ElapsedTicks);
+            sw.Restart();
 
             GameMain.ParticleManager.Update((float)deltaTime); 
             

@@ -229,7 +229,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             int objIndex = msg.ReadRangedInteger(0, objects.Count);
             objects[objIndex].ClientRead(msg);

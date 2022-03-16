@@ -1,8 +1,6 @@
 ﻿#nullable enable
-using System;
-using System.Collections.Generic;
-using System.Xml.Linq;
 using Microsoft.Xna.Framework;
+using System;
 
 namespace Barotrauma
 {
@@ -26,6 +24,8 @@ namespace Barotrauma
 
         public LocalizedString Description { get; }
         public LocalizedString ShortDescription { get; }
+
+        public int MenuOrder { get; }
 
         /// <summary>
         /// How low the reputation can drop on this faction
@@ -52,6 +52,7 @@ namespace Barotrauma
 
         public FactionPrefab(ContentXElement element, FactionsFile file) : base(file, element.GetAttributeIdentifier("identifier", string.Empty))
         {
+            MenuOrder = element.GetAttributeInt("menuorder", 0);
             MinReputation = element.GetAttributeInt("minreputation", -100);
             MaxReputation = element.GetAttributeInt("maxreputation", 100);
             InitialReputation = element.GetAttributeInt("initialreputation", 0);

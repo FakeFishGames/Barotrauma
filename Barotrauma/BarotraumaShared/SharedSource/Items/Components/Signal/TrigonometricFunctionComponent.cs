@@ -20,6 +20,8 @@ namespace Barotrauma.Items.Components
         private readonly float[] receivedSignal = new float[2];
         private readonly float[] timeSinceReceived = new float[2];
 
+        protected Character signalSender;
+
         [Serialize(FunctionType.Sin, IsPropertySaveable.No, description: "Which kind of function to run the input through.", alwaysUseInstanceValues: true)]
         public FunctionType Function
         {
@@ -56,7 +58,7 @@ namespace Barotrauma.Items.Components
                 {
                     float angle = (float)Math.Atan2(receivedSignal[1], receivedSignal[0]);
                     if (!UseRadians) { angle = MathHelper.ToDegrees(angle); }
-                    item.SendSignal(angle.ToString("G", CultureInfo.InvariantCulture), "signal_out");
+                    item.SendSignal(new Signal(angle.ToString("G", CultureInfo.InvariantCulture), sender: signalSender), "signal_out");
                 }
             }
         }
@@ -65,6 +67,7 @@ namespace Barotrauma.Items.Components
         {
             float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
             bool sendOutputImmediately = true;
+            signalSender = signal.sender;
             switch (Function)
             {
                 case FunctionType.Sin:

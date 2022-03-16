@@ -1,20 +1,28 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class AbilityConditionNoCrewDied : AbilityConditionDataless
     {
+        public bool assistantsDontCount;
+
         public AbilityConditionNoCrewDied(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
+            assistantsDontCount = conditionElement.GetAttributeBool(nameof(assistantsDontCount), true);
         }
 
         protected override bool MatchesConditionSpecific()
         {
-            if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+            if (GameMain.GameSession == null) { return false; }
+
+            foreach (Character character in GameMain.GameSession.Casualties)
             {
-                return !campaign.CrewHasDied;
+                if (assistantsDontCount && character.Info?.Job?.Prefab.Identifier == "assistant")
+                {
+                    continue;
+                }
+                if (character.CauseOfDeath != null && character.CauseOfDeath.Type != CauseOfDeathType.Disconnected)
+                {
+                    return false;
+                }
             }
             return true;
         }

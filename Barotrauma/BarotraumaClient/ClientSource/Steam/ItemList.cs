@@ -522,7 +522,7 @@ namespace Barotrauma.Steam
                     UserData = tag
                 };
                 tagBtn.RectTransform.NonScaledSize
-                    = tagBtn.Font.MeasureString(tagBtn.Text).ToPoint() + new Point(GUI.IntScale(5));
+                    = tagBtn.Font.MeasureString(tagBtn.Text).ToPoint() + new Point(GUI.IntScale(15), GUI.IntScale(5));
                 tagBtn.RectTransform.IsFixedSize = true;
                 tagBtn.ClampMouseRectToParent = false;
             }
@@ -625,7 +625,7 @@ namespace Barotrauma.Steam
             #region Stats box
             var statsHorizontalLayout = new GUILayoutGroup(new RectTransform(Vector2.One, statsBox.RectTransform), isHorizontal: true);
             var statsVertical0
-                = new GUILayoutGroup(new RectTransform((1.0f, 1.0f), statsHorizontalLayout.RectTransform));
+                = new GUILayoutGroup(new RectTransform((1.0f, 1.0f), statsHorizontalLayout.RectTransform), childAnchor: Anchor.TopCenter);
 
             statFrame("", ""); //padding
             
@@ -680,7 +680,7 @@ namespace Barotrauma.Steam
 
             var tagsLabel = new GUITextBlock(new RectTransform((1.0f, 0.12f), statsVertical0.RectTransform),
                 TextManager.Get("WorkshopItemTags"), font: GUIStyle.SubHeadingFont);
-            CreateTagsList(workshopItem.Tags.ToIdentifiers(), new RectTransform((1.0f, 0.3f), statsVertical0.RectTransform), canBeFocused: false);
+            CreateTagsList(workshopItem.Tags.ToIdentifiers(), new RectTransform((0.97f, 0.3f), statsVertical0.RectTransform), canBeFocused: false);
             #endregion
 
             var descriptionListBox = new GUIListBox(new RectTransform((1.0f, 0.38f), verticalLayout.RectTransform));

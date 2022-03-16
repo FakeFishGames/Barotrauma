@@ -20,6 +20,16 @@ namespace Barotrauma
         private readonly List<CharacterInfo> characterInfos = new List<CharacterInfo>();
         private readonly List<Character> characters = new List<Character>();
 
+        public IEnumerable<Character> GetCharacters()
+        {
+            return characters;
+        }
+
+        public IEnumerable<CharacterInfo> GetCharacterInfos()
+        {
+            return characterInfos;
+        }
+
         private Character welcomeMessageNPC;
 
         public List<CharacterInfo> CharacterInfos => characterInfos;

@@ -63,6 +63,8 @@ namespace Barotrauma
             }
         }
 
+        public virtual Wallet Wallet => GetWallet();
+
         public override void ShowStartMessage()
         {
             foreach (Mission mission in Missions.ToList())
@@ -310,7 +312,7 @@ namespace Barotrauma
             if (ShowCampaignUI || ForceMapUI)
             {
                 campaignUIContainer?.AddToGUIUpdateList();
-                if (CampaignUI?.UpgradeStore?.HoveredItem != null)
+                if (CampaignUI?.UpgradeStore?.HoveredEntity != null)
                 {
                     if (CampaignUI.SelectedTab != InteractionType.Upgrade) { return; }
                     CampaignUI?.UpgradeStore?.ItemInfoFrame.AddToGUIUpdateList(order: 1);

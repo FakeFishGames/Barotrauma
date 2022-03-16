@@ -156,17 +156,17 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             //targetForce can only be adjusted at 10% intervals -> no need for more accuracy than this
             msg.WriteRangedInteger((int)(targetForce / 10.0f), -10, 10);
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             if (correctionTimer > 0.0f)
             {
-                StartDelayedCorrection(type, msg.ExtractBits(5 + 16), sendingTime);
+                StartDelayedCorrection(msg.ExtractBits(5 + 16), sendingTime);
                 return;
             }
 

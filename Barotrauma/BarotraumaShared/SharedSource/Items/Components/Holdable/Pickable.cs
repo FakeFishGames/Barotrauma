@@ -282,12 +282,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public virtual void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public virtual void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(activePicker == null ? (ushort)0 : activePicker.ID);
+            msg.Write(activePicker?.ID ?? (ushort)0);
         }
 
-        public virtual void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public virtual void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             ushort pickerID = msg.ReadUInt16();
             if (pickerID == 0)

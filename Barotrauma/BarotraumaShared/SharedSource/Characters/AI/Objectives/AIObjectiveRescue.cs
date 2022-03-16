@@ -30,6 +30,7 @@ namespace Barotrauma
         private float findHullTimer;
         private bool ignoreOxygen;
         private readonly float findHullInterval = 1.0f;
+        private bool performedCpr;
 
         public AIObjectiveRescue(Character character, Character targetCharacter, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
@@ -220,12 +221,12 @@ namespace Barotrauma
                     DialogueIdentifier = "dialogcannotreachpatient".ToIdentifier(),
                     TargetName = targetCharacter.DisplayName
                 },
-                    onCompleted: () => RemoveSubObjective(ref goToObjective),
-                    onAbandon: () =>
-                    {
-                        RemoveSubObjective(ref goToObjective);
-                        Abandon = true;
-                    });
+                onCompleted: () => RemoveSubObjective(ref goToObjective),
+                onAbandon: () =>
+                {
+                    RemoveSubObjective(ref goToObjective);
+                    Abandon = true;
+                });
             }
             else
             {
@@ -401,6 +402,7 @@ namespace Barotrauma
                 {
                     character.SelectCharacter(targetCharacter);
                     character.AnimController.Anim = AnimController.Animation.CPR;
+                    performedCpr = true;
                 }
                 else
                 {
@@ -436,9 +438,10 @@ namespace Barotrauma
         {
             bool isCompleted = AIObjectiveRescueAll.GetVitalityFactor(targetCharacter) >= AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager, character, targetCharacter);
             if (isCompleted && targetCharacter != character && character.IsOnPlayerTeam)
-            {                
-                character.Speak(TextManager.GetWithVariable("DialogTargetHealed", "[targetname]", targetCharacter.Name).Value,
-                    null, 1.0f, $"targethealed{targetCharacter.Name}".ToIdentifier(), 60.0f);
+            {
+                string textTag = performedCpr ? "DialogTargetResuscitated" : "DialogTargetHealed";
+                string message = TextManager.GetWithVariable(textTag, "[targetname]", targetCharacter.Name)?.Value;
+                character.Speak(message, delay: 1.0f, identifier: $"targethealed{targetCharacter.Name}".ToIdentifier(), minDurationBetweenSimilar: 60.0f);
             }
             return isCompleted;
         }

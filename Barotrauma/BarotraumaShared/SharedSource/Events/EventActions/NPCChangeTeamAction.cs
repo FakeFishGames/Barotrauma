@@ -61,7 +61,7 @@ namespace Barotrauma
                         npc.GiveIdCardTags(subWaypoint, createNetworkEvent: true);
                     }
 #if SERVER
-                    GameMain.NetworkMember.CreateEntityEvent(npc, new object[] { NetEntityEvent.Type.AddToCrew, TeamTag, npc.Inventory.AllItems.Select(it => it.ID).ToArray() });
+                    GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AddToCrewEventData(TeamTag, npc.Inventory.AllItems));
 #endif
                 }
             }

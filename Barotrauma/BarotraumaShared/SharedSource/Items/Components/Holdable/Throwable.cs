@@ -178,11 +178,11 @@ namespace Barotrauma.Items.Components
                     throwDone = true;
                     IsActive = true;
 
-                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                    if (GameMain.NetworkMember is { IsServer: true })
                     {
-                        GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnSecondaryUse, this, CurrentThrower.ID });
+                        GameMain.NetworkMember.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnSecondaryUse, this, CurrentThrower));
                     }
-                    if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+                    if (!(GameMain.NetworkMember is { IsClient: true }))
                     {
                         //Stun grenades, flares, etc. all have their throw-related things handled in "onSecondaryUse"
                         ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, CurrentThrower, user: CurrentThrower);

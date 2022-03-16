@@ -80,7 +80,7 @@ namespace Barotrauma.Items.Components
         }
 #endif
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             State = msg.ReadBoolean();
             ushort userID = msg.ReadUInt16();

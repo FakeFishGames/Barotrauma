@@ -11,6 +11,16 @@ namespace Barotrauma.Items.Components
 {
     partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
+        private readonly struct ClientEventData : IEventData
+        {
+            public readonly int NodeCount;
+            
+            public ClientEventData(int nodeCount)
+            {
+                NodeCount = nodeCount;
+            }
+        }
+        
         public static Color higlightColor = Color.LightGreen;
         public static Color editorHighlightColor = Color.Yellow;
         public static Color editorSelectedColor = Color.Red;
@@ -555,7 +565,7 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             int eventIndex = msg.ReadRangedInteger(0, (int)Math.Ceiling(MaxNodeCount / (float)MaxNodesPerNetworkEvent));
             int nodeCount = msg.ReadRangedInteger(0, MaxNodesPerNetworkEvent);
@@ -586,9 +596,13 @@ namespace Barotrauma.Items.Components
                 (item.ParentInventory is CharacterInventory characterInventory && ((characterInventory.Owner as Character)?.HasEquippedItem(item) ?? false));
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public override bool ValidateEventData(NetEntityEvent.IData data)
+            => TryExtractEventData<ClientEventData>(data, out _);
+
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            int nodeCount = (int)extraData[2];
+            var eventData = ExtractEventData<ClientEventData>(extraData);
+            int nodeCount = eventData.NodeCount;
             msg.Write((byte)nodeCount);
             if (nodeCount > 0)
             {

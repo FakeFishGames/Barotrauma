@@ -372,12 +372,12 @@ namespace Barotrauma.Items.Components
             IsOn = on;
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.Write(isOn);
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float _)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             SetState(msg.ReadBoolean(), true);
         }

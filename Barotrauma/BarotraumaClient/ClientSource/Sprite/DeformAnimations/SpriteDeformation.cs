@@ -21,8 +21,8 @@ namespace Barotrauma.SpriteDeformations
             private set;
         }
 
-        [Serialize("", IsPropertySaveable.Yes)]
-        public string TypeName
+        [Serialize("", IsPropertySaveable.No)]
+        public string Type 
         {
             get;
             set;
@@ -35,7 +35,7 @@ namespace Barotrauma.SpriteDeformations
             set;
         }
 
-        public string Name => $"Deformation ({TypeName})";
+        public string Name => $"Deformation ({Type})";
 
         [Serialize(1.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2, ValueStep = 0.01f)]
         public float Strength { get; private set; }
@@ -85,11 +85,11 @@ namespace Barotrauma.SpriteDeformations
 
         public SpriteDeformationParams(XElement element)
         {
-            if (element != null)
-            {
-                TypeName = element.GetAttributeString("type", "").ToLowerInvariant();
-            }
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            if (element != null && string.IsNullOrEmpty(Type))
+            {
+                Type = element.GetAttributeString("typename", string.Empty);
+            }
         }
     }
 
@@ -120,7 +120,7 @@ namespace Barotrauma.SpriteDeformations
             set { SetResolution(value); }
         }
 
-        public string TypeName => Params.TypeName;
+        public string TypeName => Params.Type;
 
         public int Sync => Params.Sync;
 
@@ -177,7 +177,7 @@ namespace Barotrauma.SpriteDeformations
 
             if (newDeformation != null)
             {
-                newDeformation.Params.TypeName = typeName;
+                newDeformation.Params.Type = typeName;
             }
             return newDeformation;
         }

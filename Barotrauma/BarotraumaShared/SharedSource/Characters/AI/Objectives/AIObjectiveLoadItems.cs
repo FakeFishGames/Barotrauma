@@ -60,6 +60,7 @@ namespace Barotrauma
             if (targetCondition.HasValue && container.Inventory.IsFull() && container.Inventory.AllItems.None(i => ItemMatchesTargetCondition(i, targetCondition.Value))) { return false; }
             if (!AIObjectiveCleanupItems.IsItemInsideValidSubmarine(item, character)) { return false; }
             if (item.GetRootInventoryOwner() is Character owner && owner != character) { return false; }
+            if (item.IsClaimedByBallastFlora) { return false; }
             if (!item.HasAccess(character)) { return false; }
             // Ignore items that require power but don't have it
             if (item.GetComponent<Powered>() is Powered powered && powered.PowerConsumption > 0 && powered.Voltage < powered.MinVoltage) { return false; }

@@ -89,7 +89,7 @@ namespace Barotrauma.Steam
         }
         
         private static int Round(float v) => (int)MathF.Round(v);
-        private static string Percentage(float v) => $"{Round(v * 100)}%";
+        private static string Percentage(float v) => $"{Round(v * 100)}";
 
         private struct ActionCarrier
         {

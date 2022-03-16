@@ -507,7 +507,7 @@ namespace Barotrauma.Items.Components
             list.Remove(this);
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             //no further data needed, the event just triggers the discharge
         }

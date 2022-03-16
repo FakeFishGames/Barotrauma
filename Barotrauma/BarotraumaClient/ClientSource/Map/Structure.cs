@@ -526,22 +526,17 @@ namespace Barotrauma
             return true;
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             byte sectionCount = msg.ReadByte();
 
             bool invalidMessage = false;
-            if (type != ServerNetObject.ENTITY_EVENT && type != ServerNetObject.ENTITY_EVENT_INITIAL)
-            {
-                DebugConsole.NewMessage($"Error while reading a network event for the structure \"{Name} ({ID})\". Invalid event type ({type}).", Color.Red);
-                return;
-            }
-            else if (sectionCount != Sections.Length)
+            if (sectionCount != Sections.Length)
             {
                 invalidMessage = true;
                 string errorMsg = $"Error while reading a network event for the structure \"{Name} ({ID})\". Section count does not match (server: {sectionCount} client: {Sections.Length})";
-                DebugConsole.NewMessage(errorMsg, Color.Red);
                 GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                throw new Exception(errorMsg);
             }
 
             for (int i = 0; i < sectionCount; i++)

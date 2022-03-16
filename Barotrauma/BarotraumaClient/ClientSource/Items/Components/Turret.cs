@@ -44,7 +44,9 @@ namespace Barotrauma.Items.Components
 
         private readonly Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
         private float prevAngle;
-        
+
+        private float currentBarrelSpin = 0f;
+
         private bool flashLowPower;
         private bool flashNoAmmo, flashLoaderBroken;
         private float flashTimer;
@@ -716,7 +718,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             UInt16 projectileID = msg.ReadUInt16();
             float newTargetRotation = msg.ReadRangedSingle(minRotation, maxRotation, 16);

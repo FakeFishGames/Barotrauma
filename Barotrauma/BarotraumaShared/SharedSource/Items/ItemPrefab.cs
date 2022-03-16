@@ -43,10 +43,6 @@ namespace Barotrauma
             OutConditionMax = element.GetAttributeFloat("outconditionmax", element.GetAttributeFloat("outcondition", 1.0f));
             CopyCondition = element.GetAttributeBool("copycondition", false);
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
-            if (element.Attribute("copycondition") != null && element.Attribute("outcondition") != null)
-            {
-                DebugConsole.AddWarning($"Invalid deconstruction output in \"{parentDebugName}\": the output item \"{ItemIdentifier}\" has the out condition set, but is also set to copy the condition of the deconstructed item. Ignoring the out condition.");
-            }
             RequiredDeconstructor = element.GetAttributeStringArray("requireddeconstructor", 
                 element.Parent?.GetAttributeStringArray("requireddeconstructor", new string[0]) ?? new string[0]);
             RequiredOtherItem = element.GetAttributeStringArray("requiredotheritem", new string[0]);

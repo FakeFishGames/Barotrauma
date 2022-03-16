@@ -1846,11 +1846,9 @@ namespace Barotrauma
                 }
 
                 float angle = flipAngle ? -limb.body.Rotation : limb.body.Rotation;
-                if (wrapAngle) angle = MathUtils.WrapAnglePi(angle);
+                if (wrapAngle) { angle = MathUtils.WrapAnglePi(angle); }
                 
-                TrySetLimbPosition(limb, Collider.SimPosition, position);
-
-                limb.body.SetTransform(limb.body.SimPosition, angle);
+                TrySetLimbPosition(limb, Collider.SimPosition, position, angle);
             }
         }
 

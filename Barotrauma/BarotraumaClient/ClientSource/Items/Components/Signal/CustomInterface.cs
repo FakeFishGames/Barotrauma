@@ -137,13 +137,14 @@ namespace Barotrauma.Items.Components
                     };
                     btn.OnClicked += (_, userdata) =>
                     {
+                        CustomInterfaceElement btnElement = userdata as CustomInterfaceElement;;
                         if (GameMain.Client == null)
                         {
-                            ButtonClicked(userdata as CustomInterfaceElement);
+                            ButtonClicked(btnElement);
                         }
                         else
                         {
-                            GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(this), userdata as CustomInterfaceElement });
+                            item.CreateClientEvent(this, new EventData(btnElement));
                         }
                         return true;
                     };
@@ -301,7 +302,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             //extradata contains an array of buttons clicked by the player (or nothing if the player didn't click anything)
             for (int i = 0; i < customInterfaceElementList.Count; i++)
@@ -323,12 +324,12 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    msg.Write(extraData != null && extraData.Any(d => d as CustomInterfaceElement == customInterfaceElementList[i]));
+                    msg.Write(extraData is Item.ComponentStateEventData { ComponentData: EventData eventData } && eventData.BtnElement == customInterfaceElementList[i]);
                 }
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {

@@ -581,7 +581,7 @@ namespace Barotrauma
 
         private void ShowTransferPrompt()
         {
-            if (GameMain.GameSession.Campaign.Money < deliveryFee && deliveryFee > 0)
+            if (!GameMain.GameSession.Campaign.Wallet.CanAfford(deliveryFee) && deliveryFee > 0)
             {
                 new GUIMessageBox(TextManager.Get("deliveryrequestheader"), TextManager.GetWithVariables("notenoughmoneyfordeliverytext",
                     ("[currencyname]", currencyLongText),
@@ -629,7 +629,7 @@ namespace Barotrauma
 
         private void ShowBuyPrompt(bool purchaseOnly)
         {
-            if (GameMain.GameSession.Campaign.Money < selectedSubmarine.Price)
+            if (!GameMain.GameSession.Campaign.Wallet.CanAfford(selectedSubmarine.Price))
             {
                 new GUIMessageBox(TextManager.Get("purchasesubmarineheader"), TextManager.GetWithVariables("notenoughmoneyforpurchasetext",
                     ("[currencyname]", currencyLongText),

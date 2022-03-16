@@ -160,8 +160,7 @@ namespace Barotrauma.CharacterEditor
                 bool isTextureSelected = false;
                 void UpdatePaths()
                 {
-                    string pathBase = ContentPackage == GameMain.VanillaContent ? $"Content/Characters/{Name}/{Name}"
-                        : $"{ContentPath.ModDirStr}/Characters/{Name}/{Name}";
+                    string pathBase = $"{ContentPath.ModDirStr}/Characters/{Name}/{Name}";
                     XMLPath = $"{pathBase}.xml";
                     xmlPathElement.Text = XMLPath;
                     if (updateTexturePath)
@@ -307,10 +306,10 @@ namespace Barotrauma.CharacterEditor
                                 contentPackageDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.5f), rightContainer.RectTransform, Anchor.TopRight));
                                 foreach (ContentPackage contentPackage in ContentPackageManager.EnabledPackages.All)
                                 {
-#if !DEBUG
-                                    if (contentPackage == GameMain.VanillaContent) { continue; }
-#endif
-                                    contentPackageDropDown.AddItem(contentPackage.Name, userData: contentPackage, toolTip: contentPackage.Path);
+                                    if (contentPackage != GameMain.VanillaContent)
+                                    {
+                                        contentPackageDropDown.AddItem(contentPackage.Name, userData: contentPackage, toolTip: contentPackage.Path);
+                                    }
                                 }
                                 contentPackageDropDown.OnSelected = (obj, userdata) =>
                                 {

@@ -12,9 +12,12 @@ namespace Barotrauma
             Int, Float
         }
 
+        public delegate void OnValueEnteredHandler(GUINumberInput numberInput);
+        public OnValueEnteredHandler OnValueEntered;
+
         public delegate void OnValueChangedHandler(GUINumberInput numberInput);
         public OnValueChangedHandler OnValueChanged;
-        
+
         public GUITextBox TextBox { get; private set; }
 
         public GUIButton PlusButton { get; private set; }
@@ -209,6 +212,8 @@ namespace Barotrauma
                 {
                     ClampFloatValue();
                 }
+
+                OnValueEntered?.Invoke(this);
             };
             TextBox.OnEnterPressed += (textBox, text) =>
             {
@@ -220,6 +225,8 @@ namespace Barotrauma
                 {
                     ClampFloatValue();
                 }
+
+                OnValueEntered?.Invoke(this);
                 return true;
             };
 

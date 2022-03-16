@@ -354,7 +354,14 @@ namespace Barotrauma.Items.Components
                             {
                                 foreach (Item containedItem in availableItem.OwnInventory.AllItemsMod)
                                 {
-                                    containedItem.Drop(dropper: null);
+                                    if (availableItem.GetComponent<ItemContainer>()?.RemoveContainedItemsOnDeconstruct ?? false)
+                                    {
+                                        Entity.Spawner.AddItemToRemoveQueue(containedItem);
+                                    }
+                                    else
+                                    {
+                                        containedItem.Drop(dropper: null);
+                                    }
                                 }
                             }
 

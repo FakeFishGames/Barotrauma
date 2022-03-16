@@ -342,9 +342,9 @@ namespace Barotrauma
             if (property.PropertyType == typeof(string) && value == null)
             {
                 value = "";
-            }
+            }            
 
-            Identifier propertyTag = $"{entity.GetType().Name}.{property.PropertyInfo.Name}".ToIdentifier();
+            Identifier propertyTag = $"{property.PropertyInfo.DeclaringType.Name}.{property.PropertyInfo.Name}".ToIdentifier();
             Identifier fallbackTag = property.PropertyInfo.Name.ToIdentifier();
             LocalizedString displayName =
                 TextManager.Get(propertyTag, $"sp.{propertyTag}.name".ToIdentifier());
@@ -365,7 +365,7 @@ namespace Barotrauma
             {   
                 displayName = property.Name.FormatCamelCaseWithSpaces();
 #if DEBUG
-                Editable editable = property.GetAttribute<Editable>();
+                InGameEditable editable = property.GetAttribute<InGameEditable>();
                 if (editable != null)
                 {
                     if (!MissingLocalizations.Contains($"sp.{propertyTag}.name|{displayName}"))
@@ -378,7 +378,11 @@ namespace Barotrauma
 #endif
             }
 
-            LocalizedString toolTip = TextManager.Get($"sp.{propertyTag}.description", $"sp.{fallbackTag}.description");
+            LocalizedString toolTip = TextManager.Get($"sp.{propertyTag}.description");
+            if (toolTip.IsNullOrEmpty())
+            {
+                toolTip =  TextManager.Get($"{propertyTag}.description", $"sp.{fallbackTag}.description");
+            }
 
             if (toolTip == null)
             {
@@ -1312,12 +1316,9 @@ namespace Barotrauma
                 entity = e.Item;
             }
 
-            if (GameMain.Client != null)
+            if (GameMain.Client != null && entity is Item item)
             {
-                if (entity is IClientSerializable clientSerializable)
-                {
-                    GameMain.Client.CreateEntityEvent(clientSerializable, new object[] { NetEntityEvent.Type.ChangeProperty, property });
-                }
+                GameMain.Client.CreateEntityEvent(item, new Item.ChangePropertyEventData(property));
             }
         }
 

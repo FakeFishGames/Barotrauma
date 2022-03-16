@@ -1668,11 +1668,7 @@ namespace Barotrauma.CharacterEditor
             
             if (contentPackage == null)
             {
-#if DEBUG
-                contentPackage = ContentPackageManager.EnabledPackages.All.LastOrDefault();
-#else
                 contentPackage = ContentPackageManager.EnabledPackages.All.LastOrDefault(cp => cp != vanilla);
-#endif
             }
             if (contentPackage == null)
             {
@@ -1680,13 +1676,11 @@ namespace Barotrauma.CharacterEditor
                 DebugConsole.ThrowError(GetCharacterEditorTranslation("NoContentPackageSelected"));
                 return false;
             }
-#if !DEBUG
             if (vanilla != null && contentPackage == vanilla)
             {
                 GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), GUIStyle.Red, font: GUIStyle.LargeFont);
                 return false;
             }
-#endif
             // Content package
             if (contentPackage is RegularPackage regular && !ContentPackageManager.EnabledPackages.Regular.Contains(regular))
             {
@@ -1721,9 +1715,9 @@ namespace Barotrauma.CharacterEditor
             }
             else
             {
-                config.SetAttributeValue("speciesname", name);
-                config.SetAttributeValue("humanoid", isHumanoid);
-                var ragdollElement = config.Element("ragdolls");
+                config.SetAttributeValue("speciesname", name, StringComparison.OrdinalIgnoreCase);
+                config.SetAttributeValue("humanoid", isHumanoid, StringComparison.OrdinalIgnoreCase);
+                var ragdollElement = config.GetChildElement("ragdolls");
                 if (ragdollElement == null)
                 {
                     config.Add(new XElement("ragdolls", CreateRagdollPath()));
@@ -1736,7 +1730,7 @@ namespace Barotrauma.CharacterEditor
                         ragdollElement.ReplaceWith(new XElement("ragdolls", CreateRagdollPath()));
                     }
                 }
-                var animationElement = config.Element("animations");
+                var animationElement = config.GetChildElement("animations");
                 if (animationElement == null)
                 {
                     config.Add(new XElement("animations", CreateAnimationPath()));

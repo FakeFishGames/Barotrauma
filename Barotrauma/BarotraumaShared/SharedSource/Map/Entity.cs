@@ -5,6 +5,7 @@ using System.Diagnostics;
 using Barotrauma.IO;
 using System.Linq;
 using System.Text;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {

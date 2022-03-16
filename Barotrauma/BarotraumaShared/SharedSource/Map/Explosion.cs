@@ -237,9 +237,9 @@ namespace Barotrauma
                         if (!fireProof)
                         {
                             item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
-                            if (item.Condition <= 0.0f && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                            if (item.Condition <= 0.0f && GameMain.NetworkMember is { IsServer: true })
                             {
-                                GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
+                                GameMain.NetworkMember.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnFire));
                             }
                         }                        
                     }

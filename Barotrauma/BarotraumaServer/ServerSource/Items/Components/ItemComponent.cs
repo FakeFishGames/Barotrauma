@@ -1,4 +1,6 @@
-﻿using System.Xml.Linq;
+﻿using System;
+using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma.Items.Components
 {
@@ -18,7 +20,7 @@ namespace Barotrauma.Items.Components
             return true; //element processed
         }
 
-        public virtual void ServerAppendExtraData(ref object[] extraData) { }
+        public virtual IEventData ServerGetEventData() => null;
     }
 
 }

@@ -99,7 +99,6 @@ namespace Barotrauma
         /// </summary>
         private void Load(XElement element)
         {
-            Money = element.GetAttributeInt("money", 0);
             PurchasedLostShuttles = element.GetAttributeBool("purchasedlostshuttles", false);
             PurchasedHullRepairs = element.GetAttributeBool("purchasedhullrepairs", false);
             PurchasedItemRepairs = element.GetAttributeBool("purchaseditemrepairs", false);
@@ -166,6 +165,9 @@ namespace Barotrauma
                     case "stats":
                         LoadStats(subElement);
                         break;
+                    case Wallet.LowerCaseSaveElementName:
+                        Bank = new Wallet(subElement);
+                        break;
 #if SERVER
                     case "savedexperiencepoints":
                         foreach (XElement savedExp in subElement.Elements())
@@ -175,6 +177,15 @@ namespace Barotrauma
                         break;
 #endif
                 }
+            }
+
+            int oldMoney = element.GetAttributeInt("money", 0);
+            if (oldMoney > 0)
+            {
+                Bank = new Wallet
+                {
+                    Balance = oldMoney
+                };
             }
 
             CampaignMetadata ??= new CampaignMetadata(this);

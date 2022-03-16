@@ -427,7 +427,7 @@ namespace Barotrauma.Items.Components
             item.CreateClientEvent(this);
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             deteriorationTimer = msg.ReadSingle();
             deteriorateAlwaysResetTimer = msg.ReadSingle();
@@ -446,7 +446,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             msg.WriteRangedInteger((int)requestStartFixAction, 0, 2);
             msg.Write(qteSuccess);

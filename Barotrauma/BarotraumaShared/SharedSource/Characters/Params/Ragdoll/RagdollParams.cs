@@ -956,7 +956,7 @@ namespace Barotrauma
                 Deformations = new Dictionary<SpriteDeformationParams, XElement>();
                 foreach (var deformationElement in element.GetChildElements("spritedeformation"))
                 {
-                    string typeName = deformationElement.GetAttributeString("typename", null) ?? deformationElement.GetAttributeString("type", "");
+                    string typeName = deformationElement.GetAttributeString("type", null) ?? deformationElement.GetAttributeString("typename", string.Empty);
                     SpriteDeformationParams deformation = null;
                     switch (typeName.ToLowerInvariant())
                     {
@@ -982,7 +982,7 @@ namespace Barotrauma
                     }
                     if (deformation != null)
                     {
-                        deformation.TypeName = typeName;
+                        deformation.Type = typeName;
                     }
                     Deformations.Add(deformation, deformationElement);
                 }

@@ -37,6 +37,12 @@ namespace Barotrauma
         private GUIFrame pendingChangesFrame = null;
 
         public static Color OwnCharacterBGColor = Color.Gold * 0.7f;
+        private bool isTransferMenuOpen;
+        private bool isSending;
+        private GUIComponent transferMenu;
+        private GUIButton transferMenuButton;
+        private float transferMenuOpenState;
+        private bool transferMenuStateCompleted;
 
         private class LinkedGUI
         {
@@ -133,8 +139,43 @@ namespace Barotrauma
             SelectInfoFrameTab(SelectedTab);
         }
 
-        public void Update()
+        public void Update(float deltaTime)
         {
+            float menuOpenSpeed = deltaTime * 10f;
+            if (isTransferMenuOpen)
+            {
+                if (transferMenuStateCompleted)
+                {
+                    transferMenuOpenState = transferMenuOpenState < 0.25f ? Math.Min(0.25f, transferMenuOpenState + (menuOpenSpeed / 2f)) : 0.25f;
+                }
+                else
+                {
+                    if (transferMenuOpenState > 0.15f)
+                    {
+                        transferMenuStateCompleted = false;
+                        transferMenuOpenState = Math.Max(0.15f, transferMenuOpenState - menuOpenSpeed);
+                    }
+                    else
+                    {
+                        transferMenuStateCompleted = true;
+                    }
+                }
+            }
+            else
+            {
+                transferMenuStateCompleted = false;
+                if (transferMenuOpenState < 1f)
+                {
+                    transferMenuOpenState = Math.Min(1f, transferMenuOpenState + menuOpenSpeed);
+                }
+            }
+
+            if (transferMenu != null && transferMenuButton != null)
+            {
+                int pos = (int)(transferMenuOpenState * -transferMenu.Rect.Height);
+                transferMenu.RectTransform.AbsoluteOffset = new Point(0, pos);
+                transferMenuButton.RectTransform.AbsoluteOffset = new Point(0, -pos - transferMenu.Rect.Height);
+            }
             GameSession.UpdateTalentNotificationIndicator(talentPointNotification);
             if (Character.Controlled is { } controlled && talentResetButton != null && talentApplyButton != null)
             {
@@ -243,10 +284,7 @@ namespace Barotrauma
                 var reputationButton = createTabButton(InfoFrameTab.Reputation, "reputation");
 
                 var balanceFrame = new GUIFrame(new RectTransform(new Point(innerLayoutGroup.Rect.Width, innerLayoutGroup.Rect.Height - infoFrameHolderHeight), parent: innerLayoutGroup.RectTransform), style: "InnerFrame");
-                new GUITextBlock(new RectTransform(Vector2.One, balanceFrame.RectTransform), "", textAlignment: Alignment.Right)
-                {
-                    TextGetter = () => TextManager.GetWithVariable("campaignmoney", "[money]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", campaignMode.Money))
-                };
+                GUITextBlock balanceText = new GUITextBlock(new RectTransform(Vector2.One, balanceFrame.RectTransform), string.Empty, textAlignment: Alignment.Right);
                 GUIFrame bottomDisclaimerFrame = new GUIFrame(new RectTransform(new Vector2(contentFrameSize.X, 0.1f), infoFrame.RectTransform)
                 {
                     AbsoluteOffset = new Point(contentFrame.Rect.X, contentFrame.Rect.Bottom + GUI.IntScale(8))
@@ -257,6 +295,18 @@ namespace Barotrauma
                 if (GameMain.NetLobbyScreen?.CampaignCharacterDiscarded ?? false)
                 {
                     NetLobbyScreen.CreateChangesPendingFrame(pendingChangesFrame);
+                }
+
+                SetBalanceText(balanceText, campaignMode.Bank.Balance);
+                campaignMode.OnMoneyChanged.RegisterOverwriteExisting(nameof(CreateInfoFrame).ToIdentifier(), e =>
+                {
+                    if (e.Wallet != campaignMode.Bank) { return; }
+                    SetBalanceText(balanceText, e.Wallet.Balance);
+                });
+
+                static void SetBalanceText(GUITextBlock text, int balance)
+                {
+                    text.Text = TextManager.GetWithVariable("bankbalanceformat", "[money]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", balance));
                 }
             }
             else
@@ -329,7 +379,8 @@ namespace Barotrauma
 
         private void CreateCrewListFrame(GUIFrame crewFrame)
         {
-            crew = GameMain.GameSession.CrewManager.GetCharacters();
+            // FIXME remove TestScreen stuff
+            crew = GameMain.GameSession?.CrewManager?.GetCharacters() ?? new []{ TestScreen.dummyCharacter };
             teamIDs = crew.Select(c => c.TeamID).Distinct().ToList();
 
             // Show own team first when there's more than one team
@@ -743,7 +794,7 @@ namespace Barotrauma
             Client client = userData as Client;
 
             GUIComponent existingPreview = infoFrameHolder.FindChild("SelectedCharacter");
-            if (existingPreview != null) infoFrameHolder.RemoveChild(existingPreview);
+            if (existingPreview != null) { infoFrameHolder.RemoveChild(existingPreview); }
 
             GUIFrame background = new GUIFrame(new RectTransform(new Vector2(0.543f, 0.717f), infoFrameHolder.RectTransform, Anchor.TopLeft, Pivot.TopRight) { RelativeOffset = new Vector2(-0.145f, 0) })
             {
@@ -760,15 +811,289 @@ namespace Barotrauma
                 {
                     GUIComponent preview = character.Info.CreateInfoFrame(background, false, GetPermissionIcon(GameMain.Client.ConnectedClients.Find(c => c.Character == character)));
                     GameMain.Client.SelectCrewCharacter(character, preview);
+                    CreateWalletFrame(background, character);
                 }
             }
             else if (client != null)
             {
                 GUIComponent preview = CreateClientInfoFrame(background, client, GetPermissionIcon(client));
-                if (GameMain.NetworkMember != null) GameMain.Client.SelectCrewClient(client, preview);
+                if (GameMain.NetworkMember != null) { GameMain.Client.SelectCrewClient(client, preview); }
+                CreateWalletFrame(background, client.Character);
             }
 
             return true;
+        }
+
+        private void CreateWalletFrame(GUIComponent parent, Character character)
+        {
+            if (character is null) { throw new ArgumentNullException(nameof(character), "Tried to create a wallet frame for a null character");}
+            isTransferMenuOpen = false;
+            transferMenuOpenState = 1f;
+            ImmutableArray<Character> salaryCrew = Mission.GetSalaryEligibleCrew().Where(c => c != character).ToImmutableArray();
+
+            Wallet targetWallet = character.Wallet;
+
+            GUIFrame walletFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.35f), parent.RectTransform, anchor: Anchor.TopLeft)
+            {
+                RelativeOffset = new Vector2(0, 1.02f)
+            });
+
+            GUILayoutGroup walletLayout = new GUILayoutGroup(new RectTransform(ToolBox.PaddingSizeParentRelative(walletFrame.RectTransform, 0.9f), walletFrame.RectTransform, anchor: Anchor.Center));
+
+            GUILayoutGroup headerLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.33f), walletLayout.RectTransform), isHorizontal: true);
+            GUIImage icon = new GUIImage(new RectTransform(Vector2.One, headerLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "StoreTradingIcon", scaleToFit: true);
+            float relativeX =  icon.RectTransform.NonScaledSize.X / (float)icon.Parent.RectTransform.NonScaledSize.X;
+            GUILayoutGroup headerTextLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - relativeX, 1f), headerLayout.RectTransform), isHorizontal: true) { Stretch = true };
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), headerTextLayout.RectTransform), TextManager.Get("crewwallet.wallet"), font: GUIStyle.LargeFont);
+            GUITextBlock moneyBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), headerTextLayout.RectTransform), UpgradeStore.FormatCurrency(targetWallet.Balance), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right);
+
+            GUILayoutGroup middleLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.66f), walletLayout.RectTransform));
+            GUILayoutGroup salaryTextLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), middleLayout.RectTransform), isHorizontal: true);
+            GUITextBlock salaryTitle = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), salaryTextLayout.RectTransform), TextManager.Get("crewwallet.salary"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
+            GUITextBlock rewardBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), salaryTextLayout.RectTransform), $"{Mission.GetRewardShare(targetWallet.RewardDistribution, salaryCrew, Option<int>.None()).Percentage}%", textAlignment: Alignment.BottomRight);
+            GUILayoutGroup sliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), middleLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.Center);
+            GUIScrollBar salarySlider = new GUIScrollBar(new RectTransform(new Vector2(0.9f, 1f), sliderLayout.RectTransform), style: "GUISlider", barSize: 0.03f)
+            {
+                Range = Vector2.UnitY,
+                BarScrollValue = targetWallet.RewardDistribution / 100f,
+                Step = 0.01f,
+                BarSize = 0.1f,
+                OnMoved = (bar, scroll) =>
+                {
+                    rewardBlock.Text = $"{Mission.GetRewardShare((int)(scroll * 100f), salaryCrew, Option<int>.None()).Percentage}%";
+                    return true;
+                },
+                OnReleased = (bar, scroll) =>
+                {
+                    int newRewardDistribution = (int)(scroll * 100);
+                    if (newRewardDistribution == targetWallet.RewardDistribution) { return false; }
+                    SetRewardDistribution(character, newRewardDistribution);
+                    return true;
+                }
+            };
+// @formatter:off
+            GUIScissorComponent scissorComponent = new GUIScissorComponent(new RectTransform(new Vector2(0.85f, 1.25f), walletFrame.RectTransform, Anchor.BottomCenter, Pivot.TopCenter))
+            {
+                CanBeFocused = false
+            };
+            transferMenu = new GUIFrame(new RectTransform(Vector2.One, scissorComponent.Content.RectTransform));
+
+            GUILayoutGroup transferMenuLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.8f), transferMenu.RectTransform, Anchor.BottomLeft), childAnchor: Anchor.Center);
+                GUILayoutGroup paddedTransferMenuLayout = new GUILayoutGroup(new RectTransform(ToolBox.PaddingSizeParentRelative(transferMenuLayout.RectTransform, 0.85f), transferMenuLayout.RectTransform));
+                    GUILayoutGroup mainLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), paddedTransferMenuLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+                        GUILayoutGroup leftLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1f), mainLayout.RectTransform));
+                            GUITextBlock leftName = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), leftLayout.RectTransform), character.Name, textAlignment: Alignment.CenterLeft, font: GUIStyle.SubHeadingFont);
+                            GUITextBlock leftBalance = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), leftLayout.RectTransform), UpgradeStore.FormatCurrency(targetWallet.Balance), textAlignment: Alignment.Left) { TextColor = GUIStyle.Blue };
+                        GUILayoutGroup rightLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1f), mainLayout.RectTransform), childAnchor: Anchor.TopRight);
+                            GUITextBlock rightName = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), rightLayout.RectTransform), string.Empty, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterRight);
+                            GUITextBlock rightBalance = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), rightLayout.RectTransform), string.Empty, textAlignment: Alignment.Right) { TextColor = GUIStyle.Red };
+                        GUILayoutGroup centerLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.9f), mainLayout.RectTransform, Anchor.Center), childAnchor: Anchor.Center) { IgnoreLayoutGroups = true };
+                            new GUIFrame(new RectTransform(new Vector2(0f, 1f), centerLayout.RectTransform, Anchor.Center), style: "VerticalLine") { IgnoreLayoutGroups = true };
+                            GUIButton centerButton = new GUIButton(new RectTransform(new Vector2(0.6f), centerLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight, anchor: Anchor.Center), style: "GUIButtonTransferArrow");
+
+                    GUILayoutGroup inputLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.25f), paddedTransferMenuLayout.RectTransform), childAnchor: Anchor.Center);
+                        GUINumberInput transferAmountInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), inputLayout.RectTransform), GUINumberInput.NumberType.Int, hidePlusMinusButtons: true)
+                        {
+                            MinValueInt = 0
+                        };
+
+                    GUILayoutGroup buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.25f), paddedTransferMenuLayout.RectTransform), childAnchor: Anchor.Center);
+                        GUILayoutGroup centerButtonLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1f), buttonLayout.RectTransform), isHorizontal: true);
+                            GUIButton confirmButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1f), centerButtonLayout.RectTransform), TextManager.Get("confirm"), style: "GUIButtonFreeScale") { Enabled = false };
+                            GUIButton resetButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1f), centerButtonLayout.RectTransform), TextManager.Get("reset"), style: "GUIButtonFreeScale") { Enabled = false };
+// @formatter:on
+            transferMenuButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.2f), walletFrame.RectTransform, Anchor.BottomCenter, Pivot.TopCenter), style: "UIToggleButtonVertical")
+            {
+                OnClicked = (button, o) =>
+                {
+                    isTransferMenuOpen = !isTransferMenuOpen;
+                    if (!isTransferMenuOpen)
+                    {
+                        transferAmountInput.IntValue = 0;
+                    }
+                    ToggleTransferMenuIcon(button, open: isTransferMenuOpen);
+                    return true;
+                }
+            };
+            ToggleTransferMenuIcon(transferMenuButton, open: isTransferMenuOpen);
+            ToggleCenterButton(centerButton, isSending);
+
+            if (GameMain.GameSession?.Campaign is MultiPlayerCampaign campaign)
+            {
+                if (!(Character.Controlled is { } myCharacter))
+                {
+                    salarySlider.Enabled = false;
+                    transferAmountInput.Enabled = false;
+                    centerButton.Enabled = false;
+                    confirmButton.Enabled = false;
+                    return;
+                }
+
+                bool hasPermissions = campaign.AllowedToManageCampaign();
+                salarySlider.Enabled = hasPermissions;
+                Wallet otherWallet;
+
+                switch (hasPermissions)
+                {
+                    case true:
+                        rightName.Text = TextManager.Get("crewwallet.bank");
+                        otherWallet = campaign.Bank;
+                        break;
+                    case false when character == myCharacter:
+                        rightName.Text =  TextManager.Get("crewwallet.bank");
+                        otherWallet = campaign.Bank;
+                        isSending = true;
+                        ToggleCenterButton(centerButton, isSending);
+                        break;
+                    default:
+                        rightName.Text = myCharacter.Name;
+                        otherWallet = campaign.PersonalWallet;
+                        break;
+                }
+
+                if (!hasPermissions)
+                {
+                    centerButton.Enabled = centerButton.CanBeFocused = false;
+                    salarySlider.Enabled = salarySlider.CanBeFocused = false;
+                }
+
+                leftBalance.Text = UpgradeStore.FormatCurrency(otherWallet.Balance);
+
+                UpdateAllInputs();
+
+                centerButton.OnClicked = (btn, o) =>
+                {
+                    isSending = !isSending;
+                    ToggleCenterButton(btn, isSending);
+                    UpdateAllInputs();
+                    return true;
+                };
+
+                transferAmountInput.OnValueChanged = input =>
+                {
+                    UpdateInputs();
+                };
+
+                transferAmountInput.OnValueEntered = input =>
+                {
+                    UpdateAllInputs();
+                };
+
+                campaign.OnMoneyChanged.RegisterOverwriteExisting(nameof(CreateWalletFrame).ToIdentifier(), e =>
+                {
+                    if (e.Wallet == targetWallet)
+                    {
+                        moneyBlock.Text = UpgradeStore.FormatCurrency(e.Info.Balance);
+                        salarySlider.BarScrollValue = e.Info.RewardDistribution / 100f;
+                    }
+                    UpdateAllInputs();
+                });
+
+                resetButton.OnClicked = (button, o) =>
+                {
+                    transferAmountInput.IntValue = 0;
+                    UpdateAllInputs();
+                    return true;
+                };
+
+                confirmButton.OnClicked = (button, o) =>
+                {
+                    int amount = transferAmountInput.IntValue;
+                    if (amount == 0) { return false; }
+
+                    Option<Character> target1 = Option<Character>.Some(character),
+                                      target2 = otherWallet == campaign.Bank ? Option<Character>.None() : Option<Character>.Some(myCharacter);
+                    if (isSending) { (target1, target2) = (target2, target1); }
+
+                    SendTransaction(target1, target2, amount);
+                    isTransferMenuOpen = false;
+                    ToggleTransferMenuIcon(transferMenuButton, isTransferMenuOpen);
+                    return true;
+                };
+
+                void UpdateAllInputs()
+                {
+                    UpdateInputs();
+                    UpdateMaxInput();
+                }
+
+                void UpdateInputs()
+                {
+                    confirmButton.Enabled = resetButton.Enabled = transferAmountInput.IntValue > 0;
+                    if (transferAmountInput.IntValue == 0)
+                    {
+                        rightBalance.Text = UpgradeStore.FormatCurrency(otherWallet.Balance);
+                        rightBalance.TextColor = GUIStyle.TextColorNormal;
+                        leftBalance.Text = UpgradeStore.FormatCurrency(targetWallet.Balance);
+                        leftBalance.TextColor = GUIStyle.TextColorNormal;
+                    }
+                    else if (isSending)
+                    {
+                        rightBalance.Text = UpgradeStore.FormatCurrency(otherWallet.Balance + transferAmountInput.IntValue);
+                        rightBalance.TextColor = GUIStyle.Blue;
+                        leftBalance.Text = UpgradeStore.FormatCurrency(targetWallet.Balance - transferAmountInput.IntValue);
+                        leftBalance.TextColor = GUIStyle.Red;
+                    }
+                    else
+                    {
+                        rightBalance.Text = UpgradeStore.FormatCurrency(otherWallet.Balance - transferAmountInput.IntValue);
+                        rightBalance.TextColor = GUIStyle.Red;
+                        leftBalance.Text = UpgradeStore.FormatCurrency(targetWallet.Balance + transferAmountInput.IntValue);
+                        leftBalance.TextColor = GUIStyle.Blue;
+                    }
+                }
+
+                void UpdateMaxInput()
+                {
+                    transferAmountInput.MaxValueInt = isSending ? targetWallet.Balance : otherWallet.Balance;
+                }
+            }
+
+            static void ToggleTransferMenuIcon(GUIButton btn, bool open)
+            {
+                foreach (GUIComponent child in btn.Children)
+                {
+                    child.SpriteEffects = open ? SpriteEffects.None : SpriteEffects.FlipVertically;
+                }
+            }
+
+            static void ToggleCenterButton(GUIButton btn, bool isSending)
+            {
+                foreach (GUIComponent child in btn.Children)
+                {
+                    child.SpriteEffects = isSending ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+                }
+            }
+
+            static void SendTransaction(Option<Character> to, Option<Character> from, int amount)
+            {
+                INetSerializableStruct transfer = new NetWalletTransfer
+                {
+                    Sender = from.Select(option => option.ID),
+                    Receiver = to.Select(option => option.ID),
+                    Amount = amount
+                };
+                IWriteMessage msg = new WriteOnlyMessage().WithHeader(ClientPacketHeader.MONEY);
+                transfer.Write(msg);
+                GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
+            }
+
+            static void SetRewardDistribution(Character character, int newValue)
+            {
+                INetSerializableStruct transfer = new NetWalletSalaryUpdate
+                {
+                    Target = character.ID,
+                    NewRewardDistribution = newValue
+                };
+                IWriteMessage msg = new WriteOnlyMessage().WithHeader(ClientPacketHeader.REWARD_DISTRIBUTION);
+                transfer.Write(msg);
+                GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
+            }
+
+            static int GetRewardDistributionPercentage(int distribution, ImmutableArray<Character> crew)
+            {
+                return Mission.GetRewardShare(distribution, crew, Option<int>.None()).Percentage;
+            }
         }
 
         private GUIComponent CreateClientInfoFrame(GUIFrame frame, Client client, Sprite permissionIcon = null)
@@ -1209,8 +1534,6 @@ namespace Barotrauma
             }
         }
         private Color unselectedColor = new Color(240, 255, 255, 225);
-        private Color selectedColor = new Color(220, 255, 220, 225);
-        private Color ownedColor = new Color(140, 180, 140, 225);
         private Color unselectableColor = new Color(100, 100, 100, 225);
         private Color pressedColor = new Color(60, 60, 60, 225);
 
@@ -1427,7 +1750,7 @@ namespace Barotrauma
 
                         GUILayoutGroup talentOptionLayoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, talentOptionCenterGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
 
-                        foreach (TalentPrefab talent in talentOption.Talents)
+                        foreach (TalentPrefab talent in talentOption.Talents.OrderBy(t => t.Identifier))
                         {
                             GUIFrame talentFrame = new GUIFrame(new RectTransform(Vector2.One, talentOptionLayoutGroup.RectTransform), style: null)
                             {
@@ -1652,7 +1975,7 @@ namespace Barotrauma
                 controlledCharacter.GiveTalent(talent);
                 if (GameMain.Client != null)
                 {
-                    GameMain.Client.CreateEntityEvent(controlledCharacter, new object[] { NetEntityEvent.Type.UpdateTalents });
+                    GameMain.Client.CreateEntityEvent(controlledCharacter, new Character.UpdateTalentsEventData());
                 }
             }
             selectedTalents = controlledCharacter.Info.GetUnlockedTalentsInTree().ToList();

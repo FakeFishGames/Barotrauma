@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
             yield return CoroutineStatus.Success;
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.Write(Text);
             lastSentText = Text;

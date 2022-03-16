@@ -1011,15 +1011,9 @@ namespace Barotrauma
                     ExecuteAttack(damageTarget, targetLimb, out attackResult);
                 }
 #if SERVER
-                GameMain.NetworkMember.CreateEntityEvent(character, new object[] 
-                { 
-                    NetEntityEvent.Type.ExecuteAttack, 
-                    this, 
-                    (damageTarget as Entity)?.ID ?? Entity.NullEntityID, 
-                    damageTarget is Character && targetLimb != null ? Array.IndexOf(((Character)damageTarget).AnimController.Limbs, targetLimb) : 0,
-                    attackSimPos.X,
-                    attackSimPos.Y
-                });   
+                GameMain.NetworkMember.CreateEntityEvent(character, new Character.ExecuteAttackEventData(
+                    attackLimb: this, targetEntity: damageTarget, targetLimb: targetLimb,
+                    targetSimPos: attackSimPos));
 #endif
             }
 
@@ -1055,7 +1049,10 @@ namespace Barotrauma
             if (!attack.IsRunning)
             {
                 // Set the main collider where the body lands after the attack
-                character.AnimController.Collider.SetTransform(character.AnimController.MainLimb.body.SimPosition, rotation: character.AnimController.Collider.Rotation);
+                if (Vector2.DistanceSquared(character.AnimController.Collider.SimPosition, character.AnimController.MainLimb.body.SimPosition) > 0.1f * 0.1f)
+                {
+                    character.AnimController.Collider.SetTransform(character.AnimController.MainLimb.body.SimPosition, rotation: character.AnimController.Collider.Rotation);
+                }
             }
             return wasHit;
         }

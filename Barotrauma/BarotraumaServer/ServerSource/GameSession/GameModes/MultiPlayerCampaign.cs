@@ -12,6 +12,22 @@ namespace Barotrauma
     partial class MultiPlayerCampaign : CampaignMode
     {
         private readonly List<CharacterCampaignData> characterData = new List<CharacterCampaignData>();
+        private readonly Dictionary<ushort, Wallet> walletsToCheck = new Dictionary<ushort, Wallet>();
+        private readonly HashSet<NetWalletTransaction> transactions = new HashSet<NetWalletTransaction>();
+        private const float clientCheckInterval = 10;
+        private float clientCheckTimer = clientCheckInterval;
+
+        public override Wallet GetWallet(Client client = null)
+        {
+            if (client is null) { throw new ArgumentNullException(nameof(client), "Client should not be null in multiplayer"); }
+
+            if (client.Character is { } character)
+            {
+                return character.Wallet;
+            }
+
+            return Wallet.Invalid;
+        }
 
         private bool forceMapUI;
         public bool ForceMapUI
@@ -229,8 +245,7 @@ namespace Barotrauma
                     characterInfo.CauseOfDeath = null;
                 }
                 c.CharacterInfo = characterInfo;
-                characterData.RemoveAll(cd => cd.MatchesClient(c));
-                characterData.Add(new CharacterCampaignData(c));                
+                SetClientCharacterData(c);
             }
 
             //refresh the character data of clients who aren't in the server anymore
@@ -412,8 +427,8 @@ namespace Barotrauma
             LastSaveID++;
         }
 
-        public bool CanPurchaseSub(SubmarineInfo info)
-            => info.Price <= Money && GetCampaignSubs().Contains(info);
+        public bool CanPurchaseSub(SubmarineInfo info, Client client)
+            => GetWallet(client).CanAfford(info.Price) && GetCampaignSubs().Contains(info);
 
         public void DiscardClientCharacterData(Client client)
         {
@@ -487,6 +502,54 @@ namespace Barotrauma
                     KeepCharactersCloseToOutpost(deltaTime);
                 }
             }
+
+            UpdateClientsToCheck(deltaTime);
+            UpdateWallets();
+        }
+
+        private void UpdateClientsToCheck(float deltaTime)
+        {
+            if (clientCheckTimer < clientCheckInterval)
+            {
+                clientCheckTimer += deltaTime;
+                return;
+            }
+
+            clientCheckTimer = 0;
+            walletsToCheck.Clear();
+            walletsToCheck.Add(0, Bank);
+
+            foreach (Character character in Mission.GetSalaryEligibleCrew())
+            {
+                walletsToCheck.Add(character.ID, character.Wallet);
+            }
+        }
+
+        private void UpdateWallets()
+        {
+            foreach (var (id, wallet) in walletsToCheck)
+            {
+                if (wallet.HasTransactions())
+                {
+                    transactions.Add(wallet.DequeueAndMergeTransactions(id));
+                }
+            }
+
+            if (transactions.Count == 0) { return; }
+
+            NetWalletUpdate walletUpdate = new NetWalletUpdate
+            {
+                Transactions = transactions.ToArray()
+            };
+
+            transactions.Clear();
+
+            foreach (Client client in GameMain.Server.ConnectedClients)
+            {
+                IWriteMessage msg = new WriteOnlyMessage().WithHeader(ServerPacketHeader.MONEY);
+                ((INetSerializableStruct)walletUpdate).Write(msg);
+                GameMain.Server?.ServerPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            }
         }
 
         public override void End(TransitionType transitionType = TransitionType.None)
@@ -530,7 +593,6 @@ namespace Barotrauma
 
             msg.Write(ForceMapUI);
 
-            msg.Write(Money);
             msg.Write(PurchasedHullRepairs);
             msg.Write(PurchasedItemRepairs);
             msg.Write(PurchasedLostShuttles);
@@ -644,7 +706,7 @@ namespace Barotrauma
             {
                 string itemPrefabIdentifier = msg.ReadString();
                 int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
-                buyCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
+                buyCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity, sender));
             }
 
             UInt16 subSellCrateItemCount = msg.ReadUInt16();
@@ -653,7 +715,7 @@ namespace Barotrauma
             {
                 string itemPrefabIdentifier = msg.ReadString();
                 int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
-                subSellCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
+                subSellCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity, sender));
             }
 
             UInt16 purchasedItemCount = msg.ReadUInt16();
@@ -662,7 +724,7 @@ namespace Barotrauma
             {
                 string itemPrefabIdentifier = msg.ReadString();
                 int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
-                purchasedItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
+                purchasedItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity, sender));
             }
 
             UInt16 soldItemCount = msg.ReadUInt16();
@@ -711,57 +773,63 @@ namespace Barotrauma
                 int hullRepairCost = location?.GetAdjustedMechanicalCost(HullRepairCost) ?? HullRepairCost;
                 int itemRepairCost = location?.GetAdjustedMechanicalCost(ItemRepairCost) ?? ItemRepairCost;
                 int shuttleRetrieveCost = location?.GetAdjustedMechanicalCost(ShuttleReplaceCost) ?? ShuttleReplaceCost;
-                if (purchasedHullRepairs != this.PurchasedHullRepairs)
+                Wallet personalWallet = GetWallet(sender);
+
+                if (purchasedHullRepairs != PurchasedHullRepairs)
                 {
-                    if (purchasedHullRepairs && Money >= hullRepairCost)
+                    switch (purchasedHullRepairs)
                     {
-                        this.PurchasedHullRepairs = true;
-                        Money -= hullRepairCost;
-                        GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
-                    }
-                    else if (!purchasedHullRepairs)
-                    {
-                        this.PurchasedHullRepairs = false;
-                        Money += hullRepairCost;
+                        case true when personalWallet.CanAfford(hullRepairCost):
+                            personalWallet.Deduct(hullRepairCost);
+                            PurchasedHullRepairs = true;
+                            GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
+                            break;
+                        case false:
+                            PurchasedHullRepairs = false;
+                            personalWallet.Refund(hullRepairCost);
+                            break;
                     }
                 }
-                if (purchasedItemRepairs != this.PurchasedItemRepairs)
+
+                if (purchasedItemRepairs != PurchasedItemRepairs)
                 {
-                    if (purchasedItemRepairs && Money >= itemRepairCost)
+                    switch (purchasedItemRepairs)
                     {
-                        this.PurchasedItemRepairs = true;
-                        Money -= itemRepairCost;
-                        GameAnalyticsManager.AddMoneySpentEvent(itemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
-                    }
-                    else if (!purchasedItemRepairs)
-                    {
-                        this.PurchasedItemRepairs = false;
-                        Money += itemRepairCost;
+                        case true when personalWallet.CanAfford(itemRepairCost):
+                            personalWallet.Deduct(itemRepairCost);
+                            PurchasedItemRepairs = true;
+                            GameAnalyticsManager.AddMoneySpentEvent(itemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
+                            break;
+                        case false:
+                            PurchasedItemRepairs = false;
+                            personalWallet.Refund(itemRepairCost);
+                            break;
                     }
                 }
-                if (purchasedLostShuttles != this.PurchasedLostShuttles)
+
+                if (purchasedLostShuttles != PurchasedLostShuttles)
                 {
-                    if (GameMain.GameSession?.SubmarineInfo != null &&
-                        GameMain.GameSession.SubmarineInfo.LeftBehindSubDockingPortOccupied)
+                    if (GameMain.GameSession?.SubmarineInfo != null && GameMain.GameSession.SubmarineInfo.LeftBehindSubDockingPortOccupied)
                     {
                         GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("ReplaceShuttleDockingPortOccupied"), sender, ChatMessageType.MessageBox);
                     }
-                    else if (purchasedLostShuttles && Money >= shuttleRetrieveCost)
+                    else if (purchasedLostShuttles && personalWallet.TryDeduct(shuttleRetrieveCost))
                     {
-                        this.PurchasedLostShuttles = true;
-                        Money -= shuttleRetrieveCost;
+                        PurchasedLostShuttles = true;
                         GameAnalyticsManager.AddMoneySpentEvent(shuttleRetrieveCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
                     }
                     else if (!purchasedItemRepairs)
                     {
-                        this.PurchasedLostShuttles = false;
-                        Money += shuttleRetrieveCost;
+                        PurchasedLostShuttles = false;
+                        personalWallet.Refund(shuttleRetrieveCost);
                     }
                 }
+
                 if (currentLocIndex < Map.Locations.Count && Map.AllowDebugTeleport)
                 {
                     Map.SetLocation(currentLocIndex);
                 }
+
                 Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
                 if (Map.SelectedLocation == null) { Map.SelectRandomLocation(preferUndiscovered: true); }
                 if (Map.SelectedConnection != null) { Map.SelectMission(selectedMissionIndices); }
@@ -772,18 +840,18 @@ namespace Barotrauma
             if (allowedToManageCampaign || allowedToUseStore || AllowedToManageCampaign(sender, ClientPermissions.BuyItems))
             {
                 var currentBuyCrateItems = new List<PurchasedItem>(CargoManager.ItemsInBuyCrate);
-                currentBuyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, -i.Quantity));
-                buyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, i.Quantity));
+                currentBuyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, -i.Quantity, sender));
+                buyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, i.Quantity, sender));
                 CargoManager.SellBackPurchasedItems(new List<PurchasedItem>(CargoManager.PurchasedItems));
-                CargoManager.PurchaseItems(purchasedItems, false);
+                CargoManager.PurchaseItems(purchasedItems, false, sender);
             }
 
             bool allowedToSellSubItems = AllowedToManageCampaign(sender, ClientPermissions.SellSubItems);
             if (allowedToManageCampaign || allowedToUseStore || allowedToSellSubItems)
             {
                 var currentSubSellCrateItems = new List<PurchasedItem>(CargoManager.ItemsInSellFromSubCrate);
-                currentSubSellCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInSubSellCrate(i.ItemPrefab, -i.Quantity));
-                subSellCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInSubSellCrate(i.ItemPrefab, i.Quantity));
+                currentSubSellCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInSubSellCrate(i.ItemPrefab, -i.Quantity, sender));
+                subSellCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInSubSellCrate(i.ItemPrefab, i.Quantity, sender));
             }
 
             bool allowedToSellInventoryItems = AllowedToManageCampaign(sender, ClientPermissions.SellInventoryItems);
@@ -791,29 +859,29 @@ namespace Barotrauma
             {
                 // for some reason CargoManager.SoldItem is never cleared by the server, I've added a check to SellItems that ignores all
                 // sold items that are removed so they should be discarded on the next message
-                CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems));
-                CargoManager.SellItems(soldItems);
+                CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems), sender);
+                CargoManager.SellItems(soldItems, sender);
             }
             else if (allowedToSellInventoryItems || allowedToSellSubItems)
             {
                 if (allowedToSellInventoryItems)
                 {
-                    CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems.Where(i => i.Origin == SoldItem.SellOrigin.Character)));
+                    CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems.Where(i => i.Origin == SoldItem.SellOrigin.Character)), sender);
                     soldItems.RemoveAll(i => i.Origin != SoldItem.SellOrigin.Character);
                 }
                 else
                 {
-                    CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems.Where(i => i.Origin == SoldItem.SellOrigin.Submarine)));
+                    CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems.Where(i => i.Origin == SoldItem.SellOrigin.Submarine)), sender);
                     soldItems.RemoveAll(i => i.Origin != SoldItem.SellOrigin.Submarine);
                 }
-                CargoManager.SellItems(soldItems);
+                CargoManager.SellItems(soldItems, sender);
             }
 
             if (allowedToManageCampaign)
             {
                 foreach (var (prefab, category, _) in purchasedUpgrades)
                 {
-                    UpgradeManager.PurchaseUpgrade(prefab, category);
+                    UpgradeManager.PurchaseUpgrade(prefab, category, client: sender);
 
                     // unstable logging
                     int price = prefab.Price.GetBuyprice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
@@ -828,7 +896,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall);
+                        UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, client: sender);
                     }
                 }
                 foreach (Item item in Item.ItemList)
@@ -840,6 +908,64 @@ namespace Barotrauma
                     }
                 }
             }
+        }
+
+        public void ServerReadMoney(IReadMessage msg, Client sender)
+        {
+            NetWalletTransfer transfer = INetSerializableStruct.Read<NetWalletTransfer>(msg);
+
+            switch (transfer.Sender)
+            {
+                case Some<ushort> { Value: var id }:
+
+                    if (id != sender.CharacterID && !AllowedToManageCampaign(sender)) { return; }
+
+                    Wallet wallet = GetWalletByID(id);
+                    if (wallet is InvalidWallet) { return; }
+
+                    TransferMoney(wallet);
+                    break;
+
+                case None<ushort> _:
+                    if (!AllowedToManageCampaign(sender)) { return; }
+
+                    TransferMoney(Bank);
+                    break;
+            }
+
+            void TransferMoney(Wallet from)
+            {
+                if (!from.TryDeduct(transfer.Amount)) { return; }
+
+                switch (transfer.Receiver)
+                {
+                    case Some<ushort> { Value: var id }:
+                        Wallet wallet = GetWalletByID(id);
+                        if (wallet is InvalidWallet) { return; }
+
+                        wallet.Give(transfer.Amount);
+                        break;
+                    case None<ushort> _:
+                        Bank.Give(transfer.Amount);
+                        break;
+                }
+            }
+
+            Wallet GetWalletByID(ushort id)
+            {
+                Character targetCharacter = Character.CharacterList.FirstOrDefault(c => c.ID == id);
+                return targetCharacter is null ? Wallet.Invalid : targetCharacter.Wallet;
+            }
+        }
+
+        public void ServerReadRewardDistribution(IReadMessage msg, Client sender)
+        {
+            NetWalletSalaryUpdate update = INetSerializableStruct.Read<NetWalletSalaryUpdate>(msg);
+
+            if (!AllowedToManageCampaign(sender)) { return; }
+
+            Character targetCharacter = Character.CharacterList.FirstOrDefault(c => c.ID == update.Target);
+            targetCharacter?.Wallet.SetRewardDistrubiton(update.NewRewardDistribution);
         }
 
         public void ServerReadCrew(IReadMessage msg, Client sender)
@@ -928,7 +1054,7 @@ namespace Barotrauma
                     {
                         foreach (CharacterInfo hireInfo in location.HireManager.PendingHires)
                         {
-                            if (TryHireCharacter(location, hireInfo))
+                            if (TryHireCharacter(location, hireInfo, sender))
                             {
                                 hiredCharacters.Add(hireInfo);
                             };
@@ -1045,7 +1171,6 @@ namespace Barotrauma
         {
             element.Add(new XAttribute("campaignid", CampaignID));
             XElement modeElement = new XElement("MultiPlayerCampaign",
-                new XAttribute("money", Money),
                 new XAttribute("purchasedlostshuttles", PurchasedLostShuttles),
                 new XAttribute("purchasedhullrepairs", PurchasedHullRepairs),
                 new XAttribute("purchaseditemrepairs", PurchasedItemRepairs),
@@ -1053,6 +1178,7 @@ namespace Barotrauma
 
             modeElement.Add(Settings.Save());
             modeElement.Add(SaveStats());
+            modeElement.Add(Bank.Save());
             CampaignMetadata?.Save(modeElement);
             Map.Save(modeElement);
             CargoManager?.SavePurchasedItems(modeElement);

@@ -278,6 +278,17 @@ namespace Barotrauma
                     characterInfos.Add((new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: jobPrefab, variant: variant), jobPrefab));
                 }
             }
+            if (characterInfos.Count == 0)
+            {
+                DebugConsole.ThrowError($"No starting crew found! If you're using mods, it may be that the mods have overridden the vanilla jobs without specifying which types of characters the starting crew should consist of. If you're the developer of the mod, ensure that you've set the {nameof(JobPrefab.InitialCount)} properties for the custom jobs.");
+                DebugConsole.AddWarning("Choosing the first available jobs as the starting crew...");
+                foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
+                {
+                    var variant = Rand.Range(0, jobPrefab.Variants);
+                    characterInfos.Add((new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: jobPrefab, variant: variant), jobPrefab));
+                    if (characterInfos.Count >= 3) { break; }
+                }
+            }
             characterInfos.Sort((a, b) => Math.Sign(b.Job.MinKarma - a.Job.MinKarma));
 
             characterInfoColumns.ClearChildren();

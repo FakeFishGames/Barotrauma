@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
 
@@ -12,6 +11,7 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "repair item".ToIdentifier();
 
         public override bool AllowInAnySub => true;
+        public override bool KeepDivingGearOn => Item?.CurrentHull == null;
 
         public Item Item { get; private set; }
 
@@ -51,6 +51,10 @@ namespace Barotrauma
             {
                 Priority = 0;
                 IsCompleted = true;
+            }
+            else if (Item.IsClaimedByBallastFlora)
+            {
+                Priority = 0;
             }
             else
             {

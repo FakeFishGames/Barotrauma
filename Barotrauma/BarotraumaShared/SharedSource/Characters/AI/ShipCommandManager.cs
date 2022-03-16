@@ -313,8 +313,7 @@ namespace Barotrauma
                         ShipCommandLog("Dismissing " + shipIssueWorker + " for character " + shipIssueWorker.OrderedCharacter);
 #endif
                         var order = new Order(OrderPrefab.Dismissal, null).WithManualPriority(3).WithOrderGiver(character);
-                        //character.Speak(orderPrefab.GetChatMessage(shipIssueWorker.OrderedCharacter.Name, "", givingOrderToSelf: false));
-                        shipIssueWorker.OrderedCharacter.SetOrder(order);
+                        shipIssueWorker.OrderedCharacter.SetOrder(order, isNewOrder: true);
                         shipIssueWorker.RemoveOrder();
                         break;
                     }
@@ -368,7 +367,7 @@ namespace Barotrauma
             ShipGlobalIssueFixLeaks shipGlobalIssueFixLeaks = new ShipGlobalIssueFixLeaks(this);
             for (int i = 0; i < crewSizeModifier; i++)
             {
-                var order = new Order(OrderPrefab.Prefabs["fixleaks"], null);
+                var order = OrderPrefab.Prefabs["fixleaks"].CreateInstance(OrderPrefab.OrderTargetType.Entity);
                 ShipIssueWorkers.Add(new ShipIssueWorkerFixLeaks(this, order, shipGlobalIssueFixLeaks));
             }
             shipGlobalIssues.Add(shipGlobalIssueFixLeaks);
@@ -376,7 +375,7 @@ namespace Barotrauma
             ShipGlobalIssueRepairSystems shipGlobalIssueRepairSystems = new ShipGlobalIssueRepairSystems(this);
             for (int i = 0; i < crewSizeModifier; i++)
             {
-                var order = new Order(OrderPrefab.Prefabs["repairsystems"], null);
+                var order = OrderPrefab.Prefabs["repairsystems"].CreateInstance(OrderPrefab.OrderTargetType.Entity);
                 ShipIssueWorkers.Add(new ShipIssueWorkerRepairSystems(this, order, shipGlobalIssueRepairSystems));
             }
             shipGlobalIssues.Add(shipGlobalIssueRepairSystems);

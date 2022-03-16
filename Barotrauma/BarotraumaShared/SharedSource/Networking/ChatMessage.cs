@@ -219,8 +219,12 @@ namespace Barotrauma.Networking
         public static string ApplyDistanceEffect(string message, ChatMessageType type, Character sender, Character receiver)
         {
             if (sender == null) { return ""; }
-
-            string spokenMsg = ApplyDistanceEffect(receiver, sender, message, SpeakRange * (1.0f - sender.SpeechImpediment / 100.0f), 3.0f);
+            float range = SpeakRange;
+            if (type == ChatMessageType.Default && sender.SpeechImpediment > 0)
+            {
+                range *= 1.0f - sender.SpeechImpediment / 100.0f;
+            }
+            string spokenMsg = ApplyDistanceEffect(receiver, sender, message, range, 3.0f);
 
             switch (type)
             {

@@ -392,7 +392,6 @@ namespace Barotrauma
             return option;
         }
 
-        
         public ImmutableArray<Identifier> GetTargetItems(Identifier option = default)
         {
             if (option.IsEmpty || !OptionTargetItems.TryGetValue(option, out ImmutableArray<Identifier> optionTargetItems))
@@ -418,6 +417,28 @@ namespace Barotrauma
         }
         
         public override void Dispose() { }
+
+        /// <summary>
+        /// Create an Order instance with a null target
+        /// </summary>
+        public Order CreateInstance(OrderTargetType targetType, Character orderGiver = null, bool isAutonomous = false)
+        {
+            try
+            {
+                return targetType switch
+                {
+                    OrderTargetType.Entity => new Order(this, targetEntity: null, targetItem: null, orderGiver, isAutonomous),
+                    OrderTargetType.Position => new Order(this, target: null, orderGiver),
+                    OrderTargetType.WallSection => new Order(this, wall: null, sectionIndex: null, orderGiver),
+                    _ => throw new NotImplementedException()
+                };
+            }
+            catch (NotImplementedException e)
+            {
+                DebugConsole.ShowError($"Error creating a new Order instance: unexpected target type \"{targetType}\".\n{e.StackTrace.CleanupStackTrace()}");
+                return null;
+            }
+        }
     }
 
     class Order
@@ -510,28 +531,45 @@ namespace Barotrauma
         public readonly bool UseController;
 
         /// <summary>
-        /// Constructor for order instances
+        /// Constructor for orders with the target type OrderTargetType.Entity
         /// </summary>
         public Order(OrderPrefab prefab, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null, bool isAutonomous = false)
             : this(prefab, Identifier.Empty, 0, OrderType.Current, null, targetEntity, targetItem, orderGiver, isAutonomous) { }
 
-
+        /// <summary>
+        /// Constructor for orders with the target type OrderTargetType.Entity
+        /// </summary>
         public Order(OrderPrefab prefab, Identifier option, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null, bool isAutonomous = false)
             : this(prefab, option, 0, OrderType.Current, null, targetEntity, targetItem, orderGiver, isAutonomous) { }
 
+        /// <summary>
+        /// Constructor for orders with the target type OrderTargetType.Position
+        /// </summary>
         public Order(OrderPrefab prefab, OrderTarget target, Character orderGiver = null)
             : this(prefab, prefab.Options.FirstOrDefault(), 0, OrderType.Current, null, target, orderGiver) { }
 
+        /// <summary>
+        /// Constructor for orders with the target type OrderTargetType.Position
+        /// </summary>
         public Order(OrderPrefab prefab, Identifier option, OrderTarget target, Character orderGiver = null)
             : this(prefab, option, 0, OrderType.Current, null, target, orderGiver) { }
 
+        /// <summary>
+        /// Constructor for orders with the target type OrderTargetType.WallSection
+        /// </summary>
         public Order(OrderPrefab prefab, Structure wall, int? sectionIndex, Character orderGiver = null)
             : this(prefab, Identifier.Empty, 0, OrderType.Current, null, wall, sectionIndex, orderGiver) { }
 
+        /// <summary>
+        /// Constructor for orders with the target type OrderTargetType.WallSection
+        /// </summary>
         public Order(OrderPrefab prefab, Identifier option, Structure wall, int? sectionIndex, Character orderGiver = null)
             : this(prefab, option, 0, OrderType.Current, null, wall, sectionIndex, orderGiver) { }
 
-        public Order(OrderPrefab prefab, Identifier option, int manualPriority, OrderType orderType, AIObjective aiObjective, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null, bool isAutonomous = false)
+        /// <summary>
+        /// Constructor for orders with the target type OrderTargetType.Entity
+        /// </summary>
+        private Order(OrderPrefab prefab, Identifier option, int manualPriority, OrderType orderType, AIObjective aiObjective, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null, bool isAutonomous = false)
         {
             Prefab = prefab;
             Option = option;
@@ -561,14 +599,20 @@ namespace Barotrauma
             TargetType = OrderTargetType.Entity;
         }
 
-        public Order(OrderPrefab prefab, Identifier option, int manualPriority, OrderType orderType, AIObjective aiObjective, OrderTarget target, Character orderGiver = null)
+        /// <summary>
+        /// Constructor for orders with the target type OrderTargetType.Position
+        /// </summary>
+        private Order(OrderPrefab prefab, Identifier option, int manualPriority, OrderType orderType, AIObjective aiObjective, OrderTarget target, Character orderGiver = null)
             : this(prefab, option, manualPriority, orderType, aiObjective, targetEntity: null, targetItem: null, orderGiver)
         {
             TargetPosition = target;
             TargetType = OrderTargetType.Position;
         }
 
-        public Order(OrderPrefab prefab, Identifier option, int manualPriority, OrderType orderType, AIObjective aiObjective, Structure wall, int? sectionIndex, Character orderGiver = null)
+        /// <summary>
+        /// Constructor for orders with the target type OrderTargetType.WallSection
+        /// </summary>
+        private Order(OrderPrefab prefab, Identifier option, int manualPriority, OrderType orderType, AIObjective aiObjective, Structure wall, int? sectionIndex, Character orderGiver = null)
             : this(prefab, option, manualPriority, orderType, aiObjective, targetEntity: wall, null, orderGiver: orderGiver)
         {
             WallSectionIndex = sectionIndex;
@@ -633,7 +677,7 @@ namespace Barotrauma
 
         public Order WithTargetEntity(Entity entity)
         {
-            return new Order(this, targetEntity: entity);
+            return new Order(this, targetEntity: entity, targetType: OrderTargetType.Entity);
         }
 
         public Order WithTargetSpatialEntity(ISpatialEntity spatialEntity)
@@ -673,7 +717,7 @@ namespace Barotrauma
 
         public Order WithTargetPosition(OrderTarget targetPosition)
         {
-            return new Order(this, targetPosition: targetPosition);
+            return new Order(this, targetPosition: targetPosition, targetType: OrderTargetType.Position);
         }
 
         public Order Clone()

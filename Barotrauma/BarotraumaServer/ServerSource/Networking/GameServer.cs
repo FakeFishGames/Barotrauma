@@ -814,6 +814,12 @@ namespace Barotrauma.Networking
                 case ClientPacketHeader.CREW:
                     ReadCrewMessage(inc, connectedClient);
                     break;
+                case ClientPacketHeader.MONEY:
+                    ReadMoneyMessage(inc, connectedClient);
+                    break;
+                case ClientPacketHeader.REWARD_DISTRIBUTION:
+                    ReadRewardDistributionMessage(inc, connectedClient);
+                    break;
                 case ClientPacketHeader.MEDICAL:
                     ReadMedicalMessage(inc, connectedClient);
                     break;
@@ -977,12 +983,12 @@ namespace Barotrauma.Networking
             {
                 if (entityEvent.Entity is EntitySpawner)
                 {
-                    var spawnData = entityEvent.Data[0] as EntitySpawner.SpawnOrRemove;
+                    var spawnData = entityEvent.Data as EntitySpawner.SpawnOrRemove;
                     errorLines.Add(
                         entityEvent.ID + ": " +
-                        (spawnData.Remove ? "Remove " : "Create ") +
+                        (spawnData is EntitySpawner.RemoveEntity ? "Remove " : "Create ") +
                         spawnData.Entity.ToString() +
-                        " (" + spawnData.OriginalID + ", " + spawnData.Entity.ID + ")");
+                        " (" + spawnData.ID + ", " + spawnData.Entity.ID + ")");
                 }
             }
 
@@ -996,7 +1002,7 @@ namespace Barotrauma.Networking
             File.WriteAllLines(filePath, errorLines);
         }
 
-        public override void CreateEntityEvent(INetSerializable entity, object[] extraData = null)
+        public override void CreateEntityEvent(INetSerializable entity, NetEntityEvent.IData extraData = null)
         {
             if (!(entity is IServerSerializable serverSerializable))
             {
@@ -1203,7 +1209,7 @@ namespace Barotrauma.Networking
                     case ClientNetObject.CHARACTER_INPUT:
                         if (c.Character != null)
                         {
-                            c.Character.ServerRead(objHeader, inc, c);
+                            c.Character.ServerReadInput(inc, c);
                         }
                         else
                         {
@@ -1243,6 +1249,22 @@ namespace Barotrauma.Networking
             if (GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
             {
                 mpCampaign.ServerReadCrew(inc, sender);
+            }
+        }
+
+        private void ReadMoneyMessage(IReadMessage inc, Client sender)
+        {
+            if (GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
+            {
+                mpCampaign.ServerReadMoney(inc, sender);
+            }
+        }
+
+        private void ReadRewardDistributionMessage(IReadMessage inc, Client sender)
+        {
+            if (GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
+            {
+                mpCampaign.ServerReadRewardDistribution(inc, sender);
             }
         }
 
@@ -1714,7 +1736,8 @@ namespace Barotrauma.Networking
             while (!c.NeedsMidRoundSync && c.PendingPositionUpdates.Count > 0)
             {
                 var entity = c.PendingPositionUpdates.Peek();
-                if (entity == null || entity.Removed ||
+                if (!(entity is IServerPositionSync entityPositionSync) ||
+                    entity.Removed ||
                     (entity is Item item && float.IsInfinity(item.PositionUpdateInterval)))
                 {
                     c.PendingPositionUpdates.Dequeue();
@@ -1724,14 +1747,7 @@ namespace Barotrauma.Networking
                 IWriteMessage tempBuffer = new ReadWriteMessage();
                 tempBuffer.Write(entity is Item); tempBuffer.WritePadBits();
                 tempBuffer.Write(entity is MapEntity me ? me.Prefab.UintIdentifier : (UInt32)0);
-                if (entity is Item)
-                {
-                    ((Item)entity).ServerWritePosition(tempBuffer, c);
-                }
-                else
-                {
-                    ((IServerSerializable)entity).ServerWrite(tempBuffer, c);
-                }
+                entityPositionSync.ServerWritePosition(tempBuffer, c);
 
                 //no more room in this packet
                 if (outmsg.LengthBytes + tempBuffer.LengthBytes > MsgConstants.MTU - 100)
@@ -1879,7 +1895,7 @@ namespace Barotrauma.Networking
                 }
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.Name);
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.MD5Hash.ToString());
-                outmsg.Write(serverSettings.UseRespawnShuttle || (gameStarted && respawnManager.UsingShuttle));
+                outmsg.Write(IsUsingRespawnShuttle());
                 var selectedShuttle = gameStarted && respawnManager.UsingShuttle ? respawnManager.RespawnShuttle.Info : GameMain.NetLobbyScreen.SelectedShuttle;
                 outmsg.Write(selectedShuttle.Name);
                 outmsg.Write(selectedShuttle.MD5Hash.ToString());
@@ -2061,7 +2077,7 @@ namespace Barotrauma.Networking
                 msg.Write(selectedSub.Name);
                 msg.Write(selectedSub.MD5Hash.StringRepresentation);
 
-                msg.Write(serverSettings.UseRespawnShuttle || (gameStarted && respawnManager.UsingShuttle));
+                msg.Write(IsUsingRespawnShuttle());
                 msg.Write(selectedShuttle.Name);
                 msg.Write(selectedShuttle.MD5Hash.StringRepresentation);
 
@@ -2218,8 +2234,6 @@ namespace Barotrauma.Networking
 
             CrewManager crewManager = campaign?.CrewManager;
 
-            entityEventManager.RefreshEntityIDs();
-
             bool hadBots = true;
 
             //assign jobs and spawnpoints separately for each team
@@ -2366,6 +2380,7 @@ namespace Barotrauma.Networking
                         }
                         characterData.ApplyHealthData(spawnedCharacter);
                         characterData.ApplyOrderData(spawnedCharacter);
+                        characterData.ApplyWalletData(spawnedCharacter);
                         spawnedCharacter.GiveIdCardTags(mainSubWaypoints[i]);
                         spawnedCharacter.LoadTalents();
 
@@ -2419,7 +2434,7 @@ namespace Barotrauma.Networking
                 List<PurchasedItem> spawnList = new List<PurchasedItem>();
                 foreach (KeyValuePair<ItemPrefab, int> kvp in serverSettings.ExtraCargo)
                 {
-                    spawnList.Add(new PurchasedItem(kvp.Key, kvp.Value));
+                    spawnList.Add(new PurchasedItem(kvp.Key, kvp.Value, buyer: null));
                 }
 
                 CargoManager.CreateItems(spawnList, sub);
@@ -2486,7 +2501,7 @@ namespace Barotrauma.Networking
             msg.Write(serverSettings.LockAllDefaultWires);
             msg.Write(serverSettings.AllowRagdollButton);
             msg.Write(serverSettings.AllowLinkingWifiToChat);
-            msg.Write(serverSettings.UseRespawnShuttle || (gameStarted && respawnManager.UsingShuttle));
+            msg.Write(IsUsingRespawnShuttle());
             msg.Write((byte)serverSettings.LosMode);
             msg.Write(includesFinalize); msg.WritePadBits();
 
@@ -2498,7 +2513,8 @@ namespace Barotrauma.Networking
                 msg.Write(serverSettings.SelectedLevelDifficulty);
                 msg.Write(gameSession.SubmarineInfo.Name);
                 msg.Write(gameSession.SubmarineInfo.MD5Hash.StringRepresentation);
-                var selectedShuttle = gameStarted && respawnManager.UsingShuttle ? respawnManager.RespawnShuttle.Info : GameMain.NetLobbyScreen.SelectedShuttle;
+                var selectedShuttle = gameStarted && respawnManager != null && respawnManager.UsingShuttle ? 
+                    respawnManager.RespawnShuttle.Info : GameMain.NetLobbyScreen.SelectedShuttle;
                 msg.Write(selectedShuttle.Name);
                 msg.Write(selectedShuttle.MD5Hash.StringRepresentation);
                 msg.Write((byte)GameMain.GameSession.GameMode.Missions.Count());
@@ -2525,6 +2541,11 @@ namespace Barotrauma.Networking
             }
 
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+        }
+
+        private bool IsUsingRespawnShuttle()
+        {
+           return serverSettings.UseRespawnShuttle || (gameStarted && respawnManager != null && respawnManager.UsingShuttle);
         }
 
         private void SendRoundStartFinalize(Client client)
@@ -3286,6 +3307,7 @@ namespace Barotrauma.Networking
         {
             SubmarineInfo targetSubmarine = Voting.SubVote.Sub;
             VoteType voteType = Voting.SubVote.VoteType;
+            Client starter = Voting.SubVote.VoteStarter;
             int deliveryFee = 0;
 
             switch (voteType)
@@ -3293,7 +3315,7 @@ namespace Barotrauma.Networking
                 case VoteType.PurchaseAndSwitchSub:
                 case VoteType.PurchaseSub:
                     // Pay for submarine
-                    GameMain.GameSession.PurchaseSubmarine(targetSubmarine);
+                    GameMain.GameSession.PurchaseSubmarine(targetSubmarine, starter);
                     break;
                 case VoteType.SwitchSub:
                     deliveryFee = Voting.SubVote.DeliveryFee;
@@ -3304,7 +3326,7 @@ namespace Barotrauma.Networking
 
             if (voteType != VoteType.PurchaseSub)
             {
-                SubmarineInfo newSub = GameMain.GameSession.SwitchSubmarine(targetSubmarine, deliveryFee);
+                SubmarineInfo newSub = GameMain.GameSession.SwitchSubmarine(targetSubmarine, deliveryFee, starter);
             }
 
             serverSettings.Voting.StopSubmarineVote(true);
@@ -3461,7 +3483,7 @@ namespace Barotrauma.Networking
             {
                 if (client.Character != null) //removing control of the current character
                 {
-                    CreateEntityEvent(client.Character, new object[] { NetEntityEvent.Type.Control, null });
+                    CreateEntityEvent(client.Character, new Character.ControlEventData(null));
                     client.Character = null;
                 }
             }
@@ -3485,7 +3507,7 @@ namespace Barotrauma.Networking
                 newCharacter.IsRemotePlayer = true;
                 newCharacter.Enabled = true;
                 client.Character = newCharacter;
-                CreateEntityEvent(newCharacter, new object[] { NetEntityEvent.Type.Control, client });
+                CreateEntityEvent(newCharacter, new Character.ControlEventData(client));
             }
         }
 

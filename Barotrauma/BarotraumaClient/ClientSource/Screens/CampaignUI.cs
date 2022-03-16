@@ -143,14 +143,13 @@ namespace Barotrauma
                 {
                     if (Campaign.PurchasedHullRepairs)
                     {
-                        Campaign.Money += CampaignMode.HullRepairCost;
+                        Campaign.Wallet.Refund(CampaignMode.HullRepairCost);
                         Campaign.PurchasedHullRepairs = false;
                     }
                     else
                     {
-                        if (Campaign.Money >= CampaignMode.HullRepairCost)
+                        if (Campaign.Wallet.TryDeduct(CampaignMode.HullRepairCost))
                         {
-                            Campaign.Money -= CampaignMode.HullRepairCost;
                             GameAnalyticsManager.AddMoneySpentEvent(CampaignMode.HullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
                             Campaign.PurchasedHullRepairs = true;
                         }
@@ -189,14 +188,13 @@ namespace Barotrauma
                 {
                     if (Campaign.PurchasedItemRepairs)
                     {
-                        Campaign.Money += CampaignMode.ItemRepairCost;
+                        Campaign.Wallet.Refund(CampaignMode.ItemRepairCost);
                         Campaign.PurchasedItemRepairs = false;
                     }
                     else
                     {
-                        if (Campaign.Money >= CampaignMode.ItemRepairCost)
+                        if (Campaign.Wallet.TryDeduct(CampaignMode.ItemRepairCost))
                         {
-                            Campaign.Money -= CampaignMode.ItemRepairCost;
                             GameAnalyticsManager.AddMoneySpentEvent(CampaignMode.ItemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
                             Campaign.PurchasedItemRepairs = true;
                         }
@@ -242,14 +240,13 @@ namespace Barotrauma
 
                     if (Campaign.PurchasedLostShuttles)
                     {
-                        Campaign.Money += CampaignMode.ShuttleReplaceCost;
+                        Campaign.Wallet.Refund(CampaignMode.ShuttleReplaceCost);
                         Campaign.PurchasedLostShuttles = false;
                     }
                     else
                     {
-                        if (Campaign.Money >= CampaignMode.ShuttleReplaceCost)
+                        if (Campaign.Wallet.TryDeduct(CampaignMode.ShuttleReplaceCost))
                         {
-                            Campaign.Money -= CampaignMode.ShuttleReplaceCost;
                             GameAnalyticsManager.AddMoneySpentEvent(CampaignMode.ShuttleReplaceCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
                             Campaign.PurchasedLostShuttles = true;
                         }
@@ -445,7 +442,7 @@ namespace Barotrauma
                     {
                         Color = MapGenerationParams.Instance.IndicatorColor,
                         HoverColor = Color.Lerp(MapGenerationParams.Instance.IndicatorColor, Color.White, 0.5f),
-                        ToolTip = TextManager.Get(connection.LevelData.IsBeaconActive ? "BeaconStationActiveTooltip" : "BeaconStationInactiveTooltip")
+                        ToolTip = RichString.Rich(TextManager.Get(connection.LevelData.IsBeaconActive ? "BeaconStationActiveTooltip" : "BeaconStationInactiveTooltip"))
                     };
                     new GUITextBlock(new RectTransform(Vector2.One, beaconStationContent.RectTransform),
                         TextManager.Get("submarinetype.beaconstation", "beaconstationsonarlabel"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft)
@@ -462,7 +459,7 @@ namespace Barotrauma
                     {
                         Color = MapGenerationParams.Instance.IndicatorColor,
                         HoverColor = Color.Lerp(MapGenerationParams.Instance.IndicatorColor, Color.White, 0.5f),
-                        ToolTip = TextManager.Get("HuntingGroundsTooltip")
+                        ToolTip = RichString.Rich(TextManager.Get("HuntingGroundsTooltip"))
                     };
                     new GUITextBlock(new RectTransform(Vector2.One, huntingGroundsContent.RectTransform),
                         TextManager.Get("missionname.huntinggrounds"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft)
@@ -705,11 +702,11 @@ namespace Barotrauma
             {
                 case CampaignMode.InteractionType.Repair:
                     repairHullsButton.Enabled =
-                        (Campaign.PurchasedHullRepairs || Campaign.Money >= CampaignMode.HullRepairCost) &&
+                        (Campaign.PurchasedHullRepairs || Campaign.Wallet.CanAfford(CampaignMode.HullRepairCost)) &&
                         Campaign.AllowedToManageCampaign();
                     repairHullsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedHullRepairs;
                     repairItemsButton.Enabled =
-                        (Campaign.PurchasedItemRepairs || Campaign.Money >= CampaignMode.ItemRepairCost) &&
+                        (Campaign.PurchasedItemRepairs || Campaign.Wallet.CanAfford(CampaignMode.ItemRepairCost)) &&
                         Campaign.AllowedToManageCampaign();
                     repairItemsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedItemRepairs;
 
@@ -721,7 +718,7 @@ namespace Barotrauma
                     else
                     {
                         replaceShuttlesButton.Enabled =
-                            (Campaign.PurchasedLostShuttles || Campaign.Money >= CampaignMode.ShuttleReplaceCost) &&
+                            (Campaign.PurchasedLostShuttles || Campaign.Wallet.CanAfford(CampaignMode.ShuttleReplaceCost)) &&
                             Campaign.AllowedToManageCampaign();
                         replaceShuttlesButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedLostShuttles;
                     }
@@ -742,7 +739,7 @@ namespace Barotrauma
 
         public static LocalizedString GetMoney()
         {
-            return TextManager.GetWithVariable("PlayerCredits", "[credits]", (GameMain.GameSession?.Campaign == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", GameMain.GameSession.Campaign.Money));
+            return TextManager.GetWithVariable("PlayerCredits", "[credits]", (GameMain.GameSession?.Campaign == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", GameMain.GameSession.Campaign.Wallet.Balance));
         }
 
         private void UpdateMaxMissions(Location location)

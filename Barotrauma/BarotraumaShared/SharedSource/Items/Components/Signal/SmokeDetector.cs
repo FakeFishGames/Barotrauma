@@ -68,7 +68,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (FireSource fireSource in hull.FireSources)
                 {
-                    if (fireSource.IsInDamageRange(item.WorldPosition, fireSource.DamageRange * 2.0f)) { return true; }
+                    if (fireSource.IsInDamageRange(item.WorldPosition, Math.Max(fireSource.DamageRange * 2.0f, 500.0f))) { return true; }
                 }
             }
 

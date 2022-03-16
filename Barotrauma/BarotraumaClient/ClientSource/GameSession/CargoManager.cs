@@ -184,7 +184,7 @@ namespace Barotrauma
                 }
                 // Exchange money
                 Location.StoreCurrentBalance -= itemValue;
-                campaign.Money += itemValue;
+                campaign.Wallet.TryDeduct(itemValue);
                 GameAnalyticsManager.AddMoneyGainedEvent(itemValue, GameAnalyticsManager.MoneySource.Store, item.ItemPrefab.Identifier.Value);
 
                 // Remove from the sell crate

@@ -15,6 +15,8 @@ namespace Barotrauma.Items.Components
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
 
+        protected readonly Character[] signalSender = new Character[2];
+
         [Serialize(999999.0f, IsPropertySaveable.Yes, description: "The output of the item is restricted below this value.", alwaysUseInstanceValues: true),
             InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f)]
         public float ClampMax
@@ -33,7 +35,7 @@ namespace Barotrauma.Items.Components
 
         [InGameEditable(DecimalCount = 2),
             Serialize(0.0f, IsPropertySaveable.Yes, description: "The item must have received signals to both inputs within this timeframe to output the result." +
-            " If set to 0, the inputs must be received at the same time.", alwaysUseInstanceValues: true)]
+            " If set to 0, the inputs must be received at the same time.", alwaysUseInstanceValues: true, translationTextTag: "sp.")]
         public float TimeFrame
         {
             get { return timeFrame; }
@@ -71,7 +73,7 @@ namespace Barotrauma.Items.Components
             float output = Calculate(receivedSignal[0], receivedSignal[1]);
             if (MathUtils.IsValid(output))
             {
-                item.SendSignal(MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), "signal_out");
+                item.SendSignal(new Signal(MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), sender: signalSender[0] ?? signalSender[1]), "signal_out");
             }           
         }
 
@@ -83,11 +85,13 @@ namespace Barotrauma.Items.Components
             {
                 case "signal_in1":
                     float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
+                    signalSender[0] = signal.sender;
                     timeSinceReceived[0] = 0.0f;
                     IsActive = true;
                     break;
                 case "signal_in2":
                     float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
+                    signalSender[1] = signal.sender;
                     timeSinceReceived[1] = 0.0f;
                     IsActive = true;
                     break;

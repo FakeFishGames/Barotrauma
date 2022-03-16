@@ -68,7 +68,7 @@ namespace Barotrauma
 
     abstract partial class CampaignMode : GameMode
     {
-        const int MaxMoney = int.MaxValue / 2; //about 1 billion
+        public const int MaxMoney = int.MaxValue / 2; //about 1 billion
         public const int InitialMoney = 8500;
 
         //duration of the cinematic + credits at the end of the campaign
@@ -101,6 +101,8 @@ namespace Barotrauma
         public CampaignSettings Settings;
 
         private readonly List<Mission> extraMissions = new List<Mission>();
+
+        public readonly NamedEvent<WalletChangedEvent> OnMoneyChanged = new NamedEvent<WalletChangedEvent>();
 
         public enum TransitionType
         {
@@ -167,12 +169,7 @@ namespace Barotrauma
             }
         }
 
-        private int money;
-        public int Money
-        {
-            get { return money; }
-            set { money = MathHelper.Clamp(value, 0, MaxMoney); }
-        }
+        public Wallet Bank;
 
         public LevelData NextLevel
         {
@@ -183,9 +180,18 @@ namespace Barotrauma
         protected CampaignMode(GameModePreset preset)
             : base(preset)
         {
-            Money = InitialMoney;
+            Bank = new Wallet
+            {
+                Balance = InitialMoney
+            };
+
             CargoManager = new CargoManager(this);
             MedicalClinic = new MedicalClinic(this);
+        }
+
+        public virtual Wallet GetWallet(Client client = null)
+        {
+            return Bank;
         }
 
         /// <summary>
@@ -200,7 +206,7 @@ namespace Barotrauma
             {
                 return Level.Loaded.EndLocation;
             }
-            return Level.Loaded?.StartLocation ?? Map.CurrentLocation;            
+            return Level.Loaded?.StartLocation ?? Map.CurrentLocation;
         }
 
         public List<Submarine> GetSubsToLeaveBehind(Submarine leavingSub)
@@ -255,8 +261,6 @@ namespace Barotrauma
             PurchasedLostShuttles = false;
             var connectedSubs = Submarine.MainSub.GetConnectedSubs();
             wasDocked = Level.Loaded.StartOutpost != null && connectedSubs.Contains(Level.Loaded.StartOutpost);
-
-            ResetTalentData();
         }
 
         public void InitCampaignData()
@@ -702,21 +706,20 @@ namespace Barotrauma
             string eventId = "FinishCampaign:";
             GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"));
             GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count() ?? 0));
-            GameAnalyticsManager.AddDesignEvent(eventId + "Money", Money);
+            GameAnalyticsManager.AddDesignEvent(eventId + "Money", Bank.Balance);
             GameAnalyticsManager.AddDesignEvent(eventId + "Playtime", TotalPlayTime);
             GameAnalyticsManager.AddDesignEvent(eventId + "PassedLevels", TotalPassedLevels);
         }
 
         protected virtual void EndCampaignProjSpecific() { }
 
-        public bool TryHireCharacter(Location location, CharacterInfo characterInfo)
+        public bool TryHireCharacter(Location location, CharacterInfo characterInfo, Client client = null)
         {
             if (characterInfo == null) { return false; }
-            if (Money < characterInfo.Salary) { return false; }
+            if (!GetWallet(client).TryDeduct(characterInfo.Salary)) { return false; }
             characterInfo.IsNewHire = true;
             location.RemoveHireableCharacter(characterInfo);
             CrewManager.AddCharacterInfo(characterInfo);
-            Money -= characterInfo.Salary;
             GameAnalyticsManager.AddMoneySpentEvent(characterInfo.Salary, GameAnalyticsManager.MoneySink.Crew, characterInfo.Job?.Prefab.Identifier.Value ?? "unknown");
             return true;
         }
@@ -740,8 +743,7 @@ namespace Barotrauma
             HumanAIController humanAI = npc.AIController as HumanAIController;
             if (humanAI == null) { yield return CoroutineStatus.Success; }
 
-            var waitOrderPrefab = OrderPrefab.Prefabs["wait"];
-            var waitOrder = new Order(waitOrderPrefab, Identifier.Empty, null, orderGiver: null);
+            var waitOrder = OrderPrefab.Prefabs["wait"].CreateInstance(OrderPrefab.OrderTargetType.Entity);
             humanAI.SetForcedOrder(waitOrder);
             var waitObjective = humanAI.ObjectiveManager.ForcedOrder;
             humanAI.FaceTarget(interactor);
@@ -856,7 +858,7 @@ namespace Barotrauma
                         {
                         
                             GameMain.Server.SendDirectChatMessage(Networking.ChatMessage.Create(
-                                TextManager.Get("RadioAnnouncerName").Value, 
+                                TextManager.Get("RadioAnnouncerName").Value,
                                 TextManager.Get("TooFarFromOutpostWarning").Value,  Networking.ChatMessageType.Default, null), c);
                         }
 #endif
@@ -906,7 +908,7 @@ namespace Barotrauma
         public void LogState()
         {
             DebugConsole.NewMessage("********* CAMPAIGN STATUS *********", Color.White);
-            DebugConsole.NewMessage("   Money: " + Money, Color.White);
+            DebugConsole.NewMessage("   Money: " + Bank.Balance, Color.White);
             DebugConsole.NewMessage("   Current location: " + map.CurrentLocation.Name, Color.White);
 
             DebugConsole.NewMessage("   Available destinations: ", Color.White);
@@ -959,14 +961,6 @@ namespace Barotrauma
                 }
             }
         }
-
-        // Talent relevant data, only stored for the duration of the mission
-        private void ResetTalentData()
-        {
-            CrewHasDied = false;
-        }
-
-        public bool CrewHasDied { get; set; }
 
     }
 }

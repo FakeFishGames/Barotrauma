@@ -162,7 +162,7 @@ namespace Barotrauma
             Identifier variantOf = MainElement.VariantOf();
             if (!variantOf.IsEmpty)
             {
-                VariantFile = doc;
+                VariantFile = new XDocument(doc);
                 #warning TODO: determine that CreateVariantXML is equipped to do this
                 XElement newRoot = CreateVariantXml(MainElement, CharacterPrefab.FindBySpeciesName(variantOf).ConfigElement);
                 var oldElement = MainElement;
@@ -477,11 +477,14 @@ namespace Barotrauma
             [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
             public float ConstantHealthRegeneration { get; private set; }
 
-            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 100, DecimalCount = 2)]
             public float HealthRegenerationWhenEating { get; private set; }
 
             [Serialize(false, IsPropertySaveable.Yes), Editable]
             public bool StunImmunity { get; set; }
+
+            [Serialize(false, IsPropertySaveable.Yes), Editable]
+            public bool PoisonImmunity { get; set; }
 
             [Serialize(false, IsPropertySaveable.Yes, description: "Can afflictions affect the face/body tint of the character."), Editable]
             public bool ApplyAfflictionColors { get; private set; }

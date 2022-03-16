@@ -156,7 +156,7 @@ namespace Barotrauma.Items.Components
 
         private readonly object mutex = new object();
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             Health = msg.ReadRangedSingle(0, MaxHealth, 8);
             int startOffset = msg.ReadRangedInteger(-1, MaximumVines);

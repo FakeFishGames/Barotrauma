@@ -153,7 +153,7 @@ namespace Barotrauma
             }
         }
 
-        public PosInfo ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime, string parentDebugName)
+        public PosInfo ClientRead(IReadMessage msg, float sendingTime, string parentDebugName)
         {
             float MaxVel            = NetConfig.MaxPhysicsBodyVelocity;
             float MaxAngularVel     = NetConfig.MaxPhysicsBodyAngularVelocity;

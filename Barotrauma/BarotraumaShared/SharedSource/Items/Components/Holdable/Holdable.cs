@@ -12,6 +12,16 @@ namespace Barotrauma.Items.Components
 {
     partial class Holdable : Pickable, IServerSerializable, IClientSerializable
     {
+        private readonly struct EventData : IEventData
+        {
+            public readonly Vector2 AttachPos;
+            
+            public EventData(Vector2 attachPos)
+            {
+                AttachPos = attachPos;
+            }
+        }
+
         const float MaxAttachDistance = 150.0f;
 
         //the position(s) in the item that the Character grabs
@@ -155,8 +165,8 @@ namespace Barotrauma.Items.Components
         [Editable, Serialize(false, IsPropertySaveable.No, description: "Should the item swing around when it's being used (for example, when firing a weapon or a welding tool).")]
         public bool SwingWhenUsing { get; set; }
 
-        [ConditionallyEditable(ConditionallyEditable.ConditionType.Attachable, MinValueFloat = 0.0f, MaxValueFloat = 0.999f, DecimalCount = 3), Serialize(0.85f, IsPropertySaveable.No, description: "Sprite depth that's used when the item is attached to a wall.")]
-        public float SpriteDepthWhenAttached
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.Attachable, MinValueFloat = 0.0f, MaxValueFloat = 0.999f, DecimalCount = 3), Serialize(0.55f, IsPropertySaveable.No, description: "Sprite depth that's used when the item is NOT attached to a wall.")]
+        public float SpriteDepthWhenDropped
         {
             get;
             set;
@@ -244,12 +254,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private bool loadedFromXml;
+        private bool loadedFromInstance;
         public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
             base.Load(componentElement, usePrefabValues, idRemap);
 
-            loadedFromXml = true;
+            loadedFromInstance = true;
 
             if (usePrefabValues)
             {
@@ -583,7 +593,7 @@ namespace Barotrauma.Items.Components
 
             Attached = true;
 #if CLIENT
-            item.DrawDepthOffset = SpriteDepthWhenAttached - item.SpriteDepth;
+            item.DrawDepthOffset = 0.0f;
 #endif
         }
 
@@ -600,6 +610,9 @@ namespace Barotrauma.Items.Components
             requiredItems.Clear();
             DisplayMsg = "";
             PickKey = InputType.Select;
+#if CLIENT
+            item.DrawDepthOffset = SpriteDepthWhenDropped - item.SpriteDepth;
+#endif
         }
 
         public override void ParseMsg()
@@ -663,12 +676,7 @@ namespace Barotrauma.Items.Components
                     {
 #if CLIENT
                         Vector2 attachPos = ConvertUnits.ToSimUnits(GetAttachPosition(character));
-                        GameMain.Client.CreateEntityEvent(item, new object[] 
-                        { 
-                            NetEntityEvent.Type.ComponentState, 
-                            item.GetComponentIndex(this), 
-                            attachPos
-                        });
+                        item.CreateClientEvent(this, new EventData(attachPos));
 #endif
                     }
                     return false;
@@ -867,8 +875,8 @@ namespace Barotrauma.Items.Components
         {
             if (!attachable) { return; }
             
-            //a mod has overridden the item, and the base item didn't have a Holdable component = a mod made the item movable/detachable
-            if (item.Prefab.IsOverride && !loadedFromXml)
+            //the Holdable component didn't get loaded from an instance of the item, just the prefab xml = a mod or update must've made the item movable/detachable
+            if (!loadedFromInstance)
             {
                 if (attachedByDefault)
                 {

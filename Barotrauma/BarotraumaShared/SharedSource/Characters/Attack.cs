@@ -487,6 +487,10 @@ namespace Barotrauma
                     // TODO: do we want to apply the effect at the world position or the entity positions in each cases? -> go through also other cases where status effects are applied
                     effect.Apply(effectType, deltaTime, attacker, sourceLimb ?? attacker as ISerializableEntity, worldPosition);
                 }
+                if (effect.HasTargetType(StatusEffect.TargetType.Parent))
+                {
+                    effect.Apply(effectType, deltaTime, attacker, attacker);
+                }
                 if (targetCharacter != null)
                 {
                     if (effect.HasTargetType(StatusEffect.TargetType.Character))
@@ -550,6 +554,10 @@ namespace Barotrauma
                 if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
                     effect.Apply(effectType, deltaTime, attacker, sourceLimb ?? attacker as ISerializableEntity);
+                }
+                if (effect.HasTargetType(StatusEffect.TargetType.Parent))
+                {
+                    effect.Apply(effectType, deltaTime, attacker, attacker);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.Character))
                 {

@@ -70,6 +70,8 @@ namespace Barotrauma
 
         private (SubmarineInfo pendingSub, float realWorldCrushDepth) pendingSubInfo;
 
+        private RichString beaconStationActiveText, beaconStationInactiveText;
+
         /*private (Rectangle targetArea, string tip)? connectionTooltip;
         private string sanitizedConnectionTooltip;
         private List<RichTextData> connectionTooltipRichTextData;
@@ -152,6 +154,9 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError($"Could not find campaign map sprites for the biome \"{missingBiome.Identifier}\". Using the sprites of the first biome instead...");
             }
+
+            beaconStationActiveText = RichString.Rich(TextManager.Get("BeaconStationActiveTooltip"));
+            beaconStationInactiveText = RichString.Rich(TextManager.Get("BeaconStationInactiveTooltip"));
 
             RemoveFogOfWar(StartLocation);
 
@@ -619,7 +624,7 @@ namespace Barotrauma
                         if (Vector2.Distance(PlayerInput.MousePosition, typeChangeIconPos) < generationParams.TypeChangeIcon.SourceRect.Width * zoom &&
                             (tooltip == null || IsPreferredTooltip(typeChangeIconPos)))
                         {
-                            tooltip = (new Rectangle(typeChangeIconPos.ToPoint(), new Point(30)), location.LastTypeChangeMessage);
+                            tooltip = (new Rectangle(typeChangeIconPos.ToPoint(), new Point(30)), RichString.Rich(location.LastTypeChangeMessage));
                         }
                     }
                     if (location != CurrentLocation && generationParams.MissionIcon != null)
@@ -920,7 +925,7 @@ namespace Barotrauma
                 if (connection.LevelData.HasBeaconStation)
                 {
                     var beaconStationIconStyle = connection.LevelData.IsBeaconActive ? "BeaconStationActive" : "BeaconStationInactive";
-                    DrawIcon(beaconStationIconStyle, (int)(28 * zoom), TextManager.Get(connection.LevelData.IsBeaconActive ? "BeaconStationActiveTooltip" : "BeaconStationInactiveTooltip"));
+                    DrawIcon(beaconStationIconStyle, (int)(28 * zoom), connection.LevelData.IsBeaconActive ? beaconStationActiveText : beaconStationInactiveText);
                 }
 
                 if (connection.Locked)
@@ -942,9 +947,9 @@ namespace Barotrauma
 
                         DrawIcon(
                             "LockedLocationConnection", (int)(28 * zoom),
-                            TextManager.GetWithVariables(unlockEvent.UnlockPathTooltip ?? "LockedPathTooltip",
+                            RichString.Rich(TextManager.GetWithVariables(unlockEvent.UnlockPathTooltip ?? "LockedPathTooltip",
                               ("[requiredreputation]", Reputation.GetFormattedReputationText(MathUtils.InverseLerp(unlockReputation.MinReputation, unlockReputation.MaxReputation, unlockEvent.UnlockPathReputation), unlockEvent.UnlockPathReputation, addColorTags: true)),
-                              ("[currentreputation]", unlockReputation.GetFormattedReputationText(addColorTags: true))));
+                              ("[currentreputation]", unlockReputation.GetFormattedReputationText(addColorTags: true)))));
                     }
                     else
                     {
@@ -955,7 +960,7 @@ namespace Barotrauma
 
                 if (connection.LevelData.HasHuntingGrounds)
                 {
-                    DrawIcon("HuntingGrounds", (int)(28 * zoom), TextManager.Get("HuntingGroundsTooltip"));
+                    DrawIcon("HuntingGrounds", (int)(28 * zoom), RichString.Rich(TextManager.Get("HuntingGroundsTooltip")));
                 }
 
                 if (crushDepthWarningIconStyle != null)
@@ -976,7 +981,7 @@ namespace Barotrauma
                 }
             }
 
-            void DrawIcon(string iconStyle, int iconSize, LocalizedString tooltipText)
+            void DrawIcon(string iconStyle, int iconSize, RichString tooltipText)
             {
                 Vector2 iconPos = (connectionStart.Value + connectionEnd.Value) / 2;
                 Vector2 iconDiff = Vector2.Normalize(connectionEnd.Value - connectionStart.Value) * iconSize;

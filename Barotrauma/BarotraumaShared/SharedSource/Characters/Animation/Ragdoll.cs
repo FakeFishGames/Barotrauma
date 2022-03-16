@@ -803,9 +803,9 @@ namespace Barotrauma
             }
 
             SeverLimbJointProjSpecific(limbJoint, playSound: true);
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+            if (GameMain.NetworkMember is { IsServer: true })
             {
-                GameMain.NetworkMember.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.Status });
+                GameMain.NetworkMember.CreateEntityEvent(character, new Character.StatusEventData());
             }
             return true;
         }
@@ -1693,7 +1693,7 @@ namespace Barotrauma
                     if (limb.IsSevered) { continue; }
                     //check visibility from the new position of the collider to the new position of this limb
                     Vector2 movePos = limb.SimPosition + limbMoveAmount;
-                    TrySetLimbPosition(limb, simPosition, movePos, lerp, ignorePlatforms);
+                    TrySetLimbPosition(limb, simPosition, movePos, limb.Rotation, lerp, ignorePlatforms);
                 }
             }
         }
@@ -1708,7 +1708,7 @@ namespace Barotrauma
             IsHanging = true;
         }
 
-        protected void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true)
+        protected void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition, float rotation, bool lerp = false, bool ignorePlatforms = true)
         {
             Vector2 movePos = simPosition;
 
@@ -1730,11 +1730,12 @@ namespace Barotrauma
             if (lerp)
             {
                 limb.body.TargetPosition = movePos;
-                limb.body.MoveToTargetPosition(true);                
+                limb.body.TargetRotation = rotation;
+                limb.body.MoveToTargetPosition(true);
             }
             else
             {
-                limb.body.SetTransform(movePos, limb.Rotation);
+                limb.body.SetTransform(movePos, rotation);
                 limb.PullJointWorldAnchorB = limb.PullJointWorldAnchorA;
                 limb.PullJointEnabled = false;
             }

@@ -1,14 +1,13 @@
 ﻿#nullable enable
+using Barotrauma.IO;
 using Microsoft.Xna.Framework.Graphics;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Barotrauma.IO;
 
 namespace Barotrauma.Steam
 {
@@ -180,8 +179,10 @@ namespace Barotrauma.Steam
                 await CopyDirectory(contentPackage.Dir, contentPackage.Name, Path.GetDirectoryName(contentPackage.Path)!, PublishStagingDir);
 
                 //Load filelist.xml and write the hash into it so anyone downloading this mod knows what it should be
-                ModProject modProject = new ModProject(contentPackage);
-                modProject.ModVersion = modVersion;
+                ModProject modProject = new ModProject(contentPackage)
+                {
+                    ModVersion = modVersion
+                };
                 modProject.Save(Path.Combine(PublishStagingDir, ContentPackage.FileListFileName));
             }
 

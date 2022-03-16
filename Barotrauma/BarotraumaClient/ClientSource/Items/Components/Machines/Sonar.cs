@@ -766,7 +766,7 @@ namespace Barotrauma.Items.Components
                 if (activePingsCount == 0) { disruptedDirections.Clear(); }
                 foreach (AITarget t in AITarget.List)
                 {
-                    if (t.Entity is Character c && c.Params.HideInSonar) { continue; }
+                    if (t.Entity is Character c && !c.IsUnconscious && c.Params.HideInSonar) { continue; }
                     if (t.SoundRange <= 0.0f || float.IsNaN(t.SoundRange) || float.IsInfinity(t.SoundRange)) { continue; }
                     
                     float distSqr = Vector2.DistanceSquared(t.WorldPosition, transducerCenter);
@@ -1264,7 +1264,7 @@ namespace Barotrauma.Items.Components
                 }
                 foreach (AITarget aiTarget in AITarget.List)
                 {
-                    float disruption = aiTarget.Entity is Character c ? c.Params.SonarDisruption : aiTarget.SonarDisruption;
+                    float disruption = aiTarget.Entity is Character c && !c.IsUnconscious ? c.Params.SonarDisruption : aiTarget.SonarDisruption;
                     if (disruption <= 0.0f || aiTarget.InDetectable) { continue; }
                     float distSqr = Vector2.DistanceSquared(aiTarget.WorldPosition, pingSource);
                     if (distSqr > worldPingRadiusSqr) { continue; }
@@ -1413,7 +1413,7 @@ namespace Barotrauma.Items.Components
             foreach (Character c in Character.CharacterList)
             {
                 if (c.AnimController.CurrentHull != null || !c.Enabled) { continue; }
-                if (c.Params.HideInSonar) { continue; }
+                if (!c.IsUnconscious && c.Params.HideInSonar) { continue; }
                 if (DetectSubmarineWalls && c.AnimController.CurrentHull == null && item.CurrentHull != null) { continue; }
 
                 if (c.AnimController.SimplePhysicsEnabled)
@@ -1742,7 +1742,7 @@ namespace Barotrauma.Items.Components
             MineralClusters = null;
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             msg.Write(currentMode == Mode.Active);
             if (currentMode == Mode.Active)
@@ -1758,7 +1758,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             int msgStartPos = msg.BitPosition;
 
@@ -1782,7 +1782,7 @@ namespace Barotrauma.Items.Components
             {
                 int msgLength = msg.BitPosition - msgStartPos;
                 msg.BitPosition = msgStartPos;
-                StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime);
+                StartDelayedCorrection(msg.ExtractBits(msgLength), sendingTime);
                 return;
             }
 

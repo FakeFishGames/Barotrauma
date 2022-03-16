@@ -100,7 +100,7 @@ namespace Barotrauma
                     }
                 case ConditionType.Attachable:
                     {
-                        return entity is Holdable holdable && holdable.Attachable;
+                        return entity is Holdable holdable && holdable.Attachable && Screen.Selected == GameMain.SubEditorScreen;
                     }
             }
             return false;
@@ -949,8 +949,7 @@ namespace Barotrauma
                             break;
                     }
                 }
-
-                element.Attribute(property.Name)?.Remove();
+                element.GetAttribute(property.Name)?.Remove();
                 element.SetAttributeValue(property.Name, stringValue);
             }
         }

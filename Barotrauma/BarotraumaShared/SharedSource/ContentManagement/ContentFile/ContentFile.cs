@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
@@ -63,7 +64,7 @@ namespace Barotrauma
 
         public static Result<ContentFile, string> CreateFromXElement(ContentPackage contentPackage, XElement element)
         {
-            Result<ContentFile, string> fail(string error)
+            static Result<ContentFile, string> fail(string error)
                 => Result<ContentFile, string>.Failure(error);
             
             Identifier elemName = element.NameAsIdentifier();
@@ -73,13 +74,16 @@ namespace Barotrauma
             {
                 return fail($"Invalid content type \"{elemName}\"");
             }
-
             if (filePath is null)
             {
                 return fail($"No content path defined for file of type \"{elemName}\"");
             }
             try
             {
+                if (!File.Exists(filePath.FullPath))
+                {
+                    return fail($"Failed to load file \"{filePath}\" of type \"{elemName}\": file not found.");
+                }
                 var file = type.CreateInstance(contentPackage, filePath);
                 return file is null
                     ? throw new Exception($"Content type is not implemented correctly")

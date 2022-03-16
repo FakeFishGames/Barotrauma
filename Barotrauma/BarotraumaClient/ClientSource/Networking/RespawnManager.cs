@@ -71,7 +71,7 @@ namespace Barotrauma.Networking
             }, delay: delay);            
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             bool respawnPromptPending = false;
             var newState = (State)msg.ReadRangedInteger(0, Enum.GetNames(typeof(State)).Length);

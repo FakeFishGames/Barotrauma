@@ -1,16 +1,12 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.ComponentModel;
-using FarseerPhysics;
-using Barotrauma.Items.Components;
-using System.Threading;
-using Barotrauma.IO;
-using System.Text;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -1187,7 +1183,7 @@ namespace Barotrauma
                 NewMessage("*****************", Color.Lime);
                 GameServer.Log("Console command \"restart\" executed: closing the server...", ServerLog.MessageType.ServerMessage);
                 GameMain.Instance.CloseServer();
-                GameMain.Instance.TryStartChildServerRelay();
+                Program.TryStartChildServerRelay(GameMain.Instance.CommandLineArgs);
                 GameMain.Instance.StartServer();
             }));
 
@@ -1400,17 +1396,71 @@ namespace Barotrauma
             commands.Add(new Command("eventdata", "", (string[] args) =>
             {
                 if (args.Length == 0) { return; }
-                if (!UInt16.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out ushort eventId)) { return; }
-                ServerEntityEvent ev = GameMain.Server.EntityEventManager.Events.Find(ev => ev.ID == eventId);
-                if (ev != null)
+
+                string indentStr(string s)
+                    => string.Join('\n', s.Split('\n').Select(sub => $"    {sub}"));
+                
+                string eventDataRip(object data)
                 {
+                    if (data is null) { return "[NULL]"; }
+                    var type = data.GetType();
+                    
+                    string retVal = $"{type.FullName} ";
+
+                    if (type.IsPrimitive
+                        || type.IsEnum
+                        || type.IsClass)
+                    {
+                        retVal += data.ToString();
+                        return retVal;
+                    }
+
+                    retVal += "{\n";
+                    var fields = data.GetType().GetFields();
+                    foreach (var field in fields)
+                    {
+                        retVal += indentStr($"{field.Name}: {eventDataRip(field.GetValue(data))}")+"\n";
+                    }
+
+                    retVal += "}";
+                    retVal = retVal.Replace("{\n}", "{ }");
+                    return retVal;
+                }
+
+                string eventDebugStr(ServerEntityEvent ev)
+                {
+                    ushort eventId = ev.ID;
+                    
                     string entityData = "";
                     if (ev.Entity is { ID: var entityId, Removed: var removed, IdFreed: var idFreed })
                     {
-                        entityData = $"Entity ID: {entityId}; Entity removed: {removed}; Entity ID freed: {idFreed}";
+                        entityData = $"Entity ID: {entityId}\n" +
+                                     $"Entity type {ev.Entity.GetType().Name}\n" +
+                                     $"Entity removed: {removed}\n" +
+                                     $"Entity ID freed: {idFreed}\n" +
+                                     $"Event data: {eventDataRip(ev.Data)}\n";
                     }
-                    NewMessage($"EventData {eventId}\n{entityData}", Color.Lime);
-                    //NewMessage(ev.StackTrace.CleanupStackTrace(), Color.Lime);
+
+                    return $"EventData {eventId}\n{indentStr(entityData)}";
+                }
+                
+                IReadOnlyList<ServerEntityEvent> events = GameMain.Server.EntityEventManager.Events;
+                ushort? eventId = null;
+                if (args[0].Equals("latest", StringComparison.OrdinalIgnoreCase))
+                {
+                    eventId = events.Max(e => e.ID);
+                }
+                else if (UInt16.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out ushort id))
+                {
+                    eventId = id;
+                }
+                IEnumerable<ServerEntityEvent> matchedEvents = GameMain.Server.EntityEventManager.Events.Where(ev
+                    => eventId.HasValue
+                        ? ev.ID == eventId
+                        : eventDebugStr(ev).Contains(args[0], StringComparison.OrdinalIgnoreCase));
+                foreach (var ev in matchedEvents)
+                {
+                    NewMessage(eventDebugStr(ev), Color.Lime);
                 }
             }));
 
@@ -1665,28 +1715,27 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     if (args.Length < 2) return;
-
-                    AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a =>
-                        a.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase) ||
-                        a.Identifier == args[0]);
+                    string affliction = args[0];
+                    AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a => a.Identifier == affliction);
                     if (afflictionPrefab == null)
                     {
-                        GameMain.Server.SendConsoleMessage("Affliction \"" + args[0] + "\" not found.", client, Color.Red);
+                        afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a => a.Name.Equals(affliction, StringComparison.OrdinalIgnoreCase));
+                    }
+                    if (afflictionPrefab == null)
+                    {
+                        GameMain.Server.SendConsoleMessage("Affliction \"" + affliction + "\" not found.", client, Color.Red);
                         return;
                     }
-
                     if (!float.TryParse(args[1], out float afflictionStrength))
                     {
                         GameMain.Server.SendConsoleMessage("\"" + args[1] + "\" is not a valid affliction strength.", client, Color.Red);
                         return;
                     }
-
                     bool relativeStrength = false;
                     if (args.Length > 4)
                     {
                         bool.TryParse(args[4], out relativeStrength);
                     }
-
                     Character targetCharacter = (args.Length <= 2) ? client.Character : FindMatchingCharacter(args.Skip(2).ToArray());
                     if (targetCharacter != null)
                     {
@@ -2217,18 +2266,50 @@ namespace Barotrauma
                         GameMain.Server.SendConsoleMessage("No campaign active!", senderClient, Color.Red);
                         return;
                     }
+
+                    Character targetCharacter = null;
+
+                    if (args.Length >= 2)
+                    {
+                        targetCharacter = FindMatchingCharacter(args.Skip(1).ToArray());
+                    }
+
                     if (int.TryParse(args[0], out int money))
                     {
-                        campaign.Money += money;
+                        Wallet wallet = targetCharacter is null ? campaign.Bank : targetCharacter.Wallet;
+                        wallet.Give(money);
                         GameAnalyticsManager.AddMoneyGainedEvent(money, GameAnalyticsManager.MoneySource.Cheat, "console");
                         campaign.LastUpdateID++;
                     }
                     else
                     {
                         GameMain.Server.SendConsoleMessage($"\"{args[0]}\" is not a valid numeric value.", senderClient, Color.Red);
-                    }                    
+                    }
                 }
             );
+
+            AssignOnClientRequestExecute(
+                "showmoney",
+                (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
+                {
+                    if (!(GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign))
+                    {
+                        GameMain.Server.SendConsoleMessage("No campaign active!", senderClient, Color.Red);
+                        return;
+                    }
+
+                    StringBuilder sb = new StringBuilder();
+                    sb.Append($"Bank: {campaign.Bank.Balance}");
+                    foreach (Client client in GameMain.Server.ConnectedClients)
+                    {
+                        if (client.Character is null) { continue; }
+                        sb.Append(Environment.NewLine);
+                        sb.Append($"{client.Name}: {client.Character.Wallet.Balance}");
+                    }
+                    GameMain.Server.SendConsoleMessage(sb.ToString(), senderClient);
+                }
+            );
+
             AssignOnClientRequestExecute(
                 "campaigndestination|setcampaigndestination",
                 (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
@@ -2327,7 +2408,7 @@ namespace Barotrauma
                             GameMain.Server.SendConsoleMessage($"Set {character.Name}'s {skillIdentifier} level to {level}", senderClient);
                         }
 
-                        GameMain.NetworkMember.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.UpdateSkills });                
+                        GameMain.NetworkMember.CreateEntityEvent(character, new Character.UpdateSkillsEventData());                
                     }
                     else
                     {

@@ -168,7 +168,7 @@ namespace Barotrauma
             foreach (Item spawnedItem in spawnedItems)
             {
 #if SERVER
-                Entity.Spawner.CreateNetworkEvent(spawnedItem, remove: false);
+                Entity.Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(spawnedItem));
 #endif
                 foreach (ItemComponent ic in spawnedItem.Components)
                 {

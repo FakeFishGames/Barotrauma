@@ -85,7 +85,7 @@ namespace Barotrauma
         {
             if (CheckRateLimit(client) == RateLimitResult.LimitReached) { return; }
 
-            HealRequestResult result = HealAllPending();
+            HealRequestResult result = HealAllPending(client: client);
             ServerSend(new NetHealRequest { Result = result }, NetworkHeader.HEAL_PENDING, DeliveryMethod.Reliable, reponseClient: client);
         }
 

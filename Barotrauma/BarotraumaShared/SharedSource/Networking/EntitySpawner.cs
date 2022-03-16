@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Steamworks.ServerList;
 
 namespace Barotrauma
 {
@@ -196,50 +197,59 @@ namespace Barotrauma
         private readonly Queue<IEntitySpawnInfo> spawnQueue;
         private readonly Queue<Entity> removeQueue;
 
-        public class SpawnOrRemove
+        public abstract class SpawnOrRemove : NetEntityEvent.IData
         {
             public readonly Entity Entity;
+            public UInt16 ID => Entity.ID;
+            
+            public readonly UInt16 InventoryID;
 
-            public readonly UInt16 OriginalID, OriginalInventoryID;
-            public readonly int OriginalSlotIndex;
-
-            public readonly byte OriginalItemContainerIndex;
-
-            public readonly bool Remove = false;
+            public readonly byte ItemContainerIndex;
+            public readonly int SlotIndex;
 
             public override string ToString()
             {
                 return
-                    (Remove ? "Remove" : "Spawn") + "(" +
+                    "(" +
                     ((Entity as MapEntity)?.Name ?? "[NULL]") +
-                    $", {OriginalID}, {OriginalInventoryID})";
+                    $", {ID}, {InventoryID}, {SlotIndex})";
             }
 
-            public SpawnOrRemove(Entity entity, bool remove)
+            protected SpawnOrRemove(Entity entity)
             {
                 Entity = entity;
-                OriginalID = entity.ID;
-                if (entity is Item item && item.ParentInventory?.Owner != null)
+                if (!(entity is Item { ParentInventory: { Owner: { } } } item)) { return; }
+
+                InventoryID = item.ParentInventory.Owner.ID;
+                SlotIndex = item.ParentInventory.FindIndex(item);
+                //find the index of the ItemContainer this item is inside to get the item to
+                //spawn in the correct inventory in multi-inventory items like fabricators
+                if (item.Container == null) { return; }
+
+                foreach (ItemComponent component in item.Container.Components)
                 {
-                    OriginalInventoryID = item.ParentInventory.Owner.ID;
-                    OriginalSlotIndex = item.ParentInventory.FindIndex(item);
-                    //find the index of the ItemContainer this item is inside to get the item to
-                    //spawn in the correct inventory in multi-inventory items like fabricators
-                    if (item.Container != null)
+                    if (component is ItemContainer container &&
+                        container.Inventory == item.ParentInventory)
                     {
-                        foreach (ItemComponent component in item.Container.Components)
-                        {
-                            if (component is ItemContainer container &&
-                                container.Inventory == item.ParentInventory)
-                            {
-                                OriginalItemContainerIndex = (byte)item.Container.GetComponentIndex(component);
-                                break;
-                            }
-                        }
+                        ItemContainerIndex = (byte)item.Container.GetComponentIndex(component);
+                        break;
                     }
                 }
-                Remove = remove;
             }
+        }
+
+        public sealed class SpawnEntity : SpawnOrRemove
+        {
+            public SpawnEntity(Entity entity) : base(entity) { }
+            public override string ToString()
+                => $"Spawn {base.ToString()}";
+        }
+        
+        public sealed class RemoveEntity : SpawnOrRemove
+        {
+            public RemoveEntity(Entity entity) : base(entity) { }
+            public override string ToString()
+                => $"Remove {base.ToString()}";
         }
         
         public EntitySpawner()
@@ -397,20 +407,19 @@ namespace Barotrauma
 
         public void Update(bool createNetworkEvents = true)
         {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (GameMain.NetworkMember is { IsClient: true }) { return; }
             while (spawnQueue.Count > 0)
             {
                 var entitySpawnInfo = spawnQueue.Dequeue();
 
                 var spawnedEntity = entitySpawnInfo.Spawn();
-                if (spawnedEntity != null)
-                {
-                    if (createNetworkEvents) 
-                    { 
-                        CreateNetworkEventProjSpecific(spawnedEntity, false); 
-                    }
-                    entitySpawnInfo.OnSpawned(spawnedEntity);
+                if (spawnedEntity == null) { continue; }
+
+                if (createNetworkEvents) 
+                { 
+                    CreateNetworkEventProjSpecific(new SpawnEntity(spawnedEntity)); 
                 }
+                entitySpawnInfo.OnSpawned(spawnedEntity);
             }
 
             while (removeQueue.Count > 0)
@@ -422,13 +431,13 @@ namespace Barotrauma
                 }
                 if (createNetworkEvents)
                 {
-                    CreateNetworkEventProjSpecific(removedEntity, true);
+                    CreateNetworkEventProjSpecific(new RemoveEntity(removedEntity));
                 }
                 removedEntity.Remove();
             }
         }
 
-        partial void CreateNetworkEventProjSpecific(Entity entity, bool remove);
+        partial void CreateNetworkEventProjSpecific(SpawnOrRemove spawnOrRemove);
 
         public void Reset()
         {

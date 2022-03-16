@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.IO;
+using Barotrauma.Networking;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Sounds;
@@ -1036,6 +1037,30 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public interface IEventData { }
+
+        public virtual bool ValidateEventData(NetEntityEvent.IData data)
+            => true;
+        
+        protected T ExtractEventData<T>(NetEntityEvent.IData data) where T : IEventData
+            => TryExtractEventData(data, out T componentData)
+                ? componentData
+                : throw new Exception($"Malformed item component state event for {item.Name} " +
+                                      $"(item ID {item.ID}, component type {GetType().Name}): " +
+                                      $"could not extract ComponentData of type {typeof(T).Name}");
+
+        protected bool TryExtractEventData<T>(NetEntityEvent.IData data, out T componentData)
+        {
+            componentData = default;
+            if (data is Item.ComponentStateEventData { ComponentData: T nestedData })
+            {
+                componentData = nestedData;
+                return true;
+            }
+
+            return false;
+        }
+        
         #region AI related
         protected const float AIUpdateInterval = 0.2f;
         protected float aiUpdateTimer;

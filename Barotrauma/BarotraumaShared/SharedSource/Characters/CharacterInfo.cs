@@ -299,7 +299,11 @@ namespace Barotrauma
             {
                 if (handleBuff)
                 {
-                    Character.CharacterHealth.ApplyAffliction(Character.AnimController.GetLimb(LimbType.Head), AfflictionPrefab.List.FirstOrDefault(a => a.Identifier == "disguised").Instantiate(100f));
+                    var head = Character.AnimController.GetLimb(LimbType.Head);
+                    if (head != null)
+                    {
+                        Character.CharacterHealth.ApplyAffliction(head, AfflictionPrefab.List.FirstOrDefault(a => a.Identifier == "disguised").Instantiate(100f));
+                    }
                 }
 
                 idCard ??= Character.Inventory?.GetItemInLimbSlot(InvSlotType.Card)?.GetComponent<IdCard>();
@@ -319,7 +323,11 @@ namespace Barotrauma
 
             if (handleBuff)
             {
-                Character.CharacterHealth.ReduceAfflictionOnLimb(Character.AnimController.GetLimb(LimbType.Head), "disguised".ToIdentifier(), 100f);
+                var head = Character.AnimController.GetLimb(LimbType.Head);
+                if (head != null)
+                {
+                    Character.CharacterHealth.ReduceAfflictionOnLimb(head, "disguised".ToIdentifier(), 100f);
+                }
             }
         }
 
@@ -572,15 +580,15 @@ namespace Barotrauma
         
         private void CheckColors()
         {
-            if (IsColorValid(Head.HairColor))
+            if (!IsColorValid(Head.HairColor))
             {
                 Head.HairColor = SelectRandomColor(HairColors, Rand.RandSync.Unsynced);
             }
-            if (IsColorValid(Head.FacialHairColor))
+            if (!IsColorValid(Head.FacialHairColor))
             {
                 Head.FacialHairColor = SelectRandomColor(FacialHairColors, Rand.RandSync.Unsynced);
             }
-            if (IsColorValid(Head.SkinColor))
+            if (!IsColorValid(Head.SkinColor))
             {
                 Head.SkinColor = SelectRandomColor(SkinColors, Rand.RandSync.Unsynced);
             }
@@ -736,7 +744,7 @@ namespace Barotrauma
 
         private int GetIdentifier(string name)
         {
-            int id = ToolBox.StringToInt(name + string.Join("", Head.Preset.TagSet));
+            int id = ToolBox.StringToInt(name + string.Join("", Head.Preset.TagSet.OrderBy(s => s)));
             id ^= Head.HairIndex << 12;
             id ^= Head.BeardIndex << 18;
             id ^= Head.MoustacheIndex << 24;
@@ -822,12 +830,12 @@ namespace Barotrauma
         {
             foreach (var limbElement in Ragdoll.MainElement.Elements())
             {
-                if (!limbElement.GetAttributeString("type", "").Equals("head", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (!limbElement.GetAttributeString("type", string.Empty).Equals("head", StringComparison.OrdinalIgnoreCase)) { continue; }
 
                 ContentXElement spriteElement = limbElement.GetChildElement("sprite");
                 if (spriteElement == null) { continue; }
 
-                string spritePath = spriteElement.Attribute("texture").Value;
+                string spritePath = spriteElement.GetAttributeContentPath("texture")?.Value;
                 if (string.IsNullOrEmpty(spritePath)) { continue; }
 
                 spritePath = ReplaceVars(spritePath);
@@ -1298,7 +1306,7 @@ namespace Barotrauma
             var orders = LoadOrders(orderData);
             foreach (var order in orders)
             {
-                character.SetOrder(order, speak: false, force: true);
+                character.SetOrder(order, isNewOrder: true, speak: false, force: true);
             }
         }
 

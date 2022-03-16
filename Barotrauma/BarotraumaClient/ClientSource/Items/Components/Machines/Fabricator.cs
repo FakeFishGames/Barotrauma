@@ -705,13 +705,13 @@ namespace Barotrauma.Items.Components
             requiredTimeBlock.Text = ToolBox.SecondsToReadableTime(timeUntilReady > 0.0f ? timeUntilReady : requiredTime);
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             uint recipeHash = pendingFabricatedItem?.RecipeHash ?? 0;
             msg.Write(recipeHash);
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             FabricatorState newState = (FabricatorState)msg.ReadByte();
             float newTimeUntilReady = msg.ReadSingle();

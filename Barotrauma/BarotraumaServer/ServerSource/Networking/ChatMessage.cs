@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Text;
 
 namespace Barotrauma.Networking
@@ -17,10 +16,10 @@ namespace Barotrauma.Networking
             Character orderTargetCharacter = null;
             Entity orderTargetEntity = null;
             OrderChatMessage orderMsg = null;
-            OrderTarget orderTargetPosition = null;
             Order.OrderTargetType orderTargetType = Order.OrderTargetType.Entity;
             int? wallSectionIndex = null;
             Order order = null;
+            bool isNewOrder = false;
             if (type == ChatMessageType.Order)
             {
                 var orderMessageInfo = OrderChatMessage.ReadOrder(msg);
@@ -30,9 +29,10 @@ namespace Barotrauma.Networking
                     if (NetIdUtils.IdMoreRecent(ID, c.LastSentChatMsgID)) { c.LastSentChatMsgID = ID; }
                     return;
                 }
+                isNewOrder = orderMessageInfo.IsNewOrder;
                 orderTargetCharacter = orderMessageInfo.TargetCharacter;
                 orderTargetEntity = orderMessageInfo.TargetEntity;
-                orderTargetPosition = orderMessageInfo.TargetPosition;
+                OrderTarget orderTargetPosition = orderMessageInfo.TargetPosition;
                 orderTargetType = orderMessageInfo.TargetType;
                 wallSectionIndex = orderMessageInfo.WallSectionIndex;
                 var orderPrefab = orderMessageInfo.OrderPrefab ?? OrderPrefab.Prefabs[orderMessageInfo.OrderIdentifier];
@@ -165,7 +165,7 @@ namespace Barotrauma.Networking
                     }
                     else if (orderTargetCharacter != null)
                     {
-                        orderTargetCharacter.SetOrder(order);
+                        orderTargetCharacter.SetOrder(order, isNewOrder);
                     }
                 }
                 GameMain.Server.SendOrderChatMessage(orderMsg);

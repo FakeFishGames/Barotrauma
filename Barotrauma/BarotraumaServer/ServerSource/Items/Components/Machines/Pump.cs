@@ -8,7 +8,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Pump : Powered, IServerSerializable, IClientSerializable
     {
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             float newFlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
             bool newIsActive = msg.ReadBoolean();
@@ -36,7 +36,7 @@ namespace Barotrauma.Items.Components
             item.CreateServerEvent(this);
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
             msg.WriteRangedInteger((int)(flowPercentage / 10.0f), -10, 10);

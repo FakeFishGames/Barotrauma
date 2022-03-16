@@ -71,6 +71,7 @@ namespace Barotrauma.Steam
             if (GameMain.Client == null)
             {
                 LeaveLobby();
+                return;
             }
 
             if (lobbyState == LobbyState.NotConnected)
@@ -83,7 +84,7 @@ namespace Barotrauma.Steam
                 return;
             }
 
-            var contentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerIncompatibleContent);
+            var contentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent);
 
             currentLobby?.SetData("name", serverSettings.ServerName);
             currentLobby?.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count ?? 0).ToString());

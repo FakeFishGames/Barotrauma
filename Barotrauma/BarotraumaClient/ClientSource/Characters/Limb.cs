@@ -523,7 +523,7 @@ namespace Barotrauma
         private string GetSpritePath(ContentPath texturePath)
         {
             if (!character.IsHumanoid) { return texturePath.Value; }
-            return GetSpritePath(texturePath, character?.Info);
+            return GetSpritePath(texturePath, character.Info);
         }
 
         partial void LoadParamsProjSpecific()

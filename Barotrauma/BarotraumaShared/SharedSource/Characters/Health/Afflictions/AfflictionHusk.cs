@@ -41,9 +41,11 @@ namespace Barotrauma
                 if (previousValue > 0.0f && value <= 0.0f)
                 {
                     DeactivateHusk();
+                    highestStrength = 0;
                 }
             }
         }
+        private float highestStrength;
 
         public InfectionState State
         {
@@ -75,6 +77,7 @@ namespace Barotrauma
         {
             if (HuskPrefab == null) { return; }
             base.Update(characterHealth, targetLimb, deltaTime);
+            highestStrength = Math.Max(_strength, highestStrength);
             character = characterHealth.Character;
             if (character == null) { return; }
 
@@ -98,7 +101,7 @@ namespace Barotrauma
                 DeactivateHusk();
                 if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: true })
                 {
-                    character.SpeechImpediment = 100;
+                    character.SpeechImpediment = 30;
                 }
                 State = InfectionState.Transition;
             }
@@ -107,6 +110,10 @@ namespace Barotrauma
                 if (State != InfectionState.Active && stun)
                 {
                     character.SetStun(Rand.Range(2f, 3f));
+                }
+                if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: true })
+                {
+                    character.SpeechImpediment = 100;
                 }
                 State = InfectionState.Active;
                 ActivateHusk();
@@ -120,7 +127,57 @@ namespace Barotrauma
             }
         }
 
-        partial void UpdateMessages();
+        private InfectionState? prevDisplayedMessage;
+        private void UpdateMessages()
+        {
+            if (Prefab is AfflictionPrefabHusk { SendMessages: false }) { return; }
+            if (prevDisplayedMessage.HasValue && prevDisplayedMessage.Value == State) { return; }
+            if (highestStrength > Strength) { return; }
+
+            switch (State)
+            {
+                case InfectionState.Dormant:
+                    if (Strength < DormantThreshold * 0.5f)
+                    {
+                        return;
+                    }
+                    if (character == Character.Controlled)
+                    {
+#if CLIENT
+                        GUI.AddMessage(TextManager.Get("HuskDormant"), GUIStyle.Red);
+#endif
+                    }
+                    else if (character.IsBot)
+                    {
+                        character.Speak(TextManager.Get("dialoghuskdormant").Value, delay: Rand.Range(0.5f, 5.0f), identifier: "huskdormant".ToIdentifier());
+                    }
+                    break;
+                case InfectionState.Transition:
+                    if (character == Character.Controlled)
+                    {
+#if CLIENT
+                        GUI.AddMessage(TextManager.Get("HuskCantSpeak"), GUIStyle.Red);
+#endif
+                    }
+                    else if (character.IsBot)
+                    {
+                        character.Speak(TextManager.Get("dialoghuskcantspeak").Value, delay: Rand.Range(0.5f, 5.0f), identifier: "huskcantspeak".ToIdentifier());
+                    }
+                    break;
+                case InfectionState.Active:
+#if CLIENT
+                    if (character == Character.Controlled && character.Params.UseHuskAppendage)
+                    {
+                        GUI.AddMessage(TextManager.GetWithVariable("HuskActivate", "[Attack]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Attack)), GUIStyle.Red);
+                    }
+#endif
+                    break;
+                case InfectionState.Final:
+                default:
+                    break;
+            }
+            prevDisplayedMessage = State;
+        }
 
         private void ApplyDamage(float deltaTime, bool applyForce)
         {
@@ -209,7 +266,9 @@ namespace Barotrauma
             {
                 yield return CoroutineStatus.Success;
             }
-
+#if SERVER
+            var client = GameMain.Server?.ConnectedClients.FirstOrDefault(c => c.Character == character);
+#endif
             character.Enabled = false;
             Entity.Spawner.AddEntityToRemoveQueue(character);
             UnsubscribeFromDeathEvent();
@@ -246,7 +305,6 @@ namespace Barotrauma
                 if (huskPrefab.ControlHusk)
                 {
 #if SERVER
-                    var client = GameMain.Server?.ConnectedClients.FirstOrDefault(c => c.Character == character);
                     if (client != null)
                     {
                         GameMain.Server.SetClientCharacter(client, husk);

@@ -187,14 +187,11 @@ namespace Barotrauma.Items.Components
 
         protected void UpdateOnActiveEffects(float deltaTime)
         {
-            if (currPowerConsumption <= 0.0f)
+            if (currPowerConsumption <= 0.0f && PowerConsumption <= 0.0f)
             {
                 //if the item consumes no power, ignore the voltage requirement and
                 //apply OnActive statuseffects as long as this component is active
-                if (PowerConsumption <= 0.0f)
-                {
-                    ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
-                }
+                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);                
                 return;
             }
 
@@ -216,6 +213,11 @@ namespace Barotrauma.Items.Components
                 powerOnSoundPlayed = false;
             }
 #endif
+            if (powerIn == null)
+            {
+                //power down the device here if it has no power connection (= receives power from contained battery cells instead of the "normal" power logic)
+                Voltage -= deltaTime;
+            }
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -238,7 +240,11 @@ namespace Barotrauma.Items.Components
                     else if (c.Name == "power_out")
                     {
                         powerOut = c;
-                        powerOut.Priority = Priority;
+                        // Connection takes the lowest priority
+                        if (Priority > powerOut.Priority)
+                        {
+                            powerOut.Priority = Priority;
+                        }
                     }
                     else if (c.Name == "power")
                     {
@@ -258,7 +264,11 @@ namespace Barotrauma.Items.Components
 #endif
                         }
                         powerOut = c;
-                        powerOut.Priority = Priority;
+                        // Connection takes the lowest priority
+                        if (Priority > powerOut.Priority)
+                        {
+                            powerOut.Priority = Priority;
+                        }
                     }
                     else
                     {
@@ -591,7 +601,7 @@ namespace Barotrauma.Items.Components
                 foreach (Connection con in grid.Connections)
                 {
                     Powered device = con.Item.GetComponent<Powered>();
-                    device.GridResolved(con);
+                    device?.GridResolved(con);
                 }
             }
 

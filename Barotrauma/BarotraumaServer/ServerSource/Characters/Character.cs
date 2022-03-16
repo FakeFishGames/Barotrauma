@@ -56,7 +56,7 @@ namespace Barotrauma
 
         partial void OnMoneyChanged(int prevAmount, int newAmount)
         {
-            GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.UpdateMoney });
+            GameMain.NetworkMember.CreateEntityEvent(this, new UpdateMoneyEventData());
         }
 
         partial void OnTalentGiven(TalentPrefab talentPrefab)

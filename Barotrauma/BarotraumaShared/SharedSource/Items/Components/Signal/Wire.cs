@@ -455,12 +455,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (GameMain.NetworkMember != null)
                 {
-                    GameMain.Client.CreateEntityEvent(item, new object[]
-                    {
-                        NetEntityEvent.Type.ComponentState,
-                        item.GetComponentIndex(this),
-                        nodes.Count
-                    });
+                    item.CreateClientEvent(this, new ClientEventData(nodes.Count));
                 }
 #endif
             }
@@ -482,12 +477,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (GameMain.NetworkMember != null)
                 {
-                    GameMain.Client.CreateEntityEvent(item, new object[]
-                    {
-                        NetEntityEvent.Type.ComponentState,
-                        item.GetComponentIndex(this),
-                        nodes.Count
-                    });
+                    item.CreateClientEvent(this, new ClientEventData(nodes.Count));
                 }
 #endif
             }

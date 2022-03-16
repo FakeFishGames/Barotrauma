@@ -83,7 +83,8 @@ namespace Barotrauma
             container.HasTag("allowcleanup") && 
             container.ParentInventory == null && container.OwnInventory != null && container.OwnInventory.AllItems.Any() && 
             container.GetComponent<ItemContainer>() != null &&
-            IsItemInsideValidSubmarine(container, character);
+            IsItemInsideValidSubmarine(container, character) &&
+            !container.IsClaimedByBallastFlora;
 
         public static bool IsValidTarget(Item item, Character character, bool checkInventory, bool allowUnloading = true)
         {
@@ -100,6 +101,7 @@ namespace Barotrauma
                 if (!IsValidContainer(item.Container, character, allowUnloading)) { return false; }
             }
             if (character != null && !IsItemInsideValidSubmarine(item, character)) { return false; }
+            if (item.HasBallastFloraInHull) { return false; }
             var pickable = item.GetComponent<Pickable>();
             if (pickable == null) { return false; }
             if (pickable is Holdable h && h.Attachable && h.Attached) { return false; }

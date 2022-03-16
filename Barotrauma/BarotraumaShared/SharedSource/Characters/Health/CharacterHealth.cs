@@ -657,6 +657,7 @@ namespace Barotrauma
             if (!DoesBleed && newAffliction is AfflictionBleeding) { return; }
             if (!Character.NeedsOxygen && newAffliction.Prefab == AfflictionPrefab.OxygenLow) { return; }
             if (Character.Params.Health.StunImmunity && newAffliction.Prefab.AfflictionType == "stun") { return; }
+            if (Character.Params.Health.PoisonImmunity && newAffliction.Prefab.AfflictionType == "poison") { return; }
             if (newAffliction.Prefab is AfflictionPrefabHusk huskPrefab)
             {
                 if (huskPrefab.TargetSpecies.None(s => s == Character.SpeciesName))
@@ -731,48 +732,47 @@ namespace Barotrauma
 
             StunTimer = Stun > 0 ? StunTimer + deltaTime : 0;
 
-            if (Character.GodMode) { return; }
-
-            afflictionsToRemove.Clear();
-            afflictionsToUpdate.Clear();
-            foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
+            if (!Character.GodMode) 
             {
-                var affliction = kvp.Key;
-                if (affliction.Strength <= 0.0f)
+                afflictionsToRemove.Clear();
+                afflictionsToUpdate.Clear();
+                foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
                 {
-                    SteamAchievementManager.OnAfflictionRemoved(affliction, Character);
-                    if (!irremovableAfflictions.Contains(affliction)) { afflictionsToRemove.Add(affliction); }
-                    continue;
+                    var affliction = kvp.Key;
+                    if (affliction.Strength <= 0.0f)
+                    {
+                        SteamAchievementManager.OnAfflictionRemoved(affliction, Character);
+                        if (!irremovableAfflictions.Contains(affliction)) { afflictionsToRemove.Add(affliction); }
+                        continue;
+                    }
+                    afflictionsToUpdate.Add(kvp);
                 }
-                afflictionsToUpdate.Add(kvp);
-            }
-            foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictionsToUpdate)
-            {
-                var affliction = kvp.Key;
-                Limb targetLimb = null;
-                if (kvp.Value != null)
+                foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictionsToUpdate)
                 {
-                    int healthIndex = limbHealths.IndexOf(kvp.Value);
-                    targetLimb =
-                        Character.AnimController.Limbs.LastOrDefault(l => !l.IsSevered && !l.Hidden && l.HealthIndex == healthIndex) ??
-                        Character.AnimController.MainLimb;
+                    var affliction = kvp.Key;
+                    Limb targetLimb = null;
+                    if (kvp.Value != null)
+                    {
+                        int healthIndex = limbHealths.IndexOf(kvp.Value);
+                        targetLimb =
+                            Character.AnimController.Limbs.LastOrDefault(l => !l.IsSevered && !l.Hidden && l.HealthIndex == healthIndex) ??
+                            Character.AnimController.MainLimb;
+                    }
+                    affliction.Update(this, targetLimb, deltaTime);
+                    affliction.DamagePerSecondTimer += deltaTime;
+                    if (affliction is AfflictionBleeding bleeding)
+                    {
+                        UpdateBleedingProjSpecific(bleeding, targetLimb, deltaTime);
+                    }
+                    Character.StackSpeedMultiplier(affliction.GetSpeedMultiplier());
                 }
-                affliction.Update(this, targetLimb, deltaTime);
-                affliction.DamagePerSecondTimer += deltaTime;
-                if (affliction is AfflictionBleeding bleeding)
+                foreach (var affliction in afflictionsToRemove)
                 {
-                    UpdateBleedingProjSpecific(bleeding, targetLimb, deltaTime);
-                }
-                Character.StackSpeedMultiplier(affliction.GetSpeedMultiplier());
-            }
-
-            foreach (var affliction in afflictionsToRemove)
-            {
-                afflictions.Remove(affliction);
+                    afflictions.Remove(affliction);
+                }                
             }
 
             Character.StackSpeedMultiplier(1f + Character.GetStatValue(StatTypes.MovementSpeed));
-
             if (Character.InWater)
             {
                 Character.StackSpeedMultiplier(1f + Character.GetStatValue(StatTypes.SwimmingSpeed));
@@ -782,13 +782,16 @@ namespace Barotrauma
                 Character.StackSpeedMultiplier(1f + Character.GetStatValue(StatTypes.WalkingSpeed));
             }
 
-            UpdateLimbAfflictionOverlays();
-            UpdateSkinTint();
-            CalculateVitality();
-
-            if (Vitality <= MinVitality)
+            if (!Character.GodMode)
             {
-                Kill();
+                UpdateLimbAfflictionOverlays();
+                UpdateSkinTint();
+                CalculateVitality();
+
+                if (Vitality <= MinVitality)
+                {
+                    Kill();
+                }
             }
         }
 

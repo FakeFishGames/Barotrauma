@@ -1,13 +1,11 @@
-﻿using System.Xml.Linq;
-
-namespace Barotrauma.Items.Components
+﻿namespace Barotrauma.Items.Components
 {
     class NotComponent : ItemComponent
     {
         private bool signalReceived;
 
         private bool continuousOutput;
-        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "When enabled, the component continuously outputs \"1\" when it's not receiving a signal.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(false, IsPropertySaveable.Yes, description: "When enabled, the component continuously outputs \"1\" when it's not receiving a signal.", alwaysUseInstanceValues: true)]
         public bool ContinuousOutput
         {
             get { return continuousOutput; }

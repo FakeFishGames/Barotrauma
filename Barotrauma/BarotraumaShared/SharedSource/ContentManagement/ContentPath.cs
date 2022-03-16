@@ -101,23 +101,27 @@ namespace Barotrauma
         }
         
         private static bool StringEquality(string? a, string? b)
-            => (a.IsNullOrEmpty() && b.IsNullOrEmpty()) ||
-                string.Equals(Path.GetFullPath(a.CleanUpPathCrossPlatform(false) ?? ""),
-                    Path.GetFullPath(b.CleanUpPathCrossPlatform(false) ?? ""),
-                    StringComparison.OrdinalIgnoreCase);
+        {
+            if (a.IsNullOrEmpty() || b.IsNullOrEmpty())
+            {
+                return a.IsNullOrEmpty() == b.IsNullOrEmpty();
+            }
+            return string.Equals(Path.GetFullPath(a.CleanUpPathCrossPlatform(false) ?? ""),
+                    Path.GetFullPath(b.CleanUpPathCrossPlatform(false) ?? ""), StringComparison.OrdinalIgnoreCase);
+        }
 
         public static bool operator==(ContentPath a, ContentPath b)
-            => StringEquality(a.Value, b.Value);
+            => StringEquality(a?.Value, b?.Value);
 
         public static bool operator!=(ContentPath a, ContentPath b) => !(a == b);
 
         public static bool operator==(ContentPath a, string? b)
-            => StringEquality(a.Value, b);
+            => StringEquality(a?.Value, b);
 
         public static bool operator!=(ContentPath a, string? b) => !(a == b);
 
         public static bool operator==(string? a, ContentPath b)
-            => StringEquality(a, b.Value);
+            => StringEquality(a, b?.Value);
 
         public static bool operator!=(string? a, ContentPath b) => !(a == b);
 

@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
     {
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             bool launch = msg.ReadBoolean();
             if (launch)

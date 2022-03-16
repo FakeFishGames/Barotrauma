@@ -1,12 +1,13 @@
 ﻿using Barotrauma.Extensions;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
     partial class CargoManager
     {
-        public void SellBackPurchasedItems(List<PurchasedItem> itemsToSell)
+        public void SellBackPurchasedItems(List<PurchasedItem> itemsToSell, Client client = null)
         {
             // Check all the prices before starting the transaction
             // to make sure the modifiers stay the same for the whole transaction
@@ -15,12 +16,12 @@ namespace Barotrauma
             {
                 var itemValue = item.Quantity * buyValues[item.ItemPrefab];
                 Location.StoreCurrentBalance -= itemValue;
-                campaign.Money += itemValue;
+                campaign.GetWallet(client).Give(itemValue);
                 PurchasedItems.Remove(item);
             }
         }
 
-        public void BuyBackSoldItems(List<SoldItem> itemsToBuy)
+        public void BuyBackSoldItems(List<SoldItem> itemsToBuy, Client client)
         {
             // Check all the prices before starting the transaction
             // to make sure the modifiers stay the same for the whole transaction
@@ -30,12 +31,12 @@ namespace Barotrauma
                 int itemValue = sellValues[item.ItemPrefab];
                 if (Location.StoreCurrentBalance < itemValue || item.Removed) { continue; }
                 Location.StoreCurrentBalance += itemValue;
-                campaign.Money -= itemValue;
+                campaign.Bank.TryDeduct(itemValue);
                 SoldItems.Remove(item);
             }
         }
 
-        public void SellItems(List<SoldItem> itemsToSell)
+        public void SellItems(List<SoldItem> itemsToSell, Client client)
         {
             bool canAddToRemoveQueue = (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer) && Entity.Spawner != null;
             IEnumerable<Item> sellableItemsInSub = Enumerable.Empty<Item>();
@@ -67,7 +68,7 @@ namespace Barotrauma
                 }
                 SoldItems.Add(item);
                 Location.StoreCurrentBalance -= itemValue;
-                campaign.Money += itemValue;
+                campaign.Bank.Give(itemValue);
                 GameAnalyticsManager.AddMoneyGainedEvent(itemValue, GameAnalyticsManager.MoneySource.Store, item.ItemPrefab.Identifier.Value);
             }
             OnSoldItemsChanged?.Invoke();

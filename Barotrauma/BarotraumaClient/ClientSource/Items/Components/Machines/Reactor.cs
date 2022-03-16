@@ -608,9 +608,10 @@ namespace Barotrauma.Items.Components
 
             Vector2 pointerPos = pos - new Vector2(0, 30) * scale;
 
+            float scaleMultiplier = 0.95f;
             if (optimalRangeNormalized.X == optimalRangeNormalized.Y)
             {
-                sectorSprite.Draw(spriteBatch, pointerPos, GUIStyle.Red, MathHelper.PiOver2, scale);
+                sectorSprite.Draw(spriteBatch, pointerPos, GUIStyle.Red, MathHelper.PiOver2, scale * scaleMultiplier);
             }
             else
             {
@@ -619,7 +620,6 @@ namespace Barotrauma.Items.Components
                 spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GameMain.GraphicsWidth, (int)(pointerPos.Y + (meterSprite.size.Y - meterSprite.Origin.Y) * scale) - 3);
                 spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
 
-                float scaleMultiplier = 0.95f;
                 sectorSprite.Draw(spriteBatch, pointerPos, optimalRangeColor, MathHelper.PiOver2 + (allowedSectorRad.X + allowedSectorRad.Y) / 2.0f, scale * scaleMultiplier);
                 sectorSprite.Draw(spriteBatch, pointerPos, offRangeColor, optimalSectorRad.X, scale * scaleMultiplier);
                 sectorSprite.Draw(spriteBatch, pointerPos, warningColor, allowedSectorRad.X, scale * scaleMultiplier);
@@ -711,7 +711,7 @@ namespace Barotrauma.Items.Components
             tempRangeIndicator?.Remove();
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             msg.Write(autoTemp);
             msg.Write(PowerOn);
@@ -721,11 +721,11 @@ namespace Barotrauma.Items.Components
             correctionTimer = CorrectionDelay;
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             if (correctionTimer > 0.0f)
             {
-                StartDelayedCorrection(type, msg.ExtractBits(1 + 1 + 8 + 8 + 8 + 8), sendingTime);
+                StartDelayedCorrection(msg.ExtractBits(1 + 1 + 8 + 8 + 8 + 8), sendingTime);
                 return;
             }
 

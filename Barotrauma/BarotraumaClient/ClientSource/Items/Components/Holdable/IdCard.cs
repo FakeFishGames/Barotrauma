@@ -96,7 +96,7 @@ namespace Barotrauma.Items.Components
                     ContentXElement getElementFromList(List<ContentXElement> list, int index)
                         => CharacterInfo.IsValidIndex(index, list)
                             ? list[index]
-                            : characterInfo.GetRandomElement(list);
+                            : null;
                     
                     var disguisedHairElement = getElementFromList(disguisedHairs, disguisedHairIndex);
                     var disguisedBeardElement = getElementFromList(disguisedBeards, disguisedBeardIndex);

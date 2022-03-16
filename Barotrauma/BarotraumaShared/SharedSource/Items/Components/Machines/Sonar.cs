@@ -349,7 +349,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             bool isActive = msg.ReadBoolean();
             bool directionalPing = useDirectionalPing;
@@ -394,7 +394,7 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.Write(currentMode == Mode.Active);
             if (currentMode == Mode.Active)

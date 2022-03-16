@@ -49,7 +49,7 @@ namespace Barotrauma
                         string[] attributes = segments[i].Split(attributeSeparator);
                         for (int j = 0; j < attributes.Length; j++)
                         {
-                            if (attributes[j].Contains(endDefinition))
+                            if (attributes[j].Contains(endDefinition, System.StringComparison.OrdinalIgnoreCase))
                             {
                                 if (tempData != null)
                                 {
@@ -59,7 +59,7 @@ namespace Barotrauma
                                 }
                                 tempData = null;
                             }
-                            else if (attributes[j].StartsWith(colorDefinition))
+                            else if (attributes[j].StartsWith(colorDefinition, System.StringComparison.OrdinalIgnoreCase))
                             {
                                 if (tempData == null) { tempData = new RichTextData(); }
                                 string valueStr = attributes[j].Substring(attributes[j].IndexOf(keyValueSeparator) + 1);
@@ -72,7 +72,7 @@ namespace Barotrauma
                                     tempData.Color = XMLExtensions.ParseColor(valueStr);
                                 }
                             }
-                            else if (attributes[j].StartsWith(metadataDefinition))
+                            else if (attributes[j].StartsWith(metadataDefinition, System.StringComparison.OrdinalIgnoreCase))
                             {
                                 if (tempData == null) { tempData = new RichTextData(); }
                                 tempData.Metadata = attributes[j].Substring(attributes[j].IndexOf(keyValueSeparator) + 1);

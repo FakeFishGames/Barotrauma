@@ -32,7 +32,7 @@ namespace Barotrauma
 #if CLIENT
         private readonly GUIFont? font;
         private readonly GUIComponentStyle? componentStyle;
-        private bool forceUpperCase = false;
+        private readonly bool forceUpperCase = false;
 
         private bool fontOrStyleForceUpperCase
             => font is { ForceUpperCase: true } || componentStyle is { ForceUpperCase: true };

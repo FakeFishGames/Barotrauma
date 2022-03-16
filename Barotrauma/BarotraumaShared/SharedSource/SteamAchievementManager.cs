@@ -30,8 +30,6 @@ namespace Barotrauma
             public readonly HashSet<Character> EnteredCrushDepth = new HashSet<Character>();
             public readonly HashSet<Character> ReactorMeltdown = new HashSet<Character>();
 
-            public readonly HashSet<Character> Casualties = new HashSet<Character>();
-
             public bool SubWasDamaged;
         }
 
@@ -269,8 +267,6 @@ namespace Barotrauma
             }
 #endif
 
-            roundData?.Casualties.Add(character);
-
             UnlockAchievement(causeOfDeath.Killer, $"kill{character.SpeciesName}".ToIdentifier());
             if (character.CurrentHull != null)
             {
@@ -406,7 +402,7 @@ namespace Barotrauma
             //made it to the destination
             if (gameSession.Submarine.AtEndExit)
             {
-                bool noDamageRun = !roundData.SubWasDamaged && !roundData.Casualties.Any(c => !(c.AIController is EnemyAIController));
+                bool noDamageRun = !roundData.SubWasDamaged && !gameSession.Casualties.Any();
 
 #if SERVER
                 if (GameMain.Server != null)
@@ -434,8 +430,8 @@ namespace Barotrauma
 
                 if (charactersInSub.Count == 1)
                 {
-                    //there must be some non-enemy casualties to get the last mant standing achievement
-                    if (roundData.Casualties.Any(c => !(c.AIController is EnemyAIController) && c.TeamID == charactersInSub[0].TeamID))
+                    //there must be some casualties to get the last mant standing achievement
+                    if (gameSession.Casualties.Any())
                     {
                         UnlockAchievement(charactersInSub[0], "lastmanstanding".ToIdentifier());
                     }

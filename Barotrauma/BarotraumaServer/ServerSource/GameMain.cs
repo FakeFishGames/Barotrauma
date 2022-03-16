@@ -141,20 +141,6 @@ namespace Barotrauma
             }*/
         }
 
-        public bool TryStartChildServerRelay()
-        {            
-            for (int i = 0; i < CommandLineArgs.Length; i++)
-            {
-                switch (CommandLineArgs[i].Trim())
-                {
-                    case "-pipes":
-                        ChildServerRelay.Start(CommandLineArgs[i + 2], CommandLineArgs[i + 1]);
-                        return true;
-                }
-            }
-            return false;
-        }
-
         public void StartServer()
         {
             string name = "Server";
@@ -299,7 +285,6 @@ namespace Barotrauma
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Items.Components.ItemComponent));
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Hull));
 
-            TryStartChildServerRelay();
             Init();
             StartServer();
 

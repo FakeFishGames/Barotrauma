@@ -31,32 +31,43 @@ namespace Barotrauma.MapCreatures.Behavior
             }
         }
 
-
-        partial void UpdateDamage(float deltaTime)
+        public void ServerWrite(IWriteMessage msg, IEventData eventData)
         {
-            if (damageUpdateTimer <= 0)
+            msg.Write((byte)eventData.NetworkHeader);
+            
+            switch (eventData)
             {
-                foreach (BallastFloraBranch branch in Branches)
-                {
-                    if (Math.Abs(branch.AccumulatedDamage) > 1.0f)
-                    {
-                        SendNetworkMessage(this, NetworkHeader.BranchDamage, branch);
-                        branch.AccumulatedDamage = 0f;
-                    }
-                }
-                damageUpdateTimer = 1f;
+                case SpawnEventData spawnEventData:
+                    ServerWriteSpawn(msg);
+                    break;
+                case KillEventData killEventData:
+                    //do nothing
+                    break;
+                case BranchCreateEventData branchCreateEventData:
+                    ServerWriteBranchGrowth(msg, branchCreateEventData.NewBranch, branchCreateEventData.Parent.ID);
+                    break;
+                case BranchDamageEventData branchDamageEventData:
+                    ServerWriteBranchDamage(msg, branchDamageEventData.Branch);
+                    break;
+                case InfectEventData infectEventData:
+                    ServerWriteInfect(msg, infectEventData.Item.ID, infectEventData.Infect, infectEventData.Infector);
+                    break;
+                case BranchRemoveEventData branchRemoveEventData:
+                    ServerWriteBranchRemove(msg, branchRemoveEventData.Branch);
+                    break;
             }
-            damageUpdateTimer -= deltaTime;
+            
+            msg.Write(PowerConsumptionTimer);
         }
 
-        public void ServerWriteSpawn(IWriteMessage msg)
+        private void ServerWriteSpawn(IWriteMessage msg)
         {
             msg.Write(Prefab.Identifier);
             msg.Write(Offset.X);
             msg.Write(Offset.Y);
         }
 
-        public void ServerWriteBranchGrowth(IWriteMessage msg, BallastFloraBranch branch, int parentId = -1)
+        private void ServerWriteBranchGrowth(IWriteMessage msg, BallastFloraBranch branch, int parentId = -1)
         {
             var (x, y) = branch.Position;
             msg.Write(parentId);
@@ -71,30 +82,30 @@ namespace Barotrauma.MapCreatures.Behavior
             msg.Write(branch.ParentBranch == null ? -1 : Branches.IndexOf(branch.ParentBranch));
         }
 
-        public void ServerWriteBranchDamage(IWriteMessage msg, BallastFloraBranch branch)
+        private void ServerWriteBranchDamage(IWriteMessage msg, BallastFloraBranch branch)
         {
             msg.Write((int)branch.ID);
             msg.Write(branch.Health);
         }
         
-        public void ServerWriteInfect(IWriteMessage msg, UInt16 itemID, bool infect, BallastFloraBranch infector = null)
+        private void ServerWriteInfect(IWriteMessage msg, UInt16 itemID, InfectEventData.InfectState infect, BallastFloraBranch infector = null)
         {
             msg.Write(itemID);
-            msg.Write(infect);
-            if (infect)
+            msg.Write(infect == InfectEventData.InfectState.Yes);
+            if (infect == InfectEventData.InfectState.Yes)
             {
                 msg.Write(infector?.ID ?? -1);
             }
         }
 
-        public void ServerWriteBranchRemove(IWriteMessage msg, BallastFloraBranch branch)
+        private void ServerWriteBranchRemove(IWriteMessage msg, BallastFloraBranch branch)
         {
             msg.Write(branch.ID);
         }
 
-        public void SendNetworkMessage(params object[] extraData)
+        public void SendNetworkMessage(IEventData extraData)
         {
-            GameMain.Server.CreateEntityEvent(Parent, extraData);
+            GameMain.Server.CreateEntityEvent(Parent, new Hull.BallastFloraEventData(this, extraData));
         }
     }
 }

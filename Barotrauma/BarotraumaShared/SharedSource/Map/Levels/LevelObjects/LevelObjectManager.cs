@@ -30,6 +30,16 @@ namespace Barotrauma
         {
         }
 
+        private readonly struct EventData : NetEntityEvent.IData
+        {
+            public readonly LevelObject LevelObject;
+            
+            public EventData(LevelObject levelObject)
+            {
+                LevelObject = levelObject;
+            }
+        }
+        
         class SpawnPosition
         {
             public readonly GraphEdge GraphEdge;
@@ -522,12 +532,12 @@ namespace Barotrauma
 
             foreach (LevelObject obj in updateableObjects)
             {
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                if (GameMain.NetworkMember is { IsServer: true })
                 {
                     obj.NetworkUpdateTimer -= deltaTime;
                     if (obj.NeedsNetworkSyncing && obj.NetworkUpdateTimer <= 0.0f)
                     {
-                        GameMain.NetworkMember.CreateEntityEvent(this, new object[] { obj });
+                        GameMain.NetworkMember.CreateEntityEvent(this, new EventData(obj));
                         obj.NeedsNetworkSyncing = false;
                         obj.NetworkUpdateTimer = NetConfig.LevelObjectUpdateInterval;
                     }
@@ -607,9 +617,10 @@ namespace Barotrauma
 
         partial void RemoveProjSpecific();
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            LevelObject obj = extraData[0] as LevelObject;
+            if (!(extraData is EventData eventData)) { throw new Exception($"Malformed LevelObjectManager event: expected {nameof(LevelObjectManager)}.{nameof(EventData)}"); }
+            LevelObject obj = eventData.LevelObject;
             msg.WriteRangedInteger(objects.IndexOf(obj), 0, objects.Count);
             obj.ServerWrite(msg, c);
         }

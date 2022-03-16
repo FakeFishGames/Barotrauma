@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 
@@ -178,7 +179,7 @@ namespace Barotrauma
         /// Purchased upgrades are temporarily stored in <see cref="PendingUpgrades"/> and they are applied
         /// after the next round starts similarly how items are spawned in the stowage room after the round starts.
         /// </remarks>
-        public void PurchaseUpgrade(UpgradePrefab prefab, UpgradeCategory category, bool force = false)
+        public void PurchaseUpgrade(UpgradePrefab prefab, UpgradeCategory category, bool force = false, Client? client = null)
         {
             if (!CanUpgradeSub())
             {
@@ -215,7 +216,7 @@ namespace Barotrauma
                 price = 0;
             }
 
-            if (Campaign.Money >= price)
+            if (Campaign.GetWallet(client).TryDeduct(price)) // FIXME personal wallets
             {
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                 {
@@ -227,7 +228,6 @@ namespace Barotrauma
                     }
                 }
 
-                Campaign.Money -= price;
                 GameAnalyticsManager.AddMoneySpentEvent(price, GameAnalyticsManager.MoneySink.SubmarineUpgrade, prefab.Identifier.Value);
 
                 PurchasedUpgrade? upgrade = FindMatchingUpgrade(prefab, category);
@@ -253,14 +253,14 @@ namespace Barotrauma
             else
             {
                 DebugConsole.ThrowError("Tried to purchase an upgrade with insufficient funds, the transaction has not been completed.\n" +
-                                        $"Upgrade: {prefab.Name}, Cost: {price}, Have: {Campaign.Money}");
+                                        $"Upgrade: {prefab.Name}, Cost: {price}, Have: {Campaign.GetWallet(client).Balance}");
             }
         }
 
         /// <summary>
         /// Purchases an item swap and handles logic for deducting the credit.
         /// </summary>
-        public void PurchaseItemSwap(Item itemToRemove, ItemPrefab itemToInstall, bool force = false)
+        public void PurchaseItemSwap(Item itemToRemove, ItemPrefab itemToInstall, bool force = false, Client? client = null)
         {
             if (!CanUpgradeSub())
             {
@@ -313,7 +313,7 @@ namespace Barotrauma
                 price = 0;
             }
 
-            if (Campaign.Money >= price)
+            if (Campaign.GetWallet(client).TryDeduct(price))
             {
                 PurchasedItemSwaps.RemoveAll(p => linkedItems.Contains(p.ItemToRemove));
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
@@ -326,7 +326,6 @@ namespace Barotrauma
                     }
                 }
 
-                Campaign.Money -= price;
                 GameAnalyticsManager.AddMoneySpentEvent(price, GameAnalyticsManager.MoneySink.SubmarineWeapon, itemToInstall.Identifier.Value);
 
                 foreach (Item itemToSwap in linkedItems)
@@ -355,7 +354,7 @@ namespace Barotrauma
             else
             {
                 DebugConsole.ThrowError("Tried to swap an item with insufficient funds, the transaction has not been completed.\n" +
-                                        $"Item to remove: {itemToRemove.Name}, Item to install: {itemToInstall.Name}, Cost: {price}, Have: {Campaign.Money}");
+                                        $"Item to remove: {itemToRemove.Name}, Item to install: {itemToInstall.Name}, Cost: {price}, Have: {Campaign.GetWallet(client).Balance}");
             }
         }
 

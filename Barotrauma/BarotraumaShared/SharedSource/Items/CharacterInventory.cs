@@ -58,7 +58,7 @@ namespace Barotrauma
             IsEquipped = new bool[capacity];
             SlotTypes = new InvSlotType[capacity];
 
-            AccessibleWhenAlive = element.GetAttributeBool("accessiblewhenalive", true);
+            AccessibleWhenAlive = element.GetAttributeBool("accessiblewhenalive", false);
             AccessibleByOwner = element.GetAttributeBool("accessiblebyowner", AccessibleWhenAlive);
 
             string[] slotTypeNames = ParseSlotTypes(element);
@@ -159,14 +159,14 @@ namespace Barotrauma
         {
             return 
                 base.CanBePutInSlot(item, i, ignoreCondition) && item.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i])) && 
-                (SlotTypes[i] == InvSlotType.Any || slots[i].ItemCount < 1);
+                (SlotTypes[i] == InvSlotType.Any || slots[i].Items.Count < 1);
         }
 
         public override bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition, int? quality = null)
         {
             return 
                 base.CanBePutInSlot(itemPrefab, i, condition, quality) &&
-                (SlotTypes[i] == InvSlotType.Any || slots[i].ItemCount < 1);
+                (SlotTypes[i] == InvSlotType.Any || slots[i].Items.Count < 1);
         }
 
         public bool CanBeAutoMovedToCorrectSlots(Item item)

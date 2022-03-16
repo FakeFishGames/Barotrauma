@@ -210,7 +210,7 @@ namespace Barotrauma
 
             Additive = element.GetAttributeBool("additive", false);
 
-            string levelTypeStr = element.GetAttributeString("leveltype", "LocationConnection");
+            string levelTypeStr = element.GetAttributeString("leveltype", parentSet?.LevelType.ToString() ?? "LocationConnection");
             if (!Enum.TryParse(levelTypeStr, true, out LevelType))
             {
                 DebugConsole.ThrowError($"Error in event set \"{Identifier}\". \"{levelTypeStr}\" is not a valid level type.");

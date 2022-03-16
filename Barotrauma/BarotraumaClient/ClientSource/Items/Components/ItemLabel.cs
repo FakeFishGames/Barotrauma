@@ -282,7 +282,7 @@ namespace Barotrauma.Items.Components
             textBlock.DrawManually(spriteBatch);
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             Text = msg.ReadString();
         }

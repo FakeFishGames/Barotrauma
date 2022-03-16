@@ -221,7 +221,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 float condition = deconstructProduct.CopyCondition ?
-                    percentageHealth * itemPrefab.Health :
+                    percentageHealth * itemPrefab.Health * deconstructProduct.OutConditionMax :
                     itemPrefab.Health * Rand.Range(deconstructProduct.OutConditionMin, deconstructProduct.OutConditionMax);
 
                 if (DeconstructItemsSimultaneously && deconstructProduct.RequiredOtherItem.Length > 0)

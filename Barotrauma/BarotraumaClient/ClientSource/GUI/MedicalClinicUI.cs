@@ -271,7 +271,7 @@ namespace Barotrauma
             healList.PriceBlock.Text = UpgradeStore.FormatCurrency(totalCost);
             healList.PriceBlock.TextColor = GUIStyle.Red;
             healList.HealButton.Enabled = false;
-            if (medicalClinic.GetMoney() > totalCost)
+            if (medicalClinic.GetWallet().CanAfford(totalCost))
             {
                 healList.PriceBlock.TextColor = GUIStyle.TextColorNormal;
                 if (medicalClinic.PendingHeals.Any())
@@ -467,7 +467,7 @@ namespace Barotrauma
 
             GUITextBlock moneyLabel = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), balanceLayout.RectTransform), string.Empty, textAlignment: Alignment.TopRight, font: GUIStyle.SubHeadingFont)
             {
-                TextGetter = () => UpgradeStore.FormatCurrency(medicalClinic.GetMoney()),
+                TextGetter = () => UpgradeStore.FormatCurrency(medicalClinic.GetWallet().Balance),
                 AutoScaleVertical = true,
                 TextScale = 1.1f
             };
@@ -577,7 +577,7 @@ namespace Barotrauma
             GUILayoutGroup buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), footerLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterRight);
             GUIButton healButton = new GUIButton(new RectTransform(new Vector2(0.33f, 1f), buttonLayout.RectTransform), TextManager.Get("medicalclinic.heal"))
             {
-                Enabled = medicalClinic.PendingHeals.Any() && medicalClinic.GetTotalCost() < medicalClinic.GetMoney(),
+                Enabled = medicalClinic.PendingHeals.Any() && medicalClinic.GetWallet().CanAfford(medicalClinic.GetTotalCost()),
                 OnClicked = (button, _) =>
                 {
                     button.Enabled = false;

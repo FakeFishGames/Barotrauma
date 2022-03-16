@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     partial class Inventory : IServerSerializable, IClientSerializable
     {
-        public const int MaxStackSize = 32;
+        public const int MaxStackSize = (1 << 6) - 1; //the max value that will fit in 6 bits, i.e 63
 
         public class ItemSlot
         {
@@ -18,15 +18,7 @@ namespace Barotrauma
 
             public bool HideIfEmpty;
 
-            public IEnumerable<Item> Items
-            {
-                get { return items; }
-            }
-
-            public int ItemCount
-            {
-                get { return items.Count; }
-            }
+            public IReadOnlyList<Item> Items => items;
 
             public bool CanBePut(Item item, bool ignoreCondition = false)
             {
@@ -631,7 +623,7 @@ namespace Barotrauma
                 {
                     if (!slots[i].Any()) { return false; }
                     var item = slots[i].FirstOrDefault();
-                    if (slots[i].ItemCount < item.Prefab.MaxStackSize) { return false; }
+                    if (slots[i].Items.Count < item.Prefab.MaxStackSize) { return false; }
                 }
             }
             else
@@ -842,29 +834,30 @@ namespace Barotrauma
 
         public virtual void CreateNetworkEvent()
         {
-            if (GameMain.NetworkMember != null)
+            if (GameMain.NetworkMember == null) { return; }
+            if (GameMain.NetworkMember.IsClient) { syncItemsDelay = 1.0f; }
+
+            if (Owner is Character character)
             {
-                if (GameMain.NetworkMember.IsClient) { syncItemsDelay = 1.0f; }
-                GameMain.NetworkMember.CreateEntityEvent(Owner as INetSerializable, new object[] { NetEntityEvent.Type.InventoryState });
+                GameMain.NetworkMember.CreateEntityEvent(character, new Character.InventoryStateEventData());
+            }
+            else if (Owner is Item item)
+            {
+                GameMain.NetworkMember.CreateEntityEvent(item, new Item.InventoryStateEventData());
             }
         }
 
         public Item FindItem(Func<Item, bool> predicate, bool recursive)
         {
-            Item match = AllItems.FirstOrDefault(i => predicate(i));
+            Item match = AllItems.FirstOrDefault(predicate);
             if (match == null && recursive)
             {
                 foreach (var item in AllItems)
                 {
-                    if (item == null) { continue; }
-                    if (item.OwnInventory != null)
-                    {
-                        match = item.OwnInventory.FindItem(predicate, recursive: true);
-                        if (match != null)
-                        {
-                            return match;
-                        }
-                    }
+                    if (item?.OwnInventory == null) { continue; }
+
+                    match = item.OwnInventory.FindItem(predicate, recursive: true);
+                    if (match != null) { return match; }
                 }
             }
             return match;
@@ -946,16 +939,31 @@ namespace Barotrauma
             slots[index].RemoveItem(item);
         }
 
-
-        public void SharedWrite(IWriteMessage msg, object[] extraData = null)
+        public void SharedRead(IReadMessage msg, out List<ushort>[] newItemIds)
+        {
+            byte slotCount = msg.ReadByte();
+            newItemIds = new List<ushort>[slotCount];
+            for (int i = 0; i < slotCount; i++)
+            {
+                newItemIds[i] = new List<ushort>();
+                int itemCount = msg.ReadRangedInteger(0, MaxStackSize);
+                for (int j = 0; j < itemCount; j++)
+                {
+                    newItemIds[i].Add(msg.ReadUInt16());
+                }
+            }
+        }
+        
+        public void SharedWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             msg.Write((byte)capacity);
             for (int i = 0; i < capacity; i++)
             {
-                msg.WriteRangedInteger(slots[i].ItemCount, 0, MaxStackSize);
-                foreach (Item item in slots[i].Items)
+                msg.WriteRangedInteger(slots[i].Items.Count, 0, MaxStackSize);
+                for (int j = 0; j < Math.Min(slots[i].Items.Count, MaxStackSize); j++)
                 {
-                    msg.Write((ushort)(item == null ? 0 : item.ID));
+                    var item = slots[i].Items[j];
+                    msg.Write(item?.ID ?? (ushort)0);
                 }
             }
         }

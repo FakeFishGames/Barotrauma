@@ -5,7 +5,7 @@ namespace Barotrauma.Items.Components
 {
     partial class CustomInterface : ItemComponent, IClientSerializable, IServerSerializable
     {
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             bool[] elementStates = new bool[customInterfaceElementList.Count];
             string[] elementValues = new string[customInterfaceElementList.Count];
@@ -51,17 +51,12 @@ namespace Barotrauma.Items.Components
             }
 
             //notify all clients of the new state
-            GameMain.Server.CreateEntityEvent(item, new object[]
-            {
-                NetEntityEvent.Type.ComponentState,
-                item.GetComponentIndex(this),
-                clickedButton
-            });
+            item.CreateServerEvent(this, new EventData(clickedButton));
 
             item.CreateServerEvent(this);
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             //extradata contains an array of buttons clicked by a client (or nothing if nothing was clicked)
             for (int i = 0; i < customInterfaceElementList.Count; i++)
@@ -76,7 +71,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    msg.Write(extraData != null && extraData.Any(d => d as CustomInterfaceElement == customInterfaceElementList[i]));
+                    msg.Write(extraData is Item.ComponentStateEventData { ComponentData: EventData eventData } && eventData.BtnElement == customInterfaceElementList[i]);
                 }
             }
         }

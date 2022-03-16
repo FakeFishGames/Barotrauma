@@ -460,9 +460,12 @@ namespace Barotrauma
                         selectedEvents[eventSet].Add(newEvent);
                     }
 
+                    Location location = (GameMain.GameSession?.GameMode as CampaignMode)?.Map?.CurrentLocation ?? level?.StartLocation;
                     foreach (EventSet childEventSet in eventSet.ChildSets)
                     {
-                        CreateEvents(childEventSet, rand);
+                        if (!IsValidForLevel(childEventSet, level)) { continue; }
+                        if (location != null && !IsValidForLocation(childEventSet, location)) { continue; }
+                        CreateEvents(childEventSet, rand);                        
                     }
                 }
             }
@@ -474,10 +477,7 @@ namespace Barotrauma
             Random rand = random ?? new MTRandom(ToolBox.StringToInt(level.Seed));
 
             var allowedEventSets = 
-                eventSets.Where(es => 
-                    level.Difficulty >= es.MinLevelDifficulty && level.Difficulty <= es.MaxLevelDifficulty && 
-                    level.LevelData.Type == es.LevelType && 
-                    (es.BiomeIdentifier.IsEmpty || es.BiomeIdentifier == level.LevelData.Biome.Identifier));
+                eventSets.Where(set => IsValidForLevel(set, level));
 
             if (requireCampaignSet.HasValue)
             {
@@ -501,13 +501,9 @@ namespace Barotrauma
             }
 
             Location location = (GameMain.GameSession?.GameMode as CampaignMode)?.Map?.CurrentLocation ?? level?.StartLocation;
-            LocationType locationType = location?.GetLocationType();
-            
             if (location != null)
             {
-                allowedEventSets = allowedEventSets.Where(set => 
-                set.LocationTypeIdentifiers == null || 
-                set.LocationTypeIdentifiers.Any(identifier => identifier == locationType.Identifier));
+                allowedEventSets = allowedEventSets.Where(set => IsValidForLocation(set, location));
             }
 
             float totalCommonness = allowedEventSets.Sum(e => e.GetCommonness(level));
@@ -524,6 +520,20 @@ namespace Barotrauma
             }
 
             return null;
+        }
+
+        private bool IsValidForLevel(EventSet eventSet, Level level)
+        {
+            return
+                level.Difficulty >= eventSet.MinLevelDifficulty && level.Difficulty <= eventSet.MaxLevelDifficulty &&
+                level.LevelData.Type == eventSet.LevelType &&
+                (eventSet.BiomeIdentifier.IsEmpty || eventSet.BiomeIdentifier == level.LevelData.Biome.Identifier);
+        }
+
+        private bool IsValidForLocation(EventSet eventSet, Location location)
+        {
+            return eventSet.LocationTypeIdentifiers == null ||
+                    eventSet.LocationTypeIdentifiers.Any(identifier => identifier == location.GetLocationType().Identifier);
         }
 
         private bool CanStartEventSet(EventSet eventSet)

@@ -19,7 +19,7 @@ namespace Barotrauma
             }
             if (Math.Abs(prevSentSkill[skillIdentifier] - newLevel) > 0.01f)
             {
-                GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateSkills });
+                GameMain.NetworkMember.CreateEntityEvent(Character, new Character.UpdateSkillsEventData());
                 prevSentSkill[skillIdentifier] = newLevel;
             }            
         }
@@ -30,14 +30,14 @@ namespace Barotrauma
             if (prevAmount != newAmount)
             {
                 GameServer.Log($"{GameServer.CharacterLogName(Character)} has gained {newAmount - prevAmount} experience ({prevAmount} -> {newAmount})", ServerLog.MessageType.Talent);
-                GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateExperience });
+                GameMain.NetworkMember.CreateEntityEvent(Character, new Character.UpdateExperienceEventData());
             }
         }
 
         partial void OnPermanentStatChanged(StatTypes statType)
         {
             if (Character == null || Character.Removed) { return; }
-            GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdatePermanentStats, statType });            
+            GameMain.NetworkMember.CreateEntityEvent(Character, new Character.UpdatePermanentStatsEventData());
         }
 
         public void ServerWrite(IWriteMessage msg)

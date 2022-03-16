@@ -5,11 +5,26 @@ namespace Barotrauma.Items.Components
 {
     partial class Projectile : ItemComponent
     {
+        private readonly struct EventData : IEventData
+        {
+            public readonly bool Launch;
+            
+            public EventData(bool launch)
+            {
+                Launch = launch;
+            }
+        }
+        
         private float launchRot;
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public override bool ValidateEventData(NetEntityEvent.IData data)
+            => TryExtractEventData<EventData>(data, out _);
+
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            bool launch = extraData.Length > 2 && (bool)extraData[2];
+            var eventData = ExtractEventData<EventData>(extraData);
+            bool launch = eventData.Launch;
+            
             msg.Write(launch);
             if (launch)
             {

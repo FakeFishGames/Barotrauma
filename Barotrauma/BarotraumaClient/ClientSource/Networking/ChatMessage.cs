@@ -115,7 +115,7 @@ namespace Barotrauma.Networking
                             }
                             else
                             {
-                                orderMessageInfo.TargetCharacter?.SetOrder(order);
+                                orderMessageInfo.TargetCharacter?.SetOrder(order, orderMessageInfo.IsNewOrder);
                             }
                         }
                     }
@@ -125,7 +125,8 @@ namespace Barotrauma.Networking
                         Order order = null;
                         if (orderMessageInfo.TargetPosition != null)
                         {
-                            order = new Order(orderPrefab, orderOption, orderMessageInfo.Priority, Order.OrderType.Current, null, orderMessageInfo.TargetPosition, orderGiver: senderCharacter);
+                            order = new Order(orderPrefab, orderOption, orderMessageInfo.TargetPosition, orderGiver: senderCharacter)
+                                .WithManualPriority(orderMessageInfo.Priority);
                         }
                         else if (orderMessageInfo.WallSectionIndex != null)
                         {

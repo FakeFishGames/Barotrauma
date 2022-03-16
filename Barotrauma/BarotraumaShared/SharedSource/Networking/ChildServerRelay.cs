@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Barotrauma.Extensions;
@@ -18,6 +19,13 @@ namespace Barotrauma.Networking
         private static PipeType writeStream;
         private static PipeType readStream;
 
+        private enum WriteStatus : byte
+        {
+            Success = 0x00,
+            Heartbeat = 0x01,
+            Crash = 0xFF
+        }
+
         private static ManualResetEvent writeManualResetEvent;
 
         private static volatile bool shutDown;
@@ -29,6 +37,8 @@ namespace Barotrauma.Networking
         private static int readIncTotal;
 
         private static ConcurrentQueue<byte[]> msgsToWrite;
+        private static ConcurrentQueue<string> errorsToWrite;
+        
         private static ConcurrentQueue<byte[]> msgsToRead;
 
         private static Thread readThread;
@@ -44,6 +54,8 @@ namespace Barotrauma.Networking
             readTempBytes = new byte[ReadBufferSize];
 
             msgsToWrite = new ConcurrentQueue<byte[]>();
+            errorsToWrite = new ConcurrentQueue<string>();
+            
             msgsToRead = new ConcurrentQueue<byte[]>();
 
             shutDown = false;
@@ -127,9 +139,11 @@ namespace Barotrauma.Networking
             }
         }
 
+        static partial void HandleCrashString(string str);
+        
         private static void UpdateRead()
         {
-            Span<byte> msgLengthSpan = stackalloc byte[2];
+            Span<byte> msgLengthSpan = stackalloc byte[3];
             while (!shutDown)
             {
                 CheckPipeConnected(nameof(readStream), readStream);
@@ -154,13 +168,26 @@ namespace Barotrauma.Networking
                 if (!readBytes(msgLengthSpan)) { shutDown = true; break; }
 
                 int msgLength = msgLengthSpan[0] | (msgLengthSpan[1] << 8);
+                WriteStatus writeStatus = (WriteStatus)msgLengthSpan[2];
 
                 if (msgLength > 0)
                 {
                     byte[] msg = new byte[msgLength];
                     if (!readBytes(msg.AsSpan())) { shutDown = true; break; }
 
-                    msgsToRead.Enqueue(msg);
+                    switch (writeStatus)
+                    {
+                        case WriteStatus.Success:
+                            msgsToRead.Enqueue(msg);
+                            break;
+                        case WriteStatus.Heartbeat:
+                            //do nothing
+                            break;
+                        case WriteStatus.Crash:
+                            HandleCrashString(Encoding.UTF8.GetString(msg));
+                            shutDown = true;
+                            break;
+                    }
                 }
 
                 Thread.Yield();
@@ -173,9 +200,9 @@ namespace Barotrauma.Networking
             {
                 CheckPipeConnected(nameof(writeStream), writeStream);
 
-                bool msgAvailable; byte[] msg;
+                byte[] msg;
 
-                void writeMsg()
+                void writeMsg(WriteStatus writeStatus)
                 {
                     // It's SUPER IMPORTANT that this stack allocation
                     // remains in this local function and is never inlined,
@@ -183,11 +210,12 @@ namespace Barotrauma.Networking
                     // when the function returns; placing it in the loop
                     // this method is based around would lead to a stack
                     // overflow real quick!
-                    Span<byte> bytesToWrite = stackalloc byte[2 + msg.Length];
+                    Span<byte> bytesToWrite = stackalloc byte[3 + msg.Length];
 
                     bytesToWrite[0] = (byte)(msg.Length & 0xFF);
                     bytesToWrite[1] = (byte)((msg.Length >> 8) & 0xFF);
-                    Span<byte> msgSlice = bytesToWrite.Slice(2, msg.Length);
+                    bytesToWrite[2] = (byte)writeStatus;
+                    Span<byte> msgSlice = bytesToWrite.Slice(3, msg.Length);
 
                     msg.AsSpan().CopyTo(msgSlice);
 
@@ -209,15 +237,20 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                msgAvailable = msgsToWrite.TryDequeue(out msg);
-                while (msgAvailable)
+                while (errorsToWrite.TryDequeue(out var error))
                 {
-                    writeMsg();
+                    msg = Encoding.UTF8.GetBytes(error);
+                    writeMsg(WriteStatus.Crash);
+                    shutDown = true;
+                }
+                
+                while (msgsToWrite.TryDequeue(out msg))
+                {
+                    writeMsg(WriteStatus.Success);
 
                     if (shutDown) { break; }
-
-                    msgAvailable = msgsToWrite.TryDequeue(out msg);
                 }
+                
                 if (!shutDown)
                 {
                     writeManualResetEvent.Reset();
@@ -226,7 +259,7 @@ namespace Barotrauma.Networking
                         if (shutDown) { return; }
 
                         //heartbeat to keep the other end alive
-                        msg = Array.Empty<byte>(); writeMsg();
+                        msg = Array.Empty<byte>(); writeMsg(WriteStatus.Heartbeat);
                     }
                 }
             }

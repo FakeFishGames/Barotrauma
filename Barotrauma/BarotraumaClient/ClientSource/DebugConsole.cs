@@ -559,7 +559,7 @@ namespace Barotrauma
 
                 GameMain.MainMenuScreen.QuickStart(fixedSeed: false, subName, difficulty, levelGenerationParams);
 
-            }, getValidArgs: () => new[] { SubmarineInfo.SavedSubmarines.Select(s => s.Name).Distinct().ToArray() }));
+            }, getValidArgs: () => new[] { SubmarineInfo.SavedSubmarines.Select(s => s.Name).Distinct().OrderBy(s => s).ToArray() }));
 
             commands.Add(new Command("steamnetdebug", "steamnetdebug: Toggles Steamworks networking debug logging.", (string[] args) =>
             {
@@ -628,7 +628,7 @@ namespace Barotrauma
                 DebugConsoleMapping.Instance.Remove(key);
                 NewMessage("Keybind unbound.", GUIStyle.Green);
                 return;                
-            }, isCheat: false, getValidArgs: () => new[] { DebugConsoleMapping.Instance.Bindings.Keys.Select(keys => keys.ToString()).Distinct().ToArray() }));
+            }, isCheat: false, getValidArgs: () => new[] { DebugConsoleMapping.Instance.Bindings.Keys.Select(keys => keys.ToString()).Distinct().OrderBy(k => k).ToArray() }));
             
             commands.Add(new Command("savebinds", "savebinds: Writes current keybinds into the config file.", (string[] args) =>
             {
@@ -710,6 +710,7 @@ namespace Barotrauma
             commands.Add(new Command("traitorlist", "", (string[] args) => { }));
             AssignRelayToServer("traitorlist", true);
             AssignRelayToServer("money", true);
+            AssignRelayToServer("showmoney", true);
             AssignRelayToServer("setskill", true);
             AssignRelayToServer("readycheck", true);
 
@@ -1734,7 +1735,7 @@ namespace Barotrauma
 
                 return new string[][]
                 {
-                    propertyList.Distinct().Select(i => i.Value).ToArray(),
+                    propertyList.Distinct().Select(i => i.Value).OrderBy(n => n).ToArray(),
                     Array.Empty<string>()
                 };
             }));
@@ -1763,17 +1764,26 @@ namespace Barotrauma
                     foreach (var missionPrefab in MissionPrefab.Prefabs)
                     {
                         Identifier missionId = (missionPrefab.ConfigElement.Attribute("textidentifier") == null ? missionPrefab.Identifier : missionPrefab.ConfigElement.GetAttributeIdentifier("textidentifier", Identifier.Empty));
-                        Identifier nameIdentifier = $"missionname.{missionId}".ToIdentifier();
-                        if (!tags[language].Contains(nameIdentifier))
+                        addIfMissing($"missionname.{missionId}".ToIdentifier(), language);
+                        addIfMissing($"missiondescription.{missionId}".ToIdentifier(), language);
+                    }
+
+                    foreach (Type itemComponentType in typeof(ItemComponent).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ItemComponent))))
+                    {
+                        foreach (var property in itemComponentType.GetProperties())
                         {
-                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<LanguageIdentifier>(); }
-                            missingTags[nameIdentifier].Add(language);
-                        }
-                        Identifier descriptionIdentifier = $"missiondescription.{missionId}".ToIdentifier();
-                        if (!tags[language].Contains(descriptionIdentifier))
-                        {
-                            if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<LanguageIdentifier>(); }
-                            missingTags[descriptionIdentifier].Add(language);
+                            if (!property.IsDefined(typeof(InGameEditable), false)) { continue; }
+
+                            string propertyTag = $"{property.DeclaringType.Name}.{property.Name}";
+
+                            addIfMissingAll(language, 
+                                propertyTag.ToIdentifier(),
+                                property.Name.ToIdentifier(),
+                                $"sp.{propertyTag}.name".ToIdentifier());
+
+                            addIfMissingAll(language, 
+                                $"sp.{propertyTag}.description".ToIdentifier(),
+                                $"{property.Name.ToIdentifier()}.description".ToIdentifier());
                         }
                     }
 
@@ -1781,18 +1791,8 @@ namespace Barotrauma
                     {
                         if (sub.Type != SubmarineType.Player || !sub.IsVanillaSubmarine()) { continue; }
 
-                        Identifier nameIdentifier = $"submarine.name.{sub.Name}".ToIdentifier();
-                        if (!tags[language].Contains(nameIdentifier))
-                        {
-                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<LanguageIdentifier>(); }
-                            missingTags[nameIdentifier].Add(language);
-                        }
-                        Identifier descriptionIdentifier = ("submarine.description." + sub.Name).ToIdentifier();
-                        if (!tags[language].Contains(descriptionIdentifier))
-                        {
-                            if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<LanguageIdentifier>(); }
-                            missingTags[descriptionIdentifier].Add(language);
-                        }
+                        addIfMissing($"submarine.name.{sub.Name}".ToIdentifier(), language);
+                        addIfMissing(("submarine.description." + sub.Name).ToIdentifier(), language);
                     }
 
                     foreach (AfflictionPrefab affliction in AfflictionPrefab.List)
@@ -1806,42 +1806,21 @@ namespace Barotrauma
                         }
 
                         Identifier afflictionId = affliction.TranslationIdentifier;
-                        Identifier nameIdentifier = $"afflictionname.{afflictionId}".ToIdentifier();
-                        if (!tags[language].Contains(nameIdentifier))
-                        {
-                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<LanguageIdentifier>(); }
-                            missingTags[nameIdentifier].Add(language);
-                        }
-                        
-                        Identifier descriptionIdentifier = $"afflictiondescription.{afflictionId}".ToIdentifier();
-                        if (!tags[language].Contains(descriptionIdentifier))
-                        {
-                            if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<LanguageIdentifier>(); }
-                            missingTags[descriptionIdentifier].Add(language);
-                        }
+                        addIfMissing($"afflictionname.{afflictionId}".ToIdentifier(), language);
+                        addIfMissing($"afflictiondescription.{afflictionId}".ToIdentifier(), language);
                     }
 
                     foreach (var talentTree in TalentTree.JobTalentTrees)
                     {
                         foreach (var talentSubTree in talentTree.TalentSubTrees)
                         {
-                            Identifier nameIdentifier = $"talenttree.{talentSubTree.Identifier}".ToIdentifier();
-                            if (!tags[language].Contains(nameIdentifier))
-                            {
-                                if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<LanguageIdentifier>(); }
-                                missingTags[nameIdentifier].Add(language);
-                            }
+                            addIfMissing($"talenttree.{talentSubTree.Identifier}".ToIdentifier(), language);
                         }
                     }
 
                     foreach (var talent in TalentPrefab.TalentPrefabs)
                     {
-                        Identifier nameIdentifier = $"talentname.{talent.Identifier}".ToIdentifier();
-                        if (!tags[language].Contains(nameIdentifier))
-                        {
-                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<LanguageIdentifier>(); }
-                            missingTags[nameIdentifier].Add(language);
-                        }
+                        addIfMissing($"talentname.{talent.Identifier}".ToIdentifier(), language);
                     }
 
                     //check missing entity names
@@ -1849,17 +1828,25 @@ namespace Barotrauma
                     {
                         Identifier nameIdentifier = ("entityname." + me.Identifier).ToIdentifier();
                         if (tags[language].Contains(nameIdentifier)) { continue; }
+                        if (me.HideInMenus) { continue; }
+
+                        ContentXElement configElement = null;
+
                         if (me is ItemPrefab itemPrefab)
                         {
-                            nameIdentifier = itemPrefab.ConfigElement?.GetAttributeIdentifier("nameidentifier", nameIdentifier) ?? nameIdentifier;
-                            if (nameIdentifier != null)
-                            {
-                                if (tags[language].Contains("entityname." + nameIdentifier)) { continue; }
-                            }
+                            configElement = itemPrefab.ConfigElement;                        
+                        }
+                        else if (me is StructurePrefab structurePrefab)
+                        {
+                            configElement = structurePrefab.ConfigElement;                       
+                        }
+                        if (configElement != null)
+                        {
+                            var overrideIdentifier = configElement.GetAttributeIdentifier("nameidentifier", null);
+                            if (overrideIdentifier != null && tags[language].Contains("entityname." + overrideIdentifier)) { continue; }
                         }
 
-                        if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<LanguageIdentifier>(); }
-                        missingTags[nameIdentifier].Add(language);
+                        addIfMissing(nameIdentifier, language);
                     }
                 }
 
@@ -1868,11 +1855,7 @@ namespace Barotrauma
                     foreach (LanguageIdentifier language in TextManager.AvailableLanguages)
                     {
                         if (language == TextManager.DefaultLanguage) { continue; }
-                        if (!tags[language].Contains(englishTag))
-                        {
-                            if (!missingTags.ContainsKey(englishTag)) { missingTags[englishTag] = new HashSet<LanguageIdentifier>(); }
-                            missingTags[englishTag].Add(language);
-                        }
+                        addIfMissing(englishTag, language);
                     }
                 }
 
@@ -1920,6 +1903,24 @@ namespace Barotrauma
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
                 SwapLanguage(TextManager.DefaultLanguage);
+
+                void addIfMissing(Identifier tag, LanguageIdentifier language)
+                {
+                    if (!tags[language].Contains(tag))
+                    {
+                        if (!missingTags.ContainsKey(tag)) { missingTags[tag] = new HashSet<LanguageIdentifier>(); }
+                        missingTags[tag].Add(language);
+                    }
+                }
+                void addIfMissingAll(LanguageIdentifier language, params Identifier[] potentialTags)
+                {
+                    if (!potentialTags.Any(t => tags[language].Contains(t)))
+                    {
+                        var tag = potentialTags.First();
+                        if (!missingTags.ContainsKey(tag)) { missingTags[tag] = new HashSet<LanguageIdentifier>(); }
+                        missingTags[tag].Add(language);
+                    }
+                }
             }));
 
             commands.Add(new Command("comparelocafiles", "comparelocafiles [file1] [file2]", (string[] args) =>
@@ -1944,7 +1945,10 @@ namespace Barotrauma
                 }
 
                 var content1 = getContent(doc1.Root);
+                var language1 = doc1.Root.GetAttributeIdentifier("language", string.Empty);
+
                 var content2 = getContent(doc2.Root);
+                var language2 = doc2.Root.GetAttributeIdentifier("language", string.Empty);
 
                 foreach (KeyValuePair<string, string> kvp in content1)
                 {
@@ -1952,12 +1956,9 @@ namespace Barotrauma
                     {
                         ThrowError($"File 2 doesn't contain the text tag \"{kvp.Key}\"");
                     }
-                    else
+                    else if (language1 == language2 && content2[kvp.Key] != kvp.Value)
                     {
-                        if (content2[kvp.Key] != kvp.Value)
-                        {
-                            ThrowError($"Texts for the tag \"{kvp.Key}\" don't match:\n1. {kvp.Value}\n2. {content2[kvp.Key]}");
-                        }
+                        ThrowError($"Texts for the tag \"{kvp.Key}\" don't match:\n1. {kvp.Value}\n2. {content2[kvp.Key]}");                        
                     }
                 }
                 foreach (KeyValuePair<string, string> kvp in content2)
@@ -2319,7 +2320,14 @@ namespace Barotrauma
                 }
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, lines);
-                ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
+                try
+                {
+                    ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
+                }
+                catch (Exception e)
+                {
+                    ThrowError($"Failed to open the file \"{filePath}\".", e);
+                }
 
                 System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
                 {

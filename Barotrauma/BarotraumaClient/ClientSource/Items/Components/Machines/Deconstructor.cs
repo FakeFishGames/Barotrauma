@@ -251,12 +251,12 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             msg.Write(pendingState);
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             ushort userID = msg.ReadUInt16();
             Character user = userID == Entity.NullEntityID ? null : Entity.FindEntityByID(userID) as Character;

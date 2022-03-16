@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 #if SERVER
 using Barotrauma.Networking;
 #endif
@@ -18,12 +19,34 @@ namespace Barotrauma
         public int Quantity { get; set; }
         public bool? IsStoreComponentEnabled { get; set; }
 
-        public PurchasedItem(ItemPrefab itemPrefab, int quantity)
+        public readonly int BuyerCharacterInfoId;
+
+        public PurchasedItem(ItemPrefab itemPrefab, int quantity, int buyerCharacterInfoId)
         {
             ItemPrefab = itemPrefab;
             Quantity = quantity;
             IsStoreComponentEnabled = null;
+            BuyerCharacterInfoId = buyerCharacterInfoId;
         }
+
+#if CLIENT
+        public PurchasedItem(ItemPrefab itemPrefab, int quantity, Client buyer = null)
+        {
+            ItemPrefab = itemPrefab;
+            Quantity = quantity;
+            IsStoreComponentEnabled = null;
+            BuyerCharacterInfoId = buyer?.Character?.Info?.ID ?? Character.Controlled?.Info?.ID ?? 0;
+        }
+#elif SERVER
+        public PurchasedItem(ItemPrefab itemPrefab, int quantity, Client buyer)
+        {
+            ItemPrefab = itemPrefab;
+            Quantity = quantity;
+            IsStoreComponentEnabled = null;
+            BuyerCharacterInfoId = buyer?.Character?.Info?.ID ?? 0;
+        }
+#endif
+
     }
 
     class SoldItem
@@ -156,7 +179,7 @@ namespace Barotrauma
             OnPurchasedItemsChanged?.Invoke();
         }
 
-        public void ModifyItemQuantityInBuyCrate(ItemPrefab itemPrefab, int changeInQuantity)
+        public void ModifyItemQuantityInBuyCrate(ItemPrefab itemPrefab, int changeInQuantity, Client client = null)
         {
             var itemInCrate = ItemsInBuyCrate.Find(i => i.ItemPrefab == itemPrefab);
             if (itemInCrate != null)
@@ -167,15 +190,15 @@ namespace Barotrauma
                     ItemsInBuyCrate.Remove(itemInCrate);
                 }
             }
-            else if(changeInQuantity > 0)
+            else if (changeInQuantity > 0)
             {
-                itemInCrate = new PurchasedItem(itemPrefab, changeInQuantity);
+                itemInCrate = new PurchasedItem(itemPrefab, changeInQuantity, client);
                 ItemsInBuyCrate.Add(itemInCrate);
             }
             OnItemsInBuyCrateChanged?.Invoke();
         }
 
-        public void ModifyItemQuantityInSubSellCrate(ItemPrefab itemPrefab, int changeInQuantity)
+        public void ModifyItemQuantityInSubSellCrate(ItemPrefab itemPrefab, int changeInQuantity, Client client = null)
         {
             var itemInCrate = ItemsInSellFromSubCrate.Find(i => i.ItemPrefab == itemPrefab);
             if (itemInCrate != null)
@@ -188,13 +211,13 @@ namespace Barotrauma
             }
             else if (changeInQuantity > 0)
             {
-                itemInCrate = new PurchasedItem(itemPrefab, changeInQuantity);
+                itemInCrate = new PurchasedItem(itemPrefab, changeInQuantity, client);
                 ItemsInSellFromSubCrate.Add(itemInCrate);
             }
             OnItemsInSellFromSubCrateChanged?.Invoke();
         }
 
-        public void PurchaseItems(List<PurchasedItem> itemsToPurchase, bool removeFromCrate)
+        public void PurchaseItems(List<PurchasedItem> itemsToPurchase, bool removeFromCrate, Client client = null)
         {
             // Check all the prices before starting the transaction
             // to make sure the modifiers stay the same for the whole transaction
@@ -210,13 +233,13 @@ namespace Barotrauma
                 }
                 else
                 {
-                    purchasedItem = new PurchasedItem(item.ItemPrefab, item.Quantity);
+                    purchasedItem = new PurchasedItem(item.ItemPrefab, item.Quantity, client);
                     PurchasedItems.Add(purchasedItem);
                 }
 
                 // Exchange money
                 var itemValue = item.Quantity * buyValues[item.ItemPrefab];
-                campaign.Money -= itemValue;
+                campaign.GetWallet(client).TryDeduct(itemValue);
                 GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier.Value);
                 Location.StoreCurrentBalance += itemValue;
 
@@ -427,7 +450,7 @@ namespace Barotrauma
 #if SERVER
                             if (GameMain.Server != null)
                             {
-                                Entity.Spawner.CreateNetworkEvent(itemContainer.Item, false);
+                                Entity.Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(itemContainer.Item));
                             }
 #endif
                         }
@@ -438,7 +461,7 @@ namespace Barotrauma
 
                     itemSpawned(item);    
 #if SERVER
-                    Entity.Spawner?.CreateNetworkEvent(item, false);
+                    Entity.Spawner?.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
 #endif
                     (itemContainer?.Item ?? item).CampaignInteractionType = CampaignMode.InteractionType.Cargo;    
                     static void itemSpawned(Item item)
@@ -491,7 +514,8 @@ namespace Barotrauma
                 if (item?.ItemPrefab == null) { continue; }
                 itemsElement.Add(new XElement("item",
                     new XAttribute("id", item.ItemPrefab.Identifier),
-                    new XAttribute("qty", item.Quantity)));
+                    new XAttribute("qty", item.Quantity),
+                    new XAttribute("buyer", item.BuyerCharacterInfoId)));
             }
             parentElement.Add(itemsElement);
         }
@@ -503,12 +527,15 @@ namespace Barotrauma
             {
                 foreach (XElement itemElement in element.GetChildElements("item"))
                 {
-                    var id = itemElement.GetAttributeString("id", null);
+                    string id = itemElement.GetAttributeString("id", null);
                     if (string.IsNullOrWhiteSpace(id)) { continue; }
                     var prefab = ItemPrefab.Prefabs.Find(p => p.Identifier == id);
                     if (prefab == null) { continue; }
-                    var qty = itemElement.GetAttributeInt("qty", 0);
-                    purchasedItems.Add(new PurchasedItem(prefab, qty));
+                    int qty = itemElement.GetAttributeInt("qty", 0);
+                    int buyerId = itemElement.GetAttributeInt("buyer", 0);
+
+                    purchasedItems.Add(new PurchasedItem(prefab, qty, buyerId));
+
                 }
             }
             SetPurchasedItems(purchasedItems);

@@ -822,7 +822,7 @@ namespace Barotrauma.Items.Components
                 Connection dockingConnection = item.Connections?.FirstOrDefault(c => c.Name == "toggle_docking");
                 if (dockingConnection != null)
                 {
-                    connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection, ignoreInactiveRelays: true);
+                    connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection, ignoreInactiveRelays: true, allowTraversingBackwards: false);
                 }
                 checkConnectedPortsTimer = CheckConnectedPortsInterval;
             }
@@ -894,7 +894,7 @@ namespace Barotrauma.Items.Components
             pathFinder = null;
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             msg.Write(AutoPilot);
             msg.Write(dockingNetworkMessagePending);
@@ -921,7 +921,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             int msgStartPos = msg.BitPosition;
 
@@ -962,7 +962,7 @@ namespace Barotrauma.Items.Components
             {
                 int msgLength = (int)(msg.BitPosition - msgStartPos);
                 msg.BitPosition = msgStartPos;
-                StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime);
+                StartDelayedCorrection(msg.ExtractBits(msgLength), sendingTime);
                 return;
             }
 

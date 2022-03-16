@@ -87,7 +87,7 @@ namespace Barotrauma
 #if SERVER
             if (GameMain.Server != null)
             {
-                Entity.Spawner.CreateNetworkEvent(item, false);
+                Entity.Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
             }
 #endif
         }

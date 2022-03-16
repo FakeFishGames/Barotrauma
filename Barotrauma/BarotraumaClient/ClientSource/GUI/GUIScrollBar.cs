@@ -312,6 +312,7 @@ namespace Barotrauma
                         MoveButton(new Vector2(
                             Math.Sign(PlayerInput.MousePosition.X - Bar.Rect.Center.X) * Bar.Rect.Width * barScale,
                             Math.Sign(PlayerInput.MousePosition.Y - Bar.Rect.Center.Y) * Bar.Rect.Height * barScale));
+                        OnReleased?.Invoke(this, BarScroll);
                     }
                 }
             }       

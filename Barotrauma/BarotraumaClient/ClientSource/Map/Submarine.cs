@@ -15,7 +15,7 @@ using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    partial class Submarine : Entity, IServerSerializable
+    partial class Submarine : Entity, IServerPositionSync
     {
         public static Vector2 MouseToWorldGrid(Camera cam, Submarine sub)
         {
@@ -547,19 +547,50 @@ namespace Barotrauma
                 }
             }
 
-            int disabledItemLightCount = 0;
-            foreach (Item item in Item.ItemList)
+            float entityCountWarningThreshold = 0.75f;
+
+            if (Item.ItemList.Count > SubEditorScreen.MaxItems * entityCountWarningThreshold)
             {
-                if (item.ParentInventory == null) { continue; }
-                disabledItemLightCount += item.GetComponents<Items.Components.LightComponent>().Count();
+                if (!IsWarningSuppressed(SubEditorScreen.WarningType.ItemCount))
+                {
+                    errorMsgs.Add(TextManager.Get("subeditor.itemcountwarning").Value);
+                    warnings.Add(SubEditorScreen.WarningType.ItemCount);
+                }
             }
-            int count = GameMain.LightManager.Lights.Count(l => l.CastShadows) - disabledItemLightCount;
-            if (count > 45)
+
+            if ((MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.HullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count) > SubEditorScreen.MaxStructures * entityCountWarningThreshold)
             {
-                if (!IsWarningSuppressed(SubEditorScreen.WarningType.TooManyLights))
+                if (!IsWarningSuppressed(SubEditorScreen.WarningType.StructureCount))
+                {
+                    errorMsgs.Add(TextManager.Get("subeditor.structurecountwarning").Value);
+                    warnings.Add(SubEditorScreen.WarningType.StructureCount);
+                }
+            }
+
+            if (Structure.WallList.Count > SubEditorScreen.MaxStructures * entityCountWarningThreshold)
+            {
+                if (!IsWarningSuppressed(SubEditorScreen.WarningType.WallCount))
+                {
+                    errorMsgs.Add(TextManager.Get("subeditor.wallcountwarning").Value);
+                    warnings.Add(SubEditorScreen.WarningType.WallCount);
+                }
+            }
+
+            if (GetLightCount() > SubEditorScreen.MaxLights * entityCountWarningThreshold)
+            {
+                if (!IsWarningSuppressed(SubEditorScreen.WarningType.LightCount))
+                {
+                    errorMsgs.Add(TextManager.Get("subeditor.lightcountwarning").Value);
+                    warnings.Add(SubEditorScreen.WarningType.LightCount);
+                }
+            }
+
+            if (GetShadowCastingLightCount() > SubEditorScreen.MaxShadowCastingLights * entityCountWarningThreshold)
+            {
+                if (!IsWarningSuppressed(SubEditorScreen.WarningType.ShadowCastingLightCount))
                 {
                     errorMsgs.Add(TextManager.Get("subeditor.shadowcastinglightswarning").Value);
-                    warnings.Add(SubEditorScreen.WarningType.TooManyLights);
+                    warnings.Add(SubEditorScreen.WarningType.ShadowCastingLightCount);
                 }
             }
 
@@ -627,14 +658,31 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public static int GetLightCount()
         {
-            if (type != ServerNetObject.ENTITY_POSITION)
+            int disabledItemLightCount = 0;
+            foreach (Item item in Item.ItemList)
             {
-                DebugConsole.NewMessage($"Error while reading a network event for the submarine \"{Info.Name} ({ID})\". Invalid event type ({type}).", Color.Red);
+                if (item.ParentInventory == null) { continue; }
+                disabledItemLightCount += item.GetComponents<Items.Components.LightComponent>().Count();
             }
+            return GameMain.LightManager.Lights.Count() - disabledItemLightCount;
+        }
 
-            var posInfo = PhysicsBody.ClientRead(type, msg, sendingTime, parentDebugName: Info.Name);
+        public static int GetShadowCastingLightCount()
+        {
+            int disabledItemLightCount = 0;
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.ParentInventory == null) { continue; }
+                disabledItemLightCount += item.GetComponents<Items.Components.LightComponent>().Count();
+            }
+            return GameMain.LightManager.Lights.Count(l => l.CastShadows) - disabledItemLightCount;
+        }
+
+        public void ClientReadPosition(IReadMessage msg, float sendingTime)
+        {
+            var posInfo = PhysicsBody.ClientRead(msg, sendingTime, parentDebugName: Info.Name);
             msg.ReadPadBits();
 
             if (posInfo != null)
@@ -647,6 +695,11 @@ namespace Barotrauma
 
                 subBody.PositionBuffer.Insert(index, posInfo);
             }
+        }
+        
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
+        {
+            throw new Exception($"Error while reading a network event for the submarine \"{Info.Name} ({ID})\". Submarines are not even supposed to receive events!");
         }
     }
 }

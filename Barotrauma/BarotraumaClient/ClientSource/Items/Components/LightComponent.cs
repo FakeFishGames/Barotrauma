@@ -56,8 +56,9 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                Light.Position = item.DrawPosition;
-                if (item.Submarine != null) { Light.Position -= item.Submarine.DrawPosition; }
+                Vector2 pos = item.DrawPosition;
+                if (item.Submarine != null) { pos -= item.Submarine.DrawPosition; }
+                Light.Position = pos;
             }
             PhysicsBody body = Light.ParentBody;
             if (body != null)
@@ -120,7 +121,7 @@ namespace Barotrauma.Items.Components
             yield return CoroutineStatus.Success;
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             IsActive = msg.ReadBoolean();
             lastReceivedState = IsActive;

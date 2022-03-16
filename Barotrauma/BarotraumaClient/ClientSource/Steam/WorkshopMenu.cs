@@ -1,16 +1,11 @@
 ﻿#nullable enable
-using System;
 using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Threading;
-using System.Xml.Linq;
-using Barotrauma.IO;
-using Microsoft.Xna.Framework.Graphics;
 using ItemOrPackage = Barotrauma.Either<Steamworks.Ugc.Item, Barotrauma.ContentPackage>;
 
 namespace Barotrauma.Steam
@@ -25,12 +20,12 @@ namespace Barotrauma.Steam
             Publish
         }
 
-        private GUILayoutGroup tabber;
-        private Dictionary<Tab, (GUIButton Button, GUIFrame Content)> tabContents;
+        private readonly GUILayoutGroup tabber;
+        private readonly Dictionary<Tab, (GUIButton Button, GUIFrame Content)> tabContents;
 
-        private GUIFrame contentFrame;
+        private readonly GUIFrame contentFrame;
 
-        private CorePackage enabledCorePackage => enabledCoreDropdown.SelectedData as CorePackage ?? throw new Exception("Valid core package not selected");
+        private CorePackage EnabledCorePackage => enabledCoreDropdown.SelectedData as CorePackage ?? throw new Exception("Valid core package not selected");
 
         private readonly GUIDropDown enabledCoreDropdown;
         private readonly GUIListBox enabledRegularModsList;
@@ -173,7 +168,7 @@ namespace Barotrauma.Steam
                 
                 to.DraggedElement = draggedElement;
 
-                to.BarScroll = to.BarScroll * (oldCount / newCount);
+                to.BarScroll *= (oldCount / newCount);
             }
         }
         
@@ -367,7 +362,8 @@ namespace Barotrauma.Steam
                             {
                                 ToolBox.OpenFileWithShell(mod.Dir);
                                 return false;
-                            }
+                            },
+                            ToolTip = TextManager.Get("OpenLocalModInExplorer")
                         };
                 }
                 else if (ContentPackageManager.WorkshopPackages.Contains(mod))
@@ -386,8 +382,13 @@ namespace Barotrauma.Steam
                                     onInstalledInfoButtonHit(item.Value);
                                 });
                             return false;
-                        }
+                        },
+                        ToolTip = TextManager.Get("ViewModDetails")
                     };
+                    if (!SteamManager.IsInitialized)
+                    {
+                        infoButton.Enabled = false;
+                    }
                     TaskPool.Add(
                         $"DetermineUpdateRequired{mod.SteamWorkshopId}",
                         mod.IsUpToDate(),
@@ -398,6 +399,7 @@ namespace Barotrauma.Steam
                             if (!isUpToDate)
                             {
                                 infoButton.ApplyStyle(GUIStyle.ComponentStyles["WorkshopMenu.InfoButtonUpdate"]);
+                                infoButton.ToolTip = TextManager.Get("ViewModDetailsUpdateAvailable");
                             }
                         });
                 }
@@ -421,20 +423,26 @@ namespace Barotrauma.Steam
         private void CreatePopularModsTab(out GUIListBox popularModsList)
         {
             GUIFrame content = CreateNewContentFrame(Tab.PopularMods);
-            
+            if (!SteamManager.IsInitialized)
+            {
+                tabContents[Tab.PopularMods].Button.Enabled = false;
+            }            
             CreateWorkshopItemList(content, out _, out popularModsList, onSelected: PopulateFrameWithItemInfo);
         }
 
         private void CreatePublishTab(out GUIListBox selfModsList)
         {
             GUIFrame content = CreateNewContentFrame(Tab.Publish);
-
+            if (!SteamManager.IsInitialized)
+            {
+                tabContents[Tab.Publish].Button.Enabled = false;
+            }
             CreateWorkshopItemOrPackageList(content, out _, out selfModsList, onSelected: PopulatePublishTab);
         }
 
         public void Apply()
         {
-            ContentPackageManager.EnabledPackages.SetCore(enabledCorePackage);
+            ContentPackageManager.EnabledPackages.SetCore(EnabledCorePackage);
             ContentPackageManager.EnabledPackages.SetRegular(enabledRegularModsList.Content.Children
                 .Where(c => c.UserData is RegularPackage).Select(c => (RegularPackage)c.UserData).ToArray());
         }

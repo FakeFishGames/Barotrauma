@@ -229,7 +229,6 @@ namespace Barotrauma.Items.Components
             int amount = Rand.Range(minAmount, maxAmount, Rand.RandSync.Unsynced);
 
             Vector2 offset = SpawnAreaOffset;
-            offset.Y = -offset.Y;
 
             switch (SpawnAreaShape)
             {

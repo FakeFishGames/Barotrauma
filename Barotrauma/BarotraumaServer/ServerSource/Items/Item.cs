@@ -20,103 +20,73 @@ namespace Barotrauma
 
         partial void AssignCampaignInteractionTypeProjSpecific(CampaignMode.InteractionType interactionType)
         {
-            GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
+            GameMain.NetworkMember.CreateEntityEvent(this, new AssignCampaignInteractionEventData());
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            string errorMsg = "";
-            if (extraData == null || extraData.Length == 0 || !(extraData[0] is NetEntityEvent.Type))
+            Exception error(string reason)
             {
-                if (extraData == null)
-                {
-                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - event data was null.";
-                }
-                else if (extraData.Length == 0)
-                {
-                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - event data was empty.";
-                }
-                else
-                {
-                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - event type not set.";
-                }
-                msg.WriteRangedInteger((int)NetEntityEvent.Type.Invalid, 0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
-                DebugConsole.Log(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:InvalidData" + Name, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
-                return;
+                string errorMsg = $"Failed to write a network event for the item \"{Name}\" - {reason}";
+                GameAnalyticsManager.AddErrorEventOnce($"Item.ServerWrite:{Name}", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                return new Exception(errorMsg);
             }
+            
+            if (extraData is null) { throw error("event data was null"); }
+            if (!(extraData is IEventData itemEventData)) { throw error($"event data was of the wrong type (\"{extraData.GetType().Name}\")"); }
 
-            int initialWritePos = msg.LengthBits;
-
-            NetEntityEvent.Type eventType = (NetEntityEvent.Type)extraData[0];
-            msg.WriteRangedInteger((int)eventType, 0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
-            switch (eventType)
+            msg.WriteRangedInteger((int)itemEventData.EventType, (int)EventType.MinValue, (int)EventType.MaxValue);
+            switch (itemEventData)
             {
-                case NetEntityEvent.Type.ComponentState:
-                    if (extraData.Length < 2 || !(extraData[1] is int))
+                case ComponentStateEventData componentStateEventData:
+                    int componentIndex = components.IndexOf(componentStateEventData.Component);
+                    if (componentIndex < 0)
                     {
-                        errorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component index not given.";
-                        break;
+                        throw error($"component index out of range ({componentIndex})");
                     }
-                    int componentIndex = (int)extraData[1];
-                    if (componentIndex < 0 || componentIndex >= components.Count)
+                    if (!(components[componentIndex] is IServerSerializable serializableComponent))
                     {
-                        errorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component index out of range (" + componentIndex + ").";
-                        break;
-                    }
-                    else if (!(components[componentIndex] is IServerSerializable))
-                    {
-                        errorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component \"" + components[componentIndex] + "\" is not server serializable.";
-                        break;
+                        throw error($"component \"{components[componentIndex]}\" is not server serializable");
                     }
                     msg.WriteRangedInteger(componentIndex, 0, components.Count - 1);
-                    (components[componentIndex] as IServerSerializable).ServerWrite(msg, c, extraData);
+                    serializableComponent.ServerEventWrite(msg, c, extraData);
                     break;
-                case NetEntityEvent.Type.InventoryState:
-                    if (extraData.Length < 2 || !(extraData[1] is int))
+                case InventoryStateEventData inventoryStateEventData:
+                    int containerIndex = components.IndexOf(inventoryStateEventData.Component);
+                    if (containerIndex < 0)
                     {
-                        errorMsg = "Failed to write an inventory state event for the item \"" + Name + "\" - component index not given.";
+                        throw error($"container index out of range ({containerIndex})");
                         break;
                     }
-                    int containerIndex = (int)extraData[1];
-                    if (containerIndex < 0 || containerIndex >= components.Count)
+                    if (!(components[containerIndex] is ItemContainer itemContainer))
                     {
-                        errorMsg = "Failed to write an inventory state event for the item \"" + Name + "\" - container index out of range (" + containerIndex + ").";
-                        break;
-                    }
-                    else if (!(components[containerIndex] is ItemContainer))
-                    {
-                        errorMsg = "Failed to write an inventory state event for the item \"" + Name + "\" - component \"" + components[containerIndex] + "\" is not server serializable.";
-                        break;
+                        throw error("component \"" + components[containerIndex] + "\" is not server serializable");
                     }
                     msg.WriteRangedInteger(containerIndex, 0, components.Count - 1);
                     msg.Write(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
-                    (components[containerIndex] as ItemContainer).Inventory.ServerWrite(msg, c);
+                    itemContainer.Inventory.ServerEventWrite(msg, c);
                     break;
-                case NetEntityEvent.Type.Status:
+                case StatusEventData _:
                     msg.Write(condition);
                     break;
-                case NetEntityEvent.Type.AssignCampaignInteraction:
+                case AssignCampaignInteractionEventData _:
                     msg.Write((byte)CampaignInteractionType);
                     break;
-                case NetEntityEvent.Type.ApplyStatusEffect:
+                case ApplyStatusEffectEventData applyStatusEffectEventData:
                     {
-                        ActionType actionType = (ActionType)extraData[1];
-                        ItemComponent targetComponent = extraData.Length > 2 ? (ItemComponent)extraData[2] : null;
-                        ushort characterID = extraData.Length > 3 ? (ushort)extraData[3] : (ushort)0;
-                        Limb targetLimb = extraData.Length > 4 ? (Limb)extraData[4] : null;
-                        ushort useTargetID = extraData.Length > 5 ? (ushort)extraData[5] : (ushort)0;
-                        Vector2? worldPosition = null;
-                        if (extraData.Length > 6) { worldPosition = (Vector2)extraData[6]; }
+                        ActionType actionType = applyStatusEffectEventData.ActionType;
+                        ItemComponent targetComponent = applyStatusEffectEventData.TargetItemComponent;
+                        Limb targetLimb = applyStatusEffectEventData.TargetLimb;
+                        Vector2? worldPosition = applyStatusEffectEventData.WorldPosition;
 
-                        Character targetCharacter = FindEntityByID(characterID) as Character;
+                        Character targetCharacter = applyStatusEffectEventData.TargetCharacter;
                         byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
 
                         msg.WriteRangedInteger((int)actionType, 0, Enum.GetValues(typeof(ActionType)).Length - 1);
                         msg.Write((byte)(targetComponent == null ? 255 : components.IndexOf(targetComponent)));
-                        msg.Write(characterID);
+                        msg.Write(applyStatusEffectEventData.TargetCharacter?.ID ?? (ushort)0);
                         msg.Write(targetLimbIndex);
-                        msg.Write(useTargetID);
+                        msg.Write(applyStatusEffectEventData.UseTarget?.ID ?? (ushort)0);
                         msg.Write(worldPosition.HasValue);
                         if (worldPosition.HasValue)
                         {
@@ -125,74 +95,56 @@ namespace Barotrauma
                         }
                     }
                     break;
-                case NetEntityEvent.Type.ChangeProperty:
+                case ChangePropertyEventData changePropertyEventData:
                     try
                     {
-                        WritePropertyChange(msg, extraData, inGameEditableOnly: !GameMain.NetworkMember.IsServer);
+                        WritePropertyChange(msg, changePropertyEventData, inGameEditableOnly: !GameMain.NetworkMember.IsServer);
                     }
                     catch (Exception e)
                     {
-                        errorMsg = "Failed to write a ChangeProperty network event for the item \"" + Name + "\" (" + e.Message + ")";
+                        throw new Exception(
+                            $"Failed to write a ChangeProperty network event for the item \"{Name}\" ({e.Message})");
                     }
                     break;
-                case NetEntityEvent.Type.Upgrade:
-                    if (extraData.Length > 0 && extraData[1] is Upgrade upgrade)
+                case UpgradeEventData upgradeEventData:
+                    var upgrade = upgradeEventData.Upgrade;
+                    var upgradeTargets = upgrade.TargetComponents;
+                    msg.Write(upgrade.Identifier);
+                    msg.Write((byte)upgrade.Level);
+                    msg.Write((byte)upgradeTargets.Count);
+                    foreach (var (_, value) in upgrade.TargetComponents)
                     {
-                        var upgradeTargets = upgrade.TargetComponents;
-                        msg.Write(upgrade.Identifier);
-                        msg.Write((byte)upgrade.Level);
-                        msg.Write((byte)upgradeTargets.Count);
-                        foreach (var (_, value) in upgrade.TargetComponents)
+                        msg.Write((byte)value.Length);
+                        foreach (var propertyReference in value)
                         {
-                            msg.Write((byte)value.Length);
-                            foreach (var propertyReference in value)
-                            {
-                                object originalValue = propertyReference.OriginalValue;
-                                msg.Write((float)(originalValue ?? -1));
-                            }
+                            object originalValue = propertyReference.OriginalValue;
+                            msg.Write((float)(originalValue ?? -1));
                         }
-                    }
-                    else
-                    {
-                        errorMsg = extraData.Length > 0 
-                            ? $"Failed to write a network event for the item \"{Name}\" - \"{extraData[1].GetType()}\" is not a valid upgrade." 
-                            : $"Failed to write a network event for the item \"{Name}\". No upgrade specified.";
                     }
                     break;
                 default:
-                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - \"" + eventType + "\" is not a valid entity event type for items.";
-                    break;
-            }
-
-            if (!string.IsNullOrEmpty(errorMsg))
-            {
-                //something went wrong - rewind the write position and write invalid event type to prevent creating an unreadable event
-                msg.BitPosition = initialWritePos;
-                msg.LengthBits = initialWritePos;
-                msg.WriteRangedInteger((int)NetEntityEvent.Type.Invalid, 0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
-                DebugConsole.Log(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:" + errorMsg, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                    throw error($"Unsupported event type {itemEventData.GetType().Name}");
             }
         }
 
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
-            NetEntityEvent.Type eventType =
-                (NetEntityEvent.Type)msg.ReadRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
+            EventType eventType =
+                (EventType)msg.ReadRangedInteger((int)EventType.MinValue, (int)EventType.MaxValue);
 
             c.KickAFKTimer = 0.0f;
 
             switch (eventType)
             {
-                case NetEntityEvent.Type.ComponentState:
+                case EventType.ComponentState:
                     int componentIndex = msg.ReadRangedInteger(0, components.Count - 1);
-                    (components[componentIndex] as IClientSerializable).ServerRead(type, msg, c);
+                    (components[componentIndex] as IClientSerializable).ServerEventRead(msg, c);
                     break;
-                case NetEntityEvent.Type.InventoryState:
+                case EventType.InventoryState:
                     int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
-                    (components[containerIndex] as ItemContainer).Inventory.ServerRead(type, msg, c);
+                    (components[containerIndex] as ItemContainer).Inventory.ServerEventRead(msg, c);
                     break;
-                case NetEntityEvent.Type.Treatment:
+                case EventType.Treatment:
                     if (c.Character == null || !c.Character.CanInteractWith(this)) return;
 
                     UInt16 characterID = msg.ReadUInt16();
@@ -218,10 +170,10 @@ namespace Barotrauma
                     ApplyTreatment(c.Character, targetCharacter, targetLimb);
 
                     break;
-                case NetEntityEvent.Type.ChangeProperty:
+                case EventType.ChangeProperty:
                     ReadPropertyChange(msg, inGameEditableOnly: GameMain.NetworkMember.IsServer, sender: c);
                     break;
-                case NetEntityEvent.Type.Combine:
+                case EventType.Combine:
                     UInt16 combineTargetID = msg.ReadUInt16();
                     Item combineTarget = FindEntityByID(combineTargetID) as Item;
                     if (combineTarget == null || !c.Character.CanInteractWith(this) || !c.Character.CanInteractWith(combineTarget))
@@ -269,6 +221,7 @@ namespace Barotrauma
             msg.WriteRangedInteger(Quality, 0, Items.Components.Quality.MaxQuality);
 
             byte teamID = 0;
+            IdCard idCardComponent = null;
             foreach (WifiComponent wifiComponent in GetComponents<WifiComponent>())
             {
                 teamID = (byte)wifiComponent.TeamID;
@@ -279,11 +232,31 @@ namespace Barotrauma
                 foreach (IdCard idCard in GetComponents<IdCard>())
                 {
                     teamID = (byte)idCard.TeamID;
+                    idCardComponent = idCard;
                     break;
                 }
             }
 
             msg.Write(teamID);
+
+            bool hasIdCard = idCardComponent != null;
+            msg.Write(hasIdCard);
+            if (hasIdCard)
+            {
+                msg.Write(idCardComponent.OwnerName);
+                msg.Write(idCardComponent.OwnerTags);
+                msg.Write((byte)Math.Max(0, idCardComponent.OwnerBeardIndex+1));
+                msg.Write((byte)Math.Max(0, idCardComponent.OwnerHairIndex+1));
+                msg.Write((byte)Math.Max(0, idCardComponent.OwnerMoustacheIndex+1));
+                msg.Write((byte)Math.Max(0, idCardComponent.OwnerFaceAttachmentIndex+1));
+                msg.WriteColorR8G8B8(idCardComponent.OwnerHairColor);
+                msg.WriteColorR8G8B8(idCardComponent.OwnerFacialHairColor);
+                msg.WriteColorR8G8B8(idCardComponent.OwnerSkinColor);
+                msg.Write(idCardComponent.OwnerJobId);
+                msg.Write((byte)idCardComponent.OwnerSheetIndex.X);
+                msg.Write((byte)idCardComponent.OwnerSheetIndex.Y);
+            }
+            
             bool tagsChanged = tags.Count != base.Prefab.Tags.Count || !tags.All(t => base.Prefab.Tags.Contains(t));
             msg.Write(tagsChanged);
             if (tagsChanged)
@@ -367,39 +340,21 @@ namespace Barotrauma
             }
         }
 
-        public void ServerWritePosition(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerWritePosition(IWriteMessage msg, Client c)
         {
             msg.Write(ID);
 
             IWriteMessage tempBuffer = new WriteOnlyMessage();
-            body.ServerWrite(tempBuffer, c, extraData);
+            body.ServerWrite(tempBuffer);
             msg.WriteVariableUInt32((uint)tempBuffer.LengthBytes);
             msg.Write(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
             msg.WritePadBits();
         }
 
         public void CreateServerEvent<T>(T ic) where T : ItemComponent, IServerSerializable
-        {
-            if (GameMain.Server == null) { return; }
+            => CreateServerEvent(ic, ic.ServerGetEventData());
 
-            if (!ItemList.Contains(this))
-            {
-                string errorMsg = "Attempted to create a network event for an item (" + Name + ") that hasn't been fully initialized yet.\n" + Environment.StackTrace.CleanupStackTrace();
-                DebugConsole.AddWarning(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
-                return;
-            }
-
-            int index = components.IndexOf(ic);
-            if (index == -1) { return; }
-
-            object[] extraData = new object[] { NetEntityEvent.Type.ComponentState, index };
-            ic.ServerAppendExtraData(ref extraData);
-
-            GameMain.Server.CreateEntityEvent(this, extraData);
-        }
-
-        public void CreateServerEvent<T>(T ic, object[] extraData) where T : ItemComponent, IServerSerializable
+        public void CreateServerEvent<T>(T ic, ItemComponent.IEventData extraData) where T : ItemComponent, IServerSerializable
         {
             if (GameMain.Server == null) { return; }
 
@@ -411,11 +366,12 @@ namespace Barotrauma
                 return;
             }
 
-            int index = components.IndexOf(ic);
-            if (index == -1) { return; }
+            #warning TODO: this should throw an exception
+            if (!components.Contains(ic)) { return; }
 
-            object[] data = new object[] { NetEntityEvent.Type.ComponentState, index }.Concat(extraData).ToArray();
-            GameMain.Server.CreateEntityEvent(this, data);
+            var eventData = new ComponentStateEventData(ic, extraData);
+            if (!ic.ValidateEventData(eventData)) { throw new Exception($"Component event creation failed: {typeof(T).Name}.{nameof(ItemComponent.ValidateEventData)} returned false"); }
+            GameMain.Server.CreateEntityEvent(this, eventData);
         }
     }
 }

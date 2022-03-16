@@ -300,7 +300,7 @@ namespace Barotrauma
 
                     if (GameMain.Client != null)
                     {
-                        GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Treatment });
+                        GameMain.Client.CreateEntityEvent(Character.Controlled, new Character.TreatmentEventData());
                     }
 
                     return true;
@@ -400,7 +400,7 @@ namespace Barotrauma
                     {
                         if (GameMain.Client != null)
                         {
-                            GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Status });
+                            GameMain.Client.CreateEntityEvent(Character.Controlled, new Character.StatusEventData());
                         }
                         else
                         {
@@ -573,10 +573,10 @@ namespace Barotrauma
                     inWater ? Character.Params.BleedParticleWater : Character.Params.BleedParticleAir,
                     limb.WorldPosition, velocity, 0.0f, Character.AnimController.CurrentHull);
 
-                if (blood != null && !inWater)
+                if (blood != null)
                 {
                     blood.Size *= bloodParticleSize;
-                    if (!string.IsNullOrEmpty(Character.BloodDecalName) && Rand.Range(0.0f, 1.0f) < 0.05f)
+                    if (!inWater && !string.IsNullOrEmpty(Character.BloodDecalName) && Rand.Range(0.0f, 1.0f) < 0.05f)
                     {
                         blood.OnCollision += (Vector2 pos, Hull hull) =>
                         {

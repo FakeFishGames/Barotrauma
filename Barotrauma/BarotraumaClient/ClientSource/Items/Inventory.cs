@@ -1598,7 +1598,7 @@ namespace Barotrauma
                                 int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, itemContainer.GetMaxStackSize(0));
                                 if (maxStackSize > 1 || containedItem.Prefab.HideConditionBar)
                                 {
-                                    containedState = itemContainer.Inventory.slots[0].ItemCount / (float)maxStackSize;
+                                    containedState = itemContainer.Inventory.slots[0].Items.Count / (float)maxStackSize;
                                 }
                             }
                         }
@@ -1702,7 +1702,7 @@ namespace Barotrauma
                 }
                 if (maxStackSize > 1 && inventory != null)
                 {
-                    int itemCount = slot.MouseOn() ? inventory.slots[slotIndex].ItemCount : inventory.slots[slotIndex].Items.Where(it => !DraggingItems.Contains(it)).Count();
+                    int itemCount = slot.MouseOn() ? inventory.slots[slotIndex].Items.Count : inventory.slots[slotIndex].Items.Where(it => !DraggingItems.Contains(it)).Count();
                     if (item.IsFullCondition || MathUtils.NearlyEqual(item.Condition, 0.0f) || itemCount > 1)
                     {
                         Vector2 stackCountPos = new Vector2(rect.Right, rect.Bottom);
@@ -1795,20 +1795,10 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             UInt16 lastEventID = msg.ReadUInt16();
-            byte slotCount = msg.ReadByte();
-            receivedItemIDs = new List<ushort>[slotCount];
-            for (int i = 0; i < slotCount; i++)
-            {
-                receivedItemIDs[i] = new List<ushort>();
-                int itemCount = msg.ReadRangedInteger(0, MaxStackSize);
-                for (int j = 0; j < itemCount; j++)
-                {
-                    receivedItemIDs[i].Add(msg.ReadUInt16());
-                }
-            }
+            SharedRead(msg, out receivedItemIDs);
 
             //delay applying the new state if less than 1 second has passed since this client last sent a state to the server
             //prevents the inventory from briefly reverting to an old state if items are moved around in quick succession
@@ -1895,7 +1885,7 @@ namespace Barotrauma
             receivedItemIDs = null;
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             SharedWrite(msg, extraData);
             syncItemsDelay = 1.0f;

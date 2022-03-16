@@ -164,7 +164,7 @@ namespace Barotrauma
                 ("[reputationvalue]", ((int)Math.Round(value)).ToString()));
             if (addColorTags)
             {
-                formattedReputation = $"‖color:{XMLExtensions.ColorToString(GetReputationColor(normalizedValue))}‖"+ formattedReputation+"‖end‖";
+                formattedReputation = $"‖color:{XMLExtensions.ToStringHex(GetReputationColor(normalizedValue))}‖{formattedReputation}‖end‖";
             }
             return formattedReputation;
         }

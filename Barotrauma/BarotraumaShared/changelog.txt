@@ -1,4 +1,88 @@
 ---------------------------------------------------------------------------------------------------------
+v0.17.1.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Added personal wallets. Everyone in the crew now has their personal wallet that they can use to purchase whatever they wish in outposts. The host (or people with campaign management permissions) can distribute a portion of the mission rewards to the crew or transfer money from the shared funds to the players.
+- Made supercapacitors take some damage when they're being charged faster than 70%.
+- Increased Orca 2's reactor output.
+- Adjustments to mission distribution: only easy missions at the beginning of the campaign, moved some of the more difficult missions later into the campaign.
+- Made Not Component's ContinuousOutput property editable in-game.
+- Show warnings when saving a sub in the sub editor if any of the entity counts (walls, items, lights, etc) are very high, don't allow saving if the light counts are above the upper limits.
+- Visual/layout mprovements to the Workshop menu.
+- Added "power_value_out" and "load_value_out" connections to relays, batteries and supercapacitors.
+- Increased SMG Magazine's capacity to 21 to make it divisible with the Deadeye Carbine's 3-bullet bursts (unstable only).
+- Made molochs, abyss monsters and fractal guardians immune to poisons.
+- Boosted the structure damage from the small crawler eggs from 150 to 200.
+- Adjusted structure and item damage for coilgun ammunition: piercing 50% less damage, exploding 100% more damage (from explosions), physicorium 50% more damage.
+- Don't populate the abyss in difficulty levels 0 to 10 in single mission mode.
+- Revisited endworm: the armor now breaks less easily, reduced the change of cutting the worm towards the head, adjusted the bleeding speed.
+
+Fixes:
+- Attempt to fix occasional performance drops in the store interface.
+- Fixed clients seeing a blank server lobby if they join when a round is running with respawning disabled.
+- Fixed arithmetic and trigonometric components not passing the sender of the signal forwards, preventing e.g. helm skill from boosting engines if the signal goes through a component.
+- Fixed occasional crashes when transitioning between levels with showperf enabled in multiplayer campaign.
+- Fixed wearables not affecting movement speed when godmode is on.
+- Fixed disconnected players preventing talents that require everyone to survive from working (e.g. "Field Medic", "Bootcamp").
+- Fixed workshop menu's "popular mods" and "publish" tabs being usable when not connected to Steam (unstable only).
+- Fixed text displays' depth being forced to 0.85, causing draw order issues in older subs (unstable only).
+- Fixes periscopes not focusing on turrets if there's certain components (e.g. arithmetic components) between them.
+- Fixed crashing when trying to use the "dumpeventtexts" command with no arguments or a disallowed path.
+- Made smoke detectors a little more sensitive (should fix small fires sometimes not being detected even if they're in the same room).
+- Fixed reactor sometimes not catching fire again if you start overheating it again immediately after a fire.
+- Fixed broken batteries consuming power (unstable only).
+- Fixed sub editor test mode spawning the crew in an inconsistent order, sometimes causing the player to start as someone else than the captain (unstable only).
+- Fixed recycling a non-empty SMG magazine dropping the bullet inside it on the floor.
+- Fixed "Trusted Captain" and "Esteemed Captain" giving medals even when no missions have been completed.
+- Fixed small pump's ballast flora infection sprite (unstable only).
+- Fixed text colors being broken in campaign map tooltips (unstable only).
+- Fixed text colors not working in texts forced to upper case (e.g. reputation texts in the round summary). Unstable only.
+- Fixed EntitySpawnerComponent's SpawnAreaOffset.Y being inverted.
+- Fixed gaps generating incorrectly on "Shell A 70 Degrees".
+- Fixed items powered by battery cells not working correctly (certain devices like handheld sonar beacons never powering up, and items staying powered indefinitely when you put in a battery and take it out). Unstable only.
+- Fixed turret lights starting in an incorrect rotation in the sub editor.
+- Fixed "commander" talent still not correctly giving the buff (giving orders that a character already had didn't move the buff). Unstable only.
+- Fixed nav terminals sometimes determining which docking port the docking button controls incorrectly (specifically, when the correct docking port is also connected to other ports).
+- Fixed campaign saves being considered incompatible if you install some new custom subs (unstable only).
+- Fixed an exploit in the depleted fuel SMG magazine recipe.
+- Fixed reactor gauges' background sticking out from the gauges when selecting a reactor in the editor.
+- Fixed projectiles bouncing off subs without doing any damage (unstable only).
+- Fixed crashing when clicking a turret in the sub upgrade menu's submarine preview (unstable only).
+- Fixed character variants failing to load animations from the base character (unstable only).
+- Fixed deltatime being applied twice to affliction reductions, making meds do practically nothing (unstable only).
+- Fixed order of the command menu changing on each launch (unstable only).
+- Fixed talent options switching places on each launch (unstable only).
+- Fixed submarine upgrades and factions in the round summary switching places on each launch (unstable only).
+- Fixed texture compression causing the preview image saving to fail when dragging and dropping the preview image into the save screen via file explorer (unstable only).
+- Fixed disguises not working in multiplayer (unstable only).
+- Fixed server host getting stuck in a lobby creation loop if their server crashes (unstable only).
+- Fixed fractal guardians fleeing to the shelter immediatedly after taking some damage when they have targeted the guardian pod once and have not changed the target yet (e.g. if you shoot a guardian that is returning from the pod and if it has not yet spotted you).
+- Fixed Crawler Broodmother regenerating really fast while eating. Broodmother no longer eats her own eggs.
+- Fixed monsters not being able to target items (unstable only).
+- Fixed spinelings accidentally killing each other with their spikes.
+- Fixed "error loading a previously saved order" errors when transitioning between levels (unstable only).
+- Fixed burn being ignored in the damagemodifier of Charybdis' head. The jaw worked correctly. Affects pulse laser damage for example.
+
+AI:
+- Adjusted bot behavior around ballast flora: priority of some objectives now drops to 0 when the target's been claimed by ballast flora, items claimed by ballast flora aren't valid targets for some objectives anymore.
+- Made bot healing dialog reflect if CPR was performed or not.
+- Fixed security from the player's own crew attacking the player in multiplayer when the player attacks someone in an outpost.
+- Fix bots not ignoring items marked to be "Hidden In Game".
+- Bots prefer not to take diving suits off in rooms marged with the "IsWetRoom" flag.
+- Docking ports are now automatically considered as "wet rooms".
+- Fixed bots trying to target through doors and walls even though there's no line of sight between the end node and the target.
+- Added some dialogue to bots when they get infected with the husk infection.
+
+Modding:
+- Fixed clients not gaining control of the final stage of a husk affliction when "controlhusk" is enabled.
+- When using a mod that doesn't set the InitialCount of any job, choose the first 3 jobs as the starting crew. Otherwise the crew customization menu will be empty and starting the campaign will lead to an immediate game over.
+- Made it possible for attack StatusEffects to target the character doing the attack instead of the limb by using "Parent" as the target type.
+- Using RemoveCharacter on a limb removes the character that limb belongs to.
+- Fixed editing human character in the character editor sometimes making the inventory inaccessible.
+- Fixed character editor crashing when trying to copy a character (unstable only).
+
+---------------------------------------------------------------------------------------------------------
 v0.17.0.0
 ---------------------------------------------------------------------------------------------------------
 

@@ -109,10 +109,23 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private void Write(IWriteMessage msg, object[] extraData)
+        private readonly struct EventData : IEventData
         {
-            if (extraData == null || extraData.Length < 3) { return; }
-            msg.WriteRangedInteger((int)extraData[2], 0, Signals.Length - 1);
+            public readonly int SignalIndex;
+            
+            public EventData(int signalIndex)
+            {
+                SignalIndex = signalIndex;
+            }
+        }
+        
+        public override bool ValidateEventData(NetEntityEvent.IData data)
+            => TryExtractEventData<EventData>(data, out _);
+
+        private void Write(IWriteMessage msg, NetEntityEvent.IData extraData)
+        {
+            var eventData = ExtractEventData<EventData>(extraData);
+            msg.WriteRangedInteger(eventData.SignalIndex, 0, Signals.Length - 1);
         }
     }
 }

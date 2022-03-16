@@ -18,6 +18,12 @@ namespace Barotrauma
 {
     partial class Level : Entity, IServerSerializable
     {
+        public enum EventType
+        {
+            SingleDestructibleWall,
+            GlobalDestructibleWall
+        }
+
         //all entities are disabled after they reach this depth
         public const int MaxEntityDepth = -300000;
         public const float ShaftHeight = 1000.0f;
@@ -3136,13 +3142,14 @@ namespace Barotrauma
                 UnsyncedExtraWalls[i].Update(deltaTime);
             }
 
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+#if SERVER
+            if (GameMain.NetworkMember is { IsServer: true })
             {
                 foreach (LevelWall wall in ExtraWalls) 
                 {
-                    if (wall is DestructibleLevelWall destructibleWall && destructibleWall.NetworkUpdatePending)
+                    if (wall is DestructibleLevelWall { NetworkUpdatePending: true } destructibleWall)
                     {
-                        GameMain.NetworkMember.CreateEntityEvent(this, new object[] { destructibleWall });
+                        GameMain.NetworkMember.CreateEntityEvent(this, new SingleLevelWallEventData(destructibleWall));
                         destructibleWall.NetworkUpdatePending = false;
                     }
                 }
@@ -3151,11 +3158,12 @@ namespace Barotrauma
                 {
                     if (ExtraWalls.Any(w => w.Body.BodyType != BodyType.Static))
                     {
-                        GameMain.NetworkMember.CreateEntityEvent(this);
+                        GameMain.NetworkMember.CreateEntityEvent(this, new GlobalLevelWallEventData());
                     }
                     networkUpdateTimer = 0.0f;
                 }
             }
+#endif
 
 #if CLIENT
             backgroundCreatureManager.Update(deltaTime, cam);
@@ -4287,29 +4295,6 @@ namespace Barotrauma
             EndLocation = null;
 
             Loaded = null;
-        }
-
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
-        {
-            if (extraData != null && extraData.Length > 0 && extraData[0] is DestructibleLevelWall destructibleWall)
-            {
-                int index = ExtraWalls.IndexOf(destructibleWall);
-                msg.Write(false);
-                msg.Write((ushort)(index == -1 ? ushort.MaxValue : index));
-                //write health using one byte
-                msg.Write((byte)MathHelper.Clamp((int)(MathUtils.InverseLerp(0.0f, destructibleWall.MaxHealth, destructibleWall.Damage) * 255.0f), 0, 255));
-            }
-            else
-            {
-                msg.Write(true);
-                foreach (LevelWall levelWall in ExtraWalls)
-                {
-                    if (levelWall.Body.BodyType == BodyType.Static) { continue; }
-                    msg.Write(levelWall.Body.Position.X);
-                    msg.Write(levelWall.Body.Position.Y);
-                    msg.WriteRangedSingle(levelWall.MoveState, 0.0f, MathHelper.TwoPi, 16);                    
-                }
-            }
         }
     }
 }

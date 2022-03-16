@@ -7,7 +7,7 @@ namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             List<Wire>[] wires = new List<Wire>[Connections.Count];
 
@@ -84,7 +84,7 @@ namespace Barotrauma.Items.Components
                         if (!selectedWire.Item.Removed) { selectedWire.CreateNetworkEvent(); }
                     }, 1.0f);
                 }
-                GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, c.Character.ID });
+                GameMain.Server?.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnFailure, this, c.Character));
                 return;
             }
 
@@ -210,10 +210,10 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.Write(user == null ? (ushort)0 : user.ID);
-            ClientWrite(msg, extraData);
+            ClientEventWrite(msg, extraData);
         }
     }
 }

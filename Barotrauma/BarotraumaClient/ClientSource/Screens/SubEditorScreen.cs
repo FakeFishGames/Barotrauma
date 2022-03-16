@@ -5,12 +5,10 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework.Input;
-using System.Threading.Tasks;
 #if DEBUG
 using System.IO;
 #else
@@ -21,6 +19,12 @@ namespace Barotrauma
 {
     class SubEditorScreen : EditorScreen
     {
+        public const int MaxStructures = 2000;
+        public const int MaxWalls = 500;
+        public const int MaxItems = 5000;
+        public const int MaxLights = 300;
+        public const int MaxShadowCastingLights = 60;
+
         private static Submarine MainSub
         {
             get => Submarine.MainSub;
@@ -83,7 +87,11 @@ namespace Barotrauma
             NoCargoSpawnpoints,
             NoBallastTag,
             NonLinkedGaps,
-            TooManyLights
+            StructureCount,
+            WallCount,
+            ItemCount,
+            LightCount,
+            ShadowCastingLightCount
         }
 
         public static Vector2 MouseDragStart = Vector2.Zero;
@@ -102,7 +110,7 @@ namespace Barotrauma
         private bool wasSelectedBefore;
 
         public GUIComponent TopPanel;
-        private GUIComponent showEntitiesPanel, entityCountPanel;
+        public GUIComponent showEntitiesPanel, entityCountPanel;
         private readonly List<GUITickBox> showEntitiesTickBoxes = new List<GUITickBox>();
         private readonly Dictionary<string, bool> hiddenSubCategories = new Dictionary<string, bool>();
 
@@ -809,7 +817,7 @@ namespace Barotrauma
             var itemCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), itemCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.CenterRight);
             itemCount.TextGetter = () =>
             {
-                itemCount.TextColor = ToolBox.GradientLerp(Item.ItemList.Count / 5000.0f, GUIStyle.Green, GUIStyle.Orange, GUIStyle.Red);
+                itemCount.TextColor = Item.ItemList.Count > MaxItems ? GUIStyle.Red : Color.Lerp(GUIStyle.Green, GUIStyle.Orange, Item.ItemList.Count / (float)MaxItems);
                 return Item.ItemList.Count.ToString();
             };
 
@@ -818,8 +826,8 @@ namespace Barotrauma
             var structureCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), structureCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.CenterRight);
             structureCount.TextGetter = () =>
             {
-                int count = (MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.HullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count);
-                structureCount.TextColor = ToolBox.GradientLerp(count / 1000.0f, GUIStyle.Green, GUIStyle.Orange, GUIStyle.Red);
+                int count = MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.HullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count;
+                structureCount.TextColor = count > MaxStructures ? GUIStyle.Red : Color.Lerp(GUIStyle.Green, GUIStyle.Orange, count / (float)MaxStructures);
                 return count.ToString();
             };
 
@@ -828,7 +836,7 @@ namespace Barotrauma
             var wallCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), wallCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.CenterRight);
             wallCount.TextGetter = () =>
             {
-                wallCount.TextColor = ToolBox.GradientLerp(Structure.WallList.Count / 500.0f, GUIStyle.Green, GUIStyle.Orange, GUIStyle.Red);
+                wallCount.TextColor = Structure.WallList.Count > MaxWalls ? GUIStyle.Red : Color.Lerp(GUIStyle.Green, GUIStyle.Orange, Structure.WallList.Count / (float)MaxWalls);
                 return Structure.WallList.Count.ToString();
             };
 
@@ -843,7 +851,7 @@ namespace Barotrauma
                     if (item.ParentInventory != null) { continue; }
                     lightCount += item.GetComponents<LightComponent>().Count();
                 }
-                lightCountText.TextColor = ToolBox.GradientLerp(lightCount / 250.0f, GUIStyle.Green, GUIStyle.Orange, GUIStyle.Red);
+                lightCountText.TextColor = lightCount > MaxLights ? GUIStyle.Red : Color.Lerp(GUIStyle.Green, GUIStyle.Orange, lightCount / (float)MaxLights);
                 return lightCount.ToString();
             };
             var shadowCastingLightCountLabel = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedEntityCountPanel.RectTransform), TextManager.Get("SubEditorShadowCastingLights"),
@@ -857,7 +865,7 @@ namespace Barotrauma
                     if (item.ParentInventory != null) { continue; }
                     lightCount += item.GetComponents<LightComponent>().Count(l => l.CastShadows);
                 }
-                shadowCastingLightCountText.TextColor = ToolBox.GradientLerp(lightCount / 60.0f, GUIStyle.Green, GUIStyle.Orange, GUIStyle.Red);
+                shadowCastingLightCountText.TextColor = lightCount > MaxShadowCastingLights ? GUIStyle.Red : Color.Lerp(GUIStyle.Green, GUIStyle.Orange, lightCount / (float)MaxShadowCastingLights);
                 return lightCount.ToString();
             };
             entityCountPanel.RectTransform.NonScaledSize =
@@ -1448,7 +1456,7 @@ namespace Barotrauma
                 case ".jpeg":
                     if (saveFrame == null) { break; }
 
-                    Texture2D texture = Sprite.LoadTexture(filePath);
+                    Texture2D texture = Sprite.LoadTexture(filePath, compress: false);
                     previewImage.Sprite = new Sprite(texture, null, null);
                     if (MainSub != null)
                     {
@@ -1548,7 +1556,7 @@ namespace Barotrauma
                 {
                     foreach (GUIColorPicker colorPicker in msgBox.GetAllChildren<GUIColorPicker>())
                     {
-                        colorPicker.DisposeTextures();
+                        colorPicker.Dispose();
                     }
 
                     msgBox.Close();
@@ -1825,6 +1833,21 @@ namespace Barotrauma
 
                 modProject.DiscardHashAndInstallTime();
                 modProject.Save(packagePath);
+            }
+
+            if (!GameMain.DebugDraw)
+            {
+                if (Submarine.GetLightCount() > MaxLights)
+                {
+                    new GUIMessageBox(TextManager.Get("error"), TextManager.GetWithVariable("subeditor.lightcounterror", "[max]", MaxShadowCastingLights.ToString()));
+                    return false;
+                }
+
+                if (Submarine.GetShadowCastingLightCount() > MaxShadowCastingLights)
+                {
+                    new GUIMessageBox(TextManager.Get("error"), TextManager.GetWithVariable("subeditor.shadowcastinglightcounterror", "[max]", MaxShadowCastingLights.ToString()));
+                    return false;
+                }
             }
 
             if (string.IsNullOrWhiteSpace(name))
@@ -3634,7 +3657,7 @@ namespace Barotrauma
 
             closeButton.OnClicked = (button, o) =>
             {
-                colorPicker.DisposeTextures();
+                colorPicker.Dispose();
                 msgBox.Close();
 
                 Color newColor = SetColor(null);
@@ -3678,7 +3701,7 @@ namespace Barotrauma
 
             cancelButton.OnClicked = (button, o) =>
             {
-                colorPicker.DisposeTextures();
+                colorPicker.Dispose();
                 msgBox.Close();
 
                 foreach (var (e, color, prop) in entities)

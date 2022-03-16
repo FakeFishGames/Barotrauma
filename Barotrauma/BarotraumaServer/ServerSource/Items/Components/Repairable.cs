@@ -7,13 +7,13 @@ namespace Barotrauma.Items.Components
         private Character prevLoggedFixer;
         private FixActions prevLoggedFixAction;
 
-        partial void InitProjSpecific(ContentXElement _)
+        public override void OnMapLoaded()
         {
             //let the clients know the initial deterioration delay
             item.CreateServerEvent(this);
         }
 
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             if (c.Character == null) { return; }
             var requestedFixAction = (FixActions)msg.ReadRangedInteger(0, 2);
@@ -42,7 +42,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.Write(deteriorationTimer);
             msg.Write(deteriorateAlwaysResetTimer);

@@ -20,7 +20,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    partial class Item : MapEntity, IDamageable, IIgnorable, ISerializableEntity, IServerSerializable, IClientSerializable
+    partial class Item : MapEntity, IDamageable, IIgnorable, ISerializableEntity, IServerPositionSync, IClientSerializable
     {
         public static List<Item> ItemList = new List<Item>();
         public new ItemPrefab Prefab => base.Prefab as ItemPrefab;
@@ -573,7 +573,7 @@ namespace Barotrauma
                     if (connections == null) { return; }                    
                     foreach (Connection c in connections.Values)
                     {
-                        if (c.IsPower && c.Grid != null)
+                        if (c.IsPower)
                         {
                             Powered.ChangedConnections.Add(c);
                             foreach (Connection conn in c.Recipients)
@@ -826,6 +826,23 @@ namespace Barotrauma
         
         public bool IgnoreByAI(Character character) => HasTag("ignorebyai") || OrderedToBeIgnored && character.IsOnPlayerTeam;
         public bool OrderedToBeIgnored { get; set; }
+
+        public bool HasBallastFloraInHull
+        {
+            get
+            {
+                return CurrentHull?.BallastFlora != null;
+            }
+        }
+
+        public bool IsClaimedByBallastFlora
+        {
+            get
+            {
+                if (CurrentHull?.BallastFlora == null) { return false; }
+                return CurrentHull.BallastFlora.ClaimedTargets.Contains(this);
+            }
+        }
 
         public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine, ushort id = Entity.NullEntityID, bool callOnItemLoaded = true)
             : this(new Rectangle(
@@ -1417,6 +1434,7 @@ namespace Barotrauma
         
         public bool HasAccess(Character character)
         {
+            if (HiddenInGame) { return false; }
             if (character.IsBot && IgnoreByAI(character)) { return false; }
             if (!IsInteractable(character)) { return false; }
             var itemContainer = GetComponent<ItemContainer>();
@@ -1656,14 +1674,13 @@ namespace Barotrauma
 
         public void SendPendingNetworkUpdates()
         {
-            if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsServer) { return; }
-            if (conditionUpdatePending)
-            {
-                GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                lastSentCondition = condition;
-                sendConditionUpdateTimer = NetConfig.ItemConditionUpdateInterval;
-                conditionUpdatePending = false;
-            }
+            if (!(GameMain.NetworkMember is { IsServer: true })) { return; }
+            if (!conditionUpdatePending) { return; }
+
+            GameMain.NetworkMember.CreateEntityEvent(this, new StatusEventData());
+            lastSentCondition = condition;
+            sendConditionUpdateTimer = NetConfig.ItemConditionUpdateInterval;
+            conditionUpdatePending = false;
         }
 
         private bool isActive = true;
@@ -1919,20 +1936,19 @@ namespace Barotrauma
         private void HandleCollision(float impact)
         {
             OnCollisionProjSpecific(impact);
-            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
-            {
-                if (ImpactTolerance > 0.0f && condition > 0.0f && Math.Abs(impact) > ImpactTolerance)
-                {
-                    ApplyStatusEffects(ActionType.OnImpact, 1.0f);
-#if SERVER
-                    GameMain.Server?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact });
-#endif
-                }
+            if (GameMain.NetworkMember is { IsClient: true }) { return; }
 
-                foreach (Item contained in ContainedItems)
-                {
-                    if (contained.body != null) { contained.HandleCollision(impact); }
-                }                
+            if (ImpactTolerance > 0.0f && condition > 0.0f && Math.Abs(impact) > ImpactTolerance)
+            {
+                ApplyStatusEffects(ActionType.OnImpact, 1.0f);
+#if SERVER
+                GameMain.Server?.CreateEntityEvent(this, new ApplyStatusEffectEventData(ActionType.OnImpact));
+#endif
+            }
+
+            foreach (Item contained in ContainedItems)
+            {
+                if (contained.body != null) { contained.HandleCollision(impact); }
             }
         }
 
@@ -1995,14 +2011,14 @@ namespace Barotrauma
         /// <summary>
         /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
         /// </summary>
-        public List<T> GetConnectedComponents<T>(bool recursive = false) where T : ItemComponent
+        public List<T> GetConnectedComponents<T>(bool recursive = false, bool allowTraversingBackwards = true) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
 
             if (recursive)
             {
                 HashSet<Connection> alreadySearched = new HashSet<Connection>();
-                GetConnectedComponentsRecursive(alreadySearched, connectedComponents);
+                GetConnectedComponentsRecursive(alreadySearched, connectedComponents, allowTraversingBackwards: allowTraversingBackwards);
                 return connectedComponents;
             }
 
@@ -2025,7 +2041,7 @@ namespace Barotrauma
             return connectedComponents;
         }
 
-        private void GetConnectedComponentsRecursive<T>(HashSet<Connection> alreadySearched, List<T> connectedComponents, bool ignoreInactiveRelays = false) where T : ItemComponent
+        private void GetConnectedComponentsRecursive<T>(HashSet<Connection> alreadySearched, List<T> connectedComponents, bool ignoreInactiveRelays = false, bool allowTraversingBackwards = true) where T : ItemComponent
         {
             ConnectionPanel connectionPanel = GetComponent<ConnectionPanel>();
             if (connectionPanel == null) { return; }
@@ -2034,18 +2050,18 @@ namespace Barotrauma
             {
                 if (alreadySearched.Contains(c)) { continue; }
                 alreadySearched.Add(c);
-                GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents, ignoreInactiveRelays);
+                GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents, ignoreInactiveRelays, allowTraversingBackwards);
             }
         }
 
         /// <summary>
         /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
         /// </summary>
-        public List<T> GetConnectedComponentsRecursive<T>(Connection c, bool ignoreInactiveRelays = false) where T : ItemComponent
+        public List<T> GetConnectedComponentsRecursive<T>(Connection c, bool ignoreInactiveRelays = false, bool allowTraversingBackwards = true) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
             HashSet<Connection> alreadySearched = new HashSet<Connection>();
-            GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents, ignoreInactiveRelays);
+            GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents, ignoreInactiveRelays, allowTraversingBackwards);
 
             return connectedComponents;
         }
@@ -2062,7 +2078,7 @@ namespace Barotrauma
             ("signal_in2".ToIdentifier(), "signal_out".ToIdentifier())
         }.ToImmutableArray();
 
-        private void GetConnectedComponentsRecursive<T>(Connection c, HashSet<Connection> alreadySearched, List<T> connectedComponents, bool ignoreInactiveRelays) where T : ItemComponent
+        private void GetConnectedComponentsRecursive<T>(Connection c, HashSet<Connection> alreadySearched, List<T> connectedComponents, bool ignoreInactiveRelays, bool allowTraversingBackwards = true) where T : ItemComponent
         {
             alreadySearched.Add(c);
                         
@@ -2087,12 +2103,12 @@ namespace Barotrauma
                         foreach (Connection wifiOutput in receiverConnections)
                         {
                             if ((wifiOutput.IsOutput == recipient.IsOutput) || alreadySearched.Contains(wifiOutput)) { continue; }
-                            GetConnectedComponentsRecursive(wifiOutput, alreadySearched, connectedComponents, ignoreInactiveRelays);
+                            GetConnectedComponentsRecursive(wifiOutput, alreadySearched, connectedComponents, ignoreInactiveRelays, allowTraversingBackwards);
                         }
                     }
                 }
 
-                recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents, ignoreInactiveRelays);                   
+                recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents, ignoreInactiveRelays, allowTraversingBackwards);                   
             }
 
             if (ignoreInactiveRelays)
@@ -2111,12 +2127,12 @@ namespace Barotrauma
                         if (pairedConnection != null)
                         {
                             if (alreadySearched.Contains(pairedConnection)) { return; }
-                            GetConnectedComponentsRecursive(pairedConnection, alreadySearched, connectedComponents, ignoreInactiveRelays);
+                            GetConnectedComponentsRecursive(pairedConnection, alreadySearched, connectedComponents, ignoreInactiveRelays, allowTraversingBackwards);
                         }
                     }
                 }
                 searchFromAToB(input, output);
-                searchFromAToB(output, input);
+                if (allowTraversingBackwards) { searchFromAToB(output, input); }
             }
         }
 
@@ -2490,7 +2506,7 @@ namespace Barotrauma
 #if CLIENT
             if (GameMain.Client != null)
             {
-                GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Treatment, character.ID, targetLimb });
+                GameMain.Client.CreateEntityEvent(this, new TreatmentEventData(character, targetLimb));
                 return;
             }
 #endif
@@ -2523,12 +2539,10 @@ namespace Barotrauma
                     }
                 }
 
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                if (GameMain.NetworkMember is { IsServer: true })
                 {
-                    GameMain.NetworkMember.CreateEntityEvent(this, new object[]
-                    {
-                        NetEntityEvent.Type.ApplyStatusEffect, actionType, ic, character.ID, targetLimb
-                    });
+                    GameMain.NetworkMember.CreateEntityEvent(this, new ApplyStatusEffectEventData(
+                        actionType, ic, character, targetLimb));
                 }
 
                 if (ic.DeleteOnUse) { remove = true; }
@@ -2553,12 +2567,18 @@ namespace Barotrauma
                 if (ic.Combine(item, user)) { isCombined = true; }
             }
 #if CLIENT
-            if (isCombined) { GameMain.Client?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Combine, item.ID }); }
+            if (isCombined) { GameMain.Client?.CreateEntityEvent(this, new CombineEventData(item)); }
 #endif
             return isCombined;
         }
 
-        public void Drop(Character dropper, bool createNetworkEvent = true)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dropper">Character who dropped the item</param>
+        /// <param name="createNetworkEvent">Should clients be notified of the item being dropped</param>
+        /// <param name="setTransform">Should the transform of the physics body be updated. Only disable this if you're moving the item somewhere else / calling SetTransform manually immediately after dropping!</param>
+        public void Drop(Character dropper, bool createNetworkEvent = true, bool setTransform = true)
         {
             if (createNetworkEvent)
             {
@@ -2585,7 +2605,7 @@ namespace Barotrauma
                             "Failed to drop the item \"" + Name + "\" (body has been removed"
                             + (Removed ? ", item has been removed)" : ")"));
                     }
-                    else
+                    else if (setTransform)
                     {
                         body.SetTransform(dropper.SimPosition, 0.0f);
                     }
@@ -2596,7 +2616,10 @@ namespace Barotrauma
             
             if (Container != null)
             {
-                SetTransform(Container.SimPosition, 0.0f);
+                if (setTransform)
+                {
+                    SetTransform(Container.SimPosition, 0.0f);
+                }
                 Container.RemoveContained(this);
                 Container = null;
             }
@@ -2646,12 +2669,12 @@ namespace Barotrauma
             return allProperties;
         }
 
-        private void WritePropertyChange(IWriteMessage msg, object[] extraData, bool inGameEditableOnly)
+        private void WritePropertyChange(IWriteMessage msg, ChangePropertyEventData extraData, bool inGameEditableOnly)
         {
             //ignoreConditions: true = include all ConditionallyEditable properties at this point,
             //to ensure client/server doesn't get any properties mixed up if there's some conditions that can vary between the server and the clients
             var allProperties = inGameEditableOnly ? GetInGameEditableProperties(ignoreConditions: true) : GetProperties<Editable>();
-            SerializableProperty property = extraData[1] as SerializableProperty;
+            SerializableProperty property = extraData.SerializableProperty;
             if (property != null)
             {
                 var propertyOwner = allProperties.Find(p => p.Second == property);
@@ -2910,9 +2933,9 @@ namespace Barotrauma
             }
 #endif
 
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+            if (GameMain.NetworkMember is { IsServer: true })
             {
-                GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, property });
+                GameMain.NetworkMember.CreateEntityEvent(this, new ChangePropertyEventData(property));
             }
         }
 
@@ -2980,7 +3003,7 @@ namespace Barotrauma
 #if SERVER
             if (createNetworkEvent)
             {
-                Spawner.CreateNetworkEvent(item, remove: false);
+                Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
             }
 #endif
 
@@ -3016,7 +3039,7 @@ namespace Barotrauma
                         {
                             if (!(property.GetValue(item)?.Equals(prevValue) ?? true))
                             {
-                                GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ChangeProperty, property });
+                                GameMain.NetworkMember.CreateEntityEvent(item, new ChangePropertyEventData(property));
                             }
                         }
                     }

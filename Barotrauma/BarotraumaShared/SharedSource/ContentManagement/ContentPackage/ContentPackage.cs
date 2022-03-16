@@ -54,8 +54,10 @@ namespace Barotrauma
 
         public int Index => ContentPackageManager.EnabledPackages.IndexOf(this);
 
-        #warning TODO: remove this, unless we truly believe that determining "multiplayer-incompatible content" is something we should do
-        public readonly bool HasMultiplayerIncompatibleContent;
+        /// <summary>
+        /// Does the content package include some content that needs to match between all players in multiplayer. 
+        /// </summary>
+        public readonly bool HasMultiplayerSyncedContent;
 
         protected ContentPackage(XDocument doc, string path)
         {
@@ -93,7 +95,7 @@ namespace Barotrauma
                 .Select(f => f.Error)
                 .ToImmutableArray();
 
-            HasMultiplayerIncompatibleContent = Files.Any(f => !f.NotSyncedInMultiplayer);
+            HasMultiplayerSyncedContent = Files.Any(f => !f.NotSyncedInMultiplayer);
 
             Hash = CalculateHash();
             var expectedHash = rootElement.GetAttributeString("expectedhash", "");

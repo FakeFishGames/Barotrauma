@@ -21,7 +21,7 @@ namespace Barotrauma
         private UInt16 pendingSaveID = 1;
         public UInt16 PendingSaveID
         {
-            get 
+            get
             {
                 return pendingSaveID;
             }
@@ -32,6 +32,14 @@ namespace Barotrauma
                 //save IDs are always above 0, so we should never be waiting for 0
                 if (pendingSaveID == 0) { pendingSaveID++; }
             }
+        }
+
+        public Wallet PersonalWallet => Character.Controlled?.Wallet ?? Wallet.Invalid;
+        public override Wallet Wallet => GetWallet();
+
+        public override Wallet GetWallet(Client client = null)
+        {
+            return PersonalWallet;
         }
 
         public static void StartCampaignSetup(IEnumerable<string> saveFiles)
@@ -193,6 +201,11 @@ namespace Barotrauma
             while (GameMain.Instance.LoadingScreenOpen)
             {
                 yield return CoroutineStatus.Running;
+            }
+
+            if (GameMain.Client == null)
+            {
+                yield return CoroutineStatus.Failure;
             }
 
             if (GameMain.Client.LateCampaignJoin)
@@ -618,7 +631,6 @@ namespace Barotrauma
 
             bool forceMapUI = msg.ReadBoolean();
 
-            int money = msg.ReadInt32();
             bool purchasedHullRepairs   = msg.ReadBoolean();
             bool purchasedItemRepairs   = msg.ReadBoolean();
             bool purchasedLostShuttles  = msg.ReadBoolean();
@@ -812,12 +824,10 @@ namespace Barotrauma
                     GameMain.NetLobbyScreen.ToggleCampaignMode(true);
                 }
 
-                bool shouldRefresh = campaign.Money != money ||
-                                     campaign.PurchasedHullRepairs != purchasedHullRepairs ||
+                bool shouldRefresh = campaign.PurchasedHullRepairs != purchasedHullRepairs ||
                                      campaign.PurchasedItemRepairs != purchasedItemRepairs ||
                                      campaign.PurchasedLostShuttles != purchasedLostShuttles;
 
-                campaign.Money = money;
                 campaign.PurchasedHullRepairs = purchasedHullRepairs;
                 campaign.PurchasedItemRepairs = purchasedItemRepairs;
                 campaign.PurchasedLostShuttles = purchasedLostShuttles;
@@ -896,6 +906,43 @@ namespace Barotrauma
             }
         }
 
+        public void ClientReadMoney(IReadMessage inc)
+        {
+            NetWalletUpdate update = INetSerializableStruct.Read<NetWalletUpdate>(inc);
+            foreach (NetWalletTransaction transaction in update.Transactions)
+            {
+                WalletInfo info = transaction.Info;
+                switch (transaction.CharacterID)
+                {
+                    case Some<ushort> { Value: var charID}:
+                    {
+                        Character targetCharacter = Character.CharacterList?.FirstOrDefault(c => c.ID == charID);
+                        if (targetCharacter is null) { break; }
+                        Wallet wallet = targetCharacter.Wallet;
+
+                        wallet.Balance = info.Balance;
+                        wallet.RewardDistribution = info.RewardDistribution;
+                        TryInvokeEvent(wallet, transaction.ChangedData, info);
+                        break;
+                    }
+                    case None<ushort> _:
+                    {
+                        Bank.Balance = info.Balance;
+                        TryInvokeEvent(Bank, transaction.ChangedData, info);
+                        break;
+                    }
+                }
+            }
+
+            void TryInvokeEvent(Wallet wallet, WalletChangedData data, WalletInfo info)
+            {
+                if (data.BalanceChanged.IsSome() || data.RewardDistributionChanged.IsSome())
+                {
+                    OnMoneyChanged.Invoke(new WalletChangedEvent(wallet, data, info));
+                }
+            }
+        }
+
         public override void Save(XElement element)
         {
             //do nothing, the clients get the save files from the server
@@ -908,10 +955,10 @@ namespace Barotrauma
 
             string gamesessionDocPath = Path.Combine(SaveUtil.TempPath, "gamesession.xml");
             XDocument doc = XMLExtensions.TryLoadXml(gamesessionDocPath);
-            if (doc == null) 
+            if (doc == null)
             {
                 DebugConsole.ThrowError($"Failed to load the state of a multiplayer campaign. Could not open the file \"{gamesessionDocPath}\".");
-                return; 
+                return;
             }
             Load(doc.Root.Element("MultiPlayerCampaign"));
             GameMain.GameSession.OwnedSubmarines = SaveUtil.LoadOwnedSubmarines(doc, out SubmarineInfo selectedSub);

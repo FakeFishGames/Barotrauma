@@ -248,16 +248,17 @@ namespace Barotrauma
             }
             linkedTo.Clear();
 
+            int tolerance = 1;
             Vector2[] searchPos = new Vector2[2];
             if (IsHorizontal)
             {
-                searchPos[0] = new Vector2(rect.X, rect.Y - rect.Height / 2);
-                searchPos[1] = new Vector2(rect.Right, rect.Y - rect.Height / 2);
+                searchPos[0] = new Vector2(rect.X - tolerance, rect.Y - rect.Height / 2);
+                searchPos[1] = new Vector2(rect.Right + tolerance, rect.Y - rect.Height / 2);
             }
             else
             {
-                searchPos[0] = new Vector2(rect.Center.X, rect.Y);
-                searchPos[1] = new Vector2(rect.Center.X, rect.Y - rect.Height);
+                searchPos[0] = new Vector2(rect.Center.X, rect.Y + tolerance);
+                searchPos[1] = new Vector2(rect.Center.X, rect.Y - rect.Height - tolerance);
             }
 
             for (int i = 0; i < 2; i++)

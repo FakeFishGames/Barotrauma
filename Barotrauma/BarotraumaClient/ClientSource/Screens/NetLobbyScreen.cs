@@ -1329,6 +1329,11 @@ namespace Barotrauma
             }
             SeedBox.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             levelDifficultyScrollBar.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            levelDifficultyScrollBar.ToolTip = string.Empty;
+            if (!levelDifficultyScrollBar.Enabled)
+            {
+                levelDifficultyScrollBar.ToolTip = TextManager.Get("campaigndifficultydisabled");
+            }
 
             traitorProbabilityButtons[0].Enabled = traitorProbabilityButtons[1].Enabled = traitorProbabilityText.Enabled =
                 !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);

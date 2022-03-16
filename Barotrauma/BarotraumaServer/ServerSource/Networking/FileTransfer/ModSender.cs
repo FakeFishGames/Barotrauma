@@ -20,7 +20,7 @@ namespace Barotrauma.Networking
                 "ModSender",
                 Task.WhenAll(
                     ContentPackageManager.EnabledPackages.All
-                        .Where(p => p != ContentPackageManager.VanillaCorePackage && p.HasMultiplayerIncompatibleContent)
+                        .Where(p => p != ContentPackageManager.VanillaCorePackage && p.HasMultiplayerSyncedContent)
                         .Select(CompressMod)),
                 (t) => Ready = true);
         }

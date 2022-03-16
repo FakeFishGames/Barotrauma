@@ -1,7 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System;
-using System.Globalization;
-using System.Xml.Linq;
+﻿using System;
 
 namespace Barotrauma.Items.Components
 {

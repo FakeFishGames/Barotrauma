@@ -212,7 +212,7 @@ namespace Barotrauma
             {
                 return null;
             }
-            
+
             int probabilitySum = allowedMissions.Sum(m => m.Commonness);
             int randomNumber = rand.NextInt32() % probabilitySum;
             foreach (MissionPrefab missionPrefab in allowedMissions)
@@ -377,9 +377,15 @@ namespace Barotrauma
             crewCharacters.ForEach(c => missionMoneyGainMultiplier.Value += c.GetStatValue(StatTypes.MissionMoneyGainMultiplier));
 
             int totalReward = (int)(reward * missionMoneyGainMultiplier.Value);
-            campaign.Money += totalReward;
-
             GameAnalyticsManager.AddMoneyGainedEvent(totalReward, GameAnalyticsManager.MoneySource.MissionReward, Prefab.Identifier.Value);
+
+#if SERVER
+            totalReward = DistributeRewardsToCrew(GetSalaryEligibleCrew(), totalReward);
+#endif
+            if (totalReward > 0)
+            {
+                campaign.Bank.Give(totalReward);
+            }
 
             foreach (Character character in crewCharacters)
             {
@@ -407,6 +413,57 @@ namespace Barotrauma
                     SetDataAction.PerformOperation(campaign.CampaignMetadata, identifier, value, operation);
                 }
             }
+        }
+
+#if SERVER
+        public static int DistributeRewardsToCrew(IEnumerable<Character> crew, int totalReward)
+        {
+            int remainingRewards = totalReward;
+            HashSet<Character> nonBotCrew = crew.Where(c => !c.IsBot).ToHashSet();
+            float sum = nonBotCrew.Sum(c => c.Wallet.RewardDistribution);
+            if (sum == 0) { return remainingRewards; }
+            foreach (Character character in nonBotCrew)
+            {
+                float rewardWeight = character.Wallet.RewardDistribution / sum;
+                int reward = (int)Math.Floor(totalReward * rewardWeight);
+                reward = Math.Max(remainingRewards, reward);
+                character.Wallet.Give(reward);
+                remainingRewards -= reward;
+                if (0 >= remainingRewards) { break; }
+            }
+
+            return remainingRewards;
+        }
+#endif
+
+        public static IEnumerable<Character> GetSalaryEligibleCrew()
+        {
+            if (!(GameMain.GameSession.CrewManager is { } crewManager)) { return Array.Empty<Character>(); }
+
+            IEnumerable<Character> characters = crewManager.GetCharacters();
+#if SERVER
+            return GameMain.Server.ConnectedClients.Select(c => c.Character).Where(IsAlive).Concat(characters);
+#elif CLIENT
+            return characters;
+#endif
+            static bool IsAlive(Character c) { return c.Info != null && !c.IsDead; }
+        }
+
+
+        public static (int Amount, int Percentage) GetRewardShare(int rewardDistribution, IEnumerable<Character> crew, Option<int> reward)
+        {
+            float sum = crew.Sum(c => c.Wallet.RewardDistribution) + rewardDistribution;
+            if (sum == 0) { return (0, 0); }
+
+            float rewardWeight = rewardDistribution / sum;
+            int rewardPercentage = (int)(rewardWeight * 100);
+
+            return reward switch
+            {
+                Some<int> { Value: var amount } => ((int)(amount * rewardWeight), rewardPercentage),
+                None<int> _ => (0, rewardPercentage),
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
         protected void ChangeLocationType(LocationTypeChange change)

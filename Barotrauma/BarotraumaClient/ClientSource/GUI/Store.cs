@@ -3,6 +3,7 @@ using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 
@@ -67,8 +68,7 @@ namespace Barotrauma
 
         private CargoManager CargoManager => campaignUI.Campaign.CargoManager;
         private Location CurrentLocation => campaignUI.Campaign.Map?.CurrentLocation;
-        private int PlayerMoney => campaignUI.Campaign.Money;
-        
+        private Wallet PlayerWallet => campaignUI.Campaign.Wallet;
         private bool IsBuying => activeTab switch
         {
             StoreTab.Buy => true,
@@ -715,24 +715,30 @@ namespace Barotrauma
 
         private LocalizedString GetMerchantBalanceText() => GetCurrencyFormatted(CurrentLocation?.StoreCurrentBalance ?? 0);
 
-        private LocalizedString GetPlayerBalanceText() => GetCurrencyFormatted(PlayerMoney);
+        private LocalizedString GetPlayerBalanceText() => GetCurrencyFormatted(PlayerWallet.Balance);
 
         private GUILayoutGroup CreateDealsGroup(GUIListBox parentList, int elementCount = 4)
         {
             var elementHeight = (int)(GUI.yScale * 80);
-            var frame = new GUIFrame(new RectTransform(new Point(parentList.Content.Rect.Width, elementCount * elementHeight + 3), parent: parentList.Content.RectTransform), style: null);
-            frame.UserData = "deals";
+            var frame = new GUIFrame(new RectTransform(new Point(parentList.Content.Rect.Width, elementCount * elementHeight + 3), parent: parentList.Content.RectTransform), style: null)
+            {
+                UserData = "deals"
+            };
             var dealsGroup = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform, anchor: Anchor.Center), childAnchor: Anchor.TopCenter);
-            var dealsHeader = new GUILayoutGroup(new RectTransform(new Point((int)(0.95f * parentList.Content.Rect.Width), elementHeight), parent: dealsGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
-            dealsHeader.UserData = "header";
+            var dealsHeader = new GUILayoutGroup(new RectTransform(new Point((int)(0.95f * parentList.Content.Rect.Width), elementHeight), parent: dealsGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                UserData = "header"
+            };
             var iconWidth = (0.9f * dealsHeader.Rect.Height) / dealsHeader.Rect.Width;
             var dealsIcon = new GUIImage(new RectTransform(new Vector2(iconWidth, 0.9f), dealsHeader.RectTransform), "StoreDealIcon", scaleToFit: true);
             var text = TextManager.Get(parentList == storeBuyList ? "campaignstore.dailyspecials" : "campaignstore.requestedgoods");
             var dealsText = new GUITextBlock(new RectTransform(new Vector2(1.0f - iconWidth, 0.9f), dealsHeader.RectTransform), text, font: GUIStyle.LargeFont);
             storeSpecialColor = dealsIcon.Color;
             dealsText.TextColor = storeSpecialColor;
-            var divider = new GUIImage(new RectTransform(new Point(dealsGroup.Rect.Width, 3), dealsGroup.RectTransform), "HorizontalLine");
-            divider.UserData = "divider";
+            var divider = new GUIImage(new RectTransform(new Point(dealsGroup.Rect.Width, 3), dealsGroup.RectTransform), "HorizontalLine")
+            {
+                UserData = "divider"
+            };
             frame.CanBeFocused = dealsGroup.CanBeFocused = dealsHeader.CanBeFocused = dealsIcon.CanBeFocused = dealsText.CanBeFocused = divider.CanBeFocused = false;
             return dealsGroup;
         }
@@ -1801,7 +1807,7 @@ namespace Barotrauma
         private void SetOwnedText(GUIComponent itemComponent, GUITextBlock ownedLabel = null)
         {
             ownedLabel ??= itemComponent?.FindChild("owned", recursive: true) as GUITextBlock;
-            if (itemComponent == null && ownedLabel == null) { return; } 
+            if (itemComponent == null && ownedLabel == null) { return; }
             PurchasedItem purchasedItem = itemComponent?.UserData as PurchasedItem;
             ItemQuantity itemQuantity = null;
             LocalizedString ownedLabelText = string.Empty;
@@ -1970,7 +1976,7 @@ namespace Barotrauma
                 DebugConsole.ShowError($"Error clearing the shopping crate: Uknown store tab type. {e.StackTrace.CleanupStackTrace()}");
                 return false;
             }
-        } 
+        }
 
         private bool BuyItems()
         {
@@ -1990,7 +1996,7 @@ namespace Barotrauma
             }
             itemsToRemove.ForEach(i => itemsToPurchase.Remove(i));
 
-            if (itemsToPurchase.None() || totalPrice > PlayerMoney) { return false; }
+            if (itemsToPurchase.None() || !PlayerWallet.CanAfford(totalPrice)) { return false; }
 
             CargoManager.PurchaseItems(itemsToPurchase, true);
             GameMain.Client?.SendCampaignState();
@@ -2047,7 +2053,7 @@ namespace Barotrauma
             if (IsBuying)
             {
                 shoppingCrateTotal.Text = GetCurrencyFormatted(buyTotal);
-                shoppingCrateTotal.TextColor = buyTotal > PlayerMoney ? Color.Red : Color.White;
+                shoppingCrateTotal.TextColor = !PlayerWallet.CanAfford(buyTotal) ? Color.Red : Color.White;
             }
             else
             {
@@ -2093,7 +2099,7 @@ namespace Barotrauma
                 ActiveShoppingCrateList.Content.RectTransform.Children.Any() &&
                 activeTab switch
                 {
-                    StoreTab.Buy => buyTotal <= PlayerMoney,
+                    StoreTab.Buy => PlayerWallet.CanAfford(buyTotal),
                     StoreTab.Sell => CurrentLocation != null && sellTotal <= CurrentLocation.StoreCurrentBalance,
                     StoreTab.SellSub => CurrentLocation != null && sellFromSubTotal <= CurrentLocation.StoreCurrentBalance,
                     _ => false
@@ -2109,9 +2115,12 @@ namespace Barotrauma
 
         private float ownedItemsUpdateTimer = 0.0f, sellableItemsFromSubUpdateTimer = 0.0f;
         private const float timerUpdateInterval = 1.5f;
+        private readonly Stopwatch updateStopwatch = new Stopwatch();
 
         public void Update(float deltaTime)
         {
+            updateStopwatch.Restart();
+
             if (GameMain.GraphicsWidth != resolutionWhenCreated.X || GameMain.GraphicsHeight != resolutionWhenCreated.Y)
             {
                 CreateUI();
@@ -2124,10 +2133,10 @@ namespace Barotrauma
                 {
                     var prevOwnedItems = new Dictionary<ItemPrefab, ItemQuantity>(OwnedItems);
                     UpdateOwnedItems();
-                    var refresh = (prevOwnedItems.Count != OwnedItems.Count) ||
-                        (prevOwnedItems.Select(kvp => kvp.Value.Total).Sum() != OwnedItems.Select(kvp => kvp.Value.Total).Sum()) ||
-                        (OwnedItems.Any(kvp => kvp.Value.Total > 0 && !prevOwnedItems.ContainsKey(kvp.Key)) ||
-                         prevOwnedItems.Any(kvp => !OwnedItems.TryGetValue(kvp.Key, out ItemQuantity itemQuantity) || kvp.Value.Total != itemQuantity.Total));
+                    bool refresh = OwnedItems.Count != prevOwnedItems.Count ||
+                        OwnedItems.Values.Sum(v => v.Total) != prevOwnedItems.Values.Sum(v => v.Total) ||
+                        OwnedItems.Any(kvp => !prevOwnedItems.TryGetValue(kvp.Key, out ItemQuantity v) || kvp.Value.Total != v.Total) ||
+                        prevOwnedItems.Any(kvp => !OwnedItems.ContainsKey(kvp.Key));
                     if (refresh)
                     {
                         needsItemsToSellRefresh = true;
@@ -2138,8 +2147,13 @@ namespace Barotrauma
                 sellableItemsFromSubUpdateTimer += deltaTime;
                 if (sellableItemsFromSubUpdateTimer >= timerUpdateInterval)
                 {
-                    needsItemsToSellFromSubRefresh = true;
-                    needsRefresh = true;
+                    var prevSubItems = new List<PurchasedItem>(itemsToSellFromSub);
+                    RefreshItemsToSellFromSub();
+                    needsRefresh = needsRefresh ||
+                        itemsToSellFromSub.Count != prevSubItems.Count ||
+                        itemsToSellFromSub.Sum(i => i.Quantity) != prevSubItems.Sum(i => i.Quantity) ||
+                        itemsToSellFromSub.Any(i => !(prevSubItems.FirstOrDefault(prev => prev.ItemPrefab == i.ItemPrefab) is PurchasedItem prev) || i.Quantity != prev.Quantity) ||
+                        prevSubItems.Any(prev => itemsToSellFromSub.None(i => i.ItemPrefab == prev.ItemPrefab));
                 }
             }
 
@@ -2148,7 +2162,10 @@ namespace Barotrauma
             if (needsRefresh || HavePermissionsChanged()) { Refresh(updateOwned: ownedItemsUpdateTimer > 0.0f); }
             if (needsBuyingRefresh || HavePermissionsChanged(StoreTab.Buy)) { RefreshBuying(updateOwned: ownedItemsUpdateTimer > 0.0f); }
             if (needsSellingRefresh || HavePermissionsChanged(StoreTab.Sell)) { RefreshSelling(updateOwned: ownedItemsUpdateTimer > 0.0f); }
-            if (needsSellingFromSubRefresh || HavePermissionsChanged(StoreTab.SellSub)) { RefreshSellingFromSub(updateItemsToSellFromSub: sellableItemsFromSubUpdateTimer > 0.0f); }
+            if (needsSellingFromSubRefresh || HavePermissionsChanged(StoreTab.SellSub)) { RefreshSellingFromSub(updateOwned: ownedItemsUpdateTimer > 0.0f, updateItemsToSellFromSub: sellableItemsFromSubUpdateTimer > 0.0f); }
+
+            updateStopwatch.Stop();
+            GameMain.PerformanceCounter.AddPartialElapsedTicks("GameSessionUpdate", "StoreUpdate", updateStopwatch.ElapsedTicks);
         }
     }
 }

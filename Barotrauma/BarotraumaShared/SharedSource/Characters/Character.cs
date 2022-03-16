@@ -25,7 +25,7 @@ namespace Barotrauma
         FriendlyNPC = 3
     }
 
-    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
+    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerPositionSync
     {
         public readonly static List<Character> CharacterList = new List<Character>();
 
@@ -130,12 +130,39 @@ namespace Barotrauma
             }
         }
 
+        private Wallet wallet = new Wallet();
+
+        public Wallet Wallet
+        {
+            get
+            {
+                ThrowIfAccessingWalletsInSingleplayer();
+                return wallet;
+            }
+            set
+            {
+                ThrowIfAccessingWalletsInSingleplayer();
+                wallet = value;
+            }
+        }
+
         public readonly HashSet<LatchOntoAI> Latchers = new HashSet<LatchOntoAI>();
         public readonly HashSet<Projectile> AttachedProjectiles = new HashSet<Projectile>();
 
         protected readonly Dictionary<string, ActiveTeamChange> activeTeamChanges = new Dictionary<string, ActiveTeamChange>();
         protected ActiveTeamChange currentTeamChange;
         const string OriginalTeamIdentifier = "original";
+
+        public static void ThrowIfAccessingWalletsInSingleplayer()
+        {
+#if CLIENT && DEBUG
+            if (Screen.Selected is TestScreen) { return; }
+#endif
+            if (GameMain.NetworkMember is null || GameMain.IsSingleplayer)
+            {
+                throw new InvalidOperationException($"Tried to access crew wallets in singleplayer. Use {nameof(CampaignMode)}.{nameof(CampaignMode.Bank)} or {nameof(CampaignMode)}.{nameof(CampaignMode.GetWallet)} instead.");
+            }
+        }
 
         public void SetOriginalTeam(CharacterTeamType newTeam)
         {
@@ -158,12 +185,11 @@ namespace Barotrauma
                 return;
             }
             // clear up any duties the character might have had from its old team (autonomous objectives are automatically recreated)
-            var order = new Order(OrderPrefab.Dismissal, Identifier.Empty,
-                manualPriority: 3, orderType: Order.OrderType.Current, aiObjective: null, target: null, orderGiver: this);
-            SetOrder(order, speak: false);
+            var order = OrderPrefab.Dismissal.CreateInstance(OrderPrefab.OrderTargetType.Entity, orderGiver: this).WithManualPriority(CharacterInfo.HighestManualOrderPriority);
+            SetOrder(order, isNewOrder: true, speak: false);
 
 #if SERVER
-            GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.TeamChange });
+            GameMain.NetworkMember.CreateEntityEvent(this, new TeamChangeEventData());
 #endif
         }
 
@@ -225,9 +251,8 @@ namespace Barotrauma
 
                 if (bestTeamChange.AggressiveBehavior) // this seemed like the least disruptive way to induce aggressive behavior
                 {
-                    var order = new Order(OrderPrefab.Prefabs["fightintruders"], Identifier.Empty,
-                        manualPriority: 3, orderType: Order.OrderType.Current, aiObjective: null, target: null, orderGiver: this);
-                    SetOrder(order, speak: false);
+                    var order = OrderPrefab.Prefabs["fightintruders"].CreateInstance(OrderPrefab.OrderTargetType.Entity, orderGiver: this).WithManualPriority(CharacterInfo.HighestManualOrderPriority);
+                    SetOrder(order, isNewOrder: true, speak: false);
                 }
             }
         }
@@ -1023,7 +1048,7 @@ namespace Barotrauma
 #if SERVER
             if (GameMain.Server != null && Spawner != null && createNetworkEvent)
             {
-                Spawner.CreateNetworkEvent(newCharacter, false);
+                Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(newCharacter));
             }
 #endif
             return newCharacter;
@@ -1177,6 +1202,10 @@ namespace Barotrauma
                 {
                     info = new CharacterInfo(nonHuskedSpeciesName);
                 }
+            }
+            else if (Params.HasInfo && info == null)
+            {
+                info = new CharacterInfo(speciesName);
             }
 
             if (IsHumanoid)
@@ -1418,9 +1447,9 @@ namespace Barotrauma
                 {
                     item.AddTag(s);
                 }
-                if (createNetworkEvent && (GameMain.NetworkMember?.IsServer ?? false))
+                if (createNetworkEvent && GameMain.NetworkMember is { IsServer: true })
                 {
-                    GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ChangeProperty, item.SerializableProperties[nameof(item.Tags).ToIdentifier()] });
+                    GameMain.NetworkMember.CreateEntityEvent(item, new Item.ChangePropertyEventData(item.SerializableProperties[nameof(item.Tags).ToIdentifier()]));
                 }
             }
         }
@@ -3199,7 +3228,7 @@ namespace Barotrauma
         }
 
         /// <param name="force">Force an order to be set for the character, bypassing hearing checks</param>
-        public void SetOrder(Order order, bool speak = true, bool force = false)
+        public void SetOrder(Order order, bool isNewOrder, bool speak = true, bool force = false)
         {
             var orderGiver = order?.OrderGiver;
             //set the character order only if the character is close enough to hear the message
@@ -3226,7 +3255,7 @@ namespace Barotrauma
                                     if (currentOrder.Identifier != order.Identifier) { continue; }
                                     if (currentOrder.TargetEntity != order.TargetEntity) { continue; }
                                     if (!currentOrder.AutoDismiss) { continue; }
-                                    character.SetOrder(currentOrder.GetDismissal(), speak: speak, force: force);
+                                    character.SetOrder(currentOrder.GetDismissal(), isNewOrder, speak: speak, force: force);
                                     break;
                                 }
                             }
@@ -3243,7 +3272,7 @@ namespace Barotrauma
                             }
                             if (orderToReplace is { AutoDismiss: true })
                             {
-                                SetOrder(orderToReplace.GetDismissal(), speak: speak, force: force);
+                                SetOrder(orderToReplace.GetDismissal(), isNewOrder, speak: speak, force: force);
                             }
                             break;
                     }
@@ -3251,10 +3280,10 @@ namespace Barotrauma
             }
 
             // Prevent adding duplicate orders
-            bool wasDuplicate = RemoveDuplicateOrders(order);
+            RemoveDuplicateOrders(order);
             AddCurrentOrder(order);
 
-            if (orderGiver != null && order.Identifier != "dismissed" && !wasDuplicate)
+            if (orderGiver != null && order.Identifier != "dismissed" && isNewOrder)
             {
                 var abilityOrderedCharacter = new AbilityOrderedCharacter(this);
                 orderGiver.CheckTalents(AbilityEffectType.OnGiveOrder, abilityOrderedCharacter);
@@ -3976,14 +4005,14 @@ namespace Barotrauma
             HealthUpdateInterval = 0.0f;
 
             //clients aren't allowed to kill characters unless they receive a network message
-            if (!isNetworkMessage && GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+            if (!isNetworkMessage && GameMain.NetworkMember is { IsClient: true })
             {
                 return;
             }
 
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+            if (GameMain.NetworkMember is { IsServer: true })
             {
-                GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                GameMain.NetworkMember.CreateEntityEvent(this, new StatusEventData());
             }
 
             isDead = true;
@@ -4072,15 +4101,7 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.GameSession != null)
-            {
-                if (GameMain.GameSession.Campaign != null && TeamID == CharacterTeamType.Team1 && !IsAssistant)
-                {
-                    GameMain.GameSession.Campaign.CrewHasDied = true;
-                }
-
-                GameMain.GameSession.KillCharacter(this);
-            }
+            GameMain.GameSession?.KillCharacter(this);
         }
         partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log);
 
@@ -4245,7 +4266,7 @@ namespace Barotrauma
                 if (!MathUtils.NearlyEqual(newItem.Condition, newItem.MaxCondition) &&
                     GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
-                    GameMain.NetworkMember.CreateEntityEvent(newItem, new object[] { NetEntityEvent.Type.Status });
+                    GameMain.NetworkMember.CreateEntityEvent(newItem, new StatusEventData());
                 }
 #if SERVER
                 newItem.GetComponent<Terminal>()?.SyncHistory();
@@ -4334,7 +4355,7 @@ namespace Barotrauma
                             hull?.Submarine ?? Submarine);
                         extraDuffelBags.Add(newDuffelBag);
 #if SERVER
-                        Spawner.CreateNetworkEvent(newDuffelBag, false);
+                        Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(newDuffelBag));
 #endif
                     }
 
@@ -4547,7 +4568,7 @@ namespace Barotrauma
             info.UnlockedTalents.Add(talentPrefab.Identifier);
             if (characterTalents.Any(t => t.Prefab == talentPrefab)) { return false; }
 #if SERVER
-            GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.UpdateTalents });
+            GameMain.NetworkMember.CreateEntityEvent(this, new UpdateTalentsEventData());
 #endif
             CharacterTalent characterTalent = new CharacterTalent(talentPrefab, this);
             characterTalents.Add(characterTalent);
@@ -4626,23 +4647,44 @@ namespace Barotrauma
         /// </summary>
         public void GiveMoney(int amount)
         {
-            if (!(GameMain.GameSession?.Campaign is CampaignMode campaign)) { return; }
+            if (!(GameMain.GameSession?.Campaign is { } campaign)) { return; }
             if (amount <= 0) { return; }
 
-            int prevAmount = campaign.Money;
-            campaign.Money += amount;
-            OnMoneyChanged(prevAmount, campaign.Money);
+            Wallet wallet;
+#if SERVER
+            if (!(campaign is MultiPlayerCampaign mpCampaign)) { throw new InvalidOperationException("Campaign on a server is not a multiplayer campaign"); }
+            Client targetClient = null;
+
+            foreach (Client client in GameMain.Server.ConnectedClients)
+            {
+                if (client.Character == this)
+                {
+                    targetClient = client;
+                    break;
+                }
+            }
+
+            wallet = targetClient is null ? mpCampaign.Bank : mpCampaign.GetWallet(targetClient);
+#else
+            wallet = campaign.Wallet;
+#endif
+
+            int prevAmount = wallet.Balance;
+            wallet.Give(amount);
+            OnMoneyChanged(prevAmount, wallet.Balance);
         }
 
+#if CLIENT
         public void SetMoney(int amount)
         {
-            if (!(GameMain.GameSession?.Campaign is CampaignMode campaign)) { return; }
-            if (amount == campaign.Money) { return; }
+            if (!(GameMain.GameSession?.Campaign is { } campaign)) { return; }
+            if (amount == campaign.Wallet.Balance) { return; }
 
-            int prevAmount = campaign.Money;
-            campaign.Money = amount;
-            OnMoneyChanged(prevAmount, campaign.Money);
+            int prevAmount = campaign.Wallet.Balance;
+            campaign.Wallet.Balance = amount;
+            OnMoneyChanged(prevAmount, campaign.Wallet.Balance);
         }
+#endif
 
         partial void OnMoneyChanged(int prevAmount, int newAmount);
         partial void OnTalentGiven(TalentPrefab talentPrefab);

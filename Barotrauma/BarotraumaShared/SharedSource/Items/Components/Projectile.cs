@@ -196,6 +196,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(true, IsPropertySaveable.No)]
+        public bool FriendlyFire
+        {
+            get;
+            set;
+        }
+
         private float deactivationTimer;
 
         [Serialize(0f, IsPropertySaveable.No)]
@@ -309,7 +316,7 @@ namespace Barotrauma.Items.Components
             {
 #if SERVER
                 launchRot = rotation;               
-                Item.CreateServerEvent(this, new object[] { true }); //true = indicate that this is a launch event          
+                Item.CreateServerEvent(this, new EventData(launch: true));         
 #endif
             }
         }
@@ -673,7 +680,7 @@ namespace Barotrauma.Items.Components
                 {
                     Unstick();
 #if SERVER
-                    item.CreateServerEvent(this);                
+                    item.CreateServerEvent(this, new EventData(launch: false));                
 #endif
                 }
             }
@@ -697,9 +704,9 @@ namespace Barotrauma.Items.Components
                 return false;
             }
             if (hits.Contains(target.Body)) { return false; }
-            if (ShouldIgnoreSubmarineCollision(target, contact))
+            if (target.Body.UserData is Submarine)
             {
-                return false;                
+                if (ShouldIgnoreSubmarineCollision(ref target, contact)) { return false; }       
             }
             else if (target.Body.UserData is Limb limb)
             {
@@ -707,6 +714,10 @@ namespace Barotrauma.Items.Components
                 {
                     //push the severed limb around a bit, but let the projectile pass through it
                     limb.body?.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass * 0.1f, item.SimPosition);
+                    return false;
+                }
+                if (!FriendlyFire && User != null && limb.character.IsFriendly(User))
+                {
                     return false;
                 }
             }
@@ -893,8 +904,8 @@ namespace Barotrauma.Items.Components
 #if SERVER
                     if (GameMain.NetworkMember.IsServer)
                     {
-                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, actionType, this, targetLimb.character.ID, targetLimb, (ushort)0, item.WorldPosition });
-                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, targetLimb.character.ID, targetLimb, (ushort)0, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(actionType, this, targetLimb.character, targetLimb, null, item.WorldPosition));
+                        GameMain.Server?.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnImpact, this, targetLimb.character, targetLimb, null, item.WorldPosition));
                     }
 #endif
                 }
@@ -905,8 +916,8 @@ namespace Barotrauma.Items.Components
 #if SERVER
                     if (GameMain.NetworkMember.IsServer)
                     {
-                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, actionType, this, (ushort)0, null, (target.Body.UserData as Entity)?.ID ?? 0, item.WorldPosition });
-                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, (ushort)0, null, (target.Body.UserData as Entity)?.ID ?? 0, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(actionType, this, null, null, target.Body.UserData as Entity, item.WorldPosition));
+                        GameMain.Server?.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnImpact, this, null, null, target.Body.UserData as Entity, item.WorldPosition));
                     }
 #endif
                 }
@@ -952,7 +963,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
                 if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
-                    item.CreateServerEvent(this);
+                    item.CreateServerEvent(this, new EventData(launch: false));
                 }
 #endif
                 item.body.LinearVelocity *= speedMultiplier;

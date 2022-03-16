@@ -400,7 +400,7 @@ namespace Barotrauma.Items.Components
         }
 
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
 #if CLIENT
             TriggerRewiringSound();

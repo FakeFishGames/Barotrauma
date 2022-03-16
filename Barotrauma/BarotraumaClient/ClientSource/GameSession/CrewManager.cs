@@ -236,7 +236,7 @@ namespace Barotrauma
 
                         if (crewManager != null)
                         {
-                            Order order = new Order(orderPrefab, Identifier.Empty, CharacterInfo.HighestManualOrderPriority, Order.OrderType.Current, null, null, orderGiver: Character.Controlled);
+                            Order order = orderPrefab.CreateInstance(OrderPrefab.OrderTargetType.Entity, orderGiver: Character.Controlled);
                             crewManager.SetCharacterOrder(null, order);
                             if (crewManager.IsSinglePlayer) { HumanAIController.ReportProblem(Character.Controlled, order); }
                         }
@@ -288,16 +288,6 @@ namespace Barotrauma
         public Rectangle GetActiveCrewArea()
         {
             return crewArea.Rect;
-        }
-
-        public IEnumerable<Character> GetCharacters()
-        {
-            return characters;
-        }
-
-        public IEnumerable<CharacterInfo> GetCharacterInfos()
-        {
-            return characterInfos;
         }
 
         /// <summary>
@@ -708,7 +698,8 @@ namespace Barotrauma
             List<Character> availableSpeakers = Character.CharacterList.FindAll(c =>
                 c.AIController is HumanAIController &&
                 !c.IsDead &&
-                c.SpeechImpediment <= 100.0f);
+                c.SpeechImpediment <= 100.0f &&
+                c.CharacterHealth.GetAllAfflictions(a => a is AfflictionHusk huskInfection && huskInfection.Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: true }).None());
             pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
         }
 
@@ -837,7 +828,7 @@ namespace Barotrauma
                 var orderGiver = order?.OrderGiver;
                 if (IsSinglePlayer)
                 {
-                    character.SetOrder(order, speak: orderGiver != character);
+                    character.SetOrder(order, isNewOrder, speak: orderGiver != character);
                     string message = order?.GetChatMessage(character.Name, orderGiver?.CurrentHull?.DisplayName?.Value, givingOrderToSelf: character == orderGiver, orderOption: order?.Option ?? Identifier.Empty, isNewOrder: isNewOrder);
                     orderGiver?.Speak(message);
                 }
@@ -2437,26 +2428,26 @@ namespace Barotrauma
             optionNodes.Add(new OptionNode(node, Keys.D0 + hotkey % 10));
         }
 
+        /// <remarks>
+        /// The order giver doesn't need to be set for the Order instances as it will be set when the node button is clicked.
+        /// </remarks>
         private void CreateShortcutNodes()
         {
-            bool HasAppropriateJobId(Character c, Identifier jobId) => c.Info?.Job != null && c.Info.Job.Prefab.AppropriateOrders.Contains(jobId);
-            bool HasAppropriateJob(Character c, string jobId) => HasAppropriateJobId(c, jobId.ToIdentifier());
-
-            var sub = GetTargetSubmarine();
-            if (sub == null) { return; }
+            if (!(GetTargetSubmarine() is { } sub)) { return; }
             shortcutNodes.Clear();
-            if (CanFitMoreNodes() && sub.GetItems(false).Find(i => i.HasTag("reactor") && i.IsPlayerTeamInteractable)?.GetComponent<Reactor>() is Reactor reactor)
+            var subItems = sub.GetItems(false);
+            if (CanFitMoreNodes() && subItems.Find(i => i.HasTag("reactor") && i.IsPlayerTeamInteractable)?.GetComponent<Reactor>() is Reactor reactor)
             {
                 float reactorOutput = -reactor.CurrPowerConsumption;
                 // If player is not an engineer AND the reactor is not powered up AND nobody is using the reactor
-                // ---> Create shortcut node for "Operate Reactor" order's "Power Up" option
+                // --> Create shortcut node for "Operate Reactor" order's "Power Up" option
                 if (ShouldDelegateOrder("operatereactor") && reactorOutput < float.Epsilon && characters.None(c => c.SelectedConstruction == reactor.Item))
                 {
                     var orderPrefab = OrderPrefab.Prefabs["operatereactor"];
-                    var order = new Order(orderPrefab, orderPrefab.Options[0], reactor.Item, reactor, Character.Controlled);
+                    var order = new Order(orderPrefab, orderPrefab.Options[0], reactor.Item, reactor);
                     if (IsNonDuplicateOrder(order))
                     {
-                        shortcutNodes.Add(CreateOrderOptionNode(shortcutNodeSize, null, Point.Zero, order, -1));
+                        AddOrderNode(order);
                     }
                 }
             }
@@ -2464,11 +2455,11 @@ namespace Barotrauma
             // If player is not a captain AND nobody is using the nav terminal AND the nav terminal is powered up
             // --> Create shortcut node for Steer order
             if (CanFitMoreNodes() && ShouldDelegateOrder("steer") && IsNonDuplicateOrderPrefab(OrderPrefab.Prefabs["steer"]) &&
-                sub.GetItems(false).Find(i => i.HasTag("navterminal") && i.IsPlayerTeamInteractable) is Item nav && characters.None(c => c.SelectedConstruction == nav) &&
+                subItems.Find(i => i.HasTag("navterminal") && i.IsPlayerTeamInteractable) is Item nav && characters.None(c => c.SelectedConstruction == nav) &&
                 nav.GetComponent<Steering>() is Steering steering && steering.Voltage > steering.MinVoltage)
             {
-                var order = new Order(OrderPrefab.Prefabs["steer"], steering.Item, steering, Character.Controlled);
-                shortcutNodes.Add(CreateOrderNode(shortcutNodeSize, null, Point.Zero, order, -1));
+                var order = new Order(OrderPrefab.Prefabs["steer"], steering.Item, steering);
+                AddOrderNode(order);
             }
             // If player is not a security officer AND invaders are reported
             // --> Create shorcut node for Fight Intruders order
@@ -2476,8 +2467,7 @@ namespace Barotrauma
                 ActiveOrders.Any(o => o.Order.Identifier == "reportintruders") &&
                 IsNonDuplicateOrderPrefab(OrderPrefab.Prefabs["fightintruders"]))
             {
-                var order = new Order(OrderPrefab.Prefabs["fightintruders"], null, orderGiver: Character.Controlled);
-                shortcutNodes.Add(CreateOrderNode(shortcutNodeSize, null, Point.Zero, order, -1));
+                AddOrderNodeWithIdentifier("fightintruders");
             }
             // If player is not a mechanic AND a breach has been reported
             // --> Create shorcut node for Fix Leaks order
@@ -2485,8 +2475,7 @@ namespace Barotrauma
                 IsNonDuplicateOrderPrefab(OrderPrefab.Prefabs["fixleaks"]) &&
                 ActiveOrders.Any(o => o.Order.Identifier == "reportbreach"))
             {
-                var order = new Order(OrderPrefab.Prefabs["fixleaks"], null, orderGiver: Character.Controlled);
-                shortcutNodes.Add(CreateOrderNode(shortcutNodeSize, null, Point.Zero, order, -1));
+                AddOrderNodeWithIdentifier("fixleaks");
             }
             // --> Create shortcut nodes for the Repair orders
             if (CanFitMoreNodes() && ActiveOrders.Any(o => o.Order.Identifier == "reportbrokendevices"))
@@ -2494,33 +2483,27 @@ namespace Barotrauma
                 var reportBrokenDevices = OrderPrefab.Prefabs["reportbrokendevices"];
                 // TODO: Doesn't work for player issued reports, because they don't have a target.
                 bool useSpecificRepairOrder = false;
-                string tag = "repairelectrical";
-                if (CanFitMoreNodes() && ShouldDelegateOrder(tag) &&
+                if (CanFitMoreNodes() && ShouldDelegateOrder("repairelectrical") &&
                     ActiveOrders.Any(o => o.Order.Prefab == reportBrokenDevices && o.Order.TargetItemComponent is Repairable r && r.requiredSkills.Any(s => s.Identifier == "electrical")))
                 {
-                    if (IsNonDuplicateOrderPrefab(OrderPrefab.Prefabs[tag]))
+                    if (IsNonDuplicateOrderPrefab(OrderPrefab.Prefabs["repairelectrical"]))
                     {
-                        var order = new Order(OrderPrefab.Prefabs[tag], null, orderGiver: Character.Controlled);
-                        shortcutNodes.Add(CreateOrderNode(shortcutNodeSize, null, Point.Zero, order, -1));
+                        AddOrderNodeWithIdentifier("repairelectrical");
                     }
                     useSpecificRepairOrder = true;
                 }
-                tag = "repairmechanical";
-                if (CanFitMoreNodes() && ShouldDelegateOrder(tag) &&
+                if (CanFitMoreNodes() && ShouldDelegateOrder("repairmechanical") &&
                     ActiveOrders.Any(o => o.Order.Prefab == reportBrokenDevices && o.Order.TargetItemComponent is Repairable r && r.requiredSkills.Any(s => s.Identifier == "mechanical")))
                 {
-                    if (IsNonDuplicateOrderPrefab(OrderPrefab.Prefabs[tag]))
+                    if (IsNonDuplicateOrderPrefab(OrderPrefab.Prefabs["repairmechanical"]))
                     {
-                        var order = new Order(OrderPrefab.Prefabs[tag], null, orderGiver: Character.Controlled);
-                        shortcutNodes.Add(CreateOrderNode(shortcutNodeSize, null, Point.Zero, order, -1));
+                        AddOrderNodeWithIdentifier("repairmechanical");
                     }
                     useSpecificRepairOrder = true;
                 }
-                tag = "repairsystems";
-                if (!useSpecificRepairOrder && CanFitMoreNodes() && ShouldDelegateOrder(tag) && OrderPrefab.Prefabs[tag] is OrderPrefab repairOrder && IsNonDuplicateOrderPrefab(repairOrder))
+                if (!useSpecificRepairOrder && CanFitMoreNodes() && ShouldDelegateOrder("repairsystems") && OrderPrefab.Prefabs["repairsystems"] is OrderPrefab repairOrder && IsNonDuplicateOrderPrefab(repairOrder))
                 {
-                    var order = new Order(OrderPrefab.Prefabs[tag], null, orderGiver: Character.Controlled);
-                    shortcutNodes.Add(CreateOrderNode(shortcutNodeSize, null, Point.Zero, order, -1));
+                    AddOrderNodeWithIdentifier("repairsystems");
                 }
             }
             // If fire is reported
@@ -2528,8 +2511,7 @@ namespace Barotrauma
             if (CanFitMoreNodes() && IsNonDuplicateOrderPrefab(OrderPrefab.Prefabs["extinguishfires"]) &&
                 ActiveOrders.Any(o => o.Order.Identifier == "reportfire"))
             {
-                var order = new Order(OrderPrefab.Prefabs["extinguishfires"], null, orderGiver: Character.Controlled);
-                shortcutNodes.Add(CreateOrderNode(shortcutNodeSize, null, Point.Zero, order, -1));
+                AddOrderNodeWithIdentifier("extinguishfires");
             }
             if (CanFitMoreNodes() && characterContext?.Info?.Job?.Prefab?.AppropriateOrders != null)
             {
@@ -2541,8 +2523,8 @@ namespace Barotrauma
                     {
                         if (!orderPrefab.MustSetTarget || orderPrefab.GetMatchingItems(sub, true, interactableFor: characterContext ?? Character.Controlled).Any())
                         {
-                            var order = new Order(orderPrefab, null, orderGiver: Character.Controlled);
-                            shortcutNodes.Add(CreateOrderNode(shortcutNodeSize, null, Point.Zero, order, -1));
+                            var order = orderPrefab.CreateInstance(OrderPrefab.OrderTargetType.Entity);
+                            AddOrderNode(order);
                         }
                         if (!CanFitMoreNodes()) { break; }
                     }
@@ -2550,9 +2532,8 @@ namespace Barotrauma
             }
             if (CanFitMoreNodes() && characterContext != null && !characterContext.IsDismissed)
             {
-                var order = new Order(OrderPrefab.Dismissal, null, orderGiver: Character.Controlled);
-                shortcutNodes.Add(
-                    CreateOrderNode(shortcutNodeSize, null, Point.Zero, order, -1));
+                var order = OrderPrefab.Dismissal.CreateInstance(OrderPrefab.OrderTargetType.Entity);
+                AddOrderNode(order);
             }
             shortcutNodes.RemoveAll(n => n.UserData is Order o && !IsOrderAvailable(o));
             if (shortcutNodes.Count < 1) { return; }
@@ -2593,18 +2574,30 @@ namespace Barotrauma
                     characterContext.CurrentOrders.None(oi => oi?.Identifier == orderPrefab?.Identifier) :
                     characterContext.CurrentOrders.None(oi => oi?.Identifier == orderPrefab?.Identifier && oi.Option == option));
             }
+            void AddOrderNodeWithIdentifier(string identifier)
+            {
+                var order = OrderPrefab.Prefabs[identifier].CreateInstance(OrderPrefab.OrderTargetType.Entity);
+                AddOrderNode(order);
+            }
+            void AddOrderNode(Order order)
+            {
+                var node = order.Option.IsEmpty ?
+                    CreateOrderNode(shortcutNodeSize, null, Point.Zero, order, -1) :
+                    CreateOrderOptionNode(shortcutNodeSize, null, Point.Zero, order, -1);
+                shortcutNodes.Add(node);
+            } 
         }
 
         private void CreateOrderNodes(OrderCategory orderCategory)
         {
-            var orderPrefabs = OrderPrefab.Prefabs.Where(o => o.Category == orderCategory && !o.IsReport && IsOrderAvailable(o)).ToArray();
+            var orderPrefabs = OrderPrefab.Prefabs.Where(o => o.Category == orderCategory && !o.IsReport && IsOrderAvailable(o)).OrderBy(o => o.Identifier).ToArray();
             Order order;
             bool disableNode;
             var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance,
                 GetCircumferencePointCount(orderPrefabs.Length), GetFirstNodeAngle(orderPrefabs.Length));
             for (int i = 0; i < orderPrefabs.Length; i++)
             {
-                order = new Order(orderPrefabs[i], null, orderGiver: Character.Controlled);
+                order = orderPrefabs[i].CreateInstance(OrderPrefab.OrderTargetType.Entity);
                 disableNode = !CanCharacterBeHeard() ||
                               (order.MustSetTarget && (order.ItemComponentType != null || order.GetTargetItems().Any() || order.RequireItems.Any()) &&
                                order.GetMatchingItems(true, interactableFor: characterContext ?? Character.Controlled).None());
@@ -2617,11 +2610,13 @@ namespace Barotrauma
         /// <summary>
         /// Create order nodes based on the item context
         /// </summary>
+        /// <remarks>
+        /// The order giver doesn't need to be set for the Order instances as it will be set when the node button is clicked.
+        /// </remarks>
         private void CreateContextualOrderNodes()
         {
             if (contextualOrders.None())
             {
-                string orderIdentifier;
                 // Check if targeting an item or a hull
                 if (itemContext != null && itemContext.IsPlayerTeamInteractable)
                 {
@@ -2636,66 +2631,62 @@ namespace Barotrauma
                             {
                                 if (p.TargetItemsMatchItem(itemContext, option))
                                 {
-                                    contextualOrders.Add(new Order(p, itemContext, targetComponent, Character.Controlled).WithOption(option));
+                                    contextualOrders.Add(new Order(p, option, itemContext, targetComponent));
                                 }
                             }
                         }
                         else if (p.TargetItemsMatchItem(itemContext) || p.TryGetTargetItemComponent(itemContext, out targetComponent))
                         {
                             contextualOrders.Add(p.HasOptions ?
-                                new Order(p, null, orderGiver: Character.Controlled) :
-                                new Order(p, itemContext, targetComponent, Character.Controlled));
+                                p.CreateInstance(OrderPrefab.OrderTargetType.Entity) :
+                                new Order(p, itemContext, targetComponent));
                         }
                     }
                     // If targeting a periscope connected to a turret, show the 'operateweapons' order
-                    orderIdentifier = "operateweapons";
-                    var operateWeaponsPrefab = OrderPrefab.Prefabs[orderIdentifier];
-                    if (contextualOrders.None(o => o.Identifier == orderIdentifier) && itemContext.Components.Any(c => c is Controller))
+                    var operateWeaponsPrefab = OrderPrefab.Prefabs["operateweapons"];
+                    if (contextualOrders.None(o => o.Identifier == "operateweapons") && itemContext.Components.Any(c => c is Controller))
                     {
                         var turret = itemContext.GetConnectedComponents<Turret>().FirstOrDefault(c => operateWeaponsPrefab.TargetItemsMatchItem(c.Item)) ??
                             itemContext.GetConnectedComponents<Turret>(recursive: true).FirstOrDefault(c => operateWeaponsPrefab.TargetItemsMatchItem(c.Item));
                         if (turret != null)
                         {
-                            contextualOrders.Add(new Order(operateWeaponsPrefab, turret.Item, turret, Character.Controlled));
+                            contextualOrders.Add(new Order(operateWeaponsPrefab, turret.Item, turret));
                         }
                     }
                     // If targeting a repairable item with condition below the repair threshold, show the 'repairsystems' order
-                    orderIdentifier = "repairsystems";
-                    if (contextualOrders.None(order => order.Identifier == orderIdentifier) && itemContext.Repairables.Any(r => r.IsBelowRepairThreshold))
+                    if (contextualOrders.None(order => order.Identifier == "repairsystems") && itemContext.Repairables.Any(r => r.IsBelowRepairThreshold))
                     {
                         if (itemContext.Repairables.Any(r => r != null && r.requiredSkills.Any(s => s != null && s.Identifier.Equals("electrical"))))
                         {
-                            contextualOrders.Add(new Order(OrderPrefab.Prefabs["repairelectrical"], itemContext, targetItem: null, Character.Controlled));
+                            contextualOrders.Add(new Order(OrderPrefab.Prefabs["repairelectrical"], itemContext, targetItem: null));
                         }
                         else if (itemContext.Repairables.Any(r => r != null && r.requiredSkills.Any(s => s != null && s.Identifier.Equals("mechanical"))))
                         {
-                            contextualOrders.Add(new Order(OrderPrefab.Prefabs["repairmechanical"], itemContext, targetItem: null, Character.Controlled));
+                            contextualOrders.Add(new Order(OrderPrefab.Prefabs["repairmechanical"], itemContext, targetItem: null));
                         }
                         else
                         {
-                            contextualOrders.Add(new Order(OrderPrefab.Prefabs[orderIdentifier], itemContext, targetItem: null, Character.Controlled));
+                            contextualOrders.Add(new Order(OrderPrefab.Prefabs["repairsystems"], itemContext, targetItem: null));
                         }
                     }
                     // Remove the 'pumpwater' order if the target pump is auto-controlled (as it will immediately overwrite the work done by the bot)
-                    orderIdentifier = "pumpwater";
-                    if (contextualOrders.FirstOrDefault(order => order.Identifier.Equals(orderIdentifier)) is Order pumpOrder &&
+                    if (contextualOrders.FirstOrDefault(order => order.Identifier.Equals("pumpwater")) is Order pumpOrder &&
                         itemContext.Components.FirstOrDefault(c => c.GetType() == pumpOrder.ItemComponentType) is Pump pump && pump.IsAutoControlled)
                     {
                         contextualOrders.Remove(pumpOrder);
                     }
-                    orderIdentifier = "cleanupitems";
-                    if (contextualOrders.None(info => info.Identifier.Equals(orderIdentifier)))
+                    if (contextualOrders.None(info => info.Identifier.Equals("cleanupitems")))
                     {
                         if (AIObjectiveCleanupItems.IsValidTarget(itemContext, Character.Controlled, checkInventory: false) || AIObjectiveCleanupItems.IsValidContainer(itemContext, Character.Controlled))
                         {
-                            contextualOrders.Add(new Order(OrderPrefab.Prefabs[orderIdentifier], itemContext, targetItem: null, Character.Controlled));
+                            contextualOrders.Add(new Order(OrderPrefab.Prefabs["cleanupitems"], itemContext, targetItem: null));
                         }
                     }
                     AddIgnoreOrder(itemContext);
                 }
                 else if (hullContext != null)
                 {
-                    contextualOrders.Add(new Order(OrderPrefab.Prefabs["fixleaks"], hullContext, targetItem: null, Character.Controlled));
+                    contextualOrders.Add(new Order(OrderPrefab.Prefabs["fixleaks"], hullContext, targetItem: null));
                     if (wallContext != null)
                     {
                         AddIgnoreOrder(wallContext);
@@ -2729,26 +2720,23 @@ namespace Barotrauma
                         }
                     }
                 }
-                orderIdentifier = "wait";
-                if (contextualOrders.None(order => order.Identifier.Equals(orderIdentifier)))
+                if (contextualOrders.None(order => order.Identifier.Equals("wait")))
                 {
                     Vector2 position = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
                     Hull hull = Hull.FindHull(position, guess: Character.Controlled?.CurrentHull);
-                    contextualOrders.Add(new Order(OrderPrefab.Prefabs[orderIdentifier], new OrderTarget(position, hull), Character.Controlled));
+                    contextualOrders.Add(new Order(OrderPrefab.Prefabs["wait"], new OrderTarget(position, hull)));
                 }
                 if (contextualOrders.None(order => order.Category != OrderCategory.Movement) && characters.Any(c => c != Character.Controlled))
                 {
-                    orderIdentifier = "follow";
-                    if (contextualOrders.None(order => order.Identifier.Equals(orderIdentifier)))
+                    if (contextualOrders.None(order => order.Identifier.Equals("follow")))
                     {
-                        contextualOrders.Add(new Order(OrderPrefab.Prefabs[orderIdentifier], null, orderGiver: Character.Controlled));
+                        contextualOrders.Add(OrderPrefab.Prefabs["follow"].CreateInstance(OrderPrefab.OrderTargetType.Entity));
                     }
                 }
                 // Show 'dismiss' order only when there are crew members with active orders
-                orderIdentifier = "dismissed";
-                if (contextualOrders.None(order => order.Identifier.Equals(orderIdentifier)) && characters.Any(c => !c.IsDismissed))
+                if (contextualOrders.None(order => order.IsDismissal) && characters.Any(c => !c.IsDismissed))
                 {
-                    contextualOrders.Add(new Order(OrderPrefab.Prefabs[orderIdentifier], null, orderGiver: Character.Controlled));
+                    contextualOrders.Add(OrderPrefab.Dismissal.CreateInstance(OrderPrefab.OrderTargetType.Entity));
                 }
             }
             contextualOrders.RemoveAll(o => !IsOrderAvailable(o));

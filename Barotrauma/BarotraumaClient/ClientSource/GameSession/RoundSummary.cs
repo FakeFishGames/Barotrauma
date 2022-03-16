@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 
@@ -15,7 +16,6 @@ namespace Barotrauma
 
         private int jobColumnWidth, characterColumnWidth, statusColumnWidth;
 
-        private readonly SubmarineInfo sub;
         private readonly List<Mission> selectedMissions;
         private readonly Location startLocation, endLocation;
 
@@ -30,11 +30,8 @@ namespace Barotrauma
 
         public GUIComponent Frame { get; private set; }
 
-
-
-        public RoundSummary(SubmarineInfo sub, GameMode gameMode, IEnumerable<Mission> selectedMissions, Location startLocation, Location endLocation)
+        public RoundSummary(GameMode gameMode, IEnumerable<Mission> selectedMissions, Location startLocation, Location endLocation)
         {
-            this.sub = sub;
             this.gameMode = gameMode;
             this.selectedMissions = selectedMissions.ToList();
             this.startLocation = startLocation;
@@ -320,6 +317,16 @@ namespace Barotrauma
                 {
                     LocalizedString rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", reward));
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), RichString.Rich(displayedMission.GetMissionRewardText(Submarine.MainSub)));
+                    if (Character.Controlled is { } controlled)
+                    {
+                        var (share, percentage) = Mission.GetRewardShare(controlled.Wallet.RewardDistribution, Mission.GetSalaryEligibleCrew(), Option<int>.Some(reward));
+                        if (share > 0)
+                        {
+                            string shareFormatted = string.Format(CultureInfo.InvariantCulture, "{0:N0}", share);
+                            RichString yourShareString = RichString.Rich(TextManager.GetWithVariables("crewwallet.missionreward.get", ("[money]", $"{shareFormatted}"), ("[share]", $"{percentage}")));
+                            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), yourShareString);
+                        }
+                    }
                 }
 
                 if (displayedMission != missionsToDisplay.Last())
@@ -407,7 +414,7 @@ namespace Barotrauma
                 CreatePathUnlockElement(locationFrame, null, startLocation);
             }
 
-            foreach (Faction faction in campaignMode.Factions)
+            foreach (Faction faction in campaignMode.Factions.OrderBy(f => f.Prefab.MenuOrder).ThenBy(f => f.Prefab.Name))
             {
                 float initialReputation = faction.Reputation.Value;
                 if (initialFactionReputations.ContainsKey(faction))
@@ -728,7 +735,7 @@ namespace Barotrauma
             if (Math.Abs(reputationChange) > 0)
             {
                 string changeText = $"{(reputationChange > 0 ? "+" : "") + reputationChange}";
-                string colorStr = XMLExtensions.ColorToString(reputationChange > 0 ? GUIStyle.Green : GUIStyle.Red);
+                string colorStr = XMLExtensions.ToStringHex(reputationChange > 0 ? GUIStyle.Green : GUIStyle.Red);
                 var richText = RichString.Rich($"{reputationText} (‖color:{colorStr}‖{changeText}‖color:end‖)");
                 new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), sliderHolder.RectTransform),
                     richText,

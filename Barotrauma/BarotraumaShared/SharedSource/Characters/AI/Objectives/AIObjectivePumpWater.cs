@@ -41,6 +41,7 @@ namespace Barotrauma
                 if (!character.Submarine.IsConnectedTo(pump.Item.Submarine)) { return false; }
             }
             if (Character.CharacterList.Any(c => c.CurrentHull == pump.Item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
+            if (pump.Item.IsClaimedByBallastFlora) { return false; }
             if (IsReady(pump)) { return false; }
             return true;
         }

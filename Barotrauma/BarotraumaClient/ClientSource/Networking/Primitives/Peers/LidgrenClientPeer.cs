@@ -84,7 +84,7 @@ namespace Barotrauma.Networking
             if (ownerKey != 0 && (ChildServerRelay.Process?.HasExited ?? true))
             {
                 Close();
-                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerProcessClosed"));
+                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
                 msgBox.Buttons[0].OnClicked += (btn, obj) => { GameMain.MainMenuScreen.Select(); return false; };
                 return;
             }

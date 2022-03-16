@@ -190,7 +190,7 @@ namespace Barotrauma
             }
             else
             {
-                tabMenu.Update();
+                tabMenu.Update(deltaTime);
                 if ((PlayerInput.KeyHit(InputType.InfoTab) || PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape)) &&
                     !(GUI.KeyboardDispatcher.Subscriber is GUITextBox))
                 {

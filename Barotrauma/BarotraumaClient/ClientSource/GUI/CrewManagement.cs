@@ -172,7 +172,7 @@ namespace Barotrauma
             {
                 AutoScaleVertical = true,
                 TextScale = 1.1f,
-                TextGetter = () => FormatCurrency(campaign.Money)
+                TextGetter = () => FormatCurrency(campaign.Wallet.Balance)
             };
 
             var pendingAndCrewGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), anchor: Anchor.Center,
@@ -630,7 +630,7 @@ namespace Barotrauma
                 total += ((InfoSkill)c.UserData).CharacterInfo.Salary;
             });
             totalBlock.Text = FormatCurrency(total);
-            bool enoughMoney = campaign != null ? total <= campaign.Money : true;
+            bool enoughMoney = campaign == null || campaign.Wallet.CanAfford(total);
             totalBlock.TextColor = enoughMoney ? Color.White : Color.Red;
             validateHiresButton.Enabled = enoughMoney && pendingList.Content.RectTransform.Children.Any();
         }
@@ -652,7 +652,7 @@ namespace Barotrauma
 
             int total = nonDuplicateHires.Aggregate(0, (total, info) => total + info.Salary);
 
-            if (total > campaign.Money) { return false; }
+            if (!campaign.Wallet.CanAfford(total)) { return false; }
 
             bool atLeastOneHired = false;
             foreach (CharacterInfo ci in nonDuplicateHires)

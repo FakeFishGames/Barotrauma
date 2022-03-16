@@ -163,16 +163,16 @@ namespace Barotrauma.Items.Components
                 indicatorSize * item.Scale, Color.Black, depth: item.SpriteDepth - 0.000015f);
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData)
         {
             msg.WriteRangedInteger((int)(rechargeSpeed / MaxRechargeSpeed * 10), 0, 10);
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             if (correctionTimer > 0.0f)
             {
-                StartDelayedCorrection(type, msg.ExtractBits(4 + 8), sendingTime);
+                StartDelayedCorrection(msg.ExtractBits(4 + 8), sendingTime);
                 return;
             }
 

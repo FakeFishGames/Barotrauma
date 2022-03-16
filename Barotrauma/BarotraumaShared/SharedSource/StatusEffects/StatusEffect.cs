@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -1227,7 +1228,15 @@ namespace Barotrauma
             {
                 for (int i = 0; i < targets.Count; i++)
                 {
-                    if (targets[i] is Character character) { Entity.Spawner?.AddEntityToRemoveQueue(character); }
+                    var target = targets[i];
+                    if (target is Character character) 
+                    { 
+                        Entity.Spawner?.AddEntityToRemoveQueue(character); 
+                    }
+                    else if (target is Limb limb)
+                    {
+                        Entity.Spawner?.AddEntityToRemoveQueue(limb.character);
+                    }
                 }
             }
             if (breakLimb || hideLimb)
@@ -1848,11 +1857,11 @@ namespace Barotrauma
                             float prevVitality = targetCharacter.Vitality;
                             if (targetLimb != null)
                             {
-                                targetCharacter.CharacterHealth.ReduceAfflictionOnLimb(targetLimb, affliction, reduceAmount * deltaTime, treatmentAction: actionType);
+                                targetCharacter.CharacterHealth.ReduceAfflictionOnLimb(targetLimb, affliction, reduceAmount, treatmentAction: actionType);
                             }
                             else
                             {
-                                targetCharacter.CharacterHealth.ReduceAfflictionOnAllLimbs(affliction, reduceAmount * deltaTime, treatmentAction: actionType);
+                                targetCharacter.CharacterHealth.ReduceAfflictionOnAllLimbs(affliction, reduceAmount, treatmentAction: actionType);
                             }
                             if (element.User != null && element.User != targetCharacter)
                             {

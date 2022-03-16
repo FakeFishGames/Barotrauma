@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.MapCreatures.Behavior;
@@ -1262,25 +1263,19 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
-            if (type == ServerNetObject.ENTITY_POSITION)
-            {
-                ClientReadPosition(type, msg, sendingTime);
-                return;
-            }
-
-            NetEntityEvent.Type eventType =
-                (NetEntityEvent.Type)msg.ReadRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
+            EventType eventType =
+                (EventType)msg.ReadRangedInteger((int)EventType.MinValue, (int)EventType.MaxValue);
 
             switch (eventType)
             {
-                case NetEntityEvent.Type.ComponentState:
+                case EventType.ComponentState:
                     {
                         int componentIndex = msg.ReadRangedInteger(0, components.Count - 1);
                         if (components[componentIndex] is IServerSerializable serverSerializable)
                         {
-                            serverSerializable.ClientRead(type, msg, sendingTime);
+                            serverSerializable.ClientEventRead(msg, sendingTime);
                         }
                         else
                         {
@@ -1288,12 +1283,12 @@ namespace Barotrauma
                         }
                     }
                     break;
-                case NetEntityEvent.Type.InventoryState:
+                case EventType.InventoryState:
                     {
                         int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
                         if (components[containerIndex] is ItemContainer container)
                         {
-                            container.Inventory.ClientRead(type, msg, sendingTime);
+                            container.Inventory.ClientEventRead(msg, sendingTime);
                         }
                         else
                         {
@@ -1301,7 +1296,7 @@ namespace Barotrauma
                         }
                     }
                     break;
-                case NetEntityEvent.Type.Status:
+                case EventType.Status:
                     float prevCondition = condition;
                     condition = msg.ReadSingle();
                     if (prevCondition > 0.0f && condition <= 0.0f)
@@ -1314,10 +1309,10 @@ namespace Barotrauma
                     }
                     SetActiveSprite();
                     break;
-                case NetEntityEvent.Type.AssignCampaignInteraction:
+                case EventType.AssignCampaignInteraction:
                     CampaignInteractionType = (CampaignMode.InteractionType)msg.ReadByte();
                     break;
-                case NetEntityEvent.Type.ApplyStatusEffect:
+                case EventType.ApplyStatusEffect:
                     {
                         ActionType actionType = (ActionType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1);
                         byte componentIndex         = msg.ReadByte();
@@ -1347,10 +1342,10 @@ namespace Barotrauma
                         }
                     }
                     break;
-                case NetEntityEvent.Type.ChangeProperty:
+                case EventType.ChangeProperty:
                     ReadPropertyChange(msg, false);
                     break;
-                case NetEntityEvent.Type.Upgrade:
+                case EventType.Upgrade:
                     Identifier identifier = msg.ReadIdentifier();
                     byte level = msg.ReadByte();
                     if (UpgradePrefab.Find(identifier) is { } upgradePrefab)
@@ -1371,51 +1366,65 @@ namespace Barotrauma
                         AddUpgrade(upgrade, false);
                     }
                     break;
-                case NetEntityEvent.Type.Invalid:
-                    break;
+                default:
+                    throw new Exception($"Malformed incoming item event: unsupported event type {eventType}");
             }
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            if (extraData == null || extraData.Length == 0 || !(extraData[0] is NetEntityEvent.Type))
+            Exception error(string reason)
             {
-                return;
+                string errorMsg = $"Failed to write a network event for the item \"{Name}\" - {reason}";
+                GameAnalyticsManager.AddErrorEventOnce($"Item.ClientWrite:{Name}", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                return new Exception(errorMsg);
             }
+            
+            if (extraData is null) { throw error("event data was null"); }
+            if (!(extraData is IEventData eventData)) { throw error($"event data was of the wrong type (\"{extraData.GetType().Name}\")"); }
 
-            NetEntityEvent.Type eventType = (NetEntityEvent.Type)extraData[0];
-            msg.WriteRangedInteger((int)eventType, 0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
-            switch (eventType)
+            EventType eventType = eventData.EventType;
+            msg.WriteRangedInteger((int)eventType, (int)EventType.MinValue, (int)EventType.MaxValue);
+            switch (eventData)
             {
-                case NetEntityEvent.Type.ComponentState:
-                    int componentIndex = (int)extraData[1];
+                case ComponentStateEventData componentStateEventData:
+                {
+                    var component = componentStateEventData.Component;
+                    if (component is null) { throw error("component was null"); }
+                    if (!(component is IClientSerializable clientSerializable)) { throw error($"component was not {nameof(IClientSerializable)}"); }
+                    int componentIndex = components.IndexOf(component);
+                    if (componentIndex < 0) { throw error("component did not belong to item"); }
                     msg.WriteRangedInteger(componentIndex, 0, components.Count - 1);
-                    (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
-                    break;
-                case NetEntityEvent.Type.InventoryState:
-                    int containerIndex = (int)extraData[1];
+                    clientSerializable.ClientEventWrite(msg, extraData);
+                }
+                break;
+                case InventoryStateEventData inventoryStateEventData:
+                {
+                    var container = inventoryStateEventData.Component;
+                    if (container is null) { throw error("container was null"); }
+                    int containerIndex = components.IndexOf(container);
+                    if (containerIndex < 0) { throw error("container did not belong to item"); }
                     msg.WriteRangedInteger(containerIndex, 0, components.Count - 1);
-                    (components[containerIndex] as ItemContainer).Inventory.ClientWrite(msg, extraData);
-                    break;
-                case NetEntityEvent.Type.Treatment:
-                    UInt16 characterID = (UInt16)extraData[1];
-                    Limb targetLimb = (Limb)extraData[2];
+                    container.Inventory.ClientEventWrite(msg, extraData);
+                }
+                break;
+                case TreatmentEventData treatmentEventData:
+                    Character targetCharacter = treatmentEventData.TargetCharacter;
 
-                    Character targetCharacter = FindEntityByID(characterID) as Character;
-
-                    msg.Write(characterID);
-                    msg.Write(targetCharacter == null ? (byte)255 : (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb));
+                    msg.Write(targetCharacter.ID);
+                    msg.Write(treatmentEventData.LimbIndex);
                     break;
-                case NetEntityEvent.Type.ChangeProperty:
-                    WritePropertyChange(msg, extraData, true);
+                case ChangePropertyEventData changePropertyEventData:
+                    WritePropertyChange(msg, changePropertyEventData, inGameEditableOnly: true);
                     editingHUDRefreshTimer = 1.0f;
                     break;
-                case NetEntityEvent.Type.Combine:
-                    UInt16 combineTargetID = (UInt16)extraData[1];
-                    msg.Write(combineTargetID);
+                case CombineEventData combineEventData:
+                    Item combineTarget = combineEventData.CombineTarget;
+                    msg.Write(combineTarget.ID);
                     break;
+                default:
+                    throw error($"Unsupported event type {eventData.GetType().Name}");
             }
-            msg.WritePadBits();
         }
 
         partial void UpdateNetPosition(float deltaTime)
@@ -1451,7 +1460,7 @@ namespace Barotrauma
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
         }
 
-        public void ClientReadPosition(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientReadPosition(IReadMessage msg, float sendingTime)
         {
             if (body == null)
             {
@@ -1465,7 +1474,7 @@ namespace Barotrauma
                 return;
             }
 
-            var posInfo = body.ClientRead(type, msg, sendingTime, parentDebugName: Name);
+            var posInfo = body.ClientRead(msg, sendingTime, parentDebugName: Name);
             msg.ReadPadBits();
             if (posInfo != null)
             {
@@ -1510,24 +1519,18 @@ namespace Barotrauma
         }
 
         public void CreateClientEvent<T>(T ic) where T : ItemComponent, IClientSerializable
+            => CreateClientEvent(ic, null);
+
+        public void CreateClientEvent<T>(T ic, ItemComponent.IEventData extraData) where T : ItemComponent, IClientSerializable
         {
-            if (GameMain.Client == null) return;
+            if (GameMain.Client == null) { return; }
 
-            int index = components.IndexOf(ic);
-            if (index == -1) return;
+            #warning TODO: this should throw an exception
+            if (!components.Contains(ic)) { return; }
 
-            GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
-        }
-
-        public void CreateClientEvent<T>(T ic, object[] extraData) where T : ItemComponent, IClientSerializable
-        {
-            if (GameMain.Client == null) return;
-
-            int index = components.IndexOf(ic);
-            if (index == -1) return;
-
-            object[] data = new object[] { NetEntityEvent.Type.ComponentState, index }.Concat(extraData).ToArray();
-            GameMain.Client.CreateEntityEvent(this, data);
+            var eventData = new ComponentStateEventData(ic, extraData);
+            if (!ic.ValidateEventData(eventData)) { throw new Exception($"Component event creation failed: {typeof(T).Name}.{nameof(ItemComponent.ValidateEventData)} returned false"); }
+            GameMain.Client.CreateEntityEvent(this, eventData);
         }
 
         public static Item ReadSpawnData(IReadMessage msg, bool spawn = true)
@@ -1576,6 +1579,36 @@ namespace Barotrauma
             bool allowStealing      = msg.ReadBoolean();
             int quality             = msg.ReadRangedInteger(0, Items.Components.Quality.MaxQuality);
             byte teamID             = msg.ReadByte();
+
+            bool hasIdCard          = msg.ReadBoolean();
+            string ownerName = "", ownerTags = "";
+            int ownerBeardIndex = -1, ownerHairIndex = -1, ownerMoustacheIndex = -1, ownerFaceAttachmentIndex = -1;
+            Color ownerHairColor = Microsoft.Xna.Framework.Color.White,
+                ownerFacialHairColor = Microsoft.Xna.Framework.Color.White,
+                ownerSkinColor = Microsoft.Xna.Framework.Color.White;
+            Identifier ownerJobId = Identifier.Empty;
+            Vector2 ownerSheetIndex = Vector2.Zero;
+            if (hasIdCard)
+            {
+                ownerName = msg.ReadString();
+                ownerTags = msg.ReadString();
+                
+                ownerBeardIndex = msg.ReadByte() - 1;
+                ownerHairIndex = msg.ReadByte() - 1;
+                ownerMoustacheIndex = msg.ReadByte() - 1;
+                ownerFaceAttachmentIndex = msg.ReadByte() - 1;
+                
+                ownerHairColor = msg.ReadColorR8G8B8();
+                ownerFacialHairColor = msg.ReadColorR8G8B8();
+                ownerSkinColor = msg.ReadColorR8G8B8();
+                
+                ownerJobId = msg.ReadIdentifier();
+                
+                int x = msg.ReadByte();
+                int y = msg.ReadByte();
+                ownerSheetIndex = (x, y);
+            }
+            
             bool tagsChanged        = msg.ReadBoolean();
             string tags = "";
             if (tagsChanged)
@@ -1587,6 +1620,7 @@ namespace Barotrauma
                     tags = string.Join(',',itemPrefab.Tags.Where(t => !removedTags.Contains(t)).Concat(addedTags));
                 }
             }
+            
             bool isNameTag = msg.ReadBoolean();
             string writtenName = "";
             if (isNameTag)
@@ -1672,6 +1706,17 @@ namespace Barotrauma
             foreach (IdCard idCard in item.GetComponents<IdCard>())
             {
                 idCard.TeamID = (CharacterTeamType)teamID;
+                idCard.OwnerName = ownerName;
+                idCard.OwnerTags = ownerTags;
+                idCard.OwnerBeardIndex = ownerBeardIndex;
+                idCard.OwnerHairIndex = ownerHairIndex;
+                idCard.OwnerMoustacheIndex = ownerMoustacheIndex;
+                idCard.OwnerFaceAttachmentIndex = ownerFaceAttachmentIndex;
+                idCard.OwnerHairColor = ownerHairColor;
+                idCard.OwnerFacialHairColor = ownerFacialHairColor;
+                idCard.OwnerSkinColor = ownerSkinColor;
+                idCard.OwnerJobId = ownerJobId;
+                idCard.OwnerSheetIndex = ownerSheetIndex;
             }
             if (descriptionChanged) { item.Description = itemDesc; }
             if (tagsChanged) { item.Tags = tags; }

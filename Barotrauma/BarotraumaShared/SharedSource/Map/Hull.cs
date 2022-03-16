@@ -320,7 +320,8 @@ namespace Barotrauma
             roomName != null && (
             roomName.Contains("ballast", StringComparison.OrdinalIgnoreCase) || 
             roomName.Contains("bilge", StringComparison.OrdinalIgnoreCase) || 
-            roomName.Contains("airlock", StringComparison.OrdinalIgnoreCase));
+            roomName.Contains("airlock", StringComparison.OrdinalIgnoreCase) ||
+            roomName.Contains("dockingport", StringComparison.OrdinalIgnoreCase));
 
         private bool isWetRoom;
         [Editable, Serialize(false, IsPropertySaveable.Yes, description: "It's normal for this hull to be filled with water. If the room name contains 'ballast', 'bilge', or 'airlock', you can't disable this setting.")]
@@ -729,9 +730,9 @@ namespace Barotrauma
             var decal = DecalManager.CreateDecal(decalName, scale, worldPosition, this, spriteIndex);
             if (decal != null)
             {
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                if (GameMain.NetworkMember is { IsServer: true })
                 {
-                    GameMain.NetworkMember.CreateEntityEvent(this, new object[] { false });
+                    GameMain.NetworkMember.CreateEntityEvent(this, new DecalEventData());
                 }
                 decals.Add(decal);
             }
@@ -739,6 +740,96 @@ namespace Barotrauma
             return decal;
         }
 
+        #region Shared network write
+        private void SharedStatusWrite(IWriteMessage msg)
+        {
+            msg.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
+
+            msg.WriteRangedInteger(Math.Min(FireSources.Count, 16), 0, 16);
+            for (int i = 0; i < Math.Min(FireSources.Count, 16); i++)
+            {
+                var fireSource = FireSources[i];
+                Vector2 normalizedPos = new Vector2(
+                    (fireSource.Position.X - rect.X) / rect.Width,
+                    (fireSource.Position.Y - (rect.Y - rect.Height)) / rect.Height);
+
+                msg.WriteRangedSingle(MathHelper.Clamp(normalizedPos.X, 0.0f, 1.0f), 0.0f, 1.0f, 8);
+                msg.WriteRangedSingle(MathHelper.Clamp(normalizedPos.Y, 0.0f, 1.0f), 0.0f, 1.0f, 8);
+                msg.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 8);
+            }
+        }
+
+        private void SharedBackgroundSectionsWrite(IWriteMessage msg, in BackgroundSectionsEventData backgroundSectionsEventData)
+        {
+            int sectorToUpdate = backgroundSectionsEventData.SectorStartIndex;
+            int start = sectorToUpdate * BackgroundSectionsPerNetworkEvent;
+            int end = Math.Min((sectorToUpdate + 1) * BackgroundSectionsPerNetworkEvent, BackgroundSections.Count - 1);
+            msg.WriteRangedInteger(sectorToUpdate, 0, BackgroundSections.Count - 1);
+            for (int i = start; i < end; i++)
+            {
+                msg.WriteRangedSingle(BackgroundSections[i].ColorStrength, 0.0f, 1.0f, 8);
+                msg.Write(BackgroundSections[i].Color.PackedValue);
+            }
+        }
+        #endregion
+
+        #region Shared network read
+        public readonly struct NetworkFireSource
+        {
+            public readonly Vector2 Position;
+            public readonly float Size;
+
+            public NetworkFireSource(Hull hull, Vector2 normalizedPosition, float normalizedSize)
+            {
+                Position = hull.Rect.Location.ToVector2()
+                           + new Vector2(0, -hull.Rect.Height)
+                           + normalizedPosition * hull.Rect.Size.ToVector2();
+                Size = normalizedSize * hull.Rect.Width;
+            }
+        }
+
+        private void SharedStatusRead(IReadMessage msg, out float newWaterVolume, out NetworkFireSource[] newFireSources)
+        {
+            newWaterVolume = msg.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
+
+            int fireSourceCount = msg.ReadRangedInteger(0, 16);
+            newFireSources = new NetworkFireSource[fireSourceCount];
+            for (int i = 0; i < fireSourceCount; i++)
+            {
+                float x = MathHelper.Clamp(msg.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f);
+                float y = MathHelper.Clamp(msg.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f);
+                float size = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                newFireSources[i] = new NetworkFireSource(this, new Vector2(x, y), size);
+            }
+        }
+
+        private readonly struct BackgroundSectionNetworkUpdate
+        {
+            public readonly int SectionIndex;
+            public readonly Color Color;
+            public readonly float ColorStrength;
+            public BackgroundSectionNetworkUpdate(int sectionIndex, Color color, float colorStrength)
+            {
+                SectionIndex = sectionIndex;
+                Color = color;
+                ColorStrength = colorStrength;
+            }
+        }
+        
+        private void SharedBackgroundSectionRead(IReadMessage msg, Action<BackgroundSectionNetworkUpdate> action, out int sectorToUpdate)
+        {
+            sectorToUpdate = msg.ReadRangedInteger(0, BackgroundSections.Count - 1);
+            int start = sectorToUpdate * BackgroundSectionsPerNetworkEvent;
+            int end = Math.Min((sectorToUpdate + 1) * BackgroundSectionsPerNetworkEvent, BackgroundSections.Count - 1);
+            for (int i = start; i < end; i++)
+            {
+                float colorStrength = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                Color color = new Color(msg.ReadUInt32());
+
+                action(new BackgroundSectionNetworkUpdate(i, color, colorStrength));
+            }
+        }
+        #endregion
 
         public override void Update(float deltaTime, Camera cam)
         {

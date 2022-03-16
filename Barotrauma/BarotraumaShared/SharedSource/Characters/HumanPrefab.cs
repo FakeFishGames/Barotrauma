@@ -190,7 +190,7 @@ namespace Barotrauma
                     GameMain.Server.EntityEventManager.Events.RemoveAll(ev => ev.Entity == item);
                 }
 
-                Entity.Spawner.CreateNetworkEvent(item, false);
+                Entity.Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
             }
 #endif
             if (itemElement.GetAttributeBool("equip", false))

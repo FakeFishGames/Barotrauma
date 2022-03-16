@@ -10,6 +10,16 @@ namespace Barotrauma
 {
     class AIObjectiveManager
     {
+        public enum ObjectiveType
+        {
+            None = 0,
+            Order = 1,
+            Objective = 2,
+            
+            MinValue = 0,
+            MaxValue = 2
+        }
+
         public const float HighestOrderPriority = 70;
         public const float LowestOrderPriority = 60;
         public const float RunPriority = 50;
@@ -184,28 +194,20 @@ namespace Barotrauma
         {
             var previousObjective = CurrentObjective;
             var firstObjective = Objectives.FirstOrDefault();
+            
             bool currentObjectiveIsOrder = CurrentOrder != null && firstObjective != null && CurrentOrder.Priority > firstObjective.Priority;
-            if (currentObjectiveIsOrder)
+            
+            CurrentObjective = currentObjectiveIsOrder ? CurrentOrder : firstObjective;
+
+            if (previousObjective == CurrentObjective) { return CurrentObjective; }
+
+            previousObjective?.OnDeselected();
+            CurrentObjective?.OnSelected();
+            GetObjective<AIObjectiveIdle>().CalculatePriority(Math.Max(CurrentObjective.Priority - 10, 0));
+            if (GameMain.NetworkMember is { IsServer: true })
             {
-                CurrentObjective = CurrentOrder;
-            }
-            else
-            {
-                CurrentObjective = firstObjective;
-            }
-            if (previousObjective != CurrentObjective)
-            {
-                previousObjective?.OnDeselected();
-                CurrentObjective?.OnSelected();
-                GetObjective<AIObjectiveIdle>().CalculatePriority(Math.Max(CurrentObjective.Priority - 10, 0));
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
-                {
-                    GameMain.NetworkMember.CreateEntityEvent(character, new object[]
-                    {
-                        NetEntityEvent.Type.ObjectiveManagerState,
-                        currentObjectiveIsOrder ? "order" : "objective"
-                    });
-                }
+                GameMain.NetworkMember.CreateEntityEvent(character,
+                    new Character.ObjectiveManagerStateEventData(currentObjectiveIsOrder ? ObjectiveType.Order : ObjectiveType.Objective));
             }
             return CurrentObjective;
         }

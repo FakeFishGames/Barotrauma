@@ -7,6 +7,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -58,7 +59,9 @@ namespace Barotrauma.MapCreatures.Behavior
 
         public float AccumulatedDamage;
         public float DamageVisualizationTimer;
+#if CLIENT
         public Vector2 ShakeAmount;
+#endif
 
         // Adjacent tiles, used to free up sides when this branch gets removed
         public readonly Dictionary<TileSide, BallastFloraBranch> Connections = new Dictionary<TileSide, BallastFloraBranch>();
@@ -286,7 +289,7 @@ namespace Barotrauma.MapCreatures.Behavior
         public float PowerConsumptionTimer;
 
         private float defenseCooldown, toxinsCooldown, fireCheckCooldown;
-        private float selfDamageTimer, toxinsTimer;
+        private float selfDamageTimer, toxinsTimer, toxinsSpawnTimer;
 
         private readonly List<BallastFloraBranch> branchesVulnerableToFire = new List<BallastFloraBranch>();
 
@@ -552,11 +555,12 @@ namespace Barotrauma.MapCreatures.Behavior
                 Anger -= deltaTime;
             }
 
-            // This entire scope is probably very heavy for GC, need to experiment
             if (toxinsTimer > 0.1f)
             {
-                if (!AttackItemPrefab.IsEmpty)
+                toxinsSpawnTimer -= deltaTime;
+                if (!AttackItemPrefab.IsEmpty && toxinsSpawnTimer <= 0.0f)
                 {
+                    toxinsSpawnTimer = 1.0f;
                     Dictionary<Hull, List<BallastFloraBranch>> branches = new Dictionary<Hull, List<BallastFloraBranch>>();
                     foreach (BallastFloraBranch branch in Branches)
                     {
@@ -581,7 +585,7 @@ namespace Barotrauma.MapCreatures.Behavior
                             randomBranch.SpawningItem = true;
                     
                             ItemPrefab prefab = ItemPrefab.Find(null, AttackItemPrefab);
-                            #warning TODO: Parent needs a nullability sanity check
+#warning TODO: Parent needs a nullability sanity check
                             Entity.Spawner?.AddItemToSpawnQueue(prefab, Parent!.Position + Offset + randomBranch.Position, Parent.Submarine, onSpawned: item =>
                             {
                                 randomBranch.AttackItem = item;
@@ -826,13 +830,13 @@ namespace Barotrauma.MapCreatures.Behavior
             {
                 if (root != null)
                 {
-                    Vector2 rootGrowthPos = Rand.Vector(rootGrowthCount * Rand.Range(3.0f, 5.0f));
+                    Vector2 rootGrowthPos = Rand.Vector(Math.Max(rootGrowthCount, 1) * Rand.Range(3.0f, 5.0f));
                     TryGrowBranch(root, TileSide.None, out List<BallastFloraBranch> newRootGrowth, isRootGrowth: true, forcePosition: rootGrowthPos);
                 }
             }
 
 #if SERVER
-            SendNetworkMessage(this, NetworkHeader.BranchCreate, newBranch, parent.ID);
+            SendNetworkMessage(new BranchCreateEventData(newBranch, parent));
 #endif
             return true;
         }
@@ -874,7 +878,7 @@ namespace Barotrauma.MapCreatures.Behavior
 #if SERVER
             if (!load)
             {
-                SendNetworkMessage(this, NetworkHeader.Infect, target.ID, true, branch);
+                SendNetworkMessage(new InfectEventData(target, InfectEventData.InfectState.Yes, branch));
             }
 #endif
         }
@@ -1002,8 +1006,10 @@ namespace Barotrauma.MapCreatures.Behavior
                         StateMachine.EnterState(new DefendWithPumpState(branch, ClaimedTargets, attacker));
                         defenseCooldown = 180f;
                     }
-
-                    defenseCooldown = 10f;
+                    else
+                    {
+                        defenseCooldown = 10f;
+                    }
                 }
             }
 
@@ -1104,7 +1110,7 @@ namespace Barotrauma.MapCreatures.Behavior
 #if SERVER
             if (!wasRemoved)
             {
-                SendNetworkMessage(this, NetworkHeader.BranchRemove, branch);
+                SendNetworkMessage(new BranchRemoveEventData(branch));
             }
 #endif
         }
@@ -1135,7 +1141,7 @@ namespace Barotrauma.MapCreatures.Behavior
                 }
             });
 #if SERVER
-            SendNetworkMessage(this, NetworkHeader.Infect, item.ID, false);
+            SendNetworkMessage(new InfectEventData(item, InfectEventData.InfectState.No, null));
 #endif
         }
 
@@ -1153,7 +1159,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
             StateMachine?.State?.Exit();
 #if SERVER
-            SendNetworkMessage(this, NetworkHeader.Kill);
+            SendNetworkMessage(new KillEventData());
 #endif
         }
 
@@ -1175,7 +1181,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
             _entityList.Remove(this);
 #if SERVER
-            SendNetworkMessage(this, NetworkHeader.Remove);
+            SendNetworkMessage(new KillEventData());
 #endif
         }
 

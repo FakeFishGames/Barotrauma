@@ -1017,24 +1017,29 @@ namespace Barotrauma
             {
                 if (l.IsSevered) { continue; }
 
+                float rotation = l.body.Rotation;
+                if (l.DoesFlip)
+                {
+                    if (RagdollParams.IsSpritesheetOrientationHorizontal)
+                    {
+                        //horizontally oriented sprites can be mirrored by rotating 180 deg and inverting the angle
+                        rotation = -(l.body.Rotation + MathHelper.Pi);
+                    }
+                    else
+                    {
+                        //vertically oriented limbs can be mirrored by inverting the angle (neutral angle is straight upwards)
+                        rotation = -l.body.Rotation;
+                    }
+                }
+
                 TrySetLimbPosition(l,
                     centerOfMass,
                     new Vector2(centerOfMass.X - (l.SimPosition.X - centerOfMass.X), l.SimPosition.Y),
+                    rotation,
                     lerp);
 
                 l.body.PositionSmoothingFactor = 0.8f;
-
-                if (!l.DoesFlip) { continue; }
-                if (RagdollParams.IsSpritesheetOrientationHorizontal)
-				{
-                    //horizontally oriented sprites can be mirrored by rotating 180 deg and inverting the angle
-                    l.body.SetTransform(l.SimPosition, -(l.body.Rotation + MathHelper.Pi));
-				}    
-                else
-				{
-                    //vertically oriented limbs can be mirrored by inverting the angle (neutral angle is straight upwards)
-                    l.body.SetTransform(l.SimPosition, -l.body.Rotation);
-				}        
+     
             }
             if (character.SelectedCharacter != null && CanDrag(character.SelectedCharacter))
             {

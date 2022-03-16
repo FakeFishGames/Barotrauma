@@ -67,7 +67,6 @@ namespace Barotrauma.Items.Components
         [Serialize("#ffffff", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public Color OwnerSkinColor { get; set; }
 
-        #warning TODO: figure out how to set Vector2.Zero as the default here
         [Serialize("0,0", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public Vector2 OwnerSheetIndex { get; set; }
 

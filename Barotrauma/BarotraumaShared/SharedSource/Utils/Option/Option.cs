@@ -1,3 +1,5 @@
+using System;
+
 namespace Barotrauma
 {
     /// <summary>
@@ -10,5 +12,15 @@ namespace Barotrauma
     {
         public static Option<T> Some(T value) => Some<T>.Create(value);
         public static Option<T> None() => None<T>.Create();
+        public bool IsNone() => this is None<T>;
+        public bool IsSome() => this is Some<T>;
+
+        public Option<TType> Select<TType>(Func<T, TType> selector) =>
+            this switch
+            {
+                Some<T> { Value: var value } => Option<TType>.Some(selector.Invoke(value)),
+                None<T> _ => Option<TType>.None(),
+                _ => throw new ArgumentOutOfRangeException()
+            };
     }
 }

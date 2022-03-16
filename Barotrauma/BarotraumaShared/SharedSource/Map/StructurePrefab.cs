@@ -34,7 +34,7 @@ namespace Barotrauma
 
         public override Sprite Sprite { get; }
 
-        public override string OriginalName => Name.Value;
+        public override string OriginalName { get; }
 
         public override ImmutableHashSet<Identifier> Tags { get; }
 
@@ -132,7 +132,7 @@ namespace Barotrauma
 
         public StructurePrefab(ContentXElement element, StructureFile file) : base(element, file)
         {
-            Name = element.GetAttributeString("name", "");
+            OriginalName = element.GetAttributeString("name", "");
             ConfigElement = element;
 
             var parentType = element.Parent?.GetAttributeIdentifier("prefabtype", Identifier.Empty) ?? Identifier.Empty;
@@ -144,20 +144,16 @@ namespace Barotrauma
 
             Identifier descriptionIdentifier = element.GetAttributeIdentifier("descriptionidentifier", "");
 
-            if (Name.IsNullOrEmpty())
-            {
-                Name = TextManager.Get($"EntityName.{Identifier}");
-                if (!nameIdentifier.IsEmpty)
-                {
-                    Name = TextManager.Get($"EntityName.{nameIdentifier}").Fallback(Name);
-                }
+            Name = TextManager.Get(nameIdentifier.IsEmpty
+                    ? $"EntityName.{Identifier}"
+                    : $"EntityName.{nameIdentifier}",
+                $"EntityName.{fallbackNameIdentifier}");
 
-                if (!fallbackNameIdentifier.IsEmpty)
-                {
-                    Name = Name.Fallback(TextManager.Get($"EntityName.{fallbackNameIdentifier}"));
-                }
+            if (parentType == "wrecked")
+            {
+                Name = TextManager.GetWithVariable("wreckeditemformat", "[name]", Name);
             }
-            
+
             var tags = new HashSet<Identifier>();
             string joinedTags = element.GetAttributeString("tags", "");
             if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
@@ -251,14 +247,6 @@ namespace Barotrauma
             DecorativeSpriteGroups = decorativeSpriteGroups.Select(kvp => (kvp.Key, kvp.Value.ToImmutableArray())).ToImmutableDictionary();
 #endif
 
-            if (parentType == "wrecked")
-            {
-                if (!Name.IsNullOrEmpty())
-                {
-                    Name = TextManager.GetWithVariable("wreckeditemformat", "[name]", Name);
-                }
-            }
-
             string categoryStr = element.GetAttributeString("category", "Structure");
             if (!Enum.TryParse(categoryStr, true, out MapEntityCategory category))
             {
@@ -323,6 +311,15 @@ namespace Barotrauma
                 DebugConsole.ThrowError(
                     "Structure prefab \"" + Name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
             }
+#if DEBUG
+            if (!Category.HasFlag(MapEntityCategory.Legacy) && !HideInMenus)
+            {
+                if (!string.IsNullOrEmpty(OriginalName))
+                {
+                    DebugConsole.AddWarning($"Structure \"{(Identifier == Identifier.Empty ? Name : Identifier.Value)}\" has a hard-coded name, and won't be localized to other languages.");
+                }
+            }
+#endif
 
             Tags = tags.ToImmutableHashSet();
             AllowedLinks = Enumerable.Empty<Identifier>().ToImmutableHashSet();

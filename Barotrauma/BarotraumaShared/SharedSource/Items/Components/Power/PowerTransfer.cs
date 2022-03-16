@@ -176,23 +176,6 @@ namespace Barotrauma.Items.Components
         {
             RefreshConnections();
 
-            float powerReadingOut = 0;
-            float loadReadingOut = ExtraLoad;
-            if (powerLoad < 0)
-            {
-                powerReadingOut = -powerLoad;
-                loadReadingOut = 0;
-            }
-
-            if (powerOut != null && powerOut.Grid != null)
-            {
-                powerReadingOut = powerOut.Grid.Power;
-                loadReadingOut = powerOut.Grid.Load;
-            }
-
-            item.SendSignal(((int)Math.Round(powerReadingOut)).ToString(), "power_value_out");
-            item.SendSignal(((int)Math.Round(loadReadingOut)).ToString(), "load_value_out");
-
             if (Timing.TotalTime > extraLoadSetTime + 1.0)
             {
                 //Decay the extra load to 0 from either positive or negative
@@ -216,21 +199,35 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            //if the item can't be fixed, don't allow it to break
-            if (!item.Repairables.Any() || !CanBeOverloaded) { return; }
-
-            if (prevSentPowerValue != (int)-CurrPowerConsumption || powerSignal == null)
+            float powerReadingOut = 0;
+            float loadReadingOut = ExtraLoad;
+            if (powerLoad < 0)
             {
-                prevSentPowerValue = (int)Math.Round(-CurrPowerConsumption);
+                powerReadingOut = -powerLoad;
+                loadReadingOut = 0;
+            }
+
+            if (powerOut != null && powerOut.Grid != null)
+            {
+                powerReadingOut = powerOut.Grid.Power;
+                loadReadingOut = powerOut.Grid.Load;
+            }
+
+            if (prevSentPowerValue != (int)powerReadingOut || powerSignal == null)
+            {
+                prevSentPowerValue = (int)Math.Round(powerReadingOut);
                 powerSignal = prevSentPowerValue.ToString();
             }
-            if (prevSentLoadValue != (int)powerLoad || loadSignal == null)
+            if (prevSentLoadValue != (int)loadReadingOut || loadSignal == null)
             {
-                prevSentLoadValue = (int)Math.Round(powerLoad);
+                prevSentLoadValue = (int)Math.Round(loadReadingOut);
                 loadSignal = prevSentLoadValue.ToString();
             }
             item.SendSignal(powerSignal, "power_value_out");
             item.SendSignal(loadSignal, "load_value_out");
+
+            //if the item can't be fixed, don't allow it to break
+            if (!item.Repairables.Any() || !CanBeOverloaded) { return; }
 
             float maxOverVoltage = Math.Max(OverloadVoltage, 1.0f);
 

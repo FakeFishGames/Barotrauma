@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -30,10 +31,14 @@ namespace Barotrauma
         private readonly List<Mission> missions = new List<Mission>();
         public IEnumerable<Mission> Missions { get { return missions; } }
 
+        private readonly HashSet<Character> casualties = new HashSet<Character>();
+        public IEnumerable<Character> Casualties { get { return casualties; } }
+
+
         public CharacterTeamType? WinningTeam;
 
         public bool IsRunning { get; private set; }
-        
+
         public bool RoundEnding { get; private set; }
 
         public Level? Level { get; private set; }
@@ -201,7 +206,8 @@ namespace Barotrauma
                 var campaign = MultiPlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8), selectedSub, settings);
                 if (selectedSub != null)
                 {
-                    campaign.Money = Math.Max(MultiPlayerCampaign.MinimumInitialMoney, campaign.Money - selectedSub.Price);
+                    campaign.Bank.TryDeduct(selectedSub.Price);
+                    campaign.Bank.Balance = Math.Max(campaign.Bank.Balance, MultiPlayerCampaign.MinimumInitialMoney);
                 }
                 return campaign;
             }
@@ -211,7 +217,8 @@ namespace Barotrauma
                 var campaign = SinglePlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8), selectedSub, settings);
                 if (selectedSub != null)
                 {
-                    campaign.Money = Math.Max(SinglePlayerCampaign.MinimumInitialMoney, campaign.Money - selectedSub.Price);
+                    campaign.Bank.TryDeduct(selectedSub.Price);
+                    campaign.Bank.Balance = Math.Max(campaign.Bank.Balance, MultiPlayerCampaign.MinimumInitialMoney);
                 }
                 return campaign;
             }
@@ -264,7 +271,7 @@ namespace Barotrauma
         /// <summary>
         /// Switch to another submarine. The sub is loaded when the next round starts.
         /// </summary>
-        public SubmarineInfo SwitchSubmarine(SubmarineInfo newSubmarine, int cost)
+        public SubmarineInfo SwitchSubmarine(SubmarineInfo newSubmarine, int cost, Client? client = null)
         {
             if (!OwnedSubmarines.Any(s => s.Name == newSubmarine.Name))
             {
@@ -283,19 +290,21 @@ namespace Barotrauma
                 }
             }
 
-            Campaign!.Money -= cost;
+            if ((GameMain.NetworkMember is null || GameMain.NetworkMember is { IsServer: true }) && cost > 0)
+            {
+                Campaign!.GetWallet(client).TryDeduct(cost);
+            }
             GameAnalyticsManager.AddMoneySpentEvent(cost, GameAnalyticsManager.MoneySink.SubmarineSwitch, newSubmarine.Name);
 
             return newSubmarine;
         }
 
-        public void PurchaseSubmarine(SubmarineInfo newSubmarine)
+        public void PurchaseSubmarine(SubmarineInfo newSubmarine, Client? client = null)
         {
             if (Campaign is null) { return; }
-            if (Campaign.Money < newSubmarine.Price) { return; }
+            if ((GameMain.NetworkMember is null || GameMain.NetworkMember is { IsServer: true }) && !Campaign.GetWallet(client).TryDeduct(newSubmarine.Price)) { return; }
             if (!OwnedSubmarines.Any(s => s.Name == newSubmarine.Name))
             {
-                Campaign.Money -= newSubmarine.Price;
                 GameAnalyticsManager.AddMoneySpentEvent(newSubmarine.Price, GameAnalyticsManager.MoneySink.SubmarinePurchase, newSubmarine.Name);
                 OwnedSubmarines.Add(newSubmarine);
             }
@@ -346,7 +355,7 @@ namespace Barotrauma
         public void StartRound(LevelData? levelData, bool mirrorLevel = false, SubmarineInfo? startOutpost = null, SubmarineInfo? endOutpost = null)
         {
             AfflictionPrefab.LoadAllEffects();
-            
+
             MirrorLevel = mirrorLevel;
             if (SubmarineInfo == null)
             {
@@ -411,9 +420,6 @@ namespace Barotrauma
                 }
             }
 
-            //Clear out the stored grids
-            Powered.Grids.Clear();
-
             Level? level = null;
             if (levelData != null)
             {
@@ -421,6 +427,11 @@ namespace Barotrauma
             }
 
             InitializeLevel(level);
+
+            //Clear out the cached grids and force update
+            Powered.Grids.Clear();
+
+            casualties.Clear();
 
             GameAnalyticsManager.AddProgressionEvent(
                 GameAnalyticsManager.ProgressionStatus.Start,
@@ -480,7 +491,7 @@ namespace Barotrauma
                 existingRoundSummary.ContinueButton.Visible = true;
             }
 
-            RoundSummary = new RoundSummary(Submarine.Info, GameMode, Missions, StartLocation, EndLocation);
+            RoundSummary = new RoundSummary(GameMode, Missions, StartLocation, EndLocation);
 
             if (!(GameMode is TutorialMode) && !(GameMode is TestGameMode))
             {
@@ -723,7 +734,7 @@ namespace Barotrauma
         }
 
         partial void UpdateProjSpecific(float deltaTime);
-        
+
         public static IEnumerable<Character> GetSessionCrewCharacters()
         {
 #if SERVER
@@ -745,7 +756,7 @@ namespace Barotrauma
             {
                 IEnumerable<Character> crewCharacters = GetSessionCrewCharacters();
 
-                int prevMoney = (GameMode as CampaignMode)?.Money ?? 0;
+                int prevMoney = (GameMode as CampaignMode)?.Bank.Balance ?? 0; // FIXME personal wallets - reward distribution
 
                 foreach (Mission mission in missions)
                 {
@@ -759,14 +770,13 @@ namespace Barotrauma
 
                 if (missions.Any())
                 {
-                    if (missions.Any())
+                    if (missions.Any(m => m.Completed))
                     {
                         foreach (Character character in crewCharacters)
                         {
                             character.CheckTalents(AbilityEffectType.OnAnyMissionCompleted);
                         }
                     }
-
                     if (missions.All(m => m.Completed))
                     {
                         foreach (Character character in crewCharacters)
@@ -818,7 +828,7 @@ namespace Barotrauma
                 LogEndRoundStats(eventId);
                 if (GameMode is CampaignMode campaignMode)
                 {
-                    GameAnalyticsManager.AddDesignEvent(eventId + "MoneyEarned", campaignMode.Money - prevMoney);
+                    GameAnalyticsManager.AddDesignEvent(eventId + "MoneyEarned", campaignMode.Bank.Balance - prevMoney); // FIXME personal wallets - reward distrubiton
                     campaignMode.TotalPlayTime += roundDuration;
                 }
 #if CLIENT
@@ -910,6 +920,10 @@ namespace Barotrauma
 
         public void KillCharacter(Character character)
         {
+            if (CrewManager != null && CrewManager.GetCharacters().Contains(character))
+            {
+                casualties.Add(character);
+            }
 #if CLIENT
             CrewManager?.KillCharacter(character);
 #endif
@@ -917,6 +931,7 @@ namespace Barotrauma
 
         public void ReviveCharacter(Character character)
         {
+            casualties.Remove(character);
 #if CLIENT
             CrewManager?.ReviveCharacter(character);
 #endif
@@ -939,7 +954,7 @@ namespace Barotrauma
             List<string> excessPackages = new List<string>();
             foreach (ContentPackage cp in ContentPackageManager.EnabledPackages.All)
             {
-                //if (!cp.HasMultiplayerIncompatibleContent) { continue; }
+                if (!cp.HasMultiplayerSyncedContent) { continue; }
                 if (!contentPackagePaths.Any(p => p == cp.Path))
                 {
                     excessPackages.Add(cp.Name);
@@ -949,7 +964,7 @@ namespace Barotrauma
             bool orderMismatch = false;
             if (missingPackages.Count == 0 && missingPackages.Count == 0)
             {
-                var enabledPackages = ContentPackageManager.EnabledPackages.All/*.Where(cp => cp.HasMultiplayerIncompatibleContent)*/.ToImmutableArray();
+                var enabledPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent).ToImmutableArray();
                 for (int i = 0; i < contentPackagePaths.Count && i < enabledPackages.Length; i++)
                 {
                     if (contentPackagePaths[i] != enabledPackages[i].Path)
@@ -1015,7 +1030,7 @@ namespace Barotrauma
             }
             if (Map != null) { rootElement.Add(new XAttribute("mapseed", Map.Seed)); }
             rootElement.Add(new XAttribute("selectedcontentpackages",
-                string.Join("|", ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerIncompatibleContent).Select(cp => cp.Path))));
+                string.Join("|", ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent).Select(cp => cp.Path))));
 
             ((CampaignMode)GameMode).Save(doc.Root);
 

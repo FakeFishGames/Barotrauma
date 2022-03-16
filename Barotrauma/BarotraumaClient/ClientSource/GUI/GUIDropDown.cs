@@ -161,7 +161,7 @@ namespace Barotrauma
             }
         }
                 
-        public GUIDropDown(RectTransform rectT, LocalizedString text = null, int elementCount = 4, string style = "", bool selectMultiple = false, bool dropAbove = false) : base(style, rectT)
+        public GUIDropDown(RectTransform rectT, LocalizedString text = null, int elementCount = 4, string style = "", bool selectMultiple = false, bool dropAbove = false, Alignment textAlignment = Alignment.CenterLeft) : base(style, rectT)
         {
             text ??= new RawLString("");
 
@@ -170,9 +170,10 @@ namespace Barotrauma
 
             this.selectMultiple = selectMultiple;
 
-            button = new GUIButton(new RectTransform(Vector2.One, rectT), text, Alignment.CenterLeft, style: "GUIDropDown")
+            button = new GUIButton(new RectTransform(Vector2.One, rectT), text, textAlignment, style: "GUIDropDown")
             {
-                OnClicked = OnClicked
+                OnClicked = OnClicked,
+                TextBlock = { OverflowClip = true }
             };
             GUIStyle.Apply(button, "", this);
             button.TextBlock.SetTextPos();

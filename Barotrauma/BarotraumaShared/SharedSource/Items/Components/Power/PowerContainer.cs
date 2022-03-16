@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Globalization;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -11,7 +10,7 @@ namespace Barotrauma.Items.Components
         //[power/min]        
         private float capacity;
 
-        private float charge;
+        private float charge, prevCharge;
 
         //how fast the battery can be recharged
         private float maxRechargeSpeed;
@@ -34,7 +33,7 @@ namespace Barotrauma.Items.Components
             get { return currPowerOutput; }
             private set
             {
-                System.Diagnostics.Debug.Assert(value >= 0.0f);
+                System.Diagnostics.Debug.Assert(value >= 0.0f, $"Tried to set PowerContainer's output to a negative value ({value})");
                 currPowerOutput = Math.Max(0, value);
             }
         }
@@ -140,6 +139,7 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
             InitProjSpecific();
+            prevCharge = Charge;
         }
 
         partial void InitProjSpecific();
@@ -171,7 +171,7 @@ namespace Barotrauma.Items.Components
                 loadReading = powerOut.Grid.Load;
             }
 
-            item.SendSignal(((int)Math.Round(-CurrPowerOutput)).ToString(), "power_value_out");
+            item.SendSignal(((int)Math.Round(CurrPowerOutput)).ToString(), "power_value_out");
             item.SendSignal(((int)Math.Round(loadReading)).ToString(), "load_value_out");
             item.SendSignal(((int)Math.Round(Charge)).ToString(), "charge");
             item.SendSignal(((int)Math.Round(Charge / capacity * 100)).ToString(), "charge_%");
@@ -194,6 +194,8 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
+                    if (item.Condition <= 0.0f) { return 0.0f; }
+
                     float missingCharge = capacity - charge;
                     float targetRechargeSpeed = rechargeSpeed;
 
@@ -231,7 +233,7 @@ namespace Barotrauma.Items.Components
             if (connection == powerOut)
             {
                 float maxOutput;
-                float chargeRatio = charge / capacity;
+                float chargeRatio = prevCharge / capacity;
                 if (chargeRatio < 0.1f)
                 {
                     maxOutput = Math.Max(chargeRatio * 10.0f, 0.0f) * MaxOutPut;
@@ -242,7 +244,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 //Limit max power out to not exceed the charge of the container
-                maxOutput = Math.Min(maxOutput, charge * 60 / UpdateInterval);
+                maxOutput = Math.Min(maxOutput, prevCharge * 60 / UpdateInterval);
                 return new PowerRange(0.0f, maxOutput);
             }
 
@@ -261,18 +263,11 @@ namespace Barotrauma.Items.Components
         /// <returns></returns>
         public override float GetConnectionPowerOut(Connection connection, float power, PowerRange minMaxPower, float load)
         {
-            if (connection == powerOut)
+            //Only power out connection can provide power and Max poweroutput can't be negative
+            if (connection == powerOut && minMaxPower.Max > 0)
             {
-                //Calculate the max power the container can output
-                float maxPowerOutput = MaxOutPut;
-                float chargeRatio = charge / capacity;
-                if (chargeRatio < 0.1f)
-                {
-                    maxPowerOutput *= Math.Max(chargeRatio * 10.0f, 0.0f);
-                }
-
                 //Set power output based on the relative max power output capabilities and load demand
-                CurrPowerOutput = MathHelper.Clamp((load - power) / minMaxPower.Max, 0, 1) * maxPowerOutput;
+                CurrPowerOutput = MathHelper.Clamp((load - power) / minMaxPower.Max, 0, 1) * MinMaxPowerOut(connection, load).Max;
                 return CurrPowerOutput;
             }
             return 0.0f;            
@@ -292,6 +287,7 @@ namespace Barotrauma.Items.Components
             {
                 //Decrease charge based on how much power is leaving the device
                 Charge = Math.Clamp(Charge - CurrPowerOutput / 60 * UpdateInterval, 0, Capacity);
+                prevCharge = Charge;
             }
         }
 

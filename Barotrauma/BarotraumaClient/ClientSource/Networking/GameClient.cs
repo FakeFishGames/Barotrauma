@@ -666,7 +666,7 @@ namespace Barotrauma.Networking
                     if (ChildServerRelay.Process?.HasExited ?? true)
                     {
                         Disconnect();
-                        var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerProcessClosed"));
+                        var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
                         msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
                     }
                 }
@@ -937,6 +937,9 @@ namespace Barotrauma.Networking
                 case ServerPacketHeader.MEDICAL:
                     campaign?.MedicalClinic?.ClientRead(inc);
                     break;
+                case ServerPacketHeader.MONEY:
+                    campaign?.ClientReadMoney(inc);
+                    break;
                 case ServerPacketHeader.READY_CHECK:
                     ReadyCheck.ClientRead(inc);
                     break;
@@ -1203,7 +1206,7 @@ namespace Barotrauma.Networking
 
                     if (disconnectReason == DisconnectReason.ServerCrashed && IsServerOwner)
                     {
-                        msg = TextManager.Get("ServerProcessCrashed");
+                        msg = TextManager.GetWithVariable("ServerProcessCrashed", "[reportfilepath]", ChildServerRelay.CrashReportFilePath);
                     }
                 }
 
@@ -2240,10 +2243,11 @@ namespace Barotrauma.Networking
             }
         }
 
+        readonly List<IServerSerializable> debugEntityList = new List<IServerSerializable>();
         private void ReadIngameUpdate(IReadMessage inc)
         {
-            List<IServerSerializable> entities = new List<IServerSerializable>();
-
+            debugEntityList.Clear();
+            
             float sendingTime = inc.ReadSingle() - 0.0f;//TODO: reimplement inc.SenderConnection.RemoteTimeOffset;
 
             ServerNetObject? prevObjHeader = null;
@@ -2284,15 +2288,15 @@ namespace Barotrauma.Networking
                             uint msgLength = inc.ReadVariableUInt32();
                             int msgEndPos = (int)(inc.BitPosition + msgLength * 8);
 
-                            var entity = Entity.FindEntityByID(id) as IServerSerializable;
+                            var entity = Entity.FindEntityByID(id) as IServerPositionSync;
                             if (msgEndPos > inc.LengthBits)
                             {
                                 DebugConsole.ThrowError($"Error while reading a position update for the entity \"({entity?.ToString() ?? "null"})\". Message length exceeds the size of the buffer.");
                                 return;
                             }
 
-                            entities.Add(entity);
-                            if (entity != null && (entity is Item || entity is Character || entity is Submarine))
+                            debugEntityList.Add(entity);
+                            if (entity != null)
                             {
                                 if (entity is Item != isItem)
                                 {
@@ -2307,7 +2311,7 @@ namespace Barotrauma.Networking
                                 }
                                 else
                                 {
-                                    entity.ClientRead(objHeader.Value, inc, sendingTime);
+                                    entity.ClientReadPosition(inc, sendingTime);
                                 }
                             }
 
@@ -2321,7 +2325,7 @@ namespace Barotrauma.Networking
                             break;
                         case ServerNetObject.ENTITY_EVENT:
                         case ServerNetObject.ENTITY_EVENT_INITIAL:
-                            if (!entityEventManager.Read(objHeader.Value, inc, sendingTime, entities))
+                            if (!entityEventManager.Read(objHeader.Value, inc, sendingTime, debugEntityList))
                             {
                                 return;
                             }
@@ -2340,7 +2344,6 @@ namespace Barotrauma.Networking
                     prevBytePos = inc.BytePosition;
                 }
             }
-
             catch (Exception ex)
             {
                 List<string> errorLines = new List<string>
@@ -2359,7 +2362,7 @@ namespace Barotrauma.Networking
                     objHeader == ServerNetObject.ENTITY_EVENT || objHeader == ServerNetObject.ENTITY_EVENT_INITIAL ||
                     objHeader == ServerNetObject.ENTITY_POSITION || prevObjHeader == ServerNetObject.ENTITY_POSITION)
                 {
-                    foreach (IServerSerializable ent in entities)
+                    foreach (IServerSerializable ent in debugEntityList)
                     {
                         if (ent == null)
                         {
@@ -2480,7 +2483,7 @@ namespace Barotrauma.Networking
                 outmsg.Write(GameMain.NetLobbyScreen.CampaignCharacterDiscarded);
             }
 
-            Character.Controlled?.ClientWrite(outmsg);
+            Character.Controlled?.ClientWriteInput(outmsg);
             GameMain.GameScreen.Cam?.ClientWrite(outmsg);
 
             entityEventManager.Write(outmsg, clientPeer?.ServerConnection);
@@ -2711,7 +2714,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void CreateEntityEvent(INetSerializable entity, object[] extraData)
+        public override void CreateEntityEvent(INetSerializable entity, NetEntityEvent.IData extraData = null)
         {
             if (!(entity is IClientSerializable clientSerializable))
             {
@@ -2770,7 +2773,7 @@ namespace Barotrauma.Networking
             if (ChildServerRelay.Process != null)
             {
                 int checks = 0;
-                while (ChildServerRelay.Process != null && !ChildServerRelay.Process.HasExited)
+                while (ChildServerRelay.Process is { HasExited: false })
                 {
                     if (checks > 10)
                     {

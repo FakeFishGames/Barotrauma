@@ -8,6 +8,16 @@ namespace Barotrauma.Items.Components
 {
     partial class CustomInterface : ItemComponent, IClientSerializable, IServerSerializable
     {
+        private readonly struct EventData : IEventData
+        {
+            public readonly CustomInterfaceElement BtnElement;
+            
+            public EventData(CustomInterfaceElement btnElement)
+            {
+                BtnElement = btnElement;
+            }
+        }
+        
         class CustomInterfaceElement : ISerializableEntity
         {
             public bool ContinuousSignal;

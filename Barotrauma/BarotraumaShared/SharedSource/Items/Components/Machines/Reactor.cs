@@ -1,11 +1,9 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
 using System.Globalization;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -287,7 +285,7 @@ namespace Barotrauma.Items.Components
             }
             else if (autoTemp)
             {
-                UpdateAutoTemp(10.0f, deltaTime * 2f);
+                UpdateAutoTemp(2.0f, deltaTime);
             }
 
 
@@ -300,7 +298,14 @@ namespace Barotrauma.Items.Components
                     if (!item.HasTag("reactorfuel")) { continue; }
                     if (fissionRate > 0.0f)
                     {
-                        item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
+                        bool isConnectedToFriendlyOutpost = Level.IsLoadedOutpost && 
+                            Item.Submarine?.TeamID == CharacterTeamType.Team1 && 
+                            Item.Submarine.GetConnectedSubs().Any(s => s.Info.IsOutpost && s.TeamID == CharacterTeamType.FriendlyNPC);
+
+                        if (!isConnectedToFriendlyOutpost)
+                        {
+                            item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
+                        }
                     }
                     fuelLeft += item.ConditionPercentage;
                 }
@@ -418,7 +423,7 @@ namespace Barotrauma.Items.Components
             {
                 float idealLoad = MaxPowerOutput / minMaxPower.ReactorMaxOutput * loadLeft;
                 float loadAdjust = MathHelper.Clamp((ratio - 0.5f) * 25 + idealLoad - (turbineOutput / 100 * MaxPowerOutput), -MaxPowerOutput / 100, MaxPowerOutput / 100);
-                newLoad = MathHelper.Clamp(loadLeft - (expectedPower + output) + loadAdjust, 0, loadLeft);
+                newLoad = MathHelper.Clamp(loadLeft - (expectedPower - output) + loadAdjust, 0, loadLeft);
             }
 
             if (float.IsNegative(newLoad))
@@ -498,7 +503,6 @@ namespace Barotrauma.Items.Components
 
             if (temperature > optimalTemperature.Y)
             {
-                float prevFireTimer = fireTimer;
                 fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.MaxCondition);
 #if SERVER
                 if (fireTimer > Math.Min(5.0f, FireDelay / 2) && blameOnBroken?.Character?.SelectedConstruction == item)
@@ -506,9 +510,10 @@ namespace Barotrauma.Items.Components
                     GameMain.Server.KarmaManager.OnReactorOverHeating(item, blameOnBroken.Character, deltaTime);
                 }
 #endif
-                if (fireTimer >= FireDelay && prevFireTimer < fireDelay)
+                if (fireTimer >= FireDelay)
                 {
                     new FireSource(item.WorldPosition);
+                    fireTimer = 0.0f;
                 }
             }
             else

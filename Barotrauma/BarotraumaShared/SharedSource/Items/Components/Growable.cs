@@ -707,7 +707,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
                 for (int i = 0; i < Vines.Count; i += VineChunkSize)
                 {
-                    GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(this), i });
+                    item.CreateServerEvent(this, new EventData(offset: i));
                 }
 #elif CLIENT
                 ResetPlanterSize();

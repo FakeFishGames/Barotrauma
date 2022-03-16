@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Diagnostics.Tracing;
 
 namespace Barotrauma.Items.Components
 {
@@ -58,18 +59,23 @@ namespace Barotrauma.Items.Components
             GUI.DrawRectangle(spriteBatch, new Vector2(attachPos.X - 2, -attachPos.Y - 2), Vector2.One * 5, GUIStyle.Red, thickness: 3);
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public override bool ValidateEventData(NetEntityEvent.IData data)
+            => TryExtractEventData<EventData>(data, out _);
+
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             if (!attachable || body == null) { return; }
+            
+            var eventData = ExtractEventData<EventData>(extraData);
 
-            Vector2 attachPos = (Vector2)extraData[2];
+            Vector2 attachPos = eventData.AttachPos;
             msg.Write(attachPos.X);
             msg.Write(attachPos.Y);
         }
 
-        public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public override void ClientEventRead(IReadMessage msg, float sendingTime)
         {
-            base.ClientRead(type, msg, sendingTime);
+            base.ClientEventRead(msg, sendingTime);
 
             bool readAttachData = msg.ReadBoolean();
             if (!readAttachData) { return; }

@@ -299,14 +299,16 @@ namespace Barotrauma
                     return;
                 }
 
-                if (GameMain.ShowFPS || GameMain.DebugDraw)
+                if (GameMain.ShowFPS || GameMain.DebugDraw || GameMain.ShowPerf)
                 {
-                    DrawString(spriteBatch, new Vector2(10, 10),
+                    float y = 10.0f;
+                    DrawString(spriteBatch, new Vector2(10, y),
                         "FPS: " + Math.Round(GameMain.PerformanceCounter.AverageFramesPerSecond),
                         Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                     if (GameMain.GameSession != null && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 1.0)
                     {
-                        DrawString(spriteBatch, new Vector2(10, 25),
+                        y += GameSettings.CurrentConfig.Graphics.TextScale * 15.0f;
+                        DrawString(spriteBatch, new Vector2(10, y),
                             $"Physics: {GameMain.CurrentUpdateRate}",
                             (GameMain.CurrentUpdateRate < Timing.FixedUpdateRate) ? Color.Red : Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                     }
@@ -336,8 +338,15 @@ namespace Barotrauma
                         DrawString(spriteBatch, new Vector2(300, y),
                             key + ": " + elapsedMillisecs.ToString("0.00"),
                             Color.Lerp(Color.LightGreen, GUIStyle.Red, elapsedMillisecs / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-
                         y += 15;
+                        foreach (string childKey in GameMain.PerformanceCounter.GetSavedPartialIdentifiers(key))
+                        {
+                            elapsedMillisecs = GameMain.PerformanceCounter.GetPartialAverageElapsedMillisecs(key, childKey);
+                            DrawString(spriteBatch, new Vector2(315, y),
+                                childKey + ": " + elapsedMillisecs.ToString("0.00"),
+                                Color.Lerp(Color.LightGreen, GUIStyle.Red, elapsedMillisecs / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                            y += 15;
+                        }
                     }
 
                     if (Powered.Grids != null)
@@ -1453,7 +1462,7 @@ namespace Barotrauma
                     3 => radii.Start,
                     _ => throw new InvalidOperationException()
                 };
-            int getDirectionIndex(int vertexIndex)
+            static int getDirectionIndex(int vertexIndex)
                 => (vertexIndex % 4) switch
                 {
                     0 => (vertexIndex / 4) + 0,

@@ -42,7 +42,7 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            var contentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerIncompatibleContent);
+            var contentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent);
 
             // These server state variables may be changed at any time.  Note that there is no longer a mechanism
             // to send the player count. The player count is maintained by Steam and you should use the player

@@ -357,21 +357,31 @@ namespace Barotrauma.Steam
 
         private IEnumerable<CoroutineStatus> MessageBoxCoroutine(Func<GUITextBlock, GUIMessageBox, IEnumerable<CoroutineStatus>> subcoroutine)
         {
-            var messageBox = new GUIMessageBox("", "", relativeSize: (0.4f, 0.4f), buttons: new [] { TextManager.Get("Cancel") });
+            var messageBox = new GUIMessageBox("", "...", buttons: new [] { TextManager.Get("Cancel") });
             messageBox.Buttons[0].OnClicked = (button, o) =>
             {
                 messageBox.Close();
                 return false;
             };
 
-            var currentStepText = new GUITextBlock(new RectTransform((1.0f, 0.8f), messageBox.InnerFrame.RectTransform),
-                "...", font: GUIStyle.Font)
+            var coroutineEval = subcoroutine(messageBox.Text, messageBox);
+            while (true)
             {
-                CanBeFocused = false
-            };
-
-            foreach (var status in subcoroutine(currentStepText, messageBox))
-            {
+                bool moveNext = true;
+                try
+                {
+                    moveNext = coroutineEval.GetEnumerator().MoveNext();
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"{e.Message} {e.StackTrace.CleanupStackTrace()}");
+                    messageBox.Close();
+                }
+                if (!moveNext)
+                {
+                    messageBox.Close();
+                }
+                var status = coroutineEval.GetEnumerator().Current;
                 if (messageBox.Closed)
                 {
                     yield return CoroutineStatus.Success;
@@ -410,7 +420,7 @@ namespace Barotrauma.Steam
                         {
                             SteamManager.Workshop.ForceRedownload(workshopItem);
                         }
-                        currentStepText.Text = $"Downloading {Percentage(workshopItem.DownloadAmount)}";
+                        currentStepText.Text = TextManager.GetWithVariable("PublishPopupDownload", "[percentage]", Percentage(workshopItem.DownloadAmount));
                         yield return new WaitForSeconds(0.5f);
                     }
                 }
@@ -426,7 +436,7 @@ namespace Barotrauma.Steam
                     });
                 while (!ContentPackageManager.WorkshopPackages.Any(p => p.SteamWorkshopId == workshopItem.Id))
                 {
-                    currentStepText.Text = $"Installing";
+                    currentStepText.Text = TextManager.Get("PublishPopupInstall");
                     yield return new WaitForSeconds(0.5f);
                 }
 
@@ -444,7 +454,7 @@ namespace Barotrauma.Steam
                 });
             while (!localCopyMade)
             {
-                currentStepText.Text = $"Creating local copy";
+                currentStepText.Text = TextManager.Get("PublishPopupCreateLocal");
                 yield return new WaitForSeconds(0.5f);
             }
 
@@ -457,45 +467,60 @@ namespace Barotrauma.Steam
             GUITextBlock currentStepText, GUIMessageBox messageBox,
             string modVersion, Steamworks.Ugc.Editor editor, ContentPackage localPackage)
         {
+            if (!SteamManager.IsInitialized)
+            {
+                yield return CoroutineStatus.Failure;
+            }
+
             bool stagingReady = false;
+            Exception? stagingException = null;
             TaskPool.Add("CreatePublishStagingCopy",
                 SteamManager.Workshop.CreatePublishStagingCopy(modVersion, localPackage),
                 (t) =>
                 {
-                    Exception? exception = t.Exception?.InnerException ?? t.Exception;
-                    if (exception != null)
-                    {
-                        throw new Exception($"Failed to create staging copy: {exception.Message} {exception.StackTrace}");
-                    }
                     stagingReady = true;
+                    stagingException = t.Exception?.GetInnermost();
                 });
-            currentStepText.Text = "Copying item to staging folder...";
+            currentStepText.Text = TextManager.Get("PublishPopupStaging");
             while (!stagingReady) { yield return new WaitForSeconds(0.5f); }
 
+            if (stagingException != null)
+            {
+                throw new Exception($"Failed to create staging copy: {stagingException.Message} {stagingException.StackTrace.CleanupStackTrace()}");
+            }
+            
             editor = editor
                 .WithContent(SteamManager.Workshop.PublishStagingDir)
                 .ForAppId(SteamManager.AppID);
 
             messageBox.Buttons[0].Enabled = false;
             Steamworks.Ugc.PublishResult? result = null;
+            Exception? resultException = null;
             TaskPool.Add($"Publishing {localPackage.Name} ({localPackage.SteamWorkshopId})",
                 editor.SubmitAsync(),
-                (t) =>
+                t =>
                 {
-                    result = ((Task<Steamworks.Ugc.PublishResult>)t).Result;
+                    t.TryGetResult(out result);
+                    resultException = t.Exception?.GetInnermost();
                 });
-            currentStepText.Text = "Submitting item to the Workshop...";
-            while (!result.HasValue) { yield return new WaitForSeconds(0.5f); }
+            currentStepText.Text = TextManager.Get("PublishPopupSubmit");
+            while (!result.HasValue && resultException is null) { yield return new WaitForSeconds(0.5f); }
 
-            if (result.Value.Success)
+            if (result is { Success: true })
             {
                 var resultId = result.Value.FileId;
                 Steamworks.Ugc.Item resultItem = new Steamworks.Ugc.Item(resultId);
-                SteamManager.Workshop.ForceRedownload(resultItem);
-                while (!resultItem.IsInstalled)
+                Task downloadTask = SteamManager.Workshop.ForceRedownload(resultItem);
+                while (!resultItem.IsInstalled && !downloadTask.IsCompleted)
                 {
-                    currentStepText.Text = $"Downloading {Percentage(resultItem.DownloadAmount)}";
+                    currentStepText.Text = TextManager.GetWithVariable("PublishPopupDownload", "[percentage]", Percentage(resultItem.DownloadAmount));
                     yield return new WaitForSeconds(0.5f);
+                }
+
+                if (!resultItem.IsInstalled)
+                {
+                    throw new Exception($"Failed to install item: download task ended with status {downloadTask.Status}, " +
+                                        $"exception was {downloadTask.Exception?.GetInnermost()?.ToString().CleanupStackTrace() ?? "[NULL]"}");
                 }
 
                 bool installed = false;
@@ -508,7 +533,7 @@ namespace Barotrauma.Steam
                     });
                 while (!installed)
                 {
-                    currentStepText.Text = $"Installing";
+                    currentStepText.Text = TextManager.Get("PublishPopupInstall");
                     yield return new WaitForSeconds(0.5f);
                 }
 
@@ -524,8 +549,19 @@ namespace Barotrauma.Steam
                 {
                     SteamManager.OverlayCustomURL(resultItem.Url);
                 }
+                new GUIMessageBox(string.Empty, TextManager.GetWithVariable("workshopitempublished", "[itemname]", localPackage.Name));
             }
+            else if (resultException != null)
+            {
+                throw new Exception($"Failed to publish item: {resultException.Message} {resultException.StackTrace.CleanupStackTrace()}");
+            }
+            else
+            {
+                new GUIMessageBox(TextManager.Get("error"), TextManager.GetWithVariable("workshopitempublishfailed", "[itemname]", localPackage.Name));
+            }
+
             SteamManager.Workshop.DeletePublishStagingCopy();
+            messageBox.Close();
         }
     }
 }

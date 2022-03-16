@@ -225,7 +225,7 @@ namespace Barotrauma.Items.Components
             var dockingConnection = item.Connections.FirstOrDefault(c => c.Name == "toggle_docking");
             if (dockingConnection != null)
             {
-                var connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection);
+                var connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection, allowTraversingBackwards: false);
                 DockingSources.AddRange(connectedPorts.Where(p => p.Item.Submarine != null && !p.Item.Submarine.Info.IsOutpost));
             }
         }
@@ -271,13 +271,9 @@ namespace Barotrauma.Items.Components
                         item.CreateClientEvent(this);
                         correctionTimer = CorrectionDelay;
                     }
-                    else
 #endif
 #if SERVER
-                    if (GameMain.Server != null)
-                    {
-                        item.CreateServerEvent(this);
-                    }
+                    item.CreateServerEvent(this);
 #endif
 
                     networkUpdateTimer = 0.1f;

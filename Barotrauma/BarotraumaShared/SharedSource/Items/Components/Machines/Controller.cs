@@ -370,7 +370,10 @@ namespace Barotrauma.Items.Components
 
         public Item GetFocusTarget()
         {
-            item.SendSignal(new Signal(MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), sender: user), "position_out");
+            var positionOut = item.Connections.Find(c => c.Name == "position_out");
+            if (positionOut == null) { return null; }
+
+            item.SendSignal(new Signal(MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), sender: user), positionOut);
 
             for (int i = item.LastSentSignalRecipients.Count - 1; i >= 0; i--)
             {
@@ -380,7 +383,16 @@ namespace Barotrauma.Items.Components
                     return item.LastSentSignalRecipients[i].Item;
                 }
             }
-            
+
+            foreach (var recipientPanel in item.GetConnectedComponentsRecursive<ConnectionPanel>(positionOut, allowTraversingBackwards: false))
+            {
+                if (recipientPanel.Item.Condition <= 0.0f) { continue; }
+                if (recipientPanel.Item.Prefab.FocusOnSelected)
+                {
+                    return recipientPanel.Item;
+                }
+            }
+                        
             return null;
         }
 

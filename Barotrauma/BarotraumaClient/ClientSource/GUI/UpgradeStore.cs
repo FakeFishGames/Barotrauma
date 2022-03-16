@@ -41,7 +41,7 @@ namespace Barotrauma
 
         private readonly CampaignUI campaignUI;
         private CampaignMode? Campaign => campaignUI.Campaign;
-        private int AvailableMoney => Campaign?.Money ?? 0;
+        private Wallet PlayerWallet => Campaign?.Wallet ?? Wallet.Invalid;
         private UpgradeTab selectedUpgradeTab = UpgradeTab.Upgrade;
 
         private GUIMessageBox? currectConfirmation;
@@ -61,7 +61,7 @@ namespace Barotrauma
         private Vector2[][] subHullVertices = new Vector2[0][];
         private List<Structure> submarineWalls = new List<Structure>();
 
-        public MapEntity? HoveredItem;
+        public MapEntity? HoveredEntity;
         private bool highlightWalls;
 
         private UpgradeCategory? currentUpgradeCategory;
@@ -105,6 +105,7 @@ namespace Barotrauma
             Campaign.UpgradeManager.OnUpgradesChanged += RefreshAll;
             Campaign.CargoManager.OnPurchasedItemsChanged += RefreshAll;
             Campaign.CargoManager.OnSoldItemsChanged += RefreshAll;
+            Campaign.OnMoneyChanged.RegisterOverwriteExisting(nameof(UpgradeStore).ToIdentifier(), e => { RefreshAll(); } );
         }
 
         public void RefreshAll()
@@ -184,7 +185,7 @@ namespace Barotrauma
             }
 
             // reset the order first
-            foreach (UpgradeCategory category in UpgradeCategory.Categories)
+            foreach (UpgradeCategory category in UpgradeCategory.Categories.OrderBy(c => c.Name))
             {
                 GUIComponent component = categoryList.Content.FindChild(c => c.UserData is CategoryData categoryData && categoryData.Category == category);
                 component?.SetAsLastChild();
@@ -286,7 +287,7 @@ namespace Barotrauma
             GUILayoutGroup rightLayout = new GUILayoutGroup(rectT(0.5f, 1, topHeaderLayout), childAnchor: Anchor.TopRight);
                 GUILayoutGroup priceLayout = new GUILayoutGroup(rectT(1, 0.8f, rightLayout), childAnchor: Anchor.Center) { RelativeSpacing = 0.08f };
                     new GUITextBlock(rectT(1f, 0f, priceLayout), TextManager.Get("CampaignStore.Balance"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right);
-                    new GUITextBlock(rectT(1f, 0f, priceLayout), FormatCurrency(AvailableMoney, format: true), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right) { TextGetter = () => FormatCurrency(AvailableMoney, format: true) };
+                    new GUITextBlock(rectT(1f, 0f, priceLayout), FormatCurrency(PlayerWallet.Balance, format: true), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right) { TextGetter = () => FormatCurrency(PlayerWallet.Balance, format: true) };
             new GUIFrame(rectT(0.5f, 0.1f, rightLayout, Anchor.BottomRight), style: "HorizontalLine") { IgnoreLayoutGroups = true };
 
             repairButton.OnClicked = upgradeButton.OnClicked = (button, o) =>
@@ -343,15 +344,15 @@ namespace Barotrauma
         private void DrawItemSwapPreview(SpriteBatch spriteBatch, GUICustomComponent component)
         {
             var selectedItem = customizeTabOpen ? 
-                activeItemSwapSlideDown?.UserData as Item ?? HoveredItem as Item : 
-                HoveredItem as Item;
+                activeItemSwapSlideDown?.UserData as Item ?? HoveredEntity as Item : 
+                HoveredEntity as Item;
             if (selectedItem?.Prefab.SwappableItem == null) { return; }
 
             Sprite schematicsSprite = selectedItem.Prefab.SwappableItem.SchematicSprite;
             if (schematicsSprite == null) { return; }
             float schematicsScale = Math.Min(component.Rect.Width / 2 / schematicsSprite.size.X, component.Rect.Height / schematicsSprite.size.Y);
             Vector2 center = new Vector2(component.Rect.Center.X, component.Rect.Center.Y);
-            schematicsSprite.Draw(spriteBatch, new Vector2(component.Rect.X, center.Y), GUIStyle.Green, new Vector2(0, schematicsSprite.size.Y / 2), 
+            schematicsSprite.Draw(spriteBatch, new Vector2(component.Rect.X, center.Y), GUIStyle.Green, new Vector2(0, schematicsSprite.size.Y / 2),
                 scale: schematicsScale);
 
             var swappableItemList = selectedUpgradeCategoryLayout?.FindChild("prefablist", true) as GUIListBox;
@@ -426,14 +427,14 @@ namespace Barotrauma
                     return false;
                 }
 
-                if (AvailableMoney >= hullRepairCost)
+                if (PlayerWallet.CanAfford(hullRepairCost))
                 {
                     LocalizedString body = TextManager.GetWithVariable("WallRepairs.PurchasePromptBody", "[amount]", hullRepairCost.ToString());
                     currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), body, () =>
                     {
-                        if (AvailableMoney >= hullRepairCost)
+                        if (PlayerWallet.Balance >= hullRepairCost)
                         {
-                            Campaign.Money -= hullRepairCost;
+                            PlayerWallet.TryDeduct(hullRepairCost);
                             GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
                             Campaign.PurchasedHullRepairs = true;
                             button.Enabled = false;
@@ -461,14 +462,14 @@ namespace Barotrauma
 
             CreateRepairEntry(currentStoreLayout.Content, TextManager.Get("repairallitems"), "RepairItemsButton", itemRepairCost, (button, o) =>
             {
-                if (AvailableMoney >= itemRepairCost && !Campaign.PurchasedItemRepairs)
+                if (PlayerWallet.Balance >= itemRepairCost && !Campaign.PurchasedItemRepairs)
                 {
                     LocalizedString body = TextManager.GetWithVariable("ItemRepairs.PurchasePromptBody", "[amount]", itemRepairCost.ToString());
                     currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), body, () =>
                     {
-                        if (AvailableMoney >= itemRepairCost && !Campaign.PurchasedItemRepairs)
+                        if (PlayerWallet.Balance >= itemRepairCost && !Campaign.PurchasedItemRepairs)
                         {
-                            Campaign.Money -= itemRepairCost;
+                            PlayerWallet.TryDeduct(itemRepairCost);
                             GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
                             Campaign.PurchasedItemRepairs = true;
                             button.Enabled = false;
@@ -507,14 +508,14 @@ namespace Barotrauma
                     return false;
                 }
 
-                if (AvailableMoney >= shuttleRetrieveCost && !Campaign.PurchasedLostShuttles)
+                if (PlayerWallet.CanAfford(shuttleRetrieveCost) && !Campaign.PurchasedLostShuttles)
                 {
                     LocalizedString body = TextManager.GetWithVariable("ReplaceLostShuttles.PurchasePromptBody", "[amount]", shuttleRetrieveCost.ToString());
                     currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), body, () =>
                     {
-                        if (AvailableMoney >= shuttleRetrieveCost && !Campaign.PurchasedLostShuttles)
+                        if (PlayerWallet.Balance >= shuttleRetrieveCost && !Campaign.PurchasedLostShuttles)
                         {
-                            Campaign.Money -= shuttleRetrieveCost;
+                            PlayerWallet.TryDeduct(shuttleRetrieveCost);
                             GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
                             Campaign.PurchasedLostShuttles = true;
                             button.Enabled = false;
@@ -572,13 +573,13 @@ namespace Barotrauma
                     new GUITextBlock(rectT(1, 0, textLayout), title, font: GUIStyle.SubHeadingFont) { CanBeFocused = false, AutoScaleHorizontal = true };
                     new GUITextBlock(rectT(1, 0, textLayout), FormatCurrency(price));
                 GUILayoutGroup buyButtonLayout = new GUILayoutGroup(rectT(0.2f, 1, contentLayout), childAnchor: Anchor.Center) { UserData = "buybutton" };
-                    new GUIButton(rectT(0.7f, 0.5f, buyButtonLayout), string.Empty, style: "RepairBuyButton") { ClickSound = GUISoundType.HireRepairClick, Enabled = AvailableMoney >= price && !isDisabled, OnClicked = onPressed };
+                    new GUIButton(rectT(0.7f, 0.5f, buyButtonLayout), string.Empty, style: "RepairBuyButton") { ClickSound = GUISoundType.HireRepairClick, Enabled = PlayerWallet.Balance >= price && !isDisabled, OnClicked = onPressed };
             contentLayout.Recalculate();
             buyButtonLayout.Recalculate();
 
             if (disableElement)
             {
-                frameChild.Enabled = AvailableMoney >= price && !isDisabled;
+                frameChild.Enabled = PlayerWallet.Balance >= price && !isDisabled;
             }
 
             if (!HasPermission)
@@ -610,9 +611,9 @@ namespace Barotrauma
 
             Dictionary<UpgradeCategory, List<UpgradePrefab>> upgrades = new Dictionary<UpgradeCategory, List<UpgradePrefab>>();
 
-            foreach (UpgradeCategory category in UpgradeCategory.Categories)
+            foreach (UpgradeCategory category in UpgradeCategory.Categories.OrderBy(c => c.Name))
             {
-                foreach (UpgradePrefab prefab in UpgradePrefab.Prefabs)
+                foreach (UpgradePrefab prefab in UpgradePrefab.Prefabs.OrderBy(p => p.Name))
                 {
                     if (prefab.UpgradeCategories.Contains(category))
                     {
@@ -963,12 +964,12 @@ namespace Barotrauma
                     buttonStyle: isPurchased ? "WeaponInstallButton" : "StoreAddToCrateButton"));
 
                 if (!(frames.Last().FindChild(c => c is GUIButton, recursive: true) is GUIButton buyButton)) { continue; }
-                if (Campaign.Money >= price)
+                if (PlayerWallet.CanAfford(price))
                 {
                     buyButton.Enabled = true;
                     buyButton.OnClicked += (button, o) =>
                     {
-                        LocalizedString promptBody = TextManager.GetWithVariables(isPurchased ? "upgrades.itemswappromptbody" : "upgrades.purchaseitemswappromptbody", 
+                        LocalizedString promptBody = TextManager.GetWithVariables(isPurchased ? "upgrades.itemswappromptbody" : "upgrades.purchaseitemswappromptbody",
                             ("[itemtoinstall]", replacement.Name),
                             ("[amount]", (replacement.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation) * linkedItems.Count).ToString()));
                         currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), promptBody, () =>
@@ -1183,7 +1184,7 @@ namespace Barotrauma
 
             buyButton.OnClicked += (button, o) =>
             {
-                LocalizedString promptBody = TextManager.GetWithVariables("Upgrades.PurchasePromptBody", 
+                LocalizedString promptBody = TextManager.GetWithVariables("Upgrades.PurchasePromptBody",
                     ("[upgradename]", prefab.Name),
                     ("[amount]", prefab.Price.GetBuyprice(Campaign.UpgradeManager.GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation).ToString()));
                 currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), promptBody, () =>
@@ -1334,16 +1335,16 @@ namespace Barotrauma
             {
                 if (GUI.MouseOn == frame)
                 {
-                    if (HoveredItem != item) { CreateItemTooltip(item); }
-                    HoveredItem = item;
+                    if (HoveredEntity != item) { CreateItemTooltip(item); }
+                    HoveredEntity = item;
                     if (PlayerInput.PrimaryMouseButtonClicked() && selectedUpgradeTab == UpgradeTab.Upgrade && currentStoreLayout != null)
                     {
                         if (customizeTabOpen)
                         {
                             if (selectedUpgradeCategoryLayout != null)
                             {
-                                var linkedItems = HoveredItem is Item ? Campaign.UpgradeManager.GetLinkedItemsToSwap((Item)HoveredItem) : new List<Item>();
-                                if (selectedUpgradeCategoryLayout.FindChild(c => c.UserData as Item == HoveredItem || linkedItems.Contains((Item)c.UserData), recursive: true) is GUIButton itemElement)
+                                var linkedItems = HoveredEntity is Item hoveredItem ? Campaign.UpgradeManager.GetLinkedItemsToSwap(hoveredItem) : new List<Item>();
+                                if (selectedUpgradeCategoryLayout.FindChild(c => c.UserData is Item item && (item == HoveredEntity || linkedItems.Contains(item)), recursive: true) is GUIButton itemElement)
                                 {
                                     if (!itemElement.Selected) { itemElement.OnClicked(itemElement, itemElement.UserData); }
                                     (itemElement.Parent?.Parent?.Parent as GUIListBox)?.ScrollToElement(itemElement);
@@ -1370,8 +1371,8 @@ namespace Barotrauma
                     // use pnpoly algorithm to detect if our mouse is within any of the hull polygons
                     if (subHullVertices.Any(hullVertex => ToolBox.PointIntersectsWithPolygon(PlayerInput.MousePosition, hullVertex)))
                     {
-                        if (HoveredItem != firstStructure && !(firstStructure is null)) { CreateItemTooltip(firstStructure); }
-                        HoveredItem = firstStructure;
+                        if (HoveredEntity != firstStructure && !(firstStructure is null)) { CreateItemTooltip(firstStructure); }
+                        HoveredEntity = firstStructure;
                         isMouseOnStructure = true;
                         GUI.MouseCursor = CursorState.Hand;
 
@@ -1382,7 +1383,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (!isMouseOnStructure) { HoveredItem = null; }
+                if (!isMouseOnStructure) { HoveredEntity = null; }
             }
 
             // flip the tooltip if it is outside of the screen
@@ -1582,12 +1583,12 @@ namespace Barotrauma
                         priceLabel.Text = TextManager.Get("Upgrade.MaxedUpgrade");
                     }
                 }
-                
+
                 GUIButton button = buttonParent.GetChild<GUIButton>();
                 if (button != null)
                 {
                     button.Enabled = currentLevel < prefab.MaxLevel;
-                    if (WaitForServerUpdate || !campaign.AllowedToManageCampaign() || price > campaign.Money)
+                    if (WaitForServerUpdate || !campaign.AllowedToManageCampaign() || !campaign.Wallet.CanAfford(price))
                     {
                         button.Enabled = false;
                     }

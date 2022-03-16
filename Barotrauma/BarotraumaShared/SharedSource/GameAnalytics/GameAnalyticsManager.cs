@@ -361,7 +361,7 @@ namespace Barotrauma
             if (!SendUserStatistics) { return; }
             if (sentEventIdentifiers.Contains(identifier)) { return; }
 
-            if (GameMain.VanillaContent == null || ContentPackageManager.EnabledPackages.All.Any(p => p.HasMultiplayerIncompatibleContent && p != GameMain.VanillaContent))
+            if (GameMain.VanillaContent == null || ContentPackageManager.EnabledPackages.All.Any(p => p.HasMultiplayerSyncedContent && p != GameMain.VanillaContent))
             {
                 message = "[MODDED] " + message;
             }

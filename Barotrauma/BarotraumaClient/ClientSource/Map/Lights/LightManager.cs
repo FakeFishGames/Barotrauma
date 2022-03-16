@@ -188,8 +188,10 @@ namespace Barotrauma.Lights
                 if (light.ParentBody != null)
                 {
                     light.ParentBody.UpdateDrawPosition();
-                    light.Position = light.ParentBody.DrawPosition;
-                    if (light.ParentSub != null) { light.Position -= light.ParentSub.DrawPosition; }
+
+                    Vector2 pos =  light.ParentBody.DrawPosition;
+                    if (light.ParentSub != null) { pos -= light.ParentSub.DrawPosition; }
+                    light.Position = pos;
                 }
 
                 float range = light.LightSourceParams.TextureRange;

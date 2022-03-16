@@ -49,8 +49,6 @@ namespace Barotrauma.Items.Components
 
         private ChargingState currentChargingState;
 
-        private float currentBarrelSpin = 0f;
-
         private readonly List<Item> activeProjectiles = new List<Item>();
         public IEnumerable<Item> ActiveProjectiles => activeProjectiles;
 
@@ -330,10 +328,10 @@ namespace Barotrauma.Items.Components
         public override void OnMapLoaded()
         {
             base.OnMapLoaded();
-            FindLightComponent();
             if (loadedRotationLimits.HasValue) { RotationLimits = loadedRotationLimits.Value; }
             if (loadedBaseRotation.HasValue) { BaseRotation = loadedBaseRotation.Value; }
             targetRotation = rotation;
+            FindLightComponent();
             UpdateTransformedBarrelPos();
         }
 
@@ -736,6 +734,16 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        private readonly struct EventData : IEventData
+        {
+            public readonly Item Projectile;
+            
+            public EventData(Item projectile)
+            {
+                Projectile = projectile;
+            }
+        }
+        
         private void Launch(Item projectile, Character user = null, float? launchRotation = null, float tinkeringStrength = 0f)
         {
             reload = reloadTime;
@@ -749,7 +757,7 @@ namespace Barotrauma.Items.Components
             if (projectile != null)
             {
                 activeProjectiles.Add(projectile);
-                projectile.Drop(null);
+                projectile.Drop(null, setTransform: false);
                 if (projectile.body != null) 
                 {                 
                     projectile.body.Dir = 1.0f;
@@ -787,12 +795,11 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                if (projectile.Container != null) { projectile.Container.RemoveContained(projectile); }            
+                projectile.Container?.RemoveContained(projectile);
             }
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
-            {
-                GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(this), projectile });
-            }
+#if SERVER
+            item.CreateServerEvent(this, new EventData(projectile));
+#endif
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, user: user);
             LaunchProjSpecific();
@@ -1630,11 +1637,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            if (extraData.Length > 2)
+            if (TryExtractEventData(extraData, out EventData eventData))
             {
-                msg.Write(!(extraData[2] is Item item) ? ushort.MaxValue : item.ID);
+                msg.Write(eventData.Projectile.ID);
                 msg.WriteRangedSingle(MathHelper.Clamp(rotation, minRotation, maxRotation), minRotation, maxRotation, 16);
             }
             else

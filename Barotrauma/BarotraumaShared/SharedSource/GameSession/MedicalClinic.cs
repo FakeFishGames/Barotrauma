@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -177,16 +178,19 @@ namespace Barotrauma
             }
         }
 
+        public readonly List<NetCrewMember> PendingHeals = new List<NetCrewMember>();
+
+        public Action? OnUpdate;
+
         private readonly CampaignMode? campaign;
 
         public MedicalClinic(CampaignMode campaign)
         {
             this.campaign = campaign;
+#if CLIENT
+            campaign.OnMoneyChanged.RegisterOverwriteExisting(nameof(MedicalClinic).ToIdentifier(), OnMoneyChanged);
+#endif
         }
-
-        public readonly List<NetCrewMember> PendingHeals = new List<NetCrewMember>();
-
-        public Action? OnUpdate;
 
         private static bool IsOutpostInCombat()
         {
@@ -203,14 +207,13 @@ namespace Barotrauma
             return false;
         }
 
-        private HealRequestResult HealAllPending(bool force = false)
+        private HealRequestResult HealAllPending(bool force = false, Client? client = null)
         {
             int totalCost = GetTotalCost();
             if (!force)
             {
-                if (GetMoney() < totalCost) { return HealRequestResult.InsufficientFunds; }
-
                 if (IsOutpostInCombat()) { return HealRequestResult.Refused; }
+                if (!GetWallet(client).TryDeduct(totalCost)) { return HealRequestResult.InsufficientFunds; }
             }
 
             ImmutableArray<CharacterInfo> crew = GetCrewCharacters();
@@ -223,11 +226,6 @@ namespace Barotrauma
                 {
                     health.ReduceAfflictionOnAllLimbs(affliction.Identifier, affliction.Prefab?.MaxStrength ?? affliction.Strength);
                 }
-            }
-
-            if (campaign != null)
-            {
-                campaign.Money -= totalCost;
             }
 
             ClearPendingHeals();
@@ -316,7 +314,10 @@ namespace Barotrauma
 
         private int GetAdjustedPrice(int price) => campaign?.Map?.CurrentLocation is { Type: { HasOutpost: true } } currentLocation ? currentLocation.GetAdjustedHealCost(price) : int.MaxValue;
 
-        public int GetMoney() => campaign?.Money ?? 0;
+        public Wallet GetWallet(Client? c = null)
+        {
+            return campaign?.GetWallet(c) ?? Wallet.Invalid;
+        }
 
         public static ImmutableArray<CharacterInfo> GetCrewCharacters()
         {

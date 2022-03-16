@@ -388,7 +388,7 @@ namespace Barotrauma
                         break;
                     }
                 }
-                if (targetingTag == null)
+                if (targetingTag.IsNullOrEmpty())
                 {
                     if (targetItem.GetComponent<Sonar>() != null)
                     {
@@ -2100,15 +2100,11 @@ namespace Barotrauma
                 if (!ActiveAttack.IsRunning)
                 {
 #if SERVER
-                    GameMain.NetworkMember.CreateEntityEvent(Character, new object[]
-                    {
-                        Networking.NetEntityEvent.Type.SetAttackTarget,
+                    GameMain.NetworkMember.CreateEntityEvent(Character, new Character.SetAttackTargetEventData(
                         attackingLimb,
-                        (damageTarget as Entity)?.ID ?? Entity.NullEntityID,
-                        damageTarget is Character character && targetLimb != null ? Array.IndexOf(character.AnimController.Limbs, targetLimb) : 0,
-                        SimPosition.X,
-                        SimPosition.Y
-                    });
+                        damageTarget,
+                        targetLimb,
+                        SimPosition));
 #else
                     Character.PlaySound(CharacterSound.SoundType.Attack, maxInterval: 3);
 #endif
@@ -2696,7 +2692,7 @@ namespace Barotrauma
                         float target = targetParams.Threshold;
                         if (targetParams.ThresholdMin > 0 && targetParams.ThresholdMax > 0)
                         {
-                            target = selectedTargetingParams == targetParams ? targetParams.ThresholdMax : targetParams.ThresholdMin;
+                            target = selectedTargetingParams == targetParams && State == AIState.FleeTo ? targetParams.ThresholdMax : targetParams.ThresholdMin;
                         }
                         if (Character.HealthPercentage > target)
                         {

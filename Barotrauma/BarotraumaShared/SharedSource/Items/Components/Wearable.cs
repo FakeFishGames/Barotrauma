@@ -540,16 +540,16 @@ namespace Barotrauma.Items.Components
                 Variant = loadedVariant;
             }
         }
-        public override void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public override void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.Write((byte)Variant);
-            base.ServerWrite(msg, c, extraData);
+            base.ServerEventWrite(msg, c, extraData);
         }
 
-        public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public override void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             Variant = (int)msg.ReadByte();
-            base.ClientRead(type, msg, sendingTime);
+            base.ClientEventRead(msg, sendingTime);
         }
 
     }

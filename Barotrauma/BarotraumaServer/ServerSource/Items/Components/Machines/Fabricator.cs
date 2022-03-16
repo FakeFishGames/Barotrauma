@@ -9,7 +9,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Fabricator : Powered, IServerSerializable, IClientSerializable
     {
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             uint recipeHash = msg.ReadUInt32();
 
@@ -32,21 +32,33 @@ namespace Barotrauma.Items.Components
         }
 
         private ulong serverEventId = 0;
-        public override void ServerAppendExtraData(ref object[] extraData)
-        {
-            //ensuring the uniqueness of this event is
-            //required for the fabricator to sync correctly;
-            //otherwise, the event manager would incorrectly
-            //assume that the client actually has the latest state
-            Array.Resize(ref extraData, 4);
-            extraData[2] = serverEventId;
-            extraData[3] = State;
-        }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        private readonly struct EventData : IEventData
         {
-            FabricatorState stateAtEvent = (FabricatorState)extraData[3];
-            msg.Write((byte)stateAtEvent);
+            public readonly ulong ServerEventId;
+            public readonly FabricatorState State;
+
+            public EventData(ulong serverEventId, FabricatorState state)
+            {
+                //ensuring the uniqueness of this event is
+                //required for the fabricator to sync correctly;
+                //otherwise, the event manager would incorrectly
+                //assume that the client actually has the latest state
+                ServerEventId = serverEventId;
+                State = state;
+            }
+        }
+        
+        public override IEventData ServerGetEventData()
+            => new EventData(serverEventId, State);
+
+        public override bool ValidateEventData(NetEntityEvent.IData data)
+            => TryExtractEventData<EventData>(data, out _);
+
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
+        {
+            var componentData = ExtractEventData<EventData>(extraData);
+            msg.Write((byte)componentData.State);
             msg.Write(timeUntilReady);
             uint recipeHash = fabricatedItem?.RecipeHash ?? 0;
             msg.Write(recipeHash);

@@ -436,13 +436,10 @@ namespace Barotrauma.Items.Components
 #if SERVER
             if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits
             {
-                GameMain.Server.CreateEntityEvent(item, new object[] 
-                {
-                    Networking.NetEntityEvent.Type.ApplyStatusEffect,                    
+                GameMain.Server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(
                     success ? ActionType.OnUse : ActionType.OnFailure,
-                    null, //itemcomponent
-                    targetCharacter.ID, targetLimb
-                });
+                    targetItemComponent: null,
+                    targetCharacter, targetLimb));
 
                 string logStr = picker?.LogName + " used " + item.Name;
                 if (item.ContainedItems != null && item.ContainedItems.Any())

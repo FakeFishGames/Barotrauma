@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using Barotrauma.Extensions;
 
@@ -10,6 +9,8 @@ namespace Barotrauma
     class AIObjectiveGoTo : AIObjective
     {
         public override Identifier Identifier { get; set; } = "go to".ToIdentifier();
+
+        public override bool KeepDivingGearOn => GetTargetHull() == null;
 
         private AIObjectiveFindDivingGear findDivingGear;
         private readonly bool repeat;
@@ -74,14 +75,6 @@ namespace Barotrauma
                 _closeEnough = Math.Max(minDistance, value);
             }
         }
-
-        // TODO: Currently we never check the visibility (to the end node), which is actually unintentional.
-        // I don't think it has caused any issues so far, so let's keep defaulting to false for now, because the less we do raycasts the better.
-        // However, if there are cases where the bots attempt to go through walls (select the end node that is behind an obstacle), we should set this true.
-
-        // NOTE: This seemes to have caused an issue now Regalis11/Barotrauma#8067: namely, the bot was trying to use a waypoint that was obstructed by a shuttle
-        // because obstruction was only checked when checking visibility in PathFinder. Changed that so that obstructed nodes are no longer used.
-        public bool CheckVisibility { get; set; }
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }
 
@@ -268,15 +261,15 @@ namespace Barotrauma
                 {
                     Character followTarget = Target as Character;
                     bool needsDivingSuit = (!isInside || hasOutdoorNodes) && character.NeedsAir && !character.HasAbilityFlag(AbilityFlags.ImmuneToPressure);
-                    bool needsDivingGear = (needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit)) && character.NeedsAir;
+                    bool needsDivingGear = (needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit));
                     if (Mimic)
                     {
-                        if (HumanAIController.HasDivingSuit(followTarget) && character.NeedsAir)
+                        if (HumanAIController.HasDivingSuit(followTarget))
                         {
                             needsDivingGear = true;
                             needsDivingSuit = true;
                         }
-                        else if (HumanAIController.HasDivingMask(followTarget) && character.NeedsAir)
+                        else if (HumanAIController.HasDivingMask(followTarget))
                         {
                             needsDivingGear = true;
                         }
@@ -505,7 +498,7 @@ namespace Barotrauma
                             startNodeFilter: n => (n.Waypoint.CurrentHull == null) == (character.CurrentHull == null),
                             endNodeFilter: endNodeFilter,
                             nodeFilter: nodeFilter,
-                            checkVisiblity: CheckVisibility);
+                            checkVisiblity: Target is Item || Target is Character);
                     }
                     if (!isInside && (PathSteering.CurrentPath == null || PathSteering.IsPathDirty || PathSteering.CurrentPath.Unreachable))
                     {

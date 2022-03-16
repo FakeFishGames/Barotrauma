@@ -145,7 +145,7 @@ namespace Barotrauma
                                     npc.SetCustomInteract(
                                         (speaker, player) => { if (e1 == speaker) { Trigger(speaker, player); } else { Trigger(player, speaker); } }, 
                                         TextManager.Get("CampaignInteraction.Talk"));
-                                    GameMain.NetworkMember.CreateEntityEvent(npc, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
+                                    GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AssignCampaignInteractionEventData());
 #endif
                                 }
                                 if (!AllowMultipleTargets) { return; }
@@ -194,7 +194,7 @@ namespace Barotrauma
                     npc.SetCustomInteract(null, null);
                     npc.RequireConsciousnessForCustomInteract = true;
     #if SERVER
-                    GameMain.NetworkMember.CreateEntityEvent(npc, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
+                    GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AssignCampaignInteractionEventData());
     #endif
                 }
                 else if (npcOrItem.TryGet(out Item item))

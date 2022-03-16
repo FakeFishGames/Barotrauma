@@ -569,7 +569,8 @@ namespace Barotrauma
                         (Character.Submarine.TeamID != Character.TeamID && !Character.IsEscorted) ||
                         ObjectiveManager.CurrentOrders.Any(o => o.Objective.KeepDivingGearOnAlsoWhenInactive) ||
                         ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn) ||
-                        Character.CurrentHull.OxygenPercentage < HULL_LOW_OXYGEN_PERCENTAGE + 10;
+                        Character.CurrentHull.OxygenPercentage < HULL_LOW_OXYGEN_PERCENTAGE + 10 ||
+                        Character.CurrentHull.IsWetRoom;
                     bool IsOrderedToWait() => Character.IsOnPlayerTeam && ObjectiveManager.CurrentOrder is AIObjectiveGoTo goTo && goTo.Target == Character;
                     bool removeDivingSuit = !shouldKeepTheGearOn && !IsOrderedToWait();
                     if (oxygenLow && Character.CurrentHull.Oxygen > 0 && (!isCurrentObjectiveFindSafety || Character.OxygenAvailable < 1))
@@ -1265,15 +1266,15 @@ namespace Barotrauma
             {
                 if (!IsFriendly(attacker))
                 {
-                    if (Character.Submarine == null)
+                    if (c.Submarine == null)
                     {
                         // Outside
                         return attacker.Submarine == null ? AIObjectiveCombat.CombatMode.Defensive : AIObjectiveCombat.CombatMode.Retreat;
                     }
-                    if (!Character.Submarine.GetConnectedSubs().Contains(attacker.Submarine))
+                    if (!c.Submarine.GetConnectedSubs().Contains(attacker.Submarine))
                     {
                         // Attacked from an unconnected submarine.
-                        return Character.SelectedConstruction?.GetComponent<Turret>() != null ? AIObjectiveCombat.CombatMode.None : AIObjectiveCombat.CombatMode.Retreat;
+                        return c.SelectedConstruction?.GetComponent<Turret>() != null ? AIObjectiveCombat.CombatMode.None : AIObjectiveCombat.CombatMode.Retreat;
                     }
                     return c.AIController is HumanAIController humanAI &&
                         (humanAI.ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || humanAI.ObjectiveManager.Objectives.Any(o => o is AIObjectiveFightIntruders)) 
@@ -1285,18 +1286,22 @@ namespace Barotrauma
                     {
                         cumulativeDamage = 100;
                     }
-                    if (GameMain.IsSingleplayer && attacker.IsPlayer && Character.TeamID == attacker.TeamID)
+                    if (attacker.IsPlayer && c.TeamID == attacker.TeamID)
                     {
-                        // Bots in the player team never act aggressively in single player when attacked by the player
-                        return cumulativeDamage > minorDamageThreshold ? AIObjectiveCombat.CombatMode.Retreat : AIObjectiveCombat.CombatMode.None;
+                        if (GameMain.IsSingleplayer || Character.TeamID != attacker.TeamID)
+                        {
+                            // Bots in the player team never act aggressively in single player when attacked by the player
+                            // In multiplayer, they react only to players attacking them or other crew members
+                            return Character == c && cumulativeDamage > minorDamageThreshold ? AIObjectiveCombat.CombatMode.Retreat : AIObjectiveCombat.CombatMode.None;
+                        }
                     }
-                    if (Character.Submarine == null || !Character.Submarine.GetConnectedSubs().Contains(attacker.Submarine))
+                    if (c.Submarine == null || !c.Submarine.GetConnectedSubs().Contains(attacker.Submarine))
                     {
                         // Outside or attacked from an unconnected submarine -> don't react.
                         return AIObjectiveCombat.CombatMode.None;
                     }
                     // If there are any enemies around, just ignore the friendly fire
-                    if (Character.CharacterList.Any(ch => ch.Submarine == Character.Submarine && !ch.Removed && !ch.IsIncapacitated && !IsFriendly(ch) && VisibleHulls.Contains(ch.CurrentHull)))
+                    if (Character.CharacterList.Any(ch => ch.Submarine == c.Submarine && !ch.Removed && !ch.IsIncapacitated && !IsFriendly(ch) && VisibleHulls.Contains(ch.CurrentHull)))
                     {
                         isAttackerFightingEnemy = true;
                         return AIObjectiveCombat.CombatMode.None;
@@ -1352,18 +1357,19 @@ namespace Barotrauma
 
                     Character FindInstigator()
                     {
-                        if (Character.IsInstigator)
+                        if (attacker.IsInstigator)
                         {
-                            return Character;
+                            return attacker;
                         }
-                        else if (c.AIController is HumanAIController humanAi)
+                        if (c.IsInstigator)
+                        {
+                            return c;
+                        }
+                        if (c.AIController is HumanAIController humanAi)
                         {
                             return Character.CharacterList.FirstOrDefault(ch => ch.Submarine == c.Submarine && !ch.Removed && !ch.IsIncapacitated && ch.IsInstigator && humanAi.VisibleHulls.Contains(ch.CurrentHull));
                         }
-                        else
-                        {
-                            return null;
-                        }
+                        return null;
                     }
                 }
             }
@@ -1497,7 +1503,7 @@ namespace Barotrauma
             if (hull == null || 
                 hull.WaterPercentage > 90 || 
                 hull.LethalPressure > 0 || 
-                hull.ConnectedGaps.Any(gap => !gap.IsRoomToRoom && gap.Open > 0.5f))
+                hull.ConnectedGaps.Any(gap => !gap.IsRoomToRoom && gap.Open > 0.9f))
             {
                 needsSuit = !Character.HasAbilityFlag(AbilityFlags.ImmuneToPressure);
                 return true;

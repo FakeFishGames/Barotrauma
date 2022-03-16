@@ -447,11 +447,11 @@ namespace Barotrauma.Networking
                     if (divingSuitPrefab != null && oxyPrefab != null)
                     {
                         var divingSuit = new Item(divingSuitPrefab, pos, respawnSub);
-                        Spawner.CreateNetworkEvent(divingSuit, false);
+                        Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(divingSuit));
                         respawnItems.Add(divingSuit);
 
                         var oxyTank = new Item(oxyPrefab, pos, respawnSub);
-                        Spawner.CreateNetworkEvent(oxyTank, false);
+                        Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(oxyTank));
                         divingSuit.Combine(oxyTank, user: null);
                         respawnItems.Add(oxyTank);
                     }
@@ -459,10 +459,10 @@ namespace Barotrauma.Networking
                     if (scooterPrefab != null && batteryPrefab != null)
                     {
                         var scooter = new Item(scooterPrefab, pos, respawnSub);
-                        Spawner.CreateNetworkEvent(scooter, false);
+                        Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(scooter));
 
                         var battery = new Item(batteryPrefab, pos, respawnSub);
-                        Spawner.CreateNetworkEvent(battery, false);
+                        Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(battery));
 
                         scooter.Combine(battery, user: null);
                         respawnItems.Add(scooter);
@@ -528,7 +528,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.WriteRangedInteger((int)CurrentState, 0, Enum.GetNames(typeof(State)).Length);
 

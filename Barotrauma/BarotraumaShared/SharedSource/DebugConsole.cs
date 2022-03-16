@@ -67,8 +67,13 @@ namespace Barotrauma
 
             public void Execute(string[] args)
             {
-                if (OnExecute == null) return;
-                if (!CheatsEnabled && IsCheat)
+                if (OnExecute == null) { return; }
+
+                bool allowCheats = false;
+#if CLIENT
+                allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is EditorScreen);
+#endif
+                if (!allowCheats && !CheatsEnabled && IsCheat)
                 {
                     NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);
 #if USE_STEAM
@@ -603,28 +608,27 @@ namespace Barotrauma
             commands.Add(new Command("giveaffliction", "giveaffliction [affliction name] [affliction strength] [character name] [limb type] [use relative strength]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
             {
                 if (args.Length < 2) { return; }
-
-                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a =>
-                    a.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase) ||
-                    a.Identifier == args[0]);
+                string affliction = args[0];
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a => a.Identifier == affliction);
                 if (afflictionPrefab == null)
                 {
-                    ThrowError("Affliction \"" + args[0] + "\" not found.");
+                    afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a => a.Name.Equals(affliction, StringComparison.OrdinalIgnoreCase));
+                }
+                if (afflictionPrefab == null)
+                {
+                    ThrowError("Affliction \"" + affliction + "\" not found.");
                     return;
                 }
-
                 if (!float.TryParse(args[1], out float afflictionStrength))
                 {
                     ThrowError("\"" + args[1] + "\" is not a valid affliction strength.");
                     return;
                 }
-
                 bool relativeStrength = false;
                 if (args.Length > 4)
                 {
                     bool.TryParse(args[4], out relativeStrength);
                 }
-
                 Character targetCharacter = args.Length <= 2 ? Character.Controlled : FindMatchingCharacter(new string[] { args[2] });
                 if (targetCharacter != null)
                 {
@@ -671,7 +675,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }, isCheat: true));
 
@@ -699,7 +703,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }, isCheat: true));
 
@@ -720,7 +724,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }, isCheat: true));
 
@@ -825,7 +829,7 @@ namespace Barotrauma
                 {
                     Character.Controlled?.Info?.Job?.Skills?.Select(skill => skill.Identifier.Value).ToArray() ?? Array.Empty<string>(),
                     new[]{ "max" },
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray(),
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray(),
                 };
             }));
 
@@ -864,7 +868,7 @@ namespace Barotrauma
                 return new string[][]
                 {
                     talentNames.Select(id => id).ToArray(),
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }, isCheat: true));
 
@@ -916,7 +920,7 @@ namespace Barotrauma
                 return new string[][]
                 {
                     availableArgs.ToArray(),
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }, isCheat: true));
 
@@ -951,7 +955,7 @@ namespace Barotrauma
                 return new[]
                 {
                     new string[] { "100" },
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray(),
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray(),
                 };
             }));
 
@@ -1066,7 +1070,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }, isCheat: true));
 
@@ -1413,7 +1417,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }, isCheat: true));
 
@@ -1455,7 +1459,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Character.CharacterList.Where(c => c.IsDead).Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Where(c => c.IsDead).Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }, isCheat: true));
 
@@ -1467,7 +1471,7 @@ namespace Barotrauma
                 return new string[][]
                 {
                     GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }));
 
@@ -1538,14 +1542,14 @@ namespace Barotrauma
                 NewMessage((GameMain.GameSession.Map.AllowDebugTeleport ? "Enabled" : "Disabled") + " teleportation on the campaign map.", Color.White);
             }, isCheat: true));
 
-            commands.Add(new Command("money", "money [amount]: Gives the specified amount of money to the crew when a campaign is active.", args =>
+            commands.Add(new Command("money", "money [amount] [character]: Gives the specified amount of money to the crew when a campaign is active.", args =>
             {
                 if (args.Length == 0) { return; }
                 if (GameMain.GameSession?.GameMode is CampaignMode campaign)
                 {
                     if (int.TryParse(args[0], out int money))
                     {
-                        campaign.Money += money;
+                        campaign.Bank.Give(money);
                         GameAnalyticsManager.AddMoneyGainedEvent(money, GameAnalyticsManager.MoneySource.Cheat, "console");
                     }
                     else
@@ -1553,8 +1557,23 @@ namespace Barotrauma
                         ThrowError($"\"{args[0]}\" is not a valid numeric value.");
                     }
                 }
+            }, isCheat: true, getValidArgs: () => new []
+            {
+                new []{ string.Empty },
+                Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+            }));
+
+            commands.Add(new Command("showmoney", "showmoney: Shows the amount of money in everyones wallet.", args =>
+            {
+                if (!(GameMain.GameSession?.GameMode is CampaignMode campaign))
+                {
+                    ThrowError("No campaign active!");
+                    return;
+                }
+
+                NewMessage($"Bank: {campaign.Bank.Balance}");
             }, isCheat: true));
-            
+
             commands.Add(new Command("skipeventcooldown", "skipeventcooldown: Skips the currently active event cooldown and triggers pending monster spawns immediately.", args =>
             {
                 GameMain.GameSession?.EventManager?.SkipEventCooldown();
@@ -1968,7 +1987,7 @@ namespace Barotrauma
             }
         }
 
-        private static string[] ListCharacterNames() => Character.CharacterList.OrderBy(c => c.IsDead).ThenByDescending(c => c.IsHuman).Select(c => c.Name).Distinct().ToArray();
+        private static string[] ListCharacterNames() => Character.CharacterList.OrderBy(c => c.IsDead).ThenByDescending(c => c.IsHuman).ThenBy(c => c.Name).Select(c => c.Name).Distinct().ToArray();
 
         private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false, Client allowedRemotePlayer = null)
         {
