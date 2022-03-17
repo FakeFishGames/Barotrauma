@@ -125,6 +125,7 @@ namespace Barotrauma
 
             InitUI();
 
+            //backwards compatibility for saves made prior to the addition of personal wallets
             int oldMoney = element.GetAttributeInt("money", 0);
             if (oldMoney > 0)
             {

@@ -666,8 +666,11 @@ namespace Barotrauma.Networking
                     if (ChildServerRelay.Process?.HasExited ?? true)
                     {
                         Disconnect();
-                        var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
-                        msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
+                        if (!GUIMessageBox.MessageBoxes.Any(mb => (mb as GUIMessageBox).Text.Text == ChildServerRelay.CrashMessage))
+                        {
+                            var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
+                            msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
+                        }
                     }
                 }
             }

@@ -370,7 +370,7 @@ namespace Barotrauma.Items.Components
 
         public Item GetFocusTarget()
         {
-            var positionOut = item.Connections.Find(c => c.Name == "position_out");
+            var positionOut = item.Connections?.Find(c => c.Name == "position_out");
             if (positionOut == null) { return null; }
 
             item.SendSignal(new Signal(MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), sender: user), positionOut);

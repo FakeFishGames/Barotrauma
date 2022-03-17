@@ -289,9 +289,8 @@ namespace Barotrauma
             UpdateLevelObjectsList();
         }
 
-        public override void Deselect()
+        protected override void DeselectEditorSpecific()
         {
-            base.Deselect();
             pointerLightSource?.Remove();
             pointerLightSource = null;
         }

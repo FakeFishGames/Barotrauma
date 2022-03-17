@@ -380,20 +380,24 @@ namespace Barotrauma
             public string Tags
             {
                 get { return string.Join(',', TagSet); }
-                private set { TagSet = value.Split(',').ToIdentifiers().ToImmutableHashSet(); }
+                private set
+                {
+                    TagSet = value.Split(',')
+                        .ToIdentifiers()
+                        .Where(id => !id.IsEmpty)
+                        .ToImmutableHashSet();
+                }
             }
 
             public ImmutableHashSet<Identifier> TagSet { get; private set; }
 
             public SoundParams(ContentXElement element, CharacterParams character) : base(element, character)
             {
-                HashSet<Identifier> tags = TagSet.ToHashSet();
                 Identifier genderFallback = element.GetAttributeIdentifier("gender", "");
                 if (genderFallback != Identifier.Empty && genderFallback != "None")
                 {
-                    tags.Add(genderFallback);
+                    TagSet = TagSet.Add(genderFallback);
                 }
-                TagSet = tags.ToImmutableHashSet();
             }
         }
 

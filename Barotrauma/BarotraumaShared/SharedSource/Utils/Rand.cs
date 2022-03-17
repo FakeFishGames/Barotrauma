@@ -11,38 +11,6 @@ namespace Barotrauma
 {
     public static class Rand
     {
-        [Obsolete("TODO: remove")]
-        public static class Tracker
-        {
-            private readonly static List<string> logMsgs = new List<string>();
-            public static IReadOnlyList<string> LogMsgs => logMsgs;
-
-            public static bool Active = false;
-            
-            public static void Reset()
-            {
-                logMsgs.Clear();
-                Active = false;
-            }
-
-            public static void RegisterCall(int stDepth=4)
-            {
-                if (!Active) { return; }
-                var st = new StackTrace(skipFrames: 2, fNeedFileInfo: true);
-                var frames = st.GetFrames();
-                string msg = string.Join("; ",
-                    frames.Take(stDepth).Select(f =>
-                        $"{Path.GetFileNameWithoutExtension(f.GetFileName())}:{f.GetFileLineNumber()}"));
-                logMsgs.Add(msg);
-            }
-
-            public static void Log(string msg)
-            {
-                if (!Active) { return; }
-                logMsgs.Add(msg);
-            }
-        }
-        
         public enum RandSync
         {
             Unsynced, //not synced, used for unimportant details like minor particle properties
@@ -81,8 +49,6 @@ namespace Barotrauma
         public static int ThreadId = 0;
         private static void CheckRandThreadSafety(RandSync sync)
         {
-            if (sync == RandSync.ServerAndClient) { Tracker.RegisterCall(); }
-
             if (ThreadId != 0 && sync == RandSync.Unsynced)
             {
                 if (System.Threading.Thread.CurrentThread.ManagedThreadId != ThreadId)

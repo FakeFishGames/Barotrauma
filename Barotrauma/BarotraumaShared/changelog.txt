@@ -1,4 +1,25 @@
 ---------------------------------------------------------------------------------------------------------
+v0.17.2.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Adjusted abyss resource spawning: less resources per level, the number of resources is relative to the difficulty, the spawned resources aren't guaranteed to always be the 5 least common alien materials.
+- Increased maximum number of lights from 300 to 600 (unstable only).
+- Backwards compatibility with human mods made before modding refactor (unstable only).
+
+Fixes: 
+- Fixed server crash in GetSalaryEligibleCrew (unstable only).
+- Fixed crashing in Controller.GetFocusTarget (unstable only).
+- Fixed "Tried to access crew wallets in singleplayer" error at the end of the round (unstable only).
+- Fixed selling items taking money instead of giving it (unstable only).
+- Fixed lights that are drawn behind subs counting as shadow-casting in the sub editor.
+- Fixed server host creating 2 disconnect message boxes if the server crashes.
+- Deactivate certain cheats when leaving an editor. Fixes ability to use certain cheat commands in an editor (which is now allowed without having to enable cheats) and then switch back to the game (unstable only).
+
+AI:
+- Fixed bots sometimes getting stuck to doors when they are trying to fix a hull behind it. Happened because the goto objective was completed before the bot could open the door.
+
+---------------------------------------------------------------------------------------------------------
 v0.17.1.0
 ---------------------------------------------------------------------------------------------------------
 

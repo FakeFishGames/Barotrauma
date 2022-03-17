@@ -22,7 +22,7 @@ namespace Barotrauma
         public const int MaxStructures = 2000;
         public const int MaxWalls = 500;
         public const int MaxItems = 5000;
-        public const int MaxLights = 300;
+        public const int MaxLights = 600;
         public const int MaxShadowCastingLights = 60;
 
         private static Submarine MainSub
@@ -852,7 +852,7 @@ namespace Barotrauma
                     lightCount += item.GetComponents<LightComponent>().Count();
                 }
                 lightCountText.TextColor = lightCount > MaxLights ? GUIStyle.Red : Color.Lerp(GUIStyle.Green, GUIStyle.Orange, lightCount / (float)MaxLights);
-                return lightCount.ToString();
+                return lightCount.ToString() + "/" + MaxLights;
             };
             var shadowCastingLightCountLabel = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedEntityCountPanel.RectTransform), TextManager.Get("SubEditorShadowCastingLights"),
                 textAlignment: Alignment.CenterLeft, font: GUIStyle.SmallFont, wrap: true);
@@ -863,10 +863,10 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.ParentInventory != null) { continue; }
-                    lightCount += item.GetComponents<LightComponent>().Count(l => l.CastShadows);
+                    lightCount += item.GetComponents<LightComponent>().Count(l => l.CastShadows && !l.DrawBehindSubs);
                 }
                 shadowCastingLightCountText.TextColor = lightCount > MaxShadowCastingLights ? GUIStyle.Red : Color.Lerp(GUIStyle.Green, GUIStyle.Orange, lightCount / (float)MaxShadowCastingLights);
-                return lightCount.ToString();
+                return lightCount.ToString() + "/" + MaxShadowCastingLights;
             };
             entityCountPanel.RectTransform.NonScaledSize =
                 new Point(
@@ -1508,10 +1508,8 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public override void Deselect()
+        protected override void DeselectEditorSpecific()
         {
-            base.Deselect();
-
             CloseItem();
 
             autoSaveLabel?.Parent?.RemoveChild(autoSaveLabel);

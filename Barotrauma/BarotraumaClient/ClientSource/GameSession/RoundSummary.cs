@@ -315,9 +315,8 @@ namespace Barotrauma
                 int reward = displayedMission.GetReward(Submarine.MainSub);
                 if (selectedMissions.Contains(displayedMission) && displayedMission.Completed && reward > 0)
                 {
-                    LocalizedString rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", reward));
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), RichString.Rich(displayedMission.GetMissionRewardText(Submarine.MainSub)));
-                    if (Character.Controlled is { } controlled)
+                    if (GameMain.IsMultiplayer && Character.Controlled is { } controlled)
                     {
                         var (share, percentage) = Mission.GetRewardShare(controlled.Wallet.RewardDistribution, Mission.GetSalaryEligibleCrew(), Option<int>.Some(reward));
                         if (share > 0)

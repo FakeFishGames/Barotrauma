@@ -677,7 +677,7 @@ namespace Barotrauma
                 if (item.ParentInventory == null) { continue; }
                 disabledItemLightCount += item.GetComponents<Items.Components.LightComponent>().Count();
             }
-            return GameMain.LightManager.Lights.Count(l => l.CastShadows) - disabledItemLightCount;
+            return GameMain.LightManager.Lights.Count(l => l.CastShadows && !l.IsBackground) - disabledItemLightCount;
         }
 
         public void ClientReadPosition(IReadMessage msg, float sendingTime)

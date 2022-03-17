@@ -850,9 +850,8 @@ namespace Barotrauma
             spriteList.Select(0, autoScroll: false);            
         }
 
-        public override void Deselect()
+        protected override void DeselectEditorSpecific()
         {
-            base.Deselect();
             loadedSprites.ForEach(s => s.Remove());
             loadedSprites.Clear();
             ResetWidgets();
