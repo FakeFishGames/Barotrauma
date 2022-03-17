@@ -216,7 +216,7 @@ namespace Barotrauma.Items.Components
                 powerOnSoundPlayed = false;
             }
 #endif
-            if (powerIn == null && powerOut == null)
+            if (powerIn == null)
             {
                 //power down the device here if it has no power connection (= receives power from contained battery cells instead of the "normal" power logic)
                 Voltage -= deltaTime;
