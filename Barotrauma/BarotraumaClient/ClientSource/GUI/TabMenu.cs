@@ -850,7 +850,7 @@ namespace Barotrauma
             GUILayoutGroup middleLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.66f), walletLayout.RectTransform));
             GUILayoutGroup salaryTextLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), middleLayout.RectTransform), isHorizontal: true);
             GUITextBlock salaryTitle = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), salaryTextLayout.RectTransform), TextManager.Get("crewwallet.salary"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
-            GUITextBlock rewardBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), salaryTextLayout.RectTransform), $"{Mission.GetRewardShare(targetWallet.RewardDistribution, salaryCrew, Option<int>.None()).Percentage}%", textAlignment: Alignment.BottomRight);
+            GUITextBlock rewardBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), salaryTextLayout.RectTransform), TextManager.GetWithVariable("percentageformat", "[value]", GetSharePercentage()), textAlignment: Alignment.BottomRight);
             GUILayoutGroup sliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), middleLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.Center);
             GUIScrollBar salarySlider = new GUIScrollBar(new RectTransform(new Vector2(0.9f, 1f), sliderLayout.RectTransform), style: "GUISlider", barSize: 0.03f)
             {
@@ -860,7 +860,7 @@ namespace Barotrauma
                 BarSize = 0.1f,
                 OnMoved = (bar, scroll) =>
                 {
-                    rewardBlock.Text = $"{Mission.GetRewardShare((int)(scroll * 100f), salaryCrew, Option<int>.None()).Percentage}%";
+                    rewardBlock.Text = TextManager.GetWithVariable("percentageformat", "[value]", GetSharePercentage());
                     return true;
                 },
                 OnReleased = (bar, scroll) =>
@@ -1090,10 +1090,7 @@ namespace Barotrauma
                 GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
             }
 
-            static int GetRewardDistributionPercentage(int distribution, ImmutableArray<Character> crew)
-            {
-                return Mission.GetRewardShare(distribution, crew, Option<int>.None()).Percentage;
-            }
+            string GetSharePercentage() => Mission.GetRewardShare(targetWallet.RewardDistribution, salaryCrew, Option<int>.None()).Percentage.ToString();
         }
 
         private GUIComponent CreateClientInfoFrame(GUIFrame frame, Client client, Sprite permissionIcon = null)

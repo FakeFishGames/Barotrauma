@@ -407,8 +407,6 @@ namespace Barotrauma
             Loaded = this;
             Generating = true;
 
-            Rand.Tracker.Reset();
-            Rand.Tracker.Active = true;
             EqualityCheckValues.Clear();
             EntitiesBeforeGenerate = GetEntities().ToList();
             EntityCountBeforeGenerate = EntitiesBeforeGenerate.Count();
@@ -1305,8 +1303,6 @@ namespace Barotrauma
             //assign an ID to make entity events work
             //ID = FindFreeID();
             Generating = false;
-            Rand.Tracker.Active = false;
-            File.WriteAllLines(GameMain.NetworkMember is { IsServer: true } ? "serverrng.txt" : "clientrng.txt", Rand.Tracker.LogMsgs);
         }
 
         private List<Point> GeneratePathNodes(Point startPosition, Point endPosition, Rectangle pathBorders, Tunnel parentTunnel, float variance)
@@ -2443,7 +2439,6 @@ namespace Barotrauma
                     fixedResources.Add((itemPrefab, fixedQuantityResourceInfo));
                 }
             }
-            levelResources.Sort((x, y) => x.commonness.CompareTo(y.commonness));
 
             DebugConsole.Log("Generating level resources...");
             var allValidLocations = GetAllValidClusterLocations();
@@ -2473,29 +2468,33 @@ namespace Barotrauma
 
             //place some of the least common resources in the abyss
             AbyssResources.Clear();
-            for (int j = 0; j < levelResources.Count && j < 5; j++)
-            {
-                for (int i = 0; i < 10; i++)
-                {
-                    var (itemPrefab, commonness) = levelResources[j];
-                    var location = allValidLocations.GetRandom(l =>
-                    {
-                        if (l.Cell == null || l.Edge == null) { return false; }
-                        if (l.EdgeCenter.Y > AbyssArea.Bottom) { return false; }
-                        l.InitializeResources();
-                        return l.Resources.Count <= GetMaxResourcesOnEdge(itemPrefab, l, out _);
-                    }, randSync: Rand.RandSync.ServerAndClient);
 
-                    if (location.Cell == null || location.Edge == null) { break; }
-                    int clusterSize = Rand.Range(GenerationParams.ResourceClusterSizeRange.X, GenerationParams.ResourceClusterSizeRange.Y + 1, Rand.RandSync.ServerAndClient);
-                    PlaceResources(itemPrefab, clusterSize, location, out var abyssResources);
-                    var abyssClusterLocation = new ClusterLocation(location.Cell, location.Edge, initializeResourceList: true);
-                    abyssClusterLocation.Resources.AddRange(abyssResources);
-                    AbyssResources.Add(abyssClusterLocation);
-                    var locationIndex = allValidLocations.FindIndex(l => l.Equals(location));
-                    allValidLocations.RemoveAt(locationIndex);
-                }
-            }
+            int abyssClusterCount = (int)MathHelper.Lerp(GenerationParams.AbyssResourceClustersMin, GenerationParams.AbyssResourceClustersMax, Difficulty / 100.0f);
+
+            for (int i = 0; i < abyssClusterCount; i++)
+            {
+                //use inverse commonness to select the abyss resources (the rarest ones are the most common in the abyss)
+                var selectedPrefab = ToolBox.SelectWeightedRandom(
+                    levelResources.Select(it => it.itemPrefab).ToList(),
+                    levelResources.Select(it => it.commonness <= 0.0f ? 0.0f : 1.0f / it.commonness).ToList(),
+                    Rand.RandSync.ServerAndClient);
+                var location = allValidLocations.GetRandom(l =>
+                {
+                    if (l.Cell == null || l.Edge == null) { return false; }
+                    if (l.EdgeCenter.Y > AbyssArea.Bottom) { return false; }
+                    l.InitializeResources();
+                    return l.Resources.Count <= GetMaxResourcesOnEdge(selectedPrefab, l, out _);
+                }, randSync: Rand.RandSync.ServerAndClient);
+
+                if (location.Cell == null || location.Edge == null) { break; }
+                int clusterSize = Rand.Range(GenerationParams.ResourceClusterSizeRange.X, GenerationParams.ResourceClusterSizeRange.Y + 1, Rand.RandSync.ServerAndClient);
+                PlaceResources(selectedPrefab, clusterSize, location, out var abyssResources);
+                var abyssClusterLocation = new ClusterLocation(location.Cell, location.Edge, initializeResourceList: true);
+                abyssClusterLocation.Resources.AddRange(abyssResources);
+                AbyssResources.Add(abyssClusterLocation);
+                var locationIndex = allValidLocations.FindIndex(l => l.Equals(location));
+                allValidLocations.RemoveAt(locationIndex);
+            }            
 
             PathPoints.Clear();
             nextPathPointId = 0;
@@ -2603,7 +2602,14 @@ namespace Barotrauma
 
 #if DEBUG
             DebugConsole.NewMessage("Level resources spawned: " + itemCount + "\n" +
-                "Spawn points containing resources: " + PathPoints.Where(p => p.ClusterLocations.Any()).Count() + "/" + PathPoints.Count);
+                "   Spawn points containing resources: " + PathPoints.Where(p => p.ClusterLocations.Any()).Count() + "/" + PathPoints.Count + "\n" +
+                "   Total value: "+ PathPoints.Sum(p => p.ClusterLocations.Sum(c => c.Resources.Sum(r => r.Prefab.DefaultPrice?.Price ?? 0)))+" mk");
+            if (AbyssResources.Count > 0)
+            {
+
+                DebugConsole.NewMessage("Abyss resources spawned: " + AbyssResources.Sum(a => a.Resources.Count) + "\n" +
+                "   Total value: " + AbyssResources.Sum(c => c.Resources.Sum(r => r.Prefab.DefaultPrice?.Price ?? 0)) + " mk");
+            }
 #endif
 
             DebugConsole.Log("Level resources generated");

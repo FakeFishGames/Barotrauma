@@ -521,7 +521,7 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(Vector2.One, healthLayout.RectTransform), string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont)
             {
-                TextGetter = () => $"{(int)(info.Character?.HealthPercentage ?? 100f)}%",
+                TextGetter = () => TextManager.GetWithVariable("percentageformat", "[value]", $"{(int)(info.Character?.HealthPercentage ?? 100f)}"),
                 TextColor = GUIStyle.Green
             };
 

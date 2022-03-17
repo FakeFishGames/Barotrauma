@@ -57,7 +57,7 @@ namespace Barotrauma.Items.Components
         }
 
         [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Should structures cast shadows when light from this light source hits them. " +
-            "Disabling shadows increases the performance of the game, and is recommended for lights with a short range.", alwaysUseInstanceValues: true)]
+            "Disabling shadows increases the performance of the game, and is recommended for lights with a short range. Lights that are set to be drawn behind subs don't cast shadows, regardless of this setting.", alwaysUseInstanceValues: true)]
         public bool CastShadows
         {
             get { return castShadows; }

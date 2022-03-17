@@ -446,7 +446,7 @@ namespace Barotrauma
 #elif CLIENT
             return characters;
 #endif
-            static bool IsAlive(Character c) { return c.Info != null && !c.IsDead; }
+            static bool IsAlive(Character c) { return c?.Info != null && !c.IsDead; }
         }
 
 

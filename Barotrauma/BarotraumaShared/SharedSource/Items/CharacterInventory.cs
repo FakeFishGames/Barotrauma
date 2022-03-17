@@ -58,7 +58,7 @@ namespace Barotrauma
             IsEquipped = new bool[capacity];
             SlotTypes = new InvSlotType[capacity];
 
-            AccessibleWhenAlive = element.GetAttributeBool("accessiblewhenalive", false);
+            AccessibleWhenAlive = element.GetAttributeBool("accessiblewhenalive", character.Info != null);
             AccessibleByOwner = element.GetAttributeBool("accessiblebyowner", AccessibleWhenAlive);
 
             string[] slotTypeNames = ParseSlotTypes(element);

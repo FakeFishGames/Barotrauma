@@ -519,11 +519,6 @@ namespace Barotrauma
             base.Select();
         }
 
-        public override void Deselect()
-        {
-            base.Deselect();
-        }
-
         public override void AddToGUIUpdateList()
         {
             GuiFrame.AddToGUIUpdateList();

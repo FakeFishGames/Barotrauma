@@ -243,9 +243,8 @@ namespace Barotrauma.CharacterEditor
             character.AnimController.ForceSelectAnimationType = AnimationType.NotDefined;
         }
 
-        public override void Deselect()
+        protected override void DeselectEditorSpecific()
         {
-            base.Deselect();
             SoundPlayer.OverrideMusicType = Identifier.Empty;
             GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", GameSettings.CurrentConfig.Audio.SoundVolume, 0);
             GUI.ForceMouseOn(null);

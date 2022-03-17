@@ -36,7 +36,7 @@ namespace Barotrauma
             var menuCategoryElement = ConfigElement.GetChildElement("MenuCategory");
             var pronounsElement = ConfigElement.GetChildElement("Pronouns");
 
-            if (headsElement != null && varsElement != null && menuCategoryElement != null && pronounsElement != null)
+            if (headsElement != null)
             {
                 CharacterInfoPrefab = new CharacterInfoPrefab(headsElement, varsElement, menuCategoryElement, pronounsElement);
             }

@@ -21,13 +21,25 @@ namespace Barotrauma
         public CharacterInfoPrefab(ContentXElement headsElement, XElement varsElement, XElement menuCategoryElement, XElement pronounsElement)
         {
             Heads = headsElement.Elements().Select(e => new CharacterInfo.HeadPreset(this, e)).ToImmutableArray();
-            VarTags = varsElement.Elements()
-                .Select(e =>
-                    (e.GetAttributeIdentifier("var", ""),
-                     e.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToImmutableHashSet()))
-                .ToImmutableDictionary();
-            MenuCategoryVar = menuCategoryElement.GetAttributeIdentifier("var", Identifier.Empty);
-            Pronouns = pronounsElement.GetAttributeIdentifier("vars", Identifier.Empty);
+            if (varsElement != null)
+            {
+                VarTags = varsElement.Elements()
+                    .Select(e =>
+                        (e.GetAttributeIdentifier("var", ""),
+                            e.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToImmutableHashSet()))
+                    .ToImmutableDictionary();
+            }
+            else
+            {
+                VarTags = new[]
+                {
+                    ("GENDER".ToIdentifier(),
+                        new[] { "female".ToIdentifier(), "male".ToIdentifier() }.ToImmutableHashSet())
+                }.ToImmutableDictionary();
+            }
+
+            MenuCategoryVar = menuCategoryElement?.GetAttributeIdentifier("var", Identifier.Empty) ?? "GENDER".ToIdentifier();
+            Pronouns = pronounsElement?.GetAttributeIdentifier("vars", Identifier.Empty) ?? "GENDER".ToIdentifier();
         }
         public string ReplaceVars(string str, CharacterInfo.HeadPreset headPreset)
         {
@@ -135,7 +147,13 @@ namespace Barotrauma
             public string Tags
             {
                 get { return string.Join(",", TagSet); }
-                private set { TagSet = value.Split(",").Select(s => s.ToIdentifier()).ToImmutableHashSet(); }
+                private set
+                {
+                    TagSet = value.Split(",")
+                        .Select(s => s.ToIdentifier())
+                        .Where(id => !id.IsEmpty)
+                        .ToImmutableHashSet();
+                }
             }
 
             [Serialize("0,0", IsPropertySaveable.No)]
@@ -149,6 +167,20 @@ namespace Barotrauma
             {
                 characterInfoPrefab = charInfoPrefab;
                 SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+                DetermineTagsFromLegacyFormat(element);
+            }
+
+            private void DetermineTagsFromLegacyFormat(XElement element)
+            {
+                void addTag(string tag)
+                    => TagSet = TagSet.Add(tag.ToIdentifier());
+                
+                string headId = element.GetAttributeString("id", "");
+                string gender = element.GetAttributeString("gender", "");
+                string race = element.GetAttributeString("race", "");
+                if (!headId.IsNullOrEmpty()) { addTag($"head{headId}"); }
+                if (!gender.IsNullOrEmpty()) { addTag(gender); }
+                if (!race.IsNullOrEmpty()) { addTag(race); }
             }
         }
 
@@ -438,12 +470,37 @@ namespace Barotrauma
         public readonly ImmutableArray<(Color Color, float Commonness)> FacialHairColors;
         public readonly ImmutableArray<(Color Color, float Commonness)> SkinColors;
         
-        private void GetName(ContentPath namesFile, Rand.RandSync randSync, out string name)
+        private void GetName(Rand.RandSync randSync, out string name)
         {
-            XDocument doc = XMLExtensions.TryLoadXml(namesFile);
-            name = doc.Root.GetAttributeString("format", "");
+            var nameElement = CharacterConfigElement.GetChildElement("names") ?? CharacterConfigElement.GetChildElement("name");
+            ContentPath namesXmlFile = nameElement?.GetAttributeContentPath("path") ?? ContentPath.Empty;
+            XElement namesXml = null;
+            if (!namesXmlFile.IsNullOrEmpty()) //names.xml is defined 
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(namesXmlFile);
+                namesXml = doc.Root;
+            }
+            else //the legacy firstnames.txt/lastnames.txt shit is defined
+            {
+                namesXml = new XElement("names", new XAttribute("format", "[firstname] [lastname]"));
+                var firstNamesPath = ReplaceVars(nameElement.GetAttributeContentPath("firstname")?.Value ?? "");
+                var lastNamesPath = ReplaceVars(nameElement.GetAttributeContentPath("lastname")?.Value ?? "");
+                if (File.Exists(firstNamesPath) && File.Exists(lastNamesPath))
+                {
+                    var firstNames = File.ReadAllLines(firstNamesPath);
+                    var lastNames = File.ReadAllLines(lastNamesPath);
+                    namesXml.Add(firstNames.Select(n => new XElement("firstname", new XAttribute("value", n))));
+                    namesXml.Add(lastNames.Select(n => new XElement("lastname", new XAttribute("value", n))));
+                }
+                else //the files don't exist, just fall back to the vanilla names
+                {
+                    XDocument doc = XMLExtensions.TryLoadXml("Content/Characters/Human/names.xml");
+                    namesXml = doc.Root;
+                }
+            }
+            name = namesXml.GetAttributeString("format", "");
             Dictionary<Identifier, List<string>> entries = new Dictionary<Identifier, List<string>>();
-            foreach (var subElement in doc.Root.Elements())
+            foreach (var subElement in namesXml.Elements())
             {
                 Identifier elemName = subElement.NameAsIdentifier();
                 if (!entries.ContainsKey(elemName))
@@ -477,8 +534,21 @@ namespace Barotrauma
         // talent-relevant values
         public int MissionsCompletedSinceDeath = 0;
 
+        private static bool ElementHasSpecifierTags(XElement element)
+            => element.GetAttributeBool("specifiertags",
+                element.GetAttributeBool("genders",
+                    element.GetAttributeBool("races", false)));
+        
         // Used for creating the data
-        public CharacterInfo(Identifier speciesName, string name = "", string originalName = "", Either<Job, JobPrefab> jobOrJobPrefab = null, string ragdollFileName = null, int variant = 0, Rand.RandSync randSync = Rand.RandSync.Unsynced, Identifier npcIdentifier = default)
+        public CharacterInfo(
+            Identifier speciesName,
+            string name = "",
+            string originalName = "",
+            Either<Job, JobPrefab> jobOrJobPrefab = null,
+            string ragdollFileName = null,
+            int variant = 0,
+            Rand.RandSync randSync = Rand.RandSync.Unsynced,
+            Identifier npcIdentifier = default)
         {
             JobPrefab jobPrefab = null;
             Job job = null;
@@ -494,7 +564,7 @@ namespace Barotrauma
             CharacterConfigElement = CharacterPrefab.FindBySpeciesName(SpeciesName)?.ConfigElement;
             if (CharacterConfigElement == null) { return; }
             // TODO: support for variants
-            HasSpecifierTags = CharacterConfigElement.GetAttributeBool("specifiertags", false);
+            HasSpecifierTags = ElementHasSpecifierTags(CharacterConfigElement);
             if (HasSpecifierTags)
             {
                 HairColors = CharacterConfigElement.GetAttributeTupleArray("haircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
@@ -537,12 +607,7 @@ namespace Barotrauma
 
         public string GetRandomName(Rand.RandSync randSync)
         {
-            string name = "";
-            var nameElement = CharacterConfigElement.GetChildElement("names");
-            if (nameElement != null)
-            {
-                GetName(nameElement.GetAttributeContentPath("path") ?? ContentPath.Empty, randSync, out name);
-            }
+            GetName(randSync, out string name);
 
             return name;
         }
@@ -623,7 +688,7 @@ namespace Barotrauma
             if (element == null) { return; }
             // TODO: support for variants
             CharacterConfigElement = element;
-            HasSpecifierTags = CharacterConfigElement.GetAttributeBool("specifiertags", false);
+            HasSpecifierTags = ElementHasSpecifierTags(CharacterConfigElement);
             if (HasSpecifierTags)
             {
                 RecreateHead(
@@ -647,7 +712,7 @@ namespace Barotrauma
                     var nameElement = CharacterConfigElement.GetChildElement("names");
                     if (nameElement != null)
                     {
-                        GetName(nameElement.GetAttributeContentPath("path") ?? ContentPath.Empty, Rand.RandSync.ServerAndClient, out Name);
+                        GetName(Rand.RandSync.ServerAndClient, out Name);
                     }
                 }
             }

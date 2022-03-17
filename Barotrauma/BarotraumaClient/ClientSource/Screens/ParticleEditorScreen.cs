@@ -153,9 +153,8 @@ namespace Barotrauma
             RefreshPrefabList();
         }
 
-        public override void Deselect()
+        protected override void DeselectEditorSpecific()
         {
-            base.Deselect();
             GameMain.ParticleManager.Camera = GameMain.GameScreen.Cam;
             filterBox.Text = "";
         }

@@ -842,7 +842,7 @@ namespace Barotrauma
                 ContentXElement headElement = info.Ragdoll.MainElement.Elements().FirstOrDefault(e =>
                     e.GetAttributeString("type", "").Equals("head", StringComparison.OrdinalIgnoreCase));
                 ContentXElement headSpriteElement = headElement.GetChildElement("sprite");
-                string spritePathWithTags = headSpriteElement.Attribute("texture").Value;
+                ContentPath spritePathWithTags = headSpriteElement.GetAttributeContentPath("texture");
 
                 var characterConfigElement = info.CharacterConfigElement;
 
@@ -853,7 +853,7 @@ namespace Barotrauma
                     itemsInRow = 0;
                     foreach (var head in heads.Where(h => h.TagSet.Contains(selectedCategory)))
                     {
-                        string spritePath = info.Prefab.ReplaceVars(spritePathWithTags, head);
+                        string spritePath = info.Prefab.ReplaceVars(spritePathWithTags.Value, head);
 
                         if (!File.Exists(spritePath)) { continue; }
 

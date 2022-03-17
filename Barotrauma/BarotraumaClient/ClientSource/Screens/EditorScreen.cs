@@ -7,6 +7,18 @@ namespace Barotrauma
         public static Color BackgroundColor = GameSettings.CurrentConfig.SubEditorBackground;
         public override bool IsEditor => true;
 
+        public override sealed void Deselect()
+        {
+            DeselectEditorSpecific();
+            //reset cheats the player might have used in the editor
+            GameMain.LightManager.LightingEnabled = true;
+            GameMain.LightManager.LosEnabled = true;
+            Hull.EditFire = false;
+            Hull.EditWater = false;
+        }
+
+        protected virtual void DeselectEditorSpecific() { }
+
         public void CreateBackgroundColorPicker()
         {
             var msgBox = new GUIMessageBox(TextManager.Get("CharacterEditor.EditBackgroundColor"), "", new[] { TextManager.Get("Reset"), TextManager.Get("OK")}, new Vector2(0.2f, 0.175f), minSize: new Point(300, 175));
