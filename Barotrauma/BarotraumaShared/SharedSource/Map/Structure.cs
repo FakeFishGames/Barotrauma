@@ -101,9 +101,11 @@ namespace Barotrauma
 
         public List<Body> Bodies { get; private set; }
 
+        [Editable, Serialize(false, true, description: "should the structure cast a shadow in the LoS shader")]
         public bool CastShadow
         {
-            get { return Prefab.CastShadow; }
+            get;
+            set;
         }
 
         public bool IsHorizontal { get; private set; }
@@ -1456,6 +1458,8 @@ namespace Barotrauma
             {
                 s.UpdateSections();
             }
+
+            s.CastShadow = element.GetAttributeBool("castshadow", prefab.CastShadow);
 
             return s;
         }
