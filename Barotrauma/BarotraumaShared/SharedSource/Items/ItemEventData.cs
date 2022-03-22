@@ -63,7 +63,7 @@ namespace Barotrauma
             }
         }
 
-        private readonly struct StatusEventData : IEventData
+        private readonly struct ItemStatusEventData : IEventData
         {
             public EventType EventType => EventType.Status;
         }

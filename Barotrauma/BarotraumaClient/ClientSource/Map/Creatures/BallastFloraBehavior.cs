@@ -370,6 +370,7 @@ namespace Barotrauma.MapCreatures.Behavior
         private BallastFloraBranch ReadBranch(IReadMessage msg)
         {
             int id = msg.ReadInt32();
+            bool isRootGrowth = msg.ReadBoolean();
             byte type = (byte)msg.ReadRangedInteger(0b0000, 0b1111);
             byte sides = (byte)msg.ReadRangedInteger(0b0000, 0b1111);
             int flowerConfig = msg.ReadRangedInteger(0, 0xFFF);
@@ -385,7 +386,8 @@ namespace Barotrauma.MapCreatures.Behavior
             {
                 ID = id,
                 MaxHealth = maxHealth,
-                Sides = (TileSide) sides
+                Sides = (TileSide) sides,
+                IsRootGrowth = isRootGrowth
             };
         }
     }

@@ -25,12 +25,18 @@ namespace Barotrauma
         public int Balance;
     }
 
+    /// <summary>
+    /// Network message for the server to update wallet values to clients
+    /// </summary>
     internal struct NetWalletUpdate : INetSerializableStruct
     {
         [NetworkSerialize(ArrayMaxSize = NetConfig.MaxPlayers + 1)]
         public NetWalletTransaction[] Transactions;
     }
 
+    /// <summary>
+    /// Network message for the client to transfer money between wallets
+    /// </summary>
     [NetworkSerialize]
     internal struct NetWalletTransfer : INetSerializableStruct
     {
@@ -39,7 +45,10 @@ namespace Barotrauma
         public int Amount;
     }
 
-    internal struct NetWalletSalaryUpdate : INetSerializableStruct
+    /// <summary>
+    /// Network message for the client to set the salary of someone
+    /// </summary>
+    internal struct NetWalletSetSalaryUpdate : INetSerializableStruct
     {
         [NetworkSerialize]
         public ushort Target;
@@ -48,6 +57,10 @@ namespace Barotrauma
         public int NewRewardDistribution;
     }
 
+    /// <summary>
+    /// Represents the difference in balance and salary when a wallet gets updated
+    /// Not really used right now but could be used for notifications when receiving funds similar to how talents do it
+    /// </summary>
     [NetworkSerialize]
     internal struct WalletChangedData : INetSerializableStruct
     {
@@ -82,6 +95,9 @@ namespace Barotrauma
         }
     }
 
+    /// <summary>
+    /// Represents an update that changed the amount of money or salary of the wallet
+    /// </summary>
     [NetworkSerialize]
     internal struct NetWalletTransaction : INetSerializableStruct
     {

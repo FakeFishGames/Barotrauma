@@ -272,11 +272,7 @@ namespace Barotrauma
 
         private GUIComponent CreateEditingHUD()
         {
-            int width = 500;
-            int height = spawnType == SpawnType.Path ? 80 : 200;
-            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
-
-            editingHUD = new GUIFrame(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
+            editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.15f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) })
             {
                 UserData = this
             };
@@ -284,7 +280,7 @@ namespace Barotrauma
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), editingHUD.RectTransform, Anchor.Center))
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                AbsoluteSpacing = (int)(GUI.Scale * 5)
             };
 
             if (spawnType == SpawnType.Path)
@@ -417,6 +413,10 @@ namespace Barotrauma
                     textBox.Flash(GUIStyle.Green);
                 };
             }
+
+            editingHUD.RectTransform.Resize(new Point(
+                editingHUD.Rect.Width,
+                (int)(paddedFrame.Children.Sum(c => c.Rect.Height + paddedFrame.AbsoluteSpacing) / paddedFrame.RectTransform.RelativeSize.Y)));
 
             PositionEditingHUD();
 

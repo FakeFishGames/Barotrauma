@@ -248,7 +248,7 @@ namespace Barotrauma
         {
             if (Submarine.MainSub != null && Submarine.MainSub.AtEndExit)
             {
-                int deliveredItemCount = items.Count(i => i.CurrentHull != null && !i.Removed && i.Condition > 0.0f);
+                int deliveredItemCount = items.Count(it => IsItemDelivered(it));
                 if (deliveredItemCount / (float)items.Count >= requiredDeliveryAmount)
                 {
                     GiveReward();
@@ -266,6 +266,13 @@ namespace Barotrauma
             }
             items.Clear();
             failed = !completed;
+        }
+
+        private bool IsItemDelivered(Item item)
+        {
+            if (item.Removed || item.Condition <= 0.0f || Submarine.MainSub == null) { return false; }
+            var submarine = item.Submarine ?? item.GetRootContainer()?.Submarine;
+            return submarine == Submarine.MainSub || Submarine.MainSub.GetConnectedSubs().Contains(submarine);
         }
     }
 }

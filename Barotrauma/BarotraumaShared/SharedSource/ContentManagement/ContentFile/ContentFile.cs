@@ -30,6 +30,7 @@ namespace Barotrauma
             public readonly bool NotSyncedInMultiplayer;
             public readonly ImmutableHashSet<Type>? AlternativeTypes;
             public readonly ImmutableHashSet<Identifier> Names;
+            private readonly MethodInfo? contentPathMutator;
 
             public TypeInfo(Type type)
             {
@@ -40,9 +41,11 @@ namespace Barotrauma
                 var notSyncedInMultiplayerAttribute = type.GetCustomAttribute<NotSyncedInMultiplayer>();
                 NotSyncedInMultiplayer = notSyncedInMultiplayerAttribute != null;
                 AlternativeTypes = reqByCoreAttribute?.AlternativeTypes;
+                contentPathMutator
+                    = Type.GetMethod(nameof(MutateContentPath), BindingFlags.Static | BindingFlags.Public);
 
                 HashSet<Identifier> names = new HashSet<Identifier> { type.Name.RemoveFromEnd("File").ToIdentifier() };
-                if (type.GetCustomAttribute<AlternativeContentTypeNames>()?.Names is { } altNames)
+                if (type.GetCustomAttribute<AlternativeContentTypeNames>(inherit: false)?.Names is { } altNames)
                 {
                     names.UnionWith(altNames);
                 }
@@ -50,6 +53,10 @@ namespace Barotrauma
                 Names = names.ToImmutableHashSet();
             }
 
+            public ContentPath MutateContentPath(ContentPath path)
+                => (ContentPath?)contentPathMutator?.Invoke(null, new object[] { path })
+                   ?? path;
+            
             public ContentFile? CreateInstance(ContentPackage contentPackage, ContentPath path) =>
                 (ContentFile?)Activator.CreateInstance(Type, contentPackage, path);
         }
@@ -80,6 +87,7 @@ namespace Barotrauma
             }
             try
             {
+                filePath = type.MutateContentPath(filePath);
                 if (!File.Exists(filePath.FullPath))
                 {
                     return fail($"Failed to load file \"{filePath}\" of type \"{elemName}\": file not found.");

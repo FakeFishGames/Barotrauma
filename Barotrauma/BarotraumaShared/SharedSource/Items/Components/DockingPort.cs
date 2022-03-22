@@ -74,7 +74,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(true, IsPropertySaveable.No, description: "Should the OnUse StatusEffects trigger when docking (on vanilla docking ports these effects emit particles and play a sound).)")]
+        [Editable, Serialize(true, IsPropertySaveable.No, description: "Should the OnUse StatusEffects trigger when docking (on vanilla docking ports these effects emit particles and play a sound).)")]
         public bool ApplyEffectsOnDocking
         {
             get;

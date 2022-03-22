@@ -805,7 +805,7 @@ namespace Barotrauma
             SeverLimbJointProjSpecific(limbJoint, playSound: true);
             if (GameMain.NetworkMember is { IsServer: true })
             {
-                GameMain.NetworkMember.CreateEntityEvent(character, new Character.StatusEventData());
+                GameMain.NetworkMember.CreateEntityEvent(character, new Character.CharacterStatusEventData());
             }
             return true;
         }

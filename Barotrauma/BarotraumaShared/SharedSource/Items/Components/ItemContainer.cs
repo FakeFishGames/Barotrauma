@@ -424,6 +424,15 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void UpdateBroken(float deltaTime, Camera cam)
+        {
+            //update when the item is broken too to get OnContaining effects to execute and contained item positions to update
+            if (IsActive)
+            {
+                Update(deltaTime, cam);
+            }
+        }
+
         public override bool HasRequiredItems(Character character, bool addMessage, LocalizedString msg = null)
         {
             return AllowAccess && (!AccessOnlyWhenBroken || Item.Condition <= 0) && base.HasRequiredItems(character, addMessage, msg);

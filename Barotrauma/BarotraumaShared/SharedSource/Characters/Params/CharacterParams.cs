@@ -104,6 +104,9 @@ namespace Barotrauma
         [Serialize(10f, IsPropertySaveable.Yes, "How frequent the recurring idle and attack sounds are?"), Editable(MinValueFloat = 1f, MaxValueFloat = 100f)]
         public float SoundInterval { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        public bool DrawLast { get; set; }
+
         public readonly CharacterFile File;
 
         public XDocument VariantFile { get; private set; }
@@ -573,6 +576,9 @@ namespace Barotrauma
 
             [Serialize(false, IsPropertySaveable.Yes, description: "The character will flee for a brief moment when being shot at if not performing an attack."), Editable]
             public bool AvoidGunfire { get; private set; }
+
+            [Serialize(0f, IsPropertySaveable.Yes, description: "How much damage is required for single attack to trigger avoiding/releasing targets."), Editable(minValue: 0f, maxValue: 1000f)]
+            public float DamageThreshold { get; private set; }
 
             [Serialize(3f, IsPropertySaveable.Yes, description: "How long the creature avoids gunfire. Also used when the creature is unlatched."), Editable(minValue: 0f, maxValue: 100f)]
             public float AvoidTime { get; private set; }

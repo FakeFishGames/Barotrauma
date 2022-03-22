@@ -68,15 +68,21 @@ namespace Barotrauma
 
         public bool IsTriggered { get; private set; }
 
-        public float Timer { get; private set; } = -1;
+        public float Timer { get; private set; }
 
         public bool IsActive { get; private set; }
+
+        public bool IsPermanent { get; private set; }
 
         public void Launch()
         {
             IsTriggered = true;
             IsActive = true;
-            Timer = Duration;
+            IsPermanent = Duration <= 0;
+            if (!IsPermanent)
+            {
+                Timer = Duration;
+            }
         }
 
         public void Reset()
@@ -88,6 +94,7 @@ namespace Barotrauma
 
         public void UpdateTimer(float deltaTime)
         {
+            if (IsPermanent) { return; }
             Timer -= deltaTime;
             if (Timer < 0)
             {
@@ -1243,23 +1250,26 @@ namespace Barotrauma
             {
                 for (int i = 0; i < targets.Count; i++)
                 {
-                    if (targets[i] is Character character)
+                    var target = targets[i];
+                    Limb targetLimb = target as Limb;
+                    if (targetLimb == null && target is Character character)
                     {
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
                             if (limb.body == sourceBody)
                             {
+                                targetLimb = limb;
                                 if (breakLimb)
                                 {
                                     character.TrySeverLimbJoints(limb, severLimbsProbability: 100, damage: 100, allowBeheading: true, attacker: user);
                                 }
-                                else
-                                {
-                                    limb.HideAndDisable(hideLimbTimer);
-                                }
                                 break;
                             }
                         }
+                    }
+                    if (hideLimb)
+                    {
+                        targetLimb?.HideAndDisable(hideLimbTimer);
                     }
                 }
             }

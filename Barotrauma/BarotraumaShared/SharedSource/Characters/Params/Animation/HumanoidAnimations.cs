@@ -103,6 +103,9 @@ namespace Barotrauma
 
         [Serialize(1f, IsPropertySaveable.Yes, description: "How much force is used to move the hands."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
         public float HandMoveStrength { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "Is the head angle fixed or does the angle follow the mouse position?"), Editable]
+        public bool FixedHeadAngle { get; set; }
     }
 
     abstract class HumanGroundedParams : GroundedMovementParams, IHumanAnimation
@@ -131,7 +134,7 @@ namespace Barotrauma
             get => MathHelper.ToDegrees(FootAngleInRadians);
             set
             {
-                FootAngleInRadians = MathHelper.ToRadians(value);                
+                FootAngleInRadians = MathHelper.ToRadians(value);
             }
         }
         public float FootAngleInRadians { get; private set; }
@@ -156,6 +159,9 @@ namespace Barotrauma
 
         [Serialize(1f, IsPropertySaveable.Yes, description: "How much force is used to move the hands."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
         public float HandMoveStrength { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "Is the head angle fixed or does the angle follow the mouse position?"), Editable]
+        public bool FixedHeadAngle { get; set; }
     }
 
     public interface IHumanAnimation
@@ -166,5 +172,7 @@ namespace Barotrauma
         float ArmMoveStrength { get; set; }
 
         float HandMoveStrength { get; set; }
+
+        bool FixedHeadAngle { get; set; }
     }
 }

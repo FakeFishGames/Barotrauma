@@ -216,7 +216,7 @@ namespace Barotrauma
                 price = 0;
             }
 
-            if (Campaign.GetWallet(client).TryDeduct(price)) // FIXME personal wallets
+            if (Campaign.GetWallet(client).TryDeduct(price))
             {
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                 {

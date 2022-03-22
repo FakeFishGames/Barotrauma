@@ -12,22 +12,30 @@ namespace Barotrauma
     {
         public sealed partial class PackageSource : ICollection<ContentPackage>
         {
-            public ContentPackage SaveAndEnableRegularMod(ModProject modProject)
+            public string SaveRegularMod(ModProject modProject)
             {
                 if (modProject.IsCore) { throw new ArgumentException("ModProject must not be a core package"); }
-                
-                //save the content package
+
                 string fileListPath = Path.Combine(directory, ToolBox.RemoveInvalidFileNameChars(modProject.Name), ContentPackage.FileListFileName)
                     .CleanUpPathCrossPlatform(correctFilenameCase: false);
-                Directory.CreateDirectory(Path.GetDirectoryName(fileListPath)!);
                 modProject.Save(fileListPath);
                 Refresh(); EnabledPackages.DisableRemovedMods();
-                var newPackage = Regular.First(p => p.Path == fileListPath);
 
-                //enable it
-                EnabledPackages.EnableRegular(newPackage);
+                return fileListPath;
+            }
 
-                return newPackage;
+            public RegularPackage GetRegularModByPath(string fileListPath)
+            {
+                return Regular.First(p => p.Path == fileListPath);
+            }
+            
+            public RegularPackage SaveAndEnableRegularMod(ModProject modProject)
+            {
+                string fileListPath = SaveRegularMod(modProject);
+                var package = GetRegularModByPath(fileListPath);
+                EnabledPackages.EnableRegular(package);
+
+                return package;
             }
         }
         

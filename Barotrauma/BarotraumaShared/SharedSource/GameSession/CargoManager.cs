@@ -30,22 +30,16 @@ namespace Barotrauma
         }
 
 #if CLIENT
-        public PurchasedItem(ItemPrefab itemPrefab, int quantity, Client buyer = null)
+        public PurchasedItem(ItemPrefab itemPrefab, int quantity)
+            : this(itemPrefab, quantity, buyer: null) { }
+#endif
+        public PurchasedItem(ItemPrefab itemPrefab, int quantity, Client buyer)
         {
             ItemPrefab = itemPrefab;
             Quantity = quantity;
             IsStoreComponentEnabled = null;
             BuyerCharacterInfoId = buyer?.Character?.Info?.ID ?? Character.Controlled?.Info?.ID ?? 0;
         }
-#elif SERVER
-        public PurchasedItem(ItemPrefab itemPrefab, int quantity, Client buyer)
-        {
-            ItemPrefab = itemPrefab;
-            Quantity = quantity;
-            IsStoreComponentEnabled = null;
-            BuyerCharacterInfoId = buyer?.Character?.Info?.ID ?? 0;
-        }
-#endif
 
     }
 

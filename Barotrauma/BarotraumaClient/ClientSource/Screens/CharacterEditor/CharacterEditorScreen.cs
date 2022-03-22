@@ -2805,7 +2805,8 @@ namespace Barotrauma.CharacterEditor
                     return false;
                 }
 #endif
-                if (!character.IsHuman && !string.IsNullOrEmpty(RagdollParams.Texture) && !File.Exists(RagdollParams.Texture))
+                ContentPath texturePath = ContentPath.FromRaw(character.Prefab.ContentPackage, RagdollParams.Texture);
+                if (!character.IsHuman && (texturePath.IsNullOrWhiteSpace() || !File.Exists(texturePath.Value)))
                 {
                     DebugConsole.ThrowError($"Invalid texture path: {RagdollParams.Texture}");
                     return false;

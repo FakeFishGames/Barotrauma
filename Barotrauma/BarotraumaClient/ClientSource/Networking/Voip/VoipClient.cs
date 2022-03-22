@@ -54,7 +54,17 @@ namespace Barotrauma.Networking
             }
             else
             {
-                if (VoipCapture.Instance == null) { VoipCapture.Create(GameSettings.CurrentConfig.Audio.VoiceCaptureDevice, storedBufferID); }
+                try
+                {
+                    if (VoipCapture.Instance == null) { VoipCapture.Create(GameSettings.CurrentConfig.Audio.VoiceCaptureDevice, storedBufferID); }
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"VoipCature.Create failed: {e.Message} {e.StackTrace.CleanupStackTrace()}");
+                    var config = GameSettings.CurrentConfig;
+                    config.Audio.VoiceSetting = VoiceMode.Disabled;
+                    GameSettings.SetCurrentConfig(config);
+                }
                 if (VoipCapture.Instance == null || VoipCapture.Instance.EnqueuedTotalLength <= 0) { return; }
             }
 

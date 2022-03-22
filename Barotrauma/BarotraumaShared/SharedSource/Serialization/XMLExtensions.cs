@@ -172,11 +172,11 @@ namespace Barotrauma
             return !texName.IsNullOrEmpty() & !texName.Contains("/") && !texName.Contains("%ModDir", StringComparison.OrdinalIgnoreCase);
         }
 
-        public static ContentPath GetAttributeContentPath(this XElement element, string name,
-            ContentPackage contentPackage)
+        public static ContentPath GetAttributeContentPath(this XElement element, string name, ContentPackage contentPackage)
         {
-            if (element?.GetAttribute(name) == null) { return null; }
-            return ContentPath.FromRaw(contentPackage, GetAttributeString(element.GetAttribute(name), null));
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return null; }
+            return ContentPath.FromRaw(contentPackage, GetAttributeString(attribute, null));
         }
         
         public static Identifier GetAttributeIdentifier(this XElement element, string name, string defaultValue)

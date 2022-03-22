@@ -29,10 +29,19 @@ namespace Barotrauma
             currentDownload = null;
             confirmDownload = false;
         }
+
+        private void DeletePrevDownloads()
+        {
+            if (Directory.Exists(ModReceiver.DownloadFolder))
+            {
+                Directory.Delete(ModReceiver.DownloadFolder, recursive: true);
+            }
+        }
         
         public override void Select()
         {
             base.Select();
+            DeletePrevDownloads();
             Reset();
             
             Frame.ClearChildren();

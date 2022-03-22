@@ -51,7 +51,7 @@ namespace Barotrauma
             }
         }
 
-        public struct StatusEventData : IEventData
+        public struct CharacterStatusEventData : IEventData
         {
             public EventType EventType => EventType.Status;
         }

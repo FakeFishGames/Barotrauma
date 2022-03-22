@@ -2,12 +2,14 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class ItemLabel : ItemComponent, IDrawableComponent
+    partial class ItemLabel : ItemComponent, IDrawableComponent, IHasExtraTextPickerEntries
     {
         private GUITextBlock textBlock;
 
@@ -106,7 +108,7 @@ namespace Barotrauma.Items.Components
             set
             {
                 scrollable = value;
-                IsActive = value;
+                IsActive = value || parseSpecialTextTagOnStart;
                 TextBlock.Wrap = !scrollable;
                 TextBlock.TextAlignment = scrollable ? Alignment.CenterLeft : Alignment.Center;
             }
@@ -134,6 +136,11 @@ namespace Barotrauma.Items.Components
         public ItemLabel(Item item, ContentXElement element)
             : base(item, element)
         {            
+        }
+
+        public IEnumerable<string> GetExtraTextPickerEntries()
+        {
+            return SpecialTextTags;
         }
 
         private void SetScrollingText()
@@ -174,9 +181,18 @@ namespace Barotrauma.Items.Components
             scrollIndex = MathHelper.Clamp(scrollIndex, 0, DisplayText.Length);
         }
 
+        private static readonly string[] SpecialTextTags = new string[] { "[CurrentLocationName]", "[CurrentBiomeName]", "[CurrentSubName]" };
+        private bool parseSpecialTextTagOnStart;
         private void SetDisplayText(string value)
         {
+            if (SpecialTextTags.Contains(value))
+            {
+                parseSpecialTextTagOnStart = true;
+                IsActive = true;
+            }
+
             DisplayText = IgnoreLocalization ? value : TextManager.Get(value).Fallback(value);
+
             TextBlock.Text = DisplayText;
             if (Screen.Selected == GameMain.SubEditorScreen && Scrollable)
             {
@@ -198,9 +214,37 @@ namespace Barotrauma.Items.Components
             };
         }
 
+        private void ParseSpecialTextTag()
+        {
+            switch (text)
+            {
+                case "[CurrentLocationName]":
+                    SetDisplayText(Level.Loaded?.StartLocation?.Name ?? string.Empty);
+                    break;
+                case "[CurrentBiomeName]":
+                    SetDisplayText(Level.Loaded?.LevelData?.Biome?.DisplayName.Value ?? string.Empty);
+                    break;
+                case "[CurrentSubName]":
+                    SetDisplayText(item.Submarine?.Info?.DisplayName.Value ?? string.Empty);
+                    break;
+                default:
+                    break;
+            }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
-            if (!scrollable) { return; }
+            if (parseSpecialTextTagOnStart)
+            {
+                ParseSpecialTextTag();
+                parseSpecialTextTagOnStart = false;
+            }
+
+            if (!scrollable) 
+            {
+                IsActive = false;
+                return; 
+            }
 
             if (scrollingText == null)
             {
@@ -286,5 +330,6 @@ namespace Barotrauma.Items.Components
         {
             Text = msg.ReadString();
         }
+
     }
 }

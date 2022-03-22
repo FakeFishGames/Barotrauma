@@ -322,7 +322,7 @@ namespace Barotrauma
 #endif
 
             Tags = tags.ToImmutableHashSet();
-            AllowedLinks = Enumerable.Empty<Identifier>().ToImmutableHashSet();
+            AllowedLinks = ImmutableHashSet<Identifier>.Empty;
         }
 
         protected override void CreateInstance(Rectangle rect)

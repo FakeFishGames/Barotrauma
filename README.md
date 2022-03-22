@@ -22,6 +22,6 @@ If you're interested in working on the code, either to develop mods or to contri
 ### Windows
 - [Visual Studio](https://www.visualstudio.com/vs/community/) with C# 8.0 support (VS 2019 or later recommended)
 ### Linux
-- [.NET Core 3.0 SDK](https://docs.microsoft.com/en-us/dotnet/core/install/linux-package-manager-ubuntu-1904)
+- [.NET Core 3.1 SDK](https://docs.microsoft.com/en-us/dotnet/core/install/linux-package-manager-ubuntu-1904)
 ### macOS
 - [Visual Studio 2019 for Mac](https://visualstudio.microsoft.com/vs/mac/)

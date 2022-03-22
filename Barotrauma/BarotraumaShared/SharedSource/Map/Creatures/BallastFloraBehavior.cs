@@ -520,8 +520,9 @@ namespace Barotrauma.MapCreatures.Behavior
                     if (branch.Health > branch.MaxHealth * 0.9f || branch.DisconnectedFromRoot) { continue; }
                     float branchHealAmount = (float)(MaxBranchHealthRegenDistance - branch.BranchDepth) / MaxBranchHealthRegenDistance * healAmount;
                     if (branchHealAmount <= 0.0f) { continue; }
+                    float prevHealth = branch.Health;
                     branch.Health += branchHealAmount;
-                    branch.AccumulatedDamage -= branchHealAmount;
+                    branch.AccumulatedDamage += (prevHealth - branch.Health);
                 }
             }
             StateMachine.Update(deltaTime);
@@ -633,7 +634,8 @@ namespace Barotrauma.MapCreatures.Behavior
             {
                 if (branch.ParentBranch != null && (branch.ParentBranch.DisconnectedFromRoot || branch.ParentBranch.Health <= 0.0f))
                 {
-                    DamageBranch(branch, deltaTime * MathHelper.Lerp(10.0f, 0.01f, branch.ParentBranch.Health / branch.ParentBranch.MaxHealth), AttackType.CutFromRoot);
+                    float speed = MathHelper.Lerp(5.0f, 0.1f, branch.ParentBranch.Health / branch.ParentBranch.MaxHealth);
+                    DamageBranch(branch, speed * speed * deltaTime, AttackType.CutFromRoot);
                 }
                 if (branch.Health <= 0.0f)
                 {
@@ -836,7 +838,7 @@ namespace Barotrauma.MapCreatures.Behavior
             }
 
 #if SERVER
-            SendNetworkMessage(new BranchCreateEventData(newBranch, parent));
+            CreateNetworkMessage(new BranchCreateEventData(newBranch, parent));
 #endif
             return true;
         }
@@ -878,7 +880,7 @@ namespace Barotrauma.MapCreatures.Behavior
 #if SERVER
             if (!load)
             {
-                SendNetworkMessage(new InfectEventData(target, InfectEventData.InfectState.Yes, branch));
+                CreateNetworkMessage(new InfectEventData(target, InfectEventData.InfectState.Yes, branch));
             }
 #endif
         }
@@ -955,8 +957,6 @@ namespace Barotrauma.MapCreatures.Behavior
         /// <param name="branch"></param>
         private void CreateBody(BallastFloraBranch branch)
         {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-
             Rectangle rect = branch.Rect;
             Vector2 pos = Parent.Position + Offset + branch.Position;
 
@@ -975,6 +975,14 @@ namespace Barotrauma.MapCreatures.Behavior
         public void DamageBranch(BallastFloraBranch branch, float amount, AttackType type, Character? attacker = null)
         {
             float damage = amount;
+            if (damage > 0)
+            {
+                damage = Math.Min(damage, branch.Health);
+            }
+            else
+            {
+                damage = Math.Max(damage, branch.Health - branch.MaxHealth);
+            }
 
             if (type != AttackType.Other && type != AttackType.CutFromRoot)
             {
@@ -983,8 +991,28 @@ namespace Barotrauma.MapCreatures.Behavior
 
             if (branch.IsRootGrowth && root != null && root.Health > 0.0f) { return; }
 
-            // damage is handled server side currently
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (type != AttackType.Other && type != AttackType.CutFromRoot)
+            {
+                branch.AccumulatedDamage += damage;
+                Anger += damage * 0.001f;
+            }
+
+            if (GameMain.NetworkMember != null)
+            { 
+                // damage is handled server side
+                if (GameMain.NetworkMember.IsClient)
+                {
+                    return;
+                }
+                else
+                {
+                    //accumulate damage on the server's side to ensure clients get notified 
+                    if (type == AttackType.Other || type == AttackType.CutFromRoot)
+                    {
+                        branch.AccumulatedDamage += damage;
+                    }
+                }
+            }
 
             if (attacker != null && toxinsCooldown <= 0)
             {
@@ -1014,11 +1042,6 @@ namespace Barotrauma.MapCreatures.Behavior
             }
 
             branch.Health -= damage;
-            if (type != AttackType.Other && type != AttackType.CutFromRoot)
-            {
-                branch.AccumulatedDamage += damage;
-                Anger += damage * 0.001f;
-            }
 
 #if SERVER
             GameMain.Server?.KarmaManager?.OnBallastFloraDamaged(attacker, damage);
@@ -1110,7 +1133,7 @@ namespace Barotrauma.MapCreatures.Behavior
 #if SERVER
             if (!wasRemoved)
             {
-                SendNetworkMessage(new BranchRemoveEventData(branch));
+                CreateNetworkMessage(new BranchRemoveEventData(branch));
             }
 #endif
         }
@@ -1141,7 +1164,7 @@ namespace Barotrauma.MapCreatures.Behavior
                 }
             });
 #if SERVER
-            SendNetworkMessage(new InfectEventData(item, InfectEventData.InfectState.No, null));
+            CreateNetworkMessage(new InfectEventData(item, InfectEventData.InfectState.No, null));
 #endif
         }
 
@@ -1159,7 +1182,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
             StateMachine?.State?.Exit();
 #if SERVER
-            SendNetworkMessage(new KillEventData());
+            CreateNetworkMessage(new KillEventData());
 #endif
         }
 
@@ -1181,7 +1204,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
             _entityList.Remove(this);
 #if SERVER
-            SendNetworkMessage(new KillEventData());
+            CreateNetworkMessage(new KillEventData());
 #endif
         }
 

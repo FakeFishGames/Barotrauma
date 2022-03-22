@@ -99,8 +99,7 @@ namespace Barotrauma
             {
                 if (InWater || !CanWalk)
                 {
-                    float avg = (SwimSlowParams.MovementSpeed + SwimFastParams.MovementSpeed) / 2.0f;
-                    return TargetMovement.LengthSquared() > avg * avg;
+                    return TargetMovement.LengthSquared() > SwimSlowParams.MovementSpeed;
                 }
                 else
                 {

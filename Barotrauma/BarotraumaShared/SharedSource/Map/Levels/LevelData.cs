@@ -31,7 +31,15 @@ namespace Barotrauma
 
         public bool HasHuntingGrounds, OriginallyHadHuntingGrounds;
 
+        //minimum difficulty of the level before hunting grounds can appear
+        public const float HuntingGroundsDifficultyThreshold = 25;
+
+        //probability of hunting grounds appearing in 100% difficulty levels
+        public const float MaxHuntingGroundsProbability = 0.3f;
+
         public OutpostGenerationParams ForceOutpostGenerationParams;
+
+        public bool AllowInvalidOutpost;
 
         public readonly Point Size;
 
@@ -150,11 +158,7 @@ namespace Barotrauma
             }
             else
             {
-                //minimum difficulty of the level before hunting grounds can appear
-                float huntingGroundsDifficultyThreshold = 25;
-                //probability of hunting grounds appearing in 100% difficulty levels
-                float maxHuntingGroundsProbability = 0.3f;
-                HasHuntingGrounds = OriginallyHadHuntingGrounds = rand.NextDouble() < MathUtils.InverseLerp(huntingGroundsDifficultyThreshold, 100.0f, Difficulty) * maxHuntingGroundsProbability;
+                HasHuntingGrounds = OriginallyHadHuntingGrounds = rand.NextDouble() < MathUtils.InverseLerp(HuntingGroundsDifficultyThreshold, 100.0f, Difficulty) * MaxHuntingGroundsProbability;
                 HasBeaconStation = !HasHuntingGrounds && rand.NextDouble() < locationConnection.Locations.Select(l => l.Type.BeaconStationChance).Max();
             }            
             IsBeaconActive = false;

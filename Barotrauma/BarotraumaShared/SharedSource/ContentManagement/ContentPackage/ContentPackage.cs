@@ -110,7 +110,7 @@ namespace Barotrauma
                !expectedHash.IsNullOrWhiteSpace() &&
                !expectedHash.Equals(Hash.StringRepresentation, StringComparison.OrdinalIgnoreCase);
 
-        public IEnumerable<T> GetFiles<T>() where T : ContentFile => Files.Where(f => f is T).Cast<T>();
+        public IEnumerable<T> GetFiles<T>() where T : ContentFile => Files.OfType<T>();
 
         public IEnumerable<ContentFile> GetFiles(Type type)
             => !type.IsSubclassOf(typeof(ContentFile))

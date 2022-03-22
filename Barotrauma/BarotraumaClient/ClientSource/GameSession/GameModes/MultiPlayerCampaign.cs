@@ -914,7 +914,7 @@ namespace Barotrauma
                 WalletInfo info = transaction.Info;
                 switch (transaction.CharacterID)
                 {
-                    case Some<ushort> { Value: var charID}:
+                    case Some<ushort> { Value: var charID }:
                     {
                         Character targetCharacter = Character.CharacterList?.FirstOrDefault(c => c.ID == charID);
                         if (targetCharacter is null) { break; }

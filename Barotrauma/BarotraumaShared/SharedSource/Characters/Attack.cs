@@ -37,7 +37,9 @@ namespace Barotrauma
         Pursue,
         FollowThrough,
         FollowThroughUntilCanAttack,
-        IdleUntilCanAttack
+        IdleUntilCanAttack,
+        Reverse,
+        ReverseUntilCanAttack
     }
 
     struct AttackResult
@@ -102,7 +104,7 @@ namespace Barotrauma
         public bool Retreat { get; private set; }
 
         private float _range;
-        [Serialize(0.0f, IsPropertySaveable.Yes, description: "The min distance from the attack limb to the target before the AI tries to attack."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "The min distance from the attack limb to the target before the AI tries to attack."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float Range
         {
             get => _range * RangeMultiplier;
@@ -110,12 +112,15 @@ namespace Barotrauma
         }
 
         private float _damageRange;
-        [Serialize(0.0f, IsPropertySaveable.Yes, description: "The min distance from the attack limb to the target to do damage. In distance-based hit detection, the hit will be registered as soon as the target is within the damage range, unless the attack duration has expired."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "The min distance from the attack limb to the target to do damage. In distance-based hit detection, the hit will be registered as soon as the target is within the damage range, unless the attack duration has expired."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float DamageRange
         {
             get => _damageRange * RangeMultiplier;
             set => _damageRange = value;
         }
+
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: ""), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
+        public float MinRange { get; private set; }
 
         [Serialize(0.25f, IsPropertySaveable.Yes, description: "An approximation of the attack duration. Effectively defines the time window in which the hit can be registered. If set to too low value, it's possible that the attack won't hit the target in time."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2)]
         public float Duration { get; private set; }
@@ -686,7 +691,7 @@ namespace Barotrauma
 
         public bool IsValidTarget(AttackTarget targetType) => TargetType == AttackTarget.Any || TargetType == targetType;
 
-        public bool IsValidTarget(IDamageable target)
+        public bool IsValidTarget(Entity target)
         {
             return TargetType switch
             {

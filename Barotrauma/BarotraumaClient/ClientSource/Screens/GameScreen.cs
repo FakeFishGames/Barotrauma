@@ -248,17 +248,24 @@ namespace Barotrauma
             }
             spriteBatch.End();
 
-            //draw characters with deformable limbs last, because they can't be batched into SpriteBatch
-            //pretty hacky way of preventing draw order issues between normal and deformable sprites
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
-            //backwards order to render the most recently spawned characters in front (characters spawned later have a larger sprite depth)
-            for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
+            DrawDeformed(firstPass: true);
+            DrawDeformed(firstPass: false);
+
+            void DrawDeformed(bool firstPass)
             {
-                Character c = Character.CharacterList[i];
-                if (!c.IsVisible || c.AnimController.Limbs.All(l => l.DeformSprite == null)) { continue; }
-                c.Draw(spriteBatch, Cam);
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
+                //backwards order to render the most recently spawned characters in front (characters spawned later have a larger sprite depth)
+                for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
+                {
+                    Character c = Character.CharacterList[i];
+                    if (!c.IsVisible) { continue; }
+                    if (c.Params.DrawLast == firstPass) { continue; }
+                    if (c.AnimController.Limbs.All(l => l.DeformSprite == null)) { continue; }
+                    c.Draw(spriteBatch, Cam);
+                }
+                spriteBatch.End();
             }
-            spriteBatch.End();
+
 
             Level.Loaded?.DrawFront(spriteBatch, cam);
 
