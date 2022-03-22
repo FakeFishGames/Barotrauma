@@ -274,6 +274,9 @@ namespace Barotrauma
 
         public readonly CharacterParams Params;
         public string SpeciesName => Params?.SpeciesName ?? "null";
+        public string MusicType => Params.MusicType;
+        public float MusicWeight => Params.MusicWeight;
+        public float MusicRangeMultiplier => Params.MusicRangeMultiplier;
         public string Group => Params.Group;
         public bool IsHumanoid => Params.Humanoid;
         public bool IsHusk => Params.Husk;
