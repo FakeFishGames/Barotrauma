@@ -160,7 +160,7 @@ namespace Barotrauma.Items.Components
                     {
                         errorMsg += "\nTrying to dock the submarine to itself.";
                     }
-                    GameAnalyticsManager.AddErrorEventOnce("DockingPort.ClientRead:JointNotCreated", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("DockingPort.ClientRead:JointNotCreated", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 }
 
                 if (isLocked)

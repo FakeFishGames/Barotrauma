@@ -16,7 +16,9 @@ namespace Barotrauma.Abilities
         {
             if ((abilityObject as IAbilityCharacter)?.Character is Character character)
             {
-                Character.GiveMoney((int)(vitalityPercentage * character.MaxVitality));
+                int totalAmount = (int)(vitalityPercentage * character.MaxVitality);
+                Character.GiveMoney(totalAmount);
+                GameAnalyticsManager.AddMoneyGainedEvent(totalAmount, GameAnalyticsManager.MoneySource.Ability, CharacterTalent.Prefab.Identifier);
             }
         }
     }

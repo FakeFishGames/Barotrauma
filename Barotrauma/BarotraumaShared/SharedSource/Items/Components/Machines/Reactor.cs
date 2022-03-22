@@ -12,7 +12,6 @@ namespace Barotrauma.Items.Components
     partial class Reactor : Powered, IServerSerializable, IClientSerializable
     {
         const float NetworkUpdateIntervalHigh = 0.5f;
-        const float NetworkUpdateIntervalLow = 10.0f;
 
         //the rate at which the reactor is being run on (higher rate -> higher temperature)
         private float fissionRate;
@@ -38,9 +37,8 @@ namespace Barotrauma.Items.Components
 
         private float maxPowerOutput;
 
-        private Queue<float> loadQueue = new Queue<float>();
-        private float load;
-        
+        private readonly Queue<float> loadQueue = new Queue<float>();
+
         private bool unsentChanges;
         private float sendUpdateTimer;
 
@@ -78,7 +76,7 @@ namespace Barotrauma.Items.Components
             {
                 if (lastUser == value) { return; }
                 lastUser = value;
-                degreeOfSuccess = lastUser == null ? 0.0f : DegreeOfSuccess(lastUser);
+                degreeOfSuccess = lastUser == null ? 0.0f : Math.Min(DegreeOfSuccess(lastUser), 1.0f);
                 LastUserWasPlayer = lastUser.IsPlayer;
             }
         }
@@ -158,11 +156,6 @@ namespace Barotrauma.Items.Components
             set { /*do nothing*/ }
         }
 
-        private float correctTurbineOutput;
-
-        private float targetFissionRate;
-        private float targetTurbineOutput;
-        
         [Serialize(false, true, description: "Is the automatic temperature control currently on. Indended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public bool AutoTemp
         {
@@ -180,6 +173,25 @@ namespace Barotrauma.Items.Components
 
         [Serialize(0.0f, true)]
         public float AvailableFuel { get; set; }
+
+        [Serialize(0.0f, true)]
+        public new float Load { get; private set; }
+
+        [Serialize(0.0f, true)]
+        public float TargetFissionRate { get; set; }
+
+        [Serialize(0.0f, true)]
+        public float TargetTurbineOutput { get; set; }
+
+        [Serialize(0.0f, true)]
+        public float CorrectTurbineOutput { get; set; }
+
+        [Editable, Serialize(true, true)]
+        public bool ExplosionDamagesOtherSubs
+        {
+            get;
+            set;
+        }
 
         public Reactor(Item item, XElement element)
             : base(item, element)
@@ -199,8 +211,8 @@ namespace Barotrauma.Items.Components
                 {
                     GameServer.Log(GameServer.CharacterLogName(lastUser) + " adjusted reactor settings: " +
                             "Temperature: " + (int)(temperature * 100.0f) +
-                            ", Fission rate: " + (int)targetFissionRate +
-                            ", Turbine output: " + (int)targetTurbineOutput +
+                            ", Fission rate: " + (int)TargetFissionRate +
+                            ", Turbine output: " + (int)TargetTurbineOutput +
                             (autoTemp ? ", Autotemp ON" : ", Autotemp OFF"),
                             ServerLog.MessageType.ItemInteraction);
 
@@ -223,7 +235,7 @@ namespace Barotrauma.Items.Components
             }
 
 #if CLIENT
-            if(PowerOn && AvailableFuel < 1)
+            if (PowerOn && AvailableFuel < 1)
             {
                 HintManager.OnReactorOutOfFuel(this);
             }
@@ -236,15 +248,15 @@ namespace Barotrauma.Items.Components
             //so the player doesn't have to keep adjusting the rate impossibly fast when the load fluctuates heavily
             if (!MathUtils.NearlyEqual(MaxPowerOutput, 0.0f))
             {
-                correctTurbineOutput += MathHelper.Clamp((load / MaxPowerOutput * 100.0f) - correctTurbineOutput, -10.0f, 10.0f) * deltaTime;
+                CorrectTurbineOutput += MathHelper.Clamp((Load / MaxPowerOutput * 100.0f) - CorrectTurbineOutput, -10.0f, 10.0f) * deltaTime;
             }
 
             //calculate tolerances of the meters based on the skills of the user
             //more skilled characters have larger "sweet spots", making it easier to keep the power output at a suitable level
             float tolerance = MathHelper.Lerp(2.5f, 10.0f, degreeOfSuccess);
-            optimalTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
+            optimalTurbineOutput = new Vector2(CorrectTurbineOutput - tolerance, CorrectTurbineOutput + tolerance);
             tolerance = MathHelper.Lerp(5.0f, 20.0f, degreeOfSuccess);
-            allowedTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
+            allowedTurbineOutput = new Vector2(CorrectTurbineOutput - tolerance, CorrectTurbineOutput + tolerance);
 
             optimalTemperature = Vector2.Lerp(new Vector2(40.0f, 60.0f), new Vector2(30.0f, 70.0f), degreeOfSuccess);
             allowedTemperature = Vector2.Lerp(new Vector2(30.0f, 70.0f), new Vector2(10.0f, 90.0f), degreeOfSuccess);
@@ -260,9 +272,9 @@ namespace Barotrauma.Items.Components
             Temperature += MathHelper.Clamp(Math.Sign(temperatureDiff) * 10.0f * deltaTime, -Math.Abs(temperatureDiff), Math.Abs(temperatureDiff));
             //if (item.InWater && AvailableFuel < 100.0f) Temperature -= 12.0f * deltaTime;
 
-            FissionRate = MathHelper.Lerp(fissionRate, Math.Min(targetFissionRate, AvailableFuel), deltaTime);
+            FissionRate = MathHelper.Lerp(fissionRate, Math.Min(TargetFissionRate, AvailableFuel), deltaTime);
 
-            TurbineOutput = MathHelper.Lerp(turbineOutput, targetTurbineOutput, deltaTime);
+            TurbineOutput = MathHelper.Lerp(turbineOutput, TargetTurbineOutput, deltaTime);
 
             float temperatureFactor = Math.Min(temperature / 50.0f, 1.0f);
             currPowerConsumption = -MaxPowerOutput * Math.Min(turbineOutput / 100.0f, temperatureFactor);
@@ -276,7 +288,7 @@ namespace Barotrauma.Items.Components
                 float maxAutoAdjust = maxPowerOutput * 0.1f;
                 autoAdjustAmount = MathHelper.Lerp(
                     autoAdjustAmount, 
-                    MathHelper.Clamp(-load - currPowerConsumption, -maxAutoAdjust, maxAutoAdjust), 
+                    MathHelper.Clamp(-Load - currPowerConsumption, -maxAutoAdjust, maxAutoAdjust), 
                     deltaTime * 10.0f);
             }
             else
@@ -287,8 +299,8 @@ namespace Barotrauma.Items.Components
 
             if (!PowerOn)
             {
-                targetFissionRate = 0.0f;
-                targetTurbineOutput = 0.0f;
+                TargetFissionRate = 0.0f;
+                TargetTurbineOutput = 0.0f;
             }
             else if (autoTemp)
             {
@@ -317,56 +329,30 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (!loadQueue.Any() && PowerOn)
-            {
-                //loadQueue is empty, round must've just started
-                //reset the fission rate, turbine output and
-                //temperature to optimal levels to prevent fires
-                //at the start of the round
-                correctTurbineOutput = MathUtils.NearlyEqual(MaxPowerOutput, 0.0f) ? 0.0f : currentLoad / MaxPowerOutput * 100.0f;
-                tolerance = MathHelper.Lerp(2.5f, 10.0f, degreeOfSuccess);
-                optimalTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
-                tolerance = MathHelper.Lerp(5.0f, 20.0f, degreeOfSuccess);
-                allowedTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
-
-                DebugConsole.Log($"Degree of success: {degreeOfSuccess}");
-                DebugConsole.Log($"Current load: {currentLoad}");
-                DebugConsole.Log($"Max power output: {MaxPowerOutput}");
-                DebugConsole.Log($"Available fuel: {AvailableFuel}");
-
-                float desiredTurbineOutput = MathHelper.Clamp(correctTurbineOutput, 0.0f, 100.0f);
-                DebugConsole.Log($"Turbine output reset: {targetTurbineOutput}, {turbineOutput} -> {desiredTurbineOutput}");
-                targetTurbineOutput = desiredTurbineOutput;
-                turbineOutput = desiredTurbineOutput;
-
-                float desiredTemperature = (optimalTemperature.X + optimalTemperature.Y) / 2.0f;
-                DebugConsole.Log($"Temperature reset: {temperature} -> {desiredTemperature}");
-                temperature = desiredTemperature;
-
-                float desiredFissionRate = GetFissionRateForTargetTemperatureAndTurbineOutput(desiredTemperature, desiredTurbineOutput);
-                DebugConsole.Log($"Fission rate reset: {targetFissionRate}, {fissionRate} -> {desiredFissionRate}");
-                targetFissionRate = desiredFissionRate;
-                fissionRate = desiredFissionRate;
-            }
-
             loadQueue.Enqueue(currentLoad);
             while (loadQueue.Count() > 60.0f)
             {
-                load = loadQueue.Average();
+                Load = loadQueue.Average();
                 loadQueue.Dequeue();
+            }
+
+            float fuelLeft = 0.0f;
+            var containedItems = item.OwnInventory?.AllItems;
+            if (containedItems != null)
+            {
+                foreach (Item item in containedItems)
+                {
+                    if (!item.HasTag("reactorfuel")) { continue; }
+                    if (fissionRate > 0.0f)
+                    {
+                        item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
+                    }
+                    fuelLeft += item.ConditionPercentage;
+                }
             }
 
             if (fissionRate > 0.0f)
             {
-                var containedItems = item.OwnInventory?.AllItems;
-                if (containedItems != null)
-                {
-                    foreach (Item item in containedItems)
-                    {
-                        if (!item.HasTag("reactorfuel")) { continue; }
-                        item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
-                    }
-                }
                 if (item.AiTarget != null && MaxPowerOutput > 0)
                 {
                     var aiTarget = item.AiTarget;
@@ -385,8 +371,9 @@ namespace Barotrauma.Items.Components
 
             item.SendSignal(((int)(temperature * 100.0f)).ToString(), "temperature_out");
             item.SendSignal(((int)-CurrPowerConsumption).ToString(), "power_value_out");
-            item.SendSignal(((int)load).ToString(), "load_value_out");
+            item.SendSignal(((int)Load).ToString(), "load_value_out");
             item.SendSignal(((int)AvailableFuel).ToString(), "fuel_out");
+            item.SendSignal(((int)fuelLeft).ToString(), "fuel_percentage_left");
 
             UpdateFailures(deltaTime);
 #if CLIENT
@@ -407,8 +394,7 @@ namespace Barotrauma.Items.Components
                 {
                     item.CreateServerEvent(this);
                 }
-#endif
-#if CLIENT
+#elif CLIENT
                 if (GameMain.Client != null)
                 {
                     item.CreateClientEvent(this);
@@ -424,12 +410,6 @@ namespace Barotrauma.Items.Components
             return fissionRate * (prevAvailableFuel / 100.0f) * 2.0f;
         }
 
-        private float GetFissionRateForTargetTemperatureAndTurbineOutput(float temperature, float turbineOutput)
-        {
-            if (MathUtils.NearlyEqual(AvailableFuel, 0f)) { return 0f; }
-            return (temperature + turbineOutput) / (AvailableFuel / 100f) / 2f;
-        }
-
         /// <summary>
         /// Do we need more fuel to generate enough power to match the current load.
         /// </summary>
@@ -438,7 +418,7 @@ namespace Barotrauma.Items.Components
         private bool NeedMoreFuel(float minimumOutputRatio, float minCondition = 0)
         {
             float remainingFuel = item.ContainedItems.Sum(i => i.Condition);
-            if (remainingFuel <= minCondition && load > 0.0f)
+            if (remainingFuel <= minCondition && Load > 0.0f)
             {
                 return true;
             }
@@ -455,7 +435,7 @@ namespace Barotrauma.Items.Components
             float theoreticalMaxOutput = Math.Min(maxTurbineOutput / 100.0f, temperatureFactor) * MaxPowerOutput;
 
             //maximum output not enough, we need more fuel
-            return theoreticalMaxOutput < load * minimumOutputRatio;
+            return theoreticalMaxOutput < Load * minimumOutputRatio;
         }
 
         private bool TooMuchFuel()
@@ -467,7 +447,7 @@ namespace Barotrauma.Items.Components
             float minimumHeat = GetGeneratedHeat(optimalFissionRate.X);
 
             //if we need a very high turbine output to keep the engine from overheating, there's too much fuel
-            return minimumHeat > Math.Min(correctTurbineOutput * 1.5f, 90);
+            return minimumHeat > Math.Min(CorrectTurbineOutput * 1.5f, 90);
         }
 
         private void UpdateFailures(float deltaTime)
@@ -514,26 +494,26 @@ namespace Barotrauma.Items.Components
         public void UpdateAutoTemp(float speed, float deltaTime)
         {
             float desiredTurbineOutput = (optimalTurbineOutput.X + optimalTurbineOutput.Y) / 2.0f;
-            targetTurbineOutput += MathHelper.Clamp(desiredTurbineOutput - targetTurbineOutput, -speed, speed) * deltaTime;
-            targetTurbineOutput = MathHelper.Clamp(targetTurbineOutput, 0.0f, 100.0f);
+            TargetTurbineOutput += MathHelper.Clamp(desiredTurbineOutput - TargetTurbineOutput, -speed, speed) * deltaTime;
+            TargetTurbineOutput = MathHelper.Clamp(TargetTurbineOutput, 0.0f, 100.0f);
 
             float desiredFissionRate = (optimalFissionRate.X + optimalFissionRate.Y) / 2.0f;
-            targetFissionRate += MathHelper.Clamp(desiredFissionRate - targetFissionRate, -speed, speed) * deltaTime;
+            TargetFissionRate += MathHelper.Clamp(desiredFissionRate - TargetFissionRate, -speed, speed) * deltaTime;
 
             if (temperature > (optimalTemperature.X + optimalTemperature.Y) / 2.0f)
             {
-                targetFissionRate = Math.Min(targetFissionRate - speed * 2 * deltaTime, allowedFissionRate.Y);
+                TargetFissionRate = Math.Min(TargetFissionRate - speed * 2 * deltaTime, allowedFissionRate.Y);
             }
-            else if (-currPowerConsumption < load)
+            else if (-currPowerConsumption < Load)
             {
-                targetFissionRate = Math.Min(targetFissionRate + speed * 2 * deltaTime, 100.0f);
+                TargetFissionRate = Math.Min(TargetFissionRate + speed * 2 * deltaTime, 100.0f);
             }
-            targetFissionRate = MathHelper.Clamp(targetFissionRate, 0.0f, 100.0f);
+            TargetFissionRate = MathHelper.Clamp(TargetFissionRate, 0.0f, 100.0f);
 
             //don't push the target too far from the current fission rate
             //otherwise we may "overshoot", cranking the target fission rate all the way up because it takes a while
             //for the actual fission rate and temperature to follow
-            targetFissionRate = MathHelper.Clamp(targetFissionRate, FissionRate - 5, FissionRate + 5);
+            TargetFissionRate = MathHelper.Clamp(TargetFissionRate, FissionRate - 5, FissionRate + 5);
         }
 
         public void PowerUpImmediately()
@@ -557,8 +537,8 @@ namespace Barotrauma.Items.Components
 
             currPowerConsumption = 0.0f;
             Temperature -= deltaTime * 1000.0f;
-            targetFissionRate = Math.Max(targetFissionRate - deltaTime * 10.0f, 0.0f);
-            targetTurbineOutput = Math.Max(targetTurbineOutput - deltaTime * 10.0f, 0.0f);
+            TargetFissionRate = Math.Max(TargetFissionRate - deltaTime * 10.0f, 0.0f);
+            TargetTurbineOutput = Math.Max(TargetTurbineOutput - deltaTime * 10.0f, 0.0f);
 #if CLIENT
             FissionRateScrollBar.BarScroll = 1.0f - FissionRate / 100.0f;
             TurbineOutputScrollBar.BarScroll = 1.0f - TurbineOutput / 100.0f;
@@ -570,6 +550,20 @@ namespace Barotrauma.Items.Components
         {
             if (item.Condition <= 0.0f) { return; }
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+
+            if (!ExplosionDamagesOtherSubs && (statusEffectLists?.ContainsKey(ActionType.OnBroken) ?? false))
+            {
+                foreach (var statusEffect in statusEffectLists[ActionType.OnBroken])
+                {
+                    foreach (Explosion explosion in statusEffect.Explosions)
+                    {
+                        foreach (Submarine sub in Submarine.Loaded)
+                        {
+                            if (sub != item.Submarine) { explosion.IgnoredSubmarines.Add(sub); }
+                        }
+                    }
+                }
+            }        
 
             item.Condition = 0.0f;
             fireTimer = 0.0f;
@@ -583,7 +577,6 @@ namespace Barotrauma.Items.Components
                     containedItem.Condition = 0.0f;
                 }
             }
-
 #if SERVER
             GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
             if (GameMain.Server != null)
@@ -608,7 +601,7 @@ namespace Barotrauma.Items.Components
 
             if (!shutDown)
             {
-                float degreeOfSuccess = DegreeOfSuccess(character);
+                float degreeOfSuccess = Math.Min(DegreeOfSuccess(character), 1.0f);
                 float refuelLimit = 0.3f;
                 //characters with insufficient skill levels don't refuel the reactor
                 if (degreeOfSuccess > refuelLimit)
@@ -628,7 +621,7 @@ namespace Barotrauma.Items.Components
                         var container = item.GetComponent<ItemContainer>();
                         if (objective.SubObjectives.None())
                         {
-                            var containObjective = AIContainItems<Reactor>(container, character, objective, itemCount: 1, equip: true, removeEmpty: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC, dropItemOnDeselected: true);
+                            var containObjective = AIContainItems<Reactor>(container, character, objective, itemCount: 1, equip: true, removeEmpty: true, spawnItemIfNotFound: !character.IsOnPlayerTeam, dropItemOnDeselected: true);
                             containObjective.Completed += ReportFuelRodCount;
                             containObjective.Abandoned += ReportFuelRodCount;
                             character.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
@@ -696,15 +689,15 @@ namespace Barotrauma.Items.Components
 
             bool prevAutoTemp = autoTemp;
             bool prevPowerOn = _powerOn;
-            float prevFissionRate = targetFissionRate;
-            float prevTurbineOutput = targetTurbineOutput;
+            float prevFissionRate = TargetFissionRate;
+            float prevTurbineOutput = TargetTurbineOutput;
 
             if (shutDown)
             {
                 PowerOn = false;
                 AutoTemp = false;
-                targetFissionRate = 0.0f;
-                targetTurbineOutput = 0.0f;
+                TargetFissionRate = 0.0f;
+                TargetTurbineOutput = 0.0f;
                 unsentChanges = true;
                 return true;
             }
@@ -730,8 +723,8 @@ namespace Barotrauma.Items.Components
 #endif
                 if (autoTemp != prevAutoTemp ||
                     prevPowerOn != _powerOn ||
-                    Math.Abs(prevFissionRate - targetFissionRate) > 1.0f ||
-                    Math.Abs(prevTurbineOutput - targetTurbineOutput) > 1.0f)
+                    Math.Abs(prevFissionRate - TargetFissionRate) > 1.0f ||
+                    Math.Abs(prevTurbineOutput - TargetTurbineOutput) > 1.0f)
                 {
                     unsentChanges = true;
                 }
@@ -767,32 +760,32 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "shutdown":
-                    if (targetFissionRate > 0.0f || targetTurbineOutput > 0.0f)
+                    if (TargetFissionRate > 0.0f || TargetTurbineOutput > 0.0f)
                     {
                         PowerOn = false;
                         AutoTemp = false;
-                        targetFissionRate = 0.0f;
-                        targetTurbineOutput = 0.0f;
+                        TargetFissionRate = 0.0f;
+                        TargetTurbineOutput = 0.0f;
                         if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }
                     }
                     break;
                 case "set_fissionrate":
                     if (PowerOn && float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newFissionRate))
                     {
-                        targetFissionRate = MathHelper.Clamp(newFissionRate, 0.0f, 100.0f);
+                        TargetFissionRate = MathHelper.Clamp(newFissionRate, 0.0f, 100.0f);
                         if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }
 #if CLIENT
-                        FissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
+                        FissionRateScrollBar.BarScroll = TargetFissionRate / 100.0f;
 #endif
                     }
                     break;
                 case "set_turbineoutput":
                     if (PowerOn && float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newTurbineOutput))
                     {
-                        targetTurbineOutput = MathHelper.Clamp(newTurbineOutput, 0.0f, 100.0f);
+                        TargetTurbineOutput = MathHelper.Clamp(newTurbineOutput, 0.0f, 100.0f);
                         if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }                       
 #if CLIENT
-                        TurbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
+                        TurbineOutputScrollBar.BarScroll = TargetTurbineOutput / 100.0f;
 #endif
                     }
                     break;

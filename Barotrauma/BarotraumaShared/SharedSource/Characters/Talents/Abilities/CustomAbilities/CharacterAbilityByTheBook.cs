@@ -30,6 +30,7 @@ namespace Barotrauma.Abilities
                 if (!enemyCharacter.LockHands) { continue; }
                 if (timesGiven > max) { continue; }
                 Character.GiveMoney(moneyAmount);
+                GameAnalyticsManager.AddMoneyGainedEvent(moneyAmount, GameAnalyticsManager.MoneySource.Ability, CharacterTalent.Prefab.Identifier);
                 foreach (Character character in Character.GetFriendlyCrew(Character))
                 {
                     character.Info?.GiveExperience(experienceAmount);

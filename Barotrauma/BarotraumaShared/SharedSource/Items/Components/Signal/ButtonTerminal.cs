@@ -19,11 +19,10 @@ namespace Barotrauma.Items.Components
         private HashSet<ItemPrefab> ActivatingItemPrefabs { get; set; } = new HashSet<ItemPrefab>();
 
 
-        private bool AllowUsingButtons => ActivatingItemPrefabs.None() || Container.Inventory.AllItems.Any(i => i != null && ActivatingItemPrefabs.Any(p => p == i.Prefab));
+        private bool AllowUsingButtons => ActivatingItemPrefabs.None() || (Container != null && Container.Inventory.AllItems.Any(i => i != null && ActivatingItemPrefabs.Any(p => p == i.Prefab)));
 
         public ButtonTerminal(Item item, XElement element) : base(item, element)
         {
-            IsActive = true;
             RequiredSignalCount = element.GetChildElements("TerminalButton").Count(c => c.GetAttribute("style") != null);
             if (RequiredSignalCount < 1)
             {
@@ -88,25 +87,25 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            var containers = item.GetComponents<ItemContainer>().ToList();
-            if (containers.Count != 1)
+            var containers = item.GetComponents<ItemContainer>();
+            if (containers.Count() != 1)
             {
                 DebugConsole.ThrowError($"Error in item \"{item.Name}\": the ButtonTerminal component requires exactly one ItemContainer component!");
                 return;
             }
-            Container = containers[0];
+            Container = containers.FirstOrDefault();
 
             OnItemLoadedProjSpecific();
         }
 
         partial void OnItemLoadedProjSpecific();
 
-        private bool SendSignal(int signalIndex, bool isServerMessage = false)
+        private bool SendSignal(int signalIndex, Character sender, bool isServerMessage = false)
         {
             if (!isServerMessage && !AllowUsingButtons) { return false; }
             string signal = Signals[signalIndex];
             string connectionName = $"signal_out{signalIndex + 1}";
-            item.SendSignal(signal, connectionName);
+            item.SendSignal(new Signal(signal, sender: sender), connectionName);
             return true;
         }
 

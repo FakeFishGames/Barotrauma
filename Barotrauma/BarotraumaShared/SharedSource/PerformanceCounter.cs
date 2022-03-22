@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -7,20 +6,18 @@ namespace Barotrauma
 {
     public class PerformanceCounter
     {
-        public long TotalFrames { get; private set; }
-        public double TotalSeconds { get; private set; }
         public double AverageFramesPerSecond { get; private set; }
         public double CurrentFramesPerSecond { get; private set; }
         
         public const int MaximumSamples = 10;
 
-        private Queue<double> sampleBuffer = new Queue<double>();
+        private readonly Queue<double> sampleBuffer = new Queue<double>();
 
-        private Dictionary<string, Queue<long>> elapsedTicks = new Dictionary<string, Queue<long>>();
-        private Dictionary<string, long> avgTicksPerFrame = new Dictionary<string, long>();
+        private readonly Dictionary<string, Queue<long>> elapsedTicks = new Dictionary<string, Queue<long>>();
+        private readonly Dictionary<string, long> avgTicksPerFrame = new Dictionary<string, long>();
 
 #if CLIENT
-        internal Graph UpdateTimeGraph = new Graph(500), UpdateIterationsGraph = new Graph(500), DrawTimeGraph = new Graph(500);
+        internal Graph UpdateTimeGraph = new Graph(500), DrawTimeGraph = new Graph(500);
 #endif
 
         public IEnumerable<string> GetSavedIdentifiers
@@ -50,7 +47,7 @@ namespace Barotrauma
         {
             if (deltaTime == 0.0f) { return false; }
 
-            CurrentFramesPerSecond = (1.0 / deltaTime);
+            CurrentFramesPerSecond = 1.0 / deltaTime;
 
             sampleBuffer.Enqueue(CurrentFramesPerSecond);
 
@@ -64,12 +61,7 @@ namespace Barotrauma
                 AverageFramesPerSecond = CurrentFramesPerSecond;
             }
 
-            if (AverageFramesPerSecond < 0 || AverageFramesPerSecond > 500) { }
-                  
-            TotalFrames++;
-            TotalSeconds += deltaTime;
             return true;
         }
-
     }    
 }

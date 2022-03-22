@@ -304,7 +304,7 @@ namespace Barotrauma
 
             foreach (LevelObjectPrefab.ChildObject child in prefab.ChildObjects)
             {
-                int childCount = Rand.Range(child.MinCount, child.MaxCount, Rand.RandSync.Server);
+                int childCount = Rand.Range(child.MinCount, child.MaxCount + 1, Rand.RandSync.Server);
                 for (int j = 0; j < childCount; j++)
                 {
                     var matchingPrefabs = LevelObjectPrefab.List.Where(p => child.AllowedNames.Contains(p.Name));

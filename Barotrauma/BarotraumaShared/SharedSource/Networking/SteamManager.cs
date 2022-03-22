@@ -74,6 +74,19 @@ namespace Barotrauma.Steam
             return Steamworks.SteamClient.Name;
         }
 
+        private static Steamworks.AuthTicket currentTicket = null;
+        public static Steamworks.AuthTicket GetAuthSessionTicket()
+        {
+            if (!isInitialized)
+            {
+                return null;
+            }
+
+            currentTicket?.Cancel();
+            currentTicket = Steamworks.SteamUser.GetAuthSessionTicket();
+            return currentTicket;
+        }
+
         public static bool OverlayCustomURL(string url)
         {
             if (!isInitialized || !Steamworks.SteamClient.IsValid)
@@ -111,7 +124,6 @@ namespace Barotrauma.Steam
             return unlocked;
         }
 
-
         public static bool IncrementStat(string statName, int increment)
         {
             if (!isInitialized || !Steamworks.SteamClient.IsValid) { return false; }
@@ -122,6 +134,10 @@ namespace Barotrauma.Steam
 #if DEBUG
                 DebugConsole.NewMessage("Failed to increment stat \"" + statName + "\".");
 #endif
+            }
+            else
+            {
+                StoreStats();
             }
             return success;
         }
@@ -137,7 +153,17 @@ namespace Barotrauma.Steam
                 DebugConsole.NewMessage("Failed to increment stat \"" + statName + "\".");
 #endif
             }
+            else
+            {
+                StoreStats();
+            }
             return success;
+        }
+
+        public static int GetStatInt(string statName)
+        {
+            if (!isInitialized || !Steamworks.SteamClient.IsValid) { return 0; }
+            return  Steamworks.SteamUserStats.GetStatInt(statName);
         }
 
         public static bool StoreStats()
@@ -152,6 +178,17 @@ namespace Barotrauma.Steam
 #endif
             }
             return success;
+        }
+
+        public static bool TryGetUnlockedAchievements(out List<Steamworks.Data.Achievement> achievements)
+        {
+            if (!isInitialized || !Steamworks.SteamClient.IsValid) 
+            {
+                achievements = null;
+                return false; 
+            }
+            achievements = Steamworks.SteamUserStats.Achievements.Where(a => a.State).ToList();
+            return true;
         }
 
         public static void Update(float deltaTime)

@@ -181,7 +181,6 @@ namespace Barotrauma
             var targetProperties = new Dictionary<string, string[]>();
 
             string nameIdentifier = element.GetAttributeString("nameidentifier", "");
-
             if (!string.IsNullOrWhiteSpace(nameIdentifier))
             {
                 Name = TextManager.Get($"UpgradeName.{nameIdentifier}", returnNull: true) ?? string.Empty;
@@ -191,7 +190,12 @@ namespace Barotrauma
                 Name = TextManager.Get($"UpgradeName.{Identifier}", returnNull: true) ?? string.Empty;
             }
 
-            if (string.IsNullOrWhiteSpace(Description))
+            string descriptionIdentifier = element.GetAttributeString("descriptionidentifier", "");
+            if (!string.IsNullOrWhiteSpace(descriptionIdentifier))
+            {
+                Description = TextManager.Get($"UpgradeDescription.{descriptionIdentifier}", returnNull: true) ?? string.Empty;
+            }
+            else if (string.IsNullOrWhiteSpace(Description))
             {
                 Description = TextManager.Get($"UpgradeDescription.{Identifier}", returnNull: true) ?? string.Empty;
             }

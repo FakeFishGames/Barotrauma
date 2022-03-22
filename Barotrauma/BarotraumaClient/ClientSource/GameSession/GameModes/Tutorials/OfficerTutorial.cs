@@ -201,7 +201,7 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
         }
 
-        public override IEnumerable<object> UpdateState()
+        public override IEnumerable<CoroutineStatus> UpdateState()
         {
             while (GameMain.Instance.LoadingScreenOpen) yield return null;
 

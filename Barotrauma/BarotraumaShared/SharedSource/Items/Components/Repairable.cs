@@ -16,6 +16,9 @@ namespace Barotrauma.Items.Components
         private float deteriorationTimer;
         private float deteriorateAlwaysResetTimer;
 
+        private int prevSentConditionValue;
+        private string conditionSignal;
+
         bool wasBroken;
         bool wasGoodCondition;
 
@@ -105,11 +108,6 @@ namespace Barotrauma.Items.Components
 
         public bool IsTinkering { get; private set; } = false;
 
-        public float RepairIconThreshold
-        {
-            get { return RepairThreshold / 2; }
-        }
-
         public Character CurrentFixer { get; private set; }
         private Item currentRepairItem;
 
@@ -117,6 +115,12 @@ namespace Barotrauma.Items.Components
         private float tinkeringStrength;
 
         public float TinkeringStrength => tinkeringStrength;
+
+        private bool tinkeringPowersDevices;
+        public bool TinkeringPowersDevices => tinkeringPowersDevices;
+
+        public bool IsBelowRepairThreshold => item.ConditionPercentage <= RepairThreshold;
+        public bool IsBelowRepairIconThreshold => item.ConditionPercentage <= RepairThreshold / 2;
 
         public enum FixActions : int
         {
@@ -179,8 +183,17 @@ namespace Barotrauma.Items.Components
             if (bestRepairItem != null && bestRepairItem.Prefab.CannotRepairFail) { return true; }
 
             // unpowered (electrical) items can be repaired without a risk of electrical shock
-            if (requiredSkills.Any(s => s != null && s.Identifier.Equals("electrical", StringComparison.OrdinalIgnoreCase)) &&
-                item.GetComponent<Powered>() is Powered powered && powered.Voltage < 0.1f) { return true; }
+            if (requiredSkills.Any(s => s != null && s.Identifier.Equals("electrical", StringComparison.OrdinalIgnoreCase)))
+            {
+                if (item.GetComponent<Reactor>() is Reactor reactor)
+                {
+                    if (MathUtils.NearlyEqual(reactor.CurrPowerConsumption, 0.0f, 0.1f)) { return true; }
+                }
+                else if (item.GetComponent<Powered>() is Powered powered && powered.Voltage < 0.1f) 
+                {
+                    return true; 
+                }
+            }
 
             if (Rand.Range(0.0f, 0.5f) < RepairDegreeOfSuccess(character, requiredSkills)) { return true; }
 
@@ -199,12 +212,27 @@ namespace Barotrauma.Items.Components
 
         public float RepairDegreeOfSuccess(Character character, List<Skill> skills)
         {
-            if (skills.Count == 0) return 1.0f;
+            if (skills.Count == 0) { return 1.0f; }
 
             float skillSum = (from t in skills let characterLevel = character.GetSkillLevel(t.Identifier) select (characterLevel - (t.Level * SkillRequirementMultiplier))).Sum();
             float average = skillSum / skills.Count;
 
             return ((average + 100.0f) / 2.0f) / 100.0f;
+        }
+
+        public void RepairBoost(bool qteSuccess)
+        {
+            if (qteSuccess)
+            {
+                item.Condition += RepairDegreeOfSuccess(CurrentFixer, requiredSkills) * 3 * (currentFixerAction == FixActions.Repair ? 1.0f : -1.0f);
+            }
+            else if (Rand.Range(0.0f, 2.0f) > RepairDegreeOfSuccess(CurrentFixer, requiredSkills))
+            {
+                ApplyStatusEffects(ActionType.OnFailure, 1.0f, CurrentFixer);
+#if SERVER
+                GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, CurrentFixer.ID });
+#endif
+            }
         }
 
         public bool StartRepairing(Character character, FixActions action)
@@ -244,6 +272,7 @@ namespace Barotrauma.Items.Components
                 if (action == FixActions.Tinker)
                 {
                     tinkeringStrength = 1f + CurrentFixer.GetStatValue(StatTypes.TinkeringStrength);
+                    tinkeringPowersDevices = CurrentFixer.HasAbilityFlag(AbilityFlags.TinkeringPowersDevices);
 
                     if (character.HasAbilityFlag(AbilityFlags.CanTinkerFabricatorsAndDeconstructors) && item.GetComponent<Deconstructor>() != null || item.GetComponent<Fabricator>() != null)
                     {
@@ -291,6 +320,8 @@ namespace Barotrauma.Items.Components
                 currentRepairItem = null;
                 currentFixerAction = FixActions.None;
 #if CLIENT
+                qteTimer = QteDuration;
+                qteCooldown = 0.0f;
                 repairSoundChannel?.FadeOutAndDispose();
                 repairSoundChannel = null;
 #endif
@@ -322,7 +353,13 @@ namespace Barotrauma.Items.Components
             UpdateProjSpecific(deltaTime);
             IsTinkering = false;
 
-            item.SendSignal($"{(int) item.ConditionPercentage}", "condition_out");
+            if (prevSentConditionValue != (int)item.ConditionPercentage || conditionSignal == null)
+            {
+                prevSentConditionValue = (int)item.ConditionPercentage;
+                conditionSignal = prevSentConditionValue.ToString();
+            }
+
+            item.SendSignal(conditionSignal, "condition_out");
 
             if (CurrentFixer == null)
             {
@@ -393,7 +430,7 @@ namespace Barotrauma.Items.Components
             float successFactor = requiredSkills.Count == 0 ? 1.0f : RepairDegreeOfSuccess(CurrentFixer, requiredSkills);
 
             //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
-            if (item.ConditionPercentage < RepairThreshold)
+            if (IsBelowRepairThreshold)
             {
                 wasBroken = true;
             }
@@ -437,6 +474,7 @@ namespace Barotrauma.Items.Components
                         SteamAchievementManager.OnItemRepaired(item, CurrentFixer);
                         CurrentFixer.CheckTalents(AbilityEffectType.OnRepairComplete);
                     }
+                    if (CurrentFixer?.SelectedConstruction == item) { CurrentFixer.SelectedConstruction = null; }
                     deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
                     wasBroken = false;
                     StopRepairing(CurrentFixer);
@@ -524,7 +562,7 @@ namespace Barotrauma.Items.Components
 
         public void AdjustPowerConsumption(ref float powerConsumption)
         {
-            if (item.ConditionPercentage < RepairThreshold)
+            if (IsBelowRepairThreshold)
             {
                 powerConsumption *= MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
             }

@@ -18,13 +18,13 @@ namespace Barotrauma.Abilities
 
         protected void LogAbilityConditionError(AbilityObject abilityObject, Type expectedData)
         {
-            DebugConsole.ThrowError($"Used data-reliant ability condition when data is incompatible! Expected {expectedData}, but received {abilityObject}");
+            DebugConsole.ThrowError($"Used data-reliant ability condition when data is incompatible! Expected {expectedData}, but received {abilityObject} in talent {characterTalent.DebugIdentifier}");
         }
 
         protected abstract bool MatchesConditionSpecific(AbilityObject abilityObject);
         public override bool MatchesCondition()
         {
-            DebugConsole.ThrowError("Used data-reliant ability condition in a state-based ability! This is not allowed.");
+            DebugConsole.ThrowError($"Used data-reliant ability condition in a state-based ability in talent {characterTalent.DebugIdentifier}! This is not allowed.");
             return false;
         }
         public override bool MatchesCondition(AbilityObject abilityObject)

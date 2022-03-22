@@ -26,25 +26,25 @@ namespace Barotrauma
         }
 
         //a value between 0.0f-1.0f (0.0 = closed, 1.0f = open)
-        private float open;           
+        private float open;
 
         //the force of the water flow which is exerted on physics bodies
         private Vector2 flowForce;
         private Hull flowTargetHull;
 
         private float openedTimer = 1.0f;
-        
+
         private float higherSurface;
         private float lowerSurface;
-        
+
         private Vector2 lerpedFlowForce;
-        
+
         //if set to true, hull connections of this gap won't be updated when changes are being done to hulls
         public bool DisableHullRechecks;
-        
+
         //can ambient light get through the gap even if it's not open
         public bool PassAmbientLight;
-        
+
 
         //a collider outside the gap (for example an ice wall next to the sub)
         //used by ragdolls to prevent them from ending up inside colliders when teleporting out of the sub
@@ -54,11 +54,11 @@ namespace Barotrauma
         public float Open
         {
             get { return open; }
-            set 
+            set
             {
                 if (float.IsNaN(value)) { return; }
                 if (value > open) { openedTimer = 1.0f; }
-                open = MathHelper.Clamp(value, 0.0f, 1.0f); 
+                open = MathHelper.Clamp(value, 0.0f, 1.0f);
             }
         }
 
@@ -301,7 +301,7 @@ namespace Barotrauma
             Hull hull2 = linkedTo.Count < 2 ? null : (Hull)linkedTo[1];
             if (hull1 == hull2) { return; }
 
-            UpdateOxygen(hull1, hull2);
+            UpdateOxygen(hull1, hull2, deltaTime);
 
             if (linkedTo.Count == 1)
             {
@@ -316,15 +316,24 @@ namespace Barotrauma
 
             flowForce.X = MathHelper.Clamp(flowForce.X, -MaxFlowForce, MaxFlowForce);
             flowForce.Y = MathHelper.Clamp(flowForce.Y, -MaxFlowForce, MaxFlowForce);
-            if (openedTimer > 0.0f && flowForce.Length() > lerpedFlowForce.Length())
+            if (openedTimer > 0.0f && flowForce.LengthSquared() > lerpedFlowForce.LengthSquared())
             {
                 //if the gap has just been opened/created, allow it to exert a large force instantly without any smoothing
-                lerpedFlowForce = flowForce;                
+                lerpedFlowForce = flowForce;
             }
             else
             {
                 lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, deltaTime * 5.0f);
             }
+            if (FlowTargetHull != null && IsRoomToRoom)
+            {
+                var otherRoom = linkedTo[1] == FlowTargetHull ? linkedTo[0] : linkedTo[1];
+                if ((otherRoom as Hull).Volume < FlowTargetHull.Volume)
+                {
+                    lerpedFlowForce = Vector2.Zero;
+                }
+            }
+
             openedTimer -= deltaTime;
 
             EmitParticles(deltaTime);
@@ -344,7 +353,7 @@ namespace Barotrauma
                 subOffset = hull2.Submarine.Position - Submarine.Position;
             }
 
-            if (hull1.WaterVolume <= 0.0 && hull2.WaterVolume <= 0.0) return;
+            if (hull1.WaterVolume <= 0.0 && hull2.WaterVolume <= 0.0) { return; }
 
             float size = IsHorizontal ? rect.Height : rect.Width;
 
@@ -366,7 +375,7 @@ namespace Barotrauma
                     //water flowing from the righthand room to the lefthand room
                     if (dir == -1)
                     {
-                        if (!(hull2.WaterVolume > 0.0f)) return;
+                        if (!(hull2.WaterVolume > 0.0f)) { return; }
                         lowerSurface = hull1.Surface - hull1.WaveY[hull1.WaveY.Length - 1];
                         //delta = Math.Min((room2.water.pressure - room1.water.pressure) * sizeModifier, Math.Min(room2.water.Volume, room2.Volume));
                         //delta = Math.Min(delta, room1.Volume - room1.water.Volume + Water.MaxCompress);
@@ -374,10 +383,10 @@ namespace Barotrauma
                         flowTargetHull = hull1;
 
                         //make sure not to move more than what the room contains
-                        delta = Math.Min(((hull2.Pressure + subOffset.Y) - hull1.Pressure) * 5.0f * sizeModifier, Math.Min(hull2.WaterVolume, hull2.Volume));
-                        
+                        delta = Math.Min(((hull2.Pressure + subOffset.Y) - hull1.Pressure) * 300.0f * sizeModifier * deltaTime, Math.Min(hull2.WaterVolume, hull2.Volume));
+
                         //make sure not to place more water to the target room than it can hold
-                        delta = Math.Min(delta, hull1.Volume * Hull.MaxCompress - (hull1.WaterVolume));
+                        delta = Math.Min(delta, hull1.Volume * Hull.MaxCompress - hull1.WaterVolume);
                         hull1.WaterVolume += delta;
                         hull2.WaterVolume -= delta;
                         if (hull1.WaterVolume > hull1.Volume)
@@ -385,31 +394,31 @@ namespace Barotrauma
                             hull1.Pressure = Math.Max(hull1.Pressure, (hull1.Pressure + hull2.Pressure+subOffset.Y) / 2);
                         }
 
-                        flowForce = new Vector2(-delta, 0.0f);
+                        flowForce = new Vector2(-delta * (float)(Timing.Step / deltaTime), 0.0f);
                     }
                     else if (dir == 1)
                     {
-                        if (!(hull1.WaterVolume > 0.0f)) return;
+                        if (!(hull1.WaterVolume > 0.0f)) { return; }
                         lowerSurface = hull2.Surface - hull2.WaveY[hull2.WaveY.Length - 1];
 
                         flowTargetHull = hull2;
 
                         //make sure not to move more than what the room contains
-                        delta = Math.Min((hull1.Pressure - (hull2.Pressure + subOffset.Y)) * 5.0f * sizeModifier, Math.Min(hull1.WaterVolume, hull1.Volume));
+                        delta = Math.Min((hull1.Pressure - (hull2.Pressure + subOffset.Y)) * 300.0f * sizeModifier * deltaTime, Math.Min(hull1.WaterVolume, hull1.Volume));
 
                         //make sure not to place more water to the target room than it can hold
-                        delta = Math.Min(delta, hull2.Volume * Hull.MaxCompress - (hull2.WaterVolume));
+                        delta = Math.Min(delta, hull2.Volume * Hull.MaxCompress - hull2.WaterVolume);
                         hull1.WaterVolume -= delta;
                         hull2.WaterVolume += delta;
                         if (hull2.WaterVolume > hull2.Volume)
                         {
                             hull2.Pressure = Math.Max(hull2.Pressure, ((hull1.Pressure-subOffset.Y) + hull2.Pressure) / 2);
                         }
-                        
-                        flowForce = new Vector2(delta, 0.0f);
+
+                        flowForce = new Vector2(delta * (float)(Timing.Step / deltaTime), 0.0f);
                     }
 
-                    if (delta > 100.0f && subOffset == Vector2.Zero)
+                    if (delta > 1.5f && subOffset == Vector2.Zero)
                     {
                         float avg = (hull1.Surface + hull2.Surface) / 2.0f;
 
@@ -448,15 +457,15 @@ namespace Barotrauma
                     hull2.WaterVolume -= delta;
 
                     flowForce = new Vector2(
-                        0.0f, 
-                        Math.Min(Math.Min((hull2.Pressure + subOffset.Y) - hull1.Pressure, 200.0f), delta));
+                        0.0f,
+                        Math.Min(Math.Min((hull2.Pressure + subOffset.Y) - hull1.Pressure, 200.0f), delta * (float)(Timing.Step / deltaTime)));
 
                     flowTargetHull = hull1;
 
                     if (hull1.WaterVolume > hull1.Volume)
                     {
                         hull1.Pressure = Math.Max(hull1.Pressure, (hull1.Pressure + (hull2.Pressure + subOffset.Y)) / 2);
-                    }                   
+                    }
 
                 }
                 //there's water in the upper room, drop to lower
@@ -477,7 +486,7 @@ namespace Barotrauma
 
                     flowForce = new Vector2(
                         hull1.WaveY[hull1.GetWaveIndex(rect.X)] - hull1.WaveY[hull1.GetWaveIndex(rect.Right)],
-                        MathHelper.Clamp(-delta, -200.0f, 0.0f));
+                        MathHelper.Clamp(-delta * (float)(Timing.Step / deltaTime), -200.0f, 0.0f));
 
                     if (hull2.WaterVolume > hull2.Volume)
                     {
@@ -494,7 +503,7 @@ namespace Barotrauma
                     hull1.LethalPressure = avgLethality;
                     hull2.LethalPressure = avgLethality;
                 }
-                else 
+                else
                 {
                     hull1.LethalPressure = 0.0f;
                     hull2.LethalPressure = 0.0f;
@@ -511,12 +520,12 @@ namespace Barotrauma
             float sizeModifier = size * open * open;
 
             float delta = 500.0f * sizeModifier * deltaTime;
-            
+
             //make sure not to place more water to the target room than it can hold
             delta = Math.Min(delta, hull1.Volume * Hull.MaxCompress - hull1.WaterVolume);
             hull1.WaterVolume += delta;
 
-            if (hull1.WaterVolume > hull1.Volume) hull1.Pressure += 0.5f;
+            if (hull1.WaterVolume > hull1.Volume) { hull1.Pressure += 30.0f * deltaTime; }
 
             flowTargetHull = hull1;
 
@@ -525,12 +534,12 @@ namespace Barotrauma
                 //water flowing from right to left
                 if (rect.X > hull1.Rect.X + hull1.Rect.Width / 2.0f)
                 {
-                    flowForce = new Vector2(-delta, 0.0f);
-                    
+                    flowForce = new Vector2(-delta * (float)(Timing.Step / deltaTime), 0.0f);
+
                 }
                 else
                 {
-                    flowForce = new Vector2(delta, 0.0f);
+                    flowForce = new Vector2(delta * (float)(Timing.Step / deltaTime), 0.0f);
                 }
 
                 higherSurface = hull1.Surface;
@@ -541,39 +550,39 @@ namespace Barotrauma
                 {
                     if (rect.X > hull1.Rect.X + hull1.Rect.Width / 2.0f)
                     {
-                        float vel = ((rect.Y - rect.Height / 2) - (hull1.Surface + hull1.WaveY[hull1.WaveY.Length - 1])) * 0.1f;
+                        float vel = ((rect.Y - rect.Height / 2) - (hull1.Surface + hull1.WaveY[hull1.WaveY.Length - 1])) * 6.0f;
                         vel *= Math.Min(Math.Abs(flowForce.X) / 200.0f, 1.0f);
 
-                        hull1.WaveVel[hull1.WaveY.Length - 1] += vel;
-                        hull1.WaveVel[hull1.WaveY.Length - 2] += vel;
+                        hull1.WaveVel[hull1.WaveY.Length - 1] += vel * deltaTime;
+                        hull1.WaveVel[hull1.WaveY.Length - 2] += vel * deltaTime;
                     }
                     else
                     {
-                        float vel = ((rect.Y - rect.Height / 2) - (hull1.Surface + hull1.WaveY[0])) * 0.1f;
+                        float vel = ((rect.Y - rect.Height / 2) - (hull1.Surface + hull1.WaveY[0])) * 6.0f;
                         vel *= Math.Min(Math.Abs(flowForce.X) / 200.0f, 1.0f);
 
-                        hull1.WaveVel[0] += vel;
-                        hull1.WaveVel[1] += vel;
-                    } 
+                        hull1.WaveVel[0] += vel * deltaTime;
+                        hull1.WaveVel[1] += vel * deltaTime;
+                    }
                 }
                 else
                 {
-                    hull1.LethalPressure += (Submarine != null && Submarine.AtDamageDepth) ? 100.0f * deltaTime : 10.0f * deltaTime;
+                    hull1.LethalPressure += ((Submarine != null && Submarine.AtDamageDepth) ? 100.0f : 10.0f) * deltaTime;
                 }
             }
             else
             {
                 if (rect.Y > hull1.Rect.Y - hull1.Rect.Height / 2.0f)
                 {
-                    flowForce = new Vector2(0.0f, -delta);
+                    flowForce = new Vector2(0.0f, -delta * (float)(Timing.Step / deltaTime));
                 }
                 else
                 {
-                    flowForce = new Vector2(0.0f, delta);
+                    flowForce = new Vector2(0.0f, delta * (float)(Timing.Step / deltaTime));
                 }
                 if (hull1.WaterVolume >= hull1.Volume / Hull.MaxCompress)
                 {
-                    hull1.LethalPressure += (Submarine != null && Submarine.AtDamageDepth) ? 100.0f * deltaTime : 10.0f * deltaTime;
+                    hull1.LethalPressure += ((Submarine != null && Submarine.AtDamageDepth) ? 100.0f : 10.0f) * deltaTime;
                 }
             }
         }
@@ -639,7 +648,7 @@ namespace Barotrauma
             }
         }
 
-        private void UpdateOxygen(Hull hull1, Hull hull2)
+        private void UpdateOxygen(Hull hull1, Hull hull2, float deltaTime)
         {
             if (hull1 == null || hull2 == null) { return; }
 
@@ -650,13 +659,13 @@ namespace Barotrauma
             }
 
             float totalOxygen = hull1.Oxygen + hull2.Oxygen;
-            float totalVolume = (hull1.Volume + hull2.Volume);
-            
+            float totalVolume = hull1.Volume + hull2.Volume;
+
             float deltaOxygen = (totalOxygen * hull1.Volume / totalVolume) - hull1.Oxygen;
-            deltaOxygen = MathHelper.Clamp(deltaOxygen, -Hull.OxygenDistributionSpeed, Hull.OxygenDistributionSpeed);
+            deltaOxygen = MathHelper.Clamp(deltaOxygen, -Hull.OxygenDistributionSpeed * deltaTime, Hull.OxygenDistributionSpeed * deltaTime);
 
             hull1.Oxygen += deltaOxygen;
-            hull2.Oxygen -= deltaOxygen;            
+            hull2.Oxygen -= deltaOxygen;
         }
 
         public static Gap FindAdjacent(IEnumerable<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist)
@@ -724,7 +733,7 @@ namespace Barotrauma
         {
             if (!DisableHullRechecks) FindHulls();
         }
-        
+
         public static Gap Load(XElement element, Submarine submarine, IdRemap idRemap)
         {
             Rectangle rect = Rectangle.Empty;
@@ -755,6 +764,8 @@ namespace Barotrauma
             {
                 linkedToID = new List<ushort>(),
             };
+
+            g.HiddenInGame = element.GetAttributeBool(nameof(HiddenInGame).ToLower(), g.HiddenInGame);
             return g;
         }
 
@@ -764,7 +775,8 @@ namespace Barotrauma
 
             element.Add(
                 new XAttribute("ID", ID),
-                new XAttribute("horizontal", IsHorizontal ? "true" : "false"));
+                new XAttribute("horizontal", IsHorizontal ? "true" : "false"),
+                new XAttribute(nameof(HiddenInGame).ToLower(), HiddenInGame));
 
             element.Add(new XAttribute("rect",
                     (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +

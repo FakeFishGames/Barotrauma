@@ -319,28 +319,29 @@ namespace Barotrauma
                     AbsoluteSpacing = absoluteSpacing.Y,
                 };
 
-                var bottomContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.3f), verticalLayoutGroup.RectTransform), style: null);
-
-                var tickBoxLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.67f, 1.0f), bottomContainer.RectTransform, anchor: Anchor.CenterLeft),
-                    isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                var bottomContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.3f), verticalLayoutGroup.RectTransform), style: null)
                 {
-                    Stretch = true,
-                    RelativeSpacing = 0.02f
+                    CanBeFocused = true
                 };
 
-                var dontShowAgainTickBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickBoxLayoutGroup.RectTransform),
+                var tickBoxLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.67f, 1.0f), bottomContainer.RectTransform, anchor: Anchor.CenterLeft))
+                {
+                    CanBeFocused = true,
+                    Stretch = true
+                };
+                Vector2 tickBoxRelativeSize = new Vector2(1.0f, 0.5f);
+                var dontShowAgainTickBox = new GUITickBox(new RectTransform(tickBoxRelativeSize, tickBoxLayoutGroup.RectTransform),
                     TextManager.Get("hintmessagebox.dontshowagain"))
                 {
                     ToolTip = TextManager.Get("hintmessagebox.dontshowagaintooltip"),
                     UserData = "dontshowagain"
                 };
-
-                //var disableHintsTickBox = new GUITickBox(new RectTransform(new Vector2(0.33f, 1.0f), tickBoxLayoutGroup.RectTransform),
-                //    TextManager.Get("hintmessagebox.disablehints"))
-                //{
-                //    ToolTip = TextManager.Get("hintmessagebox.disablehintstooltip"),
-                //    UserData = "disablehints"
-                //};
+                var disableHintsTickBox = new GUITickBox(new RectTransform(tickBoxRelativeSize, tickBoxLayoutGroup.RectTransform),
+                    TextManager.Get("hintmessagebox.disablehints"))
+                {
+                    ToolTip = TextManager.Get("hintmessagebox.disablehintstooltip"),
+                    UserData = "disablehints"
+                };
 
                 Buttons = new List<GUIButton>(1)
                 {
@@ -379,12 +380,16 @@ namespace Barotrauma
                     upperContainerHeight = Math.Max(upperContainerHeight, Icon.Rect.Height);
                     height += upperContainerHeight;
                     height += absoluteSpacing.Y;
-                    height += (int)((bottomContainer.RectTransform.RelativeSize.Y / topHorizontalLayoutGroup.RectTransform.RelativeSize.Y) * upperContainerHeight);
+                    int bottomContainerHeight = dontShowAgainTickBox.Rect.Height + disableHintsTickBox.Rect.Height;
+                    height += bottomContainerHeight;
                     height += absoluteSpacing.Y;
                     if (minSize.HasValue) { height = Math.Max(height, minSize.Value.Y); }
 
                     InnerFrame.RectTransform.NonScaledSize = new Point(InnerFrame.Rect.Width, height);
                     verticalLayoutGroup.RectTransform.NonScaledSize = GetVerticalLayoutGroupSize();
+                    float upperContainerRelativeHeight = (float)upperContainerHeight / (upperContainerHeight + bottomContainerHeight);
+                    topHorizontalLayoutGroup.RectTransform.RelativeSize = new Vector2(topHorizontalLayoutGroup.RectTransform.RelativeSize.X, upperContainerRelativeHeight);
+                    bottomContainer.RectTransform.RelativeSize = new Vector2(bottomContainer.RectTransform.RelativeSize.X, 1.0f - upperContainerRelativeHeight);
                     verticalLayoutGroup.Recalculate();
                     topHorizontalLayoutGroup.Recalculate();
                     Content.Recalculate();
@@ -613,6 +618,7 @@ namespace Barotrauma
 
         public bool Close(GUIButton button, object obj)
         {
+            RectTransform.Parent = null;
             Close();            
             return true;
         }

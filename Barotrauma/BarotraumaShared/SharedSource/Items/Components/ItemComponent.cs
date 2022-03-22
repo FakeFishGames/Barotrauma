@@ -284,6 +284,43 @@ namespace Barotrauma.Items.Components
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             ParseMsg();
 
+            string inheritRequiredSkillsFrom = element.GetAttributeString("inheritrequiredskillsfrom", "");
+            if (!string.IsNullOrEmpty(inheritRequiredSkillsFrom))
+            {
+                var component = item.Components.Find(ic => ic.Name.Equals(inheritRequiredSkillsFrom, StringComparison.OrdinalIgnoreCase));
+                if (component == null)
+                {
+                    DebugConsole.ThrowError($"Error in item \"{item.Name}\" - component \"{name}\" is set to inherit its required skills from \"{inheritRequiredSkillsFrom}\", but a component of that type couldn't be found.");
+                }
+                else
+                {
+                    requiredSkills = component.requiredSkills;
+                }
+            }
+
+            string inheritStatusEffectsFrom = element.GetAttributeString("inheritstatuseffectsfrom", "");
+            if (!string.IsNullOrEmpty(inheritStatusEffectsFrom))
+            {
+                var component = item.Components.Find(ic => ic.Name.Equals(inheritStatusEffectsFrom, StringComparison.OrdinalIgnoreCase));
+                if (component == null)
+                {
+                    DebugConsole.ThrowError($"Error in item \"{item.Name}\" - component \"{name}\" is set to inherit its StatusEffects from \"{inheritStatusEffectsFrom}\", but a component of that type couldn't be found.");
+                }
+                else if (component.statusEffectLists != null)
+                {
+                    statusEffectLists ??= new Dictionary<ActionType, List<StatusEffect>>();
+                    foreach (KeyValuePair<ActionType, List<StatusEffect>> kvp in component.statusEffectLists)
+                    {
+                        if (!statusEffectLists.TryGetValue(kvp.Key, out List<StatusEffect> effectList))
+                        {
+                            effectList = new List<StatusEffect>();
+                            statusEffectLists.Add(kvp.Key, effectList);
+                        }
+                        effectList.AddRange(kvp.Value);
+                    }
+                }
+            }
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -315,19 +352,8 @@ namespace Barotrauma.Items.Components
                         requiredSkills.Add(new Skill(skillIdentifier, subElement.GetAttributeInt("level", 0)));
                         break;
                     case "statuseffect":
-                        var statusEffect = StatusEffect.Load(subElement, item.Name);
-
-                        if (statusEffectLists == null) statusEffectLists = new Dictionary<ActionType, List<StatusEffect>>();
-
-                        List<StatusEffect> effectList;
-                        if (!statusEffectLists.TryGetValue(statusEffect.type, out effectList))
-                        {
-                            effectList = new List<StatusEffect>();
-                            statusEffectLists.Add(statusEffect.type, effectList);
-                        }
-
-                        effectList.Add(statusEffect);
-
+                        statusEffectLists ??= new Dictionary<ActionType, List<StatusEffect>>();
+                        LoadStatusEffect(subElement);
                         break;
                     default:
                         if (LoadElemProjSpecific(subElement)) { break; }
@@ -341,6 +367,17 @@ namespace Barotrauma.Items.Components
                         item.AddComponent(ic);
                         break;
                 }
+            }
+
+            void LoadStatusEffect(XElement subElement)
+            {
+                var statusEffect = StatusEffect.Load(subElement, item.Name);
+                if (!statusEffectLists.TryGetValue(statusEffect.type, out List<StatusEffect> effectList))
+                {
+                    effectList = new List<StatusEffect>();
+                    statusEffectLists.Add(statusEffect.type, effectList);
+                }
+                effectList.Add(statusEffect);
             }
         }
 
@@ -398,6 +435,8 @@ namespace Barotrauma.Items.Components
         {
             return false;
         }
+
+        public virtual bool UpdateWhenInactive => false;
 
         //called when isActive is true and condition > 0.0f
         public virtual void Update(float deltaTime, Camera cam) 
@@ -531,6 +570,7 @@ namespace Barotrauma.Items.Components
             {
                 GUI.RemoveFromUpdateList(GuiFrame, true);
                 GuiFrame.RectTransform.Parent = null;
+                GuiFrame = null;
             }
 #endif
 
@@ -613,7 +653,7 @@ namespace Barotrauma.Items.Components
             {
                 string errorMsg = "ItemComponent.DegreeOfSuccess failed (character was null).\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return 0.0f;
             }
 
@@ -631,6 +671,10 @@ namespace Barotrauma.Items.Components
         public virtual void FlipX(bool relativeToSub) { }
 
         public virtual void FlipY(bool relativeToSub) { }
+
+        public bool IsLoaded(Character user, bool checkContainedItems = true) =>
+            HasRequiredContainedItems(user, addMessage: false) &&
+            (!checkContainedItems || Item.OwnInventory == null || Item.OwnInventory.AllItems.Any(i => i.Condition > 0));
 
         public bool HasRequiredContainedItems(Character user, bool addMessage, string msg = null)
         {
@@ -794,7 +838,10 @@ namespace Barotrauma.Items.Components
                 foreach (ItemComponent ic in item.Components)
                 {
                     if (ic.statusEffectLists == null || !ic.statusEffectLists.TryGetValue(ActionType.OnBroken, out List<StatusEffect> brokenEffects)) { continue; }
-                    brokenEffects.ForEach(e => e.SetUser(user));
+                    foreach (var brokenEffect in brokenEffects)
+                    {
+                        brokenEffect.SetUser(user);
+                    }
                 }
             }
 
@@ -885,7 +932,7 @@ namespace Barotrauma.Items.Components
             {
                 DebugConsole.ThrowError("Error while loading entity of the type " + t + ".", e.InnerException);
                 GameAnalyticsManager.AddErrorEventOnce("ItemComponent.Load:TargetInvocationException" + item.Name + element.Name,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     "Error while loading entity of the type " + t + " (" + e.InnerException + ")\n" + Environment.StackTrace.CleanupStackTrace());
             }
 
@@ -990,7 +1037,7 @@ namespace Barotrauma.Items.Components
             {
                 containObjective = new AIObjectiveContainItem(character, container.ContainableItemIdentifiers.ToArray(), container, currentObjective.objectiveManager, spawnItemIfNotFound: spawnItemIfNotFound)
                 {
-                    targetItemCount = itemCount,
+                    ItemCount = itemCount,
                     Equip = equip,
                     RemoveEmpty = removeEmpty,
                     GetItemPriority = i =>
@@ -1003,7 +1050,8 @@ namespace Barotrauma.Items.Components
                                 return 0.0f;
                             }
                         }
-                        return 1.0f;
+                        // Prefer items with the same identifier as the contained items'
+                        return container.ContainsItemsWithSameIdentifier(i) ? 1.0f : 0.5f;
                     }
                 };
                 containObjective.Abandoned += () => aiController.IgnoredItems.Add(container.Item);

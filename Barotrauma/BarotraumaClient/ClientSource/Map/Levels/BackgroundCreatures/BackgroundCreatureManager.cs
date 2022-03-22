@@ -95,7 +95,7 @@ namespace Barotrauma
                 var prefab = ToolBox.SelectWeightedRandom(availablePrefabs, availablePrefabs.Select(p => p.GetCommonness(level.GenerationParams)).ToList(), Rand.RandSync.ClientOnly);
                 if (prefab == null) { break; }
 
-                int amount = Rand.Range(prefab.SwarmMin, prefab.SwarmMax, Rand.RandSync.ClientOnly);
+                int amount = Rand.Range(prefab.SwarmMin, prefab.SwarmMax + 1, Rand.RandSync.ClientOnly);
                 List<BackgroundCreature> swarmMembers = new List<BackgroundCreature>();
                 for (int n = 0; n < amount; n++)
                 {

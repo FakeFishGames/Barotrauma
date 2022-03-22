@@ -53,7 +53,7 @@ namespace Barotrauma
                 foreach (var activeOrder in ActiveOrders)
                 {
                     if (!(activeOrder?.First is Order order) || activeOrder.Second.HasValue) { continue; }
-                    OrderChatMessage.WriteOrder(msg, order, null, order.TargetSpatialEntity, null, 0, order.WallSectionIndex);
+                    OrderChatMessage.WriteOrder(msg, order, targetCharacter: null, order.TargetSpatialEntity, orderOption: null, orderPriority: 0, order.WallSectionIndex, isNewOrder: true);
                     bool hasOrderGiver = order.OrderGiver != null;
                     msg.Write(hasOrderGiver);
                     if (hasOrderGiver)

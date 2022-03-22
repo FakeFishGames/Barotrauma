@@ -50,7 +50,8 @@ namespace Barotrauma
                 return;
             }
 
-            int multiplier = CalculateScalingEscortedCharacterCount();
+            // Disabled for now, because they make balancing the missions a pain.
+            int multiplier = 1;//CalculateScalingEscortedCharacterCount();
             calculatedReward = Prefab.Reward * multiplier;
 
             string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", GetReward(missionSub))}‖end‖";
@@ -319,18 +320,33 @@ namespace Barotrauma
                 }
             }
 
-            // characters that survived will take their items with them, in case players tried to be crafty and steal them
-            // this needs to run here in case players abort the mission by going back home
-            // TODO: I think this might feel like a bug.
-            foreach (var characterItem in characterItems)
+            if (!IsClient)
             {
-                if (Survived(characterItem.Key) || !completed)
+                foreach (Character character in characters)
                 {
-                    foreach (Item item in characterItem.Value)
+                    if (character.Inventory == null) { continue; }
+                    foreach (Item item in character.Inventory.AllItemsMod)
                     {
-                        if (!item.Removed)
+                        //item didn't spawn with the characters -> drop it
+                        if (!characterItems.Any(c => c.Value.Contains(item)))
                         {
-                            item.Remove();
+                            item.Drop(character);
+                        }
+                    }
+                }
+
+                // characters that survived will take their items with them, in case players tried to be crafty and steal them
+                // this needs to run here in case players abort the mission by going back home
+                foreach (var characterItem in characterItems)
+                {
+                    if (Survived(characterItem.Key) || !completed)
+                    {
+                        foreach (Item item in characterItem.Value)
+                        {
+                            if (!item.Removed)
+                            {
+                                item.Remove();
+                            }
                         }
                     }
                 }

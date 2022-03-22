@@ -16,7 +16,6 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
-    
     internal class UpgradeStore
     {
         public readonly struct CategoryData
@@ -168,6 +167,7 @@ namespace Barotrauma
         //TODO: move this somewhere else
         public static void UpdateCategoryList(GUIListBox categoryList, CampaignMode campaign, Submarine? drawnSubmarine, IEnumerable<UpgradeCategory> applicableCategories)
         {
+            var subItems = GetSubItems();
             foreach (GUIComponent component in categoryList.Content.Children)
             {
                 if (!(component.UserData is CategoryData data)) { continue; }
@@ -179,7 +179,7 @@ namespace Barotrauma
                 var customizeButton = component.FindChild("customizebutton", true);
                 if (customizeButton != null)
                 {
-                    customizeButton.Visible = HasSwappableItems(data.Category);
+                    customizeButton.Visible = HasSwappableItems(data.Category, subItems);
                 }
             }
 
@@ -434,6 +434,7 @@ namespace Barotrauma
                         if (AvailableMoney >= hullRepairCost)
                         {
                             Campaign.Money -= hullRepairCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
                             Campaign.PurchasedHullRepairs = true;
                             button.Enabled = false;
                             SelectTab(UpgradeTab.Repairs);
@@ -468,6 +469,7 @@ namespace Barotrauma
                         if (AvailableMoney >= itemRepairCost && !Campaign.PurchasedItemRepairs)
                         {
                             Campaign.Money -= itemRepairCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
                             Campaign.PurchasedItemRepairs = true;
                             button.Enabled = false;
                             SelectTab(UpgradeTab.Repairs);
@@ -513,6 +515,7 @@ namespace Barotrauma
                         if (AvailableMoney >= shuttleRetrieveCost && !Campaign.PurchasedLostShuttles)
                         {
                             Campaign.Money -= shuttleRetrieveCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
                             Campaign.PurchasedLostShuttles = true;
                             button.Enabled = false;
                             SelectTab(UpgradeTab.Repairs);
@@ -717,15 +720,18 @@ namespace Barotrauma
 
         private bool customizeTabOpen;
 
-        private static bool HasSwappableItems(UpgradeCategory category)
+        private static bool HasSwappableItems(UpgradeCategory category, List<Item>? subItems = null)
         {
             if (Submarine.MainSub == null) { return false; }
-            return Submarine.MainSub.GetItems(true).Any(i =>
+            subItems ??= GetSubItems();
+            return subItems.Any(i =>
                 i.Prefab.SwappableItem != null &&
                 !i.HiddenInGame && i.AllowSwapping &&
                 (i.Prefab.SwappableItem.CanBeBought || ItemPrefab.Prefabs.Any(ip => ip.SwappableItem?.ReplacementOnUninstall == i.Prefab.Identifier)) &&
                 Submarine.MainSub.IsEntityFoundOnThisSub(i, true) && category.ItemTags.Any(t => i.HasTag(t)));
         }
+
+        private static List<Item> GetSubItems() => Submarine.MainSub?.GetItems(true) ?? new List<Item>();
 
         private void SelectUpgradeCategory(List<UpgradePrefab> prefabs, UpgradeCategory category, Submarine submarine)
         {
@@ -846,22 +852,26 @@ namespace Barotrauma
 
             var currentOrPending = item.PendingItemSwap ?? item.Prefab;
             string name = currentOrPending.Name;
-            string quantityText = "";
+            string nameWithQuantity = "";
             if (linkedItems.Count > 1)
             {
                 foreach (ItemPrefab distinctItem in linkedItems.Select(it => it.Prefab).Distinct())
                 {
-                    if (quantityText != string.Empty)
+                    if (nameWithQuantity != string.Empty)
                     {
-                        quantityText += ", ";
+                        nameWithQuantity += ", ";
                     }
                     int count = linkedItems.Count(it => it.Prefab == distinctItem);
-                    quantityText += distinctItem.Name;
+                    nameWithQuantity += distinctItem.Name;
                     if (count > 1)
                     {
-                        quantityText += " " + TextManager.GetWithVariable("campaignstore.quantity", "[amount]", count.ToString());
+                        nameWithQuantity += " " + TextManager.GetWithVariable("campaignstore.quantity", "[amount]", count.ToString());
                     }
                 }
+            }
+            else
+            {
+                nameWithQuantity = name;
             }
 
             bool isOpen = false;
@@ -884,7 +894,7 @@ namespace Barotrauma
             new GUITextBlock(rectT(0.3f, 1f, buttonLayout), text: slotText, font: GUI.SubHeadingFont);
             GUILayoutGroup group = new GUILayoutGroup(rectT(0.7f, 1f, buttonLayout), isHorizontal: true) { Stretch = true };
 
-            string title = item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : quantityText;
+            string title = item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : nameWithQuantity;
             GUITextBlock text = new GUITextBlock(rectT(0.7f, 1f, group), text: title, font: GUI.SubHeadingFont, textAlignment: Alignment.Right, parseRichText: true)
             {
                 TextColor = GUI.Style.Orange
@@ -907,7 +917,7 @@ namespace Barotrauma
                 if (isUninstallPending) { canUninstall = false; }
 
                 frames.Add(CreateUpgradeEntry(rectT(1f, 0.25f, parent.Content), currentOrPending.UpgradePreviewSprite,
-                                item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : TextManager.GetWithVariable("upgrades.installeditem", "[itemname]", quantityText),
+                                item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : TextManager.GetWithVariable("upgrades.installeditem", "[itemname]", nameWithQuantity),
                                 currentOrPending.Description,
                                 0, null, addBuyButton: canUninstall, addProgressBar: false, buttonStyle: "WeaponUninstallButton"));
 
@@ -1684,7 +1694,7 @@ namespace Barotrauma
 
         private bool HasPermission => campaignUI.Campaign.AllowedToManageCampaign();
 
-        private static string FormatCurrency(int money, bool format = true)
+        public static string FormatCurrency(int money, bool format = true)
         {
             return TextManager.GetWithVariable("CurrencyFormat", "[credits]", format ? string.Format(CultureInfo.InvariantCulture, "{0:N0}", money) : money.ToString());
         }

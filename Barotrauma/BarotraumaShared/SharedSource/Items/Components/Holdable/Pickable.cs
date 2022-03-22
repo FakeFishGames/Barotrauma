@@ -69,13 +69,27 @@ namespace Barotrauma.Items.Components
         public override bool Pick(Character picker)
         {
             //return if someone is already trying to pick the item
-            if (pickTimer > 0.0f) return false;
-            if (picker == null || picker.Inventory == null) return false;
+            if (pickTimer > 0.0f) { return false; }
+            if (picker == null || picker.Inventory == null) { return false; }
 
             if (PickingTime > 0.0f)
             {
-                var abilityPickingTime = new AbilityValueItem(PickingTime, item.Prefab);
+                var abilityPickingTime = new AbilityItemPickingTime(PickingTime, item.Prefab);
                 picker.CheckTalents(AbilityEffectType.OnItemPicked, abilityPickingTime);
+
+                if (requiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
+                {
+                    foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Equipped])
+                    {
+                        foreach (var heldItem in picker.HeldItems)
+                        {
+                            if (ri.MatchesItem(heldItem))
+                            {
+                                abilityPickingTime.Value /= 1 + heldItem.Prefab.AddedPickingSpeedMultiplier;
+                            }
+                        }
+                    }
+                }
 
                 if ((picker.PickingItem == null || picker.PickingItem == item) && PickingTime <= float.MaxValue)
                 {
@@ -142,7 +156,7 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        private IEnumerable<object> WaitForPick(Character picker, float requiredTime)
+        private IEnumerable<CoroutineStatus> WaitForPick(Character picker, float requiredTime)
         {
             activePicker = picker;
             picker.PickingItem = item;
@@ -285,5 +299,16 @@ namespace Barotrauma.Items.Components
                 Pick(Entity.FindEntityByID(pickerID) as Character);
             }
         }
+    }
+
+    class AbilityItemPickingTime : AbilityObject, IAbilityValue, IAbilityItemPrefab
+    {
+        public AbilityItemPickingTime(float pickingTime, ItemPrefab itemPrefab)
+        {
+            Value = pickingTime;
+            ItemPrefab = itemPrefab;
+        }
+        public float Value { get; set; }
+        public ItemPrefab ItemPrefab { get; set; }
     }
 }

@@ -112,7 +112,7 @@ namespace Barotrauma.Items.Components
             prevVoltage = Voltage;
             hasPower = Voltage > MinVoltage;
 
-            Force = MathHelper.Lerp(force, (Voltage < MinVoltage) ? 0.0f : targetForce, 0.1f);
+            Force = MathHelper.Lerp(force, (Voltage < MinVoltage) ? 0.0f : targetForce, deltaTime * 10.0f);
             if (Math.Abs(Force) > 1.0f)
             {
                 float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, 1.0f);
@@ -137,18 +137,19 @@ namespace Barotrauma.Items.Components
                 currForce *= MathHelper.Lerp(0.5f, 2.0f, condition);
                 if (item.Submarine.FlippedX) { currForce *= -1; }
                 Vector2 forceVector = new Vector2(currForce, 0);
-                item.Submarine.ApplyForce(forceVector);
+                item.Submarine.ApplyForce(forceVector * deltaTime * Timing.FixedUpdateRate);
                 UpdatePropellerDamage(deltaTime);
 #if CLIENT
-                particleTimer -= deltaTime;
-                if (particleTimer <= 0.0f)
+                float particleInterval = 1.0f / particlesPerSec;
+                particleTimer += deltaTime;
+                while (particleTimer > particleInterval)
                 {
                     Vector2 particleVel = -forceVector.ClampLength(5000.0f) / 5.0f;
                     GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition + PropellerPos * item.Scale,
-                        particleVel * Rand.Range(0.9f, 1.1f),
+                        particleVel * Rand.Range(0.8f, 1.1f),
                         0.0f, item.CurrentHull);
-                    particleTimer = 1.0f / particlesPerSec;
-                }                
+                    particleTimer -= particleInterval;
+                }
 #endif
             }
         }

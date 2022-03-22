@@ -19,6 +19,15 @@ namespace Barotrauma
 
         public virtual IEnumerable<Entity> HudIconTargets => Enumerable.Empty<Entity>();
 
+        /// <summary>
+        /// Is the mission at a state at which the only thing left to do is to reach the end of the level?
+        /// </summary>
+        public abstract bool DisplayAsCompleted { get; }
+        /// <summary>
+        /// Is the mission at a state at which the mission cannot be completed anymore?
+        /// </summary>
+        public abstract bool DisplayAsFailed { get; }
+
         public Color GetDifficultyColor()
         {
             int v = Difficulty ?? MissionPrefab.MinDifficulty;
@@ -78,7 +87,7 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(ShowMessageBoxAfterRoundSummary(header, message));
         }
 
-        private IEnumerable<object> ShowMessageBoxAfterRoundSummary(string header, string message)
+        private IEnumerable<CoroutineStatus> ShowMessageBoxAfterRoundSummary(string header, string message)
         {
             while (GUIMessageBox.VisibleBox?.UserData is RoundSummary)
             {

@@ -83,9 +83,7 @@ namespace Barotrauma.Items.Components
         private const float ConnectedSubUpdateInterval = 1.0f;
         float connectedSubUpdateTimer;
 
-        //Vector2 = vector from the ping source to the position of the disruption
-        //float = strength of the disruption, between 0-1
-        private readonly List<Pair<Vector2, float>> disruptedDirections = new List<Pair<Vector2, float>>();
+        private readonly List<(Vector2 pos, float strength)> disruptedDirections = new List<(Vector2 pos, float strength)>();
 
         private readonly Dictionary<object, CachedDistance> markerDistances = new Dictionary<object, CachedDistance>();
 
@@ -350,6 +348,27 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private Vector2 GetTransducerPos()
+        {
+            if (!UseTransducers || connectedTransducers.Count == 0)
+            {
+                //use the position of the sub if the item is static (no body) and inside a sub
+                return item.Submarine != null && item.body == null ? item.Submarine.WorldPosition : item.WorldPosition;
+            }
+
+            Vector2 transducerPosSum = Vector2.Zero;
+            foreach (ConnectedTransducer transducer in connectedTransducers)
+            {
+                if (transducer.Transducer.Item.Submarine != null && !CenterOnTransducers)
+                {
+                    return transducer.Transducer.Item.Submarine.WorldPosition;
+                }
+                transducerPosSum += transducer.Transducer.Item.WorldPosition;
+            }
+            return transducerPosSum / connectedTransducers.Count;
+        }
+
+
         public override void OnItemLoaded()
         {
             base.OnItemLoaded();
@@ -455,8 +474,21 @@ namespace Barotrauma.Items.Components
                     zoomSlider.OnMoved(zoomSlider, zoomSlider.BarScroll);
                 }
             }
-            
-            float distort = 1.0f - item.Condition / item.MaxCondition;
+
+            Vector2 transducerCenter = GetTransducerPos();
+
+            if (steering != null && steering.DockingModeEnabled && steering.ActiveDockingSource != null)
+            {
+                Vector2 worldFocusPos = (steering.ActiveDockingSource.Item.WorldPosition + steering.DockingTarget.Item.WorldPosition) / 2.0f;
+                DisplayOffset = Vector2.Lerp(DisplayOffset, worldFocusPos - transducerCenter, 0.1f);
+            }
+            else
+            {
+                DisplayOffset = Vector2.Lerp(DisplayOffset, Vector2.Zero, 0.1f);
+            }
+            transducerCenter += DisplayOffset;
+
+            float distort = MathHelper.Clamp(1.0f - item.Condition / item.MaxCondition, 0.0f, 1.0f);
             for (int i = sonarBlips.Count - 1; i >= 0; i--)
             {
                 sonarBlips[i].FadeTimer -= deltaTime * MathHelper.Lerp(0.5f, 2.0f, distort);
@@ -501,8 +533,6 @@ namespace Barotrauma.Items.Components
             {
                 return;
             }
-
-            Vector2 transducerCenter = GetTransducerPos() + DisplayOffset;
 
             if (Level.Loaded != null)
             {
@@ -829,8 +859,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Vector2 transducerCenter = GetTransducerPos();
-
+            Vector2 transducerCenter = GetTransducerPos();// + DisplayOffset;
 
             if (sonarBlips.Count > 0)
             {
@@ -840,7 +869,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (SonarBlip sonarBlip in sonarBlips)
                 {
-                    DrawBlip(spriteBatch, sonarBlip, transducerCenter, center, sonarBlip.FadeTimer / 2.0f * signalStrength, blipScale);
+                    DrawBlip(spriteBatch, sonarBlip, transducerCenter + DisplayOffset, center, sonarBlip.FadeTimer / 2.0f * signalStrength, blipScale);
                 }
 
                 spriteBatch.End();
@@ -849,8 +878,8 @@ namespace Barotrauma.Items.Components
 
             if (item.Submarine != null && !DetectSubmarineWalls)
             {
-                DrawDockingPorts(spriteBatch, transducerCenter, signalStrength);
                 transducerCenter += DisplayOffset;
+                DrawDockingPorts(spriteBatch, transducerCenter, signalStrength);
                 DrawOwnSubmarineBorders(spriteBatch, transducerCenter, signalStrength);
             }
             else
@@ -1083,14 +1112,11 @@ namespace Barotrauma.Items.Components
             {
                 DrawDockingIndicator(spriteBatch, steering, ref transducerCenter);
             }
-            else
-            {
-                DisplayOffset = Vector2.Lerp(DisplayOffset, Vector2.Zero, 0.1f);
-            }                
 
             foreach (DockingPort dockingPort in DockingPort.List)
             {
                 if (Level.Loaded != null && dockingPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
+                if (dockingPort.Item.HiddenInGame) { continue; }
                 if (dockingPort.Item.Submarine == null) { continue; }
                 if (dockingPort.Item.Submarine.Info.IsWreck) { continue; }
                 // docking ports should be shown even if defined as not, if the submarine is the same as the sonar's
@@ -1130,9 +1156,6 @@ namespace Barotrauma.Items.Components
             
             Vector2 worldFocusPos = (steering.ActiveDockingSource.Item.WorldPosition + steering.DockingTarget.Item.WorldPosition) / 2.0f;
             worldFocusPos.X = steering.DockingTarget.Item.WorldPosition.X;
-
-            DisplayOffset = Vector2.Lerp(DisplayOffset, worldFocusPos - transducerCenter, 0.1f);
-            transducerCenter += DisplayOffset;
 
             Vector2 sourcePortDiff = (steering.ActiveDockingSource.Item.WorldPosition - transducerCenter) * scale;
             Vector2 sourcePortPos = new Vector2(sourcePortDiff.X, -sourcePortDiff.Y);
@@ -1234,7 +1257,7 @@ namespace Barotrauma.Items.Components
                     Vector2 disruptionPos = new Vector2(levelObject.Position.X, levelObject.Position.Y);
 
                     float disruptionDist = Vector2.Distance(pingSource, disruptionPos);
-                    disruptedDirections.Add(new Pair<Vector2, float>((disruptionPos - pingSource) / disruptionDist, disruptionStrength));
+                    disruptedDirections.Add(((disruptionPos - pingSource) / disruptionDist, disruptionStrength));
 
                     CreateBlipsForDisruption(disruptionPos, disruptionStrength);
                     
@@ -1246,7 +1269,7 @@ namespace Barotrauma.Items.Components
                     float distSqr = Vector2.DistanceSquared(aiTarget.WorldPosition, pingSource);
                     if (distSqr > worldPingRadiusSqr) { continue; }
                     float disruptionDist = (float)Math.Sqrt(distSqr);
-                    disruptedDirections.Add(new Pair<Vector2, float>((aiTarget.WorldPosition - pingSource) / disruptionDist, aiTarget.SonarDisruption));
+                    disruptedDirections.Add(((aiTarget.WorldPosition - pingSource) / disruptionDist, aiTarget.SonarDisruption));
                     CreateBlipsForDisruption(aiTarget.WorldPosition, disruption);
                 }
             }
@@ -1461,10 +1484,10 @@ namespace Barotrauma.Items.Components
                 float transducerDist = transducerDiff.Length();
                 Vector2 pingDirection = transducerDiff / transducerDist;
                 bool disrupted = false;
-                foreach (Pair<Vector2, float> disruptDir in disruptedDirections)
+                foreach ((Vector2 disruptPos, float disruptStrength) in disruptedDirections)
                 {
-                    float dot = Vector2.Dot(pingDirection, disruptDir.First);
-                    if (dot >  1.0f - disruptDir.Second)
+                    float dot = Vector2.Dot(pingDirection, disruptPos);
+                    if (dot >  1.0f - disruptStrength)
                     {
                         disrupted = true;
                         break;
@@ -1623,6 +1646,11 @@ namespace Barotrauma.Items.Components
                     markerDistances.Add(targetIdentifier, cachedDistance);
                     dist = path.TotalLength;
                 }
+                else
+                {
+                    var cachedDistance = new CachedDistance(transducerPosition, worldPosition, linearDist, Timing.TotalTime + Rand.Range(4.0f, 7.0f));
+                    markerDistances.Add(targetIdentifier, cachedDistance);
+                }
             }
 
             Vector2 position = worldPosition - transducerPosition;
@@ -1665,13 +1693,12 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (iconIdentifier == null || !targetIcons.ContainsKey(iconIdentifier))
+            if (iconIdentifier == null || !targetIcons.TryGetValue(iconIdentifier, out var iconInfo) || iconInfo.Item1 == null)
             {
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X - 3, (int)markerPos.Y - 3, 6, 6), markerColor, thickness: 2);
             }
             else
             {
-                var iconInfo = targetIcons[iconIdentifier];
                 iconInfo.Item1.Draw(spriteBatch, markerPos, iconInfo.Item2);
             }
 
@@ -1684,7 +1711,10 @@ namespace Barotrauma.Items.Components
             Vector2 textSize = GUI.SmallFont.MeasureString(wrappedLabel);
 
             //flip the text to left side when the marker is on the left side or goes outside the right edge of the interface
-            if ((dir.X < 0.0f || labelPos.X + textSize.X + 10 > GuiFrame.Rect.X) && labelPos.X - textSize.X > 0) labelPos.X -= textSize.X + 10;
+            if (GuiFrame != null && (dir.X < 0.0f || labelPos.X + textSize.X + 10 > GuiFrame.Rect.X) && labelPos.X - textSize.X > 0) 
+            { 
+                labelPos.X -= textSize.X + 10; 
+            }
 
             GUI.DrawString(spriteBatch,
                 new Vector2(labelPos.X + 10, labelPos.Y),

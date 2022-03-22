@@ -30,10 +30,9 @@ namespace Barotrauma
 
         public static SubmarineVote SubVote;
 
-        private void StartSubmarineVote(IReadMessage inc, VoteType voteType, Client sender)
+        private void StartSubmarineVote(SubmarineInfo subInfo, VoteType voteType, Client sender)
         {
-            string subName = inc.ReadString();
-            SubVote.Sub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
+            SubVote.Sub = subInfo;
             SubVote.DeliveryFee = voteType == VoteType.SwitchSub ? GameMain.GameSession.Map.DistanceToClosestLocationWithOutpost(GameMain.GameSession.Map.CurrentLocation, out Location endLocation) : 0;
             SubVote.VoteType = voteType;
             SubVote.State = VoteState.Started;
@@ -130,7 +129,12 @@ namespace Barotrauma
                     bool startVote = inc.ReadBoolean();
                     if (startVote)
                     {
-                        StartSubmarineVote(inc, voteType, sender);
+                        string subName = inc.ReadString();
+                        SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
+                        if (GameMain.GameSession?.Campaign is MultiPlayerCampaign campaign && (campaign.CanPurchaseSub(subInfo) || GameMain.GameSession.IsSubmarineOwned(subInfo)))
+                        {
+                            StartSubmarineVote(subInfo, voteType, sender);
+                        }
                     }
                     else
                     {
@@ -155,23 +159,23 @@ namespace Barotrauma
             msg.Write(allowSubVoting);
             if (allowSubVoting)
             {
-                List<Pair<object, int>> voteList = GetVoteList(VoteType.Sub, GameMain.Server.ConnectedClients);
+                IReadOnlyDictionary<SubmarineInfo, int> voteList = GetVoteCounts<SubmarineInfo>(VoteType.Sub, GameMain.Server.ConnectedClients);
                 msg.Write((byte)voteList.Count);
-                foreach (Pair<object, int> vote in voteList)
+                foreach (KeyValuePair<SubmarineInfo, int> vote in voteList)
                 {
-                    msg.Write((byte)vote.Second);
-                    msg.Write(((SubmarineInfo)vote.First).Name);
+                    msg.Write((byte)vote.Value);
+                    msg.Write(vote.Key.Name);
                 }
             }
             msg.Write(AllowModeVoting);
             if (allowModeVoting)
             {
-                List<Pair<object, int>> voteList = GetVoteList(VoteType.Mode, GameMain.Server.ConnectedClients);
+                IReadOnlyDictionary<GameModePreset, int> voteList = GetVoteCounts<GameModePreset>(VoteType.Mode, GameMain.Server.ConnectedClients);
                 msg.Write((byte)voteList.Count);
-                foreach (Pair<object, int> vote in voteList)
+                foreach (KeyValuePair<GameModePreset, int> vote in voteList)
                 {
-                    msg.Write((byte)vote.Second);
-                    msg.Write(((GameModePreset)vote.First).Identifier);
+                    msg.Write((byte)vote.Value);
+                    msg.Write(vote.Key.Identifier);
                 }
             }
             msg.Write(AllowEndVoting);

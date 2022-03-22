@@ -1,13 +1,14 @@
-﻿using System;
-using System.ComponentModel;
-using System.Linq;
+﻿using Barotrauma.Networking;
+using System;
 using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma.Items.Components
 {
     internal partial class Growable
     {
+        private const int serverHealthUpdateDelay = 10;
+        private int serverHealthUpdateTimer;
+
         partial void LoadVines(XElement element)
         {
             foreach (XElement subElement in element.Elements())

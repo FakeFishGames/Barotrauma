@@ -6,6 +6,8 @@ namespace Barotrauma.Items.Components
 {
     class RegExFindComponent : ItemComponent
     {
+        private static readonly TimeSpan timeout = TimeSpan.FromSeconds(Timing.Step);
+
         private string expression;
 
         private string receivedSignal;
@@ -67,7 +69,10 @@ namespace Barotrauma.Items.Components
 
                 try
                 {
-                    regex = new Regex(@expression);
+                    regex = new Regex(
+                        @expression,
+                        options: RegexOptions.None,
+                        matchTimeout: timeout);
                 }
 
                 catch
@@ -97,11 +102,14 @@ namespace Barotrauma.Items.Components
                     previousResult = match.Success;
                     previousGroups = UseCaptureGroup && previousResult ? match.Groups : null;
                     previousReceivedSignal = receivedSignal;
-
                 }
-                catch
+                catch (Exception e)
                 {
-                    item.SendSignal("ERROR", "signal_out");
+                    item.SendSignal(
+                        e is RegexMatchTimeoutException
+                            ? "TIMEOUT"
+                            : "ERROR",
+                        "signal_out");
                     previousResult = false;
                     return;
                 }

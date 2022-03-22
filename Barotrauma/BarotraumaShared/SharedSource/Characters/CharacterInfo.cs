@@ -43,6 +43,7 @@ namespace Barotrauma
             public int FaceAttachmentIndex { get; set; } = -1;
 
             public XElement HairElement { get; set; }
+            public XElement HairWithHatElement { get; set; }
             public XElement BeardElement { get; set; }
             public XElement MoustacheElement { get; set; }
             public XElement FaceAttachment { get; set; }
@@ -361,10 +362,34 @@ namespace Barotrauma
 
         public CharacterTeamType TeamID;
 
-        private readonly NPCPersonalityTrait personalityTrait;
+        private NPCPersonalityTrait personalityTrait;
 
         public const int MaxCurrentOrders = 3;
         public static int HighestManualOrderPriority => MaxCurrentOrders;
+        public int GetManualOrderPriority(Order order)
+        {
+            if (order != null && order.AssignmentPriority < 100 && CurrentOrders.Any())
+            {
+                int orderPriority = HighestManualOrderPriority;
+                for (int i = 0; i < CurrentOrders.Count; i++)
+                {
+                    if (CurrentOrders[i].Order is Order currentOrder && order.AssignmentPriority >= currentOrder.AssignmentPriority)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        orderPriority--;
+                    }
+                }
+                return Math.Max(orderPriority, 1);
+            }
+            else
+            {
+                return HighestManualOrderPriority;
+            }
+        }
+
         public List<OrderInfo> CurrentOrders { get; } = new List<OrderInfo>();
 
         //unique ID given to character infos in MP
@@ -544,7 +569,7 @@ namespace Barotrauma
             HasGenders = CharacterConfigElement.GetAttributeBool("genders", false);
             HasRaces = CharacterConfigElement.GetAttributeBool("races", false);
             SetGenderAndRace(randSync);
-            Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Unsynced) : new Job(jobPrefab, variant);
+            Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Unsynced) : new Job(jobPrefab, randSync, variant);
             HairColors = CharacterConfigElement.GetAttributeTupleArray("haircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
             FacialHairColors = CharacterConfigElement.GetAttributeTupleArray("facialhaircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
             SkinColors = CharacterConfigElement.GetAttributeTupleArray("skincolors", new (Color, float)[] { (new Color(255, 215, 200, 255), 100f) }).ToImmutableArray();
@@ -560,17 +585,21 @@ namespace Barotrauma
             }
             else
             { 
-                name = "";
                 Name = GetRandomName(randSync);
             }
             OriginalName = !string.IsNullOrEmpty(originalName) ? originalName : Name;
-            personalityTrait = NPCPersonalityTrait.GetRandom(name + HeadSpriteId);         
+            SetPersonalityTrait();
             Salary = CalculateSalary();
             if (ragdollFileName != null)
             {
                 this.ragdollFileName = ragdollFileName;
             }
             LoadHeadAttachments();
+        }
+
+        private void SetPersonalityTrait()
+        {
+            personalityTrait = NPCPersonalityTrait.GetRandom(Name + HeadSpriteId);
         }
 
         public string GetRandomName(Rand.RandSync randSync)
@@ -1097,6 +1126,20 @@ namespace Barotrauma
                     Head.HairElement = GetRandomElement(hairs);
                     Head.HairIndex = hairs.IndexOf(Head.HairElement);
                 }
+                if (Head.HairElement != null)
+                {
+                    int thisHairIndex = hairs.IndexOf(head.HairElement);
+                    int hairWithHatIndex = head.HairElement.GetAttributeInt("replacewhenwearinghat", thisHairIndex);
+                    if (thisHairIndex != hairWithHatIndex && hairWithHatIndex > -1 && hairWithHatIndex < hairs.Count)
+                    {
+                        head.HairWithHatElement = hairs[hairWithHatIndex];
+                    }
+                    else
+                    {
+                        head.HairWithHatElement = null;
+                    }
+                }
+
                 if (IsValidIndex(Head.BeardIndex, beards))
                 {
                     Head.BeardElement = beards[Head.BeardIndex];
@@ -1176,13 +1219,13 @@ namespace Barotrauma
             int salary = 0;
             foreach (Skill skill in Job.Skills)
             {
-                salary += (int)(skill.Level * skill.Prefab.PriceMultiplier);
+                salary += (int)(skill.Level * skill.PriceMultiplier);
             }
 
             return (int)(salary * Job.Prefab.PriceMultiplier);
         }
 
-        public void IncreaseSkillLevel(string skillIdentifier, float increase, bool gainedFromApprenticeship = false)
+        public void IncreaseSkillLevel(string skillIdentifier, float increase, bool gainedFromAbility = false)
         {
             if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) || Character == null) { return; }         
 
@@ -1202,7 +1245,7 @@ namespace Barotrauma
             {                
                 // assume we are getting at least 1 point in skill, since this logic only runs in such cases
                 float increaseSinceLastSkillPoint = MathHelper.Max(increase, 1f);
-                var abilitySkillGain = new AbilitySkillGain(increaseSinceLastSkillPoint, skillIdentifier, Character, gainedFromApprenticeship);
+                var abilitySkillGain = new AbilitySkillGain(increaseSinceLastSkillPoint, skillIdentifier, Character, gainedFromAbility);
                 Character.CheckTalents(AbilityEffectType.OnGainSkillPoint, abilitySkillGain);
                 foreach (Character character in Character.GetFriendlyCrew(Character))
                 {
@@ -1237,7 +1280,7 @@ namespace Barotrauma
         {
             int prevAmount = ExperiencePoints;
 
-            var experienceGainMultiplier = new AbilityValue(1f);
+            var experienceGainMultiplier = new AbilityExperienceGainMultiplier(1f);
             if (isMissionExperience)
             {
                 Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplier);
@@ -1276,17 +1319,16 @@ namespace Barotrauma
 
         public float GetProgressTowardsNextLevel()
         {
-            float progress = (ExperiencePoints - GetExperienceRequiredForCurrentLevel()) / (GetExperienceRequiredToLevelUp() - GetExperienceRequiredForCurrentLevel());
-            return progress;
+            return (ExperiencePoints - GetExperienceRequiredForCurrentLevel()) / (float)(GetExperienceRequiredToLevelUp() - GetExperienceRequiredForCurrentLevel());
         }
 
-        public float GetExperienceRequiredForCurrentLevel()
+        public int GetExperienceRequiredForCurrentLevel()
         {
             GetCurrentLevel(out int experienceRequired);
             return experienceRequired;
         }
 
-        public float GetExperienceRequiredToLevelUp()
+        public int GetExperienceRequiredToLevelUp()
         {
             int level = GetCurrentLevel(out int experienceRequired);
             return experienceRequired + ExperienceRequiredPerLevel(level);
@@ -1388,7 +1430,6 @@ namespace Barotrauma
                 foreach (var savedStat in statValuePair.Value)
                 {
                     if (savedStat.StatValue == 0f) { continue; }
-                    if (savedStat.RemoveAfterRound) { continue; }
 
                     savedStatElement.Add(new XElement("savedstatvalue",
                         new XAttribute("stattype", statValuePair.Key.ToString()),
@@ -1501,7 +1542,7 @@ namespace Barotrauma
                             orderTargetElement.Add(new XAttribute("hullid", (uint)ot.Hull.ID));
                             position -= ot.Hull.WorldPosition;
                         }
-                        orderTargetElement.Add(new XAttribute("position", $"{position.X},{position.Y}"));
+                        orderTargetElement.Add(new XAttribute("position", XMLExtensions.Vector2ToString(position)));
                         orderElement.Add(orderTargetElement);
                         break;
                     case Order.OrderTargetType.WallSection when targetAvailableInNextLevel && order.TargetEntity is Structure s && order.WallSectionIndex.HasValue:
@@ -1746,6 +1787,20 @@ namespace Barotrauma
             OnPermanentStatChanged(statType);
         }
 
+        public void RemoveSavedStatValuesOnDeath()
+        {
+            foreach (StatTypes statType in SavedStatValues.Keys)
+            {
+                foreach (SavedStatValue savedStatValue in SavedStatValues[statType])
+                {
+                    if (!savedStatValue.RemoveOnDeath) { continue; }
+                    if (MathUtils.NearlyEqual(savedStatValue.StatValue, 0.0f)) { continue; }
+                    savedStatValue.StatValue = 0.0f;
+                    // no need to make a network update, as this is only done after the character has died
+                }
+            }
+        }
+
         public void ResetSavedStatValue(string statIdentifier)
         {
             foreach (StatTypes statType in SavedStatValues.Keys)
@@ -1785,7 +1840,7 @@ namespace Barotrauma
             }
         }
 
-        public void ChangeSavedStatValue(StatTypes statType, float value, string statIdentifier, bool removeOnDeath, bool removeAfterRound = false, float maxValue = float.MaxValue, bool setValue = false)
+        public void ChangeSavedStatValue(StatTypes statType, float value, string statIdentifier, bool removeOnDeath, float maxValue = float.MaxValue, bool setValue = false)
         {
             if (!SavedStatValues.ContainsKey(statType))
             {
@@ -1801,7 +1856,7 @@ namespace Barotrauma
             }
             else
             {
-                SavedStatValues[statType].Add(new SavedStatValue(statIdentifier, MathHelper.Min(value, maxValue), removeOnDeath, removeAfterRound));
+                SavedStatValues[statType].Add(new SavedStatValue(statIdentifier, MathHelper.Min(value, maxValue), removeOnDeath));
                 changed = true;
             }
             if (changed) { OnPermanentStatChanged(statType); }
@@ -1813,29 +1868,36 @@ namespace Barotrauma
         public string StatIdentifier { get; set; }
         public float StatValue { get; set; }
         public bool RemoveOnDeath { get; set; }
-        public bool RemoveAfterRound { get; set; }
 
-        public SavedStatValue(string statIdentifier, float value, bool removeOnDeath, bool retainAfterRound)
+        public SavedStatValue(string statIdentifier, float value, bool removeOnDeath)
         {
             StatValue = value;
             RemoveOnDeath = removeOnDeath;
             StatIdentifier = statIdentifier;
-            RemoveAfterRound = retainAfterRound;
         }
     }
 
-    class AbilitySkillGain : AbilityObject, IAbilityValue, IAbilityString, IAbilityCharacter
+    class AbilitySkillGain : AbilityObject, IAbilityValue, IAbilitySkillIdentifier, IAbilityCharacter
     {
-        public AbilitySkillGain(float value, string abilityString, Character character, bool gainedFromApprenticeship)
+        public AbilitySkillGain(float skillAmount, string skillIdentifier, Character character, bool gainedFromAbility)
         {
-            Value = value;
-            String = abilityString;
+            Value = skillAmount;
+            SkillIdentifier = skillIdentifier;
             Character = character;
-            GainedFromApprenticeship = gainedFromApprenticeship;
+            GainedFromAbility = gainedFromAbility;
         }
         public Character Character { get; set; }
         public float Value { get; set; }
-        public string String { get; set; }
-        public bool GainedFromApprenticeship { get; set; }
+        public string SkillIdentifier { get; set; }
+        public bool GainedFromAbility { get; }
+    }
+
+    class AbilityExperienceGainMultiplier : AbilityObject, IAbilityValue
+    {
+        public AbilityExperienceGainMultiplier(float experienceGainMultiplier)
+        {
+            Value = experienceGainMultiplier;
+        }
+        public float Value { get; set; }
     }
 }

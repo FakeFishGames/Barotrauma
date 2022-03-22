@@ -231,7 +231,7 @@ namespace Barotrauma
                     Vector2 screenTargetPos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) * 0.5f;
                     if (CharacterHealth.OpenHealthWindow != null)
                     {
-                        screenTargetPos.X = GameMain.GraphicsWidth * (CharacterHealth.OpenHealthWindow.Alignment == Alignment.Left ? 0.75f : 0.25f);
+                        screenTargetPos.X = GameMain.GraphicsWidth * (CharacterHealth.OpenHealthWindow.Alignment == Alignment.Left ? 0.6f : 0.4f);
                     }
                     else if (ConversationAction.IsDialogOpen)
                     {
@@ -245,6 +245,8 @@ namespace Barotrauma
             }
 
             cam.MoveCamera((float)deltaTime, allowZoom: GUI.MouseOn == null && !Inventory.IsMouseOnInventory);
+
+            Character.Controlled?.UpdateLocalCursor(cam);
 #endif
 
             foreach (Submarine sub in Submarine.Loaded)
@@ -305,7 +307,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Attempted to modify the state of the physics simulation while a time step was running.";
                 DebugConsole.ThrowError(errorMsg, e);
-                GameAnalyticsManager.AddErrorEventOnce("GameScreen.Update:WorldLockedException" + e.Message, GameAnalyticsSDK.Net.EGAErrorSeverity.Critical, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("GameScreen.Update:WorldLockedException" + e.Message, GameAnalyticsManager.ErrorSeverity.Critical, errorMsg);
             }
 #endif
 

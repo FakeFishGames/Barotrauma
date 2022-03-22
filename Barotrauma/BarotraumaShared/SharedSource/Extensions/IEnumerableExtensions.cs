@@ -133,7 +133,7 @@ namespace Barotrauma.Extensions
                 return source.Count(predicate) > 1;
             }
         }
-        
+
         public static IEnumerable<T> ToEnumerable<T>(this T item)
         {
             yield return item;
@@ -186,6 +186,38 @@ namespace Barotrauma.Extensions
                 if (!retVal.HasValue || v.CompareTo(retVal.Value) > 0) { retVal = v; }
             }
             return retVal;
+        }
+
+        public static int FindIndex<T>(this IReadOnlyList<T> list, Predicate<T> predicate)
+        {
+            for (int i=0; i<list.Count; i++)
+            {
+                if (predicate(list[i])) { return i; }
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Same as FirstOrDefault but will always return null instead of default(T) when no element is found
+        /// </summary>
+        public static T? FirstOrNull<T>(this IEnumerable<T> source, Func<T, bool> predicate) where T : struct
+        {
+            if (source.FirstOrDefault(predicate) is var first && !first.Equals(default(T)))
+            {
+                return first;
+            }
+
+            return null;
+        }
+
+        public static T? FirstOrNull<T>(this IEnumerable<T> source) where T : struct
+        {
+            if (source.FirstOrDefault() is var first && !first.Equals(default(T)))
+            {
+                return first;
+            }
+
+            return null;
         }
     }
 }

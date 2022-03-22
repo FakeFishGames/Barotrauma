@@ -144,16 +144,6 @@ namespace Barotrauma.Items.Components
             if (linkedGap == null)
             {
                 Rectangle rect = item.Rect;
-                if (IsHorizontal)
-                {
-                    rect.Y += 5;
-                    rect.Height += 10;
-                }
-                else
-                {
-                    rect.X -= 5;
-                    rect.Width += 10;
-                }
                 linkedGap = new Gap(rect, !IsHorizontal, Item.Submarine)
                 {
                     Submarine = item.Submarine
@@ -204,8 +194,11 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(true, true, description: ""), Editable]
+        [Editable, Serialize(true, true, description: "", alwaysUseInstanceValues: true)]
         public bool UseBetweenOutpostModules { get; private set; }
+
+        [Editable, Serialize(false, false, description: "If true, bots won't try to close this door behind them.", alwaysUseInstanceValues: true)]
+        public bool BotsShouldKeepOpen { get; private set; }
 
         public Door(Item item, XElement element)
             : base(item, element)
@@ -291,7 +284,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Pick(Character picker)
         {
-            if (item.Condition < RepairThreshold) { return true; }
+            if (item.Condition < RepairThreshold && item.GetComponent<Repairable>().HasRequiredItems(picker, addMessage: false)) { return true; }
             if (requiredItems.None()) { return false; }
             if (HasAccess(picker) && HasRequiredItems(picker, false)) { return false; }
             return base.Pick(picker);
@@ -299,7 +292,7 @@ namespace Barotrauma.Items.Components
 
         public override bool OnPicked(Character picker)
         {
-            if (item.Condition < RepairThreshold) { return true; }
+            if (item.Condition < RepairThreshold && item.GetComponent<Repairable>().HasRequiredItems(picker, addMessage: false)) { return true; }
             if (!HasAccess(picker))
             {
                 ToggleState(ActionType.OnPicked, picker);
@@ -339,6 +332,7 @@ namespace Barotrauma.Items.Components
                 ToggleState(ActionType.OnUse, character);
                 PickingTime = originalPickingTime;
                 StopPicking(picker);
+                return true;
             }
 #if CLIENT
             else if (hasRequiredItems && character != null && character == Character.Controlled)
@@ -545,7 +539,7 @@ namespace Barotrauma.Items.Components
                 if (!itemPosErrorShown)
                 {
                     DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the door is not valid (" + item.SimPosition + ")");
-                    GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:DoorPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:DoorPosInvalid", GameAnalyticsManager.ErrorSeverity.Error,
                           "Failed to push a character out of a doorway - position of the door is not valid (" + item.SimPosition + ").");
                     itemPosErrorShown = true;
                 }
@@ -568,8 +562,8 @@ namespace Barotrauma.Items.Components
                     if (!characterPosErrorShown.Contains(c))
                     {
                         if (GameSettings.VerboseLogging) { DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")"); }
-                        GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:CharacterPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                            "Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")." +
+                        GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:CharacterPosInvalid", GameAnalyticsManager.ErrorSeverity.Error,
+                            "Failed to push a character out of a doorway - position of the character \"" + c.SpeciesName + "\" is not valid (" + c.SimPosition + ")." +
                             " Removed: " + c.Removed +
                             " Remoteplayer: " + c.IsRemotePlayer);
                         characterPosErrorShown.Add(c);
@@ -598,8 +592,8 @@ namespace Barotrauma.Items.Components
             if (!MathUtils.IsValid(body.SimPosition))
             {
                 DebugConsole.ThrowError("Failed to push a limb out of a doorway - position of the body (character \"" + c.Name + "\") is not valid (" + body.SimPosition + ")");
-                GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:LimbPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + body.SimPosition + ")." +
+                GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:LimbPosInvalid", GameAnalyticsManager.ErrorSeverity.Error,
+                    "Failed to push a character out of a doorway - position of the character \"" + c.SpeciesName + "\" is not valid (" + body.SimPosition + ")." +
                     " Removed: " + c.Removed +
                     " Remoteplayer: " + c.IsRemotePlayer);
                 return false;

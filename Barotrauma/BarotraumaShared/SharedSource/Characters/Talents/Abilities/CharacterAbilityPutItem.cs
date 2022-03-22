@@ -1,6 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -13,6 +11,10 @@ namespace Barotrauma.Abilities
         {
             itemIdentifier = abilityElement.GetAttributeString("itemidentifier", "");
             amount = abilityElement.GetAttributeInt("amount", 1);
+            if (string.IsNullOrEmpty(itemIdentifier))
+            {
+                DebugConsole.ThrowError($"Error in talent \"{characterAbilityGroup.CharacterTalent.DebugIdentifier}\" - itemIdentifier not defined.");
+            }
         }
 
         protected override void ApplyEffect()
@@ -34,7 +36,13 @@ namespace Barotrauma.Abilities
                 if (GameMain.GameSession?.RoundEnding ?? true)
                 {
                     Item item = new Item(itemPrefab, Character.WorldPosition, Character.Submarine);
-                    Character.Inventory.TryPutItem(item, Character, new List<InvSlotType>() { InvSlotType.Any });
+                    if (!Character.Inventory.TryPutItem(item, Character, item.AllowedSlots))
+                    {
+                        foreach (Item containedItem in Character.Inventory.AllItemsMod)
+                        {
+                            if (containedItem.OwnInventory?.TryPutItem(item, Character) ?? false) { break; }
+                        }
+                    }
                 }
                 else
                 {

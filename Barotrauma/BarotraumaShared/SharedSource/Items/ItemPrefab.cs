@@ -45,7 +45,8 @@ namespace Barotrauma
             {
                 DebugConsole.AddWarning($"Invalid deconstruction output in \"{parentDebugName}\": the output item \"{ItemIdentifier}\" has the out condition set, but is also set to copy the condition of the deconstructed item. Ignoring the out condition.");
             }
-            RequiredDeconstructor = element.GetAttributeStringArray("requireddeconstructor", new string[0]);
+            RequiredDeconstructor = element.GetAttributeStringArray("requireddeconstructor", 
+                element.Parent?.GetAttributeStringArray("requireddeconstructor", new string[0]) ?? new string[0]);
             RequiredOtherItem = element.GetAttributeStringArray("requiredotheritem", new string[0]);
             ActivateButtonText = element.GetAttributeString("activatebuttontext", string.Empty);
             InfoText = element.GetAttributeString("infotext", string.Empty);
@@ -104,6 +105,10 @@ namespace Barotrauma
             RequiredSkills = new List<Skill>();
             RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
             OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
+            if (OutCondition > 1.0f)
+            {
+                DebugConsole.AddWarning($"Error in \"{itemPrefab.Name}\"'s fabrication recipe: out condition is above 100% ({OutCondition * 100}).");
+            }
             RequiredItems = new List<RequiredItem>();
             RequiresRecipe = element.GetAttributeBool("requiresrecipe", false);
             Amount = element.GetAttributeInt("amount", 1);
@@ -137,7 +142,7 @@ namespace Barotrauma
                         float maxCondition = subElement.GetAttributeFloat("maxcondition", 1.0f);
                         //Substract mincondition from required item's condition or delete it regardless?
                         bool useCondition = subElement.GetAttributeBool("usecondition", true);
-                        int count = subElement.GetAttributeInt("count", 1);
+                        int amount = subElement.GetAttributeInt("count", subElement.GetAttributeInt("amount", 1));
 
                         if (!string.IsNullOrEmpty(requiredItemIdentifier))
                         {
@@ -152,11 +157,11 @@ namespace Barotrauma
                                 MathUtils.NearlyEqual(r.MinCondition, minCondition) && MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
                             if (existing == null)
                             {
-                                RequiredItems.Add(new RequiredItem(requiredItem, count, minCondition, maxCondition, useCondition));
+                                RequiredItems.Add(new RequiredItem(requiredItem, amount, minCondition, maxCondition, useCondition));
                             }
                             else
                             {
-                                existing.Amount += count;
+                                existing.Amount += amount;
                             }
                         }
                         else
@@ -174,11 +179,11 @@ namespace Barotrauma
                                 MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
                             if (existing == null)
                             {
-                                RequiredItems.Add(new RequiredItem(matchingItems, count, minCondition, maxCondition, useCondition));
+                                RequiredItems.Add(new RequiredItem(matchingItems, amount, minCondition, maxCondition, useCondition));
                             }
                             else
                             {
-                                existing.Amount += count;
+                                existing.Amount += amount;
                             }
                         }
                         break;
@@ -500,6 +505,9 @@ namespace Barotrauma
         }
 
         [Serialize(0.0f, false)]
+        public float OnDamagedThreshold { get; set; }
+
+        [Serialize(0.0f, false)]
         public float SonarSize
         {
             get;
@@ -543,6 +551,13 @@ namespace Barotrauma
 
         [Serialize(0.0f, false)]
         public float AddedRepairSpeedMultiplier
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(0.0f, false)]
+        public float AddedPickingSpeedMultiplier
         {
             get;
             private set;
@@ -915,7 +930,7 @@ namespace Barotrauma
                         string spriteFolder = "";
                         if (!subElement.GetAttributeString("texture", "").Contains("/"))
                         {
-                            spriteFolder = Path.GetDirectoryName(filePath);
+                            spriteFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                         }
 
                         CanSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
@@ -972,7 +987,7 @@ namespace Barotrauma
                             string iconFolder = "";
                             if (!subElement.GetAttributeString("texture", "").Contains("/"))
                             {
-                                iconFolder = Path.GetDirectoryName(filePath);
+                                iconFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                             }
                             UpgradePreviewSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
                             UpgradePreviewScale = subElement.GetAttributeFloat("scale", 1.0f);
@@ -983,7 +998,7 @@ namespace Barotrauma
                             string iconFolder = "";
                             if (!subElement.GetAttributeString("texture", "").Contains("/"))
                             {
-                                iconFolder = Path.GetDirectoryName(filePath);
+                                iconFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                             }
                             InventoryIcon = new Sprite(subElement, iconFolder, lazyLoad: true);
                         }
@@ -993,7 +1008,7 @@ namespace Barotrauma
                             string iconFolder = "";
                             if (!subElement.GetAttributeString("texture", "").Contains("/"))
                             {
-                                iconFolder = Path.GetDirectoryName(filePath);
+                                iconFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                             }
                             MinimapIcon = new Sprite(subElement, iconFolder, lazyLoad: true);
                         }
@@ -1003,7 +1018,7 @@ namespace Barotrauma
                             string iconFolder = "";
                             if (!subElement.GetAttributeString("texture", "").Contains("/"))
                             {
-                                iconFolder = Path.GetDirectoryName(filePath);
+                                iconFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                             }
 
                             InfectedSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
@@ -1014,7 +1029,7 @@ namespace Barotrauma
                             string iconFolder = "";
                             if (!subElement.GetAttributeString("texture", "").Contains("/"))
                             {
-                                iconFolder = Path.GetDirectoryName(filePath);
+                                iconFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                             }
 
                             DamagedInfectedSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
@@ -1024,7 +1039,7 @@ namespace Barotrauma
                         string brokenSpriteFolder = "";
                         if (!subElement.GetAttributeString("texture", "").Contains("/"))
                         {
-                            brokenSpriteFolder = Path.GetDirectoryName(filePath);
+                            brokenSpriteFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                         }
 
                         var brokenSprite = new BrokenItemSprite(
@@ -1034,7 +1049,7 @@ namespace Barotrauma
                             subElement.GetAttributePoint("offset", Point.Zero));
 
                         int spriteIndex = 0;
-                        for (int i = 0; i < BrokenSprites.Count && BrokenSprites[i].MaxCondition < brokenSprite.MaxCondition; i++)
+                        for (int i = 0; i < BrokenSprites.Count && BrokenSprites[i].MaxConditionPercentage < brokenSprite.MaxConditionPercentage; i++)
                         {
                             spriteIndex = i;
                         }
@@ -1044,7 +1059,7 @@ namespace Barotrauma
                         string decorativeSpriteFolder = "";
                         if (!subElement.GetAttributeString("texture", "").Contains("/"))
                         {
-                            decorativeSpriteFolder = Path.GetDirectoryName(filePath);
+                            decorativeSpriteFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                         }
 
                         int groupID = 0;
@@ -1070,7 +1085,7 @@ namespace Barotrauma
                         string containedSpriteFolder = "";
                         if (!subElement.GetAttributeString("texture", "").Contains("/"))
                         {
-                            containedSpriteFolder = Path.GetDirectoryName(filePath);
+                            containedSpriteFolder = Path.GetDirectoryName(VariantOf?.FilePath ?? filePath);
                         }
                         var containedSprite = new ContainedItemSprite(subElement, containedSpriteFolder, lazyLoad: true);
                         if (containedSprite.Sprite != null)
@@ -1248,13 +1263,18 @@ namespace Barotrauma
 
         public static ItemPrefab Find(string name, string identifier)
         {
+            if (string.IsNullOrEmpty(name) && string.IsNullOrEmpty(identifier))
+            {
+                throw new ArgumentException("Both name and identifier cannot be null.");
+            }
+
             ItemPrefab prefab;
             if (string.IsNullOrEmpty(identifier))
             {
                 //legacy support
                 identifier = GenerateLegacyIdentifier(name);
             }
-            prefab = Find(p => p is ItemPrefab && p.Identifier==identifier) as ItemPrefab;
+            prefab = Find(p => p is ItemPrefab && p.Identifier == identifier) as ItemPrefab;
 
             //not found, see if we can find a prefab with a matching alias
             if (prefab == null && !string.IsNullOrEmpty(name))
@@ -1297,21 +1317,24 @@ namespace Barotrauma
         public ImmutableDictionary<string, PriceInfo> GetBuyPricesUnder(int maxCost = 0)
         {
             Dictionary<string, PriceInfo> priceLocations = new Dictionary<string, PriceInfo>();
-            foreach (KeyValuePair<string, PriceInfo> locationPrice in locationPrices)
+            if (locationPrices != null)
             {
-                PriceInfo priceInfo = locationPrice.Value;
+                foreach (KeyValuePair<string, PriceInfo> locationPrice in locationPrices)
+                {
+                    PriceInfo priceInfo = locationPrice.Value;
 
-                if (priceInfo == null)
-                {
-                    continue;
-                }
-                if (!priceInfo.CanBeBought)
-                {
-                    continue;
-                }
-                if (priceInfo.Price < maxCost || maxCost == 0)
-                {
-                    priceLocations.Add(locationPrice.Key, priceInfo);
+                    if (priceInfo == null)
+                    {
+                        continue;
+                    }
+                    if (!priceInfo.CanBeBought)
+                    {
+                        continue;
+                    }
+                    if (priceInfo.Price < maxCost || maxCost == 0)
+                    {
+                        priceLocations.Add(locationPrice.Key, priceInfo);
+                    }
                 }
             }
             return priceLocations.ToImmutableDictionary();
@@ -1342,17 +1365,18 @@ namespace Barotrauma
             return priceLocations.ToImmutableDictionary();
         }
 
-        public bool IsContainerPreferred(Item item, ItemContainer targetContainer, out bool isPreferencesDefined, out bool isSecondary)
+        public bool IsContainerPreferred(Item item, ItemContainer targetContainer, out bool isPreferencesDefined, out bool isSecondary, bool requireConditionRequirement = false)
         {
             isPreferencesDefined = PreferredContainers.Any();
             isSecondary = false;
             if (!isPreferencesDefined) { return true; }
-            if (PreferredContainers.Any(pc => IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Primary, targetContainer)))
+            if (PreferredContainers.Any(pc => (!requireConditionRequirement || HasConditionRequirement(pc)) && IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Primary, targetContainer)))
             {
                 return true;
             }
             isSecondary = true;
-            return PreferredContainers.Any(pc => IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Secondary, targetContainer));
+            return PreferredContainers.Any(pc => (!requireConditionRequirement || HasConditionRequirement(pc)) && IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Secondary, targetContainer));
+            static bool HasConditionRequirement(PreferredContainer pc) => pc.MinCondition > 0 || pc.MaxCondition < 100;
         }
 
         public bool IsContainerPreferred(Item item, string[] identifiersOrTags, out bool isPreferencesDefined, out bool isSecondary)
@@ -1465,6 +1489,11 @@ namespace Barotrauma
             }
 
             return newElement;
+        }
+
+        public override string ToString()
+        {
+            return $"{Name} (identifier: {Identifier})";
         }
     }
 }

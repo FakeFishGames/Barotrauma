@@ -414,15 +414,8 @@ namespace Barotrauma
             }
             else
             {
-                if (GameMain.Client == null)
-                {
-                    subsToShow.AddRange(SubmarineInfo.SavedSubmarines.Where(s => s.IsCampaignCompatible && !GameMain.GameSession.OwnedSubmarines.Any(os => os.Name == s.Name)));
-                }
-                else
-                {
-                    subsToShow.AddRange(GameMain.NetLobbyScreen.CampaignSubmarines.Where(s => !GameMain.GameSession.OwnedSubmarines.Any(os => os.Name == s.Name)));
-                }
-
+                subsToShow.AddRange((GameMain.Client is null ? SubmarineInfo.SavedSubmarines : MultiPlayerCampaign.GetCampaignSubs())
+                    .Where(s => s.IsCampaignCompatible && !GameMain.GameSession.OwnedSubmarines.Any(os => os.Name == s.Name)));
                 subsToShow.Sort((x, y) => x.SubmarineClass.CompareTo(y.SubmarineClass));
             }
 
@@ -446,20 +439,11 @@ namespace Barotrauma
 
             if (preview == null)
             {
-                SubmarineInfo potentialMatch;
-
-                if (GameMain.Client == null)
-                {
-                    potentialMatch = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.EqualityCheckVal == info.EqualityCheckVal);
-                }
-                else
-                {
-                    potentialMatch = GameMain.NetLobbyScreen.CampaignSubmarines.FirstOrDefault(s => s.EqualityCheckVal == info.EqualityCheckVal);
-                }
+                SubmarineInfo potentialMatch = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.EqualityCheckVal == info.EqualityCheckVal);
 
                 preview = potentialMatch?.PreviewImage;
 
-                // Try from savedsubmarines with name comparison as a backup
+                // Try name comparison as a backup
                 if (preview == null)
                 {
                     potentialMatch = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == info.Name);
@@ -471,7 +455,7 @@ namespace Barotrauma
         }
 
         // Initial submarine selection needs a slight wait to allow the layoutgroups to place content properly
-        private IEnumerable<object> SelectOwnSubmarineWithDelay(SubmarineInfo info, SubmarineDisplayContent display)
+        private IEnumerable<CoroutineStatus> SelectOwnSubmarineWithDelay(SubmarineInfo info, SubmarineDisplayContent display)
         {
             yield return new WaitForSeconds(0.05f);
             SelectSubmarine(info, display.background.Rect);

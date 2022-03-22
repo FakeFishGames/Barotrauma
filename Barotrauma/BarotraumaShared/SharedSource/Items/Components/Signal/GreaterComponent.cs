@@ -32,10 +32,22 @@ namespace Barotrauma.Items.Components
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)
-        {
-            base.ReceiveSignal(signal, connection);
-            float.TryParse(receivedSignal[0], NumberStyles.Float, CultureInfo.InvariantCulture, out val1);
-            float.TryParse(receivedSignal[1], NumberStyles.Float, CultureInfo.InvariantCulture, out val2);
+        {           
+            //base.ReceiveSignal(signal, connection);
+            switch (connection.Name)
+            {
+                case "signal_in1":
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out val1);
+                    timeSinceReceived[0] = 0.0f;
+                    break;
+                case "signal_in2":
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out val2);
+                    timeSinceReceived[1] = 0.0f;
+                    break;
+                case "set_output":
+                    output = signal.value;
+                    break;
+            }
         }
     }
 }

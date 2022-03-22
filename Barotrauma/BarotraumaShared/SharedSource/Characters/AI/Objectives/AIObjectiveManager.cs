@@ -128,7 +128,7 @@ namespace Barotrauma
                 Item item = null;
                 if (orderPrefab.MustSetTarget)
                 {
-                    item = orderPrefab.GetMatchingItems(character.Submarine, mustBelongToPlayerSub: false, requiredTeam: character.Info.TeamID, interactableFor: character)?.GetRandom();
+                    item = orderPrefab.GetMatchingItems(character.Submarine, mustBelongToPlayerSub: false, requiredTeam: character.Info.TeamID, interactableFor: character, orderOption: autonomousObjective.option)?.GetRandom();
                 }
                 var order = new Order(orderPrefab, item ?? character.CurrentHull as Entity, orderPrefab.GetTargetItemComponent(item), orderGiver: character);
                 if (order == null) { continue; }
@@ -279,6 +279,7 @@ namespace Barotrauma
             float highestPriority = 0;
             for (int i = CurrentOrders.Count - 1; i >= 0; i--)
             {
+                if (CurrentOrders.Count <= i) { break; }
                 var orderObjective = CurrentOrders[i].Objective;
                 if (orderObjective == null) { continue; }
                 orderObjective.CalculatePriority();
@@ -323,7 +324,6 @@ namespace Barotrauma
             SortObjectives();
         }
 
-        private CoroutineHandle speakRoutine;
         public void SetOrder(Order order, string option, int priority, Character orderGiver, bool speak)
         {
             if (character.IsDead)
@@ -355,6 +355,7 @@ namespace Barotrauma
             // Make sure the order priorities reflect those set by the player
             for (int i = CurrentOrders.Count - 1; i >= 0; i--)
             {
+                if (CurrentOrders.Count <= i) { break; }
                 var currentOrder = CurrentOrders[i];
                 if (currentOrder.Objective == null || currentOrder.MatchesOrder(order, option))
                 {
@@ -379,6 +380,7 @@ namespace Barotrauma
             var newCurrentOrder = CreateObjective(order, option, orderGiver);
             if (newCurrentOrder != null)
             {
+                newCurrentOrder.Abandoned += () => DismissSelf(order, option);
                 CurrentOrders.Add(new OrderInfo(order, option, priority, newCurrentOrder));
             }
             if (!HasOrders())
@@ -386,53 +388,12 @@ namespace Barotrauma
                 // Recreate objectives, because some of them may be removed, if impossible to complete (e.g. due to path finding)
                 CreateAutonomousObjectives();
             }
-            else
+            else if (newCurrentOrder != null)
             {
-                // This should be redundant, because all the objectives are reset when they are selected as active.
-                newCurrentOrder?.Reset();
-
                 if (speak && character.IsOnPlayerTeam)
                 {
-                    character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
-                    //if (speakRoutine != null)
-                    //{
-                    //    CoroutineManager.StopCoroutines(speakRoutine);
-                    //}
-                    //speakRoutine = CoroutineManager.InvokeAfter(() =>
-                    //{
-                    //    if (GameMain.GameSession == null || Level.Loaded == null) { return; }
-                    //    if (newCurrentOrder != null && character.SpeechImpediment < 100.0f)
-                    //    {
-                    //        if (newCurrentOrder is AIObjectiveRepairItems repairItems && repairItems.Targets.None())
-                    //        {
-                    //            character.Speak(TextManager.Get("DialogNoRepairTargets"), null, 3.0f, "norepairtargets");
-                    //        }
-                    //        else if (newCurrentOrder is AIObjectiveChargeBatteries chargeBatteries && chargeBatteries.Targets.None())
-                    //        {
-                    //            character.Speak(TextManager.Get("DialogNoBatteries"), null, 3.0f, "nobatteries");
-                    //        }
-                    //        else if (newCurrentOrder is AIObjectiveExtinguishFires extinguishFires && extinguishFires.Targets.None())
-                    //        {
-                    //            character.Speak(TextManager.Get("DialogNoFire"), null, 3.0f, "nofire");
-                    //        }
-                    //        else if (newCurrentOrder is AIObjectiveFixLeaks fixLeaks && fixLeaks.Targets.None())
-                    //        {
-                    //            character.Speak(TextManager.Get("DialogNoLeaks"), null, 3.0f, "noleaks");
-                    //        }
-                    //        else if (newCurrentOrder is AIObjectiveFightIntruders fightIntruders && fightIntruders.Targets.None())
-                    //        {
-                    //            character.Speak(TextManager.Get("DialogNoEnemies"), null, 3.0f, "noenemies");
-                    //        }
-                    //        else if (newCurrentOrder is AIObjectiveRescueAll rescueAll && rescueAll.Targets.None())
-                    //        {
-                    //            character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets");
-                    //        }
-                    //        else if (newCurrentOrder is AIObjectivePumpWater pumpWater && pumpWater.Targets.None())
-                    //        {
-                    //            character.Speak(TextManager.Get("DialogNoPumps"), null, 3.0f, "nopumps");
-                    //        }
-                    //    }
-                    //}, 3);
+                    string msg = newCurrentOrder.IsAllowed ? TextManager.Get("DialogAffirmative") : TextManager.Get("DialogNegative");
+                    character.Speak(msg, delay: 1.0f);
                 }
             }
         }
@@ -447,25 +408,25 @@ namespace Barotrauma
                     if (orderGiver == null) { return null; }
                     newObjective = new AIObjectiveGoTo(orderGiver, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        CloseEnough = Rand.Range(90, 100) + Rand.Range(50, 70) * Math.Min(HumanAIController.CountCrew(c => c.ObjectiveManager.CurrentOrder is AIObjectiveGoTo gotoOrder && gotoOrder.Target == orderGiver, onlyBots: true), 4),
-                        extraDistanceOutsideSub = 100,
-                        extraDistanceWhileSwimming = 100,
+                        CloseEnough = Rand.Range(80f, 100f),
+                        CloseEnoughMultiplier = Math.Min(1 + HumanAIController.CountCrew(c => c.ObjectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Target == orderGiver), onlyBots: true) * Rand.Range(0.8f, 1f), 4),
+                        ExtraDistanceOutsideSub = 100,
+                        ExtraDistanceWhileSwimming = 100,
                         AllowGoingOutside = true,
                         IgnoreIfTargetDead = true,
-                        isFollowOrderObjective = true,
-                        mimic = true,
+                        IsFollowOrderObjective = true,
+                        Mimic = character.IsOnPlayerTeam,
                         DialogueIdentifier = "dialogcannotreachplace"
                     };
                     break;
                 case "wait":
                     newObjective = new AIObjectiveGoTo(order.TargetSpatialEntity ?? character, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        AllowGoingOutside = character.Submarine == null || (order.TargetSpatialEntity != null && character.Submarine != order.TargetSpatialEntity.Submarine)
+                        AllowGoingOutside = true
                     };
                     break;
                 case "return":
                     newObjective = new AIObjectiveReturn(character, orderGiver, this, priorityModifier: priorityModifier);
-                    newObjective.Abandoned += () => DismissSelf(order, option);
                     newObjective.Completed += () => DismissSelf(order, option);
                     break;
                 case "fixleaks":
@@ -491,12 +452,10 @@ namespace Barotrauma
                         if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
                         newObjective = new AIObjectiveOperateItem(targetPump, character, this, option, false, priorityModifier: priorityModifier)
                         {
-                            IsLoop = true,
+                            IsLoop = false,
                             Override = orderGiver != null && orderGiver.IsCommanding
                         };
-                        // ItemComponent.AIOperate() returns false by default -> We'd have to set IsLoop = false and implement a custom override of AIOperate for the Pump.cs, 
-                        // if we want that the bot just switches the pump on/off and continues doing something else.
-                        // If we want that the bot does the objective and then forgets about it, I think we could do the same plus dismiss when the bot is done.
+                        newObjective.Completed += () => DismissSelf(order, option);
                     }
                     else
                     {
@@ -508,6 +467,12 @@ namespace Barotrauma
                     break;
                 case "fightintruders":
                     newObjective = new AIObjectiveFightIntruders(character, this, priorityModifier);
+                    break;
+                case "assaultenemy":
+                    newObjective = new AIObjectiveFightIntruders(character, this, priorityModifier)
+                    {
+                        TargetCharactersInOtherSubs = true
+                    };
                     break;
                 case "steer":
                     var steering = (order?.TargetEntity as Item)?.GetComponent<Steering>();
@@ -566,6 +531,39 @@ namespace Barotrauma
                 case "escapehandcuffs":
                     newObjective = new AIObjectiveEscapeHandcuffs(character, this, priorityModifier: priorityModifier);
                     break;
+                case "prepareforexpedition":
+                    newObjective = new AIObjectivePrepare(character, this, order.GetTargetItems(option), order.RequireItems)
+                    {
+                        KeepActiveWhenReady = true,
+                        CheckInventory = true,
+                        Equip = false,
+                        FindAllItems = true
+                    };
+                    break;
+                case "findweapon":
+                    AIObjectivePrepare prepareObjective;
+                    if (order.TargetEntity is Item tItem)
+                    {
+                        prepareObjective = new AIObjectivePrepare(character, this, targetItem: tItem);
+                    }
+                    else
+                    {
+                        prepareObjective = new AIObjectivePrepare(character, this, order.GetTargetItems(option), order.RequireItems)
+                        {
+                            KeepActiveWhenReady = false,
+                            CheckInventory = false,
+                            EvaluateCombatPriority = true,
+                            FindAllItems = false
+                        };
+                    }
+                    prepareObjective.KeepActiveWhenReady = false;
+                    prepareObjective.Equip = true;
+                    newObjective = prepareObjective;
+                    newObjective.Completed += () => DismissSelf(order, option);
+                    break;
+                case "loaditems":
+                    newObjective = new AIObjectiveLoadItems(character, this, option, order.GetTargetItems(option), order.TargetEntity as Item, priorityModifier);
+                    break;
                 default:
                     if (order.TargetItemComponent == null) { return null; }
                     if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
@@ -597,16 +595,19 @@ namespace Barotrauma
 #endif
                 return;
             }
+            Order dismissOrder = Order.GetPrefab("dismissed");
+            var orderOption = Order.GetDismissOrderOption(currentOrder);
+            int priority = currentOrder.ManualPriority;
 #if CLIENT
             if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
             {
-                GameMain.GameSession?.CrewManager?.SetCharacterOrder(character, Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(currentOrder), currentOrder.ManualPriority, character);
+                GameMain.GameSession.CrewManager.SetCharacterOrder(character, dismissOrder, orderOption, priority, character);
             }
 #else
-            GameMain.Server?.SendOrderChatMessage(new OrderChatMessage(Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(currentOrder), currentOrder.ManualPriority, currentOrder.Order?.TargetSpatialEntity, character, character));
+            GameMain.Server?.SendOrderChatMessage(new OrderChatMessage(dismissOrder, orderOption, priority, currentOrder.Order.TargetSpatialEntity, character, character));
+            SetOrder(dismissOrder, orderOption, priority, character, speak: false);
 #endif
         }
-
 
         private bool IsAllowedToWait()
         {
@@ -648,7 +649,12 @@ namespace Barotrauma
 
         public bool IsOrder(AIObjective objective)
         {
-            return objective == ForcedOrder || CurrentOrders.Any(o => o.Objective == objective);
+            if (objective == ForcedOrder) { return true; }
+            foreach (var order in CurrentOrders)
+            {
+                if (order.Objective == objective) { return true; }
+            }
+            return false;
         }
 
         public bool HasOrders()
@@ -656,10 +662,9 @@ namespace Barotrauma
             return ForcedOrder != null || CurrentOrders.Any();
         }
 
-        public bool HasOrder<T>() where T : AIObjective
-        {
-            return ForcedOrder is T || CurrentOrders.Any(o => o.Objective is T);
-        }
+        public bool HasOrder<T>(Func<T, bool> predicate = null) where T : AIObjective =>
+                ForcedOrder is T forcedOrder && (predicate == null || predicate(forcedOrder)) || 
+                CurrentOrders.Any(o => o.Objective is T order && (predicate == null || predicate(order)));
 
         public float GetOrderPriority(AIObjective objective)
         {

@@ -54,7 +54,7 @@ namespace Barotrauma.Tutorials
             GameMain.Instance.ShowLoading(Loading());
         }
 
-        private IEnumerable<object> Loading()
+        private IEnumerable<CoroutineStatus> Loading()
         {
             SubmarineInfo subInfo = new SubmarineInfo(submarinePath);
 
@@ -259,7 +259,7 @@ namespace Barotrauma.Tutorials
             base.Stop();
         }
 
-        private IEnumerable<object> Dead()
+        private IEnumerable<CoroutineStatus> Dead()
         {
             GUI.PreventPauseMenuToggle = true;
             Character.Controlled = character = null;
@@ -279,7 +279,7 @@ namespace Barotrauma.Tutorials
             yield return CoroutineStatus.Success;
         }
 
-        protected IEnumerable<object> TutorialCompleted()
+        protected IEnumerable<CoroutineStatus> TutorialCompleted()
         {
             GUI.PreventPauseMenuToggle = true;
 

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -317,6 +318,11 @@ namespace Barotrauma
             return null;
         }
 
+        public static MapEntityPrefab GetRandom(Predicate<MapEntityPrefab> predicate, Rand.RandSync sync)
+        {
+            return List.GetRandom(p => predicate(p), sync);
+        }
+
         /// <summary>
         /// Find a matching map entity prefab
         /// </summary>
@@ -338,6 +344,8 @@ namespace Barotrauma
             if (target == null) { return false; }
             if (target is StructurePrefab && AllowedLinks.Contains("structure")) { return true; }
             if (target is ItemPrefab && AllowedLinks.Contains("item")) { return true; }
+            if (target is LinkedSubmarinePrefab && Tags.Contains("dock")) { return true; }
+            if (this is LinkedSubmarinePrefab && target.Tags.Contains("dock")) { return true; }
             return AllowedLinks.Contains(target.Identifier) || target.AllowedLinks.Contains(identifier)
                 || target.Tags.Any(t => AllowedLinks.Contains(t)) || Tags.Any(t => target.AllowedLinks.Contains(t));
         }

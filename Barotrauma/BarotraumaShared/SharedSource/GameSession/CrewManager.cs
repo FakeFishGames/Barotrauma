@@ -37,7 +37,6 @@ namespace Barotrauma
         {
             IsSinglePlayer = isSinglePlayer;
             conversationTimer = 5.0f;
-
             InitProjectSpecific();
         }
 
@@ -47,7 +46,9 @@ namespace Barotrauma
         {
             if (order.TargetEntity == null)
             {
-                DebugConsole.ThrowError("Attempted to add an order with no target entity to CrewManager!\n" + Environment.StackTrace.CleanupStackTrace());
+                string message = $"Attempted to add a \"{order.Name}\" order with no target entity to CrewManager!\n{Environment.StackTrace.CleanupStackTrace()}";
+                DebugConsole.AddWarning(message);
+                GameAnalyticsManager.AddErrorEventOnce("CrewManager.AddOrder:OrderTargetEntityNull", GameAnalyticsManager.ErrorSeverity.Error, message);
                 return false;
             }
 
@@ -98,10 +99,10 @@ namespace Barotrauma
             foreach (XElement characterElement in element.Elements())
             {
                 if (!characterElement.Name.ToString().Equals("character", StringComparison.OrdinalIgnoreCase)) { continue; }
-
                 CharacterInfo characterInfo = new CharacterInfo(characterElement);
 #if CLIENT
                 if (characterElement.GetAttributeBool("lastcontrolled", false)) { characterInfo.LastControlled = true; }
+                characterInfo.CrewListIndex = characterElement.GetAttributeInt("crewlistindex", -1);
 #endif
                 characterInfos.Add(characterInfo);
                 foreach (XElement subElement in characterElement.Elements())
@@ -131,7 +132,7 @@ namespace Barotrauma
             characterInfos.Remove(characterInfo);
         }
         
-        public void AddCharacter(Character character)
+        public void AddCharacter(Character character, bool sortCrewList = true)
         {
             if (character.Removed)
             {
@@ -153,7 +154,11 @@ namespace Barotrauma
                 characterInfos.Add(character.Info);
             }
 #if CLIENT
-            AddCharacterToCrewList(character);
+            var characterComponent = AddCharacterToCrewList(character);
+            if (sortCrewList)
+            {
+                SortCrewList();
+            }
             if (character.CurrentOrders != null)
             {
                 foreach (var order in character.CurrentOrders)
@@ -185,6 +190,10 @@ namespace Barotrauma
 
         public void InitRound()
         {
+#if CLIENT
+            GUIContextMenu.CurrentContextMenu = null;
+#endif
+            
             characters.Clear();
 
             List<WayPoint> spawnWaypoints = null;
@@ -248,11 +257,15 @@ namespace Barotrauma
                     }
                 }
                 
-                AddCharacter(character);
+                AddCharacter(character, sortCrewList: false);
 #if CLIENT
                 if (IsSinglePlayer && (Character.Controlled == null || character.Info.LastControlled)) { Character.Controlled = character; }
 #endif
             }
+
+#if CLIENT
+            if (IsSinglePlayer) { SortCrewList(); }
+#endif
 
             //longer delay in multiplayer to prevent the server from triggering NPC conversations while the players are still loading the round
             conversationTimer = IsSinglePlayer ? Rand.Range(5.0f, 10.0f) : Rand.Range(45.0f, 60.0f);
@@ -435,19 +448,21 @@ namespace Barotrauma
                 filteredCharacters = filteredCharacters.Union(extraCharacters);
             }
             return filteredCharacters
-                    // 1. Prioritize those who are on the same submarine than the controlled character
+                    // Prioritize those who are on the same submarine as the controlled character
                     .OrderByDescending(c => Character.Controlled == null || c.Submarine == Character.Controlled.Submarine)
-                    // 2. Prioritize those who have been given the same maintenance or operate order as now issued
-                    .ThenByDescending(c => c.CurrentOrders.Any(o =>
-                        o.Order != null && o.Order.Identifier == order.Identifier &&
-                        (order.Category == OrderCategory.Maintenance || order.Category == OrderCategory.Operate)))
-                    // 3. Prioritize those with the appropriate job for the order
+                    // Prioritize those who are already ordered to operate the device
+                    .ThenByDescending(c => order.Category == OrderCategory.Operate && c.CurrentOrders.Any(o => o.Order != null && o.Order.Identifier == order.Identifier && o.Order.TargetEntity == order.TargetEntity))
+                    // Prioritize those with the appropriate job for the order
                     .ThenByDescending(c => order.HasAppropriateJob(c))
-                    // 4. Prioritize bots over player controlled characters
+                    // Prioritize those who don't yet have the same order (which allows quick-assigning the order to different characters)
+                    .ThenByDescending(c => c.CurrentOrders.None(o => o.Order != null && o.Order.Identifier == order.Identifier))
+                    // Prioritize those with the preferred job for the order
+                    .ThenByDescending(c => order.HasPreferredJob(c))
+                    // Prioritize bots over player-controlled characters
                     .ThenByDescending(c => c.IsBot)
-                    // 5. Use the priority value of the current objective
+                    // Prioritize those with a lower current objective priority
                     .ThenBy(c => c.AIController is HumanAIController humanAI ? humanAI.ObjectiveManager.CurrentObjective?.Priority : 0)
-                    // 6. Prioritize those with the best skill for the order
+                    // Prioritize those with a higher order skill level
                     .ThenByDescending(c => c.GetSkillLevel(order.AppropriateSkill));
         }
 

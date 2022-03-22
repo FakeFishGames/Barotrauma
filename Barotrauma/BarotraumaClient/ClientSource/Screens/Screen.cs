@@ -14,7 +14,7 @@ namespace Barotrauma
             {
                 if (frame == null)
                 {
-                    frame = new GUIFrame(new RectTransform(GUICanvas.Instance.RelativeSize, GUICanvas.Instance), style: null)
+                    frame = new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas), style: null)
                     {
                         CanBeFocused = false
                     };
@@ -43,7 +43,7 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(UpdateColorFade(from, to, duration));
         }
 
-        private IEnumerable<object> UpdateColorFade(Color from, Color to, float duration)
+        private IEnumerable<CoroutineStatus> UpdateColorFade(Color from, Color to, float duration)
         {
             while (Selected != this)
             {

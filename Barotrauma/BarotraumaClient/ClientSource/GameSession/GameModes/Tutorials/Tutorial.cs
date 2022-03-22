@@ -247,7 +247,7 @@ namespace Barotrauma.Tutorials
             }
         }
 
-        public virtual IEnumerable<object> UpdateState()
+        public virtual IEnumerable<CoroutineStatus> UpdateState()
         {
             yield return CoroutineStatus.Success;
         }
@@ -470,7 +470,7 @@ namespace Barotrauma.Tutorials
             CoroutineManager.StartCoroutine(WaitForObjectiveEnd(segment));
         }
 
-        private IEnumerable<object> WaitForObjectiveEnd(TutorialSegment objective)
+        private IEnumerable<CoroutineStatus> WaitForObjectiveEnd(TutorialSegment objective)
         {
             yield return new WaitForSeconds(2.0f);
             objectiveFrame.RemoveChild(objective.ReplayButton);

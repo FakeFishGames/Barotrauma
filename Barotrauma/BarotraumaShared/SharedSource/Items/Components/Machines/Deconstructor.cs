@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
 
         private float userDeconstructorSpeedMultiplier = 1.0f;
 
-        private const float TinkeringSpeedIncrease = 1.5f;
+        private const float TinkeringSpeedIncrease = 2.5f;
 
         private ItemContainer inputContainer, outputContainer;
 
@@ -158,10 +158,21 @@ namespace Barotrauma.Items.Components
             // In multiplayer, the server handles the deconstruction into new items
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
+            float amountMultiplier = 1f;
+
             if (user != null && !user.Removed)
             {
-                var abilityTargetItem = new AbilityItem(targetItem);
+                var abilityTargetItem = new AbilityDeconstructedItem(targetItem, user);
                 user.CheckTalents(AbilityEffectType.OnItemDeconstructed, abilityTargetItem);
+
+                foreach (Character character in Character.GetFriendlyCrew(user))
+                {
+                    character.CheckTalents(AbilityEffectType.OnItemDeconstructedByAlly, abilityTargetItem);
+                }
+
+                var itemCreationMultiplier = new AbilityItemCreationMultiplier(targetItem.Prefab, amountMultiplier);
+                user.CheckTalents(AbilityEffectType.OnItemDeconstructedMaterial, itemCreationMultiplier);
+                amountMultiplier = (int)itemCreationMultiplier.Value;
             }
 
             if (targetItem.Prefab.RandomDeconstructionOutput)
@@ -187,18 +198,18 @@ namespace Barotrauma.Items.Components
 
                 foreach (DeconstructItem deconstructProduct in products)
                 {
-                    CreateDeconstructProduct(deconstructProduct, inputItems);
+                    CreateDeconstructProduct(deconstructProduct, inputItems, amountMultiplier);
                 }
             }
             else
             {
                 foreach (DeconstructItem deconstructProduct in validDeconstructItems)
                 {
-                    CreateDeconstructProduct(deconstructProduct, inputItems);
+                    CreateDeconstructProduct(deconstructProduct, inputItems, amountMultiplier);
                 }
             }
 
-            void CreateDeconstructProduct(DeconstructItem deconstructProduct, IEnumerable<Item> inputItems)
+            void CreateDeconstructProduct(DeconstructItem deconstructProduct, IEnumerable<Item> inputItems, float amountMultiplier)
             {
                 float percentageHealth = targetItem.Condition / targetItem.MaxCondition;
 
@@ -221,7 +232,7 @@ namespace Barotrauma.Items.Components
                         if (targetItem == otherItem) { continue; }
                         if (deconstructProduct.RequiredOtherItem.Any(r => otherItem.HasTag(r) || r.Equals(otherItem.Prefab.Identifier, StringComparison.OrdinalIgnoreCase)))
                         {
-                            user.CheckTalents(AbilityEffectType.OnGeneticMaterialCombinedOrRefined);
+                            user?.CheckTalents(AbilityEffectType.OnGeneticMaterialCombinedOrRefined);
                             foreach (Character character in Character.GetFriendlyCrew(user))
                             {
                                 character.CheckTalents(AbilityEffectType.OnCrewGeneticMaterialCombinedOrRefined);
@@ -247,29 +258,41 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                int amount = 1;
-
                 if (user != null && !user.Removed)
                 {
-                    var itemsCreated = new AbilityValueItem(amount, targetItem.Prefab);
-                    user.CheckTalents(AbilityEffectType.OnItemDeconstructedMaterial, itemsCreated);
-                    amount = (int)itemsCreated.Value;
-
                     // used to spawn items directly into the deconstructor
-                    var itemContainer = new AbilityItemPrefabItem(item, targetItem.Prefab);
-                    user.CheckTalents(AbilityEffectType.OnItemDeconstructedInventory, itemContainer);
+                    var itemDeconstructedInventory = new AbilityItemDeconstructedInventory(targetItem.Prefab, item);
+                    user.CheckTalents(AbilityEffectType.OnItemDeconstructedInventory, itemDeconstructedInventory);
                 }
 
+                int amount = (int)amountMultiplier;
                 for (int i = 0; i < amount; i++)
                 {
                     Entity.Spawner.AddToSpawnQueue(itemPrefab, outputContainer.Inventory, condition, onSpawned: (Item spawnedItem) =>
                     {
+                        spawnedItem.StolenDuringRound = targetItem.StolenDuringRound;
+                        spawnedItem.AllowStealing = targetItem.AllowStealing;
                         for (int i = 0; i < outputContainer.Capacity; i++)
                         {
                             var containedItem = outputContainer.Inventory.GetItemAt(i);
-                            if (containedItem?.Combine(spawnedItem, null) ?? false)
+                            bool combined = false;
+                            if (containedItem?.OwnInventory != null)
                             {
-                                break;
+                                foreach (Item subItem in containedItem.ContainedItems.ToList())
+                                {
+                                    if (subItem.Combine(spawnedItem, null)) 
+                                    {
+                                        combined = true;
+                                        break; 
+                                    }
+                                }
+                            }
+                            if (!combined)
+                            {
+                                if (containedItem?.Combine(spawnedItem, null) ?? false)
+                                {
+                                    break;
+                                }
                             }
                         }
                         PutItemsToLinkedContainer();
@@ -277,13 +300,18 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            GameAnalyticsManager.AddDesignEvent("ItemDeconstructed:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none") + ":" + targetItem.prefab.Identifier);
+
             if (targetItem.AllowDeconstruct && allowRemove)
             {
                 //drop all items that are inside the deconstructed item
                 foreach (ItemContainer ic in targetItem.GetComponents<ItemContainer>())
                 {
                     if (ic?.Inventory == null || ic.RemoveContainedItemsOnDeconstruct) { continue; }
-                    ic.Inventory.AllItemsMod.ForEach(containedItem => outputContainer.Inventory.TryPutItem(containedItem, user: null));
+                    foreach (Item outputItem in ic.Inventory.AllItemsMod)
+                    {
+                        tryPutInOutputSlots(outputItem);
+                    }
                 }
                 inputContainer.Inventory.RemoveItem(targetItem);
                 Entity.Spawner.AddToRemoveQueue(targetItem);
@@ -292,13 +320,29 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                if (!outputContainer.Inventory.CanBePut(targetItem) || (Entity.Spawner?.IsInRemoveQueue(targetItem) ?? false))
+                if (Entity.Spawner?.IsInRemoveQueue(targetItem) ?? false)
                 {
                     targetItem.Drop(dropper: null);
                 }
                 else
                 {
-                    outputContainer.Inventory.TryPutItem(targetItem, user: null, createNetworkEvent: true);
+                    tryPutInOutputSlots(targetItem);
+                }
+            }
+
+            void tryPutInOutputSlots(Item item)
+            {
+                for (int i = 0; i < outputContainer.Capacity; i++)
+                {
+                    var containedItem = outputContainer.Inventory.GetItemAt(i);
+                    if (containedItem?.OwnInventory != null && containedItem.GetComponent<GeneticMaterial>() == null && containedItem.OwnInventory.TryPutItem(item, user: null))
+                    {
+                        return;
+                    }
+                }
+                if (!outputContainer.Inventory.TryPutItem(item, user: null))
+                {
+                    item.Drop(dropper: null);
                 }
             }
         }
@@ -401,4 +445,37 @@ namespace Barotrauma.Items.Components
             inputContainer.Inventory.Locked = IsActive;
         }
     }
+    class AbilityDeconstructedItem : AbilityObject, IAbilityItem, IAbilityCharacter
+    {
+        public AbilityDeconstructedItem(Item item, Character character)
+        {
+            Item = item;
+            Character = character;
+        }
+        public Item Item { get; set; }
+        public Character Character { get; set; }
+    }
+
+    class AbilityItemCreationMultiplier : AbilityObject, IAbilityValue, IAbilityItemPrefab
+    {
+        public AbilityItemCreationMultiplier(ItemPrefab itemPrefab, float itemAmountMultiplier)
+        {
+            ItemPrefab = itemPrefab;
+            Value = itemAmountMultiplier;
+        }
+        public ItemPrefab ItemPrefab { get; set; }
+        public float Value { get; set; }
+    }
+
+    class AbilityItemDeconstructedInventory : AbilityObject, IAbilityItem, IAbilityItemPrefab
+    {
+        public AbilityItemDeconstructedInventory(ItemPrefab itemPrefab, Item item)
+        {
+            ItemPrefab = itemPrefab;
+            Item = item;
+        }
+        public ItemPrefab ItemPrefab { get; set; }
+        public Item Item { get; set; }
+    }
+
 }

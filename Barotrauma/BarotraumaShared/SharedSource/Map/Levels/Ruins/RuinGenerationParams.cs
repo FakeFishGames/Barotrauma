@@ -35,9 +35,6 @@ namespace Barotrauma.RuinGeneration
         private static List<RuinGenerationParams> paramsList;
 
         private readonly string filePath;
-                        
-        public override string Name => "RuinGenerationParams";
-        
 
         private RuinGenerationParams(XElement element, string filePath) : base(element, filePath)
         {

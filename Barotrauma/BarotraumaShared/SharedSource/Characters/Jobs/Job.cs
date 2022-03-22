@@ -9,7 +9,7 @@ namespace Barotrauma
     {
         private readonly JobPrefab prefab;
 
-        private Dictionary<string, Skill> skills;
+        private readonly Dictionary<string, Skill> skills;
 
         public string Name
         {
@@ -35,7 +35,7 @@ namespace Barotrauma
 
         public Skill PrimarySkill { get; }
 
-        public Job(JobPrefab jobPrefab, int variant = 0)
+        public Job(JobPrefab jobPrefab, Rand.RandSync randSync = Rand.RandSync.Unsynced, int variant = 0)
         {
             prefab = jobPrefab;
             Variant = variant;
@@ -43,7 +43,7 @@ namespace Barotrauma
             skills = new Dictionary<string, Skill>();
             foreach (SkillPrefab skillPrefab in prefab.Skills)
             {
-                var skill = new Skill(skillPrefab);
+                var skill = new Skill(skillPrefab, randSync);
                 skills.Add(skillPrefab.Identifier, skill);
                 if (skillPrefab.IsPrimarySkill) { PrimarySkill = skill; }
             }
@@ -79,7 +79,7 @@ namespace Barotrauma
         {
             var prefab = JobPrefab.Random(randSync);
             var variant = Rand.Range(0, prefab.Variants, randSync);
-            return new Job(prefab, variant);
+            return new Job(prefab, randSync, variant);
         } 
 
         public float GetSkillLevel(string skillIdentifier)
@@ -147,7 +147,7 @@ namespace Barotrauma
                 {
                     string errorMsg = $"Error while spawning job items. Item {item.Name} created network events before the spawn event had been created.";
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("Job.InitializeJobItem:EventsBeforeSpawning", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Job.InitializeJobItem:EventsBeforeSpawning", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     GameMain.Server.EntityEventManager.UniqueEvents.RemoveAll(ev => ev.Entity == item);
                     GameMain.Server.EntityEventManager.Events.RemoveAll(ev => ev.Entity == item);
                 }

@@ -521,7 +521,7 @@ namespace Barotrauma.Items.Components
 
                 if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) { return true; }
 
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new ISerializableEntity[] { targetStructure });
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, structure: targetStructure);
                 FixStructureProjSpecific(user, deltaTime, targetStructure, sectionIndex);
 
                 float structureFixAmount = StructureFixAmount;
@@ -589,8 +589,7 @@ namespace Barotrauma.Items.Components
                     closestLimb.body.ApplyForce(dir * TargetForce, maxVelocity: 10.0f);
                 }
 
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse,
-                    closestLimb == null ? new ISerializableEntity[] { targetCharacter } : new ISerializableEntity[] { targetCharacter, closestLimb });
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, character: targetCharacter, limb: closestLimb);
                 FixCharacterProjSpecific(user, deltaTime, targetCharacter);
                 return true;
             }
@@ -606,7 +605,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 targetLimb.character.LastDamageSource = item;
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new ISerializableEntity[] { targetLimb.character, targetLimb });
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, character: targetLimb.character, limb: targetLimb);
                 FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
                 return true;
             }
@@ -645,7 +644,7 @@ namespace Barotrauma.Items.Components
 
                 targetItem.IsHighlighted = true;
                 
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, targetItem);
 
                 if (targetItem.body != null && !MathUtils.NearlyEqual(TargetForce, 0.0f))
                 {
@@ -682,7 +681,7 @@ namespace Barotrauma.Items.Components
                 Reset();
                 return true;
             }
-            if (leak.Submarine == null)
+            if (leak.Submarine == null || leak.Submarine != character.Submarine)
             {
                 Reset();
                 return true;
@@ -836,32 +835,48 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void ApplyStatusEffectsOnTarget(Character user, float deltaTime, ActionType actionType, IEnumerable<ISerializableEntity> targets)
+        private static List<ISerializableEntity> currentTargets = new List<ISerializableEntity>();
+        private void ApplyStatusEffectsOnTarget(Character user, float deltaTime, ActionType actionType, Item targetItem = null, Character character = null, Limb limb = null, Structure structure = null)
         {
             if (statusEffectLists == null) { return; }
             if (!statusEffectLists.TryGetValue(actionType, out List<StatusEffect> statusEffects)) { return; }
 
             foreach (StatusEffect effect in statusEffects)
             {
+                currentTargets.Clear();
                 effect.SetUser(user);
                 if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
-                    effect.Apply(actionType, deltaTime, item, targets);
+                    if (targetItem != null)
+                    {
+                        currentTargets.AddRange(targetItem.AllPropertyObjects);
+                    }
+                    if (structure != null)
+                    {
+                        currentTargets.Add(structure);
+                    }
+                    if (character != null)
+                    {
+                        currentTargets.Add(character);
+                    }
+                    effect.Apply(actionType, deltaTime, item, currentTargets);
                 }
                 else if (effect.HasTargetType(StatusEffect.TargetType.Character))
                 {
-                    effect.Apply(actionType, deltaTime, item, targets.Where(t => t is Character));
+                    currentTargets.Add(character);
+                    effect.Apply(actionType, deltaTime, item, currentTargets);
                 }
                 else if (effect.HasTargetType(StatusEffect.TargetType.Limb))
                 {
-                    effect.Apply(actionType, deltaTime, item, targets.Where(t => t is Limb));
+                    currentTargets.Add(limb);
+                    effect.Apply(actionType, deltaTime, item, currentTargets);
                 }
 
 #if CLIENT
                 if (user == null) { return; }
                 // Hard-coded progress bars for welding doors stuck.
                 // A general purpose system could be better, but it would most likely require changes in the way we define the status effects in xml.
-                foreach (ISerializableEntity target in targets)
+                foreach (ISerializableEntity target in currentTargets)
                 {
                     if (!(target is Door door)) { continue; }                    
                     if (!door.CanBeWelded || !door.Item.IsInteractable(user)) { continue; }

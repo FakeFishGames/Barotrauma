@@ -403,7 +403,7 @@ namespace Barotrauma.Items.Components
             {
                 if (GameMain.Client == null)
                 {
-                    item.SendSignal("1", "toggle_docking");
+                    item.SendSignal(new Signal("1", sender: Character.Controlled), "toggle_docking");
                 }
                 else
                 {
@@ -682,7 +682,7 @@ namespace Barotrauma.Items.Components
                     enterOutpostPrompt?.Close();
                 }
             }
-            else if (DockingSources.Any(d => d.Docked))
+            else if (connectedPorts.Any(d => d.Docked))
             {
                 dockingButton.Text = undockText;
                 dockingContainer.Visible = true;
@@ -819,7 +819,7 @@ namespace Barotrauma.Items.Components
                 Connection dockingConnection = item.Connections?.FirstOrDefault(c => c.Name == "toggle_docking");
                 if (dockingConnection != null)
                 {
-                    connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection);
+                    connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection, ignoreInactiveRelays: true);
                 }
                 checkConnectedPortsTimer = CheckConnectedPortsInterval;
             }

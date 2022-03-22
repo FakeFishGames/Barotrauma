@@ -269,6 +269,11 @@ namespace Barotrauma
             }
         }
 
+        public float GetHeightFromFloor() => GetColliderBottom().Y - FloorY;
+
+        // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
+        public bool IsAboveFloor => GetHeightFromFloor() > -0.1f;
+
         public void UpdateUseItem(bool allowMovement, Vector2 handWorldPos)
         {
             useItemTimer = 0.5f;
@@ -332,7 +337,7 @@ namespace Barotrauma
             aimingMelee = aimMelee;
             if (character.Stun > 0.0f || character.IsIncapacitated)
             {
-                aim = false; 
+                aim = false;
             }
 
             //calculate the handle positions
@@ -462,7 +467,7 @@ namespace Barotrauma
                 DebugConsole.Log(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "HumanoidAnimController.HoldItem:InvalidPos:" + character.Name + item.Name,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
 
                 return;

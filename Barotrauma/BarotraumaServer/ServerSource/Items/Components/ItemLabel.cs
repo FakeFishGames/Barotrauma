@@ -58,7 +58,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private IEnumerable<object> SendStateAfterDelay()
+        private IEnumerable<CoroutineStatus> SendStateAfterDelay()
         {
             while (sendStateTimer > 0.0f)
             {

@@ -143,9 +143,33 @@ namespace Barotrauma
 
             editorContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedRightPanel.RectTransform));
 
-            var seedContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), paddedRightPanel.RectTransform), isHorizontal: true);
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), seedContainer.RectTransform), TextManager.Get("leveleditor.levelseed"));
-            seedBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), seedContainer.RectTransform), ToolBox.RandomSeed(8));
+            var seedContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), paddedRightPanel.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+            Vector2 randomizeButtonRelativeSize = GetRandomizeButtonRelativeSize();
+            Vector2 elementRelativeSize = GetSeedElementRelativeSize();
+            var seedLabel = new GUITextBlock(new RectTransform(elementRelativeSize, seedContainer.RectTransform), TextManager.Get("leveleditor.levelseed"));
+            seedBox = new GUITextBox(new RectTransform(elementRelativeSize, seedContainer.RectTransform), GetLevelSeed());
+            var seedButton = new GUIButton(new RectTransform(randomizeButtonRelativeSize, seedContainer.RectTransform), style: "RandomizeButton")
+            {
+                OnClicked = (button, userData) =>
+                {
+                    if(seedBox == null) { return false; }
+                    seedBox.Text = GetLevelSeed();
+                    return true;
+                }
+            };
+            seedContainer.RectTransform.SizeChanged += () =>
+            {
+                Vector2 randomizeButtonRelativeSize = GetRandomizeButtonRelativeSize();
+                Vector2 elementRelativeSize = GetSeedElementRelativeSize();
+                seedLabel.RectTransform.RelativeSize = elementRelativeSize;
+                seedBox.RectTransform.RelativeSize = elementRelativeSize;
+                seedButton.RectTransform.RelativeSize = randomizeButtonRelativeSize;
+            };
+            Vector2 GetRandomizeButtonRelativeSize() => 0.2f * seedContainer.Rect.Width > seedContainer.Rect.Height ?
+                new Vector2(Math.Min((float)seedContainer.Rect.Height / seedContainer.Rect.Width, 0.2f), 1.0f) :
+                new Vector2(0.15f, Math.Min((0.2f * seedContainer.Rect.Width) / seedContainer.Rect.Height, 1.0f));
+            Vector2 GetSeedElementRelativeSize() => new Vector2(0.5f * (1.0f - randomizeButtonRelativeSize.X), 1.0f);
+            static string GetLevelSeed() => ToolBox.RandomSeed(8);
 
             mirrorLevel = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.02f), paddedRightPanel.RectTransform), TextManager.Get("mirrorentityx"));
 

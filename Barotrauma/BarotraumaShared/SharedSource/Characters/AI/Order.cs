@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -19,11 +20,11 @@ namespace Barotrauma
 
     struct OrderInfo
     {
-        public Order Order { get; }
-        public string OrderOption { get; }
-        public int ManualPriority { get; }
-        public OrderType Type { get; }
-        public AIObjective Objective { get; }
+        public readonly Order Order;
+        public readonly string OrderOption;
+        public readonly int ManualPriority;
+        public readonly OrderType Type;
+        public readonly AIObjective Objective;
         public bool IsCurrentOrder => Type == OrderType.Current;
 
         public enum OrderType
@@ -40,6 +41,8 @@ namespace Barotrauma
             Type = orderType;
             Objective = objective;
         }
+
+        public OrderInfo(Order order, string orderOption) : this(order, orderOption, CharacterInfo.HighestManualOrderPriority, null) { }
 
         public OrderInfo(Order order, string orderOption, int manualPriority) : this(order, orderOption, manualPriority, OrderType.Current, null) { }
 
@@ -103,7 +106,10 @@ namespace Barotrauma
 
         public readonly Type ItemComponentType;
         public readonly bool CanTypeBeSubclass;
-        public readonly string[] TargetItems;
+        public readonly ImmutableArray<string> TargetItems;
+        public readonly ImmutableArray<string> RequireItems;
+        private readonly Dictionary<string, ImmutableArray<string>> OptionTargetItems;
+        public bool HasOptionSpecificTargetItems => OptionTargetItems != null && OptionTargetItems.Any();
 
         public readonly string Identifier;
 
@@ -149,6 +155,9 @@ namespace Barotrauma
         public OrderCategory? Category { get; private set; }
 
         //legacy support
+        /// <summary>
+        /// If defined, the order can only be quick-assigned to characters with these jobs. Or if it's a report, the icon will only be displayed to characters with these jobs.
+        /// </summary>
         public readonly string[] AppropriateJobs;
         public readonly string[] Options;
         public readonly string[] HiddenOptions;
@@ -170,6 +179,11 @@ namespace Barotrauma
         public bool HasOptions => (IsPrefab ? Options : Prefab.Options).Length > 1;
         public bool IsPrefab { get; private set; }
         public readonly bool MustManuallyAssign;
+        public readonly bool AutoDismiss;
+        /// <summary>
+        /// If defined, the order will be quick-assigned to characters with these jobs before characters with other jobs.
+        /// </summary>
+        public string[] PreferredJobs { get; }
 
         public readonly OrderTarget TargetPosition;
 
@@ -207,6 +221,15 @@ namespace Barotrauma
         /// Should the order icon be drawn when the order target is inside a container
         /// </summary>
         public bool DrawIconWhenContained { get; }
+
+        /// <summary>
+        /// Affects how high on the order list the order will be placed (i.e. the manual priority order when it's given) when it's first given.
+        /// Manually rearranging orders will override this priority.
+        /// </summary>
+        public int AssignmentPriority { get; }
+
+        public bool ColoredWhenControllingGiver { get; }
+        public bool DisplayGiverInTooltip { get; }
 
         public static void Init()
         {
@@ -305,17 +328,46 @@ namespace Barotrauma
                 }
             }
             CanTypeBeSubclass = orderElement.GetAttributeBool("cantypebesubclass", false);
-
-            TargetItems = orderElement.GetAttributeStringArray("targetitems", new string[0], trim: true, convertToLowerInvariant: true);
             color = orderElement.GetAttributeColor("color");
             FadeOutTime = orderElement.GetAttributeFloat("fadeouttime", 0.0f);
             UseController = orderElement.GetAttributeBool("usecontroller", false);
             ControllerTags = orderElement.GetAttributeStringArray("controllertags", new string[0]);
             TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
             AppropriateJobs = orderElement.GetAttributeStringArray("appropriatejobs", new string[0]);
+            PreferredJobs = orderElement.GetAttributeStringArray("preferredjobs", new string[0]);
             Options = orderElement.GetAttributeStringArray("options", new string[0]);
             HiddenOptions = orderElement.GetAttributeStringArray("hiddenoptions", new string[0]);
             AllOptions = Options.Concat(HiddenOptions).ToArray();
+
+            OptionTargetItems = new Dictionary<string, ImmutableArray<string>>();
+            if (orderElement.GetAttributeString("targetitems", "") is string targetItems && targetItems.Contains(';'))
+            {
+                string[] splitTargetItems = targetItems.Split(';');
+#if DEBUG
+                if (splitTargetItems.Length != AllOptions.Length)
+                {
+                    DebugConsole.ThrowError($"Order \"{Identifier}\" has option-specific target items, but the option count doesn't match the target item count");
+                }
+#endif
+                var allTargetItems = new List<string>();
+                for (int i = 0; i < AllOptions.Length; i++)
+                {
+                    string[] optionTargetItems = i < splitTargetItems.Length ? splitTargetItems[i].Split(',', '，') : new string[0];
+                    for (int j = 0; j < optionTargetItems.Length; j++)
+                    {
+                        optionTargetItems[j] = optionTargetItems[j].ToLowerInvariant().Trim();
+                        allTargetItems.Add(optionTargetItems[j]);
+                    }
+                    OptionTargetItems.Add(AllOptions[i], optionTargetItems.ToImmutableArray());
+                }
+                TargetItems = allTargetItems.ToImmutableArray();
+            }
+            else
+            {
+                TargetItems = orderElement.GetAttributeStringArray("targetitems", new string[0], trim: true, convertToLowerInvariant: true).ToImmutableArray();
+            }
+            RequireItems = orderElement.GetAttributeStringArray("requireitems", new string[0], trim: true, convertToLowerInvariant: true).ToImmutableArray();
+
             var category = orderElement.GetAttributeString("category", null);
             if (!string.IsNullOrWhiteSpace(category)) { this.Category = (OrderCategory)Enum.Parse(typeof(OrderCategory), category, true); }
             MustSetTarget = orderElement.GetAttributeBool("mustsettarget", false);
@@ -333,7 +385,7 @@ namespace Barotrauma
             }
             if (OptionNames.Count != Options.Length)
             {
-                DebugConsole.ThrowError("Error in Order " + Name + " - the number of option names doesn't match the number of options.");
+                DebugConsole.AddWarning("Error in Order " + Name + " - the number of option names doesn't match the number of options.");
                 OptionNames.Clear();
                 Options.ForEach(o => OptionNames.Add(o, o));
             }
@@ -363,6 +415,10 @@ namespace Barotrauma
             MustManuallyAssign = orderElement.GetAttributeBool("mustmanuallyassign", false);
             IsIgnoreOrder = Identifier == "ignorethis" || Identifier == "unignorethis";
             DrawIconWhenContained = orderElement.GetAttributeBool("displayiconwhencontained", false);
+            AutoDismiss = orderElement.GetAttributeBool("autodismiss", Category == OrderCategory.Operate || Category == OrderCategory.Movement);
+            AssignmentPriority = Math.Clamp(orderElement.GetAttributeInt("assignmentpriority", 100), 0, 100);
+            ColoredWhenControllingGiver = orderElement.GetAttributeBool("coloredwhencontrollinggiver", false);
+            DisplayGiverInTooltip = orderElement.GetAttributeBool("displaygiverintooltip", false);
         }
 
         /// <summary>
@@ -378,6 +434,8 @@ namespace Barotrauma
             ItemComponentType     = prefab.ItemComponentType;
             CanTypeBeSubclass     = prefab.CanTypeBeSubclass;
             TargetItems           = prefab.TargetItems;
+            OptionTargetItems     = prefab.OptionTargetItems;
+            RequireItems          = prefab.RequireItems;
             Options               = prefab.Options;
             SymbolSprite          = prefab.SymbolSprite;
             Color                 = prefab.Color;
@@ -385,6 +443,7 @@ namespace Barotrauma
             ControllerTags        = prefab.ControllerTags;
             TargetAllCharacters   = prefab.TargetAllCharacters;
             AppropriateJobs       = prefab.AppropriateJobs;
+            PreferredJobs         = prefab.PreferredJobs;
             FadeOutTime           = prefab.FadeOutTime;
             MustSetTarget         = prefab.MustSetTarget;
             CanBeGeneralized      = prefab.CanBeGeneralized;
@@ -395,6 +454,10 @@ namespace Barotrauma
             DrawIconWhenContained = prefab.DrawIconWhenContained;
             Hidden                = prefab.Hidden;
             IgnoreAtOutpost       = prefab.IgnoreAtOutpost;
+            AssignmentPriority    = prefab.AssignmentPriority;
+            AutoDismiss           = prefab.AutoDismiss;
+            DisplayGiverInTooltip = prefab.DisplayGiverInTooltip;
+            ColoredWhenControllingGiver = prefab.ColoredWhenControllingGiver;
 
             OrderGiver = orderGiver;
             TargetEntity = targetEntity;
@@ -435,34 +498,39 @@ namespace Barotrauma
             WallSectionIndex = sectionIndex;
             TargetType = OrderTargetType.WallSection;
         }
-        
-        public bool HasAppropriateJob(Character character)
-        {
-            if (character.Info == null || character.Info.Job == null) { return false; }
-            if (character.Info.Job.Prefab.AppropriateOrders.Any(appropriateOrderId => Identifier == appropriateOrderId)) { return true; }
 
-            if (!JobPrefab.Prefabs.Any(jp => jp.AppropriateOrders.Contains(Identifier)) &&
-                (AppropriateJobs == null || AppropriateJobs.Length == 0))
+        private bool HasSpecifiedJob(Character character, string[] jobs)
+        {
+            if (jobs == null || jobs.Length == 0) { return false; }
+            string jobIdentifier = character?.Info?.Job?.Prefab?.Identifier;
+            if (string.IsNullOrEmpty(jobIdentifier)) { return false; }
+            for (int i = 0; i < jobs.Length; i++)
             {
-                return true;
-            }
-            for (int i = 0; i < AppropriateJobs.Length; i++)
-            {
-                if (character.Info.Job.Prefab.Identifier.Equals(AppropriateJobs[i], StringComparison.OrdinalIgnoreCase)) { return true; }
+                if (jobIdentifier.Equals(jobs[i], StringComparison.OrdinalIgnoreCase)) { return true; }
             }
             return false;
         }
 
-        public string GetChatMessage(string targetCharacterName, string targetRoomName, bool givingOrderToSelf, string orderOption = "", int? priority = null)
+        public bool HasAppropriateJob(Character character) => HasSpecifiedJob(character, AppropriateJobs);
+
+        public bool HasPreferredJob(Character character) => HasSpecifiedJob(character, PreferredJobs);
+
+        public string GetChatMessage(string targetCharacterName, string targetRoomName, bool givingOrderToSelf, string orderOption = "", bool isNewOrder = true)
         {
-            priority ??= CharacterInfo.HighestManualOrderPriority;
-            // If the order has a lesser priority, it means we are rearranging character orders
-            if (!TargetAllCharacters && priority != CharacterInfo.HighestManualOrderPriority && Identifier != "dismissed")
+            if (!TargetAllCharacters && !isNewOrder && Identifier != "dismissed")
             {
-                return TextManager.GetWithVariable("rearrangedorders", "[name]", targetCharacterName ?? string.Empty, returnNull: true) ?? string.Empty;
+                // Use special dialogue when we're rearranging character orders
+                if (!givingOrderToSelf)
+                {
+                    return TextManager.GetWithVariable("rearrangedorders", "[name]", targetCharacterName ?? string.Empty, returnNull: true) ?? string.Empty;
+                }
+                else
+                {
+                    // Say nothing when rearranging the orders of the character you're controlling
+                    return string.Empty;
+                }
             }
-            string messageTag = $"{(givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf" : "OrderDialog")}";
-            messageTag += $".{Identifier}";
+            string messageTag = $"{(givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf" : "OrderDialog")}.{Identifier}";
             if (!string.IsNullOrEmpty(orderOption))
             {
                 if (Identifier != "dismissed")
@@ -510,16 +578,17 @@ namespace Barotrauma
         }
 
         /// <param name="interactableFor">Only returns items which are interactable for this character</param>
-        public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSub, CharacterTeamType? requiredTeam = null, Character interactableFor = null)
+        public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSub, CharacterTeamType? requiredTeam = null, Character interactableFor = null, string orderOption = null)
         {
             List<Item> matchingItems = new List<Item>();
             if (submarine == null) { return matchingItems; }
-            if (ItemComponentType != null || TargetItems.Length > 0)
+            if (ItemComponentType != null || TargetItems.Any() || RequireItems.Any())
             {
                 foreach (var item in Item.ItemList)
                 {
-                    if (TargetItems.Length > 0 && !TargetItems.Contains(item.Prefab.Identifier) && !item.HasTag(TargetItems)) { continue; }
-                    if (TargetItems.Length == 0 && !TryGetTargetItemComponent(item, out _)) { continue; }
+                    if (RequireItems.Any() && !TargetItemsMatchItem(RequireItems, item)) { continue; }
+                    if (TargetItems.Any() && !TargetItemsMatchItem(item, orderOption)) { continue; }
+                    if (RequireItems.None() && TargetItems.None() && !TryGetTargetItemComponent(item, out _)) { continue; }
                     if (mustBelongToPlayerSub && item.Submarine?.Info != null && item.Submarine.Info.Type != SubmarineType.Player) { continue; }
                     if (item.Submarine != submarine && !submarine.DockedTo.Contains(item.Submarine)) { continue; }
                     if (requiredTeam.HasValue && (item.Submarine == null || item.Submarine.TeamID != requiredTeam.Value)) { continue; }
@@ -534,14 +603,13 @@ namespace Barotrauma
             return matchingItems;
         }
 
-
         /// <param name="interactableFor">Only returns items which are interactable for this character</param>
-        public List<Item> GetMatchingItems(bool mustBelongToPlayerSub, Character interactableFor = null)
+        public List<Item> GetMatchingItems(bool mustBelongToPlayerSub, Character interactableFor = null, string orderOption = null)
         {
             Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID == CharacterTeamType.Team2 && Submarine.MainSubs.Length > 1 ?
                 Submarine.MainSubs[1] :
                 Submarine.MainSub;
-            return GetMatchingItems(submarine, mustBelongToPlayerSub, interactableFor: interactableFor);
+            return GetMatchingItems(submarine, mustBelongToPlayerSub, interactableFor: interactableFor, orderOption: orderOption);
         }
 
         public string GetOptionName(string id)
@@ -579,6 +647,35 @@ namespace Barotrauma
                 return option;
             }
             return "";
+        }
+
+        public override string ToString()
+        {
+            return $"Order ({Name})";
+        }
+
+        public ImmutableArray<string> GetTargetItems(string option = null)
+        {
+            if (string.IsNullOrEmpty(option) || !OptionTargetItems.TryGetValue(option, out ImmutableArray<string> optionTargetItems))
+            {
+                return TargetItems;
+            }
+            else
+            {
+                return optionTargetItems;
+            }
+        }
+
+        public bool TargetItemsMatchItem(Item item, string option = null)
+        {
+            if (item == null) { return false; }
+            ImmutableArray<string> targetItems = GetTargetItems(option);
+            return TargetItemsMatchItem(targetItems, item);
+        }
+
+        public static bool TargetItemsMatchItem(ImmutableArray<string> targetItems, Item item)
+        {
+            return item != null && targetItems != null && targetItems.Length > 0 && (targetItems.Contains(item.Prefab.Identifier) || item.HasTag(targetItems));
         }
     }
 }

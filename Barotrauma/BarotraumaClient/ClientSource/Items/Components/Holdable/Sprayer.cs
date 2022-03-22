@@ -256,12 +256,20 @@ namespace Barotrauma.Items.Components
                 {
                     targetHull.IncreaseSectionColorOrStrength(targetSections[i], color, sizeAdjustedSprayStrength * deltaTime, true, false);
                 }
+                if (GameMain.GameSession != null)
+                {
+                    GameMain.GameSession.TimeSpentCleaning += deltaTime;
+                }
             }
             else
             {
                 for (int i = 0; i < targetSections.Count; i++)
                 {
                     targetHull.CleanSection(targetSections[i], -sizeAdjustedSprayStrength * deltaTime, true);
+                }
+                if (GameMain.GameSession != null)
+                {
+                    GameMain.GameSession.TimeSpentPainting += deltaTime;
                 }
             }
 

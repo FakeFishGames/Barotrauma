@@ -135,7 +135,13 @@ namespace Barotrauma.Items.Components
             wireSprite = overrideSprite ?? defaultWireSprite;
         }
 
+
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        {
+            Draw(spriteBatch, editing, Vector2.Zero, itemDepth);
+        }
+
+        public void Draw(SpriteBatch spriteBatch, bool editing, Vector2 offset, float itemDepth = -1)
         {
             if (sections.Count == 0 && !IsActive || Hidden)
             {
@@ -155,6 +161,8 @@ namespace Barotrauma.Items.Components
             {
                 drawOffset = sub.DrawPosition + sub.HiddenSubPosition;
             }
+
+            drawOffset += offset;
 
             float baseDepth = UseSpriteDepth ? item.SpriteDepth : wireSprite.Depth;
             float depth = item.IsSelected ? 0.0f : SubEditorScreen.IsWiringMode() ? 0.02f : baseDepth + (item.ID % 100) * 0.000001f;// item.GetDrawDepth(wireSprite.Depth, wireSprite);
@@ -285,7 +293,6 @@ namespace Barotrauma.Items.Components
                 start, start + (endPos - start) * 0.7f,
                 item.Color, depth, 0.3f);
         }
-
 
         public static void UpdateEditing(List<Wire> wires)
         {
@@ -509,6 +516,31 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void Move(Vector2 amount)
+        {
+            //only used in the sub editor, hence only in the client project
+            if (!item.IsSelected) { return; }
+
+            Vector2 wireNodeOffset = item.Submarine == null ? Vector2.Zero : item.Submarine.HiddenSubPosition + amount;            
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                if (i == 0 || i == nodes.Count - 1)
+                {
+                    if (connections[0]?.Item != null && !connections[0].Item.IsSelected && 
+                        (Submarine.RectContains(connections[0].Item.Rect, nodes[i] + wireNodeOffset) || Submarine.RectContains(connections[0].Item.Rect, nodes[i] + wireNodeOffset - amount)))
+                    {
+                        continue;
+                    }
+                    else if (connections[1]?.Item != null && !connections[1].Item.IsSelected && 
+                        (Submarine.RectContains(connections[1].Item.Rect, nodes[i] + wireNodeOffset) || Submarine.RectContains(connections[1].Item.Rect, nodes[i] + wireNodeOffset - amount)))
+                    {
+                        continue;
+                    }
+                }                
+                nodes[i] += amount;
+            }
+            UpdateSections();
+        }
         public bool IsMouseOn()
         {
             if (GUI.MouseOn == null)

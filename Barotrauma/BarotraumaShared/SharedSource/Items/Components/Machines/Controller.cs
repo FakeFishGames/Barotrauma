@@ -61,14 +61,14 @@ namespace Barotrauma.Items.Components
 
         public IEnumerable<LimbPos> LimbPositions { get { return limbPositions; } }
 
-        [Editable, Serialize(false, false, description: "When enabled, the item will continuously send out a 0/1 signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out 1 when interacted with.")]
+        [Editable, Serialize(false, false, description: "When enabled, the item will continuously send out a 0/1 signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out 1 when interacted with.", alwaysUseInstanceValues: true)]
         public bool IsToggle
         {
             get;
             set;
         }
 
-        [Editable, Serialize(false, false, description: "Whether the item is toggled on/off. Only valid if IsToggle is set to true.")]
+        [Editable, Serialize(false, false, description: "Whether the item is toggled on/off. Only valid if IsToggle is set to true.", alwaysUseInstanceValues: true)]
         public bool State
         {
             get;

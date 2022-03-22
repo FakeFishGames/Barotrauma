@@ -107,7 +107,7 @@ namespace Barotrauma
         public static bool ShowHulls = true;
 
         public static bool EditWater, EditFire;
-        public const float OxygenDistributionSpeed = 500.0f;
+        public const float OxygenDistributionSpeed = 30000.0f;
         public const float OxygenDeteriorationSpeed = 0.3f;
         public const float OxygenConsumptionSpeed = 700.0f;
 
@@ -132,7 +132,7 @@ namespace Barotrauma
 
         private float lethalPressure;
 
-        private float surface, drawSurface;
+        private float surface;
         private float waterVolume;
         private float pressure;
 
@@ -241,7 +241,10 @@ namespace Barotrauma
                 }
 
                 OxygenPercentage = prevOxygenPercentage;
-                surface = drawSurface = rect.Y - rect.Height + WaterVolume / rect.Width;
+                surface = rect.Y - rect.Height + WaterVolume / rect.Width;
+#if CLIENT
+                drawSurface = surface;
+#endif
                 Pressure = surface;
 
                 CreateBackgroundSections();
@@ -273,17 +276,6 @@ namespace Barotrauma
         public float Surface
         {
             get { return surface; }
-        }
-
-        public float DrawSurface
-        {
-            get { return drawSurface; }
-            set
-            {
-                if (Math.Abs(drawSurface - value) < 0.00001f) return;
-                drawSurface = MathHelper.Clamp(value, rect.Y - rect.Height, rect.Y);
-                update = true;
-            }
         }
 
         public float WorldSurface
@@ -628,7 +620,10 @@ namespace Barotrauma
                 Gap.UpdateHulls();
             }
 
-            surface = drawSurface = rect.Y - rect.Height + WaterVolume / rect.Width;
+            surface = rect.Y - rect.Height + WaterVolume / rect.Width;
+#if CLIENT
+            drawSurface = surface;
+#endif
             Pressure = surface;
         }
 
@@ -753,8 +748,6 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(deltaTime, cam);
-            
             BallastFlora?.Update(deltaTime);
             
             UpdateProjSpecific(deltaTime, cam);
@@ -807,11 +800,6 @@ namespace Barotrauma
             surface = Math.Max(MathHelper.Lerp(
                 surface, 
                 rect.Y - rect.Height + waterDepth,
-                deltaTime * 10.0f), rect.Y - rect.Height);
-            //interpolate the position of the rendered surface towards the "target surface"
-            drawSurface = Math.Max(MathHelper.Lerp(
-                drawSurface, 
-                rect.Y - rect.Height + waterDepth, 
                 deltaTime * 10.0f), rect.Y - rect.Height);
 
             for (int i = 0; i < waveY.Length; i++)
@@ -900,10 +888,10 @@ namespace Barotrauma
                 }
             }
 
-            //0.01 increase every ~1000 frames = reaches full dirtiness in ~27 minutes
-            if (submergedSections.Count > 0 && Submarine != null && Submarine.Info.Type == SubmarineType.Player && Rand.Int(1000) == 1)
+            //0.016 increase every ~2000 frames = reaches full dirtiness in ~35 minutes
+            if (submergedSections.Count > 0 && Submarine != null && Submarine.Info.Type == SubmarineType.Player && Rand.Int(2000) == 1)
             {
-                DirtySections(submergedSections, 0.01f);
+                DirtySections(submergedSections, deltaTime);
             }
 
             if (waterVolume < Volume)
@@ -911,11 +899,13 @@ namespace Barotrauma
                 LethalPressure -= 10.0f * deltaTime;
                 if (WaterVolume <= 0.0f)
                 {
+#if CLIENT
                     //wait for the surface to be lerped back to bottom and the waves to settle until disabling update
-                    if (drawSurface > rect.Y - rect.Height + 1) return;
+                    if (drawSurface > rect.Y - rect.Height + 1) { return; }
+#endif
                     for (int i = 1; i < waveY.Length - 1; i++)
                     {
-                        if (waveY[i] > 0.1f) return;
+                        if (waveY[i] > 0.1f) { return; }
                     }
 
                     update = false;
@@ -1058,11 +1048,17 @@ namespace Barotrauma
         /// <param name="inclusive">Does being exactly at the edge of the hull count as being inside?</param>
         public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
         {
-            if (EntityGrids == null) return null;
+            if (EntityGrids == null)
+            {
+                return null;
+            }
 
             if (guess != null)
             {
-                if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position, inclusive)) return guess;
+                if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position, inclusive))
+                {
+                    return guess;
+                }
             }
 
             foreach (EntityGrid entityGrid in EntityGrids)
@@ -1088,15 +1084,19 @@ namespace Barotrauma
                         continue;
                     }
                 }
-
                 Vector2 transformedPosition = position;
-                if (useWorldCoordinates && entityGrid.Submarine != null) transformedPosition -= entityGrid.Submarine.Position;
-
+                if (useWorldCoordinates && entityGrid.Submarine != null)
+                {
+                    transformedPosition -= entityGrid.Submarine.Position;
+                }
                 var entities = entityGrid.GetEntities(transformedPosition);
-                if (entities == null) continue;
+                if (entities == null) { continue; }
                 foreach (Hull hull in entities)
                 {
-                    if (Submarine.RectContains(hull.rect, transformedPosition, inclusive)) return hull;
+                    if (Submarine.RectContains(hull.rect, transformedPosition, inclusive))
+                    {
+                        return hull;
+                    }
                 }
             }
 
@@ -1223,7 +1223,7 @@ namespace Barotrauma
                 }
             }
 
-            Rectangle subRect = Submarine.CalculateDimensions();
+            Rectangle subRect = Submarine.Borders;
 
             Alignment roomPos;
             if (rect.Y - rect.Height / 2 > subRect.Y + subRect.Height * 0.66f)
@@ -1530,7 +1530,7 @@ namespace Barotrauma
                         if (prefab != null)
                         {
                             hull.BallastFlora = new BallastFloraBehavior(hull, prefab, Vector2.Zero);
-                            hull.BallastFlora.LoadSave(subElement);
+                            hull.BallastFlora.LoadSave(subElement, idRemap);
                         }
                         break;
                 }
@@ -1565,7 +1565,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Error - tried to save a hull that's not a part of any submarine.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Hull.Save:WorldHull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Hull.Save:WorldHull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return null;
             }
 

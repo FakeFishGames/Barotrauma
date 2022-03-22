@@ -12,17 +12,23 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            int sendOutput = 0;
+            int receivedInputs = 0;
             for (int i = 0; i < timeSinceReceived.Length; i++)
             {
-                if (timeSinceReceived[i] <= timeFrame) sendOutput += 1;
+                if (timeSinceReceived[i] <= timeFrame) { receivedInputs += 1; }
                 timeSinceReceived[i] += deltaTime;
             }
 
-            string signalOut = sendOutput == 1 ? output : falseOutput;
-            if (string.IsNullOrEmpty(signalOut)) return;
+            bool state = receivedInputs == 1;
+            string signalOut = state ? output : falseOutput;
+            if (string.IsNullOrEmpty(signalOut))
+            {
+                //deactivate the component if state is false and there's no false output (will be woken up by non-zero signals in ReceiveSignal)
+                if (!state) { IsActive = false; }
+                return;
+            }
 
-            item.SendSignal(signalOut, "signal_out");
+            item.SendSignal(new Signal(signalOut, sender: signalSender[0] ?? signalSender[1]), "signal_out");
         }
     }
 }

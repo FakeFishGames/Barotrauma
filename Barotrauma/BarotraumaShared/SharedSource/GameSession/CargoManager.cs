@@ -16,32 +16,98 @@ namespace Barotrauma
     {
         public ItemPrefab ItemPrefab { get; }
         public int Quantity { get; set; }
+        public bool? IsStoreComponentEnabled { get; set; }
 
         public PurchasedItem(ItemPrefab itemPrefab, int quantity)
         {
             ItemPrefab = itemPrefab;
             Quantity = quantity;
+            IsStoreComponentEnabled = null;
         }
     }
 
     class SoldItem
     {
         public ItemPrefab ItemPrefab { get; }
-        public ushort ID { get; }
+        public ushort ID { get; private set; }
         public bool Removed { get; set; }
         public byte SellerID { get; }
+        public SellOrigin Origin { get;  }
 
-        public SoldItem(ItemPrefab itemPrefab, ushort id, bool removed, byte sellerId)
+        public enum SellOrigin
+        {
+            Character,
+            Submarine
+        }
+
+        public SoldItem(ItemPrefab itemPrefab, ushort id, bool removed, byte sellerId, SellOrigin origin)
         {
             ItemPrefab = itemPrefab;
             ID = id;
             Removed = removed;
             SellerID = sellerId;
+            Origin = origin;
+        }
+
+        public void SetItemId(ushort id)
+        {
+            if (ID != Entity.NullEntityID)
+            {
+                DebugConsole.ShowError("Error setting SoldItem.ID: ID has already been set and should not be changed.");
+                return;
+            }
+            ID = id;
         }
     }
 
     partial class CargoManager
     {
+        private class SoldEntity
+        {
+            public enum SellStatus
+            {
+                /// <summary>
+                /// Entity sold in SP. Or, entity sold by client and confirmed by server in MP.
+                /// </summary>
+                Confirmed,
+                /// <summary>
+                /// Entity sold by client in MP. Client has received at least one update from server after selling, but this entity wasn't yet confirmed.
+                /// </summary>
+                Unconfirmed,
+                /// <summary>
+                /// Entity sold by client in MP. Client hasn't yet received an update from server after selling.
+                /// </summary>
+                Local
+            }
+
+            public Item Item { get; private set; }
+            public ItemPrefab ItemPrefab { get; }
+            public SellStatus Status { get; set; }
+
+            public SoldEntity(Item item, SellStatus status)
+            {
+                Item = item;
+                ItemPrefab = item?.Prefab;
+                Status = status;
+            }
+
+            public SoldEntity(ItemPrefab itemPrefab, SellStatus status)
+            {
+                ItemPrefab = itemPrefab;
+                Status = status;
+            }
+
+            public void SetItem(Item item)
+            {
+                if (Item != null)
+                {
+                    DebugConsole.ShowError($"Trying to set SoldEntity.Item, but it's already set!\n{Environment.StackTrace.CleanupStackTrace()}");
+                    return;
+                }
+                Item = item;
+            }
+        }
+
         public const int MaxQuantity = 100;
 
         public List<PurchasedItem> ItemsInBuyCrate { get; } = new List<PurchasedItem>();
@@ -92,7 +158,7 @@ namespace Barotrauma
 
         public void ModifyItemQuantityInBuyCrate(ItemPrefab itemPrefab, int changeInQuantity)
         {
-            PurchasedItem itemInCrate = ItemsInBuyCrate.Find(i => i.ItemPrefab == itemPrefab);
+            var itemInCrate = ItemsInBuyCrate.Find(i => i.ItemPrefab == itemPrefab);
             if (itemInCrate != null)
             {
                 itemInCrate.Quantity += changeInQuantity;
@@ -107,6 +173,25 @@ namespace Barotrauma
                 ItemsInBuyCrate.Add(itemInCrate);
             }
             OnItemsInBuyCrateChanged?.Invoke();
+        }
+
+        public void ModifyItemQuantityInSubSellCrate(ItemPrefab itemPrefab, int changeInQuantity)
+        {
+            var itemInCrate = ItemsInSellFromSubCrate.Find(i => i.ItemPrefab == itemPrefab);
+            if (itemInCrate != null)
+            {
+                itemInCrate.Quantity += changeInQuantity;
+                if (itemInCrate.Quantity < 1)
+                {
+                    ItemsInSellFromSubCrate.Remove(itemInCrate);
+                }
+            }
+            else if (changeInQuantity > 0)
+            {
+                itemInCrate = new PurchasedItem(itemPrefab, changeInQuantity);
+                ItemsInSellFromSubCrate.Add(itemInCrate);
+            }
+            OnItemsInSellFromSubCrateChanged?.Invoke();
         }
 
         public void PurchaseItems(List<PurchasedItem> itemsToPurchase, bool removeFromCrate)
@@ -132,6 +217,7 @@ namespace Barotrauma
                 // Exchange money
                 var itemValue = item.Quantity * buyValues[item.ItemPrefab];
                 campaign.Money -= itemValue;
+                GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier);
                 Location.StoreCurrentBalance += itemValue;
 
                 if (removeFromCrate)
@@ -182,6 +268,82 @@ namespace Barotrauma
         {
             CreateItems(PurchasedItems, Submarine.MainSub);
             OnPurchasedItemsChanged?.Invoke();
+        }
+
+        private Dictionary<ItemPrefab, int> UndeterminedSoldEntities { get; } = new Dictionary<ItemPrefab, int>();
+
+        public IEnumerable<Item> GetSellableItemsFromSub()
+        {
+            if (Submarine.MainSub == null) { return new List<Item>(); }
+            var confirmedSoldEntities = Enumerable.Empty<SoldEntity>();
+            UndeterminedSoldEntities.Clear();
+#if CLIENT
+            confirmedSoldEntities = GetConfirmedSoldEntities();
+            foreach (var soldEntity in SoldEntities)
+            {
+                if (soldEntity.Item != null) { continue; }
+                if (UndeterminedSoldEntities.TryGetValue(soldEntity.ItemPrefab, out int count))
+                {
+                    UndeterminedSoldEntities[soldEntity.ItemPrefab] = count + 1;
+                }
+                else
+                {
+                    UndeterminedSoldEntities.Add(soldEntity.ItemPrefab, 1);
+                }
+            }
+#endif
+            return Submarine.MainSub.GetItems(true).FindAll(item =>
+            {
+                if (!IsItemSellable(item, confirmedSoldEntities)) { return false; }
+                if (item.GetRootInventoryOwner() is Character) { return false; }
+                if (!item.Components.All(c => !(c is Holdable h) || !h.Attachable || !h.Attached)) { return false; }
+                if (!item.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null))) { return false; }
+                if (!ItemAndAllContainersInteractable(item)) { return false; }
+                if (item.GetRootContainer() is Item rootContainer && rootContainer.HasTag("donttakeitems")) { return false; }
+                return true;
+            }).Distinct();
+
+            static bool ItemAndAllContainersInteractable(Item item)
+            {
+                do
+                {
+                    if (!item.IsPlayerTeamInteractable) { return false; }
+                    item = item.Container;
+                } while (item != null);
+                return true;
+            }
+        }
+
+        private bool IsItemSellable(Item item, IEnumerable<SoldEntity> confirmedItems)
+        {
+            if (item.Removed) { return false; }
+            if (!item.Prefab.CanBeSold) { return false; }
+            if (item.SpawnedInCurrentOutpost) { return false; }
+            if (!item.Prefab.AllowSellingWhenBroken && item.ConditionPercentage < 90.0f) { return false; }
+            if (confirmedItems.Any(ci => ci.Item == item)) { return false; }
+            if (UndeterminedSoldEntities.TryGetValue(item.Prefab, out int count))
+            {
+                int newCount = count - 1;
+                if (newCount > 0)
+                {
+                    UndeterminedSoldEntities[item.Prefab] = newCount;
+                }
+                else
+                {
+                    UndeterminedSoldEntities.Remove(item.Prefab);
+                }
+                return false;
+            }
+            if (item.OwnInventory?.Container is ItemContainer itemContainer)
+            {
+                var containedItems = item.ContainedItems;
+                if (containedItems.None()) { return true; }
+                // Allow selling the item if contained items are unsellable and set to be removed on deconstruct
+                if (itemContainer.RemoveContainedItemsOnDeconstruct && containedItems.All(it => !it.Prefab.CanBeSold)) { return true; }
+                // Otherwise there must be no contained items or the contained items must be confirmed as sold
+                if (!containedItems.All(it => confirmedItems.Any(ci => ci.Item == it))) { return false; }
+            }
+            return true;
         }
 
         public static void CreateItems(List<PurchasedItem> itemsToSpawn, Submarine sub)
@@ -246,7 +408,8 @@ namespace Barotrauma
                                 continue;
                             }
 
-                            Item containerItem = new Item(containerPrefab, position, wp.Submarine);
+                            Vector2 containerPosition = GetCargoPos(cargoRoom, containerPrefab);
+                            Item containerItem = new Item(containerPrefab, containerPosition, wp.Submarine);
                             itemContainer = containerItem.GetComponent<ItemContainer>();
                             if (itemContainer == null)
                             {
@@ -264,11 +427,13 @@ namespace Barotrauma
                     }
 
                     var item = new Item(pi.ItemPrefab, position, wp.Submarine);
-                    itemContainer?.Inventory.TryPutItem(item, null);
-                    itemSpawned(item);
+                    itemContainer?.Inventory.TryPutItem(item, null);            
+
+                    itemSpawned(item);    
 #if SERVER
                     Entity.Spawner?.CreateNetworkEvent(item, false);
 #endif
+                    (itemContainer?.Item ?? item).CampaignInteractionType = CampaignMode.InteractionType.Cargo;    
                     static void itemSpawned(Item item)
                     {
                         Submarine sub = item.Submarine ?? item.GetRootContainer()?.Submarine;
@@ -290,7 +455,7 @@ namespace Barotrauma
             float floorPos = hull.Rect.Y - hull.Rect.Height;
 
             Vector2 position = new Vector2(
-                hull.Rect.Width > 40 ? Rand.Range(hull.Rect.X + 20, hull.Rect.Right - 20) : hull.Rect.Center.X,
+                hull.Rect.Width > 40 ? Rand.Range(hull.Rect.X + 20f, hull.Rect.Right - 20f) : hull.Rect.Center.X,
                 floorPos);
 
             //check where the actual floor structure is in case the bottom of the hull extends below it

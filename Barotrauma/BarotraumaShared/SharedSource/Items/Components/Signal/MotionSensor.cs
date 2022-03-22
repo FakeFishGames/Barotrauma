@@ -74,6 +74,17 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public Vector2 TransformedDetectOffset
+        {
+            get
+            {
+                Vector2 transformedDetectOffset = detectOffset;
+                if (item.FlippedX) { transformedDetectOffset.X = -transformedDetectOffset.X; }
+                if (item.FlippedY) { transformedDetectOffset.Y = -transformedDetectOffset.Y; }
+                return transformedDetectOffset;
+            }
+        }
+
         [Editable(MinValueFloat = 0.1f, MaxValueFloat = 100.0f, DecimalCount = 2), Serialize(0.1f, true, description: "How often the sensor checks if there's something moving near it. Higher values are better for performance.", alwaysUseInstanceValues: true)]
         public float UpdateInterval
         {
@@ -131,6 +142,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(true, true, description: "Should the sensor trigger when the item itself moves.")]
+        public bool DetectOwnMotion
+        {
+            get;
+            set;
+        }
+
         public MotionSensor(Item item, XElement element)
             : base(item, element)
         {
@@ -168,7 +186,7 @@ namespace Barotrauma.Items.Components
             MotionDetected = false;
             updateTimer = UpdateInterval;
 
-            if (item.body != null && item.body.Enabled)
+            if (item.body != null && item.body.Enabled && DetectOwnMotion)
             {
                 if (Math.Abs(item.body.LinearVelocity.X) > MinimumVelocity || Math.Abs(item.body.LinearVelocity.Y) > MinimumVelocity)
                 {
@@ -177,15 +195,15 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Vector2 detectPos = item.WorldPosition + detectOffset;
+            Vector2 detectPos = item.WorldPosition + TransformedDetectOffset;
             Rectangle detectRect = new Rectangle((int)(detectPos.X - rangeX), (int)(detectPos.Y - rangeY), (int)(rangeX * 2), (int)(rangeY * 2));
             float broadRangeX = Math.Max(rangeX * 2, 500);
             float broadRangeY = Math.Max(rangeY * 2, 500);
 
-            if (item.CurrentHull == null && item.Submarine != null && Level.Loaded != null &&
+            if (item.CurrentHull == null && item.Submarine != null &&
                 (Target == TargetType.Wall || Target == TargetType.Any))
             {
-                if (Math.Abs(item.Submarine.Velocity.X) > MinimumVelocity || Math.Abs(item.Submarine.Velocity.Y) > MinimumVelocity)
+                if (Level.Loaded != null && (Math.Abs(item.Submarine.Velocity.X) > MinimumVelocity || Math.Abs(item.Submarine.Velocity.Y) > MinimumVelocity))
                 {
                     var cells = Level.Loaded.GetCells(item.WorldPosition, 1);
                     foreach (var cell in cells)
@@ -261,7 +279,7 @@ namespace Barotrauma.Items.Components
                     foreach (Limb limb in c.AnimController.Limbs)
                     {
                         if (limb.IsSevered) { continue; }
-                        if (limb.LinearVelocity.LengthSquared() <= MinimumVelocity * MinimumVelocity) { continue; }
+                        if (limb.LinearVelocity.LengthSquared() < MinimumVelocity * MinimumVelocity) { continue; }
                         if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
                         {
                             MotionDetected = true;
@@ -269,23 +287,12 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-            }           
+            }
         }
 
-        public override void FlipX(bool relativeToSub)
-        {
-            detectOffset.X = -detectOffset.X;
-        }
-        public override void FlipY(bool relativeToSub)
-        {
-            detectOffset.Y = -detectOffset.Y;
-        }
         public override XElement Save(XElement parentElement)
         {
             Vector2 prevDetectOffset = detectOffset;
-            //undo flipping before saving
-            if (item.FlippedX) { detectOffset.X = -detectOffset.X; }
-            if (item.FlippedY) { detectOffset.Y = -detectOffset.Y; }
             XElement element = base.Save(parentElement);
             detectOffset = prevDetectOffset;
             return element;

@@ -440,7 +440,7 @@ namespace Barotrauma
                         DebugConsole.ThrowError("Invalid triangle created by CaveGenerator (" + triangles[i][0] + ", " + triangles[i][1] + ", " + triangles[i][2] + ")");
                         GameAnalyticsManager.AddErrorEventOnce(
                             "CaveGenerator.GeneratePolygons:InvalidTriangle",
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                            GameAnalyticsManager.ErrorSeverity.Warning,
                             "Invalid triangle created by CaveGenerator (" + triangles[i][0] + ", " + triangles[i][1] + ", " + triangles[i][2] + "). Seed: " + level.Seed);
                     }
                 }                

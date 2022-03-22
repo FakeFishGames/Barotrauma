@@ -1,10 +1,12 @@
-﻿using Barotrauma.Extensions;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using StoreBalanceStatus = Barotrauma.LocationType.StoreBalanceStatus;
 
 namespace Barotrauma
 {
@@ -87,16 +89,12 @@ namespace Barotrauma
         public int TurnsInRadiation { get; set; }
 
         #region Store
-
-        private const float StoreMaxReputationModifier = 0.1f;
-        private const float StoreSellPriceModifier = 0.8f;
-        private const float DailySpecialPriceModifier = 0.5f;
-        private const float RequestGoodPriceModifier = 1.5f;
-        public const int StoreInitialBalance = 5000;
-        /// <summary>
-        /// In percentages
-        /// </summary>
-        private const int StorePriceModifierRange = 5;
+        private float StoreMaxReputationModifier => Type.StoreMaxReputationModifier;
+        private float StoreSellPriceModifier => Type.StoreSellPriceModifier;
+        private float DailySpecialPriceModifier => Type.DailySpecialPriceModifier;
+        private float RequestGoodPriceModifier => Type.RequestGoodPriceModifier;
+        public int StoreInitialBalance => Type.StoreInitialBalance;
+        private int StorePriceModifierRange => Type.StorePriceModifierRange;
         /// <summary>
         /// In percentages. Larger values make buying more expensive and selling less profitable, and vice versa.
         /// </summary>
@@ -104,26 +102,7 @@ namespace Barotrauma
 
         public Color BalanceColor => ActiveStoreBalanceStatus.Color;
         public StoreBalanceStatus ActiveStoreBalanceStatus { get; private set; }
-        private static StoreBalanceStatus DefaultBalanceStatus { get; } = new StoreBalanceStatus(1.0f, 1.0f, Color.White);
-        private static List<StoreBalanceStatus> StoreBalanceStatuses { get; } = new List<StoreBalanceStatus>
-        {
-            new StoreBalanceStatus(0.5f, 0.75f, Color.Orange),
-            new StoreBalanceStatus(0.25f, 0.2f, Color.Red),
-        };
-
-        public struct StoreBalanceStatus
-        {
-            public float PercentageOfInitialBalance { get; }
-            public float SellPriceModifier { get; }
-            public Color Color { get; }
-
-            public StoreBalanceStatus(float percentage, float sellPriceModifier, Color color)
-            {
-                PercentageOfInitialBalance = percentage;
-                SellPriceModifier = sellPriceModifier;
-                Color = color;
-            }
-        }
+        private List<StoreBalanceStatus> StoreBalanceStatuses => Type.StoreBalanceStatuses;
 
         private int storeCurrentBalance;
         public int StoreCurrentBalance
@@ -154,6 +133,7 @@ namespace Barotrauma
         #endregion
 
         private const float MechanicalMaxDiscountPercentage = 50.0f;
+        private const float HealMaxDiscountPercentage = 10.0f;
 
         private readonly List<TakenItem> takenItems = new List<TakenItem>();
         public IEnumerable<TakenItem> TakenItems
@@ -802,7 +782,7 @@ namespace Barotrauma
                     {
                         if (priceInfo.MaxAvailableAmount > priceInfo.MinAvailableAmount)
                         {
-                            quantity = Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount);
+                            quantity = Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount + 1);
                         }
                         else
                         {
@@ -930,6 +910,12 @@ namespace Barotrauma
             return (int) Math.Ceiling((1.0f - discount) * cost * MechanicalPriceMultiplier);
         }
 
+        public int GetAdjustedHealCost(int cost)
+        {
+            float discount = Reputation.Value / Reputation.MaxReputation * (HealMaxDiscountPercentage / 100.0f);
+            return (int) Math.Ceiling((1.0f - discount) * cost * PriceMultiplier);
+        }
+
         /// <param name="force">If true, the store will be recreated if it already exists.</param>
         public void CreateStore(bool force = false)
         {
@@ -1024,7 +1010,7 @@ namespace Barotrauma
 
         private void GenerateRandomPriceModifier()
         {
-            StorePriceModifier = Rand.Range(-StorePriceModifierRange, StorePriceModifierRange);
+            StorePriceModifier = Rand.Range(-StorePriceModifierRange, StorePriceModifierRange + 1);
         }
 
         private void CreateStoreSpecials()
@@ -1111,15 +1097,16 @@ namespace Barotrauma
             }
         }
 
-        public static StoreBalanceStatus GetStoreBalanceStatus(int balance)
+        public StoreBalanceStatus GetStoreBalanceStatus(int balance)
         {
-            StoreBalanceStatus nextStatus = DefaultBalanceStatus;
-            foreach (var balanceStatus in StoreBalanceStatuses)
+            StoreBalanceStatus nextStatus = StoreBalanceStatuses[0];
+            for (int i = 1; i < StoreBalanceStatuses.Count; i++)
             {
-                if (balanceStatus.PercentageOfInitialBalance < nextStatus.PercentageOfInitialBalance &&
-                    ((float)balance / StoreInitialBalance) < balanceStatus.PercentageOfInitialBalance)
+                var status = StoreBalanceStatuses[i];
+                if (status.PercentageOfInitialBalance < nextStatus.PercentageOfInitialBalance &&
+                    ((float)balance / StoreInitialBalance) < status.PercentageOfInitialBalance)
                 {
-                    nextStatus = balanceStatus;
+                    nextStatus = status;
                 }
             }
             return nextStatus;
@@ -1131,7 +1118,7 @@ namespace Barotrauma
             Discovered = true;
             if (checkTalents)
             {
-                GameSession.GetSessionCrewCharacters().ForEach(c => c.CheckTalents(AbilityEffectType.OnLocationDiscovered, new Abilities.AbilityLocation(this)));
+                GameSession.GetSessionCrewCharacters().ForEach(c => c.CheckTalents(AbilityEffectType.OnLocationDiscovered, new AbilityLocation(this)));
             }
         }
 
@@ -1283,6 +1270,16 @@ namespace Barotrauma
         public void RemoveProjSpecific()
         {
             HireManager?.Remove();
+        }
+
+        class AbilityLocation : AbilityObject, IAbilityLocation
+        {
+            public AbilityLocation(Location location)
+            {
+                Location = location;
+            }
+
+            public Location Location { get; set; }
         }
     }
 }

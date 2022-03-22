@@ -112,7 +112,7 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(!Locations.Contains(null));
             for (int i = 0; i < Locations.Count; i++)
             {
-                Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, $"location.{i}", -100, 100, Rand.Range(-10, 10, Rand.RandSync.Server));
+                Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, Locations[i], $"location.{i}", -100, 100, Rand.Range(-10, 11, Rand.RandSync.Server));
             }
 
             List<XElement> connectionElements = new List<XElement>();
@@ -214,7 +214,7 @@ namespace Barotrauma
 
             for (int i = 0; i < Locations.Count; i++)
             {
-                Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, $"location.{i}", -100, 100, Rand.Range(-10, 10, Rand.RandSync.Server));
+                Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, Locations[i], $"location.{i}", -100, 100, Rand.Range(-10, 11, Rand.RandSync.Server));
             }
 
             foreach (Location location in Locations)
@@ -472,8 +472,11 @@ namespace Barotrauma
 
             foreach (LocationConnection connection in Connections)
             {
-                float difficulty = GetLevelDifficulty(connection.CenterPos.X / Width);
-                connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-10.0f, 0.0f, Rand.RandSync.Server), 1.2f, 100.0f);
+                //float difficulty = GetLevelDifficulty(connection.CenterPos.X / Width);
+                //connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-10.0f, 0.0f, Rand.RandSync.Server), 1.2f, 100.0f);
+                float difficulty = connection.CenterPos.X / Width * 100;
+                float random = difficulty > 10 ? 5 : 0;
+                connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-random, random, Rand.RandSync.Server), 1.0f, 100.0f);
             }
 
             AssignBiomes();
@@ -483,7 +486,8 @@ namespace Barotrauma
             {
                 location.LevelData = new LevelData(location)
                 {
-                    Difficulty = MathHelper.Clamp(GetLevelDifficulty(location.MapPosition.X / Width), 0.0f, 100.0f)
+                    Difficulty = MathHelper.Clamp(location.MapPosition.X / Width * 100, 0.0f, 100.0f)
+                    //Difficulty = MathHelper.Clamp(GetLevelDifficulty(location.MapPosition.X / Width), 0.0f, 100.0f)
                 };
                 location.UnlockInitialMissions();
             }
@@ -761,7 +765,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Failed to select a location. " + (location?.Name ?? "null") + " not found in the map.";
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Map.SelectLocation:LocationNotFound", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Map.SelectLocation:LocationNotFound", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -780,7 +784,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Failed to select a mission (current location not set).";
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Map.SelectMission:CurrentLocationNotSet", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Map.SelectMission:CurrentLocationNotSet", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 

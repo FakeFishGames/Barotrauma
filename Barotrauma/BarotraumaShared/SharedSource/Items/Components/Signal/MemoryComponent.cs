@@ -34,7 +34,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        protected bool writeable = true;
+        [Editable, Serialize(true, true, description: "Can the value stored in the memory component be changed via signals.", alwaysUseInstanceValues: true)]
+        public bool Writeable 
+        {
+            get; 
+            set;            
+        }
 
         public MemoryComponent(Item item, XElement element)
             : base(item, element)
@@ -54,7 +59,7 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "signal_in":
-                    if (writeable) 
+                    if (Writeable) 
                     {
                         string prevValue = Value;
                         Value = signal.value;
@@ -66,7 +71,7 @@ namespace Barotrauma.Items.Components
                     break;
                 case "signal_store":
                 case "lock_state":
-                    writeable = signal.value == "1";
+                    Writeable = signal.value == "1";
                     break;
             }
         }

@@ -44,7 +44,7 @@ namespace Barotrauma
         private int? maxTextLength;
 
         private int _caretIndex;
-        private int CaretIndex
+        public int CaretIndex
         {
             get { return _caretIndex; }
             set
@@ -69,6 +69,8 @@ namespace Barotrauma
         private Vector2 selectionStartPos;
         private Vector2 selectionEndPos;
         private Vector2 selectionRectSize;
+
+        private GUICustomComponent caretAndSelectionRenderer;
 
         private bool mouseHeldInside;
 
@@ -178,8 +180,7 @@ namespace Barotrauma
             }
             set
             {
-                base.ToolTip = value;
-                textBlock.ToolTip = value;
+                base.ToolTip = textBlock.ToolTip = caretAndSelectionRenderer.ToolTip = value;
             }
         }
 
@@ -268,7 +269,7 @@ namespace Barotrauma
             CaretEnabled = true;
             caretPosDirty = true;
 
-            new GUICustomComponent(new RectTransform(Vector2.One, frame.RectTransform), onDraw: DrawCaretAndSelection);
+            caretAndSelectionRenderer = new GUICustomComponent(new RectTransform(Vector2.One, frame.RectTransform), onDraw: DrawCaretAndSelection);
 
             int clearButtonWidth = 0;
             if (createClearButton)
@@ -343,34 +344,23 @@ namespace Barotrauma
 
         private void CalculateCaretPos()
         {
-            string textDrawn = Censor ? textBlock.CensoredText : textBlock.WrappedText;
-            if (textDrawn.Contains("\n"))
+            if (Censor || !Wrap)
             {
-                string[] lines = textDrawn.Split('\n');
-                int totalIndex = 0;
-                for (int i = 0; i < lines.Length; i++)
-                {
-                    int currentLineLength = lines[i].Length;
-                    totalIndex += currentLineLength;
-                    // The caret is on this line
-                    if (CaretIndex < totalIndex || totalIndex == textBlock.Text.Length)
-                    {
-                        int diff = totalIndex - CaretIndex;
-                        int index = currentLineLength - diff;
-                        Vector2 lineTextSize = Font.MeasureString(lines[i].Substring(0, index)) * TextBlock.TextScale;
-                        Vector2 lastLineSize = Font.MeasureString(lines[i]) * TextBlock.TextScale;
-                        float totalTextHeight = Font.MeasureString(textDrawn.Substring(0, totalIndex)).Y * TextBlock.TextScale;
-                        caretPos = new Vector2(lineTextSize.X, totalTextHeight - lastLineSize.Y) + textBlock.TextPos - textBlock.Origin * TextBlock.TextScale;
-                        break;
-                    }
-                }
+                string textDrawn = textBlock.CensoredText;
+                CaretIndex = Math.Min(CaretIndex, textDrawn.Length);
+                textDrawn = Censor ? textBlock.CensoredText : textBlock.Text;
+                Vector2 textSize = Font.MeasureString(textDrawn[..CaretIndex]) * TextBlock.TextScale;
+                caretPos = new Vector2(textSize.X, 0) + textBlock.TextPos - textBlock.Origin * TextBlock.TextScale;
             }
             else
             {
-                CaretIndex = Math.Min(CaretIndex, textDrawn.Length);
-                textDrawn = Censor ? textBlock.CensoredText : textBlock.Text;
-                Vector2 textSize = Font.MeasureString(textDrawn.Substring(0, CaretIndex)) * TextBlock.TextScale;
-                caretPos = new Vector2(textSize.X, 0) + textBlock.TextPos - textBlock.Origin * TextBlock.TextScale;
+                CaretIndex = Math.Min(CaretIndex, textBlock.Text.Length);
+                textBlock.Font.WrapText(
+                    textBlock.Text,
+                    (textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z) / TextBlock.TextScale,
+                    CaretIndex,
+                    out Vector2 requestedCharPos);
+                caretPos = requestedCharPos * TextBlock.TextScale + textBlock.TextPos - textBlock.Origin * TextBlock.TextScale;
             }
             caretPosDirty = false;
         }
@@ -383,6 +373,7 @@ namespace Barotrauma
                 memento.Store(Text);
             }
             CaretIndex = forcedCaretIndex == - 1 ? textBlock.GetCaretIndexFromScreenPos(PlayerInput.MousePosition) : forcedCaretIndex;
+            CalculateCaretPos();
             ClearSelection();
             selected = true;
             GUI.KeyboardDispatcher.Subscriber = this;
@@ -538,59 +529,37 @@ namespace Barotrauma
             if (textBlock.WrappedText.Contains("\n"))
             {
                 // Multiline selection
-                string[] lines = textBlock.WrappedText.Split('\n');
-                int totalIndex = 0;
-                int previousCharacters = 0;
-                Vector2 offset = textBlock.TextPos - textBlock.Origin;
-                for (int i = 0; i < lines.Length; i++)
+                var characterPositions = textBlock.GetAllCaretPositions();
+                (int startIndex, int endIndex) = selectionStartIndex < selectionEndIndex
+                    ? (selectionStartIndex, selectionEndIndex)
+                    : (selectionEndIndex, selectionStartIndex);
+                endIndex--;
+
+                void drawRect(Vector2 topLeft, Vector2 bottomRight)
                 {
-                    string currentLine = lines[i];
-                    int currentLineLength = currentLine.Length;
-                    totalIndex += currentLineLength;
-                    bool containsSelection = IsLeftToRight
-                        ? selectionStartIndex < totalIndex && selectionEndIndex > previousCharacters
-                        : selectionEndIndex < totalIndex && selectionStartIndex > previousCharacters;
-                    if (containsSelection)
-                    {
-                        Vector2 currentLineSize = Font.MeasureString(currentLine) * TextBlock.TextScale;
-                        if ((IsLeftToRight && selectionStartIndex < previousCharacters && selectionEndIndex > totalIndex)
-                            || !IsLeftToRight && selectionEndIndex < previousCharacters && selectionStartIndex > totalIndex)
-                        {
-                            // select the whole line
-                            Vector2 topLeft = offset + new Vector2(0, currentLineSize.Y * i);
-                            GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, currentLineSize, SelectionColor, isFilled: true);
-                        }
-                        else
-                        {
-                            if (IsLeftToRight)
-                            {
-                                bool selectFromTheBeginning = selectionStartIndex <= previousCharacters;
-                                int startIndex = selectFromTheBeginning ? 0 : Math.Abs(selectionStartIndex - previousCharacters);
-                                int endIndex = Math.Abs(selectionEndIndex - previousCharacters);
-                                int characters = Math.Min(endIndex - startIndex, currentLineLength - startIndex);
-                                Vector2 selectedTextSize = Font.MeasureString(currentLine.Substring(startIndex, characters)) * TextBlock.TextScale;
-                                Vector2 topLeft = selectFromTheBeginning
-                                    ? new Vector2(offset.X, offset.Y + currentLineSize.Y * i)
-                                    : new Vector2(selectionStartPos.X, offset.Y + currentLineSize.Y * i);
-                                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectedTextSize, SelectionColor, isFilled: true);
-                            }
-                            else
-                            {
-                                bool selectFromTheBeginning = selectionStartIndex >= totalIndex;
-                                bool selectFromTheStart = selectionEndIndex <= previousCharacters;
-                                int startIndex = selectFromTheBeginning ? currentLineLength : Math.Abs(selectionStartIndex - previousCharacters);
-                                int endIndex = selectFromTheStart ? 0 : Math.Abs(selectionEndIndex - previousCharacters);
-                                int characters = Math.Min(Math.Abs(endIndex - startIndex), currentLineLength);
-                                Vector2 selectedTextSize = Font.MeasureString(currentLine.Substring(endIndex, characters)) * TextBlock.TextScale;
-                                Vector2 topLeft = selectFromTheBeginning
-                                    ? new Vector2(offset.X + currentLineSize.X - selectedTextSize.X, offset.Y + currentLineSize.Y * i)
-                                    : new Vector2(selectionStartPos.X - selectedTextSize.X, offset.Y + currentLineSize.Y * i);
-                                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectedTextSize, SelectionColor, isFilled: true);
-                            }
-                        }
-                    }
-                    previousCharacters = totalIndex;
+                    int minWidth = GUI.IntScale(5);
+                    if (bottomRight.X - topLeft.X < minWidth) { bottomRight.X = topLeft.X + minWidth; }
+                    GUI.DrawRectangle(spriteBatch,
+                        Rect.Location.ToVector2() + topLeft,
+                        bottomRight - topLeft,
+                        SelectionColor, isFilled: true);
                 }
+                
+                Vector2 topLeft = characterPositions[startIndex];
+                for (int i = startIndex+1; i <= endIndex; i++)
+                {
+                    Vector2 currPos = characterPositions[i];
+                    if (!MathUtils.NearlyEqual(topLeft.Y, currPos.Y))
+                    {
+                        Vector2 bottomRight = characterPositions[i - 1];
+                        bottomRight += Font.MeasureChar(Text[i - 1]);
+                        drawRect(topLeft, bottomRight);
+                        topLeft = currPos;
+                    }
+                }
+                Vector2 finalBottomRight = characterPositions[endIndex];
+                finalBottomRight += Font.MeasureChar(Text[endIndex]);
+                drawRect(topLeft, finalBottomRight);
             }
             else
             {
@@ -728,8 +697,15 @@ namespace Barotrauma
                     {
                         InitSelectionStart();
                     }
-                    float lineHeight = Font.MeasureString("T").Y * TextBlock.TextScale;
-                    int newIndex = textBlock.GetCaretIndexFromLocalPos(new Vector2(caretPos.X, caretPos.Y - lineHeight));
+                    float lineHeight = Font.LineHeight * TextBlock.TextScale;
+                    int newIndex = textBlock.GetCaretIndexFromLocalPos(new Vector2(caretPos.X, caretPos.Y - lineHeight * 0.5f));
+                    textBlock.Font.WrapText(
+                        textBlock.Text,
+                        (textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z) / TextBlock.TextScale,
+                        newIndex,
+                        out Vector2 requestedCharPos);
+                    requestedCharPos *= TextBlock.TextScale;
+                    if (MathUtils.NearlyEqual(requestedCharPos.Y, caretPos.Y)) { newIndex = 0; }
                     CaretIndex = newIndex;
                     caretTimer = 0;
                     HandleSelection();
@@ -739,8 +715,15 @@ namespace Barotrauma
                     {
                         InitSelectionStart();
                     }
-                    lineHeight = Font.MeasureString("T").Y * TextBlock.TextScale;
-                    newIndex = textBlock.GetCaretIndexFromLocalPos(new Vector2(caretPos.X, caretPos.Y + lineHeight));
+                    lineHeight = Font.LineHeight * TextBlock.TextScale;
+                    newIndex = textBlock.GetCaretIndexFromLocalPos(new Vector2(caretPos.X, caretPos.Y + lineHeight * 1.5f));
+                    textBlock.Font.WrapText(
+                        textBlock.Text,
+                        (textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z) / TextBlock.TextScale,
+                        newIndex,
+                        out Vector2 requestedCharPos2);
+                    requestedCharPos2 *= TextBlock.TextScale;
+                    if (MathUtils.NearlyEqual(requestedCharPos2.Y, caretPos.Y)) { newIndex = Text.Length; }
                     CaretIndex = newIndex;
                     caretTimer = 0;
                     HandleSelection();
@@ -803,6 +786,7 @@ namespace Barotrauma
                     }
                     break;
             }
+            if (caretPosDirty) { CalculateCaretPos(); }
             OnKeyHit?.Invoke(this, key);
             void HandleSelection()
             {

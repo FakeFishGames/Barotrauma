@@ -28,8 +28,8 @@ namespace Barotrauma.Items.Components
                 }
                 case AreaShape.Circle:
                     Vector2 center = item.WorldPosition;
-                    center.Y = -center.Y;
                     center += SpawnAreaOffset;
+                    center.Y = -center.Y;
                     spriteBatch.DrawCircle(center, SpawnAreaRadius, 32, GUI.Style.Red, thickness: 4f);
 
                     if (MaximumAmountRangePadding > 0f)
@@ -51,8 +51,8 @@ namespace Barotrauma.Items.Components
                 }
                 case AreaShape.Circle:
                     Vector2 center = item.WorldPosition;
-                    center.Y = -center.Y;
                     center += CrewAreaOffset;
+                    center.Y = -center.Y;
                     spriteBatch.DrawCircle(center, CrewAreaRadius, 32, GUI.Style.Green);
                     break;
             }

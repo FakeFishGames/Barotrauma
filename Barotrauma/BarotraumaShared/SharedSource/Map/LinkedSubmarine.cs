@@ -147,8 +147,6 @@ namespace Barotrauma
         {
             List<Vector2> points = new List<Vector2>();
 
-            var wallPrefabs = StructurePrefab.Prefabs.Where(mp => mp.Body);
-
             foreach (XElement element in rootElement.Elements())
             {
                 if (element.Name != "Structure") { continue; }
@@ -159,8 +157,12 @@ namespace Barotrauma
                 StructurePrefab prefab = Structure.FindPrefab(name, identifier);
                 if (prefab == null) { continue; }
 
+                float scale = element.GetAttributeFloat("scale", prefab.Scale);
+
                 var rect = element.GetAttributeVector4("rect", Vector4.Zero);
-                
+                rect.Z *= scale / prefab.Scale;
+                rect.W *= scale / prefab.Scale;
+
                 points.Add(new Vector2(rect.X, rect.Y));
                 points.Add(new Vector2(rect.X + rect.Z, rect.Y));
                 points.Add(new Vector2(rect.X, rect.Y - rect.W));
@@ -175,9 +177,10 @@ namespace Barotrauma
         {
             Vector2 pos = element.GetAttributeVector2("pos", Vector2.Zero);
             LinkedSubmarine linkedSub;
+            idRemap.AssignMaxId(out ushort id);
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
-                linkedSub = CreateDummy(submarine, element, pos, idRemap.AssignMaxId());
+                linkedSub = CreateDummy(submarine, element, pos, id);
                 linkedSub.saveElement = element;
                 linkedSub.purchasedLostShuttles = false;
             }
@@ -185,7 +188,7 @@ namespace Barotrauma
             {
                 string levelSeed = element.GetAttributeString("location", "");
                 LevelData levelData = GameMain.GameSession?.Campaign?.NextLevel ?? GameMain.GameSession?.LevelData;
-                linkedSub = new LinkedSubmarine(submarine, idRemap.AssignMaxId())
+                linkedSub = new LinkedSubmarine(submarine, id)
                 {
                     purchasedLostShuttles = GameMain.GameSession?.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles,
                     saveElement = element
@@ -351,6 +354,7 @@ namespace Barotrauma
                     if (hull.Submarine != sub) { continue; }
                     hull.WaterVolume = 0.0f;
                     hull.OxygenPercentage = 100.0f;
+                    hull.BallastFlora?.Kill();
                 }
             }
 

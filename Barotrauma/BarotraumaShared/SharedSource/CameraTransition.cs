@@ -1,8 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
-using NLog.Targets;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -64,7 +62,7 @@ namespace Barotrauma
 #endif
         }
 
-        private IEnumerable<object> Update(ISpatialEntity targetEntity, Camera cam)
+        private IEnumerable<CoroutineStatus> Update(ISpatialEntity targetEntity, Camera cam)
         {
             if (targetEntity == null || (targetEntity is Entity e && e.Removed)) { yield return CoroutineStatus.Success; }
 

@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma
@@ -47,14 +48,16 @@ namespace Barotrauma
         public void SetOrder(Character orderedCharacter)
         {
             OrderedCharacter = orderedCharacter;
-            if (orderedCharacter != CommandingCharacter)
+            if (OrderedCharacter.AIController is HumanAIController humanAI && humanAI.ObjectiveManager.CurrentOrders.None(o => o.MatchesOrder(SuggestedOrderPrefab, Option)))
             {
-                CommandingCharacter.Speak(SuggestedOrderPrefab.GetChatMessage(OrderedCharacter.Name, "", false));
+                if (orderedCharacter != CommandingCharacter)
+                {
+                    CommandingCharacter.Speak(SuggestedOrderPrefab.GetChatMessage(OrderedCharacter.Name, "", false), minDurationBetweenSimilar: 5);
+                }
+                CurrentOrder = new Order(SuggestedOrderPrefab, TargetItem, TargetItemComponent, CommandingCharacter);
+                OrderedCharacter.SetOrder(CurrentOrder, Option, priority: CharacterInfo.HighestManualOrderPriority, CommandingCharacter, CommandingCharacter != OrderedCharacter);
+                OrderedCharacter.Speak(TextManager.Get("DialogAffirmative"), delay: 1.0f, minDurationBetweenSimilar: 5);
             }
-
-            // not sure if new orders are supposed to be created each time. TODO m61: check later
-            CurrentOrder = new Order(SuggestedOrderPrefab, TargetItem, TargetItemComponent, CommandingCharacter); 
-            OrderedCharacter.SetOrder(CurrentOrder, Option, priority: 3, CommandingCharacter, CommandingCharacter != OrderedCharacter);
             TimeSinceLastAttempt = 0f;
         }
 

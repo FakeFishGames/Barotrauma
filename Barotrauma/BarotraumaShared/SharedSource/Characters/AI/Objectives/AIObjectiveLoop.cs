@@ -45,6 +45,8 @@ namespace Barotrauma
         public override bool AbandonWhenCannotCompleteSubjectives => false;
         public override bool AllowSubObjectiveSorting => true;
         public virtual bool InverseTargetEvaluation => false;
+        protected virtual bool ResetWhenClearingIgnoreList => true;
+        protected virtual bool ForceOrderPriority => true;
 
         public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace.CleanupStackTrace()); }
 
@@ -55,7 +57,15 @@ namespace Barotrauma
             {
                 if (ignoreListTimer > IgnoreListClearInterval)
                 {
-                    Reset();
+                    if (ResetWhenClearingIgnoreList)
+                    {
+                        Reset();
+                    }
+                    else
+                    {
+                        ignoreList.Clear();
+                        ignoreListTimer = 0;
+                    }
                 }
                 else
                 {
@@ -113,7 +123,7 @@ namespace Barotrauma
                 Priority = 0;
                 return Priority;
             }
-            if (character.LockHands || character.Submarine == null)
+            if (character.LockHands)
             {
                 Priority = 0;
             }
@@ -131,7 +141,7 @@ namespace Barotrauma
                     // If the priority is higher than the target value, let's just use it.
                     // The priority calculation is more precise, but it takes into account things like distances,
                     // so it's better not to use it if it's lower than the rougher targetValue.
-                    targetValue = Priority;
+                    targetValue = currentSubObjective.Priority;
                 }
                 // If the target value is less than 1% of the max value, let's just treat it as zero.
                 if (targetValue < 1)

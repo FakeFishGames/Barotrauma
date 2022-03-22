@@ -41,7 +41,7 @@ namespace Barotrauma
                 }
                 msg.WriteRangedInteger((int)NetEntityEvent.Type.Invalid, 0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
                 DebugConsole.Log(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:InvalidData" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:InvalidData" + Name, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -97,22 +97,6 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.AssignCampaignInteraction:
                     msg.Write((byte)CampaignInteractionType);
-                    break;
-                case NetEntityEvent.Type.Treatment:
-                    {
-                        ItemComponent targetComponent = (ItemComponent)extraData[1];
-                        ActionType actionType = (ActionType)extraData[2];
-                        ushort targetID = (ushort)extraData[3];
-                        Limb targetLimb = (Limb)extraData[4];
-
-                        Character targetCharacter = FindEntityByID(targetID) as Character;
-                        byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
-
-                        msg.Write((byte)components.IndexOf(targetComponent));
-                        msg.WriteRangedInteger((int)actionType, 0, Enum.GetValues(typeof(ActionType)).Length - 1);
-                        msg.Write(targetID);
-                        msg.Write(targetLimbIndex);
-                    }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     {
@@ -186,7 +170,7 @@ namespace Barotrauma
                 msg.LengthBits = initialWritePos;
                 msg.WriteRangedInteger((int)NetEntityEvent.Type.Invalid, 0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
                 DebugConsole.Log(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:" + errorMsg, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:" + errorMsg, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
             }
         }
 
@@ -268,6 +252,7 @@ namespace Barotrauma
 
                 msg.Write(Position.X);
                 msg.Write(Position.Y);
+                msg.WriteRangedSingle(body == null ? 0.0f : MathUtils.WrapAngleTwoPi(body.Rotation), 0.0f, MathHelper.TwoPi, 8);
                 msg.Write(Submarine != null ? Submarine.ID : (ushort)0);
             }
             else
@@ -280,7 +265,7 @@ namespace Barotrauma
             }
 
             msg.Write(body == null ? (byte)0 : (byte)body.BodyType);
-            msg.Write(SpawnedInOutpost);
+            msg.Write(SpawnedInCurrentOutpost);
             msg.Write(AllowStealing);
             msg.WriteRangedInteger(Quality, 0, Items.Components.Quality.MaxQuality);
 
@@ -402,7 +387,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Attempted to create a network event for an item (" + Name + ") that hasn't been fully initialized yet.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -423,7 +408,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Attempted to create a network event for an item (" + Name + ") that hasn't been fully initialized yet.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 

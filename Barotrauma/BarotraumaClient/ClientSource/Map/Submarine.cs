@@ -25,14 +25,11 @@ namespace Barotrauma
         public readonly bool Stream;
         public readonly bool IgnoreMuffling;
 
-
-        public string Filename
-        {
-            get { return Sound?.Filename; }
-        }
+        public readonly string Filename;
 
         public RoundSound(XElement element, Sound sound)
         {
+            Filename = sound?.Filename;
             Sound = sound;
             Stream = sound.Stream;
             Range = element.GetAttributeFloat("range", 1000.0f);
@@ -98,7 +95,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Error when loading round sound (" + element + ") - file path not set";
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FilePathEmpty" + element.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
+                GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FilePathEmpty" + element.ToString(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
                 return null;
             }
 
@@ -124,7 +121,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Failed to load sound file \"" + filename + "\".";
                     DebugConsole.ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FileNotFound" + filename, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
+                    GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FileNotFound" + filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
                     return null;
                 }
             }
@@ -148,7 +145,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Failed to load sound file \"" + roundSound.Filename + "\".";
                     DebugConsole.ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FileNotFound" + roundSound.Filename, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
+                    GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FileNotFound" + roundSound.Filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
                     return;
                 }
             }
@@ -183,13 +180,14 @@ namespace Barotrauma
             visibleSubs.Clear();
             foreach (Submarine sub in Loaded)
             {
-                if (sub.WorldPosition.Y < Level.MaxEntityDepth) continue;
+                if (sub.WorldPosition.Y < Level.MaxEntityDepth) { continue; }
 
+                int margin = 500;
                 Rectangle worldBorders = new Rectangle(
-                    sub.Borders.X + (int)sub.WorldPosition.X - 500,
-                    sub.Borders.Y + (int)sub.WorldPosition.Y + 500,
-                    sub.Borders.Width + 1000,
-                    sub.Borders.Height + 1000);
+                    sub.VisibleBorders.X + (int)sub.WorldPosition.X - margin,
+                    sub.VisibleBorders.Y + (int)sub.WorldPosition.Y + margin,
+                    sub.VisibleBorders.Width + margin * 2,
+                    sub.VisibleBorders.Height + margin * 2);
 
                 if (RectsOverlap(worldBorders, cam.WorldView))
                 {

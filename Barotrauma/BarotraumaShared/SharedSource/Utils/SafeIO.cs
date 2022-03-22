@@ -58,21 +58,37 @@ namespace Barotrauma.IO
 
     public static class SafeXML
     {
-        public static void SaveSafe(this System.Xml.Linq.XDocument doc, string path)
+        public static void SaveSafe(this System.Xml.Linq.XDocument doc, string path, bool throwExceptions = false)
         {
             if (!Validation.CanWrite(path, false))
             {
-                DebugConsole.ThrowError($"Cannot save XML document to \"{path}\": modifying the files in this folder/with this extension is not allowed.");
+                string errorMsg = $"Cannot save XML document to \"{path}\": modifying the files in this folder/with this extension is not allowed.";
+                if (throwExceptions)
+                {
+                    throw new InvalidOperationException(errorMsg);
+                }
+                else
+                {
+                    DebugConsole.ThrowError(errorMsg);
+                }
                 return;
             }
             doc.Save(path);
         }
 
-        public static void SaveSafe(this System.Xml.Linq.XElement element, string path)
+        public static void SaveSafe(this System.Xml.Linq.XElement element, string path, bool throwExceptions = false)
         {
             if (!Validation.CanWrite(path, false))
             {
-                DebugConsole.ThrowError($"Cannot save XML element to \"{path}\": modifying the files in this folder/with this extension is not allowed.");
+                string errorMsg = $"Cannot save XML element to \"{path}\": modifying the files in this folder/with this extension is not allowed.";
+                if (throwExceptions)
+                {
+                    throw new InvalidOperationException(errorMsg);
+                }
+                else
+                {
+                    DebugConsole.ThrowError(errorMsg);
+                }
                 return;
             }
             element.Save(path);

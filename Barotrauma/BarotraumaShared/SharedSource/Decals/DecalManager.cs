@@ -74,22 +74,10 @@ namespace Barotrauma
                                 continue;
                             }
                         }
-                        Prefabs.Add(new DecalPrefab(element, configFile), allowOverriding || sourceElement.IsOverride());
+                        var newPrefab = new DecalPrefab(element, configFile);
+                        Prefabs.Add(newPrefab, allowOverriding || sourceElement.IsOverride());
+                        newPrefab.CalculatePrefabUIntIdentifier(Prefabs);
                         break;
-                }
-            }
-
-            using MD5 md5 = MD5.Create();
-            foreach (DecalPrefab prefab in Prefabs)
-            {
-                prefab.UIntIdentifier = ToolBox.StringToUInt32Hash(prefab.Identifier, md5);
-
-                //it's theoretically possible for two different values to generate the same hash, but the probability is astronomically small
-                var collision = Prefabs.Find(p => p != prefab && p.UIntIdentifier == prefab.UIntIdentifier);
-                if (collision != null)
-                {
-                    DebugConsole.ThrowError("Hashing collision when generating uint identifiers for Decals: " + prefab.Identifier + " has the same identifier as " + collision.Identifier + " (" + prefab.UIntIdentifier + ")");
-                    collision.UIntIdentifier++;
                 }
             }
         }
