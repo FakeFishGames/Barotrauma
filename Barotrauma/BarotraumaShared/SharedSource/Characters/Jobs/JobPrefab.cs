@@ -282,7 +282,7 @@ namespace Barotrauma
 
             Variants = variant;
 
-            Skills.Sort((x,y) => y.LevelRange.X.CompareTo(x.LevelRange.X));
+            Skills.Sort((x,y) => y.LevelRange.Start.CompareTo(x.LevelRange.Start));
 
             // Disabled on purpose, TODO: remove all references?
             //ClothingElement = element.GetChildElement("PortraitClothing");

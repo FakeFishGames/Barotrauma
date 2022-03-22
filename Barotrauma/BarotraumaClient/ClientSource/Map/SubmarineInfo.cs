@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Barotrauma
@@ -26,7 +26,7 @@ namespace Barotrauma
                 catch (Exception e)
                 {
                     DebugConsole.ThrowError("Loading the preview image of the submarine \"" + Name + "\" failed. The file may be corrupted.", e);
-                    GameAnalyticsManager.AddErrorEventOnce("Submarine..ctor:PreviewImageLoadingFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("Submarine..ctor:PreviewImageLoadingFailed", GameAnalyticsManager.ErrorSeverity.Error,
                         "Loading the preview image of the submarine \"" + Name + "\" failed. The file may be corrupted.");
                     PreviewImage = null;
                 }
@@ -91,7 +91,7 @@ namespace Barotrauma
         public void CreateSpecsWindow(GUIListBox parent, ScalableFont font, bool includeTitle = true, bool includeClass = true, bool includeDescription = false)
         {
             float leftPanelWidth = 0.6f;
-            float rightPanelWidth = 0.4f;
+            float rightPanelWidth = 0.4f / leftPanelWidth;
             string className = !HasTag(SubmarineTag.Shuttle) ? TextManager.Get($"submarineclass.{SubmarineClass}") : TextManager.Get("shuttle");
 
             int classHeight = (int)GUI.SubHeadingFont.MeasureString(className).Y;
@@ -110,6 +110,17 @@ namespace Barotrauma
                 submarineClassText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, classHeight), parent.Content.RectTransform), className, textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont) { CanBeFocused = false };
                 submarineClassText.RectTransform.MinSize = new Point(0, (int)submarineClassText.TextSize.Y);
             }
+
+            if (Price > 0)
+            {
+                var priceText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), parent.Content.RectTransform),
+                    TextManager.Get("subeditor.price"), textAlignment: Alignment.TopLeft, font: font, wrap: true)
+                { CanBeFocused = false };
+                new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), priceText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
+                    TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", Price)), textAlignment: Alignment.TopLeft, font: font, wrap: true)
+                { CanBeFocused = false };
+            }
+
             Vector2 realWorldDimensions = Dimensions * Physics.DisplayToRealWorldRatio;
             if (realWorldDimensions != Vector2.Zero)
             {
@@ -202,6 +213,7 @@ namespace Barotrauma
                 }
             }
             GUITextBlock.AutoScaleAndNormalize(parent.Content.GetAllChildren<GUITextBlock>().Where(c => c != submarineNameText && c != descBlock));
+            parent.ForceLayoutRecalculation();
         }
     }
 }

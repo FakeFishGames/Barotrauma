@@ -121,7 +121,7 @@ namespace Barotrauma
                         {
                             foreach (Item item in newCharacter.Inventory.AllItems)
                             {
-                                item.SpawnedInOutpost = true;
+                                item.SpawnedInCurrentOutpost = true;
                                 item.AllowStealing = false;
                             }
                         }

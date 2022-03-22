@@ -13,7 +13,7 @@ namespace Barotrauma
             get { return itemData != null; }
         }
 
-        public CharacterCampaignData(Client client, bool giveRespawnPenaltyAffliction = false)
+        public CharacterCampaignData(Client client)
         {
             Name = client.Name;
             ClientEndPoint = client.Connection.EndPointString;
@@ -22,13 +22,6 @@ namespace Barotrauma
 
             healthData = new XElement("health");
             client.Character?.CharacterHealth?.Save(healthData);
-            if (giveRespawnPenaltyAffliction)
-            {
-                var respawnPenaltyAffliction = RespawnManager.GetRespawnPenaltyAffliction();
-                healthData.Add(new XElement("Affliction",
-                    new XAttribute("identifier", respawnPenaltyAffliction.Identifier),
-                    new XAttribute("strength", respawnPenaltyAffliction.Strength.ToString("G", CultureInfo.InvariantCulture))));
-            }
             if (client.Character?.Inventory != null)
             {
                 itemData = new XElement("inventory");

@@ -635,9 +635,9 @@ namespace Barotrauma
                 }
                 else if (characterInfo.CauseOfDeath.Type == CauseOfDeathType.Affliction && characterInfo.CauseOfDeath.Affliction == null)
                 {
-                    string errorMsg = "Character \"" + characterInfo.Name + "\" had an invalid cause of death (the type of the cause of death was Affliction, but affliction was not specified).";
-                    DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("RoundSummary:InvalidCauseOfDeath", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    string errorMsg = "Character \"[name]\" had an invalid cause of death (the type of the cause of death was Affliction, but affliction was not specified).";
+                    DebugConsole.ThrowError(errorMsg.Replace("[name]", characterInfo.Name));
+                    GameAnalyticsManager.AddErrorEventOnce("RoundSummary:InvalidCauseOfDeath", GameAnalyticsManager.ErrorSeverity.Error, errorMsg.Replace("[name]", characterInfo.SpeciesName));
                     statusText = TextManager.Get("CauseOfDeathDescription.Unknown");
                     statusColor = GUI.Style.Red;
                 }

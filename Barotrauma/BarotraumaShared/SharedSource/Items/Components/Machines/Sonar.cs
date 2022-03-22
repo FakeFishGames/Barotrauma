@@ -17,6 +17,8 @@ namespace Barotrauma.Items.Components
 
         public const float DefaultSonarRange = 10000.0f;
 
+        public const float PassivePowerConsumption = 0.1f;
+
         class ConnectedTransducer
         {
             public readonly SonarTransducer Transducer;
@@ -104,6 +106,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize(false, false, description: "Should the sonar view be centered on the transducers or the submarine's center of mass. Only has an effect if UseTransducers is enabled.")]
+        public bool CenterOnTransducers
+        {
+            get;
+            set;
+        }
+
         [Editable, Serialize(false, false, description: "Does the sonar have mineral scanning mode. " +
             "Only available in-game when the Item has no Steering component.")]
         public bool HasMineralScanner { get; set; }
@@ -150,7 +159,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            currPowerConsumption = (currentMode == Mode.Active) ? powerConsumption : powerConsumption * 0.1f;
+            currPowerConsumption = (currentMode == Mode.Active) ? powerConsumption : powerConsumption * PassivePowerConsumption;
 
             UpdateOnActiveEffects(deltaTime);
 
@@ -305,26 +314,6 @@ namespace Barotrauma.Items.Components
             return TextManager.GetWithVariable("roomname.subdiroclock", "[dir]", clockDir.ToString());
         }
 
-        private Vector2 GetTransducerPos()
-        {
-            if (!UseTransducers || connectedTransducers.Count == 0)
-            {
-                //use the position of the sub if the item is static (no body) and inside a sub
-                return item.Submarine != null && item.body == null ? item.Submarine.WorldPosition : item.WorldPosition;
-            }
-
-            Vector2 transducerPosSum = Vector2.Zero;
-            foreach (ConnectedTransducer transducer in connectedTransducers)
-            {
-                if (transducer.Transducer.Item.Submarine != null)
-                {
-                    return transducer.Transducer.Item.Submarine.WorldPosition;
-                }
-                transducerPosSum += transducer.Transducer.Item.WorldPosition;
-            }
-            return transducerPosSum / connectedTransducers.Count;
-        }
-
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
             base.ReceiveSignal(signal, connection);
@@ -332,7 +321,9 @@ namespace Barotrauma.Items.Components
             if (connection.Name == "transducer_in")
             {
                 var transducer = signal.source.GetComponent<SonarTransducer>();
-                if (transducer == null) return;
+                if (transducer == null) { return; }
+
+                transducer.ConnectedSonar = this;
 
                 var connectedTransducer = connectedTransducers.Find(t => t.Transducer == transducer);
                 if (connectedTransducer == null)

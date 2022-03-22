@@ -103,6 +103,9 @@ namespace Barotrauma
 
                 container.IsActive = true;
                 container.OnItemContained(item);
+#if SERVER
+                GameMain.Server?.KarmaManager?.OnItemContained(item, container.Item, user);
+#endif
             }
 
             return wasPut;
@@ -122,6 +125,9 @@ namespace Barotrauma
 
                 container.IsActive = true;
                 container.OnItemContained(item);
+#if SERVER
+                GameMain.Server?.KarmaManager?.OnItemContained(item, container.Item, user);
+#endif
             }
 
             return wasPut;
@@ -135,7 +141,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "ItemInventory.CreateServerEvent:EventForUninitializedItem" + container.Item.Name + container.Item.ID,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 

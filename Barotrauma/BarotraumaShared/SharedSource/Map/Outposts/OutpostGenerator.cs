@@ -262,7 +262,7 @@ namespace Barotrauma
                         item.GetComponent<ConnectionPanel>()?.InitializeLinks();
                         item.GetComponent<ItemContainer>()?.OnMapLoaded();
                     }
-                    idOffset = moduleEntities.Max(e => e.ID);
+                    idOffset = moduleEntities.Max(e => e.ID) + 1;
 
                     var wallEntities = moduleEntities.Where(e => e is Structure).Cast<Structure>();
                     var hullEntities = moduleEntities.Where(e => e is Hull).Cast<Hull>();
@@ -1483,7 +1483,7 @@ namespace Barotrauma
                 }
                 characterInfo.TeamID = CharacterTeamType.FriendlyNPC;
                 var npc = Character.Create(CharacterPrefab.HumanConfigFile, SpawnAction.OffsetSpawnPos(gotoTarget.WorldPosition, 100.0f), ToolBox.RandomSeed(8), characterInfo, hasAi: true, createNetworkEvent: true);
-                npc.AnimController.FindHull(gotoTarget.WorldPosition, true);
+                npc.AnimController.FindHull(gotoTarget.WorldPosition, setSubmarine: true);
                 npc.TeamID = CharacterTeamType.FriendlyNPC;
                 npc.Prefab = humanPrefab;
                 if (!outpost.Info.OutpostNPCs.ContainsKey(humanPrefab.Identifier))
@@ -1503,7 +1503,7 @@ namespace Barotrauma
                 foreach (Item item in npc.Inventory.FindAllItems(it => it != null, recursive: true))
                 {
                     item.AllowStealing = outpost.Info.OutpostGenerationParams.AllowStealing;
-                    item.SpawnedInOutpost = true;
+                    item.SpawnedInCurrentOutpost = true;
                 }
                 npc.GiveIdCardTags(gotoTarget as WayPoint);
                 humanPrefab.InitializeCharacter(npc, gotoTarget);

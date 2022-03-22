@@ -10,8 +10,10 @@ namespace Barotrauma.Abilities
 
         protected readonly List<StatusEffect> statusEffects;
 
+        private readonly bool applyToSelf;
         private readonly bool nearbyCharactersAppliesToSelf;
         private readonly bool nearbyCharactersAppliesToAllies;
+        private readonly bool nearbyCharactersAppliesToEnemies;
         private readonly bool applyToSelected;
 
         readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
@@ -19,9 +21,11 @@ namespace Barotrauma.Abilities
         public CharacterAbilityApplyStatusEffects(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statusEffects = CharacterAbilityGroup.ParseStatusEffects(CharacterTalent, abilityElement.GetChildElement("statuseffects"));
+            applyToSelf = abilityElement.GetAttributeBool("applytoself", false);
             applyToSelected = abilityElement.GetAttributeBool("applytoselected", false);
             nearbyCharactersAppliesToSelf = abilityElement.GetAttributeBool("nearbycharactersappliestoself", true);
             nearbyCharactersAppliesToAllies = abilityElement.GetAttributeBool("nearbycharactersappliestoallies", true);
+            nearbyCharactersAppliesToEnemies = abilityElement.GetAttributeBool("nearbycharactersappliestoenemies", true);
         }
 
         protected void ApplyEffectSpecific(Character targetCharacter)
@@ -45,6 +49,10 @@ namespace Barotrauma.Abilities
                     if (!nearbyCharactersAppliesToAllies)
                     {
                         targets.RemoveAll(c => c is Character otherCharacter && HumanAIController.IsFriendly(otherCharacter, Character));
+                    }
+                    if (!nearbyCharactersAppliesToEnemies)
+                    {
+                        targets.RemoveAll(c => c is Character otherCharacter && !HumanAIController.IsFriendly(otherCharacter, Character));
                     }
                     statusEffect.SetUser(Character);
                     statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, targetCharacter, targets);
@@ -75,7 +83,7 @@ namespace Barotrauma.Abilities
 
         protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if ((abilityObject as IAbilityCharacter)?.Character is Character targetCharacter)
+            if ((abilityObject as IAbilityCharacter)?.Character is Character targetCharacter && !applyToSelf)
             {
                 ApplyEffectSpecific(targetCharacter);
             }

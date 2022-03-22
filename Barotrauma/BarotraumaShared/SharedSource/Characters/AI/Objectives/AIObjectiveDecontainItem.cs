@@ -36,6 +36,12 @@ namespace Barotrauma
         /// </summary>
         public bool DropIfFails { get; set; } = true;
 
+        public bool RemoveExistingWhenNecessary { get; set; }
+        public Func<Item, bool> RemoveExistingPredicate { get; set; }
+        public int? RemoveExistingMax { get; set; }
+        public string AbandonGetItemDialogueIdentifier { get; set; }
+        public Func<bool> AbandonGetItemDialogueCondition { get; set; }
+
         public AIObjectiveDecontainItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, ItemContainer sourceContainer = null, ItemContainer targetContainer = null, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
@@ -86,6 +92,7 @@ namespace Barotrauma
                 }
                 if (itemToDecontain.Container != sourceContainer.Item)
                 {
+                    itemToDecontain.Drop(character);
                     IsCompleted = true;
                     return;
                 }
@@ -98,7 +105,13 @@ namespace Barotrauma
             if (getItemObjective == null && !itemToDecontain.IsOwnedBy(character))
             {
                 TryAddSubObjective(ref getItemObjective,
-                    constructor: () => new AIObjectiveGetItem(character, targetItem, objectiveManager, Equip) { TakeWholeStack = this.TakeWholeStack },
+                    constructor: () => new AIObjectiveGetItem(character, targetItem, objectiveManager, Equip)
+                    {
+                        CannotFindDialogueCondition = AbandonGetItemDialogueCondition,
+                        CannotFindDialogueIdentifierOverride = AbandonGetItemDialogueIdentifier,
+                        SpeakIfFails = AbandonGetItemDialogueIdentifier != null,
+                        TakeWholeStack = this.TakeWholeStack
+                    },
                     onAbandon: () => Abandon = true);
                 return;
             }
@@ -110,6 +123,9 @@ namespace Barotrauma
                         MoveWholeStack = TakeWholeStack,
                         Equip = Equip,
                         RemoveEmpty = false,
+                        RemoveExistingWhenNecessary = RemoveExistingWhenNecessary,
+                        RemoveExistingPredicate = RemoveExistingPredicate,
+                        RemoveMax = RemoveExistingMax,
                         GetItemPriority = GetItemPriority,
                         ignoredContainerIdentifiers = sourceContainer != null ? new string[] { sourceContainer.Item.Prefab.Identifier } : null
                     },

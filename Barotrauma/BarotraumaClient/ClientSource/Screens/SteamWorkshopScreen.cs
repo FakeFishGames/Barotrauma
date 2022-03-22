@@ -304,7 +304,7 @@ namespace Barotrauma
 
         float subscribePollAdditionalWait = 0.0f;
 
-        private IEnumerable<object> PollSubscribedItems()
+        private IEnumerable<CoroutineStatus> PollSubscribedItems()
         {
             if (!SteamManager.IsInitialized) { yield return CoroutineStatus.Success; }
 
@@ -364,7 +364,7 @@ namespace Barotrauma
             }
         }
 
-        public IEnumerable<object> RefreshDownloadState()
+        public IEnumerable<CoroutineStatus> RefreshDownloadState()
         {
             bool isDownloading = true;
             while (true)
@@ -824,14 +824,13 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                string errorMsg = "Failed to save workshop item preview image to \"" + previewImagePath + "\".";
                 GameAnalyticsManager.AddErrorEventOnce("SteamWorkshopScreen.OnItemPreviewDownloaded:WriteAllBytesFailed" + previewImagePath,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + e.Message);
+                    GameAnalyticsManager.ErrorSeverity.Error, "Failed to save workshop item preview image.\n" + e.Message);
                 return;
             }
         }
 
-        private IEnumerable<object> WaitForItemPreviewDownloaded(Steamworks.Ugc.Item? item, GUIListBox listBox, string previewImagePath)
+        private IEnumerable<CoroutineStatus> WaitForItemPreviewDownloaded(Steamworks.Ugc.Item? item, GUIListBox listBox, string previewImagePath)
         {
             while (true)
             {
@@ -855,7 +854,7 @@ namespace Barotrauma
                         (var it, var lb) = tuple;
                         if (lb.Content.FindChild(item)?.GetChildByUserData("previewimage") is GUIImage previewImage)
                         {
-                            previewImage.Sprite = ((Task<Sprite>)task).Result;
+                            if (task.TryGetResult(out Sprite sprite)) { previewImage.Sprite = sprite; }
                         }
                         else
                         {
@@ -1195,7 +1194,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Failed to edit workshop item (content package null)\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("SteamWorkshopScreen.ShowCreateItemFrame:ContentPackageNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("SteamWorkshopScreen.ShowCreateItemFrame:ContentPackageNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -1835,7 +1834,7 @@ namespace Barotrauma
 
         }
 
-        private IEnumerable<object> WaitForPublish(SteamManager.WorkshopPublishStatus workshopPublishStatus)
+        private IEnumerable<CoroutineStatus> WaitForPublish(SteamManager.WorkshopPublishStatus workshopPublishStatus)
         {
             var item = workshopPublishStatus.Item;
             var coroutine = workshopPublishStatus.Coroutine;

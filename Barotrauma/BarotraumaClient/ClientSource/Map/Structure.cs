@@ -30,6 +30,9 @@ namespace Barotrauma
                 {
                     return false;
                 }
+
+                if (!SubEditorScreen.IsLayerVisible(this)) { return false; }
+
                 return HasBody ? ShowWalls : ShowStructures;
             }
         }
@@ -244,8 +247,10 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (prefab.sprite == null) { return; }
+
             if (editing)
             {
+                if (!SubEditorScreen.IsLayerVisible(this)) { return; }
                 if (!HasBody && !ShowStructures) { return; }
                 if (HasBody && !ShowWalls) { return; }
             }
@@ -273,6 +278,7 @@ namespace Barotrauma
             if (prefab.sprite == null) { return; }
             if (editing)
             {
+                if (!SubEditorScreen.IsLayerVisible(this)) { return; }
                 if (!HasBody && !ShowStructures) { return; }
                 if (HasBody && !ShowWalls) { return; }
             }
@@ -285,13 +291,11 @@ namespace Barotrauma
                 //color = Color.Lerp(color, Color.Gold, 0.5f);
                 color = spriteColor;
 
-
-
                 Vector2 rectSize = rect.Size.ToVector2();
                 if (BodyWidth > 0.0f) { rectSize.X = BodyWidth; }
                 if (BodyHeight > 0.0f) { rectSize.Y = BodyHeight; }
 
-                Vector2 bodyPos = WorldPosition + BodyOffset;
+                Vector2 bodyPos = WorldPosition + BodyOffset * Scale;
 
                 GUI.DrawRectangle(spriteBatch, new Vector2(bodyPos.X, -bodyPos.Y), rectSize.X, rectSize.Y, BodyRotation, Color.White,
                     thickness: Math.Max(1, (int)(2 / Screen.Selected.Cam.Zoom)));
@@ -438,7 +442,7 @@ namespace Barotrauma
                     for (int i = 0; i < Bodies.Count; i++)
                     {
                         Vector2 pos = FarseerPhysics.ConvertUnits.ToDisplayUnits(Bodies[i].Position);
-                        if (Submarine != null) pos += Submarine.Position;
+                        if (Submarine != null) { pos += Submarine.DrawPosition; }
                         pos.Y = -pos.Y;
                         GUI.DrawRectangle(spriteBatch,
                             pos,
@@ -465,7 +469,8 @@ namespace Barotrauma
 
         public void UpdateSpriteStates(float deltaTime)
         {
-            DecorativeSprite.UpdateSpriteStates(Prefab.DecorativeSpriteGroups, spriteAnimState, ID, deltaTime, ConditionalMatches);
+            if (Prefab.DecorativeSpriteGroups.Count == 0) { return; }            
+            DecorativeSprite.UpdateSpriteStates(Prefab.DecorativeSpriteGroups, spriteAnimState, ID, deltaTime, ConditionalMatches);            
             foreach (int spriteGroup in Prefab.DecorativeSpriteGroups.Keys)
             {
                 for (int i = 0; i < Prefab.DecorativeSpriteGroups[spriteGroup].Count; i++)
@@ -536,7 +541,7 @@ namespace Barotrauma
                 invalidMessage = true;
                 string errorMsg = $"Error while reading a network event for the structure \"{Name} ({ID})\". Section count does not match (server: {sectionCount} client: {Sections.Length})";
                 DebugConsole.NewMessage(errorMsg, Color.Red);
-                GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
             }
 
             for (int i = 0; i < sectionCount; i++)

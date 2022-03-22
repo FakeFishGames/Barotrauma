@@ -12,6 +12,10 @@ namespace Barotrauma
 {
     class SinglePlayerCampaignSetupUI : CampaignSetupUI
     {
+        private GUIListBox subList;
+
+        protected GUILayoutGroup subPreviewContainer;
+
         public CharacterInfo.AppearanceCustomizationMenu[] CharacterMenus { get; private set; }
 
         private GUIButton nextButton;
@@ -38,7 +42,7 @@ namespace Barotrauma
                 pageContainer.BarScroll = targetScroll;
             }
 
-            for (int i=0; i<CharacterMenus.Length; i++)
+            for (int i = 0; i < CharacterMenus.Length; i++)
             {
                 CharacterMenus[i]?.Update();
             }
@@ -77,6 +81,7 @@ namespace Barotrauma
                 {
                     ScrollBarEnabled = false,
                     ScrollBarVisible = false,
+                    AllowArrowKeyScroll = false,
                     HoverCursor = CursorState.Default
                 };
 

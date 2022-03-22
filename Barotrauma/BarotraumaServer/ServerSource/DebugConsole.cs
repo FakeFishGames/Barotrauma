@@ -28,11 +28,11 @@ namespace Barotrauma
                 if (!CheatsEnabled && IsCheat)
                 {
                     NewMessage("Client \"" + client.Name + "\" attempted to use the command \"" + names[0] + "\". Cheats must be enabled using \"enablecheats\" before the command can be used.", Color.Red);
-                    GameMain.Server.SendConsoleMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", client);
+                    GameMain.Server.SendConsoleMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", client, Color.Red);
 
 #if USE_STEAM
                     NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
-                    GameMain.Server.SendConsoleMessage("Enabling cheats will disable Steam achievements during this play session.", client);
+                    GameMain.Server.SendConsoleMessage("Enabling cheats will disable Steam achievements during this play session.", client, Color.Red);
 #endif
 
                     return;
@@ -98,7 +98,7 @@ namespace Barotrauma
                     {
                         ColoredText msg = queuedMessages.Dequeue();
                         Messages.Add(msg);
-                        if (GameSettings.SaveDebugConsoleLogs)
+                        if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging)
                         {
                             unsavedMessages.Add(msg);
                             if (unsavedMessages.Count >= messagesPerFile)
@@ -269,7 +269,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Failed to write input to command line (window width: " + Console.WindowWidth + ", window height: " + Console.WindowHeight + ")\n"
                     + e.Message + "\n" + e.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("DebugConsole.RewriteInputToCommandLine", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("DebugConsole.RewriteInputToCommandLine", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
             }
         }
 
@@ -281,7 +281,7 @@ namespace Barotrauma
                 {
                     var msg = queuedMessages.Dequeue();
                     Messages.Add(msg);
-                    if (GameSettings.SaveDebugConsoleLogs)
+                    if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging)
                     {
                         unsavedMessages.Add(msg);
                         if (unsavedMessages.Count >= messagesPerFile)
@@ -367,7 +367,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    GameMain.Server.SendConsoleMessage("\"" + args[0] + "\" is not a valid bot spawn mode. (Valid modes are Fill and Normal)", client);
+                    GameMain.Server.SendConsoleMessage("\"" + args[0] + "\" is not a valid bot spawn mode. (Valid modes are Fill and Normal)", client, Color.Red);
                 }
             });
 
@@ -1046,12 +1046,12 @@ namespace Barotrauma
             }));
             AssignOnClientRequestExecute("clientlist", (Client client, Vector2 cursorWorldPos, string[] args) =>
             {
-                GameMain.Server.SendConsoleMessage("***************", client);
+                GameMain.Server.SendConsoleMessage("***************", client, Color.Cyan);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.EndPointString + $", ping {c.Ping} ms", client);
+                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.EndPointString + $", ping {c.Ping} ms", client, Color.Cyan);
                 }
-                GameMain.Server.SendConsoleMessage("***************", client);
+                GameMain.Server.SendConsoleMessage("***************", client, Color.Cyan);
             });
 
             commands.Add(new Command("enablecheats", "enablecheats: Enables cheat commands and disables Steam achievements during this play session.", (string[] args) =>
@@ -1164,13 +1164,13 @@ namespace Barotrauma
                 if (GameMain.Server == null || args.Length == 0) return;
                 if (!int.TryParse(args[0], out int maxPlayers))
                 {
-                    GameMain.Server.SendConsoleMessage(args[0] + " is not a valid player count.", client);
+                    GameMain.Server.SendConsoleMessage(args[0] + " is not a valid player count.", client, Color.Red);
                 }
                 else
                 {
                     if (maxPlayers > NetConfig.MaxPlayers)
                     {
-                        GameMain.Server.SendConsoleMessage($"Setting the maximum amount of players to {maxPlayers} failed due to exceeding the limit of {NetConfig.MaxPlayers} players per server. Using the maximum of {NetConfig.MaxPlayers} instead.", client);
+                        GameMain.Server.SendConsoleMessage($"Setting the maximum amount of players to {maxPlayers} failed due to exceeding the limit of {NetConfig.MaxPlayers} players per server. Using the maximum of {NetConfig.MaxPlayers} instead.", client, Color.Red);
                         maxPlayers = NetConfig.MaxPlayers;
                     }
 
@@ -1315,7 +1315,7 @@ namespace Barotrauma
 
             commands.Add(new Command("sub|submarine", "submarine [name]: Select the submarine for the next round.", (string[] args) =>
             {
-                SubmarineInfo sub = GameMain.NetLobbyScreen.GetSubList().Find(s => s.Name.ToLower() == string.Join(" ", args).ToLower());
+                SubmarineInfo sub = GameMain.NetLobbyScreen.GetSubList().Find(s => s.Name.Equals(string.Join(" ", args), StringComparison.OrdinalIgnoreCase));
 
                 if (sub != null)
                 {
@@ -1377,7 +1377,7 @@ namespace Barotrauma
 
             commands.Add(new Command("endgame|endround|end", "end/endgame/endround: End the current round.", (string[] args) =>
             {
-                if (Screen.Selected == GameMain.NetLobbyScreen) return;
+                if (Screen.Selected == GameMain.NetLobbyScreen) { return; }
                 GameMain.Server.EndGame();
             }));
 
@@ -1399,11 +1399,18 @@ namespace Barotrauma
 
             commands.Add(new Command("eventdata", "", (string[] args) =>
             {
-                if (args.Length == 0) return;
-                ServerEntityEvent ev = GameMain.Server.EntityEventManager.Events[Convert.ToUInt16(args[0])];
+                if (args.Length == 0) { return; }
+                if (!UInt16.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out ushort eventId)) { return; }
+                ServerEntityEvent ev = GameMain.Server.EntityEventManager.Events.Find(ev => ev.ID == eventId);
                 if (ev != null)
                 {
-                    NewMessage(ev.StackTrace.CleanupStackTrace(), Color.Lime);
+                    string entityData = "";
+                    if (ev.Entity is { ID: var entityId, Removed: var removed, IdFreed: var idFreed })
+                    {
+                        entityData = $"Entity ID: {entityId}; Entity removed: {removed}; Entity ID freed: {idFreed}";
+                    }
+                    NewMessage($"EventData {eventId}\n{entityData}", Color.Lime);
+                    //NewMessage(ev.StackTrace.CleanupStackTrace(), Color.Lime);
                 }
             }));
 
@@ -1448,7 +1455,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            GameMain.Server.SendConsoleMessage("\"" + args[1] + "\" is not a valid ban duration.", client);
+                            GameMain.Server.SendConsoleMessage("\"" + args[1] + "\" is not a valid ban duration.", client, Color.Red);
                             return;
                         }
                     }
@@ -1568,7 +1575,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        GameMain.Server.SendConsoleMessage("\"" + args[0] + "\" is not a valid bot spawn mode. (Valid modes are Fill and Normal)", client);
+                        GameMain.Server.SendConsoleMessage("\"" + args[0] + "\" is not a valid bot spawn mode. (Valid modes are Fill and Normal)", client, Color.Red);
                     }
                 }
             );
@@ -1578,16 +1585,9 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     Character tpCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args, false);
-                    if (tpCharacter == null) return;
-
-                    //var cam = GameMain.GameScreen.Cam;
-                    tpCharacter.AnimController.CurrentHull = null;
-                    tpCharacter.Submarine = null;
-                    tpCharacter.AnimController.SetPosition(ConvertUnits.ToSimUnits(cursorWorldPos));
-                    tpCharacter.AnimController.FindHull(cursorWorldPos, true);
-                    if (tpCharacter.AIController?.SteeringManager is IndoorsSteeringManager pathSteering)
+                    if (tpCharacter != null)
                     {
-                        pathSteering.ResetPath();
+                        tpCharacter.TeleportTo(cursorWorldPos);
                     }
                 }
             );
@@ -1599,7 +1599,7 @@ namespace Barotrauma
                     if (Submarine.MainSub == null || Level.Loaded == null) return;
                     if (Level.Loaded.Type == LevelData.LevelType.Outpost)
                     {
-                        GameMain.Server.SendConsoleMessage("The teleportsub command is unavailable in outpost levels!", client);
+                        GameMain.Server.SendConsoleMessage("The teleportsub command is unavailable in outpost levels!", client, Color.Red);
                         return;
                     }
 
@@ -1623,7 +1623,7 @@ namespace Barotrauma
                 {
                     if (!(GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign))
                     {
-                        GameMain.Server.SendConsoleMessage("No campaign active.", client);
+                        GameMain.Server.SendConsoleMessage("No campaign active.", client, Color.Red);
                         return;
                     }
                     mpCampaign.LastUpdateID++;
@@ -1671,13 +1671,13 @@ namespace Barotrauma
                         a.Identifier.Equals(args[0], StringComparison.OrdinalIgnoreCase));
                     if (afflictionPrefab == null)
                     {
-                        GameMain.Server.SendConsoleMessage("Affliction \"" + args[0] + "\" not found.", client);
+                        GameMain.Server.SendConsoleMessage("Affliction \"" + args[0] + "\" not found.", client, Color.Red);
                         return;
                     }
 
                     if (!float.TryParse(args[1], out float afflictionStrength))
                     {
-                        GameMain.Server.SendConsoleMessage("\"" + args[1] + "\" is not a valid affliction strength.", client);
+                        GameMain.Server.SendConsoleMessage("\"" + args[1] + "\" is not a valid affliction strength.", client, Color.Red);
                         return;
                     }
 
@@ -1760,7 +1760,7 @@ namespace Barotrauma
                         c.DisplayName.Equals(args[0], StringComparison.OrdinalIgnoreCase));
                     if (talentPrefab == null)
                     {
-                        GameMain.Server.SendConsoleMessage("Couldn't find the talent \"" + args[0] + "\".", client);
+                        GameMain.Server.SendConsoleMessage("Couldn't find the talent \"" + args[0] + "\".", client, Color.Red);
                         return;
                     }
                     targetCharacter.GiveTalent(talentPrefab);
@@ -1779,19 +1779,19 @@ namespace Barotrauma
                     List<TalentTree> talentTrees = new List<TalentTree>();
                     if (args.Length == 0 || args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
                     {
-                        talentTrees.AddRange(TalentTree.JobTalentTrees.Values);
+                        talentTrees.AddRange(TalentTree.JobTalentTrees);
                     }
                     else
                     {
                         var job = JobPrefab.Prefabs.Find(jp => jp.Name != null && jp.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
                         if (job == null)
                         {
-                            GameMain.Server.SendConsoleMessage($"Failed to find the job \"{args[0]}\".", client);
+                            GameMain.Server.SendConsoleMessage($"Failed to find the job \"{args[0]}\".", client, Color.Red);
                             return;
                         }
                         if (!TalentTree.JobTalentTrees.TryGetValue(job.Identifier, out TalentTree talentTree))
                         {
-                            GameMain.Server.SendConsoleMessage($"No talents configured for the job \"{args[0]}\".", client);
+                            GameMain.Server.SendConsoleMessage($"No talents configured for the job \"{args[0]}\".", client, Color.Red);
                             return;
                         }
                         talentTrees.Add(talentTree);
@@ -1841,7 +1841,7 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     Vector2 explosionPos = cursorWorldPos;
-                    float range = 500, force = 10, damage = 50, structureDamage = 10, itemDamage = 100, empStrength = 0.0f, ballastFloraStrength = 50f;
+                    float range = 500, force = 10, damage = 50, structureDamage = 20, itemDamage = 100, empStrength = 0.0f, ballastFloraStrength = 50f;
                     if (args.Length > 0) float.TryParse(args[0], out range);
                     if (args.Length > 1) float.TryParse(args[1], out force);
                     if (args.Length > 2) float.TryParse(args[2], out damage);
@@ -1858,6 +1858,10 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     Character killedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args);
+                    if (killedCharacter == null)
+                    {
+                        GameMain.Server.SendConsoleMessage("Could not find the specified character.", client, Color.Red);
+                    }
                     killedCharacter?.SetAllDamage(200.0f, 0.0f, 0.0f);
                 }
             );
@@ -1872,6 +1876,10 @@ namespace Barotrauma
                     {
                         GameMain.Server.SetClientCharacter(client, character);
                         client.SpectateOnly = false;
+                    }
+                    else
+                    {
+                        GameMain.Server.SendConsoleMessage("Could not find the specified character.", client, Color.Red);
                     }
                 }
             );
@@ -1899,7 +1907,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        GameMain.Server.SendConsoleMessage(args[0] + " is not a valid difficulty setting (enter a value between 0-100)", client);
+                        GameMain.Server.SendConsoleMessage(args[0] + " is not a valid difficulty setting (enter a value between 0-100)", client, Color.Red);
                         NewMessage(args[0] + " is not a valid difficulty setting (enter a value between 0-100)", Color.Red);
                     }
                 }
@@ -1923,7 +1931,7 @@ namespace Barotrauma
                     ClientPermissions permission = ClientPermissions.None;
                     if (!Enum.TryParse(perm, true, out permission))
                     {
-                        GameMain.Server.SendConsoleMessage(perm + " is not a valid permission!", senderClient);
+                        GameMain.Server.SendConsoleMessage(perm + " is not a valid permission!", senderClient, Color.Red);
                         return;
                     }
 
@@ -1955,7 +1963,7 @@ namespace Barotrauma
                     }
                     if (client.Connection == GameMain.Server.OwnerConnection)
                     {
-                        GameMain.Server.SendConsoleMessage("Cannot revoke permissions from the server owner!", senderClient);
+                        GameMain.Server.SendConsoleMessage("Cannot revoke permissions from the server owner!", senderClient, Color.Red);
                         return;
                     }
 
@@ -1964,7 +1972,7 @@ namespace Barotrauma
                     ClientPermissions permission = ClientPermissions.None;
                     if (!Enum.TryParse(perm, true, out permission))
                     {
-                        GameMain.Server.SendConsoleMessage(perm + " is not a valid permission!", senderClient);
+                        GameMain.Server.SendConsoleMessage(perm + " is not a valid permission!", senderClient, Color.Red);
                         return;
                     }
                     client.RemovePermission(permission);
@@ -1988,7 +1996,7 @@ namespace Barotrauma
                     }
                     if (client.Connection == GameMain.Server.OwnerConnection)
                     {
-                        GameMain.Server.SendConsoleMessage("Cannot modify the rank of the server owner!", senderClient);
+                        GameMain.Server.SendConsoleMessage("Cannot modify the rank of the server owner!", senderClient, Color.Red);
                         return;
                     }
 
@@ -1996,7 +2004,7 @@ namespace Barotrauma
                     PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.Equals(rank, StringComparison.OrdinalIgnoreCase));
                     if (preset == null)
                     {
-                        GameMain.Server.SendConsoleMessage("Rank \"" + rank + "\" not found.", senderClient);
+                        GameMain.Server.SendConsoleMessage("Rank \"" + rank + "\" not found.", senderClient, Color.Red);
                         return;
                     }
 
@@ -2016,12 +2024,12 @@ namespace Barotrauma
                     var client = FindClient(args[0]);
                     if (client == null)
                     {
-                        GameMain.Server.SendConsoleMessage("Client \"" + args[0] + "\" not found.", senderClient);
+                        GameMain.Server.SendConsoleMessage("Client \"" + args[0] + "\" not found.", senderClient, Color.Red);
                         return;
                     }
                     if (client.Connection == GameMain.Server.OwnerConnection)
                     {
-                        GameMain.Server.SendConsoleMessage("Cannot modify the command permissions of the server owner!", senderClient);
+                        GameMain.Server.SendConsoleMessage("Cannot modify the command permissions of the server owner!", senderClient, Color.Red);
                         return;
                     }
 
@@ -2040,7 +2048,7 @@ namespace Barotrauma
                             Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
                             if (matchingCommand == null)
                             {
-                                GameMain.Server.SendConsoleMessage("Could not find the command \"" + splitCommands[i] + "\"!", senderClient);
+                                GameMain.Server.SendConsoleMessage("Could not find the command \"" + splitCommands[i] + "\"!", senderClient, Color.Red);
                             }
                             else
                             {
@@ -2078,7 +2086,7 @@ namespace Barotrauma
                     }
                     if (client.Connection == GameMain.Server.OwnerConnection)
                     {
-                        GameMain.Server.SendConsoleMessage("Cannot revoke command permissions from the server owner!", senderClient);
+                        GameMain.Server.SendConsoleMessage("Cannot revoke command permissions from the server owner!", senderClient, Color.Red);
                         return;
                     }
                     List<Command> revokedCommands = new List<Command>();
@@ -2096,7 +2104,7 @@ namespace Barotrauma
                             Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
                             if (matchingCommand == null)
                             {
-                                GameMain.Server.SendConsoleMessage("Could not find the command \"" + splitCommands[i] + "\"!", senderClient);
+                                GameMain.Server.SendConsoleMessage("Could not find the command \"" + splitCommands[i] + "\"!", senderClient, Color.Red);
                             }
                             else
                             {
@@ -2176,7 +2184,7 @@ namespace Barotrauma
                 {
                     if (args.Length < 2)
                     {
-                        GameMain.Server.SendConsoleMessage("Invalid parameters. The command should be formatted as \"setclientcharacter [client] [character]\". If the names consist of multiple words, you should surround them with quotation marks.", senderClient);
+                        GameMain.Server.SendConsoleMessage("Invalid parameters. The command should be formatted as \"setclientcharacter [client] [character]\". If the names consist of multiple words, you should surround them with quotation marks.", senderClient, Color.Red);
                         return;
                     }
 
@@ -2189,7 +2197,7 @@ namespace Barotrauma
                     var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
                     if (client == null)
                     {
-                        GameMain.Server.SendConsoleMessage("Client \"" + args[0] + "\" not found.", senderClient);
+                        GameMain.Server.SendConsoleMessage("Client \"" + args[0] + "\" not found.", senderClient, Color.Red);
                         return;
                     }
 
@@ -2206,17 +2214,18 @@ namespace Barotrauma
                     if (args.Length == 0) { return; }
                     if (!(GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign))
                     {
-                        GameMain.Server.SendConsoleMessage("No campaign active!", senderClient);
+                        GameMain.Server.SendConsoleMessage("No campaign active!", senderClient, Color.Red);
                         return;
                     }
                     if (int.TryParse(args[0], out int money))
                     {
                         campaign.Money += money;
+                        GameAnalyticsManager.AddMoneyGainedEvent(money, GameAnalyticsManager.MoneySource.Cheat, "console");
                         campaign.LastUpdateID++;
                     }
                     else
                     {
-                        GameMain.Server.SendConsoleMessage($"\"{args[0]}\" is not a valid numeric value.", senderClient);
+                        GameMain.Server.SendConsoleMessage($"\"{args[0]}\" is not a valid numeric value.", senderClient, Color.Red);
                     }                    
                 }
             );
@@ -2226,7 +2235,7 @@ namespace Barotrauma
                 {
                     if (!(GameMain.GameSession?.GameMode is CampaignMode campaign))
                     {
-                        GameMain.Server.SendConsoleMessage("No campaign active!", senderClient);
+                        GameMain.Server.SendConsoleMessage("No campaign active!", senderClient, Color.Red);
                         return;
                     }
 
@@ -2234,7 +2243,7 @@ namespace Barotrauma
                     if (args.Length < 1 || !int.TryParse(args[0], out destinationIndex)) return;
                     if (destinationIndex < 0 || destinationIndex >= campaign.Map.CurrentLocation.Connections.Count)
                     {
-                        GameMain.Server.SendConsoleMessage("Index out of bounds!", senderClient);
+                        GameMain.Server.SendConsoleMessage("Index out of bounds!", senderClient, Color.Red);
                         return;
                     }
                     Location location = campaign.Map.CurrentLocation.Connections[destinationIndex].OtherLocation(campaign.Map.CurrentLocation);
@@ -2251,14 +2260,41 @@ namespace Barotrauma
                     NewMessage(tag, Color.Yellow);
                 }
             }));
-            
+
+            commands.Add(new Command("sendchatmessage", "Sends a chat message with specified type and color.", (string[] args) =>
+            {
+                if (args.Length < 2) { return; }
+
+                ChatMessageType chatMessageType = ChatMessageType.Default;
+                Color? chatMessageColor = null;
+
+                if (args.Length >= 3 && int.TryParse(args[2], out int result))
+                {
+                    chatMessageType = (ChatMessageType)result;
+                }
+
+                if (args.Length >= 7 &&
+                    int.TryParse(args[3], out int r) &&
+                    int.TryParse(args[4], out int g) &&
+                    int.TryParse(args[5], out int b) &&
+                    int.TryParse(args[6], out int a))
+                {
+                    chatMessageColor = new Color(r, g, b, a);
+                }
+
+                foreach (var client in GameMain.Server.ConnectedClients)
+                {
+                    GameMain.Server.SendDirectChatMessage(ChatMessage.Create(args[0], args[1], chatMessageType, null, null, textColor: chatMessageColor), client);
+                }
+            }));
+
             AssignOnClientRequestExecute(
                 "setskill",
                 (senderClient, cursorWorldPos, args) =>
                 {
                     if (args.Length < 2)
                     {
-                        GameMain.Server.SendConsoleMessage($"Missing arguments. Expected at least 2 but got {args.Length} (skill, level, name)", senderClient);
+                        GameMain.Server.SendConsoleMessage($"Missing arguments. Expected at least 2 but got {args.Length} (skill, level, name)", senderClient, Color.Red);
                         return;
                     }
 
@@ -2268,7 +2304,7 @@ namespace Barotrauma
 
                     if (character?.Info?.Job == null)
                     {
-                        GameMain.Server.SendConsoleMessage("Character is not valid.", senderClient);
+                        GameMain.Server.SendConsoleMessage("Character is not valid.", senderClient, Color.Red);
                         return;
                     }
 
@@ -2295,7 +2331,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        GameMain.Server.SendConsoleMessage($"{levelString} is not a valid level. Expected number or \"max\".", senderClient);
+                        GameMain.Server.SendConsoleMessage($"{levelString} is not a valid level. Expected number or \"max\".", senderClient, Color.Red);
                     }                  
                 }
             );
@@ -2370,6 +2406,16 @@ namespace Barotrauma
                     GameMain.Server.CreateEntityEvent(wall);
                 }
             }));
+            commands.Add(new Command("stallfiletransfers", "stallfiletransfers [seconds]: A debug command that stalls each file transfer packet by the specified duration.", (string[] args) =>
+            {
+                float seconds = 0.0f;
+                if (args.Length > 0)
+                {
+                    float.TryParse(args[0], out seconds);
+                }
+                GameMain.Server.FileSender.StallPacketsTime = seconds;
+                NewMessage("Set file transfer stall time to " + seconds);
+            }));
 #endif
         }
 
@@ -2379,7 +2425,7 @@ namespace Barotrauma
             if (string.IsNullOrWhiteSpace(command)) return;
             if (!client.HasPermission(ClientPermissions.ConsoleCommands) && client.Connection != GameMain.Server.OwnerConnection)
             {
-                GameMain.Server.SendConsoleMessage("You are not permitted to use console commands!", client);
+                GameMain.Server.SendConsoleMessage("You are not permitted to use console commands!", client, Color.Red);
                 GameServer.Log(GameServer.ClientLogName(client) + " attempted to execute the console command \"" + command + "\" without a permission to use console commands.", ServerLog.MessageType.ConsoleUsage);
                 return;
             }
@@ -2388,19 +2434,19 @@ namespace Barotrauma
             Command matchingCommand = commands.Find(c => c.names.Contains(splitCommand[0].ToLowerInvariant()));
             if (matchingCommand != null && !client.PermittedConsoleCommands.Contains(matchingCommand) && client.Connection != GameMain.Server.OwnerConnection)
             {
-                GameMain.Server.SendConsoleMessage("You are not permitted to use the command\"" + matchingCommand.names[0] + "\"!", client);
+                GameMain.Server.SendConsoleMessage("You are not permitted to use the command\"" + matchingCommand.names[0] + "\"!", client, Color.Red);
                 GameServer.Log(GameServer.ClientLogName(client) + " attempted to execute the console command \"" + command + "\" without a permission to use the command.", ServerLog.MessageType.ConsoleUsage);
                 return;
             }
             else if (matchingCommand == null)
             {
-                GameMain.Server.SendConsoleMessage("Command \"" + splitCommand[0] + "\" not found.", client);
+                GameMain.Server.SendConsoleMessage("Command \"" + splitCommand[0] + "\" not found.", client, Color.Red);
                 return;
             }
 
             if (!MathUtils.IsValid(cursorWorldPos))
             {
-                GameMain.Server.SendConsoleMessage("Could not execute command \"" + command + "\" - invalid cursor position.", client);
+                GameMain.Server.SendConsoleMessage("Could not execute command \"" + command + "\" - invalid cursor position.", client, Color.Red);
                 NewMessage(GameServer.ClientLogName(client) + " attempted to execute the console command \"" + command + "\" with invalid cursor position.", Color.White);
                 return;
             }

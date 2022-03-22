@@ -365,7 +365,16 @@ namespace Barotrauma.Items.Components
         {
             foreach (var allowedSlot in allowedSlots)
             {
-                if (allowedSlot != InvSlotType.Any && !character.Inventory.IsInLimbSlot(item, allowedSlot)) { return; }
+                if (allowedSlot == InvSlotType.Any) { continue; }
+                foreach (Enum value in Enum.GetValues(typeof(InvSlotType)))
+                {
+                    var slotType = (InvSlotType)value;
+                    if (slotType == InvSlotType.Any || slotType == InvSlotType.None) { continue; }
+                    if (allowedSlot.HasFlag(slotType) && !character.Inventory.IsInLimbSlot(item, slotType))
+                    {
+                        return;
+                    }
+                }
             }
 
             picker = character;

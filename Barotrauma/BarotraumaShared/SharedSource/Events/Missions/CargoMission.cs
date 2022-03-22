@@ -207,7 +207,7 @@ namespace Barotrauma
 
             var item = new Item(itemPrefab, position.Value, cargoRoomSub)
             {
-                SpawnedInOutpost = true,
+                SpawnedInCurrentOutpost = true,
                 AllowStealing = false
             };
             item.FindHull();

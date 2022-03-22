@@ -92,7 +92,7 @@ namespace Barotrauma
                         DebugConsole.ThrowError("Invalid left normal");
 #endif
                         GameAnalyticsManager.AddErrorEventOnce("CaveGenerator.GenerateWallShapes:InvalidLeftNormal:" + level.Seed,
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                            GameAnalyticsManager.ErrorSeverity.Warning,
                             "Invalid left normal (leftedge: " + leftEdge + ", rightedge: " + rightEdge + ", normal: " + leftNormal + ", seed: " + level.Seed + ")");
 
                         if (cell.Body != null)
@@ -127,7 +127,7 @@ namespace Barotrauma
                         DebugConsole.ThrowError("Invalid right normal");
 #endif
                         GameAnalyticsManager.AddErrorEventOnce("CaveGenerator.GenerateWallShapes:InvalidRightNormal:" + level.Seed,
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                            GameAnalyticsManager.ErrorSeverity.Warning,
                             "Invalid right normal (leftedge: " + leftEdge + ", rightedge: " + rightEdge + ", normal: " + rightNormal + ", seed: " + level.Seed + ")");
 
                         if (cell.Body != null)

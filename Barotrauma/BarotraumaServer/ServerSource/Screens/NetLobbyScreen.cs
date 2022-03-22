@@ -32,61 +32,6 @@ namespace Barotrauma
             set { selectedShuttle = value; lastUpdateID++; }
         }
 
-        public List<SubmarineInfo> CampaignSubmarines
-        {
-            get
-            {
-                return campaignSubmarines;
-            }
-            set
-            {
-                campaignSubmarines = value;
-                lastUpdateID++;
-                if (GameMain.NetworkMember?.ServerSettings != null)
-                {
-                    GameMain.NetworkMember.ServerSettings.ServerDetailsChanged = true;
-                }
-            }
-        }
-
-        private List<SubmarineInfo> campaignSubmarines;       
-
-        public void AddCampaignSubmarine(SubmarineInfo sub)
-        {
-            if (!campaignSubmarines.Contains(sub))
-            {
-                campaignSubmarines.Add(sub);
-            }
-            else
-            {
-                return;
-            }
-
-            lastUpdateID++;
-            if (GameMain.NetworkMember?.ServerSettings != null)
-            {
-                GameMain.NetworkMember.ServerSettings.ServerDetailsChanged = true;
-            }
-        }
-
-        public void RemoveCampaignSubmarine(SubmarineInfo sub)
-        {
-            if (campaignSubmarines.Contains(sub))
-            {
-                campaignSubmarines.Remove(sub);
-            }
-            else
-            {
-                return;
-            }
-
-            lastUpdateID++;
-            if (GameMain.NetworkMember?.ServerSettings != null)
-            {
-                GameMain.NetworkMember.ServerSettings.ServerDetailsChanged = true;
-            }
-        }
-
         public GameModePreset[] GameModes { get; }
 
         private int selectedModeIndex;
@@ -212,10 +157,7 @@ namespace Barotrauma
         }
         
         private List<SubmarineInfo> subs;
-        public List<SubmarineInfo> GetSubList()
-        {
-            return subs;
-        }
+        public IReadOnlyList<SubmarineInfo> GetSubList() => subs;
 
         public string LevelSeed
         {
@@ -271,6 +213,8 @@ namespace Barotrauma
                 var allowedGameModes = Array.FindAll(GameModes, m => !m.IsSinglePlayer && m != GameModePreset.MultiPlayerCampaign);
                 SelectedModeIdentifier = allowedGameModes[Rand.Range(0, allowedGameModes.Length)].Identifier;
             }
+
+            GameMain.Server.ServerSettings.SelectNonHiddenSubmarine();
         }
     }
 }

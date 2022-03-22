@@ -12,6 +12,8 @@ namespace Barotrauma
     static class HintManager
     {
         private const string HintManagerFile = "hintmanager.xml";
+
+        public static bool Enabled => GameMain.Config != null && !GameMain.Config.DisableInGameHints;
         private static HashSet<string> HintIdentifiers { get; set; }
         private static Dictionary<string, HashSet<string>> HintTags { get; } = new Dictionary<string, HashSet<string>>();
         private static Dictionary<string, (string identifier, string option)> HintOrders { get; } = new Dictionary<string, (string orderIdentifier, string orderOption)>();
@@ -133,7 +135,7 @@ namespace Barotrauma
             string hintIdentifierBase = "onstartedinteracting";
 
             // onstartedinteracting.brokenitem
-            if (item.Repairables.Any(r => item.ConditionPercentage < r.RepairThreshold))
+            if (item.Repairables.Any(r => r.IsBelowRepairThreshold))
             {
                 if (DisplayHint($"{hintIdentifierBase}.brokenitem")) { return; }
             }
@@ -192,7 +194,7 @@ namespace Barotrauma
             if (!CanDisplayHints(requireGameScreen: false, requireControllingCharacter: false)) { return; }
             CoroutineManager.StartCoroutine(DisplayRoundStartedHints(initRoundHandle), "HintManager.DisplayRoundStartedHints");
 
-            static IEnumerable<object> InitRound()
+            static IEnumerable<CoroutineStatus> InitRound()
             {
                 while (Character.Controlled == null) { yield return CoroutineStatus.Running; }
                 // Get the ballast hulls on round start not to find them again and again later
@@ -211,7 +213,7 @@ namespace Barotrauma
                 yield return CoroutineStatus.Success;
             }
 
-            static IEnumerable<object> DisplayRoundStartedHints(CoroutineHandle initRoundHandle)
+            static IEnumerable<CoroutineStatus> DisplayRoundStartedHints(CoroutineHandle initRoundHandle)
             {
                 while (GameMain.Instance.LoadingScreenOpen || Screen.Selected != GameMain.GameScreen ||
                        CoroutineManager.IsCoroutineRunning(initRoundHandle) ||
@@ -475,12 +477,12 @@ namespace Barotrauma
                     ItemComponent targetItem = null;
                     if (orderPrefab.MustSetTarget)
                     {
-                        targetEntity = orderPrefab.GetMatchingItems(true, interactableFor: Character.Controlled).FirstOrDefault();
+                        targetEntity = orderPrefab.GetMatchingItems(true, interactableFor: Character.Controlled, orderOption: orderInfo.option).FirstOrDefault();
                         if (targetEntity == null) { return; }
                         targetItem = orderPrefab.GetTargetItemComponent(targetEntity);
                     }
                     var order = new Order(orderPrefab, targetEntity as Entity, targetItem, orderGiver: Character.Controlled);
-                    GameMain.GameSession.CrewManager.SetCharacterOrder(Character.Controlled, order, orderInfo.option, CharacterInfo.HighestManualOrderPriority, Character.Controlled);
+                    GameMain.GameSession?.CrewManager?.SetCharacterOrder(Character.Controlled, order, orderInfo.option, CharacterInfo.HighestManualOrderPriority, Character.Controlled);
                 });
         }
 
@@ -665,6 +667,8 @@ namespace Barotrauma
             SoundPlayer.PlayUISound(GUISoundType.UIMessage);
             ActiveHintMessageBox.InnerFrame.Flash(color: iconColor ?? Color.Orange, flashDuration: 0.75f);
             onDisplay?.Invoke();
+
+            GameAnalyticsManager.AddDesignEvent($"HintManager:{GameMain.GameSession?.GameMode?.Preset?.Identifier ?? "none"}:HintDisplayed:{hintIdentifier}");
 
             return true;
         }

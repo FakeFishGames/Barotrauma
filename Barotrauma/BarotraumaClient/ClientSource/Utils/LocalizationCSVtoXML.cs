@@ -89,7 +89,17 @@ namespace Barotrauma
 
                 for (int j = 0; j < infoTextFiles.Count; j++)
                 {
-                    List<string> xmlContent = ConvertInfoTextToXML(File.ReadAllLines(infoTextFiles[j], Encoding.UTF8), language);
+
+                    List<string> xmlContent = null;
+                    try
+                    {
+                        xmlContent = ConvertInfoTextToXML(File.ReadAllLines(infoTextFiles[j], Encoding.UTF8), language);
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + infoTextFiles[j], e);
+                        continue;
+                    }
                     if (xmlContent == null)
                     {
                         DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + infoTextFiles[j]);

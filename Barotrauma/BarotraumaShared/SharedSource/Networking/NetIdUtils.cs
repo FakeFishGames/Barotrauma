@@ -9,7 +9,7 @@ namespace Barotrauma.Networking
     static class NetIdUtils
     {
         /// <summary>
-        /// Is newID more recent than oldID
+        /// Is newID more recent than oldID, i.e. newId > oldId accounting for ushort rollover
         /// </summary>
         public static bool IdMoreRecent(ushort newID, ushort oldID)
         {
@@ -21,6 +21,12 @@ namespace Barotrauma.Networking
                    ||
                 (id2 > id1) && (id2 - id1 > ushort.MaxValue / 2);
         }
+
+        /// <summary>
+        /// newId >= oldId accounting for ushort rollover (newer or equals)
+        /// </summary>
+        public static bool IdMoreRecentOrMatches(ushort newId, ushort oldId)
+            => !IdMoreRecent(oldId, newId);
 
         public static ushort Difference(ushort id1, ushort id2)
         {

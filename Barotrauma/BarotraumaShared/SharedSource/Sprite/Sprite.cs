@@ -34,7 +34,7 @@ namespace Barotrauma
             }
         }
 
-        private static List<WeakReference<Sprite>> list = new List<WeakReference<Sprite>>();
+        private readonly static List<WeakReference<Sprite>> list = new List<WeakReference<Sprite>>();
 
         /// <summary>
         /// Reference to the xml element from where the sprite was created. Can be null if the sprite was not defined in xml!

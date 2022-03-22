@@ -219,7 +219,7 @@ namespace Barotrauma.Networking
 
         internal static void EnsureBufferSize(ref byte[] buf, int numberOfBits)
         {
-            int byteLen = ((numberOfBits + 7) >> 3);
+            int byteLen = (numberOfBits + 7) / 8;
             if (buf == null)
             {
                 buf = new byte[byteLen + MsgConstants.BufferOverAllocateAmount];
@@ -461,7 +461,7 @@ namespace Barotrauma.Networking
         {
             get
             {
-                return (LengthBits + ((8 - (LengthBits % 8)) % 8)) / 8;
+                return (LengthBits + 7) / 8;
             }
         }
 

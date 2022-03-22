@@ -167,8 +167,8 @@ namespace Barotrauma.Particles
 
             if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) { return null; }
             if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) { return null; }
-            
-            if (particles[particleCount] == null) particles[particleCount] = new Particle();
+
+            if (particles[particleCount] == null) { particles[particleCount] = new Particle(); }
 
             particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess, drawOnTop, collisionIgnoreTimer, tracerPoints: tracerPoints);
 
@@ -194,6 +194,19 @@ namespace Barotrauma.Particles
             Particle swap = particles[index];
             particles[index] = particles[particleCount];
             particles[particleCount] = swap;
+        }
+
+
+        public void RemoveParticle(Particle particle)
+        {
+            for (int i = 0; i < particleCount; i++)
+            {
+                if (particles[i] == particle)
+                {
+                    RemoveParticle(i);
+                    return;
+                }
+            }
         }
 
         public void Update(float deltaTime)

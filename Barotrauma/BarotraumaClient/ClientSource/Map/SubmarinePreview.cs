@@ -316,11 +316,11 @@ namespace Barotrauma
             var srcRect = prefab.sprite.SourceRect;
 
             SpriteEffects spriteEffects = SpriteEffects.None;
-            if (flippedX)
+            if (flippedX && ((prefab as ItemPrefab)?.CanSpriteFlipX ?? true))
             {
                 spriteEffects |= SpriteEffects.FlipHorizontally;
             }
-            if (flippedY)
+            if (flippedY && ((prefab as ItemPrefab)?.CanSpriteFlipY ?? true))
             {
                 spriteEffects |= SpriteEffects.FlipVertically;
             }
@@ -651,7 +651,11 @@ namespace Barotrauma
 
         public void Dispose()
         {
-            previewFrame = null;
+            if (previewFrame != null)
+            {
+                previewFrame.RectTransform.Parent = null;
+                previewFrame = null;
+            }
             spriteRecorder?.Dispose();
             isDisposed = true;
         }

@@ -1,7 +1,11 @@
-﻿namespace Barotrauma
+﻿using Microsoft.Xna.Framework;
+
+namespace Barotrauma
 {
     abstract partial class AIObjective
     {
+        public static Color ObjectiveIconColor => Color.LightGray;
+
         public static Sprite GetSprite(string identifier, string option, Entity targetEntity)
         {
             if (string.IsNullOrEmpty(identifier))

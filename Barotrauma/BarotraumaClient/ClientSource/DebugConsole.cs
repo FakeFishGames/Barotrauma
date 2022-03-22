@@ -32,7 +32,8 @@ namespace Barotrauma
 
             public void ClientExecute(string[] args)
             {
-                if (!CheatsEnabled && IsCheat)
+                bool allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is EditorScreen);
+                if (!allowCheats && !CheatsEnabled && IsCheat)
                 {
                     NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);
 #if USE_STEAM
@@ -138,7 +139,7 @@ namespace Barotrauma
                     var newMsg = queuedMessages.Dequeue();
                     AddMessage(newMsg);
 
-                    if (GameSettings.SaveDebugConsoleLogs)
+                    if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging)
                     {
                         unsavedMessages.Add(newMsg);
                         if (unsavedMessages.Count >= messagesPerFile)
@@ -274,7 +275,10 @@ namespace Barotrauma
                         AddMessage(newMsg);
                     }
 
-                    if (GameSettings.SaveDebugConsoleLogs) unsavedMessages.Add(newMsg);
+                    if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging)
+                    { 
+                        unsavedMessages.Add(newMsg); 
+                    }
                 }
             }
         }
@@ -537,7 +541,27 @@ namespace Barotrauma
                     return;
                 }
 
-                GameMain.MainMenuScreen.QuickStart(fixedSeed: false, subName);
+                float difficulty = 40;
+                if (args.Length > 1)
+                {
+                    float.TryParse(args[1], out difficulty);
+                }
+
+                LevelGenerationParams levelGenerationParams = null;
+                if (args.Length > 2)
+                {
+                    string levelGenerationIdentifier = args[2];
+                    levelGenerationParams = LevelGenerationParams.LevelParams.FirstOrDefault(p => p.Identifier == levelGenerationIdentifier);
+                }
+
+                if (SubmarineInfo.SavedSubmarines.None(s => s.Name.ToLowerInvariant() == subName.ToLowerInvariant()))
+                {
+                    ThrowError($"Cannot find a sub that matches the name \"{subName}\".");
+                    return;
+                }
+
+                GameMain.MainMenuScreen.QuickStart(fixedSeed: false, subName, difficulty, levelGenerationParams);
+
             }, getValidArgs: () => new[] { SubmarineInfo.SavedSubmarines.Select(s => s.Name).Distinct().ToArray() }));
 
             commands.Add(new Command("steamnetdebug", "steamnetdebug: Toggles Steamworks networking debug logging.", (string[] args) =>
@@ -720,7 +744,7 @@ namespace Barotrauma
             AssignOnExecute("explosion", (string[] args) =>
             {
                 Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
-                float range = 500, force = 10, damage = 50, structureDamage = 10, itemDamage = 100, empStrength = 0.0f, ballastFloraStrength = 50f;
+                float range = 500, force = 10, damage = 50, structureDamage = 20, itemDamage = 100, empStrength = 0.0f, ballastFloraStrength = 50f;
                 if (args.Length > 0) float.TryParse(args[0], out range);
                 if (args.Length > 1) float.TryParse(args[1], out force);
                 if (args.Length > 2) float.TryParse(args[2], out damage);
@@ -734,13 +758,10 @@ namespace Barotrauma
             AssignOnExecute("teleportcharacter|teleport", (string[] args) =>
             {
                 Character tpCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, false);
-                if (tpCharacter == null) return;
-
-                var cam = GameMain.GameScreen.Cam;
-                tpCharacter.AnimController.CurrentHull = null;
-                tpCharacter.Submarine = null;
-                tpCharacter.AnimController.SetPosition(ConvertUnits.ToSimUnits(cam.ScreenToWorld(PlayerInput.MousePosition)));
-                tpCharacter.AnimController.FindHull(cam.ScreenToWorld(PlayerInput.MousePosition), true);
+                if (tpCharacter != null)
+                {
+                    tpCharacter.TeleportTo(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
+                }
             });
 
             AssignOnExecute("spawn|spawncharacter", (string[] args) =>
@@ -1100,7 +1121,7 @@ namespace Barotrauma
                     return;
                 }
 
-                if (Submarine.MainSub.SaveAs(Barotrauma.IO.Path.Combine(SubmarineInfo.SavePath, fileName + ".sub")))
+                if (Submarine.MainSub.TrySaveAs(Barotrauma.IO.Path.Combine(SubmarineInfo.SavePath, fileName + ".sub")))
                 {
                     NewMessage("Sub saved", Color.Green);
                 }
@@ -1413,7 +1434,7 @@ namespace Barotrauma
 
             commands.Add(new Command("analyzeitem", "analyzeitem: Analyzes one item for exploits.", (string[] args) =>
             {
-                if (args.Length < 1) return;
+                if (args.Length < 1) { return; }
 
                 List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
                 foreach (ItemPrefab iPrefab in ItemPrefab.Prefabs)
@@ -1447,10 +1468,11 @@ namespace Barotrauma
                         {
                             foreach (ItemPrefab ingredientItemPrefab in ingredient.ItemPrefabs)
                             {
-                                NewMessage("        Its ingredient " + ingredientItemPrefab.Name + " has base cost " + ingredientItemPrefab.DefaultPrice.Price);
-                                totalPrice += ingredientItemPrefab.DefaultPrice.Price;
+                                int defaultPrice = ingredientItemPrefab.DefaultPrice?.Price ?? 0;
+                                NewMessage("        Its ingredient " + ingredientItemPrefab.Name + " has base cost " + defaultPrice);
+                                totalPrice += defaultPrice;
                                 totalBestPrice += ingredientItemPrefab.GetMinPrice();
-                                int basePrice = ingredientItemPrefab.DefaultPrice.Price;
+                                int basePrice = defaultPrice;
                                 foreach (KeyValuePair<string, PriceInfo> ingredientItemLocationPrice in ingredientItemPrefab.GetBuyPricesUnder())
                                 {
                                     if (basePrice > ingredientItemLocationPrice.Value.Price)
@@ -1616,7 +1638,7 @@ namespace Barotrauma
 
                 var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == parentItem);
                 int totalValue = 0;
-                NewMessage(parentItem.Name + " has the price " + parentItem.DefaultPrice.Price);
+                NewMessage(parentItem.Name + " has the price " + (parentItem.DefaultPrice?.Price ?? 0));
                 if (fabricationRecipe != null)
                 {
                     NewMessage("    It constructs from:");
@@ -1625,8 +1647,9 @@ namespace Barotrauma
                     {
                         foreach (ItemPrefab itemPrefab in requiredItem.ItemPrefabs)
                         {
-                            NewMessage("        " + itemPrefab.Name + " has the price " + itemPrefab.DefaultPrice.Price);
-                            totalValue += itemPrefab.DefaultPrice.Price;
+                            int defaultPrice = itemPrefab.DefaultPrice?.Price ?? 0;
+                            NewMessage("        " + itemPrefab.Name + " has the price " + defaultPrice);
+                            totalValue += defaultPrice;
                         }
                     }
                     NewMessage("Its total value was: " + totalValue);
@@ -1637,10 +1660,16 @@ namespace Barotrauma
                 {
                     ItemPrefab itemPrefab =
                         (MapEntityPrefab.Find(deconstructItem.ItemIdentifier, identifier: null, showErrorMessages: false) ??
-                        MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+                        MapEntityPrefab.Find(null, identifier: deconstructItem.ItemIdentifier, showErrorMessages: false)) as ItemPrefab;
+                    if (itemPrefab == null)
+                    {
+                        ThrowError($"       Couldn't find deconstruct product \"{deconstructItem.ItemIdentifier}\"!");
+                        continue;
+                    }
 
-                    NewMessage("       " + itemPrefab.Name + " has the price " + itemPrefab.DefaultPrice.Price);
-                    totalValue += itemPrefab.DefaultPrice.Price;
+                    int defaultPrice = itemPrefab.DefaultPrice?.Price ?? 0;
+                    NewMessage("       " + itemPrefab.Name + " has the price " + defaultPrice);
+                    totalValue += defaultPrice;
                 }
                 NewMessage("Its deconstruct value was: " + totalValue);
 
@@ -1792,7 +1821,7 @@ namespace Barotrauma
 
                     foreach (var talentTree in TalentTree.JobTalentTrees)
                     {
-                        foreach (var talentSubTree in talentTree.Value.TalentSubTrees)
+                        foreach (var talentSubTree in talentTree.TalentSubTrees)
                         {
                             string nameIdentifier = "talenttree." + talentSubTree.Identifier;
                             if (!tags[language].Contains(nameIdentifier))
@@ -1857,7 +1886,26 @@ namespace Barotrauma
 
             commands.Add(new Command("eventstats", "", (string[] args) =>
             {
-                var debugLines = EventSet.GetDebugStatistics();
+                List<string> debugLines;
+                if (args.Length > 0)
+                {
+                    if (!Enum.TryParse(args[0], ignoreCase: true, out Level.PositionType spawnType))
+                    {
+                        var enums = Enum.GetNames(typeof(Level.PositionType));
+                        ThrowError($"\"{args[0]}\" is not a valid Level.PositionType. Available options are: {string.Join(", ", enums)}");
+                        return;
+                    }
+                    bool fullLog = false;
+                    if (args.Length > 1)
+                    {
+                        bool.TryParse(args[1], out fullLog);
+                    }
+                    debugLines = EventSet.GetDebugStatistics(filter: monsterEvent => monsterEvent.SpawnPosType.HasFlag(spawnType), fullLog: fullLog);
+                }
+                else
+                {
+                    debugLines = EventSet.GetDebugStatistics();
+                }
                 string filePath = "eventstats.txt";
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, debugLines);
@@ -2350,8 +2398,9 @@ namespace Barotrauma
             commands.Add(new Command("querylobbies", "Queries all SteamP2P lobbies", (args) =>
             {
                 TaskPool.Add("DebugQueryLobbies",
-                    SteamManager.LobbyQueryRequest(), (t) => {
-                        var lobbies = ((Task<List<Steamworks.Data.Lobby>>)t).Result;
+                    SteamManager.LobbyQueryRequest(), (t) =>
+                    {
+                        t.TryGetResult(out List<Steamworks.Data.Lobby> lobbies);
                         foreach (var lobby in lobbies)
                         {
                             NewMessage(lobby.GetData("name") + ", " + lobby.GetData("lobbyowner"), Color.Yellow);
@@ -2366,7 +2415,7 @@ namespace Barotrauma
                 TextManager.CheckForDuplicates(args[0]);
             }));
 
-            commands.Add(new Command("writetocsv", "Writes the default language (English) to a .csv file.", (string[] args) =>
+            commands.Add(new Command("writetocsv|xmltocsv", "Writes the default language (English) to a .csv file.", (string[] args) =>
             {
                 TextManager.WriteToCSV();
                 NPCConversation.WriteToCSV();
@@ -2456,8 +2505,6 @@ namespace Barotrauma
                 GameMain.Config.WindowMode = WindowMode.BorderlessWindowed;
                 NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
                 NewMessage("Fullscreen enabled", Color.Green);
-
-                GameSettings.ShowUserStatisticsPrompt = true;
 
                 GameSettings.VerboseLogging = false;
 
@@ -3134,7 +3181,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Failed to spawn a submarine. Arguments: \"" + string.Join(" ", args) + "\".";
                     ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnSubmarine:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace.CleanupStackTrace());
+                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnSubmarine:Error", GameAnalyticsManager.ErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace.CleanupStackTrace());
                 }
             },
             () =>

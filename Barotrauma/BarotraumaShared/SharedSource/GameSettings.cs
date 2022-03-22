@@ -488,7 +488,11 @@ namespace Barotrauma
             var sortedSelected = enabledRegularPackages
                     .OrderBy(p => -ContentPackage.RegularPackages.IndexOf(p))
                     .ToList();
-            if (previousEnabledRegularPackages.SequenceEqual(sortedSelected)) { return; }
+            if (previousEnabledRegularPackages.SequenceEqual(sortedSelected)) 
+            {
+                CheckModded();
+                return; 
+            }
             enabledRegularPackages.Clear(); enabledRegularPackages.AddRange(sortedSelected);
 
             CharacterPrefab.Prefabs.SortAll();
@@ -507,6 +511,20 @@ namespace Barotrauma
             if (refreshAll)
             {
                 RefreshContentPackageItems(AllEnabledPackages.SelectMany(p => p.Files));
+            }
+
+            CheckModded();
+
+            void CheckModded()
+            {
+                if (AllEnabledPackages.Any(p => p != GameMain.VanillaContent && p.HasMultiplayerIncompatibleContent))
+                {
+                    GameAnalyticsManager.SetCustomDimension01(GameAnalyticsManager.CustomDimensions01.Modded);
+                }
+                else
+                {
+                    GameAnalyticsManager.SetCustomDimension01(GameAnalyticsManager.CustomDimensions01.Vanilla);
+                }
             }
         }
 
@@ -757,25 +775,6 @@ namespace Barotrauma
 
         public bool CampaignDisclaimerShown, EditorDisclaimerShown;
 
-        private static bool sendUserStatistics = true;
-        public static bool SendUserStatistics
-        {
-            get
-            {
-                return false;
-/*#if DEBUG
-                return false;
-#endif
-                return sendUserStatistics;*/
-            }
-            set
-            {
-                sendUserStatistics = value;
-                GameMain.Config.SaveNewPlayerConfig();
-            }
-        }
-        public static bool ShowUserStatisticsPrompt { get; set; }
-
         public bool ShowLanguageSelectionPrompt { get; set; }
 
         public static bool ShowOffensiveServerPrompt { get; set; }
@@ -858,7 +857,6 @@ namespace Barotrauma
             if (!fileFound)
             {
                 ShowLanguageSelectionPrompt = true;
-                ShowUserStatisticsPrompt = true;
                 SaveNewPlayerConfig();
             }
         }
@@ -870,9 +868,8 @@ namespace Barotrauma
         private bool LoadPlayerConfigInternal()
         {
             XDocument doc = XMLExtensions.LoadXml(PlayerSavePath);
-            if (doc == null || doc.Root == null)
+            if (doc?.Root == null)
             {
-                ShowUserStatisticsPrompt = true;
                 ShowTutorialSkipWarning = true;
                 return false;
             }
@@ -989,12 +986,7 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(overrideMultiplayerSaveFolder))
             {
                 doc.Root.Add(new XAttribute("overridemultiplayersavefolder", overrideMultiplayerSaveFolder));
-            }
-
-            if (!ShowUserStatisticsPrompt)
-            {
-                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
-            }
+            }       
 
             XElement gMode = doc.Root.Element("graphicsmode");
             if (gMode == null)
@@ -1194,7 +1186,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Saving game settings failed.", e);
-                GameAnalyticsManager.AddErrorEventOnce("GameSettings.Save:SaveFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                GameAnalyticsManager.AddErrorEventOnce("GameSettings.Save:SaveFailed", GameAnalyticsManager.ErrorSeverity.Error,
                     "Saving game settings failed.\n" + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
                 return false;
             }
@@ -1211,7 +1203,6 @@ namespace Barotrauma
                 Language = doc.Root.GetAttributeString("language", Language);
             }
             AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", AutoCheckUpdates);
-            sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", sendUserStatistics);
             QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", QuickStartSubmarineName);
             EnableSubmarineAutoSave = doc.Root.GetAttributeBool("submarineautosave", true);
             MaximumAutoSaves = doc.Root.GetAttributeInt("maxautosaves", 8);

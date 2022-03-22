@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -261,6 +262,28 @@ namespace Barotrauma
             return val;
         }
 
+        public static double GetAttributeDouble(this XElement element, string name, double defaultValue)
+        {
+            if (element?.Attribute(name) == null) { return defaultValue; }
+
+            double val = defaultValue;
+            try
+            {
+                string strVal = element.Attribute(name).Value;
+                if (strVal.LastOrDefault() == 'f')
+                {
+                    strVal = strVal.Substring(0, strVal.Length - 1);
+                }
+                val = double.Parse(strVal, CultureInfo.InvariantCulture);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in " + element + "!", e);
+            }
+
+            return val;
+        }
+
         public static float[] GetAttributeFloatArray(this XElement element, string name, float[] defaultValue)
         {
             if (element?.Attribute(name) == null) { return defaultValue; }
@@ -412,6 +435,15 @@ namespace Barotrauma
             }
 
             return ushortValue;
+        }
+
+        public static T GetAttributeEnum<T>(this XElement element, string name, T defaultValue) where T : struct, Enum
+        {
+            var attr = element?.GetAttribute(name);
+            if (attr == null) { return defaultValue; }
+            return Enum.TryParse(attr.Value, true, out T result) ? result :
+                   int.TryParse(attr.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt) ? Unsafe.As<int, T>(ref resultInt) :
+                   defaultValue;
         }
 
         public static bool GetAttributeBool(this XElement element, string name, bool defaultValue)

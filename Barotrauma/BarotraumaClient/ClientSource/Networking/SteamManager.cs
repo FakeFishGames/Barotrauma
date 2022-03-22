@@ -143,11 +143,17 @@ namespace Barotrauma.Steam
                         return;
                     }
 
-                    currentLobby = ((Task<Steamworks.Data.Lobby?>)lobby).Result;
-
+                    lobby.TryGetResult(out currentLobby);
                     if (currentLobby == null)
                     {
-                        DebugConsole.ThrowError("Failed to create Steam lobby");
+                        DebugConsole.ThrowError("Failed to create Steam lobby: returned lobby was null");
+                        lobbyState = LobbyState.NotConnected;
+                        return;
+                    }
+
+                    if (currentLobby.Value.Result != Steamworks.Result.OK)
+                    {
+                        DebugConsole.ThrowError($"Failed to create Steam lobby: result was {currentLobby.Value.Result}");
                         lobbyState = LobbyState.NotConnected;
                         return;
                     }
@@ -243,7 +249,7 @@ namespace Barotrauma.Steam
             TaskPool.Add("JoinLobbyAsync", Steamworks.SteamMatchmaking.JoinLobbyAsync(lobbyID),
                 (lobby) =>
                 {
-                    currentLobby = ((Task<Steamworks.Data.Lobby?>)lobby).Result;
+                    lobby.TryGetResult(out currentLobby);
                     lobbyState = LobbyState.Joined;
                     lobbyID = (currentLobby?.Id).Value;
                     if (joinServer)
@@ -286,10 +292,11 @@ namespace Barotrauma.Steam
                     taskDone();
                     return;
                 }
-                var lobbies = ((Task<List<Steamworks.Data.Lobby>>)t).Result;
-                if (lobbies != null)
+                t.TryGetResult(out List<Steamworks.Data.Lobby> lobbies);
+                IEnumerable<CoroutineStatus> lobbyAddCoroutine()
                 {
-                    foreach (var lobby in lobbies)
+                    int i = 0;
+                    foreach (var lobby in lobbies ?? Enumerable.Empty<Steamworks.Data.Lobby>())
                     {
                         if (string.IsNullOrEmpty(lobby.GetData("name"))) { continue; }
 
@@ -305,9 +312,13 @@ namespace Barotrauma.Steam
                         AssignLobbyDataToServerInfo(lobby, serverInfo);
 
                         addToServerList(serverInfo);
+                        i++;
+                        if (i >= 16) { yield return CoroutineStatus.Running; i = 0; }
                     }
+                    taskDone();
+                    yield return CoroutineStatus.Success;
                 }
-                taskDone();
+                CoroutineManager.StartCoroutine(lobbyAddCoroutine());
             });
 
             Steamworks.ServerList.Internet serverQuery = new Steamworks.ServerList.Internet();
@@ -337,13 +348,10 @@ namespace Barotrauma.Steam
                                 return;
                             }
 
-                            var rules = ((Task<Dictionary<string, string>>)t).Result;
+                            t.TryGetResult(out Dictionary<string, string> rules);
                             AssignServerRulesToServerInfo(rules, serverInfo);
 
-                            CrossThread.RequestExecutionOnMainThread(() =>
-                            {
-                                addToServerList(serverInfo);
-                            });
+                            addToServerList(serverInfo);
                         });
                 }
                 else
@@ -525,18 +533,6 @@ namespace Barotrauma.Steam
         }
 
 #region Connecting to servers
-        private static Steamworks.AuthTicket currentTicket = null;
-        public static Steamworks.AuthTicket GetAuthSessionTicket()
-        {
-            if (!isInitialized)
-            {
-                return null;
-            }
-
-            currentTicket?.Cancel();
-            currentTicket = Steamworks.SteamUser.GetAuthSessionTicket();
-            return currentTicket;
-        }
 
         public static Steamworks.BeginAuthResult StartAuthSession(byte[] authTicketData, ulong clientSteamID)
         {
@@ -623,7 +619,10 @@ namespace Barotrauma.Steam
                 .WithLongDescription();
             if (requireTags != null) { query = query.WithTags(requireTags); }
 
-            TaskPool.Add("GetSubscribedWorkshopItems", GetWorkshopItemsAsync(query), (task) => { onItemsFound?.Invoke(((Task<List<Steamworks.Ugc.Item>>)task).Result); });
+            TaskPool.Add("GetSubscribedWorkshopItems", GetWorkshopItemsAsync(query), (task) =>
+            {
+                task.TryGetResult(out List<Steamworks.Ugc.Item> result); onItemsFound?.Invoke(result);
+            });
         }
 
         public static void GetPopularWorkshopItems(Action<IList<Steamworks.Ugc.Item>> onItemsFound, int amount, List<string> requireTags = null)
@@ -637,7 +636,7 @@ namespace Barotrauma.Steam
 
             TaskPool.Add("GetPopularWorkshopItems", GetWorkshopItemsAsync(query, amount, (item) => !item.IsSubscribed), (task) => 
             {
-                var entries = ((Task<List<Steamworks.Ugc.Item>>)task).Result;
+                task.TryGetResult(out List<Steamworks.Ugc.Item> entries);
 
                 //count the number of each unique tag
                 foreach (var item in entries)
@@ -682,7 +681,10 @@ namespace Barotrauma.Steam
                 .WithLongDescription();
             if (requireTags != null) query.WithTags(requireTags);
 
-            TaskPool.Add("GetPublishedWorkshopItems", GetWorkshopItemsAsync(query), (task) => { onItemsFound?.Invoke(((Task<List<Steamworks.Ugc.Item>>)task).Result); });
+            TaskPool.Add("GetPublishedWorkshopItems", GetWorkshopItemsAsync(query), (task) =>
+            {
+                task.TryGetResult(out List<Steamworks.Ugc.Item> result); onItemsFound?.Invoke(result);
+            });
         }
 
         private static readonly HashSet<ulong> pendingWorkshopSubscriptions = new HashSet<ulong>();
@@ -729,7 +731,7 @@ namespace Barotrauma.Steam
                     }
                     else
                     {
-                        var item = ((Task<Steamworks.Ugc.Item?>)t).Result;
+                        t.TryGetResult(out Steamworks.Ugc.Item? item);
                         if (item != null)
                         {
                             if (item?.IsInstalled ?? false)
@@ -884,9 +886,9 @@ namespace Barotrauma.Steam
 
             catch (Exception e)
             {
-                string errorMsg = "Failed to save workshop item preview image to \"" + previewImagePath + "\" when creating workshop item staging folder.";
+                string errorMsg = "Failed to save workshop item preview image when creating workshop item staging folder.";
                 GameAnalyticsManager.AddErrorEventOnce("SteamManager.CreateWorkshopItemStaging:WriteAllBytesFailed" + previewImagePath,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + e.Message);
+                    GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + e.Message);
             }
 
             return true;
@@ -935,7 +937,7 @@ namespace Barotrauma.Steam
             return workshopPublishStatus;
         }
 
-        private static IEnumerable<object> PublishItem(WorkshopPublishStatus workshopPublishStatus)
+        private static IEnumerable<CoroutineStatus> PublishItem(WorkshopPublishStatus workshopPublishStatus)
         {
             if (!isInitialized)
             {
@@ -1082,7 +1084,7 @@ namespace Barotrauma.Steam
                             GameMain.SteamWorkshopScreen?.SetReinstallButtonStatus(item, true, GUI.Style.Red);
                             return;
                         }
-                        string errorMsg = ((Task<string>)task).Result;
+                        task.TryGetResult(out string errorMsg);
                         if (!string.IsNullOrWhiteSpace(errorMsg))
                         {
                             DebugConsole.ThrowError($"Failed to copy \"{item.Title}\": {errorMsg}");
@@ -1434,8 +1436,8 @@ namespace Barotrauma.Steam
                     "\" not found. Could not combine path (" + (item.Directory ?? "directory name empty") + ").";
                 DebugConsole.ThrowError(errorMessage);
                 GameAnalyticsManager.AddErrorEventOnce("SteamManager.CheckWorkshopItemInstalled:PathCombineException" + item.Title,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    errorMessage);
+                    GameAnalyticsManager.ErrorSeverity.Error,
+                    "Metadata file for a Workshop item not found. Could not combine path.");
                 return false;
             }
 
@@ -1567,8 +1569,8 @@ namespace Barotrauma.Steam
                         }
                         GameAnalyticsManager.AddErrorEventOnce(
                             "SteamManager.AutoUpdateWorkshopItems:" + e.Message,
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                            "Failed to autoupdate workshop item \"" + item.Title + "\". " + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
+                            GameAnalyticsManager.ErrorSeverity.Error,
+                            "Failed to autoupdate workshop item. " + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
                     });
                 }
             }

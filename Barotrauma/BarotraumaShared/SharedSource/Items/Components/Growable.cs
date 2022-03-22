@@ -1,13 +1,13 @@
 ﻿#nullable enable
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Linq;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
 using Vector4 = Microsoft.Xna.Framework.Vector4;
 
@@ -278,7 +278,7 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0, j = 0; i < maxSides; i++)
             {
-                if (!occupiedSides.IsBitSet((TileSide) (1 << i)))
+                if (!occupiedSides.HasFlag((TileSide) (1 << i)))
                 {
                     pool[j] = i;
                     j++;
@@ -303,19 +303,13 @@ namespace Barotrauma.Items.Components
 
         public bool CanGrowMore() => (Sides | BlockedSides).Count() < 4;
 
-        public bool IsSideBlocked(TileSide side) => BlockedSides.IsBitSet(side) || Sides.IsBitSet(side);
+        public bool IsSideBlocked(TileSide side) => BlockedSides.HasFlag(side) || Sides.HasFlag(side);
 
         public static Rectangle CreatePlantRect(Vector2 pos) => new Rectangle((int) pos.X - Size / 2, (int) pos.Y + Size / 2, Size, Size);
     }
 
     internal static class GrowthSideExtension
     {
-        // Enum.HasFlag() sucks
-        public static bool IsBitSet(this TileSide side, TileSide bit)
-        {
-            return ((int) side & (int) bit) != 0;
-        }
-
         // K&R algorithm for counting how many bits are set in a bit field
         public static int Count(this TileSide side)
         {
@@ -404,8 +398,6 @@ namespace Barotrauma.Items.Components
         private int flowerVariants;
         private int leafVariants;
         private int[] flowerTiles;
-        private const int serverHealthUpdateDelay = 10;
-        private int serverHealthUpdateTimer;
 
         public float Health
         {
@@ -559,18 +551,20 @@ namespace Barotrauma.Items.Components
 
             if (spawnProduct && ProducedItems.Any())
             {
-                SpawnItem(ProducedItems.RandomElementByWeight(it => it.Probability), spawnPos);
+                SpawnItem(Item, ProducedItems.RandomElementByWeight(it => it.Probability), spawnPos);
                 return;
             }
 
             if (spawnSeed)
             {
-                SpawnItem(ProducedSeed, spawnPos);
+                SpawnItem(Item, ProducedSeed, spawnPos);
             }
 
-            static void SpawnItem(ProducedItem producedItem, Vector2 pos)
+            static void SpawnItem(Item thisItem, ProducedItem producedItem, Vector2 pos)
             {
                 if (producedItem.Prefab == null) { return; }
+
+                GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "null") + ":GardeningProduce:" + thisItem.prefab.Identifier + ":" + producedItem.Prefab.Identifier);
 
                 Entity.Spawner?.AddToSpawnQueue(producedItem.Prefab, pos, onSpawned: it =>
                 {
@@ -592,8 +586,13 @@ namespace Barotrauma.Items.Components
         {
             if (Decayed) { return true; }
 
-            if (0 >= Health)
+            if (Health <= 0)
             {
+                if (!Decayed)
+                {
+                    GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "null") + ":GardeningDied:" + item.prefab.Identifier);
+                }
+
                 Decayed = true;
 #if CLIENT
                 foreach (VineTile vine in Vines)
@@ -780,7 +779,7 @@ namespace Barotrauma.Items.Components
 
                     TileSide oppositeSide = connectingSide.GetOppositeSide();
 
-                    if (otherVine.BlockedSides.IsBitSet(connectingSide))
+                    if (otherVine.BlockedSides.HasFlag(connectingSide))
                     {
                         newVine.BlockedSides |= oppositeSide;
                         continue;

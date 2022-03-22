@@ -51,7 +51,7 @@ namespace Barotrauma
         private const float RamTimerMax = 17.5f;
 
         public readonly List<ShipIssueWorker> ShipIssueWorkers = new List<ShipIssueWorker>();
-        private const float MinimumIssueThreshold = 10f;
+        public const float MinimumIssueThreshold = 10f;
         private const float IssueDevotionBuffer = 5f;
 
         private float decisionTimer = 6f;
@@ -75,7 +75,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            if (!Active) { return; }
+            if (!Active || character.IsArrested) { return; }
             decisionTimer -= deltaTime;
             if (decisionTimer <= 0.0f)
             {
@@ -199,7 +199,7 @@ namespace Barotrauma
 
             foreach (Character potentialCharacter in Character.CharacterList)
             {
-                if (!HumanAIController.IsActive(character)) { continue; }
+                if (!HumanAIController.IsActive(potentialCharacter)) { continue; }
 
                 if (HumanAIController.IsFriendly(character, potentialCharacter, true) && potentialCharacter.AIController is HumanAIController)
                 {
@@ -313,7 +313,7 @@ namespace Barotrauma
                         ShipCommandLog("Dismissing " + shipIssueWorker + " for character " + shipIssueWorker.OrderedCharacter);
 #endif
                         Order orderPrefab = Order.GetPrefab("dismissed");
-                        character.Speak(orderPrefab.GetChatMessage(shipIssueWorker.OrderedCharacter.Name, "", givingOrderToSelf: false));
+                        //character.Speak(orderPrefab.GetChatMessage(shipIssueWorker.OrderedCharacter.Name, "", givingOrderToSelf: false));
                         shipIssueWorker.OrderedCharacter.SetOrder(Order.GetPrefab("dismissed"), orderOption: null, priority: 3, character);
                         shipIssueWorker.RemoveOrder();
                         break;
@@ -344,7 +344,6 @@ namespace Barotrauma
 
             ShipIssueWorkers.Clear();
 
-            // could have support for multiple reactors, todo m61
             if (CommandedSubmarine.GetItems(false).Find(i => i.HasTag("reactor") && !i.NonInteractable)?.GetComponent<Reactor>() is Reactor reactor)
             {
                 ShipIssueWorkers.Add(new ShipIssueWorkerPowerUpReactor(this, Order.GetPrefab("operatereactor"), reactor.Item, reactor, "powerup"));

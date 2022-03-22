@@ -153,7 +153,10 @@ namespace Barotrauma
                 (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(npc, CampaignInteractionType);
                 if (positionToStayIn != null && humanAI != null)
                 {
-                    humanAI.ObjectiveManager.SetForcedOrder(new AIObjectiveGoTo(positionToStayIn, npc, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, closeEnough: 200));
+                    humanAI.ObjectiveManager.SetForcedOrder(new AIObjectiveGoTo(positionToStayIn, npc, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, closeEnough: 200)
+                    {
+                        DebugLogWhenFails = false
+                    });
                 }
             }
         }
@@ -191,7 +194,7 @@ namespace Barotrauma
                 {
                     string errorMsg = $"Error while spawning job items. Item {item.Name} created network events before the spawn event had been created.";
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("Job.InitializeJobItem:EventsBeforeSpawning", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Job.InitializeJobItem:EventsBeforeSpawning", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     GameMain.Server.EntityEventManager.UniqueEvents.RemoveAll(ev => ev.Entity == item);
                     GameMain.Server.EntityEventManager.Events.RemoveAll(ev => ev.Entity == item);
                 }

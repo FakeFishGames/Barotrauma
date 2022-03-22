@@ -358,7 +358,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    displayName = TextManager.Get(fallbackTag, true);
+                    displayName = TextManager.Get(fallbackTag, true) ?? TextManager.Get($"sp.{fallbackTag}.name", true);
                 }
             }
             
@@ -567,8 +567,6 @@ namespace Barotrauma
             {
                 if (SetPropertyValue(property, entity, numInput.FloatValue))
                 {
-                    // This causes stack overflow. What's the purpose of it?
-                    //numInput.FloatValue = (float)property.GetValue(entity);
                     TrySendNetworkUpdate(entity, property);
                 }
             };
@@ -674,7 +672,16 @@ namespace Barotrauma
                 Text = value,
                 OverflowClip = true
             };
-            
+
+            HashSet<MapEntity> editedEntities = new HashSet<MapEntity>();
+            propertyBox.OnTextChanged += (textBox, text) =>
+            {
+                foreach (var entity in MapEntity.SelectedList)
+                {
+                    editedEntities.Add(entity);
+                }
+                return true;
+            };            
             propertyBox.OnDeselected += (textBox, keys) => OnApply(textBox);
             propertyBox.OnEnterPressed += (box, text) => OnApply(box);
             refresh += () =>
@@ -684,11 +691,24 @@ namespace Barotrauma
 
             bool OnApply(GUITextBox textBox)
             {
+                List<MapEntity> prevSelected = MapEntity.SelectedList.ToList();
+                //reselect the entities that were selected during editing
+                //otherwise multi-editing won't work when we deselect the entities with unapplied changes in the textbox
+                foreach (var entity in editedEntities)
+                { 
+                    MapEntity.SelectedList.Add(entity);
+                }
                 if (SetPropertyValue(property, entity, textBox.Text))
                 {
                     TrySendNetworkUpdate(entity, property);
                     textBox.Text = (string) property.GetValue(entity);
                     textBox.Flash(GUI.Style.Green, flashDuration: 1f);
+                }
+                //restore the entities that were selected before applying
+                MapEntity.SelectedList.Clear();
+                foreach (var entity in prevSelected)
+                {
+                    MapEntity.SelectedList.Add(entity);
                 }
                 return true;
             }

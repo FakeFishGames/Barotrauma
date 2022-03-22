@@ -10,6 +10,9 @@ namespace Barotrauma.Networking
 
         public UInt16 LastRecvClientListUpdate = 0;
 
+        public UInt16 LastSentServerSettingsUpdate = 0;
+        public UInt16 LastRecvServerSettingsUpdate = 0;
+        
         public UInt16 LastRecvLobbyUpdate = 0;
 
         public UInt16 LastSentChatMsgID = 0; //last msg this client said
@@ -114,8 +117,14 @@ namespace Barotrauma.Networking
         {
             GameMain.Server.VoipServer.UnregisterQueue(VoipQueue);
             VoipQueue.Dispose();
-            characterInfo?.Remove();
-            characterInfo = null;
+            if (characterInfo != null)
+            {
+                if (characterInfo.Character == null || characterInfo.Character.Removed)
+                {
+                    characterInfo?.Remove();
+                    characterInfo = null;
+                }
+            }
         }
 
         public void InitClientSync()
@@ -133,12 +142,14 @@ namespace Barotrauma.Networking
 
         public static bool IsValidName(string name, ServerSettings serverSettings)
         {
+            if (string.IsNullOrWhiteSpace(name)) { return false; }
+            
             char[] disallowedChars = new char[] { ';', ',', '<', '>', '/', '\\', '[', ']', '"', '?' };
-            if (name.Any(c => disallowedChars.Contains(c))) return false;
+            if (name.Any(c => disallowedChars.Contains(c))) { return false; }
 
             foreach (char character in name)
             {
-                if (!serverSettings.AllowedClientNameChars.Any(charRange => (int)character >= charRange.First && (int)character <= charRange.Second)) return false;
+                if (!serverSettings.AllowedClientNameChars.Any(charRange => (int)character >= charRange.First && (int)character <= charRange.Second)) { return false; }
             }
 
             return true;

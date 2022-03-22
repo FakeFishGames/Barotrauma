@@ -29,7 +29,8 @@ namespace Barotrauma.Networking
         REQUEST_STARTGAMEFINALIZE, //tell the server you're ready to finalize round initialization
 
         ERROR,           //tell the server that an error occurred
-        CREW,
+        CREW,            //hiring UI
+        MEDICAL,         //medical clinic
         READY_CHECK,
         READY_TO_SPAWN
         
@@ -80,7 +81,8 @@ namespace Barotrauma.Networking
         MISSION,
         EVENTACTION,
         CREW,               //anything related to managing bots in multiplayer
-        READY_CHECK         //start, end and update a ready check 
+        MEDICAL,            //medical clinic
+        READY_CHECK         //start, end and update a ready check
     }
     enum ServerNetObject
     {
@@ -144,7 +146,9 @@ namespace Barotrauma.Networking
         NotOnWhitelist,
         ExcessiveDesyncOldEvent,
         ExcessiveDesyncRemovedEvent,
-        SyncTimeout
+        SyncTimeout,
+        SteamP2PError,
+        SteamP2PTimeOut,
     }
 
     abstract partial class NetworkMember
@@ -230,24 +234,24 @@ namespace Barotrauma.Networking
 
             var radio = sender.Inventory.AllItems.FirstOrDefault(i => i.GetComponent<WifiComponent>() != null);
             if (radio == null || !sender.HasEquippedItem(radio)) { return false; }
-                       
+
             var radioComponent = radio.GetComponent<WifiComponent>();
             if (radioComponent == null) { return false; }
             return radioComponent.HasRequiredContainedItems(sender, addMessage: false);
         }
 
-        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Client senderClient = null, Character senderCharacter = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None)
+        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Client senderClient = null, Character senderCharacter = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
         {
-            AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter, senderClient, changeType: changeType));
+            AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter, senderClient, changeType: changeType, textColor: textColor));
         }
 
         public virtual void AddChatMessage(ChatMessage message)
         {
             if (string.IsNullOrEmpty(message.Text)) { return; }
-                        
+
             if (message.Sender != null && !message.Sender.IsDead)
             {
-                message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)message.Type]);
+                message.Sender.ShowSpeechBubble(2.0f, message.Color);
             }
         }
 

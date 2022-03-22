@@ -132,7 +132,7 @@ namespace Barotrauma.Items.Components
                     Stretch = true, 
                     RelativeSpacing = 0.03f
                 };
-                    var inputLabel = new GUITextBlock(new RectTransform(Vector2.One, separatorArea.RectTransform), TextManager.Get("uilabel.input"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
+                    var inputLabel = new GUITextBlock(new RectTransform(Vector2.One, separatorArea.RectTransform), TextManager.Get("fabricator.input", fallBackTag: "uilabel.input"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
                     inputLabel.RectTransform.Resize(new Point((int) inputLabel.Font.MeasureString(inputLabel.Text).X, inputLabel.RectTransform.Rect.Height));
                     new GUIFrame(new RectTransform(Vector2.One, separatorArea.RectTransform), style: "HorizontalLine");
 
@@ -302,6 +302,12 @@ namespace Barotrauma.Items.Components
             }
 
             HideEmptyItemListCategories();
+
+            if (selectedItem != null)
+            {
+                //reselect to recreate the info based on the new user's skills
+                SelectItem(character, selectedItem);
+            }
         }
 
         private void DrawInputOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
@@ -329,8 +335,6 @@ namespace Barotrauma.Items.Components
                 var missingCounts = missingItems.GroupBy(missingItem => missingItem).ToDictionary(x => x.Key, x => x.Count());
                 missingItems = missingItems.Distinct().ToList();
 
-                var availableIngredients = GetAvailableIngredients();
-
                 foreach (FabricationRecipe.RequiredItem requiredItem in missingItems)
                 {
                     while (slotIndex < inputContainer.Capacity && inputContainer.Inventory.GetItemAt(slotIndex) != null)
@@ -341,23 +345,24 @@ namespace Barotrauma.Items.Components
                     requiredItem.ItemPrefabs
                         .Where(requiredPrefab => availableIngredients.ContainsKey(requiredPrefab.Identifier))
                         .ForEach(requiredPrefab => {
-                            var availablePrefabs = availableIngredients[requiredPrefab.Identifier];
-
-                            availablePrefabs
-                                .Where(availablePrefab => availablePrefab.ParentInventory != inputContainer.Inventory)
-                                .Where(availablePrefab => availablePrefab.ParentInventory.visualSlots != null) //slots are null if the inventory has never been displayed 
-                                .ForEach(availablePrefab => {                                                  //(linked item, but the UI is not set to be displayed at the same time)
-                                    int availableSlotIndex = availablePrefab.ParentInventory.FindIndex(availablePrefab);
-
-                                    if (availablePrefab.ParentInventory.visualSlots[availableSlotIndex].HighlightTimer <= 0.0f)
+                            var availableItems = availableIngredients[requiredPrefab.Identifier];
+                            foreach (Item it in availableItems)
+                            {
+                                if (it.ParentInventory == inputContainer.Inventory) { continue; }
+                                var rootInventoryOwner = it.GetRootInventoryOwner();
+                                Inventory rootInventory = (rootInventoryOwner as Item)?.OwnInventory as Inventory ?? (rootInventoryOwner as Character)?.Inventory;
+                                if (rootInventory?.visualSlots == null) { continue; }                                
+                                int availableSlotIndex = rootInventory.FindIndex((it.Container != rootInventoryOwner ? it.Container : it) ?? it);
+                                if (availableSlotIndex < 0) { continue; }
+                                if (rootInventory.visualSlots[availableSlotIndex].HighlightTimer <= 0.0f)
+                                {
+                                    rootInventory.visualSlots[availableSlotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
+                                    if (slotIndex < inputContainer.Capacity)
                                     {
-                                        availablePrefab.ParentInventory.visualSlots[availableSlotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
-                                        if (slotIndex < inputContainer.Capacity)
-                                        {
-                                            inputContainer.Inventory.visualSlots[slotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
-                                        }
+                                        inputContainer.Inventory.visualSlots[slotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
                                     }
-                                });
+                                }
+                            }
                         });
 
                     if (slotIndex >= inputContainer.Capacity) { break; }
@@ -408,9 +413,16 @@ namespace Barotrauma.Items.Components
                         {
                             toolTipText += " " + (int)Math.Round(requiredItem.MinCondition * 100) + "%";
                         }
-                        else if(requiredItem.MaxCondition < 1.0f)
+                        else if (requiredItem.MaxCondition < 1.0f)
                         {
-                            toolTipText += " 0-" + (int)Math.Round(requiredItem.MaxCondition * 100) + "%";
+                            if (requiredItem.MaxCondition <= 0.0f)
+                            {
+                                toolTipText += " " + (int)Math.Round(requiredItem.MaxCondition * 100) + "%";
+                            }
+                            else
+                            {
+                                toolTipText += " 0-" + (int)Math.Round(requiredItem.MaxCondition * 100) + "%";
+                            }
                         }
                         else if (requiredItem.MaxCondition <= 0.0f)
                         {
@@ -525,16 +537,6 @@ namespace Barotrauma.Items.Components
             
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.9f), selectedItemFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f };
             var paddedReqFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.9f), selectedItemReqsFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f };
-
-            /*var itemIcon = selectedItem.TargetItem.InventoryIcon ?? selectedItem.TargetItem.sprite;
-            if (itemIcon != null)
-            {
-                GUIImage img = new GUIImage(new RectTransform(new Point(40, 40), paddedFrame.RectTransform),
-                    itemIcon, scaleToFit: true)
-                {
-                    Color = selectedItem.TargetItem.InventoryIconColor
-                };
-            }*/
 
             string itemName = GetRecipeNameAndAmount(selectedItem);
             string name = itemName;
@@ -676,7 +678,17 @@ namespace Barotrauma.Items.Components
             activateButton.Enabled = false;
             inSufficientPowerWarning.Visible = currPowerConsumption > 0 && !hasPower;
 
-            var availableIngredients = GetAvailableIngredients();
+            if (!IsActive)
+            {
+                //only check ingredients if the fabricator isn't active (if it is, this is done in Update)
+                if (refreshIngredientsTimer <= 0.0f)
+                {
+                    RefreshAvailableIngredients();
+                    refreshIngredientsTimer = RefreshIngredientsInterval;
+                }
+                refreshIngredientsTimer -= deltaTime;
+            }
+
             if (character != null)
             {
                 foreach (GUIComponent child in itemList.Content.Children)
@@ -724,8 +736,6 @@ namespace Barotrauma.Items.Components
             Character user = Entity.FindEntityByID(userID) as Character;
 
             State = newState;
-            timeUntilReady = newTimeUntilReady;
-
             if (newState == FabricatorState.Stopped || itemIndex == -1)
             {
                 CancelFabricating();
@@ -739,6 +749,7 @@ namespace Barotrauma.Items.Components
                 SelectItem(user, fabricationRecipes[itemIndex]);
                 StartFabricating(fabricationRecipes[itemIndex], user);
             }
+            timeUntilReady = newTimeUntilReady;
         }
     }
 }

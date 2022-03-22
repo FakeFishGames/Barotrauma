@@ -31,7 +31,6 @@ namespace Barotrauma
             ConfigElement = element;
             Identifier = element.GetAttributeString("identifier", "noidentifier");
             DisplayName = TextManager.Get("talentname." + Identifier, returnNull: true) ?? Identifier;
-            this.CalculatePrefabUIntIdentifier(TalentPrefabs);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -101,37 +100,42 @@ namespace Barotrauma
             XDocument doc = XMLExtensions.TryLoadXml(file.Path);
             if (doc == null) { return; }
 
-            var rootElement = doc.Root;
-            switch (rootElement.Name.ToString().ToLowerInvariant())
+            void loadSinglePrefab(XElement element, bool isOverride)
             {
-                case "talent":
-                    TalentPrefabs.Add(new TalentPrefab(rootElement, file.Path), false);
-                    break;
-                case "talents":
-                    foreach (var element in rootElement.Elements())
-                    {
-                        if (element.IsOverride())
-                        {
-                            var itemElement = element.GetChildElement("talent");
-                            if (itemElement != null)
-                            {
-                                TalentPrefabs.Add(new TalentPrefab(rootElement, file.Path), true);
-                            }
-                            else
-                            {
-                                DebugConsole.ThrowError($"Cannot find a talent element from the children of the override element defined in {file.Path}");
-                            }
-                        }
-                        else
-                        {
-                            TalentPrefabs.Add(new TalentPrefab(element, file.Path), false);
-                        }
-                    }
-                    break;
-                default:
-                    DebugConsole.ThrowError($"Invalid XML root element: '{rootElement.Name.ToString()}' in {file.Path}");
-                    break;
+                var newPrefab = new TalentPrefab(element, file.Path) { ContentPackage = file.ContentPackage };
+                TalentPrefabs.Add(newPrefab, isOverride);
+                newPrefab.CalculatePrefabUIntIdentifier(TalentPrefabs);
             }
+
+            void loadMultiplePrefabs(XElement element, bool isOverride)
+            {
+                foreach (var subElement in element.Elements())
+                {
+                    interpretElement(subElement, isOverride);
+                }
+            }
+
+            void interpretElement(XElement subElement, bool isOverride)
+            {
+                if (subElement.IsOverride())
+                {
+                    loadMultiplePrefabs(subElement, true);
+                }
+                else if (subElement.Name.LocalName.Equals("talents", StringComparison.OrdinalIgnoreCase))
+                {
+                    loadMultiplePrefabs(subElement, isOverride);
+                }
+                else if (subElement.Name.LocalName.Equals("talent", StringComparison.OrdinalIgnoreCase))
+                {
+                    loadSinglePrefab(subElement, isOverride);
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Invalid XML element for the {nameof(TalentPrefab)} prefab type: '{subElement.Name}' in {file.Path}");
+                }
+            }
+
+            interpretElement(doc.Root, false);
         }
 
         public static void LoadAll(IEnumerable<ContentFile> files)

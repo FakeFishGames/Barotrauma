@@ -12,6 +12,8 @@ namespace Barotrauma.Items.Components
 
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
+
+        protected readonly Character[] signalSender = new Character[2];
         
         [InGameEditable(DecimalCount = 2), Serialize(0.0f, true, description: "The item sends the output if both inputs have received a non-zero signal within the timeframe. If set to 0, the inputs must receive a signal at the same time.", alwaysUseInstanceValues: true)]
         public float TimeFrame
@@ -19,6 +21,10 @@ namespace Barotrauma.Items.Components
             get { return timeFrame; }
             set
             {
+                if (value > timeFrame)
+                {
+                    timeSinceReceived[0] = timeSinceReceived[1] = Math.Max(value * 2.0f, 0.1f);
+                }
                 timeFrame = Math.Max(0.0f, value);
             }
         }
@@ -73,17 +79,22 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            bool sendOutput = true;
+            bool state = true;
             for (int i = 0; i < timeSinceReceived.Length; i++)
             {
-                if (timeSinceReceived[i] > timeFrame) sendOutput = false;
+                if (timeSinceReceived[i] > timeFrame) { state = false; }
                 timeSinceReceived[i] += deltaTime;
             }
 
-            string signalOut = sendOutput ? output : falseOutput;
-            if (string.IsNullOrEmpty(signalOut)) return;
+            string signalOut = state ? output : falseOutput;
+            if (string.IsNullOrEmpty(signalOut))
+            {
+                //deactivate the component if state is false and there's no false output (will be woken up by non-zero signals in ReceiveSignal)
+                if (!state) { IsActive = false; }
+                return;
+            }
 
-            item.SendSignal(signalOut, "signal_out");
+            item.SendSignal(new Signal(signalOut, sender: signalSender[0] ?? signalSender[1]), "signal_out");
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)
@@ -91,12 +102,16 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "signal_in1":
-                    if (signal.value == "0") return;
+                    if (signal.value == "0") { return; }
                     timeSinceReceived[0] = 0.0f;
+                    signalSender[0] = signal.sender;
+                    IsActive = true;
                     break;
                 case "signal_in2":
-                    if (signal.value == "0") return;
+                    if (signal.value == "0") { return; }
                     timeSinceReceived[1] = 0.0f;
+                    signalSender[1] = signal.sender;
+                    IsActive = true;
                     break;
                 case "set_output":
                     output = signal.value;

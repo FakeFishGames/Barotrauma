@@ -315,7 +315,7 @@ namespace Barotrauma.MapCreatures.Behavior
                         }
                         else
                         {
-                            RemoveClaim(itemId);
+                            RemoveClaim(item);
                         }
                     }
                     else

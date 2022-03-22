@@ -168,9 +168,9 @@ namespace Barotrauma
             {
                 if (itemPrefab == null)
                 {
-                    string errorMsg = "Error in AutoItemPlacer.SpawnItems - itemPrefab was null.\n"+Environment.StackTrace.CleanupStackTrace();
+                    string errorMsg = "Error in AutoItemPlacer.SpawnItems - itemPrefab was null.\n" + Environment.StackTrace.CleanupStackTrace();
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("AutoItemPlacer.SpawnItems:ItemNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("AutoItemPlacer.SpawnItems:ItemNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     return false;
                 }
                 bool success = false;
@@ -220,10 +220,10 @@ namespace Barotrauma
 
         private static readonly (int quality, float commonness)[] qualityCommonnesses = new (int quality, float commonness)[Quality.MaxQuality + 1]
         {
-            (0, 0.85f),
-            (1, 0.125f),
-            (2, 0.0225f),
-            (3, 0.0025f),
+            (0, 1.0f),
+            (1, 0.0f),
+            (2, 0.0f),
+            (3, 0.0f),
         };
 
         private static List<Item> SpawnItem(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer, float difficultyModifier)
@@ -254,7 +254,7 @@ namespace Barotrauma
                 if (!validContainer.Key.Inventory.CanBePut(itemPrefab, quality: quality)) { break; }
                 var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine)
                 {
-                    SpawnedInOutpost = validContainer.Key.Item.SpawnedInOutpost,
+                    SpawnedInCurrentOutpost = validContainer.Key.Item.SpawnedInCurrentOutpost,
                     AllowStealing = validContainer.Key.Item.AllowStealing,
                     Quality = quality,
                     OriginalModuleIndex = validContainer.Key.Item.OriginalModuleIndex,

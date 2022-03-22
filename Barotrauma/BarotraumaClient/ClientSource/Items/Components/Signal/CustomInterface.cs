@@ -197,7 +197,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        partial void UpdateProjSpecific()
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             bool elementVisibilityChanged = false;
             int visibleElementCount = 0;
@@ -209,6 +209,7 @@ namespace Barotrauma.Items.Components
                 if (uiElement.Visible != visible)
                 {
                     uiElement.Visible = visible;
+                    uiElement.IgnoreLayoutGroups = !uiElement.Visible;
                     elementVisibilityChanged = true;
                 }
             }
@@ -223,6 +224,7 @@ namespace Barotrauma.Items.Components
                     uiElement.RectTransform.RelativeSize = new Vector2(1.0f, elementSize);
                 }
                 GuiFrame.Visible = visibleElementCount > 0;
+                uiElementContainer.Recalculate();
             }
         }
 

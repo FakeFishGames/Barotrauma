@@ -139,7 +139,7 @@ namespace Barotrauma.Tutorials
             reactorItem.GetComponent<Reactor>().AutoTemp = true;
         }
 
-        public override IEnumerable<object> UpdateState()
+        public override IEnumerable<CoroutineStatus> UpdateState()
         {
             while (GameMain.Instance.LoadingScreenOpen) yield return null;
 
@@ -446,7 +446,7 @@ namespace Barotrauma.Tutorials
             CoroutineManager.StartCoroutine(TutorialCompleted());
         }
 
-        public IEnumerable<object> KeepPatientAlive(Character patient)
+        public IEnumerable<CoroutineStatus> KeepPatientAlive(Character patient)
         {
             while (patient != null && !patient.Removed)
             {

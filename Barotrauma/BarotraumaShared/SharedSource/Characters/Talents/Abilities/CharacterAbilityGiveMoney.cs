@@ -23,7 +23,9 @@ namespace Barotrauma.Abilities
                 multiplier = 0 + Character.Info.GetSavedStatValue(StatTypes.None, scalingStatIdentifier);
             }
 
-            targetCharacter.GiveMoney((int)(multiplier * amount));
+            int totalAmount = (int)(multiplier * amount);
+            targetCharacter.GiveMoney(totalAmount);
+            GameAnalyticsManager.AddMoneyGainedEvent(totalAmount, GameAnalyticsManager.MoneySource.Ability, CharacterTalent.Prefab.Identifier);
         }
 
         protected override void ApplyEffect(AbilityObject abilityObject)

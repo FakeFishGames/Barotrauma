@@ -1,13 +1,13 @@
 ﻿#region Using Statements
 
 using Barotrauma.Steam;
-using GameAnalyticsSDK.Net;
 using System;
 using Barotrauma.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
+#if LINUX
 using System.Runtime.InteropServices;
+#endif
 
 #endregion
 
@@ -42,11 +42,11 @@ namespace Barotrauma
 #endif
             Console.WriteLine("Barotrauma Dedicated Server " + GameMain.Version +
                 " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")");
-            if(Console.IsOutputRedirected)
+            if (Console.IsOutputRedirected)
             {
                 Console.WriteLine("Output redirection detected; colored text and command input will be disabled.");
             }
-            if(Console.IsInputRedirected)
+            if (Console.IsInputRedirected)
             {
                 Console.WriteLine("Redirected input is detected but is not supported by this application. Input will be ignored.");
             }
@@ -56,7 +56,7 @@ namespace Barotrauma
             Game = new GameMain(args);
 
             Game.Run();
-            if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
+            if (GameAnalyticsManager.SendUserStatistics) { GameAnalyticsManager.ShutDown(); }
             SteamManager.ShutDown();
         }
 
@@ -152,11 +152,18 @@ namespace Barotrauma
                 }
             }
 
+            if (GameAnalyticsManager.SendUserStatistics)
+            {
+                //send crash report before appending debug console messages (which may contain non-anonymous information)
+                GameAnalyticsManager.AddErrorEvent(GameAnalyticsManager.ErrorSeverity.Critical, sb.ToString());
+                GameAnalyticsManager.ShutDown();
+            }
+
             sb.AppendLine("Last debug messages:");
             DebugConsole.Clear();
-            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i-- )
+            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i--)
             {
-                sb.AppendLine("   "+DebugConsole.Messages[i].Time+" - "+DebugConsole.Messages[i].Text);
+                sb.AppendLine("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
             }
 
             string crashReport = sb.ToString();
@@ -167,12 +174,12 @@ namespace Barotrauma
             }
             Console.Write(crashReport);
 
-            File.WriteAllText(filePath,sb.ToString());
+            File.WriteAllText(filePath, sb.ToString());
 
-            if (GameSettings.SendUserStatistics)
+            if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging) { DebugConsole.SaveLogs(); }
+
+            if (GameAnalyticsManager.SendUserStatistics)
             {
-                GameAnalytics.AddErrorEvent(EGAErrorSeverity.Critical, crashReport);
-                GameAnalytics.OnQuit();
                 Console.Write("A crash report (\"servercrashreport.log\") was saved in the root folder of the game and sent to the developers.");
             }
             else

@@ -17,8 +17,8 @@ namespace Barotrauma.Items.Components
             Atan,
         }
 
-        private float[] receivedSignal = new float[2];
-        private float[] timeSinceReceived = new float[2];
+        private readonly float[] receivedSignal = new float[2];
+        private readonly float[] timeSinceReceived = new float[2];
 
         [Serialize(FunctionType.Sin, false, description: "Which kind of function to run the input through.", alwaysUseInstanceValues: true)]
         public FunctionType Function

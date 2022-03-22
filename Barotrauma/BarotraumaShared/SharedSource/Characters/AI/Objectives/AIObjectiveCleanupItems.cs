@@ -11,7 +11,7 @@ namespace Barotrauma
         public override string Identifier { get; set; } = "cleanup items";
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => false;
-        public override bool ForceOrderPriority => false;
+        protected override bool ForceOrderPriority => false;
 
         public readonly List<Item> prioritizedItems = new List<Item>();
 
@@ -52,7 +52,7 @@ namespace Barotrauma
             // The validity changes when a character picks the item up.
             if (!IsValidTarget(target, character, checkInventory: true)) { return Objectives.ContainsKey(target) && IsItemInsideValidSubmarine(target, character); }
             if (target.CurrentHull.FireSources.Count > 0) { return false; }
-            // Don't repair items in rooms that have enemies inside.
+            // Don't clean up items in rooms that have enemies inside.
             if (Character.CharacterList.Any(c => c.CurrentHull == target.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
             return true;
         }
@@ -68,15 +68,12 @@ namespace Barotrauma
         protected override void OnObjectiveCompleted(AIObjective objective, Item target)
             => HumanAIController.RemoveTargets<AIObjectiveCleanupItems, Item>(character, target);
 
-        private static bool IsItemInsideValidSubmarine(Item item, Character character)
+        public static bool IsItemInsideValidSubmarine(Item item, Character character)
         {
             if (item.CurrentHull == null) { return false; }
             if (item.Submarine == null) { return false; }
             if (item.Submarine.TeamID != character.TeamID) { return false; }
-            if (character.Submarine != null)
-            {
-                if (!character.Submarine.IsConnectedTo(item.Submarine)) { return false; }
-            }
+            if (character.Submarine != null && !character.Submarine.IsConnectedTo(item.Submarine)) { return false; }
             return true;
         }
 
@@ -94,7 +91,7 @@ namespace Barotrauma
             if (item == null) { return false; }
             if (item.IgnoreByAI(character)) { return false; }
             if (!item.IsInteractable(character)) { return false; }
-            if (item.SpawnedInOutpost) { return false; }
+            if ((item.SpawnedInCurrentOutpost && !item.AllowStealing) == character.IsOnPlayerTeam) { return false; }
             if (item.ParentInventory != null)
             {
                 if (item.Container == null)
@@ -129,29 +126,7 @@ namespace Barotrauma
             {
                 return true;
             }
-            bool canEquip = true;
-            if (!item.AllowedSlots.Contains(InvSlotType.Any))
-            {
-                canEquip = false;
-                var inv = character.Inventory;
-                foreach (var allowedSlot in item.AllowedSlots)
-                {
-                    foreach (var slotType in inv.SlotTypes)
-                    {
-                        if (!allowedSlot.HasFlag(slotType)) { continue; }                        
-                        for (int i = 0; i < inv.Capacity; i++)
-                        {
-                            canEquip = true;
-                            if (allowedSlot.HasFlag(inv.SlotTypes[i]) && inv.GetItemAt(i) != null)
-                            {
-                                canEquip = false;
-                                break;
-                            }
-                        }                        
-                    }
-                }
-            }
-            return canEquip;
+            return CanEquip(character, item);
         }
 
         public override void OnDeselected()

@@ -1,12 +1,10 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using OpenAL;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -365,6 +363,12 @@ namespace Barotrauma
                 TextManager.Get("Settings"), textAlignment: Alignment.TopLeft, font: GUI.LargeFont)
             { ForceUpperCase = true };
 
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), settingsTitle.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest), style: "GUIBugButton")
+            {
+                ToolTip = TextManager.Get("bugreportbutton") + $" (v{GameMain.Version})",
+                OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
+            };
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftPanel.RectTransform), TextManager.Get("ContentPackages"), font: GUI.SubHeadingFont);
 
             var corePackageDropdown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftPanel.RectTransform))
@@ -480,7 +484,7 @@ namespace Barotrauma
                         "\n" + string.Join("\n", contentPackage.ErrorMessages);
                 }
             }
-            contentPackageList.CanDragElements = CanHotswapPackages(false);
+            contentPackageList.CurrentDragMode = CanHotswapPackages(false) ? GUIListBox.DragMode.DragWithinBox : GUIListBox.DragMode.NoDragging;
             contentPackageList.CanBeFocused = CanHotswapPackages(false);
             contentPackageList.OnRearranged = OnContentPackagesRearranged;
 
@@ -509,16 +513,65 @@ namespace Barotrauma
                     ApplySettings();
                     GameMain.Instance.Exit();
                     return true;
-                }; msgBox.Buttons[1].OnClicked += (btn, userdata) =>
+                }; 
+                msgBox.Buttons[1].OnClicked += (btn, userdata) =>
                 {
                     Language = prevLanguage;
                     languageDD.SelectItem(Language);
                     msgBox.Close();
                     return true;
                 };
-
                 return true;
             };
+
+#if !OSX
+            var statisticsTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.045f), leftPanel.RectTransform), TextManager.Get("statisticsconsenttickbox"))
+            {
+                OnSelected = (GUITickBox tickBox) =>
+                {
+                    GameAnalyticsManager.SetConsent(
+                        tickBox.Selected
+                            ? GameAnalyticsManager.Consent.Ask
+                            : GameAnalyticsManager.Consent.No);
+                    return false;
+                }
+            };
+#if DEBUG
+            statisticsTickBox.Enabled = false;
+#endif
+            void updateGATickBoxToolTip()
+                => statisticsTickBox.ToolTip = TextManager.Get($"GameAnalyticsStatus.{GameAnalyticsManager.UserConsented}");
+            updateGATickBoxToolTip();
+            
+            var cachedConsent = GameAnalyticsManager.Consent.Unknown;
+            var statisticsTickBoxUpdater = new GUICustomComponent(
+                new RectTransform(Vector2.Zero, statisticsTickBox.RectTransform),
+                onUpdate: (deltaTime, component) =>
+            {
+                bool shouldTickBoxBeSelected = GameAnalyticsManager.UserConsented == GameAnalyticsManager.Consent.Yes;
+                
+                bool shouldUpdateTickBoxState = cachedConsent != GameAnalyticsManager.UserConsented
+                                                || statisticsTickBox.Selected != shouldTickBoxBeSelected;
+
+                if (!shouldUpdateTickBoxState) { return; }
+
+                updateGATickBoxToolTip();
+                cachedConsent = GameAnalyticsManager.UserConsented;
+                GUITickBox.OnSelectedHandler prevHandler = statisticsTickBox.OnSelected;
+                statisticsTickBox.OnSelected = null;
+                statisticsTickBox.Selected = shouldTickBoxBeSelected;
+                statisticsTickBox.OnSelected = prevHandler;
+                statisticsTickBox.Enabled = GameAnalyticsManager.UserConsented != GameAnalyticsManager.Consent.Error;
+            });
+#endif
+
+            foreach (var child in leftPanel.Children)
+            {
+                if (child is GUITextBlock textBlock)
+                {
+                    textBlock.RectTransform.MinSize = new Point(textBlock.RectTransform.MinSize.X, (int)Math.Max(textBlock.RectTransform.MinSize.Y, textBlock.TextSize.Y));
+                }
+            }
 
             // right panel --------------------------------------
 
@@ -554,14 +607,11 @@ namespace Barotrauma
                     OnClicked = (bt, userdata) => { SelectTab((Tab)userdata); return true; }
                 };
                 tabButtons[(int)tab].Text = ToolBox.LimitString(buttonText, tabButtons[(int)tab].Font, (int)(0.75f * tabWidth * tabButtonHolder.Rect.Width));
+                if (tabButtons[(int)tab].Text != buttonText)
+                {
+                    tabButtons[(int)tab].ToolTip = buttonText;
+                }
             }
-
-            new GUIButton(new RectTransform(new Vector2(0.05f, 0.75f), tabButtonHolder.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.2f) }, style: "GUIBugButton")
-            {
-                ToolTip = TextManager.Get("bugreportbutton"),
-                OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
-            };
-
 
             /// Graphics tab --------------------------------------------------------------
 
@@ -624,16 +674,16 @@ namespace Barotrauma
             GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform), TextManager.Get("EnableVSync"))
             {
                 ToolTip = TextManager.Get("EnableVSyncToolTip"),
-                OnSelected = (GUITickBox box) =>
-                {
-                    VSyncEnabled = box.Selected;
-                    GameMain.GraphicsDeviceManager.SynchronizeWithVerticalRetrace = VSyncEnabled;
-                    GameMain.GraphicsDeviceManager.ApplyChanges();
-                    UnsavedSettings = true;
-
-                    return true;
-                },
                 Selected = VSyncEnabled
+            };
+            vsyncTickBox.OnSelected = (GUITickBox box) =>
+            {
+                VSyncEnabled = box.Selected;
+                GameMain.GraphicsDeviceManager.SynchronizeWithVerticalRetrace = VSyncEnabled;
+                GameMain.GraphicsDeviceManager.ApplyChanges();
+                UnsavedSettings = true;
+
+                return true;
             };
 
 
@@ -1168,7 +1218,7 @@ namespace Barotrauma
                 catch (Exception e)
                 {
                     DebugConsole.ThrowError("Failed to set voice capture mode.", e);
-                    GameAnalyticsManager.AddErrorEventOnce("SetVoiceCaptureMode", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, "Failed to set voice capture mode. " + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
+                    GameAnalyticsManager.AddErrorEventOnce("SetVoiceCaptureMode", GameAnalyticsManager.ErrorSeverity.Error, "Failed to set voice capture mode. " + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
                     VoiceSetting = VoiceMode.Disabled;
                 }
 
@@ -1420,6 +1470,7 @@ namespace Barotrauma
                 Step = 0.01f
             };
             textScaleScrollBar.OnMoved(textScaleScrollBar, textScaleScrollBar.BarScroll);
+            textScaleDirty = false;
 
             /// Bottom buttons -------------------------------------------------------------
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
@@ -1767,7 +1818,7 @@ namespace Barotrauma
             return true;
         }
 
-        private IEnumerable<object> WaitForKeyPress(GUITextBox keyBox, KeyOrMouse[] keyArray)
+        private IEnumerable<CoroutineStatus> WaitForKeyPress(GUITextBox keyBox, KeyOrMouse[] keyArray)
         {
             yield return CoroutineStatus.Running;
 

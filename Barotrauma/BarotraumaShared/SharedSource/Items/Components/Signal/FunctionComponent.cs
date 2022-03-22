@@ -36,9 +36,17 @@ namespace Barotrauma.Items.Components
             {
                 case FunctionType.Round:
                     value = MathF.Round(value);
+                    if (value == -0)
+                    {
+                        value = 0;
+                    }
                     break;
                 case FunctionType.Ceil:
                     value = MathF.Ceiling(value);
+                    if (value == -0)
+                    {
+                        value = 0;
+                    }
                     break;
                 case FunctionType.Floor:
                     value = MathF.Floor(value);

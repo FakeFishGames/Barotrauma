@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using GameAnalyticsSDK.Net;
 using Barotrauma.IO;
 using System.Threading;
 using Barotrauma.Tutorials;
@@ -30,6 +29,13 @@ namespace Barotrauma
         public static bool IsMultiplayer => NetworkMember != null;
 
         public static PerformanceCounter PerformanceCounter;
+
+        private static Stopwatch performanceCounterTimer;
+        private static int updateCount = 0;
+        public static int CurrentUpdateRate
+        {
+            get; private set;
+        }
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
 
@@ -122,6 +128,12 @@ namespace Barotrauma
         public event Action ResolutionChanged;
 
         private bool exiting;
+
+        public static bool IsFirstLaunch
+        {
+            get;
+            private set;
+        }
 
         public static GameMain Instance
         {
@@ -350,6 +362,8 @@ namespace Barotrauma
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Item));
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Items.Components.ItemComponent));
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Hull));
+
+            performanceCounterTimer = Stopwatch.StartNew();
         }
 
         /// <summary>
@@ -384,51 +398,6 @@ namespace Barotrauma
             loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "Load", canLoadInSeparateThread);
         }
 
-        private void InitUserStats()
-        {
-            return;
-
-            if (GameSettings.ShowUserStatisticsPrompt)
-            {
-                if (TextManager.ContainsTag("statisticspromptheader") && TextManager.ContainsTag("statisticsprompttext"))
-                {
-                    var userStatsPrompt = new GUIMessageBox(
-                        TextManager.Get("statisticspromptheader"),
-                        TextManager.Get("statisticsprompttext"),
-                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-                    userStatsPrompt.Buttons[0].OnClicked += (btn, userdata) =>
-                    {
-                        GameSettings.ShowUserStatisticsPrompt = false;
-                        GameSettings.SendUserStatistics = true;
-                        GameAnalyticsManager.Init();
-                        Config.SaveNewPlayerConfig();
-                        return true;
-                    };
-                    userStatsPrompt.Buttons[0].OnClicked += userStatsPrompt.Close;
-                    userStatsPrompt.Buttons[1].OnClicked += (btn, userdata) =>
-                    {
-                        GameSettings.ShowUserStatisticsPrompt = false;
-                        GameSettings.SendUserStatistics = false;
-                        Config.SaveNewPlayerConfig();
-                        return true;
-                    };
-                    userStatsPrompt.Buttons[1].OnClicked += userStatsPrompt.Close;
-                }
-                else
-                {
-                    //user statistics enabled by default if the prompt cannot be shown in the user's language
-                    GameSettings.ShowUserStatisticsPrompt = false;
-                    GameSettings.SendUserStatistics = true;
-                    GameAnalyticsManager.Init();
-                    Config.SaveNewPlayerConfig();
-                }
-            }
-            else if (GameSettings.SendUserStatistics)
-            {
-                GameAnalyticsManager.Init();
-            }
-        }
-
         public class LoadingException : Exception
         {
             public LoadingException(Exception e) : base("Loading was interrupted due to an error.", innerException: e)
@@ -436,7 +405,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> Load(bool isSeparateThread)
+        private IEnumerable<CoroutineStatus> Load(bool isSeparateThread)
         {
             if (GameSettings.VerboseLogging)
             {
@@ -483,8 +452,8 @@ namespace Barotrauma
                 TaskPool.Add("AutoUpdateWorkshopItemsAsync",
                     SteamManager.AutoUpdateWorkshopItemsAsync(), (task) =>
                 {
-                    bool result = ((Task<bool>)task).Result;
-
+                    if (!task.TryGetResult(out bool result)) { return; }
+                    
                     Config.WaitingForAutoUpdate = false;
                 });
 
@@ -522,21 +491,17 @@ namespace Barotrauma
                 DebugConsole.Log("Selected content packages: " + string.Join(", ", Config.AllEnabledPackages.Select(cp => cp.Name)));
             }
 
-#if DEBUG
-            GameSettings.ShowUserStatisticsPrompt = false;
-            GameSettings.SendUserStatistics = false;
+#if !DEBUG && !OSX
+            GameAnalyticsManager.InitIfConsented();
 #endif
 
-            InitUserStats();
-
-        yield return CoroutineStatus.Running;
+            yield return CoroutineStatus.Running;
 
             Debug.WriteLine("sounds");
 
             int i = 0;
-            foreach (object crObj in SoundPlayer.Init())
+            foreach (CoroutineStatus status in SoundPlayer.Init())
             {
-                CoroutineStatus status = (CoroutineStatus)crObj;
                 if (status == CoroutineStatus.Success) break;
 
                 i++;
@@ -629,6 +594,18 @@ namespace Barotrauma
             {
                 Steamworks.SteamFriends.OnGameRichPresenceJoinRequested += OnInvitedToGame;
                 Steamworks.SteamFriends.OnGameLobbyJoinRequested += OnLobbyJoinRequested;
+
+                if (SteamManager.TryGetUnlockedAchievements(out List<Steamworks.Data.Achievement> achievements))
+                {
+                    //check the achievements too, so we don't consider people who've played the game before this "gamelaunchcount" stat was added as being 1st-time-players
+                    //(people who have played previous versions, but not unlocked any achievements, will be incorrectly considered 1st-time-players, but that should be a small enough group to not skew the statistics)
+                    if (!achievements.Any() && SteamManager.GetStatInt("gamelaunchcount") <= 0)
+                    {
+                        IsFirstLaunch = true;
+                        GameAnalyticsManager.AddDesignEvent("FirstLaunch");
+                    }
+                }
+                SteamManager.IncrementStat("gamelaunchcount", 1);
             }
 #endif
 
@@ -746,11 +723,10 @@ namespace Barotrauma
         protected override void Update(GameTime gameTime)
         {
             Timing.Accumulator += gameTime.ElapsedGameTime.TotalSeconds;
-            int updateIterations = (int)Math.Floor(Timing.Accumulator / Timing.Step);
-            if (Timing.Accumulator > Timing.Step * 6.0)
+            if (Timing.Accumulator > Timing.AccumulatorMax)
             {
-                //if the game's running too slowly then we have no choice
-                //but to skip a bunch of steps
+                //prevent spiral of death:
+                //if the game's running too slowly then we have no choice but to skip a bunch of steps
                 //otherwise it snowballs and becomes unplayable
                 Timing.Accumulator = Timing.Step;
             }
@@ -786,7 +762,6 @@ namespace Barotrauma
 
                 PlayerInput.Update(Timing.Step);
 
-
                 if (loadingScreenOpen)
                 {
                     //reset accumulator if loading
@@ -806,7 +781,10 @@ namespace Barotrauma
                     }
 
 #if DEBUG
-                    CancelQuickStart |= PlayerInput.KeyDown(Keys.LeftShift);
+                    if (PlayerInput.KeyHit(Keys.LeftShift))
+                    {
+                        CancelQuickStart = !CancelQuickStart;
+                    }
 
                     if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen && (Config.AutomaticQuickStartEnabled || Config.AutomaticCampaignLoadEnabled || Config.TestScreenEnabled) && FirstLoad && !CancelQuickStart)
                     {
@@ -841,6 +819,8 @@ namespace Barotrauma
                         }
                     }
 #endif
+
+                    NetworkMember?.Update((float)Timing.Step);
 
                     if (!hasLoaded && !CoroutineManager.IsCoroutineRunning(loadingCoroutine))
                     {
@@ -915,6 +895,11 @@ namespace Barotrauma
                         else if (GameSession.IsTabMenuOpen)
                         {
                             gameSession.ToggleTabMenu();
+                        }
+                        else if (GUIMessageBox.VisibleBox as GUIMessageBox != null &&
+                                 GUIMessageBox.VisibleBox.UserData as string == "bugreporter")
+                        {
+                            ((GUIMessageBox)GUIMessageBox.VisibleBox).Close();
                         }
                         else if (GUI.PauseMenuOpen)
                         {
@@ -1015,13 +1000,21 @@ namespace Barotrauma
 
                 Timing.Accumulator -= Timing.Step;
 
+                updateCount++;
+
                 sw.Stop();
                 PerformanceCounter.AddElapsedTicks("Update total", sw.ElapsedTicks);
                 PerformanceCounter.UpdateTimeGraph.Update(sw.ElapsedTicks * 1000.0f / (float)Stopwatch.Frequency);
-                PerformanceCounter.UpdateIterationsGraph.Update(updateIterations);
             }
 
-            if (!Paused) Timing.Alpha = Timing.Accumulator / Timing.Step;
+            if (!Paused) { Timing.Alpha = Timing.Accumulator / Timing.Step; }
+
+            if (performanceCounterTimer.ElapsedMilliseconds > 1000)
+            {
+                CurrentUpdateRate = (int)Math.Round(updateCount / (double)(performanceCounterTimer.ElapsedMilliseconds / 1000.0));
+                performanceCounterTimer.Restart();
+                updateCount = 0;
+            }
         }
 
         public static void ResetFrameTime()
@@ -1124,6 +1117,17 @@ namespace Barotrauma
 
             if (GameSession != null)
             {
+                double roundDuration = Timing.TotalTime - GameSession.RoundStartTime;
+                GameAnalyticsManager.AddProgressionEvent(GameAnalyticsManager.ProgressionStatus.Fail,
+                    GameSession.GameMode?.Preset.Identifier ?? "none",
+                    roundDuration);
+                string eventId = "QuitRound:" + (GameSession.GameMode?.Preset.Identifier ?? "none") + ":";
+                GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:CurrentIntensity", GameSession.EventManager.CurrentIntensity);
+                foreach (var activeEvent in GameSession.EventManager.ActiveEvents)
+                {
+                    GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:ActiveEvents:" + activeEvent.ToString());
+                }
+                GameSession.LogEndRoundStats(eventId);
                 if (Tutorial.Initialized)
                 {
                     ((TutorialMode)GameSession.GameMode).Tutorial?.Stop();
@@ -1132,6 +1136,7 @@ namespace Barotrauma
             GUIMessageBox.CloseAll();
             MainMenuScreen.Select();
             GameSession = null;
+
         }
 
         public void ShowCampaignDisclaimer(Action onContinue = null)
@@ -1213,11 +1218,7 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), TextManager.Get("bugreportgithubform"), style: "MainMenuGUIButton", textAlignment: Alignment.Left)
             {
-#if UNSTABLE
-                UserData = "https://barotraumagame.com/unstable-3rf3w5t4ter/",
-#else
                 UserData = "https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md",
-#endif
                 OnClicked = (btn, userdata) =>
                 {
                     ShowOpenUrlInWebBrowserPrompt(userdata as string);
@@ -1231,7 +1232,7 @@ namespace Barotrauma
         }
 
         static bool waitForKeyHit = true;
-        public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
+        public CoroutineHandle ShowLoading(IEnumerable<CoroutineStatus> loader, bool waitKeyHit = true)
         {
             waitForKeyHit = waitKeyHit;
             loadingScreenOpen = true;
@@ -1255,8 +1256,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error while cleaning unnecessary save files", e);
             }
 
-            if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
-            if (GameSettings.SaveDebugConsoleLogs) { DebugConsole.SaveLogs(); }
+            if (GameAnalyticsManager.SendUserStatistics) { GameAnalyticsManager.ShutDown(); }
+            if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging) { DebugConsole.SaveLogs(); }
 
             base.OnExiting(sender, args);
         }

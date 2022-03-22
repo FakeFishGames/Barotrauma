@@ -25,7 +25,7 @@ namespace Barotrauma.Items.Components
             get { return wires; }
         }
 
-        private Item item;
+        private readonly Item item;
 
         public readonly bool IsOutput;
         
@@ -142,7 +142,6 @@ namespace Barotrauma.Items.Components
 
             IsPower = Name == "power_in" || Name == "power" || Name == "power_out";
 
-            Effects = new List<StatusEffect>();
 
             wireId = new ushort[MaxWires];
 
@@ -164,6 +163,7 @@ namespace Barotrauma.Items.Components
 
                         break;
                     case "statuseffect":
+                        Effects ??= new List<StatusEffect>();
                         Effects.Add(StatusEffect.Load(subElement, item.Name + ", connection " + Name));
                         break;
                 }
@@ -272,7 +272,7 @@ namespace Barotrauma.Items.Components
                     ic.ReceiveSignal(signal, connection);
                 }
 
-                if (signal.value != "0")
+                if (recipient.Effects != null && signal.value != "0")
                 {
                     foreach (StatusEffect effect in recipient.Effects)
                     {

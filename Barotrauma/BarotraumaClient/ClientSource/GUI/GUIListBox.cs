@@ -34,7 +34,7 @@ namespace Barotrauma
         public GUIScrollBar ScrollBar { get; private set; }
 
         private readonly Dictionary<GUIComponent, bool> childVisible = new Dictionary<GUIComponent, bool>();
-  
+          
         private int totalSize;
         private bool childrenNeedsRecalculation;
         private bool scrollBarNeedsRecalculation;
@@ -53,7 +53,23 @@ namespace Barotrauma
             }
         }
 
-        public bool SelectMultiple;
+        public enum SelectMode
+        {
+            SelectSingle,
+            SelectMultiple,
+            RequireShiftToSelectMultiple
+        }
+        
+        public SelectMode CurrentSelectMode = SelectMode.SelectSingle;
+
+        public bool SelectMultiple
+        {
+            get { return CurrentSelectMode != SelectMode.SelectSingle; }
+            set
+            {
+                CurrentSelectMode = value ? SelectMode.SelectMultiple : SelectMode.SelectSingle;
+            }
+        }
 
         public bool HideChildrenOutsideFrame = true;
 
@@ -62,6 +78,8 @@ namespace Barotrauma
         private GUIComponent scrollToElement;
 
         public bool AllowMouseWheelScroll { get; set; } = true;
+
+        public bool AllowArrowKeyScroll { get; set; } = true;
 
         /// <summary>
         /// Scrolls the list smoothly
@@ -103,7 +121,7 @@ namespace Barotrauma
         /// <summary>
         /// true if mouse down should select elements instead of mouse up
         /// </summary>
-        private bool useMouseDownToSelect = false;
+        private readonly bool useMouseDownToSelect = false;
 
         private Vector4? overridePadding;
         public Vector4 Padding
@@ -132,10 +150,7 @@ namespace Barotrauma
         // TODO: fix implicit hiding
         public bool Selected { get; set; }
 
-        public List<GUIComponent> AllSelected
-        {
-            get { return selected; }
-        }
+        public IReadOnlyList<GUIComponent> AllSelected => selected;
 
         public object SelectedData
         {
@@ -214,25 +229,34 @@ namespace Barotrauma
         public bool AutoHideScrollBar { get; set; } = true;
         private bool IsScrollBarOnDefaultSide { get; set; }
 
-        public bool CanDragElements
+        public enum DragMode
+        {
+            NoDragging,
+            DragWithinBox,
+            DragOutsideBox
+        }
+        
+        private DragMode currentDragMode = DragMode.NoDragging;
+        public DragMode CurrentDragMode
         {
             get
             {
-                return canDragElements;
+                return currentDragMode;
             }
             set
             {
-                if (value == false && canDragElements && draggedElement != null)
+                if (value == DragMode.NoDragging && currentDragMode != DragMode.NoDragging && isDraggingElement)
                 {
                     DraggedElement = null;
                 }
-                canDragElements = value;
+                currentDragMode = value;
             }
         }
-        private bool canDragElements = false;
+
         private GUIComponent draggedElement;
-        private Rectangle draggedReferenceRectangle;
-        private Point draggedReferenceOffset;
+        private Point dragMousePosRelativeToTopLeftCorner;
+        private bool isDraggingElement => draggedElement != null;
+        
         public bool HasDraggedElementIndexChanged { get; private set; }
 
         public GUIComponent DraggedElement
@@ -246,8 +270,24 @@ namespace Barotrauma
                 if (value == draggedElement) { return; }
                 draggedElement = value;
                 HasDraggedElementIndexChanged = false;
+
+                if (value == null) { return; }
+
+                dragMousePosRelativeToTopLeftCorner = PlayerInput.MousePosition.ToPoint() - value.Rect.Location;
+
+                if (SelectMultiple)
+                {
+                    if (!AllSelected.Contains(DraggedElement))
+                    {
+                        Select(DraggedElement.ToEnumerable());
+                    }
+                }
             }
         }
+
+        //This exists to work around the fact that rendering child
+        //elements on top of the listbox's siblings is a clusterfuck.
+        public bool HideDraggedElement = false;
         
         private readonly bool isHorizontal;
 
@@ -322,6 +362,14 @@ namespace Barotrauma
             RectTransform.ScaleChanged += () => dimensionsNeedsRecalculation = true;
             RectTransform.SizeChanged += () => dimensionsNeedsRecalculation = true;
             UpdateDimensions();
+
+            rectT.ChildrenChanged += CheckForChildren;
+        }
+
+        private void CheckForChildren(RectTransform rectT)
+        {
+            if (rectT == ScrollBar.RectTransform || rectT == Content.RectTransform || rectT == ContentBackground.RectTransform) { return; }
+            throw new InvalidOperationException($"Children were added to {nameof(GUIListBox)}, Add them to {nameof(GUIListBox)}.{nameof(Content)} instead.");
         }
 
         public void UpdateDimensions()
@@ -354,7 +402,7 @@ namespace Barotrauma
                     (child.UserData == null && userData == null))
                 {
                     Select(i, force, autoScroll);
-                    if (!SelectMultiple) return;
+                    if (!SelectMultiple) { return; }
                 }
                 i++;
             }
@@ -363,9 +411,10 @@ namespace Barotrauma
         private Point CalculateFrameSize(bool isHorizontal, int scrollBarSize)
             => isHorizontal ? new Point(Rect.Width, Rect.Height - scrollBarSize) : new Point(Rect.Width - scrollBarSize, Rect.Height);
 
-        private void RepositionChildren()
+        public Vector2 CalculateTopOffset()
         {
-            int x = 0, y = 0;
+            int x = 0;
+            int y = 0;
             if (ScrollBar.BarSize < 1.0f)
             {
                 if (ScrollBar.IsHorizontal)
@@ -378,53 +427,59 @@ namespace Barotrauma
                 }
             }
 
+            return new Vector2(x, y);
+        }
+
+        private void CalculateChildrenOffsets(Action<int, Point> callback)
+        {
+            Vector2 topOffset = CalculateTopOffset();
+            int x = (int)topOffset.X;
+            int y = (int)topOffset.Y;
+            
             for (int i = 0; i < Content.CountChildren; i++)
             {
                 GUIComponent child = Content.GetChild(i);
-                if (!child.Visible) { continue; }
+                if (child == null || !child.Visible) { continue; }
                 if (RectTransform != null)
                 {
-                    if (child != draggedElement && (child.RectTransform.AbsoluteOffset.X != x || child.RectTransform.AbsoluteOffset.Y != y))
-                    {
-                        child.RectTransform.AbsoluteOffset = new Point(x, y);
-                    }
+                    callback(i, new Point(x, y));
                 }
 
                 if (useGridLayout)
                 {
+                    void advanceGridLayout(
+                        ref int primaryCoord,
+                        ref int secondaryCoord,
+                        int primaryChildDimension,
+                        int secondaryChildDimension,
+                        int primaryParentDimension)
+                    {
+                        if (primaryCoord + primaryChildDimension + Spacing > primaryParentDimension)
+                        {
+                            primaryCoord = 0;
+                            secondaryCoord += secondaryChildDimension + Spacing;
+                            callback(i, new Point(x, y));
+                        }
+                        primaryCoord += primaryChildDimension + Spacing;
+                    }
+                    
                     if (ScrollBar.IsHorizontal)
                     {
-                        if (y + child.Rect.Height + Spacing > Content.Rect.Height)
-                        {
-                            y = 0;
-                            x += child.Rect.Width + Spacing;
-                            if (child != draggedElement && (child.RectTransform.AbsoluteOffset.X != x || child.RectTransform.AbsoluteOffset.Y != y))
-                            {
-                                child.RectTransform.AbsoluteOffset = new Point(x, y);
-                            }
-                            y += child.Rect.Height + Spacing;
-                        }
-                        else
-                        {
-                            y += child.Rect.Height + Spacing;
-                        }
+                        advanceGridLayout(
+                            primaryCoord: ref y,
+                            secondaryCoord: ref x,
+                            primaryChildDimension: child.Rect.Height,
+                            secondaryChildDimension: child.Rect.Width,
+                            primaryParentDimension: Content.Rect.Height);
                     }
                     else
                     {
-                        if (x + child.Rect.Width + Spacing > Content.Rect.Width)
-                        {
-                            x = 0;
-                            y += child.Rect.Height + Spacing;
-                            if (child != draggedElement && (child.RectTransform.AbsoluteOffset.X != x || child.RectTransform.AbsoluteOffset.Y != y))
-                            {
-                                child.RectTransform.AbsoluteOffset = new Point(x, y);
-                            }
-                            x += child.Rect.Width + Spacing;
-                        }
-                        else
-                        {
-                            x += child.Rect.Width + Spacing;
-                        }
+                        advanceGridLayout(
+                            primaryCoord: ref x,
+                            secondaryCoord: ref y,
+                            primaryChildDimension: child.Rect.Width,
+                            secondaryChildDimension: child.Rect.Height,
+                            primaryParentDimension: Content.Rect.Width);
                     }
                 }
                 else
@@ -439,6 +494,18 @@ namespace Barotrauma
                     }
                 }
             }
+        }
+        
+        private void RepositionChildren()
+        {
+            CalculateChildrenOffsets((index, offset) =>
+            {
+                var child = Content.GetChild(index);
+                if (child != draggedElement && child.RectTransform.AbsoluteOffset != offset)
+                {
+                    child.RectTransform.AbsoluteOffset = offset;
+                }
+            });
         }
 
         /// <summary>
@@ -466,7 +533,7 @@ namespace Barotrauma
         {
             CoroutineManager.StartCoroutine(ScrollCoroutine());
 
-            IEnumerable<object> ScrollCoroutine()
+            IEnumerable<CoroutineStatus> ScrollCoroutine()
             {
                 if (BarSize >= 1.0f)
                 {
@@ -490,67 +557,121 @@ namespace Barotrauma
             }
         }
 
-        
-        private void UpdateChildrenRect()
+        private void StartDraggingElement(GUIComponent child)
         {
-            //dragging
-            if (CanDragElements && draggedElement != null)
+            DraggedElement = child;
+        }
+
+        private bool UpdateDragging()
+        {
+            if (CurrentDragMode == DragMode.NoDragging || !isDraggingElement) { return false; }
+            if (!PlayerInput.PrimaryMouseButtonHeld())
             {
-                if (!PlayerInput.PrimaryMouseButtonHeld())
+                var draggedElem = draggedElement;
+                OnRearranged?.Invoke(this, draggedElem.UserData);
+                DraggedElement = null;
+                RepositionChildren();
+                if (AllSelected.Contains(draggedElem)) { return true; }
+            }
+            else
+            {
+                Vector2 topOffset = CalculateTopOffset();
+                var mousePos = PlayerInput.MousePosition.ToPoint();
+                draggedElement.RectTransform.AbsoluteOffset = mousePos - Content.Rect.Location - dragMousePosRelativeToTopLeftCorner;
+                if (CurrentDragMode != DragMode.DragOutsideBox)
                 {
-                    OnRearranged?.Invoke(this, draggedElement.UserData);
-                    DraggedElement = null;
-                    RepositionChildren();
+                    var offset = draggedElement.RectTransform.AbsoluteOffset;
+                    draggedElement.RectTransform.AbsoluteOffset =
+                        isHorizontal ? new Point(offset.X, 0) : new Point(0, offset.Y);
+                }
+
+                int index = Content.RectTransform.GetChildIndex(draggedElement.RectTransform);
+                int newIndex = index;
+
+                Point draggedOffsetWhenReleased = Point.Zero;
+                CalculateChildrenOffsets((i, offset) =>
+                {
+                    if (index != i) { return; }
+                    draggedOffsetWhenReleased = offset;
+                });
+                Rectangle draggedRectWhenReleased = new Rectangle(Content.Rect.Location + draggedOffsetWhenReleased, draggedElement.Rect.Size);
+
+                void shiftIndices(
+                    float mousePos,
+                    ref int draggedRectWhenReleasedLocation,
+                    int draggedRectWhenReleasedSize)
+                {
+                    while (mousePos > (draggedRectWhenReleasedLocation  + draggedRectWhenReleasedSize) && newIndex < Content.CountChildren-1)
+                    {
+                        newIndex++;
+                        draggedRectWhenReleasedLocation += draggedRectWhenReleasedSize;
+                    }
+                    while (mousePos < draggedRectWhenReleasedLocation && newIndex > 0)
+                    {
+                        newIndex--;
+                        draggedRectWhenReleasedLocation -= draggedRectWhenReleasedSize;
+                    }
+                    
+                    if (newIndex != index && AllSelected.Count > 1)
+                    {
+                        this.selected.Sort((a, b) => Content.GetChildIndex(a) - Content.GetChildIndex(b));
+                        int draggedPos = AllSelected.IndexOf(draggedElement);
+                        if (newIndex < draggedPos)
+                        {
+                            newIndex = draggedPos;
+                        }
+                        if (newIndex >= Content.CountChildren - (AllSelected.Count - draggedPos))
+                        {
+                            int max = Content.CountChildren - (AllSelected.Count - draggedPos);
+                            newIndex = max;
+                        }
+                    }
+                }
+                
+                if (isHorizontal)
+                {
+                    shiftIndices(
+                        mousePos.X,
+                        ref draggedRectWhenReleased.X,
+                        draggedRectWhenReleased.Width);
                 }
                 else
                 {
-                    draggedElement.RectTransform.AbsoluteOffset = isHorizontal ?
-                        draggedReferenceOffset + new Point((int)PlayerInput.MousePosition.X - draggedReferenceRectangle.Center.X, 0) :
-                        draggedReferenceOffset + new Point(0, (int)PlayerInput.MousePosition.Y - draggedReferenceRectangle.Center.Y);
+                    shiftIndices(
+                        mousePos.Y,
+                        ref draggedRectWhenReleased.Y,
+                        draggedRectWhenReleased.Height);
+                }
 
-                    int index = Content.RectTransform.GetChildIndex(draggedElement.RectTransform);
-                    int currIndex = index;
-
-                    if (isHorizontal)
+                if (newIndex != index)
+                {
+                    if (AllSelected.Count > 1)
                     {
-                        while (currIndex > 0 && PlayerInput.MousePosition.X < draggedReferenceRectangle.Left)
+                        this.selected.Sort((a, b) => Content.GetChildIndex(a) - Content.GetChildIndex(b));
+                        int indexOfDraggedElem = AllSelected.IndexOf(draggedElement);
+                        IEnumerable<GUIComponent> allSelected = AllSelected;
+                        if (newIndex > index) { allSelected = allSelected.Reverse(); }
+                        foreach (var elem in allSelected)
                         {
-                            currIndex--;
-                            draggedReferenceRectangle.X -= draggedReferenceRectangle.Width;
-                            draggedReferenceOffset.X -= draggedReferenceRectangle.Width;
-                        }
-                        while (currIndex < Content.CountChildren - 1 && PlayerInput.MousePosition.X > draggedReferenceRectangle.Right)
-                        {
-                            currIndex++;
-                            draggedReferenceRectangle.X += draggedReferenceRectangle.Width;
-                            draggedReferenceOffset.X += draggedReferenceRectangle.Width;
+                            elem.RectTransform.RepositionChildInHierarchy(newIndex + AllSelected.IndexOf(elem) - indexOfDraggedElem);
                         }
                     }
                     else
                     {
-                        while (currIndex > 0 && PlayerInput.MousePosition.Y < draggedReferenceRectangle.Top)
-                        {
-                            currIndex--;
-                            draggedReferenceRectangle.Y -= draggedReferenceRectangle.Height;
-                            draggedReferenceOffset.Y -= draggedReferenceRectangle.Height;
-                        }
-                        while (currIndex < Content.CountChildren - 1 && PlayerInput.MousePosition.Y > draggedReferenceRectangle.Bottom)
-                        {
-                            currIndex++;
-                            draggedReferenceRectangle.Y += draggedReferenceRectangle.Height;
-                            draggedReferenceOffset.Y += draggedReferenceRectangle.Height;
-                        }
+                        draggedElement.RectTransform.RepositionChildInHierarchy(newIndex);
                     }
-
-                    if (currIndex != index)
-                    {
-                        draggedElement.RectTransform.RepositionChildInHierarchy(currIndex);
-                        HasDraggedElementIndexChanged = true;
-                    }
-
-                    return;
+                    HasDraggedElementIndexChanged = true;
                 }
+
+                return true;
             }
+
+            return false;
+        }
+        
+        private void UpdateChildrenRect()
+        {
+            if (UpdateDragging()) { return; }
 
             if (SelectTop)
             {
@@ -581,7 +702,7 @@ namespace Barotrauma
             for (int i = 0; i < Content.CountChildren; i++)
             {
                 var child = Content.RectTransform.GetChild(i)?.GUIComponent;
-                if (child == null || !child.Visible) { continue; }
+                if (!(child is { Visible: true })) { continue; }
 
                 // selecting
                 if (Enabled && (CanBeFocused || CanInteractWhenUnfocusable) && child.CanBeFocused && child.Rect.Contains(PlayerInput.MousePosition) && GUI.IsMouseOn(child))
@@ -595,19 +716,15 @@ namespace Barotrauma
                         if (SelectTop)
                         {
                             ScrollToElement(child);
-                            Select(i, autoScroll: false, takeKeyBoardFocus: true);
                         }
-                        else
-                        {
-                            Select(i, autoScroll: false, takeKeyBoardFocus: true);
-                        }
+                        Select(i, autoScroll: false, takeKeyBoardFocus: true);
                     }
 
-                    if (CanDragElements && PlayerInput.PrimaryMouseButtonDown() && GUI.MouseOn == child)
+                    if (CurrentDragMode != DragMode.NoDragging
+                        && (CurrentSelectMode != SelectMode.RequireShiftToSelectMultiple || (!PlayerInput.IsShiftDown() && !PlayerInput.IsCtrlDown()))
+                        && PlayerInput.PrimaryMouseButtonDown() && GUI.MouseOn == child)
                     {
-                        DraggedElement = child;
-                        draggedReferenceRectangle = child.Rect;
-                        draggedReferenceOffset = child.RectTransform.AbsoluteOffset;
+                        StartDraggingElement(child);
                     }
                 }
                 else if (selected.Contains(child))
@@ -686,6 +803,13 @@ namespace Barotrauma
             OnAddedToGUIUpdateList?.Invoke(this);
         }
 
+        public override void ForceLayoutRecalculation()
+        {
+            base.ForceLayoutRecalculation();
+            Content.ForceLayoutRecalculation();
+            ScrollBar.ForceLayoutRecalculation();
+        }
+        
         public void RecalculateChildren()
         {
             foreach (GUIComponent child in Content.Children)
@@ -709,8 +833,6 @@ namespace Barotrauma
             }
         }
 
-        public void ForceUpdate() => Update((float)Timing.Step);
-        
         protected override void Update(float deltaTime)
         {
             if (!Visible) { return; }
@@ -722,7 +844,6 @@ namespace Barotrauma
             {
                 UpdateScrollBarSize();
             }
-
 
             if (FadeElements)
             {
@@ -805,7 +926,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    ScrollBar.BarScroll -= (PlayerInput.ScrollWheelSpeed / 500.0f) * BarSize;
+                    ScrollBar.BarScroll -= (PlayerInput.ScrollWheelSpeed / 500.0f) * ScrollBar.UnclampedBarSize;
                 }
             }
 
@@ -870,6 +991,7 @@ namespace Barotrauma
             if (childIndex >= Content.CountChildren || childIndex < 0) { return; }
 
             GUIComponent child = Content.GetChild(childIndex);
+            if (child is null) { return; }
 
             bool wasSelected = true;
             if (OnSelected != null)
@@ -880,7 +1002,8 @@ namespace Barotrauma
 
             if (!wasSelected) { return; }
 
-            if (SelectMultiple)
+            if (CurrentSelectMode == SelectMode.SelectMultiple ||
+                (CurrentSelectMode == SelectMode.RequireShiftToSelectMultiple && PlayerInput.IsCtrlDown()))
             {
                 if (selected.Contains(child))
                 {
@@ -890,6 +1013,23 @@ namespace Barotrauma
                 {
                     selected.Add(child);
                 }
+            }
+            else if (CurrentSelectMode == SelectMode.RequireShiftToSelectMultiple && PlayerInput.IsShiftDown())
+            {
+                var first = SelectedComponent ?? child;
+                var last = child;
+                int firstIndex = Content.GetChildIndex(first);
+                int lastIndex = Content.GetChildIndex(last);
+                int sgn = Math.Sign(lastIndex - firstIndex);
+                selected.Clear(); selected.Add(first);
+                for (int i = firstIndex + sgn; i != lastIndex; i += sgn)
+                {
+                    if (Content.GetChild(i) is { Visible: true } interChild)
+                    {
+                        selected.Add(interChild);
+                    }
+                }
+                if (first != last) { selected.Add(last); }
             }
             else
             {
@@ -937,6 +1077,14 @@ namespace Barotrauma
             }
         }
 
+        public void Select(IEnumerable<GUIComponent> children)
+        {
+            Selected = true;
+            selected.Clear();
+            selected.AddRange(children.Where(c => Content.Children.Contains(c)));
+            foreach (var child in selected) { OnSelected?.Invoke(child, child.UserData); }
+        }
+        
         public void Deselect()
         {
             Selected = false;
@@ -1007,9 +1155,12 @@ namespace Barotrauma
             }
 
             float minScrollBarSize = 20.0f;
+            ScrollBar.UnclampedBarSize = ScrollBar.IsHorizontal ?
+                Math.Min(Content.Rect.Width / (float)totalSize, 1.0f) :
+                Math.Min(Content.Rect.Height / (float)totalSize, 1.0f);
             ScrollBar.BarSize = ScrollBar.IsHorizontal ?
-                Math.Max(Math.Min(Content.Rect.Width / (float)totalSize, 1.0f), minScrollBarSize / Content.Rect.Width) :
-                Math.Max(Math.Min(Content.Rect.Height / (float)totalSize, 1.0f), minScrollBarSize / Content.Rect.Height);
+                Math.Max(ScrollBar.UnclampedBarSize, minScrollBarSize / Content.Rect.Width) :
+                Math.Max(ScrollBar.UnclampedBarSize, minScrollBarSize / Content.Rect.Height);
         }
         
         public override void ClearChildren()
@@ -1052,10 +1203,11 @@ namespace Barotrauma
             int i = 0;
             foreach (GUIComponent child in Content.Children)
             {
-                if (!child.Visible) continue;
+                if (!child.Visible) { continue; }
+                if (child == draggedElement && CurrentDragMode == DragMode.DragOutsideBox) { continue; }
                 if (!IsChildInsideFrame(child))
                 {
-                    if (lastVisible > 0) break;
+                    if (lastVisible > 0) { break; }
                     continue;
                 }
                 lastVisible = i;
@@ -1068,6 +1220,11 @@ namespace Barotrauma
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
+            }
+
+            if (isDraggingElement && CurrentDragMode == DragMode.DragOutsideBox && !HideDraggedElement)
+            {
+                draggedElement.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
             }
 
             if (ScrollBarVisible)
@@ -1106,10 +1263,16 @@ namespace Barotrauma
             switch (key)
             {
                 case Keys.Down:
-                    SelectNext();
+                    if (!isHorizontal && AllowArrowKeyScroll) { SelectNext(); }
                     break;
                 case Keys.Up:
-                    SelectPrevious();
+                    if (!isHorizontal && AllowArrowKeyScroll) { SelectPrevious(); }
+                    break;
+                case Keys.Left:
+                    if (isHorizontal && AllowArrowKeyScroll) { SelectPrevious(); }
+                    break;
+                case Keys.Right:
+                    if (isHorizontal && AllowArrowKeyScroll) { SelectNext(); }
                     break;
                 case Keys.Enter:
                 case Keys.Space:

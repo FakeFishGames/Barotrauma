@@ -2,14 +2,14 @@
 
 namespace Barotrauma.Networking
 {
-    public enum DeliveryMethod : byte
+    public enum DeliveryMethod : int
     {
         Unreliable = 0x0,
         Reliable = 0x1,
         ReliableOrdered = 0x2
     }
 
-    public enum ConnectionInitialization : byte
+    public enum ConnectionInitialization : int
     {
         //used by all peer implementations
         SteamTicketAndVersion = 0x1,
@@ -22,7 +22,7 @@ namespace Barotrauma.Networking
     }
 
     [Flags]
-    public enum PacketHeader : byte
+    public enum PacketHeader : int
     {
         //used by all peer implementations
         None = 0x0,
@@ -33,6 +33,24 @@ namespace Barotrauma.Networking
         IsDisconnectMessage = 0x4,
         IsServerMessage = 0x8,
         IsHeartbeatMessage = 0x10
+    }
+
+    public static class NetworkEnumExtensions
+    {
+        public static bool IsCompressed(this PacketHeader h)
+            => h.HasFlag(PacketHeader.IsCompressed);
+
+        public static bool IsConnectionInitializationStep(this PacketHeader h)
+            => h.HasFlag(PacketHeader.IsConnectionInitializationStep);
+
+        public static bool IsDisconnectMessage(this PacketHeader h)
+            => h.HasFlag(PacketHeader.IsDisconnectMessage);
+
+        public static bool IsServerMessage(this PacketHeader h)
+            => h.HasFlag(PacketHeader.IsServerMessage);
+
+        public static bool IsHeartbeatMessage(this PacketHeader h)
+            => h.HasFlag(PacketHeader.IsHeartbeatMessage);
     }
 }
 

@@ -67,6 +67,9 @@ namespace Barotrauma
 
         public Affliction(AfflictionPrefab prefab, float strength)
         {
+#if CLIENT
+            prefab?.ReloadSoundsIfNeeded();
+#endif
             Prefab = prefab;
             PendingAdditionStrength = Prefab.GrainBurst;
             _strength = strength;
@@ -99,15 +102,21 @@ namespace Barotrauma
 
         public float GetVitalityDecrease(CharacterHealth characterHealth)
         {
-            if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
-            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
+            return GetVitalityDecrease(characterHealth, Strength);
+        }
+
+        public float GetVitalityDecrease(CharacterHealth characterHealth, float strength)
+        {
+            if (strength < Prefab.ActivationThreshold) { return 0.0f; }
+            strength = MathHelper.Clamp(strength, 0.0f, Prefab.MaxStrength);
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(strength);
             if (currentEffect == null) { return 0.0f; }
             if (currentEffect.MaxStrength - currentEffect.MinStrength <= 0.0f) { return 0.0f; }
 
             float currVitalityDecrease = MathHelper.Lerp(
-                currentEffect.MinVitalityDecrease, 
-                currentEffect.MaxVitalityDecrease, 
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+                currentEffect.MinVitalityDecrease,
+                currentEffect.MaxVitalityDecrease,
+                (strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
 
             if (currentEffect.MultiplyByMaxVitality)
             {
@@ -116,7 +125,8 @@ namespace Barotrauma
 
             return currVitalityDecrease;
         }
-        
+
+
         public float GetScreenGrainStrength()
         {
             if (Strength < Prefab.ActivationThreshold) { return 0.0f; }

@@ -110,10 +110,12 @@ namespace Barotrauma.Items.Components
             if (Item.RequireAimToUse && hitPos < MathHelper.PiOver4) { return false; }
 
             ActivateNearbySleepingCharacters();
-            reloadTimer = reload / (1 + character.GetStatValue(StatTypes.MeleeAttackSpeed));
+            reloadTimer = reload;
+            reloadTimer /= (1f + character.GetStatValue(StatTypes.MeleeAttackSpeed));
+            reloadTimer /= (1f + item.GetQualityModifier(Quality.StatType.StrikingSpeedMultiplier));
 
             item.body.FarseerBody.CollisionCategories = Physics.CollisionProjectile;
-            item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall;
+            item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionItemBlocking;
             item.body.FarseerBody.OnCollision += OnCollision;
             item.body.FarseerBody.IsBullet = true;
             item.body.PhysEnabled = true;
@@ -359,6 +361,10 @@ namespace Barotrauma.Items.Components
                 }
                 hitTargets.Add(targetItem);
             }
+            else if (f2.Body.UserData is Holdable holdable && holdable.CanPush)
+            {
+                hitTargets.Add(holdable.Item);
+            }
             else
             {
                 return false;
@@ -385,7 +391,7 @@ namespace Barotrauma.Items.Components
             {
                 Attack.SetUser(User);
                 Attack.DamageMultiplier = 1 + User.GetStatValue(StatTypes.MeleeAttackMultiplier);
-                Attack.DamageMultiplier *= 1.0f + item.GetQualityModifier(Quality.StatType.AttackMultiplier);
+                Attack.DamageMultiplier *= 1.0f + item.GetQualityModifier(Quality.StatType.StrikingPowerMultiplier);
 
                 if (targetLimb != null)
                 {
@@ -408,6 +414,14 @@ namespace Barotrauma.Items.Components
                 {
                     if (targetItem.Removed) { return; }
                     Attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
+                }
+                else if (target.UserData is Holdable holdable && holdable.CanPush)
+                {
+                    if (holdable.Item.Removed) { return; }
+                    Attack.DoDamage(User, holdable.Item, item.WorldPosition, 1.0f);
+                    RestoreCollision();
+                    hitting = false;
+                    User = null;
                 }
                 else
                 {

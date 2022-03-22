@@ -106,7 +106,8 @@ namespace Barotrauma
             respawnButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), respawnInfoFrame.RectTransform, Anchor.CenterRight), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 AbsoluteSpacing = HUDLayoutSettings.Padding,
-                Stretch = true
+                Stretch = true,
+                Visible = false
             };
             respawnTickBox = new GUITickBox(new RectTransform(Vector2.One * 0.9f, respawnButtonContainer.RectTransform, Anchor.Center), TextManager.Get("respawnquestionpromptrespawn"))
             {
@@ -171,7 +172,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    indicator.Visible = Character.Controlled.Info.GetAvailableTalentPoints() > 0;
+                    indicator.Visible = Character.Controlled.Info.GetAvailableTalentPoints() > 0 && !Character.Controlled.HasUnlockedAllTalents();
                 }
             }
         }

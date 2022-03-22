@@ -203,6 +203,14 @@ namespace Barotrauma
             enemySub.TeamID = CharacterTeamType.None;
             //make the enemy sub withstand atleast the same depth as the player sub
             enemySub.RealWorldCrushDepth = Math.Max(enemySub.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth);
+            if (Level.Loaded != null)
+            {
+                //...and the depth of the patrol positions + 1000 m
+                foreach (var patrolPos in patrolPositions)
+                {
+                    enemySub.RealWorldCrushDepth = Math.Max(enemySub.RealWorldCrushDepth, Level.Loaded.GetRealWorldDepth(patrolPos.Y) + 1000);
+                }
+            }
             enemySub.ImmuneToBallastFlora = true;
         }
 
@@ -337,12 +345,13 @@ namespace Barotrauma
 
         protected override void UpdateMissionSpecific(float deltaTime)
         {
-            int newState = State;
+            if (state >= 2) { return; }
+
             float sqrSonarRange = MathUtils.Pow2(Sonar.DefaultSonarRange);
             outsideOfSonarRange = Vector2.DistanceSquared(enemySub.WorldPosition, Submarine.MainSub.WorldPosition) > sqrSonarRange;
-            if (State < 2 && CheckWinState())
+            if (CheckWinState())
             {
-                newState = 2;
+                State = 2;
             }
             else
             {
@@ -358,7 +367,7 @@ namespace Barotrauma
                         }
                         if (!outsideOfSonarRange || patrolPositions.None())
                         {
-                            newState = 1;
+                            State = 1;
                         }
                         break;
                     case 1:
@@ -383,14 +392,13 @@ namespace Barotrauma
                         break;
                 }
             }
-            State = newState;
         }
 
         private bool CheckWinState() => !IsClient && characters.All(m => DeadOrCaptured(m));
 
         private bool DeadOrCaptured(Character character)
         {
-            return character == null || character.Removed || character.IsDead || (character.LockHands && character.Submarine == Submarine.MainSub);
+            return character == null || character.Removed || character.Submarine == null || (character.LockHands && character.Submarine == Submarine.MainSub) || character.IsIncapacitated;
         }
 
         public override void End()

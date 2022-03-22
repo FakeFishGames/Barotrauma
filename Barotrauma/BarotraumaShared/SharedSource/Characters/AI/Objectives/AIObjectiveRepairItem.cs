@@ -20,6 +20,9 @@ namespace Barotrauma
         private float previousCondition = -1;
         private RepairTool repairTool;
 
+        private const float WaitTimeBeforeRepair = 0.5f;
+        private float waitTimer;
+
         private bool IsRepairing() => IsRepairing(character, Item);
         private readonly bool isPriority;
 
@@ -107,7 +110,7 @@ namespace Barotrauma
                     {
                         foreach (RelatedItem requiredItem in kvp.Value)
                         {
-                            var getItemObjective = new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, true)
+                            var getItemObjective = new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, equip: true)
                             {
                                 AllowVariants = requiredItem.AllowVariants
                             };
@@ -160,6 +163,9 @@ namespace Barotrauma
             }
             if (!character.IsClimbing && character.CanInteractWith(Item, out _, checkLinked: false))
             {
+                waitTimer += deltaTime;
+                if (waitTimer < WaitTimeBeforeRepair) { return; }
+
                 HumanAIController.FaceTarget(Item);
                 if (repairTool != null)
                 {
@@ -176,8 +182,12 @@ namespace Barotrauma
                     {
                         if (character.SelectedConstruction != Item)
                         {
-                            if (!Item.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true) &&
-                                !Item.TryInteract(character, ignoreRequiredItems: true, forceActionKey: true))
+                            if (Item.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true) ||
+                                Item.TryInteract(character, ignoreRequiredItems: true, forceUseKey: true))
+                            {
+                                character.SelectedConstruction = Item;
+                            }
+                            else
                             {
                                 Abandon = true;
                             }
@@ -209,6 +219,7 @@ namespace Barotrauma
             }
             else
             {
+                waitTimer = 0.0f;
                 RemoveSubObjective(ref refuelObjective);
                 // If cannot reach the item, approach it.
                 TryAddSubObjective(ref goToObjective,
@@ -219,8 +230,7 @@ namespace Barotrauma
                         {
                             // Don't stop in ladders, because we can't interact with other items while holding the ladders.
                             endNodeFilter = node => node.Waypoint.Ladders == null,
-                            // Allow repairing hatches and airlock doors.
-                            AllowGoingOutside = HumanAIController.ObjectiveManager.IsCurrentOrder<AIObjectiveRepairItems>() && Item.GetComponent<Door>() != null
+                            TargetName = Item.Name
                         };
                         if (repairTool != null)
                         {

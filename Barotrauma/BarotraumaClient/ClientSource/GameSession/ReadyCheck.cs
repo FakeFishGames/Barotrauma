@@ -31,7 +31,7 @@ namespace Barotrauma
         private GUIMessageBox? msgBox;
         private GUIMessageBox? resultsBox;
 
-        public static DateTime lastReadyCheck = DateTime.MinValue;
+        public static DateTime ReadyCheckCooldown = DateTime.MinValue;
 
         public static bool IsReadyCheck(GUIComponent? msgBox) => msgBox?.UserData as string == PromptData || msgBox?.UserData as string == ResultData;
 
@@ -273,10 +273,10 @@ namespace Barotrauma
 
         public static void CreateReadyCheck()
         {
-            if (lastReadyCheck < DateTime.Now)
+            if (ReadyCheckCooldown < DateTime.Now)
             {
 #if !DEBUG
-                lastReadyCheck = DateTime.Now.AddMinutes(1);
+                ReadyCheckCooldown = DateTime.Now.AddMinutes(1);
 #endif
                 IWriteMessage msg = new WriteOnlyMessage();
                 msg.Write((byte) ClientPacketHeader.READY_CHECK);
@@ -285,7 +285,7 @@ namespace Barotrauma
                 return;
             }
 
-            GUIMessageBox msgBox = new GUIMessageBox(readyCheckHeader, readyCheckPleaseWait((lastReadyCheck - DateTime.Now).Seconds), new[] { closeButton });
+            GUIMessageBox msgBox = new GUIMessageBox(readyCheckHeader, readyCheckPleaseWait((ReadyCheckCooldown - DateTime.Now).Seconds), new[] { closeButton });
             msgBox.Buttons[0].OnClicked = delegate
             {
                 msgBox.Close();

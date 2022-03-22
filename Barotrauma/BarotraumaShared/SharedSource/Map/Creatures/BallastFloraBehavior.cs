@@ -18,8 +18,8 @@ namespace Barotrauma.MapCreatures.Behavior
         public readonly BallastFloraBehavior? ParentBallastFlora;
         public int ID = -1;
 
-        public ushort ClaimedItem;
-        public bool HasClaimedItem;
+        public Item ClaimedItem;
+        public int ClaimedItemId = -1;
 
         public float MaxHealth = 100f;
         public float Health = 100f;
@@ -271,10 +271,29 @@ namespace Barotrauma.MapCreatures.Behavior
                 {
                     ClaimTarget(item, Branches.FirstOrDefault(b => b.ID == branchid), true);
                 }
+                else
+                {
+                    string errorMsg = $"Error in BallastFloraBehavior.OnMapLoaded: could not find the item claimed by the ballast flora.";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("BallastFloraBehavior.OnMapLoaded:ClaimedItemNotFound", GameAnalyticsManager.ErrorSeverity.Warning, errorMsg);
+                }
             }
 
             foreach (BallastFloraBranch branch in Branches)
             {
+                if (branch.ClaimedItemId > -1)
+                {
+                    if (Entity.FindEntityByID((ushort)branch.ClaimedItemId) is Item item)
+                    {
+                        branch.ClaimedItem = item;
+                    }
+                    else
+                    {
+                        string errorMsg = $"Error in BallastFloraBehavior.OnMapLoaded: could not find the item claimed by a branch.";
+                        DebugConsole.ThrowError(errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("BallastFloraBehavior.OnMapLoaded:BranchClaimedItemNotFound", GameAnalyticsManager.ErrorSeverity.Warning, errorMsg);
+                    }
+                }
                 UpdateConnections(branch);
                 CreateBody(branch);
             }
@@ -335,9 +354,9 @@ namespace Barotrauma.MapCreatures.Behavior
                     new XAttribute("sides", (int)branch.Sides),
                     new XAttribute("blockedsides", (int)branch.BlockedSides));
 
-                if (branch.HasClaimedItem)
+                if (branch.ClaimedItem != null)
                 {
-                    be.Add(new XAttribute("claimed", (int)branch.ClaimedItem));
+                    be.Add(new XAttribute("claimed", (int)(branch.ClaimedItem?.ID ?? -1)));
                 }
 
                 saveElement.Add(be);
@@ -345,6 +364,13 @@ namespace Barotrauma.MapCreatures.Behavior
 
             foreach (Item target in ClaimedTargets)
             {
+                if (target.Infector == null)
+                {
+                    string errorMsg = $"Error in BallastFloraBehavior.Save: claimed target \"{target.Prefab.Identifier}\" had no infector set.";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("BallastFloraBehavior.Save:InfectorNull", GameAnalyticsManager.ErrorSeverity.Warning, errorMsg);
+                    continue;
+                }
                 XElement te = new XElement("ClaimedTarget", new XAttribute("id", target.ID), new XAttribute("branchId", target.Infector.ID));
                 saveElement.Add(te);
             }
@@ -352,7 +378,7 @@ namespace Barotrauma.MapCreatures.Behavior
             element.Add(saveElement);
         }
 
-        public void LoadSave(XElement element)
+        public void LoadSave(XElement element, IdRemap idRemap)
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             Offset = element.GetAttributeVector2("offset", Vector2.Zero);
@@ -361,21 +387,20 @@ namespace Barotrauma.MapCreatures.Behavior
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "branch":
-                        LoadBranch(subElement);
+                        LoadBranch(subElement, idRemap);
                         break;
-
                     case "claimedtarget":
                         int id = subElement.GetAttributeInt("id", -1);
                         int branchId = subElement.GetAttributeInt("branchId", -1);
                         if (id > 0)
                         {
-                            tempClaimedTargets.Add(Tuple.Create((UInt16)id, branchId));
+                            tempClaimedTargets.Add(Tuple.Create(idRemap.GetOffsetId(id), branchId));
                         }
                         break;
                 }
             }
 
-            void LoadBranch(XElement branchElement)
+            void LoadBranch(XElement branchElement, IdRemap idRemap)
             {
                 Vector2 pos = branchElement.GetAttributeVector2("pos", Vector2.Zero);
                 bool isRoot = branchElement.GetAttributeBool("isroot", false);
@@ -400,8 +425,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
                 if (claimedId > -1)
                 {
-                    newBranch.HasClaimedItem = true;
-                    newBranch.ClaimedItem = (ushort) claimedId;
+                    newBranch.ClaimedItemId = idRemap.GetOffsetId((ushort)claimedId);
                 }
 
                 Branches.Add(newBranch);
@@ -767,8 +791,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
             if (branch != null)
             {
-                branch.ClaimedItem = target.ID;
-                branch.HasClaimedItem = true;
+                branch.ClaimedItem = target;
             }
 
 #if SERVER
@@ -794,7 +817,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
                 if (parent != null)
                 {
-                    if (otherBranch.BlockedSides.IsBitSet(connectingSide))
+                    if (otherBranch.BlockedSides.HasFlag(connectingSide))
                     {
                         branch.BlockedSides |= oppositeSide;
                         continue;
@@ -977,7 +1000,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
             if (isClient) { return; }
 
-            if (branch.HasClaimedItem)
+            if (branch.ClaimedItem != null)
             {
                 RemoveClaim(branch.ClaimedItem);
             }
@@ -995,41 +1018,34 @@ namespace Barotrauma.MapCreatures.Behavior
 #endif
         }
 
-        public void RemoveClaim(ushort id)
+        public void RemoveClaim(Item item)
         {
-            ClaimedTargets.ForEachMod(item =>
+            if (!IgnoredTargets.ContainsKey(item))
             {
-                if (item.ID == id)
+                IgnoredTargets.Add(item, 10);
+            }
+
+            ClaimedTargets.Remove(item);
+            item.Infector = null;
+
+            ClaimedJunctionBoxes.ForEachMod(jb =>
+            {
+                if (jb.Item == item)
                 {
-                    if (!IgnoredTargets.ContainsKey(item))
-                    {
-                        IgnoredTargets.Add(item, 10);
-                    }
-
-                    ClaimedTargets.Remove(item);
-                    item.Infector = null;
-
-                    ClaimedJunctionBoxes.ForEachMod(jb =>
-                    {
-                        if (jb.Item == item)
-                        {
-                            ClaimedJunctionBoxes.Remove(jb);
-                        }
-                    });
-
-                    ClaimedBatteries.ForEachMod(bat =>
-                    {
-                        if (bat.Item == item)
-                        {
-                            ClaimedBatteries.Remove(bat);
-                        }
-                    });
-
-#if SERVER
-                    SendNetworkMessage(this, NetworkHeader.Infect, item.ID, false);
-#endif
+                    ClaimedJunctionBoxes.Remove(jb);
                 }
             });
+
+            ClaimedBatteries.ForEachMod(bat =>
+            {
+                if (bat.Item == item)
+                {
+                    ClaimedBatteries.Remove(bat);
+                }
+            });
+#if SERVER
+            SendNetworkMessage(this, NetworkHeader.Infect, item.ID, false);
+#endif
         }
 
         public void Kill()

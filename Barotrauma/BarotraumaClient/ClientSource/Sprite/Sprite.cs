@@ -84,7 +84,7 @@ namespace Barotrauma
 
             Vector4 sourceVector = Vector4.Zero;
             bool temp2 = false;
-            int maxLoadRetries = 3;
+            int maxLoadRetries = File.Exists(FilePath) ? 3 : 0;
             for (int i = 0; i <= maxLoadRetries; i++)
             {
                 try
@@ -148,14 +148,8 @@ namespace Barotrauma
                 return t;
             }
             string fullPath = Path.GetFullPath(file);
-            foreach (Sprite s in LoadedSprites)
-            {
-                if (s.FullPath == fullPath && s.texture != null && !s.texture.IsDisposed) 
-                {
-                    reusedSprite = s;
-                    return s.texture; 
-                }
-            }
+            reusedSprite = FindMatchingSprite(fullPath, requireTexture: true);
+            if (reusedSprite != null) { return reusedSprite.texture; }
 
             if (File.Exists(file))
             {
@@ -169,9 +163,26 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError($"Sprite \"{file}\" not found! {Environment.StackTrace.CleanupStackTrace()}");
+                DebugConsole.ThrowError($"Sprite \"{file}\" not found!");
+                DebugConsole.Log(Environment.StackTrace.CleanupStackTrace());
             }
 
+            return null;
+        }
+
+        private static Sprite FindMatchingSprite(string fullPath, bool requireTexture)
+        {
+            lock (list)
+            {
+                foreach (var wRef in list)
+                {
+                    if (wRef.TryGetTarget(out Sprite sprite))
+                    {
+                        bool hasTexture = sprite.texture != null && !sprite.texture.IsDisposed;
+                        if (sprite.FullPath == fullPath && (hasTexture || !requireTexture)) { return sprite; }
+                    }
+                }
+            }
             return null;
         }
 
@@ -370,15 +381,9 @@ namespace Barotrauma
             //check if another sprite is using the same texture
             if (!string.IsNullOrEmpty(FilePath)) //file can be empty if the sprite is created directly from a Texture2D instance
             {
-                lock (list)
-                {
-                    foreach (Sprite s in LoadedSprites)
-                    {
-                        if (s.FullPath == FullPath) { return; }
-                    }
-                }
+                if (FindMatchingSprite(FullPath, requireTexture: false) != null) { return; }
             }
-            
+
             //if not, free the texture
             if (texture != null)
             {

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Runtime.CompilerServices;
 
 namespace Barotrauma
 {
@@ -425,7 +426,7 @@ namespace Barotrauma
             return buffer;
         }
 
-        public static T SelectWeightedRandom<T>(IList<T> objects, IList<float> weights, Rand.RandSync randSync)
+        public static T SelectWeightedRandom<T>(IList<T> objects, IList<float> weights, Rand.RandSync randSync = Rand.RandSync.Unsynced)
         {
             return SelectWeightedRandom(objects, weights, Rand.GetRNG(randSync));
         }
@@ -692,6 +693,13 @@ namespace Barotrauma
             Point halfSize = size.Divide(2);
             Point topLeft = new Point(center.X - halfSize.X, center.Y + halfSize.Y);
             return new Rectangle(topLeft, size);
+        }
+
+        public static Exception GetInnermost(this Exception e)
+        {
+            while (e.InnerException != null) { e = e.InnerException; }
+
+            return e;
         }
     }
 }

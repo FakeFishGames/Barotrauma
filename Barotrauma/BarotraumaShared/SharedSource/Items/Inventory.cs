@@ -479,8 +479,21 @@ namespace Barotrauma
         {
             if (i < 0 || i >= slots.Length)
             {
-                string errorMsg = "Inventory.TryPutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("Inventory.TryPutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                string thisItemStr = item?.prefab.Identifier ?? "null";
+                string ownerStr = "null";
+                if (Owner is Item ownerItem)
+                {
+                    ownerStr = ownerItem.prefab.Identifier;
+                }
+                else if (Owner is Character ownerCharacter)
+                {
+                    ownerStr = ownerCharacter.SpeciesName;
+                }
+                string errorMsg = $"Inventory.TryPutItem failed: index was out of range (item: {thisItemStr}, inventory: {ownerStr}).";
+                GameAnalyticsManager.AddErrorEventOnce("Inventory.TryPutItem:IndexOutOfRange", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#endif
                 return false;
             }
 
@@ -531,7 +544,7 @@ namespace Barotrauma
             if (i < 0 || i >= slots.Length)
             {
                 string errorMsg = "Inventory.PutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("Inventory.PutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Inventory.PutItem:IndexOutOfRange", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -802,13 +815,13 @@ namespace Barotrauma
 
                 if (otherIsEquipped)
                 {
-                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent));
-                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent));
+                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent, ignoreCondition: true));
+                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent, ignoreCondition: true));
                 }
                 else
                 {
-                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent));
-                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent));
+                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent, ignoreCondition: true));
+                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent, ignoreCondition: true));
                 }
 
 #if CLIENT                

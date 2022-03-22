@@ -196,7 +196,7 @@ namespace Barotrauma.Networking
 
         partial void UpdateReturningProjSpecific(float deltaTime);
         
-        private IEnumerable<object> ForceShuttleToPos(Vector2 position, float speed)
+        private IEnumerable<CoroutineStatus> ForceShuttleToPos(Vector2 position, float speed)
         {
             if (RespawnShuttle == null)
             {

@@ -23,18 +23,22 @@ namespace Barotrauma.Networking
         /// </summary>
         public int? WallSectionIndex { get; set; }
 
+        public bool IsNewOrder { get; }
+
         /// <summary>
-        /// Same as calling <see cref="OrderChatMessage.OrderChatMessage(Order, string, int, string, ISpatialEntity, Character, Character)"/>, but the text parameter is set using <see cref="Order.GetChatMessage(string, string, bool, string)"/>
+        /// Same as calling <see cref="OrderChatMessage.OrderChatMessage(Order, string, int, string, ISpatialEntity, Character, Character)"/>,
+        /// but the text parameter is set using <see cref="Order.GetChatMessage(string, string, bool, string)"/>
         /// </summary>
-        public OrderChatMessage(Order order, string orderOption, int priority, ISpatialEntity targetEntity, Character targetCharacter, Character sender)
+        public OrderChatMessage(Order order, string orderOption, int priority, ISpatialEntity targetEntity, Character targetCharacter, Character sender, bool isNewOrder = true)
             : this(order, orderOption, priority,
-                   order?.GetChatMessage(targetCharacter?.Name, sender?.CurrentHull?.DisplayName, givingOrderToSelf: targetCharacter == sender, orderOption: orderOption, priority: priority),
-                   targetEntity, targetCharacter, sender)
+                   order?.GetChatMessage(targetCharacter?.Name, sender?.CurrentHull?.DisplayName, targetCharacter == sender, orderOption, isNewOrder),
+                   targetEntity, targetCharacter, sender, isNewOrder)
         {
 
         }
 
-        public OrderChatMessage(Order order, string orderOption, int priority, string text, ISpatialEntity targetEntity, Character targetCharacter, Character sender)
+        public OrderChatMessage(Order order, string orderOption, int priority, string text, ISpatialEntity targetEntity,
+            Character targetCharacter, Character sender, bool isNewOrder = true)
             : base(sender?.Name, text, ChatMessageType.Order, sender, GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == sender))
         {
             Order = order;
@@ -42,9 +46,11 @@ namespace Barotrauma.Networking
             OrderPriority = priority;
             TargetCharacter = targetCharacter;
             TargetEntity = targetEntity;
+            IsNewOrder = isNewOrder;
         }
 
-        public static void WriteOrder(IWriteMessage msg, Order order, Character targetCharacter, ISpatialEntity targetEntity, string orderOption, int orderPriority, int? wallSectionIndex)
+        public static void WriteOrder(IWriteMessage msg, Order order, Character targetCharacter, ISpatialEntity targetEntity,
+            string orderOption, int orderPriority, int? wallSectionIndex, bool isNewOrder)
         {
             msg.Write((byte)Order.PrefabList.IndexOf(order.Prefab));
             msg.Write(targetCharacter == null ? (UInt16)0 : targetCharacter.ID);
@@ -100,11 +106,13 @@ namespace Barotrauma.Networking
                     msg.Write((byte)(wallSectionIndex ?? order.WallSectionIndex ?? 0));
                 }
             }
+
+            msg.Write(isNewOrder);
         }
 
         private void WriteOrder(IWriteMessage msg)
         {
-            WriteOrder(msg, Order, TargetCharacter, TargetEntity, OrderOption, OrderPriority, WallSectionIndex);
+            WriteOrder(msg, Order, TargetCharacter, TargetEntity, OrderOption, OrderPriority, WallSectionIndex, IsNewOrder);
         }
 
         public struct OrderMessageInfo
@@ -119,8 +127,10 @@ namespace Barotrauma.Networking
             public OrderTarget TargetPosition { get; }
             public int? WallSectionIndex { get; }
             public int Priority { get; }
+            public bool IsNewOrder { get; }
 
-            public OrderMessageInfo(int orderIndex, Order orderPrefab, string orderOption, int? orderOptionIndex, Character targetCharacter, Order.OrderTargetType targetType, Entity targetEntity, OrderTarget targetPosition, int? wallSectionIndex, int orderPriority)
+            public OrderMessageInfo(int orderIndex, Order orderPrefab, string orderOption, int? orderOptionIndex, Character targetCharacter,
+                Order.OrderTargetType targetType, Entity targetEntity, OrderTarget targetPosition, int? wallSectionIndex, int orderPriority, bool isNewOrder)
             {
                 OrderIndex = orderIndex;
                 OrderPrefab = orderPrefab;
@@ -132,6 +142,7 @@ namespace Barotrauma.Networking
                 TargetPosition = targetPosition;
                 WallSectionIndex = wallSectionIndex;
                 Priority = orderPriority;
+                IsNewOrder = isNewOrder;
             }
         }
 
@@ -205,7 +216,10 @@ namespace Barotrauma.Networking
                 wallSectionIndex = msg.ReadByte();
             }
 
-            return new OrderMessageInfo(orderIndex, orderPrefab, orderOption, optionIndex, targetCharacter, orderTargetType, targetEntity, orderTargetPosition, wallSectionIndex, orderPriority);
+            bool isNewOrder = msg.ReadBoolean();
+
+            return new OrderMessageInfo(orderIndex, orderPrefab, orderOption, optionIndex, targetCharacter,
+                orderTargetType, targetEntity, orderTargetPosition, wallSectionIndex, orderPriority, isNewOrder);
         }
     }
 }

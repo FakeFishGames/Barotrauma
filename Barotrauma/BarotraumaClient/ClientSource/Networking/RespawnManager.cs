@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -17,6 +18,11 @@ namespace Barotrauma.Networking
             get; private set;
         }
 
+        public bool ForceSpawnInMainSub
+        {
+            get; private set;
+        }
+
         partial void UpdateTransportingProjSpecific(float deltaTime)
         {
             if (GameMain.Client?.Character == null || GameMain.Client.Character.Submarine != RespawnShuttle) { return; }
@@ -30,10 +36,46 @@ namespace Barotrauma.Networking
                 GameMain.Client.AddChatMessage("ServerMessage.ShuttleLeaving", ChatMessageType.Server);
             }
         }
+
+        private CoroutineHandle respawnPromptCoroutine;
+
+        public void ShowRespawnPromptIfNeeded(float delay = 5.0f)
+        {
+            if (!UseRespawnPrompt) { return; }
+            if (CoroutineManager.IsCoroutineRunning(respawnPromptCoroutine) || GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "respawnquestionprompt")) 
+            { 
+                return; 
+            }
+
+            respawnPromptCoroutine = CoroutineManager.Invoke(() =>
+            {
+                if (Character.Controlled != null || (!(GameMain.GameSession?.IsRunning ?? false))) { return; }
+                var respawnPrompt = new GUIMessageBox(
+                    TextManager.Get("tutorial.tryagainheader"), TextManager.Get("respawnquestionprompt"),
+                    new string[] { TextManager.Get("respawnquestionpromptrespawn"), TextManager.Get("respawnquestionpromptwait") })
+                {
+                    UserData = "respawnquestionprompt"
+                };
+                respawnPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                {
+                    GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: false);
+                    respawnPrompt.Close();
+                    return true;
+                };
+                respawnPrompt.Buttons[1].OnClicked += (btn, userdata) =>
+                {
+                    GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: true);
+                    respawnPrompt.Close();
+                    return true;
+                };
+            }, delay: delay);            
+        }
+
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
+            bool respawnPromptPending = false;
             var newState = (State)msg.ReadRangedInteger(0, Enum.GetNames(typeof(State)).Length);
-
+            ForceSpawnInMainSub = false;
             switch (newState)
             {
                 case State.Transporting:
@@ -46,13 +88,14 @@ namespace Barotrauma.Networking
                     if (CurrentState != newState)
                     {
                         CoroutineManager.StopCoroutines("forcepos");
-                        //CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
                     }
                     break;
                 case State.Waiting:
                     PendingRespawnCount = msg.ReadUInt16();
                     RequiredRespawnCount = msg.ReadUInt16();
+                    respawnPromptPending = msg.ReadBoolean();
                     RespawnCountdownStarted = msg.ReadBoolean();
+                    ForceSpawnInMainSub = msg.ReadBoolean();
                     ResetShuttle();
                     float newRespawnTime = msg.ReadSingle();
                     RespawnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(newRespawnTime * 1000.0f));
@@ -62,6 +105,12 @@ namespace Barotrauma.Networking
                     break;
             }
             CurrentState = newState;
+
+            if (respawnPromptPending)
+            {
+                GameMain.Client.HasSpawned = true;
+                ShowRespawnPromptIfNeeded(delay: 1.0f);
+            }
 
             msg.ReadPadBits();
         }

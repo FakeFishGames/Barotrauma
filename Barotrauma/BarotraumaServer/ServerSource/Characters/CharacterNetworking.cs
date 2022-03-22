@@ -288,15 +288,18 @@ namespace Barotrauma
                             {
                                 UInt32 talentIdentifier = msg.ReadUInt32();
                                 var prefab = TalentPrefab.TalentPrefabs.Find(p => p.UIntIdentifier == talentIdentifier);
-                                if (prefab != null) { talentSelection.Add(prefab.Identifier); }                               
+                                if (prefab == null) { continue; }     
+                                
+                                if (TalentTree.IsViableTalentForCharacter(this, prefab.Identifier, talentSelection))
+                                {
+                                    GiveTalent(prefab.Identifier);
+                                    talentSelection.Add(prefab.Identifier); 
+                                }
                             }
-                            talentSelection = TalentTree.CheckTalentSelection(this, talentSelection);
-
-                            foreach (string talent in talentSelection)
+                            if (talentSelection.Count != talentCount)
                             {
-                                GiveTalent(talent);
+                                DebugConsole.AddWarning($"Failed to unlock talents: the amount of unlocked talents doesn't match (client: {talentCount}, server: {talentSelection.Count})");
                             }
-
                             break;
                     }
                     break;
@@ -321,6 +324,7 @@ namespace Barotrauma
                     case NetEntityEvent.Type.Control:
                         msg.WriteRangedInteger(1, min, max);
                         Client owner = (Client)extraData[1];
+                        msg.Write(owner == c && owner.Character == this);
                         msg.Write(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.ID : (byte)0);
                         break;
                     case NetEntityEvent.Type.Status:

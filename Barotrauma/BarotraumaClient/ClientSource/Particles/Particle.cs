@@ -106,8 +106,12 @@ namespace Barotrauma.Particles
         public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             this.prefab = prefab;
+#if DEBUG
             debugName = $"Particle ({prefab.Name})";
-
+#else
+            //don't instantiate new string objects in release builds
+            debugName = prefab.Name;
+#endif
             spriteIndex = Rand.Int(prefab.Sprites.Count);
 
             animState = 0;

@@ -60,11 +60,11 @@ namespace Barotrauma.Networking
         {
             GUI.DrawRectangle(spriteBatch, rect, Color.Black * 0.4f, true);
 
-            graphs[(int)NetStatType.ReceivedBytes].Draw(spriteBatch, rect, null, 0.0f, Color.Cyan);
-            graphs[(int)NetStatType.SentBytes].Draw(spriteBatch, rect, null, 0.0f, GUI.Style.Orange);
+            graphs[(int)NetStatType.ReceivedBytes].Draw(spriteBatch, rect, color: Color.Cyan);
+            graphs[(int)NetStatType.SentBytes].Draw(spriteBatch, rect, null, color: GUI.Style.Orange);
             if (graphs[(int)NetStatType.ResentMessages].Average() > 0)
             {
-                graphs[(int)NetStatType.ResentMessages].Draw(spriteBatch, rect, null, 0.0f, GUI.Style.Red);
+                graphs[(int)NetStatType.ResentMessages].Draw(spriteBatch, rect, color: GUI.Style.Red);
                 GUI.SmallFont.DrawString(spriteBatch, "Peak resent: " + graphs[(int)NetStatType.ResentMessages].LargestValue() + " messages/s",
                     new Vector2(rect.Right + 10, rect.Y + 50), GUI.Style.Red);
             }

@@ -6,6 +6,9 @@ namespace Barotrauma
 {
     partial class NestMission : Mission
     {
+        public override bool DisplayAsCompleted => State > 0 && !requireDelivery;
+        public override bool DisplayAsFailed => false;
+
         public override void ClientReadInitial(IReadMessage msg)
         {
             base.ClientReadInitial(msg);

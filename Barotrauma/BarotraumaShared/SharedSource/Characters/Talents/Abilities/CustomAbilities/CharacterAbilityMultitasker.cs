@@ -13,12 +13,12 @@ namespace Barotrauma.Abilities
 
         protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if ((abilityObject as IAbilityString)?.String is string skillIdentifier)
+            if ((abilityObject as IAbilitySkillIdentifier)?.SkillIdentifier is string skillIdentifier)
             {
                 if (skillIdentifier != lastSkillIdentifier)
                 {
                     lastSkillIdentifier = skillIdentifier;
-                    Character.Info?.IncreaseSkillLevel(skillIdentifier, 1.0f);
+                    Character.Info?.IncreaseSkillLevel(skillIdentifier, 1.0f, gainedFromAbility: true);
                 }
             }
         }

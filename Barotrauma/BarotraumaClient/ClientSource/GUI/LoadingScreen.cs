@@ -379,11 +379,42 @@ namespace Barotrauma
 
             if (currSplashScreen.IsPlaying)
             {
+                graphics.Clear(Color.Black);
+                float videoAspectRatio = (float)currSplashScreen.Width / (float)currSplashScreen.Height;
+                int width; int height;
+                if (GameMain.GraphicsHeight * videoAspectRatio > GameMain.GraphicsWidth)
+                {
+                    width = GameMain.GraphicsWidth;
+                    height = (int)(GameMain.GraphicsWidth / videoAspectRatio);
+                }
+                else
+                {
+                    width = (int)(GameMain.GraphicsHeight * videoAspectRatio);
+                    height = GameMain.GraphicsHeight;
+                }
+
                 spriteBatch.Begin();
-                spriteBatch.Draw(currSplashScreen.GetTexture(), new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+                spriteBatch.Draw(
+                    currSplashScreen.GetTexture(),
+                    destinationRectangle: new Rectangle(
+                        GameMain.GraphicsWidth / 2 - width / 2,
+                        GameMain.GraphicsHeight / 2 - height / 2,
+                        width,
+                        height),
+                    sourceRectangle: new Rectangle(0, 0, currSplashScreen.Width, currSplashScreen.Height),
+                    Color.White,
+                    rotation: 0.0f,
+                    origin: Vector2.Zero,
+                    SpriteEffects.None,
+                    layerDepth: 0.0f);
                 spriteBatch.End();
 
-                if (DateTime.Now > videoStartTime + new TimeSpan(0, 0, 0, 0, milliseconds: 500) && GameMain.WindowActive && (PlayerInput.KeyHit(Keys.Escape) || PlayerInput.KeyHit(Keys.Space) || PlayerInput.KeyHit(Keys.Enter) || PlayerInput.PrimaryMouseButtonDown()))
+                if (DateTime.Now > videoStartTime + new TimeSpan(0, 0, 0, 0, milliseconds: 500)
+                    && GameMain.WindowActive
+                    && (PlayerInput.KeyHit(Keys.Escape)
+                        || PlayerInput.KeyHit(Keys.Space)
+                        || PlayerInput.KeyHit(Keys.Enter)
+                        || PlayerInput.PrimaryMouseButtonDown()))
                 {
                     currSplashScreen.Dispose(); currSplashScreen = null;
                 }
@@ -395,7 +426,7 @@ namespace Barotrauma
         }
 
         bool drawn;
-        public IEnumerable<object> DoLoading(IEnumerable<object> loader)
+        public IEnumerable<CoroutineStatus> DoLoading(IEnumerable<CoroutineStatus> loader)
         {
             drawn = false;
             LoadState = null;

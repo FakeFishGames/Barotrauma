@@ -81,16 +81,15 @@ namespace Barotrauma.Networking
         
         public bool ContentPackagesMatch()
         {
-            var myContentPackages = ContentPackage.AllPackages;
             //make sure we have all the packages the server requires
             if (ContentPackageHashes.Count != ContentPackageWorkshopIds.Count) { return false; }
             for (int i = 0; i < ContentPackageWorkshopIds.Count; i++)
             {
                 string hash = ContentPackageHashes[i];
                 UInt64 id = ContentPackageWorkshopIds[i];
-                if (!myContentPackages.Any(myPackage => myPackage.MD5hash.Hash == hash))
+                if (!GameMain.ServerListScreen.ContentPackagesByHash.ContainsKey(hash))
                 {
-                    if (myContentPackages.Any(p => p.SteamWorkshopId == id)) { return false; }
+                    if (GameMain.ServerListScreen.ContentPackagesByWorkshopId.ContainsKey(id)) { return false; }
                     if (id == 0) { return false; }
                 }
             }
@@ -98,17 +97,11 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        public bool ContentPackagesMatch(IEnumerable<string> myContentPackageHashes)
-        {
-            HashSet<string> contentPackageHashes = new HashSet<string>(ContentPackageHashes);
-            return contentPackageHashes.SetEquals(myContentPackageHashes);
-        }
-
         public void CreatePreviewWindow(GUIFrame frame)
         {
-            frame.ClearChildren();
-
             if (frame == null) { return; }
+
+            frame.ClearChildren();
 
             var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform), ServerName, font: GUI.LargeFont)
             {
@@ -428,7 +421,7 @@ namespace Barotrauma.Networking
                                 return;
                             }
 
-                            var rules = ((Task<Dictionary<string, string>>)t).Result;
+                            t.TryGetResult(out Dictionary<string, string> rules);
                             SteamManager.AssignServerRulesToServerInfo(rules, this);
 
                             onServerRulesReceived(this);

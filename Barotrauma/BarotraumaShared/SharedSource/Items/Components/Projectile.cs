@@ -61,6 +61,13 @@ namespace Barotrauma.Items.Components
 
         public List<Body> IgnoredBodies;
 
+        /// <summary>
+        /// The item that launched this projectile (if any)
+        /// </summary>
+        public Item Launcher;
+
+        private Character stickTargetCharacter;
+
         private Character _user;
         public Character User
         {
@@ -189,6 +196,15 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        private float deactivationTimer;
+
+        [Serialize(0f, false)]
+        public float DeactivationTime
+        {
+            get;
+            set;
+        }
+
         public Body StickTarget 
         { 
             get; 
@@ -199,6 +215,9 @@ namespace Barotrauma.Items.Components
         {
             get { return StickTarget != null; }
         }
+
+        private Category originalCollisionCategories;
+        private Category originalCollisionTargets;
 
         public Projectile(Item item, XElement element) 
             : base (item, element)
@@ -216,21 +235,26 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
-            if (Attack != null && Attack.DamageRange <= 0.0f && item.body != null)
+            if (item.body != null)
             {
-                switch (item.body.BodyShape)
+                if (Attack != null && Attack.DamageRange <= 0.0f)
                 {
-                    case PhysicsBody.Shape.Circle:
-                        Attack.DamageRange = item.body.radius;
-                        break;
-                    case PhysicsBody.Shape.Capsule:
-                        Attack.DamageRange = item.body.height / 2 + item.body.radius;
-                        break;
-                    case PhysicsBody.Shape.Rectangle:
-                        Attack.DamageRange = new Vector2(item.body.width / 2.0f, item.body.height / 2.0f).Length();
-                        break;
+                    switch (item.body.BodyShape)
+                    {
+                        case PhysicsBody.Shape.Circle:
+                            Attack.DamageRange = item.body.radius;
+                            break;
+                        case PhysicsBody.Shape.Capsule:
+                            Attack.DamageRange = item.body.height / 2 + item.body.radius;
+                            break;
+                        case PhysicsBody.Shape.Rectangle:
+                            Attack.DamageRange = new Vector2(item.body.width / 2.0f, item.body.height / 2.0f).Length();
+                            break;
+                    }
+                    Attack.DamageRange = ConvertUnits.ToDisplayUnits(Attack.DamageRange);
                 }
-                Attack.DamageRange = ConvertUnits.ToDisplayUnits(Attack.DamageRange);
+                originalCollisionCategories = item.body.CollisionCategories;
+                originalCollisionTargets = item.body.CollidesWith;
             }
         }
 
@@ -252,6 +276,10 @@ namespace Barotrauma.Items.Components
             launchPos = simPosition;
             //set the rotation of the projectile again because dropping the projectile resets the rotation
             Item.SetTransform(simPosition, rotation + (Item.body.Dir * LaunchRotationRadians));
+            if (DeactivationTime > 0)
+            {
+                deactivationTimer = DeactivationTime;
+            }
         }
 
         public void Shoot(Character user, Vector2 weaponPos, Vector2 spawnPos, float rotation, List<Body> ignoredBodies, bool createNetworkEvent, float damageMultiplier = 1f)
@@ -261,7 +289,8 @@ namespace Barotrauma.Items.Components
             IgnoredBodies = ignoredBodies;
             Vector2 projectilePos = weaponPos;
             //make sure there's no obstacles between the base of the weapon (or the shoulder of the character) and the end of the barrel
-            if (Submarine.PickBody(weaponPos, spawnPos, IgnoredBodies, Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking) == null)
+            if (Submarine.PickBody(weaponPos, spawnPos, IgnoredBodies, Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking, 
+                customPredicate: (Fixture f) =>  { return !IgnoredBodies.Contains(f.Body); }) == null)
             {
                 //no obstacles -> we can spawn the projectile at the barrel
                 projectilePos = spawnPos;
@@ -322,6 +351,7 @@ namespace Barotrauma.Items.Components
                     item.body.SetTransform(item.body.SimPosition, launchAngle);
                     float modifiedLaunchImpulse = LaunchImpulse * (1 + Rand.Range(-ImpulseSpread, ImpulseSpread));
                     DoLaunch(launchDir * modifiedLaunchImpulse * item.body.Mass);
+                    System.Diagnostics.Debug.WriteLine("launch: " + modifiedLaunchImpulse + "   -   " + item.body.LinearVelocity);
                 }
             }
             User = character;
@@ -345,13 +375,13 @@ namespace Barotrauma.Items.Components
             launchPos = item.SimPosition;
 
             item.body.Enabled = true;            
-            item.body.ApplyLinearImpulse(impulse, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.9f);
+            item.body.ApplyLinearImpulse(impulse, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.95f);
             
             item.body.FarseerBody.OnCollision += OnProjectileCollision;
             item.body.FarseerBody.IsBullet = true;
 
             item.body.CollisionCategories = Physics.CollisionProjectile;
-            item.body.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel;
+            item.body.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking;
 
             IsActive = true;
 
@@ -521,17 +551,20 @@ namespace Barotrauma.Items.Components
 
                 if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return -1; }
                 if (fixture.Body.UserData as string == "ruinroom" || fixture.Body?.UserData is Hull || fixture.UserData is Hull) { return -1; }
-
-                //ignore everything else than characters, sub walls and level walls
-                if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return -1; }
+                if (!(fixture.Body.UserData is Holdable holdable && holdable.CanPush)) 
+                {
+                    //ignore everything else than characters, sub walls and level walls
+                    if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
+                        !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
+                        !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return -1; }
+                }
 
                 //if doing the raycast in a submarine's coordinate space, ignore anything that's not in that sub
                 if (submarine != null)
                 {
                     if (fixture.Body.UserData is VoronoiCell) { return -1; }
                     if (fixture.Body.UserData is Entity entity && entity.Submarine != submarine) { return -1; }
+                    if (fixture.Body.UserData is Limb limb && limb.character?.Submarine != submarine) { return -1; }
                 }
 
                 //ignore level cells if the item and the point of impact are inside a sub
@@ -564,7 +597,7 @@ namespace Barotrauma.Items.Components
                 hits.Add(new HitscanResult(fixture, point, normal, fraction));
 
                 return 1;
-            }, rayStart, rayEnd, Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel);
+            }, rayStart, rayEnd, Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking);
 
             return hits;
         }
@@ -573,7 +606,7 @@ namespace Barotrauma.Items.Components
         {
             if (dropper != null)
             {
-                Deactivate();
+                DisableProjectileCollisions();
                 Unstick();
             }
             base.Drop(dropper);
@@ -581,6 +614,14 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (DeactivationTime > 0)
+            {
+                deactivationTimer -= deltaTime;
+                if (deactivationTimer < 0)
+                {
+                    DisableProjectileCollisions();
+                }
+            }
             while (impactQueue.Count > 0)
             {
                 var impact = impactQueue.Dequeue();
@@ -602,8 +643,12 @@ namespace Barotrauma.Items.Components
             }
             //projectiles with a stickjoint don't become inactive until the stickjoint is detached
             if (stickJoint == null && !item.body.FarseerBody.IsBullet) 
-            { 
-                IsActive = false; 
+            {
+                IsActive = false;
+                if (DeactivationTime > 0 && deactivationTimer > 0)
+                {
+                    DisableProjectileCollisions();
+                }
             }
 
             if (stickJoint == null) { return; }
@@ -614,8 +659,8 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            //target very far from the item -> update the item's transform to make sure it's inside the same sub as the target (or outside)
-            if (Math.Abs(stickJoint.JointTranslation) > 100.0f)
+            // Update the item's transform to make sure it's inside the same sub as the target (or outside)
+            if (StickTarget?.UserData is Limb target && target.Submarine != item.Submarine || Math.Abs(stickJoint.JointTranslation) > 100.0f)
             {
                 item.UpdateTransform();
             }
@@ -703,7 +748,7 @@ namespace Barotrauma.Items.Components
             }
             if (hits.Count() >= MaxTargetsToHit || target.Body.UserData is VoronoiCell)
             {
-                Deactivate();
+                DisableProjectileCollisions();
                 return true;
             }
             else
@@ -726,8 +771,9 @@ namespace Barotrauma.Items.Components
             }
             lastTarget = target;
 
-            float projectileNewSpeed = 0.5f;
-            float projectileDeflectedNewSpeed = 0.1f;
+            int remainingHits = Math.Max(MaxTargetsToHit - hits.Count, 0);
+            float speedMultiplier = Math.Min(0.4f + remainingHits * 0.1f, 1.0f);
+            float deflectedSpeedMultiplier = 0.1f;
 
             AttackResult attackResult = new AttackResult();
             Character character = null;
@@ -743,8 +789,8 @@ namespace Barotrauma.Items.Components
                 // when hitting limbs with piercing ammo, don't lose as much speed
                 if (MaxTargetsToHit > 1)
                 {
-                    projectileNewSpeed = 1f;
-                    projectileDeflectedNewSpeed = 0.8f;
+                    speedMultiplier = 1f;
+                    deflectedSpeedMultiplier = 0.8f;
                 }
                 if (limb.IsSevered || limb.character == null || limb.character.Removed) { return false; }
 
@@ -752,7 +798,7 @@ namespace Barotrauma.Items.Components
                 if (Attack != null) { attackResult = Attack.DoDamageToLimb(User ?? Attacker, limb, item.WorldPosition, 1.0f); }
                 if (limb.character != null) { character = limb.character; }
             }
-            else if (target.Body.UserData is Item targetItem)
+            else if ((target.Body.UserData as Item ?? (target.Body.UserData as ItemComponent)?.Item) is Item targetItem)
             {
                 if (targetItem.Removed) { return false; }
                 if (Attack != null && targetItem.Prefab.DamagedByProjectiles && targetItem.Condition > 0) 
@@ -851,13 +897,13 @@ namespace Barotrauma.Items.Components
 
             if (hits.Count() >= MaxTargetsToHit || hits.LastOrDefault()?.UserData is VoronoiCell)
             {
-                Deactivate();
+                DisableProjectileCollisions();
             }
 
             if (attackResult.AppliedDamageModifiers != null &&
                 (attackResult.AppliedDamageModifiers.Any(dm => dm.DeflectProjectiles) && !StickToDeflective))
             {
-                item.body.LinearVelocity *= projectileDeflectedNewSpeed;
+                item.body.LinearVelocity *= deflectedSpeedMultiplier;
             }
             else if (   // When hitting characters the collision normal seems to sometimes point into wrong direction, resulting in a failed attempt to stick
                         //Vector2.Dot(Vector2.Normalize(velocity), collisionNormal) < 0.0f && 
@@ -866,7 +912,7 @@ namespace Barotrauma.Items.Components
                         (DoesStick ||
                         (StickToCharacters && (target.Body.UserData is Limb || target.Body.UserData is Character)) ||
                         (StickToStructures && target.Body.UserData is Structure) ||
-                        (StickToItems && target.Body.UserData is Item)))                
+                        (StickToItems && target.Body.UserData is Item)))
             {
                 Vector2 dir = new Vector2(
                     (float)Math.Cos(item.body.Rotation),
@@ -889,13 +935,13 @@ namespace Barotrauma.Items.Components
                     item.CreateServerEvent(this);
                 }
 #endif
-                item.body.LinearVelocity *= projectileNewSpeed;
+                item.body.LinearVelocity *= speedMultiplier;
 
                 return Hitscan;                
             }
             else
             {
-                item.body.LinearVelocity *= projectileNewSpeed;
+                item.body.LinearVelocity *= speedMultiplier;
             }
 
             var containedItems = item.OwnInventory?.AllItems;
@@ -921,18 +967,26 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private void Deactivate()
+        private void DisableProjectileCollisions()
         {
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;
-            if ((item.Prefab.DamagedByProjectiles || item.Prefab.DamagedByMeleeWeapons) && item.Condition > 0)
+            if (originalCollisionCategories != Category.None && originalCollisionTargets != Category.None)
             {
-                item.body.CollisionCategories = Physics.CollisionCharacter;
-                item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
+                item.body.CollisionCategories = originalCollisionCategories;
+                item.body.CollidesWith = originalCollisionTargets;
             }
             else
             {
-                item.body.CollisionCategories = Physics.CollisionItem;
-                item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+                if ((item.Prefab.DamagedByProjectiles || item.Prefab.DamagedByMeleeWeapons) && item.Condition > 0)
+                {
+                    item.body.CollisionCategories = Physics.CollisionCharacter;
+                    item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
+                }
+                else
+                {
+                    item.body.CollisionCategories = Physics.CollisionItem;
+                    item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+                }
             }
             IgnoredBodies.Clear();
         }
@@ -965,9 +1019,14 @@ namespace Barotrauma.Items.Components
             GameMain.World.Add(stickJoint);
 
             IsActive = true;
+            if (targetBody.UserData is Limb limb)
+            {
+                stickTargetCharacter = limb.character;
+                stickTargetCharacter.AttachedProjectiles.Add(this);
+            }
         }
 
-        private void Unstick()
+        public void Unstick()
         {
             StickTarget = null;
             if (stickJoint != null)
@@ -978,26 +1037,29 @@ namespace Barotrauma.Items.Components
                 }
                 stickJoint = null;
             }
-            if (!item.body.FarseerBody.IsBullet) { IsActive = false; }
+            if (!item.body.FarseerBody.IsBullet)
+            {
+                IsActive = false;
+                if (DeactivationTime > 0 && deactivationTimer > 0)
+                {
+                    DisableProjectileCollisions();
+                }
+            }
+            item.GetComponent<Rope>()?.Snap();
+            if (stickTargetCharacter != null)
+            {
+                stickTargetCharacter.AttachedProjectiles.Remove(this);
+                stickTargetCharacter = null;
+            }
         }
 
         protected override void RemoveComponentSpecific()
         {
             base.RemoveComponentSpecific();
-            if (stickJoint != null)
+            if (IsStuckToTarget || stickJoint != null || stickTargetCharacter != null)
             {
-                try
-                {
-                    GameMain.World.Remove(stickJoint);
-                }
-                catch
-                {
-                    //the body that the projectile was stuck to has been removed
-                }
-
-                stickJoint = null;
+                Unstick();
             }
-
         }
         partial void LaunchProjSpecific(Vector2 startLocation, Vector2 endLocation);
     }

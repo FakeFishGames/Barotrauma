@@ -72,6 +72,9 @@ namespace Barotrauma
             {
                 CreateLabeledTickBox(parent, nameof(DangerousItemStealBots));
             }
+            CreateLabeledSlider(parent, 0.0f, 30.0f, 0.5f, nameof(DangerousItemContainKarmaDecrease));
+            CreateLabeledTickBox(parent, nameof(IsDangerousItemContainKarmaDecreaseIncremental));
+            CreateLabeledSlider(parent, 0.0f, 100.0f, 1.0f, nameof(MaxDangerousItemContainKarmaDecrease));
         }
 
         private void CreateLabeledSlider(GUIComponent parent, float min, float max, float step, string propertyName)

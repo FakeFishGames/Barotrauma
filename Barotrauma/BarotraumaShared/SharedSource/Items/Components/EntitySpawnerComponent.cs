@@ -55,17 +55,22 @@ namespace Barotrauma.Items.Components
         [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 1f, ValueStep = 1f, DecimalCount = 0), Serialize("1,3", true, "Minumum and maximum amount of items or creatures to spawn in one attempt")]
         public Vector2 SpawnAmountRange { get; set; }
 
-        [Editable(MinValueInt = int.MinValue, MaxValueInt = int.MaxValue), Serialize(8, true, "Amount of items or creatures in the spawn area that will prevent further items or creatures from being spawned")]
+        [Editable(MinValueInt = 0, MaxValueInt = int.MaxValue), Serialize(8, true, "Total maximum amount of items or creatures that can be spawned. 0 = unrestricted.")]
         public int MaximumAmount { get; set; }
 
-        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = int.MinValue, ValueStep = 10f), Serialize(500f, true, "Inflate the circle of rectangle by this value to extend the area that counts towards the maximum amount of items or enemies to be spawned")]
+        [Editable(MinValueInt = 0, MaxValueInt = int.MaxValue), Serialize(8, true, "Amount of items or creatures in the spawn area that will prevent further items or creatures from being spawned. 0 = unrestricted.")]
+        public int MaximumAmountInArea { get; set; }
+
+        [Editable(MaxValueFloat = int.MaxValue, MinValueFloat = 0, ValueStep = 10f), Serialize(500f, true, "Inflate the circle of rectangle by this value to extend the area that counts towards the maximum amount of items or enemies to be spawned")]
         public float MaximumAmountRangePadding { get; set; }
 
         [Serialize(true, true, "")]
         public bool CanSpawn { get; set; } = true;
 
-        private float SpawnTimer;
-        private float? SpawnTimerGoal;
+        private float spawnTimer;
+        private float? spawnTimerGoal;
+
+        private int spawnedAmount = 0;
 
         public EntitySpawnerComponent(Item item, XElement element) : base(item, element)
         {
@@ -115,15 +120,15 @@ namespace Barotrauma.Items.Components
 
             if (minTime < 0 && maxTime < 0) { return; }
 
-            SpawnTimerGoal ??= Rand.Range(minTime, maxTime, Rand.RandSync.Unsynced);
+            spawnTimerGoal ??= Rand.Range(minTime, maxTime, Rand.RandSync.Unsynced);
 
-            SpawnTimer += deltaTime;
+            spawnTimer += deltaTime;
 
-            if (SpawnTimer > SpawnTimerGoal)
+            if (spawnTimer > spawnTimerGoal)
             {
                 Spawn();
-                SpawnTimerGoal = null;
-                SpawnTimer = 0;
+                spawnTimerGoal = null;
+                spawnTimer = 0;
             }
         }
 
@@ -149,12 +154,12 @@ namespace Barotrauma.Items.Components
         private RectangleF GetAreaRectangle(Vector2 size, Vector2 offset, bool draw)
         {
             Vector2 pos = item.WorldPosition;
+            pos += offset;
             if (draw)
             {
                 pos.Y = -pos.Y;
             }
 
-            pos += offset;
             RectangleF rect = new RectangleF(pos.X - size.X / 2f, pos.Y - size.Y / 2f, size.X, size.Y);
             return rect;
         }
@@ -162,6 +167,7 @@ namespace Barotrauma.Items.Components
         private bool CanSpawnMore()
         {
             if (!CanSpawn) { return false; }
+            if (MaximumAmount > 0 && spawnedAmount >= MaximumAmount) { return false; }
 
             if (OnlySpawnWhenCrewInRange)
             {
@@ -171,10 +177,9 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (MaximumAmount < 0) { return true; }
+            if (MaximumAmountInArea <= 0) { return true; }
 
             int amount;
-
             if (!string.IsNullOrWhiteSpace(SpeciesName))
             {
                 amount = Character.CharacterList.Count(c => !c.IsDead && c.SpeciesName.Equals(SpeciesName, StringComparison.OrdinalIgnoreCase) && IsInRange(c.WorldPosition, crewArea: false, rangePad: true));
@@ -188,13 +193,12 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            return amount < MaximumAmount;
+            return amount < MaximumAmountInArea;
         }
 
         private bool IsInRange(Vector2 worldPos, bool crewArea = false, bool rangePad = false)
         {
             Vector2 offset = crewArea ? CrewAreaOffset : SpawnAreaOffset;
-            offset.Y = -offset.Y;
             switch (crewArea ? CrewAreaShape : SpawnAreaShape)
             {
                 case AreaShape.Circle:
@@ -269,6 +273,7 @@ namespace Barotrauma.Items.Components
                     string[] allSpecies = SpeciesName.Split(',');
                     string species = allSpecies.GetRandom().Trim();
                     Entity.Spawner?.AddToSpawnQueue(species, pos);
+                    spawnedAmount++;
                 }
                 else if (!string.IsNullOrWhiteSpace(ItemIdentifier))
                 {
@@ -283,6 +288,7 @@ namespace Barotrauma.Items.Components
                     }
 
                     Entity.Spawner?.AddToSpawnQueue(prefab, pos, item.Submarine);
+                    spawnedAmount++;
                 }
             }
         }

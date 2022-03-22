@@ -16,6 +16,7 @@ namespace Barotrauma
         private static Sprite infoAreaPortraitBG;
 
         public bool LastControlled;
+        public int CrewListIndex { get; set; } = -1;
 
         #warning TODO: Refactor
         private Sprite disguisedPortrait;
@@ -521,6 +522,7 @@ namespace Barotrauma
             ch.SkinColor = skinColor;
             ch.HairColor = hairColor;
             ch.FacialHairColor = facialHairColor;
+            ch.SetPersonalityTrait();
             if (ch.Job != null)
             {
                 foreach (KeyValuePair<string, float> skill in skillLevels)
@@ -790,10 +792,7 @@ namespace Barotrauma
                         return false;
                     }
                 };
-                //force update twice because the listbox is insanely janky
-                //TODO: fix all of the UI :)
-                listBox.ForceUpdate();
-                listBox.ForceUpdate();
+                listBox.ForceLayoutRecalculation();
                 foreach (var childLayoutGroup in listBox.Content.GetAllChildren<GUILayoutGroup>())
                 {
                     childLayoutGroup.Recalculate();
@@ -833,7 +832,7 @@ namespace Barotrauma
                 };
 
                 new GUIFrame(
-                    new RectTransform(new Vector2(1.25f, 1.25f), HeadSelectionList.RectTransform, Anchor.Center),
+                    new RectTransform(new Vector2(1.25f, 1.25f), HeadSelectionList.ContentBackground.RectTransform, Anchor.Center),
                     style: "OuterGlow", color: Color.Black)
                 {
                     UserData = "outerglow",
@@ -968,10 +967,15 @@ namespace Barotrauma
                 foreach (Sprite sprite in characterSprites) { sprite.Remove(); }
                 characterSprites.Clear();
             }
-            
+
             public void Dispose()
             {
                 ClearSprites();
+                if (HeadSelectionList != null)
+                {
+                    HeadSelectionList.RectTransform.Parent = null;
+                    HeadSelectionList = null;
+                }
             }
 
             ~AppearanceCustomizationMenu()

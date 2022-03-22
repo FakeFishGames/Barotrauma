@@ -73,7 +73,6 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            // TODO: move this into the character editor
             //var mouthPos = ragdoll.GetMouthPosition();
             //if (mouthPos != null)
             //{
@@ -173,6 +172,7 @@ namespace Barotrauma
 
         public float DefaultSpriteDepth { get; private set; }
 
+        public WearableSprite HairWithHatSprite { get; set; }
         public WearableSprite HuskSprite { get; private set; }
         public WearableSprite HerpesSprite { get; private set; }
 
@@ -236,8 +236,8 @@ namespace Barotrauma
 
         public string HitSoundTag => Params?.Sound?.Tag;
 
-        private List<WearableSprite> wearableTypeHidingSprites = new List<WearableSprite>();
-        private List<WearableType> wearableTypesToHide = new List<WearableType>();
+        private readonly List<WearableSprite> wearableTypeHidingSprites = new List<WearableSprite>();
+        private readonly HashSet<WearableType> wearableTypesToHide = new HashSet<WearableType>();
         private bool enableHuskSprite;
         public bool EnableHuskSprite
         {
@@ -730,8 +730,6 @@ namespace Barotrauma
                 }
             }
             
-            body.Dir = Dir;
-
             float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
 
             bool hideLimb = Hide || 
@@ -897,7 +895,22 @@ namespace Barotrauma
                 foreach (WearableSprite wearable in OtherWearables)
                 {
                     if (wearable.Type == WearableType.Husk) { continue; }
-                    if (wearableTypesToHide.Contains(wearable.Type)) { continue; }
+                    if (wearableTypesToHide.Contains(wearable.Type)) 
+                    {
+                        if (wearable.Type == WearableType.Hair)
+                        {
+                            if (HairWithHatSprite != null)
+                            {
+                                DrawWearable(HairWithHatSprite, depthStep, spriteBatch, blankColor, alpha: color.A / 255f, spriteEffect);
+                                depthStep += step;
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
                     DrawWearable(wearable, depthStep, spriteBatch, blankColor, alpha: color.A / 255f, spriteEffect);
                     //if there are multiple sprites on this limb, make the successive ones be drawn in front
                     depthStep += step;
@@ -1196,6 +1209,9 @@ namespace Barotrauma
 
             HuskSprite?.Sprite.Remove();
             HuskSprite = null;
+
+            HairWithHatSprite?.Sprite.Remove();
+            HairWithHatSprite = null;
 
             HerpesSprite?.Sprite.Remove();
             HerpesSprite = null;

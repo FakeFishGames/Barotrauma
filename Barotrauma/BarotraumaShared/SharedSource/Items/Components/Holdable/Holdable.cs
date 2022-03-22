@@ -166,10 +166,10 @@ namespace Barotrauma.Items.Components
                 Pusher = new PhysicsBody(item.body.width, item.body.height, item.body.radius, item.body.Density)
                 {
                     BodyType = BodyType.Dynamic,
-                    CollidesWith = Physics.CollisionCharacter,
+                    CollidesWith = Physics.CollisionCharacter | Physics.CollisionProjectile,
                     CollisionCategories = Physics.CollisionItemBlocking,
                     Enabled = false,
-                    UserData = "Holdable.Pusher"
+                    UserData = this
                 };
                 Pusher.FarseerBody.OnCollision += OnPusherCollision;
                 Pusher.FarseerBody.FixedRotation = false;
@@ -237,9 +237,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private bool loadedFromXml;
         public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
             base.Load(componentElement, usePrefabValues, idRemap);
+
+            loadedFromXml = true;
 
             if (usePrefabValues)
             {
@@ -536,7 +539,16 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     attachTargetCell = GetAttachTargetCell(150.0f);
-                    if (attachTargetCell != null) { IsActive = true; }
+                    if (attachTargetCell != null && attachTargetCell.IsDestructible) 
+                    {
+                        attachTargetCell.OnDestroyed += () =>
+                        {
+                            if (attachTargetCell != null && attachTargetCell.CellType != Voronoi2.CellType.Solid)
+                            {
+                                Drop(dropConnectedWires: true, dropper: null);
+                            }
+                        };
+                    }
                 }
             }
 
@@ -562,7 +574,7 @@ namespace Barotrauma.Items.Components
 
         public void DeattachFromWall()
         {
-            if (!attachable) return;
+            if (!attachable) { return; }
 
             Attached = false;
             attachTargetCell = null;
@@ -604,7 +616,14 @@ namespace Barotrauma.Items.Components
                     int maxAttachableCount = (int)character.Info.GetSavedStatValue(StatTypes.MaxAttachableCount, item.Prefab.Identifier);
                     int currentlyAttachedCount = Item.ItemList.Count(
                         i => i.Submarine == attachTarget?.Submarine && i.GetComponent<Holdable>() is Holdable holdable && holdable.Attached && i.Prefab.Identifier == item.prefab.Identifier);
-                    if (currentlyAttachedCount >= maxAttachableCount) 
+                    if (maxAttachableCount == 0)
+                    {
+#if CLIENT
+                        GUI.AddMessage(TextManager.Get("itemmsgrequiretraining"), Color.Red);
+#endif
+                        return false;
+                    }
+                    else if (currentlyAttachedCount >= maxAttachableCount) 
                     {
 #if CLIENT
                         GUI.AddMessage($"{TextManager.Get("itemmsgtotalnumberlimited")} ({currentlyAttachedCount}/{maxAttachableCount})", Color.Red);
@@ -726,15 +745,6 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (attachTargetCell != null)
-            {
-                if (attachTargetCell.CellType != Voronoi2.CellType.Solid)
-                {
-                    Drop(dropConnectedWires: true, dropper: null);
-                }
-                return;
-            }
-
             if (item.body == null || !item.body.Enabled) { return; }
             if (picker == null || !picker.HasEquippedItem(item))
             {
@@ -801,7 +811,7 @@ namespace Barotrauma.Items.Components
                     equipLimb = picker.AnimController.GetLimb(LimbType.Torso);
                 }
 
-                if (equipLimb != null)
+                if (equipLimb != null && !equipLimb.Removed)
                 {
                     float itemAngle = (equipLimb.Rotation + holdAngle * picker.AnimController.Dir);
 
@@ -812,6 +822,11 @@ namespace Barotrauma.Items.Components
                     item.SetTransform(equipLimb.SimPosition - transformedHandlePos, itemAngle);
                 }
             }
+        }
+
+        public override void ReceiveSignal(Signal signal, Connection connection)
+        {
+            //do nothing
         }
 
         public override void FlipX(bool relativeToSub)
@@ -826,15 +841,25 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
-            if (item.Submarine != null && item.Submarine.Loading) return;
+            if (item.Submarine != null && item.Submarine.Loading) { return; }
             OnMapLoaded();
             item.SetActiveSprite();
         }
 
         public override void OnMapLoaded()
         {
-            if (!attachable) return;
+            if (!attachable) { return; }
             
+            //a mod has overridden the item, and the base item didn't have a Holdable component = a mod made the item movable/detachable
+            if (item.Prefab.IsOverride && !loadedFromXml)
+            {
+                if (attachedByDefault)
+                {
+                    AttachToWall();
+                    return;
+                }
+            }
+
             if (Attached)
             {
                 AttachToWall();

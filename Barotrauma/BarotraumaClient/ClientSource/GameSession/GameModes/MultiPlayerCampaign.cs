@@ -60,7 +60,7 @@ namespace Barotrauma
             var newCampaignContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), campaignContainer.RectTransform, Anchor.Center), style: null);
             var loadCampaignContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), campaignContainer.RectTransform, Anchor.Center), style: null);
 
-            GameMain.NetLobbyScreen.CampaignSetupUI = new MultiPlayerCampaignSetupUI(newCampaignContainer, loadCampaignContainer, null, saveFiles);
+            GameMain.NetLobbyScreen.CampaignSetupUI = new MultiPlayerCampaignSetupUI(newCampaignContainer, loadCampaignContainer, saveFiles);
 
             var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("NewCampaign"), style: "GUITabButton")
@@ -97,7 +97,7 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
-            var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, GUICanvas.Instance),
+            var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, GUI.Canvas),
                 isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
                 CanBeFocused = false
@@ -108,7 +108,7 @@ namespace Barotrauma
                 buttonCenter = buttonHeight / 2,
                 screenMiddle = GameMain.GraphicsWidth / 2;
 
-            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(screenMiddle - buttonWidth / 2, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonCenter, buttonWidth, buttonHeight), GUICanvas.Instance),
+            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(screenMiddle - buttonWidth / 2, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonCenter, buttonWidth, buttonHeight), GUI.Canvas),
                 TextManager.Get("EndRound"), textAlignment: Alignment.Center, style: "EndRoundButton")
             {
                 Pulse = true,
@@ -145,7 +145,7 @@ namespace Barotrauma
             int readyButtonHeight = buttonHeight;
             int readyButtonWidth = (int) (GUI.Scale * 50);
 
-            ReadyCheckButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(screenMiddle + (buttonWidth / 2) + GUI.IntScale(16), HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonCenter, readyButtonWidth, readyButtonHeight), GUICanvas.Instance), 
+            ReadyCheckButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(screenMiddle + (buttonWidth / 2) + GUI.IntScale(16), HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonCenter, readyButtonWidth, readyButtonHeight), GUI.Canvas), 
                 style: "RepairBuyButton")
             {
                 ToolTip = TextManager.Get("ReadyCheck.Tooltip"),
@@ -188,7 +188,7 @@ namespace Barotrauma
         }
 
 
-        private IEnumerable<object> DoInitialCameraTransition()
+        private IEnumerable<CoroutineStatus> DoInitialCameraTransition()
         {
             while (GameMain.Instance.LoadingScreenOpen)
             {
@@ -310,12 +310,12 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        protected override IEnumerable<object> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null)
+        protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null)
         {
             yield return CoroutineStatus.Success;
         }
 
-        private IEnumerable<object> DoLevelTransition()
+        private IEnumerable<CoroutineStatus> DoLevelTransition()
         {
             SoundPlayer.OverrideMusicType = CrewManager.GetCharacters().Any(c => !c.IsDead) ? "endround" : "crewdead";
             SoundPlayer.OverrideMusicDuration = 18.0f;
@@ -361,7 +361,7 @@ namespace Barotrauma
             //--------------------------------------
 
             //wait for the new level to be loaded
-            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, seconds: 30);
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, seconds: 60);
             while (Level.Loaded == prevLevel || Level.Loaded == null)
             {
                 if (DateTime.Now > timeOut || Screen.Selected != GameMain.GameScreen)  { break; }
@@ -480,8 +480,6 @@ namespace Barotrauma
             {
                 IsFirstRound = false;
                 CoroutineManager.StartCoroutine(DoLevelTransition(), "LevelTransition");
-                bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
-                GUI.SetSavingIndicatorState(success && (Level.IsLoadedOutpost || transitionType != TransitionType.None));
             }
         }
 
@@ -500,7 +498,7 @@ namespace Barotrauma
             };
         }
 
-        private IEnumerable<object> DoEndCampaignCameraTransition()
+        private IEnumerable<CoroutineStatus> DoEndCampaignCameraTransition()
         {
             Character controlled = Character.Controlled;
             if (controlled != null)
@@ -547,14 +545,21 @@ namespace Barotrauma
             foreach (PurchasedItem pi in CargoManager.ItemsInBuyCrate)
             {
                 msg.Write(pi.ItemPrefab.Identifier);
-                msg.WriteRangedInteger(pi.Quantity, 0, 100);
+                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
+            }
+
+            msg.Write((UInt16)CargoManager.ItemsInSellFromSubCrate.Count);
+            foreach (PurchasedItem pi in CargoManager.ItemsInSellFromSubCrate)
+            {
+                msg.Write(pi.ItemPrefab.Identifier);
+                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
             }
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
             {
                 msg.Write(pi.ItemPrefab.Identifier);
-                msg.WriteRangedInteger(pi.Quantity, 0, 100);
+                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
             }
 
             msg.Write((UInt16)CargoManager.SoldItems.Count);
@@ -564,6 +569,7 @@ namespace Barotrauma
                 msg.Write((UInt16)si.ID);
                 msg.Write(si.Removed);
                 msg.Write(si.SellerID);
+                msg.Write((byte)si.Origin);
             }
 
             msg.Write((ushort)UpgradeManager.PurchasedUpgrades.Count);
@@ -642,6 +648,15 @@ namespace Barotrauma
                 buyCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
             }
 
+            UInt16 subSellCrateItemCount = msg.ReadUInt16();
+            List<PurchasedItem> subSellCrateItems = new List<PurchasedItem>();
+            for (int i = 0; i < subSellCrateItemCount; i++)
+            {
+                string itemPrefabIdentifier = msg.ReadString();
+                int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
+                subSellCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
+            }
+
             UInt16 purchasedItemCount = msg.ReadUInt16();
             List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
             for (int i = 0; i < purchasedItemCount; i++)
@@ -659,7 +674,8 @@ namespace Barotrauma
                 UInt16 id = msg.ReadUInt16();
                 bool removed = msg.ReadBoolean();
                 byte sellerId = msg.ReadByte();
-                soldItems.Add(new SoldItem(ItemPrefab.Prefabs[itemPrefabIdentifier], id, removed, sellerId));
+                byte origin = msg.ReadByte();
+                soldItems.Add(new SoldItem(ItemPrefab.Prefabs[itemPrefabIdentifier], id, removed, sellerId, (SoldItem.SellOrigin)origin));
             }
 
             ushort pendingUpgradeCount = msg.ReadUInt16();
@@ -680,13 +696,9 @@ namespace Barotrauma
             for (int i = 0; i < purchasedItemSwapCount; i++)
             {
                 UInt16 itemToRemoveID = msg.ReadUInt16();
-                Item itemToRemove = Entity.FindEntityByID(itemToRemoveID) as Item;
-
                 string itemToInstallIdentifier = msg.ReadString();
                 ItemPrefab itemToInstall = string.IsNullOrEmpty(itemToInstallIdentifier) ? null : ItemPrefab.Find(string.Empty, itemToInstallIdentifier);
-
-                if (itemToRemove == null) { continue; }
-
+                if (!(Entity.FindEntityByID(itemToRemoveID) is Item itemToRemove)) { continue; }
                 purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
             }
 
@@ -730,12 +742,11 @@ namespace Barotrauma
                     campaign.Map.SelectMission(selectedMissionIndices);
                     campaign.Map.AllowDebugTeleport = allowDebugTeleport;
                     campaign.CargoManager.SetItemsInBuyCrate(buyCrateItems);
+                    campaign.CargoManager.SetItemsInSubSellCrate(subSellCrateItems);
                     campaign.CargoManager.SetPurchasedItems(purchasedItems);
                     campaign.CargoManager.SetSoldItems(soldItems);
                     if (storeBalance.HasValue) { campaign.Map.CurrentLocation.StoreCurrentBalance = storeBalance.Value; }
                     campaign.UpgradeManager.SetPendingUpgrades(pendingUpgrades);
-                    campaign.UpgradeManager.PurchasedUpgrades.Clear();
-
                     campaign.UpgradeManager.PurchasedUpgrades.Clear();
                     foreach (var purchasedItemSwap in purchasedItemSwaps)
                     {
