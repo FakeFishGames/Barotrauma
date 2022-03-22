@@ -1454,12 +1454,12 @@ namespace Barotrauma
                 s.NoAITarget = prefab.NoAITarget;
             }
 
-            if (hasDamage)
+            s.CastShadow = element.GetAttributeBool("castshadow", prefab.CastShadow);
+
+            if (hasDamage || s.CastShadow)
             {
                 s.UpdateSections();
             }
-
-            s.CastShadow = element.GetAttributeBool("castshadow", prefab.CastShadow);
 
             return s;
         }
