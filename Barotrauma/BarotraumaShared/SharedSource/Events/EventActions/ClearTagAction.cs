@@ -1,5 +1,4 @@
 using System.Xml.Linq;
-using NLog.Targets;
 
 namespace Barotrauma
 {

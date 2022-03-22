@@ -204,11 +204,17 @@ namespace Barotrauma.Items.Components
 
             target.InitializeLinks();
 
-            if (!item.linkedTo.Contains(target.item)) item.linkedTo.Add(target.item);
-            if (!target.item.linkedTo.Contains(item)) target.item.linkedTo.Add(item);
+            if (!item.linkedTo.Contains(target.item)) { item.linkedTo.Add(target.item); }
+            if (!target.item.linkedTo.Contains(item)) { target.item.linkedTo.Add(item); }
 
-            if (!target.item.Submarine.DockedTo.Contains(item.Submarine)) target.item.Submarine.ConnectedDockingPorts.Add(item.Submarine, target);
-            if (!item.Submarine.DockedTo.Contains(target.item.Submarine)) item.Submarine.ConnectedDockingPorts.Add(target.item.Submarine, this);
+            if (!target.item.Submarine.DockedTo.Contains(item.Submarine))
+            {
+                target.item.Submarine.ConnectedDockingPorts.Add(item.Submarine, target);
+            }
+            if (!item.Submarine.DockedTo.Contains(target.item.Submarine))
+            {
+                item.Submarine.ConnectedDockingPorts.Add(target.item.Submarine, this);
+            }
 
             DockingTarget = target;
             DockingTarget.DockingTarget = this;
@@ -291,7 +297,7 @@ namespace Barotrauma.Items.Components
 
 
             List<MapEntity> removedEntities = item.linkedTo.Where(e => e.Removed).ToList();
-            foreach (MapEntity removed in removedEntities) item.linkedTo.Remove(removed);
+            foreach (MapEntity removed in removedEntities) { item.linkedTo.Remove(removed); }
             
             if (!item.linkedTo.Any(e => e is Hull) && !DockingTarget.item.linkedTo.Any(e => e is Hull))
             {
@@ -306,9 +312,8 @@ namespace Barotrauma.Items.Components
                 if (myWayPoint != null && targetWayPoint != null)
                 {
                     myWayPoint.FindHull();
-                    myWayPoint.linkedTo.Add(targetWayPoint);
                     targetWayPoint.FindHull();
-                    targetWayPoint.linkedTo.Add(myWayPoint);
+                    myWayPoint.ConnectTo(targetWayPoint);
                 }
             }
         }
@@ -485,7 +490,7 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "DockingPort.CreateDoorBody:InvalidPosition",
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
                 position = Vector2.Zero;
             }
@@ -597,8 +602,9 @@ namespace Barotrauma.Items.Components
                 {
                     hullRects[i].X -= expand;
                     hullRects[i].Width += expand * 2;
-                    hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
+                    hullRects[i].Location -= MathUtils.ToPoint(subs[i].WorldPosition - subs[i].HiddenSubPosition);
                     hulls[i] = new Hull(MapEntityPrefab.Find(null, "hull"), hullRects[i], subs[i]);
+                    hulls[i].RoomName = IsHorizontal ? "entityname.dockingport" : "entityname.dockinghatch";
                     hulls[i].AddToGrid(subs[i]);
                     hulls[i].FreeID();
 
@@ -716,8 +722,9 @@ namespace Barotrauma.Items.Components
                 {
                     hullRects[i].Y += expand;
                     hullRects[i].Height += expand * 2;
-                    hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
+                    hullRects[i].Location -= MathUtils.ToPoint(subs[i].WorldPosition - subs[i].HiddenSubPosition);
                     hulls[i] = new Hull(MapEntityPrefab.Find(null, "hull"), hullRects[i], subs[i]);
+                    hulls[i].RoomName = IsHorizontal ? "entityname.dockingport" : "entityname.dockinghatch";
                     hulls[i].AddToGrid(subs[i]);
                     hulls[i].FreeID();
 
@@ -778,29 +785,25 @@ namespace Barotrauma.Items.Components
 
             if (IsHorizontal)
             {
-                if (hulls[0].WorldRect.X < hulls[1].WorldRect.X)
+                if (hulls[0].WorldRect.X > hulls[1].WorldRect.X)
                 {
-                    gap.linkedTo.Add(hulls[0]);
-                    gap.linkedTo.Add(hulls[1]);
+                    var temp = hulls[0];
+                    hulls[0] = hulls[1];
+                    hulls[1] = temp;
                 }
-                else
-                {
-                    gap.linkedTo.Add(hulls[1]);
-                    gap.linkedTo.Add(hulls[0]);
-                }
+                gap.linkedTo.Add(hulls[0]);
+                gap.linkedTo.Add(hulls[1]);
             }
             else
             {
-                if (hulls[0].WorldRect.Y > hulls[1].WorldRect.Y)
+                if (hulls[0].WorldRect.Y < hulls[1].WorldRect.Y)
                 {
-                    gap.linkedTo.Add(hulls[0]);
-                    gap.linkedTo.Add(hulls[1]);
+                    var temp = hulls[0];
+                    hulls[0] = hulls[1];
+                    hulls[1] = temp;
                 }
-                else
-                {
-                    gap.linkedTo.Add(hulls[1]);
-                    gap.linkedTo.Add(hulls[0]);
-                }
+                gap.linkedTo.Add(hulls[0]);
+                gap.linkedTo.Add(hulls[1]);
             }
 
             for (int i = 0; i < 2; i++)
@@ -812,7 +815,7 @@ namespace Barotrauma.Items.Components
 
                 if (IsHorizontal)
                 {
-                    if (item.WorldPosition.X < DockingTarget.item.WorldPosition.X)
+                    if (doorGap.WorldPosition.X < gap.WorldPosition.X)
                     {
                         if (!doorGap.linkedTo.Contains(hulls[0])) { doorGap.linkedTo.Add(hulls[0]); }
                     }
@@ -830,7 +833,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    if (item.WorldPosition.Y > DockingTarget.item.WorldPosition.Y)
+                    if (doorGap.WorldPosition.Y > gap.WorldPosition.Y)
                     {
                         if (!doorGap.linkedTo.Contains(hulls[0])) { doorGap.linkedTo.Add(hulls[0]); }
                     }
@@ -872,9 +875,17 @@ namespace Barotrauma.Items.Components
                 if (myWayPoint != null && targetWayPoint != null)
                 {
                     myWayPoint.FindHull();
-                    myWayPoint.linkedTo.Remove(targetWayPoint);
+                    if (myWayPoint.linkedTo.Contains(targetWayPoint))
+                    {
+                        myWayPoint.linkedTo.Remove(targetWayPoint);
+                        myWayPoint.OnLinksChanged?.Invoke(myWayPoint);
+                    }
                     targetWayPoint.FindHull();
-                    targetWayPoint.linkedTo.Remove(myWayPoint);
+                    if (targetWayPoint.linkedTo.Contains(myWayPoint))
+                    {
+                        targetWayPoint.linkedTo.Remove(myWayPoint);
+                        targetWayPoint.OnLinksChanged?.Invoke(targetWayPoint);
+                    }
                 }
             }
             
@@ -1058,7 +1069,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (!item.linkedTo.Any()) return;
+            if (!item.linkedTo.Any()) { return; }
 
             List<MapEntity> linked = new List<MapEntity>(item.linkedTo);
             foreach (MapEntity entity in linked)

@@ -1,12 +1,10 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using OpenAL;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -51,7 +49,7 @@ namespace Barotrauma
         {
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Run] = new KeyOrMouse(Keys.LeftShift);
-            keyMapping[(int)InputType.Attack] = new KeyOrMouse(Keys.R);
+            keyMapping[(int)InputType.Attack] = new KeyOrMouse(Keys.F);
             keyMapping[(int)InputType.Crouch] = new KeyOrMouse(Keys.LeftControl);
             keyMapping[(int)InputType.Grab] = new KeyOrMouse(Keys.G);
             keyMapping[(int)InputType.Health] = new KeyOrMouse(Keys.H);
@@ -173,7 +171,7 @@ namespace Barotrauma
             }
         }
 
-        private void LoadKeyBinds(XElement element)
+        private void LoadKeyBinds(XElement element, Version gameVersion)
         {
             foreach (XAttribute attribute in element.Attributes())
             {
@@ -183,7 +181,6 @@ namespace Barotrauma
                     keyMapping[(int)InputType.TakeHalfFromInventorySlot] = new KeyOrMouse(Keys.LeftShift);
                     keyMapping[(int)InputType.TakeOneFromInventorySlot] = new KeyOrMouse(Keys.LeftControl);
                 }
-
                 if (!Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType)) { continue; }
 
                 if (int.TryParse(attribute.Value.ToString(), out int mouseButtonInt))
@@ -198,6 +195,13 @@ namespace Barotrauma
                 {
                     keyMapping[(int)inputType] = new KeyOrMouse(key);
                 }
+            }
+            //v0.15 added creature attacks that can be used with a character capable of speaking (with mudraptor or spineling genes),
+            //which causes the previous attack keybind R to conflict with the radio keybind
+            // -> automatically change it to F
+            if (gameVersion < new Version(0, 15, 0, 0))
+            {
+                keyMapping[(int)InputType.Attack] = new KeyOrMouse(Keys.F);
             }
         }
 
@@ -223,10 +227,12 @@ namespace Barotrauma
 
         private void LoadControls(XDocument doc)
         {
+            var gameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
+
             XElement keyMapping = doc.Root.Element("keymapping");
             if (keyMapping != null)
             {
-                LoadKeyBinds(keyMapping);
+                LoadKeyBinds(keyMapping, gameVersion);
             }
 
             XElement inventoryKeyMapping = doc.Root.Element("inventorykeymapping");
@@ -357,6 +363,12 @@ namespace Barotrauma
                 TextManager.Get("Settings"), textAlignment: Alignment.TopLeft, font: GUI.LargeFont)
             { ForceUpperCase = true };
 
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), settingsTitle.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest), style: "GUIBugButton")
+            {
+                ToolTip = TextManager.Get("bugreportbutton") + $" (v{GameMain.Version})",
+                OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
+            };
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftPanel.RectTransform), TextManager.Get("ContentPackages"), font: GUI.SubHeadingFont);
 
             var corePackageDropdown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftPanel.RectTransform))
@@ -472,7 +484,7 @@ namespace Barotrauma
                         "\n" + string.Join("\n", contentPackage.ErrorMessages);
                 }
             }
-            contentPackageList.CanDragElements = CanHotswapPackages(false);
+            contentPackageList.CurrentDragMode = CanHotswapPackages(false) ? GUIListBox.DragMode.DragWithinBox : GUIListBox.DragMode.NoDragging;
             contentPackageList.CanBeFocused = CanHotswapPackages(false);
             contentPackageList.OnRearranged = OnContentPackagesRearranged;
 
@@ -501,16 +513,55 @@ namespace Barotrauma
                     ApplySettings();
                     GameMain.Instance.Exit();
                     return true;
-                }; msgBox.Buttons[1].OnClicked += (btn, userdata) =>
+                }; 
+                msgBox.Buttons[1].OnClicked += (btn, userdata) =>
                 {
                     Language = prevLanguage;
                     languageDD.SelectItem(Language);
                     msgBox.Close();
                     return true;
                 };
-
                 return true;
             };
+
+            var statisticsTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.045f), leftPanel.RectTransform), TextManager.Get("statisticsconsenttickbox"))
+            {
+                OnSelected = (GUITickBox tickBox) =>
+                {
+                    GameAnalyticsManager.SetConsent(
+                        tickBox.Selected
+                            ? GameAnalyticsManager.Consent.Ask
+                            : GameAnalyticsManager.Consent.No);
+                    return false;
+                }
+            };
+#if DEBUG
+            statisticsTickBox.Enabled = false;
+#endif
+            void updateGATickBoxToolTip()
+                => statisticsTickBox.ToolTip = TextManager.Get($"GameAnalyticsStatus.{GameAnalyticsManager.UserConsented}");
+            updateGATickBoxToolTip();
+            
+            var cachedConsent = GameAnalyticsManager.Consent.Unknown;
+            var statisticsTickBoxUpdater = new GUICustomComponent(
+                new RectTransform(Vector2.Zero, statisticsTickBox.RectTransform),
+                onUpdate: (deltaTime, component) =>
+            {
+                bool shouldTickBoxBeSelected = GameAnalyticsManager.UserConsented == GameAnalyticsManager.Consent.Yes;
+                
+                bool shouldUpdateTickBoxState = cachedConsent != GameAnalyticsManager.UserConsented
+                                                || statisticsTickBox.Selected != shouldTickBoxBeSelected;
+
+                if (!shouldUpdateTickBoxState) { return; }
+
+                updateGATickBoxToolTip();
+                cachedConsent = GameAnalyticsManager.UserConsented;
+                GUITickBox.OnSelectedHandler prevHandler = statisticsTickBox.OnSelected;
+                statisticsTickBox.OnSelected = null;
+                statisticsTickBox.Selected = shouldTickBoxBeSelected;
+                statisticsTickBox.OnSelected = prevHandler;
+                statisticsTickBox.Enabled = GameAnalyticsManager.UserConsented != GameAnalyticsManager.Consent.Error;
+            });
 
             // right panel --------------------------------------
 
@@ -547,13 +598,6 @@ namespace Barotrauma
                 };
                 tabButtons[(int)tab].Text = ToolBox.LimitString(buttonText, tabButtons[(int)tab].Font, (int)(0.75f * tabWidth * tabButtonHolder.Rect.Width));
             }
-
-            new GUIButton(new RectTransform(new Vector2(0.05f, 0.75f), tabButtonHolder.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.2f) }, style: "GUIBugButton")
-            {
-                ToolTip = TextManager.Get("bugreportbutton"),
-                OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
-            };
-
 
             /// Graphics tab --------------------------------------------------------------
 
@@ -616,16 +660,16 @@ namespace Barotrauma
             GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform), TextManager.Get("EnableVSync"))
             {
                 ToolTip = TextManager.Get("EnableVSyncToolTip"),
-                OnSelected = (GUITickBox box) =>
-                {
-                    VSyncEnabled = box.Selected;
-                    GameMain.GraphicsDeviceManager.SynchronizeWithVerticalRetrace = VSyncEnabled;
-                    GameMain.GraphicsDeviceManager.ApplyChanges();
-                    UnsavedSettings = true;
-
-                    return true;
-                },
                 Selected = VSyncEnabled
+            };
+            vsyncTickBox.OnSelected = (GUITickBox box) =>
+            {
+                VSyncEnabled = box.Selected;
+                GameMain.GraphicsDeviceManager.SynchronizeWithVerticalRetrace = VSyncEnabled;
+                GameMain.GraphicsDeviceManager.ApplyChanges();
+                UnsavedSettings = true;
+
+                return true;
             };
 
 
@@ -1160,7 +1204,7 @@ namespace Barotrauma
                 catch (Exception e)
                 {
                     DebugConsole.ThrowError("Failed to set voice capture mode.", e);
-                    GameAnalyticsManager.AddErrorEventOnce("SetVoiceCaptureMode", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, "Failed to set voice capture mode. " + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
+                    GameAnalyticsManager.AddErrorEventOnce("SetVoiceCaptureMode", GameAnalyticsManager.ErrorSeverity.Error, "Failed to set voice capture mode. " + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
                     VoiceSetting = VoiceMode.Disabled;
                 }
 
@@ -1412,6 +1456,7 @@ namespace Barotrauma
                 Step = 0.01f
             };
             textScaleScrollBar.OnMoved(textScaleScrollBar, textScaleScrollBar.BarScroll);
+            textScaleDirty = false;
 
             /// Bottom buttons -------------------------------------------------------------
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
@@ -1517,6 +1562,12 @@ namespace Barotrauma
                 (b) => AutomaticQuickStartEnabled = b,
                 "Automatic quickstart enabled",
                 "Will the game automatically move on to Quickstart when the game is launched");
+
+            addDebugTickBox(
+                TestScreenEnabled,
+                (b) => TestScreenEnabled = b,
+                "Test screen enabled",
+                "Will the game automatically move on to a test screen when the game is launched");
 
             addDebugTickBox(
                 AutomaticCampaignLoadEnabled,
@@ -1753,7 +1804,7 @@ namespace Barotrauma
             return true;
         }
 
-        private IEnumerable<object> WaitForKeyPress(GUITextBox keyBox, KeyOrMouse[] keyArray)
+        private IEnumerable<CoroutineStatus> WaitForKeyPress(GUITextBox keyBox, KeyOrMouse[] keyArray)
         {
             yield return CoroutineStatus.Running;
 
@@ -1831,6 +1882,7 @@ namespace Barotrauma
                     ic.ParseMsg();
                 }
             }
+            CharacterHUD.ShouldRecreateHudTexts = true;
         }
 
         private void ApplySettings()

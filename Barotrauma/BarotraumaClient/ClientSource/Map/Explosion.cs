@@ -8,6 +8,8 @@ namespace Barotrauma
     {
         partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull)
         {
+            if (GameMain.Client?.MidRoundSyncing ?? false) { return; }
+
             if (shockwave)
             {
                 GameMain.ParticleManager.CreateParticle("shockwave", worldPosition,
@@ -93,15 +95,13 @@ namespace Barotrauma
                 MathHelper.Clamp(particlePos.Y, hull.WorldRect.Y - hull.WorldRect.Height, hull.WorldRect.Y));
         }
 
-        private IEnumerable<object> DimLight(LightSource light)
+        private IEnumerable<CoroutineStatus> DimLight(LightSource light)
         {
             float currBrightness = 1.0f;
-            float startRange = light.Range;
-
-            while (light.Color.A > 0.0f && flashDuration > 0.0f)
+            while (light.Color.A > 0.0f && flashDuration > 0.0f && currBrightness > 0.0f)
             {
-                light.Color = new Color(light.Color.R, light.Color.G, light.Color.B, currBrightness);
-                currBrightness -= (1.0f / flashDuration) * CoroutineManager.DeltaTime;
+                light.Color = new Color(light.Color.R, light.Color.G, light.Color.B, (byte)(currBrightness * 255));
+                currBrightness -= 1.0f / flashDuration * CoroutineManager.DeltaTime;
 
                 yield return CoroutineStatus.Running;
             }

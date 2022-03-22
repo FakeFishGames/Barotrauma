@@ -102,7 +102,7 @@ namespace Barotrauma.Networking
             catch (Exception e)
             {
                 string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("SteamP2PServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("SteamP2PServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #else
@@ -125,14 +125,9 @@ namespace Barotrauma.Networking
             UInt64 senderSteamId = inc.ReadUInt64();
             UInt64 ownerSteamId = inc.ReadUInt64();
 
-            byte incByte = inc.ReadByte();
-            bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
-            bool isConnectionInitializationStep = (incByte & (byte)PacketHeader.IsConnectionInitializationStep) != 0;
-            bool isDisconnectMessage = (incByte & (byte)PacketHeader.IsDisconnectMessage) != 0;
-            bool isServerMessage = (incByte & (byte)PacketHeader.IsServerMessage) != 0;
-            bool isHeartbeatMessage = (incByte & (byte)PacketHeader.IsHeartbeatMessage) != 0;
+            PacketHeader packetHeader = (PacketHeader)inc.ReadByte();
             
-            if (isServerMessage)
+            if (packetHeader.IsServerMessage())
             {
                 DebugConsole.ThrowError("Got server message from" + senderSteamId.ToString());
                 return;
@@ -160,7 +155,7 @@ namespace Barotrauma.Networking
                     }
                     return;
                 }
-                else if (isDisconnectMessage)
+                else if (packetHeader.IsDisconnectMessage())
                 {
                     if (pendingClient != null)
                     {
@@ -174,12 +169,12 @@ namespace Barotrauma.Networking
                     }
                     return;
                 }
-                else if (isHeartbeatMessage)
+                else if (packetHeader.IsHeartbeatMessage())
                 {
                     //message exists solely as a heartbeat, ignore its contents
                     return;
                 }
-                else if (isConnectionInitializationStep)
+                else if (packetHeader.IsConnectionInitializationStep())
                 {
 
                     if (pendingClient != null)
@@ -203,7 +198,7 @@ namespace Barotrauma.Networking
                 {
                     UInt16 length = inc.ReadUInt16();
                     
-                    IReadMessage msg = new ReadOnlyMessage(inc.Buffer, isCompressed, inc.BytePosition, length, connectedClient);
+                    IReadMessage msg = new ReadOnlyMessage(inc.Buffer, packetHeader.IsCompressed(), inc.BytePosition, length, connectedClient);
                     OnMessageReceived?.Invoke(connectedClient, msg);
                 }
             }
@@ -211,17 +206,17 @@ namespace Barotrauma.Networking
             {
                 if (OwnerConnection != null) { (OwnerConnection as SteamP2PConnection).Heartbeat(); }
 
-                if (isDisconnectMessage)
+                if (packetHeader.IsDisconnectMessage())
                 {
                     DebugConsole.ThrowError("Received disconnect message from owner");
                     return;
                 }
-                if (isServerMessage)
+                if (packetHeader.IsServerMessage())
                 {
                     DebugConsole.ThrowError("Received server message from owner");
                     return;
                 }
-                if (isConnectionInitializationStep)
+                if (packetHeader.IsConnectionInitializationStep())
                 {
                     if (OwnerConnection == null)
                     {
@@ -236,7 +231,7 @@ namespace Barotrauma.Networking
                     }
                     return;
                 }
-                if (isHeartbeatMessage)
+                if (packetHeader.IsHeartbeatMessage())
                 {
                     return;
                 }
@@ -244,7 +239,7 @@ namespace Barotrauma.Networking
                 {
                     UInt16 length = inc.ReadUInt16();
 
-                    IReadMessage msg = new ReadOnlyMessage(inc.Buffer, isCompressed, inc.BytePosition, length, OwnerConnection);
+                    IReadMessage msg = new ReadOnlyMessage(inc.Buffer, packetHeader.IsCompressed(), inc.BytePosition, length, OwnerConnection);
                     OnMessageReceived?.Invoke(OwnerConnection, msg);
                 }
             }
@@ -267,7 +262,7 @@ namespace Barotrauma.Networking
             }
 
             IWriteMessage msgToSend = new WriteOnlyMessage();
-            byte[] msgData = new byte[msg.LengthBytes];
+            byte[] msgData = new byte[16];
             msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);
             msgToSend.Write(conn.SteamID);
             msgToSend.Write((byte)deliveryMethod);

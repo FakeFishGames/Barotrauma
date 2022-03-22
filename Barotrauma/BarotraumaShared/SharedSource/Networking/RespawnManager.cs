@@ -26,6 +26,9 @@ namespace Barotrauma.Networking
         //any respawn items left in the shuttle are removed when the shuttle despawns
         private readonly List<Item> respawnItems = new List<Item>();
 
+        //characters who spawned during the last respawn
+        private readonly List<Character> respawnedCharacters = new List<Character>();
+
         public bool UsingShuttle
         {
             get { return RespawnShuttle != null; }
@@ -193,7 +196,7 @@ namespace Barotrauma.Networking
 
         partial void UpdateReturningProjSpecific(float deltaTime);
         
-        private IEnumerable<object> ForceShuttleToPos(Vector2 position, float speed)
+        private IEnumerable<CoroutineStatus> ForceShuttleToPos(Vector2 position, float speed)
         {
             if (RespawnShuttle == null)
             {
@@ -277,11 +280,17 @@ namespace Barotrauma.Networking
                 hull.BallastFlora?.Kill();
             }
 
+            Dictionary<Character, Vector2> characterPositions = new Dictionary<Character, Vector2>();
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Submarine != RespawnShuttle) { continue; }
+                if (!respawnedCharacters.Contains(c)) 
+                {
+                    characterPositions.Add(c, c.WorldPosition);
+                    continue; 
+                }
 #if CLIENT
-                if (Character.Controlled == c) Character.Controlled = null;
+                if (Character.Controlled == c) { Character.Controlled = null; }
 #endif
                 c.Kill(CauseOfDeathType.Unknown, null, true);
                 c.Enabled = false;
@@ -298,6 +307,11 @@ namespace Barotrauma.Networking
 
             RespawnShuttle.SetPosition(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + RespawnShuttle.Borders.Height));
             RespawnShuttle.Velocity = Vector2.Zero;
+
+            foreach (var characterPosition in characterPositions)
+            {
+                characterPosition.Key.TeleportTo(characterPosition.Value);
+            }
         }
 
         partial void RespawnCharactersProjSpecific(Vector2? shuttlePos);

@@ -175,9 +175,10 @@ namespace Barotrauma
         {
             Vector2 pos = element.GetAttributeVector2("pos", Vector2.Zero);
             LinkedSubmarine linkedSub;
+            idRemap.AssignMaxId(out ushort id);
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
-                linkedSub = CreateDummy(submarine, element, pos, idRemap.AssignMaxId());
+                linkedSub = CreateDummy(submarine, element, pos, id);
                 linkedSub.saveElement = element;
                 linkedSub.purchasedLostShuttles = false;
             }
@@ -185,7 +186,7 @@ namespace Barotrauma
             {
                 string levelSeed = element.GetAttributeString("location", "");
                 LevelData levelData = GameMain.GameSession?.Campaign?.NextLevel ?? GameMain.GameSession?.LevelData;
-                linkedSub = new LinkedSubmarine(submarine, idRemap.AssignMaxId())
+                linkedSub = new LinkedSubmarine(submarine, id)
                 {
                     purchasedLostShuttles = GameMain.GameSession?.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles,
                     saveElement = element

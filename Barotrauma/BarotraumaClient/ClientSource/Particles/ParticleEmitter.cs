@@ -136,8 +136,10 @@ namespace Barotrauma.Particles
             Prefab = prefab;
         }
 
-        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, Tuple<Vector2, Vector2> tracerPoints = null)
+        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, bool mirrorAngle = false, Tuple<Vector2, Vector2> tracerPoints = null)
         {
+            if (GameMain.Client?.MidRoundSyncing ?? false) { return; }
+
             if (initialDelay < Prefab.Properties.InitialDelay)
             {
                 initialDelay += deltaTime;
@@ -157,7 +159,7 @@ namespace Barotrauma.Particles
                     for (float z = 0.0f; z < dist; z += Prefab.Properties.EmitAcrossRayInterval)
                     {
                         Vector2 pos = tracerPoints.Item1 + dir * z;
-                        Emit(pos, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, tracerPoints: null);
+                        Emit(pos, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, mirrorAngle, tracerPoints: null);
                     }
                 }
             }
@@ -167,7 +169,7 @@ namespace Barotrauma.Particles
                 float emitInterval = 1.0f / Prefab.Properties.ParticlesPerSecond;
                 while (emitTimer > emitInterval)
                 {
-                    Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, tracerPoints: tracerPoints);
+                    Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, mirrorAngle, tracerPoints: tracerPoints);
                     emitTimer -= emitInterval;
                 }
             }
@@ -181,16 +183,19 @@ namespace Barotrauma.Particles
             }
         }
 
-        private void Emit(Vector2 position, Hull hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, Tuple<Vector2, Vector2> tracerPoints = null)
+        private void Emit(Vector2 position, Hull hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, bool mirrorAngle = false, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             var particlePrefab = overrideParticle ?? Prefab.ParticlePrefab;
             if (particlePrefab == null) { return; }
 
-            angle += Rand.Range(Prefab.Properties.AngleMinRad, Prefab.Properties.AngleMaxRad);
-
-            Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
-            Vector2 velocity = dir * Rand.Range(Prefab.Properties.VelocityMin, Prefab.Properties.VelocityMax) * velocityMultiplier;
-            position += dir * Rand.Range(Prefab.Properties.DistanceMin, Prefab.Properties.DistanceMax);
+            Vector2 velocity = Vector2.Zero;
+            if (!MathUtils.NearlyEqual(Prefab.Properties.VelocityMax * velocityMultiplier, 0.0f) || !MathUtils.NearlyEqual(Prefab.Properties.DistanceMax, 0.0f))
+            {
+                angle += Rand.Range(Prefab.Properties.AngleMinRad, Prefab.Properties.AngleMaxRad) * (mirrorAngle ? -1 : 1);
+                Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
+                velocity = dir * Rand.Range(Prefab.Properties.VelocityMin, Prefab.Properties.VelocityMax) * velocityMultiplier;
+                position += dir * Rand.Range(Prefab.Properties.DistanceMin, Prefab.Properties.DistanceMax);
+            }
 
             var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, particleRotation, hullGuess, Prefab.DrawOnTop, tracerPoints: tracerPoints);
 

@@ -73,6 +73,23 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Returns true if a prefab with the identifier exists, false otherwise.
+        /// </summary>
+        /// <param name="identifier">Prefab identifier</param>
+        /// <param name="prefab">The matching prefab (if one is found)</param>
+        /// <returns>Whether a prefab with the identifier exists or not</returns>
+        public bool TryGetValue(string identifier, out T prefab)
+        {
+            if (!ContainsKey(identifier))
+            {
+                prefab = default;
+                return false;
+            }
+            prefab = this[identifier];
+            return true;
+        }
+
+        /// <summary>
         /// Add a prefab to the collection.
         /// If not marked as an override, fail if a prefab with the same
         /// identifier already exists.

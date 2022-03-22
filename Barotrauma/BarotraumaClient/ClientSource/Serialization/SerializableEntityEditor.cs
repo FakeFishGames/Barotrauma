@@ -271,6 +271,21 @@ namespace Barotrauma
                     }
                 }
             }
+            else if (newValue is string[] a)
+            {
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    if (i >= a.Length) { break; }
+                    if (fields[i] is GUITextBox textBox)
+                    {
+                        textBox.Text = a[i];
+                        if (flash)
+                        {
+                            textBox.Flash(GUI.Style.Green);
+                        }
+                    }
+                }
+            }
         }
 
         public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "", int elementHeight = 24, ScalableFont titleFont = null)
@@ -343,7 +358,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    displayName = TextManager.Get(fallbackTag, true);
+                    displayName = TextManager.Get(fallbackTag, true) ?? TextManager.Get($"sp.{fallbackTag}.name", true);
                 }
             }
             
@@ -422,6 +437,10 @@ namespace Barotrauma
             else if (value is Rectangle r)
             {
                 propertyField = CreateRectangleField(entity, property, r, displayName, toolTip);
+            }
+            else if(value is string[] a)
+            {
+                propertyField = CreateStringArrayField(entity, property, a, displayName, toolTip);
             }
             return propertyField;
         }
@@ -1160,6 +1179,75 @@ namespace Barotrauma
                     ((GUINumberInput)fields[3]).IntValue = value.Height;
                 }
             };
+            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
+            return frame;
+        }
+
+        public GUIComponent CreateStringArrayField(ISerializableEntity entity, SerializableProperty property, string[] value, string displayName, string toolTip)
+        {
+            int elementCount = (value.Length + 1);
+            var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementCount * elementHeight), layoutGroup.RectTransform, isFixedSize: true), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f / elementCount), frame.RectTransform), displayName, font: GUI.SmallFont)
+            {
+                ToolTip = toolTip
+            };
+            var editableAttribute = property.GetAttribute<Editable>();
+            var fields = new GUIComponent[value.Length];
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, (float)(elementCount - 1) / elementCount), frame.RectTransform, anchor: Anchor.BottomLeft))
+            {
+                RelativeSpacing = 0.01f
+            };
+            elementCount -= 1;
+
+            for (int i = 0; i < value.Length; i++)
+            {
+                var element = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f / elementCount), inputArea.RectTransform) { MinSize = new Point(50, 0), MaxSize = new Point((int)(0.9f * inputArea.Rect.Width), 50) }, style: null);
+                var elementLayoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, element.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+                // Set the label to be (i + 1) so it's easier to understand for non-programmers
+                string componentLabel = (i + 1).ToString();
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), elementLayoutGroup.RectTransform) { MaxSize = new Point(25, elementLayoutGroup.Rect.Height) }, componentLabel, font: GUI.SmallFont, textAlignment: Alignment.Center);
+                GUITextBox textBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1), elementLayoutGroup.RectTransform), text: value[i]) { Font = GUI.SmallFont };
+                int comp = i;
+                textBox.OnEnterPressed += (textBox, text) => OnApply(textBox);
+                textBox.OnDeselected += (textBox, keys) => OnApply(textBox);
+                fields[i] = textBox;
+
+                bool OnApply(GUITextBox textBox)
+                {
+                    // Reserve the semicolon for serializing the value
+                    bool containsForbiddenCharacters = textBox.Text.Contains(';');
+                    string[] newValue = (string[])property.GetValue(entity);
+                    if (!containsForbiddenCharacters)
+                    {
+                        newValue[comp] = textBox.Text;
+                        if (SetPropertyValue(property, entity, newValue))
+                        {
+                            TrySendNetworkUpdate(entity, property);
+                            textBox.Flash(color: GUI.Style.Green, flashDuration: 1f);
+                        }
+                    }
+                    else
+                    {
+                        textBox.Text = newValue[comp];
+                        textBox.Flash(color: GUI.Style.Red, flashDuration: 1f);
+                    }
+                    return true;
+                }
+            }
+
+            refresh += () =>
+            {
+                if (fields.None(f => ((GUITextBox)f).Selected))
+                {
+                    string[] value = (string[])property.GetValue(entity);
+                    for (int i = 0; i < fields.Length; i++)
+                    {
+                        ((GUITextBox)fields[i]).Text = value[i];
+                    }
+                }
+            };
+
+            frame.RectTransform.MinSize =  new Point(0, frame.RectTransform.Children.Sum(c => c.MinSize.Y));
             if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
             return frame;
         }

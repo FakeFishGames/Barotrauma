@@ -27,6 +27,29 @@ namespace Barotrauma
 
         public bool GameOver { get; private set; }
 
+        class SavedExperiencePoints
+        {
+            public readonly ulong SteamID;
+            public readonly string EndPoint;
+            public readonly int ExperiencePoints;
+
+            public SavedExperiencePoints(Client client)
+            {
+                SteamID = client.SteamID;
+                EndPoint = client.Connection.EndPointString;
+                ExperiencePoints = client.Character?.Info?.ExperiencePoints ?? 0;
+            }
+
+            public SavedExperiencePoints(XElement element)
+            {
+                SteamID = element.GetAttributeUInt64("steamid", 0);
+                EndPoint = element.GetAttributeString("endpoint", string.Empty);
+                ExperiencePoints = element.GetAttributeInt("points", 0);
+            }
+        }
+
+        private readonly List<SavedExperiencePoints> savedExperiencePoints = new List<SavedExperiencePoints>();
+
         public override bool Paused
         {
             get { return ForceMapUI || CoroutineManager.IsCoroutineRunning("LevelTransition"); }
@@ -155,6 +178,20 @@ namespace Barotrauma
                     c.InGame && (IsOwner(c) || c.HasPermission(ClientPermissions.ManageCampaign)));
         }
 
+        public void SaveExperiencePoints(Client client)
+        {
+            ClearSavedExperiencePoints(client);
+            savedExperiencePoints.Add(new SavedExperiencePoints(client));
+        }
+        public int GetSavedExperiencePoints(Client client)
+        {
+            return savedExperiencePoints.Find(s => s.SteamID != 0 && client.SteamID == s.SteamID || client.EndpointMatches(s.EndPoint))?.ExperiencePoints ?? 0;
+        }
+        public void ClearSavedExperiencePoints(Client client)
+        {
+            savedExperiencePoints.RemoveAll(s => s.SteamID != 0 && client.SteamID == s.SteamID || client.EndpointMatches(s.EndPoint));
+        }
+
         public void LoadPets()
         {
             if (petsElement != null)
@@ -163,44 +200,43 @@ namespace Barotrauma
             }
         }
 
-        public void SaveInventories()
+        public void SavePlayers()
         {
-            List<CharacterCampaignData> prevCharacterData = new List<CharacterCampaignData>(characterData);
-            //client character has spawned this round -> remove old data (and replace with an up-to-date one if the client still has a character)
-            characterData.RemoveAll(cd => cd.HasSpawned);
-
             //refresh the character data of clients who are still in the server
             foreach (Client c in GameMain.Server.ConnectedClients)
             {
-                if (c.HasSpawned && c.CharacterInfo != null && c.CharacterInfo.CauseOfDeath != null && c.CharacterInfo.CauseOfDeath?.Type != CauseOfDeathType.Disconnected)
+                //ignore if the character is controlling a monster
+                //(we'll just use the previously saved campaign data if there's any)
+                if (c.Character != null && c.Character.Info == null)
                 {
-                    //the client has opted to spawn this round with Reaper's Tax
-                    if (c.WaitForNextRoundRespawn.HasValue && !c.WaitForNextRoundRespawn.Value)
-                    {
-                        c.CharacterInfo.StartItemsGiven = false;
-                        characterData.RemoveAll(cd => cd.MatchesClient(c));
-                        characterData.Add(new CharacterCampaignData(c, giveRespawnPenaltyAffliction: true));
-                        continue;
-                    }
+                    c.Character = null;
                 }
-                if (c.Character?.Info == null) { continue; }
-                if (c.Character.IsDead && c.Character.CauseOfDeath?.Type != CauseOfDeathType.Disconnected)
+                //use the info of the character the client is currently controlling
+                // or the previously saved info if not (e.g. if the client has been spectating or died)
+                var characterInfo = c.Character?.Info ?? characterData.Find(d => d.MatchesClient(c))?.CharacterInfo;
+                if (characterInfo == null) { continue; }
+                //reduce skills if the character has died
+                if (characterInfo.CauseOfDeath != null && characterInfo.CauseOfDeath.Type != CauseOfDeathType.Disconnected)
                 {
-                    continue;
+                    RespawnManager.ReduceCharacterSkills(characterInfo);
+                    characterInfo.RemoveSavedStatValuesOnDeath();
+                    characterInfo.CauseOfDeath = null;
                 }
-                c.CharacterInfo = c.Character.Info;
+                c.CharacterInfo = characterInfo;
                 characterData.RemoveAll(cd => cd.MatchesClient(c));
                 characterData.Add(new CharacterCampaignData(c));                
             }
 
             //refresh the character data of clients who aren't in the server anymore
+            List<CharacterCampaignData> prevCharacterData = new List<CharacterCampaignData>(characterData);
             foreach (CharacterCampaignData data in prevCharacterData)
             {
-                if (data.HasSpawned && !characterData.Any(cd => cd.IsDuplicate(data)))
+                if (data.HasSpawned && !GameMain.Server.ConnectedClients.Any(c => data.MatchesClient(c)))
                 {
                     var character = Character.CharacterList.Find(c => c.Info == data.CharacterInfo && !c.IsHusk);
                     if (character != null && (!character.IsDead || character.CauseOfDeath?.Type == CauseOfDeathType.Disconnected))
                     {
+                        characterData.RemoveAll(cd => cd.IsDuplicate(data));
                         data.Refresh(character);
                         characterData.Add(data);
                     }
@@ -218,7 +254,7 @@ namespace Barotrauma
                 if (c.Inventory == null) { continue; }
                 if (Level.Loaded.Type == LevelData.LevelType.Outpost && c.Submarine != Level.Loaded.StartOutpost)
                 {
-                    Map.CurrentLocation.RegisterTakenItems(c.Inventory.AllItems.Where(it => it.SpawnedInOutpost && it.OriginalModuleIndex > 0));
+                    Map.CurrentLocation.RegisterTakenItems(c.Inventory.AllItems.Where(it => it.SpawnedInCurrentOutpost && it.OriginalModuleIndex > 0));
                 }
 
                 if (c.Info != null && c.IsBot)
@@ -235,7 +271,7 @@ namespace Barotrauma
             }
         }
 
-        protected override IEnumerable<object> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults)
+        protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults)
         {
             lastUpdateID++;
 
@@ -259,6 +295,16 @@ namespace Barotrauma
             Map.ProgressWorld(transitionType, (float)(Timing.TotalTime - GameMain.GameSession.RoundStartTime));
 
             bool success = GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
+            if (success)
+            {
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    if (c.Character?.HasAbilityFlag(AbilityFlags.RetainExperienceForNewCharacter) ?? false)
+                    {
+                        (GameMain.GameSession?.GameMode as MultiPlayerCampaign)?.SaveExperiencePoints(c);
+                    }
+                }
+            }
 
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
             
@@ -266,7 +312,7 @@ namespace Barotrauma
 
             if (success)
             {
-                SaveInventories();
+                SavePlayers();
 
                 yield return CoroutineStatus.Running;
 
@@ -292,7 +338,6 @@ namespace Barotrauma
                 {
                     SubmarineInfo previousSub = GameMain.GameSession.SubmarineInfo;
                     GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
-                    PendingSubmarineSwitch = null;
 
                     for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
                     {
@@ -303,13 +348,15 @@ namespace Barotrauma
                         }
                     }
                 }
+                UpdateCampaignSubs();
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                PendingSubmarineSwitch = null;
             }
             else
             {
                 PendingSubmarineSwitch = null;
-                GameMain.Server.EndGame(TransitionType.None);
+                GameMain.Server.EndGame(TransitionType.None, wasSaved: false);
                 LoadCampaign(GameMain.GameSession.SavePath);
                 LastSaveID++;
                 LastUpdateID++;
@@ -320,7 +367,7 @@ namespace Barotrauma
 
             //--------------------------------------
 
-            GameMain.Server.EndGame(transitionType);
+            GameMain.Server.EndGame(transitionType, wasSaved: true);
 
             ForceMapUI = false;
 
@@ -344,19 +391,52 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
-            if (GameMain.Server != null)
-            {
-                CargoManager.OnItemsInBuyCrateChanged += () => { LastUpdateID++; };
-                CargoManager.OnPurchasedItemsChanged += () => { LastUpdateID++; };
-                CargoManager.OnSoldItemsChanged += () => { LastUpdateID++; };
-                UpgradeManager.OnUpgradesChanged += () => { LastUpdateID++; };
-                Map.OnLocationSelected += (loc, connection) => { LastUpdateID++; };
-                Map.OnMissionsSelected += (loc, mission) => { LastUpdateID++; };
-                Reputation.OnAnyReputationValueChanged += () => { LastUpdateID++; };
-            }
+            CargoManager.OnItemsInBuyCrateChanged += () => { LastUpdateID++; };
+            CargoManager.OnPurchasedItemsChanged += () => { LastUpdateID++; };
+            CargoManager.OnSoldItemsChanged += () => { LastUpdateID++; };
+            UpgradeManager.OnUpgradesChanged += () => { LastUpdateID++; };
+            Map.OnLocationSelected += (loc, connection) => { LastUpdateID++; };
+            Map.OnMissionsSelected += (loc, mission) => { LastUpdateID++; };
+            Reputation.OnAnyReputationValueChanged += () => { LastUpdateID++; };
+
+            UpdateCampaignSubs();
+            
             //increment save ID so clients know they're lacking the most up-to-date save file
             LastSaveID++;
         }
+
+        public static void UpdateCampaignSubs()
+        {
+            bool isSubmarineVisible(SubmarineInfo s)
+                => !GameMain.Server.ServerSettings.HiddenSubs.Any(h
+                    => s.Name.Equals(h, StringComparison.OrdinalIgnoreCase));
+            
+            List<SubmarineInfo> availableSubs =
+                SubmarineInfo.SavedSubmarines
+                    .Where(s =>
+                        s.IsCampaignCompatible
+                        && isSubmarineVisible(s))
+                    .ToList();
+
+            if (!availableSubs.Any())
+            {
+                //None of the available subs were marked as campaign-compatible, just include all visible subs
+                availableSubs.AddRange(
+                    SubmarineInfo.SavedSubmarines
+                        .Where(isSubmarineVisible));
+            }
+
+            if (!availableSubs.Any())
+            {
+                //No subs are visible at all! Just make the selected one available
+                availableSubs.Add(GameMain.NetLobbyScreen.SelectedSub);
+            }
+
+            GameMain.NetLobbyScreen.CampaignSubmarines = availableSubs;
+        }
+
+        public bool CanPurchaseSub(SubmarineInfo info)
+            => info.Price <= Money && GameMain.NetLobbyScreen.CampaignSubmarines.Contains(info);
 
         public void DiscardClientCharacterData(Client client)
         {
@@ -965,13 +1045,14 @@ namespace Barotrauma
             // save bots
             CrewManager.SaveMultiplayer(modeElement);
 
-            // save available submarines
-            XElement availableSubsElement = new XElement("AvailableSubs");
-            for (int i = 0; i < GameMain.NetLobbyScreen.CampaignSubmarines.Count; i++)
+            XElement savedExperiencePointsElement = new XElement("SavedExperiencePoints");
+            foreach (var savedExperiencePoint in savedExperiencePoints)
             {
-                availableSubsElement.Add(new XElement("Sub", new XAttribute("name", GameMain.NetLobbyScreen.CampaignSubmarines[i].Name)));
+                savedExperiencePointsElement.Add(new XElement("Point",
+                    new XAttribute("steamid", savedExperiencePoint.SteamID),
+                    new XAttribute("endpoint", savedExperiencePoint?.EndPoint ?? string.Empty),
+                    new XAttribute("points", savedExperiencePoint.ExperiencePoints)));
             }
-            modeElement.Add(availableSubsElement);
 
             element.Add(modeElement);
 

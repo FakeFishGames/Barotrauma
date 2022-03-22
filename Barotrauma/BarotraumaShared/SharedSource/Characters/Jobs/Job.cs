@@ -9,7 +9,7 @@ namespace Barotrauma
     {
         private readonly JobPrefab prefab;
 
-        private Dictionary<string, Skill> skills;
+        private readonly Dictionary<string, Skill> skills;
 
         public string Name
         {
@@ -89,11 +89,11 @@ namespace Barotrauma
             return (skill == null) ? 0.0f : skill.Level;
         }
 
-        public void IncreaseSkillLevel(string skillIdentifier, float increase)
+        public void IncreaseSkillLevel(string skillIdentifier, float increase, bool increasePastMax)
         {
             if (skills.TryGetValue(skillIdentifier, out Skill skill))
             {
-                skill.Level += increase;
+                skill.IncreaseSkill(increase, increasePastMax);
             }
             else
             {
@@ -147,7 +147,7 @@ namespace Barotrauma
                 {
                     string errorMsg = $"Error while spawning job items. Item {item.Name} created network events before the spawn event had been created.";
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("Job.InitializeJobItem:EventsBeforeSpawning", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Job.InitializeJobItem:EventsBeforeSpawning", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     GameMain.Server.EntityEventManager.UniqueEvents.RemoveAll(ev => ev.Entity == item);
                     GameMain.Server.EntityEventManager.Events.RemoveAll(ev => ev.Entity == item);
                 }

@@ -11,12 +11,11 @@ namespace Barotrauma
 
         public Func<Item, float> GetItemPriority;
 
-        public int targetItemCount = 1;
         public string[] ignoredContainerIdentifiers;
         public bool checkInventory = true;
 
-        //if the item can't be found, spawn it in the character's inventory (used by outpost NPCs)
-        private bool spawnItemIfNotFound = false;
+        //if the item can't be found, spawn it in the character's inventory (used by outpost NPCs and in some cases also enemy NPCs, like pirates)
+        private readonly bool spawnItemIfNotFound;
 
         //can either be a tag or an identifier
         public readonly string[] itemIdentifiers;
@@ -35,9 +34,24 @@ namespace Barotrauma
         public bool Equip { get; set; }
         public bool RemoveEmpty { get; set; } = true;
         public bool RemoveExisting { get; set; }
+        /// <summary>
+        /// Only remove existing items when the contain target can't be put in the inventory
+        /// </summary>
+        public bool RemoveExistingWhenNecessary { get; set; }
+        public Func<Item, bool> RemoveExistingPredicate { get; set; }
+        public int? RemoveMax { get; set; }
 
         public bool MoveWholeStack { get; set; }
 
+        private int _itemCount = 1;
+        public int ItemCount
+        {
+            get { return _itemCount; }
+            set
+            {
+                _itemCount = Math.Max(value, 1);
+            }
+        }
 
         public AIObjectiveContainItem(Character character, Item item, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier)
@@ -83,7 +97,7 @@ namespace Barotrauma
                         containedItemCount++;
                     }
                 }
-                return containedItemCount >= targetItemCount;
+                return containedItemCount >= ItemCount;
             }
         }
 
@@ -106,9 +120,9 @@ namespace Barotrauma
                 }
                 if (character.CanInteractWith(container.Item, checkLinked: false))
                 {
-                    if (RemoveExisting)
+                    if (RemoveExisting || (RemoveExistingWhenNecessary && !container.Inventory.CanBePut(item)))
                     {
-                        HumanAIController.UnequipContainedItems(container.Item);
+                        HumanAIController.UnequipContainedItems(container.Item, predicate: RemoveExistingPredicate, unequipMax: RemoveMax);
                     }
                     else if (RemoveEmpty)
                     {
@@ -127,7 +141,6 @@ namespace Barotrauma
                                     container.Inventory.TryPutItem(item, null);
                                 }
                             }
-
                             IsCompleted = true;
                         }
                     }
@@ -144,7 +157,6 @@ namespace Barotrauma
                 {
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager, getDivingGearIfNeeded: AllowToFindDivingGear)
                     {
-                        DialogueIdentifier = "dialogcannotreachtarget",
                         TargetName = container.Item.Name,
                         AbortCondition = obj =>
                             container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI(character) ||
@@ -174,7 +186,9 @@ namespace Barotrauma
                             AllowToFindDivingGear = AllowToFindDivingGear,
                             AllowDangerousPressure = AllowDangerousPressure,
                             TargetCondition = ConditionLevel,
-                            ItemFilter = (Item potentialItem) => RemoveEmpty ? container.CanBeContained(potentialItem) : container.Inventory.CanBePut(potentialItem)
+                            ItemFilter = (Item potentialItem) => RemoveEmpty ? container.CanBeContained(potentialItem) : container.Inventory.CanBePut(potentialItem),
+                            ItemCount = ItemCount,
+                            TakeWholeStack = MoveWholeStack
                         }, onAbandon: () =>
                         {
                             Abandon = true;

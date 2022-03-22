@@ -41,7 +41,7 @@ namespace Barotrauma
                 }
                 msg.WriteRangedInteger((int)NetEntityEvent.Type.Invalid, 0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
                 DebugConsole.Log(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:InvalidData" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:InvalidData" + Name, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -186,7 +186,7 @@ namespace Barotrauma
                 msg.LengthBits = initialWritePos;
                 msg.WriteRangedInteger((int)NetEntityEvent.Type.Invalid, 0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
                 DebugConsole.Log(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:" + errorMsg, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:" + errorMsg, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
             }
         }
 
@@ -280,14 +280,23 @@ namespace Barotrauma
             }
 
             msg.Write(body == null ? (byte)0 : (byte)body.BodyType);
-            msg.Write(SpawnedInOutpost);
+            msg.Write(SpawnedInCurrentOutpost);
             msg.Write(AllowStealing);
+            msg.WriteRangedInteger(Quality, 0, Items.Components.Quality.MaxQuality);
 
             byte teamID = 0;
             foreach (WifiComponent wifiComponent in GetComponents<WifiComponent>())
             {
                 teamID = (byte)wifiComponent.TeamID;
                 break;
+            }
+            if (teamID == 0)
+            {
+                foreach (IdCard idCard in GetComponents<IdCard>())
+                {
+                    teamID = (byte)idCard.TeamID;
+                    break;
+                }
             }
 
             msg.Write(teamID);
@@ -393,7 +402,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Attempted to create a network event for an item (" + Name + ") that hasn't been fully initialized yet.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -414,7 +423,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Attempted to create a network event for an item (" + Name + ") that hasn't been fully initialized yet.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 

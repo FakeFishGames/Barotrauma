@@ -43,6 +43,8 @@ namespace Barotrauma
                 get;
                 private set;
             } = new Dictionary<Character, double>();
+
+            public int DangerousItemsContained { get; set; }
         }
 
         public bool TestMode = false;
@@ -518,14 +520,22 @@ namespace Barotrauma
             AdjustKarma(character, karmaIncrease, "Repaired item");
         }
 
-        public void OnReactorOverHeating(Character character, float deltaTime)
+        public void OnReactorOverHeating(Item reactor, Character character, float deltaTime)
         {
-            AdjustKarma(character, -ReactorOverheatKarmaDecrease * deltaTime, "Caused reactor to overheat");
+            if (reactor?.Submarine == null || character == null) { return; }
+            if (reactor.Submarine.TeamID == CharacterTeamType.FriendlyNPC || reactor.Submarine.TeamID == character.TeamID)
+            {
+                AdjustKarma(character, -ReactorOverheatKarmaDecrease * deltaTime, "Caused reactor to overheat");
+            }
         }
 
-        public void OnReactorMeltdown(Character character)
+        public void OnReactorMeltdown(Item reactor, Character character)
         {
-            AdjustKarma(character, -ReactorMeltdownKarmaDecrease, "Caused a reactor meltdown");
+            if (reactor?.Submarine == null || character == null) { return; }
+            if (reactor.Submarine.TeamID == CharacterTeamType.FriendlyNPC || reactor.Submarine.TeamID == character.TeamID)
+            {
+                AdjustKarma(character, -ReactorMeltdownKarmaDecrease, "Caused a reactor meltdown");
+            }
         }
 
         public void OnExtinguishingFire(Character character, float deltaTime)
@@ -564,6 +574,25 @@ namespace Barotrauma
             {
                 client.Karma -= SpamFilterKarmaDecrease;
                 SendKarmaNotifications(client, "Triggered the spam filter");
+            }
+        }
+
+        public void OnItemContained(Item containedItem, Item container, Character character)
+        {
+            if (containedItem == null || container == null || character == null || character.IsTraitor) { return; }
+            if (container.Prefab.Identifier == "weldingtool" && containedItem.HasTag("oxygensource"))
+            {
+                var client = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
+                if (client == null) { return; }
+                float amount = -DangerousItemContainKarmaDecrease;
+                var memory = GetClientMemory(client);
+                if (IsDangerousItemContainKarmaDecreaseIncremental)
+                {
+                    amount *= memory.DangerousItemsContained;
+                }
+                amount = Math.Max(amount, -MaxDangerousItemContainKarmaDecrease);
+                AdjustKarma(character, amount, "Put an oxygen tank inside a welding tool");
+                clientMemories[client].DangerousItemsContained = memory.DangerousItemsContained + 1;
             }
         }
 

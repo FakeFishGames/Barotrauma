@@ -167,6 +167,9 @@ namespace Barotrauma
             private set { size = value; }
         }
 
+        [Serialize("", true)]
+        public string DamageSound { get; private set; }
+
         public Vector2 ScaledSize => size * Scale;
 
         protected Vector2 textureScale = Vector2.One;
@@ -291,7 +294,8 @@ namespace Barotrauma
                 {
                     case "sprite":
                         sp.sprite = new Sprite(subElement, lazyLoad: true);
-                        if (subElement.Attribute("sourcerect") == null)
+                        if (subElement.Attribute("sourcerect") == null &&
+                            subElement.Attribute("sheetindex") == null)
                         {
                             DebugConsole.ThrowError("Warning - sprite sourcerect not configured for structure \"" + sp.name + "\"!");
                         }

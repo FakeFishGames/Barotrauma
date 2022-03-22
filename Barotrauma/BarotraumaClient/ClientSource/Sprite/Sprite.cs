@@ -41,21 +41,13 @@ namespace Barotrauma
         public Sprite(Texture2D texture, Rectangle? sourceRectangle, Vector2? newOffset, float newRotation = 0.0f, string path = null)
         {
             this.texture = texture;
-
             sourceRect = sourceRectangle ?? new Rectangle(0, 0, texture.Width, texture.Height);
-
             offset = newOffset ?? Vector2.Zero;
-
             size = new Vector2(sourceRect.Width, sourceRect.Height);
-
             origin = Vector2.Zero;
-
             effects = SpriteEffects.None;
-
             rotation = newRotation;
-
             FilePath = path;
-
             AddToList(this);
         }
 
@@ -85,14 +77,14 @@ namespace Barotrauma
             EnsureLazyLoaded(isAsync: true);
         }
 
-        public void EnsureLazyLoaded(bool isAsync=false)
+        public void EnsureLazyLoaded(bool isAsync = false)
         {
             if (!LazyLoad || texture != null || cannotBeLoaded || loadingAsync) { return; }
             loadingAsync = isAsync;
 
             Vector4 sourceVector = Vector4.Zero;
             bool temp2 = false;
-            int maxLoadRetries = 3;
+            int maxLoadRetries = File.Exists(FilePath) ? 3 : 0;
             for (int i = 0; i <= maxLoadRetries; i++)
             {
                 try
@@ -177,7 +169,8 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError("Sprite \"" + file + "\" not found!");
+                DebugConsole.ThrowError($"Sprite \"{file}\" not found!");
+                DebugConsole.Log(Environment.StackTrace.CleanupStackTrace());
             }
 
             return null;
@@ -382,7 +375,7 @@ namespace Barotrauma
                 {
                     foreach (Sprite s in LoadedSprites)
                     {
-                        if (s.FullPath == FullPath) return;
+                        if (s.FullPath == FullPath) { return; }
                     }
                 }
             }

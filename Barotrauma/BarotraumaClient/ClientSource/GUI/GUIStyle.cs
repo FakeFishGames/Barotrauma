@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         private Dictionary<string, GUIComponentStyle> componentStyles;
 
-        private XElement configElement;
+        private readonly XElement configElement;
 
         private GraphicsDevice graphicsDevice;
 
@@ -25,6 +25,7 @@ namespace Barotrauma
         public ScalableFont SubHeadingFont { get; private set; }
         public ScalableFont DigitalFont { get; private set; }
         public ScalableFont HotkeyFont { get; private set; }
+        public ScalableFont MonospacedFont { get; private set; }
 
         public Dictionary<ScalableFont, bool> ForceFontUpperCase
         {
@@ -40,11 +41,21 @@ namespace Barotrauma
         public SpriteSheet SavingIndicator { get; private set; }
 
         public UISprite UIGlow { get; private set; }
+
+        public UISprite PingCircle { get; private set; }
+
+        public UISprite YouAreHereCircle { get; private set; }
+
         public UISprite UIGlowCircular { get; private set; }
+
+        public UISprite UIGlowSolidCircular { get; private set; }
+        public UISprite UIThermalGlow { get; private set; }
 
         public UISprite ButtonPulse { get; private set; }
 
         public SpriteSheet FocusIndicator { get; private set; }
+
+        public UISprite IconOverflowIndicator { get; private set; }
 
         /// <summary>
         /// General green color used for elements whose colors are set from code
@@ -81,6 +92,12 @@ namespace Barotrauma
         public Color TextColorBright { get; private set; } = Color.White * 0.9f;
         public Color TextColorDark { get; private set; } = Color.Black * 0.9f;
         public Color TextColorDim { get; private set; } = Color.White * 0.6f;
+
+        public Color ItemQualityColorPoor { get; private set; } = Color.DarkRed;
+        public Color ItemQualityColorNormal { get; private set; } = Color.Gray;
+        public Color ItemQualityColorGood { get; private set; } = Color.LightGreen;
+        public Color ItemQualityColorExcellent { get; private set; } = Color.LightBlue;
+        public Color ItemQualityColorMasterwork { get; private set; } = Color.MediumPurple;
 
         public Color ColorReputationVeryLow { get; private set; } = Color.Red;
         public Color ColorReputationLow { get; private set; } = Color.Orange;
@@ -235,6 +252,12 @@ namespace Barotrauma
                     case "uiglow":
                         UIGlow = new UISprite(subElement);
                         break;
+                    case "pingcircle":
+                        PingCircle = new UISprite(subElement);
+                        break;
+                    case "youareherecircle":
+                        YouAreHereCircle = new UISprite(subElement);
+                        break;
                     case "radiation":
                         RadiationSprite = new UISprite(subElement);
                         break;
@@ -244,8 +267,17 @@ namespace Barotrauma
                     case "uiglowcircular":
                         UIGlowCircular = new UISprite(subElement);
                         break;
+                    case "uiglowsolidcircular":
+                        UIGlowSolidCircular = new UISprite(subElement);
+                        break;
+                    case "uithermalglow":
+                        UIThermalGlow = new UISprite(subElement);
+                        break;
                     case "endroundbuttonpulse":
                         ButtonPulse = new UISprite(subElement);
+                        break;
+                    case "iconoverflowindicator":
+                        IconOverflowIndicator = new UISprite(subElement);
                         break;
                     case "focusindicator":
                         FocusIndicator = new SpriteSheet(subElement);
@@ -276,6 +308,10 @@ namespace Barotrauma
                     case "digitalfont":
                         DigitalFont = LoadFont(subElement, graphicsDevice);
                         ForceFontUpperCase[DigitalFont] = subElement.GetAttributeBool("forceuppercase", false);
+                        break;
+                    case "monospacedfont":
+                        MonospacedFont = LoadFont(subElement, graphicsDevice);
+                        ForceFontUpperCase[MonospacedFont] = subElement.GetAttributeBool("forceuppercase", false);
                         break;
                     case "hotkeyfont":
                         HotkeyFont = LoadFont(subElement, graphicsDevice);
@@ -446,7 +482,7 @@ namespace Barotrauma
 
         public void Apply(GUIComponent targetComponent, string styleName = "", GUIComponent parent = null)
         {
-            GUIComponentStyle componentStyle = null;  
+            GUIComponentStyle componentStyle = null;
             if (parent != null)
             {
                 GUIComponentStyle parentStyle = parent.Style;
@@ -461,7 +497,7 @@ namespace Barotrauma
                         return;
                     }
                 }
-                
+
                 string childStyleName = string.IsNullOrEmpty(styleName) ? targetComponent.GetType().Name : styleName;
                 parentStyle.ChildStyles.TryGetValue(childStyleName.ToLowerInvariant(), out componentStyle);
             }
@@ -477,8 +513,25 @@ namespace Barotrauma
                     return;
                 }
             }
-            
-            targetComponent.ApplyStyle(componentStyle);            
+
+            targetComponent.ApplyStyle(componentStyle);
+        }
+
+        public Color GetQualityColor(int quality)
+        {
+            switch (quality)
+            {
+                case 1:
+                    return ItemQualityColorGood;
+                case 2:
+                    return ItemQualityColorExcellent;
+                case 3:
+                    return ItemQualityColorMasterwork;
+                case -1:
+                    return ItemQualityColorPoor;
+                default:
+                    return ItemQualityColorNormal;
+            }
         }
     }
 }

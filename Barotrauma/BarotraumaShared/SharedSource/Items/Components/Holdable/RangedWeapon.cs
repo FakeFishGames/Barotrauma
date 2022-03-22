@@ -1,10 +1,11 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Networking;
 using FarseerPhysics;
-using FarseerPhysics.Collision;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -31,6 +32,13 @@ namespace Barotrauma.Items.Components
             set { reload = Math.Max(value, 0.0f); }
         }
 
+        [Serialize(false, false, description: "Tells the AI to hold the trigger down when it uses this weapon")]
+        public bool HoldTrigger
+        {
+            get;
+            set;
+        }
+
         [Serialize(1, false, description: "How projectiles the weapon launches when fired once.")]
         public int ProjectileCount
         {
@@ -52,17 +60,38 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(0f, true, description: "The time required for a charge-type turret to charge up before able to fire.")]
+        public float MaxChargeTime
+        {
+            get;
+            private set;
+        }
+
+        private enum ChargingState
+        {
+            Inactive,
+            WindingUp,
+            WindingDown,
+        }
+        private ChargingState currentChargingState;
+
         public Vector2 TransformedBarrelPos
         {
             get
             {
-                Matrix bodyTransform = Matrix.CreateRotationZ(item.body.Rotation);
+                Matrix bodyTransform = Matrix.CreateRotationZ(item.body == null ? MathHelper.ToRadians(item.Rotation) : item.body.Rotation);
                 Vector2 flippedPos = barrelPos;
-                if (item.body.Dir < 0.0f) flippedPos.X = -flippedPos.X;
-                return Vector2.Transform(flippedPos, bodyTransform);
+                if (item.body != null && item.body.Dir < 0.0f) { flippedPos.X = -flippedPos.X; }
+                return Vector2.Transform(flippedPos, bodyTransform) * item.Scale;
             }
         }
-                
+
+
+        public Projectile LastProjectile { get; private set; }
+
+        private float currentChargeTime;
+        private bool tryingToCharge;
+
         public RangedWeapon(Item item, XElement element)
             : base(item, element)
         {
@@ -88,25 +117,64 @@ namespace Barotrauma.Items.Components
             if (ReloadTimer < 0.0f)
             {
                 ReloadTimer = 0.0f;
-                IsActive = false;
+                if (MaxChargeTime <= 0f)
+                {
+                    IsActive = false;
+                    return;
+                }
             }
+
+            float previousChargeTime = currentChargeTime;
+
+            float chargeDeltaTime = tryingToCharge && ReloadTimer <= 0f ? deltaTime : -deltaTime;
+            currentChargeTime = Math.Clamp(currentChargeTime + chargeDeltaTime, 0f, MaxChargeTime);
+
+            tryingToCharge = false;
+
+            if (currentChargeTime == 0f)
+            {
+                currentChargingState = ChargingState.Inactive;
+            }
+            else if (currentChargeTime < previousChargeTime)
+            {
+                currentChargingState = ChargingState.WindingDown;
+            }
+            else
+            {
+                // if we are charging up or at maxed charge, remain winding up
+                currentChargingState = ChargingState.WindingUp;
+            }
+
+            UpdateProjSpecific(deltaTime);
         }
+
+        partial void UpdateProjSpecific(float deltaTime);
 
         private float GetSpread(Character user)
         {
-            float degreeOfFailure = 1.0f - DegreeOfSuccess(user);
+            float degreeOfFailure = MathHelper.Clamp(1.0f - DegreeOfSuccess(user), 0.0f, 1.0f);
             degreeOfFailure *= degreeOfFailure;
-            return MathHelper.ToRadians(MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure));
+            float spread = MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure) / (1f + user.GetStatValue(StatTypes.RangedSpreadReduction));
+            return MathHelper.ToRadians(spread);
         }
 
         private readonly List<Body> limbBodies = new List<Body>();
         public override bool Use(float deltaTime, Character character = null)
         {
+            tryingToCharge = true;
             if (character == null || character.Removed) { return false; }
             if ((item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) || ReloadTimer > 0.0f) { return false; }
+            if (currentChargeTime < MaxChargeTime) { return false; }
 
             IsActive = true;
-            ReloadTimer = reload;
+            ReloadTimer = reload / (1 + character?.GetStatValue(StatTypes.RangedAttackSpeed) ?? 0f);
+            currentChargeTime = 0f;
+
+            if (character != null)
+            {
+                var abilityItem = new AbilityItem(item);
+                character.CheckTalents(AbilityEffectType.OnUseRangedWeapon, abilityItem);
+            }
 
             if (item.AiTarget != null)
             {
@@ -136,7 +204,14 @@ namespace Barotrauma.Items.Components
                     Vector2 barrelPos = TransformedBarrelPos + item.body.SimPosition;
                     float rotation = (Item.body.Dir == 1.0f) ? Item.body.Rotation : Item.body.Rotation - MathHelper.Pi;
                     float spread = GetSpread(character) * Rand.Range(-0.5f, 0.5f);
-                    projectile.Shoot(character, character.AnimController.AimSourceSimPos, barrelPos, rotation + spread, ignoredBodies: limbBodies.ToList(), createNetworkEvent: false);
+                    var lastProjectile = LastProjectile;
+                    if (lastProjectile != projectile)
+                    {
+                        lastProjectile?.Item.GetComponent<Rope>()?.Snap();
+                    }
+                    float damageMultiplier = 1f + item.GetQualityModifier(Quality.StatType.FirepowerMultiplier);
+                    projectile.Launcher = item;
+                    projectile.Shoot(character, character.AnimController.AimSourceSimPos, barrelPos, rotation + spread, ignoredBodies: limbBodies.ToList(), createNetworkEvent: false, damageMultiplier);
                     projectile.Item.GetComponent<Rope>()?.Attach(Item, projectile.Item);
                     if (i == 0)
                     {
@@ -145,6 +220,7 @@ namespace Barotrauma.Items.Components
                     projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
                     Item.RemoveContained(projectile.Item);
                 }
+                LastProjectile = projectile;
             }
 
             LaunchProjSpecific();

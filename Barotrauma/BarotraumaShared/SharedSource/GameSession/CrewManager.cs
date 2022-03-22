@@ -237,6 +237,9 @@ namespace Barotrauma
                     {
                         CharacterInfo.ApplyHealthData(character, character.Info.HealthData);
                     }
+
+                    character.LoadTalents();
+
                     character.GiveIdCardTags(spawnWaypoints[i]);
                     character.Info.StartItemsGiven = true;
                     if (character.Info.OrderData != null)
@@ -485,6 +488,11 @@ namespace Barotrauma
                             DebugConsole.ThrowError("Error loading an ignore order - can't find a proper ignore target");
                             continue;
                     }
+                }
+                if (orderInfo.Order.TargetEntity == null || (orderInfo.Order.IsIgnoreOrder && ignoreTarget == null))
+                {
+                    // The order target doesn't exist anymore, just discard the loaded order
+                    continue;
                 }
                 if (ignoreTarget != null)
                 {

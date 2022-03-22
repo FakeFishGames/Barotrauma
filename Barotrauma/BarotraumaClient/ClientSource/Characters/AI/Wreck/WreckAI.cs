@@ -17,7 +17,7 @@ namespace Barotrauma
             fadeOutRoutine = CoroutineManager.StartCoroutine(FadeOutColors(Config.DeadEntityColorFadeOutTime));
         }
 
-        private IEnumerable<object> FadeOutColors(float time)
+        private IEnumerable<CoroutineStatus> FadeOutColors(float time)
         {
             float timer = 0;
             while (timer < time)

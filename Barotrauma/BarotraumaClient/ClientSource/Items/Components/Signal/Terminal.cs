@@ -26,16 +26,11 @@ namespace Barotrauma.Items.Components
                 AutoHideScrollBar = false
             };
 
-            // Create fillerBlock to cover historyBox so new values appear at the bottom of historyBox
-            // This could be removed if GUIListBox supported aligning its children
-            fillerBlock = new GUITextBlock(new RectTransform(new Vector2(1, 1), historyBox.Content.RectTransform, anchor: Anchor.TopCenter), string.Empty)
-            {
-                CanBeFocused = false
-            };
+            CreateFillerBlock();
 
             new GUIFrame(new RectTransform(new Vector2(0.9f, 0.01f), layoutGroup.RectTransform), style: "HorizontalLine");
 
-            inputBox = new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: Color.LimeGreen)
+            inputBox = new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: TextColor)
             {
                 MaxTextLength = MaxMessageLength,
                 OverflowClip = true,
@@ -55,6 +50,16 @@ namespace Barotrauma.Items.Components
             };
         }
 
+        // Create fillerBlock to cover historyBox so new values appear at the bottom of historyBox
+        // This could be removed if GUIListBox supported aligning its children
+        public void CreateFillerBlock()
+        {
+            fillerBlock = new GUITextBlock(new RectTransform(new Vector2(1, 1), historyBox.Content.RectTransform, anchor: Anchor.TopCenter), string.Empty)
+            {
+                CanBeFocused = false
+            };
+        }
+
         private void SendOutput(string input)
         {
             if (input.Length > MaxMessageLength)
@@ -63,15 +68,15 @@ namespace Barotrauma.Items.Components
             }
 
             OutputValue = input;
-            ShowOnDisplay(input);
+            ShowOnDisplay(input, addToHistory: true, TextColor);
             item.SendSignal(input, "signal_out");
         }
 
-        partial void ShowOnDisplay(string input, bool addToHistory = true)
+        partial void ShowOnDisplay(string input, bool addToHistory, Color color)
         {
             if (addToHistory)
             {
-                messageHistory.Add(input);
+                messageHistory.Add(new TerminalMessage(input, color));
                 while (messageHistory.Count > MaxMessages)
                 {
                     messageHistory.RemoveAt(0);
@@ -85,7 +90,7 @@ namespace Barotrauma.Items.Components
             GUITextBlock newBlock = new GUITextBlock(
                     new RectTransform(new Vector2(1, 0), historyBox.Content.RectTransform, anchor: Anchor.TopCenter),
                     "> " + input,
-                    textColor: Color.LimeGreen, wrap: true)
+                    textColor: color, wrap: true, font: UseMonospaceFont ? GUI.MonospacedFont : GUI.GlobalFont)
             {
                 CanBeFocused = false
             };
@@ -118,9 +123,9 @@ namespace Barotrauma.Items.Components
         // This method is overrided instead of the UpdateHUD method because this ensures the input box is selected
         // even when the terminal component is selected for the very first time. Doing the input box selection in the
         // UpdateHUD method only selects the input box on every terminal selection except for the very first time.
-        public override void AddToGUIUpdateList()
+        public override void AddToGUIUpdateList(int order = 0)
         {
-            base.AddToGUIUpdateList();
+            base.AddToGUIUpdateList(order: order);
             if (shouldSelectInputBox)
             {
                 inputBox.Select();
@@ -130,7 +135,12 @@ namespace Barotrauma.Items.Components
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
-            msg.Write((string)extraData[2]);
+            if (extraData is null) { return; }
+
+            if (extraData[2] is string str)
+            {
+                msg.Write(str);
+            }
         }
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -275,6 +276,7 @@ namespace Barotrauma
 
             public delegate void OnClickDelegate(GUITextBlock textBlock, ClickableArea area);
             public OnClickDelegate OnClick;
+            public OnClickDelegate OnSecondaryClick;
         }
         public List<ClickableArea> ClickableAreas { get; private set; } = new List<ClickableArea>();
 
@@ -376,6 +378,7 @@ namespace Barotrauma
         
         public void SetTextPos()
         {
+            cachedCaretPositions = ImmutableArray<Vector2>.Empty;
             if (text == null) { return; }
 
             censoredText = string.IsNullOrEmpty(text) ? "" : new string('\u2022', text.Length);
@@ -389,7 +392,7 @@ namespace Barotrauma
             
             if (Wrap && rect.Width > 0)
             {
-                wrappedText = ToolBox.WrapText(text, rect.Width - padding.X - padding.Z, Font, textScale, playerInput);
+                wrappedText = ToolBox.WrapText(text, rect.Width - padding.X - padding.Z, Font, textScale);
                 TextSize = MeasureText(wrappedText);
             }
             else if (OverflowClip)
@@ -477,115 +480,56 @@ namespace Barotrauma
             disabledTextColor = color;
         }
 
-        protected List<Tuple<Vector2, int>> GetAllPositions()
+        private ImmutableArray<Vector2> cachedCaretPositions = ImmutableArray<Vector2>.Empty;
+        
+        public ImmutableArray<Vector2> GetAllCaretPositions()
         {
-            float halfHeight = Font.MeasureString("T").Y * 0.5f * textScale;
-            string textDrawn = Censor ? CensoredText : WrappedText;
-            var positions = new List<Tuple<Vector2, int>>();
-            if (textDrawn.Contains("\n"))
+            if (cachedCaretPositions.Any())
             {
-                string[] lines = textDrawn.Split('\n');
-                int index = 0;
-                int totalIndex = 0;
-                for (int i = 0; i < lines.Length; i++)
-                {
-                    string line = lines[i];
-                    totalIndex += line.Length;
-                    float totalTextHeight = Font.MeasureString(textDrawn.Substring(0, totalIndex)).Y * textScale;
-                    for (int j = 0; j <= line.Length; j++)
-                    {
-                        Vector2 lineTextSize = Font.MeasureString(line.Substring(0, j)) * textScale;
-                        Vector2 indexPos = new Vector2(lineTextSize.X, totalTextHeight - halfHeight) + TextPos - Origin * textScale;
-                        //DebugConsole.NewMessage($"index: {index}, pos: {indexPos}", Color.AliceBlue);
-                        positions.Add(new Tuple<Vector2, int>(indexPos, index + j));
-                    }
-                    index = totalIndex;
-                }
+                return cachedCaretPositions;
             }
-            else
-            {
-                textDrawn = Censor ? CensoredText : Text;
-                for (int i = 0; i <= Text.Length; i++)
-                {
-                    Vector2 textSize = Font.MeasureString(textDrawn.Substring(0, i)) * textScale;
-                    Vector2 indexPos = new Vector2(textSize.X, textSize.Y - halfHeight) + TextPos - Origin * textScale;
-                    //DebugConsole.NewMessage($"index: {i}, pos: {indexPos}", Color.WhiteSmoke);
-                    positions.Add(new Tuple<Vector2, int>(indexPos, i));
-                }
-            }
-            return positions;
+            string textDrawn = Censor ? CensoredText : Text;
+            float w = Wrap
+                ? (Rect.Width - Padding.X - Padding.Z) / TextScale
+                : float.PositiveInfinity;
+            Font.WrapText(textDrawn, w, out Vector2[] positions);
+            cachedCaretPositions = positions.Select(p => p * TextScale + TextPos - Origin * TextScale).ToImmutableArray();
+            return cachedCaretPositions;
         }
 
-        public int GetCaretIndexFromScreenPos(Vector2 pos)
+        public int GetCaretIndexFromScreenPos(in Vector2 pos)
         {
             return GetCaretIndexFromLocalPos(pos - Rect.Location.ToVector2());
         }
 
-        public int GetCaretIndexFromLocalPos(Vector2 pos)
+        public int GetCaretIndexFromLocalPos(in Vector2 pos)
         {
-            var positions = GetAllPositions();
-            if (positions.Count == 0) { return 0; }
-            float halfHeight = Font.MeasureString("T").Y * 0.5f * textScale;
+            var positions = GetAllCaretPositions();
+            if (positions.Length == 0) { return 0; }
 
-            var currPosition = positions[0];
-
-            float topY = positions.Min(p => p.Item1.Y);
-
-            for (int i = 1; i < positions.Count; i++)
+            float closestXDist = float.PositiveInfinity;
+            float closestYDist = float.PositiveInfinity;
+            int closestIndex = -1;
+            for (int i = 0; i < positions.Length; i++)
             {
-                var p1 = positions[i];
-                var p2 = currPosition;
-
-                float diffY = Math.Abs(p1.Item1.Y - pos.Y) - Math.Abs(p2.Item1.Y - pos.Y);
-                if (diffY < -3.0f)
+                float xDist = Math.Abs(pos.X - positions[i].X);
+                float yDist = Math.Abs(pos.Y - (positions[i].Y + Font.LineHeight * 0.5f));
+                if (yDist < closestYDist || (MathUtils.NearlyEqual(yDist, closestYDist) && xDist < closestXDist))
                 {
-                    currPosition = p1; 
-                    continue;
-                }
-                else if (diffY > 3.0f)
-                {
-                    continue;
-                }
-                else
-                {
-                    diffY = Math.Abs(p1.Item1.Y - pos.Y);
-                    if (diffY < halfHeight || (p1.Item1.Y == topY && pos.Y < topY))
-                    {
-                        //we are on this line, select the nearest character
-                        float diffX = Math.Abs(p1.Item1.X - pos.X) - Math.Abs(p2.Item1.X - pos.X);
-                        if (diffX < -1.0f)
-                        {
-                            currPosition = p1; continue;
-                        }
-                        else
-                        {
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        //we are on a different line, preserve order
-                        if (p1.Item2 < p2.Item2)
-                        {
-                            if (p1.Item1.Y > pos.Y) { currPosition = p1; }
-                        }
-                        else if (p1.Item2 > p2.Item2)
-                        {
-                            if (p1.Item1.Y < pos.Y) { currPosition = p1; }
-                        }
-                        continue;
-                    }
+                    closestIndex = i;
+                    closestXDist = xDist;
+                    closestYDist = yDist;
                 }
             }
-            //GUI.AddMessage($"index: {posIndex.Item2}, pos: {posIndex.Item1}", Color.WhiteSmoke);
-            return currPosition != null ? currPosition.Item2 : Text.Length;
+            
+            return closestIndex >= 0 ? closestIndex : Text.Length;
         }
 
         protected override void Update(float deltaTime)
         {
             base.Update(deltaTime);
 
-            if (ClickableAreas.Any() && (GUI.MouseOn?.IsParentOf(this) ?? true))
+            if (ClickableAreas.Any() && ((GUI.MouseOn?.IsParentOf(this) ?? true) || GUI.MouseOn == this))
             {
                 if (!Rect.Contains(PlayerInput.MousePosition)) { return; }
                 int index = GetCaretIndexFromScreenPos(PlayerInput.MousePosition);
@@ -597,6 +541,10 @@ namespace Barotrauma
                         if (PlayerInput.PrimaryMouseButtonClicked())
                         {
                             clickableArea.OnClick?.Invoke(this, clickableArea);
+                        }
+                        if (PlayerInput.SecondaryMouseButtonClicked())
+                        {
+                            clickableArea.OnSecondaryClick?.Invoke(this, clickableArea);
                         }
                         break;
                     }

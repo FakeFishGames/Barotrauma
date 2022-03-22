@@ -91,8 +91,7 @@ namespace Barotrauma
 
         public static bool NearlyFullCondition(Item item)
         {
-            float condition = item.ConditionPercentage;
-            return item.Repairables.All(r => condition >= r.RepairThreshold);
+            return item.Repairables.All(r => !r.IsBelowRepairThreshold);
         }
 
         protected override float TargetEvaluation()

@@ -105,6 +105,15 @@ namespace Barotrauma
         [Serialize(120.0f, true)]
         public float AllowedRetaliationTime { get; set; }
 
+        [Serialize(5.0f, true)]
+        public float DangerousItemContainKarmaDecrease { get; set; }
+
+        [Serialize(defaultValue: true, true)]
+        public bool IsDangerousItemContainKarmaDecreaseIncremental { get; set; }
+
+        [Serialize(30.0f, true)]
+        public float MaxDangerousItemContainKarmaDecrease { get; set; }
+
         private readonly AfflictionPrefab herpesAffliction;
 
         public Dictionary<string, XElement> Presets = new Dictionary<string, XElement>();

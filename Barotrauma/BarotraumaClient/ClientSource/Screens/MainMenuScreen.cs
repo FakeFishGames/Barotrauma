@@ -40,7 +40,7 @@ namespace Barotrauma
 
         private readonly GUIFrame[] menuTabs;
 
-        private CampaignSetupUI campaignSetupUI;
+        private SinglePlayerCampaignSetupUI campaignSetupUI;
 
         private GUITextBox serverNameBox, /*portBox, queryPortBox,*/ passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, wrongPasswordBanBox, karmaBox;
@@ -435,7 +435,7 @@ namespace Barotrauma
             menuTabs[(int)Tab.Settings] = new GUIFrame(new RectTransform(new Vector2(relativeSize.X, 0.8f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing },
                 style: null);
 
-            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
+            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize * new Vector2(1.0f, 1.15f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
             menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
 
             CreateCampaignSetupUI();
@@ -594,6 +594,8 @@ namespace Barotrauma
                         GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.NewGame); });
                         return true;
                     }
+                    campaignSetupUI.RandomizeCrew();
+                    campaignSetupUI.SetPage(0);
                     campaignSetupUI.CreateDefaultSaveName();
                     campaignSetupUI.RandomizeSeed();
                     campaignSetupUI.UpdateSubList(SubmarineInfo.SavedSubmarines);
@@ -677,7 +679,7 @@ namespace Barotrauma
             return true;
         }
 
-        private IEnumerable<object> SelectScreenWithWaitCursor(Screen screen)
+        private IEnumerable<CoroutineStatus> SelectScreenWithWaitCursor(Screen screen)
         {
             GUI.SetCursorWaiting();
             //tiny delay to get the cursor to render
@@ -717,7 +719,7 @@ namespace Barotrauma
         }
 #endregion
 
-        public void QuickStart(bool fixedSeed = false, string sub = null)
+        public void QuickStart(bool fixedSeed = false, string sub = null, float difficulty = 40, LevelGenerationParams levelGenerationParams = null)
         {
             if (fixedSeed)
             {
@@ -730,9 +732,7 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(subName))
             {
                 DebugConsole.NewMessage($"Loading the predefined quick start sub \"{subName}\"", Color.White);
-                selectedSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s =>
-                    s.Name.ToLower() == subName.ToLower());
-
+                selectedSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name.ToLowerInvariant() == subName.ToLowerInvariant());
                 if (selectedSub == null)
                 {
                     DebugConsole.NewMessage($"Cannot find a sub that matches the name \"{subName}\".", Color.Red);
@@ -749,7 +749,7 @@ namespace Barotrauma
                 GameModePreset.DevSandbox,
                 missionPrefabs: null);
             //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
-            gamesession.StartRound(fixedSeed ? "abcd" : ToolBox.RandomSeed(8), difficulty: 40);
+            gamesession.StartRound(fixedSeed ? "abcd" : ToolBox.RandomSeed(8), difficulty, levelGenerationParams);
             GameMain.GameScreen.Select();
             // TODO: modding support
             string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic", "securityofficer", "medicaldoctor" };
@@ -888,7 +888,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> WaitForSubmarineHashCalculations(GUIMessageBox messageBox)
+        private IEnumerable<CoroutineStatus> WaitForSubmarineHashCalculations(GUIMessageBox messageBox)
         {
             string originalText = messageBox.Text.Text;
             int doneCount = 0;
@@ -985,24 +985,32 @@ namespace Barotrauma
             if (selectedTab < Tab.Empty && menuTabs[(int)selectedTab] != null)
             {
                 menuTabs[(int)selectedTab].AddToGUIUpdateList();
+                switch (selectedTab)
+                {
+                    case Tab.NewGame:
+                        campaignSetupUI.CharacterMenus?.ForEach(m => m.AddToGUIUpdateList());
+                        break;
+                }
             }
         }
 
         public override void Update(double deltaTime)
         {
-#if !DEBUG
-#if USE_STEAM
+#if !DEBUG && USE_STEAM
             if (GameMain.Config.UseSteamMatchmaking)
             {
                 hostServerButton.Enabled =  Steam.SteamManager.IsInitialized;
             }
             steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
-#endif
-#else
-#if USE_STEAM
+#elif USE_STEAM
             steamWorkshopButton.Enabled = true;
 #endif
-#endif
+            switch (selectedTab)
+            {
+                case Tab.NewGame:
+                    campaignSetupUI.Update();
+                    break;
+            }
         }
 
         public void DrawBackground(GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -1045,17 +1053,23 @@ namespace Barotrauma
 
             GUI.Draw(Cam, spriteBatch);
 
-#if !UNSTABLE
-            string versionString = "Barotrauma v" + GameMain.Version + " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")";
-            GUI.SmallFont.DrawString(spriteBatch, versionString, new Vector2(HUDLayoutSettings.Padding, GameMain.GraphicsHeight - GUI.SmallFont.MeasureString(versionString).Y - HUDLayoutSettings.Padding * 0.75f), Color.White * 0.7f);
-#endif
+
             if (selectedTab != Tab.Credits)
             {
+#if !UNSTABLE
+                string versionString = "Barotrauma v" + GameMain.Version + " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")";
+                GUI.SmallFont.DrawString(spriteBatch, versionString, new Vector2(HUDLayoutSettings.Padding, GameMain.GraphicsHeight - GUI.SmallFont.MeasureString(versionString).Y - HUDLayoutSettings.Padding * 0.75f), Color.White * 0.7f);
+#endif
+                string gameAnalyticsStatus = TextManager.Get($"GameAnalyticsStatus.{GameAnalyticsManager.UserConsented}");
+                Vector2 textSize = GUI.SmallFont.MeasureString(gameAnalyticsStatus).ToPoint().ToVector2();
+                GUI.SmallFont.DrawString(spriteBatch, gameAnalyticsStatus, new Vector2(HUDLayoutSettings.Padding, GameMain.GraphicsHeight - GUI.SmallFont.LineHeight * 2 - HUDLayoutSettings.Padding * 0.75f), Color.White * 0.7f);
+
+
                 Vector2 textPos = new Vector2(GameMain.GraphicsWidth - HUDLayoutSettings.Padding, GameMain.GraphicsHeight - HUDLayoutSettings.Padding * 0.75f);
                 for (int i = legalCrap.Length - 1; i >= 0; i--)
                 {
-                    Vector2 textSize = GUI.SmallFont.MeasureString(legalCrap[i]);
-                    textSize = new Vector2((int)textSize.X, (int)textSize.Y);
+                    textSize = GUI.SmallFont.MeasureString(legalCrap[i])
+                        .ToPoint().ToVector2();
                     bool mouseOn = i == 0 &&
                         PlayerInput.MousePosition.X > textPos.X - textSize.X && PlayerInput.MousePosition.X < textPos.X &&
                         PlayerInput.MousePosition.Y > textPos.Y - textSize.Y && PlayerInput.MousePosition.Y < textPos.Y;
@@ -1111,14 +1125,19 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Copying the file \"" + selectedSub.FilePath + "\" failed. The file may have been deleted or in use by another process. Try again or select another submarine.", e);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "MainMenuScreen.StartGame:IOException" + selectedSub.Name,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Copying the file \"" + selectedSub.FilePath + "\" failed.\n" + e.Message + "\n" + Environment.StackTrace.CleanupStackTrace());
+                    GameAnalyticsManager.ErrorSeverity.Error,
+                    "Copying a submarine file failed. " + e.Message + "\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
             selectedSub = new SubmarineInfo(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"));
             
             GameMain.GameSession = new GameSession(selectedSub, saveName, GameModePreset.SinglePlayerCampaign, settings, mapSeed);
+            GameMain.GameSession.CrewManager.CharacterInfos.Clear();
+            foreach (var characterInfo in campaignSetupUI.CharacterMenus.Select(m => m.CharacterInfo))
+            {
+                GameMain.GameSession.CrewManager.AddCharacterInfo(characterInfo);
+            }
             ((SinglePlayerCampaign)GameMain.GameSession.GameMode).LoadNewLevel();
         }
 
@@ -1146,7 +1165,7 @@ namespace Barotrauma
             menuTabs[(int)Tab.NewGame].ClearChildren();
             menuTabs[(int)Tab.LoadGame].ClearChildren();
 
-            var innerNewGame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.NewGame].RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.025f) })
+            var innerNewGame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.NewGame].RectTransform, Anchor.Center))
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
@@ -1154,30 +1173,14 @@ namespace Barotrauma
             var newGameContent = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.95f), innerNewGame.RectTransform, Anchor.Center),
                 style: "InnerFrame");
 
-            var paddedNewGame = new GUIFrame(new RectTransform(new Vector2(0.95f), newGameContent.RectTransform, Anchor.Center), style: null);
             var paddedLoadGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.LoadGame].RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 10) },
                 style: null);
 
-            campaignSetupUI = new CampaignSetupUI(false, paddedNewGame, paddedLoadGame, SubmarineInfo.SavedSubmarines)
+            campaignSetupUI = new SinglePlayerCampaignSetupUI(newGameContent, paddedLoadGame, SubmarineInfo.SavedSubmarines)
             {
                 LoadGame = LoadGame,
                 StartNewGame = StartGame
             };
-
-            var startButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), innerNewGame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.BottomRight)
-            {
-                RelativeSpacing = 0.05f
-            };
-            campaignSetupUI.StartButton.RectTransform.Parent = startButtonContainer.RectTransform;
-            campaignSetupUI.StartButton.RectTransform.MinSize = new Point(
-                (int)(campaignSetupUI.StartButton.TextBlock.TextSize.X * 1.5f),
-                campaignSetupUI.StartButton.RectTransform.MinSize.Y);
-            startButtonContainer.RectTransform.MinSize = new Point(0, campaignSetupUI.StartButton.RectTransform.MinSize.Y);
-            if (campaignSetupUI.CampaignCustomizeButton != null)
-            {
-                campaignSetupUI.CampaignCustomizeButton.RectTransform.Parent = startButtonContainer.RectTransform;
-            }
-            campaignSetupUI.InitialMoneyText.RectTransform.Parent = startButtonContainer.RectTransform;
         }
 
         private void CreateHostServerFields()
@@ -1447,13 +1450,13 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.ThrowError("Fetching remote content to the main menu failed.", e);
 #endif
-                GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.FetchRemoteContent:Exception", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.FetchRemoteContent:Exception", GameAnalyticsManager.ErrorSeverity.Error,
                     "Fetching remote content to the main menu failed. " + e.Message);
                 return;
             }
         }
 
-        private IEnumerable<object> WairForRemoteContentReceived()
+        private IEnumerable<CoroutineStatus> WairForRemoteContentReceived()
         {
             while (true)
             {
@@ -1490,7 +1493,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Reading received remote main menu content failed.", e);
 #endif
-                    GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.WairForRemoteContentReceived:Exception", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.WairForRemoteContentReceived:Exception", GameAnalyticsManager.ErrorSeverity.Error,
                         "Reading received remote main menu content failed. " + e.Message);
                 }
             }

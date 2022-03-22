@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Steam;
 using FarseerPhysics.Dynamics;
-using GameAnalyticsSDK.Net;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -18,7 +17,17 @@ namespace Barotrauma
     {
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
 
-        public static World World;
+
+        private static World world;
+        public static World World
+        {
+            get
+            {
+                if (world == null) { world = new World(new Vector2(0, -9.82f)); }
+                return world;
+            }
+            set { world = value; }
+        }
         public static GameSettings Config;
 
         public static GameServer Server;
@@ -88,8 +97,9 @@ namespace Barotrauma
 
             Console.WriteLine("Initializing SteamManager");
             SteamManager.Initialize();
-            Console.WriteLine("Initializing GameAnalytics");
-            if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();
+            //TODO: figure out how consent is supposed to work for servers
+            //Console.WriteLine("Initializing GameAnalytics");
+            //GameAnalyticsManager.InitIfConsented();
 
             Console.WriteLine("Initializing GameScreen");
             GameScreen = new GameScreen();
@@ -123,6 +133,8 @@ namespace Barotrauma
             ItemAssemblyPrefab.LoadAll();
             LevelObjectPrefab.LoadAll();
             BallastFloraPrefab.LoadAll(GetFilesOfType(ContentType.MapCreature));
+            TalentPrefab.LoadAll(GetFilesOfType(ContentType.Talents));
+            TalentTree.LoadAll(GetFilesOfType(ContentType.TalentTrees));
 
             GameModePreset.Init();
             DecalManager = new DecalManager();
@@ -177,6 +189,20 @@ namespace Barotrauma
             {
                 return ContentPackage.GetFilesOfType(Config.AllEnabledPackages, type);
             }
+        }
+
+        public bool TryStartChildServerRelay()
+        {            
+            for (int i = 0; i < CommandLineArgs.Length; i++)
+            {
+                switch (CommandLineArgs[i].Trim())
+                {
+                    case "-pipes":
+                        ChildServerRelay.Start(CommandLineArgs[i + 2], CommandLineArgs[i + 1]);
+                        return true;
+                }
+            }
+            return false;
         }
 
         public void StartServer()
@@ -264,7 +290,7 @@ namespace Barotrauma
                         i++;
                         break;
                     case "-pipes":
-                        ChildServerRelay.Start(CommandLineArgs[i + 2], CommandLineArgs[i + 1]);
+                        //handled in TryStartChildServerRelay
                         i += 2;
                         break;
                 }
@@ -323,6 +349,7 @@ namespace Barotrauma
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Items.Components.ItemComponent));
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Hull));
 
+            TryStartChildServerRelay();
             Init();
             StartServer();
 
@@ -390,8 +417,8 @@ namespace Barotrauma
 
             SaveUtil.CleanUnnecessarySaveFiles();
 
-            if (GameSettings.SaveDebugConsoleLogs) { DebugConsole.SaveLogs(); }
-            if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
+            if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging) { DebugConsole.SaveLogs(); }
+            if (GameAnalyticsManager.SendUserStatistics) { GameAnalyticsManager.ShutDown(); }
 
             MainThread = null;
         }
@@ -403,7 +430,7 @@ namespace Barotrauma
             stopwatch?.Start();
         }
         
-        public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
+        public CoroutineHandle ShowLoading(IEnumerable<CoroutineStatus> loader, bool waitKeyHit = true)
         {
             return CoroutineManager.StartCoroutine(loader);
         }

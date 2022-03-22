@@ -119,15 +119,23 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedInteger(0, 0, 3);
+                        msg.WriteRangedInteger(0, 0, 4);
                         Inventory.ClientWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Treatment:
-                        msg.WriteRangedInteger(1, 0, 3);
+                        msg.WriteRangedInteger(1, 0, 4);
                         msg.Write(AnimController.Anim == AnimController.Animation.CPR);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(2, 0, 3);
+                        msg.WriteRangedInteger(2, 0, 4);
+                        break;
+                    case NetEntityEvent.Type.UpdateTalents:
+                        msg.WriteRangedInteger(3, 0, 4);
+                        msg.Write((ushort)characterTalents.Count);
+                        foreach (var unlockedTalent in characterTalents)
+                        {
+                            msg.Write(unlockedTalent.Prefab.UIntIdentifier);
+                        }
                         break;
                 }
             }
@@ -258,7 +266,7 @@ namespace Barotrauma
                     if (readStatus)
                     {
                         ReadStatus(msg);
-                        (AIController as EnemyAIController)?.PetBehavior?.ClientRead(msg);
+                        AIController?.ClientRead(msg);
                     }
 
                     msg.ReadPadBits();
@@ -291,15 +299,15 @@ namespace Barotrauma
 
                     break;
                 case ServerNetObject.ENTITY_EVENT:
-                    int eventType = msg.ReadRangedInteger(0, 9);
+                    int eventType = msg.ReadRangedInteger(0, 13);
                     switch (eventType)
                     {
                         case 0: //NetEntityEvent.Type.InventoryState
                             if (Inventory == null)
                             {
-                                string errorMsg = "Received an inventory update message for an entity with no inventory (" + Name + ", removed: " + Removed + ")";
-                                DebugConsole.ThrowError(errorMsg);
-                                GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ClientRead:NoInventory" + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                                string errorMsg = "Received an inventory update message for an entity with no inventory ([name], removed: " + Removed + ")";
+                                DebugConsole.ThrowError(errorMsg.Replace("[name]", Name));
+                                GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ClientRead:NoInventory" + ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg.Replace("[name]", SpeciesName));
 
                                 //read anyway to prevent messing up reading the rest of the message
                                 _ = msg.ReadUInt16();
@@ -315,9 +323,10 @@ namespace Barotrauma
                             }
                             break;
                         case 1: //NetEntityEvent.Type.Control
+                            bool myCharacter = msg.ReadBoolean();
                             byte ownerID = msg.ReadByte();
                             ResetNetState();
-                            if (ownerID == GameMain.Client.ID)
+                            if (myCharacter)
                             {
                                 if (controlled != null)
                                 {
@@ -350,7 +359,7 @@ namespace Barotrauma
                             {
                                 string skillIdentifier = msg.ReadString();
                                 float skillLevel = msg.ReadSingle();
-                                info?.SetSkillLevel(skillIdentifier, skillLevel, Position + Vector2.UnitY * 150.0f);
+                                info?.SetSkillLevel(skillIdentifier, skillLevel);
                             }
                             break;
                         case 4: // NetEntityEvent.Type.SetAttackTarget
@@ -363,30 +372,32 @@ namespace Barotrauma
                             if (attackLimbIndex == 255 || Removed) { break; }
                             if (attackLimbIndex >= AnimController.Limbs.Length)
                             {
-                                DebugConsole.ThrowError($"Received invalid SetAttack/ExecuteAttack message. Limb index out of bounds (character: {Name}, limb index: {attackLimbIndex}, limb count: {AnimController.Limbs.Length})");
+                                DebugConsole.ThrowError($"Received invalid {(eventType == 4 ? "SetAttackTarget" : "ExecuteAttack")} message. Limb index out of bounds (character: {Name}, limb index: {attackLimbIndex}, limb count: {AnimController.Limbs.Length})");
                                 break;
                             }
                             Limb attackLimb = AnimController.Limbs[attackLimbIndex];
                             Limb targetLimb = null;
-                            if (!(FindEntityByID(targetEntityID) is IDamageable targetEntity))
+                            IDamageable targetEntity = FindEntityByID(targetEntityID) as IDamageable;
+                            if (targetEntity == null && eventType == 4)
                             {
-                                DebugConsole.ThrowError($"Received invalid SetAttack/ExecuteAttack message. Target entity not found (ID {targetEntityID})");
+                                DebugConsole.ThrowError($"Received invalid SetAttackTarget message. Target entity not found (ID {targetEntityID})");
                                 break;
                             }
                             if (targetEntity is Character targetCharacter)
                             {
                                 if (targetLimbIndex >= targetCharacter.AnimController.Limbs.Length)
                                 {
-                                    DebugConsole.ThrowError($"Received invalid SetAttack/ExecuteAttack message. Target limb index out of bounds (target character: {targetCharacter.Name}, limb index: {targetLimbIndex}, limb count: {targetCharacter.AnimController.Limbs.Length})");
+                                    DebugConsole.ThrowError($"Received invalid {(eventType == 4 ? "SetAttackTarget" : "ExecuteAttack")} message. Target limb index out of bounds (target character: {targetCharacter.Name}, limb index: {targetLimbIndex}, limb count: {targetCharacter.AnimController.Limbs.Length})");
                                     break;
                                 }
                                 targetLimb = targetCharacter.AnimController.Limbs[targetLimbIndex];
                             }
-                            if (attackLimb?.attack != null)
+                            if (attackLimb?.attack != null && Controlled != this)
                             {
                                 if (eventType == 4)
                                 {
                                     SetAttackTarget(attackLimb, targetEntity, targetSimPos);
+                                    PlaySound(CharacterSound.SoundType.Attack, maxInterval: 3);
                                 }
                                 else
                                 {
@@ -443,13 +454,49 @@ namespace Barotrauma
                                 ushort itemID = msg.ReadUInt16();
                                 if (!(Entity.FindEntityByID(itemID) is Item item)) { continue; }
                                 item.AllowStealing = true;
-                                var wifiComponent = item.GetComponent<Items.Components.WifiComponent>();
+                                var wifiComponent = item.GetComponent<WifiComponent>();
                                 if (wifiComponent != null)
                                 {
                                     wifiComponent.TeamID = teamID;
                                 }
+                                var idCard = item.GetComponent<IdCard>();
+                                if (idCard != null)
+                                {
+                                    idCard.TeamID = teamID;
+                                    idCard.SubmarineSpecificID = 0;
+                                }
                             }
                             break;
+                        case 10: //NetEntityEvent.Type.UpdateExperience
+                            int experienceAmount = msg.ReadInt32();
+                            info?.SetExperience(experienceAmount);
+                            break;
+                        case 11: //NetEntityEvent.Type.UpdateTalents:
+                            ushort talentCount = msg.ReadUInt16();
+                            for (int i = 0; i < talentCount; i++)
+                            {
+                                bool addedThisRound = msg.ReadBoolean();
+                                UInt32 talentIdentifier = msg.ReadUInt32();
+                                GiveTalent(talentIdentifier, addedThisRound);
+                            }
+                            break;
+                        case 12: //NetEntityEvent.Type.UpdateMoney:
+                            int moneyAmount = msg.ReadInt32();
+                            SetMoney(moneyAmount);
+                            break;
+                        case 13: //NetEntityEvent.Type.UpdatePermanentStats:
+                            byte savedStatValueCount = msg.ReadByte();
+                            StatTypes statType = (StatTypes)msg.ReadByte();                       
+                            info?.ClearSavedStatValues(statType);                        
+                            for (int i = 0; i < savedStatValueCount; i++)
+                            {
+                                string statIdentifier = msg.ReadString();
+                                float statValue = msg.ReadSingle();
+                                bool removeOnDeath = msg.ReadBoolean();
+                                info?.ChangeSavedStatValue(statType, statValue, statIdentifier, removeOnDeath, setValue: true);
+                            }
+                            break;
+
                     }
                     msg.ReadPadBits();
                     break;
@@ -605,7 +652,7 @@ namespace Barotrauma
                     {
                         string errorMsg = $"Error in CharacterNetworking.ReadStatus: affliction not found ({afflictionName})";
                         causeOfDeathType = CauseOfDeathType.Unknown;
-                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:AfflictionIndexOutOfBounts", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:AfflictionIndexOutOfBounts", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     }
                     else
                     {
@@ -636,7 +683,7 @@ namespace Barotrauma
                 if (severedJointIndex < 0 || severedJointIndex >= AnimController.LimbJoints.Length)
                 {
                     string errorMsg = $"Error in CharacterNetworking.ReadStatus: severed joint index out of bounds (index: {severedJointIndex}, joint count: {AnimController.LimbJoints.Length})";
-                    GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:JointIndexOutOfBounts", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:JointIndexOutOfBounts", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 }
                 else
                 {

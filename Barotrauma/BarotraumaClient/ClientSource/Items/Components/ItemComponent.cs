@@ -246,6 +246,7 @@ namespace Barotrauma.Items.Components
         public void PlaySound(ActionType type, Character user = null)
         {
             if (!hasSoundsOfType[(int)type]) { return; }
+            if (GameMain.Client?.MidRoundSyncing ?? false) { return; }
 
             if (loopingSound != null)
             {
@@ -405,7 +406,7 @@ namespace Barotrauma.Items.Components
                     DebugConsole.Log("Invalid sound volume (item " + item.Name + ", " + GetType().ToString() + "): " + newVolume);
                     GameAnalyticsManager.AddErrorEventOnce(
                         "ItemComponent.PlaySound:" + item.Name + GetType().ToString(),
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "Invalid sound volume (item " + item.Name + ", " + GetType().ToString() + "): " + newVolume);
                     return 0.0f;
                 }
@@ -429,7 +430,7 @@ namespace Barotrauma.Items.Components
             }
             foreach (ItemComponent component in item.Components)
             {
-                if (component.name.ToLower() == LinkUIToComponent.ToLower())
+                if (component.name.Equals(LinkUIToComponent, StringComparison.OrdinalIgnoreCase))
                 {
                     linkToUIComponent = component;
                 }
@@ -443,9 +444,9 @@ namespace Barotrauma.Items.Components
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }
 
-        public virtual void AddToGUIUpdateList()
+        public virtual void AddToGUIUpdateList(int order = 0)
         {
-            GuiFrame?.AddToGUIUpdateList();
+            GuiFrame?.AddToGUIUpdateList(order: order);
         }
 
         public virtual void UpdateHUD(Character character, float deltaTime, Camera cam) { }
@@ -575,7 +576,7 @@ namespace Barotrauma.Items.Components
             delayedCorrectionCoroutine = CoroutineManager.StartCoroutine(DoDelayedCorrection(type, buffer, sendingTime, waitForMidRoundSync));
         }
 
-        private IEnumerable<object> DoDelayedCorrection(ServerNetObject type, IReadMessage buffer, float sendingTime, bool waitForMidRoundSync)
+        private IEnumerable<CoroutineStatus> DoDelayedCorrection(ServerNetObject type, IReadMessage buffer, float sendingTime, bool waitForMidRoundSync)
         {
             while (GameMain.Client != null && 
                 (correctionTimer > 0.0f || (waitForMidRoundSync && GameMain.Client.MidRoundSyncing)))
@@ -620,6 +621,6 @@ namespace Barotrauma.Items.Components
             }
             OnResolutionChanged();
         }
-        public virtual void AddTooltipInfo(ref string description) { }
+        public virtual void AddTooltipInfo(ref string name, ref string description) { }
     }
 }

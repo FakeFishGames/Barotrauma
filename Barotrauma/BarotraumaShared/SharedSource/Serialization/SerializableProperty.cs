@@ -88,11 +88,11 @@ namespace Barotrauma
                     return GameMain.NetworkMember?.ServerSettings?.AllowLinkingWifiToChat ?? true;
                 case ConditionType.IsSwappableItem:
                     {
-                        return entity is Item item && item.Prefab.SwappableItem != null;
+                        return entity is Item item && item.Prefab.SwappableItem != null && Screen.Selected == GameMain.SubEditorScreen;
                     }
                 case ConditionType.AllowRotating:
                     {
-                        return entity is Item item && item.Prefab.AllowRotatingInEditor && Screen.Selected == GameMain.SubEditorScreen;
+                        return entity is Item item && item.body == null && item.Prefab.AllowRotatingInEditor && Screen.Selected == GameMain.SubEditorScreen;
                     }
             }
             return false;
@@ -146,6 +146,7 @@ namespace Barotrauma
             { typeof(Vector4), "vector4" },
             { typeof(Rectangle), "rectangle" },
             { typeof(Color), "color" },
+            { typeof(string[]), "stringarray" }
         };
 
         private static readonly Dictionary<Type, Dictionary<string, SerializableProperty>> cachedProperties = 
@@ -273,6 +274,9 @@ namespace Barotrauma
                     case "rectangle":
                         PropertyInfo.SetValue(parentObject, XMLExtensions.ParseRect(value, true));
                         break;
+                    case "stringarray":
+                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray(value));
+                        break;
                 }
             }
 
@@ -345,6 +349,9 @@ namespace Barotrauma
                             case "rectangle":
                                 PropertyInfo.SetValue(parentObject, XMLExtensions.ParseRect((string)value, false));
                                 return true;
+                            case "stringarray":
+                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray((string)value));
+                                break;
                             default:
                                 DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString());
                                 DebugConsole.ThrowError("(Cannot convert a string to a " + PropertyType.ToString() + ")");
@@ -722,6 +729,10 @@ namespace Barotrauma
                             break;
                         case "rectangle":
                             stringValue = XMLExtensions.RectToString((Rectangle)value);
+                            break;
+                        case "stringarray":
+                            string[] stringArray = (string[])value;
+                            stringValue =  stringArray != null ? string.Join(';', stringArray) : "";
                             break;
                         default:
                             stringValue = value.ToString();

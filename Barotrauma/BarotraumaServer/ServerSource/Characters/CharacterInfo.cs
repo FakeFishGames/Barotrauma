@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -9,8 +10,9 @@ namespace Barotrauma
     {
         private readonly Dictionary<string, float> prevSentSkill = new Dictionary<string, float>();
 
-        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos)
+        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel)
         {
+            if (Character == null || Character.Removed) { return; }
             if (!prevSentSkill.ContainsKey(skillIdentifier))
             {
                 prevSentSkill[skillIdentifier] = prevLevel;
@@ -22,6 +24,22 @@ namespace Barotrauma
             }            
         }
 
+        partial void OnExperienceChanged(int prevAmount, int newAmount)
+        {
+            if (Character == null || Character.Removed) { return; }
+            if (prevAmount != newAmount)
+            {
+                GameServer.Log($"{GameServer.CharacterLogName(Character)} has gained {newAmount - prevAmount} experience ({prevAmount} -> {newAmount})", ServerLog.MessageType.Talent);
+                GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateExperience });
+            }
+        }
+
+        partial void OnPermanentStatChanged(StatTypes statType)
+        {
+            if (Character == null || Character.Removed) { return; }
+            GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdatePermanentStats, statType });            
+        }
+
         public void ServerWrite(IWriteMessage msg)
         {
             msg.Write(ID);
@@ -30,10 +48,13 @@ namespace Barotrauma
             msg.Write((byte)Gender);
             msg.Write((byte)Race);
             msg.Write((byte)HeadSpriteId);
-            msg.Write((byte)Head.HairIndex);
-            msg.Write((byte)Head.BeardIndex);
-            msg.Write((byte)Head.MoustacheIndex);
-            msg.Write((byte)Head.FaceAttachmentIndex);
+            msg.Write((byte)HairIndex);
+            msg.Write((byte)BeardIndex);
+            msg.Write((byte)MoustacheIndex);
+            msg.Write((byte)FaceAttachmentIndex);
+            msg.WriteColorR8G8B8(SkinColor);
+            msg.WriteColorR8G8B8(HairColor);
+            msg.WriteColorR8G8B8(FacialHairColor);
             msg.Write(ragdollFileName);
 
             if (Job != null)
@@ -53,6 +74,19 @@ namespace Barotrauma
                 msg.Write((byte)0);
             }
             // TODO: animations
+            msg.Write((byte)SavedStatValues.SelectMany(s => s.Value).Count());
+            foreach (var savedStatValuePair in SavedStatValues)
+            {
+                foreach (var savedStatValue in savedStatValuePair.Value)
+                {
+                    msg.Write((byte)savedStatValuePair.Key);
+                    msg.Write(savedStatValue.StatIdentifier);
+                    msg.Write(savedStatValue.StatValue);
+                    msg.Write(savedStatValue.RemoveOnDeath);
+                }
+            }
+            msg.Write((ushort)ExperiencePoints);
+            msg.Write((ushort)AdditionalTalentPoints);
         }
     }
 }

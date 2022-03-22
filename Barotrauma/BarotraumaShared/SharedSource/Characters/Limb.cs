@@ -11,6 +11,7 @@ using System.Xml.Linq;
 using Barotrauma.Networking;
 using LimbParams = Barotrauma.RagdollParams.LimbParams;
 using JointParams = Barotrauma.RagdollParams.JointParams;
+using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
@@ -217,9 +218,9 @@ namespace Barotrauma
                         
         public Vector2 StepOffset => ConvertUnits.ToSimUnits(Params.StepOffset) * ragdoll.RagdollParams.JointScale;
 
-        public bool inWater;
+        public bool InWater { get; set; }
 
-        private readonly FixedMouseJoint pullJoint;
+        private FixedMouseJoint pullJoint;
 
         public readonly LimbType type;
 
@@ -363,7 +364,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:SimPosition", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:SimPosition", GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return Vector2.Zero;
                 }
@@ -380,7 +381,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:SimPosition", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:SimPosition", GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return 0.0f;
                 }
@@ -400,7 +401,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.Mass:AccessRemoved", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.Mass:AccessRemoved", GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return 1.0f;
                 }
@@ -419,7 +420,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:AccessRemoved", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:AccessRemoved", GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return Vector2.Zero;
                 }
@@ -429,8 +430,15 @@ namespace Barotrauma
 
         public float Dir
         {
-            get { return ((dir == Direction.Left) ? -1.0f : 1.0f); }
-            set { dir = (value == -1.0f) ? Direction.Left : Direction.Right; }
+            get { return (dir == Direction.Left) ? -1.0f : 1.0f; }
+            set 
+            { 
+                dir = (value == -1.0f) ? Direction.Left : Direction.Right; 
+                if (body != null)
+                {
+                    body.Dir = Dir;
+                }
+            }
         }
 
         public int RefJointIndex => Params.RefJoint;
@@ -463,7 +471,7 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(value))
                 {
                     string errorMsg = "Attempted to set the anchor A of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace.CleanupStackTrace();
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:InvalidValue", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
 #endif
@@ -477,7 +485,7 @@ namespace Barotrauma
                         ", limb enabled: " + body.Enabled +
                         ", simple physics enabled: " + character.AnimController.SimplePhysicsEnabled + ")\n"
                         + Environment.StackTrace.CleanupStackTrace();
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:ExcessiveValue", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
 #endif
@@ -496,7 +504,7 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(value))
                 {
                     string errorMsg = "Attempted to set the anchor B of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace.CleanupStackTrace();
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:InvalidValue", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
 #endif
@@ -510,7 +518,7 @@ namespace Barotrauma
                         ", limb enabled: " + body.Enabled +
                         ", simple physics enabled: " + character.AnimController.SimplePhysicsEnabled + ")\n"
                         + Environment.StackTrace.CleanupStackTrace();
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:ExcessiveValue", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
 #endif
@@ -534,14 +542,19 @@ namespace Barotrauma
 
         public string Name => Params.Name;
 
-        // Exposed for status effects
+        // These properties are exposed for status effects
         public bool IsDead => character.IsDead;
+        public float Health => character.Health;
+        public float HealthPercentage => character.HealthPercentage;
+        public AIState AIState => character.AIController is EnemyAIController enemyAI ? enemyAI.State : AIState.Idle;
 
         public bool CanBeSeveredAlive
         {
             get
             {
                 if (character.IsHumanoid) { return false; }
+                // TODO: We might need this or solve the cases where a limb is severed while holding on to an item
+                //if (character.Params.CanInteract) { return false; }
                 if (this == character.AnimController.MainLimb) { return false; }
                 if (character.AnimController.CanWalk)
                 {
@@ -683,7 +696,7 @@ namespace Barotrauma
         private readonly List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
         private readonly List<DamageModifier> tempModifiers = new List<DamageModifier>();
         private readonly List<Affliction> afflictionsCopy = new List<Affliction>();
-        public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound, float damageMultiplier = 1, float penetration = 0f)
+        public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound, float damageMultiplier = 1, float penetration = 0f, Character attacker = null)
         {
             appliedDamageModifiers.Clear();
             afflictionsCopy.Clear();
@@ -741,7 +754,11 @@ namespace Barotrauma
                 {
                     newAffliction.SetStrength(affliction.NonClampedStrength);
                 }
-
+                if (attacker != null)
+                {
+                    var abilityAffliction = new AbilityAfflictionCharacter(newAffliction, character);
+                    attacker.CheckTalents(AbilityEffectType.OnAddDamageAffliction, abilityAffliction);
+                }
                 if (applyAffliction)
                 {
                     afflictionsCopy.Add(newAffliction);
@@ -749,6 +766,10 @@ namespace Barotrauma
                 appliedDamageModifiers.AddRange(tempModifiers);
             }
             var result = new AttackResult(afflictionsCopy, this, appliedDamageModifiers);
+            if (result.Afflictions.None())
+            {
+                playSound = false;
+            }
             AddDamageProjSpecific(playSound, result);
 
             float bleedingDamage = 0;
@@ -797,7 +818,7 @@ namespace Barotrauma
         {
             UpdateProjSpecific(deltaTime);
             
-            if (inWater)
+            if (InWater)
             {
                 body.ApplyWaterForces();
             }
@@ -840,20 +861,25 @@ namespace Barotrauma
             attack?.UpdateCoolDown(deltaTime);
         }
 
+        private bool temporarilyDisabled;
         private float reEnableTimer = -1;
-        public void HideAndDisable(float duration = 0)
+        public void HideAndDisable(float duration = 0, bool ignoreCollisions = true)
         {
+            if (Hidden || Disabled) { return; }
+            if (ignoreCollisions && IgnoreCollisions) { return; }
+            temporarilyDisabled = true;
             Hidden = true;
             Disabled = true;
-            IgnoreCollisions = true;
+            IgnoreCollisions = ignoreCollisions;
             if (duration > 0)
             {
                 reEnableTimer = duration;
             }
         }
 
-        private void ReEnable()
+        public void ReEnable()
         {
+            if (!temporarilyDisabled) { return; }
             Hidden = false;
             Disabled = false;
             IgnoreCollisions = false;
@@ -868,7 +894,7 @@ namespace Barotrauma
         /// </summary>
         public bool UpdateAttack(float deltaTime, Vector2 attackSimPos, IDamageable damageTarget, out AttackResult attackResult, float distance = -1, Limb targetLimb = null)
         {
-            attackResult = default(AttackResult);
+            attackResult = default;
             Vector2 simPos = ragdoll.SimplePhysicsEnabled ? character.SimPosition : SimPosition;
             float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(simPos, attackSimPos));
             bool wasRunning = attack.IsRunning;
@@ -971,7 +997,7 @@ namespace Barotrauma
                 wasHit = damageTarget != null;
             }
 
-            if (wasHit)
+            if (wasHit || attack.HitDetectionType == HitDetection.None)
             {
                 if (character == Character.Controlled || GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
@@ -1132,10 +1158,7 @@ namespace Barotrauma
                 if (statusEffect.type != actionType) { continue; }
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
-                    if (statusEffect.AllowedAfflictions != null && (character.LastDamage.Afflictions == null || character.LastDamage.Afflictions.None(a => statusEffect.AllowedAfflictions.Contains(a.Prefab.AfflictionType) || statusEffect.AllowedAfflictions.Contains(a.Prefab.Identifier))))
-                    {
-                        continue;
-                    }
+                    if (!statusEffect.HasRequiredAfflictions(character.LastDamage)) { continue; }
                     if (statusEffect.OnlyPlayerTriggered)
                     {
                         if (character.LastAttacker == null || !character.LastAttacker.IsPlayer)
@@ -1263,6 +1286,14 @@ namespace Barotrauma
         {
             body?.Remove();
             body = null;
+            if (pullJoint != null)
+            {
+                if (GameMain.World.JointList.Contains(pullJoint))
+                {
+                    GameMain.World.Remove(pullJoint);
+                }
+                pullJoint = null;
+            }
             Release();
             RemoveProjSpecific();
             Removed = true;

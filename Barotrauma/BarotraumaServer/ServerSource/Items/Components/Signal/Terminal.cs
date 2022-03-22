@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Items.Components
 {
@@ -19,17 +20,17 @@ namespace Barotrauma.Items.Components
                 GameServer.Log(GameServer.CharacterLogName(c.Character) + " entered \"" + newOutputValue + "\" on " + item.Name,
                     ServerLog.MessageType.ItemInteraction);
                 OutputValue = newOutputValue;
-                ShowOnDisplay(newOutputValue);
+                ShowOnDisplay(newOutputValue, addToHistory: true, TextColor);
                 item.SendSignal(newOutputValue, "signal_out");
                 item.CreateServerEvent(this);
             }
         }
 
-        partial void ShowOnDisplay(string input, bool addToHistory = true)
+        partial void ShowOnDisplay(string input, bool addToHistory, Color color)
         {
             if (addToHistory)
             {
-                messageHistory.Add(input);
+                messageHistory.Add(new TerminalMessage(input, color));
                 while (messageHistory.Count > MaxMessages)
                 {
                     messageHistory.RemoveAt(0);
@@ -41,7 +42,7 @@ namespace Barotrauma.Items.Components
         {
             //split too long messages to multiple parts
             int msgIndex = 0;
-            foreach (string str in messageHistory)
+            foreach (var (str, _) in messageHistory)
             {
                 string msgToSend = str;
                 if (string.IsNullOrEmpty(msgToSend))

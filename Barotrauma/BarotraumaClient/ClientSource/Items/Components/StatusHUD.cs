@@ -39,6 +39,34 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool ThermalGoggles
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(true, false)]
+        public bool ShowDeadCharacters
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(true, false)]
+        public bool ShowTexts
+        {
+            get;
+            private set;
+        }
+
+        [Serialize("72,119,72,120", false)]
+        public Color OverlayColor
+        {
+            get;
+            private set;
+        }
+
         private readonly List<Character> visibleCharacters = new List<Character>();
 
         private const float UpdateInterval = 0.5f;
@@ -47,6 +75,8 @@ namespace Barotrauma.Items.Components
         private Character equipper;
 
         private bool isEquippable;
+
+        private float thermalEffectState;
 
         public IEnumerable<Character> VisibleCharacters
         {
@@ -80,7 +110,10 @@ namespace Barotrauma.Items.Components
             {
                 refEntity = item;
             }
-            
+
+            thermalEffectState += deltaTime;
+            thermalEffectState %= 10000.0f;
+
             if (updateTimer > 0.0f)
             {
                 updateTimer -= deltaTime;
@@ -91,6 +124,7 @@ namespace Barotrauma.Items.Components
             foreach (Character c in Character.CharacterList)
             {
                 if (c == equipper || !c.Enabled || c.Removed) { continue; }
+                if (!ShowDeadCharacters && c.IsDead) { continue; }
 
                 float dist = Vector2.DistanceSquared(refEntity.WorldPosition, c.WorldPosition);
                 if (dist < Range * Range)
@@ -123,27 +157,71 @@ namespace Barotrauma.Items.Components
         {
             if (character == null) { return; }
 
-            GUI.UIGlow.Draw(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
-                Color.LightGreen * 0.5f);
-
-            Character closestCharacter = null;
-            float closestDist = float.PositiveInfinity;
-            foreach (Character c in visibleCharacters)
+            if (OverlayColor.A > 0)
             {
-                if (c == character || !c.Enabled || c.Removed) { continue; }
-
-                float dist = Vector2.DistanceSquared(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), c.WorldPosition);
-                if (dist < closestDist)
-                {
-                    closestCharacter = c;
-                    closestDist = dist;
-                }              
+                GUI.UIGlow.Draw(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), OverlayColor);
             }
 
-            if (closestCharacter != null)
+            if (ShowTexts)
             {
-                float dist = Vector2.Distance(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), closestCharacter.WorldPosition);
-                DrawCharacterInfo(spriteBatch, closestCharacter, 1.0f - MathHelper.Max((dist - (Range - FadeOutRange)) / FadeOutRange, 0.0f));
+                Character closestCharacter = null;
+                float closestDist = float.PositiveInfinity;
+                foreach (Character c in visibleCharacters)
+                {
+                    if (c == character || !c.Enabled || c.Removed) { continue; }
+
+                    float dist = Vector2.DistanceSquared(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), c.WorldPosition);
+                    if (dist < closestDist)
+                    {
+                        closestCharacter = c;
+                        closestDist = dist;
+                    }              
+                }
+
+                if (closestCharacter != null)
+                {
+                    float dist = Vector2.Distance(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), closestCharacter.WorldPosition);
+                    DrawCharacterInfo(spriteBatch, closestCharacter, 1.0f - MathHelper.Max((dist - (Range - FadeOutRange)) / FadeOutRange, 0.0f));
+                }
+            }
+
+            if (ThermalGoggles)
+            {
+                spriteBatch.End();
+                GameMain.LightManager.SolidColorEffect.Parameters["color"].SetValue(Color.Red.ToVector4() * (0.3f + MathF.Sin(thermalEffectState) * 0.05f));
+                GameMain.LightManager.SolidColorEffect.CurrentTechnique = GameMain.LightManager.SolidColorEffect.Techniques["SolidColorBlur"];
+                GameMain.LightManager.SolidColorEffect.Parameters["blurDistance"].SetValue(0.01f + MathF.Sin(thermalEffectState) * 0.005f);
+                GameMain.LightManager.SolidColorEffect.CurrentTechnique.Passes[0].Apply();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: Screen.Selected.Cam.Transform, effect: GameMain.LightManager.SolidColorEffect);
+
+                Entity refEntity = equipper;
+                if (!isEquippable || refEntity == null)
+                {
+                    refEntity = item;
+                }
+
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (c == character || !c.Enabled || c.Removed || c.Params.HideInThermalGoggles) { continue; }
+                    if (!ShowDeadCharacters && c.IsDead) { continue; }
+
+                    float dist = Vector2.DistanceSquared(refEntity.WorldPosition, c.WorldPosition);
+                    if (dist > Range * Range) { continue; }
+
+                    Sprite pingCircle = GUI.Style.UIThermalGlow.Sprite;
+                    foreach (Limb limb in c.AnimController.Limbs)
+                    {
+                        if (limb.Mass < 1.0f) { continue; }
+                        float noise1 = PerlinNoise.GetPerlin((thermalEffectState + limb.Params.ID + c.ID) * 0.01f, (thermalEffectState + limb.Params.ID + c.ID) * 0.02f);
+                        float noise2 = PerlinNoise.GetPerlin((thermalEffectState + limb.Params.ID + c.ID) * 0.01f, (thermalEffectState + limb.Params.ID + c.ID) * 0.008f);
+                        Vector2 spriteScale = ConvertUnits.ToDisplayUnits(limb.body.GetSize()) / pingCircle.size * (noise1 * 0.5f + 2f);
+                        Vector2 drawPos = new Vector2(limb.body.DrawPosition.X + (noise1 - 0.5f) * 100, -limb.body.DrawPosition.Y + (noise2 - 0.5f) * 100);
+                        pingCircle.Draw(spriteBatch, drawPos, 0.0f, scale: Math.Max(spriteScale.X, spriteScale.Y));
+                    }
+                }
+
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
             }
         }
 

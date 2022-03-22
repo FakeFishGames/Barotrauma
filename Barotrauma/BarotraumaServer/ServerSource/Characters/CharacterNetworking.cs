@@ -238,7 +238,7 @@ namespace Barotrauma
                     break;
 
                 case ClientNetObject.ENTITY_STATE:
-                    int eventType = msg.ReadRangedInteger(0, 3);
+                    int eventType = msg.ReadRangedInteger(0, 4);
                     switch (eventType)
                     {
                         case 0:
@@ -268,8 +268,35 @@ namespace Barotrauma
                             if (IsIncapacitated)
                             {
                                 var causeOfDeath = CharacterHealth.GetCauseOfDeath();
-                                Kill(causeOfDeath.First, causeOfDeath.Second);
+                                Kill(causeOfDeath.type, causeOfDeath.affliction);
                             }
+                            break;
+                        case 3: // NetEntityEvent.Type.UpdateTalents
+                            if (c.Character != this)
+                            {
+#if DEBUG
+                                DebugConsole.Log("Received a character update message from a client who's not controlling the character");
+#endif
+                                return;
+                            }
+
+                            // get the full list of talents from the player, only give the ones
+                            // that are not already given (or otherwise not viable)
+                            ushort talentCount = msg.ReadUInt16();
+                            List<string> talentSelection = new List<string>();
+                            for (int i = 0; i < talentCount; i++)
+                            {
+                                UInt32 talentIdentifier = msg.ReadUInt32();
+                                var prefab = TalentPrefab.TalentPrefabs.Find(p => p.UIntIdentifier == talentIdentifier);
+                                if (prefab != null) { talentSelection.Add(prefab.Identifier); }                               
+                            }
+                            talentSelection = TalentTree.CheckTalentSelection(this, talentSelection);
+
+                            foreach (string talent in talentSelection)
+                            {
+                                GiveTalent(talent);
+                            }
+
                             break;
                     }
                     break;
@@ -283,7 +310,7 @@ namespace Barotrauma
 
             if (extraData != null)
             {
-                const int min = 0, max = 9;
+                const int min = 0, max = 13;
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
@@ -294,6 +321,7 @@ namespace Barotrauma
                     case NetEntityEvent.Type.Control:
                         msg.WriteRangedInteger(1, min, max);
                         Client owner = (Client)extraData[1];
+                        msg.Write(owner == c && owner.Character == this);
                         msg.Write(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.ID : (byte)0);
                         break;
                     case NetEntityEvent.Type.Status:
@@ -392,6 +420,47 @@ namespace Barotrauma
                         for (int i = 0; i < inventoryItemIDs.Length; i++)
                         {
                             msg.Write(inventoryItemIDs[i]);
+                        }
+                        break;
+                    case NetEntityEvent.Type.UpdateExperience:
+                        msg.WriteRangedInteger(10, min, max);
+                        msg.Write(Info.ExperiencePoints);
+                        break;
+                    case NetEntityEvent.Type.UpdateTalents:
+                        msg.WriteRangedInteger(11, min, max);
+                        msg.Write((ushort)characterTalents.Count);
+                        foreach (var unlockedTalent in characterTalents)
+                        {
+                            msg.Write(unlockedTalent.AddedThisRound);
+                            msg.Write(unlockedTalent.Prefab.UIntIdentifier);
+                        }
+                        break;
+                    case NetEntityEvent.Type.UpdateMoney:
+                        msg.WriteRangedInteger(12, min, max);
+                        msg.Write(GameMain.GameSession.Campaign.Money);
+                        break;
+                    case NetEntityEvent.Type.UpdatePermanentStats:
+                        msg.WriteRangedInteger(13, min, max);
+                        if (Info == null || extraData.Length < 2 || !(extraData[1] is StatTypes statType))
+                        {
+                            msg.Write((byte)0);
+                            msg.Write((byte)0);
+                        }
+                        else if (!Info.SavedStatValues.ContainsKey(statType))
+                        {
+                            msg.Write((byte)0);
+                            msg.Write((byte)statType);
+                        }
+                        else
+                        {
+                            msg.Write((byte)Info.SavedStatValues[statType].Count);
+                            msg.Write((byte)statType);
+                            foreach (var savedStatValue in Info.SavedStatValues[statType])
+                            {
+                                msg.Write(savedStatValue.StatIdentifier);
+                                msg.Write(savedStatValue.StatValue);
+                                msg.Write(savedStatValue.RemoveOnDeath);
+                            }                            
                         }
                         break;
                     default:
@@ -499,7 +568,7 @@ namespace Barotrauma
                 if (writeStatus)
                 {
                     WriteStatus(tempBuffer);
-                    (AIController as EnemyAIController)?.PetBehavior?.ServerWrite(tempBuffer);
+                    AIController?.ServerWrite(tempBuffer);
                     HealthUpdatePending = false;
                 }
 

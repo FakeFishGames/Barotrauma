@@ -115,13 +115,11 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
-            byte incByte = inc.ReadByte();
-            bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
-            bool isConnectionInitializationStep = (incByte & (byte)PacketHeader.IsConnectionInitializationStep) != 0;
+            PacketHeader packetHeader = (PacketHeader)inc.ReadByte();
 
             //Console.WriteLine(isCompressed + " " + isConnectionInitializationStep + " " + (int)incByte);
 
-            if (isConnectionInitializationStep && initializationStep != ConnectionInitialization.Success)
+            if (packetHeader.IsConnectionInitializationStep() && initializationStep != ConnectionInitialization.Success)
             {
                 ReadConnectionInitializationStep(new ReadWriteMessage(inc.Data, (int)inc.Position, inc.LengthBits, false));
             }
@@ -133,7 +131,7 @@ namespace Barotrauma.Networking
                     initializationStep = ConnectionInitialization.Success;
                 }
                 UInt16 length = inc.ReadUInt16();
-                IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.PositionInBytes, length, ServerConnection);
+                IReadMessage msg = new ReadOnlyMessage(inc.Data, packetHeader.IsCompressed(), inc.PositionInBytes, length, ServerConnection);
                 OnMessageReceived?.Invoke(msg);
             }
         }

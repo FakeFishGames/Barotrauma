@@ -1,4 +1,4 @@
-﻿using Barotrauma.Networking;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -364,6 +364,16 @@ namespace Barotrauma.Items.Components
             float velY = MathHelper.Lerp((neutralBallastLevel * 100 - 50) * 2, -100 * Math.Sign(targetVelocity.Y), Math.Abs(targetVelocity.Y) / 100.0f);
             item.SendSignal(new Signal(velY.ToString(CultureInfo.InvariantCulture), sender: user), "velocity_y_out");
 
+            // converts the controlled sub's velocity to km/h and sends it. 
+            if (controlledSub is { } sub)
+            {
+                item.SendSignal(new Signal((ConvertUnits.ToDisplayUnits(sub.Velocity.X * Physics.DisplayToRealWorldRatio) * 3.6f).ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_velocity_x");
+                item.SendSignal(new Signal((ConvertUnits.ToDisplayUnits(sub.Velocity.Y * Physics.DisplayToRealWorldRatio) * -3.6f).ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_velocity_y");
+
+                item.SendSignal(new Signal((sub.WorldPosition.X * Physics.DisplayToRealWorldRatio).ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_position_x");
+                item.SendSignal(new Signal(sub.RealWorldDepth.ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_position_y");
+            }
+
             // if our tactical AI pilot has left, revert back to maintaining position
             if (navigateTactically && (user == null || user.SelectedConstruction != item))
             {
@@ -382,8 +392,7 @@ namespace Barotrauma.Items.Components
             float userSkill = Math.Max(user.GetSkillLevel("helm"), 1.0f) / 100.0f;
             user.Info.IncreaseSkillLevel(
                 "helm",
-                SkillSettings.Current.SkillIncreasePerSecondWhenSteering / userSkill * deltaTime,
-                user.Position + Vector2.UnitY * 150.0f);
+                SkillSettings.Current.SkillIncreasePerSecondWhenSteering / userSkill * deltaTime);
         }
 
         private void UpdateAutoPilot(float deltaTime)

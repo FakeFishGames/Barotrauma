@@ -40,19 +40,16 @@ namespace Barotrauma
 
         private List<SoldEntity> SoldEntities { get; } = new List<SoldEntity>();
 
+        // The bag slot is intentionally left out since we want to be able to sell items from there
+        private readonly List<InvSlotType> equipmentSlots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.Headset, InvSlotType.Card };
+
         public IEnumerable<Item> GetSellableItems(Character character)
         {
             if (character == null) { return new List<Item>(); }
             var confirmedSoldEntities = GetConfirmedSoldEntities();
-            // The bag slot is intentionally left out since we want to be able to sell items from there
-            var equipmentSlots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.Headset, InvSlotType.Card };
             return character.Inventory.FindAllItems(item =>
             {
-                if (item.SpawnedInOutpost) { return false; }
-                if (!item.Prefab.AllowSellingWhenBroken && item.ConditionPercentage < 90.0f) { return false; }
-                if (confirmedSoldEntities.Any(it => it.Item == item)) { return false; }
-                // There must be no contained items or the contained items must be confirmed as sold
-                if (!item.ContainedItems.All(it => confirmedSoldEntities.Any(se => se.Item == it))) { return false; }
+                if (!IsItemSellable(item, confirmedSoldEntities)) { return false; }
                 // Item must be in a non-equipment slot if possible
                 if (!item.AllowedSlots.All(s => equipmentSlots.Contains(s)) && IsInEquipmentSlot(item)) { return false; }
                 // Item must not be contained inside an item in an equipment slot
@@ -76,15 +73,11 @@ namespace Barotrauma
             var confirmedSoldEntities = GetConfirmedSoldEntities();
             return Submarine.MainSub.GetItems(true).FindAll(item =>
             {
-                if (!item.Prefab.CanBeSold) { return false; }
-                if (item.SpawnedInOutpost) { return false; }
-                if (!item.Prefab.AllowSellingWhenBroken && item.ConditionPercentage < 90.0f) { return false; }
+                if (!IsItemSellable(item, confirmedSoldEntities)) { return false; }
+                if (item.GetRootInventoryOwner() is Character) { return false; }
                 if (!item.Components.All(c => !(c is Holdable h) || !h.Attachable || !h.Attached)) { return false; }
                 if (!item.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null))) { return false; }
                 if (!ItemAndAllContainersInteractable(item)) { return false; }
-                if (confirmedSoldEntities.Any(it => it.Item == item)) { return false; }
-                // There must be no contained items or the contained items must be confirmed as sold
-                if (!item.ContainedItems.All(it => confirmedSoldEntities.Any(se => se.Item == it))) { return false; }
                 return true;
             }).Distinct();
 
@@ -105,6 +98,24 @@ namespace Barotrauma
             // a) sold in singleplayer or confirmed by server (SellStatus.Confirmed); or
             // b) sold locally in multiplayer (SellStatus.Local), but the client has not received a campaing state update yet after selling them
             return SoldEntities.Where(se => se.Status != SoldEntity.SellStatus.Unconfirmed);
+        }
+
+        private bool IsItemSellable(Item item, IEnumerable<SoldEntity> confirmedSoldEntities)
+        {
+            if (!item.Prefab.CanBeSold) { return false; }
+            if (item.SpawnedInCurrentOutpost) { return false; }
+            if (!item.Prefab.AllowSellingWhenBroken && item.ConditionPercentage < 90.0f) { return false; }
+            if (confirmedSoldEntities.Any(it => it.Item == item)) { return false; }
+            if (item.OwnInventory?.Container is ItemContainer itemContainer)
+            {
+                var containedItems = item.ContainedItems;
+                if (containedItems.None()) { return true; }
+                // Allow selling the item if contained items are unsellable and set to be removed on deconstruct
+                if (itemContainer.RemoveContainedItemsOnDeconstruct && containedItems.All(it => !it.Prefab.CanBeSold)) { return true; }
+                // Otherwise there must be no contained items or the contained items must be confirmed as sold
+                if (!containedItems.All(it => confirmedSoldEntities.Any(se => se.Item == it))) { return false; }
+            }
+            return true;
         }
 
         public void SetItemsInBuyCrate(List<PurchasedItem> items)

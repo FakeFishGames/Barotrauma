@@ -52,13 +52,13 @@ namespace Barotrauma
 
         public GUIComponent GetChild(int index)
         {
-            if (index < 0 || index >= CountChildren) return null;
+            if (index < 0 || index >= CountChildren) { return null; }
             return RectTransform.GetChild(index).GUIComponent;
         }
 
         public int GetChildIndex(GUIComponent child)
         {
-            if (child == null) return -1;
+            if (child == null) { return -1; }
             return RectTransform.GetChildIndex(child.RectTransform);
         }
 
@@ -66,7 +66,7 @@ namespace Barotrauma
         {
             foreach (GUIComponent child in Children)
             {
-                if (child.UserData == obj || (child.userData != null && child.userData.Equals(obj))) return child;
+                if (child.UserData == obj || (child.userData != null && child.userData.Equals(obj))) { return child; }
             }
             return null;
         }
@@ -175,6 +175,8 @@ namespace Barotrauma
 
         public bool GlowOnSelect { get; set; }
 
+        public Vector2 UVOffset { get; set; }
+
         private CoroutineHandle pulsateCoroutine;
 
         protected Color flashColor;
@@ -256,9 +258,9 @@ namespace Barotrauma
 
         protected Rectangle ClampRect(Rectangle r)
         {
-            if (Parent == null || !ClampMouseRectToParent) return r;
+            if (Parent == null || !ClampMouseRectToParent) { return r; }
             Rectangle parentRect = Parent.ClampRect(Parent.Rect);
-            if (parentRect.Width <= 0 || parentRect.Height <= 0) return Rectangle.Empty;
+            if (parentRect.Width <= 0 || parentRect.Height <= 0) { return Rectangle.Empty; }
             if (parentRect.X > r.X)
             {
                 int diff = parentRect.X - r.X;
@@ -281,7 +283,7 @@ namespace Barotrauma
                 int diff = (r.Y + r.Height) - (parentRect.Y + parentRect.Height);
                 r.Height -= diff;
             }
-            if (r.Width <= 0 || r.Height <= 0) return Rectangle.Empty;
+            if (r.Width <= 0 || r.Height <= 0) { return Rectangle.Empty; }
             return r;
         }
 
@@ -295,7 +297,7 @@ namespace Barotrauma
         {
             get
             {
-                if (!CanBeFocused) return Rectangle.Empty;
+                if (!CanBeFocused) { return Rectangle.Empty; }
                 return ClampMouseRectToParent ? ClampRect(Rect) : Rect;
             }
         }
@@ -431,7 +433,7 @@ namespace Barotrauma
         #region Updating
         public virtual void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
-            if (!Visible) return;
+            if (!Visible) { return; }
 
             UpdateOrder = order;
             GUI.AddToUpdateList(this);
@@ -463,7 +465,7 @@ namespace Barotrauma
         /// </summary>
         public void UpdateManually(float deltaTime, bool alsoChildren = false, bool recursive = true)
         {
-            if (!Visible) return;
+            if (!Visible) { return; }
 
             AutoUpdate = false;
             Update(deltaTime);
@@ -475,7 +477,7 @@ namespace Barotrauma
 
         protected virtual void Update(float deltaTime)
         {
-            if (!Visible) return;
+            if (!Visible) { return; }
             
             if (CanBeFocused && OnSecondaryClicked != null)
             {
@@ -529,6 +531,17 @@ namespace Barotrauma
             }
         }
 
+        public virtual void ForceLayoutRecalculation()
+        {
+            //This is very ugly but it gets the job done, it
+            //would be real nice to un-jank this some day
+            ForceUpdate();
+            ForceUpdate();
+            foreach (var child in Children) { child.ForceLayoutRecalculation(); }
+        }
+
+        public void ForceUpdate() => Update((float)Timing.Step);
+
         /// <summary>
         /// Updates all the children manually.
         /// </summary>
@@ -555,7 +568,7 @@ namespace Barotrauma
         /// </summary>
         public virtual void DrawManually(SpriteBatch spriteBatch, bool alsoChildren = false, bool recursive = true)
         {
-            if (!Visible) return;
+            if (!Visible) { return; }
 
             AutoDraw = false;
             Draw(spriteBatch);
@@ -598,7 +611,7 @@ namespace Barotrauma
 
         protected virtual void Draw(SpriteBatch spriteBatch)
         {
-            if (!Visible) return;
+            if (!Visible) { return; }
             var rect = Rect;
 
             GetBlendedColor(GetColor(State), ref _currentColor);
@@ -653,7 +666,7 @@ namespace Barotrauma
                                 ? MathUtils.InverseLerp(0, SpriteCrossFadeTime, ToolBox.GetEasing(uiSprite.TransitionMode, spriteFadeTimer)) : 0;
                             if (alphaMultiplier > 0)
                             {
-                                uiSprite.Draw(spriteBatch, rect, previousColor * alphaMultiplier, SpriteEffects);
+                                uiSprite.Draw(spriteBatch, rect, previousColor * alphaMultiplier, SpriteEffects, uvOffset: UVOffset);
                             }
                         }
                     }
@@ -667,7 +680,11 @@ namespace Barotrauma
                             ? MathUtils.InverseLerp(SpriteCrossFadeTime, 0, ToolBox.GetEasing(uiSprite.TransitionMode, spriteFadeTimer)) : (_currentColor.A / 255.0f);
                         if (alphaMultiplier > 0)
                         {
-                            uiSprite.Draw(spriteBatch, rect, _currentColor * alphaMultiplier, SpriteEffects);
+                            //  * (rect.Location.Y - PlayerInput.MousePosition.Y) / rect.Height
+                            Vector2 offset = new Vector2(
+                                MathUtils.PositiveModulo((int)-UVOffset.X, uiSprite.Sprite.SourceRect.Width),
+                                MathUtils.PositiveModulo((int)-UVOffset.Y, uiSprite.Sprite.SourceRect.Height));
+                            uiSprite.Draw(spriteBatch, rect, _currentColor * alphaMultiplier, SpriteEffects, uvOffset: offset);
                         }
                     }
                 }
@@ -708,7 +725,7 @@ namespace Barotrauma
         /// </summary>
         public void DrawToolTip(SpriteBatch spriteBatch)
         {
-            if (!Visible) return;
+            if (!Visible) { return; }
             DrawToolTip(spriteBatch, ToolTip, GUI.MouseOn.Rect, TooltipRichTextData);
         }
         
@@ -825,7 +842,7 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(SlideToPosition(duration, 0.0f, targetPos));
         }
 
-        private IEnumerable<object> SlideToPosition(float duration, float wait, Vector2 target)
+        private IEnumerable<CoroutineStatus> SlideToPosition(float duration, float wait, Vector2 target)
         {
             float t = 0.0f;
             var (startX, startY) = RectTransform.ScreenSpaceOffset.ToVector2();
@@ -849,7 +866,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        private IEnumerable<object> LerpAlpha(float to, float duration, bool removeAfter, float wait = 0.0f)
+        private IEnumerable<CoroutineStatus> LerpAlpha(float to, float duration, bool removeAfter, float wait = 0.0f)
         {
             State = ComponentState.None;
             float t = 0.0f;
@@ -888,7 +905,7 @@ namespace Barotrauma
             pulsateCoroutine = CoroutineManager.StartCoroutine(DoPulsate(startScale, endScale, duration), "Pulsate" + ToString());
         }
 
-        private IEnumerable<object> DoPulsate(Vector2 startScale, Vector2 endScale, float duration)
+        private IEnumerable<CoroutineStatus> DoPulsate(Vector2 startScale, Vector2 endScale, float duration)
         {
             float t = 0.0f;
             while (t < duration)
@@ -1048,7 +1065,7 @@ namespace Barotrauma
                 {
                     case "language":
                         string[] languages = element.GetAttributeStringArray(attribute.Name.ToString(), new string[0]);
-                        if (!languages.Any(l => GameMain.Config.Language.ToLower() == l.ToLower())) { return false; }
+                        if (!languages.Any(l => GameMain.Config.Language.Equals(l, StringComparison.OrdinalIgnoreCase))) { return false; }
                         break;
                     case "gameversion":
                         var version = new Version(attribute.Value);
@@ -1213,8 +1230,7 @@ namespace Barotrauma
 
         private static GUIImage LoadGUIImage(XElement element, RectTransform parent)
         {
-            Sprite sprite = null;
-
+            Sprite sprite;
             string url = element.GetAttributeString("url", "");
             if (!string.IsNullOrEmpty(url))
             {

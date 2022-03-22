@@ -17,7 +17,11 @@ namespace Barotrauma
                 allowSubVoting = value;
                 GameMain.NetLobbyScreen.SubList.Enabled = value ||
                     (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
-                GameMain.NetLobbyScreen.Frame.FindChild("subvotes", true).Visible = value;
+                var subVotesLabel = GameMain.NetLobbyScreen.Frame.FindChild("subvotes", true) as GUITextBlock;
+                subVotesLabel.Visible = value;
+                var subVisButton = GameMain.NetLobbyScreen.SubVisibilityButton;
+                subVisButton.RectTransform.AbsoluteOffset
+                    = new Point(value ? (int)(subVotesLabel.TextSize.X + subVisButton.Rect.Width) : 0, 0);
 
                 UpdateVoteTexts(null, VoteType.Sub);
                 GameMain.NetLobbyScreen.SubList.Deselect();
@@ -66,10 +70,10 @@ namespace Barotrauma
 
                     if (clients == null) { return; }
                     
-                    List<Pair<object, int>> voteList = GetVoteList(voteType, clients);
-                    foreach (Pair<object, int> votable in voteList)
+                    IReadOnlyDictionary<object, int> voteList = GetVoteCounts<object>(voteType, clients);
+                    foreach (KeyValuePair<object, int> votable in voteList)
                     {
-                        SetVoteText(listBox, votable.First, votable.Second);
+                        SetVoteText(listBox, votable.Key, votable.Value);
                     }                    
                     break;
                 case VoteType.StartRound:

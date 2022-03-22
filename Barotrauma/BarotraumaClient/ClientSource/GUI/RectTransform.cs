@@ -732,7 +732,7 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(DoScaleAnimation(targetSize, duration));
         }
 
-        private IEnumerable<object> DoMoveAnimation(Point targetPos, float duration)
+        private IEnumerable<CoroutineStatus> DoMoveAnimation(Point targetPos, float duration)
         {
             Vector2 startPos = AbsoluteOffset.ToVector2();
             float t = 0.0f;
@@ -746,7 +746,7 @@ namespace Barotrauma
             animTargetPos = null;
             yield return CoroutineStatus.Success;
         }
-        private IEnumerable<object> DoScaleAnimation(Point targetSize, float duration)
+        private IEnumerable<CoroutineStatus> DoScaleAnimation(Point targetSize, float duration)
         {
             Vector2 startSize = NonScaledSize.ToVector2();
             float t = 0.0f;

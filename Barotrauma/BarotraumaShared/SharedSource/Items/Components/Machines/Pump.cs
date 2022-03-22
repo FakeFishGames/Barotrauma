@@ -70,6 +70,8 @@ namespace Barotrauma.Items.Components
         public bool HasPower => IsActive && Voltage >= MinVoltage;
         public bool IsAutoControlled => pumpSpeedLockTimer > 0.0f || isActiveLockTimer > 0.0f;
 
+        private const float TinkeringSpeedIncrease = 4.0f;
+
         public Pump(Item item, XElement element)
             : base(item, element)
         {
@@ -105,11 +107,19 @@ namespace Barotrauma.Items.Components
             float powerFactor = Math.Min(currPowerConsumption <= 0.0f || MinVoltage <= 0.0f ? 1.0f : Voltage, 1.0f);
 
             currFlow = flowPercentage / 100.0f * maxFlow * powerFactor;
+
+            if (item.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering)
+            {
+                currFlow *= 1f + repairable.TinkeringStrength * TinkeringSpeedIncrease;
+            }
+
             //less effective when in a bad condition
             currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / item.MaxCondition);
 
             item.CurrentHull.WaterVolume += currFlow;
             if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 0.5f; }
+
+            Voltage -= deltaTime;
         }
 
         public void InfectBallast(string identifier, bool allowMultiplePerShip = false)
@@ -180,28 +190,38 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             if (GameMain.Client != null) { return false; }
 #endif
-
-            if (objective.Option.Equals("stoppumping", StringComparison.OrdinalIgnoreCase))
+            switch (objective.Option.ToLowerInvariant())
             {
+                case "pumpout":
 #if SERVER
-                if (objective.Override || FlowPercentage > 0.0f)
-                {
-                    item.CreateServerEvent(this);
-                }
+                    if (objective.Override || !IsActive || FlowPercentage > -100.0f)
+                    {
+                        item.CreateServerEvent(this);
+                    }
 #endif
-                IsActive = false;
-                FlowPercentage = 0.0f;
-            }
-            else
-            {
+                    IsActive = true;
+                    FlowPercentage = -100.0f;
+                    break;
+                case "pumpin":
 #if SERVER
-                if (objective.Override || !IsActive || FlowPercentage > -100.0f)
-                {
-                    item.CreateServerEvent(this);
-                }
+                    if (objective.Override || !IsActive || FlowPercentage < 100.0f)
+                    {
+                        item.CreateServerEvent(this);
+                    }
 #endif
-                IsActive = true;
-                FlowPercentage = -100.0f;
+                    IsActive = true;
+                    FlowPercentage = 100.0f;
+                    break;
+                case "stoppumping":
+#if SERVER
+                    if (objective.Override || FlowPercentage > 0.0f)
+                    {
+                        item.CreateServerEvent(this);
+                    }
+#endif
+                    IsActive = false;
+                    FlowPercentage = 0.0f;
+                    break;
             }
             return true;
         }

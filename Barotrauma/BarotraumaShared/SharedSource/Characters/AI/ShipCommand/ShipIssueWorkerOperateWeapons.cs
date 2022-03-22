@@ -31,10 +31,10 @@ namespace Barotrauma
             } 
             // there should maybe be additional logic for targeting and destroying spires, because they currently cause some issues with pathing
 
-            if (targetingImportances.Any())
+            if (targetingImportances.Any(i => i > 0))
             {
                 targetingImportances.Sort();
-                Importance = targetingImportances.TakeLast(3).Average();
+                Importance = targetingImportances.TakeLast(3).Sum();
             }
         }
     }

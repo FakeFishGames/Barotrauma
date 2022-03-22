@@ -1,23 +1,30 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Networking;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     internal struct CampaignSettings
     {
-        public static CampaignSettings Empty = new CampaignSettings();
+        public static CampaignSettings Empty => new CampaignSettings();
 
         // Anything that uses this field I wasn't sure if actually needed the proper campaign settings to be passed down
-        public static CampaignSettings Unsure = Empty;
+        public static CampaignSettings Unsure => Empty;
         public bool RadiationEnabled { get; set; }
-        public int MaxMissionCount { get; set; }
+
+        public int TotalMaxMissionCount => MaxMissionCount + GetAddedMissionCount();
+
+        private int maxMissionCount;
+        public int MaxMissionCount
+        {
+            get { return maxMissionCount; }
+            set { maxMissionCount = MathHelper.Clamp(value, MinMissionCountLimit, MaxMissionCountLimit); }
+        }
 
         public const int DefaultMaxMissionCount = 2;
         public const int MaxMissionCountLimit = 10;
@@ -25,25 +32,37 @@ namespace Barotrauma
 
         public CampaignSettings(IReadMessage inc)
         {
+            maxMissionCount = DefaultMaxMissionCount;
             RadiationEnabled = inc.ReadBoolean();
-            MaxMissionCount = inc.ReadInt32();
+            MaxMissionCount = inc.ReadRangedInteger(MinMissionCountLimit, MaxMissionCountLimit);
         }
-        
+
         public CampaignSettings(XElement element)
         {
-            RadiationEnabled = element.GetAttributeBool(nameof(RadiationEnabled).ToLower(), true);
-            MaxMissionCount = element.GetAttributeInt(nameof(MaxMissionCount).ToLower(), DefaultMaxMissionCount);
+            maxMissionCount = DefaultMaxMissionCount;
+            RadiationEnabled = element.GetAttributeBool(nameof(RadiationEnabled).ToLowerInvariant(), true);
+            MaxMissionCount = element.GetAttributeInt(nameof(MaxMissionCount).ToLowerInvariant(), DefaultMaxMissionCount);
         }
 
         public void Serialize(IWriteMessage msg)
         {
             msg.Write(RadiationEnabled);
-            msg.Write(MaxMissionCount);
+            msg.WriteRangedInteger(MaxMissionCount, MinMissionCountLimit, MaxMissionCountLimit);
+        }
+
+        public int GetAddedMissionCount()
+        {
+            int count = 0;
+            foreach (Character character in GameSession.GetSessionCrewCharacters())
+            {
+                count += (int)character.GetStatValue(StatTypes.ExtraMissionCount);
+            }
+            return count;
         }
 
         public XElement Save()
         {
-            return new XElement(nameof(CampaignSettings), new XAttribute(nameof(RadiationEnabled).ToLower(), RadiationEnabled), new XAttribute(nameof(MaxMissionCount).ToLower().ToLower(), MaxMissionCount));
+            return new XElement(nameof(CampaignSettings), new XAttribute(nameof(RadiationEnabled).ToLowerInvariant(), RadiationEnabled), new XAttribute(nameof(MaxMissionCount).ToLowerInvariant(), MaxMissionCount));
         }
     }
 
@@ -226,6 +245,8 @@ namespace Barotrauma
             PurchasedLostShuttles = false;
             var connectedSubs = Submarine.MainSub.GetConnectedSubs();
             wasDocked = Level.Loaded.StartOutpost != null && connectedSubs.Contains(Level.Loaded.StartOutpost);
+
+            ResetTalentData();
         }
 
         public void InitCampaignData()
@@ -372,7 +393,7 @@ namespace Barotrauma
         /// </summary>
         protected abstract void LoadInitialLevel();
 
-        protected abstract IEnumerable<object> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null);
+        protected abstract IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null);
 
         /// <summary>
         /// Which type of transition between levels is currently possible (if any)
@@ -463,6 +484,10 @@ namespace Barotrauma
         /// </summary>
         private Submarine GetLeavingSub()
         {
+            if (Level.IsLoadedOutpost)
+            {
+                return Submarine.MainSub;
+            }
             //in single player, only the sub the controlled character is inside can transition between levels
             //in multiplayer, if there's subs at both ends of the level, only the one with more players inside can transition
             //TODO: ignore players who don't have the permission to trigger a transition between levels?
@@ -472,11 +497,6 @@ namespace Barotrauma
             Submarine leavingSubAtStart = GetLeavingSubAtStart(leavingPlayers);
             Submarine leavingSubAtEnd = GetLeavingSubAtEnd(leavingPlayers);
 
-            if (Level.IsLoadedOutpost)
-            {
-                leavingSubAtStart ??= Submarine.MainSub;
-                leavingSubAtEnd ??= Submarine.MainSub;            
-            }
             int playersInSubAtStart = leavingSubAtStart == null || !leavingSubAtStart.AtStartExit ? 0 :
                 leavingPlayers.Count(c => c.Submarine == leavingSubAtStart || leavingSubAtStart.DockedTo.Contains(c.Submarine) || (Level.Loaded.StartOutpost != null && c.Submarine == Level.Loaded.StartOutpost));
             int playersInSubAtEnd = leavingSubAtEnd == null || !leavingSubAtEnd.AtEndExit ? 0 :
@@ -522,6 +542,7 @@ namespace Barotrauma
                 if (Level.Loaded.EndOutpost == null)
                 {
                     Submarine closestSub = Submarine.FindClosest(Level.Loaded.EndExitPosition, ignoreOutposts: true, ignoreRespawnShuttle: true, teamType: leavingPlayers.FirstOrDefault()?.TeamID);
+                    if (closestSub == null) { return null; }
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
                 else
@@ -546,13 +567,16 @@ namespace Barotrauma
         public override void End(CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
         {
             List<Item> takenItems = new List<Item>();
-            foreach (Item item in Item.ItemList)
+            if (Level.Loaded?.Type == LevelData.LevelType.Outpost)
             {
-                if (!item.SpawnedInOutpost || item.OriginalModuleIndex < 0) { continue; }
-                var owner = item.GetRootInventoryOwner();
-                if ((!(owner?.Submarine?.Info?.IsOutpost ?? false)) || (owner is Character character && character.TeamID == CharacterTeamType.Team1) || item.Submarine == null || !item.Submarine.Info.IsOutpost)
+                foreach (Item item in Item.ItemList)
                 {
-                    takenItems.Add(item);
+                    if (!item.SpawnedInCurrentOutpost || item.OriginalModuleIndex < 0) { continue; }
+                    var owner = item.GetRootInventoryOwner();
+                    if ((!(owner?.Submarine?.Info?.IsOutpost ?? false)) || (owner is Character character && character.TeamID == CharacterTeamType.Team1) || item.Submarine == null || !item.Submarine.Info.IsOutpost)
+                    {
+                        takenItems.Add(item);
+                    }
                 }
             }
             if (map != null && CargoManager != null)
@@ -642,16 +666,7 @@ namespace Barotrauma
             }
             foreach (Location location in Map.Locations)
             {
-                if (location.Type != location.OriginalType)
-                {
-                    location.ChangeType(location.OriginalType);
-                    location.PendingLocationTypeChange = null;
-                }
-                location.CreateStore(force: true);
-                location.ClearMissions();
-                location.Discovered = false;
-                location.LevelData?.EventHistory?.Clear();
-                location.UnlockInitialMissions();
+                location.Reset();
             }
             Map.SetLocation(Map.Locations.IndexOf(Map.StartLocation));
             Map.SelectLocation(-1);
@@ -670,6 +685,14 @@ namespace Barotrauma
                 int loops = CampaignMetadata.GetInt("campaign.endings", 0);
                 CampaignMetadata.SetValue("campaign.endings",  loops + 1);
             }
+
+            GameAnalyticsManager.AddProgressionEvent(
+                GameAnalyticsManager.ProgressionStatus.Complete,
+                Name ?? "none");
+            string eventId = "FinishCampaign:";
+            GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"));
+            GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count() ?? 0));
+            GameAnalyticsManager.AddDesignEvent(eventId + "Money", Money);            
         }
 
         protected virtual void EndCampaignProjSpecific() { }
@@ -696,7 +719,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> DoCharacterWait(Character npc, Character interactor)
+        private IEnumerable<CoroutineStatus> DoCharacterWait(Character npc, Character interactor)
         {
             if (npc == null || interactor == null) { yield return CoroutineStatus.Failure; }
 
@@ -846,7 +869,7 @@ namespace Barotrauma
             Location location = Map?.CurrentLocation;
             if (location != null)
             {
-                location.Reputation.Value -= attackResult.Damage * Reputation.ReputationLossPerNPCDamage;
+                location.Reputation.AddReputation(-attackResult.Damage * Reputation.ReputationLossPerNPCDamage);
             }
         }
 
@@ -891,22 +914,31 @@ namespace Barotrauma
 
         public int NumberOfMissionsAtLocation(Location location)
         {
-            return Map.CurrentLocation.SelectedMissions.Count(m => m.Locations.Contains(location));
+            return Map?.CurrentLocation?.SelectedMissions?.Count(m => m.Locations.Contains(location)) ?? 0;
         }
 
         public void CheckTooManyMissions(Location currentLocation, Client sender)
         {
             foreach (Location location in currentLocation.Connections.Select(c => c.OtherLocation(currentLocation)))
             {
-                if (NumberOfMissionsAtLocation(location) > Settings.MaxMissionCount)
+                if (NumberOfMissionsAtLocation(location) > Settings.TotalMaxMissionCount)
                 {
                     DebugConsole.AddWarning($"Client {sender.Name} had too many missions selected for location {location.Name}! Count was {NumberOfMissionsAtLocation(location)}. Deselecting extra missions.");
-                    foreach (Mission mission in currentLocation.SelectedMissions.Where(m => m.Locations[1] == location).Skip(Settings.MaxMissionCount).ToList())
+                    foreach (Mission mission in currentLocation.SelectedMissions.Where(m => m.Locations[1] == location).Skip(Settings.TotalMaxMissionCount).ToList())
                     {
                         currentLocation.DeselectMission(mission);
                     }
                 }
             }
         }
+
+        // Talent relevant data, only stored for the duration of the mission
+        private void ResetTalentData()
+        {
+            CrewHasDied = false;
+        }
+
+        public bool CrewHasDied { get; set; }
+
     }
 }

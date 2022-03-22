@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -68,17 +69,36 @@ namespace Barotrauma.Items.Components
         public override bool Pick(Character picker)
         {
             //return if someone is already trying to pick the item
-            if (pickTimer > 0.0f) return false;
-            if (picker == null || picker.Inventory == null) return false;
+            if (pickTimer > 0.0f) { return false; }
+            if (picker == null || picker.Inventory == null) { return false; }
 
             if (PickingTime > 0.0f)
             {
+                var abilityPickingTime = new AbilityValueItem(PickingTime, item.Prefab);
+                picker.CheckTalents(AbilityEffectType.OnItemPicked, abilityPickingTime);
+
+                if (requiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
+                {
+                    foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Equipped])
+                    {
+                        foreach (var heldItem in picker.HeldItems)
+                        {
+                            if (ri.MatchesItem(heldItem))
+                            {
+                                abilityPickingTime.Value /= 1 + heldItem.Prefab.AddedPickingSpeedMultiplier;
+                            }
+                        }
+                    }
+                }
+
                 if ((picker.PickingItem == null || picker.PickingItem == item) && PickingTime <= float.MaxValue)
                 {
 #if SERVER
+                    // Set active picker before creating the server event to make sure it's set correctly
+                    activePicker = picker;
                     item.CreateServerEvent(this);
 #endif
-                    pickingCoroutine = CoroutineManager.StartCoroutine(WaitForPick(picker, PickingTime));
+                    pickingCoroutine = CoroutineManager.StartCoroutine(WaitForPick(picker, abilityPickingTime.Value));
                 }
                 return false;
             }
@@ -136,7 +156,7 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        private IEnumerable<object> WaitForPick(Character picker, float requiredTime)
+        private IEnumerable<CoroutineStatus> WaitForPick(Character picker, float requiredTime)
         {
             activePicker = picker;
             picker.PickingItem = item;

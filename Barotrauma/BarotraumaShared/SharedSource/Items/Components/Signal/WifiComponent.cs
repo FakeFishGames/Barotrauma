@@ -112,7 +112,10 @@ namespace Barotrauma.Items.Components
         {
             return HasRequiredContainedItems(user: null, addMessage: false);
         }
-        
+
+        /// <summary>
+        /// Returns the wifi components that can receive signals from this one
+        /// </summary>
         public IEnumerable<WifiComponent> GetReceiversInRange()
         {
             return list.Where(w => w != this && w.CanReceive(this));
@@ -121,17 +124,38 @@ namespace Barotrauma.Items.Components
         public bool CanReceive(WifiComponent sender)
         {
             if (sender == null || sender.channel != channel) { return false; }
+            if (sender.TeamID != TeamID && !AllowCrossTeamCommunication) { return false; }
 
-            if (sender.TeamID != TeamID && !AllowCrossTeamCommunication)
+            //if the component is not linked to chat and has nothing connected to the output, sending a signal to it does nothing
+            // = no point in receiving
+            if (!LinkToChat)
             {
-                return false;
-            }            
+                if (signalOutConnection == null || !signalOutConnection.Wires.Any(w => w != null))
+                {
+                    return false;
+                }
+            }
 
             if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) { return false; }
 
             return HasRequiredContainedItems(user: null, addMessage: false);
         }
 
+        /// <summary>
+        /// Returns the wifi components that can transmit signals to this one
+        /// </summary>
+        public IEnumerable<WifiComponent> GetTransmittersInRange()
+        {
+            return list.Where(w => w != this && w.CanTransmit(this));
+        }
+
+        public bool CanTransmit(WifiComponent sender)
+        {
+            if (sender == null || sender.channel != channel) { return false; }
+            if (sender.TeamID != TeamID && !AllowCrossTeamCommunication) { return false; }
+            if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) { return false; }
+            return HasRequiredContainedItems(user: null, addMessage: false);
+        }
         public override void Update(float deltaTime, Camera cam)
         {
             chatMsgCooldown -= deltaTime;
@@ -178,7 +202,7 @@ namespace Barotrauma.Items.Components
                 //signal strength diminishes by distance
                 float sentSignalStrength = signal.strength *
                     MathHelper.Clamp(1.0f - (Vector2.Distance(item.WorldPosition, wifiComp.item.WorldPosition) / wifiComp.range), 0.0f, 1.0f);
-                Signal s = new Signal(signal.value, ++signal.stepsTaken, sender: signal.sender, source: signal.source,
+                Signal s = new Signal(signal.value, signal.stepsTaken + 1, sender: signal.sender, source: signal.source,
                                       power: 0.0f, strength: sentSignalStrength);
 
                 if (wifiComp.signalOutConnection != null)

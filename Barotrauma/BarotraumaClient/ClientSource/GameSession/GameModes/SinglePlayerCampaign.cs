@@ -243,7 +243,7 @@ namespace Barotrauma
                 mirror: map.CurrentLocation != map.SelectedConnection?.Locations[0]));
         }
 
-        private IEnumerable<object> DoLoadInitialLevel(LevelData level, bool mirror)
+        private IEnumerable<CoroutineStatus> DoLoadInitialLevel(LevelData level, bool mirror)
         {
             GameMain.GameSession.StartRound(level,
                 mirrorLevel: mirror);
@@ -254,7 +254,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        private IEnumerable<object> DoInitialCameraTransition()
+        private IEnumerable<CoroutineStatus> DoInitialCameraTransition()
         {
             while (GameMain.Instance.LoadingScreenOpen)
             {
@@ -378,7 +378,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        protected override IEnumerable<object> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null)
+        protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null)
         {
             NextLevel = newLevel;
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
@@ -463,7 +463,6 @@ namespace Barotrauma
                 {
                     SubmarineInfo previousSub = GameMain.GameSession.SubmarineInfo;
                     GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
-                    PendingSubmarineSwitch = null;
 
                     for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
                     {
@@ -476,6 +475,7 @@ namespace Barotrauma
                 }
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                PendingSubmarineSwitch = null;
             }
             else
             {
@@ -515,7 +515,7 @@ namespace Barotrauma
             };
         }
 
-        private IEnumerable<object> DoEndCampaignCameraTransition()
+        private IEnumerable<CoroutineStatus> DoEndCampaignCameraTransition()
         {
             if (Character.Controlled != null)
             {

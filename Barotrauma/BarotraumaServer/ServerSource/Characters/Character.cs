@@ -28,6 +28,15 @@ namespace Barotrauma
                 }
             }
 
+            if (HasAbilityFlag(AbilityFlags.RetainExperienceForNewCharacter))
+            {
+                var ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
+                if (ownerClient != null)
+                {
+                    (GameMain.GameSession?.GameMode as MultiPlayerCampaign)?.SaveExperiencePoints(ownerClient);
+                }
+            }
+
             healthUpdateTimer = 0.0f;
 
             if (CauseOfDeath.Killer != null && CauseOfDeath.Killer.IsTraitor && CauseOfDeath.Killer != this)
@@ -45,6 +54,16 @@ namespace Barotrauma
                     client.PendingPositionUpdates.Enqueue(this);
                 }
             }
+        }
+
+        partial void OnMoneyChanged(int prevAmount, int newAmount)
+        {
+            GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.UpdateMoney });
+        }
+
+        partial void OnTalentGiven(string talentIdentifier)
+        {
+            GameServer.Log($"{GameServer.CharacterLogName(this)} has gained the talent '{talentIdentifier}'", ServerLog.MessageType.Talent);
         }
     }
 }

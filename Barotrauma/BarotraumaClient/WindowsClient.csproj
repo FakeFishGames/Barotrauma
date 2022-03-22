@@ -6,7 +6,7 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma</Product>
-    <Version>0.14.9.0</Version>
+    <Version>0.15.23.0</Version>
     <Copyright>Copyright © FakeFish 2018-2020</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>Barotrauma</AssemblyName>
@@ -40,6 +40,7 @@
     <DefineConstants>TRACE;CLIENT;WINDOWS;USE_STEAM</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
+    <Optimize>true</Optimize>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -56,11 +57,13 @@
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <Optimize>true</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="..\BarotraumaShared\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Content Remove="..\BarotraumaShared\**\*.cs" />
+    <Content Remove="..\BarotraumaShared\**\*.props" />
     <Compile Include="..\BarotraumaShared\**\*.cs" />
   </ItemGroup>
 
@@ -101,7 +104,6 @@
     <ProjectReference Include="..\..\Libraries\Concentus\CSharp\Concentus\Concentus.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Win64.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
-    <ProjectReference Include="..\..\Libraries\GameAnalytics\GA_SDK_NETSTANDARD\GA_SDK_NETSTANDARD.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\Lidgren.Network\Lidgren.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
     <ProjectReference Include="..\..\Libraries\MonoGame.Framework\Src\MonoGame.Framework\MonoGame.Framework.Windows.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
@@ -111,7 +113,6 @@
     <ProjectReference Include="..\..\Libraries\Concentus\CSharp\Concentus\Concentus.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Win64.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
-    <ProjectReference Include="..\..\Libraries\GameAnalytics\GA_SDK_NETSTANDARD\GA_SDK_NETSTANDARD.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\Lidgren.Network\Lidgren.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\MonoGame.Framework\Src\MonoGame.Framework\MonoGame.Framework.Windows.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
@@ -124,7 +125,7 @@
 
   <ItemGroup>
     <PackageReference Include="NVorbis" Version="0.8.6" />
-    <PackageReference Include="RestSharp" Version="106.6.10" />
+    <PackageReference Include="RestSharp" Version="106.12.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -217,5 +218,10 @@
     <!-- writes the attribute to the customAssemblyInfo file -->
     <WriteCodeFragment Language="C#" OutputFile="$(CustomAssemblyInfoFile)" AssemblyAttributes="@(AssemblyAttributes)" />
   </Target>
+
+  <PropertyGroup>
+    <GARuntime>win-x64</GARuntime>
+  </PropertyGroup>
+  <Import Project="../BarotraumaShared/DeployGameAnalytics.props" />
 
 </Project>

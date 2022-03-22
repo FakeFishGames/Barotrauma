@@ -1,5 +1,4 @@
-﻿using Barotrauma.Networking;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -7,6 +6,8 @@ namespace Barotrauma
     partial class CombatMission
     {
         private readonly bool[] teamDead = new bool[2];
+
+        private List<Character>[] crews;
 
         private bool initialized = false;
 
@@ -82,11 +83,6 @@ namespace Barotrauma
                     GameMain.Server.EndGame();
                 }
             }
-        }
-
-        public override void ServerWriteInitial(IWriteMessage msg, Client c)
-        {
-            //do nothing
         }
     }
 }

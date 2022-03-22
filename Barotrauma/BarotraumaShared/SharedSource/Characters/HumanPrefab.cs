@@ -153,7 +153,10 @@ namespace Barotrauma
                 (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(npc, CampaignInteractionType);
                 if (positionToStayIn != null && humanAI != null)
                 {
-                    humanAI.ObjectiveManager.SetForcedOrder(new AIObjectiveGoTo(positionToStayIn, npc, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, closeEnough: 200));
+                    humanAI.ObjectiveManager.SetForcedOrder(new AIObjectiveGoTo(positionToStayIn, npc, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, closeEnough: 200)
+                    {
+                        DebugLogWhenFails = false
+                    });
                 }
             }
         }
@@ -191,7 +194,7 @@ namespace Barotrauma
                 {
                     string errorMsg = $"Error while spawning job items. Item {item.Name} created network events before the spawn event had been created.";
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("Job.InitializeJobItem:EventsBeforeSpawning", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Job.InitializeJobItem:EventsBeforeSpawning", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     GameMain.Server.EntityEventManager.UniqueEvents.RemoveAll(ev => ev.Entity == item);
                     GameMain.Server.EntityEventManager.Events.RemoveAll(ev => ev.Entity == item);
                 }
@@ -217,10 +220,6 @@ namespace Barotrauma
             if (item.Prefab.Identifier == "idcard" || item.Prefab.Identifier == "idcardwreck")
             {
                 item.AddTag("name:" + character.Name);
-                if (Level.Loaded != null)
-                {
-                    item.ReplaceTag("wreck_id", Level.Loaded.GetWreckIDTag("wreck_id", submarine));
-                }
                 var job = character.Info?.Job;
                 if (job != null)
                 {
@@ -229,6 +228,10 @@ namespace Barotrauma
 
                 IdCard idCardComponent = item.GetComponent<IdCard>();
                 idCardComponent?.Initialize(character.Info);
+                if (submarine != null && (submarine.Info.IsWreck || submarine.Info.IsOutpost))
+                {
+                    idCardComponent.SubmarineSpecificID = submarine.SubmarineSpecificIDTag;
+                }
 
                 var idCardTags = itemElement.GetAttributeStringArray("tags", new string[0]);
                 foreach (string tag in idCardTags)

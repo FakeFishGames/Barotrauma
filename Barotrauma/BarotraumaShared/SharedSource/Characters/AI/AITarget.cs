@@ -76,7 +76,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Invalid AITarget sector direction (" + value + ")\n" + Environment.StackTrace.CleanupStackTrace();
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("AITarget.SectorDir:" + entity?.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("AITarget.SectorDir:" + entity?.ToString(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     return;
                 }
                 sectorDir = value;
@@ -92,7 +92,16 @@ namespace Barotrauma
         public string SonarLabel;
         public string SonarIconIdentifier;
 
-        public bool Enabled => SoundRange > 0 || SightRange > 0;
+        private bool inDetectable;
+
+        /// <summary>
+        /// Should be reset to false each frame and kept indetectable by e.g. a status effect.
+        /// </summary>
+        public bool InDetectable
+        {
+            get => inDetectable || (SoundRange <= 0 && SightRange <= 0);
+            set => inDetectable = value;
+        }
 
         public float MinSoundRange, MinSightRange;
         public float MaxSoundRange = 100000, MaxSightRange = 100000;
@@ -116,7 +125,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                     GameAnalyticsManager.AddErrorEventOnce("AITarget.WorldPosition:EntityRemoved",
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed AITarget\n" + Environment.StackTrace.CleanupStackTrace());
                     return Vector2.Zero;
                 }
@@ -135,7 +144,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                     GameAnalyticsManager.AddErrorEventOnce("AITarget.WorldPosition:EntityRemoved",
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed AITarget\n" + Environment.StackTrace.CleanupStackTrace());
                     return Vector2.Zero;
                 }
@@ -181,14 +190,15 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            if (Enabled && !Static && FadeOutTime > 0)
+            InDetectable = false;
+            if (!Static && FadeOutTime > 0)
             {
                 // The aitarget goes silent/invisible if the components don't keep it active
-                if (!StaticSight)
+                if (!StaticSight && SightRange > 0)
                 {
                     DecreaseSightRange(deltaTime);
                 }
-                if (!StaticSound)
+                if (!StaticSound && SoundRange > 0)
                 {
                     DecreaseSoundRange(deltaTime);
                 }
@@ -219,7 +229,7 @@ namespace Barotrauma
         {
             if (sectorRad >= MathHelper.TwoPi) { return true; }
             Vector2 diff = worldPosition - WorldPosition;
-            return MathUtils.GetShortestAngle(MathUtils.VectorToAngle(diff), MathUtils.VectorToAngle(sectorDir)) <= sectorRad * 0.5f;
+            return Math.Abs(MathUtils.GetShortestAngle(MathUtils.VectorToAngle(diff), MathUtils.VectorToAngle(sectorDir))) <= sectorRad * 0.5f;
         }
 
         public void Remove()

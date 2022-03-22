@@ -541,7 +541,7 @@ namespace Barotrauma
 
         private XElement? ExportXML()
         {
-            XElement mainElement = new XElement("ScriptedEvent", new XAttribute("identifier", projectName.RemoveWhitespace().ToLower()));
+            XElement mainElement = new XElement("ScriptedEvent", new XAttribute("identifier", projectName.RemoveWhitespace().ToLowerInvariant()));
             EditorNode? startNode = null;
             foreach (EditorNode eventNode in nodeList.Where(node => node is EventNode || node is SpecialNode))
             {

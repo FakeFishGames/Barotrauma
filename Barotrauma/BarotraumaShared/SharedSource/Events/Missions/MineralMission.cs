@@ -9,10 +9,10 @@ namespace Barotrauma
 {
     partial class MineralMission : Mission
     {
-        private Dictionary<string, Pair<int, float>> ResourceClusters { get; } = new Dictionary<string, Pair<int, float>>();
-        private Dictionary<string, List<Item>> SpawnedResources { get; } = new Dictionary<string, List<Item>>();
-        private Dictionary<string, Item[]> RelevantLevelResources { get; } = new Dictionary<string, Item[]>();
-        private List<Tuple<string, Vector2>> MissionClusterPositions { get; } = new List<Tuple<string, Vector2>>();
+        private readonly Dictionary<string, (int amount, float rotation)> resourceClusters  = new Dictionary<string, (int amount, float rotation)>();
+        private readonly Dictionary<string, List<Item>> spawnedResources = new Dictionary<string, List<Item>>();
+        private readonly Dictionary<string, Item[]> relevantLevelResources = new Dictionary<string, Item[]>();
+        private readonly List<Tuple<string, Vector2>> missionClusterPositions = new List<Tuple<string, Vector2>>();
 
         private readonly HashSet<Level.Cave> caves = new HashSet<Level.Cave>();
 
@@ -20,8 +20,8 @@ namespace Barotrauma
         {
             get
             {
-                return MissionClusterPositions
-                    .Where(p => SpawnedResources.ContainsKey(p.Item1) && AnyAreUncollected(SpawnedResources[p.Item1]))
+                return missionClusterPositions
+                    .Where(p => spawnedResources.ContainsKey(p.Item1) && AnyAreUncollected(spawnedResources[p.Item1]))
                     .Select(p => p.Item2);
             }
         }
@@ -33,53 +33,53 @@ namespace Barotrauma
             {
                 var identifier = c.GetAttributeString("identifier", null);
                 if (string.IsNullOrWhiteSpace(identifier)) { continue; }
-                if (ResourceClusters.ContainsKey(identifier))
+                if (resourceClusters.ContainsKey(identifier))
                 {
-                    ResourceClusters[identifier].First++;
+                    resourceClusters[identifier] = (resourceClusters[identifier].amount + 1, resourceClusters[identifier].rotation);
                 }
                 else
                 {
-                    ResourceClusters.Add(identifier, new Pair<int, float>(1, 0.0f));
+                    resourceClusters.Add(identifier, (1, 0.0f));
                 }
             }
         }
 
         protected override void StartMissionSpecific(Level level)
         {
-            if (SpawnedResources.Any())
+            if (spawnedResources.Any())
             {
 #if DEBUG
-                throw new Exception($"SpawnedResources.Count > 0 ({SpawnedResources.Count})");
+                throw new Exception($"SpawnedResources.Count > 0 ({spawnedResources.Count})");
 #else
                 DebugConsole.AddWarning("Spawned resources list was not empty at the start of a mineral mission. The mission instance may not have been ended correctly on previous rounds.");
-                SpawnedResources.Clear();
+                spawnedResources.Clear();
 #endif
             }
 
-            if (RelevantLevelResources.Any())
+            if (relevantLevelResources.Any())
             {
 #if DEBUG
-                throw new Exception($"RelevantLevelResources.Count > 0 ({RelevantLevelResources.Count})");
+                throw new Exception($"RelevantLevelResources.Count > 0 ({relevantLevelResources.Count})");
 #else
                 DebugConsole.AddWarning("Relevant level resources list was not empty at the start of a mineral mission. The mission instance may not have been ended correctly on previous rounds.");
-                RelevantLevelResources.Clear();
+                relevantLevelResources.Clear();
 #endif
             }
 
-            if (MissionClusterPositions.Any())
+            if (missionClusterPositions.Any())
             {
 #if DEBUG
-                throw new Exception($"MissionClusterPositions.Count > 0 ({MissionClusterPositions.Count})");
+                throw new Exception($"MissionClusterPositions.Count > 0 ({missionClusterPositions.Count})");
 #else
                 DebugConsole.AddWarning("Mission cluster positions list was not empty at the start of a mineral mission. The mission instance may not have been ended correctly on previous rounds.");
-                MissionClusterPositions.Clear();
+                missionClusterPositions.Clear();
 #endif
             }
 
             caves.Clear();
 
             if (IsClient) { return; }
-            foreach (var kvp in ResourceClusters)
+            foreach (var kvp in resourceClusters)
             {
                 var prefab = ItemPrefab.Find(null, kvp.Key);
                 if (prefab == null)
@@ -88,15 +88,14 @@ namespace Barotrauma
                         "couldn't find an item prefab with the identifier " + kvp.Key);
                     continue;
                 }
-                var spawnedResources = level.GenerateMissionResources(prefab, kvp.Value.First, out float rotation);
-                if (spawnedResources.Count < kvp.Value.First)
+                var spawnedResources = level.GenerateMissionResources(prefab, kvp.Value.amount, out float rotation);
+                if (spawnedResources.Count < kvp.Value.amount)
                 {
                     DebugConsole.ThrowError("Error in MineralMission - " +
-                        "spawned " + spawnedResources.Count + "/" + kvp.Value.First + " of " + prefab.Name);
+                        "spawned " + spawnedResources.Count + "/" + kvp.Value.amount + " of " + prefab.Name);
                 }
                 if (spawnedResources.None()) { continue; }
-                SpawnedResources.Add(kvp.Key, spawnedResources);
-                kvp.Value.Second = rotation;
+                this.spawnedResources.Add(kvp.Key, spawnedResources);
 
                 foreach (Level.Cave cave in Level.Loaded.Caves)
                 {
@@ -142,7 +141,7 @@ namespace Barotrauma
                 GiveReward();
                 completed = true;
             }
-            foreach (var kvp in SpawnedResources)
+            foreach (var kvp in spawnedResources)
             {
                 foreach (var i in kvp.Value)
                 {
@@ -152,33 +151,33 @@ namespace Barotrauma
                     }
                 }
             }
-            SpawnedResources.Clear();
-            RelevantLevelResources.Clear();
-            MissionClusterPositions.Clear();
+            spawnedResources.Clear();
+            relevantLevelResources.Clear();
+            missionClusterPositions.Clear();
             failed = !completed && state > 0;
         }
 
         private void FindRelevantLevelResources()
         {
-            RelevantLevelResources.Clear();
-            foreach (var identifier in ResourceClusters.Keys)
+            relevantLevelResources.Clear();
+            foreach (var identifier in resourceClusters.Keys)
             {
                 var items = Item.ItemList.Where(i => i.Prefab.Identifier == identifier &&
                     i.Submarine == null && i.ParentInventory == null &&
                     (!(i.GetComponent<Holdable>() is Holdable h) || (h.Attachable && h.Attached)))
                     .ToArray();
-                RelevantLevelResources.Add(identifier, items);
+                relevantLevelResources.Add(identifier, items);
             }
         }
 
         private bool EnoughHaveBeenCollected()
         {
-            foreach (var kvp in ResourceClusters)
+            foreach (var kvp in resourceClusters)
             {
-                if (RelevantLevelResources.TryGetValue(kvp.Key, out var availableResources))
+                if (relevantLevelResources.TryGetValue(kvp.Key, out var availableResources))
                 {
                     var collected = availableResources.Count(r => HasBeenCollected(r));
-                    var needed = kvp.Value.First;
+                    var needed = kvp.Value.amount;
                     if (collected < needed) { return false; }
                 }
                 else
@@ -210,8 +209,8 @@ namespace Barotrauma
 
         private void CalculateMissionClusterPositions()
         {
-            MissionClusterPositions.Clear();
-            foreach (var kvp in SpawnedResources)
+            missionClusterPositions.Clear();
+            foreach (var kvp in spawnedResources)
             {
                 if (kvp.Value.None()) { continue; }
                 var pos = Vector2.Zero;
@@ -222,7 +221,7 @@ namespace Barotrauma
                     itemCount++;
                 }
                 pos /= itemCount;
-                MissionClusterPositions.Add(new Tuple<string, Vector2>(kvp.Key, pos));
+                missionClusterPositions.Add(new Tuple<string, Vector2>(kvp.Key, pos));
             }
         }
     }    

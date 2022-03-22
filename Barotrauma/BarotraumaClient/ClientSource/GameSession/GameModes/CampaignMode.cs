@@ -65,7 +65,7 @@ namespace Barotrauma
 
         public override void ShowStartMessage()
         {
-            foreach (Mission mission in Missions)
+            foreach (Mission mission in Missions.ToList())
             {
                 new GUIMessageBox(
                     mission.Prefab.IsSideObjective ? TextManager.AddPunctuation(':', TextManager.Get("sideobjective"), mission.Name) : mission.Name, 

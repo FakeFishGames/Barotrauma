@@ -68,13 +68,13 @@ namespace Barotrauma
                     Projectile projectile = (entity as Item)?.GetComponent<Projectile>();
                     if (projectile == null)
                     {
-                        DebugConsole.NewMessage("Non-projectile using a delaytype of reachcursor", Color.Red, false, true);
+                        DebugConsole.ShowError("Non-projectile using a delaytype of reachcursor");
                         return;
                     }
 
                     if (projectile.User == null)
                     {
-                        DebugConsole.NewMessage("Projectile: '" + projectile.Name + "' missing user to determine distance", Color.Red, false, true);
+                        DebugConsole.ShowError("Projectile: '" + projectile.Name + "' missing user to determine distance");
                         return;
                     }
 
@@ -108,7 +108,7 @@ namespace Barotrauma
                     if (projectile == null)
                     {
 #if DEBUG
-                        DebugConsole.NewMessage("Non-projectile using a delaytype of reachcursor", Color.Red, false, true);
+                        DebugConsole.ShowError("Non-projectile using a delaytype of reachcursor");
 #endif
                         return;
                     }
@@ -116,7 +116,7 @@ namespace Barotrauma
                     if (projectile.User == null)
                     {
 #if DEBUG
-                        DebugConsole.NewMessage("Projectile " + projectile.Name + "missing user", Color.Red, false, true);
+                        DebugConsole.ShowError("Projectile " + projectile.Name + "missing user");
 #endif
                         return;
                     }

@@ -44,11 +44,11 @@ namespace Barotrauma.Networking
 
     class ServerEntityEventManager : NetEntityEventManager
     {
-        private List<ServerEntityEvent> events;
+        private readonly List<ServerEntityEvent> events;
 
         //list of unique events (i.e. !IsDuplicate) created during the round
         //used for syncing clients who join mid-round
-        private List<ServerEntityEvent> uniqueEvents;
+        private readonly List<ServerEntityEvent> uniqueEvents;
 
         private UInt16 lastSentToAll;
         private UInt16 lastSentToAnyone;
@@ -90,11 +90,11 @@ namespace Barotrauma.Networking
             }
         }
 
-        private List<BufferedEvent> bufferedEvents;
+        private readonly List<BufferedEvent> bufferedEvents;
 
         private UInt16 ID;
 
-        private GameServer server;
+        private readonly GameServer server;
 
         private double lastEventCountHighWarning;
         
@@ -113,22 +113,7 @@ namespace Barotrauma.Networking
 
         public void CreateEvent(IServerSerializable entity, object[] extraData = null)
         {
-            if (entity == null || !(entity is Entity))
-            {
-                DebugConsole.ThrowError("Can't create an entity event for " + entity + "!");
-                return;
-            }
-
-            if (((Entity)entity).Removed && !(entity is Level))
-            {
-                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the entity has been removed.\n"+Environment.StackTrace.CleanupStackTrace());
-                return;
-            }
-            if (((Entity)entity).IdFreed)
-            {
-                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the ID of the entity has been freed.\n"+Environment.StackTrace.CleanupStackTrace());
-                return;
-            }
+            if (!ValidateEntity(entity)) { return; }
 
             var newEvent = new ServerEntityEvent(entity, (UInt16)(ID + 1));
             if (extraData != null) newEvent.SetData(extraData);
@@ -201,7 +186,7 @@ namespace Barotrauma.Networking
                         DebugConsole.ThrowError(errorMsg, e);
                     }
                     GameAnalyticsManager.AddErrorEventOnce("ServerEntityEventManager.Read:ReadFailed" + entityName,
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "Failed to read server event for entity \"" + entityName + "\"!\n" + e.StackTrace.CleanupStackTrace());
                 }
 

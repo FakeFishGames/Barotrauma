@@ -69,6 +69,8 @@ namespace Barotrauma.Networking
         {
             GameServer.Log("Saving whitelist", ServerLog.MessageType.ServerMessage);
 
+            GameMain.Server?.ServerSettings?.UpdateFlag(ServerSettings.NetFlags.Properties);
+            
             List<string> lines = new List<string>();
 
             if (Enabled)

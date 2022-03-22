@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -97,7 +98,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Error when loading round sound (" + element + ") - file path not set";
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FilePathEmpty" + element.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
+                GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FilePathEmpty" + element.ToString(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
                 return null;
             }
 
@@ -123,7 +124,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Failed to load sound file \"" + filename + "\".";
                     DebugConsole.ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FileNotFound" + filename, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
+                    GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FileNotFound" + filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
                     return null;
                 }
             }
@@ -147,7 +148,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Failed to load sound file \"" + roundSound.Filename + "\".";
                     DebugConsole.ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FileNotFound" + roundSound.Filename, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
+                    GameAnalyticsManager.AddErrorEventOnce("Submarine.LoadRoundSound:FileNotFound" + roundSound.Filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
                     return;
                 }
             }
@@ -177,41 +178,23 @@ namespace Barotrauma
 
         //drawing ----------------------------------------------------
         private static readonly HashSet<Submarine> visibleSubs = new HashSet<Submarine>();
-        private static readonly HashSet<Ruin> visibleRuins = new HashSet<Ruin>();
         public static void CullEntities(Camera cam)
         {
             visibleSubs.Clear();
             foreach (Submarine sub in Loaded)
             {
-                if (sub.WorldPosition.Y < Level.MaxEntityDepth) continue;
+                if (sub.WorldPosition.Y < Level.MaxEntityDepth) { continue; }
 
+                int margin = 500;
                 Rectangle worldBorders = new Rectangle(
-                    sub.Borders.X + (int)sub.WorldPosition.X - 500,
-                    sub.Borders.Y + (int)sub.WorldPosition.Y + 500,
-                    sub.Borders.Width + 1000,
-                    sub.Borders.Height + 1000);
+                    sub.VisibleBorders.X + (int)sub.WorldPosition.X - margin,
+                    sub.VisibleBorders.Y + (int)sub.WorldPosition.Y + margin,
+                    sub.VisibleBorders.Width + margin * 2,
+                    sub.VisibleBorders.Height + margin * 2);
 
                 if (RectsOverlap(worldBorders, cam.WorldView))
                 {
                     visibleSubs.Add(sub);
-                }
-            }
-
-            visibleRuins.Clear();
-            if (Level.Loaded != null)
-            {
-                foreach (Ruin ruin in Level.Loaded.Ruins)
-                {
-                    Rectangle worldBorders = new Rectangle(
-                        ruin.Area.X - 500,
-                        ruin.Area.Y + ruin.Area.Height + 500,
-                        ruin.Area.Width + 1000,
-                        ruin.Area.Height + 1000);
-
-                    if (RectsOverlap(worldBorders, cam.WorldView))
-                    {
-                        visibleRuins.Add(ruin);
-                    }
                 }
             }
 
@@ -230,10 +213,6 @@ namespace Barotrauma
                 if (entity.Submarine != null)
                 {
                     if (!visibleSubs.Contains(entity.Submarine)) { continue; }
-                }
-                else if (entity.ParentRuin != null)
-                {
-                    if (!visibleRuins.Contains(entity.ParentRuin)) { continue; }
                 }
 
                 if (entity.IsVisible(worldView)) { visibleEntities.Add(entity); }
@@ -325,7 +304,7 @@ namespace Barotrauma
                     depthSortedDamageable.Insert(i, structure);
                 }
             }
-            
+
             foreach (Structure s in depthSortedDamageable)
             {
                 s.DrawDamage(spriteBatch, damageEffect, editing);
@@ -403,6 +382,8 @@ namespace Barotrauma
             }
         }
 
+        // TODO remove
+        [Obsolete("Use MiniMap.CreateMiniMap()")]
         public void CreateMiniMap(GUIComponent parent, IEnumerable<Entity> pointsOfInterest = null, bool ignoreOutpost = false)
         {
             Rectangle worldBorders = GetDockedBorders();
@@ -415,26 +396,124 @@ namespace Barotrauma
             float scale = 0.9f;
 
             GUIFrame hullContainer = new GUIFrame(new RectTransform(
-                (parentAspectRatio > aspectRatio ? new Vector2(aspectRatio / parentAspectRatio, 1.0f) : new Vector2(1.0f, parentAspectRatio / aspectRatio)) * scale, 
-                parent.RectTransform, Anchor.Center), 
-                style: null);
+                (parentAspectRatio > aspectRatio ? new Vector2(aspectRatio / parentAspectRatio, 1.0f) : new Vector2(1.0f, parentAspectRatio / aspectRatio)) * scale,
+                parent.RectTransform, Anchor.Center),
+                style: null)
+            {
+                UserData = "hullcontainer"
+            };
 
             var connectedSubs = GetConnectedSubs();
-            foreach (Hull hull in Hull.hullList)
-            {
-                if (hull.Submarine != this && !connectedSubs.Contains(hull.Submarine)) { continue; }
-                if (ignoreOutpost && !IsEntityFoundOnThisSub(hull, true)) { continue; }
 
+            HashSet<Hull> hullList = Hull.hullList.Where(hull => hull.Submarine == this || connectedSubs.Contains(hull.Submarine)).Where(hull => !ignoreOutpost || IsEntityFoundOnThisSub(hull, true)).ToHashSet();
+
+            Dictionary<Hull, HashSet<Hull>> combinedHulls = new Dictionary<Hull, HashSet<Hull>>();
+
+            foreach (Hull hull in hullList)
+            {
+                if (combinedHulls.ContainsKey(hull) || combinedHulls.Values.Any(hh => hh.Contains(hull))) { continue; }
+
+                List<Hull> linkedHulls = new List<Hull>();
+                MiniMap.GetLinkedHulls(hull, linkedHulls);
+
+                linkedHulls.Remove(hull);
+
+                foreach (Hull linkedHull in linkedHulls)
+                {
+                    if (!combinedHulls.ContainsKey(hull))
+                    {
+                        combinedHulls.Add(hull, new HashSet<Hull>());
+                    }
+
+                    combinedHulls[hull].Add(linkedHull);
+                }
+            }
+
+            foreach (Hull hull in hullList)
+            {
                 Vector2 relativeHullPos = new Vector2(
-                    (hull.WorldRect.X - worldBorders.X) / (float)worldBorders.Width, 
+                    (hull.WorldRect.X - worldBorders.X) / (float)worldBorders.Width,
                     (worldBorders.Y - hull.WorldRect.Y) / (float)worldBorders.Height);
                 Vector2 relativeHullSize = new Vector2(hull.Rect.Width / (float)worldBorders.Width, hull.Rect.Height / (float)worldBorders.Height);
 
-                var hullFrame = new GUIFrame(new RectTransform(relativeHullSize, hullContainer.RectTransform) { RelativeOffset = relativeHullPos }, style: "MiniMapRoom", color: Color.DarkCyan * 0.8f)
+                bool hideHull = combinedHulls.ContainsKey(hull) || combinedHulls.Values.Any(hh => hh.Contains(hull));
+
+                if (hideHull) { continue; }
+
+                Color color = Color.DarkCyan * 0.8f;
+
+                var hullFrame = new GUIFrame(new RectTransform(relativeHullSize, hullContainer.RectTransform) { RelativeOffset = relativeHullPos }, style: "MiniMapRoom", color: color)
                 {
                     UserData = hull
                 };
-                new GUIFrame(new RectTransform(Vector2.One, hullFrame.RectTransform), style: "ScanLines", color: Color.DarkCyan * 0.8f);
+
+                new GUIFrame(new RectTransform(Vector2.One, hullFrame.RectTransform), style: "ScanLines", color: color);
+            }
+
+            foreach (var (mainHull, linkedHulls) in combinedHulls)
+            {
+                MiniMapHullData data = ConstructLinkedHulls(mainHull, linkedHulls, hullContainer, worldBorders);
+
+                Vector2 relativeHullPos = new Vector2(
+                    (data.Bounds.X - worldBorders.X) / worldBorders.Width,
+                    (worldBorders.Y - data.Bounds.Y) / worldBorders.Height);
+
+                Vector2 relativeHullSize = new Vector2(data.Bounds.Width / worldBorders.Width, data.Bounds.Height / worldBorders.Height);
+
+                Color color = Color.DarkCyan * 0.8f;
+
+                float highestY = 0f,
+                      highestX = 0f;
+
+                foreach (var (r, _) in data.RectDatas)
+                {
+                    float y = r.Y - -r.Height,
+                          x = r.X;
+
+                    if (y > highestY) { highestY = y; }
+                    if (x > highestX) { highestX = x; }
+                }
+
+                HashSet<GUIFrame> frames = new HashSet<GUIFrame>();
+
+                foreach (var (snappredRect, hull) in data.RectDatas)
+                {
+                    RectangleF rect = snappredRect;
+                    rect.Height = -rect.Height;
+                    rect.Y -= rect.Height;
+
+                    var (parentW, parentH) = hullContainer.Rect.Size.ToVector2();
+                    Vector2 size = new Vector2(rect.Width / parentW, rect.Height / parentH);
+                    // TODO this won't be required if we some day switch RectTransform to use RectangleF
+                    Vector2 pos = new Vector2(rect.X / parentW, rect.Y / parentH);
+
+                    GUIFrame hullFrame = new GUIFrame(new RectTransform(size, hullContainer.RectTransform) { RelativeOffset = pos }, style: "ScanLinesSeamless", color: color)
+                    {
+                        UserData = hull,
+                        UVOffset = new Vector2(highestX - rect.X, highestY - rect.Y)
+                    };
+
+                    frames.Add(hullFrame);
+                }
+
+                new GUICustomComponent(new RectTransform(relativeHullSize, hullContainer.RectTransform) { RelativeOffset = relativeHullPos }, (spriteBatch, component) =>
+                {
+                    foreach (List<Vector2> list in data.Polygon)
+                    {
+                        spriteBatch.DrawPolygonInner(hullContainer.Rect.Location.ToVector2(), list, component.Color, 2f);
+                    }
+                }, (deltaTime, component) =>
+                {
+                    if (component.Parent.Rect.Size != data.ParentSize)
+                    {
+                        data = ConstructLinkedHulls(mainHull, linkedHulls, hullContainer, worldBorders);
+                    }
+                })
+                {
+                    UserData = frames,
+                    Color = color,
+                    CanBeFocused = false
+                };
             }
 
             if (pointsOfInterest != null)
@@ -453,6 +532,64 @@ namespace Barotrauma
             }
         }
 
+        public static MiniMapHullData ConstructLinkedHulls(Hull mainHull, HashSet<Hull> linkedHulls, GUIComponent parent, Rectangle worldBorders)
+        {
+            Rectangle parentRect = parent.Rect;
+
+            Dictionary<Hull, Rectangle> rects = new Dictionary<Hull, Rectangle>();
+            Rectangle worldRect = mainHull.WorldRect;
+            worldRect.Y = -worldRect.Y;
+
+            rects.Add(mainHull, worldRect);
+
+            foreach (Hull hull in linkedHulls)
+            {
+                Rectangle rect = hull.WorldRect;
+                rect.Y = -rect.Y;
+
+                worldRect = Rectangle.Union(worldRect, rect);
+                rects.Add(hull, rect);
+            }
+
+            worldRect.Y = -worldRect.Y;
+
+            List<RectangleF> normalizedRects = new List<RectangleF>();
+            List<Hull> hullRefs = new List<Hull>();
+            foreach (var (hull, rect) in rects)
+            {
+                Rectangle wRect = rect;
+                wRect.Y = -wRect.Y;
+
+                var (posX, posY) = new Vector2(
+                    (wRect.X - worldBorders.X) / (float)worldBorders.Width,
+                    (worldBorders.Y - wRect.Y) / (float)worldBorders.Height);
+
+                var (scaleX, scaleY) = new Vector2(wRect.Width / (float)worldBorders.Width, wRect.Height / (float)worldBorders.Height);
+
+                RectangleF newRect = new RectangleF(posX * parentRect.Width, posY * parentRect.Height, scaleX * parentRect.Width, scaleY * parentRect.Height);
+
+                normalizedRects.Add(newRect);
+                hullRefs.Add(hull);
+            }
+
+            ImmutableArray<RectangleF> snappedRectangles = ToolBox.SnapRectangles(normalizedRects, treshold: 1);
+
+            List<List<Vector2>> polygon = ToolBox.CombineRectanglesIntoShape(snappedRectangles);
+
+            List<List<Vector2>> scaledPolygon = new List<List<Vector2>>();
+
+            foreach (List<Vector2> list in polygon)
+            {
+                var (polySizeX, polySizeY) = ToolBox.GetPolygonBoundingBoxSize(list);
+                float sizeX = polySizeX - 1f,
+                      sizeY = polySizeY - 1f;
+
+                scaledPolygon.Add(ToolBox.ScalePolygon(list, new Vector2(sizeX / polySizeX, sizeY / polySizeY)));
+            }
+
+            return new MiniMapHullData(scaledPolygon, worldRect, parentRect.Size, snappedRectangles, hullRefs.ToImmutableArray());
+        }
+
         public void CheckForErrors()
         {
             List<string> errorMsgs = new List<string>();
@@ -467,7 +604,7 @@ namespace Barotrauma
                 }
             }
 
-            if (Info.Type != SubmarineType.OutpostModule || 
+            if (Info.Type != SubmarineType.OutpostModule ||
                 (Info.OutpostModuleInfo?.ModuleFlags.Any(f => !f.Equals("hallwayvertical", StringComparison.OrdinalIgnoreCase) && !f.Equals("hallwayhorizontal", StringComparison.OrdinalIgnoreCase)) ?? true))
             {
                 if (!WayPoint.WayPointList.Any(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Path))
@@ -535,7 +672,7 @@ namespace Barotrauma
                         int wireCount = item.Connections[i].Wires.Count(w => w != null);
                         if (doorLinks + wireCount > item.Connections[i].MaxWires)
                         {
-                            errorMsgs.Add(TextManager.GetWithVariables("InsufficientFreeConnectionsWarning", 
+                            errorMsgs.Add(TextManager.GetWithVariables("InsufficientFreeConnectionsWarning",
                                 new string[] { "[doorcount]", "[freeconnectioncount]" },
                                 new string[] { doorLinks.ToString(), (item.Connections[i].MaxWires - wireCount).ToString() }));
                             break;
@@ -632,7 +769,7 @@ namespace Barotrauma
                 return SubEditorScreen.SuppressedWarnings.Contains(type);
             }
         }
-        
+
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (type != ServerNetObject.ENTITY_POSITION)

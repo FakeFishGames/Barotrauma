@@ -137,11 +137,25 @@ namespace Barotrauma
             get { return subBody?.Body; }
         }
 
+        /// <summary>
+        /// Extents of the solid items/structures (ones with a physics body) and hulls
+        /// </summary>
         public Rectangle Borders
         {
             get
             {
                 return subBody == null ? Rectangle.Empty : subBody.Borders;
+            }
+        }
+
+        /// <summary>
+        /// Extents of all the visible items/structures/hulls (including ones without a physics body)
+        /// </summary>
+        public Rectangle VisibleBorders
+        {
+            get
+            {
+                return subBody == null ? Rectangle.Empty : subBody.VisibleBorders;
             }
         }
 
@@ -249,6 +263,17 @@ namespace Barotrauma
             get { return subBody?.HullVertices; }
         }
 
+        private int? submarineSpecificIDTag;
+        public int SubmarineSpecificIDTag
+        {
+            get
+            {
+                submarineSpecificIDTag ??= ToolBox.StringToInt((Level.Loaded?.Seed ?? "") + Info.Name);
+                return submarineSpecificIDTag.Value;
+            }
+        }
+
+
         public bool AtDamageDepth
         {
             get
@@ -261,14 +286,6 @@ namespace Barotrauma
         public override string ToString()
         {
             return "Barotrauma.Submarine (" + (Info?.Name ?? "[NULL INFO]") + ", " + IdOffset + ")";
-        }
-
-        public override bool Removed
-        {
-            get
-            {
-                return !loaded.Contains(this);
-            }
         }
 
         public int CalculateBasePrice()
@@ -329,48 +346,6 @@ namespace Barotrauma
             DockedTo.ForEach(s => s.ShowSonarMarker = false);
             PhysicsBody.FarseerBody.BodyType = BodyType.Static;
             TeamID = CharacterTeamType.None;
-
-            string defaultTag = Level.Loaded.GetWreckIDTag("wreck_id", this);
-            ReplaceIDCardTagRequirements("wreck_id", defaultTag);
-
-            foreach (Item item in Item.ItemList)
-            {
-                if (item.Submarine != this) { continue; }
-                if (item.prefab.Identifier == "idcardwreck" || item.prefab.Identifier == "idcard")
-                {
-                    foreach (string tag in item.GetTags().ToList())
-                    {
-                        if (tag == "smallitem") { continue; }
-                        string newTag = Level.Loaded.GetWreckIDTag(tag, this);
-                        item.ReplaceTag(tag, newTag);
-                        ReplaceIDCardTagRequirements(tag, newTag);
-                    }
-                }
-            }
-
-            void ReplaceIDCardTagRequirements(string oldTag, string newTag)
-            {
-                foreach (Item item in Item.ItemList)
-                {
-                    if (item.Submarine != this) { continue; }
-                    foreach (ItemComponent ic in item.Components)
-                    {
-                        ReplaceIDCardTagRequirement(ic, RelatedItem.RelationType.Picked, oldTag, newTag);
-                        ReplaceIDCardTagRequirement(ic, RelatedItem.RelationType.Equipped, oldTag, newTag);
-                    }
-                }
-            }
-
-            static void ReplaceIDCardTagRequirement(ItemComponent ic, RelatedItem.RelationType relationType, string oldTag, string newTag)
-            {
-                if (!ic.requiredItems.ContainsKey(relationType)) { return; }
-                foreach (RelatedItem requiredItem in ic.requiredItems[relationType])
-                {
-                    int index = Array.IndexOf(requiredItem.Identifiers, oldTag);
-                    if (index == -1) { continue; }
-                    requiredItem.Identifiers[index] = newTag;
-                }
-            }
         }
 
         public WreckAI WreckAI { get; private set; }
@@ -945,9 +920,11 @@ namespace Barotrauma
                 mapEntity.Move(-HiddenSubPosition);
             }
 
+            var prevBodyType = subBody.Body.BodyType;
             Vector2 pos = new Vector2(subBody.Position.X, subBody.Position.Y);
             subBody.Body.Remove();
             subBody = new SubmarineBody(this);
+            subBody.Body.BodyType = prevBodyType;
             SetPosition(pos, new List<Submarine>(parents.Where(p => p != this)));
 
             if (entityGrid != null)
@@ -1152,22 +1129,6 @@ namespace Barotrauma
             foreach (Hull hull in ballastHulls)
             {
                 hull.WaterVolume = hull.Volume * neutralBallastLevel;
-            }
-        }
-
-        /// <summary>
-        /// Run the power logic so the sub is already powered up at the start of the round (as long as the reactor was on)
-        /// </summary>
-        public void WarmStartPower()
-        {
-            for (int i = 0; i < 600; i++)
-            {
-                Powered.UpdatePower((float)Timing.Step);
-                foreach (Entity e in Item.ItemList)
-                {
-                    if (!(e is Item item) || item.GetComponent<Powered>() == null || e.Submarine != this) { continue; }
-                    item.Update((float)Timing.Step, GameMain.GameScreen.Cam);
-                }
             }
         }
 
@@ -1427,7 +1388,7 @@ namespace Barotrauma
                         if (me.Submarine != this) { continue; }
                         if (me is Item item)
                         {
-                            item.SpawnedInOutpost = info.OutpostGenerationParams != null;
+                            item.SpawnedInCurrentOutpost = info.OutpostGenerationParams != null;
                             item.AllowStealing = info.OutpostGenerationParams?.AllowStealing ?? true;
                             if (item.GetComponent<Repairable>() != null && indestructible)
                             {
@@ -1459,6 +1420,11 @@ namespace Barotrauma
                             structure.Indestructible = true;
                         }
                     }
+                }
+                else if (info.IsRuin)
+                {
+                    ShowSonarMarker = false;
+                    PhysicsBody.FarseerBody.BodyType = BodyType.Static;
                 }
             }
 
@@ -1718,7 +1684,10 @@ namespace Barotrauma
 
             PhysicsBody.RemoveAll();
 
-            GameMain.World.Clear();
+            GameMain.World?.Clear();
+            GameMain.World = null;
+
+            GC.Collect();
 
             Unloading = false;
         }
@@ -1729,6 +1698,9 @@ namespace Barotrauma
 
             subBody?.Remove();
             subBody = null;
+
+            outdoorNodes?.Clear();
+            outdoorNodes = null;
 
             if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
             {
@@ -1743,8 +1715,8 @@ namespace Barotrauma
 
             visibleEntities = null;
 
-            if (MainSub == this) MainSub = null;
-            if (MainSubs[1] == this) MainSubs[1] = null;
+            if (MainSub == this) { MainSub = null; }
+            if (MainSubs[1] == this) { MainSubs[1] = null; }
 
             ConnectedDockingPorts?.Clear();
 

@@ -31,7 +31,7 @@ namespace Barotrauma
 
         protected override AIObjective ObjectiveConstructor(Character target)
         {
-            AIObjectiveCombat.CombatMode combatMode = target.IsEscorted && character.TeamID == CharacterTeamType.Team1 ? AIObjectiveCombat.CombatMode.Arrest : AIObjectiveCombat.CombatMode.Offensive;
+            AIObjectiveCombat.CombatMode combatMode = ShouldArrest(target, character) ? AIObjectiveCombat.CombatMode.Arrest : AIObjectiveCombat.CombatMode.Offensive;
             var combatObjective = new AIObjectiveCombat(character, target, combatMode, objectiveManager, PriorityModifier);
             if (character.TeamID == CharacterTeamType.FriendlyNPC && target.TeamID == CharacterTeamType.Team1 && GameMain.GameSession?.GameMode is CampaignMode campaign)
             {
@@ -41,7 +41,7 @@ namespace Barotrauma
                     combatObjective.holdFireCondition = () =>
                     {
                         //hold fire while the enemy is in the airlock (except if they've attacked us)
-                        if (HumanAIController.GetDamageDoneByAttacker(target) > 0.0f) { return false; }
+                        if (character.GetDamageDoneByAttacker(target) > 0.0f) { return false; }
                         return target.CurrentHull == null || target.CurrentHull.OutpostModuleTags.Any(t => t.Equals("airlock", System.StringComparison.OrdinalIgnoreCase));
                     };
                     character.Speak(TextManager.Get("dialogenteroutpostwarning"), null, Rand.Range(0.5f, 1.0f), "leaveoutpostwarning", 30.0f);
@@ -56,14 +56,22 @@ namespace Barotrauma
         public static bool IsValidTarget(Character target, Character character)
         {
             if (target == null || target.Removed) { return false; }
-            if (target.IsDead || target.IsUnconscious) { return false; }
+            if (target.IsDead) { return false; }
+            if (target.IsUnconscious && target.Params.Health.ConstantHealthRegeneration <= 0.0f) { return false; }
             if (target == character) { return false; }
             if (target.Submarine == null) { return false; }
             if (character.Submarine == null) { return false; }
             if (target.CurrentHull == null) { return false; }
             if (HumanAIController.IsFriendly(character, target)) { return false; }
             if (!character.Submarine.IsConnectedTo(target.Submarine)) { return false; }
+            if (target.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI)) { return false; }
+            if (target.IsArrested) { return false; }
             return true;
+        }
+
+        public static bool ShouldArrest(Character target, Character character)
+        {
+            return target != null && target.IsEscorted && character.TeamID == CharacterTeamType.Team1;
         }
     }
 }

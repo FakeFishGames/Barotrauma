@@ -32,6 +32,7 @@ namespace Barotrauma
             set { selectedShuttle = value; lastUpdateID++; }
         }
 
+        [Obsolete("TODO: this list shouldn't exist, the client should just use the visible subs list instead")]
         public List<SubmarineInfo> CampaignSubmarines
         {
             get
@@ -50,42 +51,6 @@ namespace Barotrauma
         }
 
         private List<SubmarineInfo> campaignSubmarines;       
-
-        public void AddCampaignSubmarine(SubmarineInfo sub)
-        {
-            if (!campaignSubmarines.Contains(sub))
-            {
-                campaignSubmarines.Add(sub);
-            }
-            else
-            {
-                return;
-            }
-
-            lastUpdateID++;
-            if (GameMain.NetworkMember?.ServerSettings != null)
-            {
-                GameMain.NetworkMember.ServerSettings.ServerDetailsChanged = true;
-            }
-        }
-
-        public void RemoveCampaignSubmarine(SubmarineInfo sub)
-        {
-            if (campaignSubmarines.Contains(sub))
-            {
-                campaignSubmarines.Remove(sub);
-            }
-            else
-            {
-                return;
-            }
-
-            lastUpdateID++;
-            if (GameMain.NetworkMember?.ServerSettings != null)
-            {
-                GameMain.NetworkMember.ServerSettings.ServerDetailsChanged = true;
-            }
-        }
 
         public GameModePreset[] GameModes { get; }
 
@@ -212,10 +177,7 @@ namespace Barotrauma
         }
         
         private List<SubmarineInfo> subs;
-        public List<SubmarineInfo> GetSubList()
-        {
-            return subs;
-        }
+        public IReadOnlyList<SubmarineInfo> GetSubList() => subs;
 
         public string LevelSeed
         {
@@ -271,6 +233,8 @@ namespace Barotrauma
                 var allowedGameModes = Array.FindAll(GameModes, m => !m.IsSinglePlayer && m != GameModePreset.MultiPlayerCampaign);
                 SelectedModeIdentifier = allowedGameModes[Rand.Range(0, allowedGameModes.Length)].Identifier;
             }
+
+            GameMain.Server.ServerSettings.SelectNonHiddenSubmarine();
         }
     }
 }

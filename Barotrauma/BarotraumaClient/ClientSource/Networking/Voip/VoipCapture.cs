@@ -113,7 +113,7 @@ namespace Barotrauma.Networking
                         UserData = "capturedevicenotfound"
                     };
                 }
-                GameAnalyticsManager.AddErrorEventOnce("Alc.CaptureDeviceOpenFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                GameAnalyticsManager.AddErrorEventOnce("Alc.CaptureDeviceOpenFailed", GameAnalyticsManager.ErrorSeverity.Error,
                     "Alc.CaptureDeviceOpen(" + deviceName + ") failed. Error code: " + errorCode);
                 GameMain.Config.VoiceSetting = GameSettings.VoiceMode.Disabled;
                 Instance?.Dispose();

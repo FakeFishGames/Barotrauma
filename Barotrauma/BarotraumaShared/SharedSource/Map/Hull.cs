@@ -14,8 +14,8 @@ namespace Barotrauma
     partial class BackgroundSection
     {
         public Rectangle Rect;
-        public int Index;
-        public int RowIndex;
+        public ushort Index;
+        public ushort RowIndex;
 
         private Vector4 colorVector4;
         private Color color;
@@ -39,7 +39,7 @@ namespace Barotrauma
             }
         }
 
-        public BackgroundSection(Rectangle rect, int index, int rowIndex)
+        public BackgroundSection(Rectangle rect, ushort index, ushort rowIndex)
         {
             Rect = rect;
             Index = index;
@@ -53,7 +53,7 @@ namespace Barotrauma
             Color = DirtColor = Color.Lerp(new Color(10, 10, 10, 100), new Color(54, 57, 28, 200), Noise.X);
         }
 
-        public BackgroundSection(Rectangle rect, int index, float colorStrength, Color color, int rowIndex)
+        public BackgroundSection(Rectangle rect, ushort index, float colorStrength, Color color, ushort rowIndex)
         {
             System.Diagnostics.Debug.Assert(rect.Width > 0 && rect.Height > 0);
 
@@ -471,9 +471,8 @@ namespace Barotrauma
             {
                 aiTarget = new AITarget(this)
                 {
-                    MinSightRange = 2000,
+                    MinSightRange = 1000,
                     MaxSightRange = 5000,
-                    MaxSoundRange = 5000,
                     SoundRange = 0
                 };
             }
@@ -674,6 +673,9 @@ namespace Barotrauma
                 Gap.UpdateHulls();
             }
 
+            BackgroundSections?.Clear();
+            submergedSections?.Clear();
+
             List<FireSource> fireSourcesToRemove = new List<FireSource>(FireSources);
             foreach (FireSource fireSource in fireSourcesToRemove)
             {
@@ -784,7 +786,7 @@ namespace Barotrauma
 
             if (aiTarget != null)
             {
-                aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;
+                aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : MathHelper.Lerp(aiTarget.MinSightRange, aiTarget.MaxSightRange, Submarine.Velocity.Length() / 10);
                 aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
          
@@ -932,7 +934,7 @@ namespace Barotrauma
             foreach (var gap in ConnectedGaps.Where(gap => gap.Open > 0))
             {
                 var distance = MathHelper.Max(Vector2.DistanceSquared(item.Position, gap.Position) / 1000, 1f);
-                item.body.ApplyForce((gap.LerpedFlowForce / distance) * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                item.body.ApplyForce((gap.LerpedFlowForce / distance) * deltaTime);
             }
         }
 
@@ -1056,11 +1058,17 @@ namespace Barotrauma
         /// <param name="inclusive">Does being exactly at the edge of the hull count as being inside?</param>
         public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
         {
-            if (EntityGrids == null) return null;
+            if (EntityGrids == null)
+            {
+                return null;
+            }
 
             if (guess != null)
             {
-                if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position, inclusive)) return guess;
+                if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position, inclusive))
+                {
+                    return guess;
+                }
             }
 
             foreach (EntityGrid entityGrid in EntityGrids)
@@ -1086,15 +1094,19 @@ namespace Barotrauma
                         continue;
                     }
                 }
-
                 Vector2 transformedPosition = position;
-                if (useWorldCoordinates && entityGrid.Submarine != null) transformedPosition -= entityGrid.Submarine.Position;
-
+                if (useWorldCoordinates && entityGrid.Submarine != null)
+                {
+                    transformedPosition -= entityGrid.Submarine.Position;
+                }
                 var entities = entityGrid.GetEntities(transformedPosition);
-                if (entities == null) continue;
+                if (entities == null) { continue; }
                 foreach (Hull hull in entities)
                 {
-                    if (Submarine.RectContains(hull.rect, transformedPosition, inclusive)) return hull;
+                    if (Submarine.RectContains(hull.rect, transformedPosition, inclusive))
+                    {
+                        return hull;
+                    }
                 }
             }
 
@@ -1241,6 +1253,44 @@ namespace Barotrauma
             return "RoomName.Sub" + roomPos.ToString();
         }
 
+        /// <summary>
+        /// Is this hull or any of the items inside it tagged as "airlock"?
+        /// </summary>
+        public bool IsTaggedAirlock()
+        {
+            if (RoomName != null && RoomName.Contains("airlock", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            else
+            {
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.CurrentHull != this && item.HasTag("airlock"))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Does this hull have any doors leading outside?
+        /// </summary>
+        /// <param name="character">Used to check if this character has access to the door leading outside</param>
+        public bool LeadsOutside(Character character)
+        {
+            foreach (var gap in ConnectedGaps)
+            {
+                if (gap.ConnectedDoor == null) { continue; }
+                if (gap.IsRoomToRoom) { continue; }
+                if (!gap.ConnectedDoor.CanBeTraversed && (character == null || !gap.ConnectedDoor.HasAccess(character))) { continue; }
+                return true;
+            }
+            return false;
+        }
+
 #region BackgroundSections
         private void CreateBackgroundSections()
         {
@@ -1260,9 +1310,9 @@ namespace Barotrauma
             {
                 for (int x = 0; x < xBackgroundMax; x++)
                 {
-                    int index = BackgroundSections.Count;
+                    ushort index = (ushort)BackgroundSections.Count;
                     int sector = (int)Math.Floor(index / (float)sectorWidth - xSectors * y) + y / sectorHeight * (int)Math.Ceiling(xSectors);
-                    BackgroundSections.Add(new BackgroundSection(new Rectangle(x * sectionWidth, y * -sectionHeight, sectionWidth, sectionHeight), index, y));
+                    BackgroundSections.Add(new BackgroundSection(new Rectangle(x * sectionWidth, y * -sectionHeight, sectionWidth, sectionHeight), index, (ushort)y));
                 }
             }
 
@@ -1525,7 +1575,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Error - tried to save a hull that's not a part of any submarine.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Hull.Save:WorldHull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Hull.Save:WorldHull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return null;
             }
 

@@ -133,7 +133,7 @@ namespace Barotrauma
             string hintIdentifierBase = "onstartedinteracting";
 
             // onstartedinteracting.brokenitem
-            if (item.Repairables.Any(r => item.ConditionPercentage < r.RepairThreshold))
+            if (item.Repairables.Any(r => r.IsBelowRepairThreshold))
             {
                 if (DisplayHint($"{hintIdentifierBase}.brokenitem")) { return; }
             }
@@ -192,7 +192,7 @@ namespace Barotrauma
             if (!CanDisplayHints(requireGameScreen: false, requireControllingCharacter: false)) { return; }
             CoroutineManager.StartCoroutine(DisplayRoundStartedHints(initRoundHandle), "HintManager.DisplayRoundStartedHints");
 
-            static IEnumerable<object> InitRound()
+            static IEnumerable<CoroutineStatus> InitRound()
             {
                 while (Character.Controlled == null) { yield return CoroutineStatus.Running; }
                 // Get the ballast hulls on round start not to find them again and again later
@@ -211,7 +211,7 @@ namespace Barotrauma
                 yield return CoroutineStatus.Success;
             }
 
-            static IEnumerable<object> DisplayRoundStartedHints(CoroutineHandle initRoundHandle)
+            static IEnumerable<CoroutineStatus> DisplayRoundStartedHints(CoroutineHandle initRoundHandle)
             {
                 while (GameMain.Instance.LoadingScreenOpen || Screen.Selected != GameMain.GameScreen ||
                        CoroutineManager.IsCoroutineRunning(initRoundHandle) ||
@@ -475,12 +475,12 @@ namespace Barotrauma
                     ItemComponent targetItem = null;
                     if (orderPrefab.MustSetTarget)
                     {
-                        targetEntity = orderPrefab.GetMatchingItems(true, interactableFor: Character.Controlled).FirstOrDefault();
+                        targetEntity = orderPrefab.GetMatchingItems(true, interactableFor: Character.Controlled, orderOption: orderInfo.option).FirstOrDefault();
                         if (targetEntity == null) { return; }
                         targetItem = orderPrefab.GetTargetItemComponent(targetEntity);
                     }
                     var order = new Order(orderPrefab, targetEntity as Entity, targetItem, orderGiver: Character.Controlled);
-                    GameMain.GameSession.CrewManager.SetCharacterOrder(Character.Controlled, order, orderInfo.option, CharacterInfo.HighestManualOrderPriority, Character.Controlled);
+                    GameMain.GameSession?.CrewManager?.SetCharacterOrder(Character.Controlled, order, orderInfo.option, CharacterInfo.HighestManualOrderPriority, Character.Controlled);
                 });
         }
 
@@ -544,7 +544,7 @@ namespace Barotrauma
             if (Character.Controlled.CurrentHull == null) { return; }
             if (HumanAIController.IsBallastFloraNoticeable(Character.Controlled, Character.Controlled.CurrentHull))
             {
-                if (DisplayHint("onballastflorainfected")) { return; }
+                if (IsOnFriendlySub() && DisplayHint("onballastflorainfected")) { return; }
             }
             foreach (var gap in Character.Controlled.CurrentHull.ConnectedGaps)
             {
@@ -552,7 +552,7 @@ namespace Barotrauma
                 if (Vector2.DistanceSquared(Character.Controlled.WorldPosition, gap.ConnectedDoor.Item.WorldPosition) > 400 * 400) { continue; }
                 if (!gap.IsRoomToRoom)
                 {
-                    if (!(Character.Controlled.GetEquippedItem("deepdiving", InvSlotType.OuterClothes) is Item)) { continue; }
+                    if (!IsWearingDivingSuit()) { continue; }
                     if (Character.Controlled.IsProtectedFromPressure()) { continue; }
                     if (DisplayHint("divingsuitwarning", extendTextTag: false)) { return; }
                     continue;
@@ -561,10 +561,16 @@ namespace Barotrauma
                 {
                     if (me == Character.Controlled.CurrentHull) { continue; }
                     if (!(me is Hull adjacentHull)) { continue; }
+                    if (!IsOnFriendlySub()) { continue; }
+                    if (IsWearingDivingSuit()) { continue; }
                     if (adjacentHull.LethalPressure > 5.0f && DisplayHint("onadjacenthull.highpressure")) { return; }
                     if (adjacentHull.WaterPercentage > 75 && !BallastHulls.Contains(adjacentHull) && DisplayHint("onadjacenthull.highwaterpercentage")) { return; }
                 }
+
+                static bool IsWearingDivingSuit() => Character.Controlled.GetEquippedItem("deepdiving", InvSlotType.OuterClothes) is Item;
             }
+
+            static bool IsOnFriendlySub() => Character.Controlled.Submarine is Submarine sub && (sub.TeamID == Character.Controlled.TeamID || sub.TeamID == CharacterTeamType.FriendlyNPC);
         }
 
         private static void CheckReminders()

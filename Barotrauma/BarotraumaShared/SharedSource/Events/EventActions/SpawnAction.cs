@@ -121,7 +121,7 @@ namespace Barotrauma
                         {
                             foreach (Item item in newCharacter.Inventory.AllItems)
                             {
-                                item.SpawnedInOutpost = true;
+                                item.SpawnedInCurrentOutpost = true;
                                 item.AllowStealing = false;
                             }
                         }
@@ -226,11 +226,11 @@ namespace Barotrauma
                 List<Item> potentialItems = SpawnLocation switch
                 {
                     SpawnLocationType.MainSub => Item.ItemList.FindAll(it => it.Submarine == Submarine.MainSub),
-                    SpawnLocationType.MainPath => Item.ItemList.FindAll(it => it.Submarine == null && it.ParentRuin == null),
-                    SpawnLocationType.Outpost => Item.ItemList.FindAll(it => it.Submarine != null && it.Submarine.Info.IsOutpost),
-                    SpawnLocationType.Wreck => Item.ItemList.FindAll(it => it.Submarine != null && it.Submarine.Info.IsWreck),
-                    SpawnLocationType.Ruin => Item.ItemList.FindAll(it => it.ParentRuin != null),
-                    SpawnLocationType.BeaconStation => Item.ItemList.FindAll(it => it.Submarine != null && it.Submarine.Info.IsBeacon),
+                    SpawnLocationType.MainPath => Item.ItemList.FindAll(it => it.Submarine == null),
+                    SpawnLocationType.Outpost => Item.ItemList.FindAll(it => it.Submarine?.Info != null && it.Submarine.Info.IsOutpost),
+                    SpawnLocationType.Wreck => Item.ItemList.FindAll(it => it.Submarine?.Info != null && it.Submarine.Info.IsWreck),
+                    SpawnLocationType.Ruin => Item.ItemList.FindAll(it => it.Submarine?.Info != null && it.Submarine.Info.IsRuin),
+                    SpawnLocationType.BeaconStation => Item.ItemList.FindAll(it => it.Submarine?.Info != null && it.Submarine.Info.IsBeacon),
                     _ => throw new NotImplementedException()
                 };
 
@@ -252,11 +252,11 @@ namespace Barotrauma
             List<WayPoint> potentialSpawnPoints = spawnLocation switch
             {
                 SpawnLocationType.MainSub => WayPoint.WayPointList.FindAll(wp => wp.Submarine == Submarine.MainSub && wp.CurrentHull != null),
-                SpawnLocationType.MainPath => WayPoint.WayPointList.FindAll(wp => wp.Submarine == null && wp.ParentRuin == null),
-                SpawnLocationType.Outpost => WayPoint.WayPointList.FindAll(wp => wp.Submarine != null && wp.CurrentHull != null && wp.Submarine.Info.IsOutpost),
-                SpawnLocationType.Wreck => WayPoint.WayPointList.FindAll(wp => wp.Submarine != null && wp.Submarine.Info.IsWreck),
-                SpawnLocationType.Ruin => WayPoint.WayPointList.FindAll(wp => wp.ParentRuin != null),
-                SpawnLocationType.BeaconStation => WayPoint.WayPointList.FindAll(wp => wp.Submarine != null && wp.Submarine.Info.IsBeacon),
+                SpawnLocationType.MainPath => WayPoint.WayPointList.FindAll(wp => wp.Submarine == null),
+                SpawnLocationType.Outpost => WayPoint.WayPointList.FindAll(wp => wp.Submarine?.Info != null && wp.CurrentHull != null && wp.Submarine.Info.IsOutpost),
+                SpawnLocationType.Wreck => WayPoint.WayPointList.FindAll(wp => wp.Submarine?.Info != null && wp.Submarine.Info.IsWreck),
+                SpawnLocationType.Ruin => WayPoint.WayPointList.FindAll(wp => wp.Submarine?.Info != null && wp.Submarine.Info.IsRuin),
+                SpawnLocationType.BeaconStation => WayPoint.WayPointList.FindAll(wp => wp.Submarine?.Info != null && wp.Submarine.Info.IsBeacon),
                 _ => throw new NotImplementedException()
             };
 

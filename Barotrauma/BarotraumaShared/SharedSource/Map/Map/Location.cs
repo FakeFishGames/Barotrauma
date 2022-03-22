@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using StoreBalanceStatus = Barotrauma.LocationType.StoreBalanceStatus;
 
 namespace Barotrauma
 {
@@ -60,7 +61,7 @@ namespace Barotrauma
 
         private LocationType addInitialMissionsForType;
 
-        public bool Discovered;
+        public bool Discovered { get; private set; }
 
         public readonly Dictionary<LocationTypeChange.Requirement, int> ProximityTimer = new Dictionary<LocationTypeChange.Requirement, int>();
         public (LocationTypeChange typeChange, int delay, MissionPrefab parentMission)? PendingLocationTypeChange;
@@ -87,16 +88,12 @@ namespace Barotrauma
         public int TurnsInRadiation { get; set; }
 
         #region Store
-
-        private const float StoreMaxReputationModifier = 0.1f;
-        private const float StoreSellPriceModifier = 0.8f;
-        private const float DailySpecialPriceModifier = 0.9f;
-        private const float RequestGoodPriceModifier = 1.5f;
-        public const int StoreInitialBalance = 5000;
-        /// <summary>
-        /// In percentages
-        /// </summary>
-        private const int StorePriceModifierRange = 5;
+        private float StoreMaxReputationModifier => Type.StoreMaxReputationModifier;
+        private float StoreSellPriceModifier => Type.StoreSellPriceModifier;
+        private float DailySpecialPriceModifier => Type.DailySpecialPriceModifier;
+        private float RequestGoodPriceModifier => Type.RequestGoodPriceModifier;
+        public int StoreInitialBalance => Type.StoreInitialBalance;
+        private int StorePriceModifierRange => Type.StorePriceModifierRange;
         /// <summary>
         /// In percentages. Larger values make buying more expensive and selling less profitable, and vice versa.
         /// </summary>
@@ -104,26 +101,7 @@ namespace Barotrauma
 
         public Color BalanceColor => ActiveStoreBalanceStatus.Color;
         public StoreBalanceStatus ActiveStoreBalanceStatus { get; private set; }
-        private static StoreBalanceStatus DefaultBalanceStatus { get; } = new StoreBalanceStatus(1.0f, 1.0f, Color.White);
-        private static List<StoreBalanceStatus> StoreBalanceStatuses { get; } = new List<StoreBalanceStatus>
-        {
-            new StoreBalanceStatus(0.5f, 0.75f, Color.Orange),
-            new StoreBalanceStatus(0.25f, 0.2f, Color.Red),
-        };
-
-        public struct StoreBalanceStatus
-        {
-            public float PercentageOfInitialBalance { get; }
-            public float SellPriceModifier { get; }
-            public Color Color { get; }
-
-            public StoreBalanceStatus(float percentage, float sellPriceModifier, Color color)
-            {
-                PercentageOfInitialBalance = percentage;
-                SellPriceModifier = sellPriceModifier;
-                Color = color;
-            }
-        }
+        private List<StoreBalanceStatus> StoreBalanceStatuses => Type.StoreBalanceStatuses;
 
         private int storeCurrentBalance;
         public int StoreCurrentBalance
@@ -868,6 +846,8 @@ namespace Barotrauma
             // Adjust by random price modifier
             price = ((100 + StorePriceModifier) / 100.0f) * price;
 
+            price *= priceInfo.BuyingPriceMultiplier;
+
             // Adjust by daily special status
             if (considerDailySpecials && DailySpecials.Contains(item))
             {
@@ -1004,10 +984,20 @@ namespace Barotrauma
             stockToRemove.ForEach(i => stock.Remove(i));
             StoreStock = stock;
 
-            if (++StepsSinceSpecialsUpdated >= SpecialsUpdateInterval)
+            int extraSpecialSalesCount = GetExtraSpecialSalesCount();
+
+            if (++StepsSinceSpecialsUpdated >= SpecialsUpdateInterval || 
+                DailySpecials.Count() != DailySpecialsCount + extraSpecialSalesCount)
             {
                 CreateStoreSpecials();
             }
+        }
+
+        private int GetExtraSpecialSalesCount()
+        {
+            var characters = GameSession.GetSessionCrewCharacters();
+            if (!characters.Any()) { return 0; }
+            return characters.Max(c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
         }
 
         private void GenerateRandomPriceModifier()
@@ -1033,7 +1023,9 @@ namespace Barotrauma
                 }
                 availableStock.Add(stockItem.ItemPrefab, weight);
             }
-            for (int i = 0; i < DailySpecialsCount; i++)
+
+            int extraSpecialSalesCount = GetExtraSpecialSalesCount();
+            for (int i = 0; i < DailySpecialsCount + extraSpecialSalesCount; i++)
             {
                 if (availableStock.None()) { break; }
                 var item = ToolBox.SelectWeightedRandom(availableStock.Keys.ToList(), availableStock.Values.ToList(), Rand.RandSync.Unsynced);
@@ -1097,18 +1089,43 @@ namespace Barotrauma
             }
         }
 
-        public static StoreBalanceStatus GetStoreBalanceStatus(int balance)
+        public StoreBalanceStatus GetStoreBalanceStatus(int balance)
         {
-            StoreBalanceStatus nextStatus = DefaultBalanceStatus;
-            foreach (var balanceStatus in StoreBalanceStatuses)
+            StoreBalanceStatus nextStatus = StoreBalanceStatuses[0];
+            for (int i = 1; i < StoreBalanceStatuses.Count; i++)
             {
-                if (balanceStatus.PercentageOfInitialBalance < nextStatus.PercentageOfInitialBalance &&
-                    ((float)balance / StoreInitialBalance) < balanceStatus.PercentageOfInitialBalance)
+                var status = StoreBalanceStatuses[i];
+                if (status.PercentageOfInitialBalance < nextStatus.PercentageOfInitialBalance &&
+                    ((float)balance / StoreInitialBalance) < status.PercentageOfInitialBalance)
                 {
-                    nextStatus = balanceStatus;
+                    nextStatus = status;
                 }
             }
             return nextStatus;
+        }
+
+        public void Discover(bool checkTalents = true)
+        {
+            if (Discovered) { return; }
+            Discovered = true;
+            if (checkTalents)
+            {
+                GameSession.GetSessionCrewCharacters().ForEach(c => c.CheckTalents(AbilityEffectType.OnLocationDiscovered, new Abilities.AbilityLocation(this)));
+            }
+        }
+
+        public void Reset()
+        {
+            if (Type != OriginalType)
+            {
+                ChangeType(OriginalType);
+                PendingLocationTypeChange = null;
+            }
+            CreateStore(force: true);
+            ClearMissions();
+            LevelData?.EventHistory?.Clear();
+            UnlockInitialMissions();
+            Discovered = false;
         }
 
         public XElement Save(Map map, XElement parentElement)

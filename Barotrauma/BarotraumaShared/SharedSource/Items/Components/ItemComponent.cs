@@ -613,7 +613,7 @@ namespace Barotrauma.Items.Components
             {
                 string errorMsg = "ItemComponent.DegreeOfSuccess failed (character was null).\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return 0.0f;
             }
 
@@ -631,6 +631,10 @@ namespace Barotrauma.Items.Components
         public virtual void FlipX(bool relativeToSub) { }
 
         public virtual void FlipY(bool relativeToSub) { }
+
+        public bool IsLoaded(Character user, bool checkContainedItems = true) =>
+            HasRequiredContainedItems(user, addMessage: false) &&
+            (!checkContainedItems || Item.OwnInventory == null || Item.OwnInventory.AllItems.Any(i => i.Condition > 0));
 
         public bool HasRequiredContainedItems(Character user, bool addMessage, string msg = null)
         {
@@ -711,7 +715,27 @@ namespace Barotrauma.Items.Components
 
             bool CheckItems(RelatedItem relatedItem, IEnumerable<Item> itemList)
             {
-                bool Predicate(Item it) => it != null && it.Condition > 0.0f && relatedItem.MatchesItem(it);
+                bool Predicate(Item it)
+                {
+                    if (it == null || it.Condition <= 0.0f || !relatedItem.MatchesItem(it)) { return false; }
+                    if (item.Submarine != null)
+                    {
+                        var idCard = it.GetComponent<IdCard>();
+                        if (idCard != null)
+                        {
+                            //id cards don't work in enemy subs (except on items that only require the default "idcard" tag)
+                            if (idCard.TeamID != CharacterTeamType.None && idCard.TeamID != item.Submarine.TeamID && relatedItem.Identifiers.Any(id => id != "idcard"))
+                            {
+                                return false;
+                            }
+                            else if (idCard.SubmarineSpecificID != 0 && item.Submarine.SubmarineSpecificIDTag != idCard.SubmarineSpecificID)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                };
                 bool shouldBreak = false;
                 bool inEditor = false;
 #if CLIENT
@@ -747,7 +771,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null, float applyOnUserFraction = 0.0f)
         {
             if (statusEffectLists == null) { return; }
 
@@ -759,7 +783,13 @@ namespace Barotrauma.Items.Components
             {
                 if (broken && !effect.AllowWhenBroken && effect.type != ActionType.OnBroken) { continue; }
                 if (user != null) { effect.SetUser(user); }
-                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, useTarget, false, false, worldPosition);
+                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, useTarget, isNetworkEvent: false, checkCondition: false, worldPosition);
+                if (user != null && applyOnUserFraction > 0.0f && effect.HasTargetType(StatusEffect.TargetType.Character))
+                {
+                    effect.AfflictionMultiplier = applyOnUserFraction;
+                    item.ApplyStatusEffect(effect, type, deltaTime, user, targetLimb == null ? null : user.AnimController.GetLimb(targetLimb.type), useTarget, false, false, worldPosition);
+                    effect.AfflictionMultiplier = 1.0f;
+                }
                 reducesCondition |= effect.ReducesItemCondition();
             }
             //if any of the effects reduce the item's condition, set the user for OnBroken effects as well
@@ -859,7 +889,7 @@ namespace Barotrauma.Items.Components
             {
                 DebugConsole.ThrowError("Error while loading entity of the type " + t + ".", e.InnerException);
                 GameAnalyticsManager.AddErrorEventOnce("ItemComponent.Load:TargetInvocationException" + item.Name + element.Name,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     "Error while loading entity of the type " + t + " (" + e.InnerException + ")\n" + Environment.StackTrace.CleanupStackTrace());
             }
 
@@ -939,7 +969,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ParseMsg()
+        public virtual void ParseMsg()
         {
             string msg = TextManager.Get(Msg, true);
             if (msg != null)
@@ -962,9 +992,9 @@ namespace Barotrauma.Items.Components
             AIObjectiveContainItem containObjective = null;
             if (character.AIController is HumanAIController aiController)
             {
-                containObjective = new AIObjectiveContainItem(character, container.GetContainableItemIdentifiers.ToArray(), container, currentObjective.objectiveManager, spawnItemIfNotFound: spawnItemIfNotFound)
+                containObjective = new AIObjectiveContainItem(character, container.ContainableItemIdentifiers.ToArray(), container, currentObjective.objectiveManager, spawnItemIfNotFound: spawnItemIfNotFound)
                 {
-                    targetItemCount = itemCount,
+                    ItemCount = itemCount,
                     Equip = equip,
                     RemoveEmpty = removeEmpty,
                     GetItemPriority = i =>

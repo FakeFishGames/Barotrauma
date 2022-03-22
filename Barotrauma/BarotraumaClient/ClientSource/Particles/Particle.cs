@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Reflection.Metadata;
 
 namespace Barotrauma.Particles
 {
@@ -15,6 +14,8 @@ namespace Barotrauma.Particles
 
         public delegate void OnChangeHullHandler(Vector2 position, Hull currentHull);
         public OnChangeHullHandler OnChangeHull;
+
+        public OnChangeHullHandler OnCollision;
 
         private Vector2 position;
         private Vector2 prevPosition;
@@ -105,8 +106,12 @@ namespace Barotrauma.Particles
         public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             this.prefab = prefab;
+#if DEBUG
             debugName = $"Particle ({prefab.Name})";
-
+#else
+            //don't instantiate new string objects in release builds
+            debugName = prefab.Name;
+#endif
             spriteIndex = Rand.Int(prefab.Sprites.Count);
 
             animState = 0;
@@ -166,6 +171,7 @@ namespace Barotrauma.Particles
             HighQualityCollisionDetection = false;
 
             OnChangeHull = null;
+            OnCollision = null;
 
             subEmitters.Clear();
             hasSubEmitters = false;
@@ -340,12 +346,20 @@ namespace Barotrauma.Particles
                 Vector2 collisionNormal = Vector2.Zero;
                 if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < hullRect.Y - hullRect.Height)
                 {
-                    if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
+                    if (prefab.DeleteOnCollision)
+                    {
+                        OnCollision?.Invoke(position, currentHull);
+                        return UpdateResult.Delete; 
+                    }
                     collisionNormal = new Vector2(0.0f, 1.0f);
                 }
                 else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > hullRect.Y)
                 {
-                    if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
+                    if (prefab.DeleteOnCollision)
+                    {
+                        OnCollision?.Invoke(position, currentHull);
+                        return UpdateResult.Delete; 
+                    }
                     collisionNormal = new Vector2(0.0f, -1.0f);
                 }
 
@@ -368,6 +382,7 @@ namespace Barotrauma.Particles
                     handleCollision(gapFound, collisionNormal);
                 }
 
+                collisionNormal = Vector2.Zero;
                 if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < hullRect.X)
                 {
                     if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
@@ -487,6 +502,8 @@ namespace Barotrauma.Particles
                 velocity.Y = Math.Sign(collisionNormal.Y) * Math.Abs(velocity.Y) * prefab.Restitution;
             }
 
+            OnCollision?.Invoke(position, currentHull);
+
             velocity += subVel;
         }
 
@@ -522,6 +539,8 @@ namespace Barotrauma.Particles
                 velocity.X = -velocity.X * prefab.Restitution;
                 velocity.Y *= (1.0f - prefab.Friction);
             }
+
+            OnCollision?.Invoke(position, currentHull);
 
             velocity *= prefab.Restitution;
         }

@@ -108,6 +108,10 @@ namespace Barotrauma.Networking
 
         private readonly ServerPeer peer;
 
+#if DEBUG
+        public float StallPacketsTime { get; set; }
+#endif
+
         public List<FileTransferOut> ActiveTransfers
         {
             get { return activeTransfers; }
@@ -264,6 +268,9 @@ namespace Barotrauma.Networking
                 }
 
                 peer.Send(message, transfer.Connection, DeliveryMethod.Unreliable);
+#if DEBUG
+                transfer.WaitTimer = Math.Max(transfer.WaitTimer, StallPacketsTime);
+#endif
             }
 
             catch (Exception e)
@@ -271,7 +278,7 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("FileSender threw an exception when trying to send data", e);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "FileSender.Update:Exception",
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     "FileSender threw an exception when trying to send data:\n" + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
                 transfer.Status = FileTransferStatus.Error;
                 return;

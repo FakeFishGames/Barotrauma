@@ -1,4 +1,6 @@
 ﻿using Barotrauma.Networking;
+using System.Globalization;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -11,11 +13,58 @@ namespace Barotrauma
             get { return itemData != null; }
         }
 
-        partial void InitProjSpecific(Client client)
+        public CharacterCampaignData(Client client)
         {
+            Name = client.Name;
             ClientEndPoint = client.Connection.EndPointString;
             SteamID = client.SteamID;
             CharacterInfo = client.CharacterInfo;
+
+            healthData = new XElement("health");
+            client.Character?.CharacterHealth?.Save(healthData);
+            if (client.Character?.Inventory != null)
+            {
+                itemData = new XElement("inventory");
+                Character.SaveInventory(client.Character.Inventory, itemData);
+            }
+            OrderData = new XElement("orders");
+            if (client.CharacterInfo != null)
+            {
+                CharacterInfo.SaveOrderData(client.CharacterInfo, OrderData);
+            }
+        }
+
+
+        public CharacterCampaignData(XElement element)
+        {
+            Name = element.GetAttributeString("name", "Unnamed");
+            ClientEndPoint = element.GetAttributeString("endpoint", null) ?? element.GetAttributeString("ip", "");
+            string steamID = element.GetAttributeString("steamid", "");
+            if (!string.IsNullOrEmpty(steamID))
+            {
+                ulong.TryParse(steamID, out ulong parsedID);
+                SteamID = parsedID;
+            }
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "character":
+                    case "characterinfo":
+                        CharacterInfo = new CharacterInfo(subElement);
+                        break;
+                    case "inventory":
+                        itemData = subElement;
+                        break;
+                    case "health":
+                        healthData = subElement;
+                        break;
+                    case "orders":
+                        OrderData = subElement;
+                        break;
+                }
+            }
         }
 
         public bool MatchesClient(Client client)
@@ -56,6 +105,6 @@ namespace Barotrauma
         public void ApplyOrderData(Character character)
         {
             CharacterInfo.ApplyOrderData(character, OrderData);
-        } 
+        }
     }
 }

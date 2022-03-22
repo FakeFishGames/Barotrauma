@@ -96,6 +96,13 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize(500.0f, true)]
+        public float MaximumOlympianSkill
+        {
+            get;
+            set;
+        }
+
         private SkillSettings(XElement element)
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);

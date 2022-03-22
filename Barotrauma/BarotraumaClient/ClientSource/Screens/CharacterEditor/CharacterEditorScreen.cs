@@ -182,7 +182,7 @@ namespace Barotrauma.CharacterEditor
             showSpritesheet = false;
             isFrozen = false;
             autoFreeze = false;
-            limbPairEditing = true;
+            limbPairEditing = false;
             uniformScaling = true;
             lockSpriteOrigin = true;
             lockSpritePosition = false;
@@ -483,24 +483,20 @@ namespace Barotrauma.CharacterEditor
                     // It's possible that the physics are disabled, because the angle widgets handle input logic in the draw method (which they shouldn't)
                     character.AnimController.Collider.PhysEnabled = true;
                 }
-                if (character.IsHumanoid)
+                animTestPoseToggle.Enabled = CurrentAnimation.IsGroundedAnimation;
+                if (animTestPoseToggle.Enabled)
                 {
-                    animTestPoseToggle.Enabled = CurrentAnimation.IsGroundedAnimation;
-                    if (animTestPoseToggle.Enabled)
+                    if (PlayerInput.KeyHit(Keys.X))
                     {
-                        if (PlayerInput.KeyHit(Keys.X))
-                        {
-                            SetToggle(animTestPoseToggle, !animTestPoseToggle.Selected);
-                        }
+                        SetToggle(animTestPoseToggle, !animTestPoseToggle.Selected);
                     }
-                    else
-                    {
-                        animTestPoseToggle.Selected = false;
-                    }
+                }
+                else
+                {
+                    animTestPoseToggle.Selected = false;
                 }
                 if (PlayerInput.KeyHit(InputType.Run))
                 {
-                    // TODO: refactor this horrible hacky index manipulation mess
                     int index = 0;
                     bool isSwimming = character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast || character.AnimController.ForceSelectAnimationType == AnimationType.SwimSlow;
                     bool isMovingFast = character.AnimController.ForceSelectAnimationType == AnimationType.Run || character.AnimController.ForceSelectAnimationType == AnimationType.SwimFast;
@@ -508,23 +504,25 @@ namespace Barotrauma.CharacterEditor
                     {
                         if (isSwimming || !character.AnimController.CanWalk)
                         {
-                            index = !character.AnimController.CanWalk ? 0 : (int)AnimationType.SwimSlow - 1;
+                            index = !character.AnimController.CanWalk ? (int)AnimationType.SwimFast : (int)AnimationType.SwimSlow;
                         }
                         else
                         {
-                            index = (int)AnimationType.Walk - 1;
+                            index = (int)AnimationType.Walk;
                         }
+                        index -= 1;
                     }
                     else
                     {
                         if (isSwimming || !character.AnimController.CanWalk)
                         {
-                            index = !character.AnimController.CanWalk ? 1 : (int)AnimationType.SwimFast - 1;
+                            index = !character.AnimController.CanWalk ? (int)AnimationType.SwimSlow : (int)AnimationType.SwimFast;
                         }
                         else
                         {
-                            index = (int)AnimationType.Run - 1;
+                            index = (int)AnimationType.Run;
                         }
+                        index -= 1;
                     }
                     if (animSelection.SelectedIndex != index)
                     {
@@ -707,7 +705,7 @@ namespace Barotrauma.CharacterEditor
                 {
                     string errorMsg = "Attempted to modify the state of the physics simulation while a time step was running.";
                     DebugConsole.ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("CharacterEditorScreen.Update:WorldLockedException" + e.Message, GameAnalyticsSDK.Net.EGAErrorSeverity.Critical, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("CharacterEditorScreen.Update:WorldLockedException" + e.Message, GameAnalyticsManager.ErrorSeverity.Critical, errorMsg);
                 }
             }
             // Camera
@@ -1072,7 +1070,7 @@ namespace Barotrauma.CharacterEditor
                     {
                         if (jointCreationMode == JointCreationMode.Create)
                         {
-                            jointEndLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => l != null && l != jointStartLimb && l.ActiveSprite != null);
+                            jointEndLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => l != null && l != jointStartLimb && l.ActiveSprite != null && !l.Hidden);
                             if (jointEndLimb != null && PlayerInput.PrimaryMouseButtonClicked())
                             {
                                 Vector2 anchor1 = anchor1Pos.HasValue ? anchor1Pos.Value / spriteSheetZoom : Vector2.Zero;
@@ -1085,7 +1083,7 @@ namespace Barotrauma.CharacterEditor
                         }
                         else if (PlayerInput.PrimaryMouseButtonClicked())
                         {
-                            jointStartLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => selectedLimbs.Contains(l));
+                            jointStartLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => selectedLimbs.Contains(l) && !l.Hidden);
                             anchor1Pos = GetLimbSpritesheetRect(jointStartLimb).Center.ToVector2() - PlayerInput.MousePosition;
                             jointCreationMode = JointCreationMode.Create;
                         }
@@ -1094,7 +1092,7 @@ namespace Barotrauma.CharacterEditor
                     {
                         if (jointCreationMode == JointCreationMode.Create)
                         {
-                            jointEndLimb = GetClosestLimbOnRagdoll(PlayerInput.MousePosition, l => l != null && l != jointStartLimb && l.ActiveSprite != null);
+                            jointEndLimb = GetClosestLimbOnRagdoll(PlayerInput.MousePosition, l => l != null && l != jointStartLimb && l.ActiveSprite != null && !l.Hidden);
                             if (jointEndLimb != null && PlayerInput.PrimaryMouseButtonClicked())
                             {
                                 Vector2 anchor1 = anchor1Pos ?? Vector2.Zero;
@@ -1105,7 +1103,7 @@ namespace Barotrauma.CharacterEditor
                         }
                         else if (PlayerInput.PrimaryMouseButtonClicked())
                         {
-                            jointStartLimb = GetClosestLimbOnRagdoll(PlayerInput.MousePosition, l => selectedLimbs.Contains(l));
+                            jointStartLimb = GetClosestLimbOnRagdoll(PlayerInput.MousePosition, l => selectedLimbs.Contains(l) && !l.Hidden);
                             anchor1Pos = ConvertUnits.ToDisplayUnits(jointStartLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
                             jointCreationMode = JointCreationMode.Create;
                         }
@@ -1185,8 +1183,15 @@ namespace Barotrauma.CharacterEditor
 
         private void CreateLimb(XElement newElement)
         {
-            var lastLimbElement = RagdollParams.MainElement.Elements("limb").Last();
-            lastLimbElement.AddAfterSelf(newElement);
+            var lastElement = RagdollParams.MainElement.GetChildElements("limb").LastOrDefault();
+            if (lastElement != null)
+            {
+                lastElement.AddAfterSelf(newElement);
+            }
+            else
+            {
+                RagdollParams.MainElement.AddFirst(newElement);
+            }
             var newLimbParams = new RagdollParams.LimbParams(newElement, RagdollParams);
             RagdollParams.Limbs.Add(newLimbParams);
             character.AnimController.Recreate();
@@ -1217,12 +1222,7 @@ namespace Barotrauma.CharacterEditor
                 new XAttribute("limb1anchor", $"{a1.X.Format(2)}, {a1.Y.Format(2)}"),
                 new XAttribute("limb2anchor", $"{a2.X.Format(2)}, {a2.Y.Format(2)}")
                 );
-            var lastJointElement = RagdollParams.MainElement.Elements("joint").LastOrDefault();
-            if (lastJointElement == null)
-            {
-                // If no joints exist, use the last limb element.
-                lastJointElement = RagdollParams.MainElement.Elements("limb").LastOrDefault();
-            }
+            var lastJointElement = RagdollParams.MainElement.GetChildElements("joint").LastOrDefault() ?? RagdollParams.MainElement.GetChildElements("limb").LastOrDefault();
             if (lastJointElement == null)
             {
                 DebugConsole.ThrowError(GetCharacterEditorTranslation("CantAddJointsNoLimbElements"));
@@ -1581,7 +1581,6 @@ namespace Barotrauma.CharacterEditor
             Character.Controlled = character;
             SetWallCollisions(character.AnimController.forceStanding);
             CreateTextures();
-            limbPairEditing = character.IsHumanoid;
             CreateGUI();
             ClearWidgets();
             ClearSelection();
@@ -1805,6 +1804,9 @@ namespace Barotrauma.CharacterEditor
                         case AnimationType.Run:
                             if (!ragdollParams.CanWalk) { continue; }
                             break;
+                        case AnimationType.Crouch:
+                            if (!ragdollParams.CanWalk || !isHumanoid) { continue; }
+                            break;
                         case AnimationType.SwimSlow:
                         case AnimationType.SwimFast:
                             break;
@@ -1819,8 +1821,8 @@ namespace Barotrauma.CharacterEditor
             {
                 AllFiles.Add(configFilePath);
             }
-            limbPairEditing = false;
             SpawnCharacter(configFilePath, ragdollParams);
+            limbPairEditing = false;
             limbsToggle.Selected = true;
             recalculateColliderToggle.Selected = true;
             lockSpriteOriginToggle.Selected = false;
@@ -2196,7 +2198,7 @@ namespace Barotrauma.CharacterEditor
             animTestPoseToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AnimationTestPose"))
             {
                 Selected = character.AnimController.AnimationTestPose,
-                Enabled = character.IsHumanoid,
+                Enabled = true,
                 OnSelected = box =>
                 {
                     character.AnimController.AnimationTestPose = box.Selected;
@@ -2599,11 +2601,15 @@ namespace Barotrauma.CharacterEditor
             var layoutGroupAnimation = new GUILayoutGroup(new RectTransform(Vector2.One, animationControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
             var animationSelectionElement = new GUIFrame(new RectTransform(new Point(elementSize.X * 2 - (int)(5 * GUI.xScale), elementSize.Y), layoutGroupAnimation.RectTransform), style: null);
             var animationSelectionText = new GUITextBlock(new RectTransform(new Point(elementSize.X, elementSize.Y), animationSelectionElement.RectTransform), GetCharacterEditorTranslation("SelectedAnimation") + ": ", Color.WhiteSmoke, textAlignment: Alignment.Center);
-            animSelection = new GUIDropDown(new RectTransform(new Point((int)(100 * GUI.xScale), elementSize.Y), animationSelectionElement.RectTransform, Anchor.TopRight), elementCount: 4);
+            animSelection = new GUIDropDown(new RectTransform(new Point((int)(100 * GUI.xScale), elementSize.Y), animationSelectionElement.RectTransform, Anchor.TopRight), elementCount: 5);
             if (character.AnimController.CanWalk)
             {
                 animSelection.AddItem(AnimationType.Walk.ToString(), AnimationType.Walk);
                 animSelection.AddItem(AnimationType.Run.ToString(), AnimationType.Run);
+                if (character.IsHumanoid)
+                {
+                    animSelection.AddItem(AnimationType.Crouch.ToString(), AnimationType.Crouch);
+                }
             }
             animSelection.AddItem(AnimationType.SwimSlow.ToString(), AnimationType.SwimSlow);
             animSelection.AddItem(AnimationType.SwimFast.ToString(), AnimationType.SwimFast);
@@ -2622,25 +2628,15 @@ namespace Barotrauma.CharacterEditor
                 switch (character.AnimController.ForceSelectAnimationType)
                 {
                     case AnimationType.Walk:
-                        character.AnimController.forceStanding = true;
-                        character.ForceRun = false;
-                        if (!wallCollisionsEnabled)
-                        {
-                            SetWallCollisions(true);
-                        }
-                        if (previousAnim != AnimationType.Walk && previousAnim != AnimationType.Run)
-                        {
-                            TeleportTo(spawnPosition);
-                        }
-                        break;
                     case AnimationType.Run:
+                    case AnimationType.Crouch:
                         character.AnimController.forceStanding = true;
-                        character.ForceRun = true;
+                        character.ForceRun = character.AnimController.ForceSelectAnimationType == AnimationType.Run;
                         if (!wallCollisionsEnabled)
                         {
                             SetWallCollisions(true);
                         }
-                        if (previousAnim != AnimationType.Walk && previousAnim != AnimationType.Run)
+                        if (previousAnim != AnimationType.Walk && previousAnim != AnimationType.Run && previousAnim != AnimationType.Crouch)
                         {
                             TeleportTo(spawnPosition);
                         }
@@ -2696,7 +2692,15 @@ namespace Barotrauma.CharacterEditor
             characterDropDown.SelectItem(currentCharacterConfig);
             characterDropDown.OnSelected = (component, data) =>
             {
-                SpawnCharacter((string)data);
+                string configFile = (string)data;
+                try
+                {
+                    SpawnCharacter(configFile);
+                }
+                catch (Exception e)
+                {
+                    HandleSpawnException(configFile, e);
+                }
                 return true;
             };
             if (currentCharacterConfig == CharacterPrefab.HumanConfigFile)
@@ -2725,19 +2729,48 @@ namespace Barotrauma.CharacterEditor
             prevCharacterButton.TextBlock.AutoScaleHorizontal = true;
             prevCharacterButton.OnClicked += (b, obj) =>
             {
-                SpawnCharacter(GetPreviousConfigFile());
+                string configFile = GetPreviousConfigFile();
+                try
+                {
+                    SpawnCharacter(configFile);
+                }
+                catch (Exception e)
+                {
+                    HandleSpawnException(configFile, e);
+                }
                 return true;
             };
             var nextCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), charButtons.RectTransform, Anchor.TopRight), GetCharacterEditorTranslation("NextCharacter"));
             prevCharacterButton.TextBlock.AutoScaleHorizontal = true;
             nextCharacterButton.OnClicked += (b, obj) =>
             {
-                SpawnCharacter(GetNextConfigFile());
+                string configFile = GetNextConfigFile();
+                try
+                {
+                    SpawnCharacter(configFile);
+                }
+                catch (Exception e)
+                {
+                    HandleSpawnException(configFile, e);
+                }
                 return true;
             };
             charButtons.RectTransform.MinSize = new Point(0, prevCharacterButton.RectTransform.MinSize.Y);
             characterPanelToggle = new ToggleButton(new RectTransform(new Vector2(0.08f, 1), characterSelectionPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
             characterSelectionPanel.RectTransform.MinSize = new Point(0, (int)(content.RectTransform.Children.Sum(c => c.MinSize.Y) * 1.2f));
+
+            void HandleSpawnException(string configFile, Exception e)
+            {
+                if (configFile != CharacterPrefab.HumanConfigFile)
+                {
+                    DebugConsole.ThrowError($"Failed to spawn the character \"{configFile}\".", e);
+                    SpawnCharacter(CharacterPrefab.HumanConfigFile);
+                }
+                else
+                {
+                    throw new Exception($"Failed to spawn the character \"{configFile}\".", innerException: e);
+                }
+            }
         }
 
         private void CreateFileEditPanel()
@@ -2766,7 +2799,7 @@ namespace Barotrauma.CharacterEditor
                     return false;
                 }
 #endif
-                if (!string.IsNullOrEmpty(RagdollParams.Texture) && !File.Exists(RagdollParams.Texture))
+                if (!character.IsHuman && !string.IsNullOrEmpty(RagdollParams.Texture) && !File.Exists(RagdollParams.Texture))
                 {
                     DebugConsole.ThrowError($"Invalid texture path: {RagdollParams.Texture}");
                     return false;
@@ -3046,21 +3079,24 @@ namespace Barotrauma.CharacterEditor
                 loadBox.Buttons[1].OnClicked += (btn, data) =>
                 {
                     string fileName = Path.GetFileNameWithoutExtension(selectedFile);
-                    if (character.IsHumanoid)
+                    if (character.IsHumanoid && character.AnimController is HumanoidAnimController humanAnimController)
                     {
                         switch (selectedType)
                         {
                             case AnimationType.Walk:
-                                character.AnimController.WalkParams = HumanWalkParams.GetAnimParams(character, fileName);
+                                humanAnimController.WalkParams = HumanWalkParams.GetAnimParams(character, fileName);
                             break;
                             case AnimationType.Run:
-                                character.AnimController.RunParams = HumanRunParams.GetAnimParams(character, fileName);
+                                humanAnimController.RunParams = HumanRunParams.GetAnimParams(character, fileName);
+                                break;
+                            case AnimationType.Crouch:
+                                humanAnimController.HumanCrouchParams = HumanCrouchParams.GetAnimParams(character, fileName);
                                 break;
                             case AnimationType.SwimSlow:
-                                character.AnimController.SwimSlowParams = HumanSwimSlowParams.GetAnimParams(character, fileName);
+                                humanAnimController.SwimSlowParams = HumanSwimSlowParams.GetAnimParams(character, fileName);
                                 break;
                             case AnimationType.SwimFast:
-                                character.AnimController.SwimFastParams = HumanSwimFastParams.GetAnimParams(character, fileName);
+                                humanAnimController.SwimFastParams = HumanSwimFastParams.GetAnimParams(character, fileName);
                                 break;
                             default:
                                 DebugConsole.ThrowError(GetCharacterEditorTranslation("AnimationTypeNotImplemented").Replace("[type]", selectedType.ToString()));
@@ -3866,7 +3902,7 @@ namespace Barotrauma.CharacterEditor
             {
                 // Head angle
                 DrawRadialWidget(spriteBatch, SimToScreen(head.SimPosition), animParams.HeadAngle, GetCharacterEditorTranslation("HeadAngle"), Color.White,
-                    angle => TryUpdateAnimParam("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
+                    angle => TryUpdateAnimParam("headangle", angle), circleRadius: 25, rotationOffset: -collider.Rotation + head.Params.GetSpriteOrientation() * dir, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
                 // Head position and leaning
                 Color color = GUI.Style.Red;
                 if (animParams.IsGroundedAnimation)
@@ -3975,7 +4011,7 @@ namespace Barotrauma.CharacterEditor
                 }
                 // Torso angle
                 DrawRadialWidget(spriteBatch, SimToScreen(referencePoint), animParams.TorsoAngle, GetCharacterEditorTranslation("TorsoAngle"), Color.White,
-                    angle => TryUpdateAnimParam("torsoangle", angle), rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
+                    angle => TryUpdateAnimParam("torsoangle", angle), rotationOffset: -collider.Rotation + torso.Params.GetSpriteOrientation() * dir, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
                 Color color = Color.DodgerBlue;
                 if (animParams.IsGroundedAnimation)
                 {
@@ -4078,7 +4114,7 @@ namespace Barotrauma.CharacterEditor
             if (tail != null && fishParams != null)
             {
                 DrawRadialWidget(spriteBatch, SimToScreen(tail.SimPosition), fishParams.TailAngle, GetCharacterEditorTranslation("TailAngle"), Color.White,
-                    angle => TryUpdateAnimParam("tailangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
+                    angle => TryUpdateAnimParam("tailangle", angle), circleRadius: 25, rotationOffset: -collider.Rotation + tail.Params.GetSpriteOrientation() * dir, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
             }
             // Foot angle
             if (foot != null)
@@ -4104,13 +4140,13 @@ namespace Barotrauma.CharacterEditor
                                 fishParams.FootAnglesInRadians[limb.Params.ID] = MathHelper.ToRadians(angle);
                                 TryUpdateAnimParam("footangles", fishParams.FootAngles);
                             },
-                            circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0, wrapAnglePi: true, autoFreeze: true);
+                            circleRadius: 25, rotationOffset: -collider.Rotation + limb.Params.GetSpriteOrientation() * dir, clockWise: dir < 0, wrapAnglePi: true, autoFreeze: true);
                     }
                 }
                 else if (humanParams != null)
                 {
                     DrawRadialWidget(spriteBatch, SimToScreen(foot.SimPosition), humanParams.FootAngle, GetCharacterEditorTranslation("FootAngle"), Color.White,
-                        angle => TryUpdateAnimParam("footangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true);
+                        angle => TryUpdateAnimParam("footangle", angle), circleRadius: 25, rotationOffset: -collider.Rotation + foot.Params.GetSpriteOrientation() * dir, clockWise: dir > 0, wrapAnglePi: true);
                 }
                 // Grounded only
                 if (groundedParams != null)
@@ -4152,7 +4188,7 @@ namespace Barotrauma.CharacterEditor
                         float offset = 0.1f;
                         w.refresh = () =>
                         {
-                            var refPoint = SimToScreen(collider.SimPosition + GetSimSpaceForward() * offset);
+                            var refPoint = SimToScreen(character.AnimController.Collider.SimPosition + GetSimSpaceForward() * offset);
                             var handMovement = ConvertUnits.ToDisplayUnits(humanGroundedParams.HandMoveAmount);
                             w.DrawPos = refPoint + new Vector2(handMovement.X * character.AnimController.Dir, handMovement.Y) * Cam.Zoom;
                         };
@@ -4167,7 +4203,7 @@ namespace Barotrauma.CharacterEditor
                         {
                             if (w.IsSelected)
                             {
-                                GUI.DrawLine(sp, w.DrawPos, SimToScreen(collider.SimPosition + GetSimSpaceForward() * offset), GUI.Style.Green);
+                                GUI.DrawLine(sp, w.DrawPos, SimToScreen(character.AnimController.Collider.SimPosition + GetSimSpaceForward() * offset), GUI.Style.Green);
                             }
                         };
                     }).Draw(spriteBatch, deltaTime);
@@ -4731,7 +4767,7 @@ namespace Barotrauma.CharacterEditor
                             rotation: 0,
                             origin: orig,
                             sourceRectangle: wearable.InheritSourceRect ? limb.ActiveSprite.SourceRect : wearable.Sprite.SourceRect,
-                            scale: (wearable.InheritTextureScale ? 1 : wearable.Scale / RagdollParams.TextureScale) * spriteSheetZoom,
+                            scale: (wearable.InheritScale ? 1 : wearable.Scale / RagdollParams.TextureScale) * spriteSheetZoom,
                             effects: SpriteEffects.None,
                             color: Color.White,
                             layerDepth: 0);

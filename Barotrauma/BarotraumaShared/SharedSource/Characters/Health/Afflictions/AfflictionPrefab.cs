@@ -1,10 +1,10 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Abilities;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using System.Linq;
-using System.Security.Cryptography;
 
 namespace Barotrauma
 {
@@ -91,9 +91,16 @@ namespace Barotrauma
                 AttachLimbType = LimbType.None;
             }
 
+            TransferBuffs = element.GetAttributeBool("transferbuffs", true);
             SendMessages = element.GetAttributeBool("sendmessages", true);
             CauseSpeechImpediment = element.GetAttributeBool("causespeechimpediment", true);
             NeedsAir = element.GetAttributeBool("needsair", false);
+            ControlHusk = element.GetAttributeBool("controlhusk", false);
+
+            DormantThreshold = element.GetAttributeFloat("dormantthreshold", MaxStrength * 0.5f);
+            ActiveThreshold = element.GetAttributeFloat("activethreshold", MaxStrength * 0.75f);
+            TransitionThreshold = element.GetAttributeFloat("transitionthreshold", MaxStrength);
+            TransformThresholdOnDeath = element.GetAttributeFloat("transformthresholdondeath", ActiveThreshold);
         }
 
         // Use any of these to define which limb the appendage is attached to.
@@ -102,13 +109,18 @@ namespace Barotrauma
         public readonly string AttachLimbName;
         public readonly LimbType AttachLimbType;
 
+        public float ActiveThreshold, DormantThreshold, TransitionThreshold;
+        public float TransformThresholdOnDeath;
+
         public readonly string HuskedSpeciesName;
         public readonly string[] TargetSpecies;
         public const string Tag = "[speciesname]";
 
+        public readonly bool TransferBuffs;
         public readonly bool SendMessages;
         public readonly bool CauseSpeechImpediment;
         public readonly bool NeedsAir;
+        public readonly bool ControlHusk;
     }
 
     class AfflictionPrefab : IPrefab, IDisposable, IHasUintIdentifier
@@ -116,83 +128,132 @@ namespace Barotrauma
         public class Effect
         {
             //this effect is applied when the strength is within this range
-            public float MinStrength, MaxStrength;
+            [Serialize(0.0f, false)]
+            public float MinStrength { get; private set; }
 
-            public readonly float MinVitalityDecrease = 0.0f;
-            public readonly float MaxVitalityDecrease = 0.0f;
-            
+            [Serialize(0.0f, false)]
+            public float MaxStrength { get; private set; }
+
+            [Serialize(0.0f, false)]
+            public float MinVitalityDecrease { get; private set; }
+
+            [Serialize(0.0f, false)]
+            public float MaxVitalityDecrease { get; private set; }
+
             //how much the strength of the affliction changes per second
-            public readonly float StrengthChange = 0.0f;
+            [Serialize(0.0f, false)]
+            public float StrengthChange { get; private set; }
 
-            public readonly bool MultiplyByMaxVitality;
+            [Serialize(false, false)]
+            public bool MultiplyByMaxVitality { get; private set; }
 
-            public float MinScreenBlurStrength, MaxScreenBlurStrength;
-            public float MinScreenDistortStrength, MaxScreenDistortStrength;
-            public float MinGrainStrength, MaxGrainStrength;
-            public float MinRadialDistortStrength, MaxRadialDistortStrength;
-            public float MinChromaticAberrationStrength, MaxChromaticAberrationStrength;
-            public float MinSpeedMultiplier, MaxSpeedMultiplier;
-            public float MinBuffMultiplier, MaxBuffMultiplier;
+            [Serialize(0.0f, false)]
+            public float MinScreenBlur { get; private set; }
 
-            public float MinSkillMultiplier, MaxSkillMultiplier;
+            [Serialize(0.0f, false)]
+            public float MaxScreenBlur { get; private set; }
 
-            public float MinResistance, MaxResistance;
-            public string ResistanceFor;
-            public string DialogFlag;
+            [Serialize(0.0f, false)]
+            public float MinScreenDistort { get; private set; }
+
+            [Serialize(0.0f, false)]
+            public float MaxScreenDistort { get; private set; }
+
+            [Serialize(0.0f, false)]
+            public float MinRadialDistort { get; private set; }
+
+            [Serialize(0.0f, false)]
+            public float MaxRadialDistort { get; private set; }
+
+            [Serialize(0.0f, false)]
+            public float MinChromaticAberration { get; private set; }
+
+            [Serialize(0.0f, false)]
+            public float MaxChromaticAberration { get; private set; }
+
+            [Serialize("255,255,255,255", false)]
+            public Color GrainColor { get; private set; }
+
+            [Serialize(0.0f, false)]
+            public float MinGrainStrength { get; private set; }
+
+            [Serialize(0.0f, false)]
+            public float MaxGrainStrength { get; private set; }
+
+            [Serialize(0.0f, false)]
+            public float ScreenEffectFluctuationFrequency { get; private set; }
+
+            [Serialize(1.0f, false)]
+            public float MinAfflictionOverlayAlphaMultiplier { get; private set; }
+
+            [Serialize(1.0f, false)]
+            public float MaxAfflictionOverlayAlphaMultiplier { get; private set; }
+
+            [Serialize(1.0f, false)]
+            public float MinBuffMultiplier { get; private set; }
+
+            [Serialize(1.0f, false)]
+            public float MaxBuffMultiplier { get; private set; }
+
+            [Serialize(1.0f, false)]
+            public float MinSpeedMultiplier { get; private set; }
+
+            [Serialize(1.0f, false)]
+            public float MaxSpeedMultiplier { get; private set; }
+
+            [Serialize(1.0f, false)]
+            public float MinSkillMultiplier { get; private set; }
+
+            [Serialize(1.0f, false)]
+            public float MaxSkillMultiplier { get; private set; }
+
+            private readonly string[] resistanceFor;
+            public IEnumerable<string> ResistanceFor 
+            {
+                get { return resistanceFor; }
+            }
+
+            [Serialize(0.0f, false)]
+            public float MinResistance { get; private set; }
+
+            [Serialize(0.0f, false)]
+            public float MaxResistance { get; private set; }
+
+            [Serialize("", false)]
+            public string DialogFlag { get; private set; }
+
+            [Serialize("", false)]
+            public string Tag { get; private set; }
+
+            [Serialize("0,0,0,0", false)]
+            public Color MinFaceTint { get; private set; }
+
+            [Serialize("0,0,0,0", false)]
+            public Color MaxFaceTint { get; private set; }
+
+            [Serialize("0,0,0,0", false)]
+            public Color MinBodyTint { get; private set; }
+
+            [Serialize("0,0,0,0", false)]
+            public Color MaxBodyTint { get; private set; }
+
+            /// <summary>
+            /// Prevents AfflictionHusks with the specified identifier(s) from transforming the character into an AI-controlled character
+            /// </summary>
+            public string[] BlockTransformation { get; private set; }
+
+            public readonly Dictionary<StatTypes, (float minValue, float maxValue)> AfflictionStatValues = new Dictionary<StatTypes, (float minValue, float maxValue)>();
+            public readonly HashSet<AbilityFlags> AfflictionAbilityFlags = new HashSet<AbilityFlags>();
 
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
             public Effect(XElement element, string parentDebugName)
             {
-                MinStrength =  element.GetAttributeFloat("minstrength", 0);
-                MaxStrength =  element.GetAttributeFloat("maxstrength", 0);
+                SerializableProperty.DeserializeProperties(this, element);
 
-                MultiplyByMaxVitality = element.GetAttributeBool("multiplybymaxvitality", false);
-
-                MinVitalityDecrease = element.GetAttributeFloat("minvitalitydecrease", 0.0f);
-                MaxVitalityDecrease = element.GetAttributeFloat("maxvitalitydecrease", 0.0f);
-                MaxVitalityDecrease = Math.Max(MinVitalityDecrease, MaxVitalityDecrease);
-
-                MinScreenDistortStrength = element.GetAttributeFloat("minscreendistort", 0.0f);
-                MaxScreenDistortStrength = element.GetAttributeFloat("maxscreendistort", 0.0f);
-                MaxScreenDistortStrength = Math.Max(MinScreenDistortStrength, MaxScreenDistortStrength);
-
-                MinRadialDistortStrength = element.GetAttributeFloat("minradialdistort", 0.0f);
-                MaxRadialDistortStrength = element.GetAttributeFloat("maxradialdistort", 0.0f);
-                MaxRadialDistortStrength = Math.Max(MinRadialDistortStrength, MaxRadialDistortStrength);
-
-                MinChromaticAberrationStrength = element.GetAttributeFloat("minchromaticaberration", 0.0f);
-                MaxChromaticAberrationStrength = element.GetAttributeFloat("maxchromaticaberration", 0.0f);
-                MaxChromaticAberrationStrength = Math.Max(MinChromaticAberrationStrength, MaxChromaticAberrationStrength);
-
-                MinGrainStrength = element.GetAttributeFloat(nameof(MinGrainStrength).ToLower(), 0.0f);
-                MaxGrainStrength = element.GetAttributeFloat(nameof(MaxGrainStrength).ToLower(), 0.0f);
-                MaxGrainStrength = Math.Max(MinGrainStrength, MaxGrainStrength);
-
-                MinScreenBlurStrength = element.GetAttributeFloat("minscreenblur", 0.0f);
-                MaxScreenBlurStrength = element.GetAttributeFloat("maxscreenblur", 0.0f);
-                MaxScreenBlurStrength = Math.Max(MinScreenBlurStrength, MaxScreenBlurStrength);
-
-                MinSkillMultiplier = element.GetAttributeFloat("minskillmultiplier", 1.0f);
-                MaxSkillMultiplier = element.GetAttributeFloat("maxskillmultiplier", 1.0f);
-
-                ResistanceFor = element.GetAttributeString("resistancefor", "");
-                MinResistance = element.GetAttributeFloat("minresistance", 0.0f);
-                MaxResistance = element.GetAttributeFloat("maxresistance", 0.0f);
-                MaxResistance = Math.Max(MinResistance, MaxResistance);
-
-                MinSpeedMultiplier = element.GetAttributeFloat("minspeedmultiplier", 1.0f);
-                MaxSpeedMultiplier = element.GetAttributeFloat("maxspeedmultiplier", 1.0f);
-                MaxSpeedMultiplier = Math.Max(MinSpeedMultiplier, MaxSpeedMultiplier);
-
-                MinBuffMultiplier = element.GetAttributeFloat("minbuffmultiplier", 1.0f);
-                MaxBuffMultiplier = element.GetAttributeFloat("maxbuffmultiplier", 1.0f);
-                MaxBuffMultiplier = Math.Max(MinBuffMultiplier, MaxBuffMultiplier);
-
-                DialogFlag = element.GetAttributeString("dialogflag", "");
-
-                StrengthChange = element.GetAttributeFloat("strengthchange", 0.0f);
+                resistanceFor = element.GetAttributeStringArray("resistancefor", new string[0], convertToLowerInvariant: true);
+                BlockTransformation = element.GetAttributeStringArray("blocktransformation", new string[0], convertToLowerInvariant: true);
 
                 foreach (XElement subElement in element.Elements())
                 {
@@ -200,6 +261,22 @@ namespace Barotrauma
                     {
                         case "statuseffect":
                             StatusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
+                            break;
+                        case "statvalue":
+                            var statType = CharacterAbilityGroup.ParseStatType(subElement.GetAttributeString("stattype", ""), parentDebugName);
+
+                            float defaultValue = subElement.GetAttributeFloat("value", 0f);
+                            float minValue = subElement.GetAttributeFloat("minvalue", defaultValue);
+                            float maxValue = subElement.GetAttributeFloat("maxvalue", defaultValue);
+
+                            AfflictionStatValues.TryAdd(statType, (minValue, maxValue));
+                            break;
+                        case "abilityflag":
+                            var flagType = CharacterAbilityGroup.ParseFlagType(subElement.GetAttributeString("flagtype", ""), parentDebugName);
+                            AfflictionAbilityFlags.Add(flagType);
+                            break;
+                        case "affliction":
+                            DebugConsole.AddWarning($"Error in affliction \"{parentDebugName}\" - additional afflictions caused by the affliction should be configured inside status effects.");
                             break;
                     }
                 }
@@ -316,6 +393,9 @@ namespace Barotrauma
 
         public readonly Sprite Icon;
         public readonly Color[] IconColors;
+
+        public readonly Sprite AfflictionOverlay;
+        public readonly bool AfflictionOverlayAlphaIsLinear;
 
         private readonly List<Effect> effects = new List<Effect>();
         private readonly List<PeriodicEffect> periodicEffects = new List<PeriodicEffect>();
@@ -576,6 +656,11 @@ namespace Barotrauma
             Description = TextManager.Get("AfflictionDescription." + translationId, true) ?? element.GetAttributeString("description", "");
             IsBuff = element.GetAttributeBool("isbuff", false);
 
+            if (element.Attribute("nameidentifier") != null)
+            {
+                Name = TextManager.Get(element.GetAttributeString("nameidentifier", string.Empty), returnNull: true) ?? Name;
+            }
+
             LimbSpecific = element.GetAttributeBool("limbspecific", false);
             if (!LimbSpecific)
             {
@@ -590,7 +675,7 @@ namespace Barotrauma
             ShowIconThreshold   = element.GetAttributeFloat("showiconthreshold", Math.Max(ActivationThreshold, 0.05f));
             ShowIconToOthersThreshold   = element.GetAttributeFloat("showicontoothersthreshold", ShowIconThreshold);
             MaxStrength         = element.GetAttributeFloat("maxstrength", 100.0f);
-            GrainBurst          = element.GetAttributeFloat(nameof(GrainBurst).ToLower(), 0.0f);
+            GrainBurst          = element.GetAttributeFloat(nameof(GrainBurst).ToLowerInvariant(), 0.0f);
 
             ShowInHealthScannerThreshold = element.GetAttributeFloat("showinhealthscannerthreshold", Math.Max(ActivationThreshold, 0.05f));
             TreatmentThreshold = element.GetAttributeFloat("treatmentthreshold", Math.Max(ActivationThreshold, 5.0f));
@@ -604,6 +689,7 @@ namespace Barotrauma
             SelfCauseOfDeathDescription = TextManager.Get("AfflictionCauseOfDeathSelf." + translationId, true) ?? element.GetAttributeString("selfcauseofdeathdescription", "");
 
             IconColors = element.GetAttributeColorArray("iconcolors", null);
+            AfflictionOverlayAlphaIsLinear = element.GetAttributeBool("afflictionoverlayalphaislinear", false);
             AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
 
             foreach (XElement subElement in element.Elements())
@@ -612,6 +698,18 @@ namespace Barotrauma
                 {
                     case "icon":
                         Icon = new Sprite(subElement);
+                        break;
+                    case "afflictionoverlay":
+                        AfflictionOverlay = new Sprite(subElement);
+                        break;
+                    case "statvalue":
+                        DebugConsole.ThrowError($"Error in affliction \"{Identifier}\" - stat values should be configured inside the affliction's effects.");
+                        break;
+                    case "effect":
+                    case "periodiceffect":
+                        break;
+                    default:
+                        DebugConsole.AddWarning($"Unrecognized element in affliction \"{Identifier}\" ({subElement.Name})");
                         break;
                 }
             }

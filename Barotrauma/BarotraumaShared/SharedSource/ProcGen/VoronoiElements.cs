@@ -54,6 +54,7 @@ using Barotrauma;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Voronoi2
 {
@@ -194,9 +195,14 @@ namespace Voronoi2
 
         public bool IsPointInside(Vector2 point)
         {
+            Vector2 transformedPoint = point - Translation;
+            if (Edges.All(e => e.Point1.X < transformedPoint.X && e.Point2.X < transformedPoint.X)) { return false; }
+            if (Edges.All(e => e.Point1.Y < transformedPoint.Y && e.Point2.Y < transformedPoint.Y)) { return false; }
+            if (Edges.All(e => e.Point1.X > transformedPoint.X && e.Point2.X > transformedPoint.X)) { return false; }
+            if (Edges.All(e => e.Point1.Y > transformedPoint.Y && e.Point2.Y > transformedPoint.Y)) { return false; }
             foreach (GraphEdge edge in Edges)
             {
-                if (MathUtils.LinesIntersect(point, Center, edge.Point1 + Translation, edge.Point2 + Translation)) { return false; }
+                if (MathUtils.LinesIntersect(transformedPoint, Center - Translation, edge.Point1, edge.Point2)) { return false; }
             }
             return true;
         }

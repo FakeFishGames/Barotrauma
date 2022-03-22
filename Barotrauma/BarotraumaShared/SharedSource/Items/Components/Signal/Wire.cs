@@ -133,15 +133,15 @@ namespace Barotrauma.Items.Components
 
         public bool IsConnectedTo(Item item)
         {
-            if (connections[0] != null && connections[0].Item == item) return true;
-            return (connections[1] != null && connections[1].Item == item);
+            if (connections[0] != null && connections[0].Item == item) { return true; }
+            return connections[1] != null && connections[1].Item == item;
         }
 
         public void RemoveConnection(Item item)
         {
             for (int i = 0; i < 2; i++)
             {
-                if (connections[i] == null || connections[i].Item != item) continue;
+                if (connections[i] == null || connections[i].Item != item) { continue; }
 
                 foreach (Wire wire in connections[i].Wires)
                 {
@@ -756,14 +756,17 @@ namespace Barotrauma.Items.Components
         {
             if (item.ParentInventory != null) { return; }
 #if CLIENT
-            if (!relativeToSub && Screen.Selected != GameMain.SubEditorScreen) { return; }
+            if (!relativeToSub)
+            {
+                if (Screen.Selected != GameMain.SubEditorScreen || (item.Submarine?.Loading ?? false)) { return; }
+            }
 #else
             if (!relativeToSub) { return; }
 #endif
 
             Vector2 refPos = item.Submarine == null ?
                 Vector2.Zero :
-               item.Position - item.Submarine.HiddenSubPosition;
+                item.Position - item.Submarine.HiddenSubPosition;
 
             for (int i = 0; i < nodes.Count; i++)
             {

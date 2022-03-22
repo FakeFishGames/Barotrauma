@@ -24,7 +24,7 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 //don't consider the items to belong in the outpost to prevent the stealing icon from showing
-                item.SpawnedInOutpost = false;
+                item.SpawnedInCurrentOutpost = false;
             }
         }
 

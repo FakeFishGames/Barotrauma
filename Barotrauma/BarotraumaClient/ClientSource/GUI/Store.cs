@@ -37,7 +37,7 @@ namespace Barotrauma
         private Color storeSpecialColor;
 
         private GUIListBox shoppingCrateBuyList, shoppingCrateSellList, shoppingCrateSellFromSubList;
-        private GUITextBlock shoppingCrateTotal;
+        private GUITextBlock relevantBalanceName, shoppingCrateTotal;
         private GUIButton clearAllButton, confirmButton;
 
         private bool needsRefresh, needsBuyingRefresh, needsSellingRefresh, needsItemsToSellRefresh, needsSellingFromSubRefresh, needsItemsToSellFromSubRefresh;
@@ -58,7 +58,6 @@ namespace Barotrauma
             StoreTab.SellFromSub => false,
             _ => throw new NotImplementedException()
         };
-        private bool IsSelling => !IsBuying;
         private GUIListBox ActiveShoppingCrateList => activeTab switch
         {
             StoreTab.Buy => shoppingCrateBuyList,
@@ -222,16 +221,8 @@ namespace Barotrauma
                 TextScale = 1.1f,
                 TextGetter = () =>
                 {
-                    if (CurrentLocation != null)
-                    {
-                        merchantBalanceBlock.TextColor = CurrentLocation.BalanceColor;
-                        return GetCurrencyFormatted(CurrentLocation.StoreCurrentBalance);
-                    }
-                    else
-                    {
-                        merchantBalanceBlock.TextColor = Color.Red;
-                        return GetCurrencyFormatted(0);
-                    }
+                    merchantBalanceBlock.TextColor = CurrentLocation?.BalanceColor ?? Color.Red;
+                    return GetMerchantBalanceText();
                 } 
             };
 
@@ -275,7 +266,7 @@ namespace Barotrauma
                         };
                         if (balanceAfterTransaction != CurrentLocation.StoreCurrentBalance)
                         {
-                            var newStatus = Location.GetStoreBalanceStatus(balanceAfterTransaction);
+                            var newStatus = CurrentLocation.GetStoreBalanceStatus(balanceAfterTransaction);
                             if (CurrentLocation.ActiveStoreBalanceStatus.SellPriceModifier != newStatus.SellPriceModifier)
                             {
                                 string tooltipTag = newStatus.SellPriceModifier > CurrentLocation.ActiveStoreBalanceStatus.SellPriceModifier ?
@@ -375,28 +366,37 @@ namespace Barotrauma
             //don't show categories with no buyable items
             itemCategories.RemoveAll(c => !ItemPrefab.Prefabs.Any(ep => ep.Category.HasFlag(c) && ep.CanBeBought));
             itemCategoryButtons.Clear();
+            var categoryButton = new GUIButton(new RectTransform(new Point(categoryButtonContainer.Rect.Width, categoryButtonContainer.Rect.Width), categoryButtonContainer.RectTransform), style: "CategoryButton.All")
+            {
+                ToolTip = TextManager.Get("MapEntityCategory.All"),
+                OnClicked = OnClickedCategoryButton
+            };
+            itemCategoryButtons.Add(categoryButton);
             foreach (MapEntityCategory category in itemCategories)
             {
-                var categoryButton = new GUIButton(new RectTransform(new Point(categoryButtonContainer.Rect.Width, categoryButtonContainer.Rect.Width), categoryButtonContainer.RectTransform),
+                categoryButton = new GUIButton(new RectTransform(new Point(categoryButtonContainer.Rect.Width, categoryButtonContainer.Rect.Width), categoryButtonContainer.RectTransform),
                     style: "CategoryButton." + category)
                 {
                     ToolTip = TextManager.Get("MapEntityCategory." + category),
                     UserData = category,
-                    OnClicked = (btn, userdata) =>
-                    {
-                        MapEntityCategory? newCategory = !btn.Selected ? (MapEntityCategory?)userdata : null;
-                        if (newCategory.HasValue) { searchBox.Text = ""; }
-                        if (newCategory != selectedItemCategory) { tabLists[activeTab].ScrollBar.BarScroll = 0f; }
-                        FilterStoreItems(newCategory, searchBox.Text);
-                        return true;
-                    }
+                    OnClicked = OnClickedCategoryButton
                 };
                 itemCategoryButtons.Add(categoryButton);
-                categoryButton.RectTransform.SizeChanged += () =>
+            }
+            bool OnClickedCategoryButton(GUIButton button, object userData)
+            {
+                MapEntityCategory? newCategory = !button.Selected ? (MapEntityCategory?)userData : null;
+                if (newCategory.HasValue) { searchBox.Text = ""; }
+                if (newCategory != selectedItemCategory) { tabLists[activeTab].ScrollBar.BarScroll = 0f; }
+                FilterStoreItems(newCategory, searchBox.Text);
+                return true;
+            }
+            foreach (var btn in itemCategoryButtons)
+            {
+                btn.RectTransform.SizeChanged += () =>
                 {
-                    var sprite = categoryButton.Frame.sprites[GUIComponent.ComponentState.None].First();
-                    categoryButton.RectTransform.NonScaledSize =
-                        new Point(categoryButton.Rect.Width, (int)(categoryButton.Rect.Width * ((float)sprite.Sprite.SourceRect.Height / sprite.Sprite.SourceRect.Width)));
+                    var sprite = btn.Frame.sprites[GUIComponent.ComponentState.None].First();
+                    btn.RectTransform.NonScaledSize = new Point(btn.Rect.Width, (int)(btn.Rect.Width * ((float)sprite.Sprite.SourceRect.Height / sprite.Sprite.SourceRect.Width)));
                 };
             }
 
@@ -503,11 +503,11 @@ namespace Barotrauma
                 ForceUpperCase = true
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), playerBalanceContainer.RectTransform),
-                "", font: GUI.SubHeadingFont, textAlignment: Alignment.TopRight)
+                "", textColor: Color.White, font: GUI.SubHeadingFont, textAlignment: Alignment.TopRight)
             {
                 AutoScaleVertical = true,
                 TextScale = 1.1f,
-                TextGetter = () => GetCurrencyFormatted(PlayerMoney)
+                TextGetter = GetPlayerBalanceText
             };
 
             // Divider ------------------------------------------------
@@ -523,13 +523,28 @@ namespace Barotrauma
                 RelativeSpacing = 0.015f,
                 Stretch = true
             };
-            var shoppingCrateListContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.85f), shoppingCrateInventoryContainer.RectTransform), style: null);
+            var shoppingCrateListContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.8f), shoppingCrateInventoryContainer.RectTransform), style: null);
             shoppingCrateBuyList = new GUIListBox(new RectTransform(Vector2.One, shoppingCrateListContainer.RectTransform)) { Visible = false };
             shoppingCrateSellList = new GUIListBox(new RectTransform(Vector2.One, shoppingCrateListContainer.RectTransform)) { Visible = false };
             if (GameMain.IsSingleplayer)
             {
                 shoppingCrateSellFromSubList = new GUIListBox(new RectTransform(Vector2.One, shoppingCrateListContainer.RectTransform)) { Visible = false };
             }
+
+            var relevantBalanceContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), shoppingCrateInventoryContainer.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+            relevantBalanceName = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), relevantBalanceContainer.RectTransform), "", font: GUI.Font)
+            {
+                CanBeFocused = false
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), relevantBalanceContainer.RectTransform), "", textColor: Color.White, font: GUI.SubHeadingFont, textAlignment: Alignment.Right)
+            {
+                CanBeFocused = false,
+                TextScale = 1.1f,
+                TextGetter = () => IsBuying ? GetPlayerBalanceText() : GetMerchantBalanceText()
+            };
 
             var totalContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), shoppingCrateInventoryContainer.RectTransform), isHorizontal: true)
             {
@@ -576,10 +591,14 @@ namespace Barotrauma
             resolutionWhenCreated = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
-        private GUILayoutGroup CreateDealsGroup(GUIListBox parentList)
+        private string GetMerchantBalanceText() => GetCurrencyFormatted(CurrentLocation?.StoreCurrentBalance ?? 0);
+
+        private string GetPlayerBalanceText() => GetCurrencyFormatted(PlayerMoney);
+
+        private GUILayoutGroup CreateDealsGroup(GUIListBox parentList, int elementCount = 4)
         {
             var elementHeight = (int)(GUI.yScale * 80);
-            var frame = new GUIFrame(new RectTransform(new Point(parentList.Content.Rect.Width, 4 * elementHeight + 3), parent: parentList.Content.RectTransform), style: null);
+            var frame = new GUIFrame(new RectTransform(new Point(parentList.Content.Rect.Width, elementCount * elementHeight + 3), parent: parentList.Content.RectTransform), style: null);
             frame.UserData = "deals";
             var dealsGroup = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform, anchor: Anchor.Center), childAnchor: Anchor.TopCenter);
             var dealsHeader = new GUILayoutGroup(new RectTransform(new Point((int)(0.95f * parentList.Content.Rect.Width), elementHeight), parent: dealsGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
@@ -604,17 +623,14 @@ namespace Barotrauma
             {
                 prevLocation.Reputation.OnReputationValueChanged = null;
             }
-
-            foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
+            if (ItemPrefab.Prefabs.Any(p => p.CanBeBoughtAtLocation(CurrentLocation, out PriceInfo _)))
             {
-                if (itemPrefab.CanBeBoughtAtLocation(CurrentLocation, out PriceInfo _))
+                selectedItemCategory = null;
+                searchBox.Text = "";
+                ChangeStoreTab(StoreTab.Buy);
+                if (newLocation?.Reputation != null)
                 {
-                    ChangeStoreTab(StoreTab.Buy);
-                    if (newLocation?.Reputation != null)
-                    {
-                        newLocation.Reputation.OnReputationValueChanged += () => { needsRefresh = true; };
-                    }
-                    return;
+                    newLocation.Reputation.OnReputationValueChanged += () => { needsRefresh = true; };
                 }
             }
         }
@@ -628,6 +644,7 @@ namespace Barotrauma
                 tabButton.Selected = (StoreTab)tabButton.UserData == activeTab;
             }
             sortingDropDown.SelectItem(tabSortingMethods[tab]);
+            relevantBalanceName.Text = IsBuying ? TextManager.Get("campaignstore.balance") : TextManager.Get("campaignstore.storebalance");
             SetShoppingCrateTotalText();
             SetClearAllButtonStatus();
             SetConfirmButtonBehavior();
@@ -697,7 +714,7 @@ namespace Barotrauma
             }
             foreach (GUIButton btn in itemCategoryButtons)
             {
-                btn.Selected = category.HasValue && (MapEntityCategory)btn.UserData == selectedItemCategory;
+                btn.Selected = (MapEntityCategory?)btn.UserData == selectedItemCategory;
             }
             list.UpdateScrollBarSize();
         }
@@ -709,6 +726,8 @@ namespace Barotrauma
             FilterStoreItems(category, searchBox.Text);
         }
 
+        int prevDailySpecialCount;
+
         private void RefreshStoreBuyList()
         {
             float prevBuyListScroll = storeBuyList.BarScroll;
@@ -717,11 +736,14 @@ namespace Barotrauma
             bool hasPermissions = HasPermissions;
             HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
 
-            if ((storeDailySpecialsGroup != null) != CurrentLocation.DailySpecials.Any())
+            int dailySpecialCount = CurrentLocation?.DailySpecials.Count() ?? 3;
+
+            if ((storeDailySpecialsGroup != null) != CurrentLocation.DailySpecials.Any() || dailySpecialCount != prevDailySpecialCount)
             {
-                if (storeDailySpecialsGroup == null)
+                if (storeDailySpecialsGroup == null || dailySpecialCount != prevDailySpecialCount)
                 {
-                    storeDailySpecialsGroup = CreateDealsGroup(storeBuyList);
+                    storeBuyList.RemoveChild(storeDailySpecialsGroup?.Parent);
+                    storeDailySpecialsGroup = CreateDealsGroup(storeBuyList, 1 + dailySpecialCount);
                     storeDailySpecialsGroup.Parent.SetAsFirstChild();
                 }
                 else
@@ -730,6 +752,7 @@ namespace Barotrauma
                     storeDailySpecialsGroup = null;
                 }
                 storeBuyList.RecalculateChildren();
+                prevDailySpecialCount = dailySpecialCount;
             }
 
             foreach (PurchasedItem item in CurrentLocation.StoreStock)

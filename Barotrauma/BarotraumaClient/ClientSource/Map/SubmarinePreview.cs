@@ -600,6 +600,8 @@ namespace Barotrauma
 
             var prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
             GameMain.Instance.GraphicsDevice.ScissorRectangle = scissorRectangle;
+            var prevRasterizerState = GameMain.Instance.GraphicsDevice.RasterizerState;
+            GameMain.Instance.GraphicsDevice.RasterizerState = GameMain.ScissorTestEnable;
 
             spriteRecorder.Render(camera);
 
@@ -643,6 +645,7 @@ namespace Barotrauma
             spriteBatch.End();
 
             GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            GameMain.Instance.GraphicsDevice.RasterizerState = prevRasterizerState;
             spriteBatch.Begin(SpriteSortMode.Deferred);
         }
 

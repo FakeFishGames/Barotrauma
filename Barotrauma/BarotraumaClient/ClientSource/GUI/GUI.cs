@@ -130,6 +130,7 @@ namespace Barotrauma
         public static GUIStyle Style;
 
         private static Texture2D t;
+        public static Texture2D WhiteTexture => t;
         private static Sprite[] MouseCursorSprites => Style.CursorSprite;
 
         private static bool debugDrawSounds, debugDrawEvents, debugDrawMetadata;
@@ -163,6 +164,7 @@ namespace Barotrauma
         public static ScalableFont SubHeadingFont => Style?.SubHeadingFont;
         public static ScalableFont DigitalFont => Style?.DigitalFont;
         public static ScalableFont HotkeyFont => Style?.HotkeyFont;
+        public static ScalableFont MonospacedFont => Style?.MonospacedFont;
 
         public static ScalableFont CJKFont { get; private set; }
 
@@ -306,7 +308,7 @@ namespace Barotrauma
             });
             
             SubmarineIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(452, 385, 182, 81), new Vector2(0.5f, 0.5f));
-            arrow = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(392, 393, 49, 45), new Vector2(0.5f, 0.5f));
+            arrow = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(393, 393, 49, 45), new Vector2(0.5f, 0.5f));
             SpeechBubbleIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(385, 449, 66, 60), new Vector2(0.5f, 0.5f));
             BrokenIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(898, 386, 123, 123), new Vector2(0.5f, 0.5f));
         }
@@ -397,7 +399,7 @@ namespace Barotrauma
                         " Max: " + GameMain.PerformanceCounter.DrawTimeGraph.LargestValue().ToString("0.00") + " ms",
                         GUI.Style.Green, Color.Black * 0.8f, font: SmallFont);
                     y += 15;
-                    GameMain.PerformanceCounter.DrawTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), null, 0, GUI.Style.Green);
+                    GameMain.PerformanceCounter.DrawTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), color: Style.Green);
                     y += 50;
 
                     DrawString(spriteBatch, new Vector2(300, y),
@@ -405,8 +407,8 @@ namespace Barotrauma
                         " Max: " + GameMain.PerformanceCounter.UpdateTimeGraph.LargestValue().ToString("0.00") + " ms",
                         Color.LightBlue, Color.Black * 0.8f, font: SmallFont);
                     y += 15;
-                    GameMain.PerformanceCounter.UpdateTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), null, 0, Color.LightBlue);
-                    GameMain.PerformanceCounter.UpdateIterationsGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), 20, 0, GUI.Style.Red);
+                    GameMain.PerformanceCounter.UpdateTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), color: Color.LightBlue);
+                    GameMain.PerformanceCounter.UpdateIterationsGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), maxValue: 20, color: Style.Red);
                     y += 50;
                     foreach (string key in GameMain.PerformanceCounter.GetSavedIdentifiers)
                     {
@@ -436,7 +438,7 @@ namespace Barotrauma
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                     DrawString(spriteBatch, new Vector2(10, 40),
-                        $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count} awake, {GameMain.World.BodyList.FindAll(b => b.Awake && b.BodyType == BodyType.Dynamic && b.Enabled).Count} dynamic)",
+                        $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.Count(b => b != null && b.Awake && b.Enabled)} awake, {GameMain.World.BodyList.Count(b => b != null && b.Awake && b.BodyType == BodyType.Dynamic && b.Enabled)} dynamic)",
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                     if (Screen.Selected.Cam != null)
@@ -672,6 +674,12 @@ namespace Barotrauma
                     spriteBatch.End();
                     spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerStateClamp, rasterizerState: GameMain.ScissorTestEnable);
 
+                    if (GameMain.GameSession?.CrewManager is { DraggedOrder: { SymbolSprite: { } orderSprite, Color: var color }, DragOrder: true })
+                    {
+                        float spriteSize = Math.Max(orderSprite.size.X, orderSprite.size.Y);
+                        orderSprite.Draw(spriteBatch, PlayerInput.LatestMousePosition, color, orderSprite.size / 2f, scale: 32f / spriteSize * Scale);
+                    }
+
                     var sprite = MouseCursorSprites[(int)MouseCursor] ?? MouseCursorSprites[(int)CursorState.Default];
                     sprite.Draw(spriteBatch, PlayerInput.LatestMousePosition, Color.White, sprite.Origin, 0f, Scale / 1.5f);
 
@@ -855,11 +863,10 @@ namespace Barotrauma
                     int index = 0;
                     if (updateList.Count > 0)
                     {
-                        index = updateList.Count - 1;
-                        while (updateList[index].UpdateOrder > item.UpdateOrder)
+                        index = updateList.Count;
+                        while (index > 0 && updateList[index-1].UpdateOrder > item.UpdateOrder)
                         {
                             index--;
-                            if (index == 0) { break; }
                         }
                     }
                     if (!updateListSet.Contains(item))
@@ -927,13 +934,15 @@ namespace Barotrauma
                 GUIComponent prevMouseOn = MouseOn;
                 MouseOn = null;
                 int inventoryIndex = -1;
-            
-                if (Inventory.IsMouseOnInventory())
+
+                Inventory.RefreshMouseOnInventory();
+                if (Inventory.IsMouseOnInventory)
                 {
                     inventoryIndex = updateList.IndexOf(CharacterHUD.HUDFrame);
                 }
 
-                if (!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked())
+                if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || 
+                    (prevMouseOn == null && !PlayerInput.SecondaryMouseButtonHeld() && !Inventory.DraggingItems.Any()))
                 {
                     for (var i = updateList.Count - 1; i > inventoryIndex; i--)
                     {
@@ -941,10 +950,9 @@ namespace Barotrauma
                         if (!c.CanBeFocused) { continue; }
                         if (c.MouseRect.Contains(PlayerInput.MousePosition))
                         {
-                            if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || c == prevMouseOn)
+                            if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || c == prevMouseOn || prevMouseOn == null)
                             {
                                 MouseOn = c;
-                                var sakdjfnsjkd = c.MouseRect;
                             }
                             break;
                         }
@@ -958,7 +966,6 @@ namespace Barotrauma
                 MouseCursor = UpdateMouseCursorState(MouseOn);
                 return MouseOn;
             }
-            
         }
         
         private static CursorState UpdateMouseCursorState(GUIComponent c)
@@ -1046,27 +1053,30 @@ namespace Barotrauma
                     // Children in list boxes can be interacted with despite not having
                     // a GUIButton inside of them so instead of hard coding we check if
                     // the children can be interacted with by checking their hover state
-                    if (parent is GUIListBox listBox)
+                    if (parent is GUIListBox listBox && c.Parent == listBox.Content)
                     {
                         if (listBox.DraggedElement != null) { return CursorState.Dragging; }
-                        if (listBox.CanDragElements) { return CursorState.Move; }
-                    
-                        var hoverParent = c;
-                        while (true)
+                        if (listBox.CurrentDragMode != GUIListBox.DragMode.NoDragging) { return CursorState.Move; }
+
+                        if (listBox.HoverCursor != CursorState.Default)
                         {
-                            if (hoverParent == parent || hoverParent == null) { break; }
-                            if (hoverParent.State == GUIComponent.ComponentState.Hover) { return CursorState.Hand; }
-                            hoverParent = hoverParent.Parent;
+                            var hoverParent = c;
+                            while (true)
+                            {
+                                if (hoverParent == parent || hoverParent == null) { break; }
+                                if (hoverParent.State == GUIComponent.ComponentState.Hover) { return CursorState.Hand; }
+                                hoverParent = hoverParent.Parent;
+                            }
                         }
                     }
-                
+
                     if (parent != null && parent.CanBeFocused)
                     {
                         if (!parent.Rect.Equals(monitorRect)) { return parent.HoverCursor; }
                     }
                 }
-            
-                if (Inventory.IsMouseOnInventory()) { return Inventory.GetInventoryMouseCursor(); }
+
+                if (Inventory.IsMouseOnInventory) { return Inventory.GetInventoryMouseCursor(); }
 
                 var character = Character.Controlled;
                 // ReSharper disable once InvertIf
@@ -1139,7 +1149,7 @@ namespace Barotrauma
         {
             CoroutineManager.StartCoroutine(WaitCursorCoroutine(), "WaitCursorTimeout");
 
-            IEnumerable<object> WaitCursorCoroutine()
+            IEnumerable<CoroutineStatus> WaitCursorCoroutine()
             {
                 MouseCursor = CursorState.Waiting;
                 var timeOut = DateTime.Now + new TimeSpan(0, 0, waitSeconds);
@@ -1343,7 +1353,7 @@ namespace Barotrauma
 
         /// <param name="createOffset">Should the indicator move based on the camera position?</param>
         /// <param name="overrideAlpha">Override the distance-based alpha value with the specified alpha value</param>
-        public static void DrawIndicator(SpriteBatch spriteBatch, in Vector2 worldPosition, Camera cam, in Vector2 visibleRange, Sprite sprite, in Color color,
+        public static void DrawIndicator(SpriteBatch spriteBatch, in Vector2 worldPosition, Camera cam, in Range<float> visibleRange, Sprite sprite, in Color color,
             bool createOffset = true, float scaleMultiplier = 1.0f, float? overrideAlpha = null)
         {
             Vector2 diff = worldPosition - cam.WorldViewCenter;
@@ -1351,9 +1361,9 @@ namespace Barotrauma
 
             float symbolScale = Math.Min(64.0f / sprite.size.X, 1.0f) * scaleMultiplier * Scale;
 
-            if (overrideAlpha.HasValue || (dist > visibleRange.X && dist < visibleRange.Y))
+            if (overrideAlpha.HasValue || visibleRange.Contains(dist))
             {
-                float alpha = overrideAlpha ?? MathUtils.Min((dist - visibleRange.X) / 100.0f, 1.0f - ((dist - visibleRange.Y + 100f) / 100.0f), 1.0f);
+                float alpha = overrideAlpha ?? MathUtils.Min((dist - visibleRange.Start) / 100.0f, 1.0f - ((dist - visibleRange.End + 100f) / 100.0f), 1.0f);
                 Vector2 targetScreenPos = cam.WorldToScreen(worldPosition);
 
                 if (!createOffset)
@@ -1417,7 +1427,7 @@ namespace Barotrauma
         public static void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPosition, Camera cam, float hideDist, Sprite sprite, Color color,
             bool createOffset = true, float scaleMultiplier = 1.0f, float? overrideAlpha = null)
         {
-            DrawIndicator(spriteBatch, worldPosition, cam, new Vector2(hideDist, float.PositiveInfinity), sprite, color, createOffset, scaleMultiplier, overrideAlpha);
+            DrawIndicator(spriteBatch, worldPosition, cam, new Range<float>(hideDist, float.PositiveInfinity), sprite, color, createOffset, scaleMultiplier, overrideAlpha);
         }
 
         public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, float width = 1)
@@ -1518,6 +1528,11 @@ namespace Barotrauma
                 sb.Draw(t, new Vector2(rect.X + thickness, rect.Bottom - thickness), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(rect.Width - thickness, thickness), SpriteEffects.None, depth);
                 sb.Draw(t, new Vector2(rect.Right - thickness, rect.Y + thickness), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(thickness, rect.Height - thickness * 2f), SpriteEffects.None, depth);
             }
+        }
+
+        public static void DrawFilledRectangle(SpriteBatch sb, RectangleF rect, Color clr, float depth = 0.0f)
+        {
+            DrawFilledRectangle(sb, rect.Location, rect.Size, clr, depth);
         }
 
         public static void DrawFilledRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, float depth = 0.0f)
@@ -2240,8 +2255,8 @@ namespace Barotrauma
         #region Misc
         public static void TogglePauseMenu()
         {
-            if (Screen.Selected == GameMain.MainMenuScreen) return;
-            if (PreventPauseMenuToggle) return;
+            if (Screen.Selected == GameMain.MainMenuScreen) { return; }
+            if (PreventPauseMenuToggle) { return; }
 
             settingsMenuOpen = false;
 
@@ -2262,161 +2277,120 @@ namespace Barotrauma
                     Stretch = true,
                     RelativeSpacing = 0.05f
                 };
-                
-                new GUIButton(new RectTransform(new Vector2(0.1f, 0.1f), pauseMenuInner.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point((int)(15 * GUI.Scale)) }, 
+
+                new GUIButton(new RectTransform(new Vector2(0.1f, 0.1f), pauseMenuInner.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point((int)(15 * GUI.Scale)) },
                     "", style: "GUIBugButton")
                 {
                     IgnoreLayoutGroups = true,
-                    ToolTip = TextManager.Get("bugreportbutton"),
+                    ToolTip = TextManager.Get("bugreportbutton") + $" (v{GameMain.Version})",
                     OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
                 };
 
-                new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuResume"))
-                {
-                    OnClicked = TogglePauseMenu
-                };
-
-                new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuSettings"))
-                {
-                    OnClicked = (btn, userData) =>
-                    {
-                        TogglePauseMenu();
-                        settingsMenuOpen = !settingsMenuOpen;
-                        return true;
-                    }
-                };
+                CreateButton("PauseMenuResume", buttonContainer, null);
+                CreateButton("PauseMenuSettings", buttonContainer, () => { settingsMenuOpen = !settingsMenuOpen; });
 
                 bool IsOutpostLevel() => GameMain.GameSession != null && Level.IsLoadedOutpost;
                 if (Screen.Selected == GameMain.GameScreen && GameMain.GameSession != null)
                 {
                     if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
                     {
-                        var retryButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuRetry"));
-                        retryButton.OnClicked += (btn, userData) =>
+                        CreateButton("PauseMenuRetry", buttonContainer, verificationTextTag: "PauseMenuRetryVerification", action: () =>
                         {
-                            var msgBox = new GUIMessageBox("", TextManager.Get("PauseMenuRetryVerification"), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                            if (GameMain.GameSession.RoundSummary?.Frame != null)
                             {
-                                UserData = "verificationprompt"
-                            };
-                            msgBox.Buttons[0].OnClicked = (_, userdata) =>
-                            {
-                                if (GameMain.GameSession.RoundSummary?.Frame != null)
-                                {
-                                    GUIMessageBox.MessageBoxes.Remove(GameMain.GameSession.RoundSummary.Frame);
-                                }
+                                GUIMessageBox.MessageBoxes.Remove(GameMain.GameSession.RoundSummary.Frame);
+                            }
+                            GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction");
+                            GameMain.GameSession.LoadPreviousSave();
+                        });
 
-                                GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction");
-                                TogglePauseMenu(btn, userData);
-                                GameMain.GameSession.LoadPreviousSave();
-                                return true;
-                            };
-                            msgBox.Buttons[0].OnClicked += msgBox.Close;
-                            msgBox.Buttons[1].OnClicked = (_, userdata) =>
-                            {
-                                TogglePauseMenu(btn, userData);
-                                msgBox.Close();
-                                return true;
-                            };
-                            return true;
-                        };
                         if (IsOutpostLevel())
                         {
-                            var saveAndQuitButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuSaveQuit"))
+                            CreateButton("PauseMenuSaveQuit", buttonContainer, verificationTextTag: "PauseMenuSaveAndReturnToMainMenuVerification", action: () =>
                             {
-                                UserData = "save",
-                                OnClicked = (btn, userData) =>
-                                {
-                                    pauseMenuOpen = false;
-                                    if (IsOutpostLevel())
-                                    {
-                                        GameMain.QuitToMainMenu(save: true);
-                                    }
-                                    return true;
-                                }
-                            };
+                                if (IsOutpostLevel()) { GameMain.QuitToMainMenu(save: true); }
+                            });
                         }
                     }
                     else if (GameMain.GameSession.GameMode is TestGameMode)
                     {
-                        new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), text: TextManager.Get("PauseMenuReturnToEditor"))
+                        CreateButton("PauseMenuReturnToEditor", buttonContainer, action: () =>
                         {
-                            OnClicked = (btn, userdata) =>
-                            {
-                                GameMain.GameSession.EndRound("");
-                                pauseMenuOpen = false;
-                                return true;
-                            }
-                        };
+                            GameMain.GameSession?.EndRound("");
+                        });
                     }
                     else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ManageRound))
                     {
-                        new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), 
-                            text: TextManager.Get(GameMain.GameSession.GameMode is CampaignMode ? "ReturnToServerlobby": "EndRound"))
+                        bool canSave = GameMain.GameSession.GameMode is CampaignMode && IsOutpostLevel();
+                        if (canSave)
                         {
-                            OnClicked = (btn, userdata) =>
+                            CreateButton("PauseMenuSaveQuit", buttonContainer, verificationTextTag: "PauseMenuSaveAndReturnToServerLobbyVerification", action: () =>
                             {
-                                if (!GameMain.Client.HasPermission(ClientPermissions.ManageRound)) { return false; }
-                                if (GameMain.GameSession.GameMode is CampaignMode && !IsOutpostLevel() || (!Submarine.MainSub.AtStartExit && !Submarine.MainSub.AtEndExit))
-                                {
-                                    var msgBox = new GUIMessageBox("", 
-                                        TextManager.Get(GameMain.GameSession.GameMode is CampaignMode ? "PauseMenuReturnToServerLobbyVerification" : "EndRoundSubNotAtLevelEnd"), 
-                                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
-                                    {
-                                        UserData = "verificationprompt"
-                                    };
-                                    msgBox.Buttons[0].OnClicked = (_, __) =>
-                                    {
-                                        pauseMenuOpen = false;
-                                        GameMain.Client.RequestRoundEnd();
-                                        return true;
-                                    };
-                                    msgBox.Buttons[0].OnClicked += msgBox.Close;
-                                    msgBox.Buttons[1].OnClicked += msgBox.Close;
-                                }
-                                else
-                                {
-                                    pauseMenuOpen = false;
-                                    GameMain.Client.RequestRoundEnd();
-                                }
-                                return true;
-                            }
-                        };
+                                GameMain.Client?.RequestRoundEnd(save: true);
+                            });
+                        }
+
+                        CreateButton(GameMain.GameSession.GameMode is CampaignMode ? "ReturnToServerlobby" : "EndRound", buttonContainer, 
+                            verificationTextTag: GameMain.GameSession.GameMode is CampaignMode ? "PauseMenuReturnToServerLobbyVerification" : "EndRoundSubNotAtLevelEnd", 
+                            action: () =>
+                            {
+                                GameMain.Client?.RequestRoundEnd(save: false);
+                            });
                     }
                 }
-                                
-                var quitButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuQuit"));
-                quitButton.OnClicked += (btn, userData) =>
+
+                if (GameMain.GameSession != null || Screen.Selected is CharacterEditorScreen || Screen.Selected is SubEditorScreen)
                 {
-                    if (GameMain.GameSession != null || (Screen.Selected is CharacterEditorScreen || Screen.Selected is SubEditorScreen))
-                    {
-                        string text = GameMain.GameSession == null ? "PauseMenuQuitVerificationEditor" : "PauseMenuQuitVerification";
-                        var msgBox = new GUIMessageBox("", TextManager.Get(text), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
-                        {
-                            UserData = "verificationprompt"
-                        };
-                        msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
+                    CreateButton("PauseMenuQuit", buttonContainer,
+                        verificationTextTag: GameMain.GameSession == null ? "PauseMenuQuitVerificationEditor" : "PauseMenuQuitVerification",
+                        action: () =>
                         {
                             GameMain.QuitToMainMenu(save: false);
-                            pauseMenuOpen = false;
-                            return true;
-                        };
-                        msgBox.Buttons[0].OnClicked += msgBox.Close;
-                        msgBox.Buttons[1].OnClicked = (_, userdata) =>
-                        {
-                            pauseMenuOpen = false;
-                            msgBox.Close();
-                            return true;
-                        };
-                    }
-                    else
-                    {
-                        GameMain.QuitToMainMenu(save: false);
-                        pauseMenuOpen = false;
-                    }
-                    return true;
-                };
+                        });
+                }
+                else
+                {
+                    CreateButton("PauseMenuQuit", buttonContainer, action: () => { GameMain.QuitToMainMenu(save: false); });
+                }
 
                 GUITextBlock.AutoScaleAndNormalize(buttonContainer.Children.Where(c => c is GUIButton).Select(c => ((GUIButton)c).TextBlock));
+            }
+
+            void CreateButton(string textTag, GUIComponent parent, Action action, string verificationTextTag = null)
+            {
+                new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform), TextManager.Get(textTag))
+                {
+                    OnClicked = (btn, userData) =>
+                    {
+                        if (string.IsNullOrEmpty(verificationTextTag))
+                        {
+                            pauseMenuOpen = false;
+                            action?.Invoke();
+                        }
+                        else
+                        {
+                            CreateVerificationPrompt(verificationTextTag, action);
+                        }
+                        return true;
+                    }
+                };
+            }
+
+            void CreateVerificationPrompt(string textTag, Action confirmAction)
+            {
+                var msgBox = new GUIMessageBox("", TextManager.Get(textTag),
+                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                {
+                    UserData = "verificationprompt"
+                };
+                msgBox.Buttons[0].OnClicked = (_, __) =>
+                {
+                    pauseMenuOpen = false;
+                    confirmAction?.Invoke();
+                    return true;
+                };
+                msgBox.Buttons[0].OnClicked += msgBox.Close;
+                msgBox.Buttons[1].OnClicked += msgBox.Close;
             }
         }
 
@@ -2433,14 +2407,43 @@ namespace Barotrauma
         {
             if (messages.Any(msg => msg.Text == message)) { return; }
             messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), font ?? LargeFont));
-            if (playSound) SoundPlayer.PlayUISound(GUISoundType.UIMessage);
+            if (playSound) { SoundPlayer.PlayUISound(GUISoundType.UIMessage); }
         }
 
         public static void AddMessage(string message, Color color, Vector2 pos, Vector2 velocity, float lifeTime = 3.0f, bool playSound = true, GUISoundType soundType = GUISoundType.UIMessage, int subId = -1)
         {
             Submarine sub = Submarine.Loaded.FirstOrDefault(s => s.ID == subId);
-            messages.Add(new GUIMessage(message, color, pos, velocity, lifeTime, Alignment.Center, LargeFont, sub: sub));
-            if (playSound) SoundPlayer.PlayUISound(soundType);
+
+            var newMessage = new GUIMessage(message, color, pos, velocity, lifeTime, Alignment.Center, Font, sub: sub);
+            if (playSound) { SoundPlayer.PlayUISound(soundType); }
+            bool overlapFound = true;
+            int tries = 0;
+            while (overlapFound)
+            {
+                overlapFound = false;
+                foreach (var otherMessage in messages)
+                {
+                    float xDiff = otherMessage.Pos.X - newMessage.Pos.X;
+                    if (Math.Abs(xDiff) > (newMessage.Size.X + otherMessage.Size.X) / 2) { continue; }
+                    float yDiff = otherMessage.Pos.Y - newMessage.Pos.Y;
+                    if (Math.Abs(yDiff) > (newMessage.Size.Y + otherMessage.Size.Y) / 2) { continue; }
+                    Vector2 moveDir = -(new Vector2(xDiff, yDiff) + Rand.Vector(1.0f));
+                    if (moveDir.LengthSquared() > 0.0001f)
+                    {
+                        moveDir = Vector2.Normalize(moveDir);
+                    }
+                    else
+                    {
+                        moveDir = Rand.Vector(1.0f);
+                    }
+                    moveDir.Y = -Math.Abs(moveDir.Y);
+                    newMessage.Pos -= Vector2.UnitY * 10;
+                }
+                tries++;
+                if (tries > 20) { break; }
+            }
+
+            messages.Add(newMessage);
         }
 
         public static void ClearMessages()

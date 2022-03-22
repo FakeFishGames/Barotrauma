@@ -3,6 +3,7 @@ using System.Linq;
 using System.Xml.Linq;
 using System;
 using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -21,6 +22,8 @@ namespace Barotrauma
 
         private Character character;
 
+        private bool stun = true;
+
         private readonly List<Affliction> huskInfection = new List<Affliction>();
 
         [Serialize(0f, true), Editable]
@@ -34,6 +37,11 @@ namespace Barotrauma
                 float threshold = _strength > ActiveThreshold ? ActiveThreshold + 1 : DormantThreshold - 1;
                 float max = Math.Max(threshold, previousValue);
                 _strength = Math.Clamp(value, 0, max);
+                stun = GameMain.GameSession?.IsRunning ?? true;
+                if (previousValue > 0.0f && value <= 0.0f)
+                {
+                    DeactivateHusk();
+                }
             }
         }
 
@@ -51,13 +59,25 @@ namespace Barotrauma
             }
         }
 
-        private float DormantThreshold => Prefab.MaxStrength * 0.5f;
-        private float ActiveThreshold => Prefab.MaxStrength * 0.75f;
+        private readonly AfflictionPrefabHusk HuskPrefab;
 
-        public AfflictionHusk(AfflictionPrefab prefab, float strength) : base(prefab, strength) { }
+        private float DormantThreshold => HuskPrefab.DormantThreshold;
+        private float ActiveThreshold => HuskPrefab.ActiveThreshold;
+        private float TransitionThreshold => HuskPrefab.TransitionThreshold;
+        private float TransformThresholdOnDeath => HuskPrefab.TransformThresholdOnDeath;
+
+        public AfflictionHusk(AfflictionPrefab prefab, float strength) : base(prefab, strength)
+        {
+            HuskPrefab = prefab as AfflictionPrefabHusk;
+            if (HuskPrefab == null)
+            {
+                DebugConsole.ThrowError("Error in husk affliction definition: the prefab is of wrong type!");
+            }
+        }
 
         public override void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
+            if (HuskPrefab == null) { return; }
             base.Update(characterHealth, targetLimb, deltaTime);
             character = characterHealth.Character;
             if (character == null) { return; }
@@ -83,9 +103,9 @@ namespace Barotrauma
                 }
                 State = InfectionState.Transition;
             }
-            else if (Strength < Prefab.MaxStrength)
+            else if (Strength < TransitionThreshold)
             {
-                if (State != InfectionState.Active)
+                if (State != InfectionState.Active && stun)
                 {
                     character.SetStun(Rand.Range(2, 4));
                 }
@@ -139,6 +159,7 @@ namespace Barotrauma
 
         private void DeactivateHusk()
         {
+            if (character?.AnimController == null || character.Removed) { return; }
             if (Prefab is AfflictionPrefabHusk { NeedsAir: false })
             {
                 character.NeedsAir = character.Params.MainElement.GetAttributeBool("needsair", false);
@@ -161,7 +182,8 @@ namespace Barotrauma
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (Strength < ActiveThreshold || character.Removed) 
+            if (Strength < TransformThresholdOnDeath || character.Removed || 
+                character.CharacterHealth.GetAllAfflictions().Any(a => a.GetActiveEffect()?.BlockTransformation.Contains(Prefab.Identifier) ?? false)) 
             {
                 UnsubscribeFromDeathEvent();
                 return; 
@@ -180,7 +202,7 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(CreateAIHusk());
         }
 
-        private IEnumerable<object> CreateAIHusk()
+        private IEnumerable<CoroutineStatus> CreateAIHusk()
         {
             //character already in remove queue (being removed by something else, for example a modded affliction that uses AfflictionHusk as the base)
             // -> don't spawn the AI husk
@@ -205,11 +227,38 @@ namespace Barotrauma
             XElement parentElement = new XElement("CharacterInfo");
             XElement infoElement = character.Info?.Save(parentElement);
             CharacterInfo huskCharacterInfo = infoElement == null ? null : new CharacterInfo(infoElement);
+
+            if (huskCharacterInfo != null)
+            {
+                var bodyTint = GetBodyTint();
+                huskCharacterInfo.SkinColor =
+                        Color.Lerp(huskCharacterInfo.SkinColor, bodyTint.Opaque(), bodyTint.A / 255.0f);
+            }
+
             var husk = Character.Create(huskedSpeciesName, character.WorldPosition, ToolBox.RandomSeed(8), huskCharacterInfo, isRemotePlayer: false, hasAi: true);
             if (husk.Info != null)
             {
                 husk.Info.Character = husk;
                 husk.Info.TeamID = CharacterTeamType.None;
+            }
+
+            if (Prefab is AfflictionPrefabHusk huskPrefab)
+            {
+                if (huskPrefab.ControlHusk)
+                {
+#if SERVER
+                    var client = GameMain.Server?.ConnectedClients.FirstOrDefault(c => c.CharacterInfo.Character == character);
+                    if (client != null)
+                    {
+                        GameMain.Server.SetClientCharacter(client, husk);
+                    }
+#else
+                    if (!character.IsRemotelyControlled && character == Character.Controlled)
+                    {
+                        Character.Controlled = husk; 
+                    }
+#endif
+                }
             }
 
             foreach (Limb limb in husk.AnimController.Limbs)
@@ -229,15 +278,21 @@ namespace Barotrauma
                 }
             }
 
+            if ((Prefab as AfflictionPrefabHusk)?.TransferBuffs ?? false)
+            {
+                foreach (Affliction affliction in character.CharacterHealth.GetAllAfflictions())
+                {
+                    if (affliction.Prefab.IsBuff)
+                    {
+                        husk.CharacterHealth.ApplyAffliction(
+                            character.CharacterHealth.GetAfflictionLimb(affliction), 
+                            affliction.Prefab.Instantiate(affliction.Strength));
+                    }
+                }
+            }
+
             if (character.Inventory != null && husk.Inventory != null)
             {
-                if (character.Inventory.Capacity != husk.Inventory.Capacity)
-                {
-                    string errorMsg = "Failed to move items from the source character's inventory into a husk's inventory (inventory sizes don't match)";
-                    DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("AfflictionHusk.CreateAIHusk:InventoryMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                    yield return CoroutineStatus.Success;
-                }
                 for (int i = 0; i < character.Inventory.Capacity && i < husk.Inventory.Capacity; i++)
                 {
                     character.Inventory.GetItemsAt(i).ForEachMod(item => husk.Inventory.TryPutItem(item, i, true, false, null));
@@ -247,7 +302,7 @@ namespace Barotrauma
             husk.SetStun(5);
             yield return new WaitForSeconds(5, false);
 #if CLIENT
-            husk.PlaySound(CharacterSound.SoundType.Idle);
+            husk?.PlaySound(CharacterSound.SoundType.Idle);
 #endif
             yield return CoroutineStatus.Success;
         }

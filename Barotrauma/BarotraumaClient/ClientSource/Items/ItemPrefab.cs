@@ -11,7 +11,7 @@ namespace Barotrauma
     class BrokenItemSprite
     {
         //sprite will be rendered if the condition of the item is below this
-        public readonly float MaxCondition;
+        public readonly float MaxConditionPercentage;
         public readonly Sprite Sprite;
         public readonly bool FadeIn;
         public readonly Point Offset;
@@ -19,7 +19,7 @@ namespace Barotrauma
         public BrokenItemSprite(Sprite sprite, float maxCondition, bool fadeIn, Point offset)
         {
             Sprite = sprite;
-            MaxCondition = MathHelper.Clamp(maxCondition, 0.0f, 100.0f);
+            MaxConditionPercentage = MathHelper.Clamp(maxCondition, 0.0f, 100.0f);
             FadeIn = fadeIn;
             Offset = offset;
         }
@@ -77,6 +77,13 @@ namespace Barotrauma
             protected set;
         }
 
+        [Serialize(true, false)]
+        public bool ShowInStatusMonitor
+        {
+            get;
+            private set;
+        }
+
 
         [Serialize("", false)]
         public string ImpactSoundTag { get; private set; }
@@ -84,13 +91,13 @@ namespace Barotrauma
         public override void UpdatePlacing(Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
-            
+
             if (PlayerInput.SecondaryMouseButtonClicked())
             {
                 selected = null;
                 return;
             }
-            
+
             var potentialContainer = MapEntity.GetPotentialContainer(position);
 
             if (!ResizeHorizontal && !ResizeVertical)
@@ -155,7 +162,7 @@ namespace Barotrauma
             {
                 potentialContainer.IsHighlighted = true;
             }
-            
+
 
             //if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed) selected = null;
 

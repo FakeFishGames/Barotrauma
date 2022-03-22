@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
@@ -13,6 +14,7 @@ namespace Barotrauma
         {
             public readonly EventSet RootSet;
             public readonly Dictionary<string, int> MonsterCounts = new Dictionary<string, int>();
+            public float MonsterStrength;
 
             public EventDebugStats(EventSet rootSet)
             {
@@ -48,10 +50,10 @@ namespace Barotrauma
             List<EventPrefab> eventPrefabs = new List<EventPrefab>(PrefabList);
             foreach (var eventSet in List)
             {
-                eventPrefabs.AddRange(eventSet.EventPrefabs.Select(ep => ep.prefab));
+                eventPrefabs.AddRange(eventSet.EventPrefabs.SelectMany(ep => ep.Prefabs));
                 foreach (var childSet in eventSet.ChildSets)
                 {
-                    eventPrefabs.AddRange(childSet.EventPrefabs.Select(ep => ep.prefab));
+                    eventPrefabs.AddRange(childSet.EventPrefabs.SelectMany(ep => ep.Prefabs));
                 }
             }
             return eventPrefabs;
@@ -61,6 +63,8 @@ namespace Barotrauma
         {
             return GetAllEventPrefabs().Find(prefab => string.Equals(prefab.Identifier, identifer, StringComparison.Ordinal));
         }
+
+        public readonly bool IsCampaignSet;
 
         //0-100
         public readonly float MinLevelDifficulty, MaxLevelDifficulty;
@@ -98,7 +102,48 @@ namespace Barotrauma
 
         public readonly Dictionary<string, float> Commonness;
 
-        public readonly List<(EventPrefab prefab, float commonness, float probability)> EventPrefabs;
+        public struct SubEventPrefab
+        {
+            public SubEventPrefab(string debugIdentifier, string[] prefabIdentifiers, float? commonness, float? probability)
+            {
+                EventPrefab tryFindPrefab(string id)
+                {
+                    var prefab = PrefabList.Find(p => p.Identifier.Equals(id, StringComparison.OrdinalIgnoreCase));
+                    if (prefab is null)
+                    {
+                        DebugConsole.ThrowError($"Error in event set \"{debugIdentifier}\" - could not find the event prefab \"{id}\".");
+                    }
+                    return prefab;
+                }
+
+                this.Prefabs = prefabIdentifiers
+                    .Select(tryFindPrefab)
+                    .Where(p => p != null)
+                    .ToImmutableArray();
+                this.Commonness = commonness ?? this.Prefabs.Select(p => p.Commonness).MaxOrNull() ?? 0.0f;
+                this.Probability = probability ?? this.Prefabs.Select(p => p.Probability).MaxOrNull() ?? 0.0f;
+            }
+
+            public SubEventPrefab(EventPrefab prefab, float commonness, float probability)
+            {
+                Prefabs = prefab.ToEnumerable().ToImmutableArray();
+                Commonness = commonness;
+                Probability = probability;
+            }
+
+            public readonly ImmutableArray<EventPrefab> Prefabs;
+            public readonly float Commonness;
+            public readonly float Probability;
+
+            public void Deconstruct(out IEnumerable<EventPrefab> prefabs, out float commonness, out float probability)
+            {
+                prefabs = Prefabs;
+                commonness = Commonness;
+                probability = Probability;
+            }
+        }
+        
+        public readonly List<SubEventPrefab> EventPrefabs;
 
         public readonly List<EventSet> ChildSets;
 
@@ -112,7 +157,7 @@ namespace Barotrauma
         {
             DebugIdentifier = element.GetAttributeString("identifier", null) ?? debugIdentifier;
             Commonness = new Dictionary<string, float>();
-            EventPrefabs =  new List<(EventPrefab prefab, float commonness, float probability)>();
+            EventPrefabs =  new List<SubEventPrefab>();
             ChildSets = new List<EventSet>();
 
             BiomeIdentifier = element.GetAttributeString("biome", string.Empty);
@@ -151,6 +196,7 @@ namespace Barotrauma
             DelayWhenCrewAway = element.GetAttributeBool("delaywhencrewaway", !PerRuin && !PerCave && !PerWreck);
             OncePerOutpost = element.GetAttributeBool("onceperoutpost", false);
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
+            IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
 
             Commonness[""] = element.GetAttributeFloat("commonness", 1.0f);
             foreach (XElement subElement in element.Elements())
@@ -163,7 +209,7 @@ namespace Barotrauma
                         {
                             if (overrideElement.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase))
                             {
-                                string levelType = overrideElement.GetAttributeString("leveltype", "");
+                                string levelType = overrideElement.GetAttributeString("leveltype", "").ToLowerInvariant();
                                 if (!Commonness.ContainsKey(levelType))
                                 {
                                     Commonness.Add(levelType, overrideElement.GetAttributeFloat("commonness", 0.0f));
@@ -178,23 +224,20 @@ namespace Barotrauma
                         //an element with just an identifier = reference to an event prefab
                         if (!subElement.HasElements && subElement.Attributes().First().Name.ToString().Equals("identifier", StringComparison.OrdinalIgnoreCase))
                         {
-                            string identifier = subElement.GetAttributeString("identifier", "");
-                            var prefab = PrefabList.Find(p => p.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
-                            if (prefab == null)
-                            {
-                                DebugConsole.ThrowError($"Error in event set \"{debugIdentifier}\" - could not find the event prefab \"{identifier}\".");
-                            }
-                            else
-                            {
-                                float commonness = subElement.GetAttributeFloat("commonness", prefab.Commonness);
-                                float probability = subElement.GetAttributeFloat("probability", prefab.Probability);
-                                EventPrefabs.Add((prefab, commonness, probability));
-                            }
+                            string[] identifiers = subElement.GetAttributeStringArray("identifier", Array.Empty<string>());
+                        
+                            float commonness = subElement.GetAttributeFloat("commonness", -1f);
+                            float probability = subElement.GetAttributeFloat("probability", -1f);
+                            EventPrefabs.Add(new SubEventPrefab(
+                                debugIdentifier,
+                                identifiers,
+                                commonness >= 0f ? commonness : (float?)null,
+                                probability >= 0f ? probability : (float?)null));
                         }
                         else
                         {
                             var prefab = new EventPrefab(subElement);
-                            EventPrefabs.Add((prefab, prefab.Commonness, prefab.Probability));
+                            EventPrefabs.Add(new SubEventPrefab(prefab, prefab.Commonness, prefab.Probability));
                         }
                         break;
                 }
@@ -308,7 +351,7 @@ namespace Barotrauma
             }
         }
 
-        public static List<string> GetDebugStatistics(int simulatedRoundCount = 100)
+        public static List<string> GetDebugStatistics(int simulatedRoundCount = 100, Func<MonsterEvent, bool> filter = null)
         {
             List<string> debugLines = new List<string>();
 
@@ -318,79 +361,75 @@ namespace Barotrauma
                 for (int i = 0; i < simulatedRoundCount; i++)
                 {
                     var newStats = new EventDebugStats(eventSet);
-                    CheckEventSet(newStats, eventSet);
+                    CheckEventSet(newStats, eventSet, filter);
                     stats.Add(newStats);
                 }
                 debugLines.Add($"Event stats ({eventSet.DebugIdentifier}): ");
                 LogEventStats(stats, debugLines);
             }
 
-            for (int difficulty = 0; difficulty <= 100; difficulty += 10)
-            {
-                debugLines.Add($"Event stats on difficulty level {difficulty}: ");
-                List<EventDebugStats> stats = new List<EventDebugStats>();
-                for (int i = 0; i < simulatedRoundCount; i++)
-                {
-                    EventSet selectedSet = List.Where(s => difficulty >= s.MinLevelDifficulty && difficulty <= s.MaxLevelDifficulty).GetRandom();
-                    if (selectedSet == null) { continue; }
-                    var newStats = new EventDebugStats(selectedSet);
-                    CheckEventSet(newStats, selectedSet);
-                    stats.Add(newStats);
-                }
-                LogEventStats(stats, debugLines);
-            }
-
             return debugLines;
 
-            static void CheckEventSet(EventDebugStats stats, EventSet thisSet)
+            static void CheckEventSet(EventDebugStats stats, EventSet thisSet, Func<MonsterEvent, bool> filter = null)
             {
                 if (thisSet.ChooseRandom)
                 {
-                    var unusedEvents = new List<(EventPrefab prefab, float commonness, float probability)>(thisSet.EventPrefabs);
-                    for (int i = 0; i < thisSet.EventCount; i++)
+                    var unusedEvents = thisSet.EventPrefabs.ToList();
+                    if (unusedEvents.Any())
                     {
-                        var eventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => e.commonness).ToList(), Rand.RandSync.Unsynced);
-                        if (eventPrefab.prefab != null)
+                        for (int i = 0; i < thisSet.EventCount; i++)
                         {
-                            AddEvent(stats, eventPrefab.prefab);
-                            unusedEvents.Remove(eventPrefab);
+                            var eventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => e.Commonness).ToList());
+                            if (eventPrefab.Prefabs.Any(p => p != null))
+                            {
+                                AddEvents(stats, eventPrefab.Prefabs, filter);
+                                unusedEvents.Remove(eventPrefab);
+                            }
                         }
+                    }
+                    List<float> values = thisSet.ChildSets.SelectMany(s => s.Commonness.Values).ToList();
+                    EventSet childSet = ToolBox.SelectWeightedRandom(thisSet.ChildSets, values);
+                    if (childSet != null)
+                    {
+                        CheckEventSet(stats, childSet, filter);
                     }
                 }
                 else
                 {
                     foreach (var eventPrefab in thisSet.EventPrefabs)
                     {
-                        AddEvent(stats, eventPrefab.prefab);
+                        AddEvents(stats, eventPrefab.Prefabs, filter);
                     }
-                }
-                foreach (var childSet in thisSet.ChildSets)
-                {
-                    CheckEventSet(stats, childSet);
+                    foreach (var childSet in thisSet.ChildSets)
+                    {
+                        CheckEventSet(stats, childSet, filter);
+                    }
                 }
             }
 
-            static void AddEvent(EventDebugStats stats, EventPrefab eventPrefab)
+            static void AddEvents(EventDebugStats stats, IEnumerable<EventPrefab> eventPrefabs, Func<MonsterEvent, bool> filter = null)
+                => eventPrefabs.ForEach(p => AddEvent(stats, p, filter));
+            
+            static void AddEvent(EventDebugStats stats, EventPrefab eventPrefab, Func<MonsterEvent, bool> filter = null)
             {
-                if (eventPrefab.EventType == typeof(MonsterEvent))
+                if (eventPrefab.EventType == typeof(MonsterEvent) && eventPrefab.TryCreateInstance(out MonsterEvent monsterEvent))
                 {
-                    float spawnProbability = eventPrefab.ConfigElement.GetAttributeFloat("spawnprobability", 1.0f);
-                    if (Rand.Value(Rand.RandSync.Server) > spawnProbability)
-                    {
-                        return;
-                    }
+                    if (filter != null && !filter(monsterEvent)) { return; }
 
-                    string character = eventPrefab.ConfigElement.GetAttributeString("characterfile", "");
-                    System.Diagnostics.Debug.Assert(!string.IsNullOrEmpty(character));
-                    int amount = eventPrefab.ConfigElement.GetAttributeInt("amount", 0);
-                    int minAmount = eventPrefab.ConfigElement.GetAttributeInt("minamount", amount);
-                    int maxAmount = eventPrefab.ConfigElement.GetAttributeInt("maxamount", amount);
+                    float spawnProbability = monsterEvent.Prefab.Probability;
+                    if (Rand.Value() > spawnProbability) { return; }
 
-                    int count = Rand.Range(minAmount, maxAmount + 1);
+                    string character = monsterEvent.speciesName;
+                    int count = Rand.Range(monsterEvent.MinAmount, monsterEvent.MaxAmount + 1);
                     if (count <= 0) { return; }
-
                     if (!stats.MonsterCounts.ContainsKey(character)) { stats.MonsterCounts[character] = 0; }
                     stats.MonsterCounts[character] += count;
+                    
+                    var aiElement = CharacterPrefab.FindBySpeciesName(character)?.XDocument?.Root?.GetChildElement("ai");
+                    if (aiElement != null)
+                    {
+                        stats.MonsterStrength += aiElement.GetAttributeFloat("combatstrength", 0) * count;
+                    }
                 }
             }
 
@@ -403,16 +442,21 @@ namespace Barotrauma
                 }
                 else
                 {
-                    stats.Sort((s1, s2) => { return s1.MonsterCounts.Values.Sum().CompareTo(s2.MonsterCounts.Values.Sum()); });
-
-                    EventDebugStats minStats = stats.First();
-                    EventDebugStats maxStats = stats.First();
-                    debugLines.Add($"  Minimum monster spawns: {stats.First().MonsterCounts.Values.Sum()}");
+                    stats.Sort((s1, s2) => s1.MonsterCounts.Values.Sum().CompareTo(s2.MonsterCounts.Values.Sum()));
+                    debugLines.Add($"  Minimum monster count: {stats.First().MonsterCounts.Values.Sum()}");
                     debugLines.Add($"     {LogMonsterCounts(stats.First())}");
-                    debugLines.Add($"  Median monster spawns: {stats[stats.Count / 2].MonsterCounts.Values.Sum()}");
+                    debugLines.Add($"  Median monster count: {stats[stats.Count / 2].MonsterCounts.Values.Sum()}");
                     debugLines.Add($"     {LogMonsterCounts(stats[stats.Count / 2])}");
-                    debugLines.Add($"  Maximum monster spawns: {stats.Last().MonsterCounts.Values.Sum()}");
+                    debugLines.Add($"  Maximum monster count: {stats.Last().MonsterCounts.Values.Sum()}");
                     debugLines.Add($"     {LogMonsterCounts(stats.Last())}");
+                    debugLines.Add($"  Average monster count: {StringFormatter.FormatZeroDecimal((float)stats.Average(s => s.MonsterCounts.Values.Sum()))}");
+                    debugLines.Add($" ");
+
+                    stats.Sort((s1, s2) => s1.MonsterStrength.CompareTo(s2.MonsterStrength));
+                    debugLines.Add($"  Minimum monster strength: {StringFormatter.FormatZeroDecimal(stats.First().MonsterStrength)}");
+                    debugLines.Add($"  Median monster strength: {StringFormatter.FormatZeroDecimal(stats[stats.Count / 2].MonsterStrength)}");
+                    debugLines.Add($"  Maximum monster strength: {StringFormatter.FormatZeroDecimal(stats.Last().MonsterStrength)}");
+                    debugLines.Add($"  Average monster strength: {StringFormatter.FormatZeroDecimal(stats.Average(s => s.MonsterStrength))}");
                     debugLines.Add($" ");
                 }
             }

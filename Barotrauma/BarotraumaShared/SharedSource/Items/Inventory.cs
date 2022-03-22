@@ -48,8 +48,8 @@ namespace Barotrauma
                             return false;
                         }
                     }
-                    if (items[0].Prefab.Identifier != item.Prefab.Identifier ||
-                        items.Count + 1 > item.Prefab.MaxStackSize)
+                    if (items[0].Quality != item.Quality) { return false; }
+                    if (items[0].Prefab.Identifier != item.Prefab.Identifier || items.Count + 1 > item.Prefab.MaxStackSize)
                     {
                         return false;
                     }
@@ -57,7 +57,7 @@ namespace Barotrauma
                 return true;
             }
 
-            public bool CanBePut(ItemPrefab itemPrefab, float? condition = null)
+            public bool CanBePut(ItemPrefab itemPrefab, float? condition = null, int? quality = null)
             {
                 if (itemPrefab == null) { return false; }
                 if (items.Count > 0)
@@ -80,6 +80,11 @@ namespace Barotrauma
                     else
                     {
                         if (items.Any(it => !it.IsFullCondition)) { return false; }
+                    }
+
+                    if (quality.HasValue)
+                    {
+                        if (items[0].Quality != quality.Value) { return false; }
                     }
 
                     if (items[0].Prefab.Identifier != itemPrefab.Identifier ||
@@ -172,6 +177,11 @@ namespace Barotrauma
                 items.Clear();
             }
 
+            public void RemoveWhere(Func<Item, bool> predicate)
+            {
+                items.RemoveAll(it => predicate(it));
+            }
+
             public bool Any()
             {
                 return items.Count > 0;
@@ -257,6 +267,8 @@ namespace Barotrauma
         {
             get { return capacity; }
         }
+
+        public bool AllowSwappingContainedItems = true;
 
         public Inventory(Entity owner, int capacity, int slotsPerRow = 5)
         {
@@ -420,16 +432,16 @@ namespace Barotrauma
             return slots[i].CanBePut(item, ignoreCondition);
         }
 
-        public bool CanBePut(ItemPrefab itemPrefab, float? condition = null)
+        public bool CanBePut(ItemPrefab itemPrefab, float? condition = null, int? quality = null)
         {
             for (int i = 0; i < capacity; i++)
             {
-                if (CanBePutInSlot(itemPrefab, i, condition)) { return true; }
+                if (CanBePutInSlot(itemPrefab, i, condition, quality)) { return true; }
             }
             return false;
         }
 
-        public virtual bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition = null)
+        public virtual bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition = null, int? quality = null)
         {
             if (i < 0 || i >= slots.Length) { return false; }
             return slots[i].CanBePut(itemPrefab, condition);
@@ -468,7 +480,7 @@ namespace Barotrauma
             if (i < 0 || i >= slots.Length)
             {
                 string errorMsg = "Inventory.TryPutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("Inventory.TryPutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Inventory.TryPutItem:IndexOutOfRange", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return false;
             }
 
@@ -496,12 +508,12 @@ namespace Barotrauma
                 var itemInSlot = slots[i].First();
                 if (itemInSlot.OwnInventory != null && 
                     !itemInSlot.OwnInventory.Contains(item) &&
-                    (itemInSlot.GetComponent<ItemContainer>()?.MaxStackSize ?? 0) == 1 && 
+                    (itemInSlot.GetComponent<ItemContainer>()?.GetMaxStackSize(0) ?? 0) == 1 && 
                     itemInSlot.OwnInventory.TrySwapping(0, item, user, createNetworkEvent, swapWholeStack: false))
                 {
                     return true;
                 }
-                return 
+                return
                     TrySwapping(i, item, user, createNetworkEvent, swapWholeStack: true) || 
                     TrySwapping(i, item, user, createNetworkEvent, swapWholeStack: false);
             }
@@ -519,7 +531,7 @@ namespace Barotrauma
             if (i < 0 || i >= slots.Length)
             {
                 string errorMsg = "Inventory.PutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("Inventory.PutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Inventory.PutItem:IndexOutOfRange", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -623,6 +635,8 @@ namespace Barotrauma
         protected bool TrySwapping(int index, Item item, Character user, bool createNetworkEvent, bool swapWholeStack)
         {
             if (item?.ParentInventory == null || !slots[index].Any()) { return false; }
+            if (slots[index].Items.Any(it => !it.IsInteractable(user))) { return false; }
+            if (!AllowSwappingContainedItems) { return false; }
 
             //swap to InvSlotType.Any if possible
             Inventory otherInventory = item.ParentInventory;
@@ -772,23 +786,29 @@ namespace Barotrauma
                 {
                     for (int j = 0; j < capacity; j++)
                     {
-                        if (slots[j].Contains(item)) { slots[j].RemoveAllItems(); };
+                        if (slots[j].Contains(item))
+                        {
+                            slots[j].RemoveWhere(it => existingItems.Contains(it) || stackedItems.Contains(it));
+                        }
                     }
                     for (int j = 0; j < otherInventory.capacity; j++)
                     {
-                        if (otherInventory.slots[j].Contains(existingItems.FirstOrDefault())) { otherInventory.slots[j].RemoveAllItems(); }
+                        if (otherInventory.slots[j].Contains(existingItems.FirstOrDefault()))
+                        {
+                            otherInventory.slots[j].RemoveWhere(it => existingItems.Contains(it) || stackedItems.Contains(it));
+                        }
                     }
                 }
 
                 if (otherIsEquipped)
                 {
-                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent));
-                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent));
+                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent, ignoreCondition: true));
+                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent, ignoreCondition: true));
                 }
                 else
                 {
-                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent));
-                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent));
+                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent, ignoreCondition: true));
+                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent, ignoreCondition: true));
                 }
 
 #if CLIENT                

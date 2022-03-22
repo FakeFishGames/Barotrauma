@@ -8,6 +8,11 @@ namespace Barotrauma.Networking
 {
     partial class RespawnManager : Entity, IServerSerializable
     {
+        /// <summary>
+        /// How much skills drop towards the job's default skill levels when respawning midround in the campaign
+        /// </summary>
+        const float SkillReductionOnCampaignMidroundRespawn = 0.75f;
+
         private DateTime despawnTime;
 
         private float shuttleEmptyTimer;
@@ -42,6 +47,29 @@ namespace Barotrauma.Networking
 
                 yield return c;
             }
+        }
+
+        private bool IsRespawnPromptPendingForClient(Client c)
+        {
+            if (!UseRespawnPrompt || !(GameMain.GameSession.GameMode is MultiPlayerCampaign campaign)) { return false; }
+
+            if (!c.InGame) { return false; }
+            if (c.SpectateOnly && (GameMain.Server.ServerSettings.AllowSpectating || GameMain.Server.OwnerConnection == c.Connection)) { return false; }
+            if (c.Character != null && !c.Character.IsDead) { return false; }
+
+            var matchingData = campaign.GetClientCharacterData(c);
+            if (matchingData != null && matchingData.HasSpawned)
+            {
+                if (Character.CharacterList.Any(c => c.Info == matchingData.CharacterInfo && !c.IsDead))
+                {
+                    return false;
+                }
+                else if (!c.WaitForNextRoundRespawn.HasValue)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private List<CharacterInfo> GetBotsToRespawn()
@@ -284,6 +312,8 @@ namespace Barotrauma.Networking
         
         partial void RespawnCharactersProjSpecific(Vector2? shuttlePos)
         {
+            respawnedCharacters.Clear();
+
             var respawnSub = RespawnShuttle ?? Submarine.MainSub;
 
             MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
@@ -297,10 +327,10 @@ namespace Barotrauma.Networking
                 c.WaitForNextRoundRespawn = null;
 
                 var matchingData = campaign?.GetClientCharacterData(c);
-                if (matchingData != null && !matchingData.HasSpawned)
+                if (matchingData != null)
                 {
                     c.CharacterInfo = matchingData.CharacterInfo;
-                }                
+                }
 
                 //all characters are in Team 1 in game modes/missions with only one team.
                 //if at some point we add a game mode with multiple teams where respawning is possible, this needs to be reworked
@@ -355,8 +385,30 @@ namespace Barotrauma.Networking
 
                 characterInfos[i].ClearCurrentOrders();
 
-                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, isRemotePlayer: !bot, hasAi: bot);
+                bool forceSpawnInMainSub = false;
+                if (!bot && campaign != null)
+                {
+                    var matchingData = campaign?.GetClientCharacterData(clients[i]);
+                    if (matchingData != null)
+                    {
+                        if (!matchingData.HasSpawned)
+                        {
+                            forceSpawnInMainSub = true;
+                        }
+                        else
+                        {
+                            ReduceCharacterSkills(characterInfos[i]);
+                            characterInfos[i].RemoveSavedStatValuesOnDeath();
+                            characterInfos[i].CauseOfDeath = null;
+                        }
+                    }
+                }
+
+                var character = Character.Create(characterInfos[i], (forceSpawnInMainSub ? mainSubSpawnPoints[i] : shuttleSpawnPoints[i]).WorldPosition, characterInfos[i].Name, isRemotePlayer: !bot, hasAi: bot);
                 character.TeamID = CharacterTeamType.Team1;
+                character.LoadTalents();
+
+                respawnedCharacters.Add(character);
 
                 if (bot)
                 {
@@ -364,6 +416,12 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
+                    if (GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign && character.Info != null)
+                    {
+                        character.Info.SetExperience(Math.Max(character.Info.ExperiencePoints, mpCampaign.GetSavedExperiencePoints(clients[i])));
+                        mpCampaign.ClearSavedExperiencePoints(clients[i]);
+                    }
+
                     //tell the respawning client they're no longer a traitor
                     if (GameMain.Server.TraitorManager?.Traitors != null && clients[i].Character != null)
                     {
@@ -455,6 +513,17 @@ namespace Barotrauma.Networking
             }
         }
 
+        public static void ReduceCharacterSkills(CharacterInfo characterInfo)
+        {
+            if (characterInfo?.Job == null) { return; }
+            foreach (Skill skill in characterInfo.Job.Skills)
+            {
+                var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Identifier.Equals(s.Identifier, StringComparison.OrdinalIgnoreCase));
+                if (skillPrefab == null) { continue; }
+                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.Start, SkillReductionOnCampaignMidroundRespawn);
+            }
+        }
+
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.WriteRangedInteger((int)CurrentState, 0, Enum.GetNames(typeof(State)).Length);
@@ -467,9 +536,14 @@ namespace Barotrauma.Networking
                     msg.Write((float)(ReturnTime - DateTime.Now).TotalSeconds);
                     break;
                 case State.Waiting:
+                    MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
+                    var matchingData = campaign?.GetClientCharacterData(c);
+                    bool forceSpawnInMainSub = matchingData != null && !matchingData.HasSpawned;
                     msg.Write((ushort)pendingRespawnCount);
                     msg.Write((ushort)requiredRespawnCount);
+                    msg.Write(IsRespawnPromptPendingForClient(c));
                     msg.Write(RespawnCountdownStarted);
+                    msg.Write(forceSpawnInMainSub);
                     msg.Write((float)(RespawnTime - DateTime.Now).TotalSeconds);
                     break;
                 case State.Returning:

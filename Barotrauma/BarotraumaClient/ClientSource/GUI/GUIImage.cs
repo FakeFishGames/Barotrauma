@@ -174,7 +174,7 @@ namespace Barotrauma
             if (BlendState != null)
             {
                 spriteBatch.End();
-                spriteBatch.Begin(blendState: BlendState, samplerState: GUI.SamplerState);
+                spriteBatch.Begin(blendState: BlendState, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
             if (style != null)

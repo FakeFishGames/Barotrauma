@@ -180,7 +180,11 @@ namespace Barotrauma
                 var path = pathFinder.FindPath(ConvertUnits.ToSimUnits(patrolPos), ConvertUnits.ToSimUnits(preferredSpawnPos));
                 if (!path.Unreachable)
                 {
-                    preferredSpawnPos = path.Nodes[Rand.Range(0, path.Nodes.Count - 1)].WorldPosition; // spawn the sub in a random point in the path if possible
+                    var validNodes = path.Nodes.FindAll(n => !Level.Loaded.ExtraWalls.Any(w => w.Cells.Any(c => c.IsPointInside(n.WorldPosition))));
+                    if (validNodes.Any())
+                    {
+                        preferredSpawnPos = validNodes.GetRandom().WorldPosition; // spawn the sub in a random point in the path if possible
+                    }
                 }
 
                 int graceDistance = 500; // the sub still spawns awkwardly close to walls, so this helps. could also be given as a parameter instead
@@ -199,6 +203,14 @@ namespace Barotrauma
             enemySub.TeamID = CharacterTeamType.None;
             //make the enemy sub withstand atleast the same depth as the player sub
             enemySub.RealWorldCrushDepth = Math.Max(enemySub.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth);
+            if (Level.Loaded != null)
+            {
+                //...and the depth of the patrol positions + 1000 m
+                foreach (var patrolPos in patrolPositions)
+                {
+                    enemySub.RealWorldCrushDepth = Math.Max(enemySub.RealWorldCrushDepth, Level.Loaded.GetRealWorldDepth(patrolPos.Y) + 1000);
+                }
+            }
             enemySub.ImmuneToBallastFlora = true;
         }
 
@@ -382,11 +394,11 @@ namespace Barotrauma
             State = newState;
         }
 
-        private bool CheckWinState() => !IsClient && (characters.All(m => !Survived(m)));
+        private bool CheckWinState() => !IsClient && characters.All(m => DeadOrCaptured(m));
 
-        private bool Survived(Character character)
+        private bool DeadOrCaptured(Character character)
         {
-            return character != null && !character.Removed && !character.IsDead;
+            return character == null || character.Removed || character.IsDead || (character.LockHands && character.Submarine == Submarine.MainSub);
         }
 
         public override void End()

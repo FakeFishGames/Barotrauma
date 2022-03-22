@@ -112,33 +112,28 @@ namespace Barotrauma.Networking
                 NetworkConnection.TimeoutThresholdInGame :
                 NetworkConnection.TimeoutThreshold;
 
-            byte incByte = data[0];
-            bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
-            bool isConnectionInitializationStep = (incByte & (byte)PacketHeader.IsConnectionInitializationStep) != 0;
-            bool isDisconnectMessage = (incByte & (byte)PacketHeader.IsDisconnectMessage) != 0;
-            bool isServerMessage = (incByte & (byte)PacketHeader.IsServerMessage) != 0;
-            bool isHeartbeatMessage = (incByte & (byte)PacketHeader.IsHeartbeatMessage) != 0;
+            PacketHeader packetHeader = (PacketHeader)data[0];
 
-            if (!isServerMessage) { return; }
+            if (!packetHeader.IsServerMessage()) { return; }
 
-            if (isConnectionInitializationStep)
+            if (packetHeader.IsConnectionInitializationStep())
             {
                 ulong low = Lidgren.Network.NetBitWriter.ReadUInt32(data, 32, 8);
                 ulong high = Lidgren.Network.NetBitWriter.ReadUInt32(data, 32, 8 + 32);
                 ulong lobbyId = low + (high << 32);
 
                 Steam.SteamManager.JoinLobby(lobbyId, false);
-                IReadMessage inc = new ReadOnlyMessage(data, false, 1 + 8, dataLength - 9, ServerConnection);
+                IReadMessage inc = new ReadOnlyMessage(data, false, 1 + 8, dataLength - (1 + 8), ServerConnection);
                 if (initializationStep != ConnectionInitialization.Success)
                 {
                     incomingInitializationMessages.Add(inc);
                 }
             }
-            else if (isHeartbeatMessage)
+            else if (packetHeader.IsHeartbeatMessage())
             {
                 return; //TODO: implement heartbeats
             }
-            else if (isDisconnectMessage)
+            else if (packetHeader.IsDisconnectMessage())
             {
                 IReadMessage inc = new ReadOnlyMessage(data, false, 1, dataLength - 1, ServerConnection);
                 string msg = inc.ReadString();
@@ -147,10 +142,9 @@ namespace Barotrauma.Networking
             }
             else
             {
-                UInt16 length = data[1];
-                length |= (UInt16)(((UInt32)data[2]) << 8);
+                UInt16 length = Lidgren.Network.NetBitWriter.ReadUInt16(data, 16, 8);
 
-                IReadMessage inc = new ReadOnlyMessage(data, isCompressed, 3, length, ServerConnection);
+                IReadMessage inc = new ReadOnlyMessage(data, packetHeader.IsCompressed(), 3, length, ServerConnection);
                 incomingDataMessages.Add(inc);
             }
         }
@@ -288,7 +282,7 @@ namespace Barotrauma.Networking
             heartbeatTimer = 5.0;
 
 #if DEBUG
-            CoroutineManager.InvokeAfter(() =>
+            CoroutineManager.Invoke(() =>
             {
                 if (GameMain.Client == null) { return; }
                 if (Rand.Range(0.0f, 1.0f) < GameMain.Client.SimulatedLoss && sendType != Steamworks.P2PSend.Reliable) { return; }
