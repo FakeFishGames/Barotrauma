@@ -507,7 +507,7 @@ namespace Barotrauma.Items.Components
                         {
                             Vector2 origin = weaponSprite.Origin;
                             float scale = parentWidth / Math.Max(weaponSprite.size.X, weaponSprite.size.Y);
-                            Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? GUI.Style.Red : GUI.Style.Green;
+                            Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? Color.DimGray : GUI.Style.Green;
                             weaponSprite.Draw(batch, center, color, origin, rotation, scale, it.SpriteEffects);
                         }
                     });
@@ -537,9 +537,9 @@ namespace Barotrauma.Items.Components
             if (item.Submarine == null && displayedSubs.Count > 0 ||                                         // item not inside a sub anymore, but display is still showing subs
                 item.Submarine is { } itemSub &&
                 (
-                    !displayedSubs.Contains(itemSub) ||                                                      // current sub not displayed
-                    itemSub.DockedTo.Any(s => !displayedSubs.Contains(s)) ||                                 // some of the docked subs not displayed
-                    displayedSubs.Any(s => s != itemSub && !itemSub.DockedTo.Contains(s))                    // displaying a sub that shouldn't be displayed
+                    !displayedSubs.Contains(itemSub) ||                                                                     // current sub not displayed
+                    itemSub.DockedTo.Any(s => !displayedSubs.Contains(s) && itemSub.ConnectedDockingPorts[s].IsLocked) ||   // some of the docked subs not displayed
+                    displayedSubs.Any(s => s != itemSub && !itemSub.DockedTo.Contains(s))                                   // displaying a sub that shouldn't be displayed
                 ) ||
                 prevResolution.X != GameMain.GraphicsWidth || prevResolution.Y != GameMain.GraphicsHeight || // resolution changed
                 !submarineContainer.Children.Any())                                                          // We lack a GUI
@@ -1092,6 +1092,12 @@ namespace Barotrauma.Items.Components
                 if (!(entity is Item it)) { continue; }
                 if (!electricalChildren.TryGetValue(miniMapGuiComponent, out GUIComponent component)) { continue; }
 
+                if (entity.Removed)
+                {
+                    component.Visible = false;
+                    continue;
+                }
+
                 if (item.Submarine == null || !hasPower)
                 {
                     component.Color = component.OutlineColor = NoPowerElectricalColor;
@@ -1117,7 +1123,7 @@ namespace Barotrauma.Items.Components
                         int current = (int)-powerTransfer.CurrPowerConsumption, load = (int)powerTransfer.PowerLoad;
 
                         line1 = TextManager.GetWithVariable("statusmonitor.junctionpower.tooltip", "[amount]", current.ToString(), fallBackTag: "statusmonitor.junctioncurrent.tooltip");
-                        line2 = TextManager.GetWithVariable("statusmonitor.junctionload.tooltip", "[amount]", load.ToString());
+                        line2 = TextManager.GetWithVariables("statusmonitor.junctionload.tooltip", new string[] { "[amount]", "[load]" }, new string[] { load.ToString(), load.ToString() });
                     }
 
                     string line3 = TextManager.GetWithVariable("statusmonitor.durability.tooltip", "[amount]", durability.ToString());
@@ -1329,7 +1335,7 @@ namespace Barotrauma.Items.Components
 
             RectangleF entityRect = ScaleRectToUI(structure, parent, border);
             Vector2 spriteScale = new Vector2(entityRect.Size.X / sprite.size.X, entityRect.Size.Y / sprite.size.Y);
-            sprite.Draw(spriteBatch, new Vector2(entityRect.Location.X + inflate, entityRect.Location.Y + inflate), structure.SpriteColor, Vector2.Zero, 0f, spriteScale, structure.SpriteEffects);
+            sprite.Draw(spriteBatch, new Vector2(entityRect.Location.X + inflate, entityRect.Location.Y + inflate), structure.SpriteColor, Vector2.Zero, 0f, spriteScale, sprite.effects ^ structure.SpriteEffects);
         }
 
         private static RectangleF ScaleRectToUI(MapEntity entity, RectangleF parentRect, RectangleF worldBorders)
@@ -1414,10 +1420,11 @@ namespace Barotrauma.Items.Components
                         Vector2 drawPos = new Vector2(frame.Rect.Right - sizeX, frame.Rect.Y - sizeY / 2f);
 
                         UISprite icon = GUI.Style.IconOverflowIndicator;
-
-                        const int iconPadding = 4;
-                        icon.Draw(spriteBatch, new Rectangle((int) drawPos.X - iconPadding, (int) drawPos.Y - iconPadding, (int) maxWidth + iconPadding * 2, (int) maxWidth + iconPadding * 2), Color.White, SpriteEffects.None);
-
+                        if (icon != null)
+                        {
+                            const int iconPadding = 4;
+                            icon.Draw(spriteBatch, new Rectangle((int) drawPos.X - iconPadding, (int) drawPos.Y - iconPadding, (int) maxWidth + iconPadding * 2, (int) maxWidth + iconPadding * 2), Color.White, SpriteEffects.None);
+                        }
                         GUI.DrawString(spriteBatch, drawPos, text, GUI.Style.TextColor, font: GUI.SubHeadingFont);
                     }
                     break;
@@ -1711,6 +1718,21 @@ namespace Barotrauma.Items.Components
             }
 
             return new MiniMapHullData(scaledPolygon, worldRect, parentRect.Size, snappedRectangles, hullRefs.ToImmutableArray());
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+            if (searchAutoComplete != null)
+            {
+                searchAutoComplete.RectTransform.Parent = null;
+                searchAutoComplete = null;
+            }
+            if (hullInfoFrame != null)
+            {
+                hullInfoFrame.RectTransform.Parent = null;
+                hullInfoFrame = null;
+            }
         }
     }
 }

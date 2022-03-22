@@ -62,6 +62,9 @@ namespace Barotrauma
             return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).NextDouble() * (maximum - minimum) + minimum;
         }
 
+        /// <summary>
+        /// Min inclusive, Max exclusive!
+        /// </summary>
         public static int Range(int minimum, int maximum, RandSync sync = RandSync.Unsynced)
         {
             CheckRandThreadSafety(sync);

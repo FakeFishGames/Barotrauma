@@ -228,13 +228,13 @@ namespace Barotrauma
                 {
                     case "bool":
                         bool boolValue = value == "true" || value == "True";
-                        if (TrySetValueWithoutReflection(parentObject, boolValue)) { return true; }
+                        if (TrySetBoolValueWithoutReflection(parentObject, boolValue)) { return true; }
                         PropertyInfo.SetValue(parentObject, boolValue, null);
                         break;
                     case "int":
                         if (int.TryParse(value, out int intVal))
                         {
-                            if (TrySetValueWithoutReflection(parentObject, intVal)) { return true; }
+                            if (TrySetFloatValueWithoutReflection(parentObject, intVal)) { return true; }
                             PropertyInfo.SetValue(parentObject, intVal, null);
                         }
                         else
@@ -245,7 +245,7 @@ namespace Barotrauma
                     case "float":
                         if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float floatVal))
                         {
-                            if (TrySetValueWithoutReflection(parentObject, floatVal)) { return true; }
+                            if (TrySetFloatValueWithoutReflection(parentObject, floatVal)) { return true; }
                             PropertyInfo.SetValue(parentObject, floatVal, null);
                         }
                         else
@@ -387,7 +387,7 @@ namespace Barotrauma
         {
             try
             {
-                if (TrySetValueWithoutReflection(parentObject, value)) { return true; }
+                if (TrySetFloatValueWithoutReflection(parentObject, value)) { return true; }
                 PropertyInfo.SetValue(parentObject, value, null);
             }
             catch (TargetInvocationException e)
@@ -408,7 +408,7 @@ namespace Barotrauma
         {
             try
             {
-                if (TrySetValueWithoutReflection(parentObject, value)) { return true; }
+                if (TrySetBoolValueWithoutReflection(parentObject, value)) { return true; }
                 PropertyInfo.SetValue(parentObject, value, null);
             }
             catch (TargetInvocationException e)
@@ -428,6 +428,7 @@ namespace Barotrauma
         {
             try
             {
+                if (TrySetFloatValueWithoutReflection(parentObject, value)) { return true; }
                 PropertyInfo.SetValue(parentObject, value, null);
             }
             catch (TargetInvocationException e)
@@ -466,6 +467,56 @@ namespace Barotrauma
             }
         }
 
+        public float GetFloatValue(object parentObject)
+        {
+            if (parentObject == null || PropertyInfo == null) { return 0.0f; }
+
+            if (TryGetFloatValueWithoutReflection(parentObject, out float value))
+            {
+                return value;
+            }
+
+            try
+            {
+                return (float)PropertyInfo.GetValue(parentObject, null);
+            }
+            catch (TargetInvocationException e)
+            {
+                DebugConsole.ThrowError("Exception thrown by the target of SerializableProperty.GetValue", e.InnerException);
+                return 0.0f;
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in SerializableProperty.GetValue", e);
+                return 0.0f;
+            }
+        }
+
+        public bool GetBoolValue(object parentObject)
+        {
+            if (parentObject == null || PropertyInfo == null) { return false; }
+
+            if (TryGetBoolValueWithoutReflection(parentObject, out bool value))
+            {
+                return value;
+            }
+
+            try
+            {
+                return (bool)PropertyInfo.GetValue(parentObject, null);
+            }
+            catch (TargetInvocationException e)
+            {
+                DebugConsole.ThrowError("Exception thrown by the target of SerializableProperty.GetValue", e.InnerException);
+                return false;
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in SerializableProperty.GetValue", e);
+                return false;
+            }
+        }
+
         public static string GetSupportedTypeName(Type type)
         {
             if (type.IsEnum) return "Enum";
@@ -481,125 +532,221 @@ namespace Barotrauma
         /// </summary>
         private object TryGetValueWithoutReflection(object parentObject)
         {
+            if (PropertyType == typeof(float))
+            {
+                if (TryGetFloatValueWithoutReflection(parentObject, out float value)) { return value; }
+            }
+            else if (PropertyType == typeof(bool))
+            {
+                if (TryGetBoolValueWithoutReflection(parentObject, out bool value)) { return value; }
+            }
+            else if (PropertyType == typeof(string))
+            {
+                if (TryGetStringValueWithoutReflection(parentObject, out string value)) { return value; }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Try getting the values of some commonly used properties directly without reflection
+        /// </summary>
+        private bool TryGetFloatValueWithoutReflection(object parentObject, out float value)
+        {
+            value = 0.0f;
             switch (Name)
             {
-                case "Voltage":
-                    if (parentObject is Powered powered) { return powered.Voltage; }
-                    break;
-                case "Charge":
-                    if (parentObject is PowerContainer powerContainer) { return powerContainer.Charge; }
-                    break;
-                case "Overload":
-                    if (parentObject is PowerTransfer powerTransfer) { return powerTransfer.Overload; }
-                    break;
-                case "AvailableFuel":
-                    { if (parentObject is Reactor reactor) { return reactor.AvailableFuel; } }
-                    break;
-                case "FissionRate":
-                    { if (parentObject is Reactor reactor) { return reactor.FissionRate; } }
-                    break;
-                case "OxygenFlow":
-                    if (parentObject is Vent vent) { return vent.OxygenFlow; }
-                    break;
-                case "CurrFlow":
-                    if (parentObject is Pump pump) { return pump.CurrFlow; }
-                    if (parentObject is OxygenGenerator oxygenGenerator) { return oxygenGenerator.CurrFlow; }
-                    break;
-                case "CurrentVolume":
-                    if (parentObject is Engine engine) { return engine.CurrentVolume; }
-                    break;
-                case "MotionDetected":
-                    if (parentObject is MotionSensor motionSensor) { return motionSensor.MotionDetected; }
-                    break;
-                case "Oxygen":
-                    { if (parentObject is Character character) { return character.Oxygen; } }
-                    break;
-                case "Health":
-                    {  if (parentObject is Character character) { return character.Health; } }
-                    break;
-                case "OxygenAvailable":
-                    { if (parentObject is Character character) { return character.OxygenAvailable; } }
-                    break;
-                case "PressureProtection":
-                    { if (parentObject is Character character) { return character.PressureProtection; } }
-                    break;
-                case "IsDead":
-                    { if (parentObject is Character character) { return character.IsDead; } }
-                    break;
-                case "IsHuman":
-                    { if (parentObject is Character character) { return character.IsHuman; } }
-                    break;
-                case "IsOn":
-                    { if (parentObject is LightComponent lightComponent) { return lightComponent.IsOn; } }
-                    break;
-                case "Condition":
+                case nameof(Powered.Voltage):
                     {
-                        if (parentObject is Item item) { return item.Condition; }
+                        if (parentObject is Powered powered) { value = powered.Voltage; return true; }
                     }
                     break;
-                case "ContainerIdentifier":
+                case nameof(Powered.CurrPowerConsumption):
                     {
-                        if (parentObject is Item item) { return item.ContainerIdentifier; }
+                        if (parentObject is Powered powered) { value = powered.CurrPowerConsumption; return true; }
                     }
                     break;
-                case "PhysicsBodyActive":
+                case nameof(PowerContainer.Charge):
                     {
-                        if (parentObject is Item item) { return item.PhysicsBodyActive; }
+                        if (parentObject is PowerContainer powerContainer) { value = powerContainer.Charge; return true; }
+                    }
+                    break;
+                case nameof(PowerContainer.ChargePercentage):
+                    {
+                        if (parentObject is PowerContainer powerContainer) { value = powerContainer.ChargePercentage; return true; }
+                    }
+                    break;
+                case nameof(PowerContainer.RechargeRatio):
+                    {
+                        if (parentObject is PowerContainer powerContainer) { value = powerContainer.RechargeRatio; return true; }
+                    }
+                    break;
+                case nameof(Reactor.AvailableFuel):
+                    { if (parentObject is Reactor reactor) { value = reactor.AvailableFuel; return true; } }
+                    break;
+                case nameof(Reactor.FissionRate):
+                    { if (parentObject is Reactor reactor) { value = reactor.FissionRate; return true; } }
+                    break;
+                case nameof(Reactor.Temperature):
+                    { if (parentObject is Reactor reactor) { value = reactor.Temperature; return true; } }
+                    break;
+                case nameof(Vent.OxygenFlow):
+                    if (parentObject is Vent vent) { value = vent.OxygenFlow; return true; }
+                    break;
+                case nameof(Pump.CurrFlow):
+                    { if (parentObject is Pump pump) { value = pump.CurrFlow; return true; } }
+                    if (parentObject is OxygenGenerator oxygenGenerator) { value = oxygenGenerator.CurrFlow; return true; }
+                    break;
+                case nameof(Engine.CurrentBrokenVolume):
+                    { if (parentObject is Engine engine) { value = engine.CurrentBrokenVolume; return true; } }
+                    { if (parentObject is Pump pump) { value = pump.CurrentBrokenVolume; return true; } }
+                    break;
+                case nameof(Engine.CurrentVolume):
+                    { if (parentObject is Engine engine) { value = engine.CurrentVolume; return true; } }
+                    break;
+                case nameof(Character.Oxygen):
+                    { if (parentObject is Character character) { value = character.Oxygen; return true; } }
+                    { if (parentObject is Hull hull) { value = hull.Oxygen; return true; } }
+                    break;
+                case nameof(Character.Health):
+                    { if (parentObject is Character character) { value = character.Health; return true; } }
+                    break;
+                case nameof(Character.OxygenAvailable):
+                    { if (parentObject is Character character) { value = character.OxygenAvailable; return true; } }
+                    break;
+                case nameof(Character.PressureProtection):
+                    { if (parentObject is Character character) { value = character.PressureProtection; return true; } }
+                    break;
+                case nameof(Item.Condition):
+                    { if (parentObject is Item item) { value = item.Condition; return true; } }
+                    break;
+                case nameof(Character.SpeedMultiplier):
+                    { if (parentObject is Character character) { value = character.SpeedMultiplier; return true; } }
+                    break;
+            }
+            return false;
+        }
+        
+        /// <summary>
+         /// Try getting the values of some commonly used properties directly without reflection
+         /// </summary>
+        private bool TryGetBoolValueWithoutReflection(object parentObject, out bool value)
+        {
+            value = false;
+            switch (Name)
+            {
+                case nameof(ItemComponent.IsActive):
+                    if (parentObject is ItemComponent ic) { value = ic.IsActive; return true; }
+                    break;
+                case nameof(PowerTransfer.Overload):
+                    if (parentObject is PowerTransfer powerTransfer) { value = powerTransfer.Overload; return true; }
+                    break;
+                case nameof(MotionSensor.MotionDetected):
+                    if (parentObject is MotionSensor motionSensor) { value = motionSensor.MotionDetected; return true; }
+                    break;
+                case nameof(Character.IsDead):
+                    { if (parentObject is Character character) { value = character.IsDead; return true; } }
+                    break;
+                case nameof(Character.IsHuman):
+                    { if (parentObject is Character character) { value = character.IsHuman; return true; } }
+                    break;
+                case nameof(LightComponent.IsOn):
+                    { if (parentObject is LightComponent lightComponent) { value = lightComponent.IsOn; return true; } }
+                    break;
+                case nameof(Item.PhysicsBodyActive):
+                    {
+                        if (parentObject is Item item) { value = item.PhysicsBodyActive; return true; }
+                    }
+                    break;
+                case nameof(DockingPort.Docked):
+                    if (parentObject is DockingPort dockingPort) { value = dockingPort.Docked; return true; }
+                    break;
+                case nameof(Reactor.TemperatureCritical):
+                    if (parentObject is Reactor reactor) { value = reactor.TemperatureCritical; return true; }
+                    break;
+                case nameof(TriggerComponent.TriggerActive):
+                    if (parentObject is TriggerComponent trigger) { value = trigger.TriggerActive; return true; }
+                    break;
+                case nameof(Controller.State):
+                    if (parentObject is Controller controller) { value = controller.State; return true; }
+                    break;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Try getting the values of some commonly used properties directly without reflection
+        /// </summary>
+        private bool TryGetStringValueWithoutReflection(object parentObject, out string value)
+        {
+            value = null;
+            switch (Name)
+            {
+                case nameof(Item.ContainerIdentifier):
+                    {
+                        if (parentObject is Item item) { value = item.ContainerIdentifier; return true; }
                     }
                     break;
             }
-
-            return null;
+            return false;
         }
 
         /// <summary>
         /// Try setting the values of some commonly used properties directly without reflection
         /// </summary>
-        private bool TrySetValueWithoutReflection(object parentObject, object value)
+        private bool TrySetFloatValueWithoutReflection(object parentObject, float value)
         {
             switch (Name)
             {
-                case "Condition":
-                    if (parentObject is Item item && value is float) { item.Condition = (float)value; return true; }
+                case nameof(Item.Condition):
+                    if (parentObject is Item item) { item.Condition = value; return true; }
                     break;
-                case "Voltage":
-                    if (parentObject is Powered powered && value is float) { powered.Voltage = (float)value; return true; }
+                case nameof(Powered.Voltage):
+                    if (parentObject is Powered powered) { powered.Voltage = value; return true; }
                     break;
-                case "Charge":
-                    if (parentObject is PowerContainer powerContainer && value is float) { powerContainer.Charge = (float)value; return true; }
+                case nameof(PowerContainer.Charge):
+                    if (parentObject is PowerContainer powerContainer) { powerContainer.Charge = value; return true; }
                     break;
-                case "AvailableFuel":
-                    if (parentObject is Reactor reactor && value is float) { reactor.AvailableFuel = (float)value; return true; }
+                case nameof(Reactor.AvailableFuel):
+                    if (parentObject is Reactor reactor) { reactor.AvailableFuel = value; return true; }
                     break;
-                case "Oxygen":
-                    { if (parentObject is Character character && value is float) { character.Oxygen = (float)value; return true; } }
+                case nameof(Character.Oxygen):
+                    { if (parentObject is Character character) { character.Oxygen = value; return true; } }
                     break;
-                case "HideFace":
-                    { if (parentObject is Character character && value is bool) { character.HideFace = (bool)value; return true; } }
+                case nameof(Character.OxygenAvailable):
+                    { if (parentObject is Character character) { character.OxygenAvailable = value; return true; } }
                     break;
-                case "OxygenAvailable":
-                    { if (parentObject is Character character && value is float) { character.OxygenAvailable = (float)value; return true; } }
+                case nameof(Character.PressureProtection):
+                    { if (parentObject is Character character) { character.PressureProtection = value; return true; } }
                     break;
-                case "ObstructVision":
-                    { if (parentObject is Character character && value is bool) { character.ObstructVision = (bool)value; return true; } }
+                case nameof(Character.LowPassMultiplier):
+                    { if (parentObject is Character character) { character.LowPassMultiplier = value; return true; } }
                     break;
-                case "PressureProtection":
-                    { if (parentObject is Character character && value is float) { character.PressureProtection = (float)value; return true; } }
+                case nameof(Character.SpeedMultiplier):
+                    { if (parentObject is Character character) { character.StackSpeedMultiplier(value); return true; } }
                     break;
-                case "LowPassMultiplier":
-                    { if (parentObject is Character character && value is float) { character.LowPassMultiplier = (float)value; return true; } }
-                    break;
-                case "SpeedMultiplier":
-                    { if (parentObject is Character character && value is float) { character.StackSpeedMultiplier((float)value); return true; } }
-                    break;
-                case "HealthMultiplier":
-                    { if (parentObject is Character character && value is float) { character.StackHealthMultiplier((float)value); return true; } }
-                    break;
-                case "IsOn":
-                    { if (parentObject is LightComponent lightComponent && value is bool) { lightComponent.IsOn = (bool)value; return true; } }
+                case nameof(Character.HealthMultiplier):
+                    { if (parentObject is Character character) { character.StackHealthMultiplier(value); return true; } }
                     break;
             }
-
+            return false;
+        }
+        /// <summary>
+        /// Try setting the values of some commonly used properties directly without reflection
+        /// </summary>
+        private bool TrySetBoolValueWithoutReflection(object parentObject, bool value)
+        {
+            switch (Name)
+            {
+                case nameof(Character.ObstructVision):
+                    { if (parentObject is Character character) { character.ObstructVision = value; return true; } }
+                    break;
+                case nameof(LightComponent.IsOn):
+                    { if (parentObject is LightComponent lightComponent) { lightComponent.IsOn = value; return true; } }
+                    break;
+                case nameof(ItemComponent.IsActive):
+                    { if (parentObject is ItemComponent ic) { ic.IsActive = value; return true; } }
+                    break;
+            }
             return false;
         }
 
@@ -780,6 +927,21 @@ namespace Barotrauma
                                 structure.Rect = structure.DefaultRect = new Rectangle(structure.Rect.X, structure.Rect.Y,
                                     structure.Rect.Width,
                                     (int)structure.Prefab.ScaledSize.Y);
+                            }
+                        }
+                        else if (entity is Item item)
+                        {
+                            if (!item.ResizeHorizontal)
+                            {
+                                item.Rect = item.DefaultRect = new Rectangle(item.Rect.X, item.Rect.Y,
+                                    (int)(item.Prefab.Size.X * item.Prefab.Scale),
+                                    item.Rect.Height);
+                            }
+                            if (!item.ResizeVertical)
+                            {
+                                item.Rect = item.DefaultRect = new Rectangle(item.Rect.X, item.Rect.Y,
+                                    item.Rect.Width,
+                                    (int)(item.Prefab.Size.Y * item.Prefab.Scale));
                             }
                         }
                     }

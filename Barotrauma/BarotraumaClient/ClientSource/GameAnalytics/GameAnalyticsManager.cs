@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    public static partial class GameAnalyticsManager
+    static partial class GameAnalyticsManager
     {
         static partial void CreateConsentPrompt()
         {

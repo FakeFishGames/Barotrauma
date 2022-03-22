@@ -46,6 +46,7 @@ namespace Barotrauma.Items.Components
                     child.Enabled = buttonsEnabled;
                     child.Children.ForEach(c => c.Enabled = buttonsEnabled);
                 }
+                if (Container == null) { return; }
                 bool itemsContained = Container.Inventory.AllItems.Any();
                 if (itemsContained)
                 {
@@ -77,7 +78,7 @@ namespace Barotrauma.Items.Components
                     {
                         if (GameMain.IsSingleplayer)
                         {
-                            SendSignal((int)userData);
+                            SendSignal((int)userData, Character.Controlled);
                         }
                         else
                         {
@@ -98,6 +99,7 @@ namespace Barotrauma.Items.Components
 
         partial void OnItemLoadedProjSpecific()
         {
+            if (Container == null) { return; }
             Container.AllowUIOverlap = true;
             Container.Inventory.RectTransform = containerHolder.RectTransform;
         }
@@ -109,7 +111,7 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            SendSignal(msg.ReadRangedInteger(0, Signals.Length - 1), isServerMessage: true);
+            SendSignal(msg.ReadRangedInteger(0, Signals.Length - 1), sender: null, isServerMessage: true);
         }
     }
 }

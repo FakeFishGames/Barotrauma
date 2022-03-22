@@ -14,7 +14,7 @@ namespace Barotrauma
         public Faction(CampaignMetadata metadata, FactionPrefab prefab)
         {
             Prefab = prefab;
-            Reputation = new Reputation(metadata, $"faction.{prefab.Identifier}", prefab.MinReputation, prefab.MaxReputation, prefab.InitialReputation);
+            Reputation = new Reputation(metadata, this, prefab.MinReputation, prefab.MaxReputation, prefab.InitialReputation);
         }
     }
 

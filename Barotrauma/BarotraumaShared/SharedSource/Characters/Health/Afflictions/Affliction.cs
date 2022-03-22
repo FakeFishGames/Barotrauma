@@ -67,6 +67,9 @@ namespace Barotrauma
 
         public Affliction(AfflictionPrefab prefab, float strength)
         {
+#if CLIENT
+            prefab?.ReloadSoundsIfNeeded();
+#endif
             Prefab = prefab;
             PendingAdditionStrength = Prefab.GrainBurst;
             _strength = strength;

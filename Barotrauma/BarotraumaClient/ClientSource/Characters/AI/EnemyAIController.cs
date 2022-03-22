@@ -11,7 +11,7 @@ namespace Barotrauma
         {
             if (Character.IsUnconscious || !Character.Enabled || !Enabled) { return; }
 
-            Vector2 pos = Character.WorldPosition;
+            Vector2 pos = Character.DrawPosition;
             pos.Y = -pos.Y;
 
             if (State == AIState.Idle && PreviousState == AIState.Attack)
@@ -31,7 +31,7 @@ namespace Barotrauma
             }
             else if (SelectedAiTarget?.Entity != null)
             {
-                Vector2 targetPos = SelectedAiTarget.WorldPosition;
+                Vector2 targetPos = SelectedAiTarget.Entity.DrawPosition;
                 if (State == AIState.Attack)
                 {
                     targetPos = attackWorldPos;
@@ -72,7 +72,7 @@ namespace Barotrauma
             }
             GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 80.0f, State.ToString(), stateColor, Color.Black);
 
-            if (LatchOntoAI != null)
+            if (LatchOntoAI != null && (State == AIState.Idle || LatchOntoAI.IsAttachedToSub))
             {
                 foreach (Joint attachJoint in LatchOntoAI.AttachJoints)
                 {

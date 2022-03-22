@@ -152,7 +152,7 @@ namespace Barotrauma
                     if (spawnPoint is WayPoint wp && wp.CurrentHull != null && wp.CurrentHull.Rect.Width > 100)
                     {
                         spawnPos = new Vector2(
-                            MathHelper.Clamp(wp.WorldPosition.X + Rand.Range(-200, 200), wp.CurrentHull.WorldRect.X + 50, wp.CurrentHull.WorldRect.Right - 50),
+                            MathHelper.Clamp(wp.WorldPosition.X + Rand.Range(-200, 201), wp.CurrentHull.WorldRect.X + 50, wp.CurrentHull.WorldRect.Right - 50),
                             wp.CurrentHull.WorldRect.Y - wp.CurrentHull.Rect.Height + 16.0f);
                     }
                     var item = new Item(itemPrefab, spawnPos, null);

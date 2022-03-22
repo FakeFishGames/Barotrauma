@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    public class IdRemap
+    public sealed class IdRemap
     {
         public static readonly IdRemap DiscardId = new IdRemap(null, -1);
 

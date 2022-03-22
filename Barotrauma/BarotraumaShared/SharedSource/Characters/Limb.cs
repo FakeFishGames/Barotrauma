@@ -556,6 +556,7 @@ namespace Barotrauma
                 // TODO: We might need this or solve the cases where a limb is severed while holding on to an item
                 //if (character.Params.CanInteract) { return false; }
                 if (this == character.AnimController.MainLimb) { return false; }
+                bool canBeSevered = Params.CanBeSeveredAlive;
                 if (character.AnimController.CanWalk)
                 {
                     switch (type)
@@ -571,7 +572,7 @@ namespace Barotrauma
                             return false;
                     }
                 }
-                return true;
+                return canBeSevered;
             }
         }
 
@@ -582,6 +583,8 @@ namespace Barotrauma
         }
 
         private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
+
+        public IEnumerable<StatusEffect> StatusEffects { get { return statusEffects; } }
 
         public Limb(Ragdoll ragdoll, Character character, LimbParams limbParams)
         {
@@ -647,6 +650,8 @@ namespace Barotrauma
                             if (attackElement != null)
                             {
                                 attack.DamageMultiplier = attackElement.GetAttributeFloat("damagemultiplier", 1f);
+                                attack.RangeMultiplier = attackElement.GetAttributeFloat("rangemultiplier", 1f);
+                                attack.ImpactMultiplier = attackElement.GetAttributeFloat("impactmultiplier", 1f);
                             }
                         }
                         break;
@@ -756,12 +761,13 @@ namespace Barotrauma
                 }
                 if (attacker != null)
                 {
-                    var abilityAffliction = new AbilityAfflictionCharacter(newAffliction, character);
-                    attacker.CheckTalents(AbilityEffectType.OnAddDamageAffliction, abilityAffliction);
+                    var abilityAfflictionCharacter = new AbilityAfflictionCharacter(newAffliction, character);
+                    attacker.CheckTalents(AbilityEffectType.OnAddDamageAffliction, abilityAfflictionCharacter);
                 }
                 if (applyAffliction)
                 {
                     afflictionsCopy.Add(newAffliction);
+                    newAffliction.Source ??= attacker;
                 }
                 appliedDamageModifiers.AddRange(tempModifiers);
             }
@@ -1065,7 +1071,7 @@ namespace Barotrauma
 #endif
             if (damageTarget is Character targetCharacter && targetLimb != null)
             {
-                attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound, body);
+                attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound, body, this);
             }
             else
             {
@@ -1075,7 +1081,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound, body);
+                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound, body, this);
                 }
             }
             /*if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
@@ -1309,4 +1315,16 @@ namespace Barotrauma
 
         partial void LoadParamsProjSpecific();
     }
+
+    class AbilityAfflictionCharacter : AbilityObject, IAbilityAffliction, IAbilityCharacter
+    {
+        public AbilityAfflictionCharacter(Affliction affliction, Character character)
+        {
+            Affliction = affliction;
+            Character = character;
+        }
+        public Character Character { get; set; }
+        public Affliction Affliction { get; set; }
+    }
+
 }

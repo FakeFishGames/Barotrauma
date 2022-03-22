@@ -524,6 +524,7 @@ namespace Barotrauma
                 return true;
             };
 
+#if !OSX
             var statisticsTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.045f), leftPanel.RectTransform), TextManager.Get("statisticsconsenttickbox"))
             {
                 OnSelected = (GUITickBox tickBox) =>
@@ -562,6 +563,15 @@ namespace Barotrauma
                 statisticsTickBox.OnSelected = prevHandler;
                 statisticsTickBox.Enabled = GameAnalyticsManager.UserConsented != GameAnalyticsManager.Consent.Error;
             });
+#endif
+
+            foreach (var child in leftPanel.Children)
+            {
+                if (child is GUITextBlock textBlock)
+                {
+                    textBlock.RectTransform.MinSize = new Point(textBlock.RectTransform.MinSize.X, (int)Math.Max(textBlock.RectTransform.MinSize.Y, textBlock.TextSize.Y));
+                }
+            }
 
             // right panel --------------------------------------
 
@@ -597,6 +607,10 @@ namespace Barotrauma
                     OnClicked = (bt, userdata) => { SelectTab((Tab)userdata); return true; }
                 };
                 tabButtons[(int)tab].Text = ToolBox.LimitString(buttonText, tabButtons[(int)tab].Font, (int)(0.75f * tabWidth * tabButtonHolder.Rect.Width));
+                if (tabButtons[(int)tab].Text != buttonText)
+                {
+                    tabButtons[(int)tab].ToolTip = buttonText;
+                }
             }
 
             /// Graphics tab --------------------------------------------------------------

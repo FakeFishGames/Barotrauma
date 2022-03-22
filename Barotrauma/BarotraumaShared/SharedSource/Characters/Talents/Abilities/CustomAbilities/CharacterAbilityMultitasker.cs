@@ -13,7 +13,7 @@ namespace Barotrauma.Abilities
 
         protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if ((abilityObject as IAbilityString)?.String is string skillIdentifier)
+            if ((abilityObject as IAbilitySkillIdentifier)?.SkillIdentifier is string skillIdentifier)
             {
                 if (skillIdentifier != lastSkillIdentifier)
                 {

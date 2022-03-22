@@ -351,7 +351,7 @@ namespace Barotrauma
             }
         }
 
-        public static List<string> GetDebugStatistics(int simulatedRoundCount = 100, Func<MonsterEvent, bool> filter = null)
+        public static List<string> GetDebugStatistics(int simulatedRoundCount = 100, Func<MonsterEvent, bool> filter = null, bool fullLog = false)
         {
             List<string> debugLines = new List<string>();
 
@@ -365,7 +365,7 @@ namespace Barotrauma
                     stats.Add(newStats);
                 }
                 debugLines.Add($"Event stats ({eventSet.DebugIdentifier}): ");
-                LogEventStats(stats, debugLines);
+                LogEventStats(stats, debugLines, fullLog);
             }
 
             return debugLines;
@@ -415,14 +415,19 @@ namespace Barotrauma
                 if (eventPrefab.EventType == typeof(MonsterEvent) && eventPrefab.TryCreateInstance(out MonsterEvent monsterEvent))
                 {
                     if (filter != null && !filter(monsterEvent)) { return; }
-
                     float spawnProbability = monsterEvent.Prefab.Probability;
                     if (Rand.Value() > spawnProbability) { return; }
-
-                    string character = monsterEvent.speciesName;
                     int count = Rand.Range(monsterEvent.MinAmount, monsterEvent.MaxAmount + 1);
                     if (count <= 0) { return; }
-                    if (!stats.MonsterCounts.ContainsKey(character)) { stats.MonsterCounts[character] = 0; }
+                    string character = monsterEvent.speciesName;
+                    if (stats.MonsterCounts.TryGetValue(character, out int currentCount))
+                    {
+                        if (currentCount >= monsterEvent.MaxAmountPerLevel) { return; }
+                    }
+                    else
+                    {
+                        stats.MonsterCounts[character] = 0;
+                    }
                     stats.MonsterCounts[character] += count;
                     
                     var aiElement = CharacterPrefab.FindBySpeciesName(character)?.XDocument?.Root?.GetChildElement("ai");
@@ -433,7 +438,7 @@ namespace Barotrauma
                 }
             }
 
-            static void LogEventStats(List<EventDebugStats> stats, List<string> debugLines)
+            static void LogEventStats(List<EventDebugStats> stats, List<string> debugLines, bool fullLog)
             {
                 if (stats.Count == 0 || stats.All(s => s.MonsterCounts.Values.Sum() == 0))
                 {
@@ -442,28 +447,42 @@ namespace Barotrauma
                 }
                 else
                 {
+                    var allMonsters = new Dictionary<string, int>();
+                    foreach (var stat in stats)
+                    {
+                        foreach (var monster in stat.MonsterCounts)
+                        {
+                            if (!allMonsters.TryAdd(monster.Key, monster.Value))
+                            {
+                                allMonsters[monster.Key] += monster.Value;
+                            }
+                        }
+                    }
+                    allMonsters = allMonsters.OrderBy(m => m.Key).ToDictionary(m => m.Key, m => m.Value);
                     stats.Sort((s1, s2) => s1.MonsterCounts.Values.Sum().CompareTo(s2.MonsterCounts.Values.Sum()));
-                    debugLines.Add($"  Minimum monster count: {stats.First().MonsterCounts.Values.Sum()}");
-                    debugLines.Add($"     {LogMonsterCounts(stats.First())}");
-                    debugLines.Add($"  Median monster count: {stats[stats.Count / 2].MonsterCounts.Values.Sum()}");
-                    debugLines.Add($"     {LogMonsterCounts(stats[stats.Count / 2])}");
-                    debugLines.Add($"  Maximum monster count: {stats.Last().MonsterCounts.Values.Sum()}");
-                    debugLines.Add($"     {LogMonsterCounts(stats.Last())}");
-                    debugLines.Add($"  Average monster count: {StringFormatter.FormatZeroDecimal((float)stats.Average(s => s.MonsterCounts.Values.Sum()))}");
-                    debugLines.Add($" ");
-
+                    debugLines.Add($"  Average monster count: {StringFormatter.FormatZeroDecimal((float)stats.Average(s => s.MonsterCounts.Values.Sum()))} (Min: {stats.First().MonsterCounts.Values.Sum()}, Max: {stats.Last().MonsterCounts.Values.Sum()})");
+                    debugLines.Add($"     {LogMonsterCounts(allMonsters, divider: stats.Count)}");
+                    if (fullLog)
+                    {
+                        debugLines.Add($"  All samples:");
+                        stats.ForEach(s => debugLines.Add($"     {LogMonsterCounts(s.MonsterCounts)}"));
+                    }
                     stats.Sort((s1, s2) => s1.MonsterStrength.CompareTo(s2.MonsterStrength));
-                    debugLines.Add($"  Minimum monster strength: {StringFormatter.FormatZeroDecimal(stats.First().MonsterStrength)}");
-                    debugLines.Add($"  Median monster strength: {StringFormatter.FormatZeroDecimal(stats[stats.Count / 2].MonsterStrength)}");
-                    debugLines.Add($"  Maximum monster strength: {StringFormatter.FormatZeroDecimal(stats.Last().MonsterStrength)}");
-                    debugLines.Add($"  Average monster strength: {StringFormatter.FormatZeroDecimal(stats.Average(s => s.MonsterStrength))}");
+                    debugLines.Add($"  Average monster strength: {StringFormatter.FormatZeroDecimal(stats.Average(s => s.MonsterStrength))} (Min: {StringFormatter.FormatZeroDecimal(stats.First().MonsterStrength)}, Max: {StringFormatter.FormatZeroDecimal(stats.Last().MonsterStrength)})");
                     debugLines.Add($" ");
                 }
             }
 
-            static string LogMonsterCounts(EventDebugStats stats)
+            static string LogMonsterCounts(Dictionary<string, int> stats, float divider = 0)
             {
-                return string.Join(", ", stats.MonsterCounts.Select(mc => mc.Key + " x " + mc.Value));
+                if (divider > 0)
+                {
+                    return string.Join("\n     ", stats.Select(mc => mc.Key + " x " + (mc.Value / divider).FormatSingleDecimal()));
+                }
+                else
+                {
+                    return string.Join(", ", stats.Select(mc => mc.Key + " x " + mc.Value));
+                }      
             }
         }
     }

@@ -134,6 +134,7 @@ namespace Barotrauma
                         aggregate += Items[i].Commonness;
                         if (aggregate >= r && Items[i].Prefab != null)
                         {
+                            GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "null") + ":PetProducedItem:" + pet.AiController.Character.SpeciesName + ":" + Items[i].Prefab.Identifier);
                             Entity.Spawner.AddToSpawnQueue(Items[i].Prefab, pet.AiController.Character.WorldPosition);
                             break;
                         }
@@ -200,6 +201,8 @@ namespace Barotrauma
                         break;
                 }
             }
+
+            GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "null") + ":PetSpawned:" + aiController.Character.SpeciesName);
         }
 
         public StatusIndicatorType GetCurrentStatusIndicatorType()
@@ -210,23 +213,44 @@ namespace Barotrauma
             return StatusIndicatorType.None;
         }
 
-        public bool OnEat(IEnumerable<string> tags, float amount)
+        public bool OnEat(Item item)
+        {
+            bool success = OnEat(item.GetTags());
+            if (success)
+            {
+                GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "null") + ":PetEat:" + AiController.Character.SpeciesName + ":" + item.prefab.Identifier);
+            }
+            return success;
+        }
+
+        public bool OnEat(Character character)
+        {
+            if (character == null || !character.IsDead) { return false; }
+            bool success = OnEat("dead");
+            if (success)
+            {
+                GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "null") + ":PetEat:" + AiController.Character.SpeciesName + ":" + character.SpeciesName);
+            }
+            return success;
+        }
+
+        private bool OnEat(IEnumerable<string> tags)
         {
             foreach (string tag in tags)
             {
-               if (OnEat(tag, amount)) { return true; }
+                if (OnEat(tag)) { return true; }
             }
             return false;
         }
 
-        public bool OnEat(string tag, float amount)
+        private bool OnEat(string tag)
         {
             for (int i = 0; i < foods.Count; i++)
             {
                 if (tag.Equals(foods[i].Tag, System.StringComparison.OrdinalIgnoreCase))
                 {
-                    Hunger += foods[i].Hunger * amount;
-                    Happiness += foods[i].Happiness * amount;
+                    Hunger += foods[i].Hunger;
+                    Happiness += foods[i].Happiness;
 #if CLIENT
                     AiController.Character.PlaySound(CharacterSound.SoundType.Happy, 0.5f);
 #endif

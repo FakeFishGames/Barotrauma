@@ -9,6 +9,9 @@ namespace Barotrauma.Items.Components
         //how often the detector can switch from state to another
         const float StateSwitchInterval = 1.0f;
 
+        private int prevSentWaterPercentageValue;
+        private string waterPercentageSignal;
+
         private bool isInWater;
         private float stateSwitchDelay;
 
@@ -106,7 +109,12 @@ namespace Barotrauma.Items.Components
                 {
                     waterPercentage = MathHelper.Clamp((int)Math.Ceiling(item.CurrentHull.WaterPercentage), 0, 100);
                 }
-                item.SendSignal(waterPercentage.ToString(), "water_%");
+                if (prevSentWaterPercentageValue != waterPercentage || waterPercentageSignal == null)
+                {
+                    prevSentWaterPercentageValue = waterPercentage;
+                    waterPercentageSignal = prevSentWaterPercentageValue.ToString();
+                }
+                item.SendSignal(waterPercentageSignal, "water_%");
             }
             string highPressureOut = (item.CurrentHull == null || item.CurrentHull.LethalPressure > 5.0f) ? "1" : "0";
             item.SendSignal(highPressureOut, "high_pressure");

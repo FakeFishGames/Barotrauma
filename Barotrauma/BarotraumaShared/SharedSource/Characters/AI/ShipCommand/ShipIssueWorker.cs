@@ -55,7 +55,7 @@ namespace Barotrauma
                     CommandingCharacter.Speak(SuggestedOrderPrefab.GetChatMessage(OrderedCharacter.Name, "", false), minDurationBetweenSimilar: 5);
                 }
                 CurrentOrder = new Order(SuggestedOrderPrefab, TargetItem, TargetItemComponent, CommandingCharacter);
-                OrderedCharacter.SetOrder(CurrentOrder, Option, priority: 3, CommandingCharacter, CommandingCharacter != OrderedCharacter);
+                OrderedCharacter.SetOrder(CurrentOrder, Option, priority: CharacterInfo.HighestManualOrderPriority, CommandingCharacter, CommandingCharacter != OrderedCharacter);
                 OrderedCharacter.Speak(TextManager.Get("DialogAffirmative"), delay: 1.0f, minDurationBetweenSimilar: 5);
             }
             TimeSinceLastAttempt = 0f;

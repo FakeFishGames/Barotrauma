@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
             {
                 if (lastUser == value) { return; }
                 lastUser = value;
-                degreeOfSuccess = lastUser == null ? 0.0f : DegreeOfSuccess(lastUser);
+                degreeOfSuccess = lastUser == null ? 0.0f : Math.Min(DegreeOfSuccess(lastUser), 1.0f);
                 LastUserWasPlayer = lastUser.IsPlayer;
             }
         }
@@ -601,7 +601,7 @@ namespace Barotrauma.Items.Components
 
             if (!shutDown)
             {
-                float degreeOfSuccess = DegreeOfSuccess(character);
+                float degreeOfSuccess = Math.Min(DegreeOfSuccess(character), 1.0f);
                 float refuelLimit = 0.3f;
                 //characters with insufficient skill levels don't refuel the reactor
                 if (degreeOfSuccess > refuelLimit)

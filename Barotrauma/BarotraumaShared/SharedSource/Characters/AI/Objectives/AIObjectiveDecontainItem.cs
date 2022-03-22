@@ -40,6 +40,7 @@ namespace Barotrauma
         public Func<Item, bool> RemoveExistingPredicate { get; set; }
         public int? RemoveExistingMax { get; set; }
         public string AbandonGetItemDialogueIdentifier { get; set; }
+        public Func<bool> AbandonGetItemDialogueCondition { get; set; }
 
         public AIObjectiveDecontainItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, ItemContainer sourceContainer = null, ItemContainer targetContainer = null, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
@@ -106,6 +107,7 @@ namespace Barotrauma
                 TryAddSubObjective(ref getItemObjective,
                     constructor: () => new AIObjectiveGetItem(character, targetItem, objectiveManager, Equip)
                     {
+                        CannotFindDialogueCondition = AbandonGetItemDialogueCondition,
                         CannotFindDialogueIdentifierOverride = AbandonGetItemDialogueIdentifier,
                         SpeakIfFails = AbandonGetItemDialogueIdentifier != null,
                         TakeWholeStack = this.TakeWholeStack

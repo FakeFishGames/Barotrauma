@@ -52,10 +52,6 @@ namespace Barotrauma
             {
                 if (state == value) { return; }
                 state = value;
-                if (character != null && character == Character.Controlled)
-                {
-                    UpdateMessages();
-                }
             }
         }
 
@@ -81,6 +77,9 @@ namespace Barotrauma
             base.Update(characterHealth, targetLimb, deltaTime);
             character = characterHealth.Character;
             if (character == null) { return; }
+
+            UpdateMessages();
+
             if (!subscribedToDeathEvent)
             {
                 character.OnDeath += CharacterDead;
@@ -107,7 +106,7 @@ namespace Barotrauma
             {
                 if (State != InfectionState.Active && stun)
                 {
-                    character.SetStun(Rand.Range(2, 4));
+                    character.SetStun(Rand.Range(2f, 3f));
                 }
                 State = InfectionState.Active;
                 ActivateHusk();
@@ -247,7 +246,7 @@ namespace Barotrauma
                 if (huskPrefab.ControlHusk)
                 {
 #if SERVER
-                    var client = GameMain.Server?.ConnectedClients.FirstOrDefault(c => c.CharacterInfo.Character == character);
+                    var client = GameMain.Server?.ConnectedClients.FirstOrDefault(c => c.Character == character);
                     if (client != null)
                     {
                         GameMain.Server.SetClientCharacter(client, husk);

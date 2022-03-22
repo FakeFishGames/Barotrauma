@@ -12,6 +12,8 @@ namespace Barotrauma
     static class HintManager
     {
         private const string HintManagerFile = "hintmanager.xml";
+
+        public static bool Enabled => GameMain.Config != null && !GameMain.Config.DisableInGameHints;
         private static HashSet<string> HintIdentifiers { get; set; }
         private static Dictionary<string, HashSet<string>> HintTags { get; } = new Dictionary<string, HashSet<string>>();
         private static Dictionary<string, (string identifier, string option)> HintOrders { get; } = new Dictionary<string, (string orderIdentifier, string orderOption)>();
@@ -665,6 +667,8 @@ namespace Barotrauma
             SoundPlayer.PlayUISound(GUISoundType.UIMessage);
             ActiveHintMessageBox.InnerFrame.Flash(color: iconColor ?? Color.Orange, flashDuration: 0.75f);
             onDisplay?.Invoke();
+
+            GameAnalyticsManager.AddDesignEvent($"HintManager:{GameMain.GameSession?.GameMode?.Preset?.Identifier ?? "none"}:HintDisplayed:{hintIdentifier}");
 
             return true;
         }

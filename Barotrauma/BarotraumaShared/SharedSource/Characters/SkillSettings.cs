@@ -42,7 +42,7 @@ namespace Barotrauma
         }
 
         private float skillIncreasePerRepairedStructureDamage;
-        [Serialize(0.005f, true)]
+        [Serialize(0.0025f, true)]
         public float SkillIncreasePerRepairedStructureDamage
         {
             get { return skillIncreasePerRepairedStructureDamage * GetCurrentSkillGainMultiplier(); }
@@ -96,8 +96,8 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(500.0f, true)]
-        public float MaximumOlympianSkill
+        [Serialize(200.0f, true)]
+        public float MaximumSkillWithTalents
         {
             get;
             set;

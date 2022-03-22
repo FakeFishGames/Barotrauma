@@ -254,7 +254,7 @@ namespace Barotrauma
 
         private void SpawnInitialCells()
         {
-            int brainRoomCells = Rand.Range(MinCellsPerBrainRoom, MaxCellsPerRoom);
+            int brainRoomCells = Rand.Range(MinCellsPerBrainRoom, MaxCellsPerRoom + 1);
             if (brain.CurrentHull?.WaterPercentage >= MinWaterLevel)
             {
                 for (int i = 0; i < brainRoomCells; i++)
@@ -262,12 +262,12 @@ namespace Barotrauma
                     if (!TrySpawnCell(out _, brain.CurrentHull)) { break; }
                 }
             }
-            int cellsInside = Rand.Range(MinCellsInside, MaxCellsInside);
+            int cellsInside = Rand.Range(MinCellsInside, MaxCellsInside + 1);
             for (int i = 0; i < cellsInside; i++)
             {
                 if (!TrySpawnCell(out _)) { break; }
             }
-            int cellsOutside = Rand.Range(MinCellsOutside, MaxCellsOutside);
+            int cellsOutside = Rand.Range(MinCellsOutside, MaxCellsOutside + 1);
             // If we failed to spawn some of the cells in the brainroom/inside, spawn some extra cells outside.
             cellsOutside = Math.Clamp(cellsOutside + brainRoomCells + cellsInside - protectiveCells.Count, cellsOutside, MaxCellsOutside);
             for (int i = 0; i < cellsOutside; i++)

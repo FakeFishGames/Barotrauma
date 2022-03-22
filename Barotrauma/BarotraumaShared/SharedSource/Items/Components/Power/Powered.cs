@@ -272,7 +272,7 @@ namespace Barotrauma.Items.Components
                     powered.voltage = -pt1.CurrPowerConsumption / Math.Max(pt1.PowerLoad, 1.0f);
 					continue; 
 				}
-                if (powered.powerConsumption <= 0.0f && !(powered is PowerContainer))
+                if ((powered.powerConsumption <= 0.0f || (powered.Item.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering && repairable.TinkeringPowersDevices)) && !(powered is PowerContainer))
                 {
                     powered.voltage = 1.0f;
                     continue;
@@ -302,17 +302,24 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// Returns the amount of power that can be supplied by batteries directly connected to the item
         /// </summary>
-        protected float GetAvailableBatteryPower()
+        protected float GetAvailableInstantaneousBatteryPower()
         {
-            var batteries = item.GetConnectedComponents<PowerContainer>();
-
+            if (item.Connections == null) { return 0.0f; }
             float availablePower = 0.0f;
-            foreach (PowerContainer battery in batteries)
+            foreach (Connection c in item.Connections)
             {
-                float batteryPower = Math.Min(battery.Charge * 3600.0f, battery.MaxOutPut);
-                availablePower += batteryPower;
-            }
+                var recipients = c.Recipients;
+                foreach (Connection recipient in recipients)
+                {
+                    if (!recipient.IsPower || !recipient.IsOutput) { continue; }
+                    var battery = recipient.Item?.GetComponent<PowerContainer>();
+                    if (battery == null) { continue; }
 
+                    float maxOutputPerFrame = battery.MaxOutPut / 60.0f;
+                    float framesPerMinute = 3600.0f;
+                    availablePower += Math.Min(battery.Charge * framesPerMinute, maxOutputPerFrame);
+                }
+            }
             return availablePower;
         }
 

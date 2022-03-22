@@ -101,11 +101,21 @@ namespace Barotrauma
         [Serialize(false, true, description: "Should the AI try to steer away from the target when aiming with this attack? Best combined with PassiveAggressive behavior."), Editable]
         public bool Retreat { get; private set; }
 
+        private float _range;
         [Serialize(0.0f, true, description: "The min distance from the attack limb to the target before the AI tries to attack."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
-        public float Range { get; set; }
+        public float Range
+        {
+            get => _range * RangeMultiplier;
+            set => _range = value;
+        }
 
+        private float _damageRange;
         [Serialize(0.0f, true, description: "The min distance from the attack limb to the target to do damage. In distance-based hit detection, the hit will be registered as soon as the target is within the damage range, unless the attack duration has expired."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
-        public float DamageRange { get; set; }
+        public float DamageRange
+        {
+            get => _damageRange * RangeMultiplier;
+            set => _damageRange = value;
+        }
 
         [Serialize(0.25f, true, description: "An approximation of the attack duration. Effectively defines the time window in which the hit can be registered. If set to too low value, it's possible that the attack won't hit the target in time."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2)]
         public float Duration { get; private set; }
@@ -130,6 +140,9 @@ namespace Barotrauma
             set => _structureDamage = value;
         }
 
+        [Serialize(true, true), Editable]
+        public bool EmitStructureDamageParticles { get; private set; }
+
         private float _itemDamage;
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float ItemDamage
@@ -142,9 +155,19 @@ namespace Barotrauma
         public float Penetration { get; private set; }
 
         /// <summary>
-        /// Currently only used with variants. Used for multiplying all the damage.
+        /// Used for multiplying all the damage.
         /// </summary>
         public float DamageMultiplier { get; set; } = 1;
+
+        /// <summary>
+        /// Used for multiplying all the ranges.
+        /// </summary>
+        public float RangeMultiplier { get; set; } = 1;
+
+        /// <summary>
+        /// Used for multiplying the physics forces.
+        /// </summary>
+        public float ImpactMultiplier { get; set; } = 1;
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float LevelWallDamage { get; set; }
@@ -311,11 +334,11 @@ namespace Barotrauma
             return totalDamage * DamageMultiplier;
         }
 
-        public Attack(float damage, float bleedingDamage, float burnDamage, float structureDamage, float itemDamage, float range = 0.0f, float penetration = 0f)
+        public Attack(float damage, float bleedingDamage, float burnDamage, float structureDamage, float itemDamage, float range = 0.0f)
         {
-            if (damage > 0.0f) Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(damage), null);
-            if (bleedingDamage > 0.0f) Afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamage), null);
-            if (burnDamage > 0.0f) Afflictions.Add(AfflictionPrefab.Burn.Instantiate(burnDamage), null);
+            if (damage > 0.0f) { Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(damage), null); }
+            if (bleedingDamage > 0.0f) { Afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamage), null); }
+            if (burnDamage > 0.0f) { Afflictions.Add(AfflictionPrefab.Burn.Instantiate(burnDamage), null); }
 
             Range = range;
             DamageRange = range;
@@ -438,7 +461,7 @@ namespace Barotrauma
             ReloadAfflictions(element);
         }
         
-        public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true, PhysicsBody sourceBody = null)
+        public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true, PhysicsBody sourceBody = null, Limb sourceLimb = null)
         {
             Character targetCharacter = target as Character;
             if (OnlyHumans)
@@ -463,10 +486,10 @@ namespace Barotrauma
             foreach (StatusEffect effect in statusEffects)
             {
                 effect.sourceBody = sourceBody;
-                // TODO: do we want to apply the effect at the world position or the entity positions in each cases? -> go through also other cases where status effects are applied
                 if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
-                    effect.Apply(effectType, deltaTime, attacker, attacker, worldPosition);
+                    // TODO: do we want to apply the effect at the world position or the entity positions in each cases? -> go through also other cases where status effects are applied
+                    effect.Apply(effectType, deltaTime, attacker, sourceLimb ?? attacker as ISerializableEntity, worldPosition);
                 }
                 if (targetCharacter != null)
                 {
@@ -503,7 +526,7 @@ namespace Barotrauma
         }
 
         readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
-        public AttackResult DoDamageToLimb(Character attacker, Limb targetLimb, Vector2 worldPosition, float deltaTime, bool playSound = true, PhysicsBody sourceBody = null)
+        public AttackResult DoDamageToLimb(Character attacker, Limb targetLimb, Vector2 worldPosition, float deltaTime, bool playSound = true, PhysicsBody sourceBody = null, Limb sourceLimb = null)
         {
             if (targetLimb == null)
             {
@@ -530,7 +553,7 @@ namespace Barotrauma
                 effect.sourceBody = sourceBody;
                 if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
-                    effect.Apply(effectType, deltaTime, attacker, attacker);
+                    effect.Apply(effectType, deltaTime, attacker, sourceLimb ?? attacker as ISerializableEntity);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.Character))
                 {

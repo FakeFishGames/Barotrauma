@@ -479,8 +479,21 @@ namespace Barotrauma
         {
             if (i < 0 || i >= slots.Length)
             {
-                string errorMsg = "Inventory.TryPutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace.CleanupStackTrace();
+                string thisItemStr = item?.prefab.Identifier ?? "null";
+                string ownerStr = "null";
+                if (Owner is Item ownerItem)
+                {
+                    ownerStr = ownerItem.prefab.Identifier;
+                }
+                else if (Owner is Character ownerCharacter)
+                {
+                    ownerStr = ownerCharacter.SpeciesName;
+                }
+                string errorMsg = $"Inventory.TryPutItem failed: index was out of range (item: {thisItemStr}, inventory: {ownerStr}).";
                 GameAnalyticsManager.AddErrorEventOnce("Inventory.TryPutItem:IndexOutOfRange", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#endif
                 return false;
             }
 

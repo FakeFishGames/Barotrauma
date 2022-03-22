@@ -68,10 +68,9 @@ namespace Barotrauma
 
             force = element.GetAttributeFloat("force", 0.0f);
 
-            abilityExplosion = element.GetAttributeBool("abilityexplosion", false);
             applyToSelf = element.GetAttributeBool("applytoself", true);
 
-            bool showEffects = !abilityExplosion;
+            bool showEffects = !element.GetAttributeBool("abilityexplosion", false) && element.GetAttributeBool("showeffects", true);
             sparks = element.GetAttributeBool("sparks", showEffects);
             shockwave = element.GetAttributeBool("shockwave", showEffects);
             flames = element.GetAttributeBool("flames", showEffects);
@@ -151,7 +150,7 @@ namespace Barotrauma
 
             if (!MathUtils.NearlyEqual(Attack.GetStructureDamage(1.0f), 0.0f) || !MathUtils.NearlyEqual(Attack.GetLevelWallDamage(1.0f), 0.0f))
             {
-                RangedStructureDamage(worldPosition, displayRange, Attack.GetStructureDamage(1.0f), Attack.GetLevelWallDamage(1.0f), attacker, IgnoredSubmarines);
+                RangedStructureDamage(worldPosition, displayRange, Attack.GetStructureDamage(1.0f), Attack.GetLevelWallDamage(1.0f), attacker, IgnoredSubmarines, Attack.EmitStructureDamageParticles);
             }
 
             if (BallastFloraDamage > 0.0f)
@@ -388,7 +387,7 @@ namespace Barotrauma
                         {
                             if (damages.TryGetValue(limb, out float damage))
                             {
-                                c.TrySeverLimbJoints(limb, attack.SeverLimbsProbability * distFactor, damage, allowBeheading: true);
+                                c.TrySeverLimbJoints(limb, attack.SeverLimbsProbability * distFactor, damage, allowBeheading: true, attacker: attacker);
                             }
                         }
                     }
@@ -396,13 +395,15 @@ namespace Barotrauma
             }
         }
 
+        private static readonly List<Structure> damagedStructureList = new List<Structure>();
+        private static readonly Dictionary<Structure, float> damagedStructures = new Dictionary<Structure, float>();
         /// <summary>
         /// Returns a dictionary where the keys are the structures that took damage and the values are the amount of damage taken
         /// </summary>
-        public static Dictionary<Structure, float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage, float levelWallDamage, Character attacker = null, IEnumerable<Submarine> ignoredSubmarines = null)
+        public static Dictionary<Structure, float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage, float levelWallDamage, Character attacker = null, IEnumerable<Submarine> ignoredSubmarines = null, bool emitWallDamageParticles = true)
         {
-            List<Structure> structureList = new List<Structure>();            
             float dist = 600.0f;
+            damagedStructureList.Clear();
             foreach (MapEntity entity in MapEntity.mapEntityList)
             {
                 if (!(entity is Structure structure)) { continue; }
@@ -412,19 +413,19 @@ namespace Barotrauma
                     !structure.IsPlatform &&
                     Vector2.Distance(structure.WorldPosition, worldPosition) < dist * 3.0f)
                 {
-                    structureList.Add(structure);
+                    damagedStructureList.Add(structure);
                 }
             }
 
-            Dictionary<Structure, float> damagedStructures = new Dictionary<Structure, float>();
-            foreach (Structure structure in structureList)
+            damagedStructures.Clear();
+            foreach (Structure structure in damagedStructureList)
             {
                 for (int i = 0; i < structure.SectionCount; i++)
                 {
                     float distFactor = 1.0f - (Vector2.Distance(structure.SectionPosition(i, true), worldPosition) / worldRange);
                     if (distFactor <= 0.0f) { continue; }
 
-                    structure.AddDamage(i, damage * distFactor, attacker);
+                    structure.AddDamage(i, damage * distFactor, attacker, emitParticles: emitWallDamageParticles);
 
                     if (damagedStructures.ContainsKey(structure))
                     {

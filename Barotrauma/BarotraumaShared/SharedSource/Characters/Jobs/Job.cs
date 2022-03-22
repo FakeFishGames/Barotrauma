@@ -35,7 +35,7 @@ namespace Barotrauma
 
         public Skill PrimarySkill { get; }
 
-        public Job(JobPrefab jobPrefab, int variant = 0)
+        public Job(JobPrefab jobPrefab, Rand.RandSync randSync = Rand.RandSync.Unsynced, int variant = 0)
         {
             prefab = jobPrefab;
             Variant = variant;
@@ -43,7 +43,7 @@ namespace Barotrauma
             skills = new Dictionary<string, Skill>();
             foreach (SkillPrefab skillPrefab in prefab.Skills)
             {
-                var skill = new Skill(skillPrefab);
+                var skill = new Skill(skillPrefab, randSync);
                 skills.Add(skillPrefab.Identifier, skill);
                 if (skillPrefab.IsPrimarySkill) { PrimarySkill = skill; }
             }
@@ -79,7 +79,7 @@ namespace Barotrauma
         {
             var prefab = JobPrefab.Random(randSync);
             var variant = Rand.Range(0, prefab.Variants, randSync);
-            return new Job(prefab, variant);
+            return new Job(prefab, randSync, variant);
         } 
 
         public float GetSkillLevel(string skillIdentifier)

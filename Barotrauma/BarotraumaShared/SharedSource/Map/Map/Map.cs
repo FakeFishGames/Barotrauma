@@ -112,7 +112,7 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(!Locations.Contains(null));
             for (int i = 0; i < Locations.Count; i++)
             {
-                Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, $"location.{i}", -100, 100, Rand.Range(-10, 10, Rand.RandSync.Server));
+                Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, Locations[i], $"location.{i}", -100, 100, Rand.Range(-10, 11, Rand.RandSync.Server));
             }
 
             List<XElement> connectionElements = new List<XElement>();
@@ -214,7 +214,7 @@ namespace Barotrauma
 
             for (int i = 0; i < Locations.Count; i++)
             {
-                Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, $"location.{i}", -100, 100, Rand.Range(-10, 10, Rand.RandSync.Server));
+                Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, Locations[i], $"location.{i}", -100, 100, Rand.Range(-10, 11, Rand.RandSync.Server));
             }
 
             foreach (Location location in Locations)
@@ -486,7 +486,8 @@ namespace Barotrauma
             {
                 location.LevelData = new LevelData(location)
                 {
-                    Difficulty = MathHelper.Clamp(GetLevelDifficulty(location.MapPosition.X / Width), 0.0f, 100.0f)
+                    Difficulty = MathHelper.Clamp(location.MapPosition.X / Width * 100, 0.0f, 100.0f)
+                    //Difficulty = MathHelper.Clamp(GetLevelDifficulty(location.MapPosition.X / Width), 0.0f, 100.0f)
                 };
                 location.UnlockInitialMissions();
             }

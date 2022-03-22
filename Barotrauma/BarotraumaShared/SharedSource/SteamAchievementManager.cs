@@ -224,9 +224,9 @@ namespace Barotrauma
         public static void OnItemRepaired(Item item, Character fixer)
         {
 #if CLIENT
-            if (GameMain.Client != null) return;
+            if (GameMain.Client != null) { return; }
 #endif
-            if (fixer == null) return;
+            if (fixer == null) { return; }
             
             UnlockAchievement(fixer, "repairdevice");
             UnlockAchievement(fixer, "repair" + item.Prefab.Identifier);
@@ -234,10 +234,10 @@ namespace Barotrauma
 
         public static void OnAfflictionRemoved(Affliction affliction, Character character)
         {
-            if (string.IsNullOrEmpty(affliction.Prefab.AchievementOnRemoved)) return;
+            if (string.IsNullOrEmpty(affliction.Prefab.AchievementOnRemoved)) { return; }
 
 #if CLIENT
-            if (GameMain.Client != null) return;
+            if (GameMain.Client != null) { return; }
 #endif
             UnlockAchievement(character, affliction.Prefab.AchievementOnRemoved);
         }
@@ -245,26 +245,29 @@ namespace Barotrauma
         public static void OnCharacterRevived(Character character, Character reviver)
         {
 #if CLIENT
-            if (GameMain.Client != null) return;
+            if (GameMain.Client != null) { return; }
 #endif
-            if (reviver == null) return;
+            if (reviver == null) { return; }
             UnlockAchievement(reviver, "healcrit");
         }
 
         public static void OnCharacterKilled(Character character, CauseOfDeath causeOfDeath)
         {
 #if CLIENT
-            if (GameMain.Client != null || GameMain.GameSession == null) return;
-#endif
+            if (GameMain.Client != null || GameMain.GameSession == null) { return; }
 
             if (character != Character.Controlled &&
                 causeOfDeath.Killer != null &&
                 causeOfDeath.Killer == Character.Controlled)
             {
-                SteamManager.IncrementStat(
-                    character.IsHuman ? "humanskilled" : "monsterskilled",
-                    1);
+                IncrementStat(causeOfDeath.Killer, character.IsHuman ? "humanskilled" : "monsterskilled", 1);
             }
+#elif SERVER
+            if (character != causeOfDeath.Killer && causeOfDeath.Killer != null)
+            {
+                IncrementStat(causeOfDeath.Killer, character.IsHuman ? "humanskilled" : "monsterskilled", 1);
+            }
+#endif
 
             roundData?.Casualties.Add(character);
 
@@ -337,13 +340,15 @@ namespace Barotrauma
         public static void OnTraitorWin(Character character)
         {
 #if CLIENT
-            if (GameMain.Client != null || GameMain.GameSession == null) return;
+            if (GameMain.Client != null || GameMain.GameSession == null) { return; }
 #endif
             UnlockAchievement(character, "traitorwin");
         }
 
         public static void OnRoundEnded(GameSession gameSession)
         {
+            if (CheatsEnabled) { return; }
+
             //made it to the destination
             if (gameSession?.Submarine != null && Level.Loaded != null && gameSession.Submarine.AtEndExit)
             {
@@ -358,14 +363,14 @@ namespace Barotrauma
                         !myCharacter.IsDead &&
                         (myCharacter.Submarine == gameSession.Submarine || (Level.Loaded?.EndOutpost != null && myCharacter.Submarine == Level.Loaded.EndOutpost)))
                     {
-                        SteamManager.IncrementStat("kmstraveled", levelLengthKilometers);
+                        IncrementStat("kmstraveled", levelLengthKilometers);
                     }
 #endif
                 }
                 else
                 {
                     //in sp making it to the end is enough
-                    SteamManager.IncrementStat("kmstraveled", levelLengthKilometers);
+                    IncrementStat("kmstraveled", levelLengthKilometers);
                 }
             }
 
@@ -461,42 +466,63 @@ namespace Barotrauma
 
         private static void UnlockAchievement(Character recipient, string identifier)
         {
-            if (CheatsEnabled) return;
-            if (recipient == null) return;
+            if (CheatsEnabled || recipient == null) { return; }
 #if CLIENT
             if (recipient == Character.Controlled)
             {
                 UnlockAchievement(identifier);
             }
-#endif
-#if SERVER
+#elif SERVER
             GameMain.Server?.GiveAchievement(recipient, identifier);
 #endif
         }
-        
+
+        private static void IncrementStat(Character recipient, string identifier, int amount)
+        {
+            if (CheatsEnabled || recipient == null) { return; }
+#if CLIENT
+            if (recipient == Character.Controlled)
+            {
+                SteamManager.IncrementStat(identifier, amount);
+            }
+#elif SERVER
+            GameMain.Server?.IncrementStat(recipient, identifier, amount);
+#endif
+        }
+
+        public static void IncrementStat(string identifier, int amount)
+        {
+            if (CheatsEnabled) { return; }
+            SteamManager.IncrementStat(identifier, amount);
+        }
+
+        public static void IncrementStat(string identifier, float amount)
+        {
+            if (CheatsEnabled) { return; }
+            SteamManager.IncrementStat(identifier, amount);
+        }
+
         public static void UnlockAchievement(string identifier, bool unlockClients = false, Func<Character, bool> conditions = null)
         {
-            if (CheatsEnabled) return;
+            if (CheatsEnabled) { return; }
             identifier = identifier.ToLowerInvariant();
             
 #if SERVER
-
             if (unlockClients && GameMain.Server != null)
             {
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    if (conditions != null && !conditions(c.Character)) continue;
+                    if (conditions != null && !conditions(c.Character)) { continue; }
                     GameMain.Server.GiveAchievement(c, identifier);
                 }
             }
 #endif
-
             //already unlocked, no need to do anything
-            if (unlockedAchievements.Contains(identifier)) return;
+            if (unlockedAchievements.Contains(identifier)) { return; }
             unlockedAchievements.Add(identifier);
 
 #if CLIENT
-            if (conditions != null && !conditions(Character.Controlled)) return;
+            if (conditions != null && !conditions(Character.Controlled)) { return; }
 #endif
 
             SteamManager.UnlockAchievement(identifier);

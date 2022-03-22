@@ -408,7 +408,7 @@ namespace Barotrauma
                     if (orderGiver == null) { return null; }
                     newObjective = new AIObjectiveGoTo(orderGiver, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        CloseEnough = Rand.Range(80, 100),
+                        CloseEnough = Rand.Range(80f, 100f),
                         CloseEnoughMultiplier = Math.Min(1 + HumanAIController.CountCrew(c => c.ObjectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Target == orderGiver), onlyBots: true) * Rand.Range(0.8f, 1f), 4),
                         ExtraDistanceOutsideSub = 100,
                         ExtraDistanceWhileSwimming = 100,
@@ -422,7 +422,7 @@ namespace Barotrauma
                 case "wait":
                     newObjective = new AIObjectiveGoTo(order.TargetSpatialEntity ?? character, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        AllowGoingOutside = character.Submarine == null || (order.TargetSpatialEntity != null && character.Submarine != order.TargetSpatialEntity.Submarine)
+                        AllowGoingOutside = true
                     };
                     break;
                 case "return":
@@ -467,6 +467,12 @@ namespace Barotrauma
                     break;
                 case "fightintruders":
                     newObjective = new AIObjectiveFightIntruders(character, this, priorityModifier);
+                    break;
+                case "assaultenemy":
+                    newObjective = new AIObjectiveFightIntruders(character, this, priorityModifier)
+                    {
+                        TargetCharactersInOtherSubs = true
+                    };
                     break;
                 case "steer":
                     var steering = (order?.TargetEntity as Item)?.GetComponent<Steering>();
@@ -643,7 +649,12 @@ namespace Barotrauma
 
         public bool IsOrder(AIObjective objective)
         {
-            return objective == ForcedOrder || CurrentOrders.Any(o => o.Objective == objective);
+            if (objective == ForcedOrder) { return true; }
+            foreach (var order in CurrentOrders)
+            {
+                if (order.Objective == objective) { return true; }
+            }
+            return false;
         }
 
         public bool HasOrders()

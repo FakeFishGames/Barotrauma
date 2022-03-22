@@ -43,7 +43,6 @@ namespace Barotrauma
         private readonly float minDistance = 50;
         private readonly float seekGapsInterval = 1;
         private float seekGapsTimer;
-        private bool cannotFollow;
 
         /// <summary>
         /// Display units
@@ -52,6 +51,11 @@ namespace Barotrauma
         {
             get
             {
+                if (IsFollowOrderObjective && Target is Character targetCharacter && (targetCharacter.CurrentHull == null) != (character.CurrentHull == null))
+                {
+                    // Keep close when the target is going inside/outside
+                    return minDistance;
+                }
                 float dist = _closeEnough * CloseEnoughMultiplier;
                 float extraMultiplier = Math.Clamp(CloseEnoughMultiplier * 0.6f, 1, 3);
                 if (character.AnimController.InWater)
@@ -73,6 +77,9 @@ namespace Barotrauma
         // TODO: Currently we never check the visibility (to the end node), which is actually unintentional.
         // I don't think it has caused any issues so far, so let's keep defaulting to false for now, because the less we do raycasts the better.
         // However, if there are cases where the bots attempt to go through walls (select the end node that is behind an obstacle), we should set this true.
+
+        // NOTE: This seemes to have caused an issue now Regalis11/Barotrauma#8067: namely, the bot was trying to use a waypoint that was obstructed by a shuttle
+        // because obstruction was only checked when checking visibility in PathFinder. Changed that so that obstructed nodes are no longer used.
         public bool CheckVisibility { get; set; }
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }
@@ -95,6 +102,8 @@ namespace Barotrauma
         public ISpatialEntity Target { get; private set; }
 
         public float? OverridePriority = null;
+
+        public Func<bool> SpeakCannotReachCondition { get; set; }
 
         protected override float GetPriority()
         {
@@ -166,14 +175,14 @@ namespace Barotrauma
                 DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target}", Color.Yellow);
             }
 #endif
-            if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder == objectiveManager.CurrentObjective && DialogueIdentifier != null && SpeakIfFails)
-            {
-                string msg = TargetName == null ? TextManager.Get(DialogueIdentifier, true) : TextManager.GetWithVariable(DialogueIdentifier, "[name]", TargetName, formatCapitals: !(Target is Character));
-                if (msg != null)
-                {
-                    character.Speak(msg, identifier: DialogueIdentifier, minDurationBetweenSimilar: 20.0f);
-                }
-            }
+            if (!character.IsOnPlayerTeam) { return; }
+            if (objectiveManager.CurrentOrder != objectiveManager.CurrentObjective) { return; }
+            if (DialogueIdentifier == null) { return; }
+            if (!SpeakIfFails) { return; }
+            if (SpeakCannotReachCondition != null && !SpeakCannotReachCondition()) { return; }
+            string msg = TargetName == null ? TextManager.Get(DialogueIdentifier, true) : TextManager.GetWithVariable(DialogueIdentifier, "[name]", TargetName, formatCapitals: !(Target is Character));
+            if (msg == null) { return; }
+            character.Speak(msg, identifier: DialogueIdentifier, minDurationBetweenSimilar: 20.0f);
         }
 
         public void ForceAct(float deltaTime) => Act(deltaTime);
@@ -286,27 +295,15 @@ namespace Barotrauma
                         {
                             TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: false, objectiveManager),
                                 onAbandon: () => Abandon = true,
-                                onCompleted: () =>
-                                {
-                                    cannotFollow = false;
-                                    RemoveSubObjective(ref findDivingGear);
-                                });
+                                onCompleted: () => RemoveSubObjective(ref findDivingGear));
                         }
                         else
                         {
                             TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
                                 onAbandon: () => Abandon = true,
-                                onCompleted: () =>
-                                {
-                                    cannotFollow = false;
-                                    RemoveSubObjective(ref findDivingGear);
-                                });
+                                onCompleted: () => RemoveSubObjective(ref findDivingGear));
                         }
                         return;
-                    }
-                    else
-                    {
-                        cannotFollow = false;
                     }
                 }
                 if (repeat)
@@ -635,21 +632,29 @@ namespace Barotrauma
         {
             get
             {
-                if (SteeringManager == PathSteering && PathSteering.CurrentPath?.CurrentNode?.Ladders != null)
+                if (character.IsClimbing)
                 {
-                    //don't consider the character to be close enough to the target while climbing ladders,
-                    //UNLESS the last node in the path has been reached
-                    //otherwise characters can let go of the ladders too soon once they're close enough to the target
-                    if (PathSteering.CurrentPath.NextNode != null) { return false; }
+                    if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.CurrentPath.Finished && PathSteering.IsCurrentNodeLadder)
+                    {
+                        if (Target.WorldPosition.Y > character.WorldPosition.Y)
+                        {
+                            // The target is still above us
+                            return false;
+                        }
+                        if (!character.AnimController.IsAboveFloor)
+                        {
+                            // Going through a hatch
+                            return false;
+                        }
+                    }
                 }
                 if (!AlwaysUseEuclideanDistance && !character.AnimController.InWater)
                 {
-                    float yDiff = Math.Abs(Target.WorldPosition.Y - character.WorldPosition.Y);
-                    if (yDiff > CloseEnough) { return false; }
-                    float xDiff = Math.Abs(Target.WorldPosition.X - character.WorldPosition.X);
-                    return xDiff <= CloseEnough;
+                    float yDist = Math.Abs(Target.WorldPosition.Y - character.WorldPosition.Y);
+                    if (yDist > CloseEnough) { return false; }
+                    float xDist = Math.Abs(Target.WorldPosition.X - character.WorldPosition.X);
+                    return xDist <= CloseEnough;
                 }
-
                 Vector2 sourcePos = UseDistanceRelativeToAimSourcePos ? character.AnimController.AimSourceWorldPos : character.WorldPosition;
                 return Vector2.DistanceSquared(Target.WorldPosition, sourcePos) < CloseEnough * CloseEnough;
             }
@@ -727,7 +732,6 @@ namespace Barotrauma
             findDivingGear = null;
             seekGapsTimer = 0;
             TargetGap = null;
-            cannotFollow = false;
         }
     }
 }

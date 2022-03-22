@@ -35,9 +35,22 @@ namespace Barotrauma
             private set
             {
                 if (MathUtils.NearlyEqual(Value, value)) { return; }
+
+                float prevValue = Value;
+
                 Metadata.SetValue(metaDataIdentifier, Math.Clamp(value, MinReputation, MaxReputation));
                 OnReputationValueChanged?.Invoke();
                 OnAnyReputationValueChanged?.Invoke();
+#if CLIENT
+                int increase = (int)Value - (int)prevValue;
+                if (increase != 0 && Character.Controlled != null)
+                {
+                    Character.Controlled.AddMessage(
+                        TextManager.GetWithVariable("reputationgainnotification", "[reputationname]", Location?.Name ?? Faction.Prefab.Name),
+                        increase > 0 ? GUI.Style.Green : GUI.Style.Red,
+                        playSound: true, Identifier, increase, lifetime: 5.0f);                    
+                }
+#endif
             }
         }
 
@@ -63,15 +76,32 @@ namespace Barotrauma
         public Action OnReputationValueChanged;
         public static Action OnAnyReputationValueChanged;
 
-        public Reputation(CampaignMetadata metadata, string identifier, int minReputation, int maxReputation, int initialReputation)
+        public readonly Faction Faction;
+        public readonly Location Location;
+
+
+        public Reputation(CampaignMetadata metadata, Location location, string identifier, int minReputation, int maxReputation, int initialReputation)
+            : this(metadata, null, location, identifier, minReputation, maxReputation, initialReputation)
+        {
+        }
+
+        public Reputation(CampaignMetadata metadata, Faction faction, int minReputation, int maxReputation, int initialReputation)
+            : this(metadata, faction, null, $"faction.{faction.Prefab.Identifier}", minReputation, maxReputation, initialReputation)
+        {
+        }
+
+        private Reputation(CampaignMetadata metadata, Faction faction, Location location, string identifier, int minReputation, int maxReputation, int initialReputation)
         {
             System.Diagnostics.Debug.Assert(metadata != null);
+            System.Diagnostics.Debug.Assert(faction != null || location != null);
             Metadata = metadata;
             Identifier = identifier.ToLowerInvariant();
             metaDataIdentifier = $"reputation.{Identifier}";
             MinReputation = minReputation;
             MaxReputation = maxReputation;
             InitialReputation = initialReputation;
+            Faction = faction;
+            Location = location;
         }
 
         public string GetReputationName()

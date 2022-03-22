@@ -478,5 +478,18 @@ namespace Barotrauma
 
             return TryPutItem(item, user, new List<InvSlotType>() { placeToSlots }, createNetworkEvent, ignoreCondition);
         }
+
+        protected override void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
+        {
+            base.PutItem(item, i, user, removeItem, createNetworkEvent);
+#if CLIENT
+            CreateSlots();
+#endif
+            if (item.CampaignInteractionType == CampaignMode.InteractionType.Cargo)
+            {
+                item.CampaignInteractionType = CampaignMode.InteractionType.None;
+            }
+        }
+
     }
 }

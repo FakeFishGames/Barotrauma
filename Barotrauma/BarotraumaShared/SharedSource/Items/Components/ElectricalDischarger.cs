@@ -118,6 +118,7 @@ namespace Barotrauma.Items.Components
             if (character != null && !CharacterUsable) { return false; }
 
             CurrPowerConsumption = powerConsumption;
+            Voltage = 0.0f;
             charging = true;
             timer = Duration;
             IsActive = true;
@@ -141,7 +142,7 @@ namespace Barotrauma.Items.Components
             timer -= deltaTime;
             if (charging)
             {
-                if (GetAvailableBatteryPower() >= powerConsumption)
+                if (GetAvailableInstantaneousBatteryPower() >= powerConsumption)
                 {
                     var batteries = item.GetConnectedComponents<PowerContainer>();
                     float neededPower = powerConsumption;

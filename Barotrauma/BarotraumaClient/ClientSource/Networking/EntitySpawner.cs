@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -15,7 +16,11 @@ namespace Barotrauma
                 var entity = FindEntityByID(entityId);
                 if (entity != null)
                 {
-                    DebugConsole.Log("Received entity removal message for \"" + entity.ToString() + "\".");
+                    DebugConsole.Log($"Received entity removal message for \"{entity}\".");
+                    if (entity is Item item && item.Container?.GetComponent<Deconstructor>() != null)
+                    {
+                        GameAnalyticsManager.AddDesignEvent("ItemDeconstructed:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none") + ":" + item.prefab.Identifier);
+                    }
                     entity.Remove();
                 }
                 else
@@ -28,7 +33,11 @@ namespace Barotrauma
                 switch (message.ReadByte())
                 {
                     case (byte)SpawnableType.Item:
-                        Item.ReadSpawnData(message, true);
+                        var newItem = Item.ReadSpawnData(message, true);
+                        if (newItem is Item item && item.Container?.GetComponent<Fabricator>() != null)
+                        {
+                            GameAnalyticsManager.AddDesignEvent("ItemFabricated:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none") + ":" + item.prefab.Identifier);
+                        }
                         break;
                     case (byte)SpawnableType.Character:
                         Character.ReadSpawnData(message);

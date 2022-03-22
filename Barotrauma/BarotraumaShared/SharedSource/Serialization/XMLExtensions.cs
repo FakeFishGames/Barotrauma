@@ -262,6 +262,28 @@ namespace Barotrauma
             return val;
         }
 
+        public static double GetAttributeDouble(this XElement element, string name, double defaultValue)
+        {
+            if (element?.Attribute(name) == null) { return defaultValue; }
+
+            double val = defaultValue;
+            try
+            {
+                string strVal = element.Attribute(name).Value;
+                if (strVal.LastOrDefault() == 'f')
+                {
+                    strVal = strVal.Substring(0, strVal.Length - 1);
+                }
+                val = double.Parse(strVal, CultureInfo.InvariantCulture);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in " + element + "!", e);
+            }
+
+            return val;
+        }
+
         public static float[] GetAttributeFloatArray(this XElement element, string name, float[] defaultValue)
         {
             if (element?.Attribute(name) == null) { return defaultValue; }

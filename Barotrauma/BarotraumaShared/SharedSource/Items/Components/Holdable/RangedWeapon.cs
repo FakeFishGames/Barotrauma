@@ -158,7 +158,7 @@ namespace Barotrauma.Items.Components
             return MathHelper.ToRadians(spread);
         }
 
-        private readonly List<Body> limbBodies = new List<Body>();
+        private readonly List<Body> ignoredBodies = new List<Body>();
         public override bool Use(float deltaTime, Character character = null)
         {
             tryingToCharge = true;
@@ -172,8 +172,8 @@ namespace Barotrauma.Items.Components
 
             if (character != null)
             {
-                var abilityItem = new AbilityItem(item);
-                character.CheckTalents(AbilityEffectType.OnUseRangedWeapon, abilityItem);
+                var abilityRangedWeapon = new AbilityRangedWeapon(item);
+                character.CheckTalents(AbilityEffectType.OnUseRangedWeapon, abilityRangedWeapon);
             }
 
             if (item.AiTarget != null)
@@ -182,11 +182,20 @@ namespace Barotrauma.Items.Components
                 item.AiTarget.SightRange = item.AiTarget.MaxSightRange;
             }
 
-            limbBodies.Clear();
+            ignoredBodies.Clear();
             foreach (Limb l in character.AnimController.Limbs)
             {
                 if (l.IsSevered) { continue; }
-                limbBodies.Add(l.body.FarseerBody);
+                ignoredBodies.Add(l.body.FarseerBody);
+            }
+
+            foreach (Item heldItem in character.HeldItems)
+            {
+                var holdable = heldItem.GetComponent<Holdable>();
+                if (holdable?.Pusher != null)
+                {
+                    ignoredBodies.Add(holdable.Pusher.FarseerBody);
+                }
             }
 
             float degreeOfFailure = 1.0f - DegreeOfSuccess(character);
@@ -211,7 +220,7 @@ namespace Barotrauma.Items.Components
                     }
                     float damageMultiplier = 1f + item.GetQualityModifier(Quality.StatType.FirepowerMultiplier);
                     projectile.Launcher = item;
-                    projectile.Shoot(character, character.AnimController.AimSourceSimPos, barrelPos, rotation + spread, ignoredBodies: limbBodies.ToList(), createNetworkEvent: false, damageMultiplier);
+                    projectile.Shoot(character, character.AnimController.AimSourceSimPos, barrelPos, rotation + spread, ignoredBodies: ignoredBodies.ToList(), createNetworkEvent: false, damageMultiplier);
                     projectile.Item.GetComponent<Rope>()?.Attach(Item, projectile.Item);
                     if (i == 0)
                     {
@@ -269,5 +278,13 @@ namespace Barotrauma.Items.Components
         }
 
         partial void LaunchProjSpecific();
+    }
+    class AbilityRangedWeapon : AbilityObject, IAbilityItem
+    {
+        public AbilityRangedWeapon(Item item)
+        {
+            Item = item;
+        }
+        public Item Item { get; set; }
     }
 }

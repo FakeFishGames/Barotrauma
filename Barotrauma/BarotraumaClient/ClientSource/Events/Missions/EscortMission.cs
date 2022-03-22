@@ -4,6 +4,9 @@ namespace Barotrauma
 {
     partial class EscortMission : Mission
     {
+        public override bool DisplayAsCompleted => false;
+        public override bool DisplayAsFailed => State == 1;
+
         public override void ClientReadInitial(IReadMessage msg)
         {
             base.ClientReadInitial(msg);

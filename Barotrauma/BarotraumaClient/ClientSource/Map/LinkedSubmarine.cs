@@ -75,10 +75,12 @@ namespace Barotrauma
                 if (linkedTo.Contains(entity))
                 {
                     linkedTo.Remove(entity);
+                    entity.linkedTo.Remove(this);
                 }
                 else
                 {
                     linkedTo.Add(entity);
+                    if (!entity.linkedTo.Contains(this)) { entity.linkedTo.Add(this); }
                 }
             }
         }

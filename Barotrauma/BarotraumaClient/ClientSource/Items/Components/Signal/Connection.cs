@@ -23,7 +23,7 @@ namespace Barotrauma.Items.Components
 
         public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Character character)
         {
-            if (DraggingConnected?.Item.Removed ?? false)
+            if (DraggingConnected?.Item?.Removed ?? true)
             {
                 DraggingConnected = null;
             }

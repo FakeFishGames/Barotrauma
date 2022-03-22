@@ -60,8 +60,16 @@ namespace Barotrauma
             }
             else
             {
-                string itemIdentifier = prefab.ConfigElement.GetAttributeString("itemidentifier", "");
-                itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                string itemIdentifier = prefab.ConfigElement.GetAttributeString("itemidentifier", null);
+                if (itemIdentifier != null)
+                {
+                    itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                }
+                if (itemPrefab == null)
+                {
+                    string itemTag = prefab.ConfigElement.GetAttributeString("itemtag", "");
+                    itemPrefab = MapEntityPrefab.GetRandom(p => p.Tags.Contains(itemTag), Rand.RandSync.Unsynced) as ItemPrefab;
+                }
                 if (itemPrefab == null)
                 {
                     DebugConsole.ThrowError("Error in SalvageMission - couldn't find an item prefab with the identifier " + itemIdentifier);
@@ -150,8 +158,8 @@ namespace Barotrauma
                 if (item == null)
                 {
                     item = new Item(itemPrefab, position, null);
+                    item.body.SetTransformIgnoreContacts(item.body.SimPosition, item.body.Rotation);
                     item.body.FarseerBody.BodyType = BodyType.Kinematic;
-                    item.FindHull();
                 }
 
                 for (int i = 0; i < statusEffects.Count; i++)
@@ -192,7 +200,7 @@ namespace Barotrauma
                     }
                     if (validContainers.Any())
                     {
-                        var selectedContainer = validContainers.GetRandom();
+                        var selectedContainer = validContainers.GetRandom(Rand.RandSync.Unsynced);
                         if (selectedContainer.Combine(item, user: null))
                         {
 #if SERVER

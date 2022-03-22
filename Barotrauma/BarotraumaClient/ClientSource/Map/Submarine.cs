@@ -25,14 +25,11 @@ namespace Barotrauma
         public readonly bool Stream;
         public readonly bool IgnoreMuffling;
 
-
-        public string Filename
-        {
-            get { return Sound?.Filename; }
-        }
+        public readonly string Filename;
 
         public RoundSound(XElement element, Sound sound)
         {
+            Filename = sound?.Filename;
             Sound = sound;
             Stream = sound.Stream;
             Range = element.GetAttributeFloat("range", 1000.0f);

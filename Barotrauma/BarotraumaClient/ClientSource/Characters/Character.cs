@@ -154,7 +154,7 @@ namespace Barotrauma
 
             public bool PlaySound;
 
-            public GUIMessage(string rawText, Color color, float delay, string identifier = null, int? value = null)
+            public GUIMessage(string rawText, Color color, float delay, string identifier = null, int? value = null, float lifeTime = 3.0f)
             {
                 RawText = Text = rawText;
                 if (value.HasValue)
@@ -166,7 +166,7 @@ namespace Barotrauma
                 Size = GUI.Font.MeasureString(Text);
                 Color = color;
                 Identifier = identifier;
-                Lifetime = 3.0f;
+                Lifetime = lifeTime;
             }
         }
 
@@ -312,11 +312,7 @@ namespace Barotrauma
                     }
                 }
 
-                cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (AnimController.CurrentHull?.Submarine != null)
-                {
-                    cursorPosition -= AnimController.CurrentHull.Submarine.Position;
-                }
+                UpdateLocalCursor(cam);
 
                 Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
                 if (GUI.PauseMenuOpen)
@@ -391,6 +387,15 @@ namespace Barotrauma
             }
 
             DisableControls = false;
+        }
+
+        public void UpdateLocalCursor(Camera cam)
+        {
+            cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
+            if (AnimController.CurrentHull?.Submarine != null)
+            {
+                cursorPosition -= AnimController.CurrentHull.Submarine.DrawPosition;
+            }
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam)
@@ -997,7 +1002,7 @@ namespace Barotrauma
             return nameColor;
         }
 
-        public void AddMessage(string rawText, Color color, bool playSound, string identifier = null, int? value = null)
+        public void AddMessage(string rawText, Color color, bool playSound, string identifier = null, int? value = null, float lifetime = 3.0f)
         {
             GUIMessage existingMessage = null;
 
@@ -1026,7 +1031,7 @@ namespace Barotrauma
             }
             if (existingMessage == null || !value.HasValue)
             {
-                var newMessage = new GUIMessage(rawText, color, delay, identifier, value);
+                var newMessage = new GUIMessage(rawText, color, delay, identifier, value, lifetime);
                 guiMessages.Insert(0, newMessage);
                 if (playSound)
                 {
@@ -1156,9 +1161,9 @@ namespace Barotrauma
             }
         }
 
-        partial void OnTalentGiven(string talentIdentifier)
+        partial void OnTalentGiven(TalentPrefab talentPrefab)
         {
-            AddMessage(TextManager.Get("talentname." + talentIdentifier.ToString()), GUI.Style.Yellow, playSound: this == Controlled);
+            AddMessage(TextManager.Get("talentname." + talentPrefab.Identifier), GUI.Style.Yellow, playSound: this == Controlled);
         }
     }
 }

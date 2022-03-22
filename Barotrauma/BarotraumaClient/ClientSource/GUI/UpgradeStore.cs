@@ -16,7 +16,6 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
-    
     internal class UpgradeStore
     {
         public readonly struct CategoryData
@@ -168,6 +167,7 @@ namespace Barotrauma
         //TODO: move this somewhere else
         public static void UpdateCategoryList(GUIListBox categoryList, CampaignMode campaign, Submarine? drawnSubmarine, IEnumerable<UpgradeCategory> applicableCategories)
         {
+            var subItems = GetSubItems();
             foreach (GUIComponent component in categoryList.Content.Children)
             {
                 if (!(component.UserData is CategoryData data)) { continue; }
@@ -179,7 +179,7 @@ namespace Barotrauma
                 var customizeButton = component.FindChild("customizebutton", true);
                 if (customizeButton != null)
                 {
-                    customizeButton.Visible = HasSwappableItems(data.Category);
+                    customizeButton.Visible = HasSwappableItems(data.Category, subItems);
                 }
             }
 
@@ -434,6 +434,7 @@ namespace Barotrauma
                         if (AvailableMoney >= hullRepairCost)
                         {
                             Campaign.Money -= hullRepairCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
                             Campaign.PurchasedHullRepairs = true;
                             button.Enabled = false;
                             SelectTab(UpgradeTab.Repairs);
@@ -468,6 +469,7 @@ namespace Barotrauma
                         if (AvailableMoney >= itemRepairCost && !Campaign.PurchasedItemRepairs)
                         {
                             Campaign.Money -= itemRepairCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
                             Campaign.PurchasedItemRepairs = true;
                             button.Enabled = false;
                             SelectTab(UpgradeTab.Repairs);
@@ -513,6 +515,7 @@ namespace Barotrauma
                         if (AvailableMoney >= shuttleRetrieveCost && !Campaign.PurchasedLostShuttles)
                         {
                             Campaign.Money -= shuttleRetrieveCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
                             Campaign.PurchasedLostShuttles = true;
                             button.Enabled = false;
                             SelectTab(UpgradeTab.Repairs);
@@ -717,15 +720,18 @@ namespace Barotrauma
 
         private bool customizeTabOpen;
 
-        private static bool HasSwappableItems(UpgradeCategory category)
+        private static bool HasSwappableItems(UpgradeCategory category, List<Item>? subItems = null)
         {
             if (Submarine.MainSub == null) { return false; }
-            return Submarine.MainSub.GetItems(true).Any(i =>
+            subItems ??= GetSubItems();
+            return subItems.Any(i =>
                 i.Prefab.SwappableItem != null &&
                 !i.HiddenInGame && i.AllowSwapping &&
                 (i.Prefab.SwappableItem.CanBeBought || ItemPrefab.Prefabs.Any(ip => ip.SwappableItem?.ReplacementOnUninstall == i.Prefab.Identifier)) &&
                 Submarine.MainSub.IsEntityFoundOnThisSub(i, true) && category.ItemTags.Any(t => i.HasTag(t)));
         }
+
+        private static List<Item> GetSubItems() => Submarine.MainSub?.GetItems(true) ?? new List<Item>();
 
         private void SelectUpgradeCategory(List<UpgradePrefab> prefabs, UpgradeCategory category, Submarine submarine)
         {
@@ -1688,7 +1694,7 @@ namespace Barotrauma
 
         private bool HasPermission => campaignUI.Campaign.AllowedToManageCampaign();
 
-        private static string FormatCurrency(int money, bool format = true)
+        public static string FormatCurrency(int money, bool format = true)
         {
             return TextManager.GetWithVariable("CurrencyFormat", "[credits]", format ? string.Format(CultureInfo.InvariantCulture, "{0:N0}", money) : money.ToString());
         }

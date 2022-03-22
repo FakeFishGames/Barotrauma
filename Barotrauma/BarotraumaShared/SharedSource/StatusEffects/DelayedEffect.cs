@@ -55,14 +55,23 @@ namespace Barotrauma
         public override void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target, Vector2? worldPosition = null)
         {
             if (this.type != type || !HasRequiredItems(entity)) { return; }
-            if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.FirstOrDefault() == target)) { return; }
+            if (!Stackable)
+            {
+                foreach (var existingEffect in DelayList)
+                {
+                    if (existingEffect.Parent == this && existingEffect.Targets.FirstOrDefault() == target) { return; }
+                }
+            }
             if (!IsValidTarget(target)) { return; }
-            if (!HasRequiredConditions(target.ToEnumerable())) { return; }
+
+            currentTargets.Clear();
+            currentTargets.Add(target);
+            if (!HasRequiredConditions(currentTargets)) { return; }
 
             switch (delayType)
             {
                 case DelayTypes.Timer:
-                    DelayList.Add(new DelayedListElement(this, entity, target.ToEnumerable(), delay, worldPosition, null));
+                    DelayList.Add(new DelayedListElement(this, entity, currentTargets, delay, worldPosition, null));
                     break;
                 case DelayTypes.ReachCursor:
                     Projectile projectile = (entity as Item)?.GetComponent<Projectile>();
@@ -78,16 +87,22 @@ namespace Barotrauma
                         return;
                     }
 
-                    DelayList.Add(new DelayedListElement(this, entity, target.ToEnumerable(), Vector2.Distance(entity.WorldPosition, projectile.User.CursorWorldPosition), worldPosition, entity.WorldPosition));
+                    DelayList.Add(new DelayedListElement(this, entity, currentTargets, Vector2.Distance(entity.WorldPosition, projectile.User.CursorWorldPosition), worldPosition, entity.WorldPosition));
                     break;
             }
         }
 
-        public override void Apply(ActionType type, float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Vector2? worldPosition = null)
+        public override void Apply(ActionType type, float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
             if (this.type != type || !HasRequiredItems(entity)) { return; }
-            if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.SequenceEqual(targets))) { return; }
             if (delayType == DelayTypes.ReachCursor && Character.Controlled == null) { return; }
+            if (!Stackable) 
+            { 
+                foreach (var existingEffect in DelayList)
+                {
+                    if (existingEffect.Parent == this && existingEffect.Targets.SequenceEqual(targets)) { return; }
+                }
+            }
 
             currentTargets.Clear();
             foreach (ISerializableEntity target in targets)

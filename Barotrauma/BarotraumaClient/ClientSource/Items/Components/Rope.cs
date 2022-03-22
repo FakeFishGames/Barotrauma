@@ -199,6 +199,26 @@ namespace Barotrauma.Items.Components
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             snapped = msg.ReadBoolean();
+
+            if (!snapped)
+            {
+                UInt16 targetId = msg.ReadUInt16();
+                UInt16 sourceId = msg.ReadUInt16();
+                byte limbIndex = msg.ReadByte();
+
+                Item target = Entity.FindEntityByID(targetId) as Item;
+                if (target == null) { return; }
+                var source = Entity.FindEntityByID(sourceId);
+                if (source is Character sourceCharacter && limbIndex >= 0 && limbIndex < sourceCharacter.AnimController.Limbs.Length)
+                {
+                    Limb sourceLimb = sourceCharacter.AnimController.Limbs[limbIndex];
+                    Attach(sourceLimb, target);
+                }
+                else if (source is ISpatialEntity spatialEntity)
+                {
+                    Attach(spatialEntity, target);
+                }
+            }
         }
 
         protected override void RemoveComponentSpecific()

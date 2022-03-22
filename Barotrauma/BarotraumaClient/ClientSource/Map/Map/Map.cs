@@ -130,16 +130,29 @@ namespace Barotrauma
             int tilesY = (int)Math.Ceiling(Height / tileSize.Y);
             mapTiles = new Sprite[tilesX, tilesY];
             tileDiscovered = new bool[tilesX, tilesY];
+            HashSet<Biome> missingBiomes = new HashSet<Biome>();
             for (int x = 0; x < tilesX; x++)
             {
                 for (int y = 0; y < tilesY; y++)
                 {
                     var biome = GetBiome(x * tileSize.X);
-                    var tileList = generationParams.MapTiles.ContainsKey(biome.Identifier) ?
-                        generationParams.MapTiles[biome.Identifier] :
-                        generationParams.MapTiles.Values.First();
+                    List<Sprite> tileList = null;
+                    if (generationParams.MapTiles.ContainsKey(biome.Identifier))
+                    {
+                        tileList = generationParams.MapTiles[biome.Identifier];
+                    }
+                    else
+                    {
+                        tileList = generationParams.MapTiles.Values.First();
+                        missingBiomes.Add(biome);
+                    }
                     mapTiles[x, y] = tileList[x % tileList.Count];                    
                 }
+            }
+
+            foreach (var missingBiome in missingBiomes)
+            {
+                DebugConsole.ThrowError($"Could not find campaign map sprites for the biome \"{missingBiome.Identifier}\". Using the sprites of the first biome instead...");
             }
 
             RemoveFogOfWar(StartLocation);
@@ -194,7 +207,11 @@ namespace Barotrauma
         private void RemoveFogOfWar(Location location, bool removeFromAdjacentLocations = true)
         {
             if (location == null) { return; }
-            Vector2 mapTileSize = mapTiles[0, 0].size * generationParams.MapTileScale;
+
+            var mapTile = generationParams.MapTiles.Values.FirstOrDefault()?.FirstOrDefault();
+            if (mapTile == null) { return; }
+
+            Vector2 mapTileSize = mapTile.size * generationParams.MapTileScale;
             int startX = (int)Math.Max(Math.Floor(location.MapPosition.X / mapTileSize.X - 0.25f), 0);
             int startY = (int)Math.Max(Math.Floor(location.MapPosition.Y / mapTileSize.Y - 0.25f), 0);
             int endX = (int)Math.Min(Math.Floor(location.MapPosition.X / mapTileSize.X + 0.25f), mapTiles.GetLength(0));

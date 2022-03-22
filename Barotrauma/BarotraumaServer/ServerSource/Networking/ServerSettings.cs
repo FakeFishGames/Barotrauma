@@ -11,6 +11,21 @@ namespace Barotrauma.Networking
 {
     partial class ServerSettings
     {
+        partial class NetPropertyData
+        {
+            private object lastSyncedValue;
+            public UInt16 LastUpdateID { get; private set; }
+
+            public void SyncValue()
+            {
+                if (!PropEquals(lastSyncedValue, Value))
+                {
+                    LastUpdateID = (UInt16)(GameMain.NetLobbyScreen.LastUpdateID);
+                    lastSyncedValue = Value;
+                }
+            }
+        }
+        
         public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.xml";
         public static readonly char SubmarineSeparatorChar = '|';
 
@@ -35,20 +50,25 @@ namespace Barotrauma.Networking
             LoadClientPermissions();
         }
 
-        private void WriteNetProperties(IWriteMessage outMsg)
+        private void WriteNetProperties(IWriteMessage outMsg, Client c)
         {
-            outMsg.Write((UInt16)netProperties.Keys.Count);
             foreach (UInt32 key in netProperties.Keys)
             {
-                outMsg.Write(key);
-                netProperties[key].Write(outMsg);
+                var property = netProperties[key];
+                property.SyncValue();
+                if (property.LastUpdateID > c.LastRecvLobbyUpdate)
+                {
+                    outMsg.Write(key);
+                    netProperties[key].Write(outMsg);
+                }
             }
+            outMsg.Write((UInt32)0);
         }
 
         public void ServerAdminWrite(IWriteMessage outMsg, Client c)
         {
             c.LastSentServerSettingsUpdate = LastPropertyUpdateId;
-            WriteNetProperties(outMsg);
+            WriteNetProperties(outMsg, c);
             WriteMonsterEnabled(outMsg);
             BanList.ServerAdminWrite(outMsg, c);
             Whitelist.ServerAdminWrite(outMsg, c);
@@ -79,8 +99,11 @@ namespace Barotrauma.Networking
             {
                 WriteExtraCargo(outMsg);
             }
-            
-            WriteHiddenSubs(outMsg);
+
+            if (requiredFlags.HasFlag(NetFlags.HiddenSubs))
+            {
+                WriteHiddenSubs(outMsg);
+            }
 
             if (c.HasPermission(Networking.ClientPermissions.ManageSettings)
                 && !NetIdUtils.IdMoreRecentOrMatches(c.LastRecvServerSettingsUpdate, LastPropertyUpdateId))
@@ -164,6 +187,7 @@ namespace Barotrauma.Networking
             {
                 ReadHiddenSubs(incMsg);
                 changed |= true;
+                UpdateFlag(NetFlags.HiddenSubs);
             }
             
             if (flags.HasFlag(NetFlags.Misc))
@@ -198,11 +222,6 @@ namespace Barotrauma.Networking
                 {
                     AutoRestart = autoRestart;
                 }
-
-                RadiationEnabled = incMsg.ReadBoolean();
-
-                int maxMissionCount = MaxMissionCount + incMsg.ReadByte() - 1;
-                MaxMissionCount = MathHelper.Clamp(maxMissionCount, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit);
 
                 changed |= true;
                 UpdateFlag(NetFlags.Misc);

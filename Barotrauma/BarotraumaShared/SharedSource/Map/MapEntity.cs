@@ -3,12 +3,10 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -20,14 +18,17 @@ namespace Barotrauma
 
         protected List<ushort> linkedToID;
         public List<ushort> unresolvedLinkedToID;
-        
+
+        private const int GapUpdateInterval = 4;
+        private static int gapUpdateTimer;
+
         /// <summary>
         /// List of upgrades this item has
         /// </summary>
         protected readonly List<Upgrade> Upgrades = new List<Upgrade>();
-        
+
         public HashSet<string> disallowedUpgrades = new HashSet<string>();
-        
+
         [Editable, Serialize("", true)]
         public string DisallowedUpgrades
         {
@@ -101,7 +102,7 @@ namespace Barotrauma
                 return !DrawBelowWater;
             }
         }
-        
+
         public virtual bool Linkable
         {
             get { return false; }
@@ -231,6 +232,9 @@ namespace Barotrauma
             protected set;
         } = true;
 
+        [Serialize("", true, "Submarine editor layer")]
+        public string Layer { get; set; }
+
         /// <summary>
         /// The index of the outpost module this entity originally spawned in (-1 if not an outpost item)
         /// </summary>
@@ -242,7 +246,7 @@ namespace Barotrauma
         {
             get { return ""; }
         }
-        
+
         public MapEntity(MapEntityPrefab prefab, Submarine submarine, ushort id) : base(submarine, id)
         {
             this.prefab = prefab;
@@ -303,7 +307,7 @@ namespace Barotrauma
         {
             return GetUpgrade(identifier) != null;
         }
-        
+
         public Upgrade GetUpgrade(string identifier)
         {
             return Upgrades.Find(upgrade => upgrade.Identifier == identifier);
@@ -329,7 +333,7 @@ namespace Barotrauma
             }
             DebugConsole.Log($"Set (ID: {ID} {prefab.Name})'s \"{upgrade.Prefab.Name}\" upgrade to level {upgrade.Level}");
         }
-        
+
         /// <summary>
         /// Adds a new upgrade to the item
         /// </summary>
@@ -407,6 +411,7 @@ namespace Barotrauma
             }
 
             //connect clone wires to the clone items and refresh links between doors and gaps
+            List<Wire> orphanedWires = new List<Wire>();
             for (int i = 0; i < clones.Count; i++)
             {
                 if (!(clones[i] is Item cloneItem)) { continue; }
@@ -435,11 +440,11 @@ namespace Barotrauma
                         disconnectedFromClone.DisconnectedWires.Add(cloneWire);
                         if (cloneWire.Item.body != null) { cloneWire.Item.body.Enabled = false; }
                         cloneWire.IsActive = false;
-                        continue; 
+                        continue;
                     }
 
                     var connectedItem = originalWire.Connections[n].Item;
-                    if (connectedItem == null) { continue; }
+                    if (connectedItem == null || !entitiesToClone.Contains(connectedItem)) { continue; }
 
                     //index of the item the wire is connected to
                     int itemIndex = entitiesToClone.IndexOf(connectedItem);
@@ -466,6 +471,20 @@ namespace Barotrauma
                     (clones[itemIndex] as Item).Connections[connectionIndex].TryAddLink(cloneWire);
                     cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], false);
                 }
+
+                if ((cloneWire.Connections[0] == null || cloneWire.Connections[1] == null) && cloneItem.GetComponent<DockingPort>() == null)
+                {
+                    if (!clones.Any(c => (c as Item)?.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(cloneWire) ?? false))
+                    {
+                        orphanedWires.Add(cloneWire);
+                    }
+                }
+            }
+
+            foreach (var orphanedWire in orphanedWires)
+            {
+                orphanedWire.Item.Remove();
+                clones.Remove(orphanedWire.Item);
             }
 
             return clones;
@@ -545,20 +564,27 @@ namespace Barotrauma
             {
                 hull.Update(deltaTime, cam);
             }
+#if CLIENT
+            Hull.UpdateCheats(deltaTime, cam);
+#endif
 
             foreach (Structure structure in Structure.WallList)
             {
                 structure.Update(deltaTime, cam);
             }
 
-
-            //update gaps in random order, because otherwise in rooms with multiple gaps 
+            //update gaps in random order, because otherwise in rooms with multiple gaps
             //the water/air will always tend to flow through the first gap in the list,
             //which may lead to weird behavior like water draining down only through
             //one gap in a room even if there are several
-            foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
+            gapUpdateTimer++;
+            if (gapUpdateTimer >= GapUpdateInterval)
             {
-                gap.Update(deltaTime, cam);
+                foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
+                {
+                    gap.Update(deltaTime * GapUpdateInterval, cam);
+                }
+                gapUpdateTimer = 0;
             }
 
             Powered.UpdatePower(deltaTime);
@@ -725,11 +751,11 @@ namespace Barotrauma
 
                 foreach (ushort i in e.linkedToID)
                 {
-                    if (FindEntityByID(i) is MapEntity linked) 
+                    if (FindEntityByID(i) is MapEntity linked)
                     {
-                        e.linkedTo.Add(linked); 
-                    } 
-                    else 
+                        e.linkedTo.Add(linked);
+                    }
+                    else
                     {
 #if DEBUG
                         DebugConsole.ThrowError($"Linking the entity \"{e.Name}\" to another entity failed. Could not find an entity with the ID \"{i}\".");
@@ -770,7 +796,7 @@ namespace Barotrauma
         /// <summary>
         /// Gets all linked entities of specific type.
         /// </summary>
-        private static void GetLinkedEntitiesRecursive<T>(MapEntity mapEntity, HashSet<T> linkedTargets, ref int depth, int? maxDepth = null, Func<T, bool> filter = null) 
+        private static void GetLinkedEntitiesRecursive<T>(MapEntity mapEntity, HashSet<T> linkedTargets, ref int depth, int? maxDepth = null, Func<T, bool> filter = null)
             where T : MapEntity
         {
             if (depth > maxDepth) { return; }

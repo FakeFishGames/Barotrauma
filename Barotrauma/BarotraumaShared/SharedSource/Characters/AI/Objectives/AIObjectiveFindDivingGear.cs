@@ -108,7 +108,7 @@ namespace Barotrauma
                             AllowToFindDivingGear = false,
                             AllowDangerousPressure = true,
                             ConditionLevel = MIN_OXYGEN,
-                            RemoveExisting = true
+                            RemoveExistingWhenNecessary = true
                         };
                     },
                     onAbandon: () =>
