@@ -679,6 +679,8 @@ namespace Barotrauma.Lights
                 }
                 else
                 {
+                    // Get position of controlled character head if it exists
+                    Vector2 ViewPos = (ViewTarget as Character)?.AnimController.GetLimb(LimbType.Head)?.WorldPosition ?? ViewTarget.WorldPosition;
 
                     graphics.SetRenderTarget(LosOcclusionMap);
 
@@ -726,7 +728,7 @@ namespace Barotrauma.Lights
                     graphics.Clear(Color.Black); // init texture as black (all rays start at 0)
 
                     // Screen UVs of view target
-                    Vector2 center = new Vector2((ViewTarget.WorldPosition.X - cam.WorldView.X) /cam.WorldView.Width, (-ViewTarget.WorldPosition.Y + cam.WorldView.Y) / cam.WorldView.Height);
+                    Vector2 center = new Vector2((ViewPos.X - cam.WorldView.X) /cam.WorldView.Width, (-ViewPos.Y + cam.WorldView.Y) / cam.WorldView.Height);
 
                     // Calculate distance to furtherst corner
                     float rayLength = 0.0f;
@@ -857,7 +859,7 @@ namespace Barotrauma.Lights
 
                     if (ObstructVision)
                     {
-                        Vector2 diff = lookAtPosition - ViewTarget.WorldPosition;
+                        Vector2 diff = lookAtPosition - ViewPos;
                         diff.Y = -diff.Y;
                         if (diff.LengthSquared() > 20.0f * 20.0f) { losOffset = diff; }
                         float rotation = MathUtils.VectorToAngle(losOffset);
@@ -874,7 +876,7 @@ namespace Barotrauma.Lights
                         Matrix visionSpriteTransform = Matrix.CreateTranslation(new Vector3(-0.2f, -1.0f / 2.0f, 0.0f)) *
                             Matrix.CreateScale(new Vector3(scale*new Vector2(visionCircle.Width, visionCircle.Height), 1.0f)) *
                             Matrix.CreateRotationZ(rotation) *
-                            Matrix.CreateTranslation(new Vector3(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y, 0.0f));
+                            Matrix.CreateTranslation(new Vector3(ViewPos.X, -ViewPos.Y, 0.0f));
 
                         // Matrix for converting screen UVs to sprite UVs
                         // First cam transform (UVs to world), then inverse sprite transform (world back to UV)
