@@ -16,7 +16,7 @@ namespace Barotrauma
             Role = role;
             Character = character;
             Character.IsTraitor = true;
-            GameMain.NetworkMember.CreateEntityEvent(Character, new Character.CharacterStatusEventData());
+            GameMain.NetworkMember.CreateEntityEvent(Character, new Character.StatusEventData());
         }
 
         public delegate void MessageSender(string message);

@@ -32,7 +32,7 @@ namespace Barotrauma
 
         private readonly GUITextBox seedBox;
 
-        private readonly GUITickBox lightingEnabled, cursorLightEnabled, allowInvalidOutpost, mirrorLevel;
+        private readonly GUITickBox lightingEnabled, cursorLightEnabled, mirrorLevel;
 
         private Sprite editingSprite;
 
@@ -126,7 +126,6 @@ namespace Barotrauma
                 OnClicked = (btn, obj) =>
                 {
                     SerializeAll();
-                    GUI.AddMessage(TextManager.Get("leveleditor.allsaved"), GUIStyle.Green);
                     return true;
                 }
             };
@@ -170,12 +169,6 @@ namespace Barotrauma
 
             mirrorLevel = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.02f), paddedRightPanel.RectTransform), TextManager.Get("mirrorentityx"));
 
-            allowInvalidOutpost = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedRightPanel.RectTransform),
-                TextManager.Get("leveleditor.allowinvalidoutpost"))
-            {
-                ToolTip = TextManager.Get("leveleditor.allowinvalidoutpost.tooltip")
-            };
-
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedRightPanel.RectTransform),
                 TextManager.Get("leveleditor.generate"))
             {
@@ -186,7 +179,6 @@ namespace Barotrauma
                     GameMain.LightManager.ClearLights();
                     LevelData levelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
                     levelData.ForceOutpostGenerationParams = outpostParamsList.SelectedData as OutpostGenerationParams;
-                    levelData.AllowInvalidOutpost = allowInvalidOutpost.Selected;
                     Level.Generate(levelData, mirror: mirrorLevel.Selected);
                     GameMain.LightManager.AddLight(pointerLightSource);
                     if (!wasLevelLoaded || Cam.Position.X < 0 || Cam.Position.Y < 0 || Cam.Position.Y > Level.Loaded.Size.X || Cam.Position.Y > Level.Loaded.Size.Y)

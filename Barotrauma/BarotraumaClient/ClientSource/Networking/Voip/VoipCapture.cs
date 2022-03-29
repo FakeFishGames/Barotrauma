@@ -163,11 +163,16 @@ namespace Barotrauma.Networking
 
         public static void ChangeCaptureDevice(string deviceName)
         {
-            if (Instance == null) { return; }
+            var config = GameSettings.CurrentConfig;
+            config.Audio.VoiceCaptureDevice = deviceName;
+            GameSettings.SetCurrentConfig(config);
 
-            UInt16 storedBufferID = Instance.LatestBufferID;
-            Instance.Dispose();
-            Create(GameSettings.CurrentConfig.Audio.VoiceCaptureDevice, storedBufferID);
+            if (Instance != null)
+            {
+                UInt16 storedBufferID = Instance.LatestBufferID;
+                Instance.Dispose();
+                Create(GameSettings.CurrentConfig.Audio.VoiceCaptureDevice, storedBufferID);
+            }
         }
 
         IntPtr nativeBuffer;

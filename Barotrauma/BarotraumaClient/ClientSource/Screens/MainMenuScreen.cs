@@ -46,7 +46,6 @@ namespace Barotrauma
 
         private GUITextBox serverNameBox, passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, wrongPasswordBanBox, karmaBox;
-        private GUIDropDown serverExecutableDropdown;
         private readonly GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
         private readonly GameMain game;
 
@@ -558,35 +557,6 @@ namespace Barotrauma
                         GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.HostServer); });
                         return true;
                     }
-                    
-                    serverExecutableDropdown.ListBox.Content.Children.ToArray()
-                        .Where(c => c.UserData is ServerExecutableFile f && !ContentPackageManager.EnabledPackages.All.Contains(f.ContentPackage))
-                        .ForEach(serverExecutableDropdown.ListBox.RemoveChild);
-                    var newServerExes
-                        = ContentPackageManager.EnabledPackages.All.SelectMany(p => p.GetFiles<ServerExecutableFile>())
-                            .Where(f => serverExecutableDropdown.ListBox.Content.Children.None(c => c.UserData == f))
-                            .ToArray();
-                    foreach (var newServerExe in newServerExes)
-                    {
-                        serverExecutableDropdown.AddItem($"{newServerExe.ContentPackage.Name} - {Path.GetFileNameWithoutExtension(newServerExe.Path.Value)}", userData: newServerExe);
-                    }
-                    serverExecutableDropdown.ListBox.Content.Children.ForEach(c =>
-                    {
-                        c.RectTransform.RelativeSize = (1.0f, c.RectTransform.RelativeSize.Y);
-                        c.ForceLayoutRecalculation();
-                    });
-                    bool serverExePickable = serverExecutableDropdown.ListBox.Content.CountChildren > 1;
-                    serverExecutableDropdown.Parent.Visible
-                        = serverExePickable;
-                    serverExecutableDropdown.Parent.RectTransform.RelativeSize
-                        = (1.0f, serverExePickable ? 0.1f : 0.0f);
-                    serverExecutableDropdown.Parent.ForceLayoutRecalculation();
-                    (serverExecutableDropdown.Parent.Parent as GUILayoutGroup)?.Recalculate();
-                    if (serverExecutableDropdown.SelectedComponent is null)
-                    {
-                        serverExecutableDropdown.Select(0);
-                    }
-                    
                     break;
                 case Tab.Tutorials:
                     if (!GameSettings.CurrentConfig.CampaignDisclaimerShown)
@@ -814,7 +784,7 @@ namespace Barotrauma
             GameMain.ResetNetLobbyScreen();
             try
             {
-                string exeName = serverExecutableDropdown.SelectedComponent?.UserData is ServerExecutableFile f ? f.Path.Value : "DedicatedServer";
+                string exeName = "DedicatedServer.exe";
 
                 string arguments = "-name \"" + ToolBox.EscapeCharacters(name) + "\"" +
                                    " -public " + isPublicBox.Selected.ToString() +
@@ -844,20 +814,15 @@ namespace Barotrauma
                     arguments += " -ownerkey " + ownerKey;
                 }
 
-                string filename = Path.Combine(
-                    Path.GetDirectoryName(exeName),
-                    Path.GetFileNameWithoutExtension(exeName));
-#if WINDOWS
-                filename += ".exe";
-#else
-                filename = "./" + exeName;
+                string filename = exeName;
+#if LINUX || OSX
+                filename = "./" + Path.GetFileNameWithoutExtension(exeName);
+                //arguments = ToolBox.EscapeCharacters(arguments);
 #endif
-                
                 var processInfo = new ProcessStartInfo
                 {
                     FileName = filename,
                     Arguments = arguments,
-                    WorkingDirectory = Directory.GetCurrentDirectory(),
 #if !DEBUG
                     CreateNoWindow = true,
                     UseShellExecute = false,
@@ -1219,12 +1184,12 @@ namespace Barotrauma
             label.RectTransform.MaxSize = serverNameBox.RectTransform.MaxSize;
 
             var maxPlayersLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("MaxPlayers"), textAlignment: textAlignment);
-            var buttonContainer = new GUILayoutGroup(new RectTransform(textFieldSize, maxPlayersLabel.RectTransform, Anchor.CenterRight), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            var buttonContainer = new GUILayoutGroup(new RectTransform(textFieldSize, maxPlayersLabel.RectTransform, Anchor.CenterRight), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.1f
             };
-            new GUIButton(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton", textAlignment: Alignment.Center)
+            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton", textAlignment: Alignment.Center)
             {
                 UserData = -1,
                 OnClicked = ChangeMaxPlayers
@@ -1244,7 +1209,7 @@ namespace Barotrauma
                 currMaxPlayers = (int)MathHelper.Clamp(currMaxPlayers, 1, NetConfig.MaxPlayers);
                 maxPlayersBox.Text = currMaxPlayers.ToString();
             };
-            new GUIButton(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton", textAlignment: Alignment.Center)
+            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton", textAlignment: Alignment.Center)
             {
                 UserData = 1,
                 OnClicked = ChangeMaxPlayers
@@ -1258,41 +1223,6 @@ namespace Barotrauma
             };
             label.RectTransform.MaxSize = passwordBox.RectTransform.MaxSize;
 
-            var serverExecutableLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform),
-                TextManager.Get("ServerExecutable"), textAlignment: textAlignment);
-            const string vanillaServerOption = "Vanilla";
-            serverExecutableDropdown
-                = new GUIDropDown(new RectTransform(textFieldSize, serverExecutableLabel.RectTransform, Anchor.CenterRight),
-                    vanillaServerOption);
-            var listBoxSize = serverExecutableDropdown.ListBox.RectTransform.RelativeSize;
-            serverExecutableDropdown.ListBox.RectTransform.RelativeSize = new Vector2(listBoxSize.X * 1.5f, listBoxSize.Y);
-            serverExecutableDropdown.AddItem(vanillaServerOption, userData: null);
-            serverExecutableDropdown.OnSelected = (selected, userData) =>
-            {
-                if (userData != null)
-                {
-                    var warningBox = new GUIMessageBox(headerText: TextManager.Get("Warning"),
-                        text: TextManager.GetWithVariable("ModServerExesAtYourOwnRisk", "[exename]", serverExecutableDropdown.Text),
-                        new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
-                    warningBox.Buttons[0].OnClicked = (_, __) =>
-                    {
-                        warningBox.Close();
-                        return false;
-                    };
-                    warningBox.Buttons[1].OnClicked = (_, __) =>
-                    {
-                        serverExecutableDropdown.Select(0);
-                        warningBox.Close();
-                        return false;
-                    };
-                }
-                
-                serverExecutableDropdown.Text = ToolBox.LimitString(serverExecutableDropdown.Text,
-                    serverExecutableDropdown.Font, serverExecutableDropdown.Rect.Width * 8 / 10);
-
-                return true;
-            };
-            
             // tickbox upper ---------------
 
             var tickboxAreaUpper = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, tickBoxSize.Y), parent.RectTransform), isHorizontal: true);
@@ -1382,8 +1312,8 @@ namespace Barotrauma
             {
                 var client = new RestClient(RemoteContentUrl);
                 var request = new RestRequest("MenuContent.xml", Method.GET);
-                TaskPool.Add("RequestMainMenuRemoteContent", client.ExecuteAsync(request),
-                    RemoteContentReceived);
+                client.ExecuteAsync(request, RemoteContentReceived);
+                CoroutineManager.StartCoroutine(WairForRemoteContentReceived());
             }
 
             catch (Exception e)
@@ -1397,31 +1327,58 @@ namespace Barotrauma
             }
         }
 
-        private void RemoteContentReceived(Task t)
+        private IEnumerable<CoroutineStatus> WairForRemoteContentReceived()
         {
-            try
+            while (true)
             {
-                if (!t.TryGetResult(out IRestResponse remoteContentResponse)) { throw new Exception("Task did not return a valid result"); }
-                string xml = remoteContentResponse.Content;
-                int index = xml.IndexOf('<');
-                if (index > 0) { xml = xml.Substring(index, xml.Length - index); }
-                if (!string.IsNullOrWhiteSpace(xml))
+                lock (remoteContentLock)
                 {
-                    remoteContentDoc = XDocument.Parse(xml);
-                    foreach (var subElement in remoteContentDoc?.Root.Elements())
+                    if (remoteContentResponse != null) { break; }
+                }
+                yield return new WaitForSeconds(0.1f);
+            }
+            lock (remoteContentLock)
+            {
+                if (remoteContentResponse.ResponseStatus != ResponseStatus.Completed || remoteContentResponse.StatusCode != HttpStatusCode.OK)
+                {
+                    yield return CoroutineStatus.Success;
+                }
+
+                try
+                {
+                    string xml = remoteContentResponse.Content;
+                    int index = xml.IndexOf('<');
+                    if (index > 0) { xml = xml.Substring(index, xml.Length - index); }
+                    if (!string.IsNullOrWhiteSpace(xml))
                     {
-                        GUIComponent.FromXML(subElement.FromPackage(null), remoteContentContainer.RectTransform);
+                        remoteContentDoc = XDocument.Parse(xml);
+                        foreach (var subElement in remoteContentDoc?.Root.Elements())
+                        {
+                            GUIComponent.FromXML(subElement.FromPackage(null), remoteContentContainer.RectTransform);
+                        }
                     }
                 }
-            }
 
-            catch (Exception e)
-            {
+                catch (Exception e)
+                {
 #if DEBUG
-                DebugConsole.ThrowError("Reading received remote main menu content failed.", e);
+                    DebugConsole.ThrowError("Reading received remote main menu content failed.", e);
 #endif
-                GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.RemoteContentReceived:Exception", GameAnalyticsManager.ErrorSeverity.Error,
-                    "Reading received remote main menu content failed. " + e.Message);
+                    GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.WairForRemoteContentReceived:Exception", GameAnalyticsManager.ErrorSeverity.Error,
+                        "Reading received remote main menu content failed. " + e.Message);
+                }
+            }
+            yield return CoroutineStatus.Success;            
+        }
+
+        private readonly object remoteContentLock = new object();
+        private IRestResponse remoteContentResponse;
+
+        private void RemoteContentReceived(IRestResponse response, RestRequestAsyncHandle handle)
+        {
+            lock (remoteContentLock)
+            {
+                remoteContentResponse = response;
             }
         }
     }

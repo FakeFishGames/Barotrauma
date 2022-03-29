@@ -1198,9 +1198,9 @@ namespace Barotrauma
                     Color color = Color.Gray;
                     if (ic.HasRequiredItems(character, false))
                     {
-                        if (ic is Repairable r)
+                        if (ic is Repairable)
                         {
-                            if (r.IsBelowRepairThreshold) { color = Color.Cyan; }
+                            if (!IsFullCondition) { color = Color.Cyan; }
                         }
                         else
                         {

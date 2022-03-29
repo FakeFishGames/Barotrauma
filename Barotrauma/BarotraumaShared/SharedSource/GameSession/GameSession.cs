@@ -754,9 +754,9 @@ namespace Barotrauma
 
             try
             {
-                ImmutableArray<Character> crewCharacters = GetSessionCrewCharacters().ToImmutableArray();
+                IEnumerable<Character> crewCharacters = GetSessionCrewCharacters();
 
-                int prevMoney = GetAmountOfMoney(crewCharacters);
+                int prevMoney = (GameMode as CampaignMode)?.Bank.Balance ?? 0; // FIXME personal wallets - reward distribution
 
                 foreach (Mission mission in missions)
                 {
@@ -828,7 +828,7 @@ namespace Barotrauma
                 LogEndRoundStats(eventId);
                 if (GameMode is CampaignMode campaignMode)
                 {
-                    GameAnalyticsManager.AddDesignEvent(eventId + "MoneyEarned", GetAmountOfMoney(crewCharacters) - prevMoney);
+                    GameAnalyticsManager.AddDesignEvent(eventId + "MoneyEarned", campaignMode.Bank.Balance - prevMoney); // FIXME personal wallets - reward distrubiton
                     campaignMode.TotalPlayTime += roundDuration;
                 }
 #if CLIENT
@@ -839,17 +839,6 @@ namespace Barotrauma
             finally
             {
                 RoundEnding = false;
-            }
-
-            int GetAmountOfMoney(IEnumerable<Character> crew)
-            {
-                if (!(GameMode is CampaignMode campaign)) { return 0; }
-
-                return GameMain.NetworkMember switch
-                {
-                    null => campaign.Bank.Balance,
-                    _ => crew.Sum(c => c.Wallet.Balance) + campaign.Bank.Balance
-                };
             }
         }
 

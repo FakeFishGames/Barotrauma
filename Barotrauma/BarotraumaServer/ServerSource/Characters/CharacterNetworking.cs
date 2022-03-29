@@ -424,7 +424,7 @@ namespace Barotrauma
                     msg.Write(owner == c && owner.Character == this);
                     msg.Write(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.ID : (byte)0);
                     break;
-                case CharacterStatusEventData _:
+                case StatusEventData _:
                     WriteStatus(msg);
                     break;
                 case UpdateSkillsEventData _:

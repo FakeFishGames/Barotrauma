@@ -419,17 +419,17 @@ namespace Barotrauma
         public static int DistributeRewardsToCrew(IEnumerable<Character> crew, int totalReward)
         {
             int remainingRewards = totalReward;
-            float sum = GetRewardDistibutionSum(crew);
-            if (MathUtils.NearlyEqual(sum, 0)) { return remainingRewards; }
-            foreach (Character character in crew)
+            HashSet<Character> nonBotCrew = crew.Where(c => !c.IsBot).ToHashSet();
+            float sum = nonBotCrew.Sum(c => c.Wallet.RewardDistribution);
+            if (sum == 0) { return remainingRewards; }
+            foreach (Character character in nonBotCrew)
             {
-                int rewardDistribution = character.Wallet.RewardDistribution;
-                float rewardWeight = sum > 100 ? rewardDistribution / sum : rewardDistribution / 100f;
-                int reward = (int)(totalReward * rewardWeight);
-                reward = Math.Min(remainingRewards, reward);
+                float rewardWeight = character.Wallet.RewardDistribution / sum;
+                int reward = (int)Math.Floor(totalReward * rewardWeight);
+                reward = Math.Max(remainingRewards, reward);
                 character.Wallet.Give(reward);
                 remainingRewards -= reward;
-                if (remainingRewards <= 0) { break; }
+                if (0 >= remainingRewards) { break; }
             }
 
             return remainingRewards;
@@ -442,27 +442,26 @@ namespace Barotrauma
 
             IEnumerable<Character> characters = crewManager.GetCharacters();
 #if SERVER
-            return GameMain.Server.ConnectedClients.Select(c => c.Character).Where(c => c?.Info != null && !c.IsDead).Concat(characters);
+            return GameMain.Server.ConnectedClients.Select(c => c.Character).Where(IsAlive).Concat(characters);
 #elif CLIENT
             return characters;
 #endif
+            static bool IsAlive(Character c) { return c?.Info != null && !c.IsDead; }
         }
 
-        public static int GetRewardDistibutionSum(IEnumerable<Character> crew, int rewardDistribution = 0) => crew.Sum(c => c.Wallet.RewardDistribution) + rewardDistribution;
 
-
-        public static (int Amount, int Percentage, float Sum) GetRewardShare(int rewardDistribution, IEnumerable<Character> crew, Option<int> reward)
+        public static (int Amount, int Percentage) GetRewardShare(int rewardDistribution, IEnumerable<Character> crew, Option<int> reward)
         {
-            float sum = GetRewardDistibutionSum(crew, rewardDistribution);
-            if (MathUtils.NearlyEqual(sum, 0)) { return (0, 0, sum); }
+            float sum = crew.Sum(c => c.Wallet.RewardDistribution) + rewardDistribution;
+            if (sum == 0) { return (0, 0); }
 
-            float rewardWeight = sum > 100 ? rewardDistribution / sum : rewardDistribution / 100f;
+            float rewardWeight = rewardDistribution / sum;
             int rewardPercentage = (int)(rewardWeight * 100);
 
             return reward switch
             {
-                Some<int> { Value: var amount } => ((int)(amount * rewardWeight), rewardPercentage, sum),
-                None<int> _ => (0, rewardPercentage, sum),
+                Some<int> { Value: var amount } => ((int)(amount * rewardWeight), rewardPercentage),
+                None<int> _ => (0, rewardPercentage),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }

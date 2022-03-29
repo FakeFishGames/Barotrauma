@@ -218,7 +218,7 @@ namespace Barotrauma
 
         public void AddToGUIUpdateList()
         {
-            infoFrame?.AddToGUIUpdateList(order: 1);
+            infoFrame?.AddToGUIUpdateList();
             NetLobbyScreen.JobInfoFrame?.AddToGUIUpdateList();
         }
 
@@ -379,7 +379,8 @@ namespace Barotrauma
 
         private void CreateCrewListFrame(GUIFrame crewFrame)
         {
-            crew = GameMain.GameSession?.CrewManager?.GetCharacters() ?? Array.Empty<Character>();
+            // FIXME remove TestScreen stuff
+            crew = GameMain.GameSession?.CrewManager?.GetCharacters() ?? new []{ TestScreen.dummyCharacter };
             teamIDs = crew.Select(c => c.TeamID).Distinct().ToList();
 
             // Show own team first when there's more than one team
@@ -816,7 +817,7 @@ namespace Barotrauma
             else if (client != null)
             {
                 GUIComponent preview = CreateClientInfoFrame(background, client, GetPermissionIcon(client));
-                GameMain.Client?.SelectCrewClient(client, preview);
+                if (GameMain.NetworkMember != null) { GameMain.Client.SelectCrewClient(client, preview); }
                 CreateWalletFrame(background, client.Character);
             }
 
@@ -849,18 +850,17 @@ namespace Barotrauma
             GUILayoutGroup middleLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.66f), walletLayout.RectTransform));
             GUILayoutGroup salaryTextLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), middleLayout.RectTransform), isHorizontal: true);
             GUITextBlock salaryTitle = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), salaryTextLayout.RectTransform), TextManager.Get("crewwallet.salary"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
-            GUITextBlock rewardBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), salaryTextLayout.RectTransform), string.Empty, textAlignment: Alignment.BottomRight);
+            GUITextBlock rewardBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), salaryTextLayout.RectTransform), TextManager.GetWithVariable("percentageformat", "[value]", GetSharePercentage()), textAlignment: Alignment.BottomRight);
             GUILayoutGroup sliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), middleLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.Center);
             GUIScrollBar salarySlider = new GUIScrollBar(new RectTransform(new Vector2(0.9f, 1f), sliderLayout.RectTransform), style: "GUISlider", barSize: 0.03f)
             {
-                ToolTip = TextManager.Get("crewwallet.salary.tooltip"),
-                Range = new Vector2(0, 1),
+                Range = Vector2.UnitY,
                 BarScrollValue = targetWallet.RewardDistribution / 100f,
                 Step = 0.01f,
                 BarSize = 0.1f,
                 OnMoved = (bar, scroll) =>
                 {
-                    SetRewardText((int)(scroll * 100), rewardBlock);
+                    rewardBlock.Text = TextManager.GetWithVariable("percentageformat", "[value]", GetSharePercentage());
                     return true;
                 },
                 OnReleased = (bar, scroll) =>
@@ -871,9 +871,6 @@ namespace Barotrauma
                     return true;
                 }
             };
-
-            SetRewardText(targetWallet.RewardDistribution, rewardBlock);
-
 // @formatter:off
             GUIScissorComponent scissorComponent = new GUIScissorComponent(new RectTransform(new Vector2(0.85f, 1.25f), walletFrame.RectTransform, Anchor.BottomCenter, Pivot.TopCenter))
             {
@@ -905,11 +902,8 @@ namespace Barotrauma
                             GUIButton confirmButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1f), centerButtonLayout.RectTransform), TextManager.Get("confirm"), style: "GUIButtonFreeScale") { Enabled = false };
                             GUIButton resetButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1f), centerButtonLayout.RectTransform), TextManager.Get("reset"), style: "GUIButtonFreeScale") { Enabled = false };
 // @formatter:on
-            ImmutableArray<GUILayoutGroup> layoutGroups = ImmutableArray.Create(transferMenuLayout, paddedTransferMenuLayout, mainLayout, leftLayout, rightLayout);
-            MedicalClinicUI.EnsureTextDoesntOverflow(character.Name, leftName, leftLayout.Rect, layoutGroups);
             transferMenuButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.2f), walletFrame.RectTransform, Anchor.BottomCenter, Pivot.TopCenter), style: "UIToggleButtonVertical")
             {
-                ToolTip = TextManager.Get("crewwallet.transfer.tooltip"),
                 OnClicked = (button, o) =>
                 {
                     isTransferMenuOpen = !isTransferMenuOpen;
@@ -956,8 +950,6 @@ namespace Barotrauma
                         otherWallet = campaign.PersonalWallet;
                         break;
                 }
-
-                MedicalClinicUI.EnsureTextDoesntOverflow(rightName.Text.ToString(), rightName, rightLayout.Rect, layoutGroups);
 
                 if (!hasPermissions)
                 {
@@ -1081,14 +1073,14 @@ namespace Barotrauma
                     Receiver = to.Select(option => option.ID),
                     Amount = amount
                 };
-                IWriteMessage msg = new WriteOnlyMessage().WithHeader(ClientPacketHeader.TRANSFER_MONEY);
+                IWriteMessage msg = new WriteOnlyMessage().WithHeader(ClientPacketHeader.MONEY);
                 transfer.Write(msg);
                 GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
             }
 
             static void SetRewardDistribution(Character character, int newValue)
             {
-                INetSerializableStruct transfer = new NetWalletSetSalaryUpdate
+                INetSerializableStruct transfer = new NetWalletSalaryUpdate
                 {
                     Target = character.ID,
                     NewRewardDistribution = newValue
@@ -1098,23 +1090,7 @@ namespace Barotrauma
                 GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
             }
 
-            void SetRewardText(int value, GUITextBlock block)
-            {
-                var (_, percentage, sum) = Mission.GetRewardShare(value, salaryCrew, Option<int>.None());
-                LocalizedString tooltip = string.Empty;
-                block.TextColor = GUIStyle.TextColorNormal;
-
-                if (sum > 100)
-                {
-                    tooltip = TextManager.GetWithVariables("crewwallet.salary.over100toolitp", ("[sum]", $"{(int)sum}"), ("[newvalue]", $"{percentage}"));
-                    block.TextColor = GUIStyle.Orange;
-                }
-
-                LocalizedString text = TextManager.GetWithVariable("percentageformat", "[value]", $"{value}");
-
-                block.Text = text;
-                block.ToolTip = RichString.Rich(tooltip);
-            }
+            string GetSharePercentage() => Mission.GetRewardShare(targetWallet.RewardDistribution, salaryCrew, Option<int>.None()).Percentage.ToString();
         }
 
         private GUIComponent CreateClientInfoFrame(GUIFrame frame, Client client, Sprite permissionIcon = null)

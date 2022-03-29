@@ -65,7 +65,7 @@ namespace Barotrauma
             LoadFont();
         }
 
-        public void LoadFont()
+        private void LoadFont()
         {
             string fontPath = GetFontFilePath(element);
             uint size = GetFontSize(element);

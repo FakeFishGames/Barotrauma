@@ -160,19 +160,16 @@ namespace Barotrauma
         public void Delete()
         {
             Dispose();
-            try
+            if (File.Exists(ContentFile.Path))
             {
-                if (ContentPackage is { Files: { Length: 1 } }
-                    && ContentPackageManager.LocalPackages.Contains(ContentPackage))
+                try
                 {
-                    Directory.Delete(ContentPackage.Dir, recursive: true);
-                    ContentPackageManager.LocalPackages.Refresh();
-                    ContentPackageManager.EnabledPackages.DisableRemovedMods();
+                    File.Delete(ContentFile.Path);
                 }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Deleting item assembly \"" + Name + "\" failed.", e);
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Deleting item assembly \"" + Name + "\" failed.", e);
+                }
             }
         }
 

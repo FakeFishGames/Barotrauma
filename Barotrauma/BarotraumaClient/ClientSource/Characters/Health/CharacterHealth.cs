@@ -400,7 +400,7 @@ namespace Barotrauma
                     {
                         if (GameMain.Client != null)
                         {
-                            GameMain.Client.CreateEntityEvent(Character.Controlled, new Character.CharacterStatusEventData());
+                            GameMain.Client.CreateEntityEvent(Character.Controlled, new Character.StatusEventData());
                         }
                         else
                         {

@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class)]
     public class RequiredByCorePackage : Attribute
     {
         public readonly ImmutableHashSet<Type> AlternativeTypes;
@@ -18,7 +18,7 @@ namespace Barotrauma
         }
     }
 
-    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class)]
     public class AlternativeContentTypeNames : Attribute
     {
         public readonly ImmutableHashSet<Identifier> Names;

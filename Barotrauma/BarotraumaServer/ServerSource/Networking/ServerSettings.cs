@@ -321,16 +321,11 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
 
             HiddenSubs.UnionWith(doc.Root.GetAttributeStringArray("HiddenSubs", Array.Empty<string>()));
-            if (HiddenSubs.Any())
-            {
-                UpdateFlag(NetFlags.HiddenSubs);
-            }
 
             SelectedSubmarine = SelectNonHiddenSubmarine(SelectedSubmarine);
 
             string[] defaultAllowedClientNameChars = 
-                new string[] 
-                {
+                new string[] {
                     "32-33",
                     "38-46",
                     "48-57",

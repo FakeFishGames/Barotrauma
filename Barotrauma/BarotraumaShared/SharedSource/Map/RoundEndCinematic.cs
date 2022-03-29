@@ -48,11 +48,11 @@ namespace Barotrauma
         {
             if (!subs.Any()) yield return CoroutineStatus.Success;
 
-#if CLIENT
             Character.Controlled = null;
+            cam.TargetPos = Vector2.Zero;
+#if CLIENT
             GameMain.LightManager.LosEnabled = false;
 #endif
-            cam.TargetPos = Vector2.Zero;
 
             Level.Loaded.TopBarrier.Enabled = false;
 

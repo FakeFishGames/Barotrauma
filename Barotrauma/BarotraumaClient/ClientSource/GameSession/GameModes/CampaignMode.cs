@@ -63,10 +63,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Gets the current personal wallet
-        /// In singleplayer this is the campaign bank and in multiplayer this is the personal wallet
-        /// </summary>
         public virtual Wallet Wallet => GetWallet();
 
         public override void ShowStartMessage()

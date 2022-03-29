@@ -169,7 +169,7 @@ namespace Barotrauma.Items.Components
             hull.BallastFlora = new BallastFloraBehavior(hull, ballastFloraPrefab, offset, firstGrowth: true);
 
 #if SERVER
-            hull.BallastFlora.CreateNetworkMessage(new BallastFloraBehavior.SpawnEventData());
+            hull.BallastFlora.SendNetworkMessage(new BallastFloraBehavior.SpawnEventData());
 #endif
         }
 

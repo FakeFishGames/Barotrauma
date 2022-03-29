@@ -814,7 +814,7 @@ namespace Barotrauma.Networking
                 case ClientPacketHeader.CREW:
                     ReadCrewMessage(inc, connectedClient);
                     break;
-                case ClientPacketHeader.TRANSFER_MONEY:
+                case ClientPacketHeader.MONEY:
                     ReadMoneyMessage(inc, connectedClient);
                     break;
                 case ClientPacketHeader.REWARD_DISTRIBUTION:

@@ -1885,7 +1885,7 @@ namespace Barotrauma
                         if (!attack.IsValidContext(currentContexts)) { return false; }
                         if (attackTarget != null)
                         {
-                            if (!attack.IsValidTarget(attackTarget as Entity)) { return false; }
+                            if (!attack.IsValidTarget(attackTarget)) { return false; }
                             if (attackTarget is ISerializableEntity se && attackTarget is Character)
                             {
                                 if (attack.Conditionals.Any(c => !c.TargetSelf && !c.Matches(se))) { return false; }
@@ -3148,8 +3148,7 @@ namespace Barotrauma
 
                     var itemContainer = item?.GetComponent<ItemContainer>();
                     if (itemContainer == null) { return; }
-                    List<Item> inventoryItems = new List<Item>(Inventory.AllItemsMod);
-                    foreach (Item inventoryItem in inventoryItems)
+                    foreach (Item inventoryItem in Inventory.AllItemsMod)
                     {
                         if (!itemContainer.Inventory.TryPutItem(inventoryItem, user: null, createNetworkEvent: createNetworkEvents))
                         {
@@ -3157,25 +3156,17 @@ namespace Barotrauma
                             inventoryItem.Drop(dropper: this, createNetworkEvent: createNetworkEvents);
                         }
                     }
-                    //this needs to happen after the items have been dropped (we can no longer sync dropping the items if the character has been removed)
-                    Spawner.AddEntityToRemoveQueue(this);
                 }
             }
-            else
-            {
-                Spawner.AddEntityToRemoveQueue(this);
-            }
+
+            Spawner.AddEntityToRemoveQueue(this);
         }
 
         public void DespawnNow(bool createNetworkEvents = true)
         {
             despawnTimer = GameSettings.CurrentConfig.CorpseDespawnDelay;
             UpdateDespawn(1.0f, ignoreThresholds: true, createNetworkEvents: createNetworkEvents);
-            //update twice: first to spawn the duffel bag and move the items into it, then to remove the character
-            for (int i = 0; i < 2; i++)
-            {
-                Spawner.Update(createNetworkEvents);
-            }
+            Spawner.Update(createNetworkEvents);
         }
 
         public static void RemoveByPrefab(CharacterPrefab prefab)
@@ -4021,7 +4012,7 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember is { IsServer: true })
             {
-                GameMain.NetworkMember.CreateEntityEvent(this, new CharacterStatusEventData());
+                GameMain.NetworkMember.CreateEntityEvent(this, new StatusEventData());
             }
 
             isDead = true;
@@ -4177,11 +4168,6 @@ namespace Barotrauma
             }
             DebugConsole.Log("Removing character " + Name + " (ID: " + ID + ")");
 
-#if CLIENT
-            //ensure we apply any pending inventory updates to drop any items that need to be dropped when the character despawns
-            Inventory?.ApplyReceivedState();
-#endif
-
             base.Remove();
 
             foreach (Item heldItem in HeldItems.ToList())
@@ -4193,11 +4179,11 @@ namespace Barotrauma
 
 #if CLIENT
             GameMain.GameSession?.CrewManager?.KillCharacter(this, resetCrewListIndex: false);
-
-            if (Controlled == this) { Controlled = null; }
 #endif
 
             CharacterList.Remove(this);
+
+            if (Controlled == this) { Controlled = null; }
 
             if (Inventory != null)
             {
@@ -4280,7 +4266,7 @@ namespace Barotrauma
                 if (!MathUtils.NearlyEqual(newItem.Condition, newItem.MaxCondition) &&
                     GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
-                    newItem.CreateStatusEvent();
+                    GameMain.NetworkMember.CreateEntityEvent(newItem, new StatusEventData());
                 }
 #if SERVER
                 newItem.GetComponent<Terminal>()?.SyncHistory();

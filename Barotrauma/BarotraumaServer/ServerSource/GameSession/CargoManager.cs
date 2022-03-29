@@ -21,7 +21,7 @@ namespace Barotrauma
             }
         }
 
-        public void BuyBackSoldItems(List<SoldItem> itemsToBuy)
+        public void BuyBackSoldItems(List<SoldItem> itemsToBuy, Client client)
         {
             // Check all the prices before starting the transaction
             // to make sure the modifiers stay the same for the whole transaction

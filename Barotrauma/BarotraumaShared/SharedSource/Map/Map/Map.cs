@@ -182,7 +182,8 @@ namespace Barotrauma
             {
                 for (int i = 0; i < Connections.Count; i++)
                 {
-                    Connections[i].LevelData.HasHuntingGrounds = Rand.Range(0.0f, 1.0f) < Connections[i].Difficulty / 100.0f * LevelData.MaxHuntingGroundsProbability;
+                    float maxHuntingGroundsProbability = 0.3f;
+                    Connections[i].LevelData.HasHuntingGrounds = Rand.Range(0.0f, 1.0f) < Connections[i].Difficulty / 100.0f * maxHuntingGroundsProbability;
                     connectionElements[i].SetAttributeValue("hashuntinggrounds", true);
                 }
             }

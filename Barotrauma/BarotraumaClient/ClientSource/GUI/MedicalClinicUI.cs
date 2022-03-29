@@ -931,7 +931,7 @@ namespace Barotrauma
             });
         }
 
-        public static void EnsureTextDoesntOverflow(string? text, GUITextBlock textBlock, Rectangle bounds, ImmutableArray<GUILayoutGroup>? layoutGroups = null)
+        private static void EnsureTextDoesntOverflow(string? text, GUITextBlock textBlock, Rectangle bounds, ImmutableArray<GUILayoutGroup>? layoutGroups = null)
         {
             if (string.IsNullOrWhiteSpace(text)) { return; }
 

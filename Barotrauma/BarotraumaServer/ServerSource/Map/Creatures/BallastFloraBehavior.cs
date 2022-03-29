@@ -1,13 +1,12 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using System;
+using System.Xml.Linq;
 
 namespace Barotrauma.MapCreatures.Behavior
 {
     partial class BallastFloraBehavior
     {
-        const float DamageUpdateInterval = 1.0f;
-
         private float damageUpdateTimer;
 
         partial void LoadPrefab(ContentXElement element)
@@ -32,38 +31,16 @@ namespace Barotrauma.MapCreatures.Behavior
             }
         }
 
-        partial void UpdateDamage(float deltaTime)
-        {
-            damageUpdateTimer -= deltaTime;
-            if (damageUpdateTimer > 0.0f) { return; }
-
-            const int maxMessagesPerSecond = 10;
-            int messages = 0;
-            foreach (BallastFloraBranch branch in Branches)
-            {
-                //don't notify about minuscule amounts of damage (<= 1.0f)
-                if (branch.AccumulatedDamage > 1.0f)
-                {
-                    CreateNetworkMessage(new BranchDamageEventData(branch));
-                    branch.AccumulatedDamage = 0.0f;
-                    messages++;
-                    //throttle a bit: if a large ballast flora is withering, it can lead to a very large number of events otherwise
-                    if (messages > maxMessagesPerSecond) { break; }
-                }
-            }
-            damageUpdateTimer = DamageUpdateInterval;
-        }
-
         public void ServerWrite(IWriteMessage msg, IEventData eventData)
         {
             msg.Write((byte)eventData.NetworkHeader);
             
             switch (eventData)
             {
-                case SpawnEventData _:
+                case SpawnEventData spawnEventData:
                     ServerWriteSpawn(msg);
                     break;
-                case KillEventData _:
+                case KillEventData killEventData:
                     //do nothing
                     break;
                 case BranchCreateEventData branchCreateEventData:
@@ -95,7 +72,6 @@ namespace Barotrauma.MapCreatures.Behavior
             var (x, y) = branch.Position;
             msg.Write(parentId);
             msg.Write((int)branch.ID);
-            msg.Write(branch.IsRootGrowth);
             msg.WriteRangedInteger((byte)branch.Type, 0b0000, 0b1111);
             msg.WriteRangedInteger((byte)branch.Sides, 0b0000, 0b1111);
             msg.WriteRangedInteger(branch.FlowerConfig.Serialize(), 0, 0xFFF);
@@ -127,7 +103,7 @@ namespace Barotrauma.MapCreatures.Behavior
             msg.Write(branch.ID);
         }
 
-        public void CreateNetworkMessage(IEventData extraData)
+        public void SendNetworkMessage(IEventData extraData)
         {
             GameMain.Server.CreateEntityEvent(Parent, new Hull.BallastFloraEventData(this, extraData));
         }

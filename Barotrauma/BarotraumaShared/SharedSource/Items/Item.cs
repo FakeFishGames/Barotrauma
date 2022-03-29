@@ -1677,15 +1677,10 @@ namespace Barotrauma
             if (!(GameMain.NetworkMember is { IsServer: true })) { return; }
             if (!conditionUpdatePending) { return; }
 
-            CreateStatusEvent();
+            GameMain.NetworkMember.CreateEntityEvent(this, new StatusEventData());
             lastSentCondition = condition;
             sendConditionUpdateTimer = NetConfig.ItemConditionUpdateInterval;
             conditionUpdatePending = false;
-        }
-
-        public void CreateStatusEvent()
-        {
-            GameMain.NetworkMember.CreateEntityEvent(this, new ItemStatusEventData());
         }
 
         private bool isActive = true;

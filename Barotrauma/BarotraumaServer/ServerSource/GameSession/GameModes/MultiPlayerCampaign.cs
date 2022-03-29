@@ -859,19 +859,19 @@ namespace Barotrauma
             {
                 // for some reason CargoManager.SoldItem is never cleared by the server, I've added a check to SellItems that ignores all
                 // sold items that are removed so they should be discarded on the next message
-                CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems));
+                CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems), sender);
                 CargoManager.SellItems(soldItems, sender);
             }
             else if (allowedToSellInventoryItems || allowedToSellSubItems)
             {
                 if (allowedToSellInventoryItems)
                 {
-                    CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems.Where(i => i.Origin == SoldItem.SellOrigin.Character)));
+                    CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems.Where(i => i.Origin == SoldItem.SellOrigin.Character)), sender);
                     soldItems.RemoveAll(i => i.Origin != SoldItem.SellOrigin.Character);
                 }
                 else
                 {
-                    CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems.Where(i => i.Origin == SoldItem.SellOrigin.Submarine)));
+                    CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems.Where(i => i.Origin == SoldItem.SellOrigin.Submarine)), sender);
                     soldItems.RemoveAll(i => i.Origin != SoldItem.SellOrigin.Submarine);
                 }
                 CargoManager.SellItems(soldItems, sender);
@@ -960,7 +960,7 @@ namespace Barotrauma
 
         public void ServerReadRewardDistribution(IReadMessage msg, Client sender)
         {
-            NetWalletSetSalaryUpdate update = INetSerializableStruct.Read<NetWalletSetSalaryUpdate>(msg);
+            NetWalletSalaryUpdate update = INetSerializableStruct.Read<NetWalletSalaryUpdate>(msg);
 
             if (!AllowedToManageCampaign(sender)) { return; }
 

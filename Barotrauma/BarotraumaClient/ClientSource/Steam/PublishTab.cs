@@ -89,22 +89,23 @@ namespace Barotrauma.Steam
 
             return (fileCount, byteCount);
         }
-
-        private void DeselectPublishedItem()
-        {
-            var deselectCarrier = selfModsList.Parent.FindChild(c => c.UserData is ActionCarrier { Id: var id } && id == "deselect");
-            Action? deselectAction = deselectCarrier.UserData is ActionCarrier { Action: var action }
-                ? action
-                : null;
-            deselectAction?.Invoke();
-            SelectTab(Tab.Publish);
-        }
         
         private void PopulatePublishTab(ItemOrPackage itemOrPackage, GUIFrame parentFrame)
         {
             ContentPackageManager.LocalPackages.Refresh();
             ContentPackageManager.WorkshopPackages.Refresh();
 
+            var deselectCarrier = selfModsList.Parent.FindChild(c => c.UserData is ActionCarrier { Id: var id } && id == "deselect");
+            Action? deselectAction = deselectCarrier.UserData is ActionCarrier { Action: var action }
+                ? action
+                : null;
+
+            void deselectItem()
+            {
+                deselectAction?.Invoke();
+                SelectTab(Tab.Publish);
+            }
+            
             parentFrame.ClearChildren();
             GUILayoutGroup mainLayout = new GUILayoutGroup(new RectTransform(Vector2.One, parentFrame.RectTransform),
                 childAnchor: Anchor.TopCenter);
@@ -145,7 +146,7 @@ namespace Barotrauma.Steam
                 {
                     OnClicked = (button, o) =>
                     {
-                        DeselectPublishedItem();
+                        deselectItem();
                         return false;
                     }
                 };
@@ -333,7 +334,7 @@ namespace Barotrauma.Steam
                                     t =>
                                     {
                                         confirmDeletion.Close();
-                                        DeselectPublishedItem();
+                                        deselectItem();
                                     });
                                 return false;
                             };
@@ -363,10 +364,24 @@ namespace Barotrauma.Steam
                 return false;
             };
 
-            var coroutineEval = subcoroutine(messageBox.Text, messageBox).GetEnumerator();
+            var coroutineEval = subcoroutine(messageBox.Text, messageBox);
             while (true)
             {
-                var status = coroutineEval.Current;
+                bool moveNext = true;
+                try
+                {
+                    moveNext = coroutineEval.GetEnumerator().MoveNext();
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"{e.Message} {e.StackTrace.CleanupStackTrace()}");
+                    messageBox.Close();
+                }
+                if (!moveNext)
+                {
+                    messageBox.Close();
+                }
+                var status = coroutineEval.GetEnumerator().Current;
                 if (messageBox.Closed)
                 {
                     yield return CoroutineStatus.Success;
@@ -382,20 +397,6 @@ namespace Barotrauma.Steam
                 {
                     yield return status;
                 }
-                bool moveNext = true;
-                try
-                {
-                    moveNext = coroutineEval.MoveNext();
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError($"{e.Message} {e.StackTrace.CleanupStackTrace()}");
-                    messageBox.Close();
-                }
-                if (!moveNext)
-                {
-                    messageBox.Close();
-                }
             }
         }
         
@@ -407,9 +408,26 @@ namespace Barotrauma.Steam
             {
                 if (!SteamManager.Workshop.CanBeInstalled(workshopItem))
                 {
-                    SteamManager.Workshop.NukeDownload(workshopItem);
+                    //Must download!
+                    while (!SteamManager.Workshop.CanBeInstalled(workshopItem))
+                    {
+                        bool shouldForceInstall = workshopItem.IsInstalled
+                                                  && Directory.Exists(workshopItem.Directory)
+                                                  && !SteamManager.Workshop.IsItemDirectoryUpToDate(workshopItem);
+                        shouldForceInstall |= workshopItem is
+                            { IsDownloading: false, IsDownloadPending: false, IsInstalled: false };
+                        if (shouldForceInstall)
+                        {
+                            SteamManager.Workshop.ForceRedownload(workshopItem);
+                        }
+                        currentStepText.Text = TextManager.GetWithVariable("PublishPopupDownload", "[percentage]", Percentage(workshopItem.DownloadAmount));
+                        yield return new WaitForSeconds(0.5f);
+                    }
                 }
-                SteamManager.Workshop.DownloadModThenEnqueueInstall(workshopItem);
+                else
+                {
+                    SteamManager.Workshop.DownloadModThenEnqueueInstall(workshopItem);
+                }
                 TaskPool.Add($"Install {workshopItem.Title}",
                     SteamManager.Workshop.WaitForInstall(workshopItem),
                     (t) =>
@@ -418,9 +436,7 @@ namespace Barotrauma.Steam
                     });
                 while (!ContentPackageManager.WorkshopPackages.Any(p => p.SteamWorkshopId == workshopItem.Id))
                 {
-                    currentStepText.Text = SteamManager.Workshop.CanBeInstalled(workshopItem)
-                        ? TextManager.Get("PublishPopupInstall")
-                        : TextManager.GetWithVariable("PublishPopupDownload", "[percentage]", Percentage(workshopItem.DownloadAmount));
+                    currentStepText.Text = TextManager.Get("PublishPopupInstall");
                     yield return new WaitForSeconds(0.5f);
                 }
 
@@ -441,6 +457,7 @@ namespace Barotrauma.Steam
                 currentStepText.Text = TextManager.Get("PublishPopupCreateLocal");
                 yield return new WaitForSeconds(0.5f);
             }
+
             PopulatePublishTab(workshopItem, parentFrame);
 
             yield return CoroutineStatus.Success;
@@ -483,10 +500,7 @@ namespace Barotrauma.Steam
                 editor.SubmitAsync(),
                 t =>
                 {
-                    if (t.TryGetResult(out Steamworks.Ugc.PublishResult publishResult))
-                    {
-                        result = publishResult;
-                    }
+                    t.TryGetResult(out result);
                     resultException = t.Exception?.GetInnermost();
                 });
             currentStepText.Text = TextManager.Get("PublishPopupSubmit");
@@ -509,14 +523,6 @@ namespace Barotrauma.Steam
                                         $"exception was {downloadTask.Exception?.GetInnermost()?.ToString().CleanupStackTrace() ?? "[NULL]"}");
                 }
 
-                ContentPackage? pkgToNuke
-                    = ContentPackageManager.WorkshopPackages.FirstOrDefault(p => p.SteamWorkshopId == resultId);
-                if (pkgToNuke != null)
-                {
-                    Directory.Delete(pkgToNuke.Dir, recursive: true);
-                    ContentPackageManager.WorkshopPackages.Refresh();
-                }
-
                 bool installed = false;
                 TaskPool.Add(
                     "InstallNewlyPublished",
@@ -535,11 +541,9 @@ namespace Barotrauma.Steam
                 {
                     SteamWorkshopId = resultId
                 };
-                localModProject.DiscardHashAndInstallTime();
                 localModProject.Save(localPackage.Path);
                 ContentPackageManager.ReloadContentPackage(localPackage);
                 ContentPackageManager.WorkshopPackages.Refresh();
-                DeselectPublishedItem();
 
                 if (result.Value.NeedsWorkshopAgreement)
                 {

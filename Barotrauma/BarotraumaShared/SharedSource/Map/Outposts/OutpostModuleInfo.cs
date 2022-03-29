@@ -45,9 +45,6 @@ namespace Barotrauma
         [Serialize(GapPosition.None, IsPropertySaveable.Yes, description: "Which sides of the module have gaps on them (i.e. from which sides the module can be attached to other modules). Center = no gaps available.")]
         public GapPosition GapPositions { get; set; }
 
-        [Serialize(GapPosition.Right | GapPosition.Left | GapPosition.Bottom | GapPosition.Top, IsPropertySaveable.Yes, description: "Which sides of this module are allowed to attach to the previously placed module. E.g. if you want a module to always attach to the left side of the docking module, you could set this to Right.")]
-        public GapPosition CanAttachToPrevious { get; set; }
-
         public string Name { get; private set; }
 
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; }

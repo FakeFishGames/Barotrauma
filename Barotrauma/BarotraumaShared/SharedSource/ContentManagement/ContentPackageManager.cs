@@ -327,8 +327,7 @@ namespace Barotrauma
             => LocalPackages.Regular.CollectionConcat(WorkshopPackages.Regular);
 
         public static IEnumerable<ContentPackage> AllPackages
-            => VanillaCorePackage.ToEnumerable().CollectionConcat(LocalPackages).CollectionConcat(WorkshopPackages)
-                .OfType<ContentPackage>();
+            => LocalPackages.CollectionConcat(WorkshopPackages);
 
         public static void UpdateContentPackageList()
         {

@@ -209,11 +209,6 @@ namespace Barotrauma.Steam
                 string newPath = $"{ContentPackage.LocalModsDir}/{sanitizedName}";
                 if (File.Exists(newPath) || Directory.Exists(newPath))
                 {
-                    newPath += $"_{contentPackage.SteamWorkshopId}";
-                }
-
-                if (File.Exists(newPath) || Directory.Exists(newPath))
-                {
                     throw new Exception($"{newPath} already exists");
                 }
 

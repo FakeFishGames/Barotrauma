@@ -148,14 +148,14 @@ namespace Barotrauma
                 }
                 if (TargetCharacter != null)
                 {
-                    if (enemyAI.AttackLimb?.attack == null)
+                    if (enemyAI.AttackingLimb?.attack == null)
                     {
                         DeattachFromBody(reset: true, cooldown: 1);
                     }
                     else
                     {
-                        float range = enemyAI.AttackLimb.attack.DamageRange * 2f;
-                        if (Vector2.DistanceSquared(TargetCharacter.WorldPosition, enemyAI.AttackLimb.WorldPosition) > range * range)
+                        float range = enemyAI.AttackingLimb.attack.DamageRange * 2f;
+                        if (Vector2.DistanceSquared(TargetCharacter.WorldPosition, enemyAI.AttackingLimb.WorldPosition) > range * range)
                         {
                             DeattachFromBody(reset: true, cooldown: 1);
                         }
@@ -265,11 +265,11 @@ namespace Barotrauma
                     if (enemyAI.IsSteeringThroughGap) { break; }
                     if (_attachPos == Vector2.Zero) { break; }
                     if (!AttachToSub && !AttachToCharacters) { break; }
-                    if (enemyAI.AttackLimb == null) { break; }
+                    if (enemyAI.AttackingLimb == null) { break; }
                     if (targetBody == null) { break; }
                     if (IsAttached && AttachJoints[0].BodyB == targetBody) { break; }
                     Vector2 referencePos = TargetCharacter != null ? TargetCharacter.WorldPosition : ConvertUnits.ToDisplayUnits(transformedAttachPos);
-                    if (Vector2.DistanceSquared(referencePos, enemyAI.AttackLimb.WorldPosition) < enemyAI.AttackLimb.attack.DamageRange * enemyAI.AttackLimb.attack.DamageRange)
+                    if (Vector2.DistanceSquared(referencePos, enemyAI.AttackingLimb.WorldPosition) < enemyAI.AttackingLimb.attack.DamageRange * enemyAI.AttackingLimb.attack.DamageRange)
                     {
                         AttachToBody(transformedAttachPos);
                     }

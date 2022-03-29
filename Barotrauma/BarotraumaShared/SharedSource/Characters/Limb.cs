@@ -540,8 +540,6 @@ namespace Barotrauma
             private set;
         }
 
-        public Items.Components.Rope AttachedRope { get; set; }
-
         public string Name => Params.Name;
 
         // These properties are exposed for status effects

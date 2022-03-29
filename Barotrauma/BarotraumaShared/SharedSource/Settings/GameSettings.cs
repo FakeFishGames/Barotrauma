@@ -10,7 +10,6 @@ using System.Xml.Linq;
 using Barotrauma.IO;
 #if CLIENT
 using Barotrauma.ClientSource.Settings;
-using Barotrauma.Networking;
 using Microsoft.Xna.Framework.Input;
 #endif
 
@@ -454,12 +453,8 @@ namespace Barotrauma
 
             bool languageChanged = currentConfig.Language != newConfig.Language;
 
-            bool audioOutputChanged = currentConfig.Audio.AudioOutputDevice != newConfig.Audio.AudioOutputDevice;
-            bool voiceCaptureChanged = currentConfig.Audio.VoiceCaptureDevice != newConfig.Audio.VoiceCaptureDevice;
-
-            bool textScaleChanged = Math.Abs(currentConfig.Graphics.TextScale - newConfig.Graphics.TextScale) > MathF.Pow(2.0f, -7);
-
             currentConfig = newConfig;
+#warning TODO: Implement program state updates;
 
 #if CLIENT
             if (setGraphicsMode)
@@ -467,24 +462,6 @@ namespace Barotrauma
                 GameMain.Instance.ApplyGraphicsSettings();
             }
 
-            if (audioOutputChanged)
-            {
-                GameMain.SoundManager?.InitializeAlcDevice(currentConfig.Audio.AudioOutputDevice);
-            }
-
-            if (voiceCaptureChanged)
-            {
-                VoipCapture.ChangeCaptureDevice(currentConfig.Audio.VoiceCaptureDevice);
-            }
-
-            if (textScaleChanged)
-            {
-                foreach (var font in GUIStyle.Fonts.Values)
-                {
-                    font.Prefabs.ForEach(p => p.LoadFont());
-                }
-            }
-            
             GameMain.SoundManager?.ApplySettings();
 #endif
             if (languageChanged) { TextManager.ClearCache(); }

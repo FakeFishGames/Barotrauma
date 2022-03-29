@@ -31,7 +31,7 @@ namespace Barotrauma.Networking
         ERROR,           //tell the server that an error occurred
         CREW,            //hiring UI
         MEDICAL,         //medical clinic
-        TRANSFER_MONEY,      // wallet transfers
+        MONEY,           //wallet updates
         REWARD_DISTRIBUTION, // wallet reward distribution
         READY_CHECK,
         READY_TO_SPAWN

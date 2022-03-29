@@ -2,19 +2,19 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma.IO
 {
     static class Validation
     {
-        private static readonly ImmutableArray<Identifier> unwritableDirs = new[] { "Content".ToIdentifier() }.ToImmutableArray();
-        private static readonly ImmutableArray<Identifier> unwritableExtensions = new[]
+        private static readonly string[] unwritableDirs = new string[] { "Content" };
+        private static readonly string[] unwritableExtensions = new string[]
         {
-            ".pdb", ".com", ".scr", ".dylib", ".so", ".a", ".app", //executables and libraries (.exe, .dll and .json handled separately in CanWrite)
+            ".pdb", ".com", ".scr", ".dylib", ".so", ".a", ".app", //executables and libraries (.exe and .dll handled separately in CanWrite)
             ".bat", ".sh", //shell scripts
-        }.ToIdentifiers().ToImmutableArray();
+            ".json" //deps.json
+        };
 
         /// <summary>
         /// When set to true, the game is allowed to modify the vanilla content in debug builds. Has no effect in non-debug builds.
@@ -24,27 +24,25 @@ namespace Barotrauma.IO
         public static bool CanWrite(string path, bool isDirectory)
         {
             path = System.IO.Path.GetFullPath(path).CleanUpPath();
-            string localModsDir = System.IO.Path.GetFullPath(ContentPackage.LocalModsDir).CleanUpPath();
-            string workshopModsDir = System.IO.Path.GetFullPath(ContentPackage.WorkshopModsDir).CleanUpPath();
 
             if (!isDirectory)
             {
-                Identifier extension = System.IO.Path.GetExtension(path).Replace(" ", "").ToIdentifier();
-                if (unwritableExtensions.Any(e => e == extension))
+                string extension = System.IO.Path.GetExtension(path).Replace(" ", "");
+                if (unwritableExtensions.Any(e => e.Equals(extension, StringComparison.OrdinalIgnoreCase)))
                 {
                     return false;
                 }
-                if (!path.StartsWith(workshopModsDir, StringComparison.OrdinalIgnoreCase)
-                    && !path.StartsWith(localModsDir, StringComparison.OrdinalIgnoreCase)
-                    && (extension == ".dll" || extension == ".exe" || extension == ".json"))
+                if (!path.StartsWith(System.IO.Path.GetFullPath("Mods/").CleanUpPath(), StringComparison.OrdinalIgnoreCase)
+                    && (extension.Equals(".dll", StringComparison.OrdinalIgnoreCase)
+                        || extension.Equals(".exe", StringComparison.OrdinalIgnoreCase)))
                 {
                     return false;
                 }
             }
             
-            foreach (var unwritableDir in unwritableDirs)
+            foreach (string unwritableDir in unwritableDirs)
             {
-                string dir = System.IO.Path.GetFullPath(unwritableDir.Value).CleanUpPath();
+                string dir = System.IO.Path.GetFullPath(unwritableDir).CleanUpPath();
 
                 if (path.StartsWith(dir, StringComparison.InvariantCultureIgnoreCase))
                 {

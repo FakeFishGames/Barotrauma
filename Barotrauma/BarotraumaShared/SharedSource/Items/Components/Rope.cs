@@ -1,9 +1,9 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -12,36 +12,8 @@ namespace Barotrauma.Items.Components
         private ISpatialEntity source;
         private Item target;
 
-        private Vector2? launchDir;
-
-        private void SetSource(ISpatialEntity source)
-        {
-            this.source = source;
-            if (source is Limb sourceLimb)
-            {
-                sourceLimb.AttachedRope = this;
-                float offset = sourceLimb.Params.GetSpriteOrientation() - MathHelper.PiOver2;
-                launchDir = VectorExtensions.Forward(sourceLimb.body.TransformedRotation - offset * sourceLimb.character.AnimController.Dir);
-            }
-        }
-
-        private void ResetSource()
-        {
-            if (source is Limb sourceLimb && sourceLimb.AttachedRope == this)
-            {
-                sourceLimb.AttachedRope = null;
-            }
-            source = null;
-        }
-
         private float snapTimer;
-
-        [Serialize(1.0f, IsPropertySaveable.No, description: "")]
-        public float SnapAnimDuration
-        {
-            get;
-            set;
-        }
+        private const float SnapAnimDuration = 1.0f;
 
         private float raycastTimer;
         private const float RayCastInterval = 0.2f;
@@ -69,13 +41,6 @@ namespace Barotrauma.Items.Components
 
         [Serialize(1000.0f, IsPropertySaveable.No, description: "How far the source item can be from the projectile until the rope breaks.")]
         public float MaxLength
-        {
-            get;
-            set;
-        }
-
-        [Serialize(360.0f, IsPropertySaveable.No, description: "How far the source item can be from the projectile until the rope breaks.")]
-        public float MaxAngle
         {
             get;
             set;
@@ -150,8 +115,8 @@ namespace Barotrauma.Items.Components
         {
             System.Diagnostics.Debug.Assert(source != null);
             System.Diagnostics.Debug.Assert(target != null);
+            this.source = source;
             this.target = target;
-            SetSource(source);
             Snapped = false;
             ApplyStatusEffects(ActionType.OnUse, 1.0f, worldPosition: item.WorldPosition);
             IsActive = true;
@@ -162,7 +127,7 @@ namespace Barotrauma.Items.Components
             if (source == null || target == null || target.Removed ||
                 (source is Entity sourceEntity && sourceEntity.Removed))
             {
-                ResetSource();
+                source = null;
                 target = null;
                 IsActive = false;
                 return;
@@ -179,25 +144,10 @@ namespace Barotrauma.Items.Components
             }
 
             Vector2 diff = target.WorldPosition - source.WorldPosition;
-            float lengthSqr = diff.LengthSquared();
-            if (lengthSqr > MaxLength * MaxLength)
+            if (diff.LengthSquared() > MaxLength * MaxLength)
             {
                 Snap();
                 return;
-            }
-
-            if (MaxAngle < 180 && lengthSqr > 2500)
-            {
-                if (launchDir == null)
-                {
-                    launchDir = diff;
-                }
-                float angle = MathHelper.ToDegrees(VectorExtensions.Angle(launchDir.Value, diff));
-                if (angle > MaxAngle)
-                {
-                    Snap();
-                    return;
-                }
             }
 
 #if CLIENT

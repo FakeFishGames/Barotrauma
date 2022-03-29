@@ -52,19 +52,17 @@ namespace Barotrauma
                                 DebugConsole.ThrowError("Error in character health config (" + characterHealth.Character.Name + ") - define vitality multipliers using affliction identifiers or types instead of names.");
                                 continue;
                             }
-                            var vitalityMultipliers = subElement.GetAttributeIdentifierArray("identifier", null) ?? subElement.GetAttributeIdentifierArray("identifiers", null);
-                            if (vitalityMultipliers == null)
+
+                            Identifier afflictionIdentifier = subElement.GetAttributeIdentifier("identifier", "");
+                            Identifier afflictionType = subElement.GetAttributeIdentifier("type", "");
+                            float multiplier = subElement.GetAttributeFloat("multiplier", 1.0f);
+                            if (!afflictionIdentifier.IsEmpty)
                             {
-                                vitalityMultipliers = subElement.GetAttributeIdentifierArray("type", null) ?? subElement.GetAttributeIdentifierArray("types", null);
-                            }
-                            if (vitalityMultipliers != null)
-                            {
-                                float multiplier = subElement.GetAttributeFloat("multiplier", 1.0f);
-                                vitalityMultipliers.ForEach(i => VitalityMultipliers.Add(i, multiplier));
+                                VitalityMultipliers.Add(afflictionIdentifier, multiplier);
                             }
                             else
                             {
-                                DebugConsole.ThrowError($"Error in character health config {characterHealth.Character.Name}: affliction identifier(s) or type(s) not defined in the \"VitalityMultiplier\" elements!");
+                                VitalityTypeMultipliers.Add(afflictionType, multiplier);
                             }
                             break;
                     }

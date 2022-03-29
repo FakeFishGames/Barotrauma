@@ -443,6 +443,8 @@ namespace Barotrauma
             if (CurrentGroundedParams == null) { return; }
             Vector2 handPos;
 
+            //if you're allergic to magic numbers, stop reading now
+
             Limb leftFoot = GetLimb(LimbType.LeftFoot);
             Limb rightFoot = GetLimb(LimbType.RightFoot);
             Limb head = GetLimb(LimbType.Head);
@@ -597,19 +599,15 @@ namespace Barotrauma
             {
                 float torsoAngle = TorsoAngle.Value;
                 float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
-                if (Crouching && !movingHorizontally && !aiming) { torsoAngle -= HumanCrouchParams.ExtraTorsoAngleWhenStationary; }
+                if (Crouching && !movingHorizontally) { torsoAngle -= HumanCrouchParams.ExtraTorsoAngleWhenStationary; }
                 torsoAngle -= herpesStrength / 150.0f;
                 torso.body.SmoothRotate(torsoAngle * Dir, CurrentGroundedParams.TorsoTorque);
             }
-            if (!aiming && CurrentGroundedParams.FixedHeadAngle && HeadAngle.HasValue)
+            if (HeadAngle.HasValue)
             {
                 float headAngle = HeadAngle.Value;
                 if (Crouching && !movingHorizontally) { headAngle -= HumanCrouchParams.ExtraHeadAngleWhenStationary; }
                 head.body.SmoothRotate(headAngle * Dir, CurrentGroundedParams.HeadTorque);
-            }
-            else
-            {
-                RotateHead(head);
             }
 
             if (!onGround)
@@ -885,17 +883,23 @@ namespace Barotrauma
                 }
             }
             float targetSpeed = TargetMovement.Length();
-            if (aiming)
+            if (targetSpeed > 0.1f)
             {
-                Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
-                Vector2 diff = (mousePos - torso.SimPosition) * Dir;
-                float newRotation = MathUtils.VectorToAngle(diff);
-                Collider.SmoothRotate(newRotation, CurrentSwimParams.SteerTorque * character.SpeedMultiplier);
+                if (!aiming)
+                {
+                    float newRotation = MathUtils.VectorToAngle(TargetMovement) - MathHelper.PiOver2;
+                    Collider.SmoothRotate(newRotation, CurrentSwimParams.SteerTorque * character.SpeedMultiplier);                
+                }
             }
-            else if (targetSpeed > 0.1f)
+            else
             {
-                float newRotation = MathUtils.VectorToAngle(TargetMovement) - MathHelper.PiOver2;
-                Collider.SmoothRotate(newRotation, CurrentSwimParams.SteerTorque * character.SpeedMultiplier);
+                if (aiming)
+                {
+                    Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
+                    Vector2 diff = (mousePos - torso.SimPosition) * Dir;
+                    float newRotation = MathUtils.VectorToAngle(diff);
+                    Collider.SmoothRotate(newRotation, CurrentSwimParams.SteerTorque * character.SpeedMultiplier);
+                }
             }
 
             torso.body.MoveToPos(Collider.SimPosition + new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f, 5.0f);
@@ -910,14 +914,13 @@ namespace Barotrauma
             {
                 torso.body.SmoothRotate(Collider.Rotation, CurrentSwimParams.TorsoTorque);
             }
-
-            if (!aiming && CurrentSwimParams.FixedHeadAngle && HeadAngle.HasValue)
+            if (HeadAngle.HasValue)
             {
                 head.body.SmoothRotate(Collider.Rotation + HeadAngle.Value * Dir, CurrentSwimParams.HeadTorque);
             }
             else
             {
-                RotateHead(head);
+                head.body.SmoothRotate(Collider.Rotation, CurrentSwimParams.HeadTorque);
             }
 
             //dont try to move upwards if head is already out of water
@@ -948,18 +951,7 @@ namespace Barotrauma
 
             if (isNotRemote)
             {
-                float t = movementLerp;
-                if (targetSpeed > 0.00001f && !SimplePhysicsEnabled)
-                {
-                    Vector2 forward = VectorExtensions.Forward(Collider.Rotation + MathHelper.PiOver2);
-                    float dot = Vector2.Dot(forward, Vector2.Normalize(movement));
-                    if (dot < 0)
-                    {
-                        // Reduce the linear movement speed when not facing the movement direction
-                        t = MathHelper.Clamp((1 + dot) / 10, 0.01f, 0.1f);
-                    }
-                }
-                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, t);
+                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, movementLerp);
             }
 
             WalkPos += movement.Length();
@@ -1235,11 +1227,7 @@ namespace Barotrauma
 
             //apply forces to the collider to move the Character up/down
             Collider.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * Collider.Mass);
-            if (aiming)
-            {
-                RotateHead(head);
-            }
-            else
+            if (!aiming)
             {
                 float movementMultiplier = targetMovement.Y < 0 ? 0 : 1;
                 head.body.SmoothRotate(MathHelper.PiOver4 * movementMultiplier * Dir, WalkParams.HeadTorque);
@@ -1720,24 +1708,6 @@ namespace Barotrauma
                     target.AnimController.TargetMovement = (character.SimPosition + Vector2.UnitX * Dir) - target.SimPosition;
                 }
             }
-        }
-
-        private void RotateHead(Limb head)
-        {
-            Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
-            Vector2 dir = (mousePos - head.SimPosition) * Dir;
-            float rot = MathUtils.VectorToAngle(dir);
-            var neckJoint = GetJointBetweenLimbs(LimbType.Head, LimbType.Torso);
-            if (neckJoint != null)
-            {
-                float offset = MathUtils.WrapAnglePi(GetLimb(LimbType.Torso).body.Rotation);
-                float lowerLimit = neckJoint.LowerLimit + offset;
-                float upperLimit = neckJoint.UpperLimit + offset;
-                float min = Math.Min(lowerLimit, upperLimit);
-                float max = Math.Max(lowerLimit, upperLimit);
-                rot = Math.Clamp(rot, min, max);
-            }
-            head.body.SmoothRotate(rot, CurrentAnimationParams.HeadTorque);
         }
 
         private void FootIK(Limb foot, Vector2 pos, float legTorque, float footTorque, float footAngle)

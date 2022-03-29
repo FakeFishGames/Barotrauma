@@ -1846,7 +1846,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public void ApplyReceivedState()
+        private void ApplyReceivedState()
         {
             if (receivedItemIDs == null || (Owner != null && Owner.Removed)) { return; }
 
