@@ -22,7 +22,7 @@ namespace Barotrauma
         private GUIButton clearAllButton;
 
         private List<CharacterInfo> PendingHires => campaign.Map?.CurrentLocation?.HireManager?.PendingHires;
-        private bool HasPermission => campaignUI.Campaign.AllowedToManageCampaign();
+        private bool HasPermission => campaignUI.Campaign.AllowedToManageCampaign(ClientPermissions.ManageHires);
 
         private Point resolutionWhenCreated;
 
@@ -433,7 +433,7 @@ namespace Barotrauma
                     else if (!btn.Enabled)
                     {
                         btn.ToolTip = string.Empty;
-                        btn.Enabled = true;
+                        btn.Enabled = HasPermission;
                     }
                 };
 
@@ -632,7 +632,7 @@ namespace Barotrauma
             totalBlock.Text = TextManager.FormatCurrency(total);
             bool enoughMoney = campaign == null || campaign.Wallet.CanAfford(total);
             totalBlock.TextColor = enoughMoney ? Color.White : Color.Red;
-            validateHiresButton.Enabled = enoughMoney && pendingList.Content.RectTransform.Children.Any();
+            validateHiresButton.Enabled = enoughMoney && HasPermission && pendingList.Content.RectTransform.Children.Any();
         }
 
         public bool ValidateHires(List<CharacterInfo> hires, bool createNetworkEvent = false)

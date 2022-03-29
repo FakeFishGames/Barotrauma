@@ -6,6 +6,7 @@ namespace Barotrauma
 {
     internal readonly struct WalletChangedEvent
     {
+        public readonly Option<Character> Owner;
         public readonly Wallet Wallet;
         public readonly WalletInfo Info;
         public readonly WalletChangedData ChangedData;
@@ -15,6 +16,7 @@ namespace Barotrauma
             Wallet = wallet;
             Info = info;
             ChangedData = changedData;
+            Owner = wallet.Owner;
         }
     }
 
@@ -109,6 +111,8 @@ namespace Barotrauma
     // ReSharper disable ValueParameterNotUsed
     internal sealed class InvalidWallet : Wallet
     {
+        public InvalidWallet(): base(Option<Character>.None()) { }
+
         public override int Balance
         {
             get => 0;
@@ -132,6 +136,8 @@ namespace Barotrauma
                              AttrubuteNameRewardDistribution = "rewarddistribution",
                              SaveElementName = "Wallet";
 
+        public readonly Option<Character> Owner;
+
         private int balance;
 
         public virtual int Balance
@@ -148,9 +154,12 @@ namespace Barotrauma
             set => rewardDistribution = ClampRewardDistribution(value);
         }
 
-        public Wallet() { }
+        public Wallet(Option<Character> owner)
+        {
+            Owner = owner;
+        }
 
-        public Wallet(XElement element)
+        public Wallet(Option<Character> owner, XElement element): this(owner)
         {
             balance = ClampBalance(element.GetAttributeInt(AttributeNameBalance, 0));
             rewardDistribution = ClampBalance(element.GetAttributeInt(AttrubuteNameRewardDistribution, 0));
@@ -185,7 +194,7 @@ namespace Barotrauma
             SettingsChanged(balanceChanged: Option<int>.Some(-price), rewardChanged: Option<int>.None());
         }
 
-        public void SetRewardDistrubiton(int value)
+        public void SetRewardDistribution(int value)
         {
             int oldValue = RewardDistribution;
             RewardDistribution = value;

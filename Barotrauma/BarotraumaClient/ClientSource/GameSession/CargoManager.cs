@@ -67,6 +67,8 @@ namespace Barotrauma
 
         public void SetSoldItems(Dictionary<Identifier, List<SoldItem>> items)
         {
+            if (SoldItems.Count == 0 && items.Count == 0) { return; }
+
             SoldItems.Clear();
             foreach (var entry in items)
             {

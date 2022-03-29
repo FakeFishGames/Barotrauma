@@ -218,14 +218,22 @@ namespace Barotrauma
 
             foreach (Location location in Locations)
             {
-                if (location.Type.Identifier != "city" &&
-                    location.Type.Identifier != "outpost") 
-                { 
-                    continue; 
-                }
+                if (location.Type.Identifier != "outpost") { continue; }
                 if (CurrentLocation == null || location.MapPosition.X < CurrentLocation.MapPosition.X)
                 {
                     CurrentLocation = StartLocation = furthestDiscoveredLocation = location;
+                }
+            }
+            //if no outpost was found (using a mod that replaces the outpost location type?), find any type of outpost
+            if (CurrentLocation == null)
+            {
+                foreach (Location location in Locations)
+                {
+                    if (!location.Type.HasOutpost) { continue; }
+                    if (CurrentLocation == null || location.MapPosition.X < CurrentLocation.MapPosition.X)
+                    {
+                        CurrentLocation = StartLocation = furthestDiscoveredLocation = location;
+                    }
                 }
             }
             System.Diagnostics.Debug.Assert(StartLocation != null, "Start location not assigned after level generation.");
@@ -273,6 +281,7 @@ namespace Barotrauma
             }
 
             voronoiSites.Clear();
+            Dictionary<int, List<Location>> locationsPerZone = new Dictionary<int, List<Location>>();
             foreach (GraphEdge edge in edges)
             {
                 if (edge.Point1 == edge.Point2) { continue; }
@@ -301,7 +310,24 @@ namespace Barotrauma
                     Vector2 position = points[positionIndex];
                     if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) { position = points[1 - positionIndex]; }
                     int zone = GetZoneIndex(position.X);
-                    newLocations[i] = Location.CreateRandom(position, zone, Rand.GetRNG(Rand.RandSync.ServerAndClient), requireOutpost: false, existingLocations: Locations);
+                    if (!locationsPerZone.ContainsKey(zone))
+                    {
+                        locationsPerZone[zone] = new List<Location>();
+                    }
+
+                    LocationType forceLocationType = null;
+                    foreach (LocationType locationType in LocationType.Prefabs.OrderBy(lt => lt.Identifier))
+                    {
+                        if (locationType.MinCountPerZone.TryGetValue(zone, out int minCount) && locationsPerZone[zone].Count(l => l.Type == locationType) < minCount)
+                        {
+                            forceLocationType = locationType;
+                            break;
+                        }
+                    }
+
+                    newLocations[i] = Location.CreateRandom(position, zone, Rand.GetRNG(Rand.RandSync.ServerAndClient), 
+                        requireOutpost: false, forceLocationType: forceLocationType, existingLocations: Locations);
+                    locationsPerZone[zone].Add(newLocations[i]);
                     Locations.Add(newLocations[i]);
                 }
 
@@ -448,8 +474,7 @@ namespace Barotrauma
                         Connections[i].Locations[1];
                     if (!leftMostLocation.Type.HasOutpost || leftMostLocation.Type.Identifier == "abandoned")
                     {
-                        #warning TODO: determinism?
-                        leftMostLocation.ChangeType(LocationType.Prefabs.First(lt => lt.HasOutpost && lt.Identifier != "abandoned"));
+                        leftMostLocation.ChangeType(LocationType.Prefabs.OrderBy(lt => lt.Identifier).First(lt => lt.HasOutpost && lt.Identifier != "abandoned"));
                     }
                     leftMostLocation.IsGateBetweenBiomes = true;
                     Connections[i].Locked = true;

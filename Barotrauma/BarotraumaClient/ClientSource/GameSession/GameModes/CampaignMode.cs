@@ -86,30 +86,14 @@ namespace Barotrauma
         /// <summary>
         /// There is a server-side implementation of the method in <see cref="MultiPlayerCampaign"/>
         /// </summary>
-        public bool AllowedToEndRound()
-        {
-            //allow ending the round if the client has permissions, is the owner, the only client in the server
-            //or if no-one has management permissions
-            if (GameMain.Client == null) { return true; }
-            return
-                GameMain.Client.HasPermission(ClientPermissions.ManageRound) ||
-                GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) || 
-                GameMain.Client.ConnectedClients.Count == 1 ||
-                GameMain.Client.IsServerOwner ||
-                GameMain.Client.ConnectedClients.None(c =>
-                    c.InGame && (c.IsOwner || c.HasPermission(ClientPermissions.ManageRound) || c.HasPermission(ClientPermissions.ManageCampaign)));
-        }
-
-        /// <summary>
-        /// There is a server-side implementation of the method in <see cref="MultiPlayerCampaign"/>
-        /// </summary>
-        public bool AllowedToManageCampaign(ClientPermissions permissions = ClientPermissions.ManageCampaign)
+        public bool AllowedToManageCampaign(ClientPermissions permissions)
         {
             //allow managing the round if the client has permissions, is the owner, the only client in the server,
             //or if no-one has management permissions
             if (GameMain.Client == null) { return true; }
             return
                 GameMain.Client.HasPermission(permissions) ||
+                GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) ||
                 GameMain.Client.ConnectedClients.Count == 1 ||
                 GameMain.Client.IsServerOwner ||
                 GameMain.Client.ConnectedClients.None(c => c.InGame && (c.IsOwner || c.HasPermission(permissions)));
@@ -210,7 +194,7 @@ namespace Barotrauma
 
             if (endRoundButton.Visible)
             {
-                if (!AllowedToEndRound()) 
+                if (!AllowedToManageCampaign(ClientPermissions.ManageMap)) 
                 { 
                     buttonText = TextManager.Get("map"); 
                 }
@@ -306,7 +290,7 @@ namespace Barotrauma
                 default:
                     ShowCampaignUI = true;
                     CampaignUI.SelectTab(npc.CampaignInteractionType, storeIdentifier: npc.MerchantIdentifier);
-                    CampaignUI.UpgradeStore?.RefreshAll();
+                    CampaignUI.UpgradeStore?.RequestRefresh();
                     break;
             }
         }

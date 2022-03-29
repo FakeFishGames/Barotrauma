@@ -10,7 +10,7 @@ using ItemOrPackage = Barotrauma.Either<Steamworks.Ugc.Item, Barotrauma.ContentP
 
 namespace Barotrauma.Steam
 {
-    public partial class WorkshopMenu
+    sealed partial class MutableWorkshopMenu : WorkshopMenu
     {
         public enum Tab
         {
@@ -20,10 +20,10 @@ namespace Barotrauma.Steam
             Publish
         }
 
-        private readonly GUILayoutGroup tabber;
-        private readonly Dictionary<Tab, (GUIButton Button, GUIFrame Content)> tabContents;
+        protected readonly GUILayoutGroup tabber;
+        protected readonly Dictionary<Tab, (GUIButton Button, GUIFrame Content)> tabContents;
 
-        private readonly GUIFrame contentFrame;
+        protected readonly GUIFrame contentFrame;
 
         private CorePackage EnabledCorePackage => enabledCoreDropdown.SelectedData as CorePackage ?? throw new Exception("Valid core package not selected");
 
@@ -39,15 +39,17 @@ namespace Barotrauma.Steam
         private readonly GUIListBox popularModsList;
         private readonly GUIListBox selfModsList;
 
-        public WorkshopMenu(GUIFrame parent)
+        public MutableWorkshopMenu(GUIFrame parent) : base(parent)
         {
-            var mainLayout = new GUILayoutGroup(new RectTransform(Vector2.One, parent.RectTransform), isHorizontal: false);
+            var mainLayout
+                = new GUILayoutGroup(new RectTransform(Vector2.One, parent.RectTransform), isHorizontal: false);
 
-            tabber = new GUILayoutGroup(new RectTransform((1.0f, 0.05f), mainLayout.RectTransform), isHorizontal: true) { Stretch = true };
+            tabber = new GUILayoutGroup(new RectTransform((1.0f, 0.05f), mainLayout.RectTransform), isHorizontal: true)
+                { Stretch = true };
             tabContents = new Dictionary<Tab, (GUIButton Button, GUIFrame Content)>();
 
             contentFrame = new GUIFrame(new RectTransform((1.0f, 0.95f), mainLayout.RectTransform), style: null);
-
+            
             CreateInstalledModsTab(
                 out enabledCoreDropdown,
                 out enabledRegularModsList,

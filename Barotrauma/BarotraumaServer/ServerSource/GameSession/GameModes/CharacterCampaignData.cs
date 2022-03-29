@@ -129,7 +129,7 @@ namespace Barotrauma
 
         public void ApplyWalletData(Character character)
         {
-            character.Wallet = new Wallet(WalletData);
+            character.Wallet = new Wallet(Option<Character>.Some(character), WalletData);
         }
 
         public XElement Save()

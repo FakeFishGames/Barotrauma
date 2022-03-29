@@ -1101,58 +1101,6 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("save|savesub", "save [submarine name]: Save the currently loaded submarine using the specified name.", (string[] args) =>
-            {
-                if (args.Length < 1) { return; }
-
-                GameMain.SubEditorScreen.SetMode(SubEditorScreen.Mode.Default);
-
-                string fileName = string.Join(" ", args);
-                if (fileName.Contains("../"))
-                {
-                    ThrowError("Illegal symbols in filename (../)");
-                    return;
-                }
-
-                if (Submarine.MainSub.TrySaveAs(Barotrauma.IO.Path.Combine(SubmarineInfo.SavePath, fileName + ".sub")))
-                {
-                    NewMessage("Sub saved", Color.Green);
-                }
-            }));
-
-            commands.Add(new Command("load|loadsub", "load [submarine name]: Load a submarine.", (string[] args) =>
-            {
-                if (args.Length == 0) { return; }
-
-                if (GameMain.GameSession != null)
-                {
-                    ThrowError("The loadsub command cannot be used when a round is running. You should probably be using spawnsub instead.");
-                    return;
-                }
-
-                string name = string.Join(" ", args);
-                SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => name.Equals(s.Name, StringComparison.OrdinalIgnoreCase));
-                if (subInfo == null)
-                {
-                    string path = Path.Combine(SubmarineInfo.SavePath, name);
-                    if (!File.Exists(path))
-                    {
-                        ThrowError($"Could not find a submarine with the name \"{name}\" or in the path {path}.");
-                        return;
-                    }
-                    subInfo = new SubmarineInfo(path);
-                }
-
-                Submarine.Load(subInfo, true);
-            },
-            () =>
-            {
-                return new string[][]
-                {
-                    SubmarineInfo.SavedSubmarines.Select(s => s.Name).ToArray()
-                };
-            }));
-
             commands.Add(new Command("cleansub", "", (string[] args) =>
             {
                 for (int i = MapEntity.mapEntityList.Count - 1; i >= 0; i--)

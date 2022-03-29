@@ -735,14 +735,40 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime);
 
-        public static IEnumerable<Character> GetSessionCrewCharacters()
+        /// <summary>
+        /// Returns a list of crew characters currently in the game with a given filter.
+        /// </summary>
+        /// <param name="type">Character type filter</param>
+        /// <returns></returns>
+        /// <remarks>
+        /// In singleplayer mode the CharacterType.Player returns the currently controlled player.
+        /// </remarks>
+        public static ImmutableHashSet<Character> GetSessionCrewCharacters(CharacterType type)
         {
+            if (!(GameMain.GameSession.CrewManager is { } crewManager)) { return ImmutableHashSet<Character>.Empty; }
+
+            IEnumerable<Character> players;
+            IEnumerable<Character> bots;
+            HashSet<Character> characters = new HashSet<Character>();
+
 #if SERVER
-            return GameMain.Server.ConnectedClients.Select(c => c.Character).Where(c => c?.Info != null && !c.IsDead);
-#else
-            if (GameMain.GameSession?.CrewManager is null) { return Enumerable.Empty<Character>(); }
-            return GameMain.GameSession.CrewManager.GetCharacters().Where(c => c?.Info != null && !c.IsDead);
+            players = GameMain.Server.ConnectedClients.Select(c => c.Character).Where(c => c?.Info != null && !c.IsDead);
+            bots = crewManager.GetCharacters().Where(c => !c.IsRemotePlayer);
+#elif CLIENT
+            players = crewManager.GetCharacters().Where(c => c.IsPlayer);
+            bots = crewManager.GetCharacters().Where(c => c.IsBot);
 #endif
+            if (type.HasFlag(CharacterType.Bot))
+            {
+                foreach (Character bot in bots) { characters.Add(bot); }
+            }
+
+            if (type.HasFlag(CharacterType.Player))
+            {
+                foreach (Character player in players) { characters.Add(player); }
+            }
+
+            return characters.ToImmutableHashSet();
         }
 
         public void EndRound(string endMessage, List<TraitorMissionResult>? traitorResults = null, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
@@ -754,7 +780,7 @@ namespace Barotrauma
 
             try
             {
-                ImmutableArray<Character> crewCharacters = GetSessionCrewCharacters().ToImmutableArray();
+                ImmutableHashSet<Character> crewCharacters = GetSessionCrewCharacters(CharacterType.Both);
 
                 int prevMoney = GetAmountOfMoney(crewCharacters);
 
@@ -898,7 +924,7 @@ namespace Barotrauma
                 }
             }
 
-            foreach (Character c in GetSessionCrewCharacters())
+            foreach (Character c in GetSessionCrewCharacters(CharacterType.Both))
             {
                 foreach (var itemSelectedDuration in c.ItemSelectedDurations)
                 {
@@ -948,25 +974,25 @@ namespace Barotrauma
 #endif
         }
 
-        public static bool IsCompatibleWithEnabledContentPackages(IList<string> contentPackagePaths, out LocalizedString errorMsg)
+        public static bool IsCompatibleWithEnabledContentPackages(IList<string> contentPackageNames, out LocalizedString errorMsg)
         {
             errorMsg = "";
             //no known content packages, must be an older save file
-            if (!contentPackagePaths.Any()) { return true; }
+            if (!contentPackageNames.Any()) { return true; }
 
             List<string> missingPackages = new List<string>();
-            foreach (string packagePath in contentPackagePaths)
+            foreach (string packageName in contentPackageNames)
             {
-                if (!ContentPackageManager.EnabledPackages.All.Any(cp => cp.Path == packagePath))
+                if (!ContentPackageManager.EnabledPackages.All.Any(cp => cp.NameMatches(packageName)))
                 {
-                    missingPackages.Add(packagePath);
+                    missingPackages.Add(packageName);
                 }
             }
             List<string> excessPackages = new List<string>();
             foreach (ContentPackage cp in ContentPackageManager.EnabledPackages.All)
             {
                 if (!cp.HasMultiplayerSyncedContent) { continue; }
-                if (!contentPackagePaths.Any(p => p == cp.Path))
+                if (!contentPackageNames.Any(p => cp.NameMatches(p)))
                 {
                     excessPackages.Add(cp.Name);
                 }
@@ -976,9 +1002,9 @@ namespace Barotrauma
             if (missingPackages.Count == 0 && missingPackages.Count == 0)
             {
                 var enabledPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent).ToImmutableArray();
-                for (int i = 0; i < contentPackagePaths.Count && i < enabledPackages.Length; i++)
+                for (int i = 0; i < contentPackageNames.Count && i < enabledPackages.Length; i++)
                 {
-                    if (contentPackagePaths[i] != enabledPackages[i].Path)
+                    if (!enabledPackages[i].NameMatches(contentPackageNames[i]))
                     {
                         orderMismatch = true;
                         break;
@@ -1009,7 +1035,7 @@ namespace Barotrauma
             if (orderMismatch)
             {
                 if (!errorMsg.IsNullOrEmpty()) { errorMsg += "\n"; }
-                errorMsg += TextManager.GetWithVariable("campaignmode.contentpackageordermismatch", "[loadorder]", string.Join(", ", contentPackagePaths));
+                errorMsg += TextManager.GetWithVariable("campaignmode.contentpackageordermismatch", "[loadorder]", string.Join(", ", contentPackageNames));
             }
 
             return false;
@@ -1040,8 +1066,8 @@ namespace Barotrauma
                 }
             }
             if (Map != null) { rootElement.Add(new XAttribute("mapseed", Map.Seed)); }
-            rootElement.Add(new XAttribute("selectedcontentpackages",
-                string.Join("|", ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent).Select(cp => cp.Path))));
+            rootElement.Add(new XAttribute("selectedcontentpackagenames",
+                string.Join("|", ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent).Select(cp => cp.Name.Replace("|", @"\|")))));
 
             ((CampaignMode)GameMode).Save(doc.Root);
 

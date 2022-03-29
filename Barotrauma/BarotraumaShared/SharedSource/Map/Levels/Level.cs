@@ -831,7 +831,13 @@ namespace Barotrauma
             }
 
             List<Point> ruinPositions = new List<Point>();
-            for (int i = 0; i < GenerationParams.RuinCount; i++)
+            int ruinCount = GenerationParams.RuinCount;
+            if (GameMain.GameSession?.GameMode?.Missions.Any(m => m.Prefab.RequireRuin) ?? false)
+            {
+                ruinCount = Math.Max(ruinCount, 1);
+            }
+
+            for (int i = 0; i < ruinCount; i++)
             {
                 Point ruinSize = new Point(5000);
                 int limitLeft = Math.Max(startPosition.X, ruinSize.X / 2);

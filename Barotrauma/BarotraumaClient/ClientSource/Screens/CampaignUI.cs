@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -332,7 +333,7 @@ namespace Barotrauma
             foreach (GUITickBox tickBox in missionTickBoxes)
             {
                 bool disable = hasMaxMissions && !tickBox.Selected;
-                tickBox.Enabled = Campaign.AllowedToManageCampaign() && !disable;
+                tickBox.Enabled = Campaign.AllowedToManageCampaign(ClientPermissions.ManageMap) && !disable;
                 tickBox.Box.DisabledColor = disable ? tickBox.Box.Color * 0.5f : tickBox.Box.Color * 0.8f;
                 foreach (GUIComponent child in tickBox.Parent.Parent.Children)
                 {
@@ -480,7 +481,7 @@ namespace Barotrauma
                 if (GUI.MouseOn == tickBox) { return false; }
                 if (tickBox != null)
                 {
-                    if (Campaign.AllowedToManageCampaign() && tickBox.Enabled)
+                    if (Campaign.AllowedToManageCampaign(ClientPermissions.ManageMap) && tickBox.Enabled)
                     {
                         tickBox.Selected = !tickBox.Selected;
                     }
@@ -521,10 +522,10 @@ namespace Barotrauma
                         };
                         tickBox.RectTransform.MinSize = new Point(tickBox.Rect.Height, 0);
                         tickBox.RectTransform.IsFixedSize = true;
-                        tickBox.Enabled = Campaign.AllowedToManageCampaign();
+                        tickBox.Enabled = Campaign.AllowedToManageCampaign(ClientPermissions.ManageMap);
                         tickBox.OnSelected += (GUITickBox tb) =>
                         {
-                            if (!Campaign.AllowedToManageCampaign()) { return false; }
+                            if (!Campaign.AllowedToManageCampaign(Networking.ClientPermissions.ManageMap)) { return false; }
                             
                             if (tb.Selected)
                             {
@@ -544,7 +545,7 @@ namespace Barotrauma
                             UpdateMaxMissions(connection.OtherLocation(currentDisplayLocation));
 
                             if ((Campaign is MultiPlayerCampaign multiPlayerCampaign) && !multiPlayerCampaign.SuppressStateSending &&
-                                Campaign.AllowedToManageCampaign())
+                                Campaign.AllowedToManageCampaign(Networking.ClientPermissions.ManageMap))
                             {
                                 GameMain.Client?.SendCampaignState();
                             }
@@ -665,7 +666,7 @@ namespace Barotrauma
                     return true;
                 },
                 Enabled = true,
-                Visible = Campaign.AllowedToEndRound()
+                Visible = Campaign.AllowedToManageCampaign(ClientPermissions.ManageMap)
             };
 
             buttonArea.RectTransform.MinSize = new Point(0, StartButton.RectTransform.MinSize.Y);
@@ -702,12 +703,10 @@ namespace Barotrauma
             {
                 case CampaignMode.InteractionType.Repair:
                     repairHullsButton.Enabled =
-                        (Campaign.PurchasedHullRepairs || Campaign.Wallet.CanAfford(CampaignMode.HullRepairCost)) &&
-                        Campaign.AllowedToManageCampaign();
+                        (Campaign.PurchasedHullRepairs || Campaign.Wallet.CanAfford(CampaignMode.HullRepairCost));
                     repairHullsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedHullRepairs;
                     repairItemsButton.Enabled =
-                        (Campaign.PurchasedItemRepairs || Campaign.Wallet.CanAfford(CampaignMode.ItemRepairCost)) &&
-                        Campaign.AllowedToManageCampaign();
+                        (Campaign.PurchasedItemRepairs || Campaign.Wallet.CanAfford(CampaignMode.ItemRepairCost));
                     repairItemsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedItemRepairs;
 
                     if (GameMain.GameSession?.SubmarineInfo == null || !GameMain.GameSession.SubmarineInfo.SubsLeftBehind)
@@ -718,8 +717,7 @@ namespace Barotrauma
                     else
                     {
                         replaceShuttlesButton.Enabled =
-                            (Campaign.PurchasedLostShuttles || Campaign.Wallet.CanAfford(CampaignMode.ShuttleReplaceCost)) &&
-                            Campaign.AllowedToManageCampaign();
+                            (Campaign.PurchasedLostShuttles || Campaign.Wallet.CanAfford(CampaignMode.ShuttleReplaceCost));
                         replaceShuttlesButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedLostShuttles;
                     }
                     break;

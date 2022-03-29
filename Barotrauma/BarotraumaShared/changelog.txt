@@ -1,4 +1,54 @@
 ---------------------------------------------------------------------------------------------------------
+v0.17.5.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Changed server browser tooltips: list all missing mods instead of just missing ones that aren't available from the workshop.
+- Players without the permission to access the bank can request money from the bank (approved by vote).
+- Modified Selkie emergency hatch: can only use it if the shuttle is flooded.
+- Added limits to how many items a vending machine can dispense and adjusted what's available in them (unstable only).
+- Reworked campaign permissions: removed BuyItems and CampaignStore permissions (no longer needed, everyone can buy), added ManageMap and ManageHires permissions, ManageCampaign allows gives you all the other campaign-related permissions.
+- Adjusted the amount of colonies in cold caverns.
+- Added a prompt to allow modders to automatically transfer their mods and submarines from before v0.17 to the new LocalMods folder.
+- Disabled loading submarines from the Submarines folder, as it has been rendered obsolete by this change.
+- Removed submarine download confirmation prompt. All subs that are required to play in a server will be downloaded automatically, which shouldn't be a problem since they're only stored temporarily.
+- Swapped the sides of server log and character info in multiplayer tab menu.
+- Doubled the rate limit for medical clinic which should reduce "No response from server" errors.
+- Rebalance mudraptors: slightly more health, less damage at head.
+- Reduce the probability for the coilgun to dismember limbs (or break armor).
+- Crawler: adjust the vitality multipliers of hands and tail from 50% to 75%.
+
+Fixes:
+- Fixed multiplayer campaign saves with semicolons or pipes in their name causing "path to a save file was empty" errors in the server lobby.
+- Fixed performance drops in multiplayer when someone attacks the outpost NPCs and causes the reputation to drop.
+- Moved the showperf view to the right to prevent it from overlapping with the crew list.
+- Fixed status monitor's electrical view and item finder not showing items in docked subs.
+- The sound of crowbaring a door open can't be heard from other subs.
+- Fixed "a gaze into the abyss" achievement working unreliably. The achievement didn't unlock until you returned to 50% of the crush depth, which isn't possible in some levels (e.g. if the level starts at 3500 m and crush depth at 5000 m). Now it's unlocked if you get to 500 m above the crush depth or to the end of the level.
+- Fixed certain achievements (last man standing, lone sailor, finishing a round with a specific job) not unlocking if you're in a docked sub instead of the main sub at the end of the round.
+- Readjusted all sitting animations so that they characters shouldn't twitch anymore while sitting.
+
+Fixes (unstable only):
+- Fixed mods list being configurable outside of the main menu.
+- Misc fixes to colonies (added vents, wired docking ports, adjusted misaligned stairs, fixed a bunch of gap and draw order issues).
+- Fixed outpost generator sometimes placing a hallway between modules connected by stairs in colonies.
+- Fixed crashing when saving a sub.
+- Fixed cargo missions sometimes displaying an incorrect number of crates in the description.
+- Hide the "sufficient skills to fabricate"/"insufficient skills to fabricate" labels on the vending machines.
+- Decrease the number of daily specials and requested goods for merchants to account for the multiple vendors.
+- Fixed crash in Mission.GetSalaryEligibleCrew when taking control of a bot in the multiplayer campaign.
+- Fixed tab menu blocking all other UI elements.
+- Readjusted amount of materials in abyss islands.
+- Fixed wallet UI being accessible in all multiplayer game modes.
+- Fixed flashlights emitting sparks.
+- Flipped the confirm and reset buttons in wallet UI.
+- Added a new column to multiplayer tab menu that shows the amount of money the player has in their wallet.
+
+Modding:
+- Option to make missions force a ruin in the level if there isn't one.
+- Character editor: don't check the validity of the texture path when copying humans (because the path is not valid and will be parsed later). Allows creating custom human characters by copying the vanilla human (even though they are not fully supported).
+
+---------------------------------------------------------------------------------------------------------
 v0.17.4.0
 ---------------------------------------------------------------------------------------------------------
 

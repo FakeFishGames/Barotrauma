@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
@@ -13,6 +12,7 @@ namespace Barotrauma.Items.Components
     {
         [Editable]
         public LimbType LimbType { get; set; }
+        
         [Editable]
         public Vector2 Position { get; set; }
 
@@ -33,7 +33,7 @@ namespace Barotrauma.Items.Components
     partial class Controller : ItemComponent, IServerSerializable
     {
         //where the limbs of the user should be positioned when using the controller
-        private readonly List<LimbPos> limbPositions;
+        private readonly List<LimbPos> limbPositions = new List<LimbPos>();
 
         private Direction dir;
 
@@ -117,38 +117,9 @@ namespace Barotrauma.Items.Components
         public Controller(Item item, ContentXElement element)
             : base(item, element)
         {
-            limbPositions = new List<LimbPos>();
-
             userPos = element.GetAttributeVector2("UserPos", Vector2.Zero);
-
             Enum.TryParse(element.GetAttributeString("direction", "None"), out dir);
-
-            foreach (var subElement in element.Elements())
-            {
-                if (subElement.Name != "limbposition") { continue; }
-                string limbStr = subElement.GetAttributeString("limb", "");
-                if (!Enum.TryParse(subElement.GetAttribute("limb").Value, out LimbType limbType))
-                {
-                    DebugConsole.ThrowError($"Error in item \"{item.Name}\" - {limbStr} is not a valid limb type.");
-                }
-                else
-                {
-                    LimbPos limbPos = new LimbPos(limbType,
-                        subElement.GetAttributeVector2("position", Vector2.Zero),
-                        subElement.GetAttributeBool("allowusinglimb", false));
-                    limbPositions.Add(limbPos);
-                    if (!limbPos.AllowUsingLimb)
-                    {
-                        if (limbType == LimbType.RightHand || limbType == LimbType.RightForearm || limbType == LimbType.RightArm ||
-                            limbType == LimbType.LeftHand || limbType == LimbType.LeftForearm || limbType == LimbType.LeftArm)
-                        {
-                            AllowAiming = false;
-                        }
-                    }
-                }
-
-            }
-
+            LoadLimbPositions(element);
             IsActive = true;
         }
 
@@ -529,5 +500,63 @@ namespace Barotrauma.Items.Components
         }
 
         partial void HideHUDs(bool value);
+
+        public override XElement Save(XElement parentElement)
+        {
+            return SaveLimbPositions(base.Save(parentElement));
+        }
+
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        {
+            base.Load(componentElement, usePrefabValues, idRemap);
+            if (GameMain.GameSession?.GameMode?.Preset == GameModePreset.TestMode)
+            {
+                LoadLimbPositions(componentElement);
+            }
+        }
+
+        private XElement SaveLimbPositions(XElement element)
+        {
+            if (Screen.Selected == GameMain.SubEditorScreen)
+            {
+                foreach (var limbPos in limbPositions)
+                {
+                    element.Add(new XElement("limbposition",
+                        new XAttribute("limb", limbPos.LimbType),
+                        new XAttribute("position", XMLExtensions.Vector2ToString(limbPos.Position)),
+                        new XAttribute("allowusinglimb", limbPos.AllowUsingLimb)));
+                }
+            }
+            return element;
+        }
+
+        private void LoadLimbPositions(XElement element)
+        {
+            limbPositions.Clear();
+            foreach (var subElement in element.Elements())
+            {
+                if (subElement.Name != "limbposition") { continue; }
+                string limbStr = subElement.GetAttributeString("limb", "");
+                if (!Enum.TryParse(subElement.GetAttribute("limb").Value, out LimbType limbType))
+                {
+                    DebugConsole.ThrowError($"Error in item \"{item.Name}\" - {limbStr} is not a valid limb type.");
+                }
+                else
+                {
+                    LimbPos limbPos = new LimbPos(limbType,
+                        subElement.GetAttributeVector2("position", Vector2.Zero),
+                        subElement.GetAttributeBool("allowusinglimb", false));
+                    limbPositions.Add(limbPos);
+                    if (!limbPos.AllowUsingLimb)
+                    {
+                        if (limbType == LimbType.RightHand || limbType == LimbType.RightForearm || limbType == LimbType.RightArm ||
+                            limbType == LimbType.LeftHand || limbType == LimbType.LeftForearm || limbType == LimbType.LeftArm)
+                        {
+                            AllowAiming = false;
+                        }
+                    }
+                }
+            }
+        }
     }
 }

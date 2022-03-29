@@ -18,7 +18,7 @@ namespace Barotrauma
         private struct RateLimitInfo
         {
             public int Requests;
-            public const int MaxRequests = 5;
+            public const int MaxRequests = 10;
             public DateTimeOffset Expiry;
         }
 

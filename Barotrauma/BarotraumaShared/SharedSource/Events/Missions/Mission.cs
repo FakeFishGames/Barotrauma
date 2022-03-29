@@ -350,7 +350,7 @@ namespace Barotrauma
             float difficultyMultiplier = 1 + level.Difficulty / 100f;
             baseExperienceGain *= difficultyMultiplier;
 
-            IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters();
+            IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
 
             // use multipliers here so that we can easily add them together without introducing multiplicative XP stacking
             var experienceGainMultiplier = new AbilityExperienceGainMultiplier(1f);
@@ -380,7 +380,7 @@ namespace Barotrauma
             GameAnalyticsManager.AddMoneyGainedEvent(totalReward, GameAnalyticsManager.MoneySource.MissionReward, Prefab.Identifier.Value);
 
 #if SERVER
-            totalReward = DistributeRewardsToCrew(GetSalaryEligibleCrew(), totalReward);
+            totalReward = DistributeRewardsToCrew(GameSession.GetSessionCrewCharacters(CharacterType.Player), totalReward);
 #endif
             if (totalReward > 0)
             {
@@ -435,18 +435,6 @@ namespace Barotrauma
             return remainingRewards;
         }
 #endif
-
-        public static IEnumerable<Character> GetSalaryEligibleCrew()
-        {
-            if (!(GameMain.GameSession.CrewManager is { } crewManager)) { return Array.Empty<Character>(); }
-
-            IEnumerable<Character> characters = crewManager.GetCharacters();
-#if SERVER
-            return GameMain.Server.ConnectedClients.Select(c => c.Character).Where(c => c?.Info != null && !c.IsDead).Concat(characters);
-#elif CLIENT
-            return characters;
-#endif
-        }
 
         public static int GetRewardDistibutionSum(IEnumerable<Character> crew, int rewardDistribution = 0) => crew.Sum(c => c.Wallet.RewardDistribution) + rewardDistribution;
 

@@ -348,6 +348,14 @@ namespace Barotrauma.Steam
 
                     string val = attribute.Value.CleanUpPathCrossPlatform(correctFilenameCase: false);
 
+                    //Handle mods that have been mangled by pre-modding-refactor
+                    //copying of post-modding-refactor mods (what a clusterfuck)
+                    int modDirStrIndex = val.IndexOf(ContentPath.ModDirStr, StringComparison.OrdinalIgnoreCase);
+                    if (modDirStrIndex >= 0)
+                    {
+                        val = val[modDirStrIndex..];
+                    }
+                    
                     //Handle really old mods (0.9.0.4-era) that might be structured as
                     //%ModDir%/Mods/[NAME]/[RESOURCE]
                     string fullSrcPath = Path.Combine(fileListDir, val).CleanUpPath();
@@ -418,7 +426,7 @@ namespace Barotrauma.Steam
                 File.Copy(from, to, overwrite: true);
             }
 
-            private static async Task CopyDirectory(string fileListDir, string modName, string from, string to)
+            public static async Task CopyDirectory(string fileListDir, string modName, string from, string to)
             {
                 from = Path.GetFullPath(from); to = Path.GetFullPath(to);
                 Directory.CreateDirectory(to);

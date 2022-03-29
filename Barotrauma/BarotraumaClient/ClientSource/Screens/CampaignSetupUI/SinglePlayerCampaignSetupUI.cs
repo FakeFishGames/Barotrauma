@@ -21,7 +21,7 @@ namespace Barotrauma
         private GUIButton nextButton;
         private GUILayoutGroup characterInfoColumns;
     
-        public SinglePlayerCampaignSetupUI(GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<SubmarineInfo> submarines, IEnumerable<string> saveFiles = null)
+        public SinglePlayerCampaignSetupUI(GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<SubmarineInfo> submarines, IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
             : base(newGameContainer, loadGameContainer)
         {
             UpdateNewGameMenu(submarines);
@@ -606,8 +606,7 @@ namespace Barotrauma
             }
         }
 
-        private List<string> prevSaveFiles;
-        public void UpdateLoadMenu(IEnumerable<string> saveFiles = null)
+        public void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
         {
             prevSaveFiles?.Clear();
             prevSaveFiles = null;
@@ -647,32 +646,16 @@ namespace Barotrauma
                 }
             };
 
-            foreach (string saveFile in saveFiles)
+            foreach (var saveInfo in saveFiles)
             {
-                string fileName = saveFile;
-                string subName = "";
-                string saveTime = "";
-                string contentPackageStr = "";
-                var saveFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), saveList.Content.RectTransform) { MinSize = new Point(0, 45) }, style: "ListBoxElement")
-                {
-                    UserData = saveFile
-                };
-
-                var nameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform), "")
-                {
-                    CanBeFocused = false
-                };
-
-                bool isCompatible = true;
-                prevSaveFiles ??= new List<string>();
-                
-                nameText.Text = Path.GetFileNameWithoutExtension(saveFile);
-                XDocument doc = SaveUtil.LoadGameSessionDoc(saveFile);
-
+                var saveFrame = CreateSaveElement(saveInfo);
+                if (saveFrame == null) { continue; }
+                                
+                XDocument doc = SaveUtil.LoadGameSessionDoc(saveInfo.FilePath);
                 if (doc?.Root == null)
                 {
-                    DebugConsole.ThrowError("Error loading save file \"" + saveFile + "\". The file may be corrupted.");
-                    nameText.TextColor = GUIStyle.Red;
+                    DebugConsole.ThrowError("Error loading save file \"" + saveInfo.FilePath + "\". The file may be corrupted.");
+                    saveFrame.GetChild<GUITextBlock>().TextColor = GUIStyle.Red;
                     continue;
                 }
                 if (doc.Root.GetChildElement("multiplayercampaign") != null)
@@ -681,44 +664,11 @@ namespace Barotrauma
                     saveList.Content.RemoveChild(saveFrame);
                     continue;
                 }
-                subName             = doc.Root.GetAttributeString("submarine", "");
-                saveTime            = doc.Root.GetAttributeString("savetime", "");
-                isCompatible        = SaveUtil.IsSaveFileCompatible(doc);
-                contentPackageStr   = doc.Root.GetAttributeStringUnrestricted("selectedcontentpackages", "");
-                prevSaveFiles?.Add(saveFile);
-                if (!string.IsNullOrEmpty(saveTime) && long.TryParse(saveTime, out long unixTime))
+                if (!SaveUtil.IsSaveFileCompatible(doc))
                 {
-                    DateTime time = ToolBox.Epoch.ToDateTime(unixTime);
-                    saveTime = time.ToString();
-                }
-                if (!string.IsNullOrEmpty(contentPackageStr))
-                {
-                    List<string> contentPackagePaths = contentPackageStr.Split('|').ToList();
-                    if (!GameSession.IsCompatibleWithEnabledContentPackages(contentPackagePaths, out LocalizedString errorMsg))
-                    {
-                        nameText.TextColor = GUIStyle.Red;
-                        saveFrame.ToolTip = string.Join("\n", errorMsg, TextManager.Get("campaignmode.contentpackagemismatchwarning"));
-                    }
-                }
-                if (!isCompatible)
-                {
-                    nameText.TextColor = GUIStyle.Red;
+                    saveFrame.GetChild<GUITextBlock>().TextColor = GUIStyle.Red;
                     saveFrame.ToolTip = TextManager.Get("campaignmode.incompatiblesave");
                 }
-
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),
-                    text: subName, font: GUIStyle.SmallFont)
-                {
-                    CanBeFocused = false,
-                    UserData = fileName
-                };
-
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), saveFrame.RectTransform),
-                    text: saveTime, textAlignment: Alignment.Right, font: GUIStyle.SmallFont)
-                {
-                    CanBeFocused = false,
-                    UserData = fileName
-                };
             }
 
             saveList.Content.RectTransform.SortChildren((c1, c2) =>
@@ -830,7 +780,7 @@ namespace Barotrauma
             EventEditorScreen.AskForConfirmation(header, body, () =>
             {
                 SaveUtil.DeleteSave(saveFile);
-                prevSaveFiles?.RemoveAll(s => s.StartsWith(saveFile));
+                prevSaveFiles?.RemoveAll(s => s.FilePath == saveFile);
                 UpdateLoadMenu(prevSaveFiles.ToList());
                 return true;
             });

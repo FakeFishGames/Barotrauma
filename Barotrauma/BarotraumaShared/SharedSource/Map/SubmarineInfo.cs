@@ -28,8 +28,6 @@ namespace Barotrauma
 
     partial class SubmarineInfo : IDisposable
     {
-        public const string SavePath = "Submarines";
-
         private static List<SubmarineInfo> savedSubmarines = new List<SubmarineInfo>();
         public static IEnumerable<SubmarineInfo> SavedSubmarines => savedSubmarines;
 
@@ -578,58 +576,14 @@ namespace Barotrauma
                 if (File.Exists(savedSubmarines[i].FilePath))
                 {
                     bool isDownloadedSub = Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
-                    bool isInSubmarinesFolder = Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SavePath);
                     bool isInContentPackage = contentPackageSubs.Any(f => f.Path == savedSubmarines[i].FilePath);
                     if (isDownloadedSub) { continue; }
-                    if (savedSubmarines[i].LastModifiedTime == File.GetLastWriteTime(savedSubmarines[i].FilePath) && (isInSubmarinesFolder || isInContentPackage)) { continue; }
+                    if (savedSubmarines[i].LastModifiedTime == File.GetLastWriteTime(savedSubmarines[i].FilePath) && isInContentPackage) { continue; }
                 }
                 savedSubmarines[i].Dispose();
             }
 
-            if (!Directory.Exists(SavePath))
-            {
-                try
-                {
-                    Directory.CreateDirectory(SavePath);
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Directory \"" + SavePath + "\" not found and creating the directory failed.", e);
-                    return;
-                }
-            }
-
-            List<string> filePaths;
-            string[] subDirectories;
-
-            try
-            {
-                filePaths = Directory.GetFiles(SavePath).ToList();
-                subDirectories = Directory.GetDirectories(SavePath).Where(s =>
-                {
-                    DirectoryInfo dir = new DirectoryInfo(s);
-                    return !dir.Attributes.HasFlag(System.IO.FileAttributes.Hidden) && !dir.Name.StartsWith(".");
-                }).ToArray();
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Couldn't open directory \"" + SavePath + "\"!", e);
-                return;
-            }
-
-            foreach (string subDirectory in subDirectories)
-            {
-                try
-                {
-                    filePaths.AddRange(Directory.GetFiles(subDirectory).ToList());
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Couldn't open subdirectory \"" + subDirectory + "\"!", e);
-                    return;
-                }
-            }
-
+            List<string> filePaths = new List<string>();
             foreach (BaseSubFile subFile in contentPackageSubs)
             {
                 if (!filePaths.Any(fp => fp == subFile.Path))
@@ -643,34 +597,7 @@ namespace Barotrauma
             foreach (string path in filePaths)
             {
                 var subInfo = new SubmarineInfo(path);
-                if (subInfo.IsFileCorrupted)
-                {
-#if CLIENT
-                    if (DebugConsole.IsOpen) { DebugConsole.Toggle(); }
-                    var deleteSubPrompt = new GUIMessageBox(
-                        TextManager.Get("Error"),
-                        TextManager.GetWithVariable("SubLoadError", "[subname]", subInfo.Name) + "\n" +
-                        TextManager.GetWithVariable("DeleteFileVerification", "[filename]", subInfo.Name),
-                        new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
-
-                    string filePath = path;
-                    deleteSubPrompt.Buttons[0].OnClicked += (btn, userdata) =>
-                    {
-                        try
-                        {
-                            File.Delete(filePath);
-                        }
-                        catch (Exception e)
-                        {
-                            DebugConsole.ThrowError($"Failed to delete file \"{filePath}\".", e);
-                        }
-                        deleteSubPrompt.Close();
-                        return true;
-                    };
-                    deleteSubPrompt.Buttons[1].OnClicked += deleteSubPrompt.Close;
-#endif
-                }
-                else
+                if (!subInfo.IsFileCorrupted)
                 {
                     savedSubmarines.Add(subInfo);
                 }

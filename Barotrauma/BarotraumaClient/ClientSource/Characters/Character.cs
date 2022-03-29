@@ -1151,15 +1151,7 @@ namespace Barotrauma
             }
         }
 
-        partial void OnMoneyChanged(int prevAmount, int newAmount)
-        {
-            if (newAmount > prevAmount)
-            {
-                int increase = newAmount - prevAmount;
-                AddMessage("+" + TextManager.GetWithVariable("currencyformat", "[credits]", "[value]").Value,
-                    GUIStyle.Yellow, playSound: this == Controlled, "money".ToIdentifier(), increase);
-            }
-        }
+        partial void OnMoneyChanged(int prevAmount, int newAmount) { }
 
         partial void OnTalentGiven(TalentPrefab talentPrefab)
         {

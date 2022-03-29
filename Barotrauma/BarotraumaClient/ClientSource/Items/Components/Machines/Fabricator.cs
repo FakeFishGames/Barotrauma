@@ -50,6 +50,9 @@ namespace Barotrauma.Items.Components
         [Serialize("FabricatorCreate", IsPropertySaveable.Yes)]
         public string CreateButtonText { get; set; }
 
+        [Serialize("vendingmachine.outofstock", IsPropertySaveable.Yes)]
+        public string FabricationLimitReachedText { get; set; }
+
         partial void InitProjSpecific()
         {
             //CreateGUI();
@@ -195,7 +198,7 @@ namespace Barotrauma.Items.Components
 
             foreach (FabricationRecipe fi in fabricationRecipes.Values)
             {
-                var frame = new GUIFrame(new RectTransform(new Point(itemList.Rect.Width, (int)(40 * GUI.yScale)), itemList.Content.RectTransform), style: null)
+                var frame = new GUIFrame(new RectTransform(new Point(itemList.Content.Rect.Width, (int)(40 * GUI.yScale)), itemList.Content.RectTransform), style: null)
                 {
                     UserData = fi,
                     HoverColor = Color.Gold * 0.2f,
@@ -222,6 +225,13 @@ namespace Barotrauma.Items.Components
                     Padding = Vector4.Zero,
                     AutoScaleVertical = true,
                     ToolTip = fi.TargetItem.Description
+                };
+
+                new GUITextBlock(new RectTransform(new Vector2(0.85f, 1f), frame.RectTransform, Anchor.BottomRight), 
+                    TextManager.Get(FabricationLimitReachedText), font: GUIStyle.SmallFont, textAlignment: Alignment.BottomRight)
+                {
+                    UserData = nameof(FabricationLimitReachedText),
+                    Visible = false
                 };
             }
         }
@@ -297,7 +307,8 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                sufficientSkillsText.Visible = false;
+                sufficientSkillsText.Visible = insufficientSkillsText.Visible = false;
+                sufficientSkillsText.Enabled = insufficientSkillsText.Enabled = false;
             }
 
             var requiresRecipeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform),
@@ -493,14 +504,15 @@ namespace Barotrauma.Items.Components
             if (string.IsNullOrWhiteSpace(filter))
             {
                 itemList.Content.Children.ForEach(c => c.Visible = true);
-                return true;
             }
-
-            foreach (GUIComponent child in itemList.Content.Children)
+            else
             {
-                FabricationRecipe recipe = child.UserData as FabricationRecipe;
-                if (recipe?.DisplayName == null) { continue; }
-                child.Visible = recipe.DisplayName.Contains(filter, StringComparison.OrdinalIgnoreCase);
+                foreach (GUIComponent child in itemList.Content.Children)
+                {
+                    FabricationRecipe recipe = child.UserData as FabricationRecipe;
+                    if (recipe?.DisplayName == null) { continue; }
+                    child.Visible = recipe.DisplayName.Contains(filter, StringComparison.OrdinalIgnoreCase);
+                }
             }
 
             HideEmptyItemListCategories();
@@ -516,7 +528,10 @@ namespace Barotrauma.Items.Components
             {
                 if (!(child.UserData is FabricationRecipe recipe))
                 {
-                    child.Visible = recipeVisible;
+                    if (child.Enabled)
+                    {
+                        child.Visible = recipeVisible;
+                    }
                     recipeVisible = false;
                 }
                 else
@@ -719,24 +734,26 @@ namespace Barotrauma.Items.Components
             {
                 foreach (GUIComponent child in itemList.Content.Children)
                 {
-                    if (!(child.UserData is FabricationRecipe itemPrefab)) { continue; }
+                    if (!(child.UserData is FabricationRecipe recipe)) { continue; }
 
-                    if (itemPrefab != selectedItem &&
+                    if (recipe != selectedItem &&
                         (child.Rect.Y > itemList.Rect.Bottom || child.Rect.Bottom < itemList.Rect.Y))
                     {
                         continue;
                     }
 
-                    bool canBeFabricated = CanBeFabricated(itemPrefab, availableIngredients, character);
-                    if (itemPrefab == selectedItem)
+                    bool canBeFabricated = CanBeFabricated(recipe, availableIngredients, character);
+                    if (recipe == selectedItem)
                     {
                         activateButton.Enabled = canBeFabricated;
                     }
 
                     var childContainer = child.GetChild<GUILayoutGroup>();
-
                     childContainer.GetChild<GUITextBlock>().TextColor = Color.White * (canBeFabricated ? 1.0f : 0.5f);
-                    childContainer.GetChild<GUIImage>().Color = itemPrefab.TargetItem.InventoryIconColor * (canBeFabricated ? 1.0f : 0.5f);
+                    childContainer.GetChild<GUIImage>().Color = recipe.TargetItem.InventoryIconColor * (canBeFabricated ? 1.0f : 0.5f);
+
+                    var limitReachedText = child.FindChild(nameof(FabricationLimitReachedText));
+                    limitReachedText.Visible = !canBeFabricated && fabricationLimits.TryGetValue(recipe.RecipeHash, out int amount) && amount <= 0;
                 }
             }
         }

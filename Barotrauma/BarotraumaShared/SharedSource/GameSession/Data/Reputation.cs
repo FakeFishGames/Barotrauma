@@ -64,7 +64,7 @@ namespace Barotrauma
             if (reputationChange > 0f)
             {
                 float reputationGainMultiplier = 1f;
-                foreach (Character character in GameSession.GetSessionCrewCharacters())
+                foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
                 {
                     reputationGainMultiplier += character.GetStatValue(StatTypes.ReputationGainMultiplier);
                 }

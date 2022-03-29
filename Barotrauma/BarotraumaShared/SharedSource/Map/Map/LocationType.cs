@@ -1,13 +1,11 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.IO;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
-using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
-using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -21,8 +19,9 @@ namespace Barotrauma
         //<name, commonness>
         private readonly ImmutableArray<(Identifier Name, float Commonness)> hireableJobs;
         private readonly float totalHireableWeight;
-        
-        public Dictionary<int, float> CommonnessPerZone = new Dictionary<int, float>();
+
+        public readonly Dictionary<int, float> CommonnessPerZone = new Dictionary<int, float>();
+        public readonly Dictionary<int, int> MinCountPerZone = new Dictionary<int, int>();
 
         public readonly LocalizedString Name;
 
@@ -65,7 +64,7 @@ namespace Barotrauma
             get;
             private set;
         }
-        
+
         public string ReplaceInRadiation { get; }
 
         public Sprite Sprite { get; private set; }
@@ -86,6 +85,8 @@ namespace Barotrauma
         /// In percentages
         /// </summary>
         public int StorePriceModifierRange { get; } = 5;
+        public int DailySpecialsCount { get; } = 1;
+        public int RequestedGoodsCount { get; } = 1;
 
         public List<StoreBalanceStatus> StoreBalanceStatuses { get; } = new List<StoreBalanceStatus>()
         {
@@ -144,7 +145,7 @@ namespace Barotrauma
                 names = new List<string>() { "Name file not found" };
             }
 
-            string[] commonnessPerZoneStrs = element.GetAttributeStringArray("commonnessperzone", new string[] { "" });
+            string[] commonnessPerZoneStrs = element.GetAttributeStringArray("commonnessperzone", Array.Empty<string>());
             foreach (string commonnessPerZoneStr in commonnessPerZoneStrs)
             {
                 string[] splitCommonnessPerZone = commonnessPerZoneStr.Split(':');                
@@ -152,10 +153,24 @@ namespace Barotrauma
                     !int.TryParse(splitCommonnessPerZone[0].Trim(), out int zoneIndex) ||
                     !float.TryParse(splitCommonnessPerZone[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float zoneCommonness))
                 {
-                    DebugConsole.ThrowError("Failed to read commonness values for location type \"" + Identifier + "\" - commonness should be given in the format \"zone0index: zone0commonness, zone1index: zone1commonness\"");
+                    DebugConsole.ThrowError("Failed to read commonness values for location type \"" + Identifier + "\" - commonness should be given in the format \"zone1index: zone1commonness, zone2index: zone2commonness\"");
                     break;
                 }
                 CommonnessPerZone[zoneIndex] = zoneCommonness;
+            }
+
+            string[] minCountPerZoneStrs = element.GetAttributeStringArray("mincountperzone", Array.Empty<string>());
+            foreach (string minCountPerZoneStr in minCountPerZoneStrs)
+            {
+                string[] splitMinCountPerZone = minCountPerZoneStr.Split(':');
+                if (splitMinCountPerZone.Length != 2 ||
+                    !int.TryParse(splitMinCountPerZone[0].Trim(), out int zoneIndex) ||
+                    !int.TryParse(splitMinCountPerZone[1].Trim(), out int minCount))
+                {
+                    DebugConsole.ThrowError("Failed to read minimum count values for location type \"" + Identifier + "\" - minimum counts should be given in the format \"zone1index: zone1mincount, zone2index: zone2mincount\"");
+                    break;
+                }
+                MinCountPerZone[zoneIndex] = minCount;
             }
 
             var hireableJobs = new List<(Identifier, float)>();
@@ -205,6 +220,8 @@ namespace Barotrauma
                                 StoreBalanceStatuses.Add(new StoreBalanceStatus(percentage, modifier, color));
                             }
                         }
+                        DailySpecialsCount = subElement.GetAttributeInt("dailyspecialscount", DailySpecialsCount);
+                        RequestedGoodsCount = subElement.GetAttributeInt("requestedgoodscount", RequestedGoodsCount);
                         break;
                 }
             }

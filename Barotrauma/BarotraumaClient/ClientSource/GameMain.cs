@@ -17,6 +17,7 @@ using Barotrauma.Tutorials;
 using Barotrauma.Media;
 using Barotrauma.Extensions;
 using System.Threading.Tasks;
+using Barotrauma.Transition;
 
 namespace Barotrauma
 {
@@ -463,6 +464,7 @@ namespace Barotrauma
 
             yield return CoroutineStatus.Running;
 
+            UgcTransition.Prepare();
             var contentPackageLoadRoutine = ContentPackageManager.Init();
             foreach (var progress in contentPackageLoadRoutine)
             {
@@ -691,14 +693,12 @@ namespace Barotrauma
                         }
                         else if (GameSettings.CurrentConfig.AutomaticCampaignLoadEnabled)
                         {
-                            IEnumerable<string> saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
-
+                            var saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
                             if (saveFiles.Count() > 0)
                             {
-                                saveFiles = saveFiles.OrderBy(file => File.GetLastWriteTime(file));
                                 try
                                 {
-                                    SaveUtil.LoadGame(saveFiles.Last());
+                                    SaveUtil.LoadGame(saveFiles.OrderBy(file => file.SaveTime).Last().FilePath);
                                 }
                                 catch (Exception e)
                                 {

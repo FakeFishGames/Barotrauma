@@ -167,7 +167,7 @@ namespace Barotrauma
                         LoadStats(subElement);
                         break;
                     case Wallet.LowerCaseSaveElementName:
-                        Bank = new Wallet(subElement);
+                        Bank = new Wallet(Option<Character>.None(), subElement);
                         break;
 #if SERVER
                     case "savedexperiencepoints":
@@ -183,7 +183,7 @@ namespace Barotrauma
             int oldMoney = element.GetAttributeInt("money", 0);
             if (oldMoney > 0)
             {
-                Bank = new Wallet
+                Bank = new Wallet(Option<Character>.None())
                 {
                     Balance = oldMoney
                 };

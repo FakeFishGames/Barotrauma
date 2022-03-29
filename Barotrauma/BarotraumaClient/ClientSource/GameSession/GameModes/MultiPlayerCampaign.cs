@@ -42,7 +42,7 @@ namespace Barotrauma
             return PersonalWallet;
         }
 
-        public static void StartCampaignSetup(IEnumerable<string> saveFiles)
+        public static void StartCampaignSetup(List<SaveInfo> saveFiles)
         {
             var parent = GameMain.NetLobbyScreen.CampaignSetupFrame;
             parent.ClearChildren();
@@ -746,7 +746,7 @@ namespace Barotrauma
                     if (reputation.HasValue)
                     {
                         campaign.Map.CurrentLocation.Reputation.SetReputation(reputation.Value);
-                        campaign?.CampaignUI?.UpgradeStore?.RefreshAll();
+                        campaign?.CampaignUI?.UpgradeStore?.RequestRefresh();
                     }
 
                     foreach (var availableMission in availableMissions)
@@ -786,7 +786,7 @@ namespace Barotrauma
 
                 if (shouldRefresh)
                 {
-                    campaign?.CampaignUI?.UpgradeStore?.RefreshAll();
+                    campaign?.CampaignUI?.UpgradeStore?.RequestRefresh();
                 }
 
                 if (myCharacterInfo != null)

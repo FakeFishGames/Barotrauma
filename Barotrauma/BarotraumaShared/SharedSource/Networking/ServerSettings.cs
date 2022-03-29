@@ -278,8 +278,6 @@ namespace Barotrauma.Networking
         {
             ServerLog = new ServerLog(serverName);
 
-            Voting = new Voting();
-
             Whitelist = new WhiteList();
             BanList = new BanList();
 
@@ -377,8 +375,6 @@ namespace Barotrauma.Networking
         public bool EnableUPnP;
 
         public ServerLog ServerLog;
-
-        public Voting Voting;
 
         public Dictionary<Identifier, bool> MonsterEnabled { get; private set; }
 
@@ -577,34 +573,20 @@ namespace Barotrauma.Networking
         [Serialize(true, IsPropertySaveable.Yes)]
         public bool AllowVoteKick
         {
-            get
-            {
-                return Voting.AllowVoteKick;
-            }
-            set
-            {
-                Voting.AllowVoteKick = value;
-            }
+            get; set;
         }
 
         [Serialize(true, IsPropertySaveable.Yes)]
         public bool AllowEndVoting
         {
-            get
-            {
-                return Voting.AllowEndVoting;
-            }
-            set
-            {
-                Voting.AllowEndVoting = value;
-            }
+            get; set;
         }
 
         private bool allowRespawn;
         [Serialize(true, IsPropertySaveable.Yes)]
         public bool AllowRespawn
         {
-            get { return allowRespawn; ; }
+            get { return allowRespawn; }
             set
             {
                 if (allowRespawn == value) { return; }
@@ -779,7 +761,7 @@ namespace Barotrauma.Networking
             set
             {
                 subSelectionMode = value;
-                Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
+                AllowSubVoting = subSelectionMode == SelectionMode.Vote;
                 ServerDetailsChanged = true;
             }
         }
@@ -792,7 +774,7 @@ namespace Barotrauma.Networking
             set
             {
                 modeSelectionMode = value;
-                Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
+                AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
                 ServerDetailsChanged = true;
             }
         }
@@ -807,14 +789,14 @@ namespace Barotrauma.Networking
         }
 
         [Serialize(0.6f, IsPropertySaveable.Yes)]
-        public float SubmarineVoteRequiredRatio
+        public float VoteRequiredRatio
         {
             get;
             private set;
         }
 
         [Serialize(30f, IsPropertySaveable.Yes)]
-        public float SubmarineVoteTimeout
+        public float VoteTimeout
         {
             get;
             private set;
@@ -927,6 +909,59 @@ namespace Barotrauma.Networking
             get { return maxMissionCount; }
             set { maxMissionCount = MathHelper.Clamp(value, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit); }            
         }
+
+        private bool allowSubVoting;
+        //Don't serialize: the value is set based on SubSelectionMode
+        public bool AllowSubVoting
+        {
+            get { return allowSubVoting; }
+            set
+            {
+                if (value == allowSubVoting) { return; }
+                allowSubVoting = value;
+#if CLIENT
+                GameMain.NetLobbyScreen.SubList.Enabled = value ||
+                    (GameMain.Client != null && GameMain.Client.HasPermission(Networking.ClientPermissions.SelectSub));
+                var subVotesLabel = GameMain.NetLobbyScreen.Frame.FindChild("subvotes", true) as GUITextBlock;
+                subVotesLabel.Visible = value;
+                var subVisButton = GameMain.NetLobbyScreen.SubVisibilityButton;
+                subVisButton.RectTransform.AbsoluteOffset
+                    = new Point(value ? (int)(subVotesLabel.TextSize.X + subVisButton.Rect.Width) : 0, 0);
+
+                GameMain.Client?.Voting.UpdateVoteTexts(null, VoteType.Sub);
+                GameMain.NetLobbyScreen.SubList.Deselect();
+#endif
+            }
+        }
+
+        private bool allowModeVoting;
+        //Don't serialize: the value is set based on ModeSelectionMode
+        public bool AllowModeVoting
+        {
+            get { return allowModeVoting; }
+            set
+            {
+                if (value == allowModeVoting) { return; }
+                allowModeVoting = value;
+#if CLIENT
+                GameMain.NetLobbyScreen.ModeList.Enabled =
+                    value ||
+                    (GameMain.Client != null && GameMain.Client.HasPermission(Networking.ClientPermissions.SelectMode));
+                GameMain.NetLobbyScreen.Frame.FindChild("modevotes", true).Visible = value;
+                // Disable modes that cannot be voted on
+                foreach (var guiComponent in GameMain.NetLobbyScreen.ModeList.Content.Children)
+                {
+                    if (guiComponent is GUIFrame frame)
+                    {
+                        frame.CanBeFocused = !allowModeVoting || ((GameModePreset)frame.UserData).Votable;
+                    }
+                }
+                GameMain.Client?.Voting.UpdateVoteTexts(null, VoteType.Mode);
+                GameMain.NetLobbyScreen.ModeList.Deselect();
+#endif
+            }
+        }
+
 
         public void SetPassword(string password)
         {

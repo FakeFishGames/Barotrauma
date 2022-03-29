@@ -1905,27 +1905,27 @@ namespace Barotrauma
                     toolTip = TextManager.GetWithVariable("ServerListIncompatibleVersion", "[version]", serverInfo.GameVersion);
                 }
 
+                int maxIncompatibleToList = 10;
+                List<LocalizedString> incompatibleModNames = new List<LocalizedString>();
                 for (int i = 0; i < serverInfo.ContentPackageNames.Count; i++)
                 {
-                    bool listAsIncompatible = false;
-                    if (serverInfo.ContentPackageWorkshopIds[i] == 0)
-                    {
-                        listAsIncompatible = !ContentPackageManager.EnabledPackages.All.Any(contentPackage => contentPackage.Hash.StringRepresentation == serverInfo.ContentPackageHashes[i]);
-                    }
-                    else
-                    {
-                        listAsIncompatible = ContentPackageManager.EnabledPackages.All.Any(contentPackage => contentPackage.Hash.StringRepresentation != serverInfo.ContentPackageHashes[i] &&
-                                                                                          contentPackage.SteamWorkshopId == serverInfo.ContentPackageWorkshopIds[i]);
-                    }
+                    bool listAsIncompatible = !ContentPackageManager.EnabledPackages.All.Any(contentPackage => contentPackage.Hash.StringRepresentation == serverInfo.ContentPackageHashes[i]);
                     if (listAsIncompatible)
                     {
-                        if (toolTip != "") toolTip += "\n";
-                        toolTip += TextManager.GetWithVariables("ServerListIncompatibleContentPackage",
-                            ("[contentpackage]", serverInfo.ContentPackageNames[i]),
-                            ("[hash]", Md5Hash.GetShortHash(serverInfo.ContentPackageHashes[i])));
+                        incompatibleModNames.Add(TextManager.GetWithVariables("ModNameAndHashFormat", 
+                            ("[name]", serverInfo.ContentPackageNames[i]), 
+                            ("[hash]", Md5Hash.GetShortHash(serverInfo.ContentPackageHashes[i]))));
+
                     }
                 }
-
+                if (incompatibleModNames.Any())
+                {
+                    toolTip += '\n' + TextManager.Get("ModDownloadHeader") + "\n" + string.Join(", ", incompatibleModNames.Take(maxIncompatibleToList));
+                    if (incompatibleModNames.Count > maxIncompatibleToList)
+                    {
+                        toolTip += '\n' + TextManager.GetWithVariable("workshopitemdownloadprompttruncated", "[number]", (incompatibleModNames.Count - maxIncompatibleToList).ToString());
+                    }
+                }
                 serverContent.Children.ForEach(c => c.ToolTip = toolTip);
 
                 serverName.TextColor *= 0.5f;

@@ -37,6 +37,12 @@ namespace Barotrauma
             events.Remove(identifier);
         }
 
+        public void TryDeregister(Identifier identifier)
+        {
+            if (!HasEvent(identifier)) { return; }
+            Deregister(identifier);
+        }
+
         public bool HasEvent(Identifier identifier) => events.ContainsKey(identifier);
 
         public void Invoke(T data)

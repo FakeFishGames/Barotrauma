@@ -10,11 +10,13 @@ namespace Barotrauma
         public override sealed void Deselect()
         {
             DeselectEditorSpecific();
+#if !DEBUG
             //reset cheats the player might have used in the editor
             GameMain.LightManager.LightingEnabled = true;
             GameMain.LightManager.LosEnabled = true;
             Hull.EditFire = false;
             Hull.EditWater = false;
+#endif
         }
 
         protected virtual void DeselectEditorSpecific() { }

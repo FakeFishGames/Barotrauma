@@ -318,7 +318,7 @@ namespace Barotrauma
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), RichString.Rich(displayedMission.GetMissionRewardText(Submarine.MainSub)));
                     if (GameMain.IsMultiplayer && Character.Controlled is { } controlled)
                     {
-                        var (share, percentage, _) = Mission.GetRewardShare(controlled.Wallet.RewardDistribution, Mission.GetSalaryEligibleCrew().Where(c => c != controlled), Option<int>.Some(reward));
+                        var (share, percentage, _) = Mission.GetRewardShare(controlled.Wallet.RewardDistribution, GameSession.GetSessionCrewCharacters(CharacterType.Player).Where(c => c != controlled), Option<int>.Some(reward));
                         if (share > 0)
                         {
                             string shareFormatted = string.Format(CultureInfo.InvariantCulture, "{0:N0}", share);

@@ -192,7 +192,7 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
-            GameMain.Server.ServerSettings.Voting.ResetVotes(GameMain.Server.ConnectedClients);
+            GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
             if (SelectedMode != GameModePreset.MultiPlayerCampaign && GameMain.GameSession?.GameMode is CampaignMode && Selected == this)
             {
                 GameMain.GameSession = null;

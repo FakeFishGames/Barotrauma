@@ -130,6 +130,8 @@ namespace Barotrauma.Networking
             KarmaManager.SelectPreset(serverSettings.KarmaPreset);
             serverSettings.SetPassword(password);
 
+            Voting = new Voting();
+
             ownerKey = ownKey;
 
             ownerSteamId = steamId;
@@ -383,23 +385,7 @@ namespace Barotrauma.Networking
 
                 TraitorManager?.Update(deltaTime);
 
-                if (serverSettings.Voting.VoteRunning)
-                {
-                    Voting.SubVote.Timer += deltaTime;
-
-                    if (Voting.SubVote.Timer >= serverSettings.SubmarineVoteTimeout)
-                    {
-                        // Do not take unanswered into account for total
-                        if (SubmarineVoteYesCount / (float)(SubmarineVoteYesCount + SubmarineVoteNoCount) >= serverSettings.SubmarineVoteRequiredRatio)
-                        {
-                            SwitchSubmarine();
-                        }
-                        else
-                        {
-                            serverSettings.Voting.StopSubmarineVote(false);
-                        }
-                    }
-                }
+                Voting.Update(deltaTime);
 
                 bool isCrewDead =
                     connectedClients.All(c => c.Character == null || c.Character.IsDead || c.Character.IsIncapacitated);
@@ -1073,7 +1059,7 @@ namespace Barotrauma.Networking
                         ChatMessage.ServerRead(inc, c);
                         break;
                     case ClientNetObject.VOTE:
-                        serverSettings.Voting.ServerRead(inc, c);
+                        Voting.ServerRead(inc, c);
                         break;
                     default:
                         return;
@@ -1220,7 +1206,7 @@ namespace Barotrauma.Networking
                         entityEventManager.Read(inc, c);
                         break;
                     case ClientNetObject.VOTE:
-                        serverSettings.Voting.ServerRead(inc, c);
+                        Voting.ServerRead(inc, c);
                         break;
                     case ClientNetObject.SPECTATING_POS:
                         c.SpectatePos = new Vector2(inc.ReadSingle(), inc.ReadSingle());
@@ -1309,17 +1295,11 @@ namespace Barotrauma.Networking
             var mpCampaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
             if (command == ClientPermissions.ManageRound && mpCampaign != null)
             {
-                if (!mpCampaign.AllowedToEndRound(sender))
-                {
-                    return;
-                }
+                //do nothing, ending campaign rounds is checked in more detail below
             }
             else if (command == ClientPermissions.ManageCampaign && mpCampaign != null)
             {
-                if (!mpCampaign.AllowedToManageCampaign(sender))
-                {
-                    return;
-                }
+                //do nothing, campaign permissions are checked in more detail in MultiplayerCampaign.ServerRead
             }
             else if (!sender.HasPermission(command))
             {
@@ -1381,21 +1361,26 @@ namespace Barotrauma.Networking
                     bool end = inc.ReadBoolean();
                     if (end)
                     {
-                        bool save = inc.ReadBoolean();
-                        if (gameStarted)
+                        if (mpCampaign == null || 
+                            mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageRound) || 
+                            mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageCampaign))
                         {
-                            Log("Client \"" + GameServer.ClientLogName(sender) + "\" ended the round.", ServerLog.MessageType.ServerMessage);
-                            if (mpCampaign != null && Level.IsLoadedOutpost && save)
+                            bool save = inc.ReadBoolean();
+                            if (gameStarted)
                             {
-                                mpCampaign.SavePlayers();
-                                GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);                              
-                                SaveUtil.SaveGame(GameMain.GameSession.SavePath);                                
+                                Log("Client \"" + GameServer.ClientLogName(sender) + "\" ended the round.", ServerLog.MessageType.ServerMessage);
+                                if (mpCampaign != null && Level.IsLoadedOutpost && save)
+                                {
+                                    mpCampaign.SavePlayers();
+                                    GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);                              
+                                    SaveUtil.SaveGame(GameMain.GameSession.SavePath);                                
+                                }
+                                else
+                                {
+                                    save = false;
+                                }
+                                EndGame(wasSaved: save);
                             }
-                            else
-                            {
-                                save = false;
-                            }
-                            EndGame(wasSaved: save);
                         }
                     }
                     else
@@ -1403,14 +1388,17 @@ namespace Barotrauma.Networking
                         bool continueCampaign = inc.ReadBoolean();
                         if (mpCampaign != null && mpCampaign.GameOver || continueCampaign)
                         {
-                            MultiPlayerCampaign.LoadCampaign(GameMain.GameSession.SavePath);
+                            if (mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageCampaign) || mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageMap))
+                            {
+                                MultiPlayerCampaign.LoadCampaign(GameMain.GameSession.SavePath);
+                            }
                         }
                         else if (!gameStarted && !initiatedStartGame)
                         {
                             Log("Client \"" + ClientLogName(sender) + "\" started the round.", ServerLog.MessageType.ServerMessage);
                             StartGame();
                         }
-                        else if (mpCampaign != null)
+                        else if (mpCampaign != null && (mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageCampaign) || mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageMap)))
                         {
                             var availableTransition = mpCampaign.GetAvailableTransition(out _, out _);
                             //don't force location if we've teleported
@@ -1473,34 +1461,20 @@ namespace Barotrauma.Networking
 
                     if (GameMain.NetLobbyScreen.GameModes[modeIndex].Identifier == "multiplayercampaign")
                     {
-                        string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer, includeInCompatible: false).ToArray();
-                        for (int i = 0; i < saveFiles.Length; i++)
-                        {
-                            XDocument doc = SaveUtil.LoadGameSessionDoc(saveFiles[i]);
-                            if (doc?.Root != null)
-                            {
-                                saveFiles[i] =
-                                    string.Join(";",
-                                        saveFiles[i].Replace(';', ' '),
-                                        doc.Root.GetAttributeStringUnrestricted("submarine", ""),
-                                        doc.Root.GetAttributeStringUnrestricted("savetime", ""),
-                                        doc.Root.GetAttributeStringUnrestricted("selectedcontentpackages", ""));
-                            }
-                        }
-
+                        const int MaxSaves = 255;
+                        var saveInfos = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer, includeInCompatible: false);
                         IWriteMessage msg = new WriteOnlyMessage();
                         msg.Write((byte)ServerPacketHeader.CAMPAIGN_SETUP_INFO);
-                        msg.Write((UInt16)saveFiles.Count());
-                        foreach (string saveFile in saveFiles)
+                        msg.Write((byte)Math.Min(saveInfos.Count, MaxSaves));
+                        for (int i = 0; i < saveInfos.Count && i < MaxSaves; i++)
                         {
-                            msg.Write(saveFile);
+                            msg.Write(saveInfos[i]);
                         }
-
                         serverPeer.Send(msg, sender.Connection, DeliveryMethod.Reliable);
                     }
                     break;
                 case ClientPermissions.ManageCampaign:
-                    (GameMain.GameSession.GameMode as MultiPlayerCampaign)?.ServerRead(inc, sender);
+                    mpCampaign?.ServerRead(inc, sender);
                     break;
                 case ClientPermissions.ConsoleCommands:
                     {
@@ -1900,8 +1874,8 @@ namespace Barotrauma.Networking
                 outmsg.Write(selectedShuttle.Name);
                 outmsg.Write(selectedShuttle.MD5Hash.ToString());
 
-                outmsg.Write(serverSettings.Voting.AllowSubVoting);
-                outmsg.Write(serverSettings.Voting.AllowModeVoting);
+                outmsg.Write(serverSettings.AllowSubVoting);
+                outmsg.Write(serverSettings.AllowModeVoting);
 
                 outmsg.Write(serverSettings.VoiceChatEnabled);
 
@@ -2036,9 +2010,9 @@ namespace Barotrauma.Networking
             SubmarineInfo selectedShuttle = GameMain.NetLobbyScreen.SelectedShuttle;
 
             SubmarineInfo selectedSub;
-            if (serverSettings.Voting.AllowSubVoting)
+            if (serverSettings.AllowSubVoting)
             {
-                selectedSub = serverSettings.Voting.HighestVoted<SubmarineInfo>(VoteType.Sub, connectedClients);
+                selectedSub = Voting.HighestVoted<SubmarineInfo>(VoteType.Sub, connectedClients);
                 if (selectedSub == null) { selectedSub = GameMain.NetLobbyScreen.SelectedSub; }
             }
             else
@@ -2051,7 +2025,7 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            GameModePreset selectedMode = serverSettings.Voting.HighestVoted<GameModePreset>(VoteType.Mode, connectedClients);
+            GameModePreset selectedMode = Voting.HighestVoted<GameModePreset>(VoteType.Mode, connectedClients);
             if (selectedMode == null) { selectedMode = GameMain.NetLobbyScreen.SelectedMode; }
 
             if (selectedMode == null)
@@ -2455,11 +2429,8 @@ namespace Barotrauma.Networking
 
             yield return CoroutineStatus.Running;
 
-            if (GameMain.Server?.ServerSettings?.Voting != null)
-            {
-                GameMain.Server.ServerSettings.Voting.ResetVotes(GameMain.Server.ConnectedClients);
-            }
-
+            Voting?.ResetVotes(GameMain.Server.ConnectedClients);
+            
             GameMain.GameScreen.Select();
 
             Log("Round started.", ServerLog.MessageType.ServerMessage);
@@ -3233,23 +3204,24 @@ namespace Barotrauma.Networking
             serverPeer.Send(msg, transfer.Connection, DeliveryMethod.ReliableOrdered);
         }
 
-        public void UpdateVoteStatus()
+        public void UpdateVoteStatus(bool checkActiveVote = true)
         {
-            if (connectedClients.Count == 0) return;
+            if (connectedClients.Count == 0) { return; }
 
-            if (serverSettings.Voting.VoteRunning)
+            if (checkActiveVote && Voting.ActiveVote != null)
             {
+                int yes = GameMain.Server.ConnectedClients.Count(c => c.InGame && c.GetVote<int>(Voting.ActiveVote.VoteType) == 2);
+                int no = GameMain.Server.ConnectedClients.Count(c => c.InGame && c.GetVote<int>(Voting.ActiveVote.VoteType) == 1);
+                int max = GameMain.Server.ConnectedClients.Count(c => c.InGame);
                 // Required ratio cannot be met
-                if (SubmarineVoteNoCount / (float)SubmarineVoteMax > 1f - serverSettings.SubmarineVoteRequiredRatio)
+                if (no / (float)max > 1f - serverSettings.VoteRequiredRatio)
                 {
-                    serverSettings.Voting.StopSubmarineVote(false);
-                    return; // Update will be re-sent via StopSubmarineVote
+                    Voting.ActiveVote.Finish(Voting, passed: false);
                 }
-                else if (SubmarineVoteYesCount / (float)SubmarineVoteMax >= serverSettings.SubmarineVoteRequiredRatio)
+                else if (yes / max >= serverSettings.VoteRequiredRatio)
                 {
-                    SwitchSubmarine();
-                    return; // Update will be re-sent via StopSubmarineVote
-                }
+                    Voting.ActiveVote.Finish(Voting, passed: true);
+                }                
             }
 
             Client.UpdateKickVotes(connectedClients);
@@ -3279,10 +3251,12 @@ namespace Barotrauma.Networking
 
             SendVoteStatus(connectedClients);
 
-            if (serverSettings.Voting.AllowEndVoting && EndVoteMax > 0 &&
-                ((float)EndVoteCount / (float)EndVoteMax) >= serverSettings.EndVoteRequiredRatio)
+            int endVoteCount = ConnectedClients.Count(c => c.HasSpawned && c.GetVote<bool>(VoteType.EndRound));
+            int endVoteMax = GameMain.Server.ConnectedClients.Count(c => c.HasSpawned);
+            if (serverSettings.AllowEndVoting && endVoteMax > 0 &&
+                ((float)endVoteCount / (float)endVoteMax) >= serverSettings.EndVoteRequiredRatio)
             {
-                Log("Ending round by votes (" + EndVoteCount + "/" + (EndVoteMax - EndVoteCount) + ")", ServerLog.MessageType.ServerMessage);
+                Log("Ending round by votes (" + endVoteCount + "/" + (endVoteMax - endVoteCount) + ")", ServerLog.MessageType.ServerMessage);
                 EndGame(wasSaved: false);
             }
         }
@@ -3294,7 +3268,7 @@ namespace Barotrauma.Networking
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ServerPacketHeader.UPDATE_LOBBY);
             msg.Write((byte)ServerNetObject.VOTE);
-            serverSettings.Voting.ServerWrite(msg);
+            Voting.ServerWrite(msg);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
             foreach (var c in recipients)
@@ -3303,11 +3277,13 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void SwitchSubmarine()
+        public void SwitchSubmarine()
         {
-            SubmarineInfo targetSubmarine = Voting.SubVote.Sub;
-            VoteType voteType = Voting.SubVote.VoteType;
-            Client starter = Voting.SubVote.VoteStarter;
+            if (!(Voting.ActiveVote is Voting.SubmarineVote subVote)) { return; }
+
+            SubmarineInfo targetSubmarine = subVote.Sub;
+            VoteType voteType = Voting.ActiveVote.VoteType;
+            Client starter = Voting.ActiveVote.VoteStarter;
             int deliveryFee = 0;
 
             switch (voteType)
@@ -3318,7 +3294,7 @@ namespace Barotrauma.Networking
                     GameMain.GameSession.PurchaseSubmarine(targetSubmarine, starter);
                     break;
                 case VoteType.SwitchSub:
-                    deliveryFee = Voting.SubVote.DeliveryFee;
+                    deliveryFee = subVote.DeliveryFee;
                     break;
                 default:
                     return;
@@ -3326,10 +3302,10 @@ namespace Barotrauma.Networking
 
             if (voteType != VoteType.PurchaseSub)
             {
-                SubmarineInfo newSub = GameMain.GameSession.SwitchSubmarine(targetSubmarine, deliveryFee, starter);
+                GameMain.GameSession.SwitchSubmarine(targetSubmarine, deliveryFee, starter);
             }
 
-            serverSettings.Voting.StopSubmarineVote(true);
+            Voting.StopSubmarineVote(true);
         }
 
         public void UpdateClientPermissions(Client client)

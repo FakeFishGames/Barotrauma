@@ -9,6 +9,7 @@ using System.Threading;
 using System.Xml.Linq;
 using Steamworks.Data;
 using Color = Microsoft.Xna.Framework.Color;
+using System.Text.RegularExpressions;
 
 namespace Barotrauma
 {
@@ -227,7 +228,7 @@ namespace Barotrauma
             return Path.Combine(folder, saveName);
         }
 
-        public static IEnumerable<string> GetSaveFiles(SaveType saveType, bool includeInCompatible = true)
+        public static IReadOnlyList<CampaignMode.SaveInfo> GetSaveFiles(SaveType saveType, bool includeInCompatible = true)
         {
             string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
             if (!Directory.Exists(folder))
@@ -250,18 +251,61 @@ namespace Barotrauma
                 files.AddRange(Directory.GetFiles(legacyFolder, "*.save", System.IO.SearchOption.TopDirectoryOnly));
             }
 
-            if (!includeInCompatible)
+            List<CampaignMode.SaveInfo> saveInfos = new List<CampaignMode.SaveInfo>();   
+            foreach (string file in files)
             {
-                for (int i = files.Count - 1; i >= 0; i--)
+                XDocument doc = LoadGameSessionDoc(file);
+                if (!includeInCompatible && !IsSaveFileCompatible(doc))
                 {
-                    XDocument doc = LoadGameSessionDoc(files[i]);
-                    if (!IsSaveFileCompatible(doc))
+                    continue;
+                }
+                if (doc?.Root == null)
+                {
+                    saveInfos.Add(new CampaignMode.SaveInfo()
                     {
-                        files.RemoveAt(i);
+                        FilePath = file
+                    });
+                }
+                else
+                {
+                    List<string> enabledContentPackageNames = new List<string>();
+
+                    //backwards compatibility
+                    string enabledContentPackagePathsStr = doc.Root.GetAttributeStringUnrestricted("selectedcontentpackages", string.Empty);
+                    foreach (string packagePath in enabledContentPackagePathsStr.Split('|'))
+                    {
+                        if (string.IsNullOrEmpty(packagePath)) { continue; }
+                        //change paths to names
+                        string fileName = Path.GetFileNameWithoutExtension(packagePath);
+                        if (fileName == "filelist")
+                        { 
+                            enabledContentPackageNames.Add(Path.GetFileName(Path.GetDirectoryName(packagePath)));
+                        }
+                        else
+                        {
+                            enabledContentPackageNames.Add(fileName);
+                        }
                     }
+
+                    string enabledContentPackageNamesStr = doc.Root.GetAttributeStringUnrestricted("selectedcontentpackagenames", string.Empty);
+                    //split on pipes, excluding pipes preceded by \
+                    foreach (string packageName in Regex.Split(enabledContentPackageNamesStr, @"(?<!(?<!\\)*\\)\|"))
+                    {
+                        if (string.IsNullOrEmpty(packageName)) { continue; }                        
+                        enabledContentPackageNames.Add(packageName.Replace(@"\|", "|"));                        
+                    }
+
+                    saveInfos.Add(new CampaignMode.SaveInfo()
+                    {
+                        FilePath = file,
+                        SubmarineName = doc?.Root?.GetAttributeStringUnrestricted("submarine", ""),
+                        SaveTime = doc.Root.GetAttributeInt("savetime", 0),
+                        EnabledContentPackageNames = enabledContentPackageNames.ToArray(),
+                    });
                 }
             }
-            return files;
+            
+            return saveInfos;
         }
 
         public static string CreateSavePath(SaveType saveType, string fileName = "Save_Default")

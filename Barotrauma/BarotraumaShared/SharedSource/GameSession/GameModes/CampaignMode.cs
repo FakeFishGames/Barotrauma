@@ -53,7 +53,7 @@ namespace Barotrauma
         public int GetAddedMissionCount()
         {
             int count = 0;
-            foreach (Character character in GameSession.GetSessionCrewCharacters())
+            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
             {
                 count += (int)character.GetStatValue(StatTypes.ExtraMissionCount);
             }
@@ -68,6 +68,15 @@ namespace Barotrauma
 
     abstract partial class CampaignMode : GameMode
     {
+        [NetworkSerialize]
+        public struct SaveInfo : INetSerializableStruct
+        {
+            public string FilePath;
+            public int SaveTime;
+            public string SubmarineName;
+            public string[] EnabledContentPackageNames;
+        }
+
         public const int MaxMoney = int.MaxValue / 2; //about 1 billion
         public const int InitialMoney = 8500;
 
@@ -180,13 +189,37 @@ namespace Barotrauma
         protected CampaignMode(GameModePreset preset)
             : base(preset)
         {
-            Bank = new Wallet
+            Bank = new Wallet(Option<Character>.None())
             {
                 Balance = InitialMoney
             };
 
             CargoManager = new CargoManager(this);
             MedicalClinic = new MedicalClinic(this);
+            Identifier messageIdentifier = new Identifier("money");
+
+#if CLIENT
+            OnMoneyChanged.RegisterOverwriteExisting(new Identifier("CampaignMoneyChangeNotification"), e =>
+            {
+                if (!(e.ChangedData.BalanceChanged is Some<int> { Value: var changed })) { return; }
+
+                bool isGain = changed > 0;
+
+                Color clr = isGain ? GUIStyle.Yellow : GUIStyle.Red;
+
+                switch (e.Owner)
+                {
+                    case Some<Character> { Value: var owner}:
+                        owner.AddMessage(FormatMessage(), clr, playSound: Character.Controlled == owner, messageIdentifier, changed);
+                        break;
+                    case None<Character> _ when IsSinglePlayer:
+                        Character.Controlled?.AddMessage(FormatMessage(), clr, playSound: true, messageIdentifier, changed);
+                        break;
+                }
+
+                string FormatMessage() => TextManager.GetWithVariable(isGain ? "moneygainformat" : "moneyloseformat", "[money]", TextManager.FormatCurrency(Math.Abs(changed))).ToString();
+            });
+#endif
         }
 
         public virtual Wallet GetWallet(Client client = null)

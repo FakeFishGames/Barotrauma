@@ -1,19 +1,11 @@
 ﻿using Barotrauma.Networking;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
     partial class Voting
     {
-        private bool allowSubVoting, allowModeVoting;
-
-        public bool AllowVoteKick = true;
-
-        public bool AllowEndVoting = true;
-
-        public bool VoteRunning = false;
-
         public enum VoteState { None = 0, Started = 1, Running = 2, Passed = 3, Failed = 4 };
 
         private IReadOnlyDictionary<T, int> GetVoteCounts<T>(VoteType voteType, List<Client> voters)
@@ -39,12 +31,12 @@ namespace Barotrauma
 
         public T HighestVoted<T>(VoteType voteType, List<Client> voters)
         {
-            if (voteType == VoteType.Sub && !AllowSubVoting) return default(T);
-            if (voteType == VoteType.Mode && !AllowModeVoting) return default(T);
+            if (voteType == VoteType.Sub && !GameMain.NetworkMember.ServerSettings.AllowSubVoting) { return default; }
+            if (voteType == VoteType.Mode && !GameMain.NetworkMember.ServerSettings.AllowModeVoting) { return default; }
 
             IReadOnlyDictionary<T, int> voteList = GetVoteCounts<T>(voteType, voters);
 
-            T selected = default(T);
+            T selected = default;
             int highestVotes = 0;
             foreach (KeyValuePair<T, int> votable in voteList)
             {
@@ -71,11 +63,13 @@ namespace Barotrauma
             {
                 client.ResetVotes();
             }
-
-            GameMain.NetworkMember.EndVoteCount = 0;
-            GameMain.NetworkMember.EndVoteMax = 0;
-
 #if CLIENT
+            foreach (VoteType voteType in Enum.GetValues(typeof(VoteType)))
+            {
+                SetVoteCountYes(voteType, 0);
+                SetVoteCountNo(voteType, 0);
+                SetVoteCountMax(voteType, 0);
+            }
             UpdateVoteTexts(connectedClients, VoteType.Mode);
             UpdateVoteTexts(connectedClients, VoteType.Sub);
 #endif

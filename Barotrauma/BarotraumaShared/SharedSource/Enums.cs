@@ -1,4 +1,6 @@
-﻿namespace Barotrauma
+﻿using System;
+
+namespace Barotrauma
 {
     public enum TransitionMode
     {
@@ -146,4 +148,11 @@
         AlwaysStayConscious,
     }
 
+    [Flags]
+    public enum CharacterType
+    {
+        Bot = 0b01,
+        Player = 0b10,
+        Both = Bot | Player
+    }
 }

@@ -237,7 +237,7 @@ namespace Barotrauma
         public override Camera Cam => cam;
 
         public static XDocument AutoSaveInfo;
-        private static readonly string autoSavePath = Path.Combine(SubmarineInfo.SavePath, ".AutoSaves");
+        private static readonly string autoSavePath = Path.Combine("Submarines", ".AutoSaves");
         private static readonly string autoSaveInfoPath = Path.Combine(autoSavePath, "autosaves.xml");
 
         private static string GetSubDescription()
@@ -678,7 +678,7 @@ namespace Barotrauma
 
             //-----------------------------------------------
 
-            showEntitiesPanel = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.5f), GUI.Canvas)
+            showEntitiesPanel = new GUIFrame(new RectTransform(new Vector2(0.15f, 0.5f), GUI.Canvas)
             {
                 MinSize = new Point(190, 0)
             })
@@ -771,21 +771,25 @@ namespace Barotrauma
             }
             foreach (string subcategory in availableSubcategories)
             {
-                var tb = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), subcategoryList.Content.RectTransform),
+                var tb = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.15f), subcategoryList.Content.RectTransform),
                     TextManager.Get("subcategory." + subcategory).Fallback(subcategory), font: GUIStyle.SmallFont)
                 {
                     UserData = subcategory,
                     Selected = !IsSubcategoryHidden(subcategory),
                     OnSelected = (GUITickBox obj) => { hiddenSubCategories[(string)obj.UserData] = !obj.Selected; return true; },
                 };
-                if (tb.TextBlock.TextSize.X > tb.TextBlock.Rect.Width * 1.25f)
+                tb.TextBlock.Wrap = true;
+            }
+
+            GUITextBlock.AutoScaleAndNormalize(subcategoryList.Content.Children.Where(c => c is GUITickBox).Select(c => ((GUITickBox)c).TextBlock));
+            foreach (GUIComponent child in subcategoryList.Content.Children)
+            {
+                if (child is GUITickBox tb && tb.TextBlock.TextSize.X > tb.TextBlock.Rect.Width * 1.25f)
                 {
                     tb.ToolTip = tb.Text;
                     tb.Text = ToolBox.LimitString(tb.Text.Value, tb.Font, (int)(tb.TextBlock.Rect.Width * 1.25f));
                 }
             }
-
-            GUITextBlock.AutoScaleAndNormalize(subcategoryList.Content.Children.Where(c => c is GUITickBox).Select(c => ((GUITickBox)c).TextBlock));
 
             showEntitiesPanel.RectTransform.NonScaledSize =
                 new Point(
@@ -2933,7 +2937,7 @@ namespace Barotrauma
                     if (deleteButtonHolder.FindChild("delete") is GUIButton deleteBtn)
                     {
                         deleteBtn.Enabled = userData is SubmarineInfo subInfo
-                                            && (GetContentPackageIntrinsicallyTiedToSub(subInfo) != null || Path.GetDirectoryName(subInfo.FilePath) == SubmarineInfo.SavePath);
+                                            && GetContentPackageIntrinsicallyTiedToSub(subInfo) != null;
                     }
                     return true;
                 }
@@ -3102,8 +3106,9 @@ namespace Barotrauma
             var loadedSub = Submarine.Load(new SubmarineInfo(filePath), true);
 
             // set the submarine file path to the "default" value
-            loadedSub.Info.FilePath = Path.Combine(SubmarineInfo.SavePath, $"{TextManager.Get("UnspecifiedSubFileName")}.sub");
-            loadedSub.Info.Name = TextManager.Get("UnspecifiedSubFileName").Value;
+            var unspecifiedFileName = TextManager.Get("UnspecifiedSubFileName");
+            loadedSub.Info.FilePath = Path.Combine(ContentPackage.LocalModsDir, unspecifiedFileName.Value, $"{unspecifiedFileName}.sub");
+            loadedSub.Info.Name = unspecifiedFileName.Value;
             try
             {
                 loadedSub.Info.Name = loadedSub.Info.SubmarineElement.GetAttributeString("name",  loadedSub.Info.Name);
@@ -3199,8 +3204,7 @@ namespace Barotrauma
             //check that it's a local content package and only allow deletion if it is.
             //(deleting from the Submarines folder is also currently allowed, but this is temporary)
             var subPackage = GetContentPackageIntrinsicallyTiedToSub(sub);
-            bool isInOldSavePath = Path.GetDirectoryName(sub.FilePath) == SubmarineInfo.SavePath;
-            if (!ContentPackageManager.LocalPackages.Regular.Contains(subPackage) && !isInOldSavePath) { return; }
+            if (!ContentPackageManager.LocalPackages.Regular.Contains(subPackage)) { return; }
             
             var msgBox = new GUIMessageBox(
                 TextManager.Get("DeleteDialogLabel"),
@@ -3215,10 +3219,6 @@ namespace Barotrauma
                         Directory.Delete(Path.GetDirectoryName(subPackage.Path), recursive: true);
                         ContentPackageManager.LocalPackages.Refresh();
                         ContentPackageManager.EnabledPackages.DisableRemovedMods();
-                    }
-                    else if (isInOldSavePath && File.Exists(sub.FilePath))
-                    {
-                        File.Delete(sub.FilePath);
                     }
                     
                     sub.Dispose();

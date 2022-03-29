@@ -412,7 +412,7 @@ namespace Barotrauma
                                 new GUIMessageBox(string.Empty, TextManager.Get("LockedPathTooltip"));
                             }
                             //clients aren't allowed to select the location without a permission
-                            else if ((GameMain.GameSession?.GameMode as CampaignMode)?.AllowedToManageCampaign() ?? false)
+                            else if ((GameMain.GameSession?.GameMode as CampaignMode)?.AllowedToManageCampaign(Networking.ClientPermissions.ManageMap) ?? false)
                             {
                                 connectionHighlightState = 0.0f;
                                 SelectedConnection = connection;

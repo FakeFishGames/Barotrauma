@@ -119,6 +119,11 @@ namespace Barotrauma
         public readonly uint RecipeHash;
         public readonly int Amount;
 
+        /// <summary>
+        /// How many of this item the fabricator can create (< 0 = unlimited)
+        /// </summary>
+        public readonly int FabricationLimitMin, FabricationLimitMax;
+
         public FabricationRecipe(XElement element, Identifier itemPrefab)
         {
             TargetItemPrefabIdentifier = itemPrefab;
@@ -140,6 +145,10 @@ namespace Barotrauma
             var requiredItems = new List<RequiredItem>();
             RequiresRecipe = element.GetAttributeBool("requiresrecipe", false);
             Amount = element.GetAttributeInt("amount", 1);
+
+            int limitDefault = element.GetAttributeInt("fabricationlimit", -1);
+            FabricationLimitMin = element.GetAttributeInt(nameof(FabricationLimitMin), limitDefault);
+            FabricationLimitMax = element.GetAttributeInt(nameof(FabricationLimitMax), limitDefault);
 
             foreach (var subElement in element.Elements())
             {
@@ -973,7 +982,11 @@ namespace Barotrauma
 
         public int? GetMinPrice()
         {
-            int? minPrice = StorePrices.Values.Min(p => p.Price);
+            int? minPrice = null;
+            if (StorePrices != null && StorePrices.Any())
+            {
+                minPrice = StorePrices.Values.Min(p => p.Price);
+            }
             if (minPrice.HasValue)
             {
                 if (DefaultPrice != null)

@@ -534,7 +534,10 @@ namespace Barotrauma
                 }
             }
             Vector2 finalBottomRight = characterPositions[endIndex];
-            finalBottomRight += Font.MeasureChar(Text[endIndex]) * TextBlock.TextScale;
+            if (Text.Length > endIndex)
+            {
+                finalBottomRight += Font.MeasureChar(Text[endIndex]) * TextBlock.TextScale;
+            }
             drawRect(topLeft, finalBottomRight);
         }
 

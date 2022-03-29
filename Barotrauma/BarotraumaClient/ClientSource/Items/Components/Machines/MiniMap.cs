@@ -396,7 +396,7 @@ namespace Barotrauma.Items.Components
 
         private bool VisibleOnItemFinder(Item it)
         {
-            if (it.Submarine != item.Submarine) { return false; }
+            if (!item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true)) { return false; }
             if (it.NonInteractable || it.HiddenInGame) { return false; }
             if (it.GetComponent<Pickable>() == null) { return false; }
 
@@ -432,10 +432,10 @@ namespace Barotrauma.Items.Components
             scissorComponent = new GUIScissorComponent(new RectTransform(Vector2.One, submarineContainer.RectTransform, Anchor.Center));
             miniMapContainer = new GUIFrame(new RectTransform(Vector2.One, scissorComponent.Content.RectTransform, Anchor.Center), style: null) { CanBeFocused = false };
 
-            ImmutableHashSet<Item> hullPointsOfInterest = Item.ItemList.Where(it => it.Submarine == item.Submarine && !it.HiddenInGame && !it.NonInteractable && it.Prefab.ShowInStatusMonitor && (it.GetComponent<Door>() != null || it.GetComponent<Turret>() != null)).ToImmutableHashSet();
+            ImmutableHashSet<Item> hullPointsOfInterest = Item.ItemList.Where(it => item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true) && !it.HiddenInGame && !it.NonInteractable && it.Prefab.ShowInStatusMonitor && (it.GetComponent<Door>() != null || it.GetComponent<Turret>() != null)).ToImmutableHashSet();
             miniMapFrame = CreateMiniMap(item.Submarine, submarineContainer, MiniMapSettings.Default, hullPointsOfInterest, out hullStatusComponents);
 
-            IEnumerable<Item> electrialPointsOfInterest = Item.ItemList.Where(it => it.Submarine == item.Submarine && !it.HiddenInGame && !it.NonInteractable && it.GetComponent<Repairable>() != null);
+            IEnumerable<Item> electrialPointsOfInterest = Item.ItemList.Where(it => item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true) && !it.HiddenInGame && !it.NonInteractable && it.GetComponent<Repairable>() != null);
             electricalFrame = CreateMiniMap(item.Submarine, miniMapContainer, new MiniMapSettings(createHullElements: false), electrialPointsOfInterest, out electricalMapComponents);
 
             Dictionary<MiniMapGUIComponent, GUIComponent> electricChildren = new Dictionary<MiniMapGUIComponent, GUIComponent>();

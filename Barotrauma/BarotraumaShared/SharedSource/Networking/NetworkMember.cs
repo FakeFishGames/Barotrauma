@@ -116,7 +116,8 @@ namespace Barotrauma.Networking
         StartRound,
         PurchaseAndSwitchSub,
         PurchaseSub,
-        SwitchSub
+        SwitchSub,
+        TransferMoney
     }
 
     public enum ReadyCheckState
@@ -179,10 +180,10 @@ namespace Barotrauma.Networking
         
         protected ServerSettings serverSettings;
 
+        public Voting Voting { get; protected set; }
+
         protected TimeSpan updateInterval;
         protected DateTime updateTimer;
-
-        public int EndVoteCount, EndVoteMax, SubmarineVoteYesCount, SubmarineVoteNoCount, SubmarineVoteMax;
 
         protected bool gameStarted;
 

@@ -226,6 +226,7 @@ namespace Barotrauma
 
         public void SetPurchasedItems(Dictionary<Identifier, List<PurchasedItem>> purchasedItems)
         {
+            if (purchasedItems.Count == 0 && PurchasedItems.Count == 0) { return; }
             PurchasedItems.Clear();
             foreach (var entry in purchasedItems)
             {

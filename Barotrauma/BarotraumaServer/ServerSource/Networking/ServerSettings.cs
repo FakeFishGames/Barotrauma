@@ -312,8 +312,8 @@ namespace Barotrauma.Networking
 
             AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
                         
-            Voting.AllowSubVoting = SubSelectionMode == SelectionMode.Vote;            
-            Voting.AllowModeVoting = ModeSelectionMode == SelectionMode.Vote;
+            AllowSubVoting = SubSelectionMode == SelectionMode.Vote;            
+            AllowModeVoting = ModeSelectionMode == SelectionMode.Vote;
 
             selectedLevelDifficulty = doc.Root.GetAttributeFloat("LevelDifficulty", 20.0f);
             GameMain.NetLobbyScreen.SetLevelDifficulty(selectedLevelDifficulty);

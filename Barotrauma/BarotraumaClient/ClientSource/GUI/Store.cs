@@ -113,71 +113,40 @@ namespace Barotrauma
 
         #region Permissions
 
-        private bool hadPermissions, hadBuyPermissions, hadSellInventoryPermissions, hadSellSubPermissions;
+        private bool hadBuyPermissions, hadSellInventoryPermissions, hadSellSubPermissions;
 
-        private bool HasPermissions
-        {
-            get => GetPermissions();
-            set => hadPermissions = value;
-        }
         private bool HasBuyPermissions
         {
-            get => HasPermissions || GetPermissions(StoreTab.Buy);
+            get => HasPermissionToUseTab(StoreTab.Buy);
             set => hadBuyPermissions = value;
         }
         private bool HasSellInventoryPermissions
         {
-            get => HasPermissions || GetPermissions(StoreTab.Sell);
+            get => HasPermissionToUseTab(StoreTab.Sell);
             set => hadSellInventoryPermissions = value;
         }
         private bool HasSellSubPermissions
         {
-            get => HasPermissions || GetPermissions(StoreTab.SellSub);
+            get => HasPermissionToUseTab(StoreTab.SellSub);
             set => hadSellSubPermissions = value;
         }
 
-        private bool GetPermissions(StoreTab? tab = null)
+        private bool HasPermissionToUseTab(StoreTab tab)
         {
-            if (!tab.HasValue)
+            return tab switch
             {
-                return campaignUI.Campaign.AllowedToManageCampaign() || campaignUI.Campaign.AllowedToManageCampaign(Networking.ClientPermissions.CampaignStore);
-            }
-            else
-            {
-                return tab.Value switch
-                {
-                    StoreTab.Buy => campaignUI.Campaign.AllowedToManageCampaign(Networking.ClientPermissions.BuyItems),
-                    StoreTab.Sell => campaignUI.Campaign.AllowedToManageCampaign(Networking.ClientPermissions.SellInventoryItems),
-                    StoreTab.SellSub => campaignUI.Campaign.AllowedToManageCampaign(Networking.ClientPermissions.SellSubItems),
-                    _ => false,
-                };
-            }
+                StoreTab.Buy => true,
+                StoreTab.Sell => campaignUI.Campaign.AllowedToManageCampaign(Networking.ClientPermissions.SellInventoryItems),
+                StoreTab.SellSub => campaignUI.Campaign.AllowedToManageCampaign(Networking.ClientPermissions.SellSubItems),
+                _ => false,
+            };            
         }
 
-        private void UpdatePermissions(StoreTab? tab = null)
+        private void UpdatePermissions()
         {
-            HasPermissions = GetPermissions();
-            if (!tab.HasValue)
-            {
-                HasBuyPermissions = GetPermissions(StoreTab.Buy);
-                HasSellInventoryPermissions = GetPermissions(StoreTab.Sell);
-                HasSellSubPermissions = GetPermissions(StoreTab.SellSub);
-            }
-            else
-            {
-                switch (tab.Value)
-                {
-                    case StoreTab.Buy:
-                        HasBuyPermissions = GetPermissions(tab.Value);
-                        break;
-                    case StoreTab.Sell:
-                        HasSellInventoryPermissions = GetPermissions(tab.Value);
-                        break;
-                    case StoreTab.SellSub:
-                        HasSellSubPermissions = GetPermissions(tab.Value);
-                        break;
-                }
-            }
+            HasBuyPermissions = HasPermissionToUseTab(StoreTab.Buy);
+            HasSellInventoryPermissions = HasPermissionToUseTab(StoreTab.Sell);
+            HasSellSubPermissions = HasPermissionToUseTab(StoreTab.SellSub);        
         }
 
         private bool HasTabPermissions(StoreTab tab)
@@ -196,23 +165,16 @@ namespace Barotrauma
             return HasTabPermissions(activeTab);
         }
 
-        private bool HavePermissionsChanged(StoreTab? tab = null)
+        private bool HavePermissionsChanged(StoreTab tab)
         {
-            if (!tab.HasValue)
+            bool hadTabPermissions = tab switch
             {
-                return hadPermissions != HasPermissions;
-            }
-            else
-            {
-                bool hadTabPermissions = tab.Value switch
-                {
-                    StoreTab.Buy => hadBuyPermissions,
-                    StoreTab.Sell => hadSellInventoryPermissions,
-                    StoreTab.SellSub => hadSellSubPermissions,
-                    _ => false
-                };
-                return hadTabPermissions != HasTabPermissions(tab.Value);
-            }
+                StoreTab.Buy => hadBuyPermissions,
+                StoreTab.Sell => hadSellInventoryPermissions,
+                StoreTab.SellSub => hadSellSubPermissions,
+                _ => false
+            };
+            return hadTabPermissions != HasTabPermissions(tab);            
         }
 
         #endregion
@@ -2201,10 +2163,6 @@ namespace Barotrauma
             if (needsItemsToSellFromSubRefresh)
             {
                 RefreshItemsToSellFromSub();
-            }
-            if (needsRefresh || HavePermissionsChanged())
-            {
-                Refresh(updateOwned: ownedItemsUpdateTimer > 0.0f);
             }
             if (needsBuyingRefresh || HavePermissionsChanged(StoreTab.Buy))
             {

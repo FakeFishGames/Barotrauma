@@ -32,6 +32,7 @@ namespace Barotrauma
             }
             else
             {
+                tabMenu?.OnClose();
                 tabMenu = null;
                 NetLobbyScreen.JobInfoFrame = null;
             }

@@ -271,6 +271,7 @@ namespace Barotrauma.Networking
             otherClients = new List<Client>();
 
             serverSettings = new ServerSettings(this, "Server", 0, 0, 0, false, false);
+            Voting = new Voting();
 
             if (steamId == 0)
             {
@@ -637,7 +638,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                EndVoteTickBox.Visible = serverSettings.Voting.AllowEndVoting && HasSpawned && !(GameMain.GameSession?.GameMode is CampaignMode);
+                EndVoteTickBox.Visible = ServerSettings.AllowEndVoting && HasSpawned && !(GameMain.GameSession?.GameMode is CampaignMode);
 
                 respawnManager?.Update(deltaTime);
 
@@ -898,13 +899,13 @@ namespace Barotrauma.Networking
                     GUI.SetSavingIndicatorState(save);
                     break;
                 case ServerPacketHeader.CAMPAIGN_SETUP_INFO:
-                    UInt16 saveCount = inc.ReadUInt16();
-                    List<string> saveFiles = new List<string>();
+                    byte saveCount = inc.ReadByte();
+                    List<CampaignMode.SaveInfo> saveInfos = new List<CampaignMode.SaveInfo>();
                     for (int i = 0; i < saveCount; i++)
                     {
-                        saveFiles.Add(inc.ReadString());
+                        saveInfos.Add(INetSerializableStruct.Read<CampaignMode.SaveInfo>(inc));
                     }
-                    MultiPlayerCampaign.StartCampaignSetup(saveFiles);
+                    MultiPlayerCampaign.StartCampaignSetup(saveInfos);
                     break;
                 case ServerPacketHeader.PERMISSIONS:
                     ReadPermissions(inc);
@@ -1458,7 +1459,7 @@ namespace Barotrauma.Networking
             {
                 if (GameMain.GameSession?.GameMode is CampaignMode campaign)
                 {
-                    campaign.CampaignUI?.UpgradeStore?.RefreshAll();
+                    campaign.CampaignUI?.UpgradeStore?.RequestRefresh();
                     campaign.CampaignUI?.CrewManagement?.RefreshPermissions();
                 }
             }
@@ -1666,10 +1667,7 @@ namespace Barotrauma.Networking
                 isOutpost = levelData.Type == LevelData.LevelType.Outpost;
             }
 
-            if (GameMain.Client?.ServerSettings?.Voting != null)
-            {
-                GameMain.Client.ServerSettings.Voting.ResetVotes(GameMain.Client.ConnectedClients);
-            }
+            Voting?.ResetVotes(GameMain.Client.ConnectedClients);            
 
             if (loadTask != null)
             {
@@ -1882,7 +1880,7 @@ namespace Barotrauma.Networking
                 var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.StringRepresentation == subHash);
                 if (matchingSub == null)
                 {
-                    matchingSub = new SubmarineInfo(Path.Combine(SubmarineInfo.SavePath, subName) + ".sub", subHash, tryLoad: false)
+                    matchingSub = new SubmarineInfo(Path.Combine(SaveUtil.SubmarineDownloadFolder, subName) + ".sub", subHash, tryLoad: false)
                     {
                         SubmarineClass = (SubmarineClass)subClass
                     };
@@ -2086,7 +2084,7 @@ namespace Barotrauma.Networking
             {
                 if (GameMain.GameSession?.GameMode is CampaignMode campaign)
                 {
-                    campaign.CampaignUI?.UpgradeStore?.RefreshAll();
+                    campaign.CampaignUI?.UpgradeStore?.RequestRefresh();
                     campaign.CampaignUI?.CrewManagement?.RefreshPermissions();
                 }
             }
@@ -2208,8 +2206,8 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
 
                                 serverSettings.VoiceChatEnabled = voiceChatEnabled;
-                                serverSettings.Voting.AllowSubVoting = allowSubVoting;
-                                serverSettings.Voting.AllowModeVoting = allowModeVoting;
+                                serverSettings.AllowSubVoting = allowSubVoting;
+                                serverSettings.AllowModeVoting = allowModeVoting;
 
                                 if (clientPeer is SteamP2POwnerPeer)
                                 {
@@ -2240,7 +2238,7 @@ namespace Barotrauma.Networking
                         ChatMessage.ClientRead(inc);
                         break;
                     case ServerNetObject.VOTE:
-                        serverSettings.Voting.ClientRead(inc);
+                        Voting.ClientRead(inc);
                         break;
                 }
             }
@@ -2826,12 +2824,12 @@ namespace Barotrauma.Networking
 
         public void Vote(VoteType voteType, object data)
         {
-            if (clientPeer == null) return;
+            if (clientPeer == null) { return; }
 
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.UPDATE_LOBBY);
             msg.Write((byte)ClientNetObject.VOTE);
-            serverSettings.Voting.ClientWrite(msg, voteType, data);
+            Voting.ClientWrite(msg, voteType, data);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
             clientPeer.Send(msg, DeliveryMethod.Reliable);
@@ -2847,19 +2845,27 @@ namespace Barotrauma.Networking
         #region Submarine Change Voting
         public void InitiateSubmarineChange(SubmarineInfo sub, VoteType voteType)
         {
-            if (sub == null) return;
-            if (serverSettings.Voting.VoteRunning)
-            {
-                new GUIMessageBox(TextManager.Get("unabletoinitiateavoteheader"), TextManager.Get("votealreadyactivetext"));
-                return;
-            }
+            if (sub == null) { return; }
             Vote(voteType, sub);
         }
 
         public void ShowSubmarineChangeVoteInterface(Client starter, SubmarineInfo info, VoteType type, float timeOut)
         {
-            if (info == null || votingInterface != null) return;
-            votingInterface = new VotingInterface(starter, info, type, timeOut);
+            if (info == null || votingInterface != null) { return; }
+            votingInterface = VotingInterface.CreateSubmarineVotingInterface(starter, info, type, timeOut);
+        }
+        #endregion
+
+        #region Money Transfer Voting
+        public void ShowMoneyTransferVoteInterface(Client starter, Client from, int amount, Client to, float timeOut)
+        {
+            if (votingInterface != null) { return; }
+            if (from == null && to == null) 
+            {
+                DebugConsole.ThrowError("Tried to initiate a vote for transferring from null to null!");
+                return; 
+            }
+            votingInterface = VotingInterface.CreateMoneyTransferVotingInterface(starter, from, to, amount, timeOut);
         }
         #endregion
 
@@ -3103,7 +3109,7 @@ namespace Barotrauma.Networking
         {
             if (!gameStarted) return false;
 
-            if (!serverSettings.Voting.AllowEndVoting || !HasSpawned)
+            if (!serverSettings.AllowEndVoting || !HasSpawned)
             {
                 tickBox.Visible = false;
                 return false;
@@ -3322,15 +3328,17 @@ namespace Barotrauma.Networking
 
             inGameHUD.DrawManually(spriteBatch);
 
-            if (EndVoteCount > 0)
+            int endVoteCount = Voting.GetVoteCountYes(VoteType.EndRound);
+            int endVoteMax = Voting.GetVoteCountMax(VoteType.EndRound);
+            if (endVoteCount > 0)
             {
                 if (EndVoteTickBox.Visible)
                 {
-                    EndVoteTickBox.Text = $"{endRoundVoteText} {EndVoteCount}/{EndVoteMax}";
+                    EndVoteTickBox.Text = $"{endRoundVoteText} {endVoteCount}/{endVoteMax}";
                 }
                 else
                 {
-                    LocalizedString endVoteText = TextManager.GetWithVariables("EndRoundVotes", ("[votes]", EndVoteCount.ToString()), ("[max]", EndVoteMax.ToString()));
+                    LocalizedString endVoteText = TextManager.GetWithVariables("EndRoundVotes", ("[votes]", endVoteCount.ToString()), ("[max]", endVoteMax.ToString()));
                     GUI.DrawString(spriteBatch, EndVoteTickBox.Rect.Center.ToVector2() - GUIStyle.SmallFont.MeasureString(endVoteText) / 2,
                         endVoteText.Value,
                         Color.White,
@@ -3498,7 +3506,7 @@ namespace Barotrauma.Networking
                     OnClicked = (btn, userdata) => { GameMain.NetLobbyScreen.KickPlayer(client); return false; }
                 };
             }
-            else if (serverSettings.Voting.AllowVoteKick && client.AllowKicking)
+            else if (serverSettings.AllowVoteKick && client.AllowKicking)
             {
                 var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
                     TextManager.Get("VoteToKick"), style: "GUIButtonSmall")

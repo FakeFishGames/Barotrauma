@@ -79,10 +79,10 @@ namespace Barotrauma
                         {
                             roundData.EnteredCrushDepth.Add(c);
                         }
-                        else if (Level.Loaded.GetRealWorldDepth(c.WorldPosition.Y) < Level.Loaded.RealWorldCrushDepth * 0.5f)
+                        else if (Level.Loaded.GetRealWorldDepth(c.WorldPosition.Y) < Level.Loaded.RealWorldCrushDepth - 500.0f)
                         {
                             //all characters that have entered crush depth and are still alive get an achievement
-                            if (roundData.EnteredCrushDepth.Contains(c)) UnlockAchievement(c, "survivecrushdepth".ToIdentifier());
+                            if (roundData.EnteredCrushDepth.Contains(c)) { UnlockAchievement(c, "survivecrushdepth".ToIdentifier()); }
                         }
                     }
                 }
@@ -426,7 +426,7 @@ namespace Barotrauma
                     !c.IsDead && 
                     c.TeamID != CharacterTeamType.FriendlyNPC &&
                     !(c.AIController is EnemyAIController) &&
-                    (c.Submarine == gameSession.Submarine || (Level.Loaded?.EndOutpost != null && c.Submarine == Level.Loaded.EndOutpost)));
+                    (c.Submarine == gameSession.Submarine || gameSession.Submarine.GetConnectedSubs().Contains(c.Submarine) || (Level.Loaded?.EndOutpost != null && c.Submarine == Level.Loaded.EndOutpost)));
 
                 if (charactersInSub.Count == 1)
                 {
@@ -454,6 +454,10 @@ namespace Barotrauma
                 }
                 foreach (Character character in charactersInSub)
                 {
+                    if (roundData.EnteredCrushDepth.Contains(character))
+                    {
+                        UnlockAchievement(character, "survivecrushdepth".ToIdentifier());
+                    }
                     if (character.Info.Job == null) { continue; }
                     UnlockAchievement(character, $"{character.Info.Job.Prefab.Identifier}round".ToIdentifier());
                 }

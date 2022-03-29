@@ -1299,16 +1299,13 @@ namespace Barotrauma
 
             if (GameMain.Client != null)
             {
-                GameMain.Client.ServerSettings.Voting.ResetVotes(GameMain.Client.ConnectedClients);
+                GameMain.Client.Voting.ResetVotes(GameMain.Client.ConnectedClients);
                 spectateButton.OnClicked = GameMain.Client.SpectateClicked;
                 ReadyToStartBox.OnSelected = GameMain.Client.SetReadyToStart;
             }
 
             roundControlsHolder.Children.ForEach(c => c.IgnoreLayoutGroups = !c.Visible);
             roundControlsHolder.Recalculate();
-
-            GameMain.NetworkMember.EndVoteCount = 0;
-            GameMain.NetworkMember.EndVoteMax = 1;
 
             base.Select();
         }
@@ -1348,9 +1345,9 @@ namespace Barotrauma
             ServerName.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             ServerMessage.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             shuttleTickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings) && !GameMain.Client.GameStarted;
-            SubList.Enabled = !CampaignFrame.Visible && (GameMain.Client.ServerSettings.Voting.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub));
+            SubList.Enabled = !CampaignFrame.Visible && (GameMain.Client.ServerSettings.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub));
             ShuttleList.Enabled = ShuttleList.ButtonEnabled = GameMain.Client.HasPermission(ClientPermissions.SelectSub) && !GameMain.Client.GameStarted;
-            ModeList.Enabled = GameMain.Client.ServerSettings.Voting.AllowModeVoting || GameMain.Client.HasPermission(ClientPermissions.SelectMode);
+            ModeList.Enabled = GameMain.Client.ServerSettings.AllowModeVoting || GameMain.Client.HasPermission(ClientPermissions.SelectMode);
             LogButtons.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
             GameMain.Client.ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
             roundControlsHolder.Children.ForEach(c => c.IgnoreLayoutGroups = !c.Visible);
@@ -1889,7 +1886,7 @@ namespace Barotrauma
             }
             else
             {
-                var classText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), parent.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(GUI.IntScale(20), 0) },
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), parent.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(GUI.IntScale(20), 0) },
                     TextManager.Get($"submarineclass.{sub.SubmarineClass}"), textAlignment: Alignment.CenterRight, font: GUIStyle.SmallFont)
                 {
                     UserData = "classtext",
@@ -1907,7 +1904,7 @@ namespace Barotrauma
             VoteType voteType;
             if (component.Parent == GameMain.NetLobbyScreen.SubList.Content)
             {
-                if (!GameMain.Client.ServerSettings.Voting.AllowSubVoting)
+                if (!GameMain.Client.ServerSettings.AllowSubVoting)
                 {
                     var selectedSub = component.UserData as SubmarineInfo;
                     if (!selectedSub.RequiredContentPackagesInstalled)
@@ -1942,7 +1939,7 @@ namespace Barotrauma
             }
             else if (component.Parent == GameMain.NetLobbyScreen.ModeList.Content)
             {
-                if (!GameMain.Client.ServerSettings.Voting.AllowModeVoting)
+                if (!GameMain.Client.ServerSettings.AllowModeVoting)
                 {
                     if (GameMain.Client.HasPermission(ClientPermissions.SelectMode))
                     {
@@ -2384,6 +2381,7 @@ namespace Barotrauma
                             return true;
                         }
                     };
+                    permissionTick.ToolTip = permissionTick.TextBlock.ToolTip = TextManager.Get("ClientPermission." + permission + ".description");
                 }
 
                 var listBoxContainerRight = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), permissionContainer.RectTransform))
@@ -2478,7 +2476,7 @@ namespace Barotrauma
 
                 if (GameMain.Client != null && GameMain.Client.ConnectedClients.Contains(selectedClient))
                 {
-                    if (GameMain.Client.ServerSettings.Voting.AllowVoteKick &&
+                    if (GameMain.Client.ServerSettings.AllowVoteKick &&
                         selectedClient != null && selectedClient.AllowKicking)
                     {
                         var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaLower.RectTransform),
@@ -3564,22 +3562,7 @@ namespace Barotrauma
 
             if (GameMain.Client.ServerSettings.AllowFileTransfers)
             {
-                errorMsg += TextManager.Get("DownloadSubQuestion");
-
-                var requestFileBox = new GUIMessageBox(TextManager.Get("DownloadSubLabel"), errorMsg,
-                    new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") })
-                {
-                    UserData = "request" + subName
-                };
-                requestFileBox.Buttons[0].UserData = new string[] { subName, md5Hash };
-                requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
-                requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
-                {
-                    string[] fileInfo = (string[])userdata;
-                    GameMain.Client?.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
-                    return true;
-                };
-                requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
+                GameMain.Client?.RequestFile(FileTransferType.Submarine, subName, md5Hash);
             }
             else
             {
@@ -3596,7 +3579,7 @@ namespace Barotrauma
         
         public bool CheckIfCampaignSubMatches(SubmarineInfo serverSubmarine, SubmarineDeliveryData deliveryData)
         {
-            if (GameMain.Client == null) return false;
+            if (GameMain.Client == null) { return false; }
 
             //already downloading the selected sub file
             if (GameMain.Client.FileReceiver.ActiveTransfers.Any(t => t.FileName == serverSubmarine.Name + ".sub"))
@@ -3610,59 +3593,19 @@ namespace Barotrauma
                 return true;
             }
 
-            purchasableSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == serverSubmarine.Name);
+            FailedSubInfo fileInfo = new FailedSubInfo(serverSubmarine.Name, serverSubmarine.MD5Hash.StringRepresentation);
 
-            LocalizedString errorMsg = "";
-            if (purchasableSub == null)
+            switch (deliveryData)
             {
-                errorMsg = TextManager.GetWithVariable("SubNotFoundError", "[subname]", serverSubmarine.Name) + " ";
-            }
-            else if (purchasableSub.MD5Hash?.StringRepresentation == null)
-            {
-                errorMsg = TextManager.GetWithVariable("SubLoadError", "[subname]", serverSubmarine.Name) + " ";
-                /*GUITextBlock textBlock = subList.Content.GetChildByUserData(sub)?.GetChild<GUITextBlock>();
-                if (textBlock != null) { textBlock.TextColor = GUIStyle.Red; }*/
-            }
-            else
-            {
-                errorMsg = TextManager.GetWithVariables("SubDoesntMatchError",
-                    ("[subname]", purchasableSub.Name),
-                    ("[myhash]", purchasableSub.MD5Hash.ShortRepresentation),
-                    ("[serverhash]", Md5Hash.GetShortHash(serverSubmarine.MD5Hash.StringRepresentation))) + " ";
-            }
-
-            errorMsg += TextManager.Get("DownloadSubQuestion");
-
-            //already showing a message about the same sub
-            if (GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "request" + serverSubmarine.Name))
-            {
-                return false;
-            }
-
-            var requestFileBox = new GUIMessageBox(TextManager.Get("DownloadSubLabel"), errorMsg,
-                new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") })
-            {
-                UserData = "request" + serverSubmarine.Name
-            };
-            requestFileBox.Buttons[0].UserData = new FailedSubInfo(serverSubmarine.Name, serverSubmarine.MD5Hash.StringRepresentation);
-            requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
-            requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
-            {
-                FailedSubInfo fileInfo = (FailedSubInfo)userdata;
-
-                if (deliveryData == SubmarineDeliveryData.Owned)
-                {
+                case SubmarineDeliveryData.Owned:
                     FailedOwnedSubs.Add(fileInfo);
-                }
-                else if (deliveryData == SubmarineDeliveryData.Campaign)
-                {
+                    break;
+                case SubmarineDeliveryData.Campaign:
                     FailedCampaignSubs.Add(fileInfo);
-                }
+                    break;
+            }
 
-                GameMain.Client?.RequestFile(FileTransferType.Submarine, fileInfo.Name, fileInfo.Hash);
-                return true;
-            };
-            requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
+            GameMain.Client?.RequestFile(FileTransferType.Submarine, fileInfo.Name, fileInfo.Hash);
 
             return false;
         }

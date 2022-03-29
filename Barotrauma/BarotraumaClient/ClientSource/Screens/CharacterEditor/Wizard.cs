@@ -387,11 +387,14 @@ namespace Barotrauma.CharacterEditor
                         contentPackageDropDown.Flash();
                         return false;
                     }
-                    if (!File.Exists(TexturePath))
+                    if (SourceCharacter?.SpeciesName != CharacterPrefab.HumanSpeciesName)
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("TextureDoesNotExist"), GUIStyle.Red);
-                        texturePathElement.Flash(GUIStyle.Red);
-                        return false;
+                        if (!File.Exists(TexturePath))
+                        {
+                            GUI.AddMessage(GetCharacterEditorTranslation("TextureDoesNotExist"), GUIStyle.Red);
+                            texturePathElement.Flash(GUIStyle.Red);
+                            return false;
+                        }
                     }
                     var path = Path.GetFileName(TexturePath);
                     if (!path.EndsWith(".png", StringComparison.OrdinalIgnoreCase))

@@ -8,9 +8,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Steam
 {
-    public partial class WorkshopMenu
+    abstract partial class WorkshopMenu
     {
-        private readonly struct BBWord
+        protected readonly struct BBWord
         {
             [Flags]
             public enum TagType
@@ -42,10 +42,10 @@ namespace Barotrauma.Steam
             }
         }
 
-        private static readonly Regex bbTagRegex = new Regex(@"\[(.+?)\]",
+        protected static readonly Regex bbTagRegex = new Regex(@"\[(.+?)\]",
             RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-        private static GUICustomComponent CreateBBCodeElement(string bbCode, GUIListBox container)
+        protected static GUICustomComponent CreateBBCodeElement(string bbCode, GUIListBox container)
         {
             Point cachedContainerSize = Point.Zero;
             List<BBWord> bbWords = new List<BBWord>();

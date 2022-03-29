@@ -135,7 +135,7 @@ namespace Barotrauma
                     DebugConsole.NewMessage("Saved campaigns:", Color.White);
                     for (int i = 0; i < saveFiles.Length; i++)
                     {
-                        DebugConsole.NewMessage("   " + i + ". " + saveFiles[i], Color.White);
+                        DebugConsole.NewMessage("   " + i + ". " + saveFiles[i].FilePath, Color.White);
                     }
                     DebugConsole.ShowQuestionPrompt("Select a save file to load (0 - " + (saveFiles.Length - 1) + "):", (string selectedSave) =>
                     {
@@ -148,7 +148,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            LoadCampaign(saveFiles[saveIndex]);
+                            LoadCampaign(saveFiles[saveIndex].FilePath);
                         }
                     });
                 }
@@ -166,28 +166,13 @@ namespace Barotrauma
         /// <summary>
         /// There is a client-side implementation of the method in <see cref="CampaignMode"/>
         /// </summary>
-        public bool AllowedToEndRound(Client client)
-        {
-            //allow ending the round if the client has permissions, is the owner, the only client in the server,
-            //or if no-one has permissions
-            return
-                client.HasPermission(ClientPermissions.ManageRound) ||
-                client.HasPermission(ClientPermissions.ManageCampaign) ||
-                GameMain.Server.ConnectedClients.Count == 1 ||
-                IsOwner(client) ||
-                GameMain.Server.ConnectedClients.None(c =>
-                    c.InGame && (IsOwner(c) || c.HasPermission(ClientPermissions.ManageRound) || c.HasPermission(ClientPermissions.ManageCampaign)));
-        }
-
-        /// <summary>
-        /// There is a client-side implementation of the method in <see cref="CampaignMode"/>
-        /// </summary>
-        public bool AllowedToManageCampaign(Client client, ClientPermissions permissions = ClientPermissions.ManageCampaign)
+        public bool AllowedToManageCampaign(Client client, ClientPermissions permissions)
         {
             //allow managing the campaign if the client has permissions, is the owner, or the only client in the server,
             //or if no-one has management permissions
             return
                 client.HasPermission(permissions) ||
+                client.HasPermission(ClientPermissions.ManageCampaign) ||
                 GameMain.Server.ConnectedClients.Count == 1 ||
                 IsOwner(client) ||
                 GameMain.Server.ConnectedClients.None(c => c.InGame && (IsOwner(c) || c.HasPermission(permissions)));
@@ -519,7 +504,7 @@ namespace Barotrauma
             walletsToCheck.Clear();
             walletsToCheck.Add(0, Bank);
 
-            foreach (Character character in Mission.GetSalaryEligibleCrew())
+            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Player))
             {
                 walletsToCheck.Add(character.ID, character.Wallet);
             }
@@ -715,107 +700,102 @@ namespace Barotrauma
                 purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
             }
 
-            bool allowedToManageCampaign = AllowedToManageCampaign(sender);
-            if (AllowedToManageCampaign(sender))
+            Location location = Map.CurrentLocation;
+            int hullRepairCost = location?.GetAdjustedMechanicalCost(HullRepairCost) ?? HullRepairCost;
+            int itemRepairCost = location?.GetAdjustedMechanicalCost(ItemRepairCost) ?? ItemRepairCost;
+            int shuttleRetrieveCost = location?.GetAdjustedMechanicalCost(ShuttleReplaceCost) ?? ShuttleReplaceCost;
+            Wallet personalWallet = GetWallet(sender);
+
+            if (purchasedHullRepairs != PurchasedHullRepairs)
             {
-                Location location = Map.CurrentLocation;
-                int hullRepairCost = location?.GetAdjustedMechanicalCost(HullRepairCost) ?? HullRepairCost;
-                int itemRepairCost = location?.GetAdjustedMechanicalCost(ItemRepairCost) ?? ItemRepairCost;
-                int shuttleRetrieveCost = location?.GetAdjustedMechanicalCost(ShuttleReplaceCost) ?? ShuttleReplaceCost;
-                Wallet personalWallet = GetWallet(sender);
-
-                if (purchasedHullRepairs != PurchasedHullRepairs)
+                switch (purchasedHullRepairs)
                 {
-                    switch (purchasedHullRepairs)
-                    {
-                        case true when personalWallet.CanAfford(hullRepairCost):
-                            personalWallet.Deduct(hullRepairCost);
-                            PurchasedHullRepairs = true;
-                            GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
-                            break;
-                        case false:
-                            PurchasedHullRepairs = false;
-                            personalWallet.Refund(hullRepairCost);
-                            break;
-                    }
+                    case true when personalWallet.CanAfford(hullRepairCost):
+                        personalWallet.Deduct(hullRepairCost);
+                        PurchasedHullRepairs = true;
+                        GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
+                        break;
+                    case false:
+                        PurchasedHullRepairs = false;
+                        personalWallet.Refund(hullRepairCost);
+                        break;
                 }
+            }
 
-                if (purchasedItemRepairs != PurchasedItemRepairs)
+            if (purchasedItemRepairs != PurchasedItemRepairs)
+            {
+                switch (purchasedItemRepairs)
                 {
-                    switch (purchasedItemRepairs)
-                    {
-                        case true when personalWallet.CanAfford(itemRepairCost):
-                            personalWallet.Deduct(itemRepairCost);
-                            PurchasedItemRepairs = true;
-                            GameAnalyticsManager.AddMoneySpentEvent(itemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
-                            break;
-                        case false:
-                            PurchasedItemRepairs = false;
-                            personalWallet.Refund(itemRepairCost);
-                            break;
-                    }
+                    case true when personalWallet.CanAfford(itemRepairCost):
+                        personalWallet.Deduct(itemRepairCost);
+                        PurchasedItemRepairs = true;
+                        GameAnalyticsManager.AddMoneySpentEvent(itemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
+                        break;
+                    case false:
+                        PurchasedItemRepairs = false;
+                        personalWallet.Refund(itemRepairCost);
+                        break;
                 }
+            }
 
-                if (purchasedLostShuttles != PurchasedLostShuttles)
+            if (purchasedLostShuttles != PurchasedLostShuttles)
+            {
+                if (GameMain.GameSession?.SubmarineInfo != null && GameMain.GameSession.SubmarineInfo.LeftBehindSubDockingPortOccupied)
                 {
-                    if (GameMain.GameSession?.SubmarineInfo != null && GameMain.GameSession.SubmarineInfo.LeftBehindSubDockingPortOccupied)
-                    {
-                        GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("ReplaceShuttleDockingPortOccupied"), sender, ChatMessageType.MessageBox);
-                    }
-                    else if (purchasedLostShuttles && personalWallet.TryDeduct(shuttleRetrieveCost))
-                    {
-                        PurchasedLostShuttles = true;
-                        GameAnalyticsManager.AddMoneySpentEvent(shuttleRetrieveCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
-                    }
-                    else if (!purchasedItemRepairs)
-                    {
-                        PurchasedLostShuttles = false;
-                        personalWallet.Refund(shuttleRetrieveCost);
-                    }
+                    GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("ReplaceShuttleDockingPortOccupied"), sender, ChatMessageType.MessageBox);
                 }
-
-                if (currentLocIndex < Map.Locations.Count && Map.AllowDebugTeleport)
+                else if (purchasedLostShuttles && personalWallet.TryDeduct(shuttleRetrieveCost))
                 {
-                    Map.SetLocation(currentLocIndex);
+                    PurchasedLostShuttles = true;
+                    GameAnalyticsManager.AddMoneySpentEvent(shuttleRetrieveCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
                 }
+                else if (!purchasedItemRepairs)
+                {
+                    PurchasedLostShuttles = false;
+                    personalWallet.Refund(shuttleRetrieveCost);
+                }
+            }
 
+            if (currentLocIndex < Map.Locations.Count && Map.AllowDebugTeleport)
+            {
+                Map.SetLocation(currentLocIndex);
+            }
+
+            if (AllowedToManageCampaign(sender, ClientPermissions.ManageMap))
+            {
                 Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
                 if (Map.SelectedLocation == null) { Map.SelectRandomLocation(preferUndiscovered: true); }
                 if (Map.SelectedConnection != null) { Map.SelectMission(selectedMissionIndices); }
                 CheckTooManyMissions(Map.CurrentLocation, sender);
             }
-
-            bool allowedToUseStore = AllowedToManageCampaign(sender, ClientPermissions.CampaignStore);
-            if (allowedToManageCampaign || allowedToUseStore || AllowedToManageCampaign(sender, ClientPermissions.BuyItems))
+     
+            var prevBuyCrateItems = new Dictionary<Identifier, List<PurchasedItem>>(CargoManager.ItemsInBuyCrate);
+            foreach (var store in prevBuyCrateItems)
             {
-                var prevBuyCrateItems = new Dictionary<Identifier, List<PurchasedItem>>(CargoManager.ItemsInBuyCrate);
-                foreach (var store in prevBuyCrateItems)
+                foreach (var item in store.Value)
                 {
-                    foreach (var item in store.Value)
-                    {
-                        CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, -item.Quantity, sender);
-                    }
-                }
-                foreach (var store in buyCrateItems)
-                {
-                    foreach (var item in store.Value)
-                    {
-                        CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, item.Quantity, sender);
-                    }
-                }
-                var prevPurchasedItems = new Dictionary<Identifier, List<PurchasedItem>>(CargoManager.PurchasedItems);
-                foreach (var store in prevPurchasedItems)
-                {
-                    CargoManager.SellBackPurchasedItems(store.Key, store.Value);
-                }
-                foreach (var store in purchasedItems)
-                {
-                    CargoManager.PurchaseItems(store.Key, store.Value, false, sender);
+                    CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, -item.Quantity, sender);
                 }
             }
+            foreach (var store in buyCrateItems)
+            {
+                foreach (var item in store.Value)
+                {
+                    CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, item.Quantity, sender);
+                }
+            }
+            var prevPurchasedItems = new Dictionary<Identifier, List<PurchasedItem>>(CargoManager.PurchasedItems);
+            foreach (var store in prevPurchasedItems)
+            {
+                CargoManager.SellBackPurchasedItems(store.Key, store.Value);
+            }
+            foreach (var store in purchasedItems)
+            {
+                CargoManager.PurchaseItems(store.Key, store.Value, false, sender);
+            }            
 
             bool allowedToSellSubItems = AllowedToManageCampaign(sender, ClientPermissions.SellSubItems);
-            if (allowedToManageCampaign || allowedToUseStore || allowedToSellSubItems)
+            if (allowedToSellSubItems)
             {
                 var prevSubSellCrateItems = new Dictionary<Identifier, List<PurchasedItem>>(CargoManager.ItemsInSellFromSubCrate);
                 foreach (var store in prevSubSellCrateItems)
@@ -834,7 +814,7 @@ namespace Barotrauma
                 }
             }
             bool allowedToSellInventoryItems = AllowedToManageCampaign(sender, ClientPermissions.SellInventoryItems);
-            if (allowedToManageCampaign || allowedToUseStore || (allowedToSellInventoryItems && allowedToSellSubItems))
+            if (allowedToSellInventoryItems && allowedToSellSubItems)
             {
                 // for some reason CargoManager.SoldItem is never cleared by the server, I've added a check to SellItems that ignores all
                 // sold items that are removed so they should be discarded on the next message
@@ -867,37 +847,34 @@ namespace Barotrauma
                 bool predicate(SoldItem i) => allowedToSellInventoryItems != (i.Origin == SoldItem.SellOrigin.Character);
             }
 
-            if (allowedToManageCampaign)
+            foreach (var (prefab, category, _) in purchasedUpgrades)
             {
-                foreach (var (prefab, category, _) in purchasedUpgrades)
-                {
-                    UpgradeManager.PurchaseUpgrade(prefab, category, client: sender);
+                UpgradeManager.PurchaseUpgrade(prefab, category, client: sender);
 
-                    // unstable logging
-                    int price = prefab.Price.GetBuyprice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
-                    int level = UpgradeManager.GetUpgradeLevel(prefab, category);
-                    GameServer.Log($"SERVER: Purchased level {level} {category.Identifier}.{prefab.Identifier} for {price}", ServerLog.MessageType.ServerMessage);
-                }
-                foreach (var purchasedItemSwap in purchasedItemSwaps)
+                // unstable logging
+                int price = prefab.Price.GetBuyprice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
+                int level = UpgradeManager.GetUpgradeLevel(prefab, category);
+                GameServer.Log($"SERVER: Purchased level {level} {category.Identifier}.{prefab.Identifier} for {price}", ServerLog.MessageType.ServerMessage);
+            }
+            foreach (var purchasedItemSwap in purchasedItemSwaps)
+            {
+                if (purchasedItemSwap.ItemToInstall == null)
                 {
-                    if (purchasedItemSwap.ItemToInstall == null)
-                    {
-                        UpgradeManager.CancelItemSwap(purchasedItemSwap.ItemToRemove);
-                    }
-                    else
-                    {
-                        UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, client: sender);
-                    }
+                    UpgradeManager.CancelItemSwap(purchasedItemSwap.ItemToRemove);
                 }
-                foreach (Item item in Item.ItemList)
+                else
                 {
-                    if (item.PendingItemSwap != null && !purchasedItemSwaps.Any(it => it.ItemToRemove == item))
-                    {
-                        UpgradeManager.CancelItemSwap(item);
-                        item.PendingItemSwap = null;
-                    }
+                    UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, client: sender);
                 }
             }
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.PendingItemSwap != null && !purchasedItemSwaps.Any(it => it.ItemToRemove == item))
+                {
+                    UpgradeManager.CancelItemSwap(item);
+                    item.PendingItemSwap = null;
+                }
+            }            
         }
 
         public void ServerReadMoney(IReadMessage msg, Client sender)
@@ -907,19 +884,26 @@ namespace Barotrauma
             switch (transfer.Sender)
             {
                 case Some<ushort> { Value: var id }:
-
-                    if (id != sender.CharacterID && !AllowedToManageCampaign(sender)) { return; }
+                    if (id != sender.CharacterID && !AllowedToManageCampaign(sender, ClientPermissions.ManageMoney)) { return; }
 
                     Wallet wallet = GetWalletByID(id);
                     if (wallet is InvalidWallet) { return; }
 
                     TransferMoney(wallet);
                     break;
-
                 case None<ushort> _:
-                    if (!AllowedToManageCampaign(sender)) { return; }
-
-                    TransferMoney(Bank);
+                    if (!AllowedToManageCampaign(sender, ClientPermissions.ManageMoney)) 
+                    {
+                        if (transfer.Receiver is Some<ushort> { Value: var receiverId } && receiverId == sender.CharacterID)
+                        {
+                            GameMain.Server?.Voting.StartTransferVote(sender, null, transfer.Amount, sender);
+                        }
+                        return; 
+                    }
+                    else
+                    {
+                        TransferMoney(Bank);
+                    }
                     break;
             }
 
@@ -952,10 +936,10 @@ namespace Barotrauma
         {
             NetWalletSetSalaryUpdate update = INetSerializableStruct.Read<NetWalletSetSalaryUpdate>(msg);
 
-            if (!AllowedToManageCampaign(sender)) { return; }
+            if (!AllowedToManageCampaign(sender, ClientPermissions.ManageMoney)) { return; }
 
             Character targetCharacter = Character.CharacterList.FirstOrDefault(c => c.ID == update.Target);
-            targetCharacter?.Wallet.SetRewardDistrubiton(update.NewRewardDistribution);
+            targetCharacter?.Wallet.SetRewardDistribution(update.NewRewardDistribution);
         }
 
         public void ServerReadCrew(IReadMessage msg, Client sender)
@@ -994,7 +978,7 @@ namespace Barotrauma
             List<CharacterInfo> hiredCharacters = new List<CharacterInfo>();
             CharacterInfo firedCharacter = null;
 
-            if (location != null && AllowedToManageCampaign(sender))
+            if (location != null && AllowedToManageCampaign(sender, ClientPermissions.ManageHires))
             {
                 if (fireCharacter)
                 {

@@ -38,11 +38,14 @@ namespace Barotrauma.Items.Components
 
         public readonly bool Loop;
 
-        public ItemSound(RoundSound sound, ActionType type, bool loop = false)
+        public readonly bool OnlyPlayInSameSub;
+
+        public ItemSound(RoundSound sound, ActionType type, bool loop = false, bool onlyPlayInSameSub = false)
         {
             this.RoundSound = sound;
             this.Type = type;
             this.Loop = loop;
+            this.OnlyPlayInSameSub = onlyPlayInSameSub;
         }
     }
 
@@ -339,6 +342,11 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            if (itemSound.OnlyPlayInSameSub && item.Submarine != null && Character.Controlled != null)
+            {
+                if (Character.Controlled.Submarine == null || !Character.Controlled.Submarine.IsEntityFoundOnThisSub(item, includingConnectedSubs: true)) { return; }
+            }
+
             if (itemSound.Loop)
             {
                 if (loopingSoundChannel != null && loopingSoundChannel.Sound != itemSound.RoundSound.Sound)
@@ -500,7 +508,9 @@ namespace Barotrauma.Items.Components
                     
                     RoundSound sound = RoundSound.Load(subElement);
                     if (sound == null) { break; }
-                    ItemSound itemSound = new ItemSound(sound, type, subElement.GetAttributeBool("loop", false))
+                    ItemSound itemSound = new ItemSound(sound, type, 
+                        subElement.GetAttributeBool("loop", false),
+                        subElement.GetAttributeBool("onlyinsamesub", false))
                     {
                         VolumeProperty = subElement.GetAttributeIdentifier("volumeproperty", "")
                     };

@@ -7,22 +7,22 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Steam
 {
-    public partial class WorkshopMenu
+    abstract partial class WorkshopMenu
     {
-        private static RectTransform NewItemRectT(GUILayoutGroup parent, float heightScale = 1.0f)
+        protected static RectTransform NewItemRectT(GUILayoutGroup parent, float heightScale = 1.0f)
             => new RectTransform((1.0f, 0.06f * heightScale), parent.RectTransform, Anchor.CenterLeft);
 
-        private static void Spacer(GUILayoutGroup parent, float height = 0.03f)
+        protected static void Spacer(GUILayoutGroup parent, float height = 0.03f)
         {
             new GUIFrame(new RectTransform((1.0f, height), parent.RectTransform, Anchor.CenterLeft), style: null);
         }
 
-        private static GUITextBlock Label(GUILayoutGroup parent, LocalizedString str, GUIFont font, float heightScale = 1.0f)
+        protected static GUITextBlock Label(GUILayoutGroup parent, LocalizedString str, GUIFont font, float heightScale = 1.0f)
         {
             return new GUITextBlock(NewItemRectT(parent, heightScale), str, font: font);
         }
 
-        private static GUITextBox ScrollableTextBox(GUILayoutGroup parent, float heightScale, string text)
+        protected static GUITextBox ScrollableTextBox(GUILayoutGroup parent, float heightScale, string text)
         {
             var containingListBox = new GUIListBox(NewItemRectT(parent, heightScale));
             var textBox = new GUITextBox(
@@ -53,12 +53,12 @@ namespace Barotrauma.Steam
             return textBox;
         }
 
-        private static GUIDropDown DropdownEnum<T>(
+        protected static GUIDropDown DropdownEnum<T>(
             GUILayoutGroup parent, Func<T, LocalizedString> textFunc, T currentValue,
             Action<T> setter) where T : Enum
             => Dropdown(parent, textFunc, (T[])Enum.GetValues(typeof(T)), currentValue, setter);
 
-        private static GUIDropDown Dropdown<T>(
+        protected static GUIDropDown Dropdown<T>(
             GUILayoutGroup parent, Func<T, LocalizedString> textFunc, IReadOnlyList<T> values, T currentValue,
             Action<T> setter, float heightScale = 1.0f)
         {
@@ -67,7 +67,7 @@ namespace Barotrauma.Steam
             return dropdown;
         }
 
-        private static void SwapDropdownValues<T>(
+        protected static void SwapDropdownValues<T>(
             GUIDropDown dropdown, Func<T, LocalizedString> textFunc, IReadOnlyList<T> values, T currentValue,
             Action<T> setter)
         {
@@ -88,10 +88,10 @@ namespace Barotrauma.Steam
             };
         }
         
-        private static int Round(float v) => (int)MathF.Round(v);
-        private static string Percentage(float v) => $"{Round(v * 100)}";
+        protected static int Round(float v) => (int)MathF.Round(v);
+        protected static string Percentage(float v) => $"{Round(v * 100)}";
 
-        private struct ActionCarrier
+        protected struct ActionCarrier
         {
             public readonly Identifier Id;
             public readonly Action Action;
@@ -102,7 +102,7 @@ namespace Barotrauma.Steam
             }
         }
 
-        private GUIComponent CreateActionCarrier(GUIComponent parent, Identifier id, Action action)
+        protected GUIComponent CreateActionCarrier(GUIComponent parent, Identifier id, Action action)
             => new GUIFrame(new RectTransform(Vector2.Zero, parent.RectTransform), style: null)
                 { UserData = new ActionCarrier(id, action) };
     }

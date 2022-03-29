@@ -80,6 +80,8 @@ namespace Barotrauma.Items.Components
 
         private float progressState;
 
+        private readonly Dictionary<uint, int> fabricationLimits = new Dictionary<uint, int>();
+
         public Fabricator(Item item, ContentXElement element)
             : base(item, element)
         {
@@ -105,6 +107,10 @@ namespace Barotrauma.Items.Components
                         }
                     }
                     fabricationRecipes.Add(recipe.RecipeHash, recipe);
+                    if (recipe.FabricationLimitMax >= 0)
+                    {
+                        fabricationLimits.Add(recipe.RecipeHash, Rand.Range(recipe.FabricationLimitMin, recipe.FabricationLimitMax + 1));
+                    }
                 }
             }
             this.fabricationRecipes = fabricationRecipes.ToImmutableDictionary();
@@ -244,7 +250,7 @@ namespace Barotrauma.Items.Components
             itemList.Enabled = true;
             if (activateButton != null)
             {
-                activateButton.Text = TextManager.Get("FabricatorCreate");
+                activateButton.Text = TextManager.Get(CreateButtonText);
             }
 #endif
             fabricatedItem = null;
@@ -400,8 +406,22 @@ namespace Barotrauma.Items.Components
                     quality = GetFabricatedItemQuality(fabricatedItem, user);
                 }
 
+                int amount = (int)fabricationitemAmount.Value;
+                if (fabricationLimits.ContainsKey(fabricatedItem.RecipeHash))
+                {
+                    if (amount > fabricationLimits[fabricatedItem.RecipeHash])
+                    {
+                        amount = fabricationLimits[fabricatedItem.RecipeHash];
+                        fabricationLimits[fabricatedItem.RecipeHash] = 0;
+                    }
+                    else
+                    {
+                        fabricationLimits[fabricatedItem.RecipeHash] -= amount;
+                    }
+                }
+
                 var tempUser = user;
-                for (int i = 0; i < (int)fabricationitemAmount.Value; i++)
+                for (int i = 0; i < amount; i++)
                 {
                     float outCondition = fabricatedItem.OutCondition;
                     GameAnalyticsManager.AddDesignEvent("ItemFabricated:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "none") + ":" + fabricatedItem.TargetItem.Identifier);
@@ -533,6 +553,11 @@ namespace Barotrauma.Items.Components
                 {
                     return false;
                 }
+            }
+
+            if (fabricationLimits.TryGetValue(fabricableItem.RecipeHash, out int amount) && amount <= 0)
+            {
+                return false;
             }
 
             return fabricableItem.RequiredItems.All(requiredItem =>
@@ -698,7 +723,6 @@ namespace Barotrauma.Items.Components
                 componentElement.Add(new XAttribute("fabricateditemidentifier", fabricatedItem.TargetItem.Identifier));
                 componentElement.Add(new XAttribute("savedtimeuntilready", timeUntilReady.ToString("G", CultureInfo.InvariantCulture)));
                 componentElement.Add(new XAttribute("savedrequiredtime", requiredTime.ToString("G", CultureInfo.InvariantCulture)));
-
             }
             return componentElement;
         }

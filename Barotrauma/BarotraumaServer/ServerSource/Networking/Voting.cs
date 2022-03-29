@@ -7,59 +7,161 @@ namespace Barotrauma
 {
     partial class Voting
     {
-        public bool AllowSubVoting
+        public interface IVote
         {
-            get { return allowSubVoting; }
-            set {  allowSubVoting = value; }
-        }
-        public bool AllowModeVoting
-        {
-            get { return allowModeVoting; }
-            set { allowModeVoting = value; }
-        }       
+            public Client VoteStarter { get; }
+            public VoteType VoteType { get; }
+            public float Timer { get; set; }
 
-        public struct SubmarineVote
+            public VoteState State { get; set; }
+
+            public void Finish(Voting voting, bool passed);
+        }
+
+        public class SubmarineVote : IVote
         {
-            public Client VoteStarter;
+            public Client VoteStarter { get; }
+            public VoteType VoteType { get; }
+            public float Timer { get; set; }
+
+            public VoteState State { get; set; }
+
             public SubmarineInfo Sub;
-            public VoteType VoteType;
-            public float Timer;
             public int DeliveryFee;
-            public VoteState State;
+
+            public SubmarineVote(Client starter, SubmarineInfo subInfo, int deliveryFee, VoteType voteType)
+            {
+                Sub = subInfo;
+                DeliveryFee = deliveryFee;
+                VoteType = voteType;
+                State = VoteState.Started;
+                VoteStarter = starter;
+            }
+
+            public void Finish(Voting voting, bool passed)
+            {
+                if (passed)
+                {
+                    GameMain.Server?.SwitchSubmarine();
+                }
+                voting.StopSubmarineVote(passed);                
+            }
         }
 
-        public static SubmarineVote SubVote;
+        public static IVote ActiveVote;
+
+        public class TransferVote : IVote
+        {
+            public Client VoteStarter { get; }
+            public VoteType VoteType { get; }
+            public float Timer { get; set; }
+
+            public VoteState State { get; set; }
+
+            //null = bank
+            public readonly Client From, To;
+            public readonly int TransferAmount;
+
+            public TransferVote(Client starter, Client from, int transferAmount, Client to)
+            {
+                VoteStarter = starter;
+                From = from;
+                To = to;
+                TransferAmount = transferAmount;
+                State = VoteState.Started;
+                VoteType = VoteType.TransferMoney;
+            }
+
+            public void Finish(Voting voting, bool passed)
+            {
+                if (passed)
+                {
+                    Wallet fromWallet = From == null ? (GameMain.GameSession.GameMode as MultiPlayerCampaign)?.Bank : From.Character?.Wallet;
+                    if (fromWallet.TryDeduct(TransferAmount))
+                    {
+                        Wallet toWallet = To == null ? (GameMain.GameSession.GameMode as MultiPlayerCampaign)?.Bank : To.Character?.Wallet;
+                        toWallet.Give(TransferAmount);
+                    }
+                }
+                voting.StopMoneyTransferVote(passed);
+            }
+        }
+
+        private static readonly Queue<IVote> pendingVotes = new Queue<IVote>();
 
         private void StartSubmarineVote(SubmarineInfo subInfo, VoteType voteType, Client sender)
         {
-            SubVote.Sub = subInfo;
-            SubVote.DeliveryFee = voteType == VoteType.SwitchSub ? GameMain.GameSession.Map.DistanceToClosestLocationWithOutpost(GameMain.GameSession.Map.CurrentLocation, out Location endLocation) : 0;
-            SubVote.VoteType = voteType;
-            SubVote.State = VoteState.Started;
-            SubVote.VoteStarter = sender;
-            VoteRunning = true;
+            var subVote = new SubmarineVote(
+                sender,
+                subInfo,
+                voteType == VoteType.SwitchSub ? GameMain.GameSession.Map.DistanceToClosestLocationWithOutpost(GameMain.GameSession.Map.CurrentLocation, out Location endLocation) : 0,
+                voteType);
+            StartOrEnqueueVote(subVote);
             sender.SetVote(voteType, 2);
+            GameMain.Server.UpdateVoteStatus(checkActiveVote: false);
         }
 
         public void StopSubmarineVote(bool passed)
         {
-            VoteRunning = false;
-            SubVote.State = passed ? VoteState.Passed : VoteState.Failed;
+            if (!(ActiveVote is SubmarineVote)) { return; }
+            StopActiveVote(passed);
+        }
 
-            GameMain.Server.UpdateVoteStatus();
+        public void StopMoneyTransferVote(bool passed)
+        {
+            if (!(ActiveVote is TransferVote)) { return; }
+            StopActiveVote(passed);
+        }
 
-            GameMain.NetworkMember.SubmarineVoteYesCount = GameMain.NetworkMember.SubmarineVoteNoCount = GameMain.NetworkMember.SubmarineVoteMax = 0;
+        public void StopActiveVote(bool passed)
+        {
+            ActiveVote.State = passed ? VoteState.Passed : VoteState.Failed;
+            GameMain.Server.UpdateVoteStatus(checkActiveVote: false);
+
             for (int i = 0; i < GameMain.NetworkMember.ConnectedClients.Count; i++)
             {
-                GameMain.NetworkMember.ConnectedClients[i].SetVote(SubVote.VoteType, 0);
+                GameMain.NetworkMember.ConnectedClients[i].SetVote(ActiveVote.VoteType, 0);
             }
 
-            SubVote.Sub = null;
-            SubVote.DeliveryFee = 0;
-            SubVote.VoteType = VoteType.Unknown;
-            SubVote.Timer = 0.0f;
-            SubVote.State = VoteState.None;
-            SubVote.VoteStarter = null;
+            ActiveVote = null;
+            if (pendingVotes.Any())
+            {
+                ActiveVote = pendingVotes.Dequeue();
+            }
+        }
+
+        public void StartTransferVote(Client starter, Client from, int transferAmount, Client to)
+        {
+            StartOrEnqueueVote(new TransferVote(starter, from, transferAmount, to));
+            starter.SetVote(VoteType.TransferMoney, 2);
+            GameMain.Server.UpdateVoteStatus(checkActiveVote: false);
+        }
+
+        private void StartOrEnqueueVote(IVote vote)
+        {
+            if (ActiveVote == null)
+            {
+                ActiveVote = vote;
+            }
+            else
+            {
+                pendingVotes.Enqueue(vote);
+            }
+        }
+
+        public void Update(float deltaTime)
+        {
+            if (ActiveVote == null) { return; }
+            
+            ActiveVote.Timer += deltaTime;
+
+            if (ActiveVote.Timer >= GameMain.NetworkMember.ServerSettings.VoteTimeout)
+            {
+                // Do not take unanswered into account for total
+                int yes = GameMain.Server.ConnectedClients.Count(c => c.InGame && c.GetVote<int>(ActiveVote.VoteType) == 2);
+                int no = GameMain.Server.ConnectedClients.Count(c => c.InGame && c.GetVote<int>(ActiveVote.VoteType) == 1);
+                ActiveVote.Finish(this, passed: yes / (float)(yes + no) >= GameMain.NetworkMember.ServerSettings.VoteRequiredRatio);
+            }
         }
 
         public void ServerRead(IReadMessage inc, Client sender)
@@ -97,10 +199,6 @@ namespace Barotrauma
                 case VoteType.EndRound:
                     if (!sender.HasSpawned) { return; }
                     sender.SetVote(voteType, inc.ReadBoolean());
-
-                    GameMain.NetworkMember.EndVoteCount = GameMain.Server.ConnectedClients.Count(c => c.HasSpawned && c.GetVote<bool>(VoteType.EndRound));
-                    GameMain.NetworkMember.EndVoteMax = GameMain.Server.ConnectedClients.Count(c => c.HasSpawned);
-
                     break;
                 case VoteType.Kick:
                     byte kickedClientID = inc.ReadByte();
@@ -126,24 +224,34 @@ namespace Barotrauma
                 case VoteType.PurchaseAndSwitchSub:
                 case VoteType.PurchaseSub:
                 case VoteType.SwitchSub:
+                case VoteType.TransferMoney:
                     bool startVote = inc.ReadBoolean();
                     if (startVote)
                     {
-                        string subName = inc.ReadString();
-                        SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
-                        if (GameMain.GameSession?.Campaign is MultiPlayerCampaign campaign && (campaign.CanPurchaseSub(subInfo, sender) || GameMain.GameSession.IsSubmarineOwned(subInfo)))
+                        if (voteType == VoteType.TransferMoney)
                         {
-                            StartSubmarineVote(subInfo, voteType, sender);
+                            int amount = inc.ReadInt32();
+                            int fromClientId = inc.ReadByte();
+                            int toClientId = inc.ReadByte();
+                            pendingVotes.Enqueue(new TransferVote(sender,
+                                GameMain.Server.ConnectedClients.Find(c => c.ID == fromClientId),
+                                amount,
+                                GameMain.Server.ConnectedClients.Find(c => c.ID == toClientId)));
+                        }
+                        else
+                        {
+                            string subName = inc.ReadString();
+                            SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
+                            if (GameMain.GameSession?.Campaign is MultiPlayerCampaign campaign && (campaign.CanPurchaseSub(subInfo, sender) || GameMain.GameSession.IsSubmarineOwned(subInfo)))
+                            {
+                                StartSubmarineVote(subInfo, voteType, sender);
+                            }
                         }
                     }
                     else
                     {
                         sender.SetVote(voteType, (int)inc.ReadByte());
                     }
-
-                    GameMain.Server.SubmarineVoteYesCount = GameMain.Server.ConnectedClients.Count(c => c.GetVote<int>(SubVote.VoteType) == 2);
-                    GameMain.Server.SubmarineVoteNoCount = GameMain.Server.ConnectedClients.Count(c => c.GetVote<int>(SubVote.VoteType) == 1);
-                    GameMain.Server.SubmarineVoteMax = GameMain.Server.ConnectedClients.Count(c => c.InGame);
                     break;
             }
 
@@ -154,10 +262,10 @@ namespace Barotrauma
 
         public void ServerWrite(IWriteMessage msg)
         {
-            if (GameMain.Server == null) return;
+            if (GameMain.Server == null) { return; }
 
-            msg.Write(allowSubVoting);
-            if (allowSubVoting)
+            msg.Write(GameMain.Server.ServerSettings.AllowSubVoting);
+            if (GameMain.Server.ServerSettings.AllowSubVoting)
             {
                 IReadOnlyDictionary<SubmarineInfo, int> voteList = GetVoteCounts<SubmarineInfo>(VoteType.Sub, GameMain.Server.ConnectedClients);
                 msg.Write((byte)voteList.Count);
@@ -167,8 +275,8 @@ namespace Barotrauma
                     msg.Write(vote.Key.Name);
                 }
             }
-            msg.Write(AllowModeVoting);
-            if (allowModeVoting)
+            msg.Write(GameMain.Server.ServerSettings.AllowModeVoting);
+            if (GameMain.Server.ServerSettings.AllowModeVoting)
             {
                 IReadOnlyDictionary<GameModePreset, int> voteList = GetVoteCounts<GameModePreset>(VoteType.Mode, GameMain.Server.ConnectedClients);
                 msg.Write((byte)voteList.Count);
@@ -178,60 +286,78 @@ namespace Barotrauma
                     msg.Write(vote.Key.Identifier);
                 }
             }
-            msg.Write(AllowEndVoting);
-            if (AllowEndVoting)
+            msg.Write(GameMain.Server.ServerSettings.AllowEndVoting);
+            if (GameMain.Server.ServerSettings.AllowEndVoting)
             {
                 msg.Write((byte)GameMain.Server.ConnectedClients.Count(c => c.HasSpawned && c.GetVote<bool>(VoteType.EndRound)));
                 msg.Write((byte)GameMain.Server.ConnectedClients.Count(c => c.HasSpawned));
             }
 
-            msg.Write(AllowVoteKick);
+            msg.Write(GameMain.Server.ServerSettings.AllowVoteKick);
 
-            msg.Write((byte)SubVote.State);
-            if (SubVote.State != VoteState.None)
+            msg.Write((byte)(ActiveVote?.State ?? VoteState.None));
+            if (ActiveVote != null)
             {
-                msg.Write((byte)SubVote.VoteType);
-
-                if (SubVote.VoteType != VoteType.Unknown)
-                {
-                    var yesClients = GameMain.Server.ConnectedClients.FindAll(c => c.GetVote<int>(SubVote.VoteType) == 2);
+                msg.Write((byte)ActiveVote.VoteType);
+                if (ActiveVote.State != VoteState.None && ActiveVote.VoteType != VoteType.Unknown)
+                {               
+                    var yesClients = GameMain.Server.ConnectedClients.FindAll(c => c.InGame && c.GetVote<int>(ActiveVote.VoteType) == 2);
                     msg.Write((byte)yesClients.Count);
                     foreach (Client c in yesClients)
                     {
                         msg.Write(c.ID);
                     }
 
-                    var noClients = GameMain.Server.ConnectedClients.FindAll(c => c.GetVote<int>(SubVote.VoteType) == 1);
+                    var noClients = GameMain.Server.ConnectedClients.FindAll(c => c.InGame && c.GetVote<int>(ActiveVote.VoteType) == 1);
                     msg.Write((byte)noClients.Count);
                     foreach (Client c in noClients)
                     {
                         msg.Write(c.ID);
                     }
 
-                    msg.Write((byte)GameMain.Server.SubmarineVoteMax);
+                    msg.Write((byte)GameMain.Server.ConnectedClients.Count(c => c.InGame));
 
-                    switch (SubVote.State)
+                    switch (ActiveVote.State)
                     {
                         case VoteState.Started:
-                            msg.Write(SubVote.Sub.Name);
-                            msg.Write(SubVote.VoteStarter.ID);
-                            msg.Write((byte)GameMain.Server.ServerSettings.SubmarineVoteTimeout);
+                            msg.Write(ActiveVote.VoteStarter.ID);
+                            msg.Write((byte)GameMain.Server.ServerSettings.VoteTimeout);
+
+                            switch (ActiveVote.VoteType)
+                            {
+                                case VoteType.PurchaseSub:
+                                case VoteType.PurchaseAndSwitchSub:
+                                case VoteType.SwitchSub:
+                                    msg.Write((ActiveVote as SubmarineVote).Sub.Name);
+                                    break;
+                                case VoteType.TransferMoney:
+                                    var transferVote = (ActiveVote as TransferVote);
+                                    msg.Write(transferVote.From?.ID ?? 0);
+                                    msg.Write(transferVote.To?.ID ?? 0);
+                                    msg.Write(transferVote.TransferAmount);
+                                    break;
+                            }
+
                             break;
                         case VoteState.Running:
                             // Nothing specific
                             break;
                         case VoteState.Passed:
                         case VoteState.Failed:
-                            msg.Write(SubVote.State == VoteState.Passed);
-                            msg.Write(SubVote.Sub.Name);
-                            if (SubVote.State == VoteState.Passed)
+                            msg.Write(ActiveVote.State == VoteState.Passed);
+                            switch (ActiveVote.VoteType)
                             {
-                                msg.Write((short)SubVote.DeliveryFee);
+                                case VoteType.PurchaseSub:
+                                case VoteType.PurchaseAndSwitchSub:
+                                case VoteType.SwitchSub:
+                                    msg.Write((ActiveVote as SubmarineVote).Sub.Name);
+                                    msg.Write((short)(ActiveVote as SubmarineVote).DeliveryFee);
+                                    break;
                             }
                             break;
-                    }
+                    }                    
                 }
-            }       
+            }            
 
             var readyClients = GameMain.Server.ConnectedClients.FindAll(c => c.GetVote<bool>(VoteType.StartRound));
             msg.Write((byte)readyClients.Count);

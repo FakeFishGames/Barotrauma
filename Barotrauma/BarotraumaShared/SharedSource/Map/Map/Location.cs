@@ -257,7 +257,7 @@ namespace Barotrauma
                 }
                 DailySpecials.Clear();
                 int extraSpecialSalesCount = Location.GetExtraSpecialSalesCount();
-                for (int i = 0; i < DailySpecialsCount + extraSpecialSalesCount; i++)
+                for (int i = 0; i < Location.DailySpecialsCount + extraSpecialSalesCount; i++)
                 {
                     if (availableStock.None()) { break; }
                     var item = ToolBox.SelectWeightedRandom(availableStock.Keys.ToList(), availableStock.Values.ToList(), Rand.RandSync.Unsynced);
@@ -266,7 +266,7 @@ namespace Barotrauma
                     availableStock.Remove(item);
                 }
                 RequestedGoods.Clear();
-                for (int i = 0; i < RequestedGoodsCount; i++)
+                for (int i = 0; i < Location.RequestedGoodsCount; i++)
                 {
                     var item = ItemPrefab.Prefabs.GetRandom(p =>
                         p.CanBeSold && !RequestedGoods.Contains(p) &&
@@ -359,8 +359,8 @@ namespace Barotrauma
         /// How many map progress steps it takes before the discounts should be updated.
         /// </summary>
         private const int SpecialsUpdateInterval = 3;
-        private const int DailySpecialsCount = 3;
-        private const int RequestedGoodsCount = 3;
+        private int DailySpecialsCount => Type.DailySpecialsCount;
+        private int RequestedGoodsCount => Type.RequestedGoodsCount;
         private int StepsSinceSpecialsUpdated { get; set; }
         public HashSet<Identifier> StoreIdentifiers { get; } = new HashSet<Identifier>();
 
@@ -1226,7 +1226,7 @@ namespace Barotrauma
 
         public int GetExtraSpecialSalesCount()
         {
-            var characters = GameSession.GetSessionCrewCharacters();
+            var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
             if (!characters.Any()) { return 0; }
             return characters.Max(c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
         }
@@ -1252,7 +1252,7 @@ namespace Barotrauma
             Discovered = true;
             if (checkTalents)
             {
-                GameSession.GetSessionCrewCharacters().ForEach(c => c.CheckTalents(AbilityEffectType.OnLocationDiscovered, new AbilityLocation(this)));
+                GameSession.GetSessionCrewCharacters(CharacterType.Both).ForEach(c => c.CheckTalents(AbilityEffectType.OnLocationDiscovered, new AbilityLocation(this)));
             }
         }
 

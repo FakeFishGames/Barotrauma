@@ -130,7 +130,7 @@ namespace Barotrauma
             }
         }
 
-        private Wallet wallet = new Wallet();
+        private Wallet wallet;
 
         public Wallet Wallet
         {
@@ -1055,8 +1055,13 @@ namespace Barotrauma
             return newCharacter;
         }
 
+        private Character(Submarine submarine, ushort id): base(submarine, id)
+        {
+            wallet = new Wallet(Option<Character>.Some(this));
+        }
+
         protected Character(CharacterPrefab prefab, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
-            : base(null, id)
+            : this(null, id)
         {
             this.Seed = seed;
             this.Prefab = prefab;

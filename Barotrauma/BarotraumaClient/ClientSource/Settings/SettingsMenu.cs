@@ -13,7 +13,7 @@ using OpenAL;
 
 namespace Barotrauma
 {
-    public class SettingsMenu
+    class SettingsMenu
     {
         public static SettingsMenu? Instance { get; private set; }
         
@@ -709,7 +709,9 @@ namespace Barotrauma
             GUIFrame content = CreateNewContentFrame(Tab.Mods);
             content.RectTransform.RelativeSize = Vector2.One;
 
-            workshopMenu = new WorkshopMenu(content);
+            workshopMenu = Screen.Selected is MainMenuScreen
+                ? (WorkshopMenu)new MutableWorkshopMenu(content)
+                : (WorkshopMenu)new ImmutableWorkshopMenu(content);
         }
 
         private void CreateBottomButtons()
@@ -729,7 +731,7 @@ namespace Barotrauma
                     OnClicked = (btn, obj) =>
                     {
                         GameSettings.SetCurrentConfig(unsavedConfig);
-                        WorkshopMenu.Apply();
+                        if (WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu) { mutableWorkshopMenu.Apply(); }
                         GameSettings.SaveCurrentConfig();
                         mainFrame.Flash(color: GUIStyle.Green);
                         return false;

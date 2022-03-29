@@ -15,7 +15,7 @@ using Path = Barotrauma.IO.Path;
 
 namespace Barotrauma.Steam
 {
-    public partial class WorkshopMenu
+    sealed partial class MutableWorkshopMenu : WorkshopMenu
     {
         private class LocalThumbnail : IDisposable
         {

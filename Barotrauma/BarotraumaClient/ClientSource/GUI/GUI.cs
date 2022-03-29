@@ -316,26 +316,27 @@ namespace Barotrauma
 
                 if (GameMain.ShowPerf)
                 {
+                    int x = 400;
                     int y = 10;
-                    DrawString(spriteBatch, new Vector2(300, y),
+                    DrawString(spriteBatch, new Vector2(x, y),
                         "Draw - Avg: " + GameMain.PerformanceCounter.DrawTimeGraph.Average().ToString("0.00") + " ms" +
                         " Max: " + GameMain.PerformanceCounter.DrawTimeGraph.LargestValue().ToString("0.00") + " ms",
                         GUIStyle.Green, Color.Black * 0.8f, font: GUIStyle.SmallFont);
                         y += 15;
-                    GameMain.PerformanceCounter.DrawTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), color: GUIStyle.Green);
+                    GameMain.PerformanceCounter.DrawTimeGraph.Draw(spriteBatch, new Rectangle(x, y, 170, 50), color: GUIStyle.Green);
                     y += 50;
 
-                    DrawString(spriteBatch, new Vector2(300, y),
+                    DrawString(spriteBatch, new Vector2(x, y),
                         "Update - Avg: " + GameMain.PerformanceCounter.UpdateTimeGraph.Average().ToString("0.00") + " ms" +
                         " Max: " + GameMain.PerformanceCounter.UpdateTimeGraph.LargestValue().ToString("0.00") + " ms",
                         Color.LightBlue, Color.Black * 0.8f, font: GUIStyle.SmallFont);
                     y += 15;
-                    GameMain.PerformanceCounter.UpdateTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), color: Color.LightBlue);
+                    GameMain.PerformanceCounter.UpdateTimeGraph.Draw(spriteBatch, new Rectangle(x, y, 170, 50), color: Color.LightBlue);
                     y += 50;
                     foreach (string key in GameMain.PerformanceCounter.GetSavedIdentifiers)
                     {
                         float elapsedMillisecs = GameMain.PerformanceCounter.GetAverageElapsedMillisecs(key);
-                        DrawString(spriteBatch, new Vector2(300, y),
+                        DrawString(spriteBatch, new Vector2(x, y),
                             key + ": " + elapsedMillisecs.ToString("0.00"),
                             Color.Lerp(Color.LightGreen, GUIStyle.Red, elapsedMillisecs / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                         y += 15;
@@ -351,18 +352,19 @@ namespace Barotrauma
 
                     if (Powered.Grids != null)
                     {
-                        DrawString(spriteBatch, new Vector2(300, y), "Grids: " + Powered.Grids.Count, Color.LightGreen, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y), "Grids: " + Powered.Grids.Count, Color.LightGreen, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                         y += 15;
                     }
 
                     if (Settings.EnableDiagnostics)
                     {
-                        DrawString(spriteBatch, new Vector2(320, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ContinuousPhysicsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(320, y + 15), "ControllersUpdateTime: " + GameMain.World.ControllersUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ControllersUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(320, y + 30), "AddRemoveTime: " + GameMain.World.AddRemoveTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.AddRemoveTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(320, y + 45), "NewContactsTime: " + GameMain.World.NewContactsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.NewContactsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(320, y + 60), "ContactsUpdateTime: " + GameMain.World.ContactsUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ContactsUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(320, y + 75), "SolveUpdateTime: " + GameMain.World.SolveUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.SolveUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        x += 20;
+                        DrawString(spriteBatch, new Vector2(x, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ContinuousPhysicsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + 15), "ControllersUpdateTime: " + GameMain.World.ControllersUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ControllersUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + 30), "AddRemoveTime: " + GameMain.World.AddRemoveTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.AddRemoveTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + 45), "NewContactsTime: " + GameMain.World.NewContactsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.NewContactsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + 60), "ContactsUpdateTime: " + GameMain.World.ContactsUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ContactsUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + 75), "SolveUpdateTime: " + GameMain.World.SolveUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.SolveUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                     }
                 }
 

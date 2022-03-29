@@ -73,6 +73,8 @@ namespace Barotrauma
         
         private Point screenResolution;
 
+        private bool needsRefresh = true;
+
         /// <summary>
         /// While set to true any call to <see cref="RefreshUpgradeList"/> will cause the buy button to be disabled and to not update the prices.
         /// This is to prevent us from buying another upgrade before the server has given us the new prices and causing potential syncing issues.
@@ -102,13 +104,18 @@ namespace Barotrauma
             CreateUI(upgradeFrame);
 
             if (Campaign == null) { return; }
-            Campaign.UpgradeManager.OnUpgradesChanged += RefreshAll;
-            Campaign.CargoManager.OnPurchasedItemsChanged += RefreshAll;
-            Campaign.CargoManager.OnSoldItemsChanged += RefreshAll;
-            Campaign.OnMoneyChanged.RegisterOverwriteExisting(nameof(UpgradeStore).ToIdentifier(), e => { RefreshAll(); } );
+            Campaign.UpgradeManager.OnUpgradesChanged += RequestRefresh;
+            Campaign.CargoManager.OnPurchasedItemsChanged += RequestRefresh;
+            Campaign.CargoManager.OnSoldItemsChanged += RequestRefresh;
+            Campaign.OnMoneyChanged.RegisterOverwriteExisting(nameof(UpgradeStore).ToIdentifier(), e => { RequestRefresh(); } );
         }
 
-        public void RefreshAll()
+        public void RequestRefresh()
+        {
+            needsRefresh = true;
+        }
+
+        private void RefreshAll()
         {
             switch (selectedUpgradeTab)
             {
@@ -131,6 +138,7 @@ namespace Barotrauma
                     }
                     break;
             }
+            needsRefresh = false;
         }
 
         private void RefreshUpgradeList()
@@ -1295,7 +1303,9 @@ namespace Barotrauma
         {
             if (Campaign == null) { return; }
 
-            if (!parent.Children.Any() || Submarine.MainSub != null && Submarine.MainSub != drawnSubmarine || GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            if (!parent.Children.Any() || 
+                Submarine.MainSub != null && Submarine.MainSub != drawnSubmarine || 
+                GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
             {
                 GameMain.GameSession?.SubmarineInfo?.CheckSubsLeftBehind();
                 drawnSubmarine = Submarine.MainSub;
@@ -1311,6 +1321,10 @@ namespace Barotrauma
                 screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
                 // this might be a bit spaghetti, we use the submarine preview's Update() function to refresh the upgrade list when the submarine changes
                 // we also need this when we first load in so we know which category entries to disable since the CampaignUI is created before the submarine is loaded in.
+                RefreshAll();
+            }
+            if (needsRefresh)
+            {
                 RefreshAll();
             }
 
@@ -1588,7 +1602,7 @@ namespace Barotrauma
                 if (button != null)
                 {
                     button.Enabled = currentLevel < prefab.MaxLevel;
-                    if (WaitForServerUpdate || !campaign.AllowedToManageCampaign() || !campaign.Wallet.CanAfford(price))
+                    if (WaitForServerUpdate || !campaign.Wallet.CanAfford(price))
                     {
                         button.Enabled = false;
                     }
@@ -1693,7 +1707,7 @@ namespace Barotrauma
             return frames.ToArray();
         }
 
-        private bool HasPermission => campaignUI.Campaign.AllowedToManageCampaign();
+        private bool HasPermission => true;
 
         // just a shortcut to create new RectTransforms since all the new RectTransform and new Vector2 confuses my IDE (and me)
         private static RectTransform rectT(float x, float y, GUIComponent parentComponent, Anchor anchor = Anchor.TopLeft, ScaleBasis scaleBasis = ScaleBasis.Normal)

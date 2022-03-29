@@ -12,7 +12,7 @@ using ItemOrPackage = Barotrauma.Either<Steamworks.Ugc.Item, Barotrauma.ContentP
 
 namespace Barotrauma.Steam
 {
-    public partial class WorkshopMenu
+    sealed partial class MutableWorkshopMenu : WorkshopMenu
     {
         private string ExtractTitle(ItemOrPackage itemOrPackage)
             => itemOrPackage.TryGet(out ContentPackage package)

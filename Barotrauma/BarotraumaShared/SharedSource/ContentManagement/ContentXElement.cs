@@ -115,6 +115,24 @@ namespace Barotrauma
         }
 
         public void Remove() => Element.Remove();
+
+        public override bool Equals(object? obj)
+        {
+            return obj is ContentXElement element && this == element;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(ContentPackage, Element);
+        }
+
+        public static bool operator ==(in ContentXElement? a, in ContentXElement? b)
+        {
+            return a?.ContentPackage == b?.ContentPackage && a?.Element == b?.Element;
+        }
+
+        public static bool operator !=(in ContentXElement? a, in ContentXElement? b) =>
+            !(a == b);
     }
 
     public static class ContentXElementExtensions

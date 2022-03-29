@@ -172,11 +172,21 @@ namespace Barotrauma
                     SetCore(ContentPackageManager.WorkshopPackages.Core.FirstOrDefault(p => p.SteamWorkshopId == Core.SteamWorkshopId) ??
                         ContentPackageManager.CorePackages.First());
                 }
-                SetRegular(Regular
-                    .Select(p => ContentPackageManager.RegularPackages.Contains(p)
-                        ? p
-                        : ContentPackageManager.WorkshopPackages.Regular.FirstOrDefault(p2 => p2.SteamWorkshopId == p.SteamWorkshopId))
-                    .ToArray());
+
+                List<RegularPackage> newRegular = new List<RegularPackage>();
+                foreach (var p in Regular)
+                {
+                    if (ContentPackageManager.RegularPackages.Contains(p))
+                    {
+                        newRegular.Add(p);
+                    }
+                    else if (ContentPackageManager.WorkshopPackages.Regular.FirstOrDefault(p2
+                                 => p2.SteamWorkshopId == p.SteamWorkshopId) is { } newP)
+                    {
+                        newRegular.Add(newP);
+                    }
+                }
+                SetRegular(newRegular);
             }
 
             public static void BackUp()

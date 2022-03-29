@@ -12,7 +12,7 @@ namespace Barotrauma
     {
         private GUIButton deleteMpSaveButton;
         
-        public MultiPlayerCampaignSetupUI(GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<string> saveFiles = null)
+        public MultiPlayerCampaignSetupUI(GUIComponent newGameContainer, GUIComponent loadGameContainer, List<CampaignMode.SaveInfo> saveFiles = null)
             : base(newGameContainer, loadGameContainer)
         {
             var verticalLayout = new GUILayoutGroup(new RectTransform(Vector2.One, newGameContainer.RectTransform), isHorizontal: false)
@@ -219,8 +219,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        private List<string> prevSaveFiles;
-        public void UpdateLoadMenu(IEnumerable<string> saveFiles = null)
+        public void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
         {
             prevSaveFiles?.Clear();
             prevSaveFiles = null;
@@ -242,73 +241,9 @@ namespace Barotrauma
                 OnSelected = SelectSaveFile
             };
 
-            foreach (string saveFile in saveFiles)
+            foreach (CampaignMode.SaveInfo saveInfo in saveFiles)
             {
-                if (string.IsNullOrEmpty(saveFile))
-                {
-                    DebugConsole.AddWarning("Error when updating campaign load menu: path to a save file was empty.\n" + Environment.StackTrace);
-                    continue;
-                }
-
-                string fileName = saveFile;
-                string subName = "";
-                string saveTime = "";
-                string contentPackageStr = "";
-                var saveFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), saveList.Content.RectTransform) { MinSize = new Point(0, 45) }, style: "ListBoxElement")
-                {
-                    UserData = saveFile
-                };
-
-                var nameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform), "")
-                {
-                    CanBeFocused = false
-                };
-
-                bool isCompatible = true;
-                prevSaveFiles ??= new List<string>();
-
-                prevSaveFiles?.Add(saveFile);
-                string[] splitSaveFile = saveFile.Split(';');
-                saveFrame.UserData = splitSaveFile[0];
-                fileName = Path.GetFileNameWithoutExtension(splitSaveFile[0]);
-                nameText.Text = fileName;
-                if (splitSaveFile.Length > 1) { subName = splitSaveFile[1]; }
-                if (splitSaveFile.Length > 2) { saveTime = splitSaveFile[2]; }
-                if (splitSaveFile.Length > 3) { contentPackageStr = splitSaveFile[3]; }
-                
-                if (!string.IsNullOrEmpty(saveTime) && long.TryParse(saveTime, out long unixTime))
-                {
-                    DateTime time = ToolBox.Epoch.ToDateTime(unixTime);
-                    saveTime = time.ToString();
-                }
-                if (!string.IsNullOrEmpty(contentPackageStr))
-                {
-                    List<string> contentPackagePaths = contentPackageStr.Split('|').ToList();
-                    if (!GameSession.IsCompatibleWithEnabledContentPackages(contentPackagePaths, out LocalizedString errorMsg))
-                    {
-                        nameText.TextColor = GUIStyle.Red;
-                        saveFrame.ToolTip = string.Join("\n", errorMsg, TextManager.Get("campaignmode.contentpackagemismatchwarning"));
-                    }
-                }
-                if (!isCompatible)
-                {
-                    nameText.TextColor = GUIStyle.Red;
-                    saveFrame.ToolTip = TextManager.Get("campaignmode.incompatiblesave");
-                }
-
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),
-                    text: subName, font: GUIStyle.SmallFont)
-                {
-                    CanBeFocused = false,
-                    UserData = fileName
-                };
-
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), saveFrame.RectTransform),
-                    text: saveTime, textAlignment: Alignment.Right, font: GUIStyle.SmallFont)
-                {
-                    CanBeFocused = false,
-                    UserData = fileName
-                };
+                CreateSaveElement(saveInfo);
             }
 
             saveList.Content.RectTransform.SortChildren((c1, c2) =>
@@ -380,7 +315,7 @@ namespace Barotrauma
             EventEditorScreen.AskForConfirmation(header, body, () =>
             {
                 SaveUtil.DeleteSave(saveFile);
-                prevSaveFiles?.RemoveAll(s => s.StartsWith(saveFile));
+                prevSaveFiles?.RemoveAll(s => s.FilePath == saveFile);
                 UpdateLoadMenu(prevSaveFiles.ToList());
                 return true;
             });

@@ -22,11 +22,12 @@ namespace Barotrauma.Networking
         ManageSettings = 0x200,
         ManagePermissions = 0x400,
         KarmaImmunity = 0x800,
-        BuyItems = 0x1000,
+        ManageMoney = 0x1000,
         SellInventoryItems = 0x2000,
         SellSubItems = 0x4000,
-        CampaignStore = 0x8000,
-        All = 0xFFFF
+        ManageMap = 0x8000,
+        ManageHires = 0x10000,
+        All = 0x1FFFF
     }
 
     class PermissionPreset

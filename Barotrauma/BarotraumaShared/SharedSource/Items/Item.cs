@@ -5,6 +5,7 @@ using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -114,7 +115,7 @@ namespace Barotrauma
 
         private readonly Quality qualityComponent;
 
-        private readonly Queue<float> impactQueue = new Queue<float>();
+        private readonly ConcurrentQueue<float> impactQueue = new ConcurrentQueue<float>();
 
         //a dictionary containing lists of the status effects in all the components of the item
         private readonly bool[] hasStatusEffectsOfType;
@@ -1695,9 +1696,8 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
-            while (impactQueue.Count > 0)
+            while (impactQueue.TryDequeue(out float impact))
             {
-                float impact = impactQueue.Dequeue();
                 HandleCollision(impact);
             }
 
@@ -1933,10 +1933,7 @@ namespace Barotrauma
             if (contact.FixtureA.Body == f1.Body) { normal = -normal; }
             float impact = Vector2.Dot(f1.Body.LinearVelocity, -normal);
 
-            lock (impactQueue)
-            {
-                impactQueue.Enqueue(impact);
-            }
+            impactQueue.Enqueue(impact);
 
             return true;
         }

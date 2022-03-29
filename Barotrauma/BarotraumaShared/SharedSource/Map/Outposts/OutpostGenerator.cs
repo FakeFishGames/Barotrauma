@@ -752,6 +752,7 @@ namespace Barotrauma
             bool solutionFound = false;
             foreach (PlacedModule module in movableModules)
             {
+                if (module.ThisGap.ConnectedDoor == null && module.PreviousGap.ConnectedDoor == null) { continue; }
                 Vector2 moveDir = GetMoveDir(module.ThisGapPosition);
                 Vector2 moveStep = moveDir * 50.0f;
                 Vector2 currentMove = Vector2.Zero;
@@ -1092,6 +1093,10 @@ namespace Barotrauma
                                 }
                             }
                             thisWayPoint.Remove();
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError($"Failed to connect waypoints between outpost modules. No waypoint in the {GetOpposingGapPosition(module.ThisGapPosition).ToString().ToLower()} gap of the module \"{module.PreviousModule.Info.Name}\".");
                         }
 
                         gapToRemove.ConnectedDoor?.Item.Remove(); 

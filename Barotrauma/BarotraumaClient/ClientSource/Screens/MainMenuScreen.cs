@@ -1006,13 +1006,12 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        private void StartGame(SubmarineInfo selectedSub, string saveName, string mapSeed, CampaignSettings settings)
+        private void StartGame(SubmarineInfo selectedSub, string savePath, string mapSeed, CampaignSettings settings)
         {
-            if (string.IsNullOrEmpty(saveName)) return;
+            if (string.IsNullOrEmpty(savePath)) { return; }
 
             var existingSaveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
-
-            if (existingSaveFiles.Any(s => s == saveName))
+            if (existingSaveFiles.Any(s => s.FilePath == savePath))
             {
                 new GUIMessageBox(TextManager.Get("SaveNameInUseHeader"), TextManager.Get("SaveNameInUseText"));
                 return;
@@ -1045,7 +1044,7 @@ namespace Barotrauma
 
             selectedSub = new SubmarineInfo(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"));
             
-            GameMain.GameSession = new GameSession(selectedSub, saveName, GameModePreset.SinglePlayerCampaign, settings, mapSeed);
+            GameMain.GameSession = new GameSession(selectedSub, savePath, GameModePreset.SinglePlayerCampaign, settings, mapSeed);
             GameMain.GameSession.CrewManager.CharacterInfos.Clear();
             foreach (var characterInfo in campaignSetupUI.CharacterMenus.Select(m => m.CharacterInfo))
             {
